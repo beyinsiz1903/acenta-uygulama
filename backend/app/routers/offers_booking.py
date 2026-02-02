@@ -62,6 +62,49 @@ async def create_booking_from_canonical_offer(
     if not supplier_code or not supplier_offer_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INVALID_CANONICAL_OFFER")
 
+    # Re-evaluate B2B pricing for booking consistency
+    from app.routers.offers import round_money
+    from app.services.pricing_rules import PricingRulesService
+
+    rules_svc = PricingRulesService(db)
+    base_price = offer.get("price") or {}
+    base_amount = float(base_price.get("amount") or 0.0)
+    currency = base_price.get("currency") or "TRY"
+
+    from datetime import date as _date
+
+    stay = offer.get("stay") or {}
+    check_in_str = stay.get("check_in")
+    check_in_date = None
+    if isinstance(check_in_str, str):
+        try:
+            check_in_date = _date.fromisoformat(check_in_str)
+        except ValueError:
+            check_in_date = None
+
+    markup_pct = 0.0
+    pricing_rule_id = None
+    if check_in_date is not None:
+        winner_rule = await rules_svc.resolve_winner_rule(
+            organization_id=organization_id,
+            agency_id=payload.buyer_tenant_id,
+            product_id=None,
+            product_type="hotel",
+            check_in=check_in_date,
+        )
+        if winner_rule is not None:
+            markup_pct = await rules_svc.resolve_markup_percent(
+                organization_id,
+                agency_id=payload.buyer_tenant_id,
+                product_id=None,
+                product_type="hotel",
+                check_in=check_in_date,
+            )
+            if winner_rule.get("_id") is not None:
+                pricing_rule_id = str(winner_rule.get("_id"))
+
+    final_amount = round_money(base_amount * (1 + float(markup_pct) / 100), currency)
+
     actor = {
         "actor_type": "user",
         "actor_id": user["id"],

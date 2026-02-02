@@ -134,7 +134,26 @@ async def test_ops_incident_created_for_supplier_all_failed(test_db: Any, async_
     client: AsyncClient = async_client
     db = test_db
 
-    org_id, email = await _create_org_and_user(db, roles=["agency_admin"])
+    from backend.tests.test_exit_supplier_partial_results_v1 import _get_default_org_and_user, _make_headers
+
+    now = now_utc()
+    org_id, email = await _get_default_org_and_user(db)
+
+    # Create tenant for header
+    await db.tenants.insert_one(
+        {
+            "tenant_key": "fail-tenant-1",
+            "organization_id": org_id,
+            "brand_name": "Fail Tenant 1",
+            "primary_domain": "fail-tenant-1.example.com",
+            "subdomain": "fail-tenant-1",
+            "theme_config": {},
+            "is_active": True,
+            "created_at": now,
+            "updated_at": now,
+        }
+    )
+    tenant_key = "fail-tenant-1"
 
     async def _failing_mock(*args, **kwargs):  # type: ignore[no-untyped-def]
         raise AppError(503, "SUPPLIER_UPSTREAM_UNAVAILABLE", "Mock unavailable", {})

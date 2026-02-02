@@ -239,6 +239,7 @@ async def test_risk_score_is_deterministic_for_same_booking(test_db: Any, async_
 
     from app.services.risk.engine import evaluate_booking_risk
 
+    now = now_utc()
     org = await test_db.organizations.insert_one(
         {"name": "RISK Org2", "slug": "risk_org2", "created_at": now, "updated_at": now}
     )

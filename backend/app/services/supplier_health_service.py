@@ -283,9 +283,16 @@ async def is_supplier_circuit_open(
             return False
 
         if circuit.until and now >= circuit.until:
-            # Auto-close and treat as closed
-            await db.supplier_health.update_one(
-                {"organization_id": organization_id, "supplier_code": supplier_code},
+            # Auto-close and treat as closed (exactly-once via conditional update)
+            from uuid import uuid4
+
+            result = await db.supplier_health.update_one(
+                {
+                    "organization_id": organization_id,
+                    "supplier_code": supplier_code,
+                    "circuit.state": "open",
+                    "circuit.until": {"$lte": now},
+                },
                 {
                     "$set": {
                         "circuit.state": "closed",
@@ -297,34 +304,33 @@ async def is_supplier_circuit_open(
                     }
                 },
             )
-            try:
-                from uuid import uuid4
-
-                await db.audit_logs.insert_one(
-                    {
-                        "_id": str(uuid4()),
-                        "organization_id": organization_id,
-                        "actor": {
-                            "actor_type": "system",
-                            "actor_id": "system",
-                            "email": None,
-                            "roles": [],
-                        },
-                        "origin": {},
-                        "action": "SUPPLIER_CIRCUIT_CLOSED",
-                        "target": {"type": "supplier", "id": supplier_code},
-                        "diff": {},
-                        "meta": {
-                            "supplier_code": supplier_code,
-                            "previous_state": "open",
-                            "new_state": "closed",
-                            "window_sec": window_sec,
-                        },
-                        "created_at": now_utc(),
-                    }
-                )
-            except Exception:
-                pass
+            if result.modified_count == 1:
+                try:
+                    await db.audit_logs.insert_one(
+                        {
+                            "_id": str(uuid4()),
+                            "organization_id": organization_id,
+                            "actor": {
+                                "actor_type": "system",
+                                "actor_id": "system",
+                                "email": None,
+                                "roles": [],
+                            },
+                            "origin": {},
+                            "action": "SUPPLIER_CIRCUIT_CLOSED",
+                            "target": {"type": "supplier", "id": supplier_code},
+                            "diff": {},
+                            "meta": {
+                                "supplier_code": supplier_code,
+                                "previous_state": "open",
+                                "new_state": "closed",
+                                "window_sec": window_sec,
+                            },
+                            "created_at": now,
+                        }
+                    )
+                except Exception:
+                    pass
             return False
 
         # still open and within until

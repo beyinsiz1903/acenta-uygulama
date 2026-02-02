@@ -212,6 +212,7 @@ async def test_pricing_graph_no_parent_fallback(test_db: Any, async_client: Asyn
         "check_out": "2026-01-12",
         "adults": 2,
         "children": 0,
+        "supplier_codes": ["mock"],
     }
 
     resp = await client.post("/api/offers/search", json=payload, headers=headers)

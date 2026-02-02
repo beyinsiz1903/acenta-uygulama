@@ -286,7 +286,7 @@ async def test_booking_uses_graph_pricing_snapshot(test_db: Any, async_client: A
 async def test_pricing_graph_deterministic(test_db: Any, async_client: AsyncClient) -> None:
     """Same inputs should yield same pricing graph outcome."""
 
-    from app.services.pricing.graph import price_offer_with_graph
+    from app.services.pricing_graph.graph import price_offer_with_graph
     from datetime import date as _date
 
     now = now_utc()
@@ -335,7 +335,7 @@ async def test_pricing_graph_deterministic(test_db: Any, async_client: AsyncClie
 async def test_pricing_graph_currency_mismatch_skips_rule(test_db: Any, async_client: AsyncClient) -> None:
     """Rules with mismatched currency should be effectively skipped (no markup)."""
 
-    from app.services.pricing.graph import price_offer_with_graph
+    from app.services.pricing_graph.graph import price_offer_with_graph
     from datetime import date as _date
 
     now = now_utc()

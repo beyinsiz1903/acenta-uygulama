@@ -532,7 +532,7 @@ export default function AppShell() {
                       )
                     }
                   >
-                    <CalendarDays className="h-4 w-4" />
+                    <AlertTriangle className="h-4 w-4" />
                     Ops Incidents
                   </NavLink>
                 </div>

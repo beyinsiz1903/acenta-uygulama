@@ -10,13 +10,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover - only for type checkers
     from app.routers.offers import CanonicalHotelOfferOut
 else:
-    # At runtime we accept both dicts and fully-typed CanonicalHotelOfferOut instances
-    # from app.routers.offers. FastAPI will call .model_dump() when serializing.
-    from typing import Any
-
-    class CanonicalHotelOfferOut(BaseModel):  # type: ignore[no-redef]
-        offer_token: Any
-
+    CanonicalHotelOfferOut = dict  # runtime placeholder; real shape handled in router
 
 
 class SupplierWarningOut(BaseModel):

@@ -170,7 +170,9 @@ async def test_risk_review_sets_risk_review_status_and_skips_supplier(test_db: A
         applied_markup_pct=10.0,
     )
 
-    # Configure credit so utilization is moderate
+    # Configure credit profile document (not used by risk v1 because Standard
+    # profile lookup expects name='Standard'); we keep it here to avoid
+    # interfering with existing finance assumptions.
     await test_db.credit_profiles.insert_one(
         {
             "organization_id": org_id,
@@ -185,7 +187,16 @@ async def test_risk_review_sets_risk_review_status_and_skips_supplier(test_db: A
         }
     )
 
-    # No prior exposure; rely on amount + low history rules for medium score
+    # Inject a pricing mismatch audit so that score falls into REVIEW band
+    await test_db.audit_logs.insert_one(
+        {
+            "organization_id": org_id,
+            "action": "PRICING_MISMATCH_DETECTED",
+            "target": {"type": "booking", "id": booking_id},
+            "meta": {"booking_id": booking_id},
+            "created_at": now,
+        }
+    )
 
     token = jwt.encode({"sub": "risk@example.com", "org": org_id}, _jwt_secret(), algorithm="HS256")
     headers = {"Authorization": f"Bearer {token}", "X-Tenant-Key": "risk-tenant-1"}

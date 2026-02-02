@@ -141,6 +141,25 @@ async def create_booking_from_canonical_offer(
             "applied_markup_pct": float(markup_pct),
             "pricing_rule_id": pricing_rule_id,
             "currency": currency,
+            # PR-20: enrich with pricing graph snapshot when available
+            "model_version": getattr(graph_result, "model_version", None) if graph_result else None,
+            "graph_path": getattr(graph_result, "graph_path", None) if graph_result else None,
+            "pricing_rule_ids": getattr(graph_result, "pricing_rule_ids", None) if graph_result else None,
+            "steps": [
+                {
+                    "level": s.level,
+                    "tenant_id": s.tenant_id,
+                    "node_type": s.node_type,
+                    "rule_id": s.rule_id,
+                    "markup_pct": s.markup_pct,
+                    "base_amount": s.base_amount,
+                    "delta_amount": s.delta_amount,
+                    "amount_after": s.amount_after,
+                    "currency": s.currency,
+                    "notes": s.notes,
+                }
+                for s in (graph_result.steps if graph_result else [])
+            ],
         },
         "created_at": now_utc(),
     }

@@ -256,6 +256,21 @@ async def test_supplier_circuit_closes_after_until(test_db: Any, async_client: A
     now = now_utc()
     org_id, email = await _get_default_org_and_user_for_search(db)
 
+    await db.tenants.insert_one(
+        {
+            "tenant_key": "circuit-tenant-3",
+            "organization_id": org_id,
+            "brand_name": "Circuit Tenant 3",
+            "primary_domain": "circuit-tenant-3.example.com",
+            "subdomain": "circuit-tenant-3",
+            "theme_config": {},
+            "is_active": True,
+            "created_at": now,
+            "updated_at": now,
+        }
+    )
+    headers = _make_search_headers(org_id, email, "circuit-tenant-3")
+
     # Seed open circuit with past until
     await db.supplier_health.insert_one(
         {

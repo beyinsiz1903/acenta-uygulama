@@ -25,7 +25,7 @@ async function loginAsSuperAdmin(page) {
 
 test.describe("Ops Incidents Console v0", () => {
   test("list loads with supplier health and detail drawer opens", async ({ page }) => {
-    await loginAsAdmin(page);
+    await loginAsSuperAdmin(page);
 
     // Navigate via sidebar or direct URL
     await page.goto(`${BASE_URL}/app/ops/incidents`);

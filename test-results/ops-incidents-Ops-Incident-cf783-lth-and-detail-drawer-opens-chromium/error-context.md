@@ -1,24 +1,11 @@
 # Page snapshot
 
 ```yaml
-- generic [ref=e2]:
-  - generic [ref=e4]:
-    - generic [ref=e5]:
-      - generic [ref=e6]: A
-      - heading "Acenta Master" [level=1] [ref=e7]
-      - paragraph [ref=e8]: Acenta operasyonlarını tek panelden yönet.
-    - generic [ref=e9]:
-      - generic [ref=e11]: Giriş Yap
-      - generic [ref=e13]:
-        - generic [ref=e14]:
-          - text: Email
-          - textbox "Email" [ref=e15]:
-            - /placeholder: ornek@acenta.com
-            - text: admin@acenta.test
-        - generic [ref=e16]:
-          - text: Şifre
-          - textbox "Şifre" [ref=e17]: admin123
-        - button "Giriş Yap" [ref=e18] [cursor=pointer]
-        - generic [ref=e19]: "Demo: admin@acenta.test / admin123"
-  - region "Notifications alt+T"
+- iframe [ref=e1]:
+  - generic [ref=f5e2]:
+    - generic [ref=f5e3]: "Uncaught runtime errors:"
+    - button "Dismiss" [ref=f5e4] [cursor=pointer]: ×
+    - generic [ref=f5e6]:
+      - generic [ref=f5e7]: ERROR
+      - generic [ref=f5e8]: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder. at SelectItem (http://localhost:3000/static/js/bundle.js:11022:11) at Object.react_stack_bottom_frame (http://localhost:3000/static/js/bundle.js:70476:18) at renderWithHooks (http://localhost:3000/static/js/bundle.js:61349:20) at updateForwardRef (http://localhost:3000/static/js/bundle.js:62567:17) at beginWork (http://localhost:3000/static/js/bundle.js:63381:16) at runWithFiberInDEV (http://localhost:3000/static/js/bundle.js:57825:68) at performUnitOfWork (http://localhost:3000/static/js/bundle.js:65734:93) at workLoopSync (http://localhost:3000/static/js/bundle.js:65629:38) at renderRootSync (http://localhost:3000/static/js/bundle.js:65614:7) at performWorkOnRoot (http://localhost:3000/static/js/bundle.js:65287:33)
 ```

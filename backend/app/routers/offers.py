@@ -131,15 +131,56 @@ async def search_offers(
             "guests": payload.adults + payload.children,
             "city": payload.destination,
         }
-        mock_succeeded = False
+
+        # Circuit breaker check for mock supplier
+        skip_mock = False
         try:
-            mock_raw = await mock_supplier_service.search_mock_offers(mock_payload)
-            # Normalize mock offers into canonical shape
-            mock_succeeded = True
-        except AppError as exc:
-            supplier_warnings.append(map_exception_to_warning("mock", exc))
-            mock_raw = {"offers": [], "supplier": "mock"}
-        
+            if await is_supplier_circuit_open(db, organization_id=organization_id, supplier_code="mock"):
+                supplier_warnings.append(
+                    SupplierWarning(
+                        supplier_code="mock",
+                        code="SUPPLIER_CIRCUIT_OPEN",
+                        message="Supplier temporarily disabled due to failures.",
+                        retryable=True,
+                        http_status=503,
+                        timeout_ms=0,
+                        duration_ms=0,
+                    )
+                )
+                skip_mock = True
+        except Exception:
+            skip_mock = False
+
+        mock_succeeded = False
+        mock_raw = {"offers": [], "supplier": "mock"}
+        if not skip_mock:
+            start = now_utc()
+            ok = True
+            err_code = None
+            http_status = None
+            try:
+                mock_raw = await mock_supplier_service.search_mock_offers(mock_payload)
+                # Normalize mock offers into canonical shape
+                mock_succeeded = True
+            except AppError as exc:
+                supplier_warnings.append(map_exception_to_warning("mock", exc))
+                ok = False
+                err_code = exc.code
+                http_status = exc.status_code
+            duration_ms = int((now_utc() - start).total_seconds() * 1000)
+            try:
+                await record_supplier_call_event(
+                    db,
+                    organization_id=organization_id,
+                    supplier_code="mock",
+                    ok=ok,
+                    code=err_code,
+                    http_status=http_status,
+                    duration_ms=duration_ms,
+                )
+            except Exception:
+                pass
+
         from app.services.offers.normalizers.mock_normalizer import normalize_mock_search_result as _norm
 
         normalized = await _norm(mock_payload, mock_raw)

@@ -307,6 +307,51 @@ async def search_offers(
         pricing_overlay_index=pricing_overlay_index if tenant_id else None,
     )
 
+    # Supplier partial failure audits (PR-20.2)
+    from app.services.audit import write_audit_log
+
+    # Determine succeeded vs failed suppliers
+    succeeded_suppliers = [
+        code
+        for code in supplier_codes
+        if any(o.supplier_code == code for o in canonical_offers)
+    ]
+    failed_suppliers = [w for w in supplier_warnings if w.supplier_code not in succeeded_suppliers]
+
+    if failed_suppliers and canonical_offers:
+        actor = {"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")}
+        await write_audit_log(
+            db,
+            organization_id=organization_id,
+            actor=actor,
+            request=request,
+            action="SUPPLIER_PARTIAL_FAILURE",
+            target_type="search_session",
+            target_id=session["session_id"],
+            before=None,
+            after=None,
+            meta={
+                "event_source": "offers_search",
+                "organization_id": organization_id,
+                "buyer_tenant_id": tenant_id,
+                "session_id": session["session_id"],
+                "failed_suppliers": [
+                    {
+                        "supplier_code": w.supplier_code,
+                        "code": w.code,
+                        "retryable": w.retryable,
+                        "http_status": w.http_status,
+                        "duration_ms": w.duration_ms,
+                        "timeout_ms": w.timeout_ms,
+                    }
+                    for w in failed_suppliers
+                ],
+                "succeeded_suppliers": succeeded_suppliers,
+                "offers_count": len(canonical_offers),
+                "warnings_count": len(supplier_warnings),
+            },
+        )
+
     # Audit pricing overlays for observability
     if tenant_id:
         from app.services.audit import write_audit_log

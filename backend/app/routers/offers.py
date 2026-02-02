@@ -88,6 +88,8 @@ class OfferSearchResponse(BaseModel):
     session_id: str
     expires_at: str
     offers: List[CanonicalHotelOfferOut] = Field(default_factory=list)
+    warnings: Optional[List[SupplierWarningOut]] = None
+    offers: List[CanonicalHotelOfferOut] = Field(default_factory=list)
 
 
 def round_money(amount: float, currency: str) -> float:

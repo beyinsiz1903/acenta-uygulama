@@ -230,12 +230,24 @@ async def test_confirm_blocked_for_risk_review_and_risk_rejected(test_db: Any, a
         test_db, status="RISK_REVIEW", with_risk=True
     )
 
-    # Seed RISK_REJECTED booking
-    # Note: reuse same org_id to keep headers/org consistent
-    org2_id, _, booking_rj = await _seed_risk_review_booking(
-        test_db, status="RISK_REJECTED", with_risk=True
-    )
-    assert org2_id == org_id
+    # Seed RISK_REJECTED booking under same organization
+    booking_rj_doc = {
+        "organization_id": org_id,
+        "state": "draft",
+        "status": "RISK_REJECTED",
+        "source": "b2b_marketplace",
+        "currency": "TRY",
+        "amount": 25000.0,
+        "offer_ref": {
+            "buyer_tenant_id": tenant_id,
+            "supplier": "mock_supplier_v1",
+            "supplier_offer_id": "MOCK-OFF-1",
+        },
+        "created_at": now_utc(),
+        "updated_at": now_utc(),
+    }
+    res = await test_db.bookings.insert_one(booking_rj_doc)
+    booking_rj = str(res.inserted_id)
 
     headers = _make_admin_headers(org_id)
 

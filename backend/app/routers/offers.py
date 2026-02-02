@@ -197,6 +197,8 @@ async def search_offers(
             canonical_offers.append(offer_out)
 
     # Apply B2B pricing overlay if tenant context is present
+    pricing_overlay_index: Dict[str, Any] = {}
+
     if tenant_id:
         from datetime import date as _date
 

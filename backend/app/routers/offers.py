@@ -126,7 +126,7 @@ async def search_offers(
             "city": payload.destination,
         }
         try:
-            mock_raw = await search_mock_offers(mock_payload)
+            mock_raw = await mock_supplier_service.search_mock_offers(mock_payload)
             # Normalize mock offers into canonical shape
         except AppError as exc:
             supplier_warnings.append(map_exception_to_warning("mock", exc))

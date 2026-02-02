@@ -296,12 +296,19 @@ async def search_offers(
     from app.services.audit import write_audit_log
 
     # Determine succeeded vs failed suppliers
-    succeeded_suppliers = [
-        code
-        for code in supplier_codes
-        if any(o.supplier_code == code for o in canonical_offers)
-    ]
-    failed_suppliers = [w for w in supplier_warnings if w.supplier_code not in succeeded_suppliers]
+    # NOTE: Successful supplier = call+parse OK, offers may be empty.
+    succeeded_suppliers = sorted(
+        {
+            code
+            for code in supplier_codes
+            if any(o.supplier_code == code for o in canonical_offers)
+        }
+    )
+
+    failed_suppliers_all = [w for w in supplier_warnings if w.supplier_code not in succeeded_suppliers]
+
+    # Deterministic ordering for failed suppliers in audit meta
+    failed_suppliers = sort_warnings(failed_suppliers_all)
 
     if failed_suppliers and canonical_offers:
         actor = {"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")}

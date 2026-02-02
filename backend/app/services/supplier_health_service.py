@@ -195,27 +195,33 @@ async def record_supplier_call_event(
             last_transition_at = now
 
             try:
-                from app.services.audit import write_audit_log
+                from uuid import uuid4
 
-                await write_audit_log(
-                    db,
-                    organization_id=organization_id,
-                    actor={"actor_type": "system"},
-                    request=None,
-                    action="SUPPLIER_CIRCUIT_OPENED",
-                    target_type="supplier",
-                    target_id=supplier_code,
-                    before={"state": previous_state},
-                    after={"state": new_state},
-                    meta={
-                        "supplier_code": supplier_code,
-                        "previous_state": previous_state,
-                        "new_state": new_state,
-                        "reason_code": reason_code,
-                        "until": until.isoformat() if until else None,
-                        "window_sec": window_sec,
-                        "consecutive_failures": consecutive_failures,
-                    },
+                await db.audit_logs.insert_one(
+                    {
+                        "_id": str(uuid4()),
+                        "organization_id": organization_id,
+                        "actor": {
+                            "actor_type": "system",
+                            "actor_id": "system",
+                            "email": None,
+                            "roles": [],
+                        },
+                        "origin": {},
+                        "action": "SUPPLIER_CIRCUIT_OPENED",
+                        "target": {"type": "supplier", "id": supplier_code},
+                        "diff": {},
+                        "meta": {
+                            "supplier_code": supplier_code,
+                            "previous_state": previous_state,
+                            "new_state": new_state,
+                            "reason_code": reason_code,
+                            "until": until.isoformat() if until else None,
+                            "window_sec": window_sec,
+                            "consecutive_failures": consecutive_failures,
+                        },
+                        "created_at": now_utc(),
+                    }
                 )
             except Exception:
                 pass

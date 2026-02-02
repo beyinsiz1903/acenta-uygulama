@@ -190,7 +190,7 @@ async def test_ops_incident_created_for_supplier_all_failed(test_db: Any, async_
     monkeypatch.setattr("app.services.supplier_search_service.search_paximum_offers", _failing_paximum)
 
     now = now_utc().date()
-    headers = _make_headers(org_id, email, tenant_key)
+    headers = _make_search_headers(org_id, email, tenant_key)
 
     payload = {
         "destination": "IST",

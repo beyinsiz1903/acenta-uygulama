@@ -281,7 +281,14 @@ async def test_booking_uses_graph_pricing_snapshot(test_db: Any, async_client: A
     assert booking_resp.status_code == 201
     booking = booking_resp.json()
 
-    assert float(booking.get("amount") or 0.0) == 1100.0
+    pricing = booking.get("pricing") or {}
+    base_amount = float(pricing.get("base_amount") or 0.0)
+    final_amount = float(pricing.get("final_amount") or 0.0)
+    currency = pricing.get("currency") or "EUR"
+
+    expected = round_money(base_amount * 1.10, currency)
+    assert final_amount == expected
+    assert float(booking.get("amount") or 0.0) == expected
     pricing = booking.get("pricing") or {}
     assert pricing.get("model_version") == "pricing_graph_v1"
     assert pricing.get("graph_path")

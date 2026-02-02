@@ -231,9 +231,11 @@ async def test_confirm_blocked_for_risk_review_and_risk_rejected(test_db: Any, a
     )
 
     # Seed RISK_REJECTED booking
-    _, _, booking_rj = await _seed_risk_review_booking(
+    # Note: reuse same org_id to keep headers/org consistent
+    org2_id, _, booking_rj = await _seed_risk_review_booking(
         test_db, status="RISK_REJECTED", with_risk=True
     )
+    assert org2_id == org_id
 
     headers = _make_admin_headers(org_id)
 

@@ -17,6 +17,7 @@ from app.schemas_ops_incidents import (
     OpsIncidentStatus,
     OpsIncidentType,
 )
+from app.services.ops_incidents_enrichment import attach_supplier_health_badges
 from app.services.ops_incidents_service import resolve_incident
 
 
@@ -51,6 +52,7 @@ async def list_incidents(
     type: Optional[OpsIncidentType] = Query(None),
     status: Optional[OpsIncidentStatus] = Query(None),
     severity: Optional[OpsIncidentSeverity] = Query(None),
+    include_supplier_health: bool = Query(False),
     limit: Optional[int] = Query(50, ge=1),
     offset: Optional[int] = Query(0, ge=0),
     db=Depends(get_db),

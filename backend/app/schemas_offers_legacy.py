@@ -24,10 +24,13 @@ class SupplierWarningOut(BaseModel):
     duration_ms: Optional[int] = None
 
 
+from datetime import date
+
+
 class OfferSearchRequest(BaseModel):
     destination: str
-    check_in: Any
-    check_out: Any
+    check_in: date
+    check_out: date
     adults: int
     children: int
     supplier_codes: Optional[List[str]] = None

@@ -42,6 +42,22 @@ def _make_admin_headers(org_id: str, email: str) -> dict[str, str]:
     return _make_jwt_headers(org_id, email, ["agency_admin"])
 
 
+async def _get_default_org_and_user_for_search(db: Any) -> tuple[str, str]:
+    """Mirror of default org+user helper used in supplier partial results tests."""
+
+    org = await db.organizations.find_one({"slug": "default"})
+    assert org is not None
+    org_id = str(org["_id"])
+
+    email = "agency1@demo.test"
+    return org_id, email
+
+
+def _make_search_headers(org_id: str, email: str, tenant_key: str) -> dict[str, str]:
+    token = jwt.encode({"sub": email, "org": org_id}, _jwt_secret(), algorithm="HS256")
+    return {"Authorization": f"Bearer {token}", "X-Tenant-Key": tenant_key}
+
+
 @pytest.mark.exit_ops_incident_created_for_risk_review
 @pytest.mark.anyio
 async def test_ops_incident_created_for_risk_review(test_db: Any, async_client: AsyncClient, monkeypatch: Any) -> None:
@@ -145,10 +161,8 @@ async def test_ops_incident_created_for_supplier_all_failed(test_db: Any, async_
     client: AsyncClient = async_client
     db = test_db
 
-    from .test_exit_supplier_partial_results_v1 import _get_default_org_and_user, _make_headers
-
     now = now_utc()
-    org_id, email = await _get_default_org_and_user(db)
+    org_id, email = await _get_default_org_and_user_for_search(db)
 
     # Create tenant for header
     await db.tenants.insert_one(

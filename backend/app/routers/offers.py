@@ -398,8 +398,8 @@ async def search_offers(
                 message=w.message,
                 retryable=w.retryable,
                 http_status=w.http_status,
-                timeout_ms=w.timeout_ms,
-                duration_ms=w.duration_ms,
+                timeout_ms=int(w.timeout_ms) if w.timeout_ms is not None else None,
+                duration_ms=int(w.duration_ms) if w.duration_ms is not None else None,
             )
             for w in warnings_sorted
         ]

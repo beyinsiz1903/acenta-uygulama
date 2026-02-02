@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from app.routers.offers import CanonicalHotelOfferOut
+from app.routers.offers import CanonicalHotelOfferOut  # type: ignore  # imported for legacy response typing only
 
 
 class SupplierWarningOut(BaseModel):

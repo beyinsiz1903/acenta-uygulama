@@ -4,7 +4,13 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from app.routers.offers import CanonicalHotelOfferOut  # type: ignore  # imported for legacy response typing only
+# NOTE: CanonicalHotelOfferOut is imported lazily in routers/offers.py to avoid circular import.
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover - only for type checkers
+    from app.routers.offers import CanonicalHotelOfferOut
+else:
+    CanonicalHotelOfferOut = dict  # runtime placeholder; real shape handled in router
 
 
 class SupplierWarningOut(BaseModel):

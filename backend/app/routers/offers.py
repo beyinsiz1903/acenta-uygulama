@@ -95,8 +95,6 @@ def round_money(amount: float, currency: str) -> float:
 
     return round(float(amount), 2)
 
-    offers: List[CanonicalHotelOfferOut] = Field(default_factory=list)
-
 
 @router.post("/search", response_model=OfferSearchResponse, dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
 async def search_offers(

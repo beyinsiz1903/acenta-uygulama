@@ -216,14 +216,14 @@ export default function AdminOpsIncidentsPage() {
           <div className="space-y-1">
             <div className="text-[11px] text-muted-foreground">Status</div>
             <Select
-              value={filters.status || ""}
-              onValueChange={(v) => onChangeFilter("status", v || undefined)}
+              value={filters.status ?? "all"}
+              onValueChange={(v) => onChangeFilter("status", v === "all" ? undefined : v)}
             >
               <SelectTrigger className="h-8 w-40 text-xs">
                 <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All</SelectItem>
+                <SelectItem value="all">All</SelectItem>
                 <SelectItem value="open">Open</SelectItem>
                 <SelectItem value="resolved">Resolved</SelectItem>
               </SelectContent>
@@ -233,14 +233,14 @@ export default function AdminOpsIncidentsPage() {
           <div className="space-y-1">
             <div className="text-[11px] text-muted-foreground">Type</div>
             <Select
-              value={filters.type || ""}
-              onValueChange={(v) => onChangeFilter("type", v || undefined)}
+              value={filters.type ?? "all"}
+              onValueChange={(v) => onChangeFilter("type", v === "all" ? undefined : v)}
             >
               <SelectTrigger className="h-8 w-48 text-xs">
                 <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All</SelectItem>
+                <SelectItem value="all">All</SelectItem>
                 <SelectItem value="risk_review">risk_review</SelectItem>
                 <SelectItem value="supplier_partial_failure">supplier_partial_failure</SelectItem>
                 <SelectItem value="supplier_all_failed">supplier_all_failed</SelectItem>
@@ -251,14 +251,14 @@ export default function AdminOpsIncidentsPage() {
           <div className="space-y-1">
             <div className="text-[11px] text-muted-foreground">Severity</div>
             <Select
-              value={filters.severity || ""}
-              onValueChange={(v) => onChangeFilter("severity", v || undefined)}
+              value={filters.severity ?? "all"}
+              onValueChange={(v) => onChangeFilter("severity", v === "all" ? undefined : v)}
             >
               <SelectTrigger className="h-8 w-40 text-xs">
                 <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All</SelectItem>
+                <SelectItem value="all">All</SelectItem>
                 <SelectItem value="critical">critical</SelectItem>
                 <SelectItem value="high">high</SelectItem>
                 <SelectItem value="medium">medium</SelectItem>

@@ -127,6 +127,7 @@ async def list_incidents(
 @router.get("/{incident_id}", response_model=OpsIncidentDetailOut)
 async def get_incident_detail(
     incident_id: str,
+    include_supplier_health: bool = Query(True),
     db=Depends(get_db),
     user=Depends(get_current_user),
     org=Depends(get_current_org),
@@ -138,6 +139,15 @@ async def get_incident_detail(
     )
     if not doc:
         raise AppError(404, "INCIDENT_NOT_FOUND", "Incident not found")
+
+    if include_supplier_health:
+        enriched = await attach_supplier_health_badges(
+            db,
+            organization_id=organization_id,
+            incidents=[doc],
+            include_supplier_health=True,
+        )
+        doc = enriched[0] if enriched else doc
 
     return OpsIncidentDetailOut(**doc)
 

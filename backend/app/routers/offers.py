@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field
 
 from app.schemas_offers_legacy import OfferSearchRequest, OfferSearchResponse, SupplierWarningOut
 from app.services.supplier_warnings import SupplierWarning, sort_warnings, map_exception_to_warning
+from app.services.supplier_health_service import is_supplier_circuit_open, record_supplier_call_event
+from app.utils import now_utc
 from uuid import uuid4
 import hashlib
 import json

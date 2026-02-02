@@ -337,7 +337,7 @@ export default function AppShell() {
                   }
                 >
                   <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <CalendarDays className="h-4 w-4" />
+                    <AlertTriangle className="h-4 w-4" />
                   </div>
                   <div className="flex-1 overflow-hidden">
                     <div className="truncate">Ops Incidents</div>

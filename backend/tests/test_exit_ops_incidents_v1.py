@@ -41,9 +41,40 @@ async def test_ops_incident_created_for_risk_review(test_db: Any, async_client: 
     client: AsyncClient = async_client
     db = test_db
 
-    # Seed org, user and a simple marketplace-style booking
+    # Seed org, tenant, admin user and a simple marketplace-style booking
     now = now_utc()
-    org_id, email = await _create_org_and_user(db, roles=["agency_agent"])
+
+    org = await db.organizations.insert_one(
+        {"name": "RISK Org Ops", "slug": "risk_org_ops", "created_at": now, "updated_at": now}
+    )
+    org_id = str(org.inserted_id)
+
+    tenant = await db.tenants.insert_one(
+        {
+            "tenant_key": "risk-tenant-rr",
+            "organization_id": org_id,
+            "brand_name": "Risk Tenant RR",
+            "primary_domain": "risk-tenant-rr.example.com",
+            "subdomain": "risk-tenant-rr",
+            "theme_config": {},
+            "is_active": True,
+            "created_at": now,
+            "updated_at": now,
+        }
+    )
+    tenant_id = str(tenant.inserted_id)
+
+    email = "admin@example.com"
+    await db.users.insert_one(
+        {
+            "organization_id": org_id,
+            "email": email,
+            "roles": ["agency_admin"],
+            "is_active": True,
+            "created_at": now,
+            "updated_at": now,
+        }
+    )
 
     booking_doc = {
         "organization_id": org_id,
@@ -53,7 +84,7 @@ async def test_ops_incident_created_for_risk_review(test_db: Any, async_client: 
         "currency": "TRY",
         "amount": 1000.0,
         "offer_ref": {
-            "buyer_tenant_id": "risk-tenant-1",
+            "buyer_tenant_id": tenant_id,
             "supplier": "mock_supplier_v1",
             "supplier_offer_id": "MOCK-OFF-1",
         },

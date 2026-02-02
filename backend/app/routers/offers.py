@@ -6,8 +6,6 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 
-from pydantic import BaseModel, Field
-
 from app.schemas_offers_legacy import OfferSearchRequest, OfferSearchResponse, SupplierWarningOut
 from app.services.supplier_warnings import SupplierWarning, sort_warnings, map_exception_to_warning
 

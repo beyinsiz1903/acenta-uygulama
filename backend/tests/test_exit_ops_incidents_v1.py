@@ -344,8 +344,8 @@ async def test_ops_incident_rbac_denied(test_db: Any, async_client: AsyncClient)
     client: AsyncClient = async_client
     db = test_db
 
-    org_id, email = await _create_org_and_user(db, roles=["agency_admin"])
+    org_id, email = await _create_org_and_user(db, roles=["agency_agent"])
 
-    headers = {"x-org-id": org_id, "x-user-email": email, "x-user-roles": "agency_agent"}
+    headers = _make_jwt_headers(org_id, email, ["agency_agent"])
     resp = await client.get("/api/admin/ops/incidents", headers=headers)
     assert resp.status_code in (401, 403)

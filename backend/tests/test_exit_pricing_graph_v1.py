@@ -169,8 +169,6 @@ async def test_pricing_graph_multi_level_applied(test_db: Any, async_client: Asy
     final_amount = float(final_price.get("amount") or 0.0)
 
     # Expected multi-level computation: 1000 * 1.10 * 1.05 * 1.05 (base in mock is 1000 EUR)
-    from app.routers.offers import round_money
-
     expected = round_money(1000.0 * 1.10 * 1.05 * 1.05, "EUR")
     assert base_amount == 1000.0
     assert final_amount == expected

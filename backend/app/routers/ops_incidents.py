@@ -32,17 +32,17 @@ SEVERITY_RANK: Dict[OpsIncidentSeverity, int] = {
 
 
 def _enforce_pagination(limit: Optional[int], offset: Optional[int]) -> tuple[int, int]:
-    l = limit or 50
-    o = offset or 0
-    if l > 200:
-        l = 200
-    if o > 10_000:
-        o = 10_000
-    if l < 1:
-        l = 1
-    if o < 0:
-        o = 0
-    return l, o
+    limit_val = limit or 50
+    offset_val = offset or 0
+    if limit_val > 200:
+        limit_val = 200
+    if offset_val > 10_000:
+        offset_val = 10_000
+    if limit_val < 1:
+        limit_val = 1
+    if offset_val < 0:
+        offset_val = 0
+    return limit_val, offset_val
 
 
 @router.get("", response_model=OpsIncidentListResponse)

@@ -327,15 +327,9 @@ async def search_offers(
 
     # Determine succeeded vs failed suppliers
     # NOTE: Successful supplier = call+parse OK, offers may be empty.
-    succeeded_suppliers = sorted(
-        {
-            code
-            for code in supplier_codes
-            if any(o.supplier_code == code for o in canonical_offers)
-        }
-    )
+    succeeded_suppliers_sorted = sorted(succeeded_suppliers)
 
-    failed_suppliers_all = [w for w in supplier_warnings if w.supplier_code not in succeeded_suppliers]
+    failed_suppliers_all = [w for w in supplier_warnings if w.supplier_code not in succeeded_suppliers_sorted]
 
     # Deterministic ordering for failed suppliers in audit meta
     failed_suppliers = sort_warnings(failed_suppliers_all)

@@ -220,14 +220,54 @@ async def search_offers(
         # NOTE: In canonical search we currently only use Paximum normalization
         # on top of the mock upstream client; failures from Paximum should not
         # break the overall canonical contract for other suppliers.
-        pax_succeeded = False
+
+        skip_paximum = False
         try:
-            pax_resp = await supplier_search_service.search_paximum_offers(organization_id, pax_payload)
-            pax_succeeded = True
-        except AppError as exc:
-            supplier_warnings.append(map_exception_to_warning("paximum", exc))
-            pax_resp = {"offers": [], "supplier": "paximum"}
-        
+            if await is_supplier_circuit_open(db, organization_id=organization_id, supplier_code="paximum"):
+                supplier_warnings.append(
+                    SupplierWarning(
+                        supplier_code="paximum",
+                        code="SUPPLIER_CIRCUIT_OPEN",
+                        message="Supplier temporarily disabled due to failures.",
+                        retryable=True,
+                        http_status=503,
+                        timeout_ms=0,
+                        duration_ms=0,
+                    )
+                )
+                skip_paximum = True
+        except Exception:
+            skip_paximum = False
+
+        pax_succeeded = False
+        pax_resp = {"offers": [], "supplier": "paximum"}
+        if not skip_paximum:
+            start = now_utc()
+            ok = True
+            err_code = None
+            http_status = None
+            try:
+                pax_resp = await supplier_search_service.search_paximum_offers(organization_id, pax_payload)
+                pax_succeeded = True
+            except AppError as exc:
+                supplier_warnings.append(map_exception_to_warning("paximum", exc))
+                ok = False
+                err_code = exc.code
+                http_status = exc.status_code
+            duration_ms = int((now_utc() - start).total_seconds() * 1000)
+            try:
+                await record_supplier_call_event(
+                    db,
+                    organization_id=organization_id,
+                    supplier_code="paximum",
+                    ok=ok,
+                    code=err_code,
+                    http_status=http_status,
+                    duration_ms=duration_ms,
+                )
+            except Exception:
+                pass
+
         from app.services.offers.normalizers.paximum_normalizer import normalize_paximum_search_result as _pn
 
         normalized = await _pn(pax_payload, pax_resp)

@@ -608,6 +608,107 @@ async def confirm_b2b_booking(
                 details={"amount": amount},
             )
 
+    # Risk engine (PR-19): evaluate booking risk before supplier fulfilment
+    from app.services.risk.engine import evaluate_booking_risk, RiskDecision
+
+    risk_result = await evaluate_booking_risk(db, organization_id=org_id, booking=booking)
+
+    # Always emit RISK_EVALUATED audit
+    actor = {"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")}
+    buyer_tenant_id = (booking.get("offer_ref") or {}).get("buyer_tenant_id")
+    await write_audit_log(
+        db,
+        organization_id=org_id,
+        actor=actor,
+        request=request,
+        action="RISK_EVALUATED",
+        target_type="booking",
+        target_id=booking_id,
+        before=None,
+        after=None,
+        meta={
+            "booking_id": booking_id,
+            "organization_id": org_id,
+            "buyer_tenant_id": buyer_tenant_id,
+            "amount": amount,
+            "score": float(risk_result.score),
+            "decision": risk_result.decision.value,
+            "reasons": list(risk_result.reasons),
+            "model_version": risk_result.model_version,
+        },
+    )
+
+    # Persist risk snapshot on booking for non-allow decisions
+    risk_snapshot = {
+        "score": float(risk_result.score),
+        "decision": risk_result.decision.value,
+        "reasons": list(risk_result.reasons),
+        "model_version": risk_result.model_version,
+    }
+
+    if risk_result.decision is RiskDecision.BLOCK:
+        # Store risk info but do not change booking state
+        await db.bookings.update_one(
+            {"_id": oid, "organization_id": org_id},
+            {"$set": {"risk": risk_snapshot, "updated_at": now_utc()}},
+        )
+
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor=actor,
+            request=request,
+            action="RISK_BLOCKED",
+            target_type="booking",
+            target_id=booking_id,
+            before=None,
+            after=None,
+            meta={
+                "booking_id": booking_id,
+                "score": float(risk_result.score),
+                "decision": "block",
+            },
+        )
+
+        raise AppError(
+            409,
+            "risk_blocked",
+            "Booking confirmation blocked by risk engine.",
+            details={"score": float(risk_result.score), "decision": "block"},
+        )
+
+    if risk_result.decision is RiskDecision.REVIEW:
+        # Set booking.status to RISK_REVIEW and persist risk snapshot
+        await db.bookings.update_one(
+            {"_id": oid, "organization_id": org_id},
+            {"$set": {"status": "RISK_REVIEW", "risk": risk_snapshot, "updated_at": now_utc()}},
+        )
+
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor=actor,
+            request=request,
+            action="RISK_REVIEW_REQUIRED",
+            target_type="booking",
+            target_id=booking_id,
+            before=None,
+            after=None,
+            meta={
+                "booking_id": booking_id,
+                "score": float(risk_result.score),
+                "decision": "review",
+            },
+        )
+
+        # 202 with standard error envelope
+        raise AppError(
+            202,
+            "risk_review_required",
+            "Booking requires manual risk review.",
+            details={"score": float(risk_result.score), "decision": "review"},
+        )
+
     # Supplier resolution
     supplier_name = (offer_ref.get("supplier") or "").strip()
     supplier_offer_id = (offer_ref.get("supplier_offer_id") or "").strip()

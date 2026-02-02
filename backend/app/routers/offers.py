@@ -184,7 +184,12 @@ async def search_offers(
         # NOTE: In canonical search we currently only use Paximum normalization
         # on top of the mock upstream client; failures from Paximum should not
         # break the overall canonical contract for other suppliers.
-        pax_resp = await search_paximum_offers(organization_id, pax_payload)
+        try:
+            pax_resp = await search_paximum_offers(organization_id, pax_payload)
+        except AppError as exc:
+            supplier_warnings.append(map_exception_to_warning("paximum", exc))
+            pax_resp = {"offers": [], "supplier": "paximum"}
+        
         from app.services.offers.normalizers.paximum_normalizer import normalize_paximum_search_result as _pn
 
         normalized = await _pn(pax_payload, pax_resp)

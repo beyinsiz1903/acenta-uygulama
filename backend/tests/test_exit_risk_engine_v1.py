@@ -71,6 +71,9 @@ async def _create_org_user_and_agency_booking(
             "supplier": "mock_supplier_v1",
             "supplier_offer_id": "MOCK-OFF-1",
         },
+        "pricing": {
+            "applied_markup_pct": applied_markup_pct,
+        },
         "created_at": now,
         "updated_at": now,
     }

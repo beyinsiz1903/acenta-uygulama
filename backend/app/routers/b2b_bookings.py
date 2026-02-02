@@ -954,6 +954,13 @@ async def confirm_b2b_booking(
                 "timeout_ms": ctx.timeout_ms,
                 "raw": redact_sensitive_fields(result.raw or {}),
             },
+        )
+        raise AppError(
+            501,
+            "supplier_not_supported",
+            "Supplier confirm is not supported.",
+            details={"supplier": supplier_name},
+        )
 
 
 @router.post(

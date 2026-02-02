@@ -254,6 +254,42 @@ async def search_offers(
         db,
         organization_id=organization_id,
         tenant_id=tenant_id,
+    # Audit pricing overlays for observability
+    if tenant_id:
+        from app.services.audit import write_audit_log
+        actor = {"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")}
+        for offer in canonical_offers:
+            b2b = offer.b2b_pricing
+            if not b2b:
+                continue
+            bp = b2b.get("base_price") or {}
+            fp = b2b.get("final_price") or {}
+            await write_audit_log(
+                db,
+                organization_id=organization_id,
+                actor=actor,
+                request=request,
+                action="PRICING_OVERLAY_APPLIED",
+                target_type="offer",
+                target_id=offer.offer_token,
+                before=None,
+                after=None,
+                meta={
+                    "event_source": "offers_search",
+                    "buyer_tenant_id": tenant_id,
+                    "session_id": session["session_id"],
+                    "offer_token": offer.offer_token,
+                    "supplier_code": offer.supplier_code,
+                    "supplier_offer_id": offer.supplier_offer_id,
+                    "currency": bp.get("currency"),
+                    "base_amount": float(bp.get("amount") or 0.0),
+                    "applied_markup_pct": float(b2b.get("applied_markup_pct") or 0.0),
+                    "final_amount": float(fp.get("amount") or 0.0),
+                    "pricing_rule_id": b2b.get("pricing_rule_id"),
+                    "pricing_trace": b2b.get("pricing_trace") or [],
+                },
+            )
+
         query={
             "destination": payload.destination,
             "check_in": payload.check_in.strftime("%Y-%m-%d"),

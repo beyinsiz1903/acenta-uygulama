@@ -274,13 +274,6 @@ async def test_supplier_circuit_closes_after_until(test_db: Any, async_client: A
     # Seed open circuit with past until
     await db.supplier_health.insert_one(
         {
-    from app.services.supplier_health_service import is_supplier_circuit_open
-
-    # Trigger auto-close once via health check
-    is_open = await is_supplier_circuit_open(db, organization_id=org_id, supplier_code="paximum")
-    assert is_open is False
-
-
             "organization_id": org_id,
             "supplier_code": "paximum",
             "window_sec": 900,
@@ -305,6 +298,12 @@ async def test_supplier_circuit_closes_after_until(test_db: Any, async_client: A
             "updated_at": now - _td(seconds=60),
         }
     )
+
+    from app.services.supplier_health_service import is_supplier_circuit_open
+
+    # Trigger auto-close once via health check
+    is_open = await is_supplier_circuit_open(db, organization_id=org_id, supplier_code="paximum")
+    assert is_open is False
 
     payload = {
         "destination": "IST",

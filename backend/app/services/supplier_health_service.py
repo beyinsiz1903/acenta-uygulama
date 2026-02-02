@@ -173,11 +173,12 @@ async def record_supplier_call_event(
             except Exception:
                 pass
 
-        # Update consecutive_failures based on current call
-        if ok:
-            consecutive_failures = 0
-        else:
-            consecutive_failures = int(circuit.consecutive_failures) + 1
+        # Compute consecutive failures as trailing failures in the current window
+        consecutive_failures = 0
+        for ev in reversed(events):
+            if ev.get("ok"):
+                break
+            consecutive_failures += 1
 
         new_state = circuit.state
         opened_at = circuit.opened_at

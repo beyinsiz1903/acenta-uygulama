@@ -202,6 +202,13 @@ async def create_booking_from_canonical_offer(
             "applied_markup_pct": float(markup_pct),
             "final_amount": final_amount,
             "pricing_rule_id": pricing_rule_id,
+            # PR-20 enrichment
+            "model_version": getattr(graph_result, "model_version", None) if graph_result else None,
+            "graph_path": getattr(graph_result, "graph_path", None) if graph_result else None,
+            "pricing_rule_ids": getattr(graph_result, "pricing_rule_ids", None) if graph_result else None,
+            "effective_total_markup_pct": float(graph_result.applied_total_markup_pct)
+            if graph_result and graph_result.applied_total_markup_pct is not None
+            else float(markup_pct),
         },
     )
 

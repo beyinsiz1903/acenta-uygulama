@@ -101,7 +101,7 @@ async def test_booking_repriced_audit_written(test_db: Any, async_client: AsyncC
     )
     org_id = str(org.inserted_id)
 
-    tenant = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "obs-tenant-2",
             "organization_id": org_id,

@@ -145,7 +145,7 @@ async def test_ops_incident_created_for_supplier_all_failed(test_db: Any, async_
     client: AsyncClient = async_client
     db = test_db
 
-    from backend.tests.test_exit_supplier_partial_results_v1 import _get_default_org_and_user, _make_headers
+    from .test_exit_supplier_partial_results_v1 import _get_default_org_and_user, _make_headers
 
     now = now_utc()
     org_id, email = await _get_default_org_and_user(db)

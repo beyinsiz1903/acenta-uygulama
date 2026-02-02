@@ -26,7 +26,8 @@ def map_exception_to_warning(supplier_code: str, exc: Exception) -> SupplierWarn
     from app.errors import AppError
 
     # Keep message short/redacted to avoid leaking internals
-    message = "Supplier call failed"
+    # Map a few known codes to deterministic short messages; never leak raw details.
+    message = "supplier_error"
     http_status: Optional[int] = None
     code = "SUPPLIER_NETWORK_ERROR"
     retryable = True

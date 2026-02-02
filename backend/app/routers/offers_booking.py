@@ -246,6 +246,15 @@ async def create_booking_from_canonical_offer(
                     "tolerance": tolerance,
                     "search_pricing_rule_id": overlay.get("pricing_rule_id"),
                     "booking_pricing_rule_id": pricing_rule_id,
+                    # PR-20 enrichment for mismatch
+                    "search_model_version": overlay.get("model_version"),
+                    "booking_model_version": getattr(graph_result, "model_version", None) if graph_result else None,
+                    "search_graph_path": overlay.get("graph_path"),
+                    "booking_graph_path": getattr(graph_result, "graph_path", None) if graph_result else None,
+                    "search_pricing_rule_ids": overlay.get("pricing_rule_ids"),
+                    "booking_pricing_rule_ids": getattr(graph_result, "pricing_rule_ids", None)
+                    if graph_result
+                    else None,
                 },
             )
 

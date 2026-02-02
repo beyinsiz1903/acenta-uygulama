@@ -1153,14 +1153,6 @@ async def reject_risk_review_booking(
 
     return {"ok": True, "booking_id": booking_id, "status": "RISK_REJECTED"}
 
-        )
-        raise AppError(
-            501,
-            "supplier_not_supported",
-            "Supplier confirm is not supported.",
-            details={"supplier": supplier_name},
-        )
-
     # Fallback for unknown statuses
     raise AppError(
         500,

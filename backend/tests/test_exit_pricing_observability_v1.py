@@ -68,7 +68,9 @@ async def test_pricing_overlay_applied_audit_written(test_db: Any, async_client:
     assert resp.status_code == status.HTTP_200_OK, resp.text
     data = resp.json()
     offers = data.get("offers") or []
-    assert offers, f"expected offers but got 0; response={data}"
+    assert offers, (
+        f"expected offers but got 0; payload={payload}; headers={{'X-Tenant-Key': headers.get('X-Tenant-Key')}}; resp={data}"
+    )
 
     offer = offers[0]
     offer_token = offer["offer_token"]

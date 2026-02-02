@@ -146,7 +146,7 @@ async def test_pricing_graph_multi_level_applied(test_db: Any, async_client: Asy
 
     payload = {
         "destination": "IST",
-        "check_in": now.date().isoformat(),
+        "check_in": "2026-01-10",
         "check_out": (now.date()).isoformat(),
         "adults": 2,
         "children": 0,
@@ -209,7 +209,7 @@ async def test_pricing_graph_no_parent_fallback(test_db: Any, async_client: Asyn
 
     payload = {
         "destination": "IST",
-        "check_in": now.date().isoformat(),
+        "check_in": "2026-01-10",
         "check_out": (now.date()).isoformat(),
         "adults": 2,
         "children": 0,
@@ -254,7 +254,7 @@ async def test_booking_uses_graph_pricing_snapshot(test_db: Any, async_client: A
 
     search_payload = {
         "destination": "IST",
-        "check_in": now.date().isoformat(),
+        "check_in": "2026-01-10",
         "check_out": (now.date()).isoformat(),
         "adults": 2,
         "children": 0,

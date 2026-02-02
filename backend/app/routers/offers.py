@@ -136,9 +136,9 @@ async def search_offers(
         from app.services.offers.normalizers.mock_normalizer import normalize_mock_search_result as _norm
 
         normalized = await _norm(mock_payload, mock_raw)
+        # Mock call+parse succeeded; even if offers is empty, mock is successful.
+        succeeded_suppliers.add("mock")
         for o in normalized:
-            # Mock call+parse succeeded; even if offers is empty, mock is successful.
-            succeeded_suppliers.add("mock")
             offer_out = CanonicalHotelOfferOut(
                 offer_token=o.offer_token,
                 supplier_code=o.supplier_code,

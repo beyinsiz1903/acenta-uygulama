@@ -169,7 +169,7 @@ async def search_offers(
         # on top of the mock upstream client; failures from Paximum should not
         # break the overall canonical contract for other suppliers.
         try:
-            pax_resp = await search_paximum_offers(organization_id, pax_payload)
+            pax_resp = await supplier_search_service.search_paximum_offers(organization_id, pax_payload)
         except AppError as exc:
             supplier_warnings.append(map_exception_to_warning("paximum", exc))
             pax_resp = {"offers": [], "supplier": "paximum"}

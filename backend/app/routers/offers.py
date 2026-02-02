@@ -404,10 +404,14 @@ async def search_offers(
             for w in warnings_sorted
         ]
 
+    # For the response model we pass plain dicts so that schemas_offers_legacy
+    # can treat CanonicalHotelOfferOut as a runtime dict-compatible type.
+    offers_out = [c.model_dump() for c in canonical_offers]
+
     return OfferSearchResponse(
         session_id=session["session_id"],
         expires_at=session["expires_at"].isoformat(),
-        offers=canonical_offers,
+        offers=offers_out,
         warnings=warnings_out,
     )
 

@@ -9,7 +9,7 @@ import json
 from datetime import date, timedelta
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://b2bportal-6.preview.emergentagent.com"
+BASE_URL = "https://riskaware-b2b.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

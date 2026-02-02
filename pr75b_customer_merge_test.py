@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List
 
 # Configuration
-BACKEND_URL = "https://b2bportal-6.preview.emergentagent.com/api"
+BACKEND_URL = "https://riskaware-b2b.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

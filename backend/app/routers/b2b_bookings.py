@@ -962,6 +962,14 @@ async def confirm_b2b_booking(
             details={"supplier": supplier_name},
         )
 
+    # Fallback for unknown statuses
+    raise AppError(
+        500,
+        "SUPPLIER_FULFILMENT_FAILED",
+        "Unexpected supplier confirm status.",
+        details={"supplier": supplier_name, "status": result.status},
+    )
+
 
 @router.post(
     "/bookings/{booking_id}/risk/approve",

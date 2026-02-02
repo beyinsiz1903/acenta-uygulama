@@ -146,10 +146,78 @@ async def create_booking_from_canonical_offer(
 
     from app.repositories.booking_repository import BookingRepository
     from app.utils import serialize_doc
+    from app.routers.offers import round_money
+    from app.services.offers.search_session_service import get_search_session
+    from app.services.audit import write_audit_log
 
     repo = BookingRepository(db)
     doc = await repo.get_by_id(organization_id, booking_id)
     if not doc:
         raise HTTPException(status_code=500, detail="BOOKING_PERSISTENCE_ERROR")
+
+    # Audit repricing
+    buyer_tenant_id = payload.buyer_tenant_id
+    await write_audit_log(
+        db,
+        organization_id=organization_id,
+        actor=actor,
+        request=request,
+        action="BOOKING_REPRICED",
+        target_type="booking",
+        target_id=booking_id,
+        before=None,
+        after=None,
+        meta={
+            "event_source": "booking_from_canonical_offer",
+            "buyer_tenant_id": buyer_tenant_id,
+            "booking_id": booking_id,
+            "session_id": payload.session_id,
+            "offer_token": payload.offer_token,
+            "supplier_code": supplier_code,
+            "supplier_offer_id": supplier_offer_id,
+            "currency": currency,
+            "base_amount": base_amount,
+            "applied_markup_pct": float(markup_pct),
+            "final_amount": final_amount,
+            "pricing_rule_id": pricing_rule_id,
+        },
+    )
+
+    # Mismatch detection (informational only)
+    session_doc = await get_search_session(db, organization_id=organization_id, session_id=payload.session_id)
+    overlay_index = (session_doc or {}).get("pricing_overlay_index") or {}
+    overlay = overlay_index.get(payload.offer_token)
+    if overlay:
+        search_final = float(overlay.get("final_amount") or 0.0)
+        booking_final = float(final_amount)
+        delta_raw = abs(booking_final - search_final)
+        delta = round_money(delta_raw, currency)
+        tolerance = 0.01
+        if delta > tolerance:
+            await write_audit_log(
+                db,
+                organization_id=organization_id,
+                actor=actor,
+                request=request,
+                action="PRICING_MISMATCH_DETECTED",
+                target_type="booking",
+                target_id=booking_id,
+                before=None,
+                after=None,
+                meta={
+                    "event_source": "booking_from_canonical_offer",
+                    "buyer_tenant_id": buyer_tenant_id,
+                    "booking_id": booking_id,
+                    "session_id": payload.session_id,
+                    "offer_token": payload.offer_token,
+                    "currency": currency,
+                    "search_final_amount": search_final,
+                    "booking_final_amount": booking_final,
+                    "delta": delta,
+                    "tolerance": tolerance,
+                    "search_pricing_rule_id": overlay.get("pricing_rule_id"),
+                    "booking_pricing_rule_id": pricing_rule_id,
+                },
+            )
 
     return serialize_doc(doc)

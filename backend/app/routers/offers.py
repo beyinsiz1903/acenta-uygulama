@@ -69,6 +69,7 @@ class CanonicalHotelOfferOut(BaseModel):
     price: CanonicalMoney
     availability_token: Optional[str]
     raw_fingerprint: str
+    b2b_pricing: Optional[Dict[str, Any]] = None
 
 
 class OfferSearchRequest(BaseModel):
@@ -83,6 +84,17 @@ class OfferSearchRequest(BaseModel):
 class OfferSearchResponse(BaseModel):
     session_id: str
     expires_at: str
+
+
+def round_money(amount: float, currency: str) -> float:
+    """Round money to 2 decimals for v1.
+
+    NOTE: Currency-specific decimals can be added later; in this PR we keep
+    behaviour simple and centralise the rounding decision.
+    """
+
+    return round(float(amount), 2)
+
     offers: List[CanonicalHotelOfferOut] = Field(default_factory=list)
 
 

@@ -222,7 +222,7 @@ async def test_supplier_circuit_open_skips_supplier_and_emits_warning(test_db: A
     async def _always_open(*args: Any, **kwargs: Any) -> bool:  # type: ignore[no-untyped-def]
         return True
 
-    monkeypatch.setattr("app.services.supplier_health_service.is_supplier_circuit_open", _always_open)
+    monkeypatch.setattr("app.routers.offers.is_supplier_circuit_open", _always_open)
     monkeypatch.setattr("app.services.supplier_search_service.search_paximum_offers", _paximum_should_not_be_called)
 
     payload = {

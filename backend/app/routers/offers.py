@@ -196,6 +196,48 @@ async def search_offers(
             )
             canonical_offers.append(offer_out)
 
+    # Apply B2B pricing overlay if tenant context is present
+    if tenant_id:
+        from datetime import date as _date
+
+        for offer in canonical_offers:
+            base_price = offer.price
+            check_in_date = payload.check_in if isinstance(payload.check_in, _date) else payload.check_in
+
+            winner_rule = await rules_svc.resolve_winner_rule(
+                organization_id=organization_id,
+                agency_id=tenant_id,
+                product_id=None,
+                product_type="hotel",
+                check_in=check_in_date,
+            )
+            if winner_rule is not None:
+                markup_pct = await rules_svc.resolve_markup_percent(
+                    organization_id,
+                    agency_id=tenant_id,
+                    product_id=None,
+                    product_type="hotel",
+                    check_in=check_in_date,
+                )
+                pricing_rule_id = str(winner_rule.get("_id")) if winner_rule.get("_id") is not None else None
+            else:
+                markup_pct = 0.0
+                pricing_rule_id = None
+
+            final_amount = round_money(base_price.amount * (1 + float(markup_pct) / 100), base_price.currency)
+
+            offer.b2b_pricing = {
+                "base_price": base_price.model_dump(),
+                "applied_markup_pct": float(markup_pct),
+                "final_price": {"amount": final_amount, "currency": base_price.currency},
+                "pricing_rule_id": pricing_rule_id,
+                "pricing_trace": [
+                    f"base={base_price.amount}",
+                    f"markup_pct={float(markup_pct)}",
+                    f"final={final_amount}",
+                ],
+            }
+
     # Persist search session
     offers_dicts = [c.model_dump() for c in canonical_offers]
 

@@ -132,6 +132,13 @@ async def create_booking_from_canonical_offer(
             "check_out": stay.get("check_out"),
             "nights": stay.get("nights"),
         },
+        "pricing": {
+            "base_amount": base_amount,
+            "final_amount": final_amount,
+            "applied_markup_pct": float(markup_pct),
+            "pricing_rule_id": pricing_rule_id,
+            "currency": currency,
+        },
         "created_at": now_utc(),
     }
 

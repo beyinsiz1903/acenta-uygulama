@@ -8,6 +8,29 @@ from httpx import AsyncClient
 from app.utils import now_utc
 
 
+async def _create_org_and_user(db: Any, roles: list[str]) -> tuple[str, str]:
+    """Minimal helper to seed an organization and user for ops tests."""
+
+    now = now_utc()
+    org = await db.organizations.insert_one(
+        {"name": "Ops Org", "slug": "ops_org", "created_at": now, "updated_at": now}
+    )
+    org_id = str(org.inserted_id)
+
+    email = "ops_user@example.com"
+    await db.users.insert_one(
+        {
+            "organization_id": org_id,
+            "email": email,
+            "roles": roles,
+            "is_active": True,
+            "created_at": now,
+            "updated_at": now,
+        }
+    )
+    return org_id, email
+
+
 @pytest.mark.exit_ops_incident_created_for_risk_review
 @pytest.mark.anyio
 async def test_ops_incident_created_for_risk_review(test_db: Any, async_client: AsyncClient, monkeypatch: Any) -> None:
@@ -18,9 +41,27 @@ async def test_ops_incident_created_for_risk_review(test_db: Any, async_client: 
     client: AsyncClient = async_client
     db = test_db
 
-    from backend.tests.test_exit_risk_engine_v1 import _seed_booking_for_risk
+    # Seed org, user and a simple marketplace-style booking
+    now = now_utc()
+    org_id, email = await _create_org_and_user(db, roles=["agency_agent"])
 
-    org_id, booking_id, email = await _seed_booking_for_risk(db, decision="REVIEW")
+    booking_doc = {
+        "organization_id": org_id,
+        "state": "draft",
+        "status": None,
+        "source": "b2b_marketplace",
+        "currency": "TRY",
+        "amount": 1000.0,
+        "offer_ref": {
+            "buyer_tenant_id": "risk-tenant-1",
+            "supplier": "mock_supplier_v1",
+            "supplier_offer_id": "MOCK-OFF-1",
+        },
+        "created_at": now,
+        "updated_at": now,
+    }
+    res = await db.bookings.insert_one(booking_doc)
+    booking_id = str(res.inserted_id)
 
     from app.services.risk.engine import evaluate_booking_risk
 

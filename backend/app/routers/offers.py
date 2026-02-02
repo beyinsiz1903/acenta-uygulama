@@ -254,6 +254,18 @@ async def search_offers(
         db,
         organization_id=organization_id,
         tenant_id=tenant_id,
+        query={
+            "destination": payload.destination,
+            "check_in": payload.check_in.strftime("%Y-%m-%d"),
+            "check_out": payload.check_out.strftime("%Y-%m-%d"),
+            "adults": payload.adults,
+            "children": payload.children,
+            "supplier_codes": supplier_codes,
+        },
+        offers=offers_dicts,
+        pricing_overlay_index=pricing_overlay_index if tenant_id else None,
+    )
+
     # Audit pricing overlays for observability
     if tenant_id:
         from app.services.audit import write_audit_log
@@ -289,18 +301,6 @@ async def search_offers(
                     "pricing_trace": b2b.get("pricing_trace") or [],
                 },
             )
-
-        query={
-            "destination": payload.destination,
-            "check_in": payload.check_in.strftime("%Y-%m-%d"),
-            "check_out": payload.check_out.strftime("%Y-%m-%d"),
-            "adults": payload.adults,
-            "children": payload.children,
-            "supplier_codes": supplier_codes,
-        },
-        offers=offers_dicts,
-        pricing_overlay_index=pricing_overlay_index if tenant_id else None,
-    )
 
     # Add PRICING_OVERLAY_APPLIED audit for offers with b2b_pricing
     if tenant_id:

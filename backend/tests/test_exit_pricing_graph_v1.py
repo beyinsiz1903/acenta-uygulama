@@ -254,6 +254,7 @@ async def test_booking_uses_graph_pricing_snapshot(test_db: Any, async_client: A
         "check_out": "2026-01-12",
         "adults": 2,
         "children": 0,
+        "supplier_codes": ["mock"],
     }
 
     search_resp = await client.post("/api/offers/search", json=search_payload, headers=headers)

@@ -251,7 +251,7 @@ async def test_ops_incident_list_filtering(test_db: Any, async_client: AsyncClie
     ]
     await db.ops_incidents.insert_many(docs)
 
-    headers = {"x-org-id": org_id, "x-user-email": email, "x-user-roles": "agency_admin"}
+    headers = _make_admin_headers(org_id, email)
     resp = await client.get("/api/admin/ops/incidents?status=open&type=risk_review", headers=headers)
     assert resp.status_code == 200, resp.text
     body = resp.json()
@@ -288,7 +288,7 @@ async def test_ops_incident_resolve_flow(test_db: Any, async_client: AsyncClient
     }
     await db.ops_incidents.insert_one(doc)
 
-    headers = {"x-org-id": org_id, "x-user-email": email, "x-user-roles": "agency_admin"}
+    headers = _make_admin_headers(org_id, email)
     resp = await client.patch("/api/admin/ops/incidents/inc_resolve_1/resolve", headers=headers)
     assert resp.status_code == 200
     body = resp.json()

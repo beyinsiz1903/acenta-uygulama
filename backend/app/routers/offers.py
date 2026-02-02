@@ -174,8 +174,10 @@ async def search_offers(
         # NOTE: In canonical search we currently only use Paximum normalization
         # on top of the mock upstream client; failures from Paximum should not
         # break the overall canonical contract for other suppliers.
+        pax_succeeded = False
         try:
             pax_resp = await supplier_search_service.search_paximum_offers(organization_id, pax_payload)
+            pax_succeeded = True
         except AppError as exc:
             supplier_warnings.append(map_exception_to_warning("paximum", exc))
             pax_resp = {"offers": [], "supplier": "paximum"}
@@ -184,7 +186,8 @@ async def search_offers(
 
         normalized = await _pn(pax_payload, pax_resp)
         # Paximum call+parse succeeded; even if offers is empty, paximum is successful.
-        succeeded_suppliers.add("paximum")
+        if pax_succeeded:
+            succeeded_suppliers.add("paximum")
         for o in normalized:
             offer_out = CanonicalHotelOfferOut(
                 offer_token=o.offer_token,

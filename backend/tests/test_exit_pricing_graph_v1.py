@@ -152,8 +152,6 @@ async def test_pricing_graph_multi_level_applied(test_db: Any, async_client: Asy
         "children": 0,
     }
 
-    # FastAPI expects ISO date, but our schema parses to date; client json is fine.
-
     resp = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp.status_code == 200
     body = resp.json()
@@ -214,8 +212,6 @@ async def test_pricing_graph_no_parent_fallback(test_db: Any, async_client: Asyn
         "adults": 2,
         "children": 0,
     }
-
-    # FastAPI expects ISO date, but our schema parses to date; client json is fine.
 
     resp = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp.status_code == 200

@@ -64,7 +64,7 @@ async def create_booking_from_canonical_offer(
 
     # Re-evaluate B2B pricing for booking consistency using pricing graph
     from app.routers.offers import round_money
-    from app.services.pricing.graph import price_offer_with_graph, PricingGraphResult
+    from app.services.pricing_graph.graph import price_offer_with_graph, PricingGraphResult
 
     base_price = offer.get("price") or {}
     base_amount = float(base_price.get("amount") or 0.0)

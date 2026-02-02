@@ -442,8 +442,26 @@ async def get_search_session_offers(
         # Consider sessions without an expires_at as effectively not found
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SEARCH_SESSION_NOT_FOUND")
 
+    # Map internal warnings to API model
+    warnings_out: Optional[List[SupplierWarningOut]] = None
+    if supplier_warnings:
+        warnings_sorted = sort_warnings(supplier_warnings)
+        warnings_out = [
+            SupplierWarningOut(
+                supplier_code=w.supplier_code,
+                code=w.code,
+                message=w.message,
+                retryable=w.retryable,
+                http_status=w.http_status,
+                timeout_ms=w.timeout_ms,
+                duration_ms=w.duration_ms,
+            )
+            for w in warnings_sorted
+        ]
+
     return OfferSearchSessionResponse(
         session_id=session_id,
         expires_at=expires_at.isoformat(),
         offers=[CanonicalHotelOfferOut.model_validate(o) for o in offers],
+        warnings=warnings_out,
     )

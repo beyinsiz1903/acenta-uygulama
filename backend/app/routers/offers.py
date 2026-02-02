@@ -211,8 +211,9 @@ async def search_offers(
                 "product_id": None,
             }
 
+            graph: Optional[PricingGraphResult]
             try:
-                graph: Optional[PricingGraphResult] = await price_offer_with_graph(
+                graph = await price_offer_with_graph(
                     db,
                     organization_id=organization_id,
                     buyer_tenant_id=tenant_id,
@@ -220,7 +221,7 @@ async def search_offers(
                     currency=base_price.currency,
                     context=context,
                 )
-            except Exception as exc:  # fail-open
+            except Exception:
                 graph = None
 
             if graph is None:

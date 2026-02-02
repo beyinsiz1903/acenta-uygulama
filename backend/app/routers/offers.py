@@ -351,10 +351,24 @@ async def search_offers(
                 },
             )
 
+    # Convert supplier warnings to response format
+    warnings_out = None
+    if supplier_warnings:
+        warnings_out = [
+            SupplierWarningOut(
+                supplier_code=w.supplier_code,
+                warning_type=w.warning_type,
+                message=w.message,
+                details=w.details
+            )
+            for w in supplier_warnings
+        ]
+
     return OfferSearchResponse(
         session_id=session["session_id"],
         expires_at=session["expires_at"].isoformat(),
         offers=canonical_offers,
+        warnings=warnings_out,
     )
 
 

@@ -1161,13 +1161,6 @@ async def reject_risk_review_booking(
 
     return {"ok": True, "booking_id": booking_id, "status": "RISK_REJECTED"}
 
-    # Fallback for unknown statuses
-    raise AppError(
-        500,
-        "SUPPLIER_FULFILMENT_FAILED",
-        "Unexpected supplier confirm status.",
-        details={"supplier": supplier_name, "status": result.status},
-    )
 
 @router.post("/bookings/{booking_id}/refund-requests")
 async def create_refund_request(

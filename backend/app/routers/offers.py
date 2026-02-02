@@ -76,21 +76,6 @@ class CanonicalHotelOfferOut(BaseModel):
     b2b_pricing: Optional[Dict[str, Any]] = None
 
 
-class OfferSearchRequest(BaseModel):
-    destination: str
-    check_in: date
-    check_out: date
-    adults: int = Field(2, ge=1, le=8)
-    children: int = Field(0, ge=0, le=8)
-    supplier_codes: Optional[List[str]] = None
-
-
-class OfferSearchResponse(BaseModel):
-    session_id: str
-    expires_at: str
-    offers: List[CanonicalHotelOfferOut] = Field(default_factory=list)
-    warnings: Optional[List[SupplierWarningOut]] = None
-
 
 def round_money(amount: float, currency: str) -> float:
     """Round money to 2 decimals for v1.

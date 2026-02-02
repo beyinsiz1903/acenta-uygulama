@@ -317,12 +317,28 @@ async def search_offers(
             }
             for w in warnings_sorted
         ]
+        # Best-effort ops incident for supplier_all_failed
+        try:
+            from app.services.ops_incidents_service import create_supplier_all_failed_incident
+
+            await create_supplier_all_failed_incident(
+                db,
+                organization_id=organization_id,
+                session_id=synthetic_session_id,
+                requested_suppliers=supplier_codes,
+                failed_suppliers=[w.supplier_code for w in warnings_sorted],
+                warnings_count=len(warnings_sorted),
+                request_fingerprint=request_fingerprint,
+            )
+        except Exception:
+            pass
+
         # All-failed must always have a non-empty warnings list
         raise AppError(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             code="SUPPLIER_ALL_FAILED",
             message="All suppliers failed during offers search.",
-            details={"warnings": details_warnings},
+            details={"warnings": details_warnings, "session_id": synthetic_session_id},
         )
 
     # Persist search session

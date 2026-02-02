@@ -180,9 +180,9 @@ async def search_offers(
         from app.services.offers.normalizers.paximum_normalizer import normalize_paximum_search_result as _pn
 
         normalized = await _pn(pax_payload, pax_resp)
+        # Paximum call+parse succeeded; even if offers is empty, paximum is successful.
+        succeeded_suppliers.add("paximum")
         for o in normalized:
-            # Paximum call+parse succeeded; even if offers is empty, paximum is successful.
-            succeeded_suppliers.add("paximum")
             offer_out = CanonicalHotelOfferOut(
                 offer_token=o.offer_token,
                 supplier_code=o.supplier_code,

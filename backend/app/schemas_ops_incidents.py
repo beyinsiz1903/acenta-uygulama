@@ -69,6 +69,7 @@ class OpsIncidentDetailOut(BaseModel):
     updated_at: datetime
     resolved_at: Optional[datetime] = None
     resolved_by_user_id: Optional[str] = None
+    supplier_health: Optional[SupplierHealthBadgeOut] = None
 
 
 class OpsIncidentListResponse(BaseModel):

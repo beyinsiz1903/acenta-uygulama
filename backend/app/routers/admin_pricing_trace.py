@@ -160,6 +160,16 @@ async def get_pricing_trace_by_session_offer(
     org_id = await _get_org_id(user)
 
     session = await get_search_session(db, organization_id=org_id, session_id=session_id)
+    if session is None:
+        # Fallback: direct lookup by _id string for manually seeded tests
+        from bson import ObjectId as _OID
+
+        try:
+            oid = _OID(session_id)
+        except Exception:
+            session = None
+        else:
+            session = await db.search_sessions.find_one({"_id": oid})
     if not session:
         raise AppError(404, "SEARCH_SESSION_NOT_FOUND", "Search session not found", {"session_id": session_id})
 

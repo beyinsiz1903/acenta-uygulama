@@ -75,6 +75,7 @@ import AdminApiKeysPage from "./pages/AdminApiKeysPage";
 import OpsB2BQueuesPage from "./pages/OpsB2BQueuesPage";
 import InboxPage from "./pages/InboxPage";
 import AdminFinanceRefundsPage from "./pages/AdminFinanceRefundsPage";
+import AdminOpsIncidentsPage from "./pages/ops/AdminOpsIncidentsPage";
 import AdminFinanceExposurePage from "./pages/AdminFinanceExposurePage";
 import AdminB2BAgenciesSummaryPage from "./pages/AdminB2BAgenciesSummaryPage";
 import AdminB2BAgencyProductsPage from "./pages/AdminB2BAgencyProductsPage";
@@ -294,6 +295,7 @@ function App() {
           <Route path="ops/guest-cases" element={<OpsGuestCasesPage />} />
           <Route path="ops/bookings/:bookingId" element={<OpsBookingDetailPage />} />
           <Route path="ops/tasks" element={<OpsTasksPage />} />
+          <Route path="ops/incidents" element={<AdminOpsIncidentsPage />} />
         </Route>
 
         {/* B2B Portal Routes (New, outside /app shell, dedicated layout) */}

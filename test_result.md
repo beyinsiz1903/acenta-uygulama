@@ -312,7 +312,22 @@ backend:
     status_history:
         - working: "NA"
           agent: "testing"
-          comment: "Initial PR-21 ops incidents backend validation planned. Focus on ops_incidents collection, incident creation from risk/supplier flows, list/detail/resolve endpoints, and RBAC." 
+          comment: "Initial PR-21 ops incidents backend validation planned. Focus on ops_incidents collection, incident creation from risk/supplier flows, list/detail/resolve endpoints, and RBAC."
+
+  - task: "PR-23: Ops Console v2 - Incidents + Supplier Health Enrichment Backend Validation"
+    implemented: true
+    working: true
+    file: "backend/tests/test_exit_ops_incidents_supplier_health_enrichment_v1.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Initial PR-23 backend validation for ops incidents supplier health enrichment functionality. Testing list/detail endpoints with include_supplier_health parameter and fail-open behavior."
+        - working: true
+          agent: "testing"
+          comment: "✅ PR-23: OPS CONSOLE V2 - INCIDENTS + SUPPLIER HEALTH ENRICHMENT BACKEND VALIDATION COMPLETE - All functionality verified successfully (100% success rate). COMPREHENSIVE TESTING PERFORMED: A) PYTEST VALIDATION: ✅ pytest -q backend/tests/test_exit_ops_incidents_supplier_health_enrichment_v1.py passed with 6/6 tests, ✅ All pytest markers working correctly: exit_ops_incidents_list_no_enrichment_by_default, exit_ops_incidents_list_enrichment_attaches_badge, exit_ops_incidents_detail_enrichment_default_true, exit_ops_incidents_enrichment_health_not_found_fail_open, exit_ops_incidents_enrichment_supplier_code_resolution_deterministic, exit_ops_incidents_enrichment_rbac_denied, ✅ pytest -q backend/tests/test_exit_ops_incidents_v1.py passed with 6/6 tests (PR-21 regression protection). B) HTTP-LEVEL SANITY CHECKS: ✅ GET /api/admin/ops/incidents (default behavior) returns 200 with supplier_health omitted/None by default, ✅ GET /api/admin/ops/incidents?include_supplier_health=true returns 200 with supplier incidents enriched with health badges (supplier_code='paximum', circuit_state='open'), ✅ Risk incidents correctly left with supplier_health=null when no supplier involved, ✅ GET /api/admin/ops/incidents/{incident_id} (supplier incident) returns 200 with supplier_health filled by default, ✅ GET /api/admin/ops/incidents/{incident_id}?include_supplier_health=false returns 200 with supplier_health omitted/None. C) FAIL-OPEN BEHAVIOR VERIFICATION: ✅ Enrichment never throws exceptions - proper fail-open behavior preserved, ✅ Missing health snapshots handled gracefully with 'health_not_found' notes flag, ✅ Supplier code resolution deterministic (always prefers first failed_suppliers entry), ✅ RBAC properly enforced - non-admin roles get 401/403 for ops incidents endpoints. D) TECHNICAL IMPLEMENTATION VERIFICATION: ✅ All HTTP requests using REACT_APP_BACKEND_URL (https://partialresults.preview.emergentagent.com), ✅ JWT authentication working correctly with agency_admin users, ✅ Organization isolation properly enforced throughout testing, ✅ Database operations working correctly for ops_incidents and supplier_health collections, ✅ Test data cleanup working properly after each test scenario. CRITICAL FINDINGS: ✅ All PR-23 contracts honored exactly as specified in review request, ✅ List endpoint behavior: supplier_health omitted by default, enriched when include_supplier_health=true, ✅ Detail endpoint behavior: supplier_health filled by default, omitted when include_supplier_health=false, ✅ Supplier incidents enriched with proper health badges (supplier_code, circuit_state, success_rate, error_rate), ✅ Risk incidents correctly left with supplier_health=null (no supplier context), ✅ Fail-open behavior working correctly - enrichment never throws, handles missing data gracefully, ✅ No regressions in PR-21 tests - all existing ops incidents functionality preserved, ✅ No critical issues blocking PR-23 deployment, ✅ Backend ops console v2 supplier health enrichment functionality ready for production use. TESTING METHODOLOGY: Used comprehensive pytest validation (12/12 tests passed) plus HTTP-level sanity checks with real API calls, created test organizations and incidents with supplier health data, verified all enrichment scenarios and edge cases, confirmed fail-open behavior and RBAC enforcement. PR-23 Ops Console v2 incidents + supplier health enrichment backend validation completed successfully with 100% contract compliance." 
 
   - task: "PR-22: Supplier Health Snapshot v1 + Circuit Skeleton"
     implemented: true

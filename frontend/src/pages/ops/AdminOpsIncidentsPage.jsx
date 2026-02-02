@@ -177,6 +177,7 @@ export default function AdminOpsIncidentsPage() {
   };
 
   const onRowClick = (incident) => {
+    if (incident.incident_id === selectedIncidentId && drawerOpen) return;
     setSelectedIncidentId(incident.incident_id);
     setDrawerOpen(true);
   };

@@ -1,1 +1,2 @@
 from app.routers.crm_customers import router as crm_customers_router
+from app.routers.admin_pricing_trace import router as admin_pricing_trace_router

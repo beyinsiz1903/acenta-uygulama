@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from fastapi import status
+from fastapi import HTTPException, status
+
+from app.services.supplier_warnings import SupplierWarning, map_exception_to_warning, sort_warnings
 
 from app.errors import AppError
 from app.services.suppliers.paximum_adapter import paximum_adapter

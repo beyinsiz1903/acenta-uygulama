@@ -14,7 +14,7 @@ import os
 from bson import ObjectId
 
 # Configuration
-BASE_URL = "https://partialresults.preview.emergentagent.com"
+BASE_URL = "https://risk-aware-b2b.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

@@ -126,9 +126,11 @@ async def search_offers(
             "guests": payload.adults + payload.children,
             "city": payload.destination,
         }
+        mock_succeeded = False
         try:
             mock_raw = await mock_supplier_service.search_mock_offers(mock_payload)
             # Normalize mock offers into canonical shape
+            mock_succeeded = True
         except AppError as exc:
             supplier_warnings.append(map_exception_to_warning("mock", exc))
             mock_raw = {"offers": [], "supplier": "mock"}
@@ -137,7 +139,8 @@ async def search_offers(
 
         normalized = await _norm(mock_payload, mock_raw)
         # Mock call+parse succeeded; even if offers is empty, mock is successful.
-        succeeded_suppliers.add("mock")
+        if mock_succeeded:
+            succeeded_suppliers.add("mock")
         for o in normalized:
             offer_out = CanonicalHotelOfferOut(
                 offer_token=o.offer_token,

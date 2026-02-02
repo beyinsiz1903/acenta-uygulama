@@ -128,6 +128,7 @@ async def search_offers(
     supplier_codes = [s.lower() for s in (payload.supplier_codes or ["mock", "paximum"])]
 
     canonical_offers: List[CanonicalHotelOfferOut] = []  # response models
+    supplier_warnings: list[SupplierWarning] = []
 
     # Helper to compute B2B overlay using simple pricing rules
     from app.services.pricing_rules import PricingRulesService

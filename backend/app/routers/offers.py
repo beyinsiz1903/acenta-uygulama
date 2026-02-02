@@ -301,6 +301,7 @@ async def search_offers(
                 continue
             bp = b2b.get("base_price") or {}
             fp = b2b.get("final_price") or {}
+            pricing_graph = b2b.get("pricing_graph") or {}
             await write_audit_log(
                 db,
                 organization_id=organization_id,

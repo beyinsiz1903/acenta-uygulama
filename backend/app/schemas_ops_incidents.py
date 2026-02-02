@@ -1,0 +1,53 @@
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any, Literal, Optional
+
+from pydantic import BaseModel, Field
+
+
+OpsIncidentStatus = Literal["open", "resolved"]
+OpsIncidentType = Literal[
+    "risk_review",
+    "supplier_partial_failure",
+    "supplier_all_failed",
+]
+OpsIncidentSeverity = Literal["low", "medium", "high", "critical"]
+
+
+class OpsIncidentSourceRef(BaseModel):
+    booking_id: Optional[str] = None
+    session_id: Optional[str] = None
+    offer_token: Optional[str] = None
+    supplier_code: Optional[str] = None
+    risk_decision: Optional[str] = None
+
+
+class OpsIncidentSummaryOut(BaseModel):
+    incident_id: str
+    type: OpsIncidentType
+    severity: OpsIncidentSeverity
+    status: OpsIncidentStatus
+    summary: str
+    created_at: datetime
+    source_ref: OpsIncidentSourceRef
+
+
+class OpsIncidentDetailOut(BaseModel):
+    incident_id: str
+    organization_id: str
+    type: OpsIncidentType
+    severity: OpsIncidentSeverity
+    status: OpsIncidentStatus
+    summary: str
+    source_ref: OpsIncidentSourceRef
+    meta: dict[str, Any]
+    created_at: datetime
+    updated_at: datetime
+    resolved_at: Optional[datetime] = None
+    resolved_by_user_id: Optional[str] = None
+
+
+class OpsIncidentListResponse(BaseModel):
+    total: int
+    items: list[OpsIncidentSummaryOut]

@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from typing import Any
 
+import jwt
 import pytest
 from httpx import AsyncClient
 
+from app.auth import _jwt_secret
 from app.utils import now_utc
 
 
@@ -29,6 +31,15 @@ async def _create_org_and_user(db: Any, roles: list[str]) -> tuple[str, str]:
         }
     )
     return org_id, email
+
+
+def _make_jwt_headers(org_id: str, email: str, roles: list[str]) -> dict[str, str]:
+    token = jwt.encode({"sub": email, "org": org_id, "roles": roles}, _jwt_secret(), algorithm="HS256")
+    return {"Authorization": f"Bearer {token}"}
+
+
+def _make_admin_headers(org_id: str, email: str) -> dict[str, str]:
+    return _make_jwt_headers(org_id, email, ["agency_admin"])
 
 
 @pytest.mark.exit_ops_incident_created_for_risk_review

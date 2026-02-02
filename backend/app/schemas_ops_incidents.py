@@ -15,6 +15,28 @@ OpsIncidentType = Literal[
 OpsIncidentSeverity = Literal["low", "medium", "high", "critical"]
 
 
+class SupplierHealthBadgeOut(BaseModel):
+    supplier_code: str
+    window_sec: int = 900
+
+    # metrics (all optional, fail-open)
+    success_rate: Optional[float] = None
+    error_rate: Optional[float] = None
+    avg_latency_ms: Optional[int] = None
+    p95_latency_ms: Optional[int] = None
+    last_error_codes: list[str] = Field(default_factory=list)
+
+    # circuit (all optional, fail-open)
+    circuit_state: Optional[Literal["closed", "open"]] = None
+    circuit_until: Optional[str] = None  # ISO
+    reason_code: Optional[str] = None
+    consecutive_failures: Optional[int] = None
+
+    # trace/help
+    updated_at: Optional[str] = None  # ISO
+    notes: list[str] = Field(default_factory=list)
+
+
 class OpsIncidentSourceRef(BaseModel):
     booking_id: Optional[str] = None
     session_id: Optional[str] = None

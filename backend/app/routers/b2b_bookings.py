@@ -508,6 +508,22 @@ async def confirm_b2b_booking(
         raise AppError(404, "BOOKING_NOT_FOUND", "BOOKING_NOT_FOUND")
 
     status_val = booking.get("status")
+    if status_val == "RISK_REVIEW":
+        raise AppError(
+            409,
+            "risk_review_required",
+            "Booking is in RISK_REVIEW state and requires manual review.",
+            details={"status": "RISK_REVIEW"},
+        )
+
+    if status_val == "RISK_REJECTED":
+        raise AppError(
+            409,
+            "risk_rejected",
+            "Booking was rejected by risk review.",
+            details={"status": "RISK_REJECTED"},
+        )
+
     if status_val == "CONFIRMED":
         # Idempotent confirm when projection is already CONFIRMED.
         # Ensure at least one BOOKING_CONFIRMED lifecycle event + audit exists,

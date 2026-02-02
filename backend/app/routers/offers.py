@@ -20,6 +20,7 @@ from app.services.offers.search_session_service import (
 )
 from app.services.supplier_search_service import search_paximum_offers
 from app.services.suppliers.mock_supplier_service import search_mock_offers
+from app.services.pricing.graph import price_offer_with_graph, PricingGraphResult
 
 
 router = APIRouter(prefix=f"{API_PREFIX}/offers", tags=["offers"])

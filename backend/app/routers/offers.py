@@ -263,6 +263,7 @@ async def search_offers(
             "supplier_codes": supplier_codes,
         },
         offers=offers_dicts,
+        pricing_overlay_index=pricing_overlay_index if tenant_id else None,
     )
 
     return OfferSearchResponse(

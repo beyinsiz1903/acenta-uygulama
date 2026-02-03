@@ -240,6 +240,9 @@ from fastapi import Query as _StatementQuery
 from app.errors import AppError
 from app.services.settlement_statement_service import SettlementStatementService
 
+# Safety cap for statement size (Phase 2.1-B)
+MAX_ITEMS = 500
+
 
 @network_settlements_router.get("/statement")
 async def get_settlement_statement(  # type: ignore[no-untyped-def]

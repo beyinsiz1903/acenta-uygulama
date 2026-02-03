@@ -279,7 +279,7 @@ export default function AdminOpsIncidentsPage() {
     setFilters({
       type: undefined,
       severity: undefined,
-      status: undefined,
+      status: "open",
     });
     setOffset(0);
   };
@@ -293,6 +293,9 @@ export default function AdminOpsIncidentsPage() {
   const closeDrawer = () => {
     setDrawerOpen(false);
   };
+
+  const isDefaultFilters = !filters.type && !filters.severity && filters.status === "open";
+
 
   const hasRows = items && items.length > 0;
 
@@ -313,7 +316,7 @@ export default function AdminOpsIncidentsPage() {
     <div className="space-y-4">
       <PageHeader
         title="Ops Incidents"
-        subtitle="Risk review ve supplier kaynakl1 ops olaylar1n1 tek ekranda g6rntleyin."
+        subtitle="Risk review ve tedarikçi kaynaklı ops olaylarınızı tek ekranda görüntüleyin."
       />
 
       <Card>

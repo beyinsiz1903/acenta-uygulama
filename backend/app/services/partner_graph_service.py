@@ -52,6 +52,9 @@ class PartnerGraphService:
     async def get_relationship(self, seller_tenant_id: str, buyer_tenant_id: str) -> Optional[dict[str, Any]]:
         return await self._repo.find_by_pair(seller_tenant_id, buyer_tenant_id)
 
+    async def get_relationship_by_id(self, relationship_id: str) -> dict[str, Any] | None:
+        return await self._repo.find_by_id(relationship_id)
+
     async def _get_and_check_party(self, relationship_id: str, role: str) -> dict[str, Any]:
         """Fetch relationship and verify current ctx is seller or buyer side.
 

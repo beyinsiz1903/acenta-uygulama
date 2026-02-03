@@ -42,12 +42,18 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
 
         path = request.url.path or ""
 
-        # Whitelist: auth, health, resolve endpoint, legacy admin APIs (no tenant context)
+        # Whitelist: auth, health, resolve endpoint, and org-level admin/ops APIs (no tenant context yet)
         if (
             path.startswith("/api/auth/")
             or path.startswith("/api/healthz")
             or path.startswith("/api/saas/tenants/resolve")
             or path.startswith("/api/admin/")
+            or path.startswith("/api/ops/")
+            or path.startswith("/api/finance/")
+            or path.startswith("/api/inbox")
+            or path.startswith("/api/crm/")
+            or path.startswith("/api/reports")
+            or path.startswith("/api/settings")
         ):
             return await call_next(request)
 

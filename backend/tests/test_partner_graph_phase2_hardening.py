@@ -126,7 +126,19 @@ async def test_settlements_requires_permission(async_client: AsyncClient) -> Non
         "status": "active",
         "created_at": now,
     }
-    await db.users.insert_one(user)
+    res_user = await db.users.insert_one(user)
+    user_id = str(res_user.inserted_id)
+
+    # Give the user membership in the tenant so that tenant guard passes and RBAC is evaluated
+    await db.memberships.insert_one(
+        {
+            "user_id": user_id,
+            "tenant_id": tenant_id,
+            "role": "agent",
+            "status": "active",
+            "created_at": now,
+        }
+    )
 
     token = _make_token("agent@example.com", org_id, ["b2b_agent"])
 

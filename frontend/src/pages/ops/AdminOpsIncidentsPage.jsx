@@ -433,14 +433,14 @@ export default function AdminOpsIncidentsPage() {
           {hasRows && (
             <div className="border rounded-md overflow-hidden" data-testid="ops-incidents-rows">
               <div className="grid grid-cols-8 gap-2 bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground">
-                <div>ID</div>
-                <div>Type</div>
+                <div>Created At</div>
                 <div>Severity</div>
                 <div>Status</div>
+                <div>Type</div>
                 <div>Summary</div>
                 <div>Source</div>
-                <div>Created At</div>
                 <div>Supplier Health</div>
+                <div>ID</div>
               </div>
               {items.map((inc) => {
                 const src = inc.source_ref || {};
@@ -456,25 +456,25 @@ export default function AdminOpsIncidentsPage() {
                     data-testid="ops-incidents-row"
                     data-row-id={inc.incident_id}
                   >
-                    <div className="font-mono truncate" title={inc.incident_id}>
-                      {inc.incident_id}
-                    </div>
-                    <div>{inc.type}</div>
+                    <div>{formatDateTime(inc.created_at)}</div>
                     <div>
                       <SeverityBadge severity={inc.severity} />
                     </div>
                     <div>
                       <StatusBadge status={inc.status} />
                     </div>
+                    <div>{inc.type}</div>
                     <div className="truncate" title={inc.summary}>
                       {inc.summary}
                     </div>
                     <div className="truncate" title={sourceLabel}>
                       {sourceLabel}
                     </div>
-                    <div>{formatDateTime(inc.created_at)}</div>
                     <div>
                       <SupplierHealthBadge badge={inc.supplier_health} />
+                    </div>
+                    <div className="font-mono truncate" title={inc.incident_id}>
+                      {inc.incident_id}
                     </div>
                   </button>
                 );

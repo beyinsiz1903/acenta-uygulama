@@ -14,8 +14,7 @@ from app.middleware.tenant_middleware import TenantResolutionMiddleware
 
 from app.auth import _jwt_secret
 from app.db import get_db
-from app.metrics import METRIC_BOOKINGS_CREATED
-from app.request_context import _permission_matches
+from app.request_context import _permission_matches  # unused in this module (left for future assertions)
 from server import app
 
 

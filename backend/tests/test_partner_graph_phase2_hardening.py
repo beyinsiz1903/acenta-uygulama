@@ -58,7 +58,7 @@ async def _seed_org_tenant_user(db, org_name: str, email: str) -> Dict[str, str]
         "created_at": now,
         "updated_at": now,
     }
-    await db.users.insert_one(user)
+    res_user = await db.users.insert_one(user)
     user_id = str(res_user.inserted_id)
 
     return {"org_id": org_id, "tenant_id": tenant_id, "user_id": user_id, "email": email}

@@ -231,3 +231,145 @@ async def list_network_settlements(  # type: ignore[no-untyped-def]
         items = [s for s in items if s.get("status") == status]
 
     return {"items": items}
+
+
+
+# Phase 2.1-B: Monthly settlement statement over settlement_ledger
+from datetime import datetime
+
+from fastapi import Query as _StatementQuery
+
+from app.errors import AppError
+from app.services.settlement_statement_service import SettlementStatementService
+
+
+@network_settlements_router.get("/statement")
+async def get_settlement_statement(  # type: ignore[no-untyped-def]
+    month: str = _StatementQuery(...),
+    perspective: str = _StatementQuery("seller"),
+    status: _Opt[str] = _StatementQuery(None),
+    user: _Dict[str, _Any] = _Depends(_get_current_user),
+):
+    ctx: _RequestContext = _get_request_context(required=True)  # type: ignore[assignment]
+
+    # RBAC
+    @_require_permission("settlements.view")
+    async def _guard() -> None:  # type: ignore[no-untyped-def]
+        return None
+
+    await _guard()
+
+    # Validate perspective
+    if perspective not in {"seller", "buyer"}:
+        raise AppError(
+            status_code=400,
+            code="invalid_perspective",
+            message="perspective must be 'seller' or 'buyer'",
+            details={"perspective": perspective},
+        )
+
+    # Validate month format YYYY-MM
+    try:
+        parts = month.split("-")
+        if len(parts) != 2:
+            raise ValueError
+        year = int(parts[0])
+        mon = int(parts[1])
+        if not (1 <= mon <= 12):
+            raise ValueError
+    except Exception:
+        raise AppError(
+            status_code=400,
+            code="invalid_month",
+            message="Invalid month format, expected YYYY-MM",
+            details={"month": month},
+        )
+
+    from calendar import monthrange
+    from datetime import timezone as _tz
+
+    month_start = datetime(year, mon, 1, 0, 0, 0, tzinfo=_tz.utc)
+    if mon == 12:
+        month_end = datetime(year + 1, 1, 1, 0, 0, 0, tzinfo=_tz.utc)
+    else:
+        month_end = datetime(year, mon + 1, 1, 0, 0, 0, tzinfo=_tz.utc)
+
+    statuses: _Opt[list[str]] = None
+    if status:
+        parts = [s.strip() for s in status.split(",") if s.strip()]
+        allowed = {"open", "approved", "paid", "void"}
+        if any(s not in allowed for s in parts):
+            raise AppError(
+                status_code=400,
+                code="invalid_status",
+                message="Invalid status filter",
+                details={"allowed": sorted(allowed)},
+            )
+        statuses = parts
+
+    MAX_ITEMS = 500
+    db = await _get_db()
+    svc = SettlementStatementService(db)
+
+    items = await svc.fetch_items(ctx.tenant_id or "", perspective, month_start, month_end, statuses, MAX_ITEMS)
+
+    if len(items) > MAX_ITEMS:
+        raise AppError(
+            status_code=400,
+            code="statement_too_large",
+            message="Too many settlements for statement window.",
+            details={"max_items": MAX_ITEMS},
+        )
+
+    per_curr, overall = svc.compute_totals(items)
+
+    currency_breakdown = [
+        {
+            "currency": cur,
+            "gross_total": totals.gross_total,
+            "commission_total": totals.commission_total,
+            "net_total": totals.net_total,
+            "count": totals.count,
+        }
+        for cur, totals in per_curr.items()
+    ]
+
+    # Sort currency list for stability
+    currency_breakdown.sort(key=lambda x: x["currency"])
+
+    counterparties = svc.compute_counterparties(items, perspective)
+
+    # Slice items to MAX_ITEMS; ensure consistent shape
+    response_items: list[dict[str, _Any]] = []
+    for it in items[:MAX_ITEMS]:
+        response_items.append(
+            {
+                "settlement_id": it["settlement_id"],
+                "booking_id": it.get("booking_id"),
+                "seller_tenant_id": it.get("seller_tenant_id"),
+                "buyer_tenant_id": it.get("buyer_tenant_id"),
+                "relationship_id": it.get("relationship_id"),
+                "commission_rule_id": it.get("commission_rule_id"),
+                "gross_amount": it.get("gross_amount"),
+                "commission_amount": it.get("commission_amount"),
+                "net_amount": it.get("net_amount"),
+                "currency": it.get("currency"),
+                "status": it.get("status"),
+                "created_at": it.get("created_at").isoformat() if it.get("created_at") else None,
+            }
+        )
+
+    return {
+        "tenant_id": ctx.tenant_id,
+        "perspective": perspective,
+        "month": month,
+        "currency_breakdown": currency_breakdown,
+        "totals": {
+            "count": overall.count,
+            "gross_total": overall.gross_total,
+            "commission_total": overall.commission_total,
+            "net_total": overall.net_total,
+        },
+        "counterparties": counterparties,
+        "items": response_items,
+    }

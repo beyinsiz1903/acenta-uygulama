@@ -121,7 +121,7 @@ function SentTable({ items, onActivate, busyId, onCopyId }) {
         <TableHeader>
           <TableRow>
             <TableHead className="text-xs">Relationship</TableHead>
-            <TableHead className="text-xs">Karf1 Taraf (Alc4b1cd1 Tenant)</TableHead>
+            <TableHead className="text-xs">Karşı Taraf (Alıcı Tenant)</TableHead>
             <TableHead className="text-xs">Durum</TableHead>
             <TableHead className="text-xs">Tarih</TableHead>
             <TableHead className="text-xs text-right">Aksiyon</TableHead>

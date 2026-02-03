@@ -119,6 +119,18 @@ async def test_settlements_requires_permission(async_client: AsyncClient) -> Non
     res_tenant = await db.tenants.insert_one(tenant)
     tenant_id = str(res_tenant.inserted_id)
 
+    # Seed active subscription so subscription guard passes and RBAC is exercised
+    from app.services.subscription_service import SubscriptionService
+
+    sub_service = SubscriptionService(db)
+    await sub_service.set_subscription(
+        org_id=org_id,
+        plan_id="test_plan",
+        status="active",
+        period_start=now,
+        period_end=now + timedelta(days=30),
+    )
+
     user = {
         "organization_id": org_id,
         "email": "agent@example.com",

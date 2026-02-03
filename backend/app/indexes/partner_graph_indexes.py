@@ -9,6 +9,10 @@ async def ensure_partner_graph_indexes(db: AsyncIOMotorDatabase) -> None:
         [("seller_tenant_id", 1), ("buyer_tenant_id", 1)], unique=True
     )
 
+    await db.partner_relationships.create_index([("buyer_tenant_id", 1), ("status", 1), ("created_at", 1)])
+    await db.partner_relationships.create_index([("seller_tenant_id", 1), ("status", 1), ("created_at", 1)])
+    await db.partner_relationships.create_index([("status", 1), ("updated_at", 1)])
+
     # inventory_shares
     await db.inventory_shares.create_index([("seller_tenant_id", 1), ("buyer_tenant_id", 1)])
     await db.inventory_shares.create_index([("seller_tenant_id", 1), ("product_id", 1)])

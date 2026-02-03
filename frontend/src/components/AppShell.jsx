@@ -89,6 +89,12 @@ export default function AppShell() {
         ]);
         setResSummary(a.data || []);
         setSales(b.data || []);
+      } catch {
+        // Sidebar metrikleri opsiyonel; hata UI'ı bozmasın.
+      }
+    })();
+  }, []);
+
   // Keep activeTenantKey in sync with localStorage changes (e.g. tenant switcher)
   useEffect(() => {
     const sync = () => {
@@ -112,12 +118,6 @@ export default function AppShell() {
         window.removeEventListener("storage", sync);
       }
     };
-  }, []);
-
-      } catch {
-        // Sidebar metrikleri opsiyonel; hata UI'ı bozmasın.
-      }
-    })();
   }, []);
 
   // Partner notifications summary (header badge)

@@ -186,7 +186,7 @@ export default function AppShell() {
   const partnerSection = {
     label: "Partners",
     children: [
-      { label: "Inbox", path: "/app/partners/inbox" },
+      { label: "Gelen Kutusu", path: "/app/partners/inbox" },
     ],
   };
 

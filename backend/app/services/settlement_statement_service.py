@@ -27,23 +27,41 @@ class SettlementStatementService:
         month_start: datetime,
         month_end: datetime,
         statuses: List[str] | None,
-        max_items: int,
+        counterparty_tenant_id: str | None,
+        limit: int,
+        cursor: dict[str, Any] | None,
     ) -> List[Dict[str, Any]]:
         q: Dict[str, Any] = {
             "created_at": {"$gte": month_start, "$lt": month_end},
         }
         if perspective == "seller":
             q["seller_tenant_id"] = tenant_id
+            if counterparty_tenant_id:
+                q["buyer_tenant_id"] = counterparty_tenant_id
         else:
             q["buyer_tenant_id"] = tenant_id
+            if counterparty_tenant_id:
+                q["seller_tenant_id"] = counterparty_tenant_id
 
         if statuses:
             q["status"] = {"$in": statuses}
 
-        cursor = (
+        if cursor:
+            last_created = cursor.get("created_at")
+            last_booking_id = cursor.get("booking_id")
+            if last_created and last_booking_id:
+                q["$or"] = [
+                    {"created_at": {"$gt": last_created}},
+                    {
+                        "created_at": last_created,
+                        "booking_id": {"$gt": last_booking_id},
+                    },
+                ]
+
+        cursor_q = (
             self._col.find(q)
             .sort([("created_at", 1), ("booking_id", 1)])
-            .limit(max_items + 1)
+            .limit(limit + 1)
         )
 
         items: List[Dict[str, Any]] = []

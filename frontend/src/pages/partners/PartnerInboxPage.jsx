@@ -211,7 +211,7 @@ export default function PartnerInboxPage() {
     setBusyRelationshipId(rel.id);
     try {
       await acceptPartnerRelationship(rel.id);
-      toast({ description: "Davet ba5far31yla kabul edildi." });
+      toast({ description: "Davet başarıyla kabul edildi." });
       await load();
     } catch (e) {
       toast({ variant: "destructive", description: e?.message || "Davet kabul edilirken hata olu5ftu." });

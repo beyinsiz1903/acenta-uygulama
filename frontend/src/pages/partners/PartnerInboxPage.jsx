@@ -21,10 +21,10 @@ function StatusBadge({ status }) {
     return <Badge variant="outline">Davet gönderildi</Badge>;
   }
   if (s === "suspended") {
-    return <Badge variant="outline" className="border-amber-500/40 text-amber-600 dark:text-amber-400">Askfya ald1ndd1</Badge>;
+    return <Badge variant="outline" className="border-amber-500/40 text-amber-600 dark:text-amber-400">Askıya alındı</Badge>;
   }
   if (s === "terminated") {
-    return <Badge variant="destructive">Sonlandfrfldf</Badge>;
+    return <Badge variant="destructive">Sonlandırıldı</Badge>;
   }
   return <Badge variant="outline">Bilinmiyor</Badge>;
 }

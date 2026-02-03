@@ -254,7 +254,7 @@ export default function AdminOpsIncidentsPage() {
               value={filters.severity ?? "all"}
               onValueChange={(v) => onChangeFilter("severity", v === "all" ? undefined : v)}
             >
-              <SelectTrigger className="h-8 w-40 text-xs">
+              <SelectTrigger className="h-8 w-40 text-xs" data-testid="ops-incidents-filter-severity">
                 <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent>

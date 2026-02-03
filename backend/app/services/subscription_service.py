@@ -38,12 +38,26 @@ class SubscriptionService:
             return None
         # Basic time window check
         now = datetime.now(timezone.utc)
-        period_start = doc.get("period_start")
-        period_end = doc.get("period_end")
-        if period_start and isinstance(period_start, str):
-            period_start = datetime.fromisoformat(period_start)
-        if period_end and isinstance(period_end, str):
-            period_end = datetime.fromisoformat(period_end)
+        period_start_raw = doc.get("period_start")
+        period_end_raw = doc.get("period_end")
+
+        # Normalize to timezone-aware datetimes (handles Mongo naive datetimes and ISO strings)
+        if isinstance(period_start_raw, str):
+            try:
+                period_start = _ensure_aware(datetime.fromisoformat(period_start_raw))
+            except Exception:
+                period_start = None
+        else:
+            period_start = _ensure_aware(period_start_raw)
+
+        if isinstance(period_end_raw, str):
+            try:
+                period_end = _ensure_aware(datetime.fromisoformat(period_end_raw))
+            except Exception:
+                period_end = None
+        else:
+            period_end = _ensure_aware(period_end_raw)
+
         if period_end and period_end < now:
             # Expired subscription; treat as no active
             return None

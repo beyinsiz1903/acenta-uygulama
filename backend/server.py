@@ -237,6 +237,7 @@ app.include_router(risk_snapshots_router)
 app.include_router(exports_router)
 app.include_router(public_exports_router)
 app.include_router(action_policies_router)
+app.include_router(saas_tenants_router)
 
 app.include_router(theme_router)
 

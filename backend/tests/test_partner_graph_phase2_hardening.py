@@ -61,21 +61,22 @@ async def _seed_org_tenant_user(db, org_name: str, email: str) -> Dict[str, str]
 
 
 @pytest.mark.asyncio
-async def test_inventory_shares_requires_tenant_header(async_client: AsyncClient) -> None:
+async def test_inventory_shares_requires_tenant_header() -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "SellerHard", "sellerhard@example.com")
     token = _make_token(seller["email"], seller["org_id"], ["super_admin"])
 
-    resp = await async_client.post(
-        "/api/inventory-shares/grant",
-        headers={"Authorization": f"Bearer {token}"},
-        json={
-            "buyer_tenant_id": "dummy",
-            "scope_type": "all",
-            "sell_enabled": True,
-            "view_enabled": True,
-        },
-    )
+    async with AsyncClient(app=app, base_url="http://test", raise_app_exceptions=False) as client:
+        resp = await client.post(
+            "/api/inventory-shares/grant",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "buyer_tenant_id": "dummy",
+                "scope_type": "all",
+                "sell_enabled": True,
+                "view_enabled": True,
+            },
+        )
     assert resp.status_code == 400
     body = resp.json()
     assert body["error"]["code"] == "tenant_header_missing"

@@ -78,15 +78,21 @@ async def resolve_tenant_slug(
         )
 
     sub_service = SubscriptionService(db)
-    sub = await sub_service.get_active_for_org(str(org_id))
-    if sub and sub.get("status") in ("suspended", "canceled"):
-        raise AppError(
-            status_code=403,
-            code="subscription_suspended",
-            message="Organization subscription is suspended.",
-            details={"org_id": str(org_id), "status": sub.get("status")},
-        )
+    # Use the same guard as middleware for consistency
+    from app.request_context import RequestContext
 
+    sub_ctx = RequestContext(
+        org_id=str(org_id),
+        tenant_id=tenant_id,
+        user_id=str(user["_id"]),
+        role=role,
+        permissions=[],
+        subscription_status=None,
+        plan=None,
+        is_super_admin=_is_super_admin(user),
+    )
+    await sub_service.ensure_allowed(sub_ctx)
+    sub = await sub_service.get_active_for_org(str(org_id))
     subscription_status = sub.get("status") if sub else None
 
     return {

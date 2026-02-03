@@ -7,6 +7,7 @@ from uuid import uuid4
 import jwt
 import pytest
 from httpx import AsyncClient
+from starlette.testclient import TestClient
 
 from app.auth import _jwt_secret
 from app.db import get_db

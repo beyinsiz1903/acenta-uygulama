@@ -53,7 +53,7 @@ async def resolve_tenant_slug(
     # Membership check
     membership_repo = MembershipRepository(db)
     membership = await membership_repo.find_active_membership(
-        user_id=str(user["_id"]), tenant_id=tenant_id
+        user_id=str(user["id"]), tenant_id=tenant_id
     )
     from app.auth import is_super_admin as _is_super_admin
 

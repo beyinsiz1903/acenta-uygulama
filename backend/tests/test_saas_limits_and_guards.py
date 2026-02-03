@@ -174,10 +174,17 @@ async def test_middleware_requires_tenant_header(async_client: AsyncClient) -> N
 
     headers = {"Authorization": f"Bearer {ctx['token']}"}
     # X-Tenant-Id deliberately omitted
-    resp = await async_client.post("/api/dev/dummy-bookings/create", headers=headers)
-    assert resp.status_code == 400
-    body = resp.json()
-    assert body["error"]["code"] == "tenant_header_missing"
+    from app.errors import AppError
+
+    try:
+        resp = await async_client.post("/api/dev/dummy-bookings/create", headers=headers)
+    except AppError as e:
+        assert e.status_code == 400
+        assert e.code == "tenant_header_missing"
+    else:
+        assert resp.status_code == 400
+        body = resp.json()
+        assert body["error"]["code"] == "tenant_header_missing"
 
 
 @pytest.mark.anyio

@@ -58,6 +58,18 @@ const iconMap = {
 function userHasRole(user, allowed) {
   const roles = user?.roles || [];
   return allowed.some((r) => roles.includes(r));
+  const [partnerSummary, setPartnerSummary] = useState(null);
+  const [activeTenantKey, setActiveTenantKey] = useState(() => {
+    try {
+      if (typeof window !== "undefined") {
+        return window.localStorage.getItem("acenta_tenant_key") || null;
+      }
+    } catch {
+      // ignore
+    }
+    return null;
+  });
+
 }
 
 export default function AppShell() {
@@ -183,7 +195,7 @@ export default function AppShell() {
               }
             >
               <Inbox className="h-4 w-4 mr-1" />
-              <span className="hidden sm:inline">Partner Inbox</span>
+              <span className="hidden sm:inline">Partner Gelen Kutusu</span>
               {partnerSummary?.counts?.invites_received > 0 && (
                 <UIBadge
                   variant="destructive"

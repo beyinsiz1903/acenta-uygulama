@@ -84,7 +84,7 @@ async def resolve_tenant_slug(
     sub_ctx = RequestContext(
         org_id=str(org_id),
         tenant_id=tenant_id,
-        user_id=str(user["_id"]),
+        user_id=str(user["id"]),
         role=role,
         permissions=[],
         subscription_status=None,

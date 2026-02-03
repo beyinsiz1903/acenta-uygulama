@@ -300,6 +300,8 @@ app.include_router(marketplace_router, prefix=API_PREFIX)
 app.include_router(marketplace_supplier_mapping_router, prefix=API_PREFIX)
 app.include_router(b2b_marketplace_booking_router, prefix=API_PREFIX)
 
+from app.routers.b2b_network_bookings import router as b2b_network_bookings_router
+
 app.include_router(crm_events_router)
 app.include_router(reservations_router, prefix=API_PREFIX)
 app.include_router(seo_router)

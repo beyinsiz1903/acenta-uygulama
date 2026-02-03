@@ -300,6 +300,7 @@ export default function PartnerInboxPage() {
                   items={data.invites_sent || []}
                   onActivate={handleActivate}
                   busyId={busyRelationshipId}
+                  onCopyId={handleCopyId}
                 />
               )}
             </TabsContent>

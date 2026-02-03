@@ -287,6 +287,7 @@ export default function PartnerInboxPage() {
                   items={data.invites_received || []}
                   onAccept={handleAccept}
                   busyId={busyRelationshipId}
+                  onCopyId={handleCopyId}
                 />
               )}
             </TabsContent>

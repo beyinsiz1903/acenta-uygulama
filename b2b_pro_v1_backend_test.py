@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 import os
 
 # Get backend URL from frontend env
-BACKEND_URL = "https://multitenant-11.preview.emergentagent.com"
+BACKEND_URL = "https://saas-partner.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class B2BProV1Tester:

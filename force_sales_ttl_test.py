@@ -9,7 +9,7 @@ import time
 from datetime import datetime, timedelta
 
 class ForceSalesOverrideTTLTester:
-    def __init__(self, base_url="https://multitenant-11.preview.emergentagent.com"):
+    def __init__(self, base_url="https://saas-partner.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None

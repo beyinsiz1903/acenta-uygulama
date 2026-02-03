@@ -74,6 +74,7 @@ import AdminJobsPage from "./pages/AdminJobsPage";
 import AdminApiKeysPage from "./pages/AdminApiKeysPage";
 import OpsB2BQueuesPage from "./pages/OpsB2BQueuesPage";
 import InboxPage from "./pages/InboxPage";
+import PartnerInboxPage from "./pages/partners/PartnerInboxPage";
 import AdminFinanceRefundsPage from "./pages/AdminFinanceRefundsPage";
 import AdminOpsIncidentsPage from "./pages/ops/AdminOpsIncidentsPage";
 import AdminFinanceExposurePage from "./pages/AdminFinanceExposurePage";
@@ -286,6 +287,7 @@ function App() {
           <Route path="reports" element={<ReportsPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="inbox" element={<InboxPage />} />
+          <Route path="partners/inbox" element={<PartnerInboxPage />} />
           <Route path="crm/customers" element={<CrmCustomersPage />} />
           <Route path="crm/duplicates" element={<CrmDuplicateCustomersPage />} />
           <Route path="crm/pipeline" element={<CrmPipelinePage />} />

@@ -45,9 +45,16 @@ async def _seed_org_tenant_user(db, org_name: str, email: str) -> Dict[str, str]
     return {"org_id": org_id, "tenant_id": tenant_id, "user_id": user_id, "email": email}
 
 
-def _make_token(email: str, org_id: str, roles: list[str]) -> str:
-    payload = {"sub": email, "org": org_id, "roles": roles}
-    return create_access_token(payload)
+def _make_token(email: str, org_id: str, roles: list[str], minutes: int = 60 * 12) -> str:
+    now = datetime.now(timezone.utc)
+    payload = {
+        "sub": email,
+        "org": org_id,
+        "roles": roles,
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(minutes=minutes)).timestamp()),
+    }
+    return jwt.encode(payload, _jwt_secret(), algorithm="HS256")
 
 
 @pytest.mark.asyncio

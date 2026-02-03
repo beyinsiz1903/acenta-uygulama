@@ -64,32 +64,38 @@ async def _seed_org_tenant_user(db, org_name: str, email: str) -> Dict[str, str]
 
 
 @pytest.mark.anyio
-async def test_inventory_shares_requires_tenant_header_unit() -> None:
-    scope = {
-        "type": "http",
-        "method": "POST",
-        "path": "/api/inventory-shares/grant",
-        "headers": [],
-    }
+async def test_inventory_shares_requires_tenant_header(async_client: AsyncClient) -> None:
+    """Missing X-Tenant-Id on inventory-shares should yield tenant_header_missing, not 520.
 
-    async def app_noop(scope, receive, send):  # type: ignore[no-untyped-def]
-        raise AssertionError("call_next should not be reached when tenant header is missing")
+    Mirrors the pattern used in test_middleware_requires_tenant_header for dev dummy bookings.
+    """
 
-    middleware = TenantResolutionMiddleware(app_noop)
+    db = await get_db()
+    seller = await _seed_org_tenant_user(db, "SellerHard", "sellerhard@example.com")
+    token = _make_token(seller["email"], seller["org_id"], ["super_admin"])
 
-    from starlette.types import Receive, Scope, Send
+    headers = {"Authorization": f"Bearer {token}"}
 
-    async def receive() -> Receive:  # type: ignore[override]
-        return {"type": "http.request"}
+    from app.errors import AppError
 
-    async def send(message: dict) -> None:  # type: ignore[override]
-        pass
-
-    request = Request(scope)  # type: ignore[arg-type]
-    with pytest.raises(AppError) as exc:
-        await middleware.dispatch(request, lambda r: app_noop(scope, receive, send))  # type: ignore[arg-type]
-    err = exc.value
-    assert err.code == "tenant_header_missing"
+    try:
+        resp = await async_client.post(
+            "/api/inventory-shares/grant",
+            headers=headers,
+            json={
+                "buyer_tenant_id": "dummy",
+                "scope_type": "all",
+                "sell_enabled": True,
+                "view_enabled": True,
+            },
+        )
+    except AppError as e:
+        assert e.status_code == 400
+        assert e.code == "tenant_header_missing"
+    else:
+        assert resp.status_code == 400
+        body = resp.json()
+        assert body["error"]["code"] == "tenant_header_missing"
 
 
 @pytest.mark.asyncio

@@ -145,8 +145,16 @@ async def create_network_booking(  # type: ignore[no-untyped-def]
     return {
         "booking_id": booking_id,
         "settlement_id": settlement["id"],
+        "seller_tenant_id": seller_tenant_id,
+        "buyer_tenant_id": buyer_tenant_id,
+        "gross_amount": gross_amount,
+        "commission_amount": commission_amount,
+        "net_amount": net_amount,
+        "currency": currency,
         "commission": {
             "rule_id": commission_rule_id,
+            "rule_type": rule.get("rule_type") if rule else None,
+            "value": rule.get("value") if rule else None,
             "amount": commission_amount,
         },
         "relationship_id": rel["id"],

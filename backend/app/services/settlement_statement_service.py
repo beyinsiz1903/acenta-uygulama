@@ -50,6 +50,14 @@ class SettlementStatementService:
             last_created = cursor.get("created_at")
             last_booking_id = cursor.get("booking_id")
             if last_created and last_booking_id:
+                # Ensure last_created is a datetime for comparison
+                if isinstance(last_created, str):
+                    try:
+                        last_created = datetime.fromisoformat(last_created)
+                    except Exception:
+                        # Fallback: leave as-is; query may still work if stored as string
+                        pass
+
                 q["$or"] = [
                     {"created_at": {"$gt": last_created}},
                     {

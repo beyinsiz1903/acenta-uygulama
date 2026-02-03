@@ -118,6 +118,33 @@ backend:
           comment: "✅ PR-04: PRICING RULES ADMIN V1 BLACK-BOX TESTING COMPLETE - All functionality verified successfully (100% success rate). COMPREHENSIVE TESTING PERFORMED: A) PRICING RULES CRUD API (/api/pricing/rules): ✅ POST endpoint creating rules with 201 status and proper response structure (id, organization_id, tenant_id, supplier, rule_type, value, priority, valid_from, valid_to, stackable, timestamps), ✅ GET endpoint listing rules with organization scoping and proper sorting (priority DESC, created_at ASC), ✅ GET single rule endpoint with organization isolation (404 for cross-org access), ✅ PATCH endpoint updating rules with value normalization and validation, ✅ DELETE endpoint performing hard delete with {ok: true} response, ✅ Authentication required for all endpoints with JWT token validation. B) VALUE VALIDATION AND NORMALIZATION: ✅ Invalid rule types rejected with 422 status code, ✅ Out-of-range percentage values (>1000) rejected with 422, ✅ Negative fixed values rejected with 422, ✅ Value normalization working correctly: markup_pct/commission_pct quantized to 2 decimals (10.123→10.12, 5.999→6.00), ✅ Fixed values quantized to 2 decimals (100.456→100.46, 50.1→50.10), ✅ All rule types (markup_pct, commission_pct, markup_fixed, commission_fixed) validated properly. C) QUERY PARAMETER FILTERING: ✅ Supplier filtering working correctly (?supplier=mock_v1 returns only mock_v1 rules), ✅ Rule type filtering working correctly (?rule_type=markup_pct returns only markup_pct rules), ✅ Active-only filtering working correctly (?active_only=true excludes future/expired rules based on valid_from/valid_to), ✅ Sorting by priority DESC then created_at ASC verified, ✅ Multiple filters can be combined successfully. D) CROSS-ORGANIZATION ISOLATION: ✅ Rules properly scoped to organization_id from JWT token, ✅ Cross-org rule access returns 404 (not 403, maintaining security through obscurity), ✅ Rule listing only shows rules from current organization, ✅ No data leakage between organizations detected. E) BOOKING PRICING TRACE ENDPOINT (/api/bookings/{booking_id}/pricing-trace): ✅ Endpoint returns 200 with proper JSON structure: {booking_id, pricing, pricing_audit}, ✅ Pricing field contains booking's pricing data (base_amount, final_amount, commission_amount, margin_amount, currency, applied_rules, calculated_at), ✅ Pricing_audit field contains latest PRICING_RULE_APPLIED audit log with proper serialization (ObjectId→id, dates as ISO strings), ✅ Cross-org isolation working (404 for bookings in different organizations), ✅ Invalid booking IDs handled correctly (404 with structured error), ✅ Bookings without pricing/audit return null values gracefully. F) ERROR HANDLING AND STRUCTURED RESPONSES: ✅ All validation errors return 422 with structured error format, ✅ Authentication errors return 401 with proper error messages, ✅ Not found errors return 404 with structured error envelope (code: 'not_found'), ✅ All endpoints use consistent error response format with correlation IDs. G) TECHNICAL IMPLEMENTATION VERIFICATION: ✅ All endpoints mounted correctly under /api prefix, ✅ FastAPI router app.routers.pricing_rules working as specified, ✅ Database operations using proper MongoDB collections (pricing_rules, bookings, audit_logs), ✅ JWT authentication and organization scoping working correctly, ✅ Value normalization using Decimal with ROUND_HALF_UP for financial precision, ✅ Audit log queries using proper indexes and sorting. CRITICAL FINDINGS: ✅ All PR-04 contracts honored exactly as specified in review request, ✅ CRUD operations working end-to-end with proper validation and normalization, ✅ Cross-organization isolation properly enforced at API level, ✅ Booking pricing trace endpoint working with proper data retrieval and serialization, ✅ Error handling robust with structured responses and proper HTTP status codes, ✅ No critical issues blocking production deployment, ✅ Backend API ready for production use with complete PR-04 functionality. TESTING METHODOLOGY: Used black-box testing approach with real HTTP requests to running FastAPI app (https://risk-aware-b2b.preview.emergentagent.com), created comprehensive test scenarios covering all specified contracts, verified both happy path and error conditions, tested cross-org isolation with multiple organizations, validated all response structures and status codes. PR-04 pricing rules admin v1 black-box testing completed successfully with 100% contract compliance."
 
   - task: "Backend Sprint 3 – Supplier Search → Booking v1 Gate Verification"
+
+frontend:
+  - task: "PR-24: Ops Console v2 UI v0 (Ops Incidents SPA)"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/ops/AdminOpsIncidentsPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "PR-24 UI v0 implemented: new /app/ops/incidents route + sidebar/menu wiring, filters (status/type/severity) with shadcn Select, incidents table (created_at, severity, status, type, summary, source, supplier health, id), supplier health badge states (OPEN/CLOSED/NO HEALTH with tooltips), incident detail drawer with supplier health panel + meta JSON. E2E deterministic via Playwright test tests/e2e/ops-incidents.spec.ts with route stubs and fixtures (ops-incidents-list.json, ops-incidents-detail-inc_aaa111.json). Golden path covered: login as super_admin, navigate to /app/ops/incidents, list rendered with health badges, filter change triggers list call with correct query, row click opens drawer with health panel."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: true
+
+test_plan:
+  current_focus:
+    - "PR-24: Ops Console v2 UI v0 (Ops Incidents SPA)"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
     implemented: true
     working: true
     file: "backend/app/routers/bookings.py"

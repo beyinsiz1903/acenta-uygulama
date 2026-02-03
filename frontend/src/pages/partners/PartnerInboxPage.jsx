@@ -156,7 +156,7 @@ function SentTable({ items, onActivate, busyId, onCopyId }) {
                       onClick={() => onActivate(r)}
                     >
                       {isBusy && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
-                      Etkinle5ftir
+                      Etkinleştir
                     </Button>
                   ) : (
                     <span className="text-[11px] text-muted-foreground">İşlem yok</span>

@@ -102,7 +102,7 @@ function ReceivedTable({ items, onAccept, busyId, onCopyId }) {
                       Kabul Et
                     </Button>
                   ) : (
-                    <span className="text-[11px] text-muted-foreground">c4b1c5b1lem yok</span>
+                    <span className="text-[11px] text-muted-foreground">İşlem yok</span>
                   )}
                 </TableCell>
               </TableRow>
@@ -159,7 +159,7 @@ function SentTable({ items, onActivate, busyId, onCopyId }) {
                       Etkinle5ftir
                     </Button>
                   ) : (
-                    <span className="text-[11px] text-muted-foreground">c4b1c5b1lem yok</span>
+                    <span className="text-[11px] text-muted-foreground">İşlem yok</span>
                   )}
                 </TableCell>
               </TableRow>

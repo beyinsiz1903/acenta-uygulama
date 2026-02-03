@@ -169,6 +169,11 @@ function SentTable({ items, onActivate, busyId, onCopyId }) {
       </Table>
     </div>
   );
+  const handleCopyId = async (id) => {
+    if (!id) return;
+    await copyToClipboard(id, toast);
+  };
+
 }
 
 export default function PartnerInboxPage() {

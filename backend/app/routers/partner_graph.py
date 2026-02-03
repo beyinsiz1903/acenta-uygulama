@@ -88,6 +88,11 @@ async def accept_invite(  # type: ignore[no-untyped-def]
 @router.post("/{relationship_id}/activate")
 async def activate_relationship(  # type: ignore[no-untyped-def]
     relationship_id: str,
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    db = await get_db()
+    service = PartnerGraphService(db)
+    return await service.activate_relationship(relationship_id)
 
 
 @router.get("/relationships/{relationship_id}")

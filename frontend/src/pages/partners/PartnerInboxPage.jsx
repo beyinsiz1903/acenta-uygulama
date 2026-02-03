@@ -227,6 +227,10 @@ export default function PartnerInboxPage() {
     }
   };
 
+  const handleCopyId = async (id) => {
+    await copyToClipboard(id, toast);
+  };
+
   const hasReceived = (data.invites_received || []).length > 0;
   const hasSent = (data.invites_sent || []).length > 0;
 

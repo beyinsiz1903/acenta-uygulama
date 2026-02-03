@@ -88,6 +88,73 @@ async def accept_invite(  # type: ignore[no-untyped-def]
 @router.post("/{relationship_id}/activate")
 async def activate_relationship(  # type: ignore[no-untyped-def]
     relationship_id: str,
+
+
+@router.get("/relationships/{relationship_id}")
+async def get_relationship_detail(  # type: ignore[no-untyped-def]
+    relationship_id: str,
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    ctx: RequestContext = get_request_context(required=True)  # type: ignore[assignment]
+
+    @require_permission("partner.view")
+    async def _guard() -> None:  # type: ignore[no-untyped-def]
+        return None
+
+    await _guard()
+
+    db = await get_db()
+    service = PartnerGraphService(db)
+    rel = await service.get_relationship_by_id(relationship_id)
+    if not rel:
+        raise AppError(404, "partner_relationship_not_found", "Relationship not found.", {"id": relationship_id})
+
+    if ctx.tenant_id not in {rel.get("seller_tenant_id"), rel.get("buyer_tenant_id")}:
+        raise AppError(
+            403,
+            "partner_relationship_forbidden",
+            "Tenant not part of this relationship.",
+            {"tenant_id": ctx.tenant_id},
+        )
+
+    return rel
+
+
+@router.get("/inbox")
+async def get_partner_inbox(  # type: ignore[no-untyped-def]
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    ctx: RequestContext = get_request_context(required=True)  # type: ignore[assignment]
+
+    @require_permission("partner.view")
+    async def _guard() -> None:  # type: ignore[no-untyped-def]
+        return None
+
+    await _guard()
+
+    db = await get_db()
+    svc = PartnerGraphService(db)
+    inbox = await svc.build_inbox(ctx.tenant_id or "")
+    return inbox
+
+
+@router.get("/notifications/summary")
+async def partner_notifications_summary(  # type: ignore[no-untyped-def]
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    ctx: RequestContext = get_request_context(required=True)  # type: ignore[assignment]
+
+    @require_permission("partner.view")
+    async def _guard() -> None:  # type: ignore[no-untyped-def]
+        return None
+
+    await _guard()
+
+    db = await get_db()
+    svc = PartnerGraphService(db)
+    summary = await svc.notifications_summary(ctx.tenant_id or "")
+    return summary
+
     user: Dict[str, Any] = Depends(get_current_user),
 ):
     db = await get_db()

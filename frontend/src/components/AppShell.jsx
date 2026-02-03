@@ -79,7 +79,6 @@ export default function AppShell() {
   const [resSummary, setResSummary] = useState([]);
   const [sales, setSales] = useState([]);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [partnerSummary, setPartnerSummary] = useState(null);
 
   useEffect(() => {
     (async () => {

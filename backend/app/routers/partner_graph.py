@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends
 
 from app.auth import get_current_user
 from app.db import get_db
-from app.request_context import RequestContext, get_request_context
+from app.errors import AppError
+from app.request_context import RequestContext, get_request_context, require_permission
 from app.services.partner_graph_service import PartnerGraphService
 
 router = APIRouter(prefix="/api/partner-graph", tags=["partner_graph"])

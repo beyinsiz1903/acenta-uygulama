@@ -531,7 +531,7 @@ export default function AppShell() {
 
             <div className="mt-3">
               <nav className="rounded-2xl border bg-card p-2 shadow-sm max-h-[calc(100vh-330px)] overflow-y-auto">
-                {roleBasedMenu.map((section) => (
+                {[partnerSection, ...roleBasedMenu].map((section) => (
                   <div key={section.label} className="mb-3 last:mb-0">
                     <div className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       {section.label}

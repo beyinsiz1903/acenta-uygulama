@@ -21,6 +21,38 @@ function formatDateTime(value) {
   }
 }
 
+function SeverityBadge({ severity }) {
+  if (!severity) return <span className="text-[11px] text-muted-foreground">—</span>;
+  
+  const variants = {
+    critical: "destructive",
+    high: "destructive", 
+    medium: "default",
+    low: "secondary"
+  };
+  
+  return (
+    <Badge variant={variants[severity] || "outline"} className="text-[10px] capitalize">
+      {severity}
+    </Badge>
+  );
+}
+
+function StatusBadge({ status }) {
+  if (!status) return <span className="text-[11px] text-muted-foreground">—</span>;
+  
+  const variants = {
+    open: "destructive",
+    resolved: "default"
+  };
+  
+  return (
+    <Badge variant={variants[status] || "outline"} className="text-[10px] capitalize">
+      {status}
+    </Badge>
+  );
+}
+
 function SupplierHealthBadge({ badge }) {
   if (!badge) {
     return <span className="text-[11px] text-muted-foreground">—</span>;

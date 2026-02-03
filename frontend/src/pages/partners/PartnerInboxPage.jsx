@@ -287,7 +287,7 @@ export default function PartnerInboxPage() {
 
             <TabsContent value="received" className="mt-4">
               {!hasReceived && !loading ? (
-                <p className="text-xs text-muted-foreground">Henfcz gelen davet yok.</p>
+                <p className="text-xs text-muted-foreground">Henüz gelen davet yok.</p>
               ) : (
                 <ReceivedTable
                   items={data.invites_received || []}
@@ -300,7 +300,7 @@ export default function PartnerInboxPage() {
 
             <TabsContent value="sent" className="mt-4">
               {!hasSent && !loading ? (
-                <p className="text-xs text-muted-foreground">Henfcz gf6nderilen davet yok.</p>
+                <p className="text-xs text-muted-foreground">Henüz gönderilen davet yok.</p>
               ) : (
                 <SentTable
                   items={data.invites_sent || []}
@@ -310,6 +310,11 @@ export default function PartnerInboxPage() {
                 />
               )}
             </TabsContent>
+
+            {/* Aktif partnerler placeholder (gelecek sürüm) */}
+            <div className="mt-6 text-[11px] text-muted-foreground">
+              Aktif partnerler yakında burada listelenecek.
+            </div>
           </Tabs>
         </CardContent>
       </Card>

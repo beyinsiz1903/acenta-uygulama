@@ -60,7 +60,7 @@ async def resolve_tenant_slug(
     if not membership and not _is_super_admin(user):
         raise AppError(
             status_code=403,
-            code="TENANT_ACCESS_FORBIDDEN",
+            code="tenant_access_forbidden",
             message="User does not have access to this tenant.",
             details={"tenant_id": tenant_id},
         )
@@ -72,7 +72,7 @@ async def resolve_tenant_slug(
     if tenant_org_id and str(tenant_org_id) != str(org_id):
         raise AppError(
             status_code=403,
-            code="CROSS_ORG_TENANT_FORBIDDEN",
+            code="cross_org_tenant_forbidden",
             message="Tenant does not belong to the same organization as the user.",
             details={"tenant_org_id": str(tenant_org_id), "user_org_id": str(org_id)},
         )

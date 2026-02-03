@@ -288,6 +288,8 @@ app.include_router(public_my_booking_router)    # No prefix - router has its own
 app.include_router(public_search_router)        # No prefix - router has its own
 app.include_router(public_checkout_router)      # No prefix - router has its own
 app.include_router(public_bookings_router)      # No prefix - router has its own
+app.include_router(commission_rules_router)
+
 app.include_router(public_tours_router)         # No prefix - router has its own
 app.include_router(network_settlements_router)
 

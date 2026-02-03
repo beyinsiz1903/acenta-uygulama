@@ -11,6 +11,23 @@ from app.repositories.subscription_repository import SubscriptionRepository
 from app.request_context import RequestContext
 
 
+def _ensure_aware(dt: Optional[datetime]) -> Optional[datetime]:
+    """Normalize datetimes from Mongo/JSON to timezone-aware UTC.
+
+    - Leaves None as-is
+    - If naive datetime, attaches UTC tzinfo
+    - If already aware, returns unchanged
+    - If non-datetime (e.g. already parsed elsewhere), returns as-is
+    """
+    if not dt:
+        return dt
+    if isinstance(dt, datetime):
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt
+    return dt
+
+
 class SubscriptionService:
     def __init__(self, db: AsyncIOMotorDatabase) -> None:
         self._repo = SubscriptionRepository(db)

@@ -64,26 +64,49 @@ def resolve_tenant_id(token: str, org_id: str) -> str:
 
 def create_test_tenant(org_id: str, tenant_name: str) -> str:
     """Create a test tenant in the database"""
+    from bson import ObjectId
+    
     mongo_client = get_mongo_client()
     db = mongo_client.get_default_database()
     
-    tenant_id = f"tenant_{tenant_name}_{uuid.uuid4().hex[:8]}"
+    tenant_id = ObjectId()  # Use proper ObjectId
     
     tenant_doc = {
         "_id": tenant_id,
         "organization_id": org_id,
-        "name": tenant_name,
+        "name": f"Test Tenant {tenant_name}",
         "tenant_key": f"key_{tenant_name}_{uuid.uuid4().hex[:6]}",
         "status": "active",
+        "is_active": True,
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),
     }
     
     db.tenants.replace_one({"_id": tenant_id}, tenant_doc, upsert=True)
+    
+    # Also create membership for the super admin user
+    user_doc = db.users.find_one({"email": "muratsutay@hotmail.com"})
+    if user_doc:
+        membership_doc = {
+            "_id": ObjectId(),
+            "user_id": str(user_doc["_id"]),
+            "tenant_id": str(tenant_id),
+            "role": "admin",
+            "status": "active",
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+        }
+        db.memberships.replace_one(
+            {"user_id": str(user_doc["_id"]), "tenant_id": str(tenant_id)}, 
+            membership_doc, 
+            upsert=True
+        )
+    
     mongo_client.close()
     
-    print(f"   ✅ Created tenant: {tenant_id}")
-    return tenant_id
+    tenant_id_str = str(tenant_id)
+    print(f"   ✅ Created tenant: {tenant_id_str}")
+    return tenant_id_str
 
 def cleanup_test_data(tenant_ids: list, org_id: str):
     """Clean up test data after testing"""

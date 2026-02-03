@@ -417,9 +417,13 @@ export default function AdminOpsIncidentsPage() {
           {!loading && !error && !hasRows && (
             <EmptyState
               title="No incidents"
-              description="There are no ops incidents for the selected filters."
+              description={
+                isDefaultFilters
+                  ? "Şu anda bu ortamda hiç ops incident yok."
+                  : "There are no ops incidents for the selected filters."
+              }
               action={
-                (filters.type || filters.severity || filters.status) && (
+                !isDefaultFilters && (
                   <Button
                     variant="outline"
                     size="sm"

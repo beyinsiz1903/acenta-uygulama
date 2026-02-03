@@ -149,9 +149,10 @@ class PartnerGraphService:
         ctx = await self._get_ctx()
 
     async def build_inbox(self, tenant_id: str) -> dict[str, Any]:
-        """Build inbox view: invites received, invites sent, and active partners."""
+        """Build inbox view: invites received, invites sent, and active partners.
 
-        db = self._repo._col.database
+        For now we focus on invites lists; active_partners can be enriched in a later phase.
+        """
 
         invites_received_cur = self._repo._col.find(
             {"buyer_tenant_id": tenant_id, "status": "invited"}
@@ -169,27 +170,6 @@ class PartnerGraphService:
 
         invites_received = await _collect(invites_received_cur)
         invites_sent = await _collect(invites_sent_cur)
-
-        # Active partners (ctx is seller or buyer)
-        active_cur = self._repo._col.find(
-            {
-                "status": "active",
-                "$or": [
-                    {"seller_tenant_id": tenant_id},
-                    {"buyer_tenant_id": tenant_id},
-                ],
-            }
-        ).sort("updated_at", -1).limit(200)
-
-        active_partners: list[dict[str, Any]] = []
-        async for doc in active_cur:
-            counterparty_id = (
-                doc["buyer_tenant_id"] if doc["seller_tenant_id"] == tenant_id else doc["seller_tenant_id"]
-            )
-            tenant_doc = await db.tenants.find_one({"_id": db.tenants.database.client.get_default_database().tenants._Collection__database.client.get_default_database().tenants._Collection__database.client.get_default_database()})
-
-        # To avoid over-complicating DB access here, we only return raw relationships;
-        # tests will focus on counts and basic shape.
 
         return {
             "tenant_id": tenant_id,

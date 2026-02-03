@@ -485,14 +485,14 @@ export default function AdminOpsIncidentsPage() {
           {loading && !hasRows && (
             <div className="border rounded-md overflow-hidden">
               <div className="grid grid-cols-8 gap-2 bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground">
-                <div>ID</div>
-                <div>Type</div>
+                <div>Created At</div>
                 <div>Severity</div>
                 <div>Status</div>
+                <div>Type</div>
                 <div>Summary</div>
                 <div>Source</div>
-                <div>Created At</div>
                 <div>Supplier Health</div>
+                <div>ID</div>
               </div>
               {Array.from({ length: 5 }).map((_, i) => (
                 <div

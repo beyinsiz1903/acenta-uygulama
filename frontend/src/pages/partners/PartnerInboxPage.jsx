@@ -214,7 +214,7 @@ export default function PartnerInboxPage() {
       toast({ description: "Davet başarıyla kabul edildi." });
       await load();
     } catch (e) {
-      toast({ variant: "destructive", description: e?.message || "Davet kabul edilirken hata olu5ftu." });
+      toast({ variant: "destructive", description: e?.message || "Davet kabul edilirken hata oluştu." });
     } finally {
       setBusyRelationshipId(null);
     }

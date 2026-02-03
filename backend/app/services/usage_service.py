@@ -8,9 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.repositories.usage_log_repository import UsageLogRepository
 
 
-# Metric constants
-METRIC_BOOKINGS_CREATED = "bookings.created"
-METRIC_USERS_CREATED = "users.created"
+from app.metrics import METRIC_BOOKINGS_CREATED, METRIC_USERS_CREATED
 
 
 class UsageService:

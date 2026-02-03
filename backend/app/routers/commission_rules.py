@@ -113,7 +113,7 @@ async def get_effective_commission(  # type: ignore[no-untyped-def]
     currency: str = Query(...),
     user: Dict[str, Any] = Depends(get_current_user),
 ):
-    ctx: RequestContext = get_request_context(required=True)  # type: ignore[assignment]
+    get_request_context(required=True)  # type: ignore[call-arg]
 
     @require_permission("commission.view")
     async def _guard() -> None:  # type: ignore[no-untyped-def]

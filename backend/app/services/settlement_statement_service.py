@@ -65,8 +65,9 @@ class SettlementStatementService:
         )
 
         items: List[Dict[str, Any]] = []
-        async for doc in cursor:
-            doc["settlement_id"] = str(doc.pop("_id"))
+        async for doc in cursor_q:
+            doc["_id"] = str(doc["_id"])
+            doc["settlement_id"] = doc.pop("_id")
             items.append(doc)
         return items
 

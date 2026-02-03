@@ -78,7 +78,6 @@ export default function AppShell() {
     }
     return null;
   });
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     (async () => {

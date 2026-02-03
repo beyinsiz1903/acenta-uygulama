@@ -114,6 +114,7 @@ async def test_settlements_requires_permission(async_client: AsyncClient) -> Non
         "status": "active",
         "is_active": True,
         "created_at": now,
+        "updated_at": now,
     }
     res_tenant = await db.tenants.insert_one(tenant)
     tenant_id = str(res_tenant.inserted_id)

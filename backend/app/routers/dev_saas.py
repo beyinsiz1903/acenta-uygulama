@@ -16,9 +16,11 @@ router = APIRouter(prefix="/api/dev", tags=["dev_saas"], include_in_schema=False
 
 
 def _ensure_dev_mode() -> None:
-    if not get_env_flag("DEV_MODE", default=False):
-        from app.errors import AppError
+    from app.errors import AppError
 
+    flag = os.environ.get("DEV_MODE", "false").lower()
+    enabled = flag in ("1", "true", "yes", "on")
+    if not enabled:
         raise AppError(
             status_code=403,
             code="dev_mode_disabled",

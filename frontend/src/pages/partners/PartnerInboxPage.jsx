@@ -175,6 +175,7 @@ export default function PartnerInboxPage() {
   const { toast } = useToast();
   const [data, setData] = useState({ invites_received: [], invites_sent: [], active_partners: [] });
   const [loading, setLoading] = useState(false);
+  const [partnerSummary, setPartnerSummary] = useState(null);
   const [error, setError] = useState("");
   const [busyRelationshipId, setBusyRelationshipId] = useState(null);
   const [tab, setTab] = useState("received");

@@ -224,7 +224,7 @@ export default function PartnerInboxPage() {
     setBusyRelationshipId(rel.id);
     try {
       await activatePartnerRelationship(rel.id);
-      toast({ description: "c4b1li5fki ba5far31yla etkinle5ftirildi." });
+      toast({ description: "İlişki başarıyla etkinleştirildi." });
       await load();
     } catch (e) {
       toast({ variant: "destructive", description: e?.message || "c4b1li5fki etkinle5ftirilirken hata olu5ftu." });

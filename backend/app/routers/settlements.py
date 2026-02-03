@@ -246,6 +246,9 @@ async def get_settlement_statement(  # type: ignore[no-untyped-def]
     month: str = _StatementQuery(...),
     perspective: str = _StatementQuery("seller"),
     status: _Opt[str] = _StatementQuery(None),
+    counterparty_tenant_id: _Opt[str] = _StatementQuery(None),
+    limit: int = _StatementQuery(100, ge=1, le=200),
+    cursor: _Opt[str] = _StatementQuery(None),
     user: _Dict[str, _Any] = _Depends(_get_current_user),
 ):
     ctx: _RequestContext = _get_request_context(required=True)  # type: ignore[assignment]

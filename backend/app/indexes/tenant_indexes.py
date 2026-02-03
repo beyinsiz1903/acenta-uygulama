@@ -20,7 +20,13 @@ async def ensure_tenant_indexes(db: AsyncIOMotorDatabase) -> None:
 
     # Tenants
     await db.tenants.create_index("tenant_key", unique=True)
-    await db.tenants.create_index("slug", unique=True)
+    # Ensure slug is unique only when it is a non-null string to avoid legacy null duplicates
+    await db.tenants.create_index(
+        [("slug", 1)],
+        name="tenant_slug_unique_not_null",
+        unique=True,
+        partialFilterExpression={"slug": {"$type": "string"}},
+    )
     await db.tenants.create_index("organization_id")
     await db.tenants.create_index("primary_domain")
     await db.tenants.create_index("subdomain")

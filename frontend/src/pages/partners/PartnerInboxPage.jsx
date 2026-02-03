@@ -42,7 +42,7 @@ function formatDate(value) {
 function shortenId(id) {
   if (!id) return "-";
   if (id.length <= 10) return id;
-  return `${id.slice(0, 6)}a0b7b7b7a0${id.slice(-4)}`;
+  return `${id.slice(0, 6)}…${id.slice(-4)}`;
 }
 
 function ReceivedTable({ items, onAccept, busyId }) {

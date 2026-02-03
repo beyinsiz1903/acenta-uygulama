@@ -286,6 +286,8 @@ app.include_router(public_tours_router)         # No prefix - router has its own
 app.include_router(public_cms_pages_router)     # No prefix - router has its own
 app.include_router(public_partners_router)      # No prefix - router has its own
 app.include_router(partner_graph_router)
+app.include_router(inventory_shares_router)
+
 
 app.include_router(search_router, prefix=API_PREFIX)
 app.include_router(suppliers_router, prefix=API_PREFIX)

@@ -13,7 +13,7 @@ def test_exposure_page_comprehensive():
     
     # Step 1: Login as admin
     print("\nStep 1: Admin login")
-    login_url = "https://risk-aware-b2b.preview.emergentagent.com/api/auth/login"
+    login_url = "https://multitenant-11.preview.emergentagent.com/api/auth/login"
     login_data = {
         "email": "admin@acenta.test",
         "password": "admin123"
@@ -33,7 +33,7 @@ def test_exposure_page_comprehensive():
     
     # Step 2: Test the exposure API endpoint
     print("\nStep 2: Testing /api/ops/finance/exposure endpoint")
-    exposure_url = "https://risk-aware-b2b.preview.emergentagent.com/api/ops/finance/exposure"
+    exposure_url = "https://multitenant-11.preview.emergentagent.com/api/ops/finance/exposure"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
@@ -79,7 +79,7 @@ def test_exposure_page_comprehensive():
     session = requests.Session()
     
     # Login through the web interface
-    login_page_url = "https://risk-aware-b2b.preview.emergentagent.com/login"
+    login_page_url = "https://multitenant-11.preview.emergentagent.com/login"
     try:
         # Get login page first
         response = session.get(login_page_url)
@@ -89,7 +89,7 @@ def test_exposure_page_comprehensive():
         # But we can still test the exposure page accessibility
         
         # Test the exposure page
-        exposure_page_url = "https://risk-aware-b2b.preview.emergentagent.com/app/admin/finance/exposure"
+        exposure_page_url = "https://multitenant-11.preview.emergentagent.com/app/admin/finance/exposure"
         response = session.get(exposure_page_url)
         print(f"Exposure page status: {response.status_code}")
         

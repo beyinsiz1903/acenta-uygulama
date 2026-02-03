@@ -77,7 +77,13 @@ function ReceivedTable({ items, onAccept, busyId, onCopyId }) {
             const isBusy = busyId === r.id;
             return (
               <TableRow key={r.id} className="hover:bg-muted/40">
-                <TableCell className="text-xs font-mono">{shortenId(r.id)}</TableCell>
+                <TableCell
+                  className="text-xs font-mono cursor-pointer hover:underline"
+                  title="ID'yi kopyala"
+                  onClick={() => onCopyId && onCopyId(r.id)}
+                >
+                  {shortenId(r.id)}
+                </TableCell>
                 <TableCell className="text-xs font-mono">{r.seller_tenant_id || "-"}</TableCell>
                 <TableCell className="text-xs">
                   <StatusBadge status={r.status} />

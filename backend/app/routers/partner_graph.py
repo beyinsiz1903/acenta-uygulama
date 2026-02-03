@@ -19,17 +19,51 @@ async def invite_partner(  # type: ignore[no-untyped-def]
     user: Dict[str, Any] = Depends(get_current_user),
 ):
     ctx: RequestContext = get_request_context(required=True)  # type: ignore[assignment]
+
+    @require_permission("partner.invite")
+    async def _guard() -> None:  # type: ignore[no-untyped-def]
+        return None
+
+    await _guard()
+
     db = await get_db()
     service = PartnerGraphService(db)
 
     buyer_tenant_id: Optional[str] = body.get("buyer_tenant_id")
-    if not buyer_tenant_id:
-        from app.errors import AppError
+    buyer_tenant_slug: Optional[str] = body.get("buyer_tenant_slug")
 
+    if not buyer_tenant_id and not buyer_tenant_slug:
         raise AppError(
             status_code=400,
             code="validation_error",
-            message="buyer_tenant_id is required",
+            message="buyer_tenant_id or buyer_tenant_slug is required",
+            details=None,
+        )
+
+    # Resolve slug to id if provided
+    if buyer_tenant_slug and not buyer_tenant_id:
+        tenant = await (await get_db()).tenants.find_one({"slug": buyer_tenant_slug})
+        if not tenant:
+            raise AppError(
+                status_code=404,
+                code="tenant_not_found",
+                message="Buyer tenant not found.",
+                details={"slug": buyer_tenant_slug},
+            )
+        if tenant.get("status") != "active" or not tenant.get("is_active", True):
+            raise AppError(
+                status_code=403,
+                code="tenant_inactive",
+                message="Buyer tenant is not active.",
+                details={"slug": buyer_tenant_slug},
+            )
+        buyer_tenant_id = str(tenant["_id"])
+
+    if buyer_tenant_id == ctx.tenant_id:
+        raise AppError(
+            status_code=400,
+            code="cannot_invite_self",
+            message="Cannot invite own tenant as partner.",
             details=None,
         )
 

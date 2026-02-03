@@ -38,6 +38,10 @@ async def ensure_phase2a_indexes(db):
                 return
             raise
 
+    from app.indexes.partner_graph_indexes import ensure_partner_graph_indexes
+
+    await ensure_partner_graph_indexes(db)
+
     # ========================================================================
     # supplier_accruals (Phase 2A.2)
     # ========================================================================

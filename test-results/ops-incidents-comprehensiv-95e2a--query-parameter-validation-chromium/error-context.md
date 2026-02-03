@@ -1,0 +1,294 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic: Acenta Master
+          - generic:
+            - button:
+              - img
+              - generic: Tema
+            - generic:
+              - generic: murat
+              - generic: super_admin
+            - button:
+              - img
+              - text: Çıkış
+      - generic:
+        - complementary:
+          - generic:
+            - generic:
+              - generic:
+                - generic: A
+                - generic:
+                  - generic: Acenta Master
+                  - generic: Kurumsal Panel
+            - generic:
+              - generic:
+                - generic: Toplam adet
+                - generic: "0"
+              - generic:
+                - generic: Bekleyen adet
+                - generic: "0"
+              - generic:
+                - generic: Ciro (7G, ₺)
+                - generic: ₺0
+            - generic:
+              - generic: "Rol: super_admin"
+              - generic: 03.02.2026
+            - generic:
+              - navigation:
+                - generic:
+                  - generic: Admin
+                  - link:
+                    - /url: /app/admin/b2b/dashboard
+                    - img
+                    - text: B2B Dashboard
+                  - link:
+                    - /url: /app/admin/agencies
+                    - img
+                    - text: Acentalar
+                  - link:
+                    - /url: /app/admin/hotels
+                    - img
+                    - text: Oteller
+                  - link:
+                    - /url: /app/admin/tours
+                    - img
+                    - text: Turlar
+                  - link:
+                    - /url: /app/admin/links
+                    - img
+                    - text: Link Yönetimi
+                  - link:
+                    - /url: /app/admin/cms/pages
+                    - img
+                    - text: CMS Sayfaları
+                  - link:
+                    - /url: /app/admin/campaigns
+                    - img
+                    - text: Kampanyalar
+                  - link:
+                    - /url: /app/admin/partners
+                    - img
+                    - text: Partnerler
+                  - link:
+                    - /url: /app/admin/b2b/marketplace
+                    - img
+                    - text: B2B Marketplace
+                  - link:
+                    - /url: /app/admin/catalog
+                    - img
+                    - text: Katalog
+                  - link:
+                    - /url: /app/admin/catalog/hotels
+                    - img
+                    - text: Otel Kataloğu
+                  - link:
+                    - /url: /app/admin/pricing
+                    - img
+                    - text: Fiyatlandırma
+                  - link:
+                    - /url: /app/admin/coupons
+                    - img
+                    - text: Kuponlar
+                  - link:
+                    - /url: /app/admin/approvals
+                    - img
+                    - text: Onay Görevleri
+                  - link:
+                    - /url: /app/admin/finance/refunds
+                    - img
+                    - text: Finans / İadeler
+                  - link:
+                    - /url: /app/admin/finance/exposure
+                    - img
+                    - text: Exposure & Aging (Acenta)
+                  - link:
+                    - /url: /app/admin/finance/b2b-agencies
+                    - img
+                    - text: B2B Acenteler
+                  - link:
+                    - /url: /app/admin/b2b/funnel
+                    - img
+                    - text: B2B Funnel
+                  - link:
+                    - /url: /app/admin/b2b/announcements
+                    - img
+                    - text: B2B Duyuruları
+                  - link:
+                    - /url: /app/admin/finance/settlements
+                    - img
+                    - text: Finans / Mutabakat
+                  - link:
+                    - /url: /app/admin/ops/b2b
+                    - img
+                    - text: Ops / B2B
+                - generic:
+                  - generic: Risk & Matches
+                  - link:
+                    - /url: /app/admin/matches
+                    - img
+                    - text: Match Listesi
+                  - link:
+                    - /url: /app/admin/reports/match-risk
+                    - img
+                    - text: Match Risk Raporu
+                  - link:
+                    - /url: /app/admin/reports/match-risk-trends
+                    - img
+                    - text: Match Risk Trendleri
+                  - link:
+                    - /url: /app/admin/settings/match-alerts
+                    - img
+                    - text: Match Alert Politikaları
+                  - link:
+                    - /url: /app/admin/settings/action-policies
+                    - img
+                    - text: Aksiyon Politikaları
+                  - link:
+                    - /url: /app/admin/exports
+                    - img
+                    - text: Export Çalıştırma
+                - generic:
+                  - generic: Ops Queues
+                  - link:
+                    - /url: /app/ops/tasks
+                    - img
+                    - text: Ops Tasks
+                  - link:
+                    - /url: /app/ops/incidents
+                    - img
+                    - text: Ops Incidents
+                - link:
+                  - /url: /app
+                  - img
+                  - text: Dashboard
+                - link:
+                  - /url: /app/products
+                  - img
+                  - text: Ürünler
+                - link:
+                  - /url: /app/inventory
+                  - img
+                  - text: Müsaitlik
+                - link:
+                  - /url: /app/reservations
+                  - img
+                  - text: Rezervasyonlar
+                - link:
+                  - /url: /app/customers
+                  - img
+                  - text: Müşteriler
+                - link:
+                  - /url: /app/crm/customers
+                  - img
+                  - text: CRM Müşteriler
+                - link:
+                  - /url: /app/crm/duplicates
+                  - img
+                  - text: CRM Duplicate Müşteriler
+                - link:
+                  - /url: /app/crm/pipeline
+                  - img
+                  - text: CRM Pipeline
+                - link:
+                  - /url: /app/crm/tasks
+                  - img
+                  - text: CRM Görevler
+                - link:
+                  - /url: /app/crm/events
+                  - img
+                  - text: CRM Olaylar
+                - link:
+                  - /url: /app/inbox
+                  - img
+                  - text: Inbox
+                - link:
+                  - /url: /app/b2b
+                  - img
+                  - text: B2B / Acenteler
+                - link:
+                  - /url: /app/reports
+                  - img
+                  - text: Raporlar
+                - link:
+                  - /url: /app/settings
+                  - img
+                  - text: Ayarlar
+          - generic:
+            - generic: Hızlı İpuçları
+            - generic: Müsaitlik ekranında kapasite ve fiyatı güncelleyip rezervasyon akışını hızlıca test edebilirsin.
+        - main:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - heading [level=1]: Ops Incidents
+                  - paragraph: "Risk review ve supplier kaynakl\x131 ops olaylar\x131n\x131 tek ekranda g\x0f6r\x0fnt\x0fleyin."
+            - generic:
+              - generic:
+                - generic: Filters
+              - generic:
+                - generic:
+                  - generic: Status
+                  - combobox:
+                    - generic: Resolved
+                    - img
+                - generic:
+                  - generic: Type
+                  - combobox [expanded]:
+                    - generic: supplier_partial_failure
+                    - img
+                - generic:
+                  - generic: Severity
+                  - combobox:
+                    - generic: critical
+                    - img
+                - generic:
+                  - generic: Page 1 / 1
+                  - button [disabled]: Prev
+                  - button [disabled]: Next
+            - generic:
+              - generic:
+                - generic: Incidents
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: Created At
+                    - generic: Severity
+                    - generic: Status
+                    - generic: Type
+                    - generic: Summary
+                    - generic: Source
+                    - generic: Supplier Health
+                    - generic: ID
+                  - button:
+                    - generic: 2/3/2026, 10:00:00 AM
+                    - generic:
+                      - generic: high
+                    - generic:
+                      - generic: open
+                    - generic: risk_review
+                    - generic: Test incident for filters
+                    - generic: bkg_test_1
+                    - generic:
+                      - generic: "Circuit: CLOSED"
+                    - generic: inc_filter_test_1
+      - contentinfo:
+        - generic: © 2026 — v1
+    - region "Notifications alt+T"
+  - listbox [ref=e1]:
+    - option "All" [ref=e2]:
+      - generic [ref=e4]: All
+    - option "risk_review" [ref=e5]:
+      - generic [ref=e7]: risk_review
+    - option "supplier_partial_failure" [active] [selected] [ref=e8]:
+      - img [ref=e11]
+      - generic [ref=e13]: supplier_partial_failure
+    - option "supplier_all_failed" [ref=e14]:
+      - generic [ref=e16]: supplier_all_failed
+```

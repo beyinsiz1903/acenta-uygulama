@@ -348,6 +348,18 @@ export default function AdminOpsIncidentsPage() {
             <EmptyState
               title="No incidents"
               description="There are no ops incidents for the selected filters."
+              action={
+                (filters.type || filters.severity || filters.status) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="text-xs"
+                  >
+                    Clear filters
+                  </Button>
+                )
+              }
             />
           )}
 

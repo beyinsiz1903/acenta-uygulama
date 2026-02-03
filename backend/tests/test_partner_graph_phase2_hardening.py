@@ -64,7 +64,8 @@ async def _seed_org_tenant_user(db, org_name: str, email: str) -> Dict[str, str]
     return {"org_id": org_id, "tenant_id": tenant_id, "user_id": user_id, "email": email}
 
 
-def test_inventory_shares_requires_tenant_header_unit() -> None:
+@pytest.mark.anyio
+async def test_inventory_shares_requires_tenant_header_unit() -> None:
     scope = {
         "type": "http",
         "method": "POST",
@@ -77,24 +78,19 @@ def test_inventory_shares_requires_tenant_header_unit() -> None:
 
     middleware = TenantResolutionMiddleware(app_noop)
 
-    async def call():  # type: ignore[no-untyped-def]
-        from starlette.types import Receive, Scope, Send
+    from starlette.types import Receive, Scope, Send
 
-        async def receive() -> Receive:  # type: ignore[override]
-            return {"type": "http.request"}
+    async def receive() -> Receive:  # type: ignore[override]
+        return {"type": "http.request"}
 
-        async def send(message: dict) -> None:  # type: ignore[override]
-            pass
+    async def send(message: dict) -> None:  # type: ignore[override]
+        pass
 
-        request = Request(scope)  # type: ignore[arg-type]
-        with pytest.raises(AppError) as exc:
-            await middleware.dispatch(request, lambda r: app_noop(scope, receive, send))  # type: ignore[arg-type]
-        err = exc.value
-        assert err.code == "tenant_header_missing"
-
-    import anyio
-
-    anyio.run(call)
+    request = Request(scope)  # type: ignore[arg-type]
+    with pytest.raises(AppError) as exc:
+        await middleware.dispatch(request, lambda r: app_noop(scope, receive, send))  # type: ignore[arg-type]
+    err = exc.value
+    assert err.code == "tenant_header_missing"
 
 
 @pytest.mark.asyncio

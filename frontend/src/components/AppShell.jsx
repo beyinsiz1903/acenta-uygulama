@@ -89,6 +89,31 @@ export default function AppShell() {
         ]);
         setResSummary(a.data || []);
         setSales(b.data || []);
+  // Keep activeTenantKey in sync with localStorage changes (e.g. tenant switcher)
+  useEffect(() => {
+    const sync = () => {
+      try {
+        if (typeof window === "undefined") return;
+        const v = window.localStorage.getItem("acenta_tenant_key") || null;
+        setActiveTenantKey(v);
+      } catch {
+        // ignore
+      }
+    };
+
+    sync();
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("storage", sync);
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("storage", sync);
+      }
+    };
+  }, []);
+
       } catch {
         // Sidebar metrikleri opsiyonel; hata UI'ı bozmasın.
       }

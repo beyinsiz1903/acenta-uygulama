@@ -147,6 +147,9 @@ class PartnerGraphService:
 
     async def list_for_current_tenant(self) -> list[dict[str, Any]]:
         ctx = await self._get_ctx()
+        if not ctx.tenant_id:
+            return []
+        return await self._repo.list_for_tenant(ctx.tenant_id)
 
     async def build_inbox(self, tenant_id: str) -> dict[str, Any]:
         """Build inbox view: invites received, invites sent, and active partners.

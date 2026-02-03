@@ -58,18 +58,6 @@ const iconMap = {
 function userHasRole(user, allowed) {
   const roles = user?.roles || [];
   return allowed.some((r) => roles.includes(r));
-  const [partnerSummary, setPartnerSummary] = useState(null);
-  const [activeTenantKey, setActiveTenantKey] = useState(() => {
-    try {
-      if (typeof window !== "undefined") {
-        return window.localStorage.getItem("acenta_tenant_key") || null;
-      }
-    } catch {
-      // ignore
-    }
-    return null;
-  });
-
 }
 
 export default function AppShell() {

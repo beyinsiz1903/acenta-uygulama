@@ -144,6 +144,13 @@ export default function AppShell() {
   // Combine both menus
   const allMenuItems = [...roleBasedMenu, ...visibleLegacyNav];
 
+  const partnerSection = {
+    label: "Partners",
+    children: [
+      { label: "Inbox", path: "/app/partners/inbox" },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">

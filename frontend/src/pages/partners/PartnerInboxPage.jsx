@@ -18,7 +18,7 @@ function StatusBadge({ status }) {
     return <Badge className="bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20">Kabul edildi</Badge>;
   }
   if (s === "invited") {
-    return <Badge variant="outline">Davet gf6nderildi</Badge>;
+    return <Badge variant="outline">Davet gönderildi</Badge>;
   }
   if (s === "suspended") {
     return <Badge variant="outline" className="border-amber-500/40 text-amber-600 dark:text-amber-400">Askfya ald1ndd1</Badge>;

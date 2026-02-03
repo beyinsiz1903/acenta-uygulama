@@ -318,6 +318,54 @@ async def get_settlement_statement(  # type: ignore[no-untyped-def]
 
     db = await _get_db()
     svc = SettlementStatementService(db)
+    # Compute next_cursor
+    next_cursor = None
+    if len(items) > limit:
+        last = items[limit - 1]
+        import json
+        from base64 import b64encode
+
+        payload = {
+            "created_at": last.get("created_at"),
+            "booking_id": last.get("booking_id"),
+        }
+        next_cursor = b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
+
+    response_items: list[dict[str, _Any]] = []
+    for it in items[:limit]:
+        response_items.append(
+            {
+                "settlement_id": it["settlement_id"],
+                "booking_id": it.get("booking_id"),
+                "seller_tenant_id": it.get("seller_tenant_id"),
+                "buyer_tenant_id": it.get("buyer_tenant_id"),
+                "relationship_id": it.get("relationship_id"),
+                "commission_rule_id": it.get("commission_rule_id"),
+                "gross_amount": it.get("gross_amount"),
+                "commission_amount": it.get("commission_amount"),
+                "net_amount": it.get("net_amount"),
+                "currency": it.get("currency"),
+                "status": it.get("status"),
+                "created_at": it.get("created_at").isoformat() if it.get("created_at") else None,
+            }
+        )
+
+    return {
+        "tenant_id": ctx.tenant_id,
+        "perspective": perspective,
+        "month": month,
+        "currency_breakdown": currency_breakdown,
+        "totals": {
+            "count": overall.count,
+            "gross_total": overall.gross_total,
+            "commission_total": overall.commission_total,
+            "net_total": overall.net_total,
+        },
+        "counterparties": counterparties,
+        "items": response_items,
+        "page": {"limit": limit, "next_cursor": next_cursor},
+    }
+
 
     # Decode cursor if provided
     cursor_dict = None

@@ -86,28 +86,32 @@ export default function AppShell() {
     })();
   }, []);
 
-  // Keep activeTenantKey in sync with localStorage changes (e.g. tenant switcher)
+  // Keep activeTenantKey in sync with tenant change events and storage changes
   useEffect(() => {
-    const sync = () => {
-      try {
-        if (typeof window === "undefined") return;
-        const v = window.localStorage.getItem("acenta_tenant_key") || null;
-        setActiveTenantKey(v);
-      } catch {
-        // ignore
-      }
+    const syncFromStorage = () => {
+      setActiveTenantKey(getActiveTenantKey());
     };
 
-    sync();
+    // Initial sync
+    syncFromStorage();
 
+    let unsubscribeTenant = () => {};
     if (typeof window !== "undefined") {
-      window.addEventListener("storage", sync);
+      // Custom event from tenant switcher
+      unsubscribeTenant = subscribeTenantChange((detail) => {
+        const nextKey = detail?.tenantKey ?? getActiveTenantKey();
+        setActiveTenantKey(nextKey);
+      });
+
+      // Cross-tab storage changes
+      window.addEventListener("storage", syncFromStorage);
     }
 
     return () => {
       if (typeof window !== "undefined") {
-        window.removeEventListener("storage", sync);
+        window.removeEventListener("storage", syncFromStorage);
       }
+      unsubscribeTenant();
     };
   }, []);
 

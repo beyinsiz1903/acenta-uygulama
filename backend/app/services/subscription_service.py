@@ -67,8 +67,16 @@ class SubscriptionService:
             )
         doc = await self.get_active_for_org(ctx.org_id)
         if not doc:
-            # No subscription: allow for now (backward-compatible)
-            return
+            # No subscription configured for this organization
+            if ctx.is_super_admin:
+                # Super admins are allowed even without subscription (ops/debug)
+                return
+            raise AppError(
+                status_code=403,
+                code="subscription_missing",
+                message="No active subscription configured for organization.",
+                details={"org_id": ctx.org_id},
+            )
         status = doc.get("status")
         if status in ("suspended", "canceled"):
             raise AppError(

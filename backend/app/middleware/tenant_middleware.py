@@ -86,9 +86,13 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
         # ------------------------------------------------------------------
         tenant_id_header = request.headers.get("X-Tenant-Id")
         if not tenant_id_header:
-            # No tenant header: allow legacy /api routes to function without tenant
-            # context for backward compatibility.
-            return await call_next(request)
+            # For SaaS APIs, tenant header is required (except for whitelisted routes).
+            raise AppError(
+                status_code=403,
+                code="tenant_header_missing",
+                message="X-Tenant-Id header is required for this endpoint.",
+                details=None,
+            )
 
         from bson import ObjectId
 
@@ -101,7 +105,14 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
             tenant_lookup_id = tenant_id_header
 
         tenant_doc: Optional[dict[str, Any]] = await db.tenants.find_one({"_id": tenant_lookup_id})
-        if not tenant_doc or not tenant_doc.get("is_active", True):
+        if tenant_doc:
+            status = tenant_doc.get("status", "active")
+            is_active_flag = tenant_doc.get("is_active", True)
+            active = (status == "active") and bool(is_active_flag)
+        else:
+            active = False
+
+        if not tenant_doc or not active:
             raise AppError(
                 status_code=403,
                 code="tenant_not_found",

@@ -92,7 +92,7 @@ def require_permission(required: str):
       if not has_permission(required, ctx):
         raise AppError(
           status_code=403,
-          code="INSUFFICIENT_PERMISSIONS",
+          code="insufficient_permissions",
           message=f"Missing permission: {required}",
           details={"required": required, "role": ctx.role},
         )

@@ -393,8 +393,12 @@ export default function AdminOpsIncidentsPage() {
                       {inc.incident_id}
                     </div>
                     <div>{inc.type}</div>
-                    <div className="capitalize">{inc.severity}</div>
-                    <div className="capitalize">{inc.status}</div>
+                    <div>
+                      <SeverityBadge severity={inc.severity} />
+                    </div>
+                    <div>
+                      <StatusBadge status={inc.status} />
+                    </div>
                     <div className="truncate" title={inc.summary}>
                       {inc.summary}
                     </div>
@@ -408,6 +412,36 @@ export default function AdminOpsIncidentsPage() {
                   </button>
                 );
               })}
+            </div>
+          )}
+
+          {loading && !hasRows && (
+            <div className="border rounded-md overflow-hidden">
+              <div className="grid grid-cols-8 gap-2 bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground">
+                <div>ID</div>
+                <div>Type</div>
+                <div>Severity</div>
+                <div>Status</div>
+                <div>Summary</div>
+                <div>Source</div>
+                <div>Created At</div>
+                <div>Supplier Health</div>
+              </div>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="grid grid-cols-8 gap-2 border-t px-2 py-1 items-center text-[11px] animate-pulse"
+                >
+                  <div className="h-3 bg-muted rounded w-20"></div>
+                  <div className="h-3 bg-muted rounded w-16"></div>
+                  <div className="h-3 bg-muted rounded w-12"></div>
+                  <div className="h-3 bg-muted rounded w-12"></div>
+                  <div className="h-3 bg-muted rounded w-32"></div>
+                  <div className="h-3 bg-muted rounded w-16"></div>
+                  <div className="h-3 bg-muted rounded w-24"></div>
+                  <div className="h-3 bg-muted rounded w-16"></div>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>

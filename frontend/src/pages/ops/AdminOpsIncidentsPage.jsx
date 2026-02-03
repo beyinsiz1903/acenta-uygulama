@@ -236,7 +236,7 @@ export default function AdminOpsIncidentsPage() {
               value={filters.type ?? "all"}
               onValueChange={(v) => onChangeFilter("type", v === "all" ? undefined : v)}
             >
-              <SelectTrigger className="h-8 w-48 text-xs">
+              <SelectTrigger className="h-8 w-48 text-xs" data-testid="ops-incidents-filter-type">
                 <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent>
@@ -334,6 +334,7 @@ export default function AdminOpsIncidentsPage() {
                     onClick={() => onRowClick(inc)}
                     className="grid grid-cols-8 gap-2 border-t px-2 py-1 items-center text-[11px] w-full text-left hover:bg-accent/60 focus:outline-none focus:ring-1 focus:ring-primary/40"
                     data-testid="ops-incidents-row"
+                    data-row-id={inc.incident_id}
                   >
                     <div className="font-mono truncate" title={inc.incident_id}>
                       {inc.incident_id}

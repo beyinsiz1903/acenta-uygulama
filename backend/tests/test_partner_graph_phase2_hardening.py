@@ -69,7 +69,7 @@ async def test_inventory_shares_requires_tenant_header_unit() -> None:
         "type": "http",
         "method": "POST",
         "path": "/api/inventory-shares/grant",
-        "headers": [(b"authorization", b"Bearer dummy")],
+        "headers": [],
     }
 
     async def app_noop(scope, receive, send):  # type: ignore[no-untyped-def]

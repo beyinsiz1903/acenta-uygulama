@@ -499,6 +499,28 @@ frontend:
 
   - task: "B2B Portal FriendlyError Pack (UI-only) - Retry UX and Regression Check"
     implemented: true
+    working: "NA"
+    file: "frontend/src/pages/B2BPortalPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Need to test retry UX functionality and perform regression check on existing B2B Portal functionality."
+
+  - task: "PR-24: AdminOpsIncidentsPage Frontend Improvements"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/ops/AdminOpsIncidentsPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "✅ PR-24 FRONTEND IMPROVEMENTS COMPLETE - All enhancements implemented successfully. IMPROVEMENTS MADE: A) SEVERITY/STATUS BADGES: ✅ Added SeverityBadge component with color-coded variants (critical/high→destructive, medium→default, low→secondary), ✅ Added StatusBadge component with status-specific variants (open→destructive, resolved→default), ✅ Replaced plain text severity/status with proper Badge components in table rows. B) EMPTY STATE ENHANCEMENT: ✅ Added Clear filters action button to EmptyState when filters are active, ✅ clearFilters function implemented to reset all filters (type, severity, status), ✅ Button only shows when at least one filter is applied. C) LOADING STATE IMPROVEMENTS: ✅ Added loading placeholder rows with animated skeleton when loading and no existing data, ✅ 5 skeleton rows with proper grid layout matching table structure, ✅ Animated pulse effect for better UX during data loading. D) TECHNICAL IMPLEMENTATION: ✅ All changes maintain existing functionality and styling patterns, ✅ Badge components use consistent text-[10px] sizing and capitalize styling, ✅ Loading state only shows when loading=true and hasRows=false, ✅ Clear filters functionality properly resets offset to 0. READY FOR TESTING: Component improvements complete and ready for frontend testing agent validation."
+    implemented: true
     working: true
     file: "frontend/src/pages/B2BPortalPage.jsx"
     stuck_count: 0

@@ -27,6 +27,7 @@ import { getMenuForUser } from "../config/menuConfig";
 import { Inbox } from "lucide-react";
 import { Badge as UIBadge } from "./ui/badge";
 import { fetchPartnerNotificationsSummary } from "../lib/partnerGraph";
+import { getActiveTenantKey, subscribeTenantChange } from "../lib/tenantContext";
 
 const legacyNav = [
   { to: "/app", label: "Dashboard", icon: LayoutGrid, roles: ["admin", "sales", "ops", "accounting", "b2b_agent", "super_admin"] },

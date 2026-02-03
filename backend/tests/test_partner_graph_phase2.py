@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 from uuid import uuid4
 
+import jwt
 import pytest
 from httpx import AsyncClient
 
-from app.auth import create_access_token
+from app.auth import _jwt_secret
 from app.db import get_db
 from server import app
 

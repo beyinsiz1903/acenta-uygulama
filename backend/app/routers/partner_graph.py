@@ -160,12 +160,6 @@ async def partner_notifications_summary(  # type: ignore[no-untyped-def]
     summary = await svc.notifications_summary(ctx.tenant_id or "")
     return summary
 
-    user: Dict[str, Any] = Depends(get_current_user),
-):
-    db = await get_db()
-    service = PartnerGraphService(db)
-    return await service.activate_relationship(relationship_id)
-
 
 @router.post("/{relationship_id}/suspend")
 async def suspend_relationship(  # type: ignore[no-untyped-def]

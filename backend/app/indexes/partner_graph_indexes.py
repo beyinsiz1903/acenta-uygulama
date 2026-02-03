@@ -17,6 +17,9 @@ async def ensure_partner_graph_indexes(db: AsyncIOMotorDatabase) -> None:
     # commission_rules
     await db.commission_rules.create_index([("seller_tenant_id", 1)])
     await db.commission_rules.create_index([("seller_tenant_id", 1), ("buyer_tenant_id", 1)])
+    await db.commission_rules.create_index([("seller_tenant_id", 1), ("buyer_tenant_id", 1), ("scope_type", 1), ("product_id", 1), ("tag", 1), ("status", 1)])
+    await db.commission_rules.create_index([("seller_tenant_id", 1), ("status", 1)])
+
 
     # settlement_ledger
     await db.settlement_ledger.create_index("booking_id", unique=True)

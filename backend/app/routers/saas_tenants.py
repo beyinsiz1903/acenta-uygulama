@@ -57,7 +57,7 @@ async def resolve_tenant_slug(
     )
     from app.auth import is_super_admin as _is_super_admin
 
-    if not membership and not _is_super_admin(user):
+    if not membership:
         raise AppError(
             status_code=403,
             code="tenant_access_forbidden",

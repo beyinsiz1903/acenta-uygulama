@@ -187,6 +187,7 @@ export default function AppShell() {
     label: "Partners",
     children: [
       { label: "Gelen Kutusu", path: "/app/partners/inbox" },
+      { label: "Keşfet & Davet Et", path: "/app/partners/discovery" },
     ],
   };
 

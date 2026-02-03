@@ -60,6 +60,8 @@ from app.routers.suppliers import router as suppliers_router, router_paximum as 
 from app.routers.vouchers import router as vouchers_router
 from app.routers.inventory_shares import router as inventory_shares_router
 from app.routers.settlements import network_settlements_router
+from app.routers.commission_rules import router as commission_rules_router
+
 
 
 from app.routers.partner_graph import router as partner_graph_router

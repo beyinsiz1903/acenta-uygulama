@@ -318,9 +318,9 @@ test.describe("Ops Incidents Console v2 - Comprehensive Testing", () => {
     await page.waitForTimeout(2000);
 
     // Verify error handling - should show error state, not crash
-    const errorElement = page.locator("text=Access forbidden").or(
-      page.locator("text=Forbidden").or(
-        page.locator("text=Error")
+    const errorElement = page.locator("text=Bir hata oluştu").or(
+      page.locator(".text-destructive").or(
+        page.locator("[data-testid*='error']")
       )
     );
     

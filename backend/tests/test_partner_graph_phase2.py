@@ -9,7 +9,7 @@ from httpx import AsyncClient
 
 from app.auth import create_access_token
 from app.db import get_db
-from app.main import app
+from server import app
 
 
 async def _seed_org_tenant_user(db, org_name: str, email: str) -> Dict[str, str]:

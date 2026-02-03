@@ -67,6 +67,7 @@ def setup_test_org_tenant_user(org_name: str, email: str) -> Dict[str, str]:
     # Create organization
     org = {
         "name": org_name,
+        "slug": f"{org_name.lower().replace(' ', '-')}-{uuid.uuid4().hex[:6]}",
         "billing_email": email,
         "status": "active",
         "created_at": now,

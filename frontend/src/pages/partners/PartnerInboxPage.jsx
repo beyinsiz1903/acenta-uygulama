@@ -114,7 +114,7 @@ function ReceivedTable({ items, onAccept, busyId, onCopyId }) {
   );
 }
 
-function SentTable({ items, onActivate, busyId }) {
+function SentTable({ items, onActivate, busyId, onCopyId }) {
   return (
     <div className="overflow-x-auto">
       <Table>

@@ -9,7 +9,6 @@ from httpx import AsyncClient
 
 from app.metrics import METRIC_BOOKINGS_CREATED
 from app.request_context import _permission_matches
-from app.server import app
 from app.db import get_db
 
 

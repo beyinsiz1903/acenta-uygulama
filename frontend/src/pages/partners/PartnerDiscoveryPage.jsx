@@ -186,7 +186,7 @@ export default function PartnerDiscoveryPage() {
           <DialogHeader>
             <DialogTitle>Partner daveti gönder</DialogTitle>
             <DialogDescription className="text-xs">
-              Seçili tenant'a B2B partnerlik daveti göndereceksiniz.
+              Seçili tenant’a B2B partnerlik daveti göndereceksiniz.
             </DialogDescription>
           </DialogHeader>
 

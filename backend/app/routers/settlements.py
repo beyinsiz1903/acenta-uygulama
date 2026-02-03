@@ -308,21 +308,47 @@ async def get_settlement_statement(  # type: ignore[no-untyped-def]
             )
         statuses = parts
 
-    MAX_ITEMS = 500
+    if counterparty_tenant_id and counterparty_tenant_id == ctx.tenant_id:
+        raise AppError(
+            status_code=400,
+            code="invalid_counterparty",
+            message="counterparty_tenant_id cannot be the same as tenant_id",
+            details={"tenant_id": ctx.tenant_id},
+        )
+
     db = await _get_db()
     svc = SettlementStatementService(db)
 
-    items = await svc.fetch_items(ctx.tenant_id or "", perspective, month_start, month_end, statuses, MAX_ITEMS)
+    # Decode cursor if provided
+    cursor_dict = None
+    if cursor:
+        import json
+        from base64 import b64decode
 
-    if len(items) > MAX_ITEMS:
-        raise AppError(
-            status_code=400,
-            code="statement_too_large",
-            message="Too many settlements for statement window.",
-            details={"max_items": MAX_ITEMS},
-        )
+        try:
+            raw = b64decode(cursor).decode("utf-8")
+            cursor_dict = json.loads(raw)
+            # created_at is ISO string stored as-is in DB, we use it directly in comparison
+        except Exception:
+            raise AppError(
+                status_code=400,
+                code="invalid_cursor",
+                message="Invalid cursor.",
+                details=None,
+            )
 
-    per_curr, overall = svc.compute_totals(items)
+    items = await svc.fetch_items(
+        ctx.tenant_id or "",
+        perspective,
+        month_start,
+        month_end,
+        statuses or None,
+        counterparty_tenant_id,
+        limit,
+        cursor_dict,
+    )
+
+    per_curr, overall = svc.compute_totals(items[:limit])
 
     currency_breakdown = [
         {

@@ -88,7 +88,7 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
         if not tenant_id_header:
             # For SaaS APIs, tenant header is required (except for whitelisted routes).
             raise AppError(
-                status_code=403,
+                status_code=400,
                 code="tenant_header_missing",
                 message="X-Tenant-Id header is required for this endpoint.",
                 details=None,
@@ -105,19 +105,24 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
             tenant_lookup_id = tenant_id_header
 
         tenant_doc: Optional[dict[str, Any]] = await db.tenants.find_one({"_id": tenant_lookup_id})
-        if tenant_doc:
-            status = tenant_doc.get("status", "active")
-            is_active_flag = tenant_doc.get("is_active", True)
-            active = (status == "active") and bool(is_active_flag)
-        else:
-            active = False
+        if not tenant_doc:
+            raise AppError(
+                status_code=404,
+                code="tenant_not_found",
+                message="Tenant not found.",
+                details={"tenant_id": tenant_id_header},
+            )
 
-        if not tenant_doc or not active:
+        status = tenant_doc.get("status", "active")
+        is_active_flag = tenant_doc.get("is_active", True)
+        active = (status == "active") and bool(is_active_flag)
+
+        if not active:
             raise AppError(
                 status_code=403,
-                code="tenant_not_found",
-                message="Tenant not found or inactive.",
-                details={"tenant_id": tenant_id_header},
+                code="tenant_inactive",
+                message="Tenant is inactive.",
+                details={"tenant_id": tenant_id_header, "status": status},
             )
 
         tenant_org_id = tenant_doc.get("organization_id") or tenant_doc.get("org_id")

@@ -31,9 +31,20 @@ async def resolve_tenant_slug(
     if not tenant_doc:
         raise AppError(
             status_code=404,
-            code="TENANT_NOT_FOUND",
+            code="tenant_not_found",
             message="Tenant not found for the given slug.",
             details={"slug": slug},
+        )
+
+    status = tenant_doc.get("status", "active")
+    is_active_flag = tenant_doc.get("is_active", True)
+    active = (status == "active") and bool(is_active_flag)
+    if not active:
+        raise AppError(
+            status_code=403,
+            code="tenant_inactive",
+            message="Tenant is inactive.",
+            details={"slug": slug, "status": status},
         )
 
     tenant_id = str(tenant_doc["_id"])

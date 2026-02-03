@@ -41,56 +41,147 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         path = request.url.path or ""
-        host = request.headers.get("host", "").split(":")[0].strip().lower()
-        tenant_key_header = request.headers.get("X-Tenant-Key")
+
+        # Whitelist: auth, health, resolve endpoint
+        if path.startswith("/api/auth/") or path.startswith("/api/healthz") or path.startswith("/api/saas/tenants/resolve"):
+            return await call_next(request)
 
         db: AsyncIOMotorDatabase = await get_db()
 
-        tenant_doc: Optional[dict[str, Any]] = None
+        # ------------------------------------------------------------------
+        # 1) Authenticate user via Authorization header (JWT)
+        # ------------------------------------------------------------------
+        auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
+        if not auth_header or not auth_header.lower().startswith("bearer "):
+            # Let existing auth dependencies handle 401 semantics
+            return await call_next(request)
 
-        # a) Header-based resolution
-        if tenant_key_header:
-            tenant_doc = await db.tenants.find_one({"tenant_key": tenant_key_header, "is_active": True})
+        token = auth_header.split(" ", 1)[1].strip()
+        payload = decode_token(token)
 
-        # b) Exact domain match in tenant_domains
-        if tenant_doc is None and host:
-            domain_doc = await db.tenant_domains.find_one({"domain": host})
-            if domain_doc:
-                tenant_id = domain_doc.get("tenant_id")
-                if tenant_id:
-                    tenant_doc = await db.tenants.find_one({"_id": tenant_id, "is_active": True})
-
-        # c) Subdomain pattern: {subdomain}.{BASE_DOMAIN}
-        if tenant_doc is None and host and self.base_domain:
-            # If host endswith base_domain, take the prefix as subdomain
-            if host.endswith(self.base_domain):
-                maybe_sub = host[: -len(self.base_domain)].rstrip(".")
-                if maybe_sub:
-                    # subdomain-based mapping stored as primary_domain on tenants
-                    tenant_doc = await db.tenants.find_one({
-                        "subdomain": maybe_sub,
-                        "is_active": True,
-                    })
-
-        if tenant_doc:
-            request.state.tenant_resolved = True
-            request.state.tenant_id = str(tenant_doc.get("_id"))
-            request.state.tenant_key = tenant_doc.get("tenant_key")
-            request.state.tenant_org_id = tenant_doc.get("organization_id")
-        else:
-            # No tenant resolved
-            request.state.tenant_resolved = False
-
-        # Enforce storefront tenant requirement
-        if (path.startswith("/storefront/") or path.startswith("/api/storefront/")) and not getattr(request.state, "tenant_resolved", False):
-            from fastapi.responses import JSONResponse
-
-            return JSONResponse(
-                status_code=404,
-                content={"error": {"code": "TENANT_NOT_FOUND", "message": "Tenant not found for storefront route.", "details": {}}},
+        user_email = payload.get("sub")
+        org_id = payload.get("org")
+        if not user_email or not org_id:
+            raise AppError(
+                status_code=401,
+                code="invalid_token_payload",
+                message="Token payload missing required fields.",
+                details=None,
             )
 
-        # For /api/* and other routes, no tenant is required for backward
-        # compatibility; just continue.
+        user_doc = await db.users.find_one({"email": user_email, "organization_id": org_id})
+        if not user_doc:
+            raise AppError(
+                status_code=401,
+                code="user_not_found",
+                message="User not found for token.",
+                details=None,
+            )
+
+        user_id = str(user_doc.get("_id"))
+        super_admin = is_super_admin(user_doc)
+
+        # ------------------------------------------------------------------
+        # 2) Tenant resolution via X-Tenant-Id header
+        # ------------------------------------------------------------------
+        tenant_id_header = request.headers.get("X-Tenant-Id")
+        if not tenant_id_header:
+            # No tenant header: allow legacy /api routes to function without tenant
+            # context for backward compatibility.
+            return await call_next(request)
+
+        from bson import ObjectId
+
+        tenant_lookup_id: Any = tenant_id_header
+        try:
+            # Try to interpret as ObjectId for Mongo-backed tenants
+            tenant_lookup_id = ObjectId(tenant_id_header)
+        except Exception:
+            # Fallback to string _id; repositories must handle this shape.
+            tenant_lookup_id = tenant_id_header
+
+        tenant_doc: Optional[dict[str, Any]] = await db.tenants.find_one({"_id": tenant_lookup_id})
+        if not tenant_doc or not tenant_doc.get("is_active", True):
+            raise AppError(
+                status_code=403,
+                code="tenant_not_found",
+                message="Tenant not found or inactive.",
+                details={"tenant_id": tenant_id_header},
+            )
+
+        tenant_org_id = tenant_doc.get("organization_id") or tenant_doc.get("org_id")
+        if tenant_org_id and str(tenant_org_id) != str(org_id):
+            raise AppError(
+                status_code=403,
+                code="cross_org_tenant_forbidden",
+                message="Tenant does not belong to the same organization as the user.",
+                details={"tenant_org_id": str(tenant_org_id), "user_org_id": str(org_id)},
+            )
+
+        tenant_id_str = str(tenant_doc.get("_id"))
+
+        # ------------------------------------------------------------------
+        # 3) Membership & role
+        # ------------------------------------------------------------------
+        membership_repo = MembershipRepository(db)
+        membership = await membership_repo.find_active_membership(user_id=user_id, tenant_id=tenant_id_str)
+        if not membership and not super_admin:
+            raise AppError(
+                status_code=403,
+                code="tenant_access_forbidden",
+                message="User does not have access to this tenant.",
+                details={"tenant_id": tenant_id_str},
+            )
+
+        role = membership.get("role") if membership else None
+
+        # ------------------------------------------------------------------
+        # 4) Subscription guard (org-level)
+        # ------------------------------------------------------------------
+        sub_service = SubscriptionService(db)
+        # We build a lightweight context for subscription checks
+        sub_ctx = RequestContext(
+            org_id=str(org_id),
+            tenant_id=tenant_id_str,
+            user_id=user_id,
+            role=role,
+            permissions=[],
+            subscription_status=None,
+            plan=None,
+            is_super_admin=super_admin,
+        )
+        await sub_service.ensure_allowed(sub_ctx)
+        subscription = await sub_service.get_active_for_org(str(org_id))
+        subscription_status = subscription.get("status") if subscription else None
+
+        # ------------------------------------------------------------------
+        # 5) Permissions expansion
+        # ------------------------------------------------------------------
+        permissions: list[str] = []
+        if role:
+            roles_repo = RolesPermissionsRepository(db)
+            role_doc = await roles_repo.get_by_role(role)
+            if role_doc and isinstance(role_doc.get("permissions"), list):
+                permissions = [str(p) for p in role_doc["permissions"]]
+
+        # ------------------------------------------------------------------
+        # 6) Inject context
+        # ------------------------------------------------------------------
+        ctx = RequestContext(
+            org_id=str(org_id),
+            tenant_id=tenant_id_str,
+            user_id=user_id,
+            role=role,
+            permissions=permissions,
+            subscription_status=subscription_status,
+            plan=None,
+            is_super_admin=super_admin,
+        )
+        set_request_context(ctx)
+        request.state.ctx = ctx
+        request.state.tenant_resolved = True
+        request.state.tenant_id = tenant_id_str
+        request.state.tenant_org_id = str(org_id)
+
         response = await call_next(request)
         return response

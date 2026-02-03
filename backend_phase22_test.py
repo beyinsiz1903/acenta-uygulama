@@ -80,7 +80,8 @@ def setup_test_org_tenant_user(org_name: str, email: str) -> Dict[str, str]:
     tenant = {
         "organization_id": org_id,
         "name": f"{org_name} Tenant",
-        "slug": f"{org_name.lower()}-{uuid.uuid4().hex[:6]}",
+        "slug": f"{org_name.lower().replace(' ', '-')}-{uuid.uuid4().hex[:6]}",
+        "tenant_key": f"tk_{uuid.uuid4().hex[:12]}",
         "status": "active",
         "is_active": True,
         "created_at": now,

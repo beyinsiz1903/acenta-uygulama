@@ -42,8 +42,13 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
 
         path = request.url.path or ""
 
-        # Whitelist: auth, health, resolve endpoint
-        if path.startswith("/api/auth/") or path.startswith("/api/healthz") or path.startswith("/api/saas/tenants/resolve"):
+        # Whitelist: auth, health, resolve endpoint, legacy admin APIs (no tenant context)
+        if (
+            path.startswith("/api/auth/")
+            or path.startswith("/api/healthz")
+            or path.startswith("/api/saas/tenants/resolve")
+            or path.startswith("/api/admin/")
+        ):
             return await call_next(request)
 
         db: AsyncIOMotorDatabase = await get_db()

@@ -64,6 +64,7 @@ async def test_invite_accept_activate_happy_path(async_client: AsyncClient) -> N
     seller = await _seed_org_tenant_user(db, "SellerOrg", "seller@example.com")
     buyer = await _seed_org_tenant_user(db, "BuyerOrg", "buyer@example.com")
 
+    seller_token = _make_token(seller["email"], seller["org_id"], ["super_admin"])
     buyer_token = _make_token(buyer["email"], buyer["org_id"], ["super_admin"])
 
     # Seller invites buyer

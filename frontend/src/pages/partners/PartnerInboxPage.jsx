@@ -227,7 +227,7 @@ export default function PartnerInboxPage() {
       toast({ description: "İlişki başarıyla etkinleştirildi." });
       await load();
     } catch (e) {
-      toast({ variant: "destructive", description: e?.message || "c4b1li5fki etkinle5ftirilirken hata olu5ftu." });
+      toast({ variant: "destructive", description: e?.message || "İlişki etkinleştirilirken hata oluştu." });
     } finally {
       setBusyRelationshipId(null);
     }

@@ -84,6 +84,33 @@ export default function AppShell() {
     })();
   }, []);
 
+  // Partner notifications summary (header badge)
+  useEffect(() => {
+    let active = true;
+    let intervalId;
+
+    const loadSummary = async () => {
+      try {
+        const data = await fetchPartnerNotificationsSummary();
+        if (!active) return;
+        setPartnerSummary(data);
+      } catch {
+        if (!active) return;
+        // Partner özeti kritik değil; hata UI'ı bozmasın.
+      }
+    };
+
+    void loadSummary();
+    intervalId = window.setInterval(loadSummary, 60_000);
+
+    return () => {
+      active = false;
+      if (intervalId) {
+        window.clearInterval(intervalId);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     if (typeof window !== "undefined" && window.location.search && window.location.search.includes("e2e=1")) {
       import("../version").then(({ BUILD_STAMP }) => {

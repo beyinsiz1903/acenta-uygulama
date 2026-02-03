@@ -208,6 +208,15 @@ export default function AdminOpsIncidentsPage() {
     setOffset(0);
   };
 
+  const clearFilters = () => {
+    setFilters({
+      type: undefined,
+      severity: undefined,
+      status: undefined,
+    });
+    setOffset(0);
+  };
+
   const onRowClick = (incident) => {
     if (incident.incident_id === selectedIncidentId && drawerOpen) return;
     setSelectedIncidentId(incident.incident_id);

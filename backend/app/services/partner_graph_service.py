@@ -206,7 +206,3 @@ class PartnerGraphService:
                 "active_partners": active_partners_count,
             },
         }
-
-        if not ctx.tenant_id:
-            return []
-        return await self._repo.list_for_tenant(ctx.tenant_id)

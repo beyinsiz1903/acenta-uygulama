@@ -196,7 +196,7 @@ export default function PartnerInboxPage() {
         active_partners: res.active_partners || [],
       });
     } catch (e) {
-      // apiErrorMessage metni e.message ie7ine gf6mcclfc geliyor
+      // apiErrorMessage metni e.message içine gömülü geliyor
       setError(e?.message || "Bilinmeyen hata");
     } finally {
       setLoading(false);

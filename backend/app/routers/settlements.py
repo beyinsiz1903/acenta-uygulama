@@ -215,8 +215,6 @@ async def list_network_settlements(  # type: ignore[no-untyped-def]
     ctx: _RequestContext = _get_request_context(required=True)  # type: ignore[assignment]
 
     # RBAC
-    check_perm = _require_permission("settlements.view")
-
     @_require_permission("settlements.view")
     async def _noop() -> None:  # type: ignore[no-untyped-def]
         return None

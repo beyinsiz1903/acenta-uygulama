@@ -110,7 +110,7 @@ test.describe("Ops Incidents Console v2 - Comprehensive Testing", () => {
     console.log("Testing filter reset to 'all' removes query parameters...");
     
     await page.getByTestId("ops-incidents-filter-type").click();
-    await page.getByRole("option", { name: "All" }).click();
+    await page.getByRole("option", { name: "All" }).first().click();
     await page.waitForTimeout(300);
 
     if (lastRequestUrl) {

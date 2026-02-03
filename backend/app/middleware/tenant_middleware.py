@@ -7,7 +7,13 @@ from fastapi import Request
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app.auth import decode_token, is_super_admin
 from app.db import get_db
+from app.errors import AppError
+from app.request_context import RequestContext, set_request_context
+from app.repositories.membership_repository import MembershipRepository
+from app.repositories.roles_permissions_repository import RolesPermissionsRepository
+from app.services.subscription_service import SubscriptionService
 
 
 class TenantResolutionMiddleware(BaseHTTPMiddleware):

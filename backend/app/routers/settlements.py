@@ -318,19 +318,70 @@ async def get_settlement_statement(  # type: ignore[no-untyped-def]
 
     db = await _get_db()
     svc = SettlementStatementService(db)
-    # Compute next_cursor
+
+    # Decode cursor if provided
+    cursor_dict = None
+    if cursor:
+        import json
+        from base64 import b64decode
+
+        try:
+            raw = b64decode(cursor).decode("utf-8")
+            cursor_dict = json.loads(raw)
+        except Exception:
+            raise AppError(
+                status_code=400,
+                code="invalid_cursor",
+                message="Invalid cursor.",
+                details=None,
+            )
+
+    # Fetch items with cursor + counterparty filter
+    items = await svc.fetch_items(
+        ctx.tenant_id or "",
+        perspective,
+        month_start,
+        month_end,
+        statuses or None,
+        counterparty_tenant_id,
+        limit,
+        cursor_dict,
+    )
+
+    # Compute totals on the current page (items[:limit])
+    per_curr, overall = svc.compute_totals(items[:limit])
+
+    currency_breakdown = [
+        {
+            "currency": cur,
+            "gross_total": totals.gross_total,
+            "commission_total": totals.commission_total,
+            "net_total": totals.net_total,
+            "count": totals.count,
+        }
+        for cur, totals in per_curr.items()
+    ]
+
+    # Sort currency list for stability
+    currency_breakdown.sort(key=lambda x: x["currency"])
+
+    # Counterparty aggregation based on full (un-sliced) result set for this page
+    counterparties = svc.compute_counterparties(items, perspective)
+
+    # Cursor-based pagination: encode next_cursor from the (limit+1)th item, if present
     next_cursor = None
     if len(items) > limit:
-        last = items[limit - 1]
-        import json
         from base64 import b64encode
+        import json
 
+        last = items[limit - 1]
         payload = {
             "created_at": last.get("created_at"),
             "booking_id": last.get("booking_id"),
         }
-        next_cursor = b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
+        next_cursor = b64encode(json.dumps(payload, default=str).encode("utf-8")).decode("utf-8")
 
+    # Response items for this page
     response_items: list[dict[str, _Any]] = []
     for it in items[:limit]:
         response_items.append(
@@ -364,87 +415,4 @@ async def get_settlement_statement(  # type: ignore[no-untyped-def]
         "counterparties": counterparties,
         "items": response_items,
         "page": {"limit": limit, "next_cursor": next_cursor},
-    }
-
-
-    # Decode cursor if provided
-    cursor_dict = None
-    if cursor:
-        import json
-        from base64 import b64decode
-
-        try:
-            raw = b64decode(cursor).decode("utf-8")
-            cursor_dict = json.loads(raw)
-            # created_at is ISO string stored as-is in DB, we use it directly in comparison
-        except Exception:
-            raise AppError(
-                status_code=400,
-                code="invalid_cursor",
-                message="Invalid cursor.",
-                details=None,
-            )
-
-    items = await svc.fetch_items(
-        ctx.tenant_id or "",
-        perspective,
-        month_start,
-        month_end,
-        statuses or None,
-        counterparty_tenant_id,
-        limit,
-        cursor_dict,
-    )
-
-    per_curr, overall = svc.compute_totals(items[:limit])
-
-    currency_breakdown = [
-        {
-            "currency": cur,
-            "gross_total": totals.gross_total,
-            "commission_total": totals.commission_total,
-            "net_total": totals.net_total,
-            "count": totals.count,
-        }
-        for cur, totals in per_curr.items()
-    ]
-
-    # Sort currency list for stability
-    currency_breakdown.sort(key=lambda x: x["currency"])
-
-    counterparties = svc.compute_counterparties(items, perspective)
-
-    # Slice items to MAX_ITEMS; ensure consistent shape
-    response_items: list[dict[str, _Any]] = []
-    for it in items[:MAX_ITEMS]:
-        response_items.append(
-            {
-                "settlement_id": it["settlement_id"],
-                "booking_id": it.get("booking_id"),
-                "seller_tenant_id": it.get("seller_tenant_id"),
-                "buyer_tenant_id": it.get("buyer_tenant_id"),
-                "relationship_id": it.get("relationship_id"),
-                "commission_rule_id": it.get("commission_rule_id"),
-                "gross_amount": it.get("gross_amount"),
-                "commission_amount": it.get("commission_amount"),
-                "net_amount": it.get("net_amount"),
-                "currency": it.get("currency"),
-                "status": it.get("status"),
-                "created_at": it.get("created_at").isoformat() if it.get("created_at") else None,
-            }
-        )
-
-    return {
-        "tenant_id": ctx.tenant_id,
-        "perspective": perspective,
-        "month": month,
-        "currency_breakdown": currency_breakdown,
-        "totals": {
-            "count": overall.count,
-            "gross_total": overall.gross_total,
-            "commission_total": overall.commission_total,
-            "net_total": overall.net_total,
-        },
-        "counterparties": counterparties,
-        "items": response_items,
     }

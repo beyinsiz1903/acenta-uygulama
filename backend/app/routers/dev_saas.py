@@ -10,7 +10,7 @@ from app.metrics import METRIC_BOOKINGS_CREATED, METRIC_USERS_CREATED
 from app.request_context import get_request_context
 from app.services.limits_service import LimitsService
 from app.services.usage_service import UsageService
-from app.utils import get_env_flag
+import os
 
 router = APIRouter(prefix="/api/dev", tags=["dev_saas"], include_in_schema=False)
 

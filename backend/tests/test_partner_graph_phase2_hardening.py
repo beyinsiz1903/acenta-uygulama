@@ -103,7 +103,7 @@ async def test_settlements_requires_permission(async_client: AsyncClient) -> Non
     db = await get_db()
     # Seed org/tenant/user with limited permissions: role "b2b_agent" has no settlements.view
     now = datetime.now(timezone.utc)
-    org = {"name": "OrgPerm", "billing_email": "agent@example.com", "status": "active", "created_at": now}
+    org = {"name": "OrgPerm", "billing_email": "agent@example.com", "status": "active", "created_at": now, "updated_at": now}
     res_org = await db.organizations.insert_one(org)
     org_id = str(res_org.inserted_id)
 

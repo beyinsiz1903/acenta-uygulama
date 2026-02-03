@@ -277,7 +277,7 @@ export default function PartnerInboxPage() {
           <Tabs value={tab} onValueChange={setTab} className="w-full">
             <TabsList className="grid grid-cols-2 max-w-xs">
               <TabsTrigger value="received">Gelen Davetler</TabsTrigger>
-              <TabsTrigger value="sent">Gf6nderilen Davetler</TabsTrigger>
+              <TabsTrigger value="sent">Gönderilen Davetler</TabsTrigger>
             </TabsList>
 
             <TabsContent value="received" className="mt-4">

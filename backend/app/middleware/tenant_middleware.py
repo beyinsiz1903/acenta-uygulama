@@ -57,6 +57,9 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
             or path.startswith("/api/products")
             or path.startswith("/api/inventory")
             or path.startswith("/api/customers")
+            or path.startswith("/api/reservations")
+            or path.startswith("/api/b2b/agencies")
+            or path.startswith("/api/ops-cases/counters")
         ):
             return await call_next(request)
 

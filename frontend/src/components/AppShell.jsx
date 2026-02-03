@@ -67,6 +67,18 @@ export default function AppShell() {
   const [resSummary, setResSummary] = useState([]);
   const [sales, setSales] = useState([]);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [partnerSummary, setPartnerSummary] = useState(null);
+  const [activeTenantKey, setActiveTenantKey] = useState(() => {
+    try {
+      if (typeof window !== "undefined") {
+        return window.localStorage.getItem("acenta_tenant_key") || null;
+      }
+    } catch {
+      // ignore
+    }
+    return null;
+  });
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     (async () => {

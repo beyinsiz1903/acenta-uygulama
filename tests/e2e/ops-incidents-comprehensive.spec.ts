@@ -274,9 +274,9 @@ test.describe("Ops Incidents Console v2 - Comprehensive Testing", () => {
 
     // Verify error state is displayed
     // The ErrorState component should be visible with the error message
-    const errorElement = page.locator("text=Internal server error").or(
-      page.locator("text=An error occurred").or(
-        page.locator("text=Error")
+    const errorElement = page.locator("text=Bir hata oluştu").or(
+      page.locator(".text-destructive").or(
+        page.locator("[data-testid*='error']")
       )
     );
     

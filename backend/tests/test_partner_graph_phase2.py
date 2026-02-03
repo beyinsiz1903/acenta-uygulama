@@ -56,7 +56,6 @@ async def test_invite_accept_activate_happy_path(async_client: AsyncClient) -> N
     seller = await _seed_org_tenant_user(db, "SellerOrg", "seller@example.com")
     buyer = await _seed_org_tenant_user(db, "BuyerOrg", "buyer@example.com")
 
-    seller_token = _make_token(seller["email"], seller["org_id"], ["super_admin"])
     buyer_token = _make_token(buyer["email"], buyer["org_id"], ["super_admin"])
 
     # Seller invites buyer
@@ -226,7 +225,6 @@ async def test_network_booking_creates_settlement(async_client: AsyncClient) -> 
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "SellerOrg4", "seller4@example.com")
     buyer = await _seed_org_tenant_user(db, "BuyerOrg4", "buyer4@example.com")
-    seller_token = _make_token(seller["email"], seller["org_id"], ["super_admin"])
     buyer_token = _make_token(buyer["email"], buyer["org_id"], ["super_admin"])
 
     now = datetime.now(timezone.utc)

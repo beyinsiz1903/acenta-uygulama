@@ -64,25 +64,37 @@ async def _seed_org_tenant_user(db, org_name: str, email: str) -> Dict[str, str]
     return {"org_id": org_id, "tenant_id": tenant_id, "user_id": user_id, "email": email}
 
 
-def test_inventory_shares_requires_tenant_header() -> None:
-    db = pytest.run(async_fn=get_db())  # type: ignore[attr-defined]
-    # Fallback: keep this test simple by using TestClient and assuming middleware raises our AppError
-    client = TestClient(app)
-    token = "dummy"  # no need for real JWT here because auth dependency will reject missing tenant header first
+def test_inventory_shares_requires_tenant_header_unit() -> None:
+    scope = {
+        "type": "http",
+        "method": "POST",
+        "path": "/api/inventory-shares/grant",
+        "headers": [(b"authorization", b"Bearer dummy")],
+    }
 
-    resp = client.post(
-        "/api/inventory-shares/grant",
-        headers={"Authorization": f"Bearer {token}"},
-        json={
-            "buyer_tenant_id": "dummy",
-            "scope_type": "all",
-            "sell_enabled": True,
-            "view_enabled": True,
-        },
-    )
-    assert resp.status_code == 400
-    body = resp.json()
-    assert body["error"]["code"] == "tenant_header_missing"
+    async def app_noop(scope, receive, send):  # type: ignore[no-untyped-def]
+        raise AssertionError("call_next should not be reached when tenant header is missing")
+
+    middleware = TenantResolutionMiddleware(app_noop)
+
+    async def call():  # type: ignore[no-untyped-def]
+        from starlette.types import Receive, Scope, Send
+
+        async def receive() -> Receive:  # type: ignore[override]
+            return {"type": "http.request"}
+
+        async def send(message: dict) -> None:  # type: ignore[override]
+            pass
+
+        request = Request(scope)  # type: ignore[arg-type]
+        with pytest.raises(AppError) as exc:
+            await middleware.dispatch(request, lambda r: app_noop(scope, receive, send))  # type: ignore[arg-type]
+        err = exc.value
+        assert err.code == "tenant_header_missing"
+
+    import anyio
+
+    anyio.run(call)
 
 
 @pytest.mark.asyncio

@@ -182,7 +182,6 @@ class PartnerGraphService:
         }
 
     async def notifications_summary(self, tenant_id: str) -> dict[str, Any]:
-        db = self._repo._col.database
         invites_received_count = await self._repo._col.count_documents(
             {"buyer_tenant_id": tenant_id, "status": "invited"}
         )

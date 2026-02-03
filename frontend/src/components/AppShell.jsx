@@ -165,6 +165,28 @@ export default function AppShell() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Partner inbox header badge */}
+            <NavLink
+              to="/app/partners/inbox"
+              className={({ isActive }) =>
+                cn(
+                  "relative inline-flex items-center justify-center rounded-full border px-2 py-1 text-xs transition hover:bg-accent hover:text-foreground",
+                  isActive ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"
+                )
+              }
+            >
+              <Inbox className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Partner Inbox</span>
+              {partnerSummary?.counts?.invites_received > 0 && (
+                <UIBadge
+                  variant="destructive"
+                  className="ml-1 h-4 min-w-[1.25rem] px-1 text-[10px] flex items-center justify-center rounded-full"
+                >
+                  {partnerSummary.counts.invites_received}
+                </UIBadge>
+              )}
+            </NavLink>
+
             <ThemeToggle />
             <div className="hidden sm:block text-right">
               <div className="text-sm font-medium text-foreground">{user?.name || user?.email}</div>

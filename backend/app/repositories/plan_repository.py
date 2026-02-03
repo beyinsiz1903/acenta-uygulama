@@ -15,6 +15,15 @@ class PlanRepository:
   async def get_by_name(self, name: str) -> Optional[Dict[str, Any]]:
     return await self._col.find_one({"name": name})
 
+  async def get_by_id(self, plan_id: str) -> Optional[Dict[str, Any]]:
+    from bson import ObjectId
+
+    try:
+      oid = ObjectId(plan_id)
+    except Exception:
+      oid = plan_id
+    return await self._col.find_one({"_id": oid})
+
   async def create_or_update(self, payload: Dict[str, Any]) -> str:
     key = {"name": payload["name"]}
     update = {"$set": payload}

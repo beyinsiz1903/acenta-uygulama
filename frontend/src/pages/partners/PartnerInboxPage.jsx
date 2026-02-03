@@ -247,8 +247,8 @@ export default function PartnerInboxPage() {
         <div>
           <h1 className="text-base font-semibold">Partner Gelen Kutusu</h1>
           <p className="text-xs text-muted-foreground">
-            B2B partner davetlerini buradan yf6netin. Gelen ve gf6nderilen davetleri gf6rfcp kabul / etkinle5ftirme
-            i5flemlerini yapabilirsiniz.
+            B2B partner davetlerini buradan yönetin. Gelen ve gönderilen davetleri görüp kabul / etkinleştirme
+            işlemlerini yapabilirsiniz.
           </p>
         </div>
       </div>

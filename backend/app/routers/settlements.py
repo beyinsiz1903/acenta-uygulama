@@ -190,3 +190,39 @@ async def agency_settlements(
         "totals": totals_list,
         "entries": [serialize_doc(e) for e in entries[:200]],
     }
+
+
+
+# Phase 2.0.1: B2B Network Settlements listing over settlement_ledger
+from typing import Dict as _Dict, Any as _Any, Optional as _Opt
+
+from fastapi import Depends as _Depends, APIRouter as _APIRouter, Query as _Query
+
+from app.auth import get_current_user as _get_current_user
+from app.db import get_db as _get_db
+from app.request_context import get_request_context as _get_request_context, RequestContext as _RequestContext, require_permission as _require_permission
+from app.services.settlement_service import SettlementService as _SettlementService
+
+network_settlements_router = _APIRouter(prefix="/api/settlements", tags=["network-settlements"])
+
+
+@network_settlements_router.get("")
+async def list_network_settlements(  # type: ignore[no-untyped-def]
+    perspective: str = _Query("seller", pattern="^(seller|buyer)$"),
+    status: _Opt[str] = _Query(None),
+    user: _Dict[str, _Any] = _Depends(_get_current_user),
+):
+    ctx: _RequestContext = _get_request_context(required=True)  # type: ignore[assignment]
+
+    # RBAC
+    guard = _require_permission("settlements.view")
+    await guard()  # type: ignore[func-returns-value]
+
+    db = await _get_db()
+    service = _SettlementService(db)
+
+    items = await service.list_settlements(ctx.tenant_id or "", perspective)
+    if status:
+        items = [s for s in items if s.get("status") == status]
+
+    return {"items": items}

@@ -37,7 +37,7 @@
               - generic "₺0,00" [ref=e33]: ₺0
           - generic [ref=e34]:
             - generic [ref=e35]: "Rol: super_admin"
-            - generic [ref=e36]: 02.02.2026
+            - generic [ref=e36]: 03.02.2026
           - navigation [ref=e38]:
             - generic [ref=e39]:
               - generic [ref=e40]: Admin
@@ -249,10 +249,44 @@
                 - button "Next" [disabled]
           - generic [ref=e278]:
             - generic [ref=e280]: Incidents
-            - generic [ref=e283]:
-              - paragraph [ref=e284]: No incidents
-              - paragraph [ref=e285]: There are no ops incidents for the selected filters.
-    - contentinfo [ref=e286]:
-      - generic [ref=e287]: © 2026 — v1
+            - generic [ref=e282]:
+              - generic [ref=e283]:
+                - generic [ref=e284]: ID
+                - generic [ref=e285]: Type
+                - generic [ref=e286]: Severity
+                - generic [ref=e287]: Status
+                - generic [ref=e288]: Summary
+                - generic [ref=e289]: Source
+                - generic [ref=e290]: Created At
+                - generic [ref=e291]: Supplier Health
+              - 'button "inc_aaa111 supplier_partial_failure medium open Paximum partial failure sess_1 2/3/2026, 10:00:00 AM Circuit: OPEN" [ref=e292] [cursor=pointer]':
+                - generic "inc_aaa111" [ref=e293]
+                - generic [ref=e294]: supplier_partial_failure
+                - generic [ref=e295]: medium
+                - generic [ref=e296]: open
+                - generic "Paximum partial failure" [ref=e297]
+                - generic "sess_1" [ref=e298]
+                - generic [ref=e299]: 2/3/2026, 10:00:00 AM
+                - generic [ref=e301]: "Circuit: OPEN"
+              - button "inc_bbb222 supplier_all_failed critical open All suppliers failed sess_fail_2 2/3/2026, 9:50:00 AM NO HEALTH" [ref=e302] [cursor=pointer]:
+                - generic "inc_bbb222" [ref=e303]
+                - generic [ref=e304]: supplier_all_failed
+                - generic [ref=e305]: critical
+                - generic [ref=e306]: open
+                - generic "All suppliers failed" [ref=e307]
+                - generic "sess_fail_2" [ref=e308]
+                - generic [ref=e309]: 2/3/2026, 9:50:00 AM
+                - generic [ref=e311]: NO HEALTH
+              - 'button "inc_ccc333 risk_review high open Risk review required bkg_123 2/3/2026, 9:40:00 AM Circuit: CLOSED" [ref=e312] [cursor=pointer]':
+                - generic "inc_ccc333" [ref=e313]
+                - generic [ref=e314]: risk_review
+                - generic [ref=e315]: high
+                - generic [ref=e316]: open
+                - generic "Risk review required" [ref=e317]
+                - generic "bkg_123" [ref=e318]
+                - generic [ref=e319]: 2/3/2026, 9:40:00 AM
+                - generic [ref=e321]: "Circuit: CLOSED"
+    - contentinfo [ref=e322]:
+      - generic [ref=e323]: © 2026 — v1
   - region "Notifications alt+T"
 ```

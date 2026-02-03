@@ -75,6 +75,7 @@ import AdminApiKeysPage from "./pages/AdminApiKeysPage";
 import OpsB2BQueuesPage from "./pages/OpsB2BQueuesPage";
 import InboxPage from "./pages/InboxPage";
 import PartnerInboxPage from "./pages/partners/PartnerInboxPage";
+import PartnerDiscoveryPage from "./pages/partners/PartnerDiscoveryPage";
 import AdminFinanceRefundsPage from "./pages/AdminFinanceRefundsPage";
 import AdminOpsIncidentsPage from "./pages/ops/AdminOpsIncidentsPage";
 import AdminFinanceExposurePage from "./pages/AdminFinanceExposurePage";

@@ -347,12 +347,22 @@ async def get_settlement_statement(  # type: ignore[no-untyped-def]
         month_end,
         statuses or None,
         counterparty_tenant_id,
-        limit,
+        # Always fetch up to MAX_ITEMS + 1 to evaluate guard & cursor independently of per-page limit
+        MAX_ITEMS,
         cursor_dict,
     )
 
-    # Compute totals on the current page (items[:limit])
-    per_curr, overall = svc.compute_totals(items[:limit])
+    # Guardrail: too many items in a single statement
+    if len(items) > MAX_ITEMS:
+        raise AppError(
+            status_code=400,
+            code="statement_too_large",
+            message="Statement has too many items.",
+            details={"max_items": MAX_ITEMS},
+        )
+
+    # Compute totals on the current result set
+    per_curr, overall = svc.compute_totals(items)
 
     currency_breakdown = [
         {

@@ -272,9 +272,9 @@ export default function PartnerInboxPage() {
           {error && (
             <div className="mb-3 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-[11px] text-destructive">
               {error.includes("401")
-                ? "Oturum sfcreniz dolmu5f olabilir. Lfctfen tekrar giri5f yap31n."
+                ? "Oturum süreniz dolmuş olabilir. Lütfen tekrar giriş yapın."
                 : error.includes("403")
-                ? "Bu alana eri5fim yetkiniz yok."
+                ? "Bu alana erişim yetkiniz yok."
                 : error}
             </div>
           )}

@@ -58,7 +58,7 @@ async function copyToClipboard(text, toast) {
 }
 
 
-function ReceivedTable({ items, onAccept, busyId }) {
+function ReceivedTable({ items, onAccept, busyId, onCopyId }) {
   return (
     <div className="overflow-x-auto">
       <Table>

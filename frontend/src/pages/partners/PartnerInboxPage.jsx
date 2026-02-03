@@ -44,6 +44,19 @@ function shortenId(id) {
   if (id.length <= 10) return id;
   return `${id.slice(0, 6)}…${id.slice(-4)}`;
 }
+async function copyToClipboard(text, toast) {
+  try {
+    if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      if (toast) {
+        toast({ description: "Relationship ID panoya kopyalandı." });
+      }
+    }
+  } catch {
+    // sessizce yut; kritik değil
+  }
+}
+
 
 function ReceivedTable({ items, onAccept, busyId }) {
   return (

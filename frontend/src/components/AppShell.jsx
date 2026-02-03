@@ -105,9 +105,12 @@ export default function AppShell() {
         const data = await fetchPartnerNotificationsSummary();
         if (!active) return;
         setPartnerSummary(data);
-      } catch {
+      } catch (err) {
         if (!active) return;
-        // Partner özeti kritik değil; hata UI'ı bozmasın.
+        // Partner özeti kritik değil; hata UI'ı bozmasın ancak debug için iz bırak.
+        if (typeof console !== "undefined" && console.debug) {
+          console.debug("[partner-graph] notifications summary failed", err?.message || err);
+        }
       }
     };
 
@@ -120,7 +123,7 @@ export default function AppShell() {
         window.clearInterval(intervalId);
       }
     };
-  }, []);
+  }, [activeTenantKey]);
 
   useEffect(() => {
     if (typeof window !== "undefined" && window.location.search && window.location.search.includes("e2e=1")) {

@@ -124,20 +124,22 @@ export default function PartnerRelationshipsPage() {
   }, [loadFirstPage]);
 
   const derivedItems = useMemo(() => {
-    // Derive a friendly role label and counterparty per row based on current tenant role
+    // V1: current tenant id backend'ten gelmediği için sadece role filtresine göre label türetiyoruz.
     return items.map((it) => {
       let roleLabel = "";
-      if (it.seller_tenant_id === it.current_tenant_id) {
+      if (role === "seller") {
         roleLabel = "Ben Satıcıyım";
-      } else if (it.buyer_tenant_id === it.current_tenant_id) {
+      } else if (role === "buyer") {
         roleLabel = "Ben Alıcıyım";
+      } else {
+        roleLabel = ""; // any iken karışık olabilir
       }
       return {
         ...it,
         _role_label: roleLabel,
       };
     });
-  }, [items]);
+  }, [items, role]);
 
   const handleCopyId = async (id) => {
     if (!id) return;

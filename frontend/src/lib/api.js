@@ -80,12 +80,37 @@ api.interceptors.request.use((config) => {
 
   if (!isAuthRoute) {
     const token = getToken();
-    const tenantId = getActiveTenantId();
-    
+
+    // 1) Auth header
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
+    // 2) Tenant header: first try runtime-selected tenant from localStorage,
+    // then fall back to a default tenant id provided via env (build-time).
+    let tenantId = getActiveTenantId();
+
+    if (!tenantId) {
+      // Support both Vite-style and CRA-style env access
+      const envDefault =
+        (typeof import.meta !== "undefined" &&
+          import.meta.env &&
+          import.meta.env.REACT_APP_DEFAULT_TENANT_ID) ||
+        process.env.REACT_APP_DEFAULT_TENANT_ID;
+
+      if (envDefault) {
+        tenantId = envDefault;
+        // Best-effort: seed storage so subsequent calls and UI can see it
+        try {
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem("acenta_tenant_id", envDefault);
+          }
+        } catch {
+          // storage hatasleri kritik deil
+        }
+      }
+    }
+
     if (tenantId) {
       config.headers["X-Tenant-Id"] = tenantId;
     }

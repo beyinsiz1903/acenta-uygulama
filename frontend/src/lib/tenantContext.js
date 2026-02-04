@@ -1,13 +1,23 @@
 // frontend/src/lib/tenantContext.js
 // Tek kaynaklı tenant anahtarı helper'ı + custom event yayıncısı
 
-const STORAGE_KEY = "acenta_tenant_key";
+const STORAGE_TENANT_KEY = "acenta_tenant_key";
+const STORAGE_TENANT_ID = "acenta_tenant_id";
 const EVENT_NAME = "acenta:tenant-changed";
 
 export function getActiveTenantKey() {
   try {
     if (typeof window === "undefined") return null;
-    return window.localStorage.getItem(STORAGE_KEY) || null;
+    return window.localStorage.getItem(STORAGE_TENANT_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+
+export function getActiveTenantId() {
+  try {
+    if (typeof window === "undefined") return null;
+    return window.localStorage.getItem(STORAGE_TENANT_ID) || null;
   } catch {
     return null;
   }

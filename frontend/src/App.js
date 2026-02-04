@@ -111,6 +111,7 @@ import WebBookingPage from "./pages/WebBookingPage";
 import AgencyBookingDraftPage from "./pages/AgencyBookingDraftPage";
 import AgencyBookingConfirmedPage from "./pages/AgencyBookingConfirmedPage";
 import AgencyBookingPendingPage from "./pages/AgencyBookingPendingPage";
+import { Navigate } from "react-router-dom";
 import AgencyBookingsListPage from "./pages/AgencyBookingsListPage";
 import AgencySettlementsPage from "./pages/AgencySettlementsPage";
 import AgencyHelpPage from "./pages/AgencyHelpPage";

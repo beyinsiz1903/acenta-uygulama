@@ -57,3 +57,22 @@ export async function invitePartnerBySlug(buyerTenantSlug, note) {
     throw { message: apiErrorMessage(err), raw: err };
   }
 }
+
+export async function fetchRelationships(params) {
+  const { statuses, role = "any", limit = 50, cursor } = params || {};
+
+  const query = new URLSearchParams();
+  if (Array.isArray(statuses) && statuses.length > 0) {
+    query.set("status", statuses.join(","));
+  }
+  if (role) query.set("role", role);
+  if (limit) query.set("limit", String(limit));
+  if (cursor) query.set("cursor", cursor);
+
+  try {
+    const res = await api.get(`/partner-graph/relationships?${query.toString()}`);
+    return res.data || { items: [], next_cursor: null };
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}

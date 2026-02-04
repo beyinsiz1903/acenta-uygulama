@@ -80,6 +80,7 @@ def create_test_tenant_and_user(org_id: str, tenant_suffix: str) -> tuple[str, s
         "organization_id": org_id,
         "name": f"Partner Test Tenant {tenant_suffix}",
         "slug": tenant_slug,
+        "tenant_key": tenant_slug,  # Add tenant_key to avoid index conflict
         "status": "active",
         "is_active": True,
         "created_at": now,

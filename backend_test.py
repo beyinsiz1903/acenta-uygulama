@@ -63,9 +63,14 @@ def login_super_admin():
     return data["access_token"], user["organization_id"], user["email"]
 
 def create_test_tenant_and_user(org_id: str, tenant_suffix: str) -> tuple[str, str, str]:
-    """Create test tenant and user, return tenant_id, user_email, token"""
+    """Create test tenant and use existing admin user, return tenant_id, user_email, token"""
     mongo_client = get_mongo_client()
     db = mongo_client.get_default_database()
+    
+    # Use existing admin user
+    admin_user = db.users.find_one({"email": "admin@acenta.test"})
+    if not admin_user:
+        raise Exception("Admin user not found")
     
     # Create unique tenant
     unique_id = uuid.uuid4().hex[:8]
@@ -88,53 +93,35 @@ def create_test_tenant_and_user(org_id: str, tenant_suffix: str) -> tuple[str, s
     }
     db.tenants.replace_one({"_id": tenant_id}, tenant_doc, upsert=True)
     
-    # Create user with agency_admin role
-    user_email = f"user_{tenant_suffix}_{unique_id}@test.com"
-    import bcrypt
-    password_hash = bcrypt.hashpw("testpass123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    
-    user_doc = {
-        "email": user_email,
-        "password_hash": password_hash,
-        "roles": ["agency_admin"],
+    # Create membership linking admin user to tenant
+    membership_doc = {
+        "user_id": str(admin_user["_id"]),
+        "tenant_id": tenant_id,
         "organization_id": org_id,
+        "role": "admin",
+        "permissions": ["partner.view", "partner.invite"],
         "is_active": True,
+        "status": "active",
         "created_at": now,
         "updated_at": now,
     }
-    db.users.replace_one({"email": user_email}, user_doc, upsert=True)
-    
-    # Create membership linking user to tenant
-    user_doc = db.users.find_one({"email": user_email})
-    if user_doc:
-        membership_doc = {
-            "user_id": str(user_doc["_id"]),
-            "tenant_id": tenant_id,
-            "organization_id": org_id,
-            "role": "admin",
-            "permissions": ["partner.view", "partner.invite"],
-            "is_active": True,
-            "status": "active",
-            "created_at": now,
-            "updated_at": now,
-        }
-        db.memberships.replace_one(
-            {"user_id": str(user_doc["_id"]), "tenant_id": tenant_id}, 
-            membership_doc, 
-            upsert=True
-        )
+    db.memberships.replace_one(
+        {"user_id": str(admin_user["_id"]), "tenant_id": tenant_id}, 
+        membership_doc, 
+        upsert=True
+    )
     
     mongo_client.close()
     
-    # Login to get token
+    # Use existing admin token
     r = requests.post(
         f"{BASE_URL}/api/auth/login",
-        json={"email": user_email, "password": "testpass123"},
+        json={"email": "admin@acenta.test", "password": "admin123"},
     )
-    assert r.status_code == 200, f"User login failed for {user_email}: {r.text}"
+    assert r.status_code == 200, f"Admin login failed: {r.text}"
     
     token = r.json()["access_token"]
-    return tenant_id, user_email, token
+    return tenant_id, "admin@acenta.test", token
 
 def create_partner_relationship(seller_tenant_id: str, buyer_tenant_id: str, status: str = "invited") -> str:
     """Create a partner relationship directly in database and return relationship_id"""

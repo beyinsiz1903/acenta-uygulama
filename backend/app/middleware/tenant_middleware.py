@@ -72,7 +72,13 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         token = auth_header.split(" ", 1)[1].strip()
-        payload = decode_token(token)
+        try:
+            payload = decode_token(token)
+        except HTTPException:
+            # Normalize token errors to a deterministic 401 response instead of bubbling as 500/520
+            return _error_response(401, "invalid_token", "Geçersiz token.", None)
+        except Exception:
+            return _error_response(401, "invalid_token", "Geçersiz token.", None)
 
         user_email = payload.get("sub")
         org_id = payload.get("org")

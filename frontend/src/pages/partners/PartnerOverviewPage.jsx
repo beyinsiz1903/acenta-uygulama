@@ -3,9 +3,11 @@ import { Users, Receipt, Link2 } from "lucide-react";
 
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
-import { apiErrorMessage, api } from "../../lib/api";
+import { Button } from "../../components/ui/button";
+import { apiErrorMessage } from "../../lib/api";
 import { fetchPartnerNotificationsSummary, fetchRelationships } from "../../lib/partnerGraph";
 import { fetchSettlementStatement } from "../../lib/settlements";
+import { Link } from "react-router-dom";
 
 function formatDate(value) {
   if (!value) return "-";

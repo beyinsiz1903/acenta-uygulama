@@ -78,6 +78,7 @@ import PartnerInboxPage from "./pages/partners/PartnerInboxPage";
 import PartnerDiscoveryPage from "./pages/partners/PartnerDiscoveryPage";
 import AdminFinanceRefundsPage from "./pages/AdminFinanceRefundsPage";
 import PartnerInvitesPage from "./pages/partners/PartnerInvitesPage";
+import PartnerRelationshipsPage from "./pages/partners/PartnerRelationshipsPage";
 import PartnerStatementsPage from "./pages/partners/PartnerStatementsPage";
 
 

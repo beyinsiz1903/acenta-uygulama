@@ -105,14 +105,14 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
         # ------------------------------------------------------------------
         # 2) Tenant resolution via X-Tenant-Id header
         # ------------------------------------------------------------------
-        tenant_id_header = request.headers.get("X-Tenant-Id")
+        tenant_id_header = (request.headers.get("X-Tenant-Id") or "").strip()
         if not tenant_id_header:
             # For SaaS APIs, tenant header is required (except for whitelisted routes).
-            raise AppError(
-                status_code=400,
-                code="tenant_header_missing",
-                message="X-Tenant-Id header is required for this endpoint.",
-                details=None,
+            return _error_response(
+                400,
+                "tenant_header_missing",
+                "X-Tenant-Id header is required for this endpoint.",
+                None,
             )
 
         from bson import ObjectId

@@ -296,13 +296,16 @@ function App() {
           <Route path="reports" element={<ReportsPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="inbox" element={<InboxPage />} />
-          <Route path="partners/inbox" element={<PartnerInboxPage />} />
-          <Route path="partners/discovery" element={<PartnerDiscoveryPage />} />
-          <Route path="partners/invites" element={<PartnerInvitesPage />} />
-          <Route path="partners/relationships" element={<PartnerRelationshipsPage />} />
-          <Route path="partners/statements" element={<PartnerStatementsPage />} />
-          <Route path="partners/relationships-old" element={<Navigate to="/app/partners/invites" replace />} />
-          <Route path="partners/invites-old" element={<Navigate to="/app/partners/invites" replace />} />
+          <Route path="partners" element={<PartnerLayout />}>
+            <Route index element={<PartnerOverviewPage />} />
+            <Route path="inbox" element={<PartnerInboxPage />} />
+            <Route path="discovery" element={<PartnerDiscoveryPage />} />
+            <Route path="invites" element={<PartnerInvitesPage />} />
+            <Route path="relationships" element={<PartnerRelationshipsPage />} />
+            <Route path="statements" element={<PartnerStatementsPage />} />
+            <Route path="relationships-old" element={<Navigate to="/app/partners/invites" replace />} />
+            <Route path="invites-old" element={<Navigate to="/app/partners/invites" replace />} />
+          </Route>
           <Route path="crm/customers" element={<CrmCustomersPage />} />
           <Route path="crm/duplicates" element={<CrmDuplicateCustomersPage />} />
           <Route path="crm/pipeline" element={<CrmPipelinePage />} />

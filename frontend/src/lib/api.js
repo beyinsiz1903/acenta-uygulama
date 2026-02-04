@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getActiveTenantId } from "./tenantContext";
 
 // Backend base URL: prefer REACT_APP_BACKEND_URL from env, fallback to same-origin /api
 // This prevents broken URLs like "undefined/api" when env is not set in certain environments.

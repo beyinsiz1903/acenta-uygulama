@@ -324,7 +324,7 @@ export default function PartnerStatementsPage() {
               <CardTitle className="text-[11px] font-medium">Net toplam</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-semibold">{totals.net_total}</div>
+              <div className="text-lg font-semibold">{formatAmount(totals.net_total, totals.currency)}</div>
             </CardContent>
           </Card>
         </div>

@@ -16,4 +16,13 @@ test("Partner Genel Bakış açılır ve subnav görünür", async ({ page }) =>
   await expect(page.getByRole("link", { name: "İlişkiler" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Keşfet" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Mutabakat" })).toBeVisible();
+
+  // CTA butonlar
+  await expect(page.getByRole("button", { name: "Davetleri Gr" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "likilere Git" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Mutabakat A" })).toBeVisible();
+
+  // Basit navigasyon: Davetleri Gr -> invites
+  await page.getByRole("button", { name: "Davetleri Gr" }).click();
+  await expect(page).toHaveURL(/\/app\/partners\/invites/);
 });

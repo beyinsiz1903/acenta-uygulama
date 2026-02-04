@@ -112,6 +112,18 @@ export default function AppShell() {
     // Initial sync
     syncFromStorage();
 
+    // If no tenant id is set yet, and a default tenant id is provided via env,
+    // seed it once so that tenant-aware APIs can function until a real switcher exists.
+    try {
+      const currentId = getActiveTenantId();
+      const defId = process.env.REACT_APP_DEFAULT_TENANT_ID;
+      if (!currentId && defId) {
+        setActiveTenantId(defId);
+      }
+    } catch {
+      // ignore
+    }
+
     let unsubscribeTenant = () => {};
     if (typeof window !== "undefined") {
       // Custom event from tenant switcher

@@ -6,7 +6,7 @@ import { api, apiErrorMessage, setToken, setUser } from "../lib/api";
 export default function B2BLoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState("agency1@demo.test");
+  const [email, setEmail] = useState("agency1@acenta.test");
   const [password, setPassword] = useState("agency123");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

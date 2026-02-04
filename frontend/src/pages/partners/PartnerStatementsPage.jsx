@@ -418,9 +418,9 @@ export default function PartnerStatementsPage() {
                         {it.counterparty_tenant_id || <span className="text-muted-foreground">-</span>}
                       </TableCell>
                       <TableCell className="text-xs">{it.currency || "-"}</TableCell>
-                      <TableCell className="text-xs">{it.gross_amount}</TableCell>
-                      <TableCell className="text-xs">{it.commission_amount}</TableCell>
-                      <TableCell className="text-xs">{it.net_amount}</TableCell>
+                      <TableCell className="text-xs">{formatAmount(it.gross_amount, it.currency)}</TableCell>
+                      <TableCell className="text-xs">{formatAmount(it.commission_amount, it.currency)}</TableCell>
+                      <TableCell className="text-xs">{formatAmount(it.net_amount, it.currency)}</TableCell>
                       <TableCell className="text-xs">
                         <Badge variant="outline">{it.status || "-"}</Badge>
                       </TableCell>

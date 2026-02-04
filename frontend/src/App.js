@@ -294,8 +294,10 @@ function App() {
           <Route path="inbox" element={<InboxPage />} />
           <Route path="partners/inbox" element={<PartnerInboxPage />} />
           <Route path="partners/discovery" element={<PartnerDiscoveryPage />} />
-          <Route path="partners/relationships" element={<PartnerInvitesPage />} />
+          <Route path="partners/invites" element={<PartnerInvitesPage />} />
+          <Route path="partners/relationships" element={<PartnerRelationshipsPage />} />
           <Route path="partners/statements" element={<PartnerStatementsPage />} />
+          <Route path="partners/relationships" element={<PartnerRelationshipsPage />} />
           <Route path="crm/customers" element={<CrmCustomersPage />} />
           <Route path="crm/duplicates" element={<CrmDuplicateCustomersPage />} />
           <Route path="crm/pipeline" element={<CrmPipelinePage />} />

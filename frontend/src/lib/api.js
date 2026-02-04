@@ -80,8 +80,14 @@ api.interceptors.request.use((config) => {
 
   if (!isAuthRoute) {
     const token = getToken();
+    const tenantId = getActiveTenantId();
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    if (tenantId) {
+      config.headers["X-Tenant-Id"] = tenantId;
     }
   } else if (config.headers && config.headers.Authorization) {
     // Login/register isteklerinde eski token taşınmasın

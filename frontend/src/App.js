@@ -80,6 +80,8 @@ import AdminFinanceRefundsPage from "./pages/AdminFinanceRefundsPage";
 import PartnerInvitesPage from "./pages/partners/PartnerInvitesPage";
 import PartnerRelationshipsPage from "./pages/partners/PartnerRelationshipsPage";
 import PartnerStatementsPage from "./pages/partners/PartnerStatementsPage";
+import PartnerLayout from "./pages/partners/PartnerLayout";
+import PartnerOverviewPage from "./pages/partners/PartnerOverviewPage";
 
 
 import AdminOpsIncidentsPage from "./pages/ops/AdminOpsIncidentsPage";

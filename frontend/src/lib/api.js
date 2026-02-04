@@ -100,14 +100,8 @@ api.interceptors.request.use((config) => {
 
       if (envDefault) {
         tenantId = envDefault;
-        // Best-effort: seed storage so subsequent calls and UI can see it
-        try {
-          if (typeof window !== "undefined") {
-            window.localStorage.setItem("acenta_tenant_id", envDefault);
-          }
-        } catch {
-          // storage hatasleri kritik deil
-        }
+        // NOTA: preview/prod ortamlarında multi-user karışıklığı olmaması için
+        // artık localStorage'a yazmıyoruz; sadece header'da kullanıyoruz.
       }
     }
 

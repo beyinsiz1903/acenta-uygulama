@@ -183,8 +183,27 @@ async def terminate_relationship(  # type: ignore[no-untyped-def]
 
 @router.get("/relationships")
 async def list_relationships(  # type: ignore[no-untyped-def]
+    status: Optional[str] = None,
+    role: str = "any",
+    limit: int = 50,
+    cursor: Optional[str] = None,
     user: Dict[str, Any] = Depends(get_current_user),
 ):
+    ctx: RequestContext = get_request_context(required=True)  # type: ignore[assignment]
+
+    @require_permission("partner.view")
+    async def _guard() -> None:  # type: ignore[no-untyped-def]
+        return None
+
+    await _guard()
+
     db = await get_db()
     service = PartnerGraphService(db)
-    return await service.list_for_current_tenant()
+
+    return await service.list_for_current_tenant(
+        tenant_id=ctx.tenant_id or "",
+        status_param=status,
+        role_param=role,
+        limit=limit,
+        cursor=cursor,
+    )

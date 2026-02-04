@@ -27,7 +27,10 @@ export function setActiveTenantKey(tenantKey, extra = {}) {
   try {
     if (typeof window === "undefined") return;
     const key = tenantKey || "";
-    window.localStorage.setItem(STORAGE_KEY, key);
+    window.localStorage.setItem(STORAGE_TENANT_KEY, key);
+    if (extra.tenantId) {
+      window.localStorage.setItem(STORAGE_TENANT_ID, extra.tenantId);
+    }
     const detail = {
       tenantKey: key || null,
       tenantId: extra.tenantId || null,
@@ -36,6 +39,22 @@ export function setActiveTenantKey(tenantKey, extra = {}) {
     window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail }));
   } catch {
     // sessizce yut; kritik değil
+  }
+}
+
+export function setActiveTenantId(tenantId) {
+  try {
+    if (typeof window === "undefined") return;
+    const id = tenantId || "";
+    window.localStorage.setItem(STORAGE_TENANT_ID, id);
+    const detail = {
+      tenantKey: getActiveTenantKey(),
+      tenantId: id || null,
+      orgId: null,
+    };
+    window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail }));
+  } catch {
+    // sessizce yut
   }
 }
 

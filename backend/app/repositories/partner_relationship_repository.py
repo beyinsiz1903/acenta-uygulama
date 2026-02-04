@@ -100,10 +100,69 @@ class PartnerRelationshipRepository:
         doc["id"] = str(doc.pop("_id"))
         return doc
 
-    async def list_for_tenant(self, tenant_id: str) -> list[dict[str, Any]]:
-        cur = self._col.find({"$or": [{"seller_tenant_id": tenant_id}, {"buyer_tenant_id": tenant_id}]})
+    async def list_for_tenant_paginated(
+        self,
+        tenant_id: str,
+        statuses: set[str] | None,
+        role: str,
+        limit: int,
+        cursor_payload: dict[str, Any] | None,
+    ) -> tuple[list[dict[str, Any]], str | None]:
+        # Base filter: tenant is either seller or buyer depending on role
+        if role == "seller":
+            base_filter: dict[str, Any] = {"seller_tenant_id": tenant_id}
+        elif role == "buyer":
+            base_filter = {"buyer_tenant_id": tenant_id}
+        else:
+            base_filter = {"$or": [{"seller_tenant_id": tenant_id}, {"buyer_tenant_id": tenant_id}]}
+
+        if statuses:
+            base_filter["status"] = {"$in": list(statuses)}
+
+        # Sorting: created_at DESC, _id DESC
+        sort_spec = [("created_at", -1), ("_id", -1)]
+
+        # Cursor for keyset pagination
+        if cursor_payload:
+            created_at = cursor_payload.get("created_at")
+            rel_id = cursor_payload.get("id")
+            if created_at and rel_id:
+                # For DESC ordering: next page is strictly less than cursor (created_at, _id)
+                from bson import ObjectId
+
+                try:
+                    _id = ObjectId(rel_id)
+                except Exception:
+                    _id = None
+
+                gt_filter = {
+                    "$or": [
+                        {"created_at": {"$lt": created_at}},
+                        {"created_at": created_at, "_id": {"$lt": _id}},
+                    ]
+                }
+                base_filter = {"$and": [base_filter, gt_filter]}
+
+        cursor_db = (
+            self._col.find(base_filter)
+            .sort(sort_spec)
+            .limit(limit + 1)
+        )
+
         items: list[dict[str, Any]] = []
-        async for doc in cur:
+        async for doc in cursor_db:
             doc["id"] = str(doc.pop("_id"))
             items.append(doc)
-        return items
+
+        next_cursor: str | None = None
+        if len(items) > limit:
+            # Build next cursor from the last element in the page
+            last = items[limit - 1]
+            import json
+            from base64 import b64encode
+
+            payload = {"created_at": last.get("created_at"), "id": last["id"]}
+            next_cursor = b64encode(json.dumps(payload, default=str).encode("utf-8")).decode("utf-8")
+            items = items[:limit]
+
+        return items, next_cursor

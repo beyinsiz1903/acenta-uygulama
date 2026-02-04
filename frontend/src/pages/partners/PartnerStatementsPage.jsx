@@ -25,6 +25,17 @@ function shortenId(id) {
   return `${id.slice(0, 6)}…${id.slice(-4)}`;
 }
 
+async function copyToClipboard(text, toast) {
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      toast?.({ description: "ID panoya kopyalandı." });
+    }
+  } catch {
+    // kritik değil
+  }
+}
+
 export default function PartnerStatementsPage() {
   const { toast } = useToast();
 
@@ -370,9 +381,25 @@ export default function PartnerStatementsPage() {
                   {derivedItems.map((it) => (
                     <TableRow key={it.settlement_id} className="hover:bg-muted/40">
                       <TableCell className="text-xs">{formatDate(it.created_at)}</TableCell>
-                      <TableCell className="text-xs font-mono">{shortenId(it.booking_id)}</TableCell>
-                      <TableCell className="text-xs font-mono">{shortenId(it.settlement_id)}</TableCell>
-                      <TableCell className="text-xs font-mono">
+                      <TableCell
+                        className="text-xs font-mono cursor-pointer hover:underline"
+                        title="Booking ID'yi kopyala"
+                        onClick={() => it.booking_id && copyToClipboard(it.booking_id, toast)}
+                      >
+                        {shortenId(it.booking_id)}
+                      </TableCell>
+                      <TableCell
+                        className="text-xs font-mono cursor-pointer hover:underline"
+                        title="Settlement ID'yi kopyala"
+                        onClick={() => it.settlement_id && copyToClipboard(it.settlement_id, toast)}
+                      >
+                        {shortenId(it.settlement_id)}
+                      </TableCell>
+                      <TableCell
+                        className="text-xs font-mono cursor-pointer hover:underline"
+                        title="Karşı tenant ID'yi kopyala"
+                        onClick={() => it.counterparty_tenant_id && copyToClipboard(it.counterparty_tenant_id, toast)}
+                      >
                         {it.counterparty_tenant_id || <span className="text-muted-foreground">-</span>}
                       </TableCell>
                       <TableCell className="text-xs">{it.currency || "-"}</TableCell>

@@ -178,10 +178,12 @@ def cleanup_test_data(tenant_ids: List[str]):
                     ]
                 })
             else:
-                # Clean by tenant_id or _id
                 if collection_name == "tenants":
                     result = collection.delete_many({"_id": {"$in": tenant_ids}})
+                elif collection_name == "memberships":
+                    result = collection.delete_many({"tenant_id": {"$in": tenant_ids}})
                 else:
+                    # Clean by tenant_id or _id
                     result = collection.delete_many({"tenant_id": {"$in": tenant_ids}})
             
             if result.deleted_count > 0:

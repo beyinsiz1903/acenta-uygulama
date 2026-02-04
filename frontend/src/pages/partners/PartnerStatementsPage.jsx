@@ -308,7 +308,7 @@ export default function PartnerStatementsPage() {
               <CardTitle className="text-[11px] font-medium">Brüt toplam</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-semibold">{totals.gross_total}</div>
+              <div className="text-lg font-semibold">{formatAmount(totals.gross_total, totals.currency)}</div>
             </CardContent>
           </Card>
           <Card>
@@ -316,7 +316,7 @@ export default function PartnerStatementsPage() {
               <CardTitle className="text-[11px] font-medium">Komisyon toplamı</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-semibold">{totals.commission_total}</div>
+              <div className="text-lg font-semibold">{formatAmount(totals.commission_total, totals.currency)}</div>
             </CardContent>
           </Card>
           <Card>

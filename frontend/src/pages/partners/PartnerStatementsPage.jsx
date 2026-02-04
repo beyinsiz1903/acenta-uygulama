@@ -105,7 +105,19 @@ export default function PartnerStatementsPage() {
       setCurrencyBreakdown(res.currency_breakdown || []);
       setNextCursor(res.page?.next_cursor || null);
     } catch (e) {
-      const msg = e?.message || "Mutabakat ekstresi yüklenirken bir hata oluştu.";
+      const code = e?.raw?.response?.data?.error?.code;
+      let msg = e?.message || "Mutabakat ekstresi yüklenirken bir hata oluştu.";
+      if (code === "invalid_month") {
+        msg = "Ay formatı geçersiz. Örn: 2026-02.";
+      } else if (code === "statement_too_large") {
+        msg = "Bu filtreyle çok fazla kayıt var (max 500). Lütfen filtreleri daraltın.";
+      } else if (code === "invalid_cursor") {
+        msg = "Sayfalama bilgisi geçersiz. Lütfen sayfayı yenileyin.";
+      } else if (code === "tenant_header_missing") {
+        msg = "Tenant seçimi gerekli. Lütfen geçerli bir tenant ile tekrar deneyin.";
+      } else if (code === "invalid_token") {
+        msg = "Oturum süreniz dolmuş olabilir. Lütfen tekrar giriş yapın.";
+      }
       setError(msg);
       setItems([]);
       setTotals(null);

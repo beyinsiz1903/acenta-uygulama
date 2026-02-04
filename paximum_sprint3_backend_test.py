@@ -30,7 +30,7 @@ import respx
 from contextlib import asynccontextmanager
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://saas-partner.preview.emergentagent.com"
+BASE_URL = "https://tenant-network.preview.emergentagent.com"
 PAXIMUM_BASE_URL = "https://api.paximum.com"  # Mock upstream URL
 
 def get_mongo_client():

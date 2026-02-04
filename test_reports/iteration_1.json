@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://saas-partner.preview.emergentagent.com/api",
-    "frontend_url": "https://saas-partner.preview.emergentagent.com",
+    "backend_url": "https://tenant-network.preview.emergentagent.com/api",
+    "frontend_url": "https://tenant-network.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

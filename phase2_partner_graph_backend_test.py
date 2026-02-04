@@ -5,7 +5,7 @@ Phase 2.0 Partner Graph Backend Smoke Test
 This test suite verifies the new Phase 2.0 backend graph features work end-to-end 
 using the deployed preview environment as requested in the review.
 
-Base URL: https://saas-partner.preview.emergentagent.com
+Base URL: https://tenant-network.preview.emergentagent.com
 Auth: Use existing super admin user muratsutay@hotmail.com / murat1903
 
 Features to test:
@@ -28,7 +28,7 @@ import os
 from typing import Dict, Any, Optional
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://saas-partner.preview.emergentagent.com"
+BASE_URL = "https://tenant-network.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

@@ -132,7 +132,7 @@ export default function PartnerRelationshipsPage() {
       } else if (role === "buyer") {
         roleLabel = "Ben Alıcıyım";
       } else {
-        roleLabel = ""; // any iken karışık olabilir
+        roleLabel = "—"; // any: nötr placeholder
       }
       return {
         ...it,

@@ -300,6 +300,7 @@ function App() {
           <Route path="partners/relationships" element={<PartnerRelationshipsPage />} />
           <Route path="partners/statements" element={<PartnerStatementsPage />} />
           <Route path="partners/relationships-old" element={<Navigate to="/app/partners/invites" replace />} />
+          <Route path="partners/invites-old" element={<Navigate to="/app/partners/invites" replace />} />
           <Route path="crm/customers" element={<CrmCustomersPage />} />
           <Route path="crm/duplicates" element={<CrmDuplicateCustomersPage />} />
           <Route path="crm/pipeline" element={<CrmPipelinePage />} />

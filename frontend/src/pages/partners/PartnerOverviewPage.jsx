@@ -109,6 +109,9 @@ export default function PartnerOverviewPage() {
               <Users className="h-4 w-4" />
               <CardTitle className="text-sm font-medium">Bekleyen Davetler</CardTitle>
             </div>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/app/partners/invites">Davetleri Gör</Link>
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold">{invitesReceived}</div>
@@ -124,6 +127,9 @@ export default function PartnerOverviewPage() {
               <Users className="h-4 w-4" />
               <CardTitle className="text-sm font-medium">Aktif Partnerler</CardTitle>
             </div>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/app/partners/relationships">İlişkilere Git</Link>
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold">{activePartners}</div>
@@ -139,6 +145,9 @@ export default function PartnerOverviewPage() {
               <Receipt className="h-4 w-4" />
               <CardTitle className="text-sm font-medium">Bu Ay Mutabakat</CardTitle>
             </div>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/app/partners/statements">Mutabakat Aç</Link>
+            </Button>
           </CardHeader>
           <CardContent className="text-xs space-y-1">
             <div className="text-lg font-semibold">Toplam kayıt: {statementInfo.totalCount}</div>

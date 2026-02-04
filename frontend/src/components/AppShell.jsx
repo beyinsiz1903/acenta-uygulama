@@ -207,11 +207,7 @@ export default function AppShell() {
   const partnerSection = {
     label: "Partners",
     children: [
-      { label: "Gelen Kutusu", path: "/app/partners/inbox" },
-      { label: "Keşfet & Davet Et", path: "/app/partners/discovery" },
-      { label: "Partner Davetleri", path: "/app/partners/invites" },
-      { label: "Partner İlişkileri", path: "/app/partners/relationships" },
-      { label: "Mutabakat Ekstresi", path: "/app/partners/statements" },
+      { label: "Genel Bakış", path: "/app/partners" },
     ],
   };
 

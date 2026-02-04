@@ -105,21 +105,24 @@ def create_test_tenant_and_user(org_id: str, tenant_suffix: str) -> tuple[str, s
     db.users.replace_one({"email": user_email}, user_doc, upsert=True)
     
     # Create membership linking user to tenant
-    membership_doc = {
-        "user_id": user_email,  # Using email as user_id for simplicity
-        "tenant_id": tenant_id,
-        "organization_id": org_id,
-        "role": "admin",
-        "permissions": ["partner.view", "partner.invite"],
-        "is_active": True,
-        "created_at": now,
-        "updated_at": now,
-    }
-    db.memberships.replace_one(
-        {"user_id": user_email, "tenant_id": tenant_id}, 
-        membership_doc, 
-        upsert=True
-    )
+    user_doc = db.users.find_one({"email": user_email})
+    if user_doc:
+        membership_doc = {
+            "user_id": str(user_doc["_id"]),
+            "tenant_id": tenant_id,
+            "organization_id": org_id,
+            "role": "admin",
+            "permissions": ["partner.view", "partner.invite"],
+            "is_active": True,
+            "status": "active",
+            "created_at": now,
+            "updated_at": now,
+        }
+        db.memberships.replace_one(
+            {"user_id": str(user_doc["_id"]), "tenant_id": tenant_id}, 
+            membership_doc, 
+            upsert=True
+        )
     
     mongo_client.close()
     

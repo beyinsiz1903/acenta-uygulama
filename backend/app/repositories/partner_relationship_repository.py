@@ -127,6 +127,14 @@ class PartnerRelationshipRepository:
             created_at = cursor_payload.get("created_at")
             rel_id = cursor_payload.get("id")
             if created_at and rel_id:
+                # Ensure created_at is a datetime for comparison
+                from datetime import datetime as _dt
+                if isinstance(created_at, str):
+                    try:
+                        created_at = _dt.fromisoformat(created_at)
+                    except Exception:
+                        created_at = None
+
                 # For DESC ordering: next page is strictly less than cursor (created_at, _id)
                 from bson import ObjectId
 
@@ -135,13 +143,14 @@ class PartnerRelationshipRepository:
                 except Exception:
                     _id = None
 
-                gt_filter = {
-                    "$or": [
-                        {"created_at": {"$lt": created_at}},
-                        {"created_at": created_at, "_id": {"$lt": _id}},
-                    ]
-                }
-                base_filter = {"$and": [base_filter, gt_filter]}
+                if created_at is not None and _id is not None:
+                    gt_filter = {
+                        "$or": [
+                            {"created_at": {"$lt": created_at}},
+                            {"created_at": created_at, "_id": {"$lt": _id}},
+                        ]
+                    }
+                    base_filter = {"$and": [base_filter, gt_filter]}
 
         cursor_db = (
             self._col.find(base_filter)

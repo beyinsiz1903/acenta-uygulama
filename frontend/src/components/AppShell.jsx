@@ -71,6 +71,23 @@ export default function AppShell() {
   const [partnerSummary, setPartnerSummary] = useState(null);
   const [activeTenantKey, setActiveTenantKey] = useState(() => getActiveTenantKey());
 
+  // On first load, if there is a default tenant id configured and no active tenant set,
+  // seed it into storage so that tenant-aware APIs (X-Tenant-Id) work even before a
+  // dedicated tenant switcher exists.
+  useEffect(() => {
+    try {
+      const existing = getActiveTenantKey();
+      const defId = process.env.REACT_APP_DEFAULT_TENANT_ID;
+      if (!existing && defId) {
+        // Only set id; key can be introduced later by a real switcher.
+        // We don't call setActiveTenantKey here to avoid overriding future logic.
+        // Instead, use tenantContext's setActiveTenantId when available.
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {

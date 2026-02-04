@@ -3,9 +3,10 @@ from __future__ import annotations
 import os
 from typing import Any, Optional
 
-from fastapi import Request
+from fastapi import HTTPException, Request
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
 
 from app.auth import decode_token, is_super_admin
 from app.db import get_db

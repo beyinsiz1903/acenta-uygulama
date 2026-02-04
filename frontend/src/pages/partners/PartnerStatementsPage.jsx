@@ -19,6 +19,21 @@ function formatDate(value) {
   }
 }
 
+function formatAmount(value, currency) {
+  if (value == null || value === "") return "-";
+  if (!currency) return String(value);
+  try {
+    return new Intl.NumberFormat("tr-TR", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 2,
+    }).format(Number(value));
+  } catch {
+    return String(value);
+  }
+}
+
+
 function shortenId(id) {
   if (!id) return "-";
   if (id.length <= 10) return id;

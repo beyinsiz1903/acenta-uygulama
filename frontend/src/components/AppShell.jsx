@@ -75,14 +75,11 @@ export default function AppShell() {
   // seed it into storage so that tenant-aware APIs (X-Tenant-Id) work even before a
   // dedicated tenant switcher exists.
   useEffect(() => {
+    // Eski davranış: burada default tenant id'yi localStorage'a yazmaya
+    // hazırlanıyorduk. Artık interceptor env default'u sadece header'da
+    // kullanıyor ve localStorage'a dokunmuyor. Bu effect'i no-op bırakıyoruz.
     try {
-      const existing = getActiveTenantKey();
-      const defId = process.env.REACT_APP_DEFAULT_TENANT_ID;
-      if (!existing && defId) {
-        // Only set id; key can be introduced later by a real switcher.
-        // We don't call setActiveTenantKey here to avoid overriding future logic.
-        // Instead, use tenantContext's setActiveTenantId when available.
-      }
+      void getActiveTenantKey();
     } catch {
       // ignore
     }

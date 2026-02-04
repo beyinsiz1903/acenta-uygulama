@@ -349,9 +349,9 @@ export default function PartnerStatementsPage() {
                     </Badge>
                   </div>
                   <div className="text-[11px] text-muted-foreground space-y-0.5">
-                    <div>Brüt: {c.gross_total}</div>
-                    <div>Komisyon: {c.commission_total}</div>
-                    <div>Net: {c.net_total}</div>
+                    <div>Brüt: {formatAmount(c.gross_total, c.currency)}</div>
+                    <div>Komisyon: {formatAmount(c.commission_total, c.currency)}</div>
+                    <div>Net: {formatAmount(c.net_total, c.currency)}</div>
                   </div>
                 </div>
               ))}

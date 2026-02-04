@@ -145,11 +145,80 @@ class PartnerGraphService:
         assert updated is not None
         return updated
 
-    async def list_for_current_tenant(self) -> list[dict[str, Any]]:
-        ctx = await self._get_ctx()
-        if not ctx.tenant_id:
-            return []
-        return await self._repo.list_for_tenant(ctx.tenant_id)
+    async def list_for_current_tenant(
+        self,
+        tenant_id: str,
+        status_param: str | None,
+        role_param: str,
+        limit: int,
+        cursor: str | None,
+    ) -> dict[str, Any]:
+        if not tenant_id:
+            return {"items": [], "next_cursor": None}
+
+        # Validate role
+        allowed_roles = {"seller", "buyer", "any"}
+        if role_param not in allowed_roles:
+            raise AppError(
+                status_code=400,
+                code="invalid_role",
+                message="Invalid role parameter.",
+                details={"allowed": sorted(allowed_roles)},
+            )
+
+        # Validate and clamp limit
+        if limit <= 0:
+            limit = 50
+        if limit > 200:
+            raise AppError(
+                status_code=400,
+                code="invalid_limit",
+                message="Limit too large.",
+                details={"max": 200},
+            )
+
+        # Parse statuses
+        statuses: set[str] | None = None
+        if status_param:
+            parts = [p.strip() for p in status_param.split(",") if p.strip()]
+            if parts:
+                allowed_statuses = {"invited", "accepted", "active", "suspended", "terminated"}
+                if any(p not in allowed_statuses for p in parts):
+                    raise AppError(
+                        status_code=400,
+                        code="invalid_status",
+                        message="Invalid status parameter.",
+                        details={"allowed": sorted(allowed_statuses)},
+                    )
+                statuses = set(parts)
+
+        # Decode cursor
+        cursor_payload: dict[str, Any] | None = None
+        if cursor:
+            import json
+            from base64 import b64decode
+
+            try:
+                raw = b64decode(cursor).decode("utf-8")
+                cursor_payload = json.loads(raw)
+            except Exception:
+                raise AppError(
+                    status_code=400,
+                    code="invalid_cursor",
+                    message="Invalid cursor.",
+                    details=None,
+                )
+
+        # Delegate to repository
+        items, next_cursor = await self._repo.list_for_tenant_paginated(
+            tenant_id=tenant_id,
+            statuses=statuses,
+            role=role_param,
+            limit=limit,
+            cursor_payload=cursor_payload,
+        )
+
+        return {"items": items, "next_cursor": next_cursor}
 
     async def build_inbox(self, tenant_id: str) -> dict[str, Any]:
         """Build inbox view: invites received, invites sent, and active partners.

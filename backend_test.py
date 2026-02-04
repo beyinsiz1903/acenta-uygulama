@@ -163,7 +163,7 @@ def cleanup_test_data(tenant_ids: List[str]):
         
         # Clean up collections
         collections_to_clean = [
-            "tenants", "users", "memberships", "partner_relationships"
+            "tenants", "memberships", "partner_relationships"
         ]
         
         for collection_name in collections_to_clean:

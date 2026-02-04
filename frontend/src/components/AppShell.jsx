@@ -184,6 +184,7 @@ export default function AppShell() {
       { label: "Gelen Kutusu", path: "/app/partners/inbox" },
       { label: "Keşfet & Davet Et", path: "/app/partners/discovery" },
       { label: "Partner Davetleri", path: "/app/partners/relationships" },
+      { label: "Mutabakat Ekstresi", path: "/app/partners/statements" },
     ],
   };
 

@@ -74,9 +74,9 @@ backend:
 frontend:
   - task: "Partner B2B Network UI (B2B Ağ) – Phase 1"
     implemented: true
-    working: false
+    working: true
     file: "frontend/src/pages/partners/PartnerB2BNetworkPage.jsx"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -86,6 +86,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "CRITICAL ROUTING ISSUE: All /app/* routes showing 'Sayfa bulunamadı' (404). Login works and redirects to /app/admin/agencies, but then ALL subsequent /app/* routes (including /app/partners, /app/partners/b2b, /app/products, /app) show 404. This is NOT specific to B2B Network page - it's a broader React Router configuration issue. Components exist and are properly imported. Suspect React Router v7.5.1 compatibility issue or routing configuration problem. AppShell renders correctly with Outlet, RequireAuth passes, but routes not matching."
+      - working: true
+        agent: "testing"
+        comment: "✅ SMOKE TEST PASSED: B2B Network UI fully functional after role and error-context fixes. Login as agency1@acenta.test works, redirects to /app/partners, and /app/partners/b2b loads successfully. All required Turkish texts verified: 'B2B Ağ' main heading, 'Satıcı'/'Sağlayıcı' mode toggles working, Seller mode shows 'Müsait Listingler' and 'Taleplerim', Provider mode shows 'Listinglerim' and 'Gelen Talepler'. No error messages or 404 indicators found. UI skeleton renders correctly independent of backend data. Previous routing issues have been resolved."
 
 metadata:
   created_by: "main_agent"

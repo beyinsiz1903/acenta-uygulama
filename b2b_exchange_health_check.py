@@ -33,16 +33,16 @@ def get_mongo_client():
 
 def login_b2b_user():
     """Login as B2B user and return token, org_id, user_id"""
-    # Use existing agency1@acenta.test pattern from previous tests
+    # Use existing agency1@demo.test which has agency_admin role
     r = requests.post(
         f"{BASE_URL}/api/auth/login",
-        json={"email": "agency1@acenta.test", "password": "agency123"},
+        json={"email": "agency1@demo.test", "password": "demo123"},
     )
     if r.status_code != 200:
-        # Fallback to admin user if agency1 doesn't exist
+        # Fallback to agency2@demo.test
         r = requests.post(
             f"{BASE_URL}/api/auth/login",
-            json={"email": "admin@acenta.test", "password": "admin123"},
+            json={"email": "agency2@demo.test", "password": "demo123"},
         )
     
     assert r.status_code == 200, f"B2B user login failed: {r.text}"

@@ -1,70 +1,60 @@
 import React from "react";
-import { AlertTriangle } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+
 import { Button } from "../components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
 import { clearToken } from "../lib/api";
 
 export default function ErrorContextPage() {
-  const user = React.useMemo(() => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const params = new URLSearchParams(location.search || "");
+  const reason = params.get("reason") || "unknown";
+
+  let detailMessage = "Hesap bağlamı eksik. Ajans veya otel bilgisi tanımlanmamış olabilir.";
+  if (reason === "agency_id_missing") {
+    detailMessage = "Acenta panellerine erişmek için hesabınıza bağlı bir ajans (agency_id) bulunmalıdır.";
+  } else if (reason === "hotel_id_missing") {
+    detailMessage = "Otel panellerine erişmek için hesabınıza bağlı bir otel (hotel_id) bulunmalıdır.";
+  }
+
+  const handleLogout = () => {
     try {
-      return JSON.parse(localStorage.getItem("acenta_user"));
+      clearToken();
     } catch {
-      return null;
+      // ignore
     }
-  }, []);
+    navigate("/login", { replace: true });
+  };
+
+  const handleBackToLogin = () => {
+    navigate("/login", { replace: true });
+  };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="max-w-md w-full text-center space-y-6">
-        <div className="flex justify-center">
-          <div className="h-20 w-20 rounded-full bg-yellow-500/10 flex items-center justify-center">
-            <AlertTriangle className="h-10 w-10 text-yellow-500" />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-foreground">Eksik Context</h1>
-          <p className="text-muted-foreground">
-            Kullanıcı hesabınızda gerekli context bilgisi eksik.
-            <br />
-            Lütfen sistem yöneticinizle iletişime geçin.
-          </p>
-        </div>
-
-        {user && (
-          <div className="bg-muted/50 rounded-lg p-4 text-sm text-left space-y-1">
-            <div>
-              <span className="text-muted-foreground">Email:</span>{" "}
-              <span className="font-mono text-foreground">{user.email}</span>
+    <div className="min-h-screen flex items-center justify-center px-4 bg-background">
+      <div className="w-full max-w-md">
+        <Card className="rounded-2xl shadow-sm">
+          <CardHeader>
+            <CardTitle>Hesap bağlamı eksik</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm text-muted-foreground">
+            <p>{detailMessage}</p>
+            <p>
+              Lütfen sistem yöneticinizle iletişime geçerek hesabınıza doğru ajans/otel bilgisi
+              tanımlandığından emin olun.
+            </p>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" size="sm" onClick={handleBackToLogin}>
+                Girişe dön
+              </Button>
+              <Button size="sm" onClick={handleLogout}>
+                Çıkış yap
+              </Button>
             </div>
-            <div>
-              <span className="text-muted-foreground">Roller:</span>{" "}
-              <span className="font-mono text-foreground">
-                {user.roles?.join(", ") || "Yok"}
-              </span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Agency ID:</span>{" "}
-              <span className="font-mono text-foreground">
-                {user.agency_id || "❌ Eksik"}
-              </span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Hotel ID:</span>{" "}
-              <span className="font-mono text-foreground">
-                {user.hotel_id || "❌ Eksik"}
-              </span>
-            </div>
-          </div>
-        )}
-
-        <Button
-          onClick={() => {
-            clearToken();
-            window.location.href = "/login";
-          }}
-        >
-          Çıkış Yap
-        </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

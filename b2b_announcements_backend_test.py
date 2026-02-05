@@ -19,7 +19,7 @@ import json
 from datetime import datetime, timedelta
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://tenant-network.preview.emergentagent.com"
+BACKEND_URL = "https://travelpartner-2.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin and return JWT token"""

@@ -14,7 +14,7 @@ from bson import ObjectId
 import os
 from typing import Dict, Any, Optional
 
-BASE_URL = "https://tenant-network.preview.emergentagent.com"
+BASE_URL = "https://travelpartner-2.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

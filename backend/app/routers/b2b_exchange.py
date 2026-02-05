@@ -221,7 +221,9 @@ async def create_listing(  # type: ignore[no-untyped-def]
     db = await get_db()
 
     now = _now()
+    public_id = "lst_" + uuid4().hex
     doc = {
+        "id": public_id,
         "provider_tenant_id": tenant_ctx.tenant_id,
         "title": body.title,
         "description": body.description,

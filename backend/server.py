@@ -257,6 +257,8 @@ app.include_router(b2b_router)
 app.include_router(b2b_bookings_router)
 app.include_router(b2b_bookings_list_router)
 app.include_router(b2b_hotels_search_router)
+from app.routers.b2b_exchange import router as b2b_exchange_router
+
 app.include_router(b2b_quotes_router)
 from app.routers.health import router as health_router
 

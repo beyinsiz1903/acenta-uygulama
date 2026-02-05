@@ -103,7 +103,7 @@ export default function PartnerOverviewPage() {
       )}
 
       <div className="grid gap-3 md:grid-cols-3">
-        <Card>
+        <Card className={invitesReceived > 0 ? "border border-primary/40 bg-primary/5" : ""}>
           <CardHeader className="pb-2 flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs">
               <Users className="h-4 w-4" />

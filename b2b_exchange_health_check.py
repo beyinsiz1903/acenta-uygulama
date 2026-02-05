@@ -49,10 +49,10 @@ def create_test_tenant_and_user(org_id: str, tenant_suffix: str) -> tuple[str, s
     mongo_client = get_mongo_client()
     db = mongo_client.get_default_database()
     
-    # Use the B2B user we created
-    user = db.users.find_one({"email": "test_b2b@acenta.test"})
+    # Use the admin user
+    user = db.users.find_one({"email": "admin@acenta.test"})
     if not user:
-        raise Exception("No suitable B2B user found")
+        raise Exception("Admin user not found")
     
     # Create unique tenant
     unique_id = uuid.uuid4().hex[:8]
@@ -98,12 +98,12 @@ def create_test_tenant_and_user(org_id: str, tenant_suffix: str) -> tuple[str, s
     # Get fresh token
     r = requests.post(
         f"{BASE_URL}/api/auth/login",
-        json={"email": "test_b2b@acenta.test", "password": "test123"},
+        json={"email": "admin@acenta.test", "password": "admin123"},
     )
     assert r.status_code == 200, f"User login failed: {r.text}"
     
     token = r.json()["access_token"]
-    return tenant_id, "test_b2b@acenta.test", token
+    return tenant_id, "admin@acenta.test", token
 
 def create_partner_relationship(seller_tenant_id: str, buyer_tenant_id: str, status: str = "active") -> str:
     """Create an active partner relationship directly in database"""

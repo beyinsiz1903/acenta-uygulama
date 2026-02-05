@@ -20,7 +20,10 @@ const groups = [
   {
     key: "growth",
     label: "Büyütme",
-    items: [{ label: "Keşfet", to: "/app/partners/discovery" }],
+    items: [
+      { label: "Keşfet", to: "/app/partners/discovery" },
+      { label: "B2B A1f", to: "/app/partners/b2b" },
+    ],
   },
   {
     key: "finance",

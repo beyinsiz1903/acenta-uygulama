@@ -43,11 +43,12 @@ def login_b2b_user():
     if not b2b_user:
         # Create a B2B user for testing
         from bson import ObjectId
-        import bcrypt
+        from passlib.context import CryptContext
         
-        # Hash password
+        # Use the same password context as the backend
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         password = "test123"
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        hashed_password = pwd_context.hash(password)
         
         # Create organization if needed
         org_doc = {
@@ -62,7 +63,7 @@ def login_b2b_user():
         # Create user
         user_doc = {
             "email": "test_b2b@acenta.test",
-            "password": hashed_password,
+            "password_hash": hashed_password,  # Use password_hash field name
             "roles": ["agency_admin"],
             "organization_id": "test_b2b_org",
             "agency_id": "test_agency_id",

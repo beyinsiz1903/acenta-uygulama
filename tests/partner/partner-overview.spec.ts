@@ -17,12 +17,18 @@ test("Partner Genel Bakış açılır ve subnav görünür", async ({ page }) =>
   await expect(page.getByRole("link", { name: "Keşfet" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Mutabakat" })).toBeVisible();
 
-  // CTA butonlar
-  await expect(page.getByRole("button", { name: "Davetleri Gr" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "likilere Git" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Mutabakat A" })).toBeVisible();
+  // Header'da Partner Gelen Kutusu linki
+  const headerLink = page.getByRole("link", { name: /Partner Gelen Kutusu/ });
+  await expect(headerLink).toBeVisible();
+  await headerLink.click();
+  await expect(page).toHaveURL(/\/app\/partners\/?$/);
 
-  // Basit navigasyon: Davetleri Gr -> invites
-  await page.getByRole("button", { name: "Davetleri Gr" }).click();
+  // CTA butonlar
+  await expect(page.getByRole("button", { name: "Davetleri Gör" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "İlişkilere Git" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Mutabakatı Aç" })).toBeVisible();
+
+  // Basit navigasyon: Davetleri Gör -> invites
+  await page.getByRole("button", { name: "Davetleri Gör" }).click();
   await expect(page).toHaveURL(/\/app\/partners\/invites/);
 });

@@ -183,13 +183,9 @@ def _serialize(doc: dict[str, Any]) -> dict[str, Any]:
 
 
 async def _get_listing(db, listing_id: str) -> Optional[dict[str, Any]]:
-    from bson import ObjectId
+    """Fetch listing by public id (lst_*)."""
 
-    try:
-        _id = ObjectId(listing_id)
-        doc = await db.b2b_listings.find_one({"_id": _id})
-    except Exception:
-        doc = await db.b2b_listings.find_one({"id": listing_id})
+    doc = await db.b2b_listings.find_one({"id": listing_id})
     return doc
 
 

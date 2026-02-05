@@ -33,17 +33,53 @@ def get_mongo_client():
 
 def login_b2b_user():
     """Login as B2B user and return token, org_id, user_id"""
-    # Use existing agency1@demo.test which has agency_admin role
+    # First, create a B2B user if needed
+    mongo_client = get_mongo_client()
+    db = mongo_client.get_default_database()
+    
+    # Check if we have a suitable B2B user
+    b2b_user = db.users.find_one({"email": "test_b2b@acenta.test"})
+    
+    if not b2b_user:
+        # Create a B2B user for testing
+        from bson import ObjectId
+        import bcrypt
+        
+        # Hash password
+        password = "test123"
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        # Create organization if needed
+        org_doc = {
+            "_id": "test_b2b_org",
+            "name": "Test B2B Organization",
+            "status": "active",
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
+        }
+        db.organizations.replace_one({"_id": "test_b2b_org"}, org_doc, upsert=True)
+        
+        # Create user
+        user_doc = {
+            "email": "test_b2b@acenta.test",
+            "password": hashed_password,
+            "roles": ["agency_admin"],
+            "organization_id": "test_b2b_org",
+            "agency_id": "test_agency_id",
+            "is_active": True,
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
+        }
+        result = db.users.insert_one(user_doc)
+        print(f"Created B2B user: {result.inserted_id}")
+    
+    mongo_client.close()
+    
+    # Now try to login
     r = requests.post(
         f"{BASE_URL}/api/auth/login",
-        json={"email": "agency1@demo.test", "password": "demo123"},
+        json={"email": "test_b2b@acenta.test", "password": "test123"},
     )
-    if r.status_code != 200:
-        # Fallback to agency2@demo.test
-        r = requests.post(
-            f"{BASE_URL}/api/auth/login",
-            json={"email": "agency2@demo.test", "password": "demo123"},
-        )
     
     assert r.status_code == 200, f"B2B user login failed: {r.text}"
     data = r.json()

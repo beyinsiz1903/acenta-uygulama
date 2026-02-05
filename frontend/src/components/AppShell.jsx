@@ -234,7 +234,7 @@ export default function AppShell() {
           <div className="flex items-center gap-2">
             {/* Partner inbox header badge */}
             <NavLink
-              to="/app/partners/inbox"
+              to="/app/partners"
               className={({ isActive }) =>
                 cn(
                   "relative inline-flex items-center justify-center rounded-full border px-2 py-1 text-xs transition hover:bg-accent hover:text-foreground",

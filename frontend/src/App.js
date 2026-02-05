@@ -82,6 +82,7 @@ import PartnerRelationshipsPage from "./pages/partners/PartnerRelationshipsPage"
 import PartnerStatementsPage from "./pages/partners/PartnerStatementsPage";
 import PartnerLayout from "./pages/partners/PartnerLayout";
 import PartnerOverviewPage from "./pages/partners/PartnerOverviewPage";
+import PartnerB2BNetworkPage from "./pages/partners/PartnerB2BNetworkPage";
 
 
 import AdminOpsIncidentsPage from "./pages/ops/AdminOpsIncidentsPage";
@@ -300,6 +301,7 @@ function App() {
             <Route index element={<PartnerOverviewPage />} />
             <Route path="inbox" element={<PartnerInboxPage />} />
             <Route path="discovery" element={<PartnerDiscoveryPage />} />
+            <Route path="b2b" element={<PartnerB2BNetworkPage />} />
             <Route path="invites" element={<PartnerInvitesPage />} />
             <Route path="relationships" element={<PartnerRelationshipsPage />} />
             <Route path="statements" element={<PartnerStatementsPage />} />

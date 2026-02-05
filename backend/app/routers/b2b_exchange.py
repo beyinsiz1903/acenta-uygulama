@@ -378,7 +378,9 @@ async def create_match_request(  # type: ignore[no-untyped-def]
     ]
 
     doc = {
-        "listing_id": str(listing.get("_id")),
+        "id": "mreq_" + uuid4().hex,
+        "listing_id": listing.get("id"),
+        "listing_mongo_id": str(listing.get("_id")),
         "provider_tenant_id": provider_tenant_id,
         "seller_tenant_id": seller_tenant_id,
         "requested_price": float(body.requested_price),

@@ -74,15 +74,18 @@ backend:
 frontend:
   - task: "Partner B2B Network UI (B2B Ağ) – Phase 1"
     implemented: true
-    working: "NA"
+    working: false
     file: "frontend/src/pages/partners/PartnerB2BNetworkPage.jsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Partner B2B Network UI oluşturuldu: Satıcı modu (Müsait Listingler + Taleplerim) ve Sağlayıcı modu (Listinglerim + Gelen Talepler) tamamlandı. Mutasyon sonrası refresh standardı uygulandı, TR hata mesajı mapping'i ve TRY fiyat formatı eklendi. UI smoke test için frontend testing agent ile Playwright senaryosu çalıştırılacak."
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL ROUTING ISSUE: All /app/* routes showing 'Sayfa bulunamadı' (404). Login works and redirects to /app/admin/agencies, but then ALL subsequent /app/* routes (including /app/partners, /app/partners/b2b, /app/products, /app) show 404. This is NOT specific to B2B Network page - it's a broader React Router configuration issue. Components exist and are properly imported. Suspect React Router v7.5.1 compatibility issue or routing configuration problem. AppShell renders correctly with Outlet, RequireAuth passes, but routes not matching."
 
 metadata:
   created_by: "main_agent"

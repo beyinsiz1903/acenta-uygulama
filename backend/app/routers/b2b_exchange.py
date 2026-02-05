@@ -177,8 +177,8 @@ def _serialize(doc: dict[str, Any]) -> dict[str, Any]:
     if not doc:
         return {}
     d = dict(doc)
-    if "_id" in d:
-        d["id"] = str(d.pop("_id"))
+    # id already present as public id (lst_*/mreq_*). We still drop _id.
+    d.pop("_id", None)
     return d
 
 

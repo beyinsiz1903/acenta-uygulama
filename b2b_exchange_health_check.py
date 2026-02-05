@@ -55,8 +55,8 @@ def create_test_tenant_and_user(org_id: str, tenant_suffix: str) -> tuple[str, s
     mongo_client = get_mongo_client()
     db = mongo_client.get_default_database()
     
-    # Use existing user (agency1 or admin)
-    user = db.users.find_one({"email": {"$in": ["agency1@acenta.test", "admin@acenta.test"]}})
+    # Use existing user (agency1 or agency2)
+    user = db.users.find_one({"email": {"$in": ["agency1@demo.test", "agency2@demo.test"]}})
     if not user:
         raise Exception("No suitable B2B user found")
     
@@ -103,7 +103,7 @@ def create_test_tenant_and_user(org_id: str, tenant_suffix: str) -> tuple[str, s
     
     # Get fresh token
     email = user["email"]
-    password = "agency123" if "agency1" in email else "admin123"
+    password = "demo123"
     r = requests.post(
         f"{BASE_URL}/api/auth/login",
         json={"email": email, "password": password},

@@ -22,7 +22,7 @@ const groups = [
     label: "Büyütme",
     items: [
       { label: "Keşfet", to: "/app/partners/discovery" },
-      { label: "B2B A1f", to: "/app/partners/b2b" },
+      { label: "B2B Ağ", to: "/app/partners/b2b" },
     ],
   },
   {

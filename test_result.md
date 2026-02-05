@@ -96,6 +96,11 @@ metadata:
 test_plan:
   current_focus:
     - "Partner B2B Network UI (B2B Ağ) – Phase 1"
-  stuck_tasks: []
+  stuck_tasks:
+    - "Partner B2B Network UI (B2B Ağ) – Phase 1"
   test_all: false
   test_priority: "high_first"
+
+agent_communication:
+  - agent: "testing"
+    message: "CRITICAL ROUTING ISSUE DISCOVERED: Cannot test B2B Network UI because ALL /app/* routes are broken. Login works but all subsequent navigation shows 404. This is a React Router configuration issue, not specific to B2B Network. Suspect React Router v7.5.1 compatibility problem. Main agent needs to investigate routing configuration in App.js or downgrade React Router version. Components are properly implemented but unreachable due to routing failure."

@@ -282,7 +282,9 @@ function App() {
         <Route
           path="/app/*"
           element={
-            <RequireAuth roles={["admin", "sales", "ops", "accounting", "b2b_agent", "super_admin"]}>
+            <RequireAuth
+              roles={["admin", "sales", "ops", "accounting", "b2b_agent", "super_admin", "agency_admin", "agency_agent"]}
+            >
               <AppShell />
             </RequireAuth>
           }

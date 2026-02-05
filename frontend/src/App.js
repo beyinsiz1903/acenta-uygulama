@@ -136,6 +136,7 @@ import HotelSettlementsPage from "./pages/HotelSettlementsPage";
 import HotelIntegrationsPage from "./pages/HotelIntegrationsPage";
 import HotelHelpPage from "./pages/HotelHelpPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import ErrorContextPage from "./pages/ErrorContextPage";
 import { Toaster } from "./components/ui/sonner";
 import { useTheme } from "./theme/useTheme";
 import { getBrandNameFromThemeCache } from "./hooks/useSeo";
@@ -364,6 +365,7 @@ function App() {
         <Route path="/my-booking" element={<PublicMyBookingRequestPage />} />
         <Route path="/my-booking/:token" element={<PublicMyBookingDetailPage />} />
         <Route path="/app/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/error-context" element={<ErrorContextPage />} />
 
         {/* Hotel Routes */}
         <Route

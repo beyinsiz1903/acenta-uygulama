@@ -127,10 +127,8 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus:
-    - "B2B Exchange Integration Tests"
-  stuck_tasks:
-    - "B2B Exchange Integration Tests"
+  current_focus: []
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 

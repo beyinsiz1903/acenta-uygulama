@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -10,6 +11,14 @@ from app.constants.features import FEATURE_B2B
 from app.services.b2b_event_service import list_b2b_events
 
 router = APIRouter(prefix="/api/b2b/events", tags=["b2b_events"])
+
+
+def _serialize_item(item: dict) -> dict:
+  out = dict(item)
+  for k, v in out.items():
+    if isinstance(v, datetime):
+      out[k] = v.isoformat()
+  return out
 
 
 @router.get("")
@@ -31,5 +40,6 @@ async def get_b2b_events(
     limit=limit,
     cursor=cursor,
   )
-  next_cursor = items[-1]["id"] if items else None
-  return {"items": items, "next_cursor": next_cursor}
+  serialized = [_serialize_item(i) for i in items]
+  next_cursor = serialized[-1]["id"] if serialized else None
+  return {"items": serialized, "next_cursor": next_cursor}

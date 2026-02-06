@@ -87,10 +87,19 @@ class OnboardingService:
         except AppError:
             raise
         except Exception as exc:
-            # Rollback
-            await db.users.delete_one({"_id": user_id})
-            await db.tenants.delete_one({"_id": tenant_id})
-            await db.organizations.delete_one({"_id": org_id})
+            # Rollback - use delete_many to handle partial inserts
+            try:
+                await db.users.delete_one({"_id": user_id})
+            except Exception:
+                pass
+            try:
+                await db.tenants.delete_one({"_id": tenant_id})
+            except Exception:
+                pass
+            try:
+                await db.organizations.delete_one({"_id": org_id})
+            except Exception:
+                pass
             logger.error("signup_step_a rollback: %s", exc)
             raise AppError(500, "signup_failed", "Kayıt oluşturulamadı.", {})
 

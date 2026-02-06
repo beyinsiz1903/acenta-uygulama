@@ -26,6 +26,7 @@ export const adminNav = [
       { label: "B2B Duyuruları", path: "/app/admin/b2b/announcements" },
       { label: "Finans / Mutabakat", path: "/app/admin/finance/settlements" },
       { label: "Ops / B2B", path: "/app/admin/ops/b2b" },
+      { label: "Tenant Özellikleri", path: "/app/admin/tenant-features" },
     ],
   },
   {

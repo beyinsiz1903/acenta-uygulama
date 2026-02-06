@@ -1,5 +1,5 @@
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBhY2VudGEudGVzdCIsIm9yZyI6IjY5ODYxZWVkZTA0M2VmODNiODFhNWQ5NiIsInJvbGVzIjpbInN1cGVyX2FkbWluIl0sImlhdCI6MTc3MDM5OTUzNywiZXhwIjoxNzcwNDQyNzM3fQ.1nzL0UqHUW5APRAV25XCWoG1Qsp6qyKiS6ENic4zHKk",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBhY2VudGEudGVzdCIsIm9yZyI6IjY5ODYxZWVkZTA0M2VmODNiODFhNWQ5NiIsInJvbGVzIjpbInN1cGVyX2FkbWluIl0sImlhdCI6MTc3MDM5OTU1MSwiZXhwIjoxNzcwNDQyNzUxfQ.ns6aVSYpFAz4WMFsWaI-Y0_24iVWbTJ91sKb23bcB3s",
   "tenantId": "69861f0b80cec7dd7627ed5b",
   "baseURL": "https://dashboard-refresh-32.preview.emergentagent.com",
   "email": "admin@acenta.test"

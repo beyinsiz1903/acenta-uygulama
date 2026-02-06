@@ -33,7 +33,7 @@ test("B2B Ağ sayfası agency kullanıcısı için temel iskeleti render eder", 
   await expect(page.getByText("Taleplerim")).toBeVisible();
 
   // 3) Sağlayıcı moduna geç ve bölümleri kontrol et
-  await page.click("button:text('Sağlayıcı')");
+  await page.getByRole("button", { name: "Sağlayıcı" }).click();
 
   await expect(page.getByText("Listinglerim")).toBeVisible();
   await expect(page.getByText("Gelen Talepler")).toBeVisible();

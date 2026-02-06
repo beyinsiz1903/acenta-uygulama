@@ -22,11 +22,13 @@ function TenantListItem({ tenant, selected, onSelect }) {
   };
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       data-testid={`tenant-row-${tenant.id}`}
       onClick={() => onSelect(tenant)}
-      className={`w-full text-left px-3 py-2.5 border-b border-border transition-colors ${
+      onKeyDown={(e) => e.key === "Enter" && onSelect(tenant)}
+      className={`w-full text-left px-3 py-2.5 border-b border-border transition-colors cursor-pointer ${
         selected ? "bg-primary/10 border-l-2 border-l-primary" : "hover:bg-muted/50"
       }`}
     >

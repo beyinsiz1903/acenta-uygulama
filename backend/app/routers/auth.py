@@ -10,7 +10,7 @@ from app.utils import serialize_doc
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-@router.post("/login", response_model=LoginResponse)
+@router.post("/login")
 async def login(payload: LoginRequest):
     db = await get_db()
 

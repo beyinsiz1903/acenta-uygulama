@@ -51,7 +51,7 @@ function KpiCard({ label, value, icon: Icon, to, color, loading }) {
   return (
     <div
       onClick={handleClick}
-      className={`group flex items-center gap-3 rounded-[10px] border border-border/60 bg-card px-4 py-3 h-[82px]
+      className={`group flex items-center gap-3 rounded-[10px] border border-border/60 bg-card px-3 py-3 h-[82px]
         ${to ? "cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all duration-150" : ""}
       `}
     >
@@ -62,11 +62,11 @@ function KpiCard({ label, value, icon: Icon, to, color, loading }) {
         <Icon className="h-4.5 w-4.5" style={{ color: color || "hsl(var(--primary))" }} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[12px] leading-tight text-muted-foreground truncate">{label}</p>
-        <p className="text-[32px] font-semibold leading-tight text-foreground tracking-tight">{value}</p>
+        <p className="text-[11px] leading-tight text-muted-foreground truncate">{label}</p>
+        <p className="text-[28px] font-semibold leading-tight text-foreground tracking-tight">{value}</p>
       </div>
       {to && (
-        <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary transition-colors shrink-0" />
+        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors shrink-0" />
       )}
     </div>
   );

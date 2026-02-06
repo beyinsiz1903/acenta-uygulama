@@ -71,6 +71,18 @@ backend:
         agent: "testing"
         comment: "B2B Exchange ana endpoint'leri (listings/my, listings/available, match-request create/list) REACT_APP_BACKEND_URL üzerinden HTTP seviyesinde doğrulandı. Tüm çağrılar 2xx dönüyor ve beklenen JSON kontratına uyuyor."
 
+  - task: "B2B Exchange Integration Tests"
+    implemented: true
+    working: false
+    file: "backend/tests/integration/b2b/test_b2b_exchange_flow.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL AUTH ISSUE: Both B2B integration tests (test_b2b_happy_path_flow, test_b2b_not_active_partner_cannot_see_or_request) FAILING with 401 'Kullanıcı bulunamadı' error. Root cause identified: B2B fixtures in backend/tests/integration/b2b/conftest.py store user.organization_id as ObjectId but JWT tokens contain organization_id as string. The get_current_user function fails to match ObjectId != string. Fix required: Change line 82 in conftest.py from 'organization_id': org['_id'] to 'organization_id': str(org['_id']) for both provider_user and seller_user fixtures. This matches the pattern used in main conftest.py seed_default_org_and_users."
+
 frontend:
   - task: "Partner B2B Network UI (B2B Ağ) – Phase 1"
     implemented: true

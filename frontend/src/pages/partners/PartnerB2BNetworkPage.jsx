@@ -154,6 +154,10 @@ export default function PartnerB2BNetworkPage() {
   const [editingListing, setEditingListing] = useState(null);
   const [listingForm, setListingForm] = useState({
     title: "",
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailRequest, setDetailRequest] = useState(null);
+  const [detailListing, setDetailListing] = useState(null);
+
     base_price: "",
     provider_commission_rate: "",
     description: "",

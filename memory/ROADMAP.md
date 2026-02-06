@@ -57,10 +57,14 @@
 
 ## Future 🔴
 
-### Escrow & Payment Orchestration
-- B2B transaction escrow hold/release
-- Settlement lifecycle
-- Platform fee capture
+### Escrow & Payment Orchestration (PRE-DESIGN COMPLETE)
+- Domain model designed: `docs/escrow/escrow-domain-design.md`
+- 6 entities: EscrowTransaction, EscrowAccount, Settlement, FeeAllocation, DisputeCase
+- State machine: pending_funding → funded → service_confirmed → releasing → released
+- Financial model: gross - platform_fee - provider_commission = net_seller
+- 3-phase implementation: Core MVP → Operations → Advanced
+- Decision: Stripe Connect recommended for V1
+- **Next**: Legal review (BDDK) → Phase 1 implementation
 
 ### Self-Service B2B Onboarding
 - Tenant self-registration

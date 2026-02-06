@@ -240,9 +240,7 @@ metadata:
 
 test_plan:
   current_focus: []
-  stuck_tasks: 
-    - "Demo Seed POST /api/admin/demo/seed"
-    - "Tenant Health GET /api/admin/tenants/health"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
@@ -251,3 +249,5 @@ agent_communication:
     message: "GTM + CRM endpoints implemented and mostly working. Demo seed has database constraint issue."
   - agent: "testing" 
     message: "✅ BACKEND TESTING COMPLETE: 6/8 endpoints working perfectly. 2 CRITICAL ISSUES FOUND: (1) Demo Seed: BulkWriteError - ops_cases missing case_id field violates unique index. (2) Tenant Health: TypeError - datetime timezone mismatch when subtracting trial_end from now. Authentication & tenant isolation working. All CRM features (deals, tasks, notes) working with proper audit logging. Automation rules working and created 2 overdue tasks."
+  - agent: "testing"
+    message: "🎉 ALL BACKEND APIS NOW WORKING (100% success rate): Fixed both critical issues. (1) Demo seed now includes proper case_id for ops_cases. (2) Tenant health properly handles timezone-aware/naive datetime mixing. All 8 API groups tested successfully: Demo Seed ✅, Activation Checklist ✅, Upgrade Requests ✅, Tenant Health ✅, CRM Deal CRUD+Move-Stage ✅, CRM Task Complete ✅, CRM Notes ✅, Automation Rules ✅. Tenant isolation verified. Ready for production."

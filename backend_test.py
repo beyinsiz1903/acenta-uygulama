@@ -725,7 +725,10 @@ class GTMBackendTester:
                 second_token = data.get("access_token")
                 
                 # Update session with second user's token
-                self.session.headers.update({'Authorization': f'Bearer {second_token}'})
+                self.session.headers.update({
+                    'Authorization': f'Bearer {second_token}',
+                    'X-Tenant-Id': data.get("tenant_id", "")
+                })
                 
                 # Test that second user can't see first user's data
                 deals_response = self.session.get(f"{self.base_url}/api/crm/deals")

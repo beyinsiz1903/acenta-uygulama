@@ -125,8 +125,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Partner B2B Network UI (B2B Ağ) – Phase 1"
-  stuck_tasks: []
+    - "B2B Exchange Integration Tests"
+  stuck_tasks:
+    - "B2B Exchange Integration Tests"
   test_all: false
   test_priority: "high_first"
 

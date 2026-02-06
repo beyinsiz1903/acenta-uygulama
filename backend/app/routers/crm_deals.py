@@ -1,16 +1,22 @@
 from __future__ import annotations
 
+import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 
 from app.auth import require_roles
 from app.db import get_db
 from app.schemas_crm import DealCreate, DealOut, DealPatch
 from app.services.crm_deals import create_deal, get_deal, link_deal_booking, list_deals, patch_deal
+from app.services.audit import write_audit_log
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/crm/deals", tags=["crm-deals"])
+
+VALID_STAGES = ["lead", "contacted", "proposal", "won", "lost", "new", "qualified", "quoted"]
 
 
 class DealListResponse(BaseModel):

@@ -349,6 +349,14 @@ async def create_match_request(  # type: ignore[no-untyped-def]
       payload={"requested_price": float(body.requested_price), "currency": currency},
     )
 
+    await track_usage(
+      tenant_id=seller_tenant_id,
+      metric="b2b.match_request",
+      quantity=1,
+      source="b2b",
+      source_event_id=doc["id"],
+    )
+
     return B2BMatchRequestOut(**_serialize(inserted))
 
 

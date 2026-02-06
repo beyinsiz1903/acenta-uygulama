@@ -364,20 +364,19 @@ export default function DashboardPage() {
   const fetchData = useCallback(async (days) => {
     setLoading(true);
     setError("");
+    const safe = async (fn) => { try { return await fn(); } catch { return null; } };
     try {
       const [a, b, c] = await Promise.all([
-        api.get("/reports/reservations-summary"),
-        api.get(`/reports/sales-summary?days=${days}`),
-        api.get("/ops-cases/counters"),
+        safe(() => api.get("/reports/reservations-summary")),
+        safe(() => api.get(`/reports/sales-summary?days=${days}`)),
+        safe(() => api.get("/ops-cases/counters")),
       ]);
-      setResSummary(a.data || []);
-      setSales(b.data || []);
-      setCaseCounters(c.data || { open: 0, waiting: 0, in_progress: 0 });
+      if (a?.data) setResSummary(a.data);
+      if (b?.data) setSales(b.data);
+      if (c?.data) setCaseCounters(c.data);
     } catch (e) {
       const msg = apiErrorMessage(e);
-      const status = e?.response?.status;
-      // 400/403/404 → sessizce geç, rapor endpoint'leri tenant config'e bağlı
-      if (status !== 400 && status !== 403 && msg !== "Not Found") setError(msg);
+      setError(msg);
     } finally {
       setLoading(false);
     }

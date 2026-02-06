@@ -11,7 +11,7 @@ export const MENU_CONFIG = {
 export function getMenuForUser(user) {
   if (!user) return [];
 
-  if (user.roles?.includes("super_admin")) {
+  if (user.roles?.includes("super_admin") || user.roles?.includes("admin")) {
     return MENU_CONFIG.super_admin;
   }
 

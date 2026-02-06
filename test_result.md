@@ -90,6 +90,18 @@ frontend:
         agent: "testing"
         comment: "✅ SMOKE TEST PASSED: B2B Network UI fully functional after role and error-context fixes. Login as agency1@acenta.test works, redirects to /app/partners, and /app/partners/b2b loads successfully. All required Turkish texts verified: 'B2B Ağ' main heading, 'Satıcı'/'Sağlayıcı' mode toggles working, Seller mode shows 'Müsait Listingler' and 'Taleplerim', Provider mode shows 'Listinglerim' and 'Gelen Talepler'. No error messages or 404 indicators found. UI skeleton renders correctly independent of backend data. Previous routing issues have been resolved."
 
+  - task: "Admin Subtree Guard (/app/admin/*) Authorization"
+    implemented: true
+    working: false
+    file: "tests/auth/admin-subtree-guard.spec.ts"
+    stuck_count: 1
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "PLAYWRIGHT TEST RESULTS: Mixed results for admin subtree guard tests. ✅ Agency user (agency1@acenta.test) correctly blocked from /app/admin/agencies - shows 'Yetkiniz yok' message and redirects to /unauthorized as expected. ❌ Admin user (admin@acenta.test) fails to access admin page - redirected to /error-context?reason=agency_id_missing instead of seeing 'Acentalar' heading. Root cause: admin account lacks required agency_id association in database. Authorization logic working correctly, but admin user needs proper agency context configuration."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"

@@ -159,6 +159,65 @@ function SubscriptionPanel({ tenantId }) {
   );
 }
 
+function UsagePanel({ tenantId }) {
+  const [usage, setUsage] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchUsage = useCallback(async () => {
+    if (!tenantId) return;
+    setLoading(true);
+    try {
+      const res = await api.get(`/admin/billing/tenants/${tenantId}/usage`);
+      setUsage(res.data);
+    } catch {
+      setUsage(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [tenantId]);
+
+  useEffect(() => { fetchUsage(); }, [fetchUsage]);
+
+  if (loading) return null;
+  if (!usage || !usage.metrics || Object.keys(usage.metrics).length === 0) return null;
+
+  const METRIC_LABELS = { "b2b.match_request": "B2B Talep" };
+
+  return (
+    <div className="rounded-lg border bg-card p-3 space-y-2" data-testid="usage-panel">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Kullanım ({usage.billing_period})</span>
+        <Button variant="ghost" size="sm" onClick={fetchUsage} className="h-6 px-2" title="Yenile"><RefreshCw className="h-3 w-3" /></Button>
+      </div>
+      {Object.entries(usage.metrics).map(([metric, data]) => {
+        const label = METRIC_LABELS[metric] || metric;
+        const pct = data.quota ? Math.min(100, Math.round((data.used / data.quota) * 100)) : 0;
+        return (
+          <div key={metric} className="space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span>{label}</span>
+              <span className={data.exceeded ? "text-destructive font-medium" : "text-muted-foreground"}>
+                {data.used}{data.quota !== null ? ` / ${data.quota}` : ""}
+              </span>
+            </div>
+            {data.quota !== null && (
+              <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${data.exceeded ? "bg-destructive" : pct > 80 ? "bg-amber-500" : "bg-primary"}`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            )}
+            {data.exceeded && (
+              <p className="text-[10px] text-destructive">Quota aşıldı!</p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function TenantListItem({ tenant, selected, onSelect }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = (e) => {

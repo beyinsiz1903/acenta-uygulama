@@ -9,6 +9,7 @@ import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../components/ui/dialog";
 import { useToast } from "../../hooks/use-toast";
+import MatchRequestDetailDrawer from "./components/MatchRequestDetailDrawer";
 import {
   fetchMyListings,
   createListing,

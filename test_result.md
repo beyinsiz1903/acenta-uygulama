@@ -193,7 +193,7 @@ backend:
         comment: "Overdue payment rule + deal proposal overdue rule. Idempotent per day via rule_runs collection."
       - working: true
         agent: "testing"
-        comment: "✅ WORKING: POST /api/notifications/trigger-checks returns automation_rules with overdue_payment_tasks=2, deal_overdue_tasks=0. Rules executed successfully and created 2 overdue payment tasks."
+        comment: "✅ WORKING: POST /api/notifications/trigger-checks successfully executes automation rules. Returns automation_rules key with counts: {'overdue_payment_tasks': 3, 'deal_overdue_tasks': 0}. Rules are idempotent and creating tasks as expected."
 
 frontend:
   - task: "Dashboard with ActivationChecklist + DemoSeedButton"

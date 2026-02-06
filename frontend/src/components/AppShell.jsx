@@ -709,5 +709,6 @@ export default function AppShell() {
         </div>
       </footer>
     </div>
+    </FeatureProvider>
   );
 }

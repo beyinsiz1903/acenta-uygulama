@@ -76,15 +76,11 @@ class GTMCRMTester:
                 self.access_token = data.get("access_token")
                 self.tenant_id = data.get("tenant_id")
                 
-                if self.access_token:
-                    # If tenant_id not in response, try to get it from user info
-                    if not self.tenant_id:
-                        self.tenant_id = self._get_tenant_id()
-                    
+                if self.access_token and self.tenant_id:
                     self.log_result("Authentication Setup", True, f"User created and token obtained for {self.test_email}, tenant_id: {self.tenant_id}")
                     return True
                 else:
-                    self.log_result("Authentication Setup", False, "No access token in signup response", {"response": data})
+                    self.log_result("Authentication Setup", False, f"Missing token or tenant_id. Token: {bool(self.access_token)}, Tenant: {bool(self.tenant_id)}", {"response": data})
                     return False
             else:
                 self.log_result("Authentication Setup", False, f"Signup failed with status {response.status_code}", {"response": response.text})
@@ -93,26 +89,6 @@ class GTMCRMTester:
         except Exception as e:
             self.log_result("Authentication Setup", False, f"Exception during signup: {e}")
             return False
-
-    def _get_tenant_id(self) -> str:
-        """Get tenant ID from user context or create one"""
-        try:
-            # Try to get tenant from user profile or organization
-            headers = {"Authorization": f"Bearer {self.access_token}"}
-            
-            # The automation endpoint works and resolves tenant internally
-            # Let's use it to trigger tenant resolution, then check for tenant info
-            response = requests.post(f"{BASE_URL}/api/notifications/trigger-checks", headers=headers)
-            
-            if response.status_code == 200:
-                # For demo purposes, let's generate a tenant ID based on the email
-                # In a real system, this would come from the signup response or user profile
-                return f"tenant_{self.test_email.split('@')[0]}"
-            
-            return None
-        except Exception as e:
-            print(f"Failed to resolve tenant_id: {e}")
-            return None
 
     def get_headers(self) -> dict:
         """Get authentication headers for API calls"""

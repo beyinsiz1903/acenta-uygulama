@@ -14,3 +14,8 @@ export async function fetchPushStatus() {
   const res = await api.get("/admin/billing/push-status");
   return res.data;
 }
+
+export async function fetchCronStatus() {
+  const res = await api.get("/admin/billing/cron-status");
+  return res.data;
+}

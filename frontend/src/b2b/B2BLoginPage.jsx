@@ -32,6 +32,14 @@ export default function B2BLoginPage() {
       setToken(resp.data.access_token);
       setUser(resp.data.user);
 
+      // Store tenant_id for API calls
+      try {
+        const tid = resp.data.tenant_id || resp.data.user?.tenant_id;
+        if (tid) {
+          localStorage.setItem("acenta_tenant_id", tid);
+        }
+      } catch {}
+
       // Verify that this user has B2B access via /api/b2b/me
       await api.get("/b2b/me");
 

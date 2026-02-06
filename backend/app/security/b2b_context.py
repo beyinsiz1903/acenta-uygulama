@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from app.db import get_db
 from app.errors import AppError
 from app.repositories.membership_repository import MembershipRepository
-from app.security.deps_b2b import CurrentB2BUser
+from app.security.deps_b2b import CurrentB2BUser, current_b2b_user
 
 
 class B2BTenantContext(BaseModel):

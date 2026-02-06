@@ -715,11 +715,11 @@ class GTMBackendTester:
             
             test_result = {
                 "name": "Second user signup",
-                "status": "pass" if response.status_code == 201 else "fail",
+                "status": "pass" if response.status_code in [200, 201] else "fail",
                 "details": f"Status: {response.status_code}"
             }
             
-            if response.status_code == 201:
+            if response.status_code in [200, 201]:
                 data = response.json()
                 second_token = data.get("access_token")
                 

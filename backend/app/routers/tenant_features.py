@@ -12,18 +12,23 @@ router = APIRouter(prefix="/api/tenant", tags=["tenant_features"])
 
 @router.get("/features")
 async def get_tenant_features(request: Request) -> dict:
-  """Return the enabled features for the current tenant.
+  """Return the effective features for the current tenant.
 
-  Tenant is resolved by TenantResolutionMiddleware (X-Tenant-Id header).
+  Uses plan_defaults + add_ons model (tenant_capabilities).
+  Falls back to legacy tenant_features if no capabilities doc exists.
   """
   tenant_id = getattr(request.state, "tenant_id", None)
   if not tenant_id:
-    raise AppError(
-      400,
-      "tenant_context_missing",
-      "Tenant context bulunamadı.",
-      None,
-    )
+    raise AppError(400, "tenant_context_missing", "Tenant context bulunamadı.", None)
 
-  features: List[str] = await feature_service.get_features(tenant_id)
-  return {"tenant_id": tenant_id, "features": features}
+  features, source = await feature_service.get_effective_features(tenant_id)
+  plan = await feature_service.get_plan(tenant_id)
+  add_ons = await feature_service.get_add_ons(tenant_id)
+
+  return {
+    "tenant_id": tenant_id,
+    "plan": plan,
+    "add_ons": add_ons,
+    "features": features,
+    "source": source,
+  }

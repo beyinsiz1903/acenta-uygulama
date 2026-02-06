@@ -113,6 +113,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ SMOKE TEST PASSED: B2B Network UI fully functional after role and error-context fixes. Login as agency1@acenta.test works, redirects to /app/partners, and /app/partners/b2b loads successfully. All required Turkish texts verified: 'B2B Ağ' main heading, 'Satıcı'/'Sağlayıcı' mode toggles working, Seller mode shows 'Müsait Listingler' and 'Taleplerim', Provider mode shows 'Listinglerim' and 'Gelen Talepler'. No error messages or 404 indicators found. UI skeleton renders correctly independent of backend data. Previous routing issues have been resolved."
+      - working: true
+        agent: "testing"
+        comment: "✅ PLAYWRIGHT UI SMOKE TEST RE-VERIFIED: Successfully executed tests/partner/partner-b2b-ui-status.spec.ts with proper authentication flow. Test PASSED after fixing authentication method from HTTP headers to browser login flow. All expected UI elements verified: 1) /app/partners/b2b loads without error, 2) 'B2B Ağ' heading visible, 3) 'Satıcı' and 'Sağlayıcı' toggle buttons visible, 4) Default Satıcı mode shows 'Müsait Listingler' and 'Taleplerim', 5) After clicking Sağlayıcı button shows 'Listinglerim' and 'Gelen Talepler'. Authentication via agency1@acenta.test login working correctly. UI smoke test fully functional."
 
   - task: "Admin Subtree Guard (/app/admin/*) Authorization"
     implemented: true

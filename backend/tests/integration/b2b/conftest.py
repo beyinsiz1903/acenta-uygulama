@@ -411,3 +411,12 @@ async def enable_b2b_features(test_db, provider_tenant, seller_tenant) -> None:
   """Enable B2B features for both provider and seller tenants."""
   await enable_b2b_feature_for_tenant(test_db, str(provider_tenant["_id"]))
   await enable_b2b_feature_for_tenant(test_db, str(seller_tenant["_id"]))
+
+
+@pytest.fixture
+async def enable_b2b_features_all(test_db, provider_tenant, seller_tenant, other_tenant, third_tenant) -> None:
+  """Enable B2B features for all test tenants."""
+  await enable_b2b_feature_for_tenant(test_db, str(provider_tenant["_id"]))
+  await enable_b2b_feature_for_tenant(test_db, str(seller_tenant["_id"]))
+  await enable_b2b_feature_for_tenant(test_db, str(other_tenant["_id"]))
+  await enable_b2b_feature_for_tenant(test_db, str(third_tenant["_id"]))

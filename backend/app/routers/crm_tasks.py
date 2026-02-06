@@ -145,3 +145,51 @@ async def http_patch_task(
     )
 
     return updated
+
+
+# ─── PUT /{task_id}/complete ──────────────────────────────────────
+@router.put("/{task_id}/complete")
+async def http_complete_task(
+    task_id: str,
+    request: Request,
+    db=Depends(get_db),
+    current_user: dict = Depends(require_roles(["agency_agent", "super_admin"])),
+):
+    """Mark a task as done with audit logging."""
+    org_id = current_user.get("organization_id")
+    user_id = current_user.get("id") or current_user.get("email")
+
+    updated = await patch_task(db, org_id, task_id, {"status": "done"})
+    if not updated:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    # Audit log
+    try:
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={"actor_type": "user", "actor_id": str(user_id), "email": current_user.get("email"), "roles": current_user.get("roles", [])},
+            request=request,
+            action="crm.task_completed",
+            target_type="crm_task",
+            target_id=task_id,
+            meta={"task_id": task_id},
+        )
+    except Exception as e:
+        logger.warning("Audit log failed: %s", e)
+
+    # CRM event
+    try:
+        from app.services.crm_events import log_crm_event
+        await log_crm_event(
+            db, org_id,
+            entity_type="task", entity_id=task_id,
+            action="completed",
+            payload={"status": "done"},
+            actor={"id": user_id, "roles": current_user.get("roles") or []},
+            source="api",
+        )
+    except Exception as e:
+        logger.warning("CRM event failed: %s", e)
+
+    return updated

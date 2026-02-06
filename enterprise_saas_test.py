@@ -216,13 +216,13 @@ class EnterpriseTestSuite:
         data = self.assert_response(response, 200, "Process Refund")
         
         # Verify refund structure  
-        required_fields = ["id", "amount", "payment_id"]
+        required_fields = ["id", "amount", "original_payment_id"]
         for field in required_fields:
             assert field in data, f"Refund response missing {field}"
             
         self.refund_id = data["id"]
         assert data["amount"] == 500, f"Expected refund amount 500, got {data['amount']}"
-        assert data["payment_id"] == self.payment_id, f"Refund not linked to original payment"
+        assert data["original_payment_id"] == self.payment_id, f"Refund not linked to original payment"
         
         self.log_test(f"✅ Refund processed - ID: {self.refund_id}, Amount: {data['amount']}")
 

@@ -289,6 +289,7 @@ function App() {
             <Route path="audit-logs" element={<AdminAuditLogPage />} />
             <Route path="analytics" element={<AdminAnalyticsPage />} />
             <Route path="tenant-health" element={<AdminTenantHealthPage />} />
+            <Route path="tenant-health" element={<AdminTenantHealthPage />} />
           </Route>
         </Route>
 

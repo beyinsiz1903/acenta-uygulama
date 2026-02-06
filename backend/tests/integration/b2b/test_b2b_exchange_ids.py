@@ -28,7 +28,7 @@ def _assert_no_internal_fields(item: Dict[str, Any], extra_forbidden: List[str] 
 
 
 @pytest.mark.anyio
-async def test_listing_id_prefix_and_no_mongo_id_leak(provider_client: AsyncClient) -> None:
+async def test_listing_id_prefix_and_no_mongo_id_leak(provider_client: AsyncClient, enable_b2b_features) -> None:
   """Listing public id'leri lst_* formatında olmalı ve _id leak etmemeli."""
 
   create_resp = await provider_client.post(

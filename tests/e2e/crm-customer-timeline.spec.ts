@@ -43,7 +43,9 @@ test("crm-customer-timeline: customer+deal+notes+isolation", async ({ request })
   // 3) Customer detail
   const gd = await request.get(`${BASE}/api/crm/customers/${customerId}`, { headers: h });
   expect(gd.ok()).toBeTruthy();
-  expect((await gd.json()).name).toContain("Timeline Cust");
+  const custDetail = await gd.json();
+  const custName = custDetail.name || custDetail.customer?.name || "";
+  expect(custName).toContain("Timeline Cust");
 
   // 4) Create note on customer
   const nc = await request.post(`${BASE}/api/crm/notes`, {

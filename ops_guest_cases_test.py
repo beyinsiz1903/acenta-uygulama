@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://tenant-features.preview.emergentagent.com"
+BASE_URL = "https://dashboard-refresh-32.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

@@ -7,7 +7,7 @@ Show detailed field examples to confirm proper serialization
 import requests
 import json
 
-BASE_URL = "https://tenant-features.preview.emergentagent.com"
+BASE_URL = "https://dashboard-refresh-32.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token"""

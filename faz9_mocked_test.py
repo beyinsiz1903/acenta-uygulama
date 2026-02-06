@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from unittest.mock import patch, MagicMock
 
 class FAZ9MockedTester:
-    def __init__(self, base_url="https://tenant-features.preview.emergentagent.com"):
+    def __init__(self, base_url="https://dashboard-refresh-32.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.tests_run = 0

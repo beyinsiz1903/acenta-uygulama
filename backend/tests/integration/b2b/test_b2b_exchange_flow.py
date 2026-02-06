@@ -150,6 +150,51 @@ async def test_b2b_not_active_partner_cannot_see_or_request(
   seller_client: AsyncClient,
   test_db,
   provider_tenant,
+  seller_tenant,
+) -> None:
+  """Non-active partner relationship should block visibility and match requests.
+
+  - With status != active, seller should not see provider's listing in /available
+  - Direct /match-request should return not_active_partner error code
+  """
+
+  # 1) Insert non-active partner relationship (invited)
+  await test_db.partner_relationships.insert_one(
+    {
+      "seller_tenant_id": str(provider_tenant["_id"]),
+      "buyer_tenant_id": str(seller_tenant["_id"]),
+      "status": "invited",
+    }
+  )
+
+  # 2) Provider creates listing
+  create_resp = await provider_client.post(
+    LISTINGS_PATH,
+    json={
+      "title": "Listing without active partner",
+      "base_price": 1000.0,
+      "provider_commission_rate": 10.0,
+    },
+  )
+  assert create_resp.status_code == 200, create_resp.text
+  listing = create_resp.json()
+
+  # 3) Seller should not see this listing in /available
+  available_resp = await seller_client.get(AVAILABLE_PATH)
+  assert available_resp.status_code == 200, available_resp.text
+  available = available_resp.json()
+  assert all(item["id"] != listing["id"] for item in available)
+
+  # 4) Seller trying to create match-request should get not_active_partner
+  match_resp = await seller_client.post(
+    MATCH_REQUEST_PATH,
+    json={"listing_id": listing["id"], "requested_price": 1100.0},
+  )
+  assert match_resp.status_code in (400, 403, 422), match_resp.text
+  body = match_resp.json()
+  # AppError format: {"error": {"code": ..., "message": ..., "details": {...}}}
+  error = body.get("error") or {}
+  assert error.get("code") == "not_active_partner", body
 
 
 @pytest.mark.anyio

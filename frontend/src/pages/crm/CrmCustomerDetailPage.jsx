@@ -480,7 +480,8 @@ export default function CrmCustomerDetailPage() {
         value={activeTab}
         onChange={setActiveTab}
         items={[
-          { value: "overview", label: "Özet" },
+          { value: "overview", label: "Ozet" },
+          { value: "timeline", label: "Timeline" },
           { value: "activities", label: "Aktiviteler" },
         ]}
       />

@@ -82,6 +82,31 @@ class UsageLedgerRepository:
     results = await cursor.to_list(length=100)
     return {r["_id"]: r["total"] for r in results}
 
+  async def get_unbilled(self, billing_period: Optional[str] = None, limit: int = 500) -> List[Dict[str, Any]]:
+    """Get unbilled usage entries for push."""
+    col = await self._col()
+    flt: Dict[str, Any] = {"billed": False}
+    if billing_period:
+      flt["billing_period"] = billing_period
+    cursor = col.find(flt, {"_id": 1, "tenant_id": 1, "metric": 1, "quantity": 1, "timestamp": 1, "source_event_id": 1, "push_attempts": 1}).sort("timestamp", 1).limit(limit)
+    return await cursor.to_list(length=limit)
+
+  async def mark_pushed(self, doc_id, stripe_usage_record_id: str) -> None:
+    """Mark a usage entry as pushed to Stripe."""
+    col = await self._col()
+    await col.update_one(
+      {"_id": doc_id},
+      {"$set": {"billed": True, "pushed_at": datetime.now(timezone.utc), "stripe_usage_record_id": stripe_usage_record_id}},
+    )
+
+  async def mark_push_error(self, doc_id, error: str) -> None:
+    """Record push error for a usage entry."""
+    col = await self._col()
+    await col.update_one(
+      {"_id": doc_id},
+      {"$set": {"last_push_error": error}, "$inc": {"push_attempts": 1}},
+    )
+
   async def ensure_indexes(self) -> None:
     col = await self._col()
     await col.create_index(

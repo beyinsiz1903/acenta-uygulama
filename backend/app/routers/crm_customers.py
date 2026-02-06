@@ -40,7 +40,7 @@ class ListResponse(BaseModel):
     page_size: int
 
 
-@router.get("", response_model=ListResponse)
+@router.get("", response_model=ListResponse, dependencies=[CrmFeatureDep])
 async def http_list_customers(
     search: Optional[str] = None,
     type: Optional[str] = Query(default=None, alias="type"),

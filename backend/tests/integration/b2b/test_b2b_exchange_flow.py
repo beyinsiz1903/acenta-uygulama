@@ -162,6 +162,7 @@ async def test_b2b_not_active_partner_cannot_see_or_request(
   test_db,
   provider_tenant,
   seller_tenant,
+  enable_b2b_features,
 ) -> None:
   """Non-active partner relationship should block visibility and match requests.
 

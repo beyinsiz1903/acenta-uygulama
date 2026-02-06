@@ -1,0 +1,276 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e5]:
+      - generic [ref=e7]:
+        - generic [ref=e8]: A
+        - generic [ref=e9]: Acenta Master
+      - generic [ref=e10]:
+        - link "Partner" [ref=e11] [cursor=pointer]:
+          - /url: /app/partners
+          - img [ref=e12]
+          - generic [ref=e15]: Partner
+        - button [ref=e17] [cursor=pointer]:
+          - img [ref=e18]
+        - button "Aktivite Logu" [ref=e21] [cursor=pointer]:
+          - img [ref=e22]
+        - button "Tema" [ref=e25] [cursor=pointer]:
+          - img
+          - generic [ref=e26]: Tema
+        - generic [ref=e27]:
+          - generic [ref=e28]: E2E Admin
+          - generic [ref=e29]: super_admin
+        - button "Çıkış" [ref=e30] [cursor=pointer]:
+          - img
+          - text: Çıkış
+    - generic [ref=e31]:
+      - complementary [ref=e32]:
+        - button "Daralt" [ref=e34] [cursor=pointer]:
+          - img [ref=e35]
+        - generic [ref=e38]:
+          - generic [ref=e39]:
+            - generic [ref=e40]: Toplam
+            - generic [ref=e41]: "0"
+          - generic [ref=e42]:
+            - generic [ref=e43]: Bekleyen
+            - generic [ref=e44]: "0"
+          - generic [ref=e45]:
+            - generic [ref=e46]: Ciro 7G
+            - generic [ref=e47]: ₺0
+        - navigation [ref=e48]:
+          - generic [ref=e49]:
+            - generic [ref=e50]: CORE
+            - generic [ref=e51]:
+              - link "Dashboard" [ref=e52] [cursor=pointer]:
+                - /url: /app
+                - img [ref=e53]
+                - generic [ref=e58]: Dashboard
+              - link "Rezervasyonlar" [ref=e59] [cursor=pointer]:
+                - /url: /app/reservations
+                - img [ref=e60]
+                - generic [ref=e62]: Rezervasyonlar
+              - link "Ürünler" [ref=e63] [cursor=pointer]:
+                - /url: /app/products
+                - img [ref=e64]
+                - generic [ref=e68]: Ürünler
+          - generic [ref=e69]:
+            - generic [ref=e70]: CRM
+            - link "Inbox" [ref=e72] [cursor=pointer]:
+              - /url: /app/inbox
+              - img [ref=e73]
+              - generic [ref=e76]: Inbox
+          - generic [ref=e77]:
+            - generic [ref=e78]: B2B AĞ
+            - generic [ref=e79]:
+              - link "Partner Yönetimi" [ref=e80] [cursor=pointer]:
+                - /url: /app/partners
+                - img [ref=e81]
+                - generic [ref=e86]: Partner Yönetimi
+              - link "Marketplace" [ref=e87] [cursor=pointer]:
+                - /url: /app/admin/b2b/marketplace
+                - img [ref=e88]
+                - generic [ref=e91]: Marketplace
+              - link "B2B Funnel" [ref=e92] [cursor=pointer]:
+                - /url: /app/admin/b2b/funnel
+                - img [ref=e93]
+                - generic [ref=e96]: B2B Funnel
+          - generic [ref=e97]:
+            - generic [ref=e98]: FİNANS
+            - generic [ref=e99]:
+              - link "Mutabakat" [ref=e100] [cursor=pointer]:
+                - /url: /app/admin/finance/settlements
+                - img [ref=e101]
+                - generic [ref=e105]: Mutabakat
+              - link "İadeler" [ref=e106] [cursor=pointer]:
+                - /url: /app/admin/finance/refunds
+                - img [ref=e107]
+                - generic [ref=e109]: İadeler
+              - link "Exposure" [ref=e110] [cursor=pointer]:
+                - /url: /app/admin/finance/exposure
+                - img [ref=e111]
+                - generic [ref=e113]: Exposure
+          - generic [ref=e114]:
+            - generic [ref=e115]: OPS
+            - generic [ref=e116]:
+              - link "Guest Cases" [ref=e117] [cursor=pointer]:
+                - /url: /app/ops/guest-cases
+                - img [ref=e118]
+                - generic [ref=e120]: Guest Cases
+              - link "Ops Tasks" [ref=e121] [cursor=pointer]:
+                - /url: /app/ops/tasks
+                - img [ref=e122]
+                - generic [ref=e125]: Ops Tasks
+              - link "Incidents" [ref=e126] [cursor=pointer]:
+                - /url: /app/ops/incidents
+                - img [ref=e127]
+                - generic [ref=e129]: Incidents
+          - generic [ref=e130]:
+            - generic [ref=e131]: YÖNETİM
+            - generic [ref=e132]:
+              - link "Acentalar" [ref=e133] [cursor=pointer]:
+                - /url: /app/admin/agencies
+                - img [ref=e134]
+                - generic [ref=e138]: Acentalar
+              - link "Oteller" [ref=e139] [cursor=pointer]:
+                - /url: /app/admin/hotels
+                - img [ref=e140]
+                - generic [ref=e143]: Oteller
+              - link "Turlar" [ref=e144] [cursor=pointer]:
+                - /url: /app/admin/tours
+                - img [ref=e145]
+                - generic [ref=e148]: Turlar
+              - link "Fiyatlandırma" [ref=e149] [cursor=pointer]:
+                - /url: /app/admin/pricing
+                - img [ref=e150]
+                - generic [ref=e153]: Fiyatlandırma
+              - link "Kuponlar" [ref=e154] [cursor=pointer]:
+                - /url: /app/admin/coupons
+                - img [ref=e155]
+                - generic [ref=e158]: Kuponlar
+              - link "Kampanyalar" [ref=e159] [cursor=pointer]:
+                - /url: /app/admin/campaigns
+                - img [ref=e160]
+                - generic [ref=e163]: Kampanyalar
+              - link "Linkler" [ref=e164] [cursor=pointer]:
+                - /url: /app/admin/links
+                - img [ref=e165]
+                - generic [ref=e168]: Linkler
+              - link "CMS" [ref=e169] [cursor=pointer]:
+                - /url: /app/admin/cms/pages
+                - img [ref=e170]
+                - generic [ref=e172]: CMS
+              - link "Tenant Ayarları" [ref=e173] [cursor=pointer]:
+                - /url: /app/admin/tenant-features
+                - img [ref=e174]
+                - generic [ref=e176]: Tenant Ayarları
+              - link "Audit Log" [ref=e177] [cursor=pointer]:
+                - /url: /app/admin/audit-logs
+                - img [ref=e178]
+                - generic [ref=e181]: Audit Log
+              - link "Ayarlar" [ref=e182] [cursor=pointer]:
+                - /url: /app/settings
+                - img [ref=e183]
+                - generic [ref=e186]: Ayarlar
+        - generic [ref=e188]: super_admin · 06.02.2026
+      - main [ref=e189]:
+        - generic [ref=e191]:
+          - generic [ref=e192]:
+            - generic [ref=e193]:
+              - heading "Dashboard" [level=2] [ref=e194]
+              - paragraph [ref=e195]: Rezervasyon ve operasyon özetini buradan takip edebilirsin.
+            - generic [ref=e196]:
+              - link "Ürünler" [ref=e197] [cursor=pointer]:
+                - /url: /app/products
+              - link "Rezervasyonlar" [ref=e198] [cursor=pointer]:
+                - /url: /app/reservations
+          - generic [ref=e200]:
+            - img [ref=e201]
+            - generic [ref=e203]:
+              - button "Bugün" [ref=e204] [cursor=pointer]
+              - button "7G" [ref=e205] [cursor=pointer]
+              - button "14G" [ref=e206] [cursor=pointer]
+              - button "30G" [ref=e207] [cursor=pointer]
+              - button "Bu Ay" [ref=e208] [cursor=pointer]
+            - generic [ref=e210]:
+              - generic [ref=e211]: "Durum:"
+              - generic [ref=e212]:
+                - combobox [ref=e213]:
+                  - option "Tümü" [selected]
+                  - option "Beklemede"
+                  - option "Onaylı"
+                  - option "Ödendi"
+                - img
+            - button "Rahat" [ref=e214] [cursor=pointer]:
+              - img [ref=e215]
+              - text: Rahat
+            - button "CSV" [ref=e220] [cursor=pointer]:
+              - img [ref=e221]
+              - text: CSV
+            - button "Uygula" [ref=e224] [cursor=pointer]
+          - generic [ref=e225]: Son 30 günde veri bulunamadı. Veriler geldikçe özet kartlar otomatik güncellenecektir.
+          - generic [ref=e226]:
+            - generic [ref=e227] [cursor=pointer]:
+              - img [ref=e229]
+              - generic [ref=e231]:
+                - paragraph [ref=e232]: Toplam Rezervasyon
+                - paragraph [ref=e233]: "0"
+              - img [ref=e234]
+            - generic [ref=e236] [cursor=pointer]:
+              - img [ref=e238]
+              - generic [ref=e241]:
+                - paragraph [ref=e242]: Beklemede
+                - paragraph [ref=e243]: "0"
+              - img [ref=e244]
+            - generic [ref=e246] [cursor=pointer]:
+              - img [ref=e248]
+              - generic [ref=e251]:
+                - paragraph [ref=e252]: Onaylı
+                - paragraph [ref=e253]: "0"
+              - img [ref=e254]
+            - generic [ref=e256] [cursor=pointer]:
+              - img [ref=e258]
+              - generic [ref=e261]:
+                - paragraph [ref=e262]: Ödendi
+                - paragraph [ref=e263]: "0"
+              - img [ref=e264]
+            - generic [ref=e266] [cursor=pointer]:
+              - img [ref=e268]
+              - generic [ref=e270]:
+                - paragraph [ref=e271]: Açık Case
+                - paragraph [ref=e272]: "0"
+              - img [ref=e273]
+            - generic [ref=e275] [cursor=pointer]:
+              - img [ref=e277]
+              - generic [ref=e279]:
+                - paragraph [ref=e280]: İşlemde Case
+                - paragraph [ref=e281]: "0"
+              - img [ref=e282]
+          - generic [ref=e284]:
+            - generic [ref=e285]:
+              - generic [ref=e286]:
+                - paragraph [ref=e287]: Satış Grafiği
+                - generic [ref=e289]:
+                  - button "Satış" [ref=e290] [cursor=pointer]
+                  - button "Rezervasyon" [ref=e291] [cursor=pointer]
+              - generic [ref=e292]:
+                - img [ref=e294]
+                - paragraph [ref=e296]: Grafik verisi bulunamadı
+                - paragraph [ref=e297]: Son 30 günde satış kaydı yok
+            - generic [ref=e298]:
+              - generic [ref=e299]:
+                - paragraph [ref=e300]: Rezervasyon Dağılımı
+                - generic [ref=e301]:
+                  - img [ref=e303]
+                  - paragraph [ref=e305]: Rezervasyon verisi yok
+              - generic [ref=e306]:
+                - paragraph [ref=e307]: Case Dağılımı
+                - generic [ref=e308]:
+                  - img [ref=e310]
+                  - paragraph [ref=e312]: Case verisi yok
+              - generic [ref=e313]:
+                - paragraph [ref=e314]: En Çok Satılanlar
+                - generic [ref=e315]:
+                  - img [ref=e317]
+                  - paragraph [ref=e321]: Henüz yeterli veri yok
+          - generic [ref=e322]:
+            - generic [ref=e323]:
+              - generic [ref=e324]:
+                - img [ref=e325]
+                - paragraph [ref=e328]: Hemen İlgilenilmesi Gerekenler
+              - generic [ref=e329]:
+                - img [ref=e331]
+                - paragraph [ref=e334]: Tüm işler yolunda görünüyor
+            - generic [ref=e335]:
+              - generic [ref=e336]:
+                - img [ref=e337]
+                - paragraph [ref=e339]: Son Aktiviteler
+              - generic [ref=e340]:
+                - img [ref=e342]
+                - paragraph [ref=e345]: Henüz aktivite kaydı yok
+                - paragraph [ref=e346]: Rezervasyon ve case işlemleri burada görünecek
+    - contentinfo [ref=e347]:
+      - generic [ref=e348]: © 2026 — v1
+  - region "Notifications alt+T"
+```

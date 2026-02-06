@@ -69,6 +69,18 @@ async def _audit_webpos(db, org_id, email, request, action, target_id, meta):
 @router.post("/payments")
 async def record_payment(payload: RecordPaymentRequest, request: Request, user=Depends(get_current_user)):
     tenant_id = await _resolve_tenant(user)
+
+    # Idempotency guard: if idempotency_key provided, check for duplicate
+    if payload.idempotency_key:
+        db = await get_db()
+        existing = await db.webpos_payments.find_one({
+            "tenant_id": tenant_id,
+            "idempotency_key": payload.idempotency_key,
+        })
+        if existing:
+            existing["id"] = str(existing.pop("_id", ""))
+            return existing
+
     result = await webpos_service.record_payment(
         tenant_id=tenant_id,
         org_id=user["organization_id"],
@@ -79,6 +91,7 @@ async def record_payment(payload: RecordPaymentRequest, request: Request, user=D
         reservation_id=payload.reservation_id,
         description=payload.description,
         actor_email=user["email"],
+        idempotency_key=payload.idempotency_key,
     )
     db = await get_db()
     await _audit_webpos(db, user["organization_id"], user["email"], request, "PAYMENT_RECORDED", result["id"], {"amount": payload.amount, "method": payload.method})

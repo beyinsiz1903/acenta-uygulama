@@ -61,6 +61,8 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
             or path.startswith("/api/b2b/")
             or path.startswith("/api/admin/tenants")
             or path.startswith("/api/admin/audit-logs")
+            or path.startswith("/api/admin/billing")
+            or path.startswith("/api/webhook/")
             or path.startswith("/docs")
             or path.startswith("/openapi.json")
         ):

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { BarChart3, TrendingUp, AlertTriangle, Users, CreditCard, Loader2, RefreshCw, ArrowUpRight, Activity } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
-import { fetchRevenueSummary, fetchUsageOverview, fetchPushStatus } from "../../lib/analytics";
+import { fetchRevenueSummary, fetchUsageOverview, fetchPushStatus, fetchCronStatus } from "../../lib/analytics";
 
 function StatCard({ icon: Icon, label, value, sub, variant }) {
   const colors = {

@@ -4,6 +4,6 @@
     "e2e:b2b_marketplace": "playwright test --grep exit_b2b_marketplace_e2e_v1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.57.0"
+    "@playwright/test": "^1.58.2"
   }
 }

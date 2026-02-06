@@ -270,6 +270,9 @@ export default function MatchRequestDetailDrawer({
                 </div>
               )}
             </div>
+
+            {/* Aktivite Timeline */}
+            <ActivityTimeline entityId={request?.id} />
           </div>
         )}
       </SheetContent>

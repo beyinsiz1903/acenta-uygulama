@@ -45,7 +45,7 @@ async def bulk_upsert(payload: InventoryBulkUpsertIn, user=Depends(get_current_u
     return result
 
 
-@router.get("", dependencies=[Depends(get_current_user)])
+@router.get("", dependencies=[Depends(get_current_user), InventoryFeatureDep])
 async def list_inventory(product_id: str, start: str, end: str, user=Depends(get_current_user)):
     db = await get_db()
     docs = await db.inventory.find(

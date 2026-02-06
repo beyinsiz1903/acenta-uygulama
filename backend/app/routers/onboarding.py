@@ -252,6 +252,14 @@ async def complete_onboarding(request: Request, user=Depends(get_current_user)):
     db = await get_db()
     state = await onboarding_service.complete_onboarding(tenant_id)
     await _audit(db, user["organization_id"], user["email"], request, "ONBOARDING_COMPLETED", "onboarding", tenant_id, {})
+
+    # Auto-create activation checklist
+    try:
+        from app.routers.activation_checklist import ensure_checklist_for_tenant
+        await ensure_checklist_for_tenant(db, tenant_id)
+    except Exception as e:
+        logger.warning("Failed to create activation checklist: %s", e)
+
     return state
 
 

@@ -13,6 +13,51 @@ MATCH_REQUEST_PATH = "/api/b2b/match-request"
 
 
 @pytest.mark.anyio
+async def test_b2b_tenant_isolation_cannot_request_own_listing(
+  seller_client: AsyncClient,
+  test_db,
+  seller_tenant,
+) -> None:
+  """Seller cannot create match request on its own listing.
+
+  - Seller creates a listing under its own tenant (acts as provider)
+  - Listing should not appear in /listings/available for the same tenant
+  - Direct /match-request must return cannot_request_own_listing
+  """
+
+  # 1) Seller creates listing for its own tenant
+  create_resp = await seller_client.post(
+    LISTINGS_PATH,
+    json={
+      "title": "Own Listing",
+      "base_price": 900.0,
+      "provider_commission_rate": 12.0,
+    },
+  )
+  assert create_resp.status_code == 200, create_resp.text
+  listing = create_resp.json()
+
+  # Sağlayıcı tenant id'si seller_tenant ile aynı olmalı
+  assert listing["provider_tenant_id"] == str(seller_tenant["_id"])
+
+  # 2) Same-tenant available listesinde bu listing görünmemeli (partner ilişkisi yok)
+  available_resp = await seller_client.get(AVAILABLE_PATH)
+  assert available_resp.status_code == 200, available_resp.text
+  available = available_resp.json()
+  assert all(item["id"] != listing["id"] for item in available)
+
+  # 3) Same-tenant doğrudan match-request denemesi yasak
+  match_resp = await seller_client.post(
+    MATCH_REQUEST_PATH,
+    json={"listing_id": listing["id"], "requested_price": 1000.0},
+  )
+  assert match_resp.status_code in (400, 403, 422), match_resp.text
+  body = match_resp.json()
+  error = body.get("error") or {}
+  assert error.get("code") == "cannot_request_own_listing", body
+
+
+@pytest.mark.anyio
 async def test_b2b_happy_path_flow(
   provider_client: AsyncClient,
   seller_client: AsyncClient,

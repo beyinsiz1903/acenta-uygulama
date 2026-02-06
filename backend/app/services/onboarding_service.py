@@ -133,16 +133,15 @@ class OnboardingService:
         await db.subscriptions.insert_one(sub_doc)
 
         # 2) Tenant capabilities (plan features)
-        cap_doc = {
+        cap_set = {
             "tenant_id": tenant_id,
             "plan": plan_key,
             "add_ons": [],
-            "created_at": now,
             "updated_at": now,
         }
         await db.tenant_capabilities.update_one(
             {"tenant_id": tenant_id},
-            {"$set": cap_doc, "$setOnInsert": {"created_at": now}},
+            {"$set": cap_set, "$setOnInsert": {"created_at": now}},
             upsert=True,
         )
 

@@ -25,6 +25,14 @@ export default function LoginPage() {
       setToken(resp.data.access_token);
       setUser(resp.data.user);
       
+      // Store tenant_id for API calls (X-Tenant-Id header)
+      try {
+        const tid = resp.data.tenant_id || resp.data.user?.tenant_id;
+        if (tid) {
+          localStorage.setItem("acenta_tenant_id", tid);
+        }
+      } catch {}
+      
       // Role-based redirect with optional return-to from sessionStorage
       let redirectPath = redirectByRole(resp.data.user);
       try {

@@ -129,6 +129,122 @@ async def admin_push_usage(
   return await usage_push_service.push_unbilled(period)
 
 
+@router.post("/finalize-period", dependencies=[Depends(require_roles(["super_admin"]))])
+async def admin_finalize_period(
+  period: Optional[str] = Query(None),
+  user=Depends(get_current_user),
+) -> dict:
+  """Super-admin: finalize billing period (push all remaining + reconcile).
+
+  Default: previous month (Istanbul TZ). Locked per period — returns 409 if running.
+  """
+  from datetime import timedelta
+  from app.services.usage_push_service import usage_push_service
+  from app.services.audit_log_service import append_audit_log
+  from app.db import get_db
+
+  # Determine period (default: previous month, Istanbul TZ)
+  if not period:
+    from datetime import datetime as dt
+    now = dt.now(tz=__import__("datetime").timezone.utc)
+    prev = (now.replace(day=1) - timedelta(days=1))
+    period = prev.strftime("%Y-%m")
+
+  # Lock check
+  triggered_by = str(user.get("email", "unknown"))
+  locked = await billing_repo.start_period_job(period, triggered_by)
+  if not locked:
+    raise AppError(409, "finalize_already_running", "Bu period için finalize zaten çalışıyor.", {"period": period})
+
+  db = await get_db()
+
+  # Snapshot before
+  pending_before = await db.usage_ledger.count_documents({"billing_period": period, "billed": False})
+
+  # Push
+  try:
+    result = await usage_push_service.push_unbilled(period)
+  except Exception as e:
+    await billing_repo.finish_period_job(period, "failed", 0, 0, pending_before, pending_before)
+    raise AppError(500, "finalize_failed", f"Push hatası: {str(e)[:200]}", {"period": period})
+
+  # Snapshot after
+  pending_after = await db.usage_ledger.count_documents({"billing_period": period, "billed": False})
+
+  pushed = result.get("pushed", 0)
+  errors = result.get("errors", 0)
+  status = "success" if errors == 0 else "partial"
+
+  await billing_repo.finish_period_job(period, status, pushed, errors, pending_before, pending_after)
+
+  await append_audit_log(
+    scope="billing",
+    tenant_id="system",
+    actor_user_id=str(user.get("id", "")),
+    actor_email=triggered_by,
+    action="billing.period_finalized",
+    before={"pending_before": pending_before},
+    after={"pushed": pushed, "errors": errors, "pending_after": pending_after, "period": period, "status": status},
+  )
+
+  return {
+    "period": period,
+    "status": status,
+    "pending_before": pending_before,
+    "pushed": pushed,
+    "errors": errors,
+    "pending_after": pending_after,
+  }
+
+
+@router.get("/push-status", dependencies=[AdminDep])
+async def admin_push_status() -> dict:
+  """Admin: billing push operational status."""
+  from app.db import get_db
+  from datetime import datetime as dt
+
+  db = await get_db()
+  now = dt.now(tz=__import__("datetime").timezone.utc)
+  current_period = now.strftime("%Y-%m")
+  prev_period = (now.replace(day=1) - __import__("datetime").timedelta(days=1)).strftime("%Y-%m")
+
+  # Last pushed_at
+  last_pushed = await db.usage_ledger.find_one(
+    {"billed": True}, {"_id": 0, "pushed_at": 1},
+    sort=[("pushed_at", -1)],
+  )
+  last_push_at = last_pushed["pushed_at"].isoformat() if last_pushed and last_pushed.get("pushed_at") else None
+
+  # Pending counts
+  pending_current = await db.usage_ledger.count_documents({"billing_period": current_period, "billed": False})
+  pending_previous = await db.usage_ledger.count_documents({"billing_period": prev_period, "billed": False})
+
+  # Error records
+  error_records = await db.usage_ledger.count_documents({"billed": False, "last_push_error": {"$ne": None}})
+
+  # Last finalize
+  last_finalize = await billing_repo.get_last_finalize()
+  finalize_info = None
+  if last_finalize:
+    finalize_info = {
+      "period": last_finalize.get("period"),
+      "status": last_finalize.get("status"),
+      "finished_at": last_finalize["finished_at"].isoformat() if last_finalize.get("finished_at") else None,
+      "pushed_count": last_finalize.get("pushed_count", 0),
+      "error_count": last_finalize.get("error_count", 0),
+      "pending_after": last_finalize.get("pending_after", 0),
+    }
+
+  return {
+    "last_push_at": last_push_at,
+    "pending_current_period": pending_current,
+    "pending_previous_period": pending_previous,
+    "error_records": error_records,
+    "last_finalize": finalize_info,
+    "generated_at": now.isoformat(),
+  }
+
+
 @router.post("/tenants/{tenant_id}/setup-metered-item", dependencies=[Depends(require_roles(["super_admin"]))])
 async def admin_setup_metered_item(
   tenant_id: str,

@@ -27,6 +27,7 @@ export const adminNav = [
       { label: "Finans / Mutabakat", path: "/app/admin/finance/settlements" },
       { label: "Ops / B2B", path: "/app/admin/ops/b2b" },
       { label: "Tenant Özellikleri", path: "/app/admin/tenant-features" },
+      { label: "Audit Log", path: "/app/admin/audit-logs" },
     ],
   },
   {

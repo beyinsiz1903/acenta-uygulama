@@ -51,7 +51,8 @@ class GTMBackendTester:
                 
                 # Set auth header for subsequent requests
                 self.session.headers.update({
-                    'Authorization': f'Bearer {self.auth_token}'
+                    'Authorization': f'Bearer {self.auth_token}',
+                    'X-Tenant-Id': self.tenant_id
                 })
                 
                 self.log(f"✅ User signup successful: user_id={self.user_id}, org_id={self.org_id}, tenant_id={self.tenant_id}")

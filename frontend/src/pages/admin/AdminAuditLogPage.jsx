@@ -48,8 +48,8 @@ export default function AdminAuditLogPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [nextCursor, setNextCursor] = useState(null);
   const [tenants, setTenants] = useState([]);
-  const [filterTenant, setFilterTenant] = useState("");
-  const [filterAction, setFilterAction] = useState("");
+  const [filterTenant, setFilterTenant] = useState("__all__");
+  const [filterAction, setFilterAction] = useState("__all__");
 
   // Load tenants for filter dropdown
   useEffect(() => {
@@ -58,8 +58,8 @@ export default function AdminAuditLogPage() {
 
   const loadLogs = useCallback(async (cursor) => {
     const params = { limit: 50 };
-    if (filterTenant) params.tenant_id = filterTenant;
-    if (filterAction) params.action = filterAction;
+    if (filterTenant && filterTenant !== "__all__") params.tenant_id = filterTenant;
+    if (filterAction && filterAction !== "__all__") params.action = filterAction;
     if (cursor) params.cursor = cursor;
 
     try {

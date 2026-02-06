@@ -630,6 +630,10 @@ export default function CrmCustomerDetailPage() {
         </div>
       ) : null}
 
+      {activeTab === "timeline" ? (
+        <TimelineTab customerId={customerId} />
+      ) : null}
+
       {activeTab === "activities" ? (
         <div style={{ marginTop: 12, border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>

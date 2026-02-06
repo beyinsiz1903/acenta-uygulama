@@ -70,6 +70,89 @@ function formatDateTime(value) {
   if (Number.isNaN(d.getTime())) {
     return "\u2014";
   }
+
+function relTime(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  const diff = (Date.now() - d.getTime()) / 1000;
+  if (diff < 60) return "az once";
+  if (diff < 3600) return `${Math.floor(diff / 60)}dk once`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}sa once`;
+  return `${Math.floor(diff / 86400)}g once`;
+}
+
+const TL_ICONS = { reservation: "\u{1F3E8}", payment: "\u{1F4B3}", note: "\u{1F4DD}", deal: "\u{1F4BC}", task: "\u2705" };
+const TL_FILTERS = [
+  { value: "", label: "Tumu" },
+  { value: "reservations", label: "Rezervasyonlar" },
+  { value: "payments", label: "Odemeler" },
+  { value: "deals", label: "Deallar" },
+  { value: "tasks", label: "Gorevler" },
+  { value: "notes", label: "Notlar" },
+];
+
+function TimelineTab({ customerId }) {
+  const [items, setItems] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [filter, setFilter] = React.useState("");
+
+  React.useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await getCustomerTimeline(customerId, { filter_type: filter || undefined, limit: 50 });
+        setItems(res.items || []);
+      } catch { setItems([]); }
+      finally { setLoading(false); }
+    })();
+  }, [customerId, filter]);
+
+  return (
+    <div style={{ marginTop: 12, border: "1px solid #eee", borderRadius: 12, padding: 12 }} data-testid="customer-timeline">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
+        <div style={{ fontWeight: 700, fontSize: 16 }}>Timeline</div>
+        <div style={{ display: "flex", gap: 4 }}>
+          {TL_FILTERS.map((f) => (
+            <button
+              key={f.value}
+              onClick={() => setFilter(f.value)}
+              data-testid={`timeline-filter-${f.value || "all"}`}
+              style={{
+                padding: "4px 10px", borderRadius: 999, fontSize: 11, border: "1px solid #ddd",
+                background: filter === f.value ? "#2563eb" : "#fff",
+                color: filter === f.value ? "#fff" : "#555",
+                cursor: "pointer",
+              }}
+            >{f.label}</button>
+          ))}
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {[1,2,3].map((i) => <div key={i} style={{ height: 48, background: "#f3f4f6", borderRadius: 8, animation: "pulse 1.5s infinite" }} />)}
+        </div>
+      ) : items.length === 0 ? (
+        <div style={{ color: "#999", fontSize: 13, textAlign: "center", padding: 24 }}>Bu musteri icin aktivite yok</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {items.map((item, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 4px", borderBottom: "1px solid #f3f4f6" }} data-testid="timeline-item">
+              <span style={{ fontSize: 18, lineHeight: 1, marginTop: 2 }}>{TL_ICONS[item.type] || "\u{1F4CC}"}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#222" }}>{item.title}</div>
+                {item.subtitle && <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>{item.subtitle}</div>}
+              </div>
+              <div style={{ fontSize: 11, color: "#999", whiteSpace: "nowrap" }} title={item.ts ? new Date(item.ts).toLocaleString("tr-TR") : ""}>
+                {relTime(item.ts)}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
   return d.toLocaleString("tr-TR");
 }
 

@@ -301,6 +301,7 @@ async def test_b2b_invalid_status_pending_cannot_complete(
   provider_client: AsyncClient,
   seller_client: AsyncClient,
   partner_relationship_active: Dict[str, Any],
+  enable_b2b_features,
 ) -> None:
   """pending durumundaki talep doğrudan complete edilemez.
 

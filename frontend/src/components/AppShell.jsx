@@ -204,6 +204,7 @@ function SidebarItem({ to, label, icon: Icon, collapsed, end, onClick }) {
 export default function AppShell() {
   const user = getUser();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [resSummary, setResSummary] = useState([]);
   const [sales, setSales] = useState([]);
@@ -212,6 +213,27 @@ export default function AppShell() {
   const [activeTenantKey, setActiveTenantKeyState] = useState(() => getActiveTenantKey());
   const [collapsed, setCollapsed] = useState(() => loadCollapsed());
   const [notifOpen, setNotifOpen] = useState(false);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+
+  // ── P0: Onboarding auto-redirect ──────────────────────────
+  useEffect(() => {
+    if (onboardingChecked) return;
+    if (location.pathname === "/app/onboarding") { setOnboardingChecked(true); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get("/onboarding/state");
+        if (cancelled) return;
+        const state = res.data;
+        if (state && !state.completed_at && !state.completed && state.steps) {
+          navigate("/app/onboarding", { replace: true });
+          return;
+        }
+      } catch { /* legacy tenant or no onboarding state – skip */ }
+      if (!cancelled) setOnboardingChecked(true);
+    })();
+    return () => { cancelled = true; };
+  }, [location.pathname, onboardingChecked, navigate]);
 
   // Tenant setup
   useEffect(() => {

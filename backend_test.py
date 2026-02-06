@@ -37,8 +37,8 @@ class GTMBackendTester:
             response = self.session.post(f"{self.base_url}/api/onboarding/signup", json={
                 "email": email,
                 "password": "TestPassword123!",
-                "name": "GTM Test User",
-                "organization_name": f"GTM Test Org {timestamp}",
+                "admin_name": "GTM Test User",
+                "company_name": f"GTM Test Org {timestamp}",
                 "plan": "startup"
             })
             

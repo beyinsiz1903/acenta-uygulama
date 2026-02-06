@@ -70,7 +70,9 @@ export default function AdminAnalyticsPage() {
       ]);
       setRevenue(rev);
       setUsage(usg);
-      setPushStatus(ps);
+      // Merge cron status into push status
+      const cron = await fetchCronStatus().catch(() => null);
+      setPushStatus(ps ? { ...ps, cron } : null);
     } catch {
       // partial load ok
     } finally {

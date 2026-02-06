@@ -70,6 +70,8 @@ function formatDateTime(value) {
   if (Number.isNaN(d.getTime())) {
     return "\u2014";
   }
+  return d.toLocaleString("tr-TR");
+}
 
 function relTime(dateStr) {
   if (!dateStr) return "";

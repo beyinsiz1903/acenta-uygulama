@@ -41,7 +41,7 @@ class OnboardingService:
         org_id = str(uuid.uuid4())
         tenant_id = str(uuid.uuid4())
         user_id = str(uuid.uuid4())
-        slug = company_name.lower().replace(" ", "-").replace(".", "")[:48]
+        slug = company_name.lower().replace(" ", "-").replace(".", "")[:40] + "-" + uuid.uuid4().hex[:6]
 
         try:
             # 1) Organization

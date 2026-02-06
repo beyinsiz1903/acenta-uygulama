@@ -679,7 +679,7 @@ export default function PartnerB2BNetworkPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {myListings.map((l) => (
+                      {sortedMyListings.map((l) => (
                         <TableRow key={l.id} className="hover:bg-muted/40">
                           <TableCell
                             className="text-xs font-mono cursor-pointer hover:underline"

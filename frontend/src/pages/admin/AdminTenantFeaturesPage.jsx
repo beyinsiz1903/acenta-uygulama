@@ -440,8 +440,9 @@ export default function AdminTenantFeaturesPage() {
               </div>
 
               {/* Subscription Status Panel */}
-              <div className="px-4 pt-3">
+              <div className="px-4 pt-3 space-y-3">
                 <SubscriptionPanel tenantId={selectedTenant.id} />
+                <UsagePanel tenantId={selectedTenant.id} />
               </div>
 
               {loadingFeatures ? (

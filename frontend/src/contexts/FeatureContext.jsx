@@ -6,16 +6,19 @@ const FeatureContext = createContext({
   features: [],
   loading: true,
   hasFeature: () => false,
+  quotaAlerts: [],
 });
 
 export function FeatureProvider({ children }) {
   const [features, setFeatures] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [quotaAlerts, setQuotaAlerts] = useState([]);
 
   const fetchFeatures = useCallback(async () => {
     const tenantId = getActiveTenantId();
     if (!tenantId) {
       setFeatures([]);
+      setQuotaAlerts([]);
       setLoading(false);
       return;
     }
@@ -24,9 +27,18 @@ export function FeatureProvider({ children }) {
       setFeatures(res.data?.features || []);
     } catch {
       setFeatures([]);
-    } finally {
-      setLoading(false);
     }
+
+    // Best-effort quota fetch
+    try {
+      const qRes = await api.get("/tenant/quota-status");
+      const alerts = (qRes.data?.quotas || []).filter((q) => q.ratio >= 0.8);
+      setQuotaAlerts(alerts);
+    } catch {
+      setQuotaAlerts([]);
+    }
+
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -44,8 +56,8 @@ export function FeatureProvider({ children }) {
   );
 
   const value = useMemo(
-    () => ({ features, loading, hasFeature }),
-    [features, loading, hasFeature],
+    () => ({ features, loading, hasFeature, quotaAlerts }),
+    [features, loading, hasFeature, quotaAlerts],
   );
 
   return (

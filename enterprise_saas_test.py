@@ -337,7 +337,13 @@ class EnterpriseTestSuite:
             self.log_test(f"📊 Testing {report} report...")
             response = requests.get(f"{self.base_url}/api/reports/{report}", headers=self.get_headers())
             data = self.assert_response(response, 200, f"{report.title()} Report")
-            self.log_test(f"✅ {report} report successful - Keys: {list(data.keys())}")
+            # Handle different response structures
+            if isinstance(data, list):
+                self.log_test(f"✅ {report} report successful - {len(data)} items returned")
+            elif isinstance(data, dict):
+                self.log_test(f"✅ {report} report successful - Keys: {list(data.keys())}")
+            else:
+                self.log_test(f"✅ {report} report successful - Type: {type(data)}")
 
     def run_all_tests(self):
         """Run all enterprise SaaS tests"""

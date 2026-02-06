@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -7,11 +7,16 @@ import {
 import {
   Ticket, CalendarDays, AlertCircle, TrendingUp,
   CheckCircle2, Clock, Activity, ChevronRight,
-  BarChart3, ListChecks, Package, FileWarning,
+  BarChart3, ListChecks, Package, FileWarning, ExternalLink,
 } from "lucide-react";
 
 import { api, getUser } from "../lib/api";
 import { Skeleton } from "../components/ui/skeleton";
+import DashboardFilterBar from "../components/DashboardFilterBar";
+import {
+  resolveFilters, saveToLocalStorage, saveDensity, filtersToQuery,
+  getPresetDays, getPresetDateRange, DEFAULT_FILTERS, exportDashboardCSV,
+} from "../lib/dashboardFilters";
 
 /* ------------------------------------------------------------------ */
 /*  COLORS                                                             */
@@ -32,13 +37,13 @@ const CASE_COLORS = {
 /* ------------------------------------------------------------------ */
 /*  KPI CARD (compact, 90px max, fully clickable)                      */
 /* ------------------------------------------------------------------ */
-function KpiCard({ label, value, icon: Icon, to, color, loading }) {
+function KpiCard({ label, value, icon: Icon, to, color, loading, comfort }) {
   const navigate = useNavigate();
   const handleClick = () => { if (to) navigate(to); };
 
   if (loading) {
     return (
-      <div className="flex items-center gap-3 rounded-[10px] border border-border/60 bg-card px-4 py-3 h-[82px]">
+      <div className={`flex items-center gap-3 rounded-[10px] border border-border/60 bg-card px-3 ${comfort ? "py-4 h-auto" : "py-3 h-[82px]"}`}>
         <Skeleton className="h-9 w-9 rounded-lg shrink-0" />
         <div className="flex-1 space-y-2">
           <Skeleton className="h-3 w-16" />
@@ -51,7 +56,8 @@ function KpiCard({ label, value, icon: Icon, to, color, loading }) {
   return (
     <div
       onClick={handleClick}
-      className={`group flex items-center gap-3 rounded-[10px] border border-border/60 bg-card px-3 py-3 h-[82px]
+      className={`group flex items-center gap-3 rounded-[10px] border border-border/60 bg-card px-3
+        ${comfort ? "py-4 h-auto" : "py-3 h-[82px]"}
         ${to ? "cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all duration-150" : ""}
       `}
     >
@@ -63,7 +69,7 @@ function KpiCard({ label, value, icon: Icon, to, color, loading }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[11px] leading-tight text-muted-foreground truncate">{label}</p>
-        <p className="text-[28px] font-semibold leading-tight text-foreground tracking-tight">{value}</p>
+        <p className={`${comfort ? "text-[34px]" : "text-[28px]"} font-semibold leading-tight text-foreground tracking-tight`}>{value}</p>
       </div>
       {to && (
         <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors shrink-0" />
@@ -190,7 +196,6 @@ function AttentionList({ items, loading }) {
               <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
               <div className="flex-1 space-y-1.5">
                 <Skeleton className="h-3 w-3/4" />
-                <Skeleton className="h-2.5 w-1/2" />
               </div>
               <Skeleton className="h-5 w-8 rounded" />
             </div>
@@ -256,9 +261,9 @@ function AttentionList({ items, loading }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  ACTIVITY TIMELINE                                                  */
+/*  ACTIVITY TIMELINE (real data from audit/logs)                      */
 /* ------------------------------------------------------------------ */
-function ActivityTimeline({ loading }) {
+function ActivityTimeline({ loading, events }) {
   if (loading) {
     return (
       <div className="rounded-[10px] border border-border/60 bg-card p-4">
@@ -284,15 +289,38 @@ function ActivityTimeline({ loading }) {
         <Activity className="h-4 w-4 text-blue-500" />
         <p className="text-[14px] font-medium text-foreground">Son Aktiviteler</p>
       </div>
-      <div className="flex flex-col items-center justify-center py-8 text-center">
-        <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mb-2">
-          <Clock className="h-4 w-4 text-muted-foreground/60" />
+      {events && events.length > 0 ? (
+        <div className="space-y-0.5">
+          {events.slice(0, 10).map((ev, i) => {
+            const time = ev.created_at
+              ? new Date(ev.created_at).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })
+              : '';
+            return (
+              <div key={ev.id || i} className="flex gap-3 py-2 border-b border-border/20 last:border-0">
+                <div className="h-6 w-6 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <Activity className="h-3 w-3 text-blue-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] text-foreground truncate">
+                    {ev.action || 'Bilinmeyen olay'}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/60">{time}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
-        <p className="text-[12px] text-muted-foreground">Henüz aktivite kaydı yok</p>
-        <p className="text-[11px] text-muted-foreground/60 mt-0.5">
-          Rezervasyon ve case işlemleri burada görünecek
-        </p>
-      </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mb-2">
+            <Clock className="h-4 w-4 text-muted-foreground/60" />
+          </div>
+          <p className="text-[12px] text-muted-foreground">Henüz aktivite kaydı yok</p>
+          <p className="text-[11px] text-muted-foreground/60 mt-0.5">
+            Rezervasyon ve case işlemleri burada görünecek
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -344,22 +372,33 @@ function ChartTooltip({ active, payload, label, metric }) {
 /* ================================================================== */
 export default function DashboardPage() {
   const user = getUser();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isHotel = (user?.roles || []).some((r) => r.startsWith("hotel_"));
   const isAgency = (user?.roles || []).some((r) => r.startsWith("agency_"));
+
+  // Filters
+  const [filters, setFilters] = useState(() => resolveFilters(location.search));
+  const [density, setDensity] = useState(() => filters.density || 'compact');
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [resSummary, setResSummary] = useState([]);
   const [sales, setSales] = useState([]);
   const [caseCounters, setCaseCounters] = useState({ open: 0, waiting: 0, in_progress: 0 });
+  const [activityEvents, setActivityEvents] = useState([]);
 
   // Chart toggles
-  const [chartDays, setChartDays] = useState(14);
+  const chartDays = getPresetDays(filters.preset || '30d');
   const [chartMetric, setChartMetric] = useState("revenue");
 
   const bookingsBase = isHotel ? "/app/hotel/bookings" : isAgency ? "/app/agency/bookings" : "/app/reservations";
   const casesBase = "/app/ops/guest-cases";
 
+  const isComfort = density === 'comfort';
+
+  /* ---------- fetch data ---------- */
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -369,15 +408,17 @@ export default function DashboardPage() {
         try { return await fn(); }
         catch { return null; }
       };
-      const [a, b, c] = await Promise.all([
+      const [a, b, c, d] = await Promise.all([
         safe(() => api.get("/reports/reservations-summary")),
         safe(() => api.get(`/reports/sales-summary?days=${chartDays}`)),
         safe(() => api.get("/ops-cases/counters")),
+        safe(() => api.get("/audit/logs", { params: { range: "7d", limit: 10 } })),
       ]);
       if (cancelled) return;
       if (a?.data) setResSummary(a.data);
       if (b?.data) setSales(b.data);
       if (c?.data) setCaseCounters(c.data);
+      if (d?.data) setActivityEvents(d.data);
       setLoading(false);
     };
     load();
@@ -448,7 +489,6 @@ export default function DashboardPage() {
   /* ---------- chart data ---------- */
   const chartData = useMemo(() => {
     if (!sales.length) return [];
-    // Last N days
     return sales.slice(-chartDays).map((s) => ({
       day: s.day ? s.day.slice(5) : "",
       revenue: s.revenue || 0,
@@ -456,11 +496,49 @@ export default function DashboardPage() {
     }));
   }, [sales, chartDays]);
 
+  /* ---------- filter handlers ---------- */
+  const handleApplyFilters = () => {
+    saveToLocalStorage(filters);
+    const qs = filtersToQuery(filters);
+    navigate(`/app${qs}`, { replace: true });
+  };
+
+  const handleResetFilters = () => {
+    const reset = { ...DEFAULT_FILTERS, density };
+    setFilters(reset);
+    saveToLocalStorage(reset);
+    navigate('/app', { replace: true });
+  };
+
+  const handleDensityChange = (d) => {
+    setDensity(d);
+    saveDensity(d);
+    setFilters((f) => ({ ...f, density: d }));
+  };
+
+  const handleExport = () => {
+    const dateRange = getPresetDateRange(filters.preset || '30d');
+    exportDashboardCSV({
+      kpis: {
+        'Toplam Rezervasyon': totals.total,
+        'Beklemede': totals.pending,
+        'Onaylı': totals.confirmed,
+        'Ödendi': totals.paid,
+        'Açık Case': caseCounters.open,
+        'İşlemde Case': caseCounters.in_progress,
+      },
+      chartData,
+      attentionItems,
+      chartMetric,
+      dateRange,
+    });
+  };
+
   /* ================================================================ */
   /*  RENDER                                                           */
   /* ================================================================ */
   return (
-    <div className="space-y-5 pb-8">
+    <div className={`space-y-${isComfort ? '6' : '4'} pb-8`} data-testid="dashboard-page">
       {/* ---------- HEADER ---------- */}
       <div className="flex items-center justify-between">
         <div>
@@ -485,6 +563,17 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* ---------- FILTER BAR ---------- */}
+      <DashboardFilterBar
+        filters={filters}
+        onFiltersChange={setFilters}
+        onApply={handleApplyFilters}
+        onReset={handleResetFilters}
+        onExport={handleExport}
+        density={density}
+        onDensityChange={handleDensityChange}
+      />
+
       {/* ---------- ERROR ---------- */}
       {error && (
         <div className="rounded-[10px] border border-rose-200 bg-rose-50 dark:border-rose-800 dark:bg-rose-950/30 px-4 py-2.5 text-[12px] text-rose-700 dark:text-rose-300" data-testid="dash-error">
@@ -500,14 +589,15 @@ export default function DashboardPage() {
       )}
 
       {/* ========== ROW 1: KPI BAR ========== */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3" data-testid="dashboard-kpi-bar">
         <KpiCard
-          label="Toplam Rez."
+          label="Toplam Rezervasyon"
           value={totals.total}
           icon={Ticket}
           color="#6366f1"
           to={bookingsBase}
           loading={loading}
+          comfort={isComfort}
         />
         <KpiCard
           label="Beklemede"
@@ -516,6 +606,7 @@ export default function DashboardPage() {
           color="#f59e0b"
           to={`${bookingsBase}?status=pending`}
           loading={loading}
+          comfort={isComfort}
         />
         <KpiCard
           label="Onaylı"
@@ -524,6 +615,7 @@ export default function DashboardPage() {
           color="#3b82f6"
           to={`${bookingsBase}?status=confirmed`}
           loading={loading}
+          comfort={isComfort}
         />
         <KpiCard
           label="Ödendi"
@@ -532,6 +624,7 @@ export default function DashboardPage() {
           color="#10b981"
           to={`${bookingsBase}?status=paid`}
           loading={loading}
+          comfort={isComfort}
         />
         <KpiCard
           label="Açık Case"
@@ -540,14 +633,16 @@ export default function DashboardPage() {
           color="#ef4444"
           to={`${casesBase}?status=open`}
           loading={loading}
+          comfort={isComfort}
         />
         <KpiCard
-          label="İşlemde"
+          label="İşlemde Case"
           value={caseCounters.in_progress}
           icon={Activity}
           color="#8b5cf6"
           to={`${casesBase}?status=in_progress`}
           loading={loading}
+          comfort={isComfort}
         />
       </div>
 
@@ -558,14 +653,6 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
             <p className="text-[14px] font-medium text-foreground">Satış Grafiği</p>
             <div className="flex items-center gap-2">
-              <ChipGroup
-                options={[
-                  { label: "14G", value: 14 },
-                  { label: "30G", value: 30 },
-                ]}
-                value={chartDays}
-                onChange={setChartDays}
-              />
               <ChipGroup
                 options={[
                   { label: "Satış", value: "revenue" },
@@ -656,7 +743,7 @@ export default function DashboardPage() {
       {/* ========== ROW 3: ATTENTION + ACTIVITY ========== */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <AttentionList items={attentionItems} loading={loading} />
-        <ActivityTimeline loading={loading} />
+        <ActivityTimeline loading={loading} events={activityEvents} />
       </div>
     </div>
   );

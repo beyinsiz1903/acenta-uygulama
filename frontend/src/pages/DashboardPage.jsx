@@ -360,29 +360,29 @@ export default function DashboardPage() {
   const bookingsBase = isHotel ? "/app/hotel/bookings" : isAgency ? "/app/agency/bookings" : "/app/reservations";
   const casesBase = "/app/ops/guest-cases";
 
-  /* ---------- fetch data ---------- */
-  const fetchData = useCallback(async (days) => {
-    setLoading(true);
-    setError("");
-    const safe = async (fn) => {
-      try { return await fn(); }
-      catch (err) {
-        // Suppress 400/403/404 silently – expected for missing features or permissions
-        return null;
-      }
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      setError("");
+      const safe = async (fn) => {
+        try { return await fn(); }
+        catch { return null; }
+      };
+      const [a, b, c] = await Promise.all([
+        safe(() => api.get("/reports/reservations-summary")),
+        safe(() => api.get(`/reports/sales-summary?days=${chartDays}`)),
+        safe(() => api.get("/ops-cases/counters")),
+      ]);
+      if (cancelled) return;
+      if (a?.data) setResSummary(a.data);
+      if (b?.data) setSales(b.data);
+      if (c?.data) setCaseCounters(c.data);
+      setLoading(false);
     };
-    const [a, b, c] = await Promise.all([
-      safe(() => api.get("/reports/reservations-summary")),
-      safe(() => api.get(`/reports/sales-summary?days=${days}`)),
-      safe(() => api.get("/ops-cases/counters")),
-    ]);
-    if (a?.data) setResSummary(a.data);
-    if (b?.data) setSales(b.data);
-    if (c?.data) setCaseCounters(c.data);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => { fetchData(chartDays); }, [chartDays, fetchData]);
+    load();
+    return () => { cancelled = true; };
+  }, [chartDays]);
 
   /* ---------- derived data ---------- */
   const totals = useMemo(() => {

@@ -154,16 +154,18 @@ export default function PartnerB2BNetworkPage() {
   const [editingListing, setEditingListing] = useState(null);
   const [listingForm, setListingForm] = useState({
     title: "",
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [detailRequest, setDetailRequest] = useState(null);
-  const [detailListing, setDetailListing] = useState(null);
-
     base_price: "",
     provider_commission_rate: "",
     description: "",
     category: "",
     status: "active",
   });
+  const [listingSubmitting, setListingSubmitting] = useState(false);
+  const [listingModalError, setListingModalError] = useState("");
+
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailRequest, setDetailRequest] = useState(null);
+  const [detailListing, setDetailListing] = useState(null);
   const [listingSubmitting, setListingSubmitting] = useState(false);
   const [listingModalError, setListingModalError] = useState("");
 

@@ -24,7 +24,7 @@ from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorClient
 
 # Configuration
-BACKEND_URL = "https://dashboard-refresh-32.preview.emergentagent.com"
+BACKEND_URL = "https://billing-dashboard-v5.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

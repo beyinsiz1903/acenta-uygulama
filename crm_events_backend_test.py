@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 
 # Backend URL from frontend env
-BACKEND_URL = "https://dashboard-refresh-32.preview.emergentagent.com"
+BACKEND_URL = "https://billing-dashboard-v5.preview.emergentagent.com"
 
 # Test credentials
 ADMIN_EMAIL = "admin@acenta.test"

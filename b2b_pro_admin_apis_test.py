@@ -13,7 +13,7 @@ from pymongo import MongoClient
 import os
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://dashboard-refresh-32.preview.emergentagent.com"
+BASE_URL = "https://billing-dashboard-v5.preview.emergentagent.com"
 
 def login_user(email, password):
     """Login user and return token, org_id, user data"""

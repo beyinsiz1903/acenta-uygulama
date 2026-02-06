@@ -258,6 +258,8 @@ app.include_router(saas_tenants_router)
 app.include_router(tenant_features_router)
 app.include_router(admin_tenant_features_router)
 app.include_router(admin_audit_logs_router)
+app.include_router(admin_billing_router)
+app.include_router(billing_webhooks_router)
 app.include_router(b2b_events_router)
 app.include_router(dev_saas_router)
 

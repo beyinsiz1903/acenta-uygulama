@@ -509,65 +509,67 @@ export default function PartnerB2BNetworkPage() {
                 </p>
               )}
               {sellerHasListings && (
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-[11px] text-muted-foreground">Sadece duruma göre filtreleyin.</p>
-                  <select
-                    className="h-7 rounded-md border bg-background px-2 text-[11px]"
-                    value={sellerStatusFilter}
-                    onChange={(e) => setSellerStatusFilter(e.target.value)}
-                  >
-                    <option value="all">Tüm durumlar</option>
-                    <option value="pending">Beklemede</option>
-                    <option value="approved">Onaylandı</option>
-                    <option value="rejected">Reddedildi</option>
-                    <option value="completed">Tamamlandı</option>
-                  </select>
-                </div>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-xs">Listing ID</TableHead>
-                        <TableHead className="text-xs">Başlık</TableHead>
-                        <TableHead className="text-xs">Kategori</TableHead>
-                        <TableHead className="text-xs">Taban Fiyat</TableHead>
-                        <TableHead className="text-xs">Sağlayıcı Komisyonu</TableHead>
-                        <TableHead className="text-xs">Durum</TableHead>
-                        <TableHead className="text-xs text-right">Aksiyon</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {sortedAvailableListings.map((l) => (
-                        <TableRow key={l.id} className="hover:bg-muted/40">
-                          <TableCell
-                            className="text-xs font-mono cursor-pointer hover:underline"
-                            title="ID'yi kopyala"
-                            onClick={() => copyToClipboard(l.id, toast)}
-                          >
-                            {shortenId(l.id)}
-                          </TableCell>
-                          <TableCell className="text-xs">{l.title || "-"}</TableCell>
-                          <TableCell className="text-xs">{l.category || "-"}</TableCell>
-                          <TableCell className="text-xs">{formatTry(l.base_price)}</TableCell>
-                          <TableCell className="text-xs">{`${l.provider_commission_rate ?? 0}%`}</TableCell>
-                          <TableCell className="text-xs">
-                            <Badge variant={l.status === "active" ? "outline" : "secondary"}>{l.status}</Badge>
-                          </TableCell>
-                          <TableCell className="text-xs text-right">
-                            <Button
-                              type="button"
-                              size="xs"
-                              className="h-7 px-2 text-[11px]"
-                              onClick={() => openRequestModal(l)}
-                            >
-                              Talep Gönder
-                            </Button>
-                          </TableCell>
+                <>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[11px] text-muted-foreground">Sadece duruma göre filtreleyin.</p>
+                    <select
+                      className="h-7 rounded-md border bg-background px-2 text-[11px]"
+                      value={sellerStatusFilter}
+                      onChange={(e) => setSellerStatusFilter(e.target.value)}
+                    >
+                      <option value="all">Tüm durumlar</option>
+                      <option value="pending">Beklemede</option>
+                      <option value="approved">Onaylandı</option>
+                      <option value="rejected">Reddedildi</option>
+                      <option value="completed">Tamamlandı</option>
+                    </select>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-xs">Listing ID</TableHead>
+                          <TableHead className="text-xs">Başlık</TableHead>
+                          <TableHead className="text-xs">Kategori</TableHead>
+                          <TableHead className="text-xs">Taban Fiyat</TableHead>
+                          <TableHead className="text-xs">Sağlayıcı Komisyonu</TableHead>
+                          <TableHead className="text-xs">Durum</TableHead>
+                          <TableHead className="text-xs text-right">Aksiyon</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                      </TableHeader>
+                      <TableBody>
+                        {sortedAvailableListings.map((l) => (
+                          <TableRow key={l.id} className="hover:bg-muted/40">
+                            <TableCell
+                              className="text-xs font-mono cursor-pointer hover:underline"
+                              title="ID'yi kopyala"
+                              onClick={() => copyToClipboard(l.id, toast)}
+                            >
+                              {shortenId(l.id)}
+                            </TableCell>
+                            <TableCell className="text-xs">{l.title || "-"}</TableCell>
+                            <TableCell className="text-xs">{l.category || "-"}</TableCell>
+                            <TableCell className="text-xs">{formatTry(l.base_price)}</TableCell>
+                            <TableCell className="text-xs">{`${l.provider_commission_rate ?? 0}%`}</TableCell>
+                            <TableCell className="text-xs">
+                              <Badge variant={l.status === "active" ? "outline" : "secondary"}>{l.status}</Badge>
+                            </TableCell>
+                            <TableCell className="text-xs text-right">
+                              <Button
+                                type="button"
+                                size="xs"
+                                className="h-7 px-2 text-[11px]"
+                                onClick={() => openRequestModal(l)}
+                              >
+                                Talep Gönder
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>

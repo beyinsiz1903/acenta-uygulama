@@ -119,6 +119,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ POST-MATCHREQUESTDETAILDRAWER INTEGRATION VERIFICATION: Re-executed tests/partner/partner-b2b-ui-status.spec.ts to ensure MatchRequestDetailDrawer integration did not break core B2B Network UI layout. TEST PASSED (4.8s execution time). All expected behaviors confirmed: /app/partners/b2b loads successfully, 'B2B Ağ' heading visible, 'Satıcı'/'Sağlayıcı' toggle buttons functional, Satıcı mode shows 'Müsait Listingler' & 'Taleplerim', Sağlayıcı mode shows 'Listinglerim' & 'Gelen Talepler'. No layout breakage or regression detected. Core UI skeleton remains intact after drawer integration."
+      - working: true
+        agent: "testing"
+        comment: "✅ POST-DETAY-BUTTON REGRESSION TEST: Re-executed tests/partner/partner-b2b-ui-status.spec.ts to verify new Detay button in provider Incoming Requests table did not break layout. TEST PASSED (6.3s execution time). All existing assertions confirmed working: /app/partners/b2b loads successfully, 'B2B Ağ' heading visible, 'Satıcı'/'Sağlayıcı' toggle buttons functional, Satıcı mode shows 'Müsait Listingler' & 'Taleplerim', Sağlayıcı mode shows 'Listinglerim' & 'Gelen Talepler'. No layout breakage or UI regression detected from Detay button addition. Core B2B Network UI remains stable and functional."
 
   - task: "Admin Subtree Guard (/app/admin/*) Authorization"
     implemented: true

@@ -751,7 +751,7 @@ export default function PartnerB2BNetworkPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {incomingRequests.map((r) => {
+                      {sortedIncomingRequests.map((r) => {
                         const canApproveOrReject = (r.status || "").toLowerCase() === "pending";
                         const canComplete = (r.status || "").toLowerCase() === "approved";
                         const isBusy = busyMatchId === r.id;

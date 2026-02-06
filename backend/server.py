@@ -395,6 +395,7 @@ app.include_router(activation_checklist_router)
 app.include_router(upgrade_requests_router)
 app.include_router(tenant_health_router)
 app.include_router(crm_notes_router)
+app.include_router(crm_timeline_router)
 
 
 @app.get("/")

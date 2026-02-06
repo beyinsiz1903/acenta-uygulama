@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://billing-dashboard-v5.preview.emergentagent.com"
+BACKEND_URL = "https://enterprise-ops-8.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin and return JWT token and user info"""

@@ -7,7 +7,7 @@ from datetime import date, timedelta
 async def test_payment_failed_standardization():
     """Test the PAYMENT_FAILED error standardization for public checkout"""
     
-    base_url = "https://billing-dashboard-v5.preview.emergentagent.com"
+    base_url = "https://enterprise-ops-8.preview.emergentagent.com"
     
     async with httpx.AsyncClient(base_url=base_url, timeout=30.0) as client:
         

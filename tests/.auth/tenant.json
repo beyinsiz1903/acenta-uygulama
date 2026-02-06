@@ -1,6 +1,6 @@
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBhY2VudGEudGVzdCIsIm9yZyI6IjJiOTczMWZlLWY1NmMtNDMwMC04MmFmLTE3ZWMzNmNlOWE4OSIsInJvbGVzIjpbInN1cGVyX2FkbWluIl0sImlhdCI6MTc3MDQwOTcyMywiZXhwIjoxNzcwNDUyOTIzfQ.5gT2VdIDMCgicNHPDuVt9hddwv0u_T_oWIfYARV50Z0",
   "tenantId": "82b44666-e656-4dd5-a0a8-42e41cef284f",
-  "baseURL": "https://billing-dashboard-v5.preview.emergentagent.com",
+  "baseURL": "https://enterprise-ops-8.preview.emergentagent.com",
   "email": "admin@acenta.test"
 }

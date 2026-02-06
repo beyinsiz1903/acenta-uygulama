@@ -337,6 +337,17 @@ async def create_match_request(  # type: ignore[no-untyped-def]
     inserted = await db.b2b_match_requests.find_one({"_id": res.inserted_id})
     assert inserted is not None
 
+    await append_b2b_event(
+      event_type="match_request.created",
+      entity_type="match_request",
+      entity_id=doc["id"],
+      listing_id=body.listing_id,
+      provider_tenant_id=provider_tenant_id,
+      seller_tenant_id=seller_tenant_id,
+      actor_user_id=tenant_ctx.user_id,
+      payload={"requested_price": float(body.requested_price), "currency": currency},
+    )
+
     return B2BMatchRequestOut(**_serialize(inserted))
 
 

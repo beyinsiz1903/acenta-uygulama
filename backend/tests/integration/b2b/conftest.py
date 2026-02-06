@@ -156,23 +156,29 @@ async def seller_token(seller_user, org) -> str:
 
 
 @pytest.fixture
-async def provider_client(async_client: AsyncClient, provider_token: str, provider_tenant, provider_membership) -> AsyncGenerator[AsyncClient, None]:
+async def provider_client(app_with_overrides, provider_token: str, provider_tenant, provider_membership) -> AsyncGenerator[AsyncClient, None]:
+  from httpx import ASGITransport
+  
   headers = {
     "Authorization": f"Bearer {provider_token}",
     "X-Tenant-Id": str(provider_tenant["_id"]),
   }
-  async_client.headers.update(headers)
-  yield async_client
+  transport = ASGITransport(app=app_with_overrides)
+  async with AsyncClient(transport=transport, base_url="http://test", timeout=30.0, headers=headers) as client:
+    yield client
 
 
 @pytest.fixture
-async def seller_client(async_client: AsyncClient, seller_token: str, seller_tenant, seller_membership) -> AsyncGenerator[AsyncClient, None]:
+async def seller_client(app_with_overrides, seller_token: str, seller_tenant, seller_membership) -> AsyncGenerator[AsyncClient, None]:
+  from httpx import ASGITransport
+  
   headers = {
     "Authorization": f"Bearer {seller_token}",
     "X-Tenant-Id": str(seller_tenant["_id"]),
   }
-  async_client.headers.update(headers)
-  yield async_client
+  transport = ASGITransport(app=app_with_overrides)
+  async with AsyncClient(transport=transport, base_url="http://test", timeout=30.0, headers=headers) as client:
+    yield client
 
 
 @pytest.fixture

@@ -119,7 +119,7 @@ backend:
 
   - task: "Tenant Health GET /api/admin/tenants/health"
     implemented: true
-    working: false
+    working: true
     file: "backend/app/routers/tenant_health.py"
     stuck_count: 0
     priority: "high"
@@ -131,6 +131,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "CRITICAL: 520 internal server error. TypeError: can't subtract offset-naive and offset-aware datetimes at line 60. trial_end from database may be string or naive datetime, but code tries to subtract from timezone-aware 'now'. Need to ensure consistent timezone handling."
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING: Fixed timezone handling issues. GET /api/admin/tenants/health returns health data for multiple tenants. All filters (trial_expiring, inactive, overdue) work correctly without internal server errors."
 
   - task: "CRM Deal move-stage POST /api/crm/deals/{id}/move-stage"
     implemented: true

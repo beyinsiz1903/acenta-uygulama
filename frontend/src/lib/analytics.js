@@ -9,3 +9,8 @@ export async function fetchUsageOverview(params = {}) {
   const res = await api.get("/admin/analytics/usage-overview", { params });
   return res.data;
 }
+
+export async function fetchPushStatus() {
+  const res = await api.get("/admin/billing/push-status");
+  return res.data;
+}

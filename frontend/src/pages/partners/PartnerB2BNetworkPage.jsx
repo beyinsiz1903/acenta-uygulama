@@ -166,9 +166,6 @@ export default function PartnerB2BNetworkPage() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailRequest, setDetailRequest] = useState(null);
   const [detailListing, setDetailListing] = useState(null);
-  const [listingSubmitting, setListingSubmitting] = useState(false);
-  const [listingModalError, setListingModalError] = useState("");
-
   const [sellerStatusFilter, setSellerStatusFilter] = useState("all");
   const [providerStatusFilter, setProviderStatusFilter] = useState("all");
 

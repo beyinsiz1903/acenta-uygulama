@@ -354,3 +354,33 @@ async def partner_relationship_active(test_db, org, provider_tenant, seller_tena
   }
   await test_db.partner_relationships.insert_one(doc)
   return doc
+
+
+async def clear_tenant_features(test_db, tenant_id: str) -> None:
+  """Helper to clear tenant_features for a given tenant_id.
+  
+  This removes any existing tenant_features document for the tenant,
+  effectively disabling all features for that tenant.
+  """
+  await test_db.tenant_features.delete_many({"tenant_id": tenant_id})
+
+
+async def set_tenant_features_without_b2b(test_db, tenant_id: str) -> None:
+  """Helper to set tenant_features without the 'b2b' feature.
+  
+  This creates a tenant_features document with some other features
+  but explicitly excludes 'b2b' to test feature flag enforcement.
+  """
+  now = datetime.now(timezone.utc)
+  doc = {
+    "tenant_id": tenant_id,
+    "plan": "basic",
+    "features": ["search", "booking"],  # No "b2b" feature
+    "created_at": now,
+    "updated_at": now,
+  }
+  await test_db.tenant_features.replace_one(
+    {"tenant_id": tenant_id}, 
+    doc, 
+    upsert=True
+  )

@@ -380,6 +380,11 @@ export default function AdminTenantFeaturesPage() {
                 </div>
               </div>
 
+              {/* Subscription Status Panel */}
+              <div className="px-4 pt-3">
+                <SubscriptionPanel tenantId={selectedTenant.id} />
+              </div>
+
               {loadingFeatures ? (
                 <div className="flex items-center justify-center py-16 text-muted-foreground">
                   <Loader2 className="h-5 w-5 animate-spin mr-2" /><span className="text-sm">Yükleniyor...</span>

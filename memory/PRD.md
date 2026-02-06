@@ -2,35 +2,19 @@
 
 ## Implemented (Complete Stack)
 
-### Core Engine
-- Feature guards (A-E), Plan Inheritance (G), FeatureContext + dynamic menus
+### Core: Feature guards, Plan inheritance, FeatureContext ✅
+### Billing: BillingProvider ABC, Stripe, Webhooks, Subscription lifecycle ✅
+### Monetization: Usage ledger, Quota logic, Metered push (shadow), Provisioning ✅
+### Observability: Audit logs, B2B events, Revenue analytics, Billing ops widget ✅
 
-### Billing & Monetization  
-- BillingProvider ABC (Stripe real + Iyzico stub)
-- SubscriptionManager, Webhooks (idempotent), Plan catalog (DB seeded)
-- Usage ledger (idempotent), Quota logic (soft enforcement)
-- Stripe metered push (shadow mode), Product provisioning (4 guardrails)
-- Period finalize job (lock, reconciliation, partial failure safe)
-- Push status operational dashboard
-
-### Observability
-- Audit logs, B2B events, Activity timeline
-- Revenue Analytics: MRR, plan distribution, quota buckets, enterprise candidates
-- Billing Ops widget: push status, pending counts, finalize history
-- In-app quota notification banners
+### Finalize Cron Automation ✅
+- APScheduler with FastAPI lifespan integration
+- Monthly finalize: 1st of each month 00:05 Europe/Istanbul
+- Guardrails: SCHEDULER_ENABLED env, coalesce=True, max_instances=1, misfire_grace_time=3600
+- billing_period_jobs lock prevents duplicate runs
+- Already-success skip, partial failure tracking
+- `GET /api/admin/billing/cron-status` — scheduler status, next_run, last_result
+- Billing Ops widget shows cron Active/Disabled + next run time
 
 ## Test Coverage: 63+ backend integration tests
-
-## Key Endpoints
-| Endpoint | Purpose |
-|---|---|
-| POST /api/admin/billing/finalize-period | Period close + reconciliation |
-| GET /api/admin/billing/push-status | Billing ops dashboard |
-| POST /api/admin/billing/usage-push | Daily push trigger |
-| GET /api/admin/analytics/revenue-summary | MRR + risk metrics |
-| GET /api/admin/analytics/usage-overview | Quota buckets + candidates |
-
-## Backlog
-### P1: Active overage pricing (shadow→real), Usage email notifications
-### P2: Escrow & Payment Orchestration
-### P3: B2C Storefront/CMS/SEO Layer
+## Next: Shadow cycle observation → Active overage pricing → Usage emails → Escrow

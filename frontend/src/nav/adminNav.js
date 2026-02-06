@@ -28,6 +28,7 @@ export const adminNav = [
       { label: "Ops / B2B", path: "/app/admin/ops/b2b" },
       { label: "Tenant Özellikleri", path: "/app/admin/tenant-features" },
       { label: "Audit Log", path: "/app/admin/audit-logs" },
+      { label: "Revenue Analytics", path: "/app/admin/analytics" },
     ],
   },
   {

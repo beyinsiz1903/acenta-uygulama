@@ -73,6 +73,7 @@ async def test_b2b_happy_path_flow(
   seller_client: AsyncClient,
   partner_relationship_active: Dict[str, Any],
   test_db,
+  enable_b2b_features,
 ) -> None:
   """Provider creates a listing, seller requests it, provider approves and completes.
 

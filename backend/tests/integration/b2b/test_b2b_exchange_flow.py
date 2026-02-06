@@ -12,6 +12,15 @@ AVAILABLE_PATH = "/api/b2b/listings/available"
 MATCH_REQUEST_PATH = "/api/b2b/match-request"
 
 
+async def clear_tenant_features(test_db, tenant_id: str) -> None:
+  """Helper to clear tenant_features for a given tenant_id.
+  
+  This removes any existing tenant_features document for the tenant,
+  effectively disabling all features for that tenant.
+  """
+  await test_db.tenant_features.delete_many({"tenant_id": tenant_id})
+
+
 @pytest.mark.anyio
 async def test_b2b_tenant_isolation_cannot_request_own_listing(
   seller_client: AsyncClient,

@@ -1,0 +1,202 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e5]:
+      - generic [ref=e7]:
+        - generic [ref=e8]: A
+        - generic [ref=e9]: Acenta Master
+      - generic [ref=e10]:
+        - link "Partner" [ref=e11] [cursor=pointer]:
+          - /url: /app/partners
+          - img [ref=e12]
+          - generic [ref=e15]: Partner
+        - button [ref=e17] [cursor=pointer]:
+          - img [ref=e18]
+        - button "Aktivite Logu" [ref=e21] [cursor=pointer]:
+          - img [ref=e22]
+        - button "Tema" [ref=e25] [cursor=pointer]:
+          - img
+          - generic [ref=e26]: Tema
+        - generic [ref=e27]:
+          - generic [ref=e28]: Admin
+          - generic [ref=e29]: super_admin
+        - button "Çıkış" [ref=e30] [cursor=pointer]:
+          - img
+          - text: Çıkış
+    - generic [ref=e31]:
+      - complementary [ref=e32]:
+        - button "Daralt" [ref=e34] [cursor=pointer]:
+          - img [ref=e35]
+        - generic [ref=e38]:
+          - generic [ref=e39]:
+            - generic [ref=e40]: Toplam
+            - generic [ref=e41]: "0"
+          - generic [ref=e42]:
+            - generic [ref=e43]: Bekleyen
+            - generic [ref=e44]: "0"
+          - generic [ref=e45]:
+            - generic [ref=e46]: Ciro 7G
+            - generic [ref=e47]: ₺0
+        - navigation [ref=e48]:
+          - generic [ref=e49]:
+            - generic [ref=e50]: CORE
+            - generic [ref=e51]:
+              - link "Dashboard" [ref=e52] [cursor=pointer]:
+                - /url: /app
+                - img [ref=e53]
+                - generic [ref=e58]: Dashboard
+              - link "Rezervasyonlar" [ref=e59] [cursor=pointer]:
+                - /url: /app/reservations
+                - img [ref=e60]
+                - generic [ref=e62]: Rezervasyonlar
+              - link "Ürünler" [ref=e63] [cursor=pointer]:
+                - /url: /app/products
+                - img [ref=e64]
+                - generic [ref=e68]: Ürünler
+          - generic [ref=e69]:
+            - generic [ref=e70]: CRM
+            - link "Inbox" [ref=e72] [cursor=pointer]:
+              - /url: /app/inbox
+              - img [ref=e73]
+              - generic [ref=e76]: Inbox
+          - generic [ref=e77]:
+            - generic [ref=e78]: B2B AĞ
+            - generic [ref=e79]:
+              - link "Partner Yönetimi" [ref=e80] [cursor=pointer]:
+                - /url: /app/partners
+                - img [ref=e81]
+                - generic [ref=e86]: Partner Yönetimi
+              - link "Marketplace" [ref=e87] [cursor=pointer]:
+                - /url: /app/admin/b2b/marketplace
+                - img [ref=e88]
+                - generic [ref=e91]: Marketplace
+              - link "B2B Funnel" [ref=e92] [cursor=pointer]:
+                - /url: /app/admin/b2b/funnel
+                - img [ref=e93]
+                - generic [ref=e96]: B2B Funnel
+          - generic [ref=e97]:
+            - generic [ref=e98]: FİNANS
+            - generic [ref=e99]:
+              - link "Mutabakat" [ref=e100] [cursor=pointer]:
+                - /url: /app/admin/finance/settlements
+                - img [ref=e101]
+                - generic [ref=e105]: Mutabakat
+              - link "İadeler" [ref=e106] [cursor=pointer]:
+                - /url: /app/admin/finance/refunds
+                - img [ref=e107]
+                - generic [ref=e109]: İadeler
+              - link "Exposure" [ref=e110] [cursor=pointer]:
+                - /url: /app/admin/finance/exposure
+                - img [ref=e111]
+                - generic [ref=e113]: Exposure
+          - generic [ref=e114]:
+            - generic [ref=e115]: OPS
+            - generic [ref=e116]:
+              - link "Guest Cases" [ref=e117] [cursor=pointer]:
+                - /url: /app/ops/guest-cases
+                - img [ref=e118]
+                - generic [ref=e120]: Guest Cases
+              - link "Ops Tasks" [ref=e121] [cursor=pointer]:
+                - /url: /app/ops/tasks
+                - img [ref=e122]
+                - generic [ref=e125]: Ops Tasks
+              - link "Incidents" [ref=e126] [cursor=pointer]:
+                - /url: /app/ops/incidents
+                - img [ref=e127]
+                - generic [ref=e129]: Incidents
+          - generic [ref=e130]:
+            - generic [ref=e131]: YÖNETİM
+            - generic [ref=e132]:
+              - link "Acentalar" [ref=e133] [cursor=pointer]:
+                - /url: /app/admin/agencies
+                - img [ref=e134]
+                - generic [ref=e138]: Acentalar
+              - link "Oteller" [ref=e139] [cursor=pointer]:
+                - /url: /app/admin/hotels
+                - img [ref=e140]
+                - generic [ref=e143]: Oteller
+              - link "Turlar" [ref=e144] [cursor=pointer]:
+                - /url: /app/admin/tours
+                - img [ref=e145]
+                - generic [ref=e148]: Turlar
+              - link "Fiyatlandırma" [ref=e149] [cursor=pointer]:
+                - /url: /app/admin/pricing
+                - img [ref=e150]
+                - generic [ref=e153]: Fiyatlandırma
+              - link "Kuponlar" [ref=e154] [cursor=pointer]:
+                - /url: /app/admin/coupons
+                - img [ref=e155]
+                - generic [ref=e158]: Kuponlar
+              - link "Kampanyalar" [ref=e159] [cursor=pointer]:
+                - /url: /app/admin/campaigns
+                - img [ref=e160]
+                - generic [ref=e163]: Kampanyalar
+              - link "Linkler" [ref=e164] [cursor=pointer]:
+                - /url: /app/admin/links
+                - img [ref=e165]
+                - generic [ref=e168]: Linkler
+              - link "CMS" [ref=e169] [cursor=pointer]:
+                - /url: /app/admin/cms/pages
+                - img [ref=e170]
+                - generic [ref=e172]: CMS
+              - link "Tenant Ayarları" [ref=e173] [cursor=pointer]:
+                - /url: /app/admin/tenant-features
+                - img [ref=e174]
+                - generic [ref=e176]: Tenant Ayarları
+              - link "Tenant Sağlık" [ref=e177] [cursor=pointer]:
+                - /url: /app/admin/tenant-health
+                - img [ref=e178]
+                - generic [ref=e180]: Tenant Sağlık
+              - link "Audit Log" [ref=e181] [cursor=pointer]:
+                - /url: /app/admin/audit-logs
+                - img [ref=e182]
+                - generic [ref=e185]: Audit Log
+              - link "Ayarlar" [ref=e186] [cursor=pointer]:
+                - /url: /app/settings
+                - img [ref=e187]
+                - generic [ref=e190]: Ayarlar
+        - generic [ref=e192]: super_admin · 06.02.2026
+      - main [ref=e193]:
+        - generic [ref=e194]:
+          - generic [ref=e195]:
+            - img [ref=e196]
+            - generic [ref=e198]:
+              - text: "Deneme sureniz:"
+              - strong [ref=e199]: 13 gun
+              - text: kaldi
+          - generic [ref=e200]:
+            - button "Plani yukselt" [ref=e201] [cursor=pointer]
+            - button [ref=e202] [cursor=pointer]:
+              - img [ref=e203]
+        - generic [ref=e208]:
+          - generic [ref=e209]:
+            - generic [ref=e211]: "1"
+            - generic [ref=e214]: "2"
+            - generic [ref=e217]: "3"
+            - generic [ref=e220]: "4"
+          - generic [ref=e221]:
+            - generic [ref=e222]:
+              - img [ref=e224]
+              - generic [ref=e228]:
+                - 'heading "Adım 1: Şirket Ayarları" [level=2] [ref=e229]'
+                - paragraph [ref=e230]: Hızlıca başlamak için bilgilerinizi girin
+            - generic [ref=e231]:
+              - generic [ref=e232]:
+                - text: Şirket Adı
+                - textbox "Şirketiniz" [ref=e233]
+              - generic [ref=e234]:
+                - text: Para Birimi
+                - combobox [ref=e235]:
+                  - option "TRY - Türk Lirası" [selected]
+                  - option "EUR - Euro"
+                  - option "USD - Dolar"
+            - button "Devam" [ref=e238] [cursor=pointer]:
+              - text: Devam
+              - img
+          - generic [ref=e239]: "Deneme süreniz: 13 gün kaldı"
+    - contentinfo [ref=e240]:
+      - generic [ref=e241]: © 2026 — v1
+  - region "Notifications alt+T"
+```

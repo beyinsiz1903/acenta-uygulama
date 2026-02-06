@@ -1,5 +1,5 @@
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBhY2VudGEudGVzdCIsIm9yZyI6ImFhYzIzMWIwLTg2OTItNDY3My1iYTIwLTJiNDkwNWE5ZWJlMCIsInJvbGVzIjpbInN1cGVyX2FkbWluIl0sImlhdCI6MTc3MDQxMjY2OSwiZXhwIjoxNzcwNDU1ODY5fQ.PdPwWXzX-0DLj0T92xqWX-i2OiP4GbK0rfy1F5tT57Q",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBhY2VudGEudGVzdCIsIm9yZyI6ImFhYzIzMWIwLTg2OTItNDY3My1iYTIwLTJiNDkwNWE5ZWJlMCIsInJvbGVzIjpbInN1cGVyX2FkbWluIl0sImlhdCI6MTc3MDQxMjY3OSwiZXhwIjoxNzcwNDU1ODc5fQ.zVUruiqwsCMc67JpYwGb90ay7ZgvOm8oL0hc24U29PE",
   "tenantId": "c2c10633-7331-4490-a50b-b0e7b5048cde",
   "baseURL": "https://enterprise-ops-8.preview.emergentagent.com",
   "email": "admin@acenta.test"

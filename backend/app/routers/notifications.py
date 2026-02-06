@@ -96,4 +96,13 @@ async def trigger_notification_checks(user=Depends(get_current_user)):
     except Exception as e:
         logger.warning("open cases check failed: %s", e)
 
+    # Run automation rules (creates tasks for overdue payments/deals)
+    try:
+        from app.services.automation_rules import trigger_all_rules
+        rule_results = await trigger_all_rules(tenant_id, org_id)
+        results["automation_rules"] = rule_results
+    except Exception as e:
+        logger.warning("automation rules failed: %s", e)
+        results["automation_rules"] = {"error": str(e)}
+
     return results

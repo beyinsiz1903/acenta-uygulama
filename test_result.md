@@ -116,6 +116,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ PLAYWRIGHT UI SMOKE TEST RE-VERIFIED: Successfully executed tests/partner/partner-b2b-ui-status.spec.ts with proper authentication flow. Test PASSED after fixing authentication method from HTTP headers to browser login flow. All expected UI elements verified: 1) /app/partners/b2b loads without error, 2) 'B2B Ağ' heading visible, 3) 'Satıcı' and 'Sağlayıcı' toggle buttons visible, 4) Default Satıcı mode shows 'Müsait Listingler' and 'Taleplerim', 5) After clicking Sağlayıcı button shows 'Listinglerim' and 'Gelen Talepler'. Authentication via agency1@acenta.test login working correctly. UI smoke test fully functional."
+      - working: true
+        agent: "testing"
+        comment: "✅ POST-MATCHREQUESTDETAILDRAWER INTEGRATION VERIFICATION: Re-executed tests/partner/partner-b2b-ui-status.spec.ts to ensure MatchRequestDetailDrawer integration did not break core B2B Network UI layout. TEST PASSED (4.8s execution time). All expected behaviors confirmed: /app/partners/b2b loads successfully, 'B2B Ağ' heading visible, 'Satıcı'/'Sağlayıcı' toggle buttons functional, Satıcı mode shows 'Müsait Listingler' & 'Taleplerim', Sağlayıcı mode shows 'Listinglerim' & 'Gelen Talepler'. No layout breakage or regression detected. Core UI skeleton remains intact after drawer integration."
 
   - task: "Admin Subtree Guard (/app/admin/*) Authorization"
     implemented: true

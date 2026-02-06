@@ -1,54 +1,63 @@
-# PRD — Plan Inheritance Engine (Multi-Tenant ERP)
+# PRD — SaaS Billing & Plan Engine (Multi-Tenant ERP)
 
 ## Original Problem Statement
-Build a modular multi-tenant SaaS ERP with Plan Inheritance: plan_defaults + add_ons = effective_features.
+Build a modular multi-tenant SaaS ERP with Plan Inheritance + Billing Abstraction for travel agencies.
 
 ## What's Implemented
 
 ### PROMPT A–E: Feature Capability Engine ✅
-- Backend guards, tenant features endpoint, FeatureContext, Admin UI, Tenant Feature Management
-
 ### PROMPT F: Observability + Audit Log ✅
-- `audit_logs` + `b2b_events` collections, admin audit page, activity timeline in drawer
-
 ### PROMPT G: Plan Inheritance Engine ✅
-- **Plan Matrix** (`constants/plan_matrix.py`): starter (5), pro (8), enterprise (10 modules)
-- **Tenant Capabilities** (`tenant_capabilities` collection): `{ tenant_id, plan, add_ons }`
-- **Effective Features** = plan_defaults + add_ons (via `FeatureService.get_effective_features`)
-- **Soft-Deprecate**: Falls back to legacy `tenant_features` when no capabilities doc exists
-- **Admin API**: `PATCH /plan`, `PATCH /add-ons` with validation + audit logging
-- **Admin UI**: Plan dropdown + Add-on checkbox grid, plan features disabled with "Plan" badge
-- **Migration Script**: `scripts/migrate_tenant_features_to_capabilities.py`
+- Plan Matrix (starter/pro/enterprise), tenant_capabilities, effective_features = plan_defaults + add_ons
+
+### PROMPT H: Billing Abstraction + Subscription Mapping ✅
+- **BillingProvider ABC**: Provider-agnostic interface (create_customer, create/update/cancel_subscription)
+- **StripeBillingProvider**: Real Stripe SDK implementation
+- **IyzicoBillingProvider**: Stub with capabilities flags (subscriptions=False)
+- **SubscriptionManager**: Orchestrates plan changes through provider → tenant_capabilities
+- **Billing Repository**: 4 collections (billing_customers, billing_subscriptions, billing_plan_catalog, billing_webhook_events)
+- **Webhook Engine**: Stripe webhook with idempotency (billing_webhook_events dedup)
+  - Handles: invoice.paid, subscription.updated/deleted, payment_failed
+  - Grace period (7 days) on payment failure instead of immediate freeze
+- **Plan Catalog**: DB-seeded pricing (Starter ₺499, Pro ₺999, Enterprise ₺2499/mo)
+- **Admin API**: subscribe, cancel, downgrade-preview, plan-catalog, plan-catalog/seed
+- **Audit**: All billing actions logged to audit_logs
 
 ## DB Collections
-- `tenant_capabilities`: `{ tenant_id (unique), plan, add_ons[], created_at, updated_at }`
-- `tenant_features`: Legacy (soft-deprecated, fallback read)
-- `audit_logs`: `{ id, scope, tenant_id, actor_*, action, before, after, metadata, created_at }`
-- `b2b_events`: `{ id, event_type, entity_type, entity_id, payload, created_at }`
-
-## Plan Matrix
-| Plan | Modules |
+| Collection | Purpose |
 |---|---|
-| Starter | dashboard, reservations, crm, inventory, reports |
-| Pro | + accounting, webpos, partners |
-| Enterprise | + b2b, ops |
-
-## Test Coverage
-- 34 backend integration tests (13 B2B + 12 feature flags + 8 plan inheritance + 1 audit)
+| tenant_capabilities | Plan + add_ons per tenant |
+| billing_customers | Provider customer mapping |
+| billing_subscriptions | Active subscriptions (status, period_end, grace_period) |
+| billing_plan_catalog | Plan pricing (plan, interval, currency, provider_price_id) |
+| billing_webhook_events | Webhook idempotency (provider_event_id unique) |
+| audit_logs | All admin + billing actions |
+| b2b_events | B2B lifecycle events |
 
 ## Key API Endpoints
-- `PATCH /api/admin/tenants/{id}/plan` — Set plan (starter/pro/enterprise)
-- `PATCH /api/admin/tenants/{id}/add-ons` — Set add-on modules
-- `GET /api/admin/tenants/{id}/features` — Get effective features + plan_matrix
-- `GET /api/tenant/features` — Tenant self-service (effective features + source)
+| Endpoint | Auth | Purpose |
+|---|---|---|
+| PATCH /api/admin/tenants/{id}/plan | admin | Set plan |
+| PATCH /api/admin/tenants/{id}/add-ons | admin | Set add-ons |
+| POST /api/admin/billing/tenants/{id}/subscribe | admin | Create/update subscription |
+| POST /api/admin/billing/tenants/{id}/cancel-subscription | admin | Cancel subscription |
+| POST /api/admin/billing/tenants/{id}/downgrade-preview | admin | Preview feature loss |
+| POST /api/admin/billing/plan-catalog/seed | super_admin | Seed prices |
+| POST /api/webhook/stripe-billing | public | Stripe webhooks |
+
+## Test Coverage
+- 34+ backend integration tests across: B2B, feature flags, plan inheritance, billing
+- Frontend UI tested via testing agent
 
 ## Prioritized Backlog
 ### P1
-- Usage-based billing hooks
-- Stripe/Iyzico subscription mapping
+- Admin UI: subscription status + billing panel on tenant features page
+- Usage-based billing hooks (b2b.match_request metered)
 ### P2
-- Self-Service B2B Onboarding, Real Paraşüt integration
+- Real Stripe Products/Prices creation (currently using seed IDs)
+- Self-Service B2B Onboarding
 ### P3
+- Escrow & Payment Orchestration (B2B transaction fees)
 - B2C Storefront/CMS/SEO Layer
 
 ## Credentials

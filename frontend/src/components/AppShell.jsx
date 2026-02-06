@@ -2,20 +2,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { formatMoney, formatMoneyCompact } from "../lib/format";
 import {
-  LayoutGrid,
-  CalendarDays,
-  Ticket,
-  Users,
-  Layers,
-  FileText,
-  Building2,
-  Settings,
-  BarChart3,
-  LogOut,
-  Menu,
-  Hotel,
-  Link as LinkIcon,
-  AlertTriangle,
+  LayoutGrid, CalendarDays, Ticket, Users, Layers, FileText,
+  Building2, Settings, BarChart3, LogOut, Menu, Hotel,
+  Link as LinkIcon, AlertTriangle, ChevronLeft, ChevronRight,
+  Inbox, Bell, PanelLeftClose, PanelLeft,
+  Briefcase, ShieldCheck, TrendingUp, MessageSquare, Globe,
+  ClipboardList, Tag, Megaphone, Network, DollarSign,
+  Scale, Activity, Eye, Zap, BookOpen, Search,
 } from "lucide-react";
 
 import { Button } from "./ui/button";
@@ -25,43 +18,188 @@ import { cn } from "../lib/utils";
 import { api, clearToken, getUser } from "../lib/api";
 import { getMenuForUser } from "../config/menuConfig";
 import { FeatureProvider, useFeatures } from "../contexts/FeatureContext";
-import { Inbox } from "lucide-react";
 import { Badge as UIBadge } from "./ui/badge";
 import { fetchPartnerNotificationsSummary } from "../lib/partnerGraph";
 import { getActiveTenantKey, getActiveTenantId, setActiveTenantId, subscribeTenantChange } from "../lib/tenantContext";
+import NotificationDrawer from "./NotificationDrawer";
 
-const legacyNav = [
-  { to: "/app", label: "Dashboard", icon: LayoutGrid, roles: ["admin", "sales", "ops", "accounting", "b2b_agent", "super_admin"], requiredFeature: "dashboard" },
-  { to: "/app/products", label: "Ürünler", icon: Layers, roles: ["admin", "sales", "ops", "super_admin"] },
-  { to: "/app/inventory", label: "Müsaitlik", icon: CalendarDays, roles: ["admin", "sales", "ops", "super_admin"], requiredFeature: "inventory" },
-  { to: "/app/reservations", label: "Rezervasyonlar", icon: Ticket, roles: ["admin", "sales", "ops", "accounting", "b2b_agent", "super_admin"] },
-  { to: "/app/customers", label: "Müşteriler", icon: Users, roles: ["admin", "sales", "ops", "super_admin"] },
-  { to: "/app/crm/customers", label: "CRM Müşteriler", icon: Users, roles: ["admin", "sales", "ops", "super_admin"], requiredFeature: "crm" },
-  { to: "/app/crm/duplicates", label: "CRM Duplicate Müşteriler", icon: Users, roles: ["admin", "super_admin"], requiredFeature: "crm" },
-  { to: "/app/crm/pipeline", label: "CRM Pipeline", icon: FileText, roles: ["admin", "sales", "ops", "super_admin"], requiredFeature: "crm" },
-  { to: "/app/crm/tasks", label: "CRM Görevler", icon: CalendarDays, roles: ["admin", "sales", "ops", "super_admin"], requiredFeature: "crm" },
-  { to: "/app/crm/events", label: "CRM Olaylar", icon: FileText, roles: ["admin", "super_admin"], requiredFeature: "crm" },
-  { to: "/app/inbox", label: "Inbox", icon: Inbox, roles: ["admin", "super_admin", "ops"] },
-  { to: "/app/b2b", label: "B2B / Acenteler", icon: Building2, roles: ["admin", "super_admin"], requiredFeature: "b2b" },
-  { to: "/app/b2b-book", label: "B2B Rezervasyon", icon: Ticket, roles: ["b2b_agent"], requiredFeature: "b2b" },
-  { to: "/app/reports", label: "Raporlar", icon: BarChart3, roles: ["admin", "sales", "accounting", "super_admin"], requiredFeature: "reports" },
-  { to: "/app/settings", label: "Ayarlar", icon: Settings, roles: ["admin", "super_admin"] },
-];
+/* ------------------------------------------------------------------ */
+/*  Sidebar collapse persistence                                       */
+/* ------------------------------------------------------------------ */
+const COLLAPSE_KEY = "sidebar_collapsed";
+function loadCollapsed() {
+  try { return localStorage.getItem(COLLAPSE_KEY) === "true"; } catch { return false; }
+}
+function saveCollapsed(v) {
+  try { localStorage.setItem(COLLAPSE_KEY, v ? "true" : "false"); } catch { /* */ }
+}
 
-const iconMap = {
+/* ------------------------------------------------------------------ */
+/*  ICON MAP for sidebar items                                         */
+/* ------------------------------------------------------------------ */
+const sidebarIconMap = {
+  "Dashboard": LayoutGrid,
+  "Ürünler": Layers,
+  "Müsaitlik": CalendarDays,
+  "Rezervasyonlar": Ticket,
+  "Müşteriler": Users,
+  "CRM Müşteriler": Users,
+  "CRM Duplicate Müşteriler": Users,
+  "CRM Pipeline": TrendingUp,
+  "CRM Görevler": ClipboardList,
+  "CRM Olaylar": Activity,
+  "Inbox": Inbox,
+  "B2B / Acenteler": Building2,
+  "B2B Rezervasyon": Ticket,
+  "Raporlar": BarChart3,
+  "Ayarlar": Settings,
   "Acentalar": Building2,
   "Oteller": Hotel,
   "Link Yönetimi": LinkIcon,
   "Otellerim": Hotel,
-  "Mutabakat": FileText,
+  "Mutabakat": Scale,
   "Exposure & Aging": BarChart3,
+  "B2B Dashboard": BarChart3,
+  "Turlar": Globe,
+  "CMS Sayfaları": BookOpen,
+  "Kampanyalar": Megaphone,
+  "Partnerler": Network,
+  "B2B Marketplace": Globe,
+  "Katalog": Search,
+  "Otel Kataloğu": Hotel,
+  "Fiyatlandırma": Tag,
+  "Kuponlar": Tag,
+  "Onay Görevleri": ShieldCheck,
+  "Finans / İadeler": DollarSign,
+  "Exposure & Aging (Acenta)": BarChart3,
+  "B2B Acenteler": Building2,
+  "B2B Funnel": TrendingUp,
+  "B2B Duyuruları": Megaphone,
+  "Finans / Mutabakat": Scale,
+  "Ops / B2B": Briefcase,
+  "Tenant Özellikleri": Zap,
+  "Audit Log": Eye,
+  "Revenue Analytics": TrendingUp,
+  "Match Listesi": ShieldCheck,
+  "Match Risk Raporu": AlertTriangle,
+  "Match Risk Trendleri": TrendingUp,
+  "Match Alert Politikaları": Bell,
+  "Aksiyon Politikaları": ShieldCheck,
+  "Export Çalıştırma": FileText,
+  "Genel Bakış": LayoutGrid,
+  "Gelen Talepler": Inbox,
+  "Stop Sell": AlertTriangle,
+  "Allocations": CalendarDays,
+  "Entegrasyonlar": Zap,
+  "Yardım": MessageSquare,
+  "Rezervasyonlarım": Ticket,
+  "Ops Tasks": ClipboardList,
+  "Ops Incidents": AlertTriangle,
 };
 
+/* ------------------------------------------------------------------ */
+/*  GROUPED SIDEBAR SECTIONS for admin                                  */
+/* ------------------------------------------------------------------ */
+const ADMIN_GROUPED_NAV = [
+  {
+    group: "CORE",
+    items: [
+      { to: "/app", label: "Dashboard", icon: LayoutGrid, end: true },
+      { to: "/app/reservations", label: "Rezervasyonlar", icon: Ticket },
+      { to: "/app/products", label: "Ürünler", icon: Layers },
+      { to: "/app/inventory", label: "Müsaitlik", icon: CalendarDays, feature: "inventory" },
+    ],
+  },
+  {
+    group: "CRM",
+    items: [
+      { to: "/app/crm/customers", label: "Müşteriler", icon: Users, feature: "crm" },
+      { to: "/app/crm/pipeline", label: "Pipeline", icon: TrendingUp, feature: "crm" },
+      { to: "/app/crm/tasks", label: "Görevler", icon: ClipboardList, feature: "crm" },
+      { to: "/app/inbox", label: "Inbox", icon: Inbox },
+    ],
+  },
+  {
+    group: "B2B AĞ",
+    items: [
+      { to: "/app/partners", label: "Partner Yönetimi", icon: Network },
+      { to: "/app/b2b", label: "B2B Acenteler", icon: Building2, feature: "b2b" },
+      { to: "/app/admin/b2b/marketplace", label: "Marketplace", icon: Globe },
+      { to: "/app/admin/b2b/funnel", label: "B2B Funnel", icon: TrendingUp },
+    ],
+  },
+  {
+    group: "FİNANS",
+    items: [
+      { to: "/app/admin/finance/settlements", label: "Mutabakat", icon: Scale },
+      { to: "/app/admin/finance/refunds", label: "İadeler", icon: DollarSign },
+      { to: "/app/admin/finance/exposure", label: "Exposure", icon: BarChart3 },
+      { to: "/app/reports", label: "Raporlar", icon: BarChart3, feature: "reports" },
+    ],
+  },
+  {
+    group: "OPS",
+    items: [
+      { to: "/app/ops/guest-cases", label: "Guest Cases", icon: MessageSquare },
+      { to: "/app/ops/tasks", label: "Ops Tasks", icon: ClipboardList },
+      { to: "/app/ops/incidents", label: "Incidents", icon: AlertTriangle },
+    ],
+  },
+  {
+    group: "YÖNETİM",
+    items: [
+      { to: "/app/admin/agencies", label: "Acentalar", icon: Building2 },
+      { to: "/app/admin/hotels", label: "Oteller", icon: Hotel },
+      { to: "/app/admin/tours", label: "Turlar", icon: Globe },
+      { to: "/app/admin/pricing", label: "Fiyatlandırma", icon: Tag },
+      { to: "/app/admin/coupons", label: "Kuponlar", icon: Tag },
+      { to: "/app/admin/campaigns", label: "Kampanyalar", icon: Megaphone },
+      { to: "/app/admin/links", label: "Linkler", icon: LinkIcon },
+      { to: "/app/admin/cms/pages", label: "CMS", icon: BookOpen },
+      { to: "/app/admin/tenant-features", label: "Tenant Ayarları", icon: Zap },
+      { to: "/app/admin/audit-logs", label: "Audit Log", icon: Eye },
+      { to: "/app/settings", label: "Ayarlar", icon: Settings },
+    ],
+  },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Legacy nav helper                                                   */
+/* ------------------------------------------------------------------ */
 function userHasRole(user, allowed) {
   const roles = user?.roles || [];
   return allowed.some((r) => roles.includes(r));
 }
 
+/* ================================================================== */
+/*  SIDEBAR ITEM                                                       */
+/* ================================================================== */
+function SidebarItem({ to, label, icon: Icon, collapsed, end, onClick }) {
+  return (
+    <NavLink
+      to={to}
+      end={end}
+      onClick={onClick}
+      className={({ isActive }) =>
+        cn(
+          "flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-colors",
+          isActive
+            ? "bg-primary text-primary-foreground shadow-sm"
+            : "text-muted-foreground hover:bg-accent hover:text-foreground",
+          collapsed && "justify-center px-2"
+        )
+      }
+      title={collapsed ? label : undefined}
+    >
+      <Icon className="h-4 w-4 shrink-0" />
+      {!collapsed && <span className="truncate">{label}</span>}
+    </NavLink>
+  );
+}
+
+/* ================================================================== */
+/*  MAIN APP SHELL                                                     */
+/* ================================================================== */
 export default function AppShell() {
   const user = getUser();
   const location = useLocation();
@@ -70,22 +208,16 @@ export default function AppShell() {
   const [sales, setSales] = useState([]);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [partnerSummary, setPartnerSummary] = useState(null);
-  const [activeTenantKey, setActiveTenantKey] = useState(() => getActiveTenantKey());
+  const [activeTenantKey, setActiveTenantKeyState] = useState(() => getActiveTenantKey());
+  const [collapsed, setCollapsed] = useState(() => loadCollapsed());
+  const [notifOpen, setNotifOpen] = useState(false);
 
-  // On first load, if there is a default tenant id configured and no active tenant set,
-  // seed it into storage so that tenant-aware APIs (X-Tenant-Id) work even before a
-  // dedicated tenant switcher exists.
+  // Tenant setup
   useEffect(() => {
-    // Eski davranış: burada default tenant id'yi localStorage'a yazmaya
-    // hazırlanıyorduk. Artık interceptor env default'u sadece header'da
-    // kullanıyor ve localStorage'a dokunmuyor. Bu effect'i no-op bırakıyoruz.
-    try {
-      void getActiveTenantKey();
-    } catch {
-      // ignore
-    }
+    try { void getActiveTenantKey(); } catch { /* */ }
   }, []);
 
+  // Fetch sidebar metrics
   useEffect(() => {
     (async () => {
       try {
@@ -95,88 +227,54 @@ export default function AppShell() {
         ]);
         setResSummary(a.data || []);
         setSales(b.data || []);
-      } catch {
-        // Sidebar metrikleri opsiyonel; hata UI'ı bozmasın.
-      }
+      } catch { /* sidebar metrics are optional */ }
     })();
   }, []);
 
-  // Keep activeTenantKey in sync with tenant change events and storage changes
+  // Tenant sync
   useEffect(() => {
-    const syncFromStorage = () => {
-      setActiveTenantKey(getActiveTenantKey());
-    };
-
-    // Initial sync
+    const syncFromStorage = () => { setActiveTenantKeyState(getActiveTenantKey()); };
     syncFromStorage();
-
-    // If no tenant id is set yet, and a default tenant id is provided via env,
-    // seed it once so that tenant-aware APIs can function until a real switcher exists.
     try {
       const currentId = getActiveTenantId();
       const defId = process.env.REACT_APP_DEFAULT_TENANT_ID;
-      if (!currentId && defId) {
-        setActiveTenantId(defId);
-      }
-    } catch {
-      // ignore
-    }
+      if (!currentId && defId) setActiveTenantId(defId);
+    } catch { /* */ }
 
-    let unsubscribeTenant = () => {};
+    let unsubscribe = () => {};
     if (typeof window !== "undefined") {
-      // Custom event from tenant switcher
-      unsubscribeTenant = subscribeTenantChange((detail) => {
+      unsubscribe = subscribeTenantChange((detail) => {
         const nextKey = detail?.tenantKey ?? getActiveTenantKey();
-        setActiveTenantKey(nextKey);
+        setActiveTenantKeyState(nextKey);
       });
-
-      // Cross-tab storage changes
       window.addEventListener("storage", syncFromStorage);
     }
-
     return () => {
-      if (typeof window !== "undefined") {
-        window.removeEventListener("storage", syncFromStorage);
-      }
-      unsubscribeTenant();
+      if (typeof window !== "undefined") window.removeEventListener("storage", syncFromStorage);
+      unsubscribe();
     };
   }, []);
 
-  // Partner notifications summary (header badge)
+  // Partner notifications
   useEffect(() => {
     let active = true;
     let intervalId;
-
     const loadSummary = async () => {
       try {
         const data = await fetchPartnerNotificationsSummary();
-        if (!active) return;
-        setPartnerSummary(data);
-      } catch (err) {
-        if (!active) return;
-        // Partner özeti kritik değil; hata UI'ı bozmasın ancak debug için iz bırak.
-        if (typeof console !== "undefined" && console.debug) {
-          console.debug("[partner-graph] notifications summary failed", err?.message || err);
-        }
-      }
+        if (active) setPartnerSummary(data);
+      } catch { /* */ }
     };
-
     void loadSummary();
     intervalId = window.setInterval(loadSummary, 60_000);
-
-    return () => {
-      active = false;
-      if (intervalId) {
-        window.clearInterval(intervalId);
-      }
-    };
+    return () => { active = false; if (intervalId) window.clearInterval(intervalId); };
   }, [activeTenantKey]);
 
+  // Build stamp
   useEffect(() => {
-    if (typeof window !== "undefined" && window.location.search && window.location.search.includes("e2e=1")) {
+    if (typeof window !== "undefined" && window.location.search?.includes("e2e=1")) {
       import("../version").then(({ BUILD_STAMP }) => {
         window.__BUILD_STAMP__ = BUILD_STAMP;
-        console.info("BUILD_STAMP", BUILD_STAMP);
       });
     }
   }, []);
@@ -185,73 +283,60 @@ export default function AppShell() {
     const map = new Map((resSummary || []).map((r) => [r.status, Number(r.count || 0)]));
     const total = (resSummary || []).reduce((a, r) => a + Number(r.count || 0), 0);
     const revenue7d = (sales || []).reduce((a, r) => a + Number(r.revenue || 0), 0);
-    return {
-      total,
-      pending: map.get("pending") || 0,
-      confirmed: map.get("confirmed") || 0,
-      revenue7d,
-    };
+    return { total, pending: map.get("pending") || 0, revenue7d };
   }, [resSummary, sales]);
 
-  const isHotel = (user?.roles || []).includes("hotel_admin") || (user?.roles || []).includes("hotel_staff");
-  const isAgency = (user?.roles || []).includes("agency_admin") || (user?.roles || []).includes("agency_agent");
-
+  const isAdmin = (user?.roles || []).some((r) => ["super_admin", "admin"].includes(r));
   const { hasFeature, loading: featuresLoading, quotaAlerts } = useFeatures();
 
-  // Role-based menu (new structure)
-  const roleBasedMenu = getMenuForUser(user);
-  
-  // Legacy nav (filtered by role + feature)
-  const visibleLegacyNav = legacyNav.filter((n) => {
-    if (!userHasRole(user, n.roles)) return false;
-    if (n.requiredFeature && !featuresLoading && !hasFeature(n.requiredFeature)) return false;
-    return true;
-  });
-
-  // Combine both menus
-  const allMenuItems = [...roleBasedMenu, ...visibleLegacyNav];
-
-  const partnerSection = {
-    label: "Partners",
-    children: [
-      { label: "Genel Bakış", path: "/app/partners" },
-    ],
+  const toggleCollapse = () => {
+    setCollapsed((v) => {
+      const next = !v;
+      saveCollapsed(next);
+      return next;
+    });
   };
 
+  /* ================================================================ */
+  /*  RENDER                                                           */
+  /* ================================================================ */
   return (
     <FeatureProvider>
     <div className="min-h-screen bg-background">
+      {/* ========== TOP BAR ========== */}
       <div className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-4 py-2.5">
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
-              className="md:hidden"
+              className="md:hidden h-8 w-8"
               onClick={() => setMobileNavOpen(true)}
               data-testid="mobile-nav-open"
             >
               <Menu className="h-5 w-5" />
             </Button>
-
-            <div className="flex items-center gap-3">
-              <div className="sr-only">Acenta Master</div>
+            <div className="hidden md:flex items-center gap-2">
+              <div className="h-7 w-7 rounded-lg bg-primary text-primary-foreground grid place-items-center font-semibold text-xs">
+                A
+              </div>
+              <span className="text-[13px] font-semibold text-foreground">Acenta Master</span>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Partner inbox header badge */}
+            {/* Partner inbox */}
             <NavLink
               to="/app/partners"
               className={({ isActive }) =>
                 cn(
-                  "relative inline-flex items-center justify-center rounded-full border px-2 py-1 text-xs transition hover:bg-accent hover:text-foreground",
+                  "relative inline-flex items-center justify-center rounded-lg border px-2 py-1 text-xs transition hover:bg-accent hover:text-foreground",
                   isActive ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"
                 )
               }
             >
-              <Inbox className="h-4 w-4 mr-1" />
-              <span className="hidden sm:inline">Partner Gelen Kutusu</span>
+              <Inbox className="h-3.5 w-3.5 mr-1" />
+              <span className="hidden sm:inline text-[11px]">Partner</span>
               {partnerSummary?.counts?.invites_received > 0 && (
                 <UIBadge
                   variant="destructive"
@@ -262,479 +347,198 @@ export default function AppShell() {
               )}
             </NavLink>
 
+            {/* Notification bell */}
+            <button
+              onClick={() => setNotifOpen(true)}
+              className="relative inline-flex items-center justify-center h-8 w-8 rounded-lg border border-border text-muted-foreground hover:bg-accent hover:text-foreground transition"
+              data-testid="notif-bell"
+            >
+              <Bell className="h-4 w-4" />
+            </button>
+
             <ThemeToggle />
+
             <div className="hidden sm:block text-right">
-              <div className="text-sm font-medium text-foreground">{user?.name || user?.email}</div>
-              <div className="text-xs text-muted-foreground">{(user?.roles || []).join(", ")}</div>
+              <div className="text-[12px] font-medium text-foreground">{user?.name || user?.email}</div>
+              <div className="text-[10px] text-muted-foreground">{(user?.roles || []).join(", ")}</div>
             </div>
+
             <Button
               variant="outline"
               size="sm"
               data-testid="logout-btn"
-              onClick={() => {
-                clearToken();
-                window.location.href = "/login";
-              }}
-              className="gap-2"
+              onClick={() => { clearToken(); window.location.href = "/login"; }}
+              className="gap-1.5 h-8 text-[11px]"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-3.5 w-3.5" />
               Çıkış
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Mobile nav drawer */}
+      {/* ========== NOTIFICATION DRAWER ========== */}
+      <NotificationDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />
+
+      {/* ========== MOBILE NAV DRAWER ========== */}
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-        <SheetContent side="left" className="p-0" data-testid="mobile-nav-sheet">
-          <div className="border-b px-5 py-4">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground grid place-items-center font-semibold">
-                A
-              </div>
+        <SheetContent side="left" className="p-0 w-[280px]" data-testid="mobile-nav-sheet">
+          <div className="border-b px-4 py-3">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground grid place-items-center font-semibold text-xs">A</div>
               <div>
-                <div className="sr-only">Acenta Master</div>
-                <div className="text-xs text-muted-foreground">Menü</div>
+                <div className="text-[13px] font-semibold text-foreground">Acenta Master</div>
+                <div className="text-[10px] text-muted-foreground">{user?.email}</div>
               </div>
             </div>
           </div>
-
-          <div className="px-4 py-4 pb-32">
-            <div className="grid grid-cols-3 gap-2">
-              {isAgency ? (
-                <div className="rounded-xl border bg-background/50 p-2 opacity-70 cursor-default">
-                  <div className="text-[11px] text-muted-foreground">Toplam</div>
-                  <div className="text-sm font-semibold text-foreground">{sidebarStats.total}</div>
+          <div className="overflow-y-auto h-[calc(100vh-120px)] px-3 py-3">
+            {ADMIN_GROUPED_NAV.map((section) => (
+              <div key={section.group} className="mb-3">
+                <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
+                  {section.group}
                 </div>
-              ) : (
-                <NavLink
-                  to={isHotel ? "/app/hotel/bookings" : "/app"}
-                  onClick={() => setMobileNavOpen(false)}
-                  className={({ isActive }) =>
-                    cn(
-                      "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
-                      isActive ? "ring-1 ring-ring" : ""
-                    )
-                  }
-                >
-                  <div className="text-[11px] text-muted-foreground">Toplam</div>
-                  <div className="text-sm font-semibold text-foreground">{sidebarStats.total}</div>
-                </NavLink>
-              )}
-
-              {isAgency ? (
-                <div className="rounded-xl border bg-background/50 p-2 opacity-70 cursor-default">
-                  <div className="text-[11px] text-muted-foreground">Bekleyen</div>
-                  <div className="text-sm font-semibold text-foreground">{sidebarStats.pending}</div>
-                </div>
-              ) : (
-                <NavLink
-                  to={isHotel ? "/app/hotel/bookings?status=pending" : "/app"}
-                  onClick={() => setMobileNavOpen(false)}
-                  className={({ isActive }) =>
-                    cn(
-                      "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
-                      isActive ? "ring-1 ring-ring" : ""
-                    )
-                  }
-                >
-                  <div className="text-[11px] text-muted-foreground">Bekleyen</div>
-                  <div className="text-sm font-semibold text-foreground">{sidebarStats.pending}</div>
-                </NavLink>
-              )}
-
-              {isAgency ? (
-                <div className="rounded-xl border bg-background/50 p-2 opacity-70 cursor-default">
-                  <div className="text-[11px] text-muted-foreground">Ciro (7G)</div>
-                  <div className="text-sm font-semibold text-foreground">{formatMoneyCompact(sidebarStats.revenue7d, "TRY")}</div>
-                </div>
-              ) : (
-                <NavLink
-                  to={isHotel ? "/app/hotel/settlements" : "/app"}
-                  onClick={() => setMobileNavOpen(false)}
-                  className={({ isActive }) =>
-                    cn(
-                      "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
-                      isActive ? "ring-1 ring-ring" : ""
-                    )
-                  }
-                >
-                  <div className="text-[11px] text-muted-foreground">Ciro (7G)</div>
-                  <div className="text-sm font-semibold text-foreground">{formatMoneyCompact(sidebarStats.revenue7d, "TRY")}</div>
-                </NavLink>
-              )}
-            </div>
-
-            <div className="mt-4 rounded-2xl border bg-card p-2 shadow-sm">
-              {roleBasedMenu.map((section) => (
-                <div key={section.label} className="mb-3 last:mb-0">
-                  <div className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    {section.label}
-                  </div>
-                  {section.children.map((item) => {
-                    const Icon = iconMap[item.label] || Building2;
-                    return (
-                      <NavLink
-                        key={`rb-${item.path}`}
-                        to={item.path}
-                        end
-                        onClick={() => setMobileNavOpen(false)}
-                        className={({ isActive }) =>
-                          cn(
-                            "relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:shadow-sm",
-                            "border-l-4",
-                            isActive
-                              ? "bg-primary text-primary-foreground shadow border-primary"
-                              : "border-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
-                          )
-                        }
-                      >
-                        <Icon className="h-4 w-4" />
-                        {item.label}
-                      </NavLink>
-                    );
-                  })}
-                </div>
-              ))}
-
-              {/* Ops Tasks Section */}
-              <div className="mb-3">
-                <div className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Ops Queues
-                </div>
-                <NavLink
-                  to="/app/ops/tasks"
-                  end
-                  className={({ isActive }) =>
-                    cn(
-                      "relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:shadow-sm",
-                      "border-l-4",
-                      isActive
-                        ? "bg-primary text-primary-foreground shadow border-primary"
-                        : "border-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
-                    )
-                  }
-                >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <CalendarDays className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 overflow-hidden">
-                    <div className="truncate">Ops Tasks</div>
-                  </div>
-                </NavLink>
+                {section.items
+                  .filter((it) => !it.feature || (!featuresLoading && hasFeature(it.feature)))
+                  .map((item) => (
+                    <SidebarItem
+                      key={item.to}
+                      to={item.to}
+                      label={item.label}
+                      icon={item.icon}
+                      end={item.end}
+                      onClick={() => setMobileNavOpen(false)}
+                    />
+                  ))}
               </div>
-
-              {/* Ops Queues Section */}
-              <div className="mb-3">
-                <div className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Ops Queues
-                </div>
-                <NavLink
-                  to="/app/ops/tasks"
-                  end
-                  onClick={() => setMobileNavOpen(false)}
-                  className={({ isActive }) =>
-                    cn(
-                      "relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:shadow-sm",
-                      "border-l-4",
-                      isActive
-                        ? "bg-primary text-primary-foreground shadow border-primary"
-                        : "border-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
-                    )
-                  }
-                >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <CalendarDays className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 overflow-hidden">
-                    <div className="truncate">Ops Tasks</div>
-                  </div>
-                </NavLink>
-                <NavLink
-                  to="/app/ops/incidents"
-                  end
-                  onClick={() => setMobileNavOpen(false)}
-                  className={({ isActive }) =>
-                    cn(
-                      "relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:shadow-sm",
-                      "border-l-4",
-                      isActive
-                        ? "bg-primary text-primary-foreground shadow border-primary"
-                        : "border-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
-                    )
-                  }
-                >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <AlertTriangle className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 overflow-hidden">
-                    <div className="truncate">Ops Incidents</div>
-                  </div>
-                </NavLink>
-              </div>
-
-              {visibleLegacyNav.length > 0 && (roleBasedMenu.length > 0 || true) && (
-                <div className="my-2 border-t" />
-              )}
-
-              {visibleLegacyNav.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <NavLink
-                    key={`m-${item.to}`}
-                    to={item.to}
-                    end={item.to === "/app"}
-                    onClick={() => setMobileNavOpen(false)}
-                    className={({ isActive }) =>
-                      cn(
-                        "relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:shadow-sm",
-                        "border-l-4",
-                        isActive
-                          ? "bg-primary text-primary-foreground shadow border-primary"
-                          : "border-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
-                      )
-                    }
-                  >
-                    <Icon className="h-4 w-4" />
-                    {item.label}
-                  </NavLink>
-                );
-              })}
-            </div>
+            ))}
           </div>
-
-          <div className="fixed bottom-3 left-3 right-3 rounded-2xl border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 py-3 shadow-lg">
-            <div className="flex items-center justify-between gap-2">
-              <div className="text-xs text-muted-foreground truncate">{user?.email || ""}</div>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => setMobileNavOpen(false)} className="gap-2">
-                  Kapat
-                </Button>
-                <ThemeToggle testId="theme-toggle-mobile" />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setMobileNavOpen(false);
-                    clearToken();
-                    window.location.href = "/login";
-                  }}
-                  className="gap-2"
-                  data-testid="mobile-logout"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Çıkış
-                </Button>
-              </div>
-            </div>
+          <div className="border-t px-3 py-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full gap-2 text-[11px]"
+              onClick={() => { setMobileNavOpen(false); clearToken(); window.location.href = "/login"; }}
+              data-testid="mobile-logout"
+            >
+              <LogOut className="h-3.5 w-3.5" /> Çıkış
+            </Button>
           </div>
-
         </SheetContent>
       </Sheet>
 
+      {/* ========== MAIN LAYOUT ========== */}
+      <div className="flex">
+        {/* --- Desktop Sidebar --- */}
+        <aside
+          className={cn(
+            "hidden md:flex flex-col border-r bg-card/60 sticky top-[53px] h-[calc(100vh-53px)] transition-all duration-200 shrink-0",
+            collapsed ? "w-[56px]" : "w-[220px]"
+          )}
+          data-testid="sidebar"
+        >
+          {/* Collapse toggle */}
+          <div className="flex items-center justify-end px-2 py-1.5 border-b border-border/40">
+            <button
+              onClick={toggleCollapse}
+              className="h-7 w-7 rounded-md flex items-center justify-center hover:bg-muted/50 transition-colors text-muted-foreground"
+              data-testid="sidebar-toggle"
+              title={collapsed ? "Genişlet" : "Daralt"}
+            >
+              {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+            </button>
+          </div>
 
-      <div className="mx-auto grid max-w-7xl grid-cols-12 gap-4 px-4 py-6">
-        <aside className="col-span-12 md:col-span-3 lg:col-span-2 md:sticky md:top-[84px] md:h-[calc(100vh-104px)]">
-          <div className="rounded-2xl border bg-card/60 p-3 shadow-sm select-none">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground grid place-items-center font-semibold">
-                  A
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-foreground">Acenta Master</div>
-                  <div className="text-xs text-muted-foreground">Kurumsal Panel</div>
-                </div>
+          {/* Mini stats (only when expanded) */}
+          {!collapsed && (
+            <div className="grid grid-cols-3 gap-1 px-2 py-2 border-b border-border/40">
+              <div className="rounded-md bg-muted/30 p-1.5 text-center">
+                <div className="text-[9px] text-muted-foreground">Toplam</div>
+                <div className="text-[12px] font-semibold text-foreground" data-testid="sb-total">{sidebarStats.total}</div>
               </div>
-              <div className="hidden md:block h-2 w-2 rounded-full bg-emerald-500" title="Online" />
-            </div>
-
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              <div className="rounded-xl border bg-background/50 p-2 opacity-70 cursor-default">
-                <div className="text-[11px] text-muted-foreground">Toplam adet</div>
-                <div
-                  className="mt-1 text-sm font-semibold text-foreground truncate"
-                  title={sidebarStats.total?.toLocaleString("tr-TR")}
-                  data-testid="sb-total"
-                >
-                  {sidebarStats.total >= 1000
-                    ? `${(sidebarStats.total / (sidebarStats.total >= 1_000_000 ? 1_000_000 : 1_000)).toFixed(1)}${
-                        sidebarStats.total >= 1_000_000 ? "M" : "K"
-                      }`
-                    : sidebarStats.total}
-                </div>
+              <div className="rounded-md bg-muted/30 p-1.5 text-center">
+                <div className="text-[9px] text-muted-foreground">Bekleyen</div>
+                <div className="text-[12px] font-semibold text-foreground" data-testid="sb-pending">{sidebarStats.pending}</div>
               </div>
-
-              <div className="rounded-xl border bg-background/50 p-2 opacity-70 cursor-default">
-                <div className="text-[11px] text-muted-foreground">Bekleyen adet</div>
-                <div
-                  className="mt-1 text-sm font-semibold text-foreground truncate"
-                  title={sidebarStats.pending?.toLocaleString("tr-TR")}
-                  data-testid="sb-pending"
-                >
-                  {sidebarStats.pending >= 1000
-                    ? `${(sidebarStats.pending / (sidebarStats.pending >= 1_000_000 ? 1_000_000 : 1_000)).toFixed(1)}${
-                        sidebarStats.pending >= 1_000_000 ? "M" : "K"
-                      }`
-                    : sidebarStats.pending}
-                </div>
-              </div>
-
-              <div className="rounded-xl border bg-background/50 p-2 opacity-70 cursor-default">
-                <div className="text-[11px] text-muted-foreground">Ciro (7G, ₺)</div>
-                <div
-                  className="mt-1 text-sm font-semibold text-foreground truncate"
-                  title={formatMoney(sidebarStats.revenue7d, "TRY")}
-                  data-testid="sb-rev7"
-                >
-                  {formatMoneyCompact(sidebarStats.revenue7d, "TRY")}
-                </div>
+              <div className="rounded-md bg-muted/30 p-1.5 text-center">
+                <div className="text-[9px] text-muted-foreground">Ciro 7G</div>
+                <div className="text-[12px] font-semibold text-foreground" data-testid="sb-rev7">{formatMoneyCompact(sidebarStats.revenue7d, "TRY")}</div>
               </div>
             </div>
+          )}
 
-            <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-              <span>Rol: {(user?.roles || ["-"])[0]}</span>
-              <span>{new Date().toLocaleDateString("tr-TR")}</span>
-            </div>
-
-            <div className="mt-3">
-              <nav className="rounded-2xl border bg-card p-2 shadow-sm max-h-[calc(100vh-330px)] overflow-y-auto">
-                {[partnerSection, ...roleBasedMenu].map((section) => (
-                  <div key={section.label} className="mb-3 last:mb-0">
-                    <div className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      {section.label}
+          {/* Nav sections */}
+          <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-3">
+            {ADMIN_GROUPED_NAV.map((section) => {
+              const visibleItems = section.items.filter(
+                (it) => !it.feature || (!featuresLoading && hasFeature(it.feature))
+              );
+              if (!visibleItems.length) return null;
+              return (
+                <div key={section.group}>
+                  {!collapsed && (
+                    <div className="px-2 py-0.5 text-[9px] font-bold text-muted-foreground/60 uppercase tracking-wider">
+                      {section.group}
                     </div>
-                    {section.children.map((item) => {
-                      const Icon = iconMap[item.label] || Building2;
-                      return (
-                        <NavLink
-                          key={`d-${item.path}`}
-                          to={item.path}
-                          end
-                          className={({ isActive }) =>
-                            cn(
-                              "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:shadow-sm",
-                              isActive
-                                ? "bg-primary text-primary-foreground shadow"
-                                : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                            )
-                          }
-                        >
-                          <Icon className="h-4 w-4" />
-                          {item.label}
-                        </NavLink>
-                      );
-                    })}
+                  )}
+                  {collapsed && <div className="h-px bg-border/40 mx-1 my-1" />}
+                  <div className="space-y-0.5">
+                    {visibleItems.map((item) => (
+                      <SidebarItem
+                        key={item.to}
+                        to={item.to}
+                        label={item.label}
+                        icon={item.icon}
+                        collapsed={collapsed}
+                        end={item.end}
+                      />
+                    ))}
                   </div>
-                ))}
-
-                {/* Ops Queues Section */}
-                <div className="mb-3">
-                  <div className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Ops Queues
-                  </div>
-                  <NavLink
-                    to="/app/ops/tasks"
-                    end
-                    className={({ isActive }) =>
-                      cn(
-                        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:shadow-sm",
-                        isActive
-                          ? "bg-primary text-primary-foreground shadow"
-                          : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                      )
-                    }
-                  >
-                    <CalendarDays className="h-4 w-4" />
-                    Ops Tasks
-                  </NavLink>
-                  <NavLink
-                    to="/app/ops/incidents"
-                    end
-                    className={({ isActive }) =>
-                      cn(
-                        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:shadow-sm",
-                        isActive
-                          ? "bg-primary text-primary-foreground shadow"
-                          : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                      )
-                    }
-                  >
-                    <AlertTriangle className="h-4 w-4" />
-                    Ops Incidents
-                  </NavLink>
                 </div>
+              );
+            })}
+          </nav>
 
-                {visibleLegacyNav.length > 0 && (roleBasedMenu.length > 0 || true) && (
-                  <div className="my-2 border-t" />
-                )}
-
-                {visibleLegacyNav.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      end={item.to === "/app"}
-                      className={({ isActive }) =>
-                        cn(
-                          "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:shadow-sm",
-                          isActive
-                            ? "bg-primary text-primary-foreground shadow"
-                            : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                        )
-                      }
-                      data-testid={`nav-${item.label}`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {item.label}
-                    </NavLink>
-                  );
-                })}
-              </nav>
+          {/* Footer */}
+          {!collapsed && (
+            <div className="border-t border-border/40 px-3 py-2">
+              <div className="text-[9px] text-muted-foreground/50">
+                {(user?.roles || ["-"])[0]} · {new Date().toLocaleDateString("tr-TR")}
+              </div>
             </div>
-          </div>
-
-          <div className="mt-4 rounded-2xl border bg-card p-4 shadow-sm">
-            <div className="text-xs font-semibold text-foreground">Hızlı İpuçları</div>
-            <div className="mt-2 text-xs text-muted-foreground">
-              Müsaitlik ekranında kapasite ve fiyatı güncelleyip rezervasyon akışını
-              hızlıca test edebilirsin.
-            </div>
-          </div>
+          )}
         </aside>
 
-        <main className="col-span-12 md:col-span-9 lg:col-span-10 md:min-h-[calc(100vh-104px)]">
+        {/* --- Main Content --- */}
+        <main className="flex-1 min-h-[calc(100vh-53px)] overflow-auto">
           {quotaAlerts && quotaAlerts.length > 0 && (
             <div className="mx-4 mt-3 space-y-2" data-testid="quota-alert-banners">
               {quotaAlerts.map((q) => (
                 <div
                   key={q.metric}
-                  className={`rounded-lg border px-4 py-2.5 text-sm flex items-center justify-between ${
+                  className={`rounded-lg border px-4 py-2 text-[12px] flex items-center justify-between ${
                     q.exceeded
                       ? "border-destructive/40 bg-destructive/5 text-destructive"
                       : "border-amber-500/40 bg-amber-500/5 text-amber-700"
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 shrink-0" />
-                    <span>
-                      {q.exceeded ? "Quota aşıldı" : "Quota'ya yaklaşıyorsunuz"}: {q.used}/{q.quota} ({Math.round(q.ratio * 100)}%)
-                    </span>
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                    <span>{q.exceeded ? "Quota aşıldı" : "Quota'ya yaklaşıyorsunuz"}: {q.used}/{q.quota} ({Math.round(q.ratio * 100)}%)</span>
                   </div>
-                  {q.recommendation && (
-                    <span className="text-xs font-medium shrink-0 ml-3">{q.recommendation}</span>
-                  )}
+                  {q.recommendation && <span className="text-[10px] font-medium shrink-0 ml-3">{q.recommendation}</span>}
                 </div>
               ))}
             </div>
           )}
-          <Outlet />
+          <div className="p-4 md:p-6 max-w-[1400px]">
+            <Outlet />
+          </div>
         </main>
       </div>
 
       <footer className="border-t bg-background">
-        <div className="mx-auto max-w-7xl px-4 py-4 text-xs text-muted-foreground">
+        <div className="px-4 py-3 text-[10px] text-muted-foreground">
           © {new Date().getFullYear()} — v1
         </div>
       </footer>

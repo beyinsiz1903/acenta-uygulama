@@ -452,3 +452,72 @@ async def test_b2b_invalid_status_completed_cannot_change(
     error = body.get("error") or {}
     assert error.get("code") == "invalid_status_transition", body
 
+
+@pytest.mark.anyio
+async def test_b2b_feature_flag_enforcement(
+  seller_client: AsyncClient,
+  test_db,
+  seller_tenant,
+) -> None:
+  """When tenant_features for the current tenant DO NOT include 'b2b', 
+  all /api/b2b/* endpoints return 403 with error.code == 'feature_not_enabled'.
+  
+  This test verifies that the @require_tenant_feature("b2b") decorator
+  properly blocks access when the tenant doesn't have the b2b feature enabled.
+  """
+  
+  # 1) Clear tenant_features for seller_tenant to ensure no "b2b" feature
+  await clear_tenant_features(test_db, str(seller_tenant["_id"]))
+  
+  # 2) Try to call GET /api/b2b/listings/available - should return 403
+  available_resp = await seller_client.get(AVAILABLE_PATH)
+  assert available_resp.status_code == 403, available_resp.text
+  body = available_resp.json()
+  error = body.get("error") or {}
+  assert error.get("code") == "feature_not_enabled", body
+  
+  # 3) Try to call POST /api/b2b/listings - should return 403
+  create_listing_resp = await seller_client.post(
+    LISTINGS_PATH,
+    json={
+      "title": "Test Listing",
+      "base_price": 1000.0,
+      "provider_commission_rate": 15.0,
+    },
+  )
+  assert create_listing_resp.status_code == 403, create_listing_resp.text
+  body = create_listing_resp.json()
+  error = body.get("error") or {}
+  assert error.get("code") == "feature_not_enabled", body
+  
+  # 4) Try to call GET /api/b2b/listings/my - should return 403
+  my_listings_resp = await seller_client.get(f"{LISTINGS_PATH}/my")
+  assert my_listings_resp.status_code == 403, my_listings_resp.text
+  body = my_listings_resp.json()
+  error = body.get("error") or {}
+  assert error.get("code") == "feature_not_enabled", body
+  
+  # 5) Try to call POST /api/b2b/match-request - should return 403
+  match_request_resp = await seller_client.post(
+    MATCH_REQUEST_PATH,
+    json={"listing_id": "lst_dummy", "requested_price": 1200.0},
+  )
+  assert match_request_resp.status_code == 403, match_request_resp.text
+  body = match_request_resp.json()
+  error = body.get("error") or {}
+  assert error.get("code") == "feature_not_enabled", body
+  
+  # 6) Try to call GET /api/b2b/match-request/my - should return 403
+  my_matches_resp = await seller_client.get(f"{MATCH_REQUEST_PATH}/my")
+  assert my_matches_resp.status_code == 403, my_matches_resp.text
+  body = my_matches_resp.json()
+  error = body.get("error") or {}
+  assert error.get("code") == "feature_not_enabled", body
+  
+  # 7) Try to call GET /api/b2b/match-request/incoming - should return 403
+  incoming_matches_resp = await seller_client.get(f"{MATCH_REQUEST_PATH}/incoming")
+  assert incoming_matches_resp.status_code == 403, incoming_matches_resp.text
+  body = incoming_matches_resp.json()
+  error = body.get("error") or {}
+  assert error.get("code") == "feature_not_enabled", body
+

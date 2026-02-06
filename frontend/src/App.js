@@ -309,7 +309,8 @@ function App() {
           <Route path="customers" element={<CustomersPage />} />
           <Route path="b2b" element={<B2BPage />} />
           <Route path="b2b-book" element={<B2BBookingPage />} />
-          <Route path="reports" element={<ReportsPage />} />
+          <Route path="reports" element={<AdvancedReportsPage />} />
+          <Route path="finance/webpos" element={<WebPOSPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="inbox" element={<InboxPage />} />
           <Route path="partners" element={<PartnerLayout />}>

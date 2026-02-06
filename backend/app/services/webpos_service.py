@@ -51,6 +51,7 @@ class WebPOSService:
             "method": method,
             "description": description or "",
             "status": "recorded",
+            "idempotency_key": idempotency_key,
             "created_at": now,
             "created_by": actor_email,
         }

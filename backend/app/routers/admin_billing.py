@@ -187,6 +187,10 @@ async def admin_finalize_period(
     after={"pushed": pushed, "errors": errors, "pending_after": pending_after, "period": period, "status": status},
   )
 
+  # Slack alert on issues
+  from app.billing.notifier import send_finalize_alert
+  await send_finalize_alert({"period": period, "status": status, "pushed": pushed, "errors": errors, "pending_after": pending_after})
+
   return {
     "period": period,
     "status": status,

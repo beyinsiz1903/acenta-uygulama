@@ -46,13 +46,16 @@ class DealOut(BaseModel):
     organization_id: str
     customer_id: Optional[str] = None
     title: Optional[str] = None
-    stage: Literal["new", "qualified", "quoted", "won", "lost"] = "new"
-    status: Literal["open", "won", "lost"] = "open"
+    stage: str = "lead"
+    status: str = "open"
     amount: Optional[float] = None
     currency: Optional[str] = None
     owner_user_id: Optional[str] = None
     expected_close_date: Optional[datetime] = None
+    next_action_at: Optional[datetime] = None
     won_booking_id: Optional[str] = None
+    tenant_id: Optional[str] = None
+    source: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
@@ -60,20 +63,23 @@ class DealOut(BaseModel):
 class DealCreate(BaseModel):
     customer_id: Optional[str] = None
     title: Optional[constr(strip_whitespace=True, min_length=1)] = None
+    stage: Optional[str] = "lead"
     amount: Optional[float] = None
     currency: Optional[str] = None
     owner_user_id: Optional[str] = None
+    next_action_at: Optional[datetime] = None
 
 
 class DealPatch(BaseModel):
     customer_id: Optional[str] = None
     title: Optional[constr(strip_whitespace=True, min_length=1)] = None
-    stage: Optional[Literal["new", "qualified", "quoted", "won", "lost"]] = None
-    status: Optional[Literal["open", "won", "lost"]] = None
+    stage: Optional[str] = None
+    status: Optional[str] = None
     amount: Optional[float] = None
     currency: Optional[str] = None
     owner_user_id: Optional[str] = None
     expected_close_date: Optional[datetime] = None
+    next_action_at: Optional[datetime] = None
 
 
 class TaskOut(BaseModel):

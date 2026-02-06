@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 from typing import Any, Callable, Coroutine, Optional, TypeVar
 
 from fastapi import Depends
@@ -21,11 +22,9 @@ def require_tenant_feature(feature_key: str) -> Callable[[Callable[..., Coroutin
   """
 
   def decorator(func: Callable[..., Coroutine[Any, Any, T]]) -> Callable[..., Coroutine[Any, Any, T]]:
-    async def wrapper(
-      *args: Any,
-      **kwargs: Any,
-    ) -> T:
-      # Extract tenant_ctx from kwargs if it exists, otherwise get it via dependency
+    @functools.wraps(func)
+    async def wrapper(*args: Any, **kwargs: Any) -> T:
+      # Extract tenant_ctx from kwargs - it should be injected by FastAPI dependency
       tenant_ctx = kwargs.get('tenant_ctx')
       if tenant_ctx is None:
         # This should not happen in normal operation since the dependency should inject it

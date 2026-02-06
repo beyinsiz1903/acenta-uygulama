@@ -663,7 +663,7 @@ export default function PartnerB2BNetworkPage() {
               )}
               {!myListingsLoading && !providerHasListings && !myListingsError && (
                 <p className="text-[11px] text-muted-foreground">
-                  Henüz tur listelemediniz. "Yeni Listing" ile başlayın.
+                  Henüz tur listelemediniz. &quot;Yeni Listing&quot; ile başlayın.
                 </p>
               )}
               {providerHasListings && (

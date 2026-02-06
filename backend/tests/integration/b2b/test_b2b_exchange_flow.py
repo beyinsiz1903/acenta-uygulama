@@ -150,6 +150,91 @@ async def test_b2b_not_active_partner_cannot_see_or_request(
   seller_client: AsyncClient,
   test_db,
   provider_tenant,
+
+
+@pytest.mark.anyio
+async def test_b2b_cross_org_cannot_see_or_request(
+  provider_client: AsyncClient,
+  other_client: AsyncClient,
+) -> None:
+  """Cross-org tenant cannot see or request another org's listing.
+
+  - Provider in org A creates listing
+  - Tenant in org B calls /listings/available -> listing not visible
+  - Tenant in org B calls /match-request -> not_active_partner
+  """
+
+  # Provider (org A) creates listing
+  create_resp = await provider_client.post(
+    LISTINGS_PATH,
+    json={
+      "title": "Cross-org Listing",
+      "base_price": 800.0,
+      "provider_commission_rate": 10.0,
+    },
+  )
+  assert create_resp.status_code == 200, create_resp.text
+  listing = create_resp.json()
+
+  # Cross-org tenant should not see listing in /available
+  available_resp = await other_client.get(AVAILABLE_PATH)
+  assert available_resp.status_code == 200, available_resp.text
+  available = available_resp.json()
+  assert all(item["id"] != listing["id"] for item in available)
+
+  # Cross-org tenant trying to create match-request should get not_active_partner
+  match_resp = await other_client.post(
+    MATCH_REQUEST_PATH,
+    json={"listing_id": listing["id"], "requested_price": 950.0},
+  )
+  assert match_resp.status_code in (400, 403, 422), match_resp.text
+  body = match_resp.json()
+  error = body.get("error") or {}
+  assert error.get("code") == "not_active_partner", body
+
+
+@pytest.mark.anyio
+async def test_b2b_third_tenant_cannot_approve_match(
+  provider_client: AsyncClient,
+  seller_client: AsyncClient,
+  third_client: AsyncClient,
+  partner_relationship_active: Dict[str, Any],
+) -> None:
+  """Third tenant (no provider role on match) cannot approve another tenant's match.
+
+  - Provider A creates listing
+  - Seller B creates match request
+  - Third tenant C attempts to approve -> 403 forbidden
+  """
+
+  # 1) Provider creates listing
+  create_resp = await provider_client.post(
+    LISTINGS_PATH,
+    json={
+      "title": "Approval Isolation Listing",
+      "base_price": 700.0,
+      "provider_commission_rate": 10.0,
+    },
+  )
+  assert create_resp.status_code == 200, create_resp.text
+  listing = create_resp.json()
+
+  # 2) Seller creates match request
+  match_resp = await seller_client.post(
+    MATCH_REQUEST_PATH,
+    json={"listing_id": listing["id"], "requested_price": 750.0},
+  )
+  assert match_resp.status_code == 200, match_resp.text
+  match = match_resp.json()
+
+  # 3) Third tenant tries to approve -> should be forbidden
+  approve_resp = await third_client.patch(f"{MATCH_REQUEST_PATH}/{match['id']}/approve")
+  assert approve_resp.status_code == 403, approve_resp.text
+  body = approve_resp.json()
+  error = body.get("error") or {}
+  assert error.get("code") == "forbidden", body
+
+
   seller_tenant,
 ) -> None:
   """Non-active partner relationship should block visibility and match requests.

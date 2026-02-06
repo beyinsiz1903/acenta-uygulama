@@ -182,6 +182,158 @@ async def seller_client(app_with_overrides, seller_token: str, seller_tenant, se
 
 
 @pytest.fixture
+async def other_org(test_db) -> dict:
+  """Second organization for cross-org isolation tests."""
+  now = datetime.now(timezone.utc)
+  doc = {
+    "_id": ObjectId(),
+    "name": "B2B Other Org",
+    "slug": "b2b-other-org",
+    "created_at": now,
+    "updated_at": now,
+  }
+  await test_db.organizations.insert_one(doc)
+  return doc
+
+
+@pytest.fixture
+async def other_tenant(test_db, other_org) -> dict:
+  doc = {
+    "_id": ObjectId(),
+    "organization_id": str(other_org["_id"]),
+    "name": "B2B Other Tenant",
+    "slug": "b2b-other-tenant",
+    "status": "active",
+    "is_active": True,
+    "created_at": datetime.now(timezone.utc),
+    "updated_at": datetime.now(timezone.utc),
+  }
+  await test_db.tenants.insert_one(doc)
+  return doc
+
+
+@pytest.fixture
+async def other_user(test_db, other_org) -> dict:
+  email = "other-b2b@test.local"
+  roles = ["agency_admin"]
+  assert any(r in ALLOWED_B2B_ROLES for r in roles), "other_user must have B2B-allowed role"
+
+  doc = {
+    "_id": ObjectId(),
+    "organization_id": str(other_org["_id"]),
+    "email": email,
+    "name": "Other B2B User",
+    "roles": roles,
+    "is_active": True,
+    "created_at": datetime.now(timezone.utc),
+    "updated_at": datetime.now(timezone.utc),
+  }
+  await test_db.users.insert_one(doc)
+  return doc
+
+
+@pytest.fixture
+async def other_membership(test_db, other_user, other_tenant) -> str:
+  repo = MembershipRepository(test_db)
+  payload = {
+    "user_id": str(other_user["_id"]),
+    "tenant_id": str(other_tenant["_id"]),
+    "status": "active",
+    "created_at": datetime.now(timezone.utc),
+    "updated_at": datetime.now(timezone.utc),
+  }
+  return await repo.upsert_membership(payload)
+
+
+@pytest.fixture
+async def other_token(other_user, other_org) -> str:
+  return await _make_token(other_user["email"], other_org["_id"], other_user["roles"])
+
+
+@pytest.fixture
+async def other_client(app_with_overrides, other_token: str, other_tenant, other_membership) -> AsyncGenerator[AsyncClient, None]:
+  from httpx import ASGITransport
+
+  headers = {
+    "Authorization": f"Bearer {other_token}",
+    "X-Tenant-Id": str(other_tenant["_id"]),
+  }
+  transport = ASGITransport(app=app_with_overrides)
+  async with AsyncClient(transport=transport, base_url="http://test", timeout=30.0, headers=headers) as client:
+    yield client
+
+
+@pytest.fixture
+async def third_tenant(test_db, org) -> dict:
+  """Third tenant in same org for cross-tenant isolation tests."""
+  doc = {
+    "_id": ObjectId(),
+    "organization_id": str(org["_id"]),
+    "name": "B2B Third Tenant",
+    "slug": "b2b-third-tenant",
+    "status": "active",
+    "is_active": True,
+    "created_at": datetime.now(timezone.utc),
+    "updated_at": datetime.now(timezone.utc),
+  }
+  await test_db.tenants.insert_one(doc)
+  return doc
+
+
+@pytest.fixture
+async def third_user(test_db, org) -> dict:
+  email = "third-b2b@test.local"
+  roles = ["agency_admin"]
+  assert any(r in ALLOWED_B2B_ROLES for r in roles), "third_user must have B2B-allowed role"
+
+  doc = {
+    "_id": ObjectId(),
+    "organization_id": str(org["_id"]),
+    "email": email,
+    "name": "Third B2B User",
+    "roles": roles,
+    "is_active": True,
+    "created_at": datetime.now(timezone.utc),
+    "updated_at": datetime.now(timezone.utc),
+  }
+  await test_db.users.insert_one(doc)
+  return doc
+
+
+@pytest.fixture
+async def third_membership(test_db, third_user, third_tenant) -> str:
+  repo = MembershipRepository(test_db)
+  payload = {
+    "user_id": str(third_user["_id"]),
+    "tenant_id": str(third_tenant["_id"]),
+    "status": "active",
+    "created_at": datetime.now(timezone.utc),
+    "updated_at": datetime.now(timezone.utc),
+  }
+  return await repo.upsert_membership(payload)
+
+
+@pytest.fixture
+async def third_token(third_user, org) -> str:
+  return await _make_token(third_user["email"], org["_id"], third_user["roles"])
+
+
+@pytest.fixture
+async def third_client(app_with_overrides, third_token: str, third_tenant, third_membership) -> AsyncGenerator[AsyncClient, None]:
+  from httpx import ASGITransport
+
+  headers = {
+    "Authorization": f"Bearer {third_token}",
+    "X-Tenant-Id": str(third_tenant["_id"]),
+  }
+  transport = ASGITransport(app=app_with_overrides)
+  async with AsyncClient(transport=transport, base_url="http://test", timeout=30.0, headers=headers) as client:
+    yield client
+
+
+
+
+@pytest.fixture
 async def partner_relationship_active(test_db, org, provider_tenant, seller_tenant) -> dict:
   """Active partner relationship between provider_tenant and seller_tenant.
 

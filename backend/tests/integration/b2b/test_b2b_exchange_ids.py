@@ -63,6 +63,7 @@ async def test_match_id_prefix_and_no_internal_fields_leak(
   provider_client: AsyncClient,
   seller_client: AsyncClient,
   partner_relationship_active: Dict[str, Any],
+  enable_b2b_features,
 ) -> None:
   """Match id'leri mreq_* formatında olmalı ve internal alanlar sızmamalı.
 

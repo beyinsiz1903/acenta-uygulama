@@ -132,3 +132,107 @@ async def http_link_booking(
         raise HTTPException(status_code=404, detail="Deal not found")
 
     return updated
+
+
+# ─── GET single deal ──────────────────────────────────────────────
+@router.get("/{deal_id}")
+async def http_get_deal(
+    deal_id: str,
+    db=Depends(get_db),
+    current_user: dict = Depends(require_roles(["agency_agent", "super_admin"])),
+):
+    org_id = current_user.get("organization_id")
+    deal = await get_deal(db, org_id, deal_id)
+    if not deal:
+        raise HTTPException(status_code=404, detail="Deal not found")
+    return deal
+
+
+# ─── PUT /{deal_id} ──────────────────────────────────────────────
+@router.put("/{deal_id}")
+async def http_update_deal(
+    deal_id: str,
+    body: DealPatch,
+    request: Request,
+    db=Depends(get_db),
+    current_user: dict = Depends(require_roles(["agency_agent", "super_admin"])),
+):
+    org_id = current_user.get("organization_id")
+    patch_dict = body.model_dump(exclude_unset=True)
+    updated = await patch_deal(db, org_id, deal_id, patch_dict)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Deal not found")
+    return updated
+
+
+# ─── POST /{deal_id}/move-stage ──────────────────────────────────
+class MoveStageRequest(BaseModel):
+    stage: str
+
+
+@router.post("/{deal_id}/move-stage")
+async def http_move_stage(
+    deal_id: str,
+    body: MoveStageRequest,
+    request: Request,
+    db=Depends(get_db),
+    current_user: dict = Depends(require_roles(["agency_agent", "super_admin"])),
+):
+    """Move a deal to a new pipeline stage with audit logging."""
+    org_id = current_user.get("organization_id")
+    user_id = current_user.get("id") or current_user.get("email")
+
+    if body.stage not in VALID_STAGES:
+        raise HTTPException(status_code=400, detail=f"Invalid stage: {body.stage}. Valid: {VALID_STAGES}")
+
+    # Get current deal
+    deal = await get_deal(db, org_id, deal_id)
+    if not deal:
+        raise HTTPException(status_code=404, detail="Deal not found")
+
+    old_stage = deal.get("stage")
+    new_stage = body.stage
+
+    # Determine new status
+    new_status = "open"
+    if new_stage == "won":
+        new_status = "won"
+    elif new_stage == "lost":
+        new_status = "lost"
+
+    updated = await patch_deal(db, org_id, deal_id, {"stage": new_stage, "status": new_status})
+    if not updated:
+        raise HTTPException(status_code=404, detail="Deal not found after update")
+
+    # Audit log for stage change
+    try:
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={"actor_type": "user", "actor_id": str(user_id), "email": current_user.get("email"), "roles": current_user.get("roles", [])},
+            request=request,
+            action="crm.deal_stage_changed",
+            target_type="crm_deal",
+            target_id=deal_id,
+            before={"stage": old_stage},
+            after={"stage": new_stage},
+            meta={"old_stage": old_stage, "new_stage": new_stage},
+        )
+    except Exception as e:
+        logger.warning("Audit log failed for deal stage change: %s", e)
+
+    # CRM event
+    try:
+        from app.services.crm_events import log_crm_event
+        await log_crm_event(
+            db, org_id,
+            entity_type="deal", entity_id=deal_id,
+            action="stage_changed",
+            payload={"old_stage": old_stage, "new_stage": new_stage},
+            actor={"id": user_id, "roles": current_user.get("roles") or []},
+            source="api",
+        )
+    except Exception as e:
+        logger.warning("CRM event failed: %s", e)
+
+    return updated

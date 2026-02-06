@@ -159,8 +159,8 @@ export default function AdminAuditLogPage() {
                   </td>
                 </tr>
               ) : (
-                logs.map((log) => (
-                  <tr key={log.id} className="border-t hover:bg-muted/30">
+                logs.map((log, idx) => (
+                  <tr key={log.id || `log_${idx}`} className="border-t hover:bg-muted/30">
                     <td className="px-4 py-2.5 whitespace-nowrap text-xs">{formatDate(log.created_at)}</td>
                     <td className="px-4 py-2.5">
                       <Badge variant="outline" className="text-[11px]">{log.action}</Badge>

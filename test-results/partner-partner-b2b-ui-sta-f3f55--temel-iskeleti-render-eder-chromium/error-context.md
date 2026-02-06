@@ -2,23 +2,140 @@
 
 ```yaml
 - generic [ref=e2]:
-  - generic [ref=e4]:
+  - generic [ref=e3]:
     - generic [ref=e5]:
-      - generic [ref=e6]: A
-      - heading "Acenta Master" [level=1] [ref=e7]
-      - paragraph [ref=e8]: Acenta operasyonlarını tek panelden yönet.
-    - generic [ref=e9]:
-      - generic [ref=e11]: Giriş Yap
-      - generic [ref=e13]:
-        - generic [ref=e14]:
-          - text: Email
-          - textbox "Email" [ref=e15]:
-            - /placeholder: ornek@acenta.com
-            - text: admin@acenta.test
-        - generic [ref=e16]:
-          - text: Şifre
-          - textbox "Şifre" [ref=e17]: admin123
-        - button "Giriş Yap" [ref=e18] [cursor=pointer]
-        - generic [ref=e19]: "Demo: admin@acenta.test / admin123"
+      - generic [ref=e6]: Acenta Master
+      - generic [ref=e7]:
+        - link "Partner Gelen Kutusu" [ref=e8] [cursor=pointer]:
+          - /url: /app/partners
+          - img [ref=e9]
+          - generic [ref=e12]: Partner Gelen Kutusu
+        - button "Tema" [ref=e13] [cursor=pointer]:
+          - img
+          - generic [ref=e14]: Tema
+        - generic [ref=e15]:
+          - generic [ref=e16]: B2B Agency 1
+          - generic [ref=e17]: agency_admin
+        - button "Çıkış" [ref=e18] [cursor=pointer]:
+          - img
+          - text: Çıkış
+    - generic [ref=e19]:
+      - complementary [ref=e20]:
+        - generic [ref=e21]:
+          - generic [ref=e22]:
+            - generic [ref=e23]:
+              - generic [ref=e24]: A
+              - generic [ref=e25]:
+                - generic [ref=e26]: Acenta Master
+                - generic [ref=e27]: Kurumsal Panel
+            - generic "Online" [ref=e28]
+          - generic [ref=e29]:
+            - generic [ref=e30]:
+              - generic [ref=e31]: Toplam adet
+              - generic "0" [ref=e32]
+            - generic [ref=e33]:
+              - generic [ref=e34]: Bekleyen adet
+              - generic "0" [ref=e35]
+            - generic [ref=e36]:
+              - generic [ref=e37]: Ciro (7G, ₺)
+              - generic "₺0,00" [ref=e38]: ₺0
+          - generic [ref=e39]:
+            - generic [ref=e40]: "Rol: agency_admin"
+            - generic [ref=e41]: 06.02.2026
+          - navigation [ref=e43]:
+            - generic [ref=e44]:
+              - generic [ref=e45]: Partners
+              - link "Genel Bakış" [ref=e46] [cursor=pointer]:
+                - /url: /app/partners
+                - img [ref=e47]
+                - text: Genel Bakış
+            - generic [ref=e51]:
+              - generic [ref=e52]: B2B
+              - link "Otellerim" [ref=e53] [cursor=pointer]:
+                - /url: /app/agency/hotels
+                - img [ref=e54]
+                - text: Otellerim
+              - link "Rezervasyonlarım" [ref=e57] [cursor=pointer]:
+                - /url: /app/agency/bookings
+                - img [ref=e58]
+                - text: Rezervasyonlarım
+              - link "Mutabakat" [ref=e62] [cursor=pointer]:
+                - /url: /app/agency/settlements
+                - img [ref=e63]
+                - text: Mutabakat
+              - link "Yardım" [ref=e66] [cursor=pointer]:
+                - /url: /app/agency/help
+                - img [ref=e67]
+                - text: Yardım
+            - generic [ref=e71]:
+              - generic [ref=e72]: Ops Queues
+              - link "Ops Tasks" [ref=e73] [cursor=pointer]:
+                - /url: /app/ops/tasks
+                - img [ref=e74]
+                - text: Ops Tasks
+              - link "Ops Incidents" [ref=e76] [cursor=pointer]:
+                - /url: /app/ops/incidents
+                - img [ref=e77]
+                - text: Ops Incidents
+        - generic [ref=e79]:
+          - generic [ref=e80]: Hızlı İpuçları
+          - generic [ref=e81]: Müsaitlik ekranında kapasite ve fiyatı güncelleyip rezervasyon akışını hızlıca test edebilirsin.
+      - main [ref=e82]:
+        - generic [ref=e83]:
+          - generic [ref=e84]:
+            - heading "Partners" [level=1] [ref=e85]
+            - paragraph [ref=e86]: Partner davetleri, ilişkiler ve mutabakatları buradan yönetin.
+          - navigation [ref=e87]:
+            - generic [ref=e88]:
+              - generic [ref=e90]:
+                - generic [ref=e91]: Genel
+                - link "Genel Bakış" [ref=e93] [cursor=pointer]:
+                  - /url: /app/partners
+              - generic [ref=e96]:
+                - generic [ref=e97]: Operasyon
+                - generic [ref=e98]:
+                  - link "Gelen Kutusu" [ref=e99] [cursor=pointer]:
+                    - /url: /app/partners/inbox
+                  - link "Davetler" [ref=e100] [cursor=pointer]:
+                    - /url: /app/partners/invites
+                  - link "İlişkiler" [ref=e101] [cursor=pointer]:
+                    - /url: /app/partners/relationships
+              - generic [ref=e104]:
+                - generic [ref=e105]: Büyütme
+                - generic [ref=e106]:
+                  - link "Keşfet" [ref=e107] [cursor=pointer]:
+                    - /url: /app/partners/discovery
+                  - link "B2B Ağ" [ref=e108] [cursor=pointer]:
+                    - /url: /app/partners/b2b
+              - generic [ref=e111]:
+                - generic [ref=e112]: Finans
+                - link "Mutabakat" [ref=e114] [cursor=pointer]:
+                  - /url: /app/partners/statements
+          - generic [ref=e116]:
+            - generic [ref=e117]:
+              - img [ref=e118]
+              - generic [ref=e123]:
+                - heading "B2B Ağ" [level=1] [ref=e124]
+                - paragraph [ref=e125]: Aktif partner ilişkileriniz üzerinden listing yayınlayın veya diğer sağlayıcıların listinglerine talep gönderin.
+            - generic [ref=e127]:
+              - generic [ref=e128]:
+                - img [ref=e129]
+                - generic [ref=e132]: Mod
+              - generic [ref=e133]:
+                - button "Satıcı" [ref=e134] [cursor=pointer]
+                - button "Sağlayıcı" [ref=e135] [cursor=pointer]
+            - generic [ref=e136]:
+              - generic [ref=e137]:
+                - generic [ref=e139]:
+                  - generic [ref=e140]: Müsait Listingler
+                  - paragraph [ref=e141]: Aktif partner ilişkileriniz olan sağlayıcıların yayınladığı listingler.
+                - paragraph [ref=e143]: Request failed with status code 403
+              - generic [ref=e144]:
+                - generic [ref=e146]:
+                  - generic [ref=e147]: Taleplerim
+                  - paragraph [ref=e148]: Diğer sağlayıcıların listingleri için gönderdiğiniz talepler.
+                - paragraph [ref=e150]: Request failed with status code 403
+    - contentinfo [ref=e151]:
+      - generic [ref=e152]: © 2026 — v1
   - region "Notifications alt+T"
 ```

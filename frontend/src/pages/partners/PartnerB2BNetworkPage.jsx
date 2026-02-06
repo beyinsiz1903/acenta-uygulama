@@ -45,10 +45,12 @@ async function copyToClipboard(text, toast) {
   try {
     if (navigator?.clipboard?.writeText) {
       await navigator.clipboard.writeText(text);
-      toast?.({ description: "ID panoya kopyalandı." });
+      toast?.({ description: "Kopyalandı" });
+      return;
     }
+    throw new Error("clipboard_not_available");
   } catch {
-    // kritik değil
+    toast?.({ variant: "destructive", description: "Kopyalanamadı" });
   }
 }
 
@@ -160,17 +162,57 @@ export default function PartnerB2BNetworkPage() {
   const [listingSubmitting, setListingSubmitting] = useState(false);
   const [listingModalError, setListingModalError] = useState("");
 
+  const [sellerStatusFilter, setSellerStatusFilter] = useState("all");
+  const [providerStatusFilter, setProviderStatusFilter] = useState("all");
+
+
   const [busyMatchId, setBusyMatchId] = useState(null);
   const [busyMatchAction, setBusyMatchAction] = useState(null);
 
   // Derived maps
   const listingTitleById = useMemo(() => {
+  const sortedAvailableListings = useMemo(() => {
+    const items = Array.isArray(availableListings) ? [...availableListings] : [];
+    return items.sort(
+      (a, b) => new Date(b.created_at || b.updated_at || 0) - new Date(a.created_at || a.updated_at || 0),
+    );
+  }, [availableListings]);
+
+  const sortedMyListings = useMemo(() => {
+    const items = Array.isArray(myListings) ? [...myListings] : [];
+    return items.sort(
+      (a, b) => new Date(b.created_at || b.updated_at || 0) - new Date(a.created_at || a.updated_at || 0),
+    );
+  }, [myListings]);
+
+  const sortedMyRequests = useMemo(() => {
+    const items = Array.isArray(myRequests) ? [...myRequests] : [];
+    items.sort(
+      (a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0),
+    );
+    if (sellerStatusFilter === "all") return items;
+    return items.filter((r) => (r.status || "").toLowerCase() === sellerStatusFilter);
+  }, [myRequests, sellerStatusFilter]);
+
+  const sortedIncomingRequests = useMemo(() => {
+    const items = Array.isArray(incomingRequests) ? [...incomingRequests] : [];
+    items.sort(
+      (a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0),
+    );
+    if (providerStatusFilter === "all") return items;
+    return items.filter((r) => (r.status || "").toLowerCase() === providerStatusFilter);
+  }, [incomingRequests, providerStatusFilter]);
+
+
     const map = {};
     (myListings || []).forEach((l) => {
       if (l?.id) map[l.id] = l.title || l.id;
     });
+    (availableListings || []).forEach((l) => {
+      if (l?.id && !map[l.id]) map[l.id] = l.title || l.id;
+    });
     return map;
-  }, [myListings]);
+  }, [myListings, availableListings]);
 
   const loadAvailableListings = useCallback(async () => {
     setAvailableLoading(true);

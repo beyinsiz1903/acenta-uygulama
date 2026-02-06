@@ -257,6 +257,7 @@ async def test_b2b_third_tenant_cannot_approve_match(
   seller_client: AsyncClient,
   third_client: AsyncClient,
   partner_relationship_active: Dict[str, Any],
+  enable_b2b_features_all,
 ) -> None:
   """Third tenant (no provider role on match) cannot approve another tenant's match.
 

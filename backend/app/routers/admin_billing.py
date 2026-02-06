@@ -9,6 +9,7 @@ from app.auth import get_current_user, require_roles
 from app.constants.plan_matrix import VALID_PLANS
 from app.repositories.billing_repository import billing_repo
 from app.services.subscription_manager import subscription_manager
+from app.services.usage_service import get_usage_summary, check_quota
 
 router = APIRouter(prefix="/api/admin/billing", tags=["admin_billing"])
 

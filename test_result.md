@@ -178,7 +178,7 @@ backend:
         comment: "Notes attached to customer/deal/reservation/payment. List + Create with audit."
       - working: true
         agent: "testing"
-        comment: "✅ WORKING: POST creates note with entity_type='deal', entity_id='test123'. GET with query filters ?entity_type=deal&entity_id=test123 returns the created note. Audit logging working."
+        comment: "✅ WORKING: POST /api/crm/notes creates note with entity_type='deal' and entity_id='test-123'. GET /api/crm/notes with filters correctly returns the created note. Audit logging working."
 
   - task: "Automation Rules (trigger-checks extended)"
     implemented: true

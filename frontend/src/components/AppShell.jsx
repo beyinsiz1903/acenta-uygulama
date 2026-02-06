@@ -160,6 +160,7 @@ const ADMIN_GROUPED_NAV = [
       { to: "/app/admin/links", label: "Linkler", icon: LinkIcon },
       { to: "/app/admin/cms/pages", label: "CMS", icon: BookOpen },
       { to: "/app/admin/tenant-features", label: "Tenant Ayarları", icon: Zap },
+      { to: "/app/admin/tenant-health", label: "Tenant Sağlık", icon: Activity },
       { to: "/app/admin/audit-logs", label: "Audit Log", icon: Eye },
       { to: "/app/settings", label: "Ayarlar", icon: Settings },
     ],

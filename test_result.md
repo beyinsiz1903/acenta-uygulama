@@ -66,10 +66,10 @@
 # END - Testing Protocol - DO NOT EDIT OR REMOVE THIS SECTION
 #====================================================================================================
 
-user_problem_statement: "GTM Readiness Pack (demo seed, activation checklist, upgrade requests, tenant health) + CRM Pipeline Deepening (new stages, move-stage, complete task, notes, automation rules)"
+user_problem_statement: "GTM Readiness Pack (demo seed, activation checklist, trial banner, tenant health) + CRM Pipeline Deepening (new stages, move-stage, notes, task complete, automation rules)"
 
 backend:
-  - task: "Demo Seed (POST /api/admin/demo/seed)"
+  - task: "Demo Seed POST /api/admin/demo/seed"
     implemented: true
     working: "NA"
     file: "backend/app/routers/gtm_demo_seed.py"
@@ -79,9 +79,9 @@ backend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "New endpoint for 1-click demo data seeding. Supports mode (light/full), with_finance, with_crm params. Idempotent via demo_seed_runs collection. Rate limited."
+        comment: "POST /api/admin/demo/seed - creates products, customers, reservations, WebPOS payments, cases, CRM deals+tasks. Idempotent via demo_seed_runs. Rate limited."
 
-  - task: "Activation Checklist (GET/PUT /api/activation/checklist)"
+  - task: "Activation Checklist GET/PUT /api/activation/checklist"
     implemented: true
     working: "NA"
     file: "backend/app/routers/activation_checklist.py"
@@ -91,9 +91,9 @@ backend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Checklist with 7 items, auto-created on onboarding complete. PUT to mark items complete. Audit logged."
+        comment: "GET checklist, PUT /{item_key}/complete. Auto-created on onboarding complete."
 
-  - task: "Upgrade Requests (POST /api/upgrade-requests)"
+  - task: "Upgrade Requests POST /api/upgrade-requests"
     implemented: true
     working: "NA"
     file: "backend/app/routers/upgrade_requests.py"
@@ -103,9 +103,9 @@ backend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Tenant admin can request upgrade. Super admin can change plan directly. Notifications created for admins."
+        comment: "POST create upgrade request (any user), POST /api/admin/tenants/{id}/change-plan (super_admin only)."
 
-  - task: "Tenant Health (GET /api/admin/tenants/health)"
+  - task: "Tenant Health GET /api/admin/tenants/health"
     implemented: true
     working: "NA"
     file: "backend/app/routers/tenant_health.py"
@@ -115,9 +115,9 @@ backend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Super admin only. Returns per-tenant health metrics with filters (trial_expiring, inactive, overdue)."
+        comment: "Returns per-tenant: last_login, last_activity, trial_days_left, overdue_count, quota_ratio. Filters: trial_expiring, inactive, overdue."
 
-  - task: "CRM Deal Move Stage (POST /api/crm/deals/{id}/move-stage)"
+  - task: "CRM Deal move-stage POST /api/crm/deals/{id}/move-stage"
     implemented: true
     working: "NA"
     file: "backend/app/routers/crm_deals.py"
@@ -127,9 +127,9 @@ backend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "New stages: lead, contacted, proposal, won, lost. Audit logged. CRM event fired."
+        comment: "Moves deal stage with audit logging. New stages: lead/contacted/proposal/won/lost."
 
-  - task: "CRM Task Complete (PUT /api/crm/tasks/{id}/complete)"
+  - task: "CRM Task complete PUT /api/crm/tasks/{id}/complete"
     implemented: true
     working: "NA"
     file: "backend/app/routers/crm_tasks.py"
@@ -139,9 +139,9 @@ backend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Mark task as done. Audit logged."
+        comment: "Marks task as done with audit log."
 
-  - task: "CRM Notes (GET/POST /api/crm/notes)"
+  - task: "CRM Notes GET/POST /api/crm/notes"
     implemented: true
     working: "NA"
     file: "backend/app/routers/crm_notes.py"
@@ -151,9 +151,9 @@ backend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Notes attachable to customer/deal/reservation/payment. Audit logged."
+        comment: "Notes attached to customer/deal/reservation/payment. List + Create with audit."
 
-  - task: "Automation Rules (overdue payment + deal proposal)"
+  - task: "Automation Rules (trigger-checks extended)"
     implemented: true
     working: "NA"
     file: "backend/app/services/automation_rules.py"
@@ -163,10 +163,10 @@ backend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Two rules: overdue payment task creation + deal proposal overdue notification. Idempotent per day via rule_runs collection. Triggered via /api/notifications/trigger-checks."
+        comment: "Overdue payment rule + deal proposal overdue rule. Idempotent per day via rule_runs collection."
 
 frontend:
-  - task: "Dashboard with Demo Seed + Activation Checklist"
+  - task: "Dashboard with ActivationChecklist + DemoSeedButton"
     implemented: true
     working: "NA"
     file: "frontend/src/pages/DashboardPage.jsx"
@@ -176,33 +176,9 @@ frontend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Demo seed button + activation checklist widget added to dashboard."
+        comment: "Dashboard includes ActivationChecklist widget and DemoSeedButton. TrialBanner in AppShell."
 
-  - task: "Trial Banner + Upgrade CTA"
-    implemented: true
-    working: "NA"
-    file: "frontend/src/components/TrialBanner.jsx"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Trial banner in AppShell, upgrade modal with plan selection."
-
-  - task: "Tenant Health Page"
-    implemented: true
-    working: "NA"
-    file: "frontend/src/pages/admin/AdminTenantHealthPage.jsx"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Admin page with tenant health table and filters."
-
-  - task: "CRM Pipeline (new stages)"
+  - task: "CRM Pipeline with new stages (lead/contacted/proposal/won/lost)"
     implemented: true
     working: "NA"
     file: "frontend/src/pages/crm/CrmPipelinePage.jsx"
@@ -212,19 +188,19 @@ frontend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Updated to new stages: lead, contacted, proposal, won, lost. moveDealStage API used."
+        comment: "Kanban with 5 new stages, stage move uses moveDealStage API."
 
-  - task: "Sidebar Navigation Update"
+  - task: "Tenant Health Page /app/admin/tenant-health"
     implemented: true
     working: "NA"
-    file: "frontend/src/components/AppShell.jsx"
+    file: "frontend/src/pages/admin/AdminTenantHealthPage.jsx"
     stuck_count: 0
-    priority: "medium"
+    priority: "high"
     needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Added Tenant Health under YÖNETİM section."
+        comment: "Table with filters: trial_expiring, inactive, overdue. Route registered in App.js + adminNav."
 
 metadata:
   created_by: "main_agent"
@@ -233,15 +209,15 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: 
-    - "Demo Seed (POST /api/admin/demo/seed)"
-    - "Activation Checklist (GET/PUT /api/activation/checklist)"
-    - "Upgrade Requests (POST /api/upgrade-requests)"
-    - "Tenant Health (GET /api/admin/tenants/health)"
-    - "CRM Deal Move Stage (POST /api/crm/deals/{id}/move-stage)"
-    - "CRM Task Complete (PUT /api/crm/tasks/{id}/complete)"
-    - "CRM Notes (GET/POST /api/crm/notes)"
-    - "Automation Rules (overdue payment + deal proposal)"
+  current_focus:
+    - "Demo Seed POST /api/admin/demo/seed"
+    - "Activation Checklist GET/PUT /api/activation/checklist"
+    - "CRM Deal move-stage POST /api/crm/deals/{id}/move-stage"
+    - "CRM Task complete PUT /api/crm/tasks/{id}/complete"
+    - "CRM Notes GET/POST /api/crm/notes"
+    - "Upgrade Requests POST /api/upgrade-requests"
+    - "Tenant Health GET /api/admin/tenants/health"
+    - "Automation Rules (trigger-checks extended)"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"

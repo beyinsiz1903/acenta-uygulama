@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { formatMoney, formatMoneyCompact } from "../lib/format";
 import {
   LayoutGrid, CalendarDays, Ticket, Users, Layers, FileText,

@@ -204,3 +204,22 @@ export async function createNote(body) {
     throw { message: apiErrorMessage(err), raw: err };
   }
 }
+
+
+export async function getActivity(params) {
+  try {
+    const res = await api.get("/crm/activity", { params });
+    return res.data;
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}
+
+export async function getCustomerTimeline(customerId, params) {
+  try {
+    const res = await api.get(`/crm/customers/${customerId}/timeline`, { params });
+    return res.data;
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}

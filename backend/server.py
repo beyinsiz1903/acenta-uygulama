@@ -373,6 +373,13 @@ app.include_router(webpos_router)
 app.include_router(notifications_router)
 app.include_router(advanced_reports_router)
 
+# GTM + CRM deepening
+app.include_router(gtm_demo_seed_router)
+app.include_router(activation_checklist_router)
+app.include_router(upgrade_requests_router)
+app.include_router(tenant_health_router)
+app.include_router(crm_notes_router)
+
 
 @app.get("/")
 async def read_root() -> dict[str, str]:

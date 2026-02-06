@@ -122,6 +122,7 @@ from app.routers.tenant_features import router as tenant_features_router
 from app.routers.admin_tenant_features import router as admin_tenant_features_router
 from app.routers.admin_audit_logs import router as admin_audit_logs_router
 from app.routers.admin_billing import router as admin_billing_router
+from app.routers.admin_analytics import router as admin_analytics_router
 from app.routers.billing_webhooks import router as billing_webhooks_router
 from app.routers.b2b_events import router as b2b_events_router
 from app.routers.dev_saas import router as dev_saas_router

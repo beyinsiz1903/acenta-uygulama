@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 
-from app.auth import require_roles
+from app.auth import get_current_user, require_roles
 from app.constants.features import ALL_FEATURE_KEYS
 from app.db import get_db
 from app.errors import AppError
+from app.services.audit_log_service import append_audit_log
 from app.services.feature_service import feature_service
 
 router = APIRouter(prefix="/api/admin/tenants", tags=["admin_tenant_features"])

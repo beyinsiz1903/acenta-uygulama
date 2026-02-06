@@ -10,6 +10,155 @@ import { FEATURE_CATALOG } from "../../config/featureCatalog";
 import { api, apiErrorMessage } from "../../lib/api";
 import { fetchTenantList } from "../../lib/tenantFeaturesAdmin";
 
+const STATUS_MAP = {
+  active: { label: "Active", color: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20" },
+  trialing: { label: "Trial", color: "bg-blue-500/10 text-blue-700 border-blue-500/20" },
+  past_due: { label: "Payment Issue", color: "bg-amber-500/10 text-amber-700 border-amber-500/20" },
+  incomplete: { label: "Payment Issue", color: "bg-amber-500/10 text-amber-700 border-amber-500/20" },
+  unpaid: { label: "Payment Issue", color: "bg-amber-500/10 text-amber-700 border-amber-500/20" },
+  canceled: { label: "Canceled", color: "bg-muted text-muted-foreground border-border" },
+};
+
+function getDisplayStatus(sub) {
+  if (!sub) return null;
+  if (sub.cancel_at_period_end && sub.status === "active") {
+    return { label: "Canceling", color: "bg-orange-500/10 text-orange-700 border-orange-500/20" };
+  }
+  return STATUS_MAP[sub.status] || { label: sub.status, color: "bg-muted text-muted-foreground border-border" };
+}
+
+function daysUntil(isoDate) {
+  if (!isoDate) return null;
+  const target = typeof isoDate === "string" ? new Date(isoDate.includes("T") ? isoDate : isoDate + "T00:00:00Z") : new Date(Number(isoDate) * 1000);
+  if (isNaN(target.getTime())) return null;
+  const now = new Date();
+  const diff = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+  return diff;
+}
+
+function formatTRDate(isoDate) {
+  if (!isoDate) return "—";
+  try {
+    const d = typeof isoDate === "string" ? new Date(isoDate.includes("T") ? isoDate : isoDate + "T00:00:00Z") : new Date(Number(isoDate) * 1000);
+    if (isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  } catch { return "—"; }
+}
+
+function SubscriptionPanel({ tenantId }) {
+  const [sub, setSub] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const fetchSub = useCallback(async () => {
+    if (!tenantId) return;
+    setLoading(true);
+    setError(false);
+    try {
+      const res = await api.get(`/admin/billing/tenants/${tenantId}/subscription`);
+      setSub(res.data?.subscription || null);
+    } catch {
+      setError(true);
+      setSub(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [tenantId]);
+
+  useEffect(() => { fetchSub(); }, [fetchSub]);
+
+  if (loading) {
+    return (
+      <div className="rounded-lg border bg-muted/20 p-3 flex items-center gap-2 text-xs text-muted-foreground" data-testid="sub-panel-loading">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Subscription yükleniyor...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 flex items-center justify-between" data-testid="sub-panel-error">
+        <span className="text-xs text-destructive">Billing verisi alınamadı.</span>
+        <Button variant="ghost" size="sm" onClick={fetchSub} className="h-6 px-2"><RefreshCw className="h-3 w-3" /></Button>
+      </div>
+    );
+  }
+
+  if (!sub) {
+    return (
+      <div className="rounded-lg border border-dashed bg-muted/10 p-3 flex items-center gap-2" data-testid="sub-panel-empty">
+        <CreditCard className="h-4 w-4 text-muted-foreground/50" />
+        <span className="text-xs text-muted-foreground">Bu tenant için aktif subscription bulunamadı.</span>
+      </div>
+    );
+  }
+
+  const displayStatus = getDisplayStatus(sub);
+  const renewalDays = daysUntil(sub.current_period_end);
+  const graceDays = sub.grace_period_until ? daysUntil(sub.grace_period_until) : null;
+  const showGrace = graceDays !== null && graceDays > 0;
+  const isPastDue = sub.status === "past_due" || sub.status === "unpaid" || sub.status === "incomplete";
+
+  return (
+    <div className="rounded-lg border bg-card p-3 space-y-2" data-testid="sub-panel">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <CreditCard className="h-4 w-4 text-muted-foreground" />
+          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Subscription</span>
+        </div>
+        <Button variant="ghost" size="sm" onClick={fetchSub} className="h-6 px-2" title="Yenile" data-testid="sub-refresh-btn">
+          <RefreshCw className="h-3 w-3" />
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        <div>
+          <p className="text-muted-foreground mb-0.5">Plan</p>
+          <p className="font-medium capitalize">{sub.plan || "—"}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground mb-0.5">Durum</p>
+          <Badge className={`${displayStatus?.color} text-[10px] px-1.5 py-0`} data-testid="sub-status-badge">
+            {displayStatus?.label}
+          </Badge>
+        </div>
+        <div>
+          <p className="text-muted-foreground mb-0.5">Yenileme</p>
+          <div className="flex items-center gap-1">
+            <Calendar className="h-3 w-3 text-muted-foreground" />
+            <span>{formatTRDate(sub.current_period_end)}</span>
+          </div>
+          {renewalDays !== null && renewalDays > 0 && (
+            <p className="text-[10px] text-muted-foreground">{renewalDays} gün kaldı</p>
+          )}
+        </div>
+        <div>
+          <p className="text-muted-foreground mb-0.5">Mode</p>
+          <p className="font-medium">{sub.mode || "test"}</p>
+        </div>
+      </div>
+
+      {/* Cancel at period end badge */}
+      {sub.cancel_at_period_end && sub.status === "active" && (
+        <div className="rounded border border-orange-500/30 bg-orange-500/5 px-2.5 py-1.5 text-xs text-orange-700 flex items-center gap-1.5" data-testid="sub-cancel-badge">
+          <AlertTriangle className="h-3.5 w-3.5" />
+          Period sonunda iptal edilecek.
+        </div>
+      )}
+
+      {/* Past due / grace warning */}
+      {isPastDue && (
+        <div className="rounded border border-amber-500/30 bg-amber-500/5 px-2.5 py-1.5 text-xs text-amber-700 flex items-center gap-1.5" data-testid="sub-past-due-banner">
+          <AlertTriangle className="h-3.5 w-3.5" />
+          Ödeme başarısız.
+          {showGrace && <span className="font-medium">Grace: {graceDays} gün kaldı.</span>}
+          {!showGrace && <span>Tenant kısıtlanabilir.</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TenantListItem({ tenant, selected, onSelect }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = (e) => {

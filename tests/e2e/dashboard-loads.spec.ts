@@ -26,7 +26,8 @@ test('dashboard loads with KPI bar visible', async ({ page }) => {
 
   // Check labels
   await expect(page.getByText('Toplam Rezervasyon')).toBeVisible();
-  await expect(page.getByText('Beklemede')).toBeVisible();
+  const kpiBar2 = page.locator('[data-testid="dashboard-kpi-bar"]');
+  await expect(kpiBar2.getByText('Beklemede')).toBeVisible();
   await expect(page.getByText('Açık Case')).toBeVisible();
 });
 

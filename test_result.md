@@ -85,6 +85,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ FIXED: B2B integration tests now PASSING after fixing pytest fixture issue. Root cause was NOT organization_id type mismatch (that was already correct), but shared AsyncClient instance between provider_client and seller_client fixtures. Both fixtures were modifying the same client's headers, causing authentication conflicts. Fixed by creating separate AsyncClient instances for each fixture with proper headers. Both tests now pass: test_b2b_happy_path_flow validates full B2B exchange flow (listing creation, visibility, match request, approval, completion), test_b2b_not_active_partner_cannot_see_or_request validates proper access control for non-active partner relationships."
+      - working: true
+        agent: "testing"
+        comment: "✅ RE-VERIFIED: All three B2B exchange integration tests PASSING successfully. test_b2b_tenant_isolation_cannot_request_own_listing: Validates seller cannot request own listing (provider_tenant_id == seller_tenant._id, listing not in /api/b2b/listings/available, POST /api/b2b/match-request returns cannot_request_own_listing error). test_b2b_happy_path_flow: Full B2B exchange flow working (listing creation with lst_* id, visibility via active partner relationship, match request with mreq_* id, approval/completion flow, platform_fee_amount calculation). test_b2b_not_active_partner_cannot_see_or_request: Access control working (non-active partner cannot see listings or create match requests, returns not_active_partner error). All expected behaviors validated and working correctly."
 
 frontend:
   - task: "Partner B2B Network UI (B2B Ağ) – Phase 1"

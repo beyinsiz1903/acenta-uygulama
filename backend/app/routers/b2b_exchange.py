@@ -316,10 +316,10 @@ async def create_match_request(  # type: ignore[no-untyped-def]
 
 
 @router.get("/match-request/my", response_model=List[B2BMatchRequestOut])
-@require_tenant_feature("b2b")
 async def list_my_match_requests(  # type: ignore[no-untyped-def]
     user: CurrentB2BUser = Depends(current_b2b_user),
     tenant_ctx: B2BTenantContext = Depends(get_b2b_tenant_context),
+    _: None = Depends(require_tenant_feature("b2b")),
 ):
     db = await get_db()
     cursor = db.b2b_match_requests.find({"seller_tenant_id": tenant_ctx.tenant_id}).sort("created_at", -1)

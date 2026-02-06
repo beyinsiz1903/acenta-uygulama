@@ -863,6 +863,18 @@ export default function PartnerB2BNetworkPage() {
                               )}
                               {!canApproveOrReject && !canComplete && (
                                 <span className="text-[11px] text-muted-foreground">İşlem yok</span>
+                            <TableCell className="text-xs text-right">
+                              <Button
+                                type="button"
+                                size="xs"
+                                variant="outline"
+                                className="h-7 px-2 text-[11px]"
+                                onClick={() => openDetailForRequest(r, "provider")}
+                              >
+                                Detay
+                              </Button>
+                            </TableCell>
+
                               )}
                             </TableCell>
                           </TableRow>

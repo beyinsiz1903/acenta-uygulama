@@ -147,8 +147,21 @@ metadata:
   test_sequence: 3
   run_ui: true
 
+  - task: "Enterprise Dashboard Faz 1-2 Redesign"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/DashboardPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Dashboard tamamen yeniden tasarlandı: 6 KPI kartı tek satırda (compact 82px), Chart alanı toggle chips ile (14G/30G, Satış/Rezervasyon), sağ kolon mini donut kartları (Rezervasyon + Case dağılımı + En Çok Satılanlar), alt satırda Hemen İlgilenilmesi Gerekenler + Son Aktiviteler. Skeleton loaders, empty states, hover efektleri eklendi. Backend'e dokunulmadı."
+
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Enterprise Dashboard Faz 1-2 Redesign"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

@@ -579,7 +579,7 @@ export default function PartnerB2BNetworkPage() {
                 <p className="mb-2 text-[11px] text-destructive">{myRequestsError}</p>
               )}
               {!myRequestsLoading && !sellerHasRequests && !myRequestsError && (
-                <p className="text-[11px] text-muted-foreground">Henüz talep yok.</p>
+                <p className="text-[11px] text-muted-foreground">Henüz talep oluşturmadınız.</p>
               )}
               {sellerHasRequests && (
                 <div className="overflow-x-auto">

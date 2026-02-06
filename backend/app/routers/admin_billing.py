@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 
 from app.auth import get_current_user, require_roles
+from app.errors import AppError
 from app.constants.plan_matrix import VALID_PLANS
 from app.repositories.billing_repository import billing_repo
 from app.services.subscription_manager import subscription_manager

@@ -12,7 +12,7 @@ from app.errors import AppError
 from app.repositories.membership_repository import MembershipRepository
 from app.repositories.partner_relationship_repository import PartnerRelationshipRepository
 from app.security.deps_b2b import CurrentB2BUser, current_b2b_user
-from app.security.feature_flags import require_tenant_feature
+from app.security.feature_flags import require_b2b_feature
 from app.constants.features import FEATURE_B2B
 from app.security.b2b_context import B2BTenantContext, get_b2b_tenant_context
 

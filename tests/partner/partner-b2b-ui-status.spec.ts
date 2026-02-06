@@ -25,8 +25,8 @@ test("B2B Ağ sayfası agency kullanıcısı için temel iskeleti render eder", 
 
   // 2) Ana başlık ve mod toggle'ları
   await expect(page.getByRole("heading", { name: "B2B Ağ" })).toBeVisible();
-  await expect(page.getByText("Satıcı")).toBeVisible();
-  await expect(page.getByText("Sağlayıcı")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Satıcı" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sağlayıcı" })).toBeVisible();
 
   // Varsayılan mod Satıcı; Satıcı modunun ana bölümleri
   await expect(page.getByText("Müsait Listingler")).toBeVisible();

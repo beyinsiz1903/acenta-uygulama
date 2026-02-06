@@ -96,6 +96,7 @@ import OpsSupplierAccrualsPage from "./pages/OpsSupplierAccrualsPage";
 import AdminSupplierSettlementBridgePage from "./pages/AdminSupplierSettlementBridgePage";
 import AdminTenantFeaturesPage from "./pages/admin/AdminTenantFeaturesPage";
 import AdminAuditLogPage from "./pages/admin/AdminAuditLogPage";
+import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProductsPage from "./pages/ProductsPage";
 import InventoryPage from "./pages/InventoryPage";

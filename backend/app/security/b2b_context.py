@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import Request
+from fastapi import Request, Depends
 from pydantic import BaseModel
 
 from app.db import get_db

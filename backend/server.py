@@ -133,6 +133,13 @@ from app.routers.dev_saas import router as dev_saas_router
 from app.routers.admin_reports import router as admin_reports_router
 from app.routers.match_alerts import router as match_alerts_router
 
+# GTM + CRM deepening routers
+from app.routers.gtm_demo_seed import router as gtm_demo_seed_router
+from app.routers.activation_checklist import router as activation_checklist_router
+from app.routers.upgrade_requests import router as upgrade_requests_router
+from app.routers.tenant_health import router as tenant_health_router
+from app.routers.crm_notes import router as crm_notes_router
+
 from app.routers.seo import router as seo_router
 from app.routers.public_campaigns import router as public_campaigns_router
 from app.routers.public_tours import router as public_tours_router

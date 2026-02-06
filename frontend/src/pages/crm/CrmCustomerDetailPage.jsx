@@ -155,8 +155,6 @@ function TimelineTab({ customerId }) {
     </div>
   );
 }
-  return d.toLocaleString("tr-TR");
-}
 
 export default function CrmCustomerDetailPage() {
   const navigate = useNavigate();

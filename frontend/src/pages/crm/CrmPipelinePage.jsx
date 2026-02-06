@@ -1,6 +1,6 @@
 // frontend/src/pages/crm/CrmPipelinePage.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { listDeals, patchDeal, createDeal } from "../../lib/crm";
+import { listDeals, patchDeal, createDeal, moveDealStage } from "../../lib/crm";
 import { getUser, apiErrorMessage } from "../../lib/api";
 
 function ColumnHeader({ title, count, tone }) {
@@ -42,7 +42,7 @@ function ColumnHeader({ title, count, tone }) {
 }
 
 function DealCard({ deal, stages, onChangeStage, disabled }) {
-  const safeStage = stages.find((s) => s.value === deal.stage)?.value || "new";
+  const safeStage = stages.find((s) => s.value === deal.stage)?.value || "lead";
   const [currentStage, setCurrentStage] = useState(safeStage);
 
   function handleStageChange(e) {

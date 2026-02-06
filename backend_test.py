@@ -42,7 +42,7 @@ class GTMBackendTester:
                 "plan": "startup"
             })
             
-            if response.status_code == 201:
+            if response.status_code in [200, 201]:
                 data = response.json()
                 self.auth_token = data.get("access_token")
                 self.user_id = data.get("user_id") 

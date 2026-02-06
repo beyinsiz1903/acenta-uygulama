@@ -71,99 +71,123 @@ user_problem_statement: "GTM Readiness Pack (demo seed, activation checklist, tr
 backend:
   - task: "Demo Seed POST /api/admin/demo/seed"
     implemented: true
-    working: "NA"
+    working: false
     file: "backend/app/routers/gtm_demo_seed.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/admin/demo/seed - creates products, customers, reservations, WebPOS payments, cases, CRM deals+tasks. Idempotent via demo_seed_runs. Rate limited."
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL: 520 internal server error. Database constraint violation - BulkWriteError on ops_cases collection: 'E11000 duplicate key error index: uniq_ops_case_id dup key: { case_id: null }'. The _gen_cases() function is missing case_id field, causing duplicate null values that violate unique index. Need to add case_id field to case documents."
 
   - task: "Activation Checklist GET/PUT /api/activation/checklist"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/app/routers/activation_checklist.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "GET checklist, PUT /{item_key}/complete. Auto-created on onboarding complete."
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING: GET returns 7 checklist items with completed_count=0. PUT /api/activation/checklist/create_product/complete successfully marks item as completed, count increases to 1. Tenant isolation working properly."
 
   - task: "Upgrade Requests POST /api/upgrade-requests"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/app/routers/upgrade_requests.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST create upgrade request (any user), POST /api/admin/tenants/{id}/change-plan (super_admin only)."
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING: POST creates upgrade request with requested_plan='growth'. Duplicate prevention working - second request returns 409 conflict. Request properly stored with tenant isolation."
 
   - task: "Tenant Health GET /api/admin/tenants/health"
     implemented: true
-    working: "NA"
+    working: false
     file: "backend/app/routers/tenant_health.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Returns per-tenant: last_login, last_activity, trial_days_left, overdue_count, quota_ratio. Filters: trial_expiring, inactive, overdue."
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL: 520 internal server error. TypeError: can't subtract offset-naive and offset-aware datetimes at line 60. trial_end from database may be string or naive datetime, but code tries to subtract from timezone-aware 'now'. Need to ensure consistent timezone handling."
 
   - task: "CRM Deal move-stage POST /api/crm/deals/{id}/move-stage"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/app/routers/crm_deals.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Moves deal stage with audit logging. New stages: lead/contacted/proposal/won/lost."
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING: POST creates deal with stage='lead'. POST /api/crm/deals/{id}/move-stage successfully moves from 'lead' to 'contacted'. GET verifies stage change. Audit logging and CRM events working."
 
   - task: "CRM Task complete PUT /api/crm/tasks/{id}/complete"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/app/routers/crm_tasks.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Marks task as done with audit log."
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING: POST creates task with status='open'. PUT /api/crm/tasks/{id}/complete changes status to 'done'. GET ?status=done shows completed task. Audit logging working."
 
   - task: "CRM Notes GET/POST /api/crm/notes"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/app/routers/crm_notes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Notes attached to customer/deal/reservation/payment. List + Create with audit."
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING: POST creates note with entity_type='deal', entity_id='test123'. GET with query filters ?entity_type=deal&entity_id=test123 returns the created note. Audit logging working."
 
   - task: "Automation Rules (trigger-checks extended)"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/app/services/automation_rules.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Overdue payment rule + deal proposal overdue rule. Idempotent per day via rule_runs collection."
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING: POST /api/notifications/trigger-checks returns automation_rules with overdue_payment_tasks=2, deal_overdue_tasks=0. Rules executed successfully and created 2 overdue payment tasks."
 
 frontend:
   - task: "Dashboard with ActivationChecklist + DemoSeedButton"

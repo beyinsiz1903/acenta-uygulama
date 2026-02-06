@@ -105,6 +105,26 @@ export default function AdminAnalyticsPage() {
             <StatCard icon={CreditCard} label="Past Due" value={revenue?.past_due_count || 0} sub={`Grace: ${revenue?.grace_count || 0} | Canceling: ${revenue?.canceling_count || 0}`} variant={revenue?.past_due_count > 0 ? "danger" : "default"} />
           </div>
 
+          {/* MRR Trend */}
+          {(revenue?.trend || []).length > 0 && (
+            <div className="border rounded-lg p-4 space-y-3" data-testid="mrr-trend">
+              <h3 className="text-sm font-medium text-foreground">MRR Trendi (Son 3 Ay)</h3>
+              <div className="flex items-end gap-2 h-24">
+                {revenue.trend.map((t, i) => {
+                  const maxMRR = Math.max(...revenue.trend.map((x) => x.mrr_gross_active), 1);
+                  const pct = Math.max(5, Math.round((t.mrr_gross_active / maxMRR) * 100));
+                  return (
+                    <div key={t.period} className="flex-1 flex flex-col items-center gap-1">
+                      <span className="text-[10px] text-muted-foreground">{formatTRY(t.mrr_gross_active)}</span>
+                      <div className="w-full rounded-t bg-primary/80 transition-all" style={{ height: `${pct}%` }} />
+                      <span className="text-[10px] text-muted-foreground">{t.period}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Plan Distribution */}
             <div className="border rounded-lg p-4 space-y-3">

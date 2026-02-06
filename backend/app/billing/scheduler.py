@@ -82,13 +82,20 @@ async def _finalize_job() -> None:
       after={"pushed": pushed, "errors": errors, "pending_after": pending_after, "period": period},
     )
 
-    _last_result = {"period": period, "status": status, "pushed": pushed, "errors": errors}
+    _last_result = {"period": period, "status": status, "pushed": pushed, "errors": errors, "pending_after": pending_after}
     logger.info("[cron] Finalize %s: status=%s pushed=%d errors=%d", period, status, pushed, errors)
+
+    # Slack alert on issues
+    from app.billing.notifier import send_finalize_alert
+    await send_finalize_alert(_last_result)
 
   except Exception as e:
     await billing_repo.finish_period_job(period, "failed", 0, 0, pending_before, pending_before)
-    _last_result = {"period": period, "status": "failed", "error": str(e)[:200]}
+    _last_result = {"period": period, "status": "failed", "error": str(e)[:200], "pending_after": pending_before}
     logger.exception("[cron] Finalize failed for %s", period)
+
+    from app.billing.notifier import send_finalize_alert
+    await send_finalize_alert(_last_result)
 
 
 def start_scheduler() -> None:

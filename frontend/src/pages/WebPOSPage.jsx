@@ -14,23 +14,29 @@ function PaymentModal({ open, onClose, onSuccess }) {
   const [form, setForm] = useState({ amount: "", method: "cash", description: "", customer_id: "", reservation_id: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [submitted, setSubmitted] = useState(false);
 
   if (!open) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading || submitted) return; // Double-click guard
     setError("");
     setLoading(true);
+    setSubmitted(true);
     try {
-      const payload = { ...form, amount: parseFloat(form.amount) };
+      const idempotencyKey = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const payload = { ...form, amount: parseFloat(form.amount), idempotency_key: idempotencyKey };
       if (!payload.customer_id) delete payload.customer_id;
       if (!payload.reservation_id) delete payload.reservation_id;
       await api.post("/webpos/payments", payload);
       onSuccess();
       onClose();
       setForm({ amount: "", method: "cash", description: "", customer_id: "", reservation_id: "" });
+      setSubmitted(false);
     } catch (err) {
       setError(err?.response?.data?.error?.message || "Ödeme kaydedilemedi.");
+      setSubmitted(false);
     } finally {
       setLoading(false);
     }

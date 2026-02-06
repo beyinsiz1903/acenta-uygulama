@@ -102,8 +102,14 @@ async def get_tenants_health(
             if trial_days_left is not None and trial_days_left <= 7:
                 results.append(entry)
         elif filter_type == "inactive":
-            if last_activity is None or (now - last_activity).days > 7:
+            if last_activity is None:
                 results.append(entry)
+            else:
+                # Make sure both datetimes have timezone info for comparison
+                if last_activity.tzinfo is None:
+                    last_activity = last_activity.replace(tzinfo=timezone.utc)
+                if (now - last_activity).days > 7:
+                    results.append(entry)
         elif filter_type == "overdue":
             if overdue_count > 0:
                 results.append(entry)

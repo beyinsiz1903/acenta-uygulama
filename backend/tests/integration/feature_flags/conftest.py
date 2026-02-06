@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import AsyncGenerator
 
 import pytest
@@ -8,7 +8,6 @@ from bson import ObjectId
 from httpx import ASGITransport, AsyncClient
 
 from app.auth import create_access_token
-from app.db import get_db
 from app.repositories.membership_repository import MembershipRepository
 from app.services.feature_service import feature_service
 
@@ -57,6 +56,33 @@ async def feature_test_user(test_db) -> dict:
 
 
 @pytest.fixture
+async def feature_test_subscription(test_db) -> None:
+  """Seed an active subscription for the default org.
+
+  TenantResolutionMiddleware calls SubscriptionService.ensure_allowed()
+  which requires a subscription record with status='active' for non-super-admin users.
+  """
+  org = await test_db.organizations.find_one({"slug": "default"})
+  assert org is not None
+
+  now = datetime.now(timezone.utc)
+  doc = {
+    "org_id": str(org["_id"]),
+    "plan": "pro",
+    "status": "active",
+    "period_start": now - timedelta(days=30),
+    "period_end": now + timedelta(days=335),
+    "created_at": now,
+    "updated_at": now,
+  }
+  await test_db.subscriptions.update_one(
+    {"org_id": doc["org_id"]},
+    {"$setOnInsert": doc},
+    upsert=True,
+  )
+
+
+@pytest.fixture
 async def feature_test_membership(test_db, feature_test_user, tenant_for_feature_test) -> str:
   """Create an active membership linking user to tenant."""
   repo = MembershipRepository(test_db)
@@ -73,7 +99,6 @@ async def feature_test_membership(test_db, feature_test_user, tenant_for_feature
 @pytest.fixture
 async def feature_test_token(feature_test_user) -> str:
   """JWT token for the feature test user."""
-  org = await get_db()  # not needed, org_id is on user doc
   return create_access_token(
     subject=feature_test_user["email"],
     organization_id=feature_test_user["organization_id"],
@@ -87,6 +112,7 @@ async def feature_test_client(
   feature_test_token: str,
   tenant_for_feature_test,
   feature_test_membership,
+  feature_test_subscription,
 ) -> AsyncGenerator[AsyncClient, None]:
   """HTTP client with Bearer token + X-Tenant-Id headers for feature tests.
 

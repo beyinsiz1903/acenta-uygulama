@@ -486,6 +486,7 @@ async def _update_match_status(
 
 
 @router.patch("/match-request/{match_id}/approve", response_model=B2BMatchRequestOut)
+@require_tenant_feature("b2b")
 async def approve_match_request(  # type: ignore[no-untyped-def]
     match_id: str,
     user: CurrentB2BUser = Depends(current_b2b_user),

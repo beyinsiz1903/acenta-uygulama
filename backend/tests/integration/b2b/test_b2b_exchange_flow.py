@@ -426,6 +426,7 @@ async def test_b2b_invalid_status_completed_cannot_change(
   provider_client: AsyncClient,
   seller_client: AsyncClient,
   partner_relationship_active: Dict[str, Any],
+  enable_b2b_features,
 ) -> None:
   """completed durumundaki talep tekrar approve/reject/complete edilemez."""
 

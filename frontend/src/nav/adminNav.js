@@ -19,6 +19,7 @@ export const adminNav = [
       { label: "Fiyatlandırma", path: "/app/admin/pricing" },
       { label: "Kuponlar", path: "/app/admin/coupons" },
       { label: "Onay Görevleri", path: "/app/admin/approvals" },
+      { label: "WebPOS", path: "/app/finance/webpos", requiredFeature: "webpos" },
       { label: "Finans / İadeler", path: "/app/admin/finance/refunds" },
       { label: "Exposure & Aging (Acenta)", path: "/app/admin/finance/exposure" },
       { label: "B2B Acenteler", path: "/app/admin/finance/b2b-agencies" },

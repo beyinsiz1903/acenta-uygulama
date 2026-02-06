@@ -15,6 +15,7 @@ from app.security.deps_b2b import CurrentB2BUser, current_b2b_user
 from app.security.feature_flags import require_b2b_feature
 from app.constants.features import FEATURE_B2B
 from app.security.b2b_context import B2BTenantContext, get_b2b_tenant_context
+from app.services.b2b_event_service import append_b2b_event
 
 
 router = APIRouter(prefix="/api/b2b", tags=["b2b-exchange"])

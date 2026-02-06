@@ -110,6 +110,7 @@ async def test_list_endpoints_do_not_leak_internal_fields(
   provider_client: AsyncClient,
   seller_client: AsyncClient,
   partner_relationship_active: Dict[str, Any],
+  enable_b2b_features,
 ) -> None:
   """Tüm liste endpoint'lerinde internal alanlar (_id, listing_mongo_id) sızmamalı."""
 

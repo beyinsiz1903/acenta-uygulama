@@ -537,7 +537,7 @@ export default function PartnerB2BNetworkPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {availableListings.map((l) => (
+                      {sortedAvailableListings.map((l) => (
                         <TableRow key={l.id} className="hover:bg-muted/40">
                           <TableCell
                             className="text-xs font-mono cursor-pointer hover:underline"

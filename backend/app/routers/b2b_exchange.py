@@ -152,6 +152,17 @@ async def create_listing(  # type: ignore[no-untyped-def]
     res = await db.b2b_listings.insert_one(doc)
     inserted = await db.b2b_listings.find_one({"_id": res.inserted_id})
     assert inserted is not None
+
+    await append_b2b_event(
+      event_type="listing.created",
+      entity_type="listing",
+      entity_id=public_id,
+      listing_id=public_id,
+      provider_tenant_id=tenant_ctx.tenant_id,
+      actor_user_id=tenant_ctx.user_id,
+      payload={"title": body.title, "base_price": float(body.base_price), "status": doc["status"]},
+    )
+
     return B2BListingOut(**_serialize(inserted))
 
 

@@ -148,7 +148,7 @@ backend:
         comment: "Moves deal stage with audit logging. New stages: lead/contacted/proposal/won/lost."
       - working: true
         agent: "testing"
-        comment: "✅ WORKING: POST creates deal with stage='lead'. POST /api/crm/deals/{id}/move-stage successfully moves from 'lead' to 'contacted'. GET verifies stage change. Audit logging and CRM events working."
+        comment: "✅ WORKING: Full CRM Deal CRUD working. POST creates deals with stage='lead'. Move-stage API successfully moves deal through stages: lead→contacted→proposal→won. When stage=won, status automatically changes to 'won'. Audit logging and CRM events working."
 
   - task: "CRM Task complete PUT /api/crm/tasks/{id}/complete"
     implemented: true

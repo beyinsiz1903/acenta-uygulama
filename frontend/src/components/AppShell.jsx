@@ -23,6 +23,7 @@ import { fetchPartnerNotificationsSummary } from "../lib/partnerGraph";
 import { getActiveTenantKey, getActiveTenantId, setActiveTenantId, subscribeTenantChange } from "../lib/tenantContext";
 import NotificationDrawer from "./NotificationDrawer";
 import NotificationBell from "./NotificationBell";
+import TrialBanner from "./TrialBanner";
 
 /* ------------------------------------------------------------------ */
 /*  Sidebar collapse persistence                                       */

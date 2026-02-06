@@ -12,6 +12,7 @@ from app.errors import AppError
 from app.repositories.membership_repository import MembershipRepository
 from app.repositories.partner_relationship_repository import PartnerRelationshipRepository
 from app.security.deps_b2b import CurrentB2BUser, current_b2b_user
+from app.security.feature_flags import require_tenant_feature
 
 
 router = APIRouter(prefix="/api/b2b", tags=["b2b-exchange"])

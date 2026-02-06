@@ -255,6 +255,8 @@ app.include_router(action_policies_router)
 app.include_router(saas_tenants_router)
 app.include_router(tenant_features_router)
 app.include_router(admin_tenant_features_router)
+app.include_router(admin_audit_logs_router)
+app.include_router(b2b_events_router)
 app.include_router(dev_saas_router)
 
 app.include_router(theme_router)

@@ -10,6 +10,7 @@ PLAN_MATRIX = {
       "inventory",
       "reports",
     ],
+    "quotas": {},
   },
   "pro": {
     "label": "Pro",
@@ -23,6 +24,9 @@ PLAN_MATRIX = {
       "webpos",
       "partners",
     ],
+    "quotas": {
+      "b2b.match_request": 100,
+    },
   },
   "enterprise": {
     "label": "Enterprise",
@@ -38,6 +42,9 @@ PLAN_MATRIX = {
       "b2b",
       "ops",
     ],
+    "quotas": {
+      "b2b.match_request": 1000,
+    },
   },
 }
 

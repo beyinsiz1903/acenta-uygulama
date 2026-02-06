@@ -341,10 +341,10 @@ export default function CrmPipelinePage() {
 
   const stages = useMemo(
     () => [
-      { value: "new", label: "Yeni" },
-      { value: "qualified", label: "Nitelikli" },
-      { value: "quoted", label: "Teklif G\u00f6nderildi" },
-      { value: "won", label: "Kazan\u0131ld\u0131" },
+      { value: "lead", label: "Lead" },
+      { value: "contacted", label: "Iletisimde" },
+      { value: "proposal", label: "Teklif" },
+      { value: "won", label: "Kazanildi" },
       { value: "lost", label: "Kaybedildi" },
     ],
     []
@@ -352,24 +352,24 @@ export default function CrmPipelinePage() {
 
   const columnConfig = useMemo(
     () => ({
-      new: {
-        key: "new",
-        title: "Yeni",
+      lead: {
+        key: "lead",
+        title: "Lead",
         tone: { bg: "#eff6ff", color: "#1d4ed8", dot: "#3b82f6" },
       },
-      qualified: {
-        key: "qualified",
-        title: "Nitelikli",
+      contacted: {
+        key: "contacted",
+        title: "Iletisimde",
         tone: { bg: "#ecfdf3", color: "#15803d", dot: "#22c55e" },
       },
-      quoted: {
-        key: "quoted",
-        title: "Teklif G\u00f6nderildi",
+      proposal: {
+        key: "proposal",
+        title: "Teklif",
         tone: { bg: "#fefce8", color: "#a16207", dot: "#eab308" },
       },
       won: {
         key: "won",
-        title: "Kazan\u0131ld\u0131",
+        title: "Kazanildi",
         tone: { bg: "#e0f2fe", color: "#0369a1", dot: "#0ea5e9" },
       },
       lost: {
@@ -383,17 +383,21 @@ export default function CrmPipelinePage() {
 
   function distributeDeals(allDeals) {
     const next = {
-      new: [],
-      qualified: [],
-      quoted: [],
+      lead: [],
+      contacted: [],
+      proposal: [],
       won: [],
       lost: [],
     };
 
     allDeals.forEach((deal) => {
-      let stage = deal.stage || "new";
-      if (!["new", "qualified", "quoted", "won", "lost"].includes(stage)) {
-        stage = "new";
+      let stage = deal.stage || "lead";
+      // Map old stages to new
+      if (stage === "new") stage = "lead";
+      if (stage === "qualified") stage = "contacted";
+      if (stage === "quoted") stage = "proposal";
+      if (!["lead", "contacted", "proposal", "won", "lost"].includes(stage)) {
+        stage = "lead";
       }
       if (deal.status === "won") stage = "won";
       if (deal.status === "lost") stage = "lost";

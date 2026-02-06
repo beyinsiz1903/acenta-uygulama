@@ -1,20 +1,29 @@
 # PRD — SaaS Platform (Multi-Tenant ERP)
 
-## Implemented (A–H + Usage + Analytics)
+## Implemented
 
 ### Feature Engine (A–E) ✅
-### Observability (F) ✅  
+### Observability (F) ✅
 ### Plan Inheritance (G) ✅
-### Billing (H) ✅
-### Usage-Based Billing Hooks ✅
+### Billing + Subscription (H) ✅
+### Usage Tracking + Quota ✅
 ### Revenue Analytics Dashboard ✅
-- `GET /api/admin/analytics/revenue-summary` — MRR (gross + at_risk), plan distribution, past_due/grace/canceling
-- `GET /api/admin/analytics/usage-overview` — quota buckets (0-20%, 20-50%, 50-80%, 80-100%, 100%+), enterprise candidates
-- `/app/admin/analytics` — stat cards, plan bar chart, quota bucket visualization, enterprise candidate table
+### In-App Quota Notification ✅
+- `GET /api/tenant/quota-status` — tenant self-service
+- FeatureContext fetches quota alerts, AppShell shows warning/critical banners
+- Recommendation text for Pro→Enterprise upgrade
+
+### MRR Trend Chart ✅
+- Revenue Analytics: 3-month MRR bar chart with lookback=3
+
+### Stripe Product Provisioning ✅
+- `POST /api/admin/billing/stripe/provision-products`
+- 4 guardrails: mode gate (test only), idempotency key, dry_run default, audit log
+- Creates real Stripe Products + Prices, updates billing_plan_catalog
 
 ## Test Coverage: 62+ backend integration tests
 
 ## Backlog
-### P1: Real Stripe Products/Prices, Stripe metered push
+### P1: Stripe metered billing push, Usage email notifications
 ### P2: Escrow & Payment Orchestration
 ### P3: B2C Storefront/CMS/SEO Layer

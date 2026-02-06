@@ -649,6 +649,17 @@ export default function PartnerB2BNetworkPage() {
                             {r.platform_fee_amount ? formatTry(r.platform_fee_amount) : "-"}
                           </TableCell>
                           <TableCell className="text-xs">{statusBadge(r.status)}</TableCell>
+                          <TableCell className="text-xs text-right">
+                            <Button
+                              type="button"
+                              size="xs"
+                              variant="outline"
+                              className="h-7 px-2 text-[11px]"
+                              onClick={() => openDetailForRequest(r, "seller")}
+                            >
+                              Detay
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

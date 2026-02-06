@@ -174,6 +174,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ VERIFIED: Signup page loads correctly with all form fields (company name, email, password) and plan selector showing all 3 plans."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Full signup flow works correctly, redirecting to /app after successful signup. Duplicate email error handling also working as expected."
 
   - task: "Pricing Page (/pricing)"
     implemented: true

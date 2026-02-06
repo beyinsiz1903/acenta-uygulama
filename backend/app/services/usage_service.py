@@ -1,30 +1,99 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
-from motor.motor_asyncio import AsyncIOMotorDatabase
+from app.constants.plan_matrix import DEFAULT_PLAN, PLAN_MATRIX
+from app.repositories.usage_ledger_repository import usage_ledger_repo
+from app.services.audit_log_service import append_audit_log
+from app.services.feature_service import feature_service
 
-from app.repositories.usage_log_repository import UsageLogRepository
+logger = logging.getLogger(__name__)
 
 
-from app.metrics import METRIC_BOOKINGS_CREATED, METRIC_USERS_CREATED
+def _current_billing_period() -> str:
+  return datetime.now(timezone.utc).strftime("%Y-%m")
 
 
-class UsageService:
-    def __init__(self, db: AsyncIOMotorDatabase) -> None:
-        self._repo = UsageLogRepository(db)
+async def track_usage(
+  tenant_id: str,
+  metric: str,
+  quantity: int,
+  source: str,
+  source_event_id: str,
+) -> None:
+  """Best-effort usage tracking. Never raises."""
+  try:
+    plan = await feature_service.get_plan(tenant_id)
+    if plan == "starter":
+      return  # Starter has no metered features
 
-    async def log(self, metric: str, org_id: str, tenant_id: Optional[str] = None, value: int = 1) -> None:
-        now = datetime.now(timezone.utc)
-        payload = {
-            "org_id": org_id,
-            "tenant_id": tenant_id,
-            "metric": metric,
-            "value": int(value),
-            "ts": now,
-        }
-        await self._repo.insert_log(payload)
+    inserted = await usage_ledger_repo.append(
+      tenant_id=tenant_id,
+      metric=metric,
+      quantity=quantity,
+      source=source,
+      source_event_id=source_event_id,
+    )
+    if not inserted:
+      logger.debug("Usage duplicate skipped: %s/%s/%s", tenant_id, metric, source_event_id)
+  except Exception:
+    logger.warning("usage track failed", exc_info=True)
 
-    async def get_monthly_count(self, org_id: str, metric: str, month_start: datetime, month_end: datetime) -> int:
-        return await self._repo.get_monthly_count(org_id, metric, month_start, month_end)
+
+async def check_quota(tenant_id: str, metric: str) -> Dict[str, Any]:
+  """Check if tenant is within quota for a metric."""
+  plan = await feature_service.get_plan(tenant_id) or DEFAULT_PLAN
+  quotas = PLAN_MATRIX.get(plan, {}).get("quotas", {})
+  quota = quotas.get(metric)
+
+  period = _current_billing_period()
+  totals = await usage_ledger_repo.get_period_totals(tenant_id, period)
+  used = totals.get(metric, 0)
+
+  if quota is None:
+    return {"metric": metric, "quota": None, "used": used, "remaining": None, "exceeded": False}
+
+  remaining = max(0, quota - used)
+  exceeded = used >= quota
+
+  if exceeded:
+    await append_audit_log(
+      scope="usage",
+      tenant_id=tenant_id,
+      actor_user_id="system",
+      actor_email="quota_check",
+      action="usage.quota_exceeded",
+      before=None,
+      after={"metric": metric, "quota": quota, "used": used, "period": period},
+    )
+
+  return {"metric": metric, "quota": quota, "used": used, "remaining": remaining, "exceeded": exceeded}
+
+
+async def get_usage_summary(tenant_id: str) -> Dict[str, Any]:
+  """Get full usage summary for a tenant (current period)."""
+  plan = await feature_service.get_plan(tenant_id) or DEFAULT_PLAN
+  quotas = PLAN_MATRIX.get(plan, {}).get("quotas", {})
+  period = _current_billing_period()
+  totals = await usage_ledger_repo.get_period_totals(tenant_id, period)
+
+  metrics = {}
+  all_metric_keys = set(list(quotas.keys()) + list(totals.keys()))
+  for m in sorted(all_metric_keys):
+    quota = quotas.get(m)
+    used = totals.get(m, 0)
+    metrics[m] = {
+      "quota": quota,
+      "used": used,
+      "remaining": max(0, quota - used) if quota is not None else None,
+      "exceeded": used >= quota if quota is not None else False,
+    }
+
+  return {
+    "tenant_id": tenant_id,
+    "plan": plan,
+    "billing_period": period,
+    "metrics": metrics,
+  }

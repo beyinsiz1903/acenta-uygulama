@@ -619,10 +619,13 @@ class GTMCRMTester:
             if response.status_code == 200:
                 data = response.json()
                 second_token = data.get("access_token")
-                if second_token:
+                second_tenant_id = data.get("tenant_id")
+                
+                if second_token and second_tenant_id:
                     second_headers = {
                         "Authorization": f"Bearer {second_token}",
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
+                        "X-Tenant-Id": second_tenant_id
                     }
                     
                     # Try to access first tenant's deals
@@ -640,10 +643,10 @@ class GTMCRMTester:
                             self.log_result("Tenant Isolation", False, f"Second tenant can access first tenant's deals: {response2.status_code}")
                     else:
                         # No deals to test with, just verify different tenant setup
-                        self.log_result("Tenant Isolation", True, "Second tenant created successfully (no deals to test isolation)")
+                        self.log_result("Tenant Isolation", True, f"Second tenant created successfully - tenant_id: {second_tenant_id} vs {self.tenant_id}")
                         return True
                 else:
-                    self.log_result("Tenant Isolation", False, "Second tenant creation failed - no token")
+                    self.log_result("Tenant Isolation", False, f"Second tenant creation failed - missing token or tenant_id. Token: {bool(second_token)}, Tenant: {bool(second_tenant_id)}")
             else:
                 self.log_result("Tenant Isolation", False, f"Second tenant creation failed: {response.status_code}")
             

@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from app.db import get_db
 from app.auth import require_roles
+from app.constants.features import FEATURE_CRM
 from app.schemas_crm import (
     CustomerCreate,
     CustomerPatch,
@@ -24,9 +25,12 @@ from app.services.crm_customers import (
     find_duplicate_customers,
     perform_customer_merge,
 )
+from app.security.feature_flags import require_tenant_feature
 
 
 router = APIRouter(prefix="/api/crm/customers", tags=["crm-customers"])
+
+CrmFeatureDep = Depends(require_tenant_feature(FEATURE_CRM))
 
 
 class ListResponse(BaseModel):

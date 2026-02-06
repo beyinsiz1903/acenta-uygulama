@@ -29,6 +29,7 @@ import SignupPage from "./pages/public/SignupPage";
 import PricingPage from "./pages/public/PricingPage";
 import WebPOSPage from "./pages/WebPOSPage";
 import AdvancedReportsPage from "./pages/AdvancedReportsPage";
+import OnboardingWizardPage from "./pages/OnboardingWizardPage";
 import PublicHomePage from "./pages/PublicHomePage";
 import StorefrontSearchPage from "./pages/storefront/StorefrontSearchPage";
 import StorefrontOfferPage from "./pages/storefront/StorefrontOfferPage";

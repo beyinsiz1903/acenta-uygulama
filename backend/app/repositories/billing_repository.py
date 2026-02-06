@@ -140,6 +140,61 @@ class BillingRepository:
       upsert=True,
     )
 
+  # --- Period Jobs (finalize lock) ---
+
+  async def get_period_job(self, period: str) -> Optional[Dict[str, Any]]:
+    db = await self._db()
+    return await db.billing_period_jobs.find_one({"period": period}, {"_id": 0})
+
+  async def start_period_job(self, period: str, triggered_by: str) -> bool:
+    """Try to start a finalize job. Returns False if already running."""
+    db = await self._db()
+    now = datetime.now(timezone.utc)
+    from pymongo.errors import DuplicateKeyError
+    try:
+      await db.billing_period_jobs.insert_one({
+        "period": period,
+        "status": "running",
+        "started_at": now,
+        "finished_at": None,
+        "pushed_count": 0,
+        "error_count": 0,
+        "pending_before": 0,
+        "pending_after": 0,
+        "triggered_by": triggered_by,
+      })
+      return True
+    except DuplicateKeyError:
+      existing = await self.get_period_job(period)
+      if existing and existing.get("status") == "running":
+        return False
+      # Re-run allowed if previous was success/failed
+      await db.billing_period_jobs.update_one(
+        {"period": period},
+        {"$set": {"status": "running", "started_at": now, "triggered_by": triggered_by, "finished_at": None}},
+      )
+      return True
+
+  async def finish_period_job(self, period: str, status: str, pushed_count: int, error_count: int, pending_before: int, pending_after: int) -> None:
+    db = await self._db()
+    await db.billing_period_jobs.update_one(
+      {"period": period},
+      {"$set": {
+        "status": status,
+        "finished_at": datetime.now(timezone.utc),
+        "pushed_count": pushed_count,
+        "error_count": error_count,
+        "pending_before": pending_before,
+        "pending_after": pending_after,
+      }},
+    )
+
+  async def get_last_finalize(self) -> Optional[Dict[str, Any]]:
+    db = await self._db()
+    cursor = db.billing_period_jobs.find({}, {"_id": 0}).sort("started_at", -1).limit(1)
+    docs = await cursor.to_list(1)
+    return docs[0] if docs else None
+
   # --- Indexes ---
 
   async def ensure_indexes(self) -> None:
@@ -149,6 +204,7 @@ class BillingRepository:
     await db.billing_subscriptions.create_index("provider_subscription_id")
     await db.billing_plan_catalog.create_index([("plan", 1), ("interval", 1), ("currency", 1)], unique=True)
     await db.billing_webhook_events.create_index("provider_event_id", unique=True)
+    await db.billing_period_jobs.create_index("period", unique=True)
 
 
 billing_repo = BillingRepository()

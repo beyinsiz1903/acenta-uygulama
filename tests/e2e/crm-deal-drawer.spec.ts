@@ -45,7 +45,7 @@ test("deal-drawer: open, switch tabs, add note, close", async ({ request }) => {
   expect(ct.ok()).toBeTruthy();
 
   // Verify tasks for this deal
-  const tl = await request.get(`${BASE}/api/crm/tasks?relatedType=deal&relatedId=${deal.id}&status=`, { headers: h });
+  const tl = await request.get(`${BASE}/api/crm/tasks?relatedType=deal&relatedId=${deal.id}&status=open`, { headers: h });
   expect(tl.ok()).toBeTruthy();
   const tasks = await tl.json();
   expect(tasks.items.length).toBeGreaterThan(0);

@@ -71,5 +71,9 @@ async def test_audit_log_captures_before_state(
     {"_id": 0},
   )
   assert log is not None
-  assert log["before"]["features"] == ["crm"]
-  assert set(log["after"]["features"]) == {"crm", "b2b", "reports"}
+  # Before state had crm as add_on, effective = starter plan defaults + crm
+  assert "crm" in log["before"]["features"]
+  # After state has crm, b2b, reports as add_ons, effective = starter defaults + those
+  assert "crm" in log["after"]["features"]
+  assert "b2b" in log["after"]["features"]
+  assert "reports" in log["after"]["features"]

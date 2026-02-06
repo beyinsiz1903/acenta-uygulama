@@ -5,13 +5,17 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Response
 
 from app.auth import get_current_user
+from app.constants.features import FEATURE_REPORTS
 from app.db import get_db
+from app.security.feature_flags import require_tenant_feature
 from app.utils import serialize_doc, to_csv
 
 router = APIRouter(prefix="/api/reports", tags=["reports"])
 
+ReportsFeatureDep = Depends(require_tenant_feature(FEATURE_REPORTS))
 
-@router.get("/reservations-summary", dependencies=[Depends(get_current_user)])
+
+@router.get("/reservations-summary", dependencies=[Depends(get_current_user), ReportsFeatureDep])
 async def reservations_summary(user=Depends(get_current_user)):
     db = await get_db()
     pipeline = [

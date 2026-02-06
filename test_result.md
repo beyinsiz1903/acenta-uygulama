@@ -166,11 +166,14 @@ frontend:
     file: "frontend/src/pages/public/SignupPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Screenshot verified."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Signup page loads correctly with all form fields (company name, email, password) and plan selector showing all 3 plans."
 
   - task: "Pricing Page (/pricing)"
     implemented: true
@@ -178,47 +181,59 @@ frontend:
     file: "frontend/src/pages/public/PricingPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Screenshot verified."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Pricing page loads correctly showing all three plans from the API."
 
   - task: "WebPOS Page (/app/finance/webpos)"
     implemented: true
-    working: true
+    working: false
     file: "frontend/src/pages/WebPOSPage.jsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Payment modal, refund, ledger view, balance."
+      - working: false
+        agent: "testing"
+        comment: "❌ FAILED: Unable to verify WebPOS page functionality. Authentication failed with 401 error when attempting to log in using admin@acenta.test / admin123 credentials."
 
   - task: "Advanced Reports Page (/app/reports)"
     implemented: true
-    working: true
+    working: false
     file: "frontend/src/pages/AdvancedReportsPage.jsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "4 sections + CSV export."
+      - working: false
+        agent: "testing"
+        comment: "❌ FAILED: Unable to verify Reports page functionality. Authentication failed with 401 error when attempting to log in using admin@acenta.test / admin123 credentials."
 
   - task: "NotificationBell"
     implemented: true
-    working: true
+    working: false
     file: "frontend/src/components/NotificationBell.jsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Bell with unread badge, dropdown, mark-all-read."
+      - working: false
+        agent: "testing"
+        comment: "❌ FAILED: Unable to verify NotificationBell functionality. Authentication failed with 401 error when attempting to log in using admin@acenta.test / admin123 credentials."
 
 metadata:
   created_by: "main_agent"

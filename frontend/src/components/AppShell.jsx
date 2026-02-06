@@ -132,6 +132,7 @@ const ADMIN_GROUPED_NAV = [
   {
     group: "FİNANS",
     items: [
+      { to: "/app/finance/webpos", label: "WebPOS", icon: DollarSign, feature: "webpos" },
       { to: "/app/admin/finance/settlements", label: "Mutabakat", icon: Scale },
       { to: "/app/admin/finance/refunds", label: "İadeler", icon: DollarSign },
       { to: "/app/admin/finance/exposure", label: "Exposure", icon: BarChart3 },

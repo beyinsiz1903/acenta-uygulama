@@ -31,8 +31,10 @@ async def test_admin_patch_tenant_features(
   admin_headers: dict,
   test_db,
 ) -> None:
-  """Admin can PATCH features for a tenant."""
+  """Admin can PATCH features for a tenant (legacy compat writes add_ons)."""
   target = "admin_test_tenant_1"
+  await test_db.tenant_capabilities.delete_many({"tenant_id": target})
+  await test_db.tenant_features.delete_many({"tenant_id": target})
 
   # Set features
   resp = await async_client.patch(
@@ -42,7 +44,9 @@ async def test_admin_patch_tenant_features(
   )
   assert resp.status_code == 200, resp.text
   body = resp.json()
-  assert set(body["features"]) == {FEATURE_B2B, FEATURE_REPORTS}
+  # Effective features = starter plan defaults + add_ons (b2b, reports)
+  assert FEATURE_B2B in body["features"]
+  assert FEATURE_REPORTS in body["features"]
 
   # Verify via GET
   resp2 = await async_client.get(
@@ -50,7 +54,10 @@ async def test_admin_patch_tenant_features(
     headers=admin_headers,
   )
   assert resp2.status_code == 200
-  assert set(resp2.json()["features"]) == {FEATURE_B2B, FEATURE_REPORTS}
+  data = resp2.json()
+  assert FEATURE_B2B in data["features"]
+  assert FEATURE_REPORTS in data["features"]
+  assert data["source"] == "capabilities"
 
 
 @pytest.mark.anyio

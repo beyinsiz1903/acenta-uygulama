@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { getTenantsHealth } from "../../lib/gtm";
+import { AlertTriangle, Activity, Filter } from "lucide-react";
 
 export default function AdminTenantHealthPage() {
   const [data, setData] = useState([]);
@@ -11,60 +12,51 @@ export default function AdminTenantHealthPage() {
 
   async function loadData() {
     setLoading(true); setError("");
-    try { const res = await getTenantsHealth(filter || undefined); setData(res.items || []); }
-    catch (e) { setError(e?.message || "Yuklenemedi"); }
+    try {
+      const res = await getTenantsHealth(filter||undefined);
+      setData(res.items||[]);
+    } catch (e) { setError(e?.message||"Yuklenemedi"); }
     finally { setLoading(false); }
   }
 
-  const filters = [
-    { value: "", label: "Tumu" },
-    { value: "trial_expiring", label: "Deneme Suresi Doluyor" },
-    { value: "inactive", label: "Inaktif" },
-    { value: "overdue", label: "Gecikmis Odemeler" },
-  ];
+  const filters = [{value:"",label:"Tumu"},{value:"trial_expiring",label:"Deneme Dolacak"},{value:"inactive",label:"Inaktif"},{value:"overdue",label:"Gecikmis Odeme"}];
 
   return (
     <div className="p-6 max-w-7xl mx-auto" data-testid="tenant-health-page">
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Tenant Saglik Paneli</h1>
-          <p className="text-sm text-gray-500 mt-1">Tum tenant'larin saglik durumunu izleyin</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {filters.map(f => (
-            <button key={f.value} onClick={() => setFilter(f.value)} className={`px-3 py-1.5 text-xs rounded-full border ${filter === f.value ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300"}`} data-testid={`filter-${f.value || 'all'}`}>{f.label}</button>
-          ))}
+        <div><h1 className="text-2xl font-bold text-gray-900">Tenant Saglik Paneli</h1>
+          <p className="text-sm text-gray-500 mt-1">Tum tenantlarin saglik durumunu izleyin</p></div>
+        <div className="flex items-center gap-2"><Filter size={16} className="text-gray-500" />
+          {filters.map(f=>(<button key={f.value} onClick={()=>setFilter(f.value)}
+            className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${filter===f.value?"bg-blue-600 text-white border-blue-600":"bg-white text-gray-600 border-gray-300 hover:bg-gray-50"}`}
+            data-testid={`filter-${f.value||'all'}`}>{f.label}</button>))}
         </div>
       </div>
       {error && <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-4">{error}</div>}
-      {loading ? (
-        <div className="flex items-center justify-center py-12"><div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>
-      ) : data.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">Tenant bulunamadi</div>
-      ) : (
+      {loading ? <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>
+      : data.length===0 ? <div className="text-center py-12 text-gray-500">Tenant bulunamadi</div>
+      : (
         <div className="bg-white border rounded-xl overflow-hidden">
           <table className="w-full text-sm" data-testid="tenant-health-table">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Tenant</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Durum</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Son Giris</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Son Aktivite</th>
-                <th className="text-center px-4 py-3 font-medium text-gray-600">Deneme (gun)</th>
-                <th className="text-center px-4 py-3 font-medium text-gray-600">Gecikmis</th>
-                <th className="text-center px-4 py-3 font-medium text-gray-600">Kota</th>
-              </tr>
-            </thead>
+            <thead className="bg-gray-50 border-b"><tr>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Tenant</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Durum</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Son Giris</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Son Aktivite</th>
+              <th className="text-center px-4 py-3 font-medium text-gray-600">Deneme (gun)</th>
+              <th className="text-center px-4 py-3 font-medium text-gray-600">Gecikmis</th>
+              <th className="text-center px-4 py-3 font-medium text-gray-600">Kota</th>
+            </tr></thead>
             <tbody className="divide-y">
-              {data.map((t, i) => (
-                <tr key={t.tenant_id || i} className="hover:bg-gray-50">
-                  <td className="px-4 py-3"><div className="font-medium text-gray-900">{t.tenant_name || t.tenant_id}</div></td>
-                  <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${t.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{t.status}</span></td>
-                  <td className="px-4 py-3 text-gray-600">{t.last_login_at ? new Date(t.last_login_at).toLocaleDateString('tr-TR') : '-'}</td>
-                  <td className="px-4 py-3 text-gray-600">{t.last_activity_at ? new Date(t.last_activity_at).toLocaleDateString('tr-TR') : '-'}</td>
-                  <td className="px-4 py-3 text-center"><span className={`font-medium ${t.trial_days_left != null && t.trial_days_left <= 3 ? 'text-red-600' : 'text-gray-700'}`}>{t.trial_days_left ?? '-'}</span></td>
-                  <td className="px-4 py-3 text-center">{t.overdue_payments_count > 0 ? <span className="text-red-600 font-medium">{t.overdue_payments_count}</span> : <span className="text-gray-400">0</span>}</td>
-                  <td className="px-4 py-3 text-center">{t.quota_ratio != null ? `${Math.round(t.quota_ratio * 100)}%` : '-'}</td>
+              {data.map((t,i)=>(
+                <tr key={t.tenant_id||i} className="hover:bg-gray-50">
+                  <td className="px-4 py-3"><div className="font-medium text-gray-900">{t.tenant_name||t.tenant_id}</div></td>
+                  <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${t.status==='active'?'bg-green-100 text-green-700':'bg-gray-100 text-gray-600'}`}><Activity size={12} />{t.status}</span></td>
+                  <td className="px-4 py-3 text-gray-600">{t.last_login_at?new Date(t.last_login_at).toLocaleDateString('tr-TR'):'-'}</td>
+                  <td className="px-4 py-3 text-gray-600">{t.last_activity_at?new Date(t.last_activity_at).toLocaleDateString('tr-TR'):'-'}</td>
+                  <td className="px-4 py-3 text-center">{t.trial_days_left!=null?<span className={`font-medium ${t.trial_days_left<=3?'text-red-600':t.trial_days_left<=7?'text-amber-600':'text-gray-700'}`}>{t.trial_days_left}</span>:'-'}</td>
+                  <td className="px-4 py-3 text-center">{t.overdue_payments_count>0?<span className="inline-flex items-center gap-1 text-red-600 font-medium"><AlertTriangle size={14} />{t.overdue_payments_count}</span>:<span className="text-gray-400">0</span>}</td>
+                  <td className="px-4 py-3 text-center">{t.quota_ratio!=null?<span className={`font-medium ${t.quota_ratio>0.8?'text-red-600':'text-gray-700'}`}>{Math.round(t.quota_ratio*100)}%</span>:'-'}</td>
                 </tr>
               ))}
             </tbody>

@@ -1,7 +1,7 @@
 // frontend/src/pages/crm/CrmCustomerDetailPage.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getCustomer, patchCustomer, listActivities, createActivity, listCustomerInboxThreads } from "../../lib/crm";
+import { getCustomer, patchCustomer, listActivities, createActivity, listCustomerInboxThreads, getCustomerTimeline } from "../../lib/crm";
 
 function Badge({ children }) {
   return (

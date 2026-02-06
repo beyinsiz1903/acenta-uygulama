@@ -17,7 +17,7 @@ import uuid
 from datetime import datetime, timedelta
 
 class VoucherDemoRemovalTester:
-    def __init__(self, base_url="https://travelpartner-2.preview.emergentagent.com"):
+    def __init__(self, base_url="https://tenant-features.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.hotel_token = None

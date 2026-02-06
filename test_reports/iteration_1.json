@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://travelpartner-2.preview.emergentagent.com/api",
-    "frontend_url": "https://travelpartner-2.preview.emergentagent.com",
+    "backend_url": "https://tenant-features.preview.emergentagent.com/api",
+    "frontend_url": "https://tenant-features.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

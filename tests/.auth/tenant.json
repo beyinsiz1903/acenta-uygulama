@@ -1,6 +1,6 @@
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBhY2VudGEudGVzdCIsIm9yZyI6Im9yZ19jbGlja190b19wYXlfbm90aGluZyIsInJvbGVzIjpbInN1cGVyX2FkbWluIiwiYWdlbmN5X2FkbWluIl0sImlhdCI6MTc3MDM2NjkwNiwiZXhwIjoxNzcwNDEwMTA2fQ.bJR6MQdSEZgJtwWEw7aCZBWZFl4uaw8103W6FFOjy9c",
   "tenantId": "tenant_partner_test_a_14beaf25",
-  "baseURL": "https://travelpartner-2.preview.emergentagent.com",
+  "baseURL": "https://tenant-features.preview.emergentagent.com",
   "email": "admin@acenta.test"
 }

@@ -4,7 +4,7 @@ import { test, expect } from "@playwright/test";
 // NOT: Bu testler, admin subtree (/app/admin/*) için UI guard davranışını doğrular.
 // Backend RBAC zaten admin API'lerini koruyor; burada amaç route/guard regresyonlarını yakalamaktır.
 
-const BASE_URL = "https://travelpartner-2.preview.emergentagent.com";
+const BASE_URL = "https://tenant-features.preview.emergentagent.com";
 
 async function login(page, email: string, password: string) {
   await page.goto(`${BASE_URL}/login`);

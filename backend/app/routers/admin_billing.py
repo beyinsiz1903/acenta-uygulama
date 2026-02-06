@@ -415,3 +415,11 @@ async def admin_provision_stripe_products(
     "skipped": skipped_count,
     "results": results,
   }
+
+
+@router.get("/cron-status", dependencies=[AdminDep])
+async def admin_cron_status() -> dict:
+  """Admin: get billing cron scheduler status."""
+  from app.billing.scheduler import get_cron_status
+  return get_cron_status()
+

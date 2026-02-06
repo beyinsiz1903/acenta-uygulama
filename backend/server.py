@@ -139,6 +139,7 @@ from app.routers.activation_checklist import router as activation_checklist_rout
 from app.routers.upgrade_requests import router as upgrade_requests_router
 from app.routers.tenant_health import router as tenant_health_router
 from app.routers.crm_notes import router as crm_notes_router
+from app.routers.crm_timeline import router as crm_timeline_router
 
 from app.routers.seo import router as seo_router
 from app.routers.public_campaigns import router as public_campaigns_router

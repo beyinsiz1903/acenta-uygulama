@@ -629,6 +629,7 @@ export default function PartnerB2BNetworkPage() {
                         <TableHead className="text-xs">Talep Fiyatı</TableHead>
                         <TableHead className="text-xs">Platform Ücreti</TableHead>
                         <TableHead className="text-xs">Durum</TableHead>
+                        <TableHead className="text-xs text-right">Aksiyon</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

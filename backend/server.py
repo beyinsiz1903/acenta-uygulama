@@ -355,6 +355,17 @@ app.include_router(public_campaigns_router)
 
 app.include_router(auth_router)
 
+# Phase 5-8: Onboarding, WebPOS, Notifications, Advanced Reports
+from app.routers.onboarding import router as onboarding_router
+from app.routers.webpos import router as webpos_router
+from app.routers.notifications import router as notifications_router
+from app.routers.advanced_reports import router as advanced_reports_router
+
+app.include_router(onboarding_router)
+app.include_router(webpos_router)
+app.include_router(notifications_router)
+app.include_router(advanced_reports_router)
+
 
 @app.get("/")
 async def read_root() -> dict[str, str]:

@@ -721,7 +721,7 @@ export default function PartnerB2BNetworkPage() {
                 <p className="mb-2 text-[11px] text-destructive">{incomingError}</p>
               )}
               {!incomingLoading && !providerHasIncoming && !incomingError && (
-                <p className="text-[11px] text-muted-foreground">Henüz talep yok.</p>
+                <p className="text-[11px] text-muted-foreground">Henüz gelen talep yok.</p>
               )}
               {providerHasIncoming && (
                 <div className="overflow-x-auto">

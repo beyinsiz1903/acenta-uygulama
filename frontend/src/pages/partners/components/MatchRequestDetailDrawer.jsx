@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   Sheet,
   SheetContent,
@@ -8,6 +8,7 @@ import {
 } from "../../../components/ui/sheet";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
+import { fetchB2BEvents } from "../../../lib/b2bEvents";
 
 function statusLabel(status) {
   const s = (status || "").toLowerCase();

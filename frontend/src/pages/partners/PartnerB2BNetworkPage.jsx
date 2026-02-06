@@ -1036,6 +1036,19 @@ export default function PartnerB2BNetworkPage() {
               <span className="text-[11px] font-medium">Durum</span>
               <div className="inline-flex rounded-md border bg-background p-0.5 text-[11px]">
                 <button
+
+      <MatchRequestDetailDrawer
+        open={detailOpen}
+        onOpenChange={(open) => {
+          if (!open) closeDetail();
+          else setDetailOpen(true);
+        }}
+        request={detailRequest}
+        listing={detailListing}
+        onCopyId={(value) => copyToClipboard(value, toast)}
+        formatPrice={formatTry}
+      />
+
                   type="button"
                   className={`px-3 py-1 rounded-sm ${
                     listingForm.status === "active"

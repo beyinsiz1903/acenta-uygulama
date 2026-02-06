@@ -36,13 +36,17 @@ export default function RequireAuth({ children, roles }) {
   }
 
   // 3️⃣ Context validation (VERY IMPORTANT)
-  if (user.roles?.includes("agency_admin") || user.roles?.includes("agency_agent")) {
+  const roles = user.roles || [];
+  const isAdminLike = roles.includes("super_admin") || roles.includes("admin");
+
+  // 3️⃣ Context validation (agency/hotel rolleri için, admin/super_admin hariç)
+  if (!isAdminLike && (roles.includes("agency_admin") || roles.includes("agency_agent"))) {
     if (!user.agency_id) {
       return <Navigate to="/error-context?reason=agency_id_missing" replace />;
     }
   }
 
-  if (user.roles?.includes("hotel_admin") || user.roles?.includes("hotel_staff")) {
+  if (!isAdminLike && (roles.includes("hotel_admin") || roles.includes("hotel_staff"))) {
     if (!user.hotel_id) {
       return <Navigate to="/error-context?reason=hotel_id_missing" replace />;
     }

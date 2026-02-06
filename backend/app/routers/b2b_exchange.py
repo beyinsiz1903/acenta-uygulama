@@ -430,6 +430,7 @@ async def _append_status_history(db, match_doc: dict[str, Any], status: str, use
 
 
 @router.get("/match-request/incoming", response_model=List[B2BMatchRequestOut])
+@require_tenant_feature("b2b")
 async def list_incoming_match_requests(  # type: ignore[no-untyped-def]
     user: CurrentB2BUser = Depends(current_b2b_user),
     tenant_ctx: B2BTenantContext = Depends(get_b2b_tenant_context),

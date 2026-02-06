@@ -5,7 +5,7 @@ from typing import Any, Callable, Coroutine, Optional, TypeVar
 from fastapi import Depends
 
 from app.errors import AppError
-from app.routers.b2b_exchange import B2BTenantContext, get_b2b_tenant_context
+from app.security.b2b_context import B2BTenantContext, get_b2b_tenant_context
 from app.services.feature_service import feature_service
 
 T = TypeVar("T")

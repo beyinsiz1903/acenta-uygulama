@@ -264,7 +264,7 @@ class EnterpriseTestSuite:
         credit_found = False
         
         for entry in entries:
-            required_fields = ["id", "type", "amount", "balance_after", "created_at"]
+            required_fields = ["id", "type", "amount", "balance_after", "timestamp"]
             for field in required_fields:
                 assert field in entry, f"Ledger entry missing {field}"
                 

@@ -201,6 +201,43 @@ export default function AdminAnalyticsPage() {
             </div>
           )}
 
+          {/* Billing Ops Status */}
+          {pushStatus && (
+            <div className="border rounded-lg p-4 space-y-3" data-testid="billing-ops">
+              <div className="flex items-center gap-2">
+                <Activity className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-medium text-foreground">Billing Ops</h3>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+                <div>
+                  <p className="text-muted-foreground mb-0.5">Son Push</p>
+                  <p className="font-medium">{pushStatus.last_push_at ? new Date(pushStatus.last_push_at).toLocaleString("tr-TR") : "—"}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground mb-0.5">Pending (Bu Ay)</p>
+                  <p className={`font-medium ${pushStatus.pending_current_period > 0 ? "text-amber-600" : ""}`}>{pushStatus.pending_current_period}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground mb-0.5">Pending (Önceki)</p>
+                  <p className={`font-medium ${pushStatus.pending_previous_period > 0 ? "text-destructive" : ""}`}>{pushStatus.pending_previous_period}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground mb-0.5">Hatalar</p>
+                  <p className={`font-medium ${pushStatus.error_records > 0 ? "text-destructive" : ""}`}>{pushStatus.error_records}</p>
+                </div>
+              </div>
+              {pushStatus.last_finalize && (
+                <div className="rounded border bg-muted/30 px-3 py-2 text-xs flex items-center justify-between">
+                  <span>Son Finalize: <strong>{pushStatus.last_finalize.period}</strong></span>
+                  <Badge variant={pushStatus.last_finalize.status === "success" ? "default" : "destructive"} className="text-[10px]">
+                    {pushStatus.last_finalize.status}
+                  </Badge>
+                  <span>Pushed: {pushStatus.last_finalize.pushed_count} | Errors: {pushStatus.last_finalize.error_count}</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {revenue?.generated_at && (
             <p className="text-[10px] text-muted-foreground text-right">
               Oluşturulma: {new Date(revenue.generated_at).toLocaleString("tr-TR")}

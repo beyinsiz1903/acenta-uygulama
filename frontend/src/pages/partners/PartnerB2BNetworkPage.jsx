@@ -1085,6 +1085,19 @@ export default function PartnerB2BNetworkPage() {
 
       <MatchRequestDetailDrawer
         open={detailOpen}
+        onOpenChange={(open) => {
+          if (!open) closeDetail();
+          else setDetailOpen(true);
+        }}
+        request={detailRequest}
+        listing={detailListing}
+        onCopyId={(value) => copyToClipboard(value, toast)}
+        formatPrice={formatTry}
+      />
+
+
+      <MatchRequestDetailDrawer
+        open={detailOpen}
         onClose={closeDetail}
         request={detailRequest}
         listing={detailListing}

@@ -62,7 +62,7 @@ export default function AdminAnalyticsPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [rev, usg] = await Promise.all([fetchRevenueSummary(), fetchUsageOverview()]);
+      const [rev, usg] = await Promise.all([fetchRevenueSummary({ lookback: 3 }), fetchUsageOverview()]);
       setRevenue(rev);
       setUsage(usg);
     } catch {

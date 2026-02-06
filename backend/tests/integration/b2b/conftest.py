@@ -384,3 +384,30 @@ async def set_tenant_features_without_b2b(test_db, tenant_id: str) -> None:
     doc, 
     upsert=True
   )
+
+
+async def enable_b2b_feature_for_tenant(test_db, tenant_id: str) -> None:
+  """Helper to enable the 'b2b' feature for a tenant.
+  
+  This creates or updates a tenant_features document to include the 'b2b' feature.
+  """
+  now = datetime.now(timezone.utc)
+  doc = {
+    "tenant_id": tenant_id,
+    "plan": "pro",
+    "features": ["search", "booking", "b2b"],  # Include "b2b" feature
+    "created_at": now,
+    "updated_at": now,
+  }
+  await test_db.tenant_features.replace_one(
+    {"tenant_id": tenant_id}, 
+    doc, 
+    upsert=True
+  )
+
+
+@pytest.fixture
+async def enable_b2b_features(test_db, provider_tenant, seller_tenant) -> None:
+  """Enable B2B features for both provider and seller tenants."""
+  await enable_b2b_feature_for_tenant(test_db, str(provider_tenant["_id"]))
+  await enable_b2b_feature_for_tenant(test_db, str(seller_tenant["_id"]))

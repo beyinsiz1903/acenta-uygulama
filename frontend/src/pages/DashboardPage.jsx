@@ -10,7 +10,7 @@ import {
   BarChart3, ListChecks, Package, FileWarning,
 } from "lucide-react";
 
-import { api, apiErrorMessage, getUser } from "../lib/api";
+import { api, getUser } from "../lib/api";
 import { Skeleton } from "../components/ui/skeleton";
 
 /* ------------------------------------------------------------------ */

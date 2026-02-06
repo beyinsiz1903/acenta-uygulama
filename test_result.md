@@ -71,7 +71,7 @@ user_problem_statement: "GTM Readiness Pack (demo seed, activation checklist, tr
 backend:
   - task: "Demo Seed POST /api/admin/demo/seed"
     implemented: true
-    working: false
+    working: true
     file: "backend/app/routers/gtm_demo_seed.py"
     stuck_count: 0
     priority: "high"
@@ -83,6 +83,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "CRITICAL: 520 internal server error. Database constraint violation - BulkWriteError on ops_cases collection: 'E11000 duplicate key error index: uniq_ops_case_id dup key: { case_id: null }'. The _gen_cases() function is missing case_id field, causing duplicate null values that violate unique index. Need to add case_id field to case documents."
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING: Fixed case_id field issue. Demo seed creates {products: 3, customers: 5, reservations: 10, payments: 6, ledger_entries: 6, cases: 3, deals: 5, tasks: 10}. Idempotency check returns already_seeded=true. Force re-seed with force=true works correctly."
 
   - task: "Activation Checklist GET/PUT /api/activation/checklist"
     implemented: true

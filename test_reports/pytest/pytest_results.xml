@@ -1,1 +1,60 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="23" time="29.598" timestamp="2026-02-06T10:31:11.120435+00:00" hostname="agent-env-b8b95755-0346-4c6d-966d-df3edd135947"><testcase classname="tests.integration.feature_flags.test_admin_tenant_features" name="test_admin_get_tenant_features" time="1.226" /><testcase classname="tests.integration.feature_flags.test_admin_tenant_features" name="test_admin_patch_tenant_features" time="1.227" /><testcase classname="tests.integration.feature_flags.test_admin_tenant_features" name="test_admin_patch_invalid_features" time="1.214" /><testcase classname="tests.integration.feature_flags.test_admin_tenant_features" name="test_admin_features_requires_admin_role" time="0.990" /><testcase classname="tests.integration.feature_flags.test_feature_crm_guard" name="test_crm_blocked_when_feature_disabled" time="1.256" /><testcase classname="tests.integration.feature_flags.test_feature_crm_guard" name="test_crm_allowed_when_feature_enabled" time="1.264" /><testcase classname="tests.integration.feature_flags.test_feature_reports_guard" name="test_reports_blocked_when_feature_disabled" time="1.250" /><testcase classname="tests.integration.feature_flags.test_feature_reports_guard" name="test_reports_allowed_when_feature_enabled" time="1.236" /><testcase classname="tests.integration.feature_flags.test_tenant_features_endpoint" name="test_get_tenant_features_empty" time="1.244" /><testcase classname="tests.integration.feature_flags.test_tenant_features_endpoint" name="test_get_tenant_features_with_enabled" time="1.281" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_tenant_isolation_cannot_request_own_listing" time="1.042" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_happy_path_flow" time="1.082" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_not_active_partner_cannot_see_or_request" time="1.058" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_cross_org_cannot_see_or_request" time="1.038" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_third_tenant_cannot_approve_match" time="1.036" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_invalid_status_pending_cannot_complete" time="1.062" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_invalid_status_rejected_cannot_approve" time="4.648" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_invalid_status_approved_cannot_reapprove" time="1.065" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_invalid_status_completed_cannot_change" time="1.102" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_feature_flag_enforcement" time="1.039" /><testcase classname="tests.integration.b2b.test_b2b_exchange_ids" name="test_listing_id_prefix_and_no_mongo_id_leak" time="1.051" /><testcase classname="tests.integration.b2b.test_b2b_exchange_ids" name="test_match_id_prefix_and_no_internal_fields_leak" time="1.063" /><testcase classname="tests.integration.b2b.test_b2b_exchange_ids" name="test_list_endpoints_do_not_leak_internal_fields" time="1.083" /></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="27" time="39.016" timestamp="2026-02-06T11:26:24.744092+00:00" hostname="agent-env-b8b95755-0346-4c6d-966d-df3edd135947"><testcase classname="tests.integration.feature_flags.test_admin_tenant_features" name="test_admin_get_tenant_features" time="1.249" /><testcase classname="tests.integration.feature_flags.test_admin_tenant_features" name="test_admin_patch_tenant_features" time="1.241" /><testcase classname="tests.integration.feature_flags.test_admin_tenant_features" name="test_admin_patch_invalid_features" time="1.253" /><testcase classname="tests.integration.feature_flags.test_admin_tenant_features" name="test_admin_features_requires_admin_role" time="0.990" /><testcase classname="tests.integration.feature_flags.test_audit_log_on_feature_update" name="test_audit_log_written_on_feature_update" time="1.238" /><testcase classname="tests.integration.feature_flags.test_audit_log_on_feature_update" name="test_audit_log_captures_before_state" time="1.259" /><testcase classname="tests.integration.feature_flags.test_feature_crm_guard" name="test_crm_blocked_when_feature_disabled" time="1.259" /><testcase classname="tests.integration.feature_flags.test_feature_crm_guard" name="test_crm_allowed_when_feature_enabled" time="1.256" /><testcase classname="tests.integration.feature_flags.test_feature_reports_guard" name="test_reports_blocked_when_feature_disabled" time="1.259" /><testcase classname="tests.integration.feature_flags.test_feature_reports_guard" name="test_reports_allowed_when_feature_enabled" time="1.270" /><testcase classname="tests.integration.feature_flags.test_tenant_features_endpoint" name="test_get_tenant_features_empty" time="1.244" /><testcase classname="tests.integration.feature_flags.test_tenant_features_endpoint" name="test_get_tenant_features_with_enabled" time="1.261" /><testcase classname="tests.integration.b2b.test_b2b_events_written" name="test_b2b_events_written_on_happy_path" time="1.084" /><testcase classname="tests.integration.b2b.test_b2b_events_written" name="test_b2b_event_has_tenant_ids" time="5.123" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_tenant_isolation_cannot_request_own_listing" time="1.052" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_happy_path_flow" time="1.102" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_not_active_partner_cannot_see_or_request" time="1.067" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_cross_org_cannot_see_or_request" time="1.060" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_third_tenant_cannot_approve_match" time="1.080" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_invalid_status_pending_cannot_complete" time="1.107" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_invalid_status_rejected_cannot_approve" time="1.094" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_invalid_status_approved_cannot_reapprove" time="1.085" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_invalid_status_completed_cannot_change" time="1.104" /><testcase classname="tests.integration.b2b.test_b2b_exchange_flow" name="test_b2b_feature_flag_enforcement" time="1.040" /><testcase classname="tests.integration.b2b.test_b2b_exchange_ids" name="test_listing_id_prefix_and_no_mongo_id_leak" time="1.055" /><testcase classname="tests.integration.b2b.test_b2b_exchange_ids" name="test_match_id_prefix_and_no_internal_fields_leak" time="4.807"><error message="failed on setup with &quot;pymongo.errors.AutoReconnect: localhost:27017: connection closed&quot;">/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:932: in command
+    return command(
+/root/.venv/lib/python3.11/site-packages/pymongo/network.py:181: in command
+    reply = receive_message(conn, request_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/network.py:247: in receive_message
+    length, _, response_to, op_code = _UNPACK_HEADER(_receive_data_on_socket(conn, 16, deadline))
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/network.py:336: in _receive_data_on_socket
+    raise OSError("connection closed")
+E   OSError: connection closed
+
+The above exception was the direct cause of the following exception:
+/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:123: in wrapper
+    yield runner.run_fixture(local_func, kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2313: in run_fixture
+    retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/integration/b2b/conftest.py:355: in partner_relationship_active
+    await test_db.partner_relationships.insert_one(doc)
+/usr/local/lib/python3.11/concurrent/futures/thread.py:58: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:671: in insert_one
+    self._insert_one(
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:611: in _insert_one
+    self.__database.client._retryable_write(acknowledged, _insert_command, session)
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:1568: in _retryable_write
+    return self._retry_with_session(retryable, func, s, None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:1413: in _retry_with_session
+    return self._retry_internal(retryable, func, session, bulk)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/_csot.py:108: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:1460: in _retry_internal
+    return func(session, conn, retryable)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:599: in _insert_command
+    result = conn.command(
+/root/.venv/lib/python3.11/site-packages/pymongo/helpers.py:315: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:960: in command
+    self._raise_connection_failure(error)
+/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:1134: in _raise_connection_failure
+    _raise_connection_failure(self.address, error)
+/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:406: in _raise_connection_failure
+    raise AutoReconnect(msg) from error
+E   pymongo.errors.AutoReconnect: localhost:27017: connection closed</error></testcase><testcase classname="tests.integration.b2b.test_b2b_exchange_ids" name="test_list_endpoints_do_not_leak_internal_fields" time="1.068" /></testsuite></testsuites>

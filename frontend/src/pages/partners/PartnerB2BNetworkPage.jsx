@@ -647,7 +647,9 @@ export default function PartnerB2BNetworkPage() {
                 <p className="mb-2 text-[11px] text-destructive">{myListingsError}</p>
               )}
               {!myListingsLoading && !providerHasListings && !myListingsError && (
-                <p className="text-[11px] text-muted-foreground">Henüz listing bulunamadı.</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Henüz tur listelemediniz. "Yeni Listing" ile başlayın.
+                </p>
               )}
               {providerHasListings && (
                 <div className="overflow-x-auto">

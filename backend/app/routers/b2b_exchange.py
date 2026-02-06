@@ -214,6 +214,7 @@ def _ensure_currency_try(currency: Optional[str]) -> str:
 
 
 @router.post("/listings", response_model=B2BListingOut)
+@require_tenant_feature("b2b")
 async def create_listing(  # type: ignore[no-untyped-def]
     body: B2BListingCreateIn,
     user: CurrentB2BUser = Depends(current_b2b_user),

@@ -61,7 +61,8 @@ export default function DashboardPage() {
         // "Not Found" durumunu veri yok / rapor devre df olarak yorumlayp
         // dashboard'da krmz hata gstermek yerine sessizce bofa dryoruz.
         if (msg !== "Not Found") {
-          setError(msg);
+          const status = e?.response?.status;
+          if (status !== 403) setError(msg);
         }
       }
     })();

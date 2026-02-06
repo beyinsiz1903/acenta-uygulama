@@ -1,18 +1,27 @@
 // tests/partner/partner-b2b-ui-status.spec.ts
-import { test, expect } from "./fixtures";
+import { test, expect } from "@playwright/test";
 
 // Bu smoke testi, B2B Ağ sayfasının temel iskeletinin agency kullanıcısı için
 // render olup olmadığını doğrular. Data varlığını değil, sadece başlık ve
 // ana bölümlerin görünürlüğünü kontrol eder.
 
-// NOT: fixtures.ts context'e Authorization + X-Tenant-Id eklediği için
-// burada ekstra login akışı koşturmuyoruz. tests/.auth/tenant.json içinde
-// agency1@acenta.test / agency123 kullanıcı context'i olmalı.
+const BASE_URL = "https://travelpartner-2.preview.emergentagent.com";
+
+async function login(page, email: string, password: string) {
+  await page.goto(`${BASE_URL}/login`);
+  await page.fill('[data-testid="login-email"]', email);
+  await page.fill('[data-testid="login-password"]', password);
+  await page.click('[data-testid="login-submit"]');
+  await page.waitForURL(/\/app\//, { timeout: 60000 });
+}
 
 // 1️⃣ B2B Ağ iskeleti smoke testi
 test("B2B Ağ sayfası agency kullanıcısı için temel iskeleti render eder", async ({ page }) => {
-  // 1) /app/partners/b2b sayfasına git - use baseURL from config
-  await page.goto("/app/partners/b2b");
+  // Login as agency user first
+  await login(page, "agency1@acenta.test", "agency123");
+  
+  // 1) /app/partners/b2b sayfasına git
+  await page.goto(`${BASE_URL}/app/partners/b2b`);
 
   // 2) Ana başlık ve mod toggle'ları
   await expect(page.getByText("B2B Ağ")).toBeVisible();

@@ -439,7 +439,7 @@ export default function CrmPipelinePage() {
   }, [onlyMine]);
 
   function handleStageChange(deal, newStage) {
-    const prevStage = deal.stage || "new";
+    const prevStage = deal.stage || "lead";
     if (prevStage === newStage) return;
 
     setOptimistic((prev) => ({ ...prev, [deal.id]: true }));
@@ -447,28 +447,28 @@ export default function CrmPipelinePage() {
     // optimistic move
     setDealsByStage((current) => {
       const next = {
-        new: [],
-        qualified: [],
-        quoted: [],
+        lead: [],
+        contacted: [],
+        proposal: [],
         won: [],
         lost: [],
       };
       const all = [
-        ...current.new,
-        ...current.qualified,
-        ...current.quoted,
+        ...current.lead,
+        ...current.contacted,
+        ...current.proposal,
         ...current.won,
         ...current.lost,
       ].filter((d) => d.id !== deal.id);
       const updated = { ...deal, stage: newStage };
-      const safeStage = ["new", "qualified", "quoted", "won", "lost"].includes(newStage)
+      const safeStage = ["lead", "contacted", "proposal", "won", "lost"].includes(newStage)
         ? newStage
-        : "new";
+        : "lead";
       all.push(updated);
       all.forEach((d) => {
-        let st = d.stage || "new";
-        if (!["new", "qualified", "quoted", "won", "lost"].includes(st)) {
-          st = "new";
+        let st = d.stage || "lead";
+        if (!["lead", "contacted", "proposal", "won", "lost"].includes(st)) {
+          st = "lead";
         }
         if (d.status === "won") st = "won";
         if (d.status === "lost") st = "lost";
@@ -482,9 +482,10 @@ export default function CrmPipelinePage() {
 
     (async () => {
       try {
-        await patchDeal(deal.id, { stage: newStage });
+        const { moveDealStage } = await import("../../lib/crm");
+        await moveDealStage(deal.id, newStage);
       } catch (e) {
-        setErrMsg(e.message || "A\u015fama g\u00fcncellenemedi.");
+        setErrMsg(e.message || "Asama guncellenemedi.");
         await refresh();
       } finally {
         setOptimistic((prev) => {

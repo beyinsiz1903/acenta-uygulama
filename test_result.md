@@ -163,7 +163,7 @@ backend:
         comment: "Marks task as done with audit log."
       - working: true
         agent: "testing"
-        comment: "✅ WORKING: POST creates task with status='open'. PUT /api/crm/tasks/{id}/complete changes status to 'done'. GET ?status=done shows completed task. Audit logging working."
+        comment: "✅ WORKING: POST /api/crm/tasks creates task with status='open'. PUT /api/crm/tasks/{id}/complete successfully changes status to 'done'. Audit logging and CRM events firing correctly."
 
   - task: "CRM Notes GET/POST /api/crm/notes"
     implemented: true

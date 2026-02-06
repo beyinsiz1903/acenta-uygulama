@@ -38,6 +38,68 @@ function statusBadgeNode(status) {
   return <Badge variant="outline">{status || "-"}</Badge>;
 }
 
+const EVENT_TYPE_LABELS = {
+  "listing.created": "Listing oluşturuldu",
+  "listing.updated": "Listing güncellendi",
+  "match_request.created": "Talep oluşturuldu",
+  "match_request.status_changed": "Durum değişti",
+};
+
+function ActivityTimeline({ entityId }) {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (!entityId) return;
+    setLoading(true);
+    setError(false);
+    fetchB2BEvents({ entity_id: entityId, limit: 50 })
+      .then((data) => setEvents(data.items || []))
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, [entityId]);
+
+  if (!entityId) return null;
+
+  return (
+    <div className="rounded-lg border bg-muted/40 p-3 space-y-2" data-testid="activity-timeline">
+      <span className="font-medium text-xs">Aktivite</span>
+      {loading ? (
+        <p className="text-[11px] text-muted-foreground">Yükleniyor...</p>
+      ) : error ? (
+        <p className="text-[11px] text-destructive">Aktivite yüklenemedi.</p>
+      ) : events.length === 0 ? (
+        <p className="text-[11px] text-muted-foreground">Henüz aktivite yok.</p>
+      ) : (
+        <div className="space-y-1">
+          {events.map((evt) => (
+            <div key={evt.id} className="flex items-start gap-2 rounded-md border bg-background/80 px-2 py-1.5">
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-medium">
+                  {EVENT_TYPE_LABELS[evt.event_type] || evt.event_type}
+                </p>
+                {evt.payload?.from && evt.payload?.to && (
+                  <p className="text-[10px] text-muted-foreground">
+                    {statusLabel(evt.payload.from)} &rarr; {statusLabel(evt.payload.to)}
+                    {evt.payload.requested_price ? ` | ${evt.payload.requested_price} TRY` : ""}
+                  </p>
+                )}
+                {evt.payload?.title && (
+                  <p className="text-[10px] text-muted-foreground truncate">{evt.payload.title}</p>
+                )}
+              </div>
+              <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                {new Date(evt.created_at).toLocaleString("tr-TR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function MatchRequestDetailDrawer({
   open,
   onOpenChange,

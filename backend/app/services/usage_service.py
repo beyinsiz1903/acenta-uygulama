@@ -97,3 +97,26 @@ async def get_usage_summary(tenant_id: str) -> Dict[str, Any]:
     "billing_period": period,
     "metrics": metrics,
   }
+
+
+class UsageService:
+  """Legacy compat class used by limits_service and dev_saas."""
+
+  def __init__(self, db) -> None:
+    self._db = db
+
+  async def log(self, metric: str, org_id: str, tenant_id: Optional[str] = None, value: int = 1) -> None:
+    """Log usage for org-level metrics (legacy compat)."""
+    now = datetime.now(timezone.utc)
+    await self._db.usage_log.update_one(
+      {"org_id": org_id, "metric": metric, "period": now.strftime("%Y-%m")},
+      {"$inc": {"value": value}, "$set": {"updated_at": now}, "$setOnInsert": {"created_at": now}},
+      upsert=True,
+    )
+
+  async def get_current_value(self, metric: str, org_id: str) -> int:
+    now = datetime.now(timezone.utc)
+    doc = await self._db.usage_log.find_one(
+      {"org_id": org_id, "metric": metric, "period": now.strftime("%Y-%m")},
+    )
+    return int(doc.get("value", 0)) if doc else 0

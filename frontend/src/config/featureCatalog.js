@@ -1,5 +1,6 @@
 export const FEATURE_CATALOG = [
   { key: "dashboard", label: "Dashboard", description: "Ana kontrol paneli" },
+  { key: "reservations", label: "Rezervasyonlar", description: "Rezervasyon yönetimi" },
   { key: "partners", label: "Partnerler", description: "Partner ağı yönetimi" },
   { key: "b2b", label: "B2B Ağ", description: "B2B borsa ve acente ağı" },
   { key: "accounting", label: "Muhasebe", description: "Muhasebe ve fatura yönetimi" },

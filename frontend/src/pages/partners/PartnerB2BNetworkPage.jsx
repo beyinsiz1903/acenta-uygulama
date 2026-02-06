@@ -510,6 +510,20 @@ export default function PartnerB2BNetworkPage() {
                 </p>
               )}
               {sellerHasListings && (
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[11px] text-muted-foreground">Sadece duruma göre filtreleyin.</p>
+                  <select
+                    className="h-7 rounded-md border bg-background px-2 text-[11px]"
+                    value={sellerStatusFilter}
+                    onChange={(e) => setSellerStatusFilter(e.target.value)}
+                  >
+                    <option value="all">Tüm durumlar</option>
+                    <option value="pending">Beklemede</option>
+                    <option value="approved">Onaylandı</option>
+                    <option value="rejected">Reddedildi</option>
+                    <option value="completed">Tamamlandı</option>
+                  </select>
+                </div>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>

@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import List, Optional
 
-from app.config.plan_matrix import DEFAULT_PLAN, PLAN_MATRIX
+from app.constants.plan_matrix import DEFAULT_PLAN, PLAN_MATRIX
 from app.db import get_db
 from app.repositories.tenant_capability_repository import TenantCapabilityRepository
 from app.repositories.tenant_feature_repository import TenantFeatureRepository

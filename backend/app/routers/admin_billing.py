@@ -109,3 +109,10 @@ async def admin_seed_plan_catalog() -> dict:
     seeded += 1
 
   return {"seeded": seeded, "items": await billing_repo.get_plan_catalog()}
+
+
+
+@router.get("/tenants/{tenant_id}/usage", dependencies=[AdminDep])
+async def admin_get_tenant_usage(tenant_id: str) -> dict:
+  """Admin: get usage summary for a tenant (current billing period)."""
+  return await get_usage_summary(tenant_id)

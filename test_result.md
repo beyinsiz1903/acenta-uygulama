@@ -92,15 +92,18 @@ frontend:
 
   - task: "Admin Subtree Guard (/app/admin/*) Authorization"
     implemented: true
-    working: false
+    working: true
     file: "tests/auth/admin-subtree-guard.spec.ts"
-    stuck_count: 1
+    stuck_count: 0
     priority: "medium"
     needs_retesting: false
     status_history:
       - working: false
         agent: "testing"
         comment: "PLAYWRIGHT TEST RESULTS: Mixed results for admin subtree guard tests. ✅ Agency user (agency1@acenta.test) correctly blocked from /app/admin/agencies - shows 'Yetkiniz yok' message and redirects to /unauthorized as expected. ❌ Admin user (admin@acenta.test) fails to access admin page - redirected to /error-context?reason=agency_id_missing instead of seeing 'Acentalar' heading. Root cause: admin account lacks required agency_id association in database. Authorization logic working correctly, but admin user needs proper agency context configuration."
+      - working: true
+        agent: "testing"
+        comment: "✅ PLAYWRIGHT TEST RESULTS: Both admin subtree guard tests now PASSING after RequireAuth context guard fix. Test 1: agency1@acenta.test correctly blocked from /app/admin/agencies - shows 'Yetkiniz yok' message as expected. Test 2: admin@acenta.test successfully accesses /app/admin/agencies and sees 'Acentalar' heading without being redirected to /error-context. The RequireAuth update allowing admin-like users (roles including 'super_admin' or 'admin') to bypass agency_id/hotel_id context requirement is working correctly."
 
 metadata:
   created_by: "main_agent"

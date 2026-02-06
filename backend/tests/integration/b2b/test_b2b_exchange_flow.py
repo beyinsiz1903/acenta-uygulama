@@ -279,3 +279,175 @@ async def test_b2b_third_tenant_cannot_approve_match(
   error = body.get("error") or {}
   assert error.get("code") == "forbidden", body
 
+
+
+
+@pytest.mark.anyio
+async def test_b2b_invalid_status_pending_cannot_complete(
+  provider_client: AsyncClient,
+  seller_client: AsyncClient,
+  partner_relationship_active: Dict[str, Any],
+) -> None:
+  """pending durumundaki talep doğrudan complete edilemez.
+
+  Beklenen:
+  - /match-request/{id}/complete çağrısı 400 + error.code="invalid_status_transition" döner.
+  """
+
+  # 1) Provider listing + pending match oluştur
+  create_resp = await provider_client.post(
+    LISTINGS_PATH,
+    json={
+      "title": "Invalid Transition Pending -> Complete",
+      "base_price": 500.0,
+      "provider_commission_rate": 10.0,
+    },
+  )
+  assert create_resp.status_code == 200, create_resp.text
+  listing = create_resp.json()
+
+  match_resp = await seller_client.post(
+    MATCH_REQUEST_PATH,
+    json={"listing_id": listing["id"], "requested_price": 550.0},
+  )
+  assert match_resp.status_code == 200, match_resp.text
+  match = match_resp.json()
+  assert match["status"] == "pending"
+
+  # 2) Doğrudan complete etmeye çalış
+  complete_resp = await provider_client.patch(f"{MATCH_REQUEST_PATH}/{match['id']}/complete")
+  assert complete_resp.status_code == 400, complete_resp.text
+  body = complete_resp.json()
+  error = body.get("error") or {}
+  assert error.get("code") == "invalid_status_transition", body
+
+
+@pytest.mark.anyio
+async def test_b2b_invalid_status_rejected_cannot_approve(
+  provider_client: AsyncClient,
+  seller_client: AsyncClient,
+  partner_relationship_active: Dict[str, Any],
+) -> None:
+  """rejected durumundaki talep tekrar approve edilemez."""
+
+  # 1) Pending match oluştur
+  create_resp = await provider_client.post(
+    LISTINGS_PATH,
+    json={
+      "title": "Invalid Transition Rejected -> Approve",
+      "base_price": 600.0,
+      "provider_commission_rate": 10.0,
+    },
+  )
+  assert create_resp.status_code == 200, create_resp.text
+  listing = create_resp.json()
+
+  match_resp = await seller_client.post(
+    MATCH_REQUEST_PATH,
+    json={"listing_id": listing["id"], "requested_price": 650.0},
+  )
+  assert match_resp.status_code == 200, match_resp.text
+  match = match_resp.json()
+
+  # 2) Önce reject et (geçerli)
+  reject_resp = await provider_client.patch(f"{MATCH_REQUEST_PATH}/{match['id']}/reject")
+  assert reject_resp.status_code == 200, reject_resp.text
+  rejected = reject_resp.json()
+  assert rejected["status"] == "rejected"
+
+  # 3) Sonra tekrar approve etmeye çalış
+  approve_resp = await provider_client.patch(f"{MATCH_REQUEST_PATH}/{match['id']}/approve")
+  assert approve_resp.status_code == 400, approve_resp.text
+  body = approve_resp.json()
+  error = body.get("error") or {}
+  assert error.get("code") == "invalid_status_transition", body
+
+
+@pytest.mark.anyio
+async def test_b2b_invalid_status_approved_cannot_reapprove(
+  provider_client: AsyncClient,
+  seller_client: AsyncClient,
+  partner_relationship_active: Dict[str, Any],
+) -> None:
+  """approved durumundaki talep tekrar approve edilemez."""
+
+  # 1) Pending match oluştur
+  create_resp = await provider_client.post(
+    LISTINGS_PATH,
+    json={
+      "title": "Invalid Transition Approved -> Approve",
+      "base_price": 700.0,
+      "provider_commission_rate": 10.0,
+    },
+  )
+  assert create_resp.status_code == 200, create_resp.text
+  listing = create_resp.json()
+
+  match_resp = await seller_client.post(
+    MATCH_REQUEST_PATH,
+    json={"listing_id": listing["id"], "requested_price": 750.0},
+  )
+  assert match_resp.status_code == 200, match_resp.text
+  match = match_resp.json()
+
+  # 2) Geçerli approve
+  approve_resp_1 = await provider_client.patch(f"{MATCH_REQUEST_PATH}/{match['id']}/approve")
+  assert approve_resp_1.status_code == 200, approve_resp_1.text
+  approved = approve_resp_1.json()
+  assert approved["status"] == "approved"
+
+  # 3) Tekrar approve etmeye çalış
+  approve_resp_2 = await provider_client.patch(f"{MATCH_REQUEST_PATH}/{match['id']}/approve")
+  assert approve_resp_2.status_code == 400, approve_resp_2.text
+  body = approve_resp_2.json()
+  error = body.get("error") or {}
+  assert error.get("code") == "invalid_status_transition", body
+
+
+@pytest.mark.anyio
+async def test_b2b_invalid_status_completed_cannot_change(
+  provider_client: AsyncClient,
+  seller_client: AsyncClient,
+  partner_relationship_active: Dict[str, Any],
+) -> None:
+  """completed durumundaki talep tekrar approve/reject/complete edilemez."""
+
+  # 1) Pending match oluştur
+  create_resp = await provider_client.post(
+    LISTINGS_PATH,
+    json={
+      "title": "Invalid Transition Completed -> Any",
+      "base_price": 800.0,
+      "provider_commission_rate": 10.0,
+    },
+  )
+  assert create_resp.status_code == 200, create_resp.text
+  listing = create_resp.json()
+
+  match_resp = await seller_client.post(
+    MATCH_REQUEST_PATH,
+    json={"listing_id": listing["id"], "requested_price": 850.0},
+  )
+  assert match_resp.status_code == 200, match_resp.text
+  match = match_resp.json()
+
+  # 2) Geçerli approve + complete
+  approve_resp = await provider_client.patch(f"{MATCH_REQUEST_PATH}/{match['id']}/approve")
+  assert approve_resp.status_code == 200, approve_resp.text
+  complete_resp = await provider_client.patch(f"{MATCH_REQUEST_PATH}/{match['id']}/complete")
+  assert complete_resp.status_code == 200, complete_resp.text
+  completed = complete_resp.json()
+  assert completed["status"] == "completed"
+
+  # 3) Tekrar approve / reject / complete çağrıları invalid olmalı
+  for path in [
+    f"{MATCH_REQUEST_PATH}/{match['id']}/approve",
+    f"{MATCH_REQUEST_PATH}/{match['id']}/reject",
+    f"{MATCH_REQUEST_PATH}/{match['id']}/complete",
+  ]:
+    resp = await provider_client.patch(path)
+    assert resp.status_code == 400, resp.text
+    body = resp.json()
+    error = body.get("error") or {}
+    assert error.get("code") == "invalid_status_transition", body
+

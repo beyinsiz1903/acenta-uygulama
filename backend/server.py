@@ -120,6 +120,8 @@ from app.routers.action_policies import router as action_policies_router
 from app.routers.saas_tenants import router as saas_tenants_router
 from app.routers.tenant_features import router as tenant_features_router
 from app.routers.admin_tenant_features import router as admin_tenant_features_router
+from app.routers.admin_audit_logs import router as admin_audit_logs_router
+from app.routers.b2b_events import router as b2b_events_router
 from app.routers.dev_saas import router as dev_saas_router
 from app.routers.admin_reports import router as admin_reports_router
 from app.routers.match_alerts import router as match_alerts_router

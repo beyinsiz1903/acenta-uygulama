@@ -56,7 +56,7 @@
 # ##   test_all: false
 # ##   test_priority: "high_first"  # or "sequential" or "stuck_first"
 #
-user_problem_statement: "Enterprise Dashboard Faz 1-2: Frontend-only structural redesign and visual upgrade. 6 KPI compact bar, 70/30 chart + right rail layout, attention list + activity timeline, skeleton loaders, empty states, enterprise polish."
+user_problem_statement: "Enterprise Dashboard Faz 1-4: Structural redesign, visual upgrade, global filter bar, density toggle, CSV export, notification center, activity timeline, collapsible sidebar with grouped sections, E2E tests."
 
 backend:
   - task: "B2B Exchange Backend Health Check"

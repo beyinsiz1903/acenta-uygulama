@@ -26,6 +26,7 @@ class RecordPaymentRequest(BaseModel):
     customer_id: Optional[str] = None
     reservation_id: Optional[str] = None
     description: Optional[str] = None
+    idempotency_key: Optional[str] = None
 
 
 class RefundPaymentRequest(BaseModel):

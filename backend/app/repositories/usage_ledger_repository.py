@@ -52,6 +52,10 @@ class UsageLedgerRepository:
       "timestamp": now,
       "billing_period": billing_period,
       "billed": False,
+      "pushed_at": None,
+      "stripe_usage_record_id": None,
+      "push_attempts": 0,
+      "last_push_error": None,
       "source": source,
       "source_event_id": source_event_id,
     }

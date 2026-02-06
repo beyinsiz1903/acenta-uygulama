@@ -13,6 +13,8 @@ import {
 import { api, getUser } from "../lib/api";
 import { Skeleton } from "../components/ui/skeleton";
 import DashboardFilterBar from "../components/DashboardFilterBar";
+import ActivationChecklist from "../components/ActivationChecklist";
+import DemoSeedButton from "../components/DemoSeedButton";
 import {
   resolveFilters, saveToLocalStorage, saveDensity, filtersToQuery,
   getPresetDays, getPresetDateRange, DEFAULT_FILTERS, exportDashboardCSV,

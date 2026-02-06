@@ -863,6 +863,8 @@ export default function PartnerB2BNetworkPage() {
                               )}
                               {!canApproveOrReject && !canComplete && (
                                 <span className="text-[11px] text-muted-foreground">İşlem yok</span>
+                              )}
+                            </TableCell>
                             <TableCell className="text-xs text-right">
                               <Button
                                 type="button"
@@ -873,9 +875,6 @@ export default function PartnerB2BNetworkPage() {
                               >
                                 Detay
                               </Button>
-                            </TableCell>
-
-                              )}
                             </TableCell>
                           </TableRow>
                         );

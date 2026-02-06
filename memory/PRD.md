@@ -1,31 +1,36 @@
 # PRD — SaaS Platform (Multi-Tenant ERP)
 
-## Implemented
+## Implemented (Complete Stack)
 
-### Feature Engine (A–E) ✅
-### Observability (F) ✅
-### Plan Inheritance (G) ✅
-### Billing + Subscription (H) ✅
-### Usage Tracking + Quota ✅
-### Revenue Analytics Dashboard ✅
-### In-App Quota Notification ✅
-### MRR Trend Chart ✅
-### Stripe Product Provisioning ✅
+### Core Engine
+- Feature guards (A-E), Plan Inheritance (G), FeatureContext + dynamic menus
 
-### Stripe Metered Billing Push ✅
-- `UsagePushService`: usage_ledger → `stripe.SubscriptionItem.create_usage_record`
-- Push tracking: pushed_at, stripe_usage_record_id, push_attempts, last_push_error
-- Idempotency key: `usage:{tenant_id}:{metric}:{source_event_id}`
-- Shadow mode: metered price ₺0/unit
-- `POST /api/admin/billing/usage-push` — trigger push job
-- `POST /api/admin/billing/tenants/{id}/setup-metered-item` — attach metered item to subscription
+### Billing & Monetization  
+- BillingProvider ABC (Stripe real + Iyzico stub)
+- SubscriptionManager, Webhooks (idempotent), Plan catalog (DB seeded)
+- Usage ledger (idempotent), Quota logic (soft enforcement)
+- Stripe metered push (shadow mode), Product provisioning (4 guardrails)
+- Period finalize job (lock, reconciliation, partial failure safe)
+- Push status operational dashboard
 
-### Subscribe/Cancel UI ✅
-- Cancel button in SubscriptionPanel (confirm dialog, cancel_at_period_end default)
+### Observability
+- Audit logs, B2B events, Activity timeline
+- Revenue Analytics: MRR, plan distribution, quota buckets, enterprise candidates
+- Billing Ops widget: push status, pending counts, finalize history
+- In-app quota notification banners
 
-## Test Coverage: 63 backend integration tests
+## Test Coverage: 63+ backend integration tests
+
+## Key Endpoints
+| Endpoint | Purpose |
+|---|---|
+| POST /api/admin/billing/finalize-period | Period close + reconciliation |
+| GET /api/admin/billing/push-status | Billing ops dashboard |
+| POST /api/admin/billing/usage-push | Daily push trigger |
+| GET /api/admin/analytics/revenue-summary | MRR + risk metrics |
+| GET /api/admin/analytics/usage-overview | Quota buckets + candidates |
 
 ## Backlog
-### P1: Usage email notifications, Period finalize job (cron)
+### P1: Active overage pricing (shadow→real), Usage email notifications
 ### P2: Escrow & Payment Orchestration
 ### P3: B2C Storefront/CMS/SEO Layer

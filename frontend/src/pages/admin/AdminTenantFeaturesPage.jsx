@@ -155,6 +155,28 @@ function SubscriptionPanel({ tenantId }) {
           {!showGrace && <span>Tenant kısıtlanabilir.</span>}
         </div>
       )}
+
+      {/* Cancel button (super_admin) */}
+      {sub.status === "active" && !sub.cancel_at_period_end && (
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs text-destructive border-destructive/30 hover:bg-destructive/5"
+            data-testid="cancel-sub-btn"
+            onClick={async () => {
+              if (!window.confirm("Aboneliği period sonunda iptal etmek istediğinize emin misiniz?")) return;
+              try {
+                await api.post(`/admin/billing/tenants/${tenantId}/cancel-subscription`, { at_period_end: true });
+                toast.success("Abonelik period sonunda iptal edilecek.");
+                fetchSub();
+              } catch (err) { toast.error(apiErrorMessage(err)); }
+            }}
+          >
+            Period Sonunda İptal Et
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

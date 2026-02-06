@@ -1,320 +1,155 @@
 // frontend/src/pages/crm/CrmPipelinePage.jsx
-import React, { useEffect, useMemo, useState } from "react";
-import { listDeals, patchDeal, createDeal, moveDealStage } from "../../lib/crm";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
+import { listDeals, createDeal, moveDealStage } from "../../lib/crm";
 import { getUser, apiErrorMessage } from "../../lib/api";
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import DealDrawer from "../../components/DealDrawer";
+import { Lock, Plus, GripVertical } from "lucide-react";
 
-function ColumnHeader({ title, count, tone }) {
+/* ─── Stage config ──────────────────────────────────────────────── */
+const STAGES = ["lead", "contacted", "proposal", "won", "lost"];
+const STAGE_META = {
+  lead:      { title: "Lead",        bg: "#eff6ff", color: "#1d4ed8", dot: "#3b82f6" },
+  contacted: { title: "Iletisimde",  bg: "#ecfdf3", color: "#15803d", dot: "#22c55e" },
+  proposal:  { title: "Teklif",      bg: "#fefce8", color: "#a16207", dot: "#eab308" },
+  won:       { title: "Kazanildi",   bg: "#e0f2fe", color: "#0369a1", dot: "#0ea5e9" },
+  lost:      { title: "Kaybedildi",  bg: "#fef2f2", color: "#b91c1c", dot: "#ef4444" },
+};
+
+function mapStage(s) {
+  if (s === "new") return "lead";
+  if (s === "qualified") return "contacted";
+  if (s === "quoted") return "proposal";
+  if (STAGES.includes(s)) return s;
+  return "lead";
+}
+
+/* ─── Column header ─────────────────────────────────────────────── */
+function ColHeader({ stage, count }) {
+  const m = STAGE_META[stage];
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        marginBottom: 8,
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <div
-          style={{
-            padding: "4px 8px",
-            borderRadius: 999,
-            fontSize: 11,
-            fontWeight: 600,
-            border: "1px solid #e5e7eb",
-            background: tone?.bg || "#f9fafb",
-            color: tone?.color || "#111827",
-          }}
-        >
-          {title}
-        </div>
-        <div style={{ fontSize: 11, color: "#6b7280" }}>{count} kayıt</div>
+    <div className="flex items-center justify-between mb-2 px-1">
+      <div className="flex items-center gap-1.5">
+        <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold border" style={{ background: m.bg, color: m.color, borderColor: m.color + "33" }}>{m.title}</span>
+        <span className="text-[11px] text-gray-400">{count}</span>
       </div>
-      <div
-        style={{
-          width: 8,
-          height: 8,
-          borderRadius: 999,
-          background: tone?.dot || "#9ca3af",
-        }}
-      />
+      <div className="w-2 h-2 rounded-full" style={{ background: m.dot }} />
     </div>
   );
 }
 
-function DealCard({ deal, stages, onChangeStage, disabled }) {
-  const safeStage = stages.find((s) => s.value === deal.stage)?.value || "lead";
-  const [currentStage, setCurrentStage] = useState(safeStage);
+/* ─── Draggable deal card ───────────────────────────────────────── */
+function DealCard({ deal, onClick, isDragging }) {
+  const locked = deal.stage === "won" || deal.stage === "lost";
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: deal.id,
+    disabled: locked,
+  });
 
-  function handleStageChange(e) {
-    const value = e.target.value;
-    setCurrentStage(value);
-    onChangeStage(deal, value);
-  }
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
 
   return (
     <div
-      style={{
-        borderRadius: 12,
-        border: "1px solid #e5e7eb",
-        padding: 10,
-        background: "#ffffff",
-        boxShadow: "0 1px 2px rgba(15,23,42,0.05)",
-        marginBottom: 8,
-      }}
+      ref={setNodeRef}
+      style={style}
+      className={`rounded-xl border bg-white p-2.5 mb-2 shadow-sm hover:shadow-md transition-shadow cursor-pointer group ${locked ? "opacity-70" : ""}`}
+      data-testid="deal-card"
+      onClick={() => onClick(deal.id)}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-        <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#111827",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-            title={deal.title || deal.id}
-          >
-            {deal.title || deal.id}
-          </div>
-          <div style={{ marginTop: 4, fontSize: 11, color: "#6b7280" }}>
-            {deal.customer_id
-              ? `M\u00fc\u015fteri: ${deal.customer_id}`
-              : "M\u00fc\u015fteri yok"}
-          </div>
-          <div style={{ marginTop: 4, fontSize: 11, color: "#6b7280" }}>
-            {deal.owner_user_id
-              ? `Sahip: ${deal.owner_user_id}`
-              : "Sahip atanmad\u0131"}
-          </div>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="text-[13px] font-semibold text-gray-900 truncate">{deal.title || deal.id}</div>
+          <div className="text-[11px] text-gray-500 mt-1">{deal.amount != null ? `${deal.amount} ${deal.currency || "TRY"}` : ""}</div>
+          {deal.next_action_at && (
+            <div className="text-[10px] text-gray-400 mt-0.5">Aksiyon: {new Date(deal.next_action_at).toLocaleDateString("tr-TR")}</div>
+          )}
         </div>
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>
-            {deal.amount != null ? `${deal.amount} ${deal.currency || ""}` : "Tutar yok"}
-          </div>
-          <div style={{ marginTop: 6 }}>
-            <select
-              value={currentStage}
-              onChange={handleStageChange}
-              disabled={disabled}
-              style={{
-                fontSize: 11,
-                padding: "4px 8px",
-                borderRadius: 999,
-                border: "1px solid #d1d5db",
-                background: disabled ? "#e5e7eb" : "#f9fafb",
-                cursor: disabled ? "not-allowed" : "pointer",
-              }}
-            >
-              {stages.map((st) => (
-                <option key={st.value} value={st.value}>
-                  {st.label}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="flex items-center gap-1 shrink-0">
+          {locked ? (
+            <Lock size={12} className="text-gray-400" />
+          ) : (
+            <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
+              <GripVertical size={14} className="text-gray-400" />
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
+/* ─── Droppable column ──────────────────────────────────────────── */
+function KanbanColumn({ stage, deals, onCardClick }) {
+  return (
+    <div className="rounded-2xl border bg-gray-50/80 p-2.5 min-h-[140px] flex flex-col" data-testid={`kanban-column-${stage}`}>
+      <ColHeader stage={stage} count={deals.length} />
+      <div className="flex-1 overflow-y-auto max-h-[520px] pr-1">
+        {deals.length === 0 ? (
+          <div className="text-center py-6 text-[11px] text-gray-400 border border-dashed rounded-xl p-3">Henuz firsat yok</div>
+        ) : (
+          deals.map((d) => <DealCard key={d.id} deal={d} onClick={onCardClick} />)
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Drag overlay card ─────────────────────────────────────────── */
+function DragOverlayCard({ deal }) {
+  if (!deal) return null;
+  return (
+    <div className="rounded-xl border-2 border-blue-400 bg-white p-2.5 shadow-xl w-[200px]">
+      <div className="text-[13px] font-semibold text-gray-900 truncate">{deal.title || deal.id}</div>
+      <div className="text-[11px] text-gray-500 mt-1">{deal.amount != null ? `${deal.amount} ${deal.currency || "TRY"}` : ""}</div>
+    </div>
+  );
+}
+
+/* ─── New deal modal ────────────────────────────────────────────── */
 function NewDealModal({ open, onClose, onCreated }) {
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("TRY");
-  const [customerId, setCustomerId] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
   if (!open) return null;
 
   async function handleSubmit(e) {
-    e.preventDefault();
-    setErr("");
-    setLoading(true);
+    e.preventDefault(); setErr(""); setLoading(true);
     try {
-      const payload = {
-        title: title.trim() || undefined,
-        amount: amount ? Number(amount) : undefined,
-        currency: currency || undefined,
-        customer_id: customerId.trim() || undefined,
-      };
-      await createDeal(payload);
-      onCreated?.();
-      onClose();
-      setTitle("");
-      setAmount("");
-      setCurrency("TRY");
-      setCustomerId("");
-    } catch (e2) {
-      setErr(apiErrorMessage(e2));
-    } finally {
-      setLoading(false);
-    }
+      await createDeal({ title: title.trim() || undefined, amount: amount ? Number(amount) : undefined, currency: currency || undefined });
+      onCreated?.(); onClose(); setTitle(""); setAmount("");
+    } catch (e2) { setErr(apiErrorMessage(e2)); } finally { setLoading(false); }
   }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(15,23,42,0.35)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 16,
-        zIndex: 1000,
-      }}
-      onMouseDown={onClose}
-    >
-      <div
-        style={{
-          width: "min(480px, 100%)",
-          background: "#ffffff",
-          borderRadius: 12,
-          padding: 16,
-          boxShadow: "0 20px 40px rgba(15,23,42,0.3)",
-        }}
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2 style={{ margin: 0, fontSize: 18 }}>Yeni F\u0131rsat</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={loading}
-            style={{
-              border: "none",
-              background: "transparent",
-              fontSize: 18,
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.5 : 1,
-            }}
-            aria-label="Kapat"
-          >
-            {"\u00d7"}
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} style={{ marginTop: 12 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ fontSize: 12, color: "#6b7280" }}>Ba\u015fl\u0131k *</label>
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                minLength={2}
-                style={{
-                  marginTop: 6,
-                  width: "100%",
-                  padding: 10,
-                  borderRadius: 10,
-                  border: "1px solid #d1d5db",
-                }}
-                placeholder={"\u00d6rn: Yaz sezonu kontrat"}
-              />
-            </div>
-
-            <div>
-              <label style={{ fontSize: 12, color: "#6b7280" }}>Tutar</label>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                style={{
-                  marginTop: 6,
-                  width: "100%",
-                  padding: 10,
-                  borderRadius: 10,
-                  border: "1px solid #d1d5db",
-                }}
-                placeholder={"\u00d6rn: 50000"}
-              />
-            </div>
-
-            <div>
-              <label style={{ fontSize: 12, color: "#6b7280" }}>Para Birimi</label>
-              <input
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                style={{
-                  marginTop: 6,
-                  width: "100%",
-                  padding: 10,
-                  borderRadius: 10,
-                  border: "1px solid #d1d5db",
-                }}
-                placeholder="TRY"
-              />
-            </div>
-
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ fontSize: 12, color: "#6b7280" }}>M\u00fc\u015fteri ID (opsiyonel)</label>
-              <input
-                value={customerId}
-                onChange={(e) => setCustomerId(e.target.value)}
-                style={{
-                  marginTop: 6,
-                  width: "100%",
-                  padding: 10,
-                  borderRadius: 10,
-                  border: "1px solid #d1d5db",
-                }}
-                placeholder={"\u00d6rn: cust_..."}
-              />
-            </div>
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-lg font-bold mb-4">Yeni Firsat</h2>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div><label className="text-sm font-medium">Baslik</label>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" placeholder="Deal basligi" /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className="text-sm font-medium">Tutar</label>
+              <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
+            <div><label className="text-sm font-medium">Para Birimi</label>
+              <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                <option value="TRY">TRY</option><option value="USD">USD</option><option value="EUR">EUR</option>
+              </select></div>
           </div>
-
-          {err ? (
-            <div
-              style={{
-                marginTop: 10,
-                padding: 10,
-                borderRadius: 10,
-                border: "1px solid #fecaca",
-                background: "#fef2f2",
-                color: "#b91c1c",
-                fontSize: 13,
-              }}
-            >
-              {err}
-            </div>
-          ) : null}
-
-          <div style={{ marginTop: 14, display: "flex", justifyContent: "flex-end", gap: 10 }}>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              style={{
-                padding: "8px 12px",
-                borderRadius: 10,
-                border: "1px solid #d1d5db",
-                background: "#ffffff",
-                cursor: "pointer",
-                fontSize: 13,
-              }}
-            >
-              {"\u0130ptal"}
-            </button>
-            <button
-              type="submit"
-              disabled={loading || !title.trim()}
-              style={{
-                padding: "8px 12px",
-                borderRadius: 10,
-                border: "1px solid #111827",
-                background: "#111827",
-                color: "#ffffff",
-                cursor: "pointer",
-                fontSize: 13,
-              }}
-            >
-              {loading ? "Olu\u015fturuluyor\u2026" : "Olu\u015ftur"}
+          {err && <p className="text-sm text-red-600">{err}</p>}
+          <div className="flex gap-2 justify-end pt-2">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm border rounded-lg">Iptal</button>
+            <button type="submit" disabled={loading} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg disabled:opacity-50">
+              {loading ? "Olusturuluyor..." : "Olustur"}
             </button>
           </div>
         </form>
@@ -323,339 +158,138 @@ function NewDealModal({ open, onClose, onCreated }) {
   );
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   MAIN PIPELINE PAGE
+   ═══════════════════════════════════════════════════════════════════ */
 export default function CrmPipelinePage() {
-  const user = getUser();
-
-  const [onlyMine, setOnlyMine] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [user] = useState(() => getUser());
+  const [allDeals, setAllDeals] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState("");
-  const [dealsByStage, setDealsByStage] = useState({
-    new: [],
-    qualified: [],
-    quoted: [],
-    won: [],
-    lost: [],
-  });
-  const [optimistic, setOptimistic] = useState({});
   const [newDealOpen, setNewDealOpen] = useState(false);
+  const [activeDragId, setActiveDragId] = useState(null);
 
-  const stages = useMemo(
-    () => [
-      { value: "lead", label: "Lead" },
-      { value: "contacted", label: "Iletisimde" },
-      { value: "proposal", label: "Teklif" },
-      { value: "won", label: "Kazanildi" },
-      { value: "lost", label: "Kaybedildi" },
-    ],
-    []
+  // Drawer
+  const drawerDealId = searchParams.get("deal") || null;
+  function openDrawer(id) { setSearchParams({ deal: id }); }
+  function closeDrawer() { const p = new URLSearchParams(searchParams); p.delete("deal"); setSearchParams(p); }
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
 
-  const columnConfig = useMemo(
-    () => ({
-      lead: {
-        key: "lead",
-        title: "Lead",
-        tone: { bg: "#eff6ff", color: "#1d4ed8", dot: "#3b82f6" },
-      },
-      contacted: {
-        key: "contacted",
-        title: "Iletisimde",
-        tone: { bg: "#ecfdf3", color: "#15803d", dot: "#22c55e" },
-      },
-      proposal: {
-        key: "proposal",
-        title: "Teklif",
-        tone: { bg: "#fefce8", color: "#a16207", dot: "#eab308" },
-      },
-      won: {
-        key: "won",
-        title: "Kazanildi",
-        tone: { bg: "#e0f2fe", color: "#0369a1", dot: "#0ea5e9" },
-      },
-      lost: {
-        key: "lost",
-        title: "Kaybedildi",
-        tone: { bg: "#fef2f2", color: "#b91c1c", dot: "#ef4444" },
-      },
-    }),
-    []
-  );
-
-  function distributeDeals(allDeals) {
-    const next = {
-      lead: [],
-      contacted: [],
-      proposal: [],
-      won: [],
-      lost: [],
-    };
-
-    allDeals.forEach((deal) => {
-      let stage = deal.stage || "lead";
-      // Map old stages to new
-      if (stage === "new") stage = "lead";
-      if (stage === "qualified") stage = "contacted";
-      if (stage === "quoted") stage = "proposal";
-      if (!["lead", "contacted", "proposal", "won", "lost"].includes(stage)) {
-        stage = "lead";
-      }
-      if (deal.status === "won") stage = "won";
-      if (deal.status === "lost") stage = "lost";
-      next[stage].push(deal);
-    });
-
-    setDealsByStage(next);
-  }
-
-  async function refresh() {
-    setLoading(true);
-    setErrMsg("");
-    const ownerId = onlyMine ? user?.id : undefined;
+  // Fetch deals
+  const refresh = useCallback(async () => {
+    setLoading(true); setErrMsg("");
     try {
-      const baseParams = ownerId ? { owner: ownerId } : {};
-      const [openRes, wonRes, lostRes] = await Promise.all([
-        listDeals({ ...baseParams, status: "open" }),
-        listDeals({ ...baseParams, status: "won" }),
-        listDeals({ ...baseParams, status: "lost" }),
-      ]);
+      const res = await listDeals({ status: "", page_size: 200 });
+      setAllDeals(res.items || []);
+    } catch (e) { setErrMsg(e.message || "Yuklenemedi"); }
+    finally { setLoading(false); }
+  }, []);
 
-      const allItems = [
-        ...(openRes?.items || []),
-        ...(wonRes?.items || []),
-        ...(lostRes?.items || []),
-      ];
+  useEffect(() => { refresh(); }, [refresh]);
 
-      distributeDeals(allItems);
-    } catch (e) {
-      setErrMsg(e.message || "Pipeline y\u00fcklenemedi.");
-    } finally {
-      setLoading(false);
+  // Distribute deals by stage
+  const columns = useMemo(() => {
+    const cols = {};
+    STAGES.forEach((s) => { cols[s] = []; });
+    allDeals.forEach((d) => {
+      let s = mapStage(d.stage);
+      if (d.status === "won") s = "won";
+      if (d.status === "lost") s = "lost";
+      cols[s].push(d);
+    });
+    return cols;
+  }, [allDeals]);
+
+  const totalOpen = useMemo(() => allDeals.filter((d) => d.status === "open").length, [allDeals]);
+
+  // Find deal by id (for drag overlay)
+  const activeDeal = activeDragId ? allDeals.find((d) => d.id === activeDragId) : null;
+
+  // DnD handlers
+  function findStageForDeal(dealId) {
+    for (const stage of STAGES) {
+      if (columns[stage].some((d) => d.id === dealId)) return stage;
     }
+    return null;
   }
 
-  useEffect(() => {
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onlyMine]);
+  function handleDragStart(event) { setActiveDragId(event.active.id); }
 
-  function handleStageChange(deal, newStage) {
-    const prevStage = deal.stage || "lead";
-    if (prevStage === newStage) return;
+  function handleDragEnd(event) {
+    setActiveDragId(null);
+    const { active, over } = event;
+    if (!over) return;
 
-    setOptimistic((prev) => ({ ...prev, [deal.id]: true }));
+    const dealId = active.id;
+    // Find target stage: over.id could be a deal card or column
+    let targetStage = null;
+    if (STAGES.includes(over.id)) {
+      targetStage = over.id;
+    } else {
+      // Dropped on a deal card - find which column it's in
+      targetStage = findStageForDeal(over.id);
+    }
 
-    // optimistic move
-    setDealsByStage((current) => {
-      const next = {
-        lead: [],
-        contacted: [],
-        proposal: [],
-        won: [],
-        lost: [],
-      };
-      const all = [
-        ...current.lead,
-        ...current.contacted,
-        ...current.proposal,
-        ...current.won,
-        ...current.lost,
-      ].filter((d) => d.id !== deal.id);
-      const updated = { ...deal, stage: newStage };
-      const safeStage = ["lead", "contacted", "proposal", "won", "lost"].includes(newStage)
-        ? newStage
-        : "lead";
-      all.push(updated);
-      all.forEach((d) => {
-        let st = d.stage || "lead";
-        if (!["lead", "contacted", "proposal", "won", "lost"].includes(st)) {
-          st = "lead";
-        }
-        if (d.status === "won") st = "won";
-        if (d.status === "lost") st = "lost";
-        if (d.id === deal.id) {
-          st = safeStage;
-        }
-        next[st].push(d);
-      });
-      return next;
-    });
+    if (!targetStage) return;
+    const sourceStage = findStageForDeal(dealId);
+    if (sourceStage === targetStage) return;
 
+    // Optimistic update
+    const prevDeals = [...allDeals];
+    setAllDeals((prev) =>
+      prev.map((d) => d.id === dealId ? { ...d, stage: targetStage, status: targetStage === "won" ? "won" : targetStage === "lost" ? "lost" : "open" } : d)
+    );
+
+    // API call
     (async () => {
       try {
-        const { moveDealStage } = await import("../../lib/crm");
-        await moveDealStage(deal.id, newStage);
+        await moveDealStage(dealId, targetStage);
       } catch (e) {
-        setErrMsg(e.message || "Asama guncellenemedi.");
-        await refresh();
-      } finally {
-        setOptimistic((prev) => {
-          const copy = { ...prev };
-          delete copy[deal.id];
-          return copy;
-        });
+        setErrMsg(e.message || "Stage degistirilemedi");
+        setAllDeals(prevDeals); // Rollback
       }
     })();
   }
 
-  const totalOpen =
-    (dealsByStage.new?.length || 0) +
-    (dealsByStage.qualified?.length || 0) +
-    (dealsByStage.quoted?.length || 0);
-
   return (
-    <div style={{ padding: 16 }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
+    <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
         <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>CRM • Pipeline</h1>
-          <div style={{ marginTop: 4, fontSize: 13, color: "#6b7280" }}>
-            Satış fırsatlarınızı aşamalara göre izleyin, kazanılan ve kaybedilenleri ayrı görün.
-          </div>
+          <h1 className="text-xl font-bold text-gray-900">CRM Pipeline</h1>
+          <div className="text-sm text-gray-500 mt-0.5">Toplam acik firsat: <b>{totalOpen}</b></div>
         </div>
-
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 13,
-              color: "#4b5563",
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={onlyMine}
-              onChange={(e) => setOnlyMine(e.target.checked)}
-            />
-            {"Sadece benim f\u0131rsatlar\u0131m"}
-          </label>
-
-          <button
-            type="button"
-            onClick={() => setNewDealOpen(true)}
-            style={{
-              padding: "8px 12px",
-              borderRadius: 10,
-              border: "1px solid #111827",
-              background: "#111827",
-              color: "#ffffff",
-              cursor: "pointer",
-              fontSize: 13,
-            }}
-          >
-            {"Yeni F\u0131rsat"}
-          </button>
-        </div>
+        <button onClick={() => setNewDealOpen(true)} className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700" data-testid="new-deal-btn">
+          <Plus size={16} /> Yeni Firsat
+        </button>
       </div>
 
-      {errMsg ? (
-        <div
-          style={{
-            marginTop: 12,
-            padding: 12,
-            borderRadius: 12,
-            border: "1px solid #fecaca",
-            background: "#fef2f2",
-            color: "#b91c1c",
-            fontSize: 13,
-          }}
-        >
-          {errMsg}
+      {errMsg && <div className="bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm mb-3">{errMsg}</div>}
+
+      {/* Kanban board with DnD */}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <div className="grid grid-cols-5 gap-3" data-testid="kanban-board">
+          {STAGES.map((stage) => (
+            <KanbanColumn key={stage} stage={stage} deals={columns[stage]} onCardClick={openDrawer} />
+          ))}
         </div>
-      ) : null}
+        <DragOverlay>{activeDeal ? <DragOverlayCard deal={activeDeal} /> : null}</DragOverlay>
+      </DndContext>
 
-      <div style={{ marginTop: 12, fontSize: 13, color: "#6b7280" }}>
-        {"Toplam a\u00e7\u0131k f\u0131rsat: "}
-        <b>{totalOpen}</b>
-      </div>
+      {loading && <div className="text-center text-sm text-gray-400 mt-3">Yukleniyor...</div>}
 
-      <div
-        style={{
-          marginTop: 12,
-          display: "grid",
-          gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
-          gap: 12,
-        }}
-      >
-        {(["lead", "contacted", "proposal", "won", "lost"]).map((key) => {
-          const col = columnConfig[key];
-          const items = dealsByStage[key] || [];
-          return (
-            <div
-              key={key}
-              style={{
-                borderRadius: 16,
-                border: "1px solid #e5e7eb",
-                padding: 10,
-                background: "#f9fafb",
-                minHeight: 120,
-              }}
-            >
-              <ColumnHeader title={col.title} count={items.length} tone={col.tone} />
-              <div style={{ maxHeight: 520, overflowY: "auto", paddingRight: 4 }}>
-                {items.length === 0 ? (
-                  <div
-                    style={{
-                      borderRadius: 12,
-                      border: "1px dashed #e5e7eb",
-                      padding: 12,
-                      fontSize: 11,
-                      color: "#9ca3af",
-                      textAlign: "center",
-                    }}
-                  >
-                    <div style={{ fontWeight: 600, marginBottom: 4 }}>Henüz fırsat yok</div>
-                    <div style={{ marginBottom: 8 }}>
-                      İlk fırsatı oluşturarak pipeline akışını başlatabilirsiniz.
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setNewDealOpen(true)}
-                      style={{
-                        padding: "6px 10px",
-                        borderRadius: 999,
-                        border: "1px solid #111827",
-                        background: "#111827",
-                        color: "#ffffff",
-                        fontSize: 11,
-                        cursor: "pointer",
-                      }}
-                    >
-                      İlk fırsatı oluştur
-                    </button>
-                  </div>
-                ) : (
-                  items.map((deal) => (
-                    <DealCard
-                      key={deal.id}
-                      deal={deal}
-                      stages={stages}
-                      onChangeStage={handleStageChange}
-                      disabled={!!optimistic[deal.id]}
-                    />
-                  ))
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
+      {/* New deal modal */}
       <NewDealModal open={newDealOpen} onClose={() => setNewDealOpen(false)} onCreated={refresh} />
 
-      {loading ? (
-        <div style={{ marginTop: 8, fontSize: 12, color: "#6b7280" }}>
-          {"Y\u00fckleniyor\u2026"}
-        </div>
-      ) : null}
+      {/* Deal drawer (deep-linkable) */}
+      {drawerDealId && (
+        <DealDrawer dealId={drawerDealId} onClose={closeDrawer} onStageChanged={refresh} />
+      )}
     </div>
   );
 }

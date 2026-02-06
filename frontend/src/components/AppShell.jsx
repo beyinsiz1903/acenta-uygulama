@@ -22,6 +22,7 @@ import { Badge as UIBadge } from "./ui/badge";
 import { fetchPartnerNotificationsSummary } from "../lib/partnerGraph";
 import { getActiveTenantKey, getActiveTenantId, setActiveTenantId, subscribeTenantChange } from "../lib/tenantContext";
 import NotificationDrawer from "./NotificationDrawer";
+import NotificationBell from "./NotificationBell";
 
 /* ------------------------------------------------------------------ */
 /*  Sidebar collapse persistence                                       */

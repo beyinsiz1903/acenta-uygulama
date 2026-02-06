@@ -4,12 +4,16 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.auth import get_current_user
+from app.constants.features import FEATURE_INVENTORY
 from app.db import get_db
 from app.schemas import InventoryBulkUpsertIn, InventoryUpsertIn
+from app.security.feature_flags import require_tenant_feature
 from app.services.inventory import bulk_upsert_inventory, upsert_inventory
 from app.utils import serialize_doc, to_object_id
 
 router = APIRouter(prefix="/api/inventory", tags=["inventory"])
+
+InventoryFeatureDep = Depends(require_tenant_feature(FEATURE_INVENTORY))
 
 
 def _oid_or_400(id_str: str) -> ObjectId:

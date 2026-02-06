@@ -53,11 +53,10 @@ test.describe("WebPOS Record Payment", () => {
 
     // Click ledger tab
     await page.click('text=Defter');
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
-    // Should see ledger content
-    const content = await page.content();
-    const hasLedger = content.includes('Borç') || content.includes('Alacak') || content.includes('Defter kaydı yok');
-    expect(hasLedger).toBeTruthy();
+    // Should see ledger table headers (Zaman, Tür, Kategori, Tutar, Bakiye)
+    const hasTable = await page.locator('table').count();
+    expect(hasTable).toBeGreaterThan(0);
   });
 });

@@ -103,6 +103,7 @@ import AdminTenantFeaturesPage from "./pages/admin/AdminTenantFeaturesPage";
 import AdminAuditLogPage from "./pages/admin/AdminAuditLogPage";
 import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
 import AdminTenantHealthPage from "./pages/admin/AdminTenantHealthPage";
+import AdminTenantHealthPage from "./pages/admin/AdminTenantHealthPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProductsPage from "./pages/ProductsPage";
 import InventoryPage from "./pages/InventoryPage";

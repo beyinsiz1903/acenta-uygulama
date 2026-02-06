@@ -427,3 +427,69 @@ async def admin_cron_status() -> dict:
   from app.billing.scheduler import get_cron_status
   return get_cron_status()
 
+
+
+@router.get("/overage-config", dependencies=[Depends(require_roles(["super_admin"]))])
+async def admin_get_overage_config() -> dict:
+  """Super-admin: get overage billing configuration."""
+  from app.services.runtime_config import (
+    get_config, OVERAGE_ENABLED_KEY, OVERAGE_PRICE_PER_UNIT_KEY, OVERAGE_MODE_KEY,
+  )
+  return {
+    "overage_enabled": await get_config(OVERAGE_ENABLED_KEY, False),
+    "overage_mode": await get_config(OVERAGE_MODE_KEY, "shadow"),
+    "overage_price_per_unit": await get_config(OVERAGE_PRICE_PER_UNIT_KEY, None),
+  }
+
+
+class OverageConfigBody(BaseModel):
+  overage_enabled: Optional[bool] = None
+  overage_mode: Optional[str] = None
+  overage_price_per_unit: Optional[int] = None
+
+
+@router.patch("/overage-config", dependencies=[Depends(require_roles(["super_admin"]))])
+async def admin_patch_overage_config(
+  body: OverageConfigBody,
+  user=Depends(get_current_user),
+) -> dict:
+  """Super-admin: update overage billing configuration."""
+  from app.services.runtime_config import (
+    set_config, get_config,
+    OVERAGE_ENABLED_KEY, OVERAGE_PRICE_PER_UNIT_KEY, OVERAGE_MODE_KEY,
+  )
+  from app.services.audit_log_service import append_audit_log
+
+  before = {
+    "overage_enabled": await get_config(OVERAGE_ENABLED_KEY, False),
+    "overage_mode": await get_config(OVERAGE_MODE_KEY, "shadow"),
+    "overage_price_per_unit": await get_config(OVERAGE_PRICE_PER_UNIT_KEY, None),
+  }
+
+  if body.overage_enabled is not None:
+    await set_config(OVERAGE_ENABLED_KEY, body.overage_enabled)
+  if body.overage_mode is not None:
+    valid_modes = ["shadow", "new_only", "opt_in", "all"]
+    if body.overage_mode not in valid_modes:
+      raise AppError(422, "invalid_mode", "Geçersiz overage mode.", {"valid": valid_modes})
+    await set_config(OVERAGE_MODE_KEY, body.overage_mode)
+  if body.overage_price_per_unit is not None:
+    await set_config(OVERAGE_PRICE_PER_UNIT_KEY, body.overage_price_per_unit)
+
+  after = {
+    "overage_enabled": await get_config(OVERAGE_ENABLED_KEY, False),
+    "overage_mode": await get_config(OVERAGE_MODE_KEY, "shadow"),
+    "overage_price_per_unit": await get_config(OVERAGE_PRICE_PER_UNIT_KEY, None),
+  }
+
+  await append_audit_log(
+    scope="billing",
+    tenant_id="system",
+    actor_user_id=str(user.get("id", "")),
+    actor_email=str(user.get("email", "")),
+    action="billing.overage_config.updated",
+    before=before,
+    after=after,
+  )
+
+  return after

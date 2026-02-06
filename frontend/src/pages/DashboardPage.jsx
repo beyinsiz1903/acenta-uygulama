@@ -550,6 +550,7 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <DemoSeedButton />
           <Link
             to="/app/products"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium rounded-lg border border-border/60 bg-card text-foreground hover:bg-muted/50 transition-colors"
@@ -564,6 +565,9 @@ export default function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* ---------- ACTIVATION CHECKLIST ---------- */}
+      <ActivationChecklist />
 
       {/* ---------- FILTER BAR ---------- */}
       <DashboardFilterBar

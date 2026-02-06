@@ -6,6 +6,7 @@ import pytest
 from httpx import AsyncClient
 
 from app.db import get_db
+from .conftest import clear_tenant_features
 
 LISTINGS_PATH = "/api/b2b/listings"
 AVAILABLE_PATH = "/api/b2b/listings/available"

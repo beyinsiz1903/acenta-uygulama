@@ -244,11 +244,11 @@ async def list_available_listings(  # type: ignore[no-untyped-def]
 
 
 @router.post("/match-request", response_model=B2BMatchRequestOut)
-@require_tenant_feature("b2b")
 async def create_match_request(  # type: ignore[no-untyped-def]
     body: B2BMatchRequestCreateIn,
     user: CurrentB2BUser = Depends(current_b2b_user),
     tenant_ctx: B2BTenantContext = Depends(get_b2b_tenant_context),
+    _: None = Depends(require_tenant_feature("b2b")),
 ):
     db = await get_db()
     listing = await _get_listing(db, body.listing_id)

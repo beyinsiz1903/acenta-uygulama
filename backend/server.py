@@ -179,8 +179,13 @@ async def lifespan(app: FastAPI):
     await ensure_offers_indexes(db)
     # Supplier adapters are lazily initialized in AdapterRegistry._ensure_defaults_loaded()
 
+    # Start billing cron scheduler
+    from app.billing.scheduler import start_scheduler, stop_scheduler
+    start_scheduler()
+
     yield
 
+    stop_scheduler()
     await close_mongo()
 
 

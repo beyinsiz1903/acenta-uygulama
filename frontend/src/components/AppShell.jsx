@@ -540,6 +540,7 @@ export default function AppShell() {
 
         {/* --- Main Content --- */}
         <main className="flex-1 min-h-[calc(100vh-53px)] overflow-auto">
+          <TrialBanner />
           {quotaAlerts && quotaAlerts.length > 0 && (
             <div className="mx-4 mt-3 space-y-2" data-testid="quota-alert-banners">
               {quotaAlerts.map((q) => (

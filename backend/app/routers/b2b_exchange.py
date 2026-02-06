@@ -207,6 +207,17 @@ async def update_listing(  # type: ignore[no-untyped-def]
     await db.b2b_listings.update_one({"_id": listing["_id"]}, {"$set": update_doc})
     updated = await db.b2b_listings.find_one({"_id": listing["_id"]})
     assert updated is not None
+
+    await append_b2b_event(
+      event_type="listing.updated",
+      entity_type="listing",
+      entity_id=listing_id,
+      listing_id=listing_id,
+      provider_tenant_id=tenant_ctx.tenant_id,
+      actor_user_id=tenant_ctx.user_id,
+      payload={"title": body.title, "base_price": float(body.base_price), "status": update_doc["status"]},
+    )
+
     return B2BListingOut(**_serialize(updated))
 
 

@@ -57,14 +57,20 @@ function formatTRY(amount) {
 export default function AdminAnalyticsPage() {
   const [revenue, setRevenue] = useState(null);
   const [usage, setUsage] = useState(null);
+  const [pushStatus, setPushStatus] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [rev, usg] = await Promise.all([fetchRevenueSummary({ lookback: 3 }), fetchUsageOverview()]);
+      const [rev, usg, ps] = await Promise.all([
+        fetchRevenueSummary({ lookback: 3 }),
+        fetchUsageOverview(),
+        fetchPushStatus().catch(() => null),
+      ]);
       setRevenue(rev);
       setUsage(usg);
+      setPushStatus(ps);
     } catch {
       // partial load ok
     } finally {

@@ -348,11 +348,15 @@ export default function AppShell() {
               )}
             </NavLink>
 
-            {/* Notification bell */}
+            {/* Notification bell - in-app notifications */}
+            <NotificationBell />
+
+            {/* Activity log bell */}
             <button
               onClick={() => setNotifOpen(true)}
               className="relative inline-flex items-center justify-center h-8 w-8 rounded-lg border border-border text-muted-foreground hover:bg-accent hover:text-foreground transition"
               data-testid="notif-bell"
+              title="Aktivite Logu"
             >
               <Bell className="h-4 w-4" />
             </button>

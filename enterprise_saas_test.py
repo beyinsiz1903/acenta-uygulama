@@ -253,8 +253,8 @@ class EnterpriseTestSuite:
         response = requests.get(f"{self.base_url}/api/webpos/ledger", headers=self.get_headers())
         data = self.assert_response(response, 200, "Get Ledger")
         
-        assert "entries" in data, "Ledger should contain 'entries'"
-        entries = data["entries"]
+        assert "items" in data, "Ledger should contain 'items'"
+        entries = data["items"]
         
         # Should have at least 2 entries: 1 debit (payment), 1 credit (refund)
         assert len(entries) >= 2, f"Expected at least 2 ledger entries, got {len(entries)}"

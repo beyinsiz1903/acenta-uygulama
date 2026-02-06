@@ -26,6 +26,7 @@ async def test_b2b_tenant_isolation_cannot_request_own_listing(
   seller_client: AsyncClient,
   test_db,
   seller_tenant,
+  enable_b2b_features,
 ) -> None:
   """Seller cannot create match request on its own listing.
 

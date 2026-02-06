@@ -8,6 +8,7 @@ from fastapi import Depends
 from app.errors import AppError
 from app.security.b2b_context import B2BTenantContext, get_b2b_tenant_context
 from app.services.feature_service import feature_service
+from app.constants.features import FEATURE_B2B
 
 T = TypeVar("T")
 

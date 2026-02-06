@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 FEATURE_DASHBOARD = "dashboard"
+FEATURE_RESERVATIONS = "reservations"
 FEATURE_PARTNERS = "partners"
 FEATURE_B2B = "b2b"
 FEATURE_ACCOUNTING = "accounting"
@@ -12,6 +13,7 @@ FEATURE_OPS = "ops"
 
 ALL_FEATURE_KEYS = [
   FEATURE_DASHBOARD,
+  FEATURE_RESERVATIONS,
   FEATURE_PARTNERS,
   FEATURE_B2B,
   FEATURE_ACCOUNTING,

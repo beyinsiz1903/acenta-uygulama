@@ -1,5 +1,5 @@
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBhY2VudGEudGVzdCIsIm9yZyI6Im9yZ19jbGlja190b19wYXlfbm90aGluZyIsInJvbGVzIjpbImFnZW5jeV9hZG1pbiIsInN1cGVyX2FkbWluIl0sImlhdCI6MTc3MDM2MjA3MiwiZXhwIjoxNzcwNDA1MjcyfQ.6DKFrfO7srYKabaLaLkFkPXvbXqTa2eKF8ZDhINez_Q",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBhY2VudGEudGVzdCIsIm9yZyI6Im9yZ19jbGlja190b19wYXlfbm90aGluZyIsInJvbGVzIjpbImFnZW5jeV9hZG1pbiIsInN1cGVyX2FkbWluIl0sImlhdCI6MTc3MDM2MjEwNywiZXhwIjoxNzcwNDA1MzA3fQ.sMHj-518va3zxjfOVRzMscbxslsXimtj5jmFI93WiHQ",
   "tenantId": "tenant_partner_test_a_14beaf25",
   "baseURL": "https://travelpartner-2.preview.emergentagent.com",
   "email": "admin@acenta.test"

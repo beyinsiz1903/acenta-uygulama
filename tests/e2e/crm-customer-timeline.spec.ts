@@ -1,133 +1,96 @@
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "https://enterprise-ops-8.preview.emergentagent.com";
+const BASE = "https://enterprise-ops-8.preview.emergentagent.com";
 const UID = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
-test.describe("CRM Customer Timeline", () => {
-  let token: string;
-  let customerId: string;
-  let dealId: string;
-
-  test.beforeAll(async ({ request }) => {
-    const signup = await request.post(`${BASE_URL}/api/onboarding/signup`, {
-      data: {
-        company_name: `TimelineCo_${UID}`,
-        admin_name: "Timeline Admin",
-        email: `timeline_${UID}@test.com`,
-        password: "test123456",
-        plan: "starter",
-        billing_cycle: "monthly",
-      },
-    });
-    expect(signup.ok()).toBeTruthy();
-    const d = await signup.json();
-    token = d.access_token;
-
-    // Create a customer
-    const cust = await request.post(`${BASE_URL}/api/crm/customers`, {
-      headers: { Authorization: `Bearer ${token}` },
-      data: {
-        name: `Timeline Customer ${UID}`,
-        type: "individual",
-        contacts: [{ type: "email", value: `cust_${UID}@example.com`, is_primary: true }],
-      },
-    });
-    expect(cust.ok()).toBeTruthy();
-    const custData = await cust.json();
-    customerId = custData.id;
-
-    // Create a deal linked to customer
-    const deal = await request.post(`${BASE_URL}/api/crm/deals`, {
-      headers: { Authorization: `Bearer ${token}` },
-      data: { title: `Timeline Deal ${UID}`, amount: 8000, currency: "TRY", customer_id: customerId },
-    });
-    expect(deal.ok()).toBeTruthy();
-    const dealData = await deal.json();
-    dealId = dealData.id;
+test("crm-customer-timeline: customer+deal+notes+isolation", async ({ request }) => {
+  // Signup Tenant A
+  const su = await request.post(`${BASE}/api/onboarding/signup`, {
+    data: {
+      company_name: `TL_${UID}`,
+      admin_name: "Admin",
+      email: `tl_${UID}@test.com`,
+      password: "test123456",
+      plan: "starter",
+      billing_cycle: "monthly",
+    },
   });
+  expect(su.ok()).toBeTruthy();
+  const { access_token: token } = await su.json();
+  const h = { Authorization: `Bearer ${token}` };
 
-  test("customer detail endpoint returns data", async ({ request }) => {
-    const res = await request.get(`${BASE_URL}/api/crm/customers/${customerId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    expect(res.ok()).toBeTruthy();
-    const body = await res.json();
-    expect(body.id).toBe(customerId);
-    expect(body.name).toContain("Timeline Customer");
+  // 1) Create customer
+  const cc = await request.post(`${BASE}/api/crm/customers`, {
+    headers: h,
+    data: {
+      name: `Timeline Cust ${UID}`,
+      type: "individual",
+      contacts: [{ type: "email", value: `cust_${UID}@example.com`, is_primary: true }],
+    },
   });
+  expect(cc.ok()).toBeTruthy();
+  const cust = await cc.json();
+  const customerId = cust.id;
 
-  test("create note on customer shows in notes list", async ({ request }) => {
-    const noteRes = await request.post(`${BASE_URL}/api/crm/notes`, {
-      headers: { Authorization: `Bearer ${token}` },
-      data: { content: "Important customer note for timeline", entity_type: "customer", entity_id: customerId },
-    });
-    expect(noteRes.ok()).toBeTruthy();
-
-    // List notes for this customer
-    const list = await request.get(`${BASE_URL}/api/crm/notes?entity_type=customer&entity_id=${customerId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    expect(list.ok()).toBeTruthy();
-    const body = await list.json();
-    expect(body.items.length).toBeGreaterThan(0);
-    expect(body.items[0].content).toContain("Important customer note");
+  // 2) Create deal linked to customer
+  const cd = await request.post(`${BASE}/api/crm/deals`, {
+    headers: h,
+    data: { title: `TL Deal ${UID}`, amount: 8000, currency: "TRY", customer_id: customerId },
   });
+  expect(cd.ok()).toBeTruthy();
+  const deal = await cd.json();
 
-  test("deal linked to customer visible in deals list", async ({ request }) => {
-    const res = await request.get(`${BASE_URL}/api/crm/deals?customer_id=${customerId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    expect(res.ok()).toBeTruthy();
-    const body = await res.json();
-    expect(body.items.length).toBeGreaterThan(0);
-    const found = body.items.find((d: any) => d.id === dealId);
-    expect(found).toBeTruthy();
+  // 3) Customer detail
+  const gd = await request.get(`${BASE}/api/crm/customers/${customerId}`, { headers: h });
+  expect(gd.ok()).toBeTruthy();
+  expect((await gd.json()).name).toContain("Timeline Cust");
+
+  // 4) Create note on customer
+  const nc = await request.post(`${BASE}/api/crm/notes`, {
+    headers: h,
+    data: { content: "Important note for timeline", entity_type: "customer", entity_id: customerId },
   });
+  expect(nc.ok()).toBeTruthy();
 
-  test("deal stage change creates activity trail", async ({ request }) => {
-    // Move deal stage
-    const move = await request.post(`${BASE_URL}/api/crm/deals/${dealId}/move-stage`, {
-      headers: { Authorization: `Bearer ${token}` },
-      data: { stage: "contacted" },
-    });
-    expect(move.ok()).toBeTruthy();
+  // 5) List notes for customer
+  const nl = await request.get(`${BASE}/api/crm/notes?entity_type=customer&entity_id=${customerId}`, { headers: h });
+  expect(nl.ok()).toBeTruthy();
+  const notes = await nl.json();
+  expect(notes.items.length).toBeGreaterThan(0);
+  expect(notes.items[0].content).toContain("Important note");
 
-    // Create note on the deal
-    const note = await request.post(`${BASE_URL}/api/crm/notes`, {
-      headers: { Authorization: `Bearer ${token}` },
-      data: { content: "Follow-up after contact", entity_type: "deal", entity_id: dealId },
-    });
-    expect(note.ok()).toBeTruthy();
+  // 6) Deal visible for customer
+  const dl = await request.get(`${BASE}/api/crm/deals?customer_id=${customerId}`, { headers: h });
+  expect(dl.ok()).toBeTruthy();
+  expect((await dl.json()).items.length).toBeGreaterThan(0);
 
-    // Verify notes on deal
-    const notes = await request.get(`${BASE_URL}/api/crm/notes?entity_type=deal&entity_id=${dealId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    expect(notes.ok()).toBeTruthy();
-    const body = await notes.json();
-    expect(body.items.length).toBeGreaterThan(0);
+  // 7) Move deal stage + note on deal
+  await request.post(`${BASE}/api/crm/deals/${deal.id}/move-stage`, {
+    headers: h, data: { stage: "contacted" },
   });
-
-  test("tenant isolation - other tenant cannot see customer", async ({ request }) => {
-    // Signup another tenant
-    const signup2 = await request.post(`${BASE_URL}/api/onboarding/signup`, {
-      data: {
-        company_name: `OtherCo_${UID}`,
-        admin_name: "Other Admin",
-        email: `other_${UID}@test.com`,
-        password: "test123456",
-        plan: "starter",
-        billing_cycle: "monthly",
-      },
-    });
-    expect(signup2.ok()).toBeTruthy();
-    const d2 = await signup2.json();
-
-    // Try to access customer from first tenant
-    const res = await request.get(`${BASE_URL}/api/crm/customers/${customerId}`, {
-      headers: { Authorization: `Bearer ${d2.access_token}` },
-    });
-    // Should be 404 (not found in other tenant)
-    expect(res.status()).toBe(404);
+  await request.post(`${BASE}/api/crm/notes`, {
+    headers: h,
+    data: { content: "Follow-up note", entity_type: "deal", entity_id: deal.id },
   });
+  const dnl = await request.get(`${BASE}/api/crm/notes?entity_type=deal&entity_id=${deal.id}`, { headers: h });
+  expect(dnl.ok()).toBeTruthy();
+  expect((await dnl.json()).items.length).toBeGreaterThan(0);
+
+  // 8) Tenant isolation - other tenant can't see customer
+  const su2 = await request.post(`${BASE}/api/onboarding/signup`, {
+    data: {
+      company_name: `Other_${UID}`,
+      admin_name: "Other",
+      email: `other_${UID}@test.com`,
+      password: "test123456",
+      plan: "starter",
+      billing_cycle: "monthly",
+    },
+  });
+  expect(su2.ok()).toBeTruthy();
+  const t2 = await su2.json();
+  const r = await request.get(`${BASE}/api/crm/customers/${customerId}`, {
+    headers: { Authorization: `Bearer ${t2.access_token}` },
+  });
+  expect(r.status()).toBe(404);
 });

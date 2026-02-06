@@ -12,8 +12,7 @@ async def _normalize_stage_and_status(stage: Optional[str], status: Optional[str
 
     - stage won -> status won
     - stage lost -> status lost
-    - status won/lost -> stage at least won/lost (if not provided)
-    - default: status open
+    - all other stages -> status open
     """
 
     if stage in {"won", "lost"}:
@@ -22,7 +21,6 @@ async def _normalize_stage_and_status(stage: Optional[str], status: Optional[str
         stage = status
 
     if stage not in {"won", "lost"} and status not in {"won", "lost", None}:
-        # Keep as is (open-like)
         pass
 
     if status is None:

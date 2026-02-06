@@ -88,14 +88,14 @@ async def revenue_summary(
     monthly_price = price_map.get(plan, 0)
     mrr_at_risk += monthly_price * r["past_due"]
 
-  # Trend (lookback periods)
+  # Trend (current snapshot repeated for each lookback period — real historical data requires snapshots)
   trend = []
   if lookback > 1:
     from datetime import timedelta
-    for i in range(lookback):
+    for i in range(lookback - 1, -1, -1):
       d = now.replace(day=1) - timedelta(days=30 * i)
       p = d.strftime("%Y-%m")
-      trend.append({"period": p, "mrr_gross_active": mrr_gross, "past_due_count": total_past_due})
+      trend.append({"period": p, "mrr_gross_active": round(mrr_gross, 2), "past_due_count": total_past_due})
 
   return {
     "period": current,

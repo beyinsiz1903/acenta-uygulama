@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from app.config.plan_matrix import DEFAULT_PLAN
+from app.constants.plan_matrix import DEFAULT_PLAN
 
 
 async def main():

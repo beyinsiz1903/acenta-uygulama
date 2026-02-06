@@ -119,6 +119,83 @@ async def admin_get_tenant_usage(tenant_id: str) -> dict:
   return await get_usage_summary(tenant_id)
 
 
+@router.post("/usage-push", dependencies=[Depends(require_roles(["super_admin"]))])
+async def admin_push_usage(
+  period: Optional[str] = Query(None),
+  user=Depends(get_current_user),
+) -> dict:
+  """Super-admin: push unbilled usage records to Stripe (daily job trigger)."""
+  from app.services.usage_push_service import usage_push_service
+  return await usage_push_service.push_unbilled(period)
+
+
+@router.post("/tenants/{tenant_id}/setup-metered-item", dependencies=[Depends(require_roles(["super_admin"]))])
+async def admin_setup_metered_item(
+  tenant_id: str,
+  user=Depends(get_current_user),
+) -> dict:
+  """Super-admin: attach metered subscription item to a tenant's subscription."""
+  import os
+  import stripe
+
+  stripe_key = os.environ.get("STRIPE_API_KEY", "")
+  if not stripe_key:
+    raise AppError(500, "stripe_key_missing", "STRIPE_API_KEY tanımlı değil.", None)
+  stripe.api_key = stripe_key
+
+  sub = await billing_repo.get_subscription(tenant_id)
+  if not sub or not sub.get("provider_subscription_id"):
+    raise AppError(404, "subscription_not_found", "Aktif abonelik bulunamadı.", {"tenant_id": tenant_id})
+
+  if sub.get("metered_subscription_item_id"):
+    return {"tenant_id": tenant_id, "metered_subscription_item_id": sub["metered_subscription_item_id"], "action": "already_exists"}
+
+  # Create a metered price for usage tracking
+  try:
+    metered_price = stripe.Price.create(
+      product=stripe.Product.create(
+        name=f"Usage - {sub.get('plan', 'pro')} ({tenant_id[:12]})",
+        metadata={"tenant_id": tenant_id, "type": "metered"},
+        idempotency_key=f"metered_product:{tenant_id}",
+      ).id,
+      currency="try",
+      recurring={"interval": "month", "usage_type": "metered"},
+      unit_amount=0,  # Shadow mode: ₺0 per unit
+      metadata={"tenant_id": tenant_id, "type": "metered"},
+      idempotency_key=f"metered_price:{tenant_id}",
+    )
+
+    # Add metered item to existing subscription
+    item = stripe.SubscriptionItem.create(
+      subscription=sub["provider_subscription_id"],
+      price=metered_price.id,
+      idempotency_key=f"metered_item:{tenant_id}",
+    )
+
+    # Save item id
+    from app.db import get_db
+    db = await get_db()
+    await db.billing_subscriptions.update_one(
+      {"tenant_id": tenant_id},
+      {"$set": {"metered_subscription_item_id": item.id}},
+    )
+
+    from app.services.audit_log_service import append_audit_log
+    await append_audit_log(
+      scope="billing",
+      tenant_id=tenant_id,
+      actor_user_id=str(user.get("id", "")),
+      actor_email=str(user.get("email", "")),
+      action="billing.metered_item_created",
+      before=None,
+      after={"metered_subscription_item_id": item.id, "price_id": metered_price.id},
+    )
+
+    return {"tenant_id": tenant_id, "metered_subscription_item_id": item.id, "price_id": metered_price.id, "action": "created"}
+  except Exception as e:
+    raise AppError(500, "stripe_error", f"Stripe hatası: {str(e)[:200]}", {"tenant_id": tenant_id})
+
+
 
 @router.post("/stripe/provision-products", dependencies=[Depends(require_roles(["super_admin"]))])
 async def admin_provision_stripe_products(

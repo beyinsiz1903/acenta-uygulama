@@ -73,15 +73,18 @@ backend:
 
   - task: "B2B Exchange Integration Tests"
     implemented: true
-    working: false
+    working: true
     file: "backend/tests/integration/b2b/test_b2b_exchange_flow.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "testing"
         comment: "❌ CRITICAL AUTH ISSUE: Both B2B integration tests (test_b2b_happy_path_flow, test_b2b_not_active_partner_cannot_see_or_request) FAILING with 401 'Kullanıcı bulunamadı' error. Root cause identified: B2B fixtures in backend/tests/integration/b2b/conftest.py store user.organization_id as ObjectId but JWT tokens contain organization_id as string. The get_current_user function fails to match ObjectId != string. Fix required: Change line 82 in conftest.py from 'organization_id': org['_id'] to 'organization_id': str(org['_id']) for both provider_user and seller_user fixtures. This matches the pattern used in main conftest.py seed_default_org_and_users."
+      - working: true
+        agent: "testing"
+        comment: "✅ FIXED: B2B integration tests now PASSING after fixing pytest fixture issue. Root cause was NOT organization_id type mismatch (that was already correct), but shared AsyncClient instance between provider_client and seller_client fixtures. Both fixtures were modifying the same client's headers, causing authentication conflicts. Fixed by creating separate AsyncClient instances for each fixture with proper headers. Both tests now pass: test_b2b_happy_path_flow validates full B2B exchange flow (listing creation, visibility, match request, approval, completion), test_b2b_not_active_partner_cannot_see_or_request validates proper access control for non-active partner relationships."
 
 frontend:
   - task: "Partner B2B Network UI (B2B Ağ) – Phase 1"

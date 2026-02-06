@@ -116,10 +116,16 @@ class GTMCRMTester:
 
     def get_headers(self) -> dict:
         """Get authentication headers for API calls"""
-        return {
+        headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json"
         }
+        
+        # Add tenant header if we have a tenant_id
+        if self.tenant_id:
+            headers["X-Tenant-Id"] = self.tenant_id
+            
+        return headers
 
     def test_demo_seed(self) -> bool:
         """Test POST /api/admin/demo/seed"""

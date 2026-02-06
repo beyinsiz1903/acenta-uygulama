@@ -580,11 +580,11 @@ export default function DashboardPage() {
           {loading ? (
             <div className="space-y-3" style={{ minHeight: 280 }}>
               <div className="flex items-end gap-1 h-[260px] px-4">
-                {Array.from({ length: 14 }).map((_, i) => (
+                {[65, 40, 75, 50, 85, 35, 60, 45, 70, 55, 80, 42, 68, 52].map((h, i) => (
                   <Skeleton
                     key={i}
                     className="flex-1 rounded-t"
-                    style={{ height: `${30 + Math.random() * 60}%` }}
+                    style={{ height: `${h}%` }}
                   />
                 ))}
               </div>

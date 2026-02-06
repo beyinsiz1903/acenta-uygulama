@@ -129,7 +129,7 @@ async def create_listing(  # type: ignore[no-untyped-def]
     body: B2BListingCreateIn,
     user: CurrentB2BUser = Depends(current_b2b_user),
     tenant_ctx: B2BTenantContext = Depends(get_b2b_tenant_context),
-    _: None = Depends(require_tenant_feature(FEATURE_B2B)),
+    _: None = Depends(require_b2b_feature(FEATURE_B2B)),
 ):
     db = await get_db()
 
@@ -158,7 +158,7 @@ async def create_listing(  # type: ignore[no-untyped-def]
 async def list_my_listings(  # type: ignore[no-untyped-def]
     user: CurrentB2BUser = Depends(current_b2b_user),
     tenant_ctx: B2BTenantContext = Depends(get_b2b_tenant_context),
-    _: None = Depends(require_tenant_feature("b2b")),
+    _: None = Depends(require_b2b_feature("b2b")),
 ):
     db = await get_db()
     cursor = db.b2b_listings.find({"provider_tenant_id": tenant_ctx.tenant_id}).sort("created_at", -1)
@@ -172,7 +172,7 @@ async def update_listing(  # type: ignore[no-untyped-def]
     body: B2BListingCreateIn,
     user: CurrentB2BUser = Depends(current_b2b_user),
     tenant_ctx: B2BTenantContext = Depends(get_b2b_tenant_context),
-    _: None = Depends(require_tenant_feature("b2b")),
+    _: None = Depends(require_b2b_feature("b2b")),
 ):
     db = await get_db()
     listing = await _get_listing(db, listing_id)
@@ -207,7 +207,7 @@ async def update_listing(  # type: ignore[no-untyped-def]
 async def list_available_listings(  # type: ignore[no-untyped-def]
     user: CurrentB2BUser = Depends(current_b2b_user),
     tenant_ctx: B2BTenantContext = Depends(get_b2b_tenant_context),
-    _: None = Depends(require_tenant_feature("b2b")),
+    _: None = Depends(require_b2b_feature("b2b")),
 ):
     db = await get_db()
     rel_repo = PartnerRelationshipRepository(db)
@@ -250,7 +250,7 @@ async def create_match_request(  # type: ignore[no-untyped-def]
     body: B2BMatchRequestCreateIn,
     user: CurrentB2BUser = Depends(current_b2b_user),
     tenant_ctx: B2BTenantContext = Depends(get_b2b_tenant_context),
-    _: None = Depends(require_tenant_feature("b2b")),
+    _: None = Depends(require_b2b_feature("b2b")),
 ):
     db = await get_db()
     listing = await _get_listing(db, body.listing_id)
@@ -321,7 +321,7 @@ async def create_match_request(  # type: ignore[no-untyped-def]
 async def list_my_match_requests(  # type: ignore[no-untyped-def]
     user: CurrentB2BUser = Depends(current_b2b_user),
     tenant_ctx: B2BTenantContext = Depends(get_b2b_tenant_context),
-    _: None = Depends(require_tenant_feature("b2b")),
+    _: None = Depends(require_b2b_feature("b2b")),
 ):
     db = await get_db()
     cursor = db.b2b_match_requests.find({"seller_tenant_id": tenant_ctx.tenant_id}).sort("created_at", -1)
@@ -345,7 +345,7 @@ async def _append_status_history(db, match_doc: dict[str, Any], status: str, use
 async def list_incoming_match_requests(  # type: ignore[no-untyped-def]
     user: CurrentB2BUser = Depends(current_b2b_user),
     tenant_ctx: B2BTenantContext = Depends(get_b2b_tenant_context),
-    _: None = Depends(require_tenant_feature("b2b")),
+    _: None = Depends(require_b2b_feature("b2b")),
 ):
     db = await get_db()
     cursor = db.b2b_match_requests.find({"provider_tenant_id": tenant_ctx.tenant_id}).sort("created_at", -1)
@@ -402,7 +402,7 @@ async def approve_match_request(  # type: ignore[no-untyped-def]
     match_id: str,
     user: CurrentB2BUser = Depends(current_b2b_user),
     tenant_ctx: B2BTenantContext = Depends(get_b2b_tenant_context),
-    _: None = Depends(require_tenant_feature("b2b")),
+    _: None = Depends(require_b2b_feature("b2b")),
 ):
     return await _update_match_status(match_id, "approved", ["pending"], tenant_ctx)
 
@@ -412,7 +412,7 @@ async def reject_match_request(  # type: ignore[no-untyped-def]
     match_id: str,
     user: CurrentB2BUser = Depends(current_b2b_user),
     tenant_ctx: B2BTenantContext = Depends(get_b2b_tenant_context),
-    _: None = Depends(require_tenant_feature("b2b")),
+    _: None = Depends(require_b2b_feature("b2b")),
 ):
     return await _update_match_status(match_id, "rejected", ["pending"], tenant_ctx)
 
@@ -422,7 +422,7 @@ async def complete_match_request(  # type: ignore[no-untyped-def]
     match_id: str,
     user: CurrentB2BUser = Depends(current_b2b_user),
     tenant_ctx: B2BTenantContext = Depends(get_b2b_tenant_context),
-    _: None = Depends(require_tenant_feature("b2b")),
+    _: None = Depends(require_b2b_feature("b2b")),
 ):
     return await _update_match_status(match_id, "completed", ["approved"], tenant_ctx)
 

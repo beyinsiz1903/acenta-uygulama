@@ -506,7 +506,7 @@ export default function PartnerB2BNetworkPage() {
               )}
               {!availableLoading && !sellerHasListings && !availableError && (
                 <p className="text-[11px] text-muted-foreground">
-                  Henüz listing bulunamadı. Aktif partner ilişkiniz yoksa listing göremezsiniz.
+                  Henüz müsait tur yok. Aktif partner ilişkiniz yoksa burada liste göremezsiniz.
                 </p>
               )}
               {sellerHasListings && (

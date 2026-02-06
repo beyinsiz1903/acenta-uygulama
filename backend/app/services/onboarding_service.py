@@ -262,6 +262,9 @@ class OnboardingService:
 
         now = datetime.now(timezone.utc)
         trial_end = sub.get("trial_end") or sub.get("period_end")
+        # Ensure timezone-aware comparison
+        if trial_end and trial_end.tzinfo is None:
+            trial_end = trial_end.replace(tzinfo=timezone.utc)
         if trial_end and now > trial_end:
             # Auto-expire
             await db.subscriptions.update_one(

@@ -506,6 +506,7 @@ async def reject_match_request(  # type: ignore[no-untyped-def]
 
 
 @router.patch("/match-request/{match_id}/complete", response_model=B2BMatchRequestOut)
+@require_tenant_feature("b2b")
 async def complete_match_request(  # type: ignore[no-untyped-def]
     match_id: str,
     user: CurrentB2BUser = Depends(current_b2b_user),

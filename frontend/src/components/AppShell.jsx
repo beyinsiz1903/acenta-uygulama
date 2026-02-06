@@ -705,6 +705,30 @@ export default function AppShell() {
         </aside>
 
         <main className="col-span-12 md:col-span-9 lg:col-span-10 md:min-h-[calc(100vh-104px)]">
+          {quotaAlerts && quotaAlerts.length > 0 && (
+            <div className="mx-4 mt-3 space-y-2" data-testid="quota-alert-banners">
+              {quotaAlerts.map((q) => (
+                <div
+                  key={q.metric}
+                  className={`rounded-lg border px-4 py-2.5 text-sm flex items-center justify-between ${
+                    q.exceeded
+                      ? "border-destructive/40 bg-destructive/5 text-destructive"
+                      : "border-amber-500/40 bg-amber-500/5 text-amber-700"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                    <span>
+                      {q.exceeded ? "Quota aşıldı" : "Quota'ya yaklaşıyorsunuz"}: {q.used}/{q.quota} ({Math.round(q.ratio * 100)}%)
+                    </span>
+                  </div>
+                  {q.recommendation && (
+                    <span className="text-xs font-medium shrink-0 ml-3">{q.recommendation}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
           <Outlet />
         </main>
       </div>

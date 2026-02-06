@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from typing import List, Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, constr
 
 from app.auth import require_roles
 from app.db import get_db
 from app.services.crm_tasks import create_task, list_tasks, patch_task
+from app.services.audit import write_audit_log
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/crm/tasks", tags=["crm-tasks"])
 

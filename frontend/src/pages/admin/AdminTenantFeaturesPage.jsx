@@ -51,7 +51,11 @@ function TenantListItem({ tenant, selected, onSelect }) {
           </button>
         </div>
       </div>
-    </div>({ feature, checked, onChange, disabled }) {
+    </div>
+  );
+}
+
+function FeatureCheckboxRow({ feature, checked, onChange, disabled }) {
   return (
     <label
       className={`flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${

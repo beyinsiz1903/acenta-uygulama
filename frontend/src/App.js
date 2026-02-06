@@ -216,6 +216,8 @@ function App() {
         <Route path="/p/:slug" element={<PublicCMSPage />} />
         <Route path="/campaigns/:slug" element={<PublicCampaignPage />} />
         <Route path="/partners/apply" element={<PublicPartnerApplyPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
 
         {/* Admin Routes */}
         <Route

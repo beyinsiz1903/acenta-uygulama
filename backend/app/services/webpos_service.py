@@ -27,6 +27,7 @@ class WebPOSService:
         reservation_id: Optional[str] = None,
         description: Optional[str] = None,
         actor_email: str = "",
+        idempotency_key: Optional[str] = None,
     ) -> Dict[str, Any]:
         db = await get_db()
         now = datetime.now(timezone.utc)

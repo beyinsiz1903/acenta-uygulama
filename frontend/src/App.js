@@ -303,6 +303,7 @@ function App() {
           }
         >
           <Route index element={<DashboardPage />} />
+          <Route path="onboarding" element={<OnboardingWizardPage />} />
           <Route path="b2b/marketplace" element={<B2BMarketplaceCatalogPage />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="inventory" element={<InventoryPage />} />

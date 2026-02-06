@@ -36,7 +36,7 @@ async def provider_tenant(test_db, org) -> dict:
 
   doc = {
     "_id": ObjectId(),
-    "organization_id": org["_id"],
+    "organization_id": str(org["_id"]),
     "name": "B2B Provider Tenant",
     "slug": "b2b-provider-tenant",
     "status": "active",
@@ -52,7 +52,7 @@ async def provider_tenant(test_db, org) -> dict:
 async def seller_tenant(test_db, org) -> dict:
   doc = {
     "_id": ObjectId(),
-    "organization_id": org["_id"],
+    "organization_id": str(org["_id"]),
     "name": "B2B Seller Tenant",
     "slug": "b2b-seller-tenant",
     "status": "active",
@@ -79,7 +79,7 @@ async def provider_user(test_db, org) -> dict:
   # Link user to default org; seed_default_org_and_users already set up org
   doc = {
     "_id": ObjectId(),
-    "organization_id": org["_id"],
+    "organization_id": str(org["_id"]),
     "email": email,
     "name": "Provider B2B User",
     "roles": roles,
@@ -99,7 +99,7 @@ async def seller_user(test_db, org) -> dict:
 
   doc = {
     "_id": ObjectId(),
-    "organization_id": org["_id"],
+    "organization_id": str(org["_id"]),
     "email": email,
     "name": "Seller B2B User",
     "roles": roles,

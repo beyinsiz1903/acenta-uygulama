@@ -20,7 +20,7 @@ class B2BTenantContext(BaseModel):
 
 async def get_b2b_tenant_context(
     request: Request,
-    user: CurrentB2BUser,
+    user: CurrentB2BUser = Depends(current_b2b_user),
 ) -> B2BTenantContext:
     """Resolve tenant from X-Tenant-Id for B2B APIs.
 

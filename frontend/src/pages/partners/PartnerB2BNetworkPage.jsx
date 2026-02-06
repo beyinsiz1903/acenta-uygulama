@@ -171,6 +171,16 @@ export default function PartnerB2BNetworkPage() {
 
   // Derived maps
   const listingTitleById = useMemo(() => {
+    const map = {};
+    (myListings || []).forEach((l) => {
+      if (l?.id) map[l.id] = l.title || l.id;
+    });
+    (availableListings || []).forEach((l) => {
+      if (l?.id && !map[l.id]) map[l.id] = l.title || l.id;
+    });
+    return map;
+  }, [myListings, availableListings]);
+
   const sortedAvailableListings = useMemo(() => {
     const items = Array.isArray(availableListings) ? [...availableListings] : [];
     return items.sort(
@@ -202,17 +212,6 @@ export default function PartnerB2BNetworkPage() {
     if (providerStatusFilter === "all") return items;
     return items.filter((r) => (r.status || "").toLowerCase() === providerStatusFilter);
   }, [incomingRequests, providerStatusFilter]);
-
-
-    const map = {};
-    (myListings || []).forEach((l) => {
-      if (l?.id) map[l.id] = l.title || l.id;
-    });
-    (availableListings || []).forEach((l) => {
-      if (l?.id && !map[l.id]) map[l.id] = l.title || l.id;
-    });
-    return map;
-  }, [myListings, availableListings]);
 
   const loadAvailableListings = useCallback(async () => {
     setAvailableLoading(true);

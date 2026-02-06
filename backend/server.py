@@ -118,6 +118,7 @@ from app.routers.risk_snapshots import router as risk_snapshots_router
 from app.routers.exports import router as exports_router, public_router as public_exports_router
 from app.routers.action_policies import router as action_policies_router
 from app.routers.saas_tenants import router as saas_tenants_router
+from app.routers.tenant_features import router as tenant_features_router
 from app.routers.dev_saas import router as dev_saas_router
 from app.routers.admin_reports import router as admin_reports_router
 from app.routers.match_alerts import router as match_alerts_router

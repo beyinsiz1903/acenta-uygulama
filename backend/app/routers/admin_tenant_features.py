@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 
 from app.auth import get_current_user, require_roles
-from app.config.plan_matrix import ALL_PLAN_FEATURE_KEYS, PLAN_MATRIX, VALID_PLANS
+from app.constants.plan_matrix import ALL_PLAN_FEATURE_KEYS, PLAN_MATRIX, VALID_PLANS
 from app.constants.features import ALL_FEATURE_KEYS
 from app.db import get_db
 from app.errors import AppError

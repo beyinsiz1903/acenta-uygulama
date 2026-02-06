@@ -24,6 +24,7 @@ import ThemeToggle from "./ThemeToggle";
 import { cn } from "../lib/utils";
 import { api, clearToken, getUser } from "../lib/api";
 import { getMenuForUser } from "../config/menuConfig";
+import { FeatureProvider, useFeatures } from "../contexts/FeatureContext";
 import { Inbox } from "lucide-react";
 import { Badge as UIBadge } from "./ui/badge";
 import { fetchPartnerNotificationsSummary } from "../lib/partnerGraph";

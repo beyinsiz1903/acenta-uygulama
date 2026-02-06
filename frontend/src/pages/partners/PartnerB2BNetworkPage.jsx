@@ -1082,6 +1082,13 @@ export default function PartnerB2BNetworkPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <MatchRequestDetailDrawer
+        open={detailOpen}
+        onClose={closeDetail}
+        request={detailRequest}
+        listing={detailListing}
+      />
     </div>
   );
 }

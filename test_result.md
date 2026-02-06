@@ -228,20 +228,20 @@ frontend:
 
 metadata:
   created_by: "main_agent"
-  version: "2.0"
-  test_sequence: 3
+  version: "3.0"
+  test_sequence: 4
   run_ui: false
 
 test_plan:
-  current_focus:
+  current_focus: []
+  stuck_tasks: 
     - "Demo Seed POST /api/admin/demo/seed"
-    - "Activation Checklist GET/PUT /api/activation/checklist"
-    - "CRM Deal move-stage POST /api/crm/deals/{id}/move-stage"
-    - "CRM Task complete PUT /api/crm/tasks/{id}/complete"
-    - "CRM Notes GET/POST /api/crm/notes"
-    - "Upgrade Requests POST /api/upgrade-requests"
     - "Tenant Health GET /api/admin/tenants/health"
-    - "Automation Rules (trigger-checks extended)"
-  stuck_tasks: []
-  test_all: true
+  test_all: false
   test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "GTM + CRM endpoints implemented and mostly working. Demo seed has database constraint issue."
+  - agent: "testing" 
+    message: "✅ BACKEND TESTING COMPLETE: 6/8 endpoints working perfectly. 2 CRITICAL ISSUES FOUND: (1) Demo Seed: BulkWriteError - ops_cases missing case_id field violates unique index. (2) Tenant Health: TypeError - datetime timezone mismatch when subtracting trial_end from now. Authentication & tenant isolation working. All CRM features (deals, tasks, notes) working with proper audit logging. Automation rules working and created 2 overdue tasks."

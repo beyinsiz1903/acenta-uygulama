@@ -24,7 +24,7 @@ test("B2B Ağ sayfası agency kullanıcısı için temel iskeleti render eder", 
   await page.goto(`${BASE_URL}/app/partners/b2b`);
 
   // 2) Ana başlık ve mod toggle'ları
-  await expect(page.getByText("B2B Ağ")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "B2B Ağ" })).toBeVisible();
   await expect(page.getByText("Satıcı")).toBeVisible();
   await expect(page.getByText("Sağlayıcı")).toBeVisible();
 

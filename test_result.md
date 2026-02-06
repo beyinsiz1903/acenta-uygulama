@@ -56,7 +56,7 @@
 # ##   test_all: false
 # ##   test_priority: "high_first"  # or "sequential" or "stuck_first"
 #
-user_problem_statement: "Phase 1 B2B Agency Network UI – Seller + Provider akışlarının tamamlanması ve mevcut B2B backend (b2b_exchange.py) ile entegrasyonunun doğrulanması."
+user_problem_statement: "Enterprise Dashboard Faz 1-2: Frontend-only structural redesign and visual upgrade. 6 KPI compact bar, 70/30 chart + right rail layout, attention list + activity timeline, skeleton loaders, empty states, enterprise polish."
 
 backend:
   - task: "B2B Exchange Backend Health Check"

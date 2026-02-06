@@ -38,5 +38,5 @@ async def get_audit_logs(
     cursor=cursor,
   )
   serialized = [_serialize_item(i) for i in items]
-  next_cursor = serialized[-1]["id"] if serialized else None
+  next_cursor = serialized[-1].get("id") if serialized else None
   return {"items": serialized, "next_cursor": next_cursor}

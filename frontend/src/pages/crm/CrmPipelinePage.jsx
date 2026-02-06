@@ -585,7 +585,7 @@ export default function CrmPipelinePage() {
           gap: 12,
         }}
       >
-        {(["new", "qualified", "quoted", "won", "lost"]).map((key) => {
+        {(["lead", "contacted", "proposal", "won", "lost"]).map((key) => {
           const col = columnConfig[key];
           const items = dealsByStage[key] || [];
           return (

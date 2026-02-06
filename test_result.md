@@ -91,6 +91,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ FINAL VERIFICATION: All 5 B2B exchange integration tests PASSING as requested. test_b2b_tenant_isolation_cannot_request_own_listing: ✅ PASS (seller cannot request own listing, proper error.code='cannot_request_own_listing'). test_b2b_happy_path_flow: ✅ PASS (full B2B exchange flow working end-to-end). test_b2b_not_active_partner_cannot_see_or_request: ✅ PASS (non-active partner blocked, error.code='not_active_partner'). test_b2b_cross_org_cannot_see_or_request: ✅ PASS (cross-org client never sees other org's listing in /listings/available, gets error.code='not_active_partner' on /match-request). test_b2b_third_tenant_cannot_approve_match: ✅ PASS (third tenant gets 403 + error.code='forbidden' when attempting to approve someone else's match). All expected behaviors from review request validated successfully."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPLETE B2B EXCHANGE TEST SUITE: All 9 tests in backend/tests/integration/b2b/test_b2b_exchange_flow.py PASSING including new invalid status transition tests. Core tests: test_b2b_tenant_isolation_cannot_request_own_listing ✅, test_b2b_happy_path_flow ✅, test_b2b_not_active_partner_cannot_see_or_request ✅, test_b2b_cross_org_cannot_see_or_request ✅, test_b2b_third_tenant_cannot_approve_match ✅. Invalid status transition tests: test_b2b_invalid_status_pending_cannot_complete ✅ (pending->complete blocked with error.code='invalid_status_transition'), test_b2b_invalid_status_rejected_cannot_approve ✅ (rejected->approve blocked), test_b2b_invalid_status_approved_cannot_reapprove ✅ (approved->approve blocked), test_b2b_invalid_status_completed_cannot_change ✅ (completed state immutable). All status transition validations working correctly with proper HTTP 400 + error.code='invalid_status_transition' responses."
 
 frontend:
   - task: "Partner B2B Network UI (B2B Ağ) – Phase 1"

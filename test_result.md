@@ -238,15 +238,23 @@ frontend:
 metadata:
   created_by: "main_agent"
   version: "1.0"
-  test_sequence: 1
+  test_sequence: 2
   run_ui: false
 
 test_plan:
-  current_focus: []
-  stuck_tasks: []
+  current_focus: 
+    - "WebPOS Page (/app/finance/webpos)"
+    - "NotificationBell"
+    - "Advanced Reports Page (/app/reports)"
+  stuck_tasks:
+    - "WebPOS Page (/app/finance/webpos)"
+    - "NotificationBell"
+    - "Advanced Reports Page (/app/reports)"
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "testing"
     message: "✅ COMPLETE BACKEND VERIFICATION SUCCESS - All 12 backend API tests passed! Enterprise SaaS Platform (Phases 5-8) fully functional: Signup flow with JWT, onboarding wizard, WebPOS payments/refunds with ledger integration, notifications system, and advanced reports suite. Payment→ledger relationship verified (1000 TRY payment creates debit, 500 TRY refund creates credit, balance correctly shows 500). All endpoints return proper response structures and handle authentication/authorization correctly."
+  - agent: "testing"
+    message: "❌ FRONTEND E2E TEST FAILURE - Authentication issues detected! Public pages (signup, pricing) work correctly, but all authenticated pages (WebPOS, reports, notifications) fail due to 401 errors when attempting login with the provided admin@acenta.test/admin123 credentials. API-level tenant isolation tests pass correctly. The system needs authentication fixes before other frontend tests can proceed. Specifically, /api/auth/login returns 401 unauthorized when using the provided credentials."

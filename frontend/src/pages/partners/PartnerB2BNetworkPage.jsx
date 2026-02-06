@@ -1048,6 +1048,19 @@ export default function PartnerB2BNetworkPage() {
                 </button>
                 <button
                   type="button"
+
+      <MatchRequestDetailDrawer
+        open={detailOpen}
+        onOpenChange={(open) => {
+          if (!open) closeDetail();
+          else setDetailOpen(true);
+        }}
+        request={detailRequest}
+        listing={detailListing}
+        onCopyId={(value) => copyToClipboard(value, toast)}
+        formatPrice={formatTry}
+      />
+
                   className={`px-3 py-1 rounded-sm ${
                     listingForm.status === "inactive"
                       ? "bg-primary text-primary-foreground"

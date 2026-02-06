@@ -502,7 +502,7 @@ export default function DashboardPage() {
       {/* ========== ROW 1: KPI BAR ========== */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
         <KpiCard
-          label="Toplam Rezervasyon"
+          label="Toplam Rez."
           value={totals.total}
           icon={Ticket}
           color="#6366f1"
@@ -542,7 +542,7 @@ export default function DashboardPage() {
           loading={loading}
         />
         <KpiCard
-          label="İşlemde Case"
+          label="İşlemde"
           value={caseCounters.in_progress}
           icon={Activity}
           color="#8b5cf6"

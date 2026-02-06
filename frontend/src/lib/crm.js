@@ -156,3 +156,51 @@ export async function listCustomerInboxThreads(customerId, params) {
     throw { message: apiErrorMessage(err), raw: err };
   }
 }
+
+// ─── New: Move stage ──────────────────────────────────────────────
+export async function moveDealStage(dealId, stage) {
+  try {
+    const res = await api.post(`/crm/deals/${dealId}/move-stage`, { stage });
+    return res.data;
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}
+
+export async function getDeal(id) {
+  try {
+    const res = await api.get(`/crm/deals/${id}`);
+    return res.data;
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}
+
+// ─── New: Complete task ───────────────────────────────────────────
+export async function completeTask(id) {
+  try {
+    const res = await api.put(`/crm/tasks/${id}/complete`);
+    return res.data;
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}
+
+// ─── New: CRM Notes ──────────────────────────────────────────────
+export async function listNotes(params) {
+  try {
+    const res = await api.get("/crm/notes", { params });
+    return res.data;
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}
+
+export async function createNote(body) {
+  try {
+    const res = await api.post("/crm/notes", body);
+    return res.data;
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}

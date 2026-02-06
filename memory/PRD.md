@@ -1,31 +1,36 @@
-# PRD — SaaS Billing & Plan Engine (Multi-Tenant ERP)
+# PRD — SaaS Platform (Multi-Tenant ERP)
 
-## What's Implemented
+## Implemented (A–H + Usage)
 
-### PROMPT A–E: Feature Capability Engine ✅
-### PROMPT F: Observability + Audit Log ✅
-### PROMPT G: Plan Inheritance Engine ✅
-### PROMPT H: Billing Abstraction + Subscription Mapping ✅
-### Subscription Visibility UI ✅
-- SubscriptionPanel on admin tenant features page
-- Status badges: Active, Trial, Payment Issue, Canceling, Canceled
-- Renewal countdown, grace period warning, cancel-at-period-end badge
-- Empty state, error state, refresh button
-- Edge cases: no subscription, null dates, past grace period, API failure
+### Feature Engine (A–E) ✅
+- Feature guards, FeatureContext, Admin UI
+
+### Observability (F) ✅
+- Audit logs, B2B events, Activity timeline
+
+### Plan Inheritance (G) ✅
+- plan_defaults + add_ons = effective_features
+
+### Billing (H) ✅
+- BillingProvider ABC, Stripe, Iyzico stub, SubscriptionManager, Webhooks
+
+### Usage-Based Billing Hooks ✅
+- `usage_ledger` collection with idempotency (source_event_id unique)
+- `track_usage()` best-effort hook in B2B match_request creation
+- Quota logic: plan_matrix quotas (pro: 100, enterprise: 1000 match_requests/mo)
+- `check_quota()` with soft enforcement + audit log on exceeded
+- `GET /api/admin/billing/tenants/{id}/usage` — summary with totals/quota/remaining
+- Subscription panel + Usage panel on Admin Tenant Features page
 
 ## Test Coverage
-- 52 backend integration tests passing
+- 58 backend integration tests passing
 
 ## Prioritized Backlog
 ### P1
-- Usage-based billing hooks (b2b.match_request metered)
 - Real Stripe Products/Prices creation
+- Revenue analytics dashboard
 ### P2
-- Self-Service B2B Onboarding
 - Escrow & Payment Orchestration
+- Self-Service B2B Onboarding
 ### P3
 - B2C Storefront/CMS/SEO Layer
-
-## Credentials
-- Admin: admin@acenta.test / admin123
-- Agency: agency1@acenta.test / agency123

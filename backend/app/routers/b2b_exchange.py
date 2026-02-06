@@ -129,7 +129,7 @@ async def create_listing(  # type: ignore[no-untyped-def]
     body: B2BListingCreateIn,
     user: CurrentB2BUser = Depends(current_b2b_user),
     tenant_ctx: B2BTenantContext = Depends(get_b2b_tenant_context),
-    _: None = Depends(require_tenant_feature("b2b")),
+    _: None = Depends(require_tenant_feature(FEATURE_B2B)),
 ):
     db = await get_db()
 

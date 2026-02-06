@@ -23,9 +23,19 @@ def require_tenant_feature(feature_key: str) -> Callable[[Callable[..., Coroutin
   def decorator(func: Callable[..., Coroutine[Any, Any, T]]) -> Callable[..., Coroutine[Any, Any, T]]:
     async def wrapper(
       *args: Any,
-      tenant_ctx: B2BTenantContext = Depends(get_b2b_tenant_context),
       **kwargs: Any,
     ) -> T:
+      # Extract tenant_ctx from kwargs if it exists, otherwise get it via dependency
+      tenant_ctx = kwargs.get('tenant_ctx')
+      if tenant_ctx is None:
+        # This should not happen in normal operation since the dependency should inject it
+        raise AppError(
+          500,
+          "tenant_context_missing",
+          "Tenant context is missing.",
+          {"feature": feature_key},
+        )
+      
       tenant_id = tenant_ctx.tenant_id
       has = await feature_service.has_feature(tenant_id, feature_key)
       if not has:
@@ -35,7 +45,7 @@ def require_tenant_feature(feature_key: str) -> Callable[[Callable[..., Coroutin
           "Bu özellik planınızda aktif değil.",
           {"feature": feature_key},
         )
-      return await func(*args, tenant_ctx=tenant_ctx, **kwargs)
+      return await func(*args, **kwargs)
 
     return wrapper
 

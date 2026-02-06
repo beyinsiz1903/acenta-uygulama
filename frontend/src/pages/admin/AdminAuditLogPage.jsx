@@ -110,7 +110,7 @@ export default function AdminAuditLogPage() {
               <SelectValue placeholder="Tümü" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tümü</SelectItem>
+              <SelectItem value="__all__">Tümü</SelectItem>
               {tenants.map((t) => (
                 <SelectItem key={t.id} value={t.id}>{t.name || t.slug || t.id.slice(0, 12)}</SelectItem>
               ))}
@@ -124,7 +124,7 @@ export default function AdminAuditLogPage() {
               <SelectValue placeholder="Tümü" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tümü</SelectItem>
+              <SelectItem value="__all__">Tümü</SelectItem>
               <SelectItem value="tenant_features.updated">Feature Güncelleme</SelectItem>
             </SelectContent>
           </Select>

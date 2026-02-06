@@ -202,10 +202,10 @@ async def update_listing(  # type: ignore[no-untyped-def]
 
 
 @router.get("/listings/available", response_model=List[B2BListingOut])
-@require_tenant_feature("b2b")
 async def list_available_listings(  # type: ignore[no-untyped-def]
     user: CurrentB2BUser = Depends(current_b2b_user),
     tenant_ctx: B2BTenantContext = Depends(get_b2b_tenant_context),
+    _: None = Depends(require_tenant_feature("b2b")),
 ):
     db = await get_db()
     rel_repo = PartnerRelationshipRepository(db)

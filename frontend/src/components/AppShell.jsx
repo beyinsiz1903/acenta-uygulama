@@ -196,7 +196,7 @@ export default function AppShell() {
   const isHotel = (user?.roles || []).includes("hotel_admin") || (user?.roles || []).includes("hotel_staff");
   const isAgency = (user?.roles || []).includes("agency_admin") || (user?.roles || []).includes("agency_agent");
 
-  const { hasFeature, loading: featuresLoading } = useFeatures();
+  const { hasFeature, loading: featuresLoading, quotaAlerts } = useFeatures();
 
   // Role-based menu (new structure)
   const roleBasedMenu = getMenuForUser(user);

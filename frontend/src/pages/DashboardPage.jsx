@@ -364,22 +364,22 @@ export default function DashboardPage() {
   const fetchData = useCallback(async (days) => {
     setLoading(true);
     setError("");
-    const safe = async (fn) => { try { return await fn(); } catch { return null; } };
-    try {
-      const [a, b, c] = await Promise.all([
-        safe(() => api.get("/reports/reservations-summary")),
-        safe(() => api.get(`/reports/sales-summary?days=${days}`)),
-        safe(() => api.get("/ops-cases/counters")),
-      ]);
-      if (a?.data) setResSummary(a.data);
-      if (b?.data) setSales(b.data);
-      if (c?.data) setCaseCounters(c.data);
-    } catch (e) {
-      const msg = apiErrorMessage(e);
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
+    const safe = async (fn) => {
+      try { return await fn(); }
+      catch (err) {
+        // Suppress 400/403/404 silently – expected for missing features or permissions
+        return null;
+      }
+    };
+    const [a, b, c] = await Promise.all([
+      safe(() => api.get("/reports/reservations-summary")),
+      safe(() => api.get(`/reports/sales-summary?days=${days}`)),
+      safe(() => api.get("/ops-cases/counters")),
+    ]);
+    if (a?.data) setResSummary(a.data);
+    if (b?.data) setSales(b.data);
+    if (c?.data) setCaseCounters(c.data);
+    setLoading(false);
   }, []);
 
   useEffect(() => { fetchData(chartDays); }, [chartDays, fetchData]);

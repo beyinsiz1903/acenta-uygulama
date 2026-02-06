@@ -376,7 +376,8 @@ export default function DashboardPage() {
     } catch (e) {
       const msg = apiErrorMessage(e);
       const status = e?.response?.status;
-      if (msg !== "Not Found" && status !== 403) setError(msg);
+      // 400/403/404 → sessizce geç, rapor endpoint'leri tenant config'e bağlı
+      if (status !== 400 && status !== 403 && msg !== "Not Found") setError(msg);
     } finally {
       setLoading(false);
     }

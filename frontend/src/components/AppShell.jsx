@@ -31,20 +31,20 @@ import { fetchPartnerNotificationsSummary } from "../lib/partnerGraph";
 import { getActiveTenantKey, getActiveTenantId, setActiveTenantId, subscribeTenantChange } from "../lib/tenantContext";
 
 const legacyNav = [
-  { to: "/app", label: "Dashboard", icon: LayoutGrid, roles: ["admin", "sales", "ops", "accounting", "b2b_agent", "super_admin"] },
+  { to: "/app", label: "Dashboard", icon: LayoutGrid, roles: ["admin", "sales", "ops", "accounting", "b2b_agent", "super_admin"], requiredFeature: "dashboard" },
   { to: "/app/products", label: "Ürünler", icon: Layers, roles: ["admin", "sales", "ops", "super_admin"] },
-  { to: "/app/inventory", label: "Müsaitlik", icon: CalendarDays, roles: ["admin", "sales", "ops", "super_admin"] },
+  { to: "/app/inventory", label: "Müsaitlik", icon: CalendarDays, roles: ["admin", "sales", "ops", "super_admin"], requiredFeature: "inventory" },
   { to: "/app/reservations", label: "Rezervasyonlar", icon: Ticket, roles: ["admin", "sales", "ops", "accounting", "b2b_agent", "super_admin"] },
   { to: "/app/customers", label: "Müşteriler", icon: Users, roles: ["admin", "sales", "ops", "super_admin"] },
-  { to: "/app/crm/customers", label: "CRM Müşteriler", icon: Users, roles: ["admin", "sales", "ops", "super_admin"] },
-  { to: "/app/crm/duplicates", label: "CRM Duplicate Müşteriler", icon: Users, roles: ["admin", "super_admin"] },
-  { to: "/app/crm/pipeline", label: "CRM Pipeline", icon: FileText, roles: ["admin", "sales", "ops", "super_admin"] },
-  { to: "/app/crm/tasks", label: "CRM Görevler", icon: CalendarDays, roles: ["admin", "sales", "ops", "super_admin"] },
-  { to: "/app/crm/events", label: "CRM Olaylar", icon: FileText, roles: ["admin", "super_admin"] },
+  { to: "/app/crm/customers", label: "CRM Müşteriler", icon: Users, roles: ["admin", "sales", "ops", "super_admin"], requiredFeature: "crm" },
+  { to: "/app/crm/duplicates", label: "CRM Duplicate Müşteriler", icon: Users, roles: ["admin", "super_admin"], requiredFeature: "crm" },
+  { to: "/app/crm/pipeline", label: "CRM Pipeline", icon: FileText, roles: ["admin", "sales", "ops", "super_admin"], requiredFeature: "crm" },
+  { to: "/app/crm/tasks", label: "CRM Görevler", icon: CalendarDays, roles: ["admin", "sales", "ops", "super_admin"], requiredFeature: "crm" },
+  { to: "/app/crm/events", label: "CRM Olaylar", icon: FileText, roles: ["admin", "super_admin"], requiredFeature: "crm" },
   { to: "/app/inbox", label: "Inbox", icon: Inbox, roles: ["admin", "super_admin", "ops"] },
-  { to: "/app/b2b", label: "B2B / Acenteler", icon: Building2, roles: ["admin", "super_admin"] },
-  { to: "/app/b2b-book", label: "B2B Rezervasyon", icon: Ticket, roles: ["b2b_agent"] },
-  { to: "/app/reports", label: "Raporlar", icon: BarChart3, roles: ["admin", "sales", "accounting", "super_admin"] },
+  { to: "/app/b2b", label: "B2B / Acenteler", icon: Building2, roles: ["admin", "super_admin"], requiredFeature: "b2b" },
+  { to: "/app/b2b-book", label: "B2B Rezervasyon", icon: Ticket, roles: ["b2b_agent"], requiredFeature: "b2b" },
+  { to: "/app/reports", label: "Raporlar", icon: BarChart3, roles: ["admin", "sales", "accounting", "super_admin"], requiredFeature: "reports" },
   { to: "/app/settings", label: "Ayarlar", icon: Settings, roles: ["admin", "super_admin"] },
 ];
 

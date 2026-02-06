@@ -196,11 +196,17 @@ export default function AppShell() {
   const isHotel = (user?.roles || []).includes("hotel_admin") || (user?.roles || []).includes("hotel_staff");
   const isAgency = (user?.roles || []).includes("agency_admin") || (user?.roles || []).includes("agency_agent");
 
+  const { hasFeature, loading: featuresLoading } = useFeatures();
+
   // Role-based menu (new structure)
   const roleBasedMenu = getMenuForUser(user);
   
-  // Legacy nav (filtered by role)
-  const visibleLegacyNav = legacyNav.filter((n) => userHasRole(user, n.roles));
+  // Legacy nav (filtered by role + feature)
+  const visibleLegacyNav = legacyNav.filter((n) => {
+    if (!userHasRole(user, n.roles)) return false;
+    if (n.requiredFeature && !featuresLoading && !hasFeature(n.requiredFeature)) return false;
+    return true;
+  });
 
   // Combine both menus
   const allMenuItems = [...roleBasedMenu, ...visibleLegacyNav];

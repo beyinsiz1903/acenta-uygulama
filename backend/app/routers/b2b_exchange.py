@@ -171,6 +171,7 @@ async def update_listing(  # type: ignore[no-untyped-def]
     body: B2BListingCreateIn,
     user: CurrentB2BUser = Depends(current_b2b_user),
     tenant_ctx: B2BTenantContext = Depends(get_b2b_tenant_context),
+    _: None = Depends(require_tenant_feature("b2b")),
 ):
     db = await get_db()
     listing = await _get_listing(db, listing_id)

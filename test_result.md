@@ -75,11 +75,14 @@ backend:
     file: "backend/app/routers/onboarding.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "2-step signup creates org+tenant+user, trial subscription, capabilities, onboarding_state. Returns JWT."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Signup with unique email returns JWT, user_id, org_id, tenant_id, plan, trial_end. Duplicate email properly returns 409."
 
   - task: "Onboarding Wizard (state, steps, complete)"
     implemented: true
@@ -87,11 +90,14 @@ backend:
     file: "backend/app/routers/onboarding.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "GET state, PUT steps/company|product|invite|partner, POST complete all working."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: GET /api/onboarding/state shows progress with trial info. PUT /api/onboarding/steps/company & steps/product work correctly. POST /api/onboarding/complete successful."
 
   - task: "WebPOS Payments (record, list, refund)"
     implemented: true
@@ -99,11 +105,14 @@ backend:
     file: "backend/app/routers/webpos.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Record payment, list, refund, partial refund, daily-summary all working."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: POST /api/webpos/payments creates payment (1000 TRY). POST /api/webpos/refunds processes partial refund (500 TRY) correctly."
 
   - task: "WebPOS Ledger (append-only, balance)"
     implemented: true
@@ -111,11 +120,14 @@ backend:
     file: "backend/app/services/webpos_service.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Append-only ledger, auto balance_after, debit on payment, credit on refund."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: GET /api/webpos/ledger shows correct entries (debit for payment, credit for refund). GET /api/webpos/balance shows correct balance (500 after 1000 payment - 500 refund)."
 
   - task: "Notifications CRUD"
     implemented: true
@@ -123,11 +135,14 @@ backend:
     file: "backend/app/routers/notifications.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "List, unread-count, mark-read, mark-all-read with tenant isolation."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: GET /api/notifications lists notifications correctly. GET /api/notifications/unread-count returns count. PUT /api/notifications/mark-all-read works."
 
   - task: "Advanced Reports (financial-summary, product-performance, partner-performance, aging)"
     implemented: true
@@ -135,11 +150,14 @@ backend:
     file: "backend/app/routers/advanced_reports.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "All date-range parameterized, snapshot-safe."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: GET /api/reports/financial-summary shows detailed metrics (total_revenue, total_payments, total_refunds). All other reports (product-performance, partner-performance, aging) return correct responses."
 
 frontend:
   - task: "Signup Page (/signup)"

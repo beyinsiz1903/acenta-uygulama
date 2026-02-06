@@ -53,10 +53,14 @@ async def get_tenants_health(
             trial_end = sub["trial_end"]
             if isinstance(trial_end, str):
                 try:
-                    trial_end = datetime.fromisoformat(trial_end.replace("Z", "+00:00"))
+                    from dateutil import parser
+                    trial_end = parser.parse(trial_end)
                 except Exception:
                     trial_end = None
             if trial_end:
+                # Make sure both datetimes have timezone info
+                if trial_end.tzinfo is None:
+                    trial_end = trial_end.replace(tzinfo=timezone.utc)
                 delta = (trial_end - now).days
                 trial_days_left = max(0, delta)
 

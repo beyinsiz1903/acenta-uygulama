@@ -237,6 +237,15 @@ export default function AdminAnalyticsPage() {
                   <span>Pushed: {pushStatus.last_finalize.pushed_count} | Errors: {pushStatus.last_finalize.error_count}</span>
                 </div>
               )}
+              {pushStatus.cron && (
+                <div className="rounded border bg-muted/30 px-3 py-2 text-xs flex items-center gap-3">
+                  <span>Finalize Cron:</span>
+                  <Badge variant={pushStatus.cron.scheduler_running ? "default" : "secondary"} className="text-[10px]">
+                    {pushStatus.cron.scheduler_running ? "Active" : "Disabled"}
+                  </Badge>
+                  {pushStatus.cron.next_run_at && <span className="text-muted-foreground">Next: {new Date(pushStatus.cron.next_run_at).toLocaleString("tr-TR")}</span>}
+                </div>
+              )}
             </div>
           )}
 

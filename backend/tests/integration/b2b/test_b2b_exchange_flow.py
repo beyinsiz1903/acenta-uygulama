@@ -213,7 +213,7 @@ async def test_b2b_not_active_partner_cannot_see_or_request(
 async def test_b2b_cross_org_cannot_see_or_request(
   provider_client: AsyncClient,
   other_client: AsyncClient,
-  enable_b2b_features,
+  enable_b2b_features_all,
 ) -> None:
   """Cross-org tenant cannot see or request another org's listing.
 

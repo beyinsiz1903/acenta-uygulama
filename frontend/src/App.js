@@ -287,6 +287,7 @@ function App() {
             <Route path="tenant-features" element={<AdminTenantFeaturesPage />} />
             <Route path="audit-logs" element={<AdminAuditLogPage />} />
             <Route path="analytics" element={<AdminAnalyticsPage />} />
+            <Route path="tenant-health" element={<AdminTenantHealthPage />} />
           </Route>
         </Route>
 

@@ -428,6 +428,24 @@ async def _update_match_status(
     await db.b2b_match_requests.update_one({"_id": match_doc["_id"]}, {"$set": update_fields})
     updated = await db.b2b_match_requests.find_one({"_id": match_doc["_id"]})
     assert updated is not None
+
+    entity_id = str(match_doc.get("id") or match_id)
+    await append_b2b_event(
+      event_type="match_request.status_changed",
+      entity_type="match_request",
+      entity_id=entity_id,
+      listing_id=str(match_doc.get("listing_id", "")),
+      provider_tenant_id=str(match_doc.get("provider_tenant_id", "")),
+      seller_tenant_id=str(match_doc.get("seller_tenant_id", "")),
+      actor_user_id=tenant_ctx.user_id,
+      payload={
+        "from": current_status,
+        "to": new_status,
+        "requested_price": float(match_doc.get("requested_price") or 0),
+        "platform_fee_amount": float(update_fields.get("platform_fee_amount") or 0),
+      },
+    )
+
     return B2BMatchRequestOut(**_serialize(updated))
 
 

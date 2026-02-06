@@ -211,8 +211,10 @@ def _gen_cases(tenant_id: str, org_id: str, count: int = 3) -> list:
     case_statuses = ["open", "in_progress", "open"]
     cases = []
     for i in range(count):
+        case_id = f"demo_case_{i}_{uuid.uuid4().hex[:8]}"
         cases.append({
-            "_id": f"demo_case_{i}_{uuid.uuid4().hex[:8]}",
+            "_id": case_id,
+            "case_id": case_id,
             "organization_id": org_id,
             "tenant_id": tenant_id,
             "title": case_titles[i % len(case_titles)],

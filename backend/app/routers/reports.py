@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/reports", tags=["reports"])
 ReportsFeatureDep = Depends(require_tenant_feature(FEATURE_REPORTS))
 
 
-@router.get("/reservations-summary", dependencies=[Depends(get_current_user), ReportsFeatureDep])
+@router.get("/reservations-summary", dependencies=[Depends(get_current_user)])
 async def reservations_summary(user=Depends(get_current_user)):
     db = await get_db()
     pipeline = [

@@ -28,3 +28,35 @@ export function getMenuForUser(user) {
 
   return [];
 }
+
+/**
+ * Filter menu items by enabled features.
+ * Items with requiredFeature are hidden if that feature is not enabled.
+ * Items without requiredFeature are always shown.
+ */
+export function filterMenuByFeatures(menu, hasFeature) {
+  if (!hasFeature) return menu;
+
+  return menu
+    .map((section) => {
+      if (section.children) {
+        const filtered = section.children.filter(
+          (item) => !item.requiredFeature || hasFeature(item.requiredFeature),
+        );
+        if (filtered.length === 0) {
+          // If the section itself has a requiredFeature check
+          if (section.requiredFeature && !hasFeature(section.requiredFeature)) {
+            return null;
+          }
+          return null;
+        }
+        return { ...section, children: filtered };
+      }
+      // Top-level items
+      if (section.requiredFeature && !hasFeature(section.requiredFeature)) {
+        return null;
+      }
+      return section;
+    })
+    .filter(Boolean);
+}

@@ -66,200 +66,182 @@
 # END - Testing Protocol - DO NOT EDIT OR REMOVE THIS SECTION
 #====================================================================================================
 
-user_problem_statement: "Enterprise SaaS core: Self-Service Onboarding (Phase 5), WebPOS + Internal Ledger (Phase 6), Notifications Engine (Phase 8), Advanced Reporting (Phase 7), System Hardening (Phase 9)"
+user_problem_statement: "GTM Readiness Pack (demo seed, activation checklist, upgrade requests, tenant health) + CRM Pipeline Deepening (new stages, move-stage, complete task, notes, automation rules)"
 
 backend:
-  - task: "Signup API (POST /api/onboarding/signup)"
+  - task: "Demo Seed (POST /api/admin/demo/seed)"
     implemented: true
-    working: true
-    file: "backend/app/routers/onboarding.py"
+    working: "NA"
+    file: "backend/app/routers/gtm_demo_seed.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-      - working: true
+      - working: "NA"
         agent: "main"
-        comment: "2-step signup creates org+tenant+user, trial subscription, capabilities, onboarding_state. Returns JWT."
-      - working: true
-        agent: "testing"
-        comment: "✅ VERIFIED: Signup with unique email returns JWT, user_id, org_id, tenant_id, plan, trial_end. Duplicate email properly returns 409."
+        comment: "New endpoint for 1-click demo data seeding. Supports mode (light/full), with_finance, with_crm params. Idempotent via demo_seed_runs collection. Rate limited."
 
-  - task: "Onboarding Wizard (state, steps, complete)"
+  - task: "Activation Checklist (GET/PUT /api/activation/checklist)"
     implemented: true
-    working: true
-    file: "backend/app/routers/onboarding.py"
+    working: "NA"
+    file: "backend/app/routers/activation_checklist.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-      - working: true
+      - working: "NA"
         agent: "main"
-        comment: "GET state, PUT steps/company|product|invite|partner, POST complete all working."
-      - working: true
-        agent: "testing"
-        comment: "✅ VERIFIED: GET /api/onboarding/state shows progress with trial info. PUT /api/onboarding/steps/company & steps/product work correctly. POST /api/onboarding/complete successful."
+        comment: "Checklist with 7 items, auto-created on onboarding complete. PUT to mark items complete. Audit logged."
 
-  - task: "WebPOS Payments (record, list, refund)"
+  - task: "Upgrade Requests (POST /api/upgrade-requests)"
     implemented: true
-    working: true
-    file: "backend/app/routers/webpos.py"
+    working: "NA"
+    file: "backend/app/routers/upgrade_requests.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-      - working: true
+      - working: "NA"
         agent: "main"
-        comment: "Record payment, list, refund, partial refund, daily-summary all working."
-      - working: true
-        agent: "testing"
-        comment: "✅ VERIFIED: POST /api/webpos/payments creates payment (1000 TRY). POST /api/webpos/refunds processes partial refund (500 TRY) correctly."
+        comment: "Tenant admin can request upgrade. Super admin can change plan directly. Notifications created for admins."
 
-  - task: "WebPOS Ledger (append-only, balance)"
+  - task: "Tenant Health (GET /api/admin/tenants/health)"
     implemented: true
-    working: true
-    file: "backend/app/services/webpos_service.py"
+    working: "NA"
+    file: "backend/app/routers/tenant_health.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-      - working: true
+      - working: "NA"
         agent: "main"
-        comment: "Append-only ledger, auto balance_after, debit on payment, credit on refund."
-      - working: true
-        agent: "testing"
-        comment: "✅ VERIFIED: GET /api/webpos/ledger shows correct entries (debit for payment, credit for refund). GET /api/webpos/balance shows correct balance (500 after 1000 payment - 500 refund)."
+        comment: "Super admin only. Returns per-tenant health metrics with filters (trial_expiring, inactive, overdue)."
 
-  - task: "Notifications CRUD"
+  - task: "CRM Deal Move Stage (POST /api/crm/deals/{id}/move-stage)"
     implemented: true
-    working: true
-    file: "backend/app/routers/notifications.py"
+    working: "NA"
+    file: "backend/app/routers/crm_deals.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-      - working: true
+      - working: "NA"
         agent: "main"
-        comment: "List, unread-count, mark-read, mark-all-read with tenant isolation."
-      - working: true
-        agent: "testing"
-        comment: "✅ VERIFIED: GET /api/notifications lists notifications correctly. GET /api/notifications/unread-count returns count. PUT /api/notifications/mark-all-read works."
+        comment: "New stages: lead, contacted, proposal, won, lost. Audit logged. CRM event fired."
 
-  - task: "Advanced Reports (financial-summary, product-performance, partner-performance, aging)"
+  - task: "CRM Task Complete (PUT /api/crm/tasks/{id}/complete)"
     implemented: true
-    working: true
-    file: "backend/app/routers/advanced_reports.py"
+    working: "NA"
+    file: "backend/app/routers/crm_tasks.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-      - working: true
+      - working: "NA"
         agent: "main"
-        comment: "All date-range parameterized, snapshot-safe."
-      - working: true
-        agent: "testing"
-        comment: "✅ VERIFIED: GET /api/reports/financial-summary shows detailed metrics (total_revenue, total_payments, total_refunds). All other reports (product-performance, partner-performance, aging) return correct responses."
+        comment: "Mark task as done. Audit logged."
+
+  - task: "CRM Notes (GET/POST /api/crm/notes)"
+    implemented: true
+    working: "NA"
+    file: "backend/app/routers/crm_notes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Notes attachable to customer/deal/reservation/payment. Audit logged."
+
+  - task: "Automation Rules (overdue payment + deal proposal)"
+    implemented: true
+    working: "NA"
+    file: "backend/app/services/automation_rules.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Two rules: overdue payment task creation + deal proposal overdue notification. Idempotent per day via rule_runs collection. Triggered via /api/notifications/trigger-checks."
 
 frontend:
-  - task: "Signup Page (/signup)"
+  - task: "Dashboard with Demo Seed + Activation Checklist"
     implemented: true
-    working: true
-    file: "frontend/src/pages/public/SignupPage.jsx"
+    working: "NA"
+    file: "frontend/src/pages/DashboardPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-      - working: true
+      - working: "NA"
         agent: "main"
-        comment: "Screenshot verified."
-      - working: true
-        agent: "testing"
-        comment: "✅ VERIFIED: Signup page loads correctly with all form fields (company name, email, password) and plan selector showing all 3 plans."
-      - working: true
-        agent: "testing"
-        comment: "✅ VERIFIED: Full signup flow works correctly, redirecting to /app after successful signup. Duplicate email error handling also working as expected."
+        comment: "Demo seed button + activation checklist widget added to dashboard."
 
-  - task: "Pricing Page (/pricing)"
+  - task: "Trial Banner + Upgrade CTA"
     implemented: true
-    working: true
-    file: "frontend/src/pages/public/PricingPage.jsx"
+    working: "NA"
+    file: "frontend/src/components/TrialBanner.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-      - working: true
+      - working: "NA"
         agent: "main"
-        comment: "Screenshot verified."
-      - working: true
-        agent: "testing"
-        comment: "✅ VERIFIED: Pricing page loads correctly showing all three plans from the API."
+        comment: "Trial banner in AppShell, upgrade modal with plan selection."
 
-  - task: "WebPOS Page (/app/finance/webpos)"
+  - task: "Tenant Health Page"
     implemented: true
-    working: false
-    file: "frontend/src/pages/WebPOSPage.jsx"
-    stuck_count: 1
+    working: "NA"
+    file: "frontend/src/pages/admin/AdminTenantHealthPage.jsx"
+    stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-      - working: true
+      - working: "NA"
         agent: "main"
-        comment: "Payment modal, refund, ledger view, balance."
-      - working: false
-        agent: "testing"
-        comment: "❌ FAILED: Unable to verify WebPOS page functionality. Authentication failed with 401 error when attempting to log in using admin@acenta.test / admin123 credentials."
+        comment: "Admin page with tenant health table and filters."
 
-  - task: "Advanced Reports Page (/app/reports)"
+  - task: "CRM Pipeline (new stages)"
     implemented: true
-    working: false
-    file: "frontend/src/pages/AdvancedReportsPage.jsx"
-    stuck_count: 1
+    working: "NA"
+    file: "frontend/src/pages/crm/CrmPipelinePage.jsx"
+    stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-      - working: true
+      - working: "NA"
         agent: "main"
-        comment: "4 sections + CSV export."
-      - working: false
-        agent: "testing"
-        comment: "❌ FAILED: Unable to verify Reports page functionality. Authentication failed with 401 error when attempting to log in using admin@acenta.test / admin123 credentials."
+        comment: "Updated to new stages: lead, contacted, proposal, won, lost. moveDealStage API used."
 
-  - task: "NotificationBell"
+  - task: "Sidebar Navigation Update"
     implemented: true
-    working: false
-    file: "frontend/src/components/NotificationBell.jsx"
-    stuck_count: 1
-    priority: "high"
-    needs_retesting: false
+    working: "NA"
+    file: "frontend/src/components/AppShell.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
     status_history:
-      - working: true
+      - working: "NA"
         agent: "main"
-        comment: "Bell with unread badge, dropdown, mark-all-read."
-      - working: false
-        agent: "testing"
-        comment: "❌ FAILED: Unable to verify NotificationBell functionality. Authentication failed with 401 error when attempting to log in using admin@acenta.test / admin123 credentials."
+        comment: "Added Tenant Health under YÖNETİM section."
 
 metadata:
   created_by: "main_agent"
-  version: "1.0"
-  test_sequence: 2
+  version: "2.0"
+  test_sequence: 3
   run_ui: false
 
 test_plan:
   current_focus: 
-    - "WebPOS Page (/app/finance/webpos)"
-    - "NotificationBell"
-    - "Advanced Reports Page (/app/reports)"
-  stuck_tasks:
-    - "WebPOS Page (/app/finance/webpos)"
-    - "NotificationBell"
-    - "Advanced Reports Page (/app/reports)"
-  test_all: false
+    - "Demo Seed (POST /api/admin/demo/seed)"
+    - "Activation Checklist (GET/PUT /api/activation/checklist)"
+    - "Upgrade Requests (POST /api/upgrade-requests)"
+    - "Tenant Health (GET /api/admin/tenants/health)"
+    - "CRM Deal Move Stage (POST /api/crm/deals/{id}/move-stage)"
+    - "CRM Task Complete (PUT /api/crm/tasks/{id}/complete)"
+    - "CRM Notes (GET/POST /api/crm/notes)"
+    - "Automation Rules (overdue payment + deal proposal)"
+  stuck_tasks: []
+  test_all: true
   test_priority: "high_first"
-
-agent_communication:
-  - agent: "testing"
-    message: "✅ COMPLETE BACKEND VERIFICATION SUCCESS - All 12 backend API tests passed! Enterprise SaaS Platform (Phases 5-8) fully functional: Signup flow with JWT, onboarding wizard, WebPOS payments/refunds with ledger integration, notifications system, and advanced reports suite. Payment→ledger relationship verified (1000 TRY payment creates debit, 500 TRY refund creates credit, balance correctly shows 500). All endpoints return proper response structures and handle authentication/authorization correctly."
-  - agent: "testing"
-    message: "❌ FRONTEND E2E TEST FAILURE - Authentication issues detected! Public pages (signup, pricing) work correctly, but all authenticated pages (WebPOS, reports, notifications) fail due to 401 errors when attempting login with the provided admin@acenta.test/admin123 credentials. API-level tenant isolation tests pass correctly. The system needs authentication fixes before other frontend tests can proceed. Specifically, /api/auth/login returns 401 unauthorized when using the provided credentials."
-  - agent: "testing"
-    message: "✅ ADDITIONAL TESTS SUCCESS - Full signup flow works correctly, redirecting users to /app after successful signup. Duplicate email error handling works correctly. All tenant isolation tests pass - new tenants can create their own data but cannot access other tenant data. The multi-tenancy security model is properly implemented at the API level."

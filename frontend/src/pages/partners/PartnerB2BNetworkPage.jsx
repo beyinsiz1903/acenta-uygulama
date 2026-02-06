@@ -432,6 +432,24 @@ export default function PartnerB2BNetworkPage() {
   const providerHasListings = (myListings || []).length > 0;
   const providerHasIncoming = (incomingRequests || []).length > 0;
 
+  const openDetailForRequest = (req, mode) => {
+    setDetailRequest(req);
+    if (mode === "seller") {
+      const fromAvailable = (availableListings || []).find((l) => l.id === req.listing_id);
+      setDetailListing(fromAvailable || null);
+    } else {
+      const fromMy = (myListings || []).find((l) => l.id === req.listing_id);
+      setDetailListing(fromMy || null);
+    }
+    setDetailOpen(true);
+  };
+
+  const closeDetail = () => {
+    setDetailOpen(false);
+    setDetailRequest(null);
+    setDetailListing(null);
+  };
+
   const computeBreakdown = () => {
     const price = Number(requestedPrice);
     if (!Number.isFinite(price) || price <= 0 || !selectedListing) {

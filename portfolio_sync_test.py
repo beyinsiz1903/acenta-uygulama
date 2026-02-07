@@ -55,7 +55,8 @@ class PortfolioSyncTester:
             
         # Add tenant header if we have user data
         if self.user_data and "X-Tenant-Id" not in req_headers:
-            tenant_id = self.user_data.get("tenant_id") or self.user_data.get("organization_id")
+            # Use organization_id as tenant_id since no separate tenant_id
+            tenant_id = self.user_data.get("organization_id")
             if tenant_id:
                 req_headers["X-Tenant-Id"] = tenant_id
             

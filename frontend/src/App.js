@@ -78,6 +78,9 @@ import AdminPerfDashboardPage from "./pages/admin/AdminPerfDashboardPage";
 // Enterprise Demo Pack (C)
 import AdminDemoGuidePage from "./pages/admin/AdminDemoGuidePage";
 
+// Product Mode Settings
+import AdminProductModePage from "./pages/admin/AdminProductModePage";
+
 import AdminMatchesPage from "./pages/AdminMatchesPage";
 import AdminExportsPage from "./pages/AdminExportsPage";
 import AdminMatchDetailPage from "./pages/AdminMatchDetailPage";

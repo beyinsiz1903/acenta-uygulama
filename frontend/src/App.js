@@ -318,6 +318,13 @@ function App() {
             <Route path="efatura" element={<AdminEFaturaPage />} />
             <Route path="sms" element={<AdminSMSPage />} />
             <Route path="tickets" element={<AdminTicketsPage />} />
+            {/* Operational Excellence (O1-O5) */}
+            <Route path="system-backups" element={<AdminSystemBackupsPage />} />
+            <Route path="system-integrity" element={<AdminSystemIntegrityPage />} />
+            <Route path="system-metrics" element={<AdminSystemMetricsPage />} />
+            <Route path="system-errors" element={<AdminSystemErrorsPage />} />
+            <Route path="system-uptime" element={<AdminSystemUptimePage />} />
+            <Route path="system-incidents" element={<AdminSystemIncidentsPage />} />
           </Route>
         </Route>
 

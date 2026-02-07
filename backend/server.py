@@ -423,6 +423,17 @@ app.include_router(tenant_health_router)
 app.include_router(crm_notes_router)
 app.include_router(crm_timeline_router)
 
+# Enterprise Hardening (E1-E4)
+app.include_router(enterprise_rbac_router)
+app.include_router(enterprise_approvals_router)
+app.include_router(enterprise_2fa_router)
+app.include_router(enterprise_health_router)
+app.include_router(enterprise_audit_router)
+app.include_router(enterprise_export_router)
+app.include_router(enterprise_schedules_router)
+app.include_router(enterprise_ip_whitelist_router)
+app.include_router(enterprise_whitelabel_router)
+
 
 @app.get("/")
 async def read_root() -> dict[str, str]:

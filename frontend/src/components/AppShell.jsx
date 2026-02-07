@@ -376,6 +376,37 @@ export default function AppShell() {
     });
   }, [featuresLoading, hasFeature, currentModeLevel, hiddenNavItems]);
 
+  /* ── Mode Route Guard: redirect if current path is hidden by mode ── */
+  useEffect(() => {
+    if (modeLoading) return;
+    const currentPath = location.pathname;
+    // Build a Set of all allowed paths for this mode
+    const allItems = ADMIN_GROUPED_NAV.flatMap((section) => {
+      // Group-level check
+      if (section.minGroupMode) {
+        const groupLevel = MODE_ORDER_MAP[section.minGroupMode] ?? 0;
+        if (groupLevel > currentModeLevel) return [];
+      }
+      return section.items;
+    });
+    // Check if current path matches any hidden nav item
+    const hiddenPaths = allItems
+      .filter((it) => {
+        if (it.minMode) {
+          const itemLevel = MODE_ORDER_MAP[it.minMode] ?? 0;
+          if (itemLevel > currentModeLevel) return true;
+        }
+        if (it.modeKey && hiddenNavItems.includes(it.modeKey)) return true;
+        return false;
+      })
+      .map((it) => it.to);
+    // If current path starts with a hidden path, redirect
+    const isBlocked = hiddenPaths.some((hp) => currentPath === hp || currentPath.startsWith(hp + "/"));
+    if (isBlocked) {
+      navigate("/app", { replace: true });
+    }
+  }, [location.pathname, modeLoading, currentModeLevel, hiddenNavItems, navigate]);
+
   const toggleCollapse = () => {
     setCollapsed((v) => {
       const next = !v;

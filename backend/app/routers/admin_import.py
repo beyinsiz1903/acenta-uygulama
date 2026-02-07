@@ -277,13 +277,34 @@ async def export_template(user=Depends(require_roles(["super_admin", "admin"])))
     )
 
 
-# ── Google Sheets (MOCKED) ─────────────────────────────────────
+# ── Google Sheets (Production-Ready with Graceful Fallback) ────
+
+from app.services.google_sheets_client import (
+    is_configured as sheets_configured,
+    get_service_account_email,
+    fetch_sheet_headers,
+)
+from app.services.sheet_sync_service import run_sheet_sync
+
 
 class SheetConnectRequest(BaseModel):
     sheet_id: str
     worksheet_name: str = "Sheet1"
+    header_row: int = 1
     column_mapping: Dict[str, str] = {}
     sync_enabled: bool = False
+
+
+@router.get("/sheet/config", dependencies=[AdminDep])
+async def get_sheet_config(user=Depends(get_current_user)):
+    """Return Google Sheets integration configuration status."""
+    configured = sheets_configured()
+    email = get_service_account_email() if configured else None
+    return {
+        "configured": configured,
+        "service_account_email": email,
+        "message": None if configured else "Google Sheets entegrasyonu yapılandırılmamış. GOOGLE_SERVICE_ACCOUNT_JSON env var gerekli.",
+    }
 
 
 @router.post("/sheet/connect", dependencies=[AdminDep])
@@ -292,24 +313,46 @@ async def connect_sheet(
     user=Depends(get_current_user),
     db=Depends(get_db),
 ):
-    """Store a Google Sheet connection. Sync is MOCKED."""
+    """Connect a Google Sheet. Validates access if configured."""
     org_id = user["organization_id"]
     tenant_id = user.get("tenant_id") or org_id
+
+    detected_headers = []
+    if sheets_configured():
+        try:
+            detected_headers = fetch_sheet_headers(
+                body.sheet_id, body.worksheet_name, body.header_row
+            )
+        except RuntimeError as e:
+            raise AppError(400, "sheet_access_error", str(e))
+    # If not configured, still save the connection for when key is added
 
     doc = {
         "_id": str(uuid.uuid4()),
         "tenant_id": tenant_id,
         "organization_id": org_id,
+        "entity_type": "hotel",
         "sheet_id": body.sheet_id,
         "worksheet_name": body.worksheet_name,
+        "header_row": body.header_row,
         "column_mapping": body.column_mapping,
+        "sync_mode": "upsert",
         "sync_enabled": body.sync_enabled,
         "last_sync_at": None,
+        "last_sync_status": None,
+        "last_sync_error": None,
+        "stats": {"last_rows": 0, "last_upserts": 0, "last_errors": 0},
         "status": "connected",
         "created_at": now_utc(),
+        "updated_at": now_utc(),
     }
     await db.sheet_connections.insert_one(doc)
-    return serialize_doc(doc)
+
+    result = serialize_doc(doc)
+    result["service_account_email"] = get_service_account_email()
+    result["detected_headers"] = detected_headers
+    result["configured"] = sheets_configured()
+    return result
 
 
 @router.post("/sheet/sync", dependencies=[AdminDep])
@@ -317,7 +360,14 @@ async def sync_sheet(
     user=Depends(get_current_user),
     db=Depends(get_db),
 ):
-    """Trigger a Google Sheet sync. MOCKED — returns simulated result."""
+    """Trigger a manual Google Sheet sync."""
+    if not sheets_configured():
+        return {
+            "status": "not_configured",
+            "message": "Google Sheets entegrasyonu yapılandırılmamış. GOOGLE_SERVICE_ACCOUNT_JSON env var gerekli.",
+            "configured": False,
+        }
+
     org_id = user["organization_id"]
     conn = await db.sheet_connections.find_one(
         {"organization_id": org_id, "status": "connected"}
@@ -325,17 +375,67 @@ async def sync_sheet(
     if not conn:
         raise AppError(404, "no_connection", "Bağlı Google Sheet bulunamadı.")
 
-    # MOCKED sync
-    await db.sheet_connections.update_one(
-        {"_id": conn["_id"]},
-        {"$set": {"last_sync_at": now_utc()}},
-    )
+    run_result = await run_sheet_sync(db, conn)
 
     return {
-        "status": "synced",
-        "message": "Google Sheets senkronizasyonu simüle edildi (MOCK). Gerçek API key gerekli.",
-        "sheet_id": conn["sheet_id"],
-        "last_sync_at": now_utc().isoformat(),
+        "status": run_result.get("status", "unknown"),
+        "run_id": run_result.get("run_id"),
+        "rows_fetched": run_result.get("rows_fetched", 0),
+        "rows_processed": run_result.get("rows_processed", 0),
+        "upserts": run_result.get("upserts", 0),
+        "errors": run_result.get("errors", 0),
+        "error_message": run_result.get("error_message"),
+        "configured": True,
+    }
+
+
+@router.get("/sheet/connection", dependencies=[AdminDep])
+async def get_sheet_connection(
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Get current tenant's active sheet connection + status."""
+    org_id = user["organization_id"]
+    conn = await db.sheet_connections.find_one(
+        {"organization_id": org_id, "status": "connected"}
+    )
+    if not conn:
+        return {"connected": False}
+
+    result = serialize_doc(conn)
+    result["connected"] = True
+    result["configured"] = sheets_configured()
+    result["service_account_email"] = get_service_account_email()
+    return result
+
+
+@router.get("/sheet/status", dependencies=[AdminDep])
+async def get_sheet_status(
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Get sync status for current tenant."""
+    org_id = user["organization_id"]
+    conn = await db.sheet_connections.find_one(
+        {"organization_id": org_id, "status": "connected"}
+    )
+    if not conn:
+        return {"connected": False}
+
+    # Get last 5 sync runs
+    runs = await db.sheet_sync_runs.find(
+        {"sheet_connection_id": conn["_id"]}
+    ).sort("started_at", -1).to_list(5)
+
+    return {
+        "connected": True,
+        "configured": sheets_configured(),
+        "last_sync_at": conn.get("last_sync_at"),
+        "last_sync_status": conn.get("last_sync_status"),
+        "last_sync_error": conn.get("last_sync_error"),
+        "sync_enabled": conn.get("sync_enabled", False),
+        "stats": conn.get("stats", {}),
+        "recent_runs": [serialize_doc(r) for r in runs],
     }
 
 

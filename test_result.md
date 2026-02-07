@@ -209,15 +209,18 @@ backend:
 
   - task: "E4.2 Full Data Export (zip)"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/app/routers/enterprise_export.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/admin/tenant/export returns zip with customers, deals, tasks, reservations, payments JSON."
+      - working: true
+        agent: "testing"
+        comment: "✅ Data export working correctly: POST /api/admin/tenant/export returns valid zip file (1206 bytes) with proper content-type headers."
 
   - task: "E4.3 Scheduled Reports"
     implemented: true

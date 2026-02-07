@@ -493,14 +493,20 @@ export default function AppShell() {
             </div>
           </div>
           <div className="overflow-y-auto h-[calc(100vh-120px)] px-3 py-3">
-            {ADMIN_GROUPED_NAV.map((section) => (
+            {ADMIN_GROUPED_NAV.map((section) => {
+              // Group-level mode check
+              if (section.minGroupMode) {
+                const groupLevel = MODE_ORDER_MAP[section.minGroupMode] ?? 0;
+                if (groupLevel > currentModeLevel) return null;
+              }
+              const visibleItems = filterNavByMode(section.items);
+              if (!visibleItems.length) return null;
+              return (
               <div key={section.group} className="mb-3">
                 <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
                   {section.group}
                 </div>
-                {section.items
-                  .filter((it) => !it.feature || (!featuresLoading && hasFeature(it.feature)))
-                  .map((item) => (
+                {visibleItems.map((item) => (
                     <SidebarItem
                       key={item.to}
                       to={item.to}
@@ -511,7 +517,8 @@ export default function AppShell() {
                     />
                   ))}
               </div>
-            ))}
+              );
+            })}
           </div>
           <div className="border-t px-3 py-3">
             <Button

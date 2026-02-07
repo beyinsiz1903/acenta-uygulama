@@ -337,6 +337,23 @@ async def lifespan(app: FastAPI):
             except Exception as e:
                 logging.getLogger("portfolio_sync").error("Portfolio sync error: %s", e)
         sheets_scheduler.add_job(_run_portfolio_sync, "interval", minutes=sheets_sync_interval, id="portfolio_sync")
+
+        # Write-Back Queue Processor (every 30 seconds)
+        async def _process_writebacks():
+            try:
+                from app.services.sheet_writeback_service import process_pending_writebacks
+                _sdb = await get_db()
+                result = await process_pending_writebacks(_sdb)
+                total = result.get("total", 0)
+                if total > 0:
+                    logging.getLogger("sheet_writeback").info(
+                        "Write-back processed: total=%d completed=%d failed=%d",
+                        total, result.get("completed", 0), result.get("failed", 0)
+                    )
+            except Exception as e:
+                logging.getLogger("sheet_writeback").error("Write-back processor error: %s", e)
+        sheets_scheduler.add_job(_process_writebacks, "interval", seconds=30, id="writeback_processor")
+
         sheets_scheduler.start()
 
     # Ensure indexes for import/sheets

@@ -511,3 +511,82 @@ async def list_available_hotels(
         })
 
     return result
+
+
+
+# ── Write-Back Endpoints ─────────────────────────────────────
+
+from app.services.sheet_writeback_service import (
+    get_writeback_stats,
+    process_pending_writebacks,
+)
+
+
+@router.get("/writeback/stats", dependencies=[AdminDep])
+async def get_writeback_statistics(
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Get write-back queue statistics."""
+    tenant_id = user.get("tenant_id") or user["organization_id"]
+    stats = await get_writeback_stats(db, tenant_id)
+    stats["configured"] = is_configured()
+    return stats
+
+
+@router.post("/writeback/process", dependencies=[AdminDep])
+async def process_writeback_queue(
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Manually process pending write-back jobs."""
+    if not is_configured():
+        return {
+            "status": "not_configured",
+            "configured": False,
+            "message": "Google Sheets yapilandirilmamis.",
+        }
+
+    result = await process_pending_writebacks(db)
+    return {
+        "status": "processed",
+        "configured": True,
+        **result,
+    }
+
+
+@router.get("/writeback/queue", dependencies=[AdminDep])
+async def list_writeback_queue(
+    status: Optional[str] = Query(None),
+    hotel_id: Optional[str] = Query(None),
+    limit: int = Query(50, le=200),
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """List write-back queue items."""
+    tenant_id = user.get("tenant_id") or user["organization_id"]
+    query: Dict[str, Any] = {"tenant_id": tenant_id}
+    if status:
+        query["status"] = status
+    if hotel_id:
+        query["hotel_id"] = hotel_id
+
+    docs = await db.sheet_writeback_queue.find(query).sort("created_at", -1).to_list(limit)
+    return [serialize_doc(d) for d in docs]
+
+
+@router.get("/changelog", dependencies=[AdminDep])
+async def list_change_log(
+    hotel_id: Optional[str] = Query(None),
+    limit: int = Query(50, le=200),
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """List sheet change log entries."""
+    tenant_id = user.get("tenant_id") or user["organization_id"]
+    query: Dict[str, Any] = {"tenant_id": tenant_id}
+    if hotel_id:
+        query["hotel_id"] = hotel_id
+
+    docs = await db.sheet_change_log.find(query).sort("created_at", -1).to_list(limit)
+    return [serialize_doc(d) for d in docs]

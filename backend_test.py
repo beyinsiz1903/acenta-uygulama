@@ -21,7 +21,7 @@ import httpx
 
 
 # Configuration
-BACKEND_URL = "https://unified-control-4.preview.emergentagent.com"
+BACKEND_URL = "https://portfolio-connector.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 API_BASE = f"{BACKEND_URL}/api"

@@ -11,7 +11,7 @@ import uuid
 from datetime import datetime, timedelta
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://unified-control-4.preview.emergentagent.com"
+BASE_URL = "https://portfolio-connector.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

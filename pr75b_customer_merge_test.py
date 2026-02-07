@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List
 
 # Configuration
-BACKEND_URL = "https://unified-control-4.preview.emergentagent.com/api"
+BACKEND_URL = "https://portfolio-connector.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

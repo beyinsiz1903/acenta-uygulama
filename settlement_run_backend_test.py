@@ -20,7 +20,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://unified-control-4.preview.emergentagent.com"
+BACKEND_URL = "https://portfolio-connector.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin and return JWT token"""

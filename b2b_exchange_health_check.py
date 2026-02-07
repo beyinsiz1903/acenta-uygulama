@@ -24,7 +24,7 @@ import os
 from typing import Dict, Any, List, Optional
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://unified-control-4.preview.emergentagent.com"
+BASE_URL = "https://portfolio-connector.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

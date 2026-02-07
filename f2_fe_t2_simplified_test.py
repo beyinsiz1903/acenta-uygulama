@@ -7,7 +7,7 @@ Testing the core functionality without strict language validation
 import asyncio
 from playwright.async_api import async_playwright
 
-BASE_URL = "https://unified-control-4.preview.emergentagent.com"
+BASE_URL = "https://portfolio-connector.preview.emergentagent.com"
 PRODUCT_ID = "696564845776721d56136a1c"
 ORG_ID = "org_public_checkout"
 

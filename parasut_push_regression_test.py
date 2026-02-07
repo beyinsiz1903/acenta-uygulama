@@ -405,7 +405,7 @@ class ParasutRegressionTester:
 async def main():
     """Ana test çalıştırıcısı"""
     # Backend URL'yi environment'tan al
-    backend_url = "https://unified-control-4.preview.emergentagent.com"
+    backend_url = "https://portfolio-connector.preview.emergentagent.com"
     
     print(f"🚀 Paraşüt Push V1 Backend API Regression Test")
     print(f"Backend URL: {backend_url}")

@@ -8,7 +8,7 @@ import tempfile
 import time
 import httpx
 
-BACKEND_URL = "https://unified-control-4.preview.emergentagent.com"
+BACKEND_URL = "https://portfolio-connector.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"

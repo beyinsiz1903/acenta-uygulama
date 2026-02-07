@@ -30,13 +30,15 @@ ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 API_BASE = f"{BACKEND_URL}/api"
 
-# Test data
-TEST_CSV_CONTENT = """Otel Adı,Şehir,Ülke,Açıklama,Fiyat,Yıldız
-Import Hotel 1,İstanbul,TR,Test hotel,1500,5
-Import Hotel 2,Antalya,TR,Beach hotel,2000,4
-Import Hotel 3,Bodrum,TR,Marina view,3000,5
-Import Hotel 4,,TR,Missing city,,3
-Import Hotel 5,İzmir,TR,Good hotel,abc,4"""
+# Test data - use timestamp to ensure unique names
+import time
+timestamp = str(int(time.time()))
+TEST_CSV_CONTENT = f"""Otel Adı,Şehir,Ülke,Açıklama,Fiyat,Yıldız
+Import Hotel {timestamp}_1,İstanbul,TR,Test hotel,1500,5
+Import Hotel {timestamp}_2,Antalya,TR,Beach hotel,2000,4
+Import Hotel {timestamp}_3,Bodrum,TR,Marina view,3000,5
+Import Hotel {timestamp}_4,,TR,Missing city,,3
+Import Hotel {timestamp}_5,İzmir,TR,Good hotel,abc,4"""
 
 class TestResults:
     def __init__(self):

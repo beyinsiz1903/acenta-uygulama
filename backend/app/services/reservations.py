@@ -122,6 +122,18 @@ async def create_reservation(*, org_id: str, user_email: str, payload: dict[str,
     ins = await db.reservations.insert_one(res_doc)
     saved = await db.reservations.find_one({"_id": ins.inserted_id})
     assert saved
+
+    # ── Sheet Write-Back Hook (best-effort, fire-and-forget) ──
+    try:
+        from app.services.sheet_writeback_service import on_reservation_created
+        tenant_id = org_id  # tenant_id == org_id in current architecture
+        await on_reservation_created(db, tenant_id, org_id, saved)
+    except Exception as wb_err:
+        import logging
+        logging.getLogger("sheet_writeback").warning(
+            "Write-back hook failed for reservation %s: %s", str(ins.inserted_id), wb_err
+        )
+
     return saved
 
 

@@ -158,6 +158,11 @@ from app.routers.enterprise_schedules import router as enterprise_schedules_rout
 from app.routers.enterprise_ip_whitelist import router as enterprise_ip_whitelist_router
 from app.routers.enterprise_whitelabel import router as enterprise_whitelabel_router
 
+# Feature modules (E-Fatura, SMS, Tickets)
+from app.routers.efatura import router as efatura_router
+from app.routers.sms_notifications import router as sms_notifications_router
+from app.routers.tickets import router as tickets_router
+
 from app.email_worker import email_dispatch_loop
 from app.indexes import finance_indexes, inbox_indexes, pricing_indexes, public_indexes, voucher_indexes
 from app.indexes import crm_indexes

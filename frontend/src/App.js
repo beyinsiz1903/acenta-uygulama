@@ -75,6 +75,9 @@ import AdminRunbookPage from "./pages/admin/AdminRunbookPage";
 // Cost/Performance Pack (B)
 import AdminPerfDashboardPage from "./pages/admin/AdminPerfDashboardPage";
 
+// Enterprise Demo Pack (C)
+import AdminDemoGuidePage from "./pages/admin/AdminDemoGuidePage";
+
 import AdminMatchesPage from "./pages/AdminMatchesPage";
 import AdminExportsPage from "./pages/AdminExportsPage";
 import AdminMatchDetailPage from "./pages/AdminMatchDetailPage";

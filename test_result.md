@@ -66,138 +66,177 @@
 # END - Testing Protocol - DO NOT EDIT OR REMOVE THIS SECTION
 #====================================================================================================
 
-user_problem_statement: "GTM Readiness Pack + CRM Pipeline Deepening: demo seed, activation checklist, trial banner, tenant health, CRM stages, move-stage, notes, task complete, automation rules"
+user_problem_statement: "Enterprise Hardening Sprint E1-E4: Governance (RBAC v2, Approval Workflow, Immutable Audit), Security (2FA TOTP, IP Whitelist, Password Policy), Observability (Structured Logging, Health Endpoints, Rate Limiting), Enterprise UX (White-Label, Full Data Export, Scheduled Reports)"
 
 backend:
-  - task: "Demo Seed POST /api/admin/demo/seed"
+  - task: "E3.2 Health Endpoints (live + ready)"
     implemented: true
     working: true
-    file: "backend/app/routers/gtm_demo_seed.py"
+    file: "backend/app/routers/enterprise_health.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
-        agent: "testing"
-        comment: "VERIFIED: Creates products(3), customers(5), reservations(10), payments(6), deals(5), tasks(10). Idempotent (already_seeded=true). Force mode works."
+        agent: "main"
+        comment: "Verified: /api/health/live returns alive, /api/health/ready returns ready with DB check"
 
-  - task: "Activation Checklist GET/PUT /api/activation/checklist"
+  - task: "E2.3 Password Policy"
     implemented: true
     working: true
-    file: "backend/app/routers/activation_checklist.py"
+    file: "backend/app/services/password_policy.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
-        agent: "testing"
-        comment: "VERIFIED: Auto-creates 7 items, complete item increments count, all_completed tracks correctly."
+        agent: "main"
+        comment: "Verified: weak password returns 400 with violations list, strong password accepted"
 
-  - task: "Upgrade Requests POST /api/upgrade-requests"
+  - task: "E3.3 Rate Limiting (login, signup, export, approvals)"
     implemented: true
     working: true
-    file: "backend/app/routers/upgrade_requests.py"
+    file: "backend/app/middleware/rate_limit_middleware.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
-        agent: "testing"
-        comment: "VERIFIED: Creates pending request, 409 on duplicate, GET lists requests."
+        agent: "main"
+        comment: "Verified: returns 429 when exceeding limits"
 
-  - task: "Tenant Health GET /api/admin/tenants/health"
+  - task: "E3.1 Structured JSON Logging"
     implemented: true
     working: true
-    file: "backend/app/routers/tenant_health.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "VERIFIED: Returns tenant health data with filters working."
-
-  - task: "CRM Deal move-stage POST /api/crm/deals/{id}/move-stage"
-    implemented: true
-    working: true
-    file: "backend/app/routers/crm_deals.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "VERIFIED: lead->contacted->proposal->won works. Stage+status sync correctly."
-
-  - task: "CRM Task complete PUT /api/crm/tasks/{id}/complete"
-    implemented: true
-    working: true
-    file: "backend/app/routers/crm_tasks.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "VERIFIED: Marks task as done, audit logged."
-
-  - task: "CRM Notes GET/POST /api/crm/notes"
-    implemented: true
-    working: true
-    file: "backend/app/routers/crm_notes.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "VERIFIED: Create and list notes with entity_type/entity_id filtering."
-
-  - task: "Automation Rules (trigger-checks extended)"
-    implemented: true
-    working: true
-    file: "backend/app/services/automation_rules.py"
+    file: "backend/app/middleware/structured_logging_middleware.py"
     stuck_count: 0
     priority: "medium"
     needs_retesting: false
     status_history:
       - working: true
-        agent: "testing"
-        comment: "VERIFIED: POST /api/notifications/trigger-checks returns automation_rules results."
+        agent: "main"
+        comment: "Logs request_id, tenant_id, user_id, path, method, status_code, latency_ms. X-Request-Id header added."
+
+  - task: "E1.1 Granular RBAC v2"
+    implemented: true
+    working: "NA"
+    file: "backend/app/routers/enterprise_rbac.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Seed, list, upsert permissions/roles endpoints implemented. Additive - backward compat."
+
+  - task: "E1.2 Approval Workflow Engine"
+    implemented: true
+    working: "NA"
+    file: "backend/app/routers/enterprise_approvals.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Create, list, approve, reject endpoints. Double-approve blocked (409). Audit logged."
+
+  - task: "E1.3 Immutable Audit Log (hash chain + CSV export)"
+    implemented: true
+    working: "NA"
+    file: "backend/app/routers/enterprise_audit.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Per-tenant hash chain. Verify integrity. Streaming CSV export."
+
+  - task: "E2.1 2FA (TOTP) with recovery codes"
+    implemented: true
+    working: "NA"
+    file: "backend/app/routers/enterprise_2fa.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Enable, verify, disable endpoints. Login flow checks 2FA. Recovery codes supported."
+
+  - task: "E2.2 Tenant IP Whitelist"
+    implemented: true
+    working: "NA"
+    file: "backend/app/routers/enterprise_ip_whitelist.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Middleware checks allowed_ips in tenant settings. Admin CRUD for whitelist."
+
+  - task: "E4.1 White-Label Settings"
+    implemented: true
+    working: "NA"
+    file: "backend/app/routers/enterprise_whitelabel.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Extended existing whitelabel with logo_url, primary_color, company_name."
+
+  - task: "E4.2 Full Data Export (zip)"
+    implemented: true
+    working: "NA"
+    file: "backend/app/routers/enterprise_export.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "POST /api/admin/tenant/export returns zip with customers, deals, tasks, reservations, payments JSON."
+
+  - task: "E4.3 Scheduled Reports"
+    implemented: true
+    working: "NA"
+    file: "backend/app/routers/enterprise_schedules.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "CRUD for schedules. APScheduler runs every 15 min. Manual execute-due endpoint."
 
 frontend:
-  - task: "Dashboard with ActivationChecklist + DemoSeedButton + TrialBanner"
-    implemented: true
+  - task: "E4.1 White-Label UI (dynamic logo/color/name)"
+    implemented: false
     working: "NA"
-    file: "frontend/src/pages/DashboardPage.jsx"
+    file: "frontend/src/components/AppShell.jsx"
     stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-
-  - task: "CRM Pipeline with new stages"
-    implemented: true
-    working: "NA"
-    file: "frontend/src/pages/crm/CrmPipelinePage.jsx"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-
-  - task: "Tenant Health Page"
-    implemented: true
-    working: "NA"
-    file: "frontend/src/pages/admin/AdminTenantHealthPage.jsx"
-    stuck_count: 0
-    priority: "high"
+    priority: "medium"
     needs_retesting: true
 
 metadata:
   created_by: "main_agent"
-  version: "2.0"
-  test_sequence: 4
+  version: "3.0"
+  test_sequence: 5
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "E1.1 Granular RBAC v2"
+    - "E1.2 Approval Workflow Engine"
+    - "E1.3 Immutable Audit Log (hash chain + CSV export)"
+    - "E2.1 2FA (TOTP) with recovery codes"
+    - "E2.2 Tenant IP Whitelist"
+    - "E4.2 Full Data Export (zip)"
+    - "E4.3 Scheduled Reports"
   stuck_tasks: []
-  test_all: false
+  test_all: true
   test_priority: "high_first"

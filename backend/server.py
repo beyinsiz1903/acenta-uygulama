@@ -245,6 +245,51 @@ async def lifespan(app: FastAPI):
     report_scheduler.add_job(_check_due_reports, "interval", minutes=15, id="report_check")
     report_scheduler.start()
 
+    # ---- Operational Excellence cron jobs (O2 + O5) ----
+    ops_scheduler = AsyncIOScheduler()
+
+    # O5: Uptime check every minute
+    async def _check_uptime():
+        try:
+            from app.services.uptime_service import check_and_log_uptime
+            await check_and_log_uptime()
+        except Exception as e:
+            import logging
+            logging.getLogger("ops_scheduler").error("Uptime check failed: %s", e)
+    ops_scheduler.add_job(_check_uptime, "interval", minutes=1, id="uptime_check")
+
+    # O2: Daily audit chain verification at 03:00
+    async def _verify_audit_chains():
+        try:
+            from app.services.integrity_service import verify_all_audit_chains
+            await verify_all_audit_chains()
+        except Exception as e:
+            import logging
+            logging.getLogger("ops_scheduler").error("Audit chain verify failed: %s", e)
+    ops_scheduler.add_job(_verify_audit_chains, "cron", hour=3, minute=0, id="audit_chain_verify")
+
+    # O2: Nightly ledger integrity check at 03:30
+    async def _verify_ledger():
+        try:
+            from app.services.integrity_service import verify_ledger_integrity
+            await verify_ledger_integrity()
+        except Exception as e:
+            import logging
+            logging.getLogger("ops_scheduler").error("Ledger integrity check failed: %s", e)
+    ops_scheduler.add_job(_verify_ledger, "cron", hour=3, minute=30, id="ledger_integrity")
+
+    # O1: Backup retention cleanup daily at 04:00
+    async def _cleanup_backups():
+        try:
+            from app.services.backup_service import cleanup_old_backups
+            await cleanup_old_backups()
+        except Exception as e:
+            import logging
+            logging.getLogger("ops_scheduler").error("Backup cleanup failed: %s", e)
+    ops_scheduler.add_job(_cleanup_backups, "cron", hour=4, minute=0, id="backup_cleanup")
+
+    ops_scheduler.start()
+
     # Ensure enterprise indexes
     try:
         await db.audit_logs_chain.create_index([("tenant_id", 1), ("created_at", 1)])

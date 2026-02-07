@@ -401,6 +401,23 @@ async def lifespan(app: FastAPI):
         await db.hotel_inventory_snapshots.create_index(
             [("tenant_id", 1), ("hotel_id", 1), ("date", 1), ("room_type", 1)]
         )
+        # Write-back indexes
+        await db.sheet_writeback_queue.create_index(
+            [("tenant_id", 1), ("status", 1), ("created_at", 1)]
+        )
+        await db.sheet_writeback_queue.create_index(
+            [("tenant_id", 1), ("hotel_id", 1)]
+        )
+        await db.sheet_writeback_markers.create_index(
+            [("tenant_id", 1), ("source_id", 1), ("event_type", 1)],
+            unique=True
+        )
+        await db.sheet_change_log.create_index(
+            [("tenant_id", 1), ("hotel_id", 1), ("created_at", -1)]
+        )
+        await db.sheet_change_log.create_index(
+            "created_at", expireAfterSeconds=2592000  # 30 days TTL
+        )
     except Exception as e:
         import logging
         logging.getLogger(__name__).warning("Portfolio sync index creation warning: %s", e)

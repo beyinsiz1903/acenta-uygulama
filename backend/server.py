@@ -304,22 +304,39 @@ async def lifespan(app: FastAPI):
 
     ops_scheduler.start()
 
-    # ---- Google Sheets Sync Scheduler ----
+    # ---- Google Sheets Sync Scheduler (Legacy + Portfolio) ----
     import os as _os
     sheets_sync_enabled = _os.environ.get("GOOGLE_SHEETS_SYNC_ENABLED", "true").lower() == "true"
     sheets_sync_interval = int(_os.environ.get("GOOGLE_SHEETS_SYNC_INTERVAL_MINUTES", "5"))
     if sheets_sync_enabled:
         sheets_scheduler = AsyncIOScheduler()
+        # Legacy sheet sync (admin_import)
         async def _run_sheets_sync():
             try:
                 from app.services.sheet_sync_service import run_scheduled_sync
                 _sdb = await get_db()
                 count = await run_scheduled_sync(_sdb)
                 if count > 0:
-                    logging.getLogger("sheets_sync").info("Synced %d sheet connections", count)
+                    logging.getLogger("sheets_sync").info("Synced %d legacy sheet connections", count)
             except Exception as e:
-                logging.getLogger("sheets_sync").error("Sheets sync error: %s", e)
+                logging.getLogger("sheets_sync").error("Legacy sheets sync error: %s", e)
         sheets_scheduler.add_job(_run_sheets_sync, "interval", minutes=sheets_sync_interval, id="sheets_sync")
+
+        # Portfolio Sync Engine (per-hotel)
+        async def _run_portfolio_sync():
+            try:
+                from app.services.hotel_portfolio_sync_service import run_scheduled_portfolio_sync
+                _sdb = await get_db()
+                result = await run_scheduled_portfolio_sync(_sdb)
+                total = result.get("total", 0)
+                if total > 0:
+                    logging.getLogger("portfolio_sync").info(
+                        "Portfolio sync: total=%d success=%d failed=%d",
+                        total, result.get("success", 0), result.get("failed", 0)
+                    )
+            except Exception as e:
+                logging.getLogger("portfolio_sync").error("Portfolio sync error: %s", e)
+        sheets_scheduler.add_job(_run_portfolio_sync, "interval", minutes=sheets_sync_interval, id="portfolio_sync")
         sheets_scheduler.start()
 
     # Ensure indexes for import/sheets
@@ -336,6 +353,40 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         import logging
         logging.getLogger(__name__).warning("Import/sheets index creation warning: %s", e)
+
+    # ---- Portfolio Sync Engine indexes ----
+    try:
+        await db.hotel_portfolio_sources.create_index(
+            [("tenant_id", 1), ("hotel_id", 1)], unique=True
+        )
+        await db.hotel_portfolio_sources.create_index(
+            [("tenant_id", 1), ("sync_enabled", 1)]
+        )
+        await db.hotel_portfolio_sources.create_index(
+            [("tenant_id", 1), ("last_sync_at", 1)]
+        )
+        await db.sheet_sync_runs.create_index(
+            [("tenant_id", 1), ("hotel_id", 1), ("started_at", -1)]
+        )
+        await db.sheet_sync_runs.create_index(
+            [("tenant_id", 1), ("status", 1, "started_at", -1)]
+        )
+        await db.sheet_row_fingerprints.create_index(
+            [("tenant_id", 1), ("hotel_id", 1), ("row_key", 1)],
+            unique=True
+        )
+        await db.sheet_sync_locks.create_index(
+            "lock_key", unique=True
+        )
+        await db.sheet_sync_locks.create_index(
+            "expires_at", expireAfterSeconds=0
+        )
+        await db.hotel_inventory_snapshots.create_index(
+            [("tenant_id", 1), ("hotel_id", 1), ("date", 1), ("room_type", 1)]
+        )
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning("Portfolio sync index creation warning: %s", e)
 
     # Ensure enterprise indexes
     try:

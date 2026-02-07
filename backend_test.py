@@ -708,7 +708,15 @@ class PortfolioSyncTester:
         self.test_duplicate_connect()
         self.test_delete_connection()
         
-        # Step 16: Auth guards
+        # Step 16-21: NEW Write-Back endpoints (from review request)
+        self.test_writeback_stats()
+        self.test_writeback_process()
+        self.test_writeback_queue()
+        self.test_changelog()
+        self.test_existing_endpoints_regression()
+        self.test_writeback_auth_guards()
+        
+        # Step 22: Auth guards
         self.test_auth_guards()
         
         return True

@@ -174,6 +174,7 @@ from app.routers.admin_maintenance import router as admin_maintenance_router
 from app.routers.system_product_mode import router as system_product_mode_router
 from app.routers.admin_product_mode import router as admin_product_mode_router
 from app.routers.admin_import import router as admin_import_router
+from app.routers.admin_sheets import router as admin_sheets_router
 
 # Production Go-Live Pack (A)
 from app.routers.admin_system_preflight import router as admin_system_preflight_router

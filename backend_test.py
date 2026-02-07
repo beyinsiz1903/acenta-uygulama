@@ -264,7 +264,7 @@ class HotelImportTester:
             
             if response.status_code == 200:
                 data = response.json()
-                required_fields = ["_id", "status", "success_count", "error_count"]
+                required_fields = ["id", "status", "success_count", "error_count"]
                 missing = [f for f in required_fields if f not in data]
                 
                 if missing:

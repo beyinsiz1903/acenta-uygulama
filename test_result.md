@@ -201,15 +201,18 @@ frontend:
 
   - task: "Admin Product Mode Settings Page"
     implemented: true
-    working: "NA"
+    working: false
     file: "frontend/src/pages/admin/AdminProductModePage.jsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
         comment: "3 mode cards (Lite/Pro/Enterprise), current mode badge, preview modal with diff, confirm+apply. Route: /app/admin/product-mode"
+      - working: false
+        agent: "testing"
+        comment: "❌ ISSUES: Mode switching UI works partially - Enterprise to Lite switch shows modal and can be applied, but (1) Subsequent mode switches (Lite→Pro, Pro→Enterprise) fail with click timeout errors; (2) The confirm modal doesn't properly close after first mode change; (3) The 'Gizlenecek' items section in modal isn't showing items that will be hidden in downgrade."
 
 metadata:
   created_by: "main_agent"

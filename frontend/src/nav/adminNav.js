@@ -59,4 +59,11 @@ export const adminNav = [
       { label: "Demo Rehberi", path: "/app/admin/demo-guide" },
     ],
   },
+  {
+    label: "Veri & Entegrasyon",
+    children: [
+      { label: "Veri Import", path: "/app/admin/import" },
+      { label: "Portfolio Sync", path: "/app/admin/portfolio-sync" },
+    ],
+  },
 ];

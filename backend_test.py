@@ -8,8 +8,6 @@ import asyncio
 import json
 import time
 import requests
-import pyotp
-import base64
 from datetime import datetime
 from typing import Dict, Any, Optional
 
@@ -22,90 +20,18 @@ class FeatureModulesTester:
         self.user_id = None
         self.org_id = None
         self.tenant_id = None
-        self.admin_email = None
-        self.admin_password = None
+        self.admin_email = "admin@acenta.test"
+        self.admin_password = "admin123"
         
     def log(self, message: str, level: str = "INFO"):
         """Log test messages with timestamp"""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print(f"[{timestamp}] [{level}] {message}")
 
-    def find_admin_user(self) -> bool:
-        """Find existing admin user from MongoDB"""
-        try:
-            self.log("🔍 Looking for existing admin user in MongoDB...")
-            
-            # Try to find existing admin user in MongoDB
-            import subprocess
-            result = subprocess.run([
-                "mongosh", "--eval", 
-                'use test_database; db.users.findOne({"roles": {$regex: "admin"}});'
-            ], capture_output=True, text=True)
-            
-            self.log(f"MongoDB query result: {result.stdout[:200]}...")
-            
-            if "null" not in result.stdout and "@" in result.stdout:
-                # Parse the output to extract email
-                import re
-                email_match = re.search(r'"email":\s*"([^"]+)"', result.stdout)
-                if email_match:
-                    self.admin_email = email_match.group(1)
-                    # Try common passwords
-                    for pwd in ["TestPassword123!", "AdminTest123!", "password123", "admin123"]:
-                        self.admin_password = pwd
-                        if self.login_admin():
-                            return True
-            
-            # No admin found or login failed, create one
-            return self.create_admin_user()
-                
-        except Exception as e:
-            self.log(f"❌ Admin user setup error: {str(e)}", "ERROR")
-            return self.create_admin_user()
-
-    def create_admin_user(self) -> bool:
-        """Create new admin user via signup"""
-        try:
-            self.log("👤 Creating new admin user...")
-            timestamp = str(int(time.time()))
-            self.admin_email = f"admin_{timestamp}@test.com"
-            self.admin_password = "AdminTest123!"
-            
-            # Create admin user via signup
-            response = self.session.post(f"{self.base_url}/api/onboarding/signup", json={
-                "email": self.admin_email,
-                "password": self.admin_password,
-                "admin_name": "Enterprise Test Admin",
-                "company_name": f"Enterprise Test Org {timestamp}",
-                "plan": "enterprise"
-            })
-            
-            if response.status_code in [200, 201]:
-                data = response.json()
-                self.auth_token = data.get("access_token")
-                self.user_id = data.get("user_id")
-                self.org_id = data.get("org_id")
-                self.tenant_id = data.get("tenant_id")
-                
-                # Update session headers
-                self.session.headers.update({
-                    'Authorization': f'Bearer {self.auth_token}',
-                    'X-Tenant-Id': self.tenant_id
-                })
-                
-                self.log(f"✅ Admin user created: {self.admin_email}")
-                return True
-            else:
-                self.log(f"❌ Admin creation failed: {response.status_code} - {response.text}", "ERROR")
-                return False
-                
-        except Exception as e:
-            self.log(f"❌ Admin creation error: {str(e)}", "ERROR")
-            return False
-
     def login_admin(self) -> bool:
-        """Login with admin credentials"""
+        """Login as admin@acenta.test with admin123"""
         try:
+            self.log(f"🔐 Logging in as {self.admin_email}...")
             response = self.session.post(f"{self.base_url}/api/auth/login", json={
                 "email": self.admin_email,
                 "password": self.admin_password
@@ -115,16 +41,18 @@ class FeatureModulesTester:
                 data = response.json()
                 self.auth_token = data.get("access_token")
                 self.user_id = data.get("user_id")
-                self.org_id = data.get("org_id")
-                self.tenant_id = data.get("tenant_id")
+                self.org_id = data.get("org_id") or data.get("organization_id")
+                self.tenant_id = data.get("tenant_id") or self.org_id
                 
                 # Update session headers
                 self.session.headers.update({
                     'Authorization': f'Bearer {self.auth_token}',
-                    'X-Tenant-Id': self.tenant_id
+                    'X-Tenant-Id': self.tenant_id if self.tenant_id else '',
+                    'Content-Type': 'application/json'
                 })
                 
-                self.log(f"✅ Admin login successful: {self.admin_email}")
+                self.log(f"✅ Admin login successful - Token: {self.auth_token[:20]}...")
+                self.log(f"   Org ID: {self.org_id}, Tenant ID: {self.tenant_id}")
                 return True
             else:
                 self.log(f"❌ Admin login failed: {response.status_code} - {response.text}", "ERROR")
@@ -134,501 +62,608 @@ class FeatureModulesTester:
             self.log(f"❌ Admin login error: {str(e)}", "ERROR")
             return False
 
-    def create_approval_requests(self) -> list:
-        """Create some approval requests for audit testing"""
-        approval_ids = []
-        try:
-            for i in range(2):
-                response = self.session.post(f"{self.base_url}/api/approvals", json={
-                    "entity_type": "user",
-                    "entity_id": f"test-user-{i}",
-                    "action": "role_assignment",
-                    "data": {"role": "admin"},
-                    "reason": f"Test approval workflow {i}"
-                })
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    approval_id = data.get("id")
-                    if approval_id:
-                        approval_ids.append(approval_id)
-                        self.log(f"Created approval request: {approval_id}")
-                        
-                        # Approve it to generate audit trail
-                        approve_response = self.session.post(f"{self.base_url}/api/approvals/{approval_id}/approve")
-                        if approve_response.status_code == 200:
-                            self.log(f"Approved request: {approval_id}")
-                        
-        except Exception as e:
-            self.log(f"Error creating approvals: {e}")
-            
-        return approval_ids
-
-    def test_e13_immutable_audit_fixed(self) -> Dict[str, Any]:
-        """Test E1.3 Immutable Audit Log (FIXED) - Focus on previously failing items"""
-        results = {"group": "E1.3 Immutable Audit Log (FIXED)", "tests": []}
+    def test_efatura_profile_crud(self) -> Dict[str, Any]:
+        """Test A) E-Fatura - Profile CRUD operations"""
+        results = {"group": "A) E-Fatura - Profile CRUD", "tests": []}
         
         try:
-            self.log("🧪 Testing E1.3 Immutable Audit Log - checking if hash chain integrity is fixed")
+            self.log("🧪 Testing E-Fatura Profile CRUD operations")
             
-            # First create some approval requests to generate audit entries
-            self.log("Creating approval requests to generate audit trail...")
-            approval_ids = self.create_approval_requests()
+            # Test 1: PUT /api/efatura/profile - Create profile
+            profile_data = {
+                "legal_name": "Test Corp",
+                "tax_number": "1234567890",
+                "tax_office": "Istanbul",
+                "city": "Istanbul",
+                "default_currency": "TRY"
+            }
             
-            # Test 1: Get audit chain entries
-            response = self.session.get(f"{self.base_url}/api/admin/audit/chain")
+            response = self.session.put(f"{self.base_url}/api/efatura/profile", json=profile_data)
             
             test_result = {
-                "name": "GET /api/admin/audit/chain - list entries",
+                "name": "PUT /api/efatura/profile - Create profile",
                 "status": "pass" if response.status_code == 200 else "fail",
                 "details": f"Status: {response.status_code}"
             }
             
             if response.status_code == 200:
                 data = response.json()
-                if "items" in data and isinstance(data["items"], list):
-                    entries_count = len(data["items"])
-                    test_result["details"] += f" ✅ Found {entries_count} audit entries"
-                    if entries_count > 0:
-                        # Show sample entry structure
-                        sample_entry = data["items"][0]
-                        test_result["details"] += f" - Sample entry has keys: {list(sample_entry.keys())}"
-                else:
-                    test_result["details"] += " ⚠️ No audit entries found"
+                test_result["details"] += f" ✅ Profile created successfully: {data}"
             else:
-                test_result["details"] += f" ❌ Response: {response.text}"
+                test_result["details"] += f" ❌ Response: {response.text[:200]}"
                 
             results["tests"].append(test_result)
             
-            # Test 2: CRITICAL - Verify chain integrity (was previously failing)
-            response2 = self.session.get(f"{self.base_url}/api/admin/audit/chain/verify", 
-                                       params={"tenant_id": self.tenant_id})
+            # Test 2: GET /api/efatura/profile - Retrieve profile
+            response2 = self.session.get(f"{self.base_url}/api/efatura/profile")
             
             test_result2 = {
-                "name": "GET /api/admin/audit/chain/verify - integrity check (CRITICAL FIX)",
+                "name": "GET /api/efatura/profile - Retrieve profile",
                 "status": "pass" if response2.status_code == 200 else "fail",
                 "details": f"Status: {response2.status_code}"
             }
             
             if response2.status_code == 200:
                 data2 = response2.json()
-                self.log(f"Integrity check response: {data2}")
-                
-                if data2.get("valid") is True:
-                    test_result2["details"] += " ✅ Chain integrity VERIFIED - FIXED!"
-                elif data2.get("valid") is False:
-                    test_result2["status"] = "fail"
-                    test_result2["details"] += f" ❌ Chain integrity BROKEN - still failing: {data2}"
-                    # Log more details for debugging
-                    if "errors" in data2:
-                        test_result2["details"] += f" Errors: {data2['errors']}"
+                if "legal_name" in data2 and data2.get("legal_name") == "Test Corp":
+                    test_result2["details"] += f" ✅ Profile retrieved correctly: legal_name={data2.get('legal_name')}"
                 else:
                     test_result2["status"] = "fail"
-                    test_result2["details"] += f" ❌ Invalid verification response: {data2}"
+                    test_result2["details"] += f" ❌ Profile data invalid: {data2}"
             else:
-                test_result2["details"] += f" ❌ Response: {response2.text}"
+                test_result2["details"] += f" ❌ Response: {response2.text[:200]}"
                 
             results["tests"].append(test_result2)
             
-            # Test 3: CSV export functionality
-            response3 = self.session.get(f"{self.base_url}/api/admin/audit/export")
-            
-            test_result3 = {
-                "name": "GET /api/admin/audit/export - CSV download",
-                "status": "pass" if response3.status_code == 200 else "fail",
-                "details": f"Status: {response3.status_code}"
-            }
-            
-            if response3.status_code == 200:
-                content_type = response3.headers.get("content-type", "")
-                content_length = len(response3.content)
-                
-                if "csv" in content_type.lower() or response3.text.strip().startswith("timestamp"):
-                    test_result3["details"] += f" ✅ CSV export successful ({content_length} bytes)"
-                    # Show first line of CSV
-                    first_line = response3.text.split('\n')[0] if response3.text else ""
-                    test_result3["details"] += f" - CSV header: {first_line[:100]}..."
-                else:
-                    test_result3["status"] = "fail"
-                    test_result3["details"] += f" ❌ Not CSV format: {content_type}"
-            else:
-                test_result3["details"] += f" ❌ Response: {response3.text}"
-                
-            results["tests"].append(test_result3)
-            
         except Exception as e:
             results["tests"].append({
-                "name": "Immutable audit exception",
+                "name": "E-Fatura Profile CRUD Exception",
                 "status": "fail",
                 "details": f"Exception: {str(e)}"
             })
             
         return results
 
-    def test_e21_2fa_flow_clarified(self) -> Dict[str, Any]:
-        """Test E2.1 2FA TOTP Flow (CLARIFIED) - Test the clarified flow"""
-        results = {"group": "E2.1 2FA TOTP Flow (CLARIFIED)", "tests": []}
+    def test_efatura_invoice_operations(self) -> Dict[str, Any]:
+        """Test A) E-Fatura - Invoice CRUD + Send + Cancel operations"""
+        results = {"group": "A) E-Fatura - Invoice CRUD + Send + Cancel", "tests": []}
         
         try:
-            self.log("🧪 Testing E2.1 2FA TOTP Flow - clarified flow: enable → verify (activates) → login requires OTP")
+            self.log("🧪 Testing E-Fatura Invoice operations")
             
-            # Test 1: Enable 2FA (gets secret & recovery codes)
-            response = self.session.post(f"{self.base_url}/api/auth/2fa/enable")
+            # Test 1: POST /api/efatura/invoices - Create invoice (idempotent)
+            invoice_data = {
+                "source_type": "manual",
+                "source_id": "test-1",
+                "customer_id": "cust-1",
+                "lines": [{
+                    "description": "Otel konaklama",
+                    "quantity": 2,
+                    "unit_price": 500,
+                    "tax_rate": 18,
+                    "line_total": 1000
+                }],
+                "currency": "TRY"
+            }
+            
+            response = self.session.post(f"{self.base_url}/api/efatura/invoices", json=invoice_data)
             
             test_result = {
-                "name": "POST /api/auth/2fa/enable - get secret & recovery codes",
+                "name": "POST /api/efatura/invoices - Create invoice",
                 "status": "pass" if response.status_code == 200 else "fail",
                 "details": f"Status: {response.status_code}"
             }
             
-            secret = None
-            recovery_codes = None
-            
+            invoice_id = None
             if response.status_code == 200:
                 data = response.json()
-                secret = data.get("secret")
-                recovery_codes = data.get("recovery_codes", [])
-                
-                if secret and len(recovery_codes) > 0:
-                    test_result["details"] += f" ✅ Got secret and {len(recovery_codes)} recovery codes"
+                invoice_id = data.get("invoice_id")
+                if invoice_id and data.get("status") == "draft":
+                    test_result["details"] += f" ✅ Invoice created: {invoice_id}, status={data.get('status')}"
                 else:
                     test_result["status"] = "fail"
-                    test_result["details"] += f" ❌ Missing secret or recovery codes: {data}"
+                    test_result["details"] += f" ❌ Invalid invoice response: {data}"
             else:
-                test_result["details"] += f" ❌ Response: {response.text}"
+                test_result["details"] += f" ❌ Response: {response.text[:200]}"
                 
             results["tests"].append(test_result)
             
-            # Test 2: Verify with OTP (this ACTIVATES 2FA)
-            if secret:
-                totp = pyotp.TOTP(secret)
-                current_otp = totp.now()
-                
-                response2 = self.session.post(f"{self.base_url}/api/auth/2fa/verify", json={
-                    "otp_code": current_otp
-                })
+            # Test 2: POST same data again - Test idempotency
+            if invoice_id:
+                response2 = self.session.post(f"{self.base_url}/api/efatura/invoices", json=invoice_data)
                 
                 test_result2 = {
-                    "name": "POST /api/auth/2fa/verify - activates 2FA with OTP",
+                    "name": "POST /api/efatura/invoices - Test idempotency",
                     "status": "pass" if response2.status_code == 200 else "fail",
                     "details": f"Status: {response2.status_code}"
                 }
                 
                 if response2.status_code == 200:
                     data2 = response2.json()
-                    self.log(f"2FA verify response: {data2}")
-                    
-                    # Check if response indicates activation
-                    if "activated" in str(data2).lower() or data2.get("verified"):
-                        test_result2["details"] += " ✅ 2FA activated successfully via verify endpoint"
+                    if data2.get("invoice_id") == invoice_id:
+                        test_result2["details"] += f" ✅ Idempotency works - same invoice returned: {invoice_id}"
                     else:
-                        test_result2["details"] += f" ⚠️ Verify response: {data2}"
+                        test_result2["status"] = "fail"
+                        test_result2["details"] += f" ❌ Different invoice returned: {data2.get('invoice_id')} vs {invoice_id}"
                 else:
-                    test_result2["details"] += f" ❌ Response: {response2.text}"
+                    test_result2["details"] += f" ❌ Response: {response2.text[:200]}"
                     
                 results["tests"].append(test_result2)
-                
-                # Test 3: Check 2FA status (should be enabled=true)
-                response3 = self.session.get(f"{self.base_url}/api/auth/2fa/status")
+            
+            # Test 3: POST /api/efatura/invoices/{invoice_id}/send
+            if invoice_id:
+                response3 = self.session.post(f"{self.base_url}/api/efatura/invoices/{invoice_id}/send")
                 
                 test_result3 = {
-                    "name": "GET /api/auth/2fa/status - should show enabled=true",
+                    "name": f"POST /api/efatura/invoices/{invoice_id}/send - Send invoice",
                     "status": "pass" if response3.status_code == 200 else "fail",
                     "details": f"Status: {response3.status_code}"
                 }
                 
                 if response3.status_code == 200:
                     data3 = response3.json()
-                    if data3.get("enabled") is True:
-                        test_result3["details"] += " ✅ 2FA status correctly shows enabled=true"
-                    else:
-                        test_result3["status"] = "fail"
-                        test_result3["details"] += f" ❌ 2FA not enabled after verify: {data3}"
+                    test_result3["details"] += f" ✅ Invoice sent successfully: {data3}"
                 else:
-                    test_result3["details"] += f" ❌ Response: {response3.text}"
+                    test_result3["details"] += f" ❌ Response: {response3.text[:200]}"
                     
                 results["tests"].append(test_result3)
                 
-                # Test 4: Login without OTP (should require 2FA)
+                # Test 4: GET /api/efatura/invoices/{invoice_id} - Check status
+                time.sleep(1)  # Brief wait
+                response4 = self.session.get(f"{self.base_url}/api/efatura/invoices/{invoice_id}")
+                
                 test_result4 = {
-                    "name": "Login without OTP - should return requires_2fa=true",
-                    "status": "pass",
-                    "details": "Skipped - would logout current admin session"
-                }
-                results["tests"].append(test_result4)
-                
-                # Test 5: Disable 2FA with valid OTP
-                current_otp_disable = totp.now()
-                # Wait a moment to ensure we get a different OTP if needed
-                time.sleep(1)
-                if current_otp_disable == current_otp:
-                    time.sleep(30)  # Wait for next OTP
-                    current_otp_disable = totp.now()
-                
-                response5 = self.session.post(f"{self.base_url}/api/auth/2fa/disable", json={
-                    "otp_code": current_otp_disable
-                })
-                
-                test_result5 = {
-                    "name": "POST /api/auth/2fa/disable - with valid OTP",
-                    "status": "pass" if response5.status_code == 200 else "fail",
-                    "details": f"Status: {response5.status_code}"
+                    "name": f"GET /api/efatura/invoices/{invoice_id} - Check status",
+                    "status": "pass" if response4.status_code == 200 else "fail",
+                    "details": f"Status: {response4.status_code}"
                 }
                 
-                if response5.status_code == 200:
-                    test_result5["details"] += " ✅ 2FA disabled successfully"
+                if response4.status_code == 200:
+                    data4 = response4.json()
+                    status = data4.get("status")
+                    if status in ["sent", "accepted"]:  # Mock auto-accepts
+                        test_result4["details"] += f" ✅ Invoice status: {status}"
+                    else:
+                        test_result4["details"] += f" ⚠️ Invoice status: {status} (expected sent/accepted)"
                 else:
-                    test_result5["details"] += f" ❌ Response: {response5.text}"
+                    test_result4["details"] += f" ❌ Response: {response4.text[:200]}"
                     
-                results["tests"].append(test_result5)
+                results["tests"].append(test_result4)
+            
+            # Test 5: Create another invoice for cancellation test
+            invoice_data_2 = {
+                "source_type": "manual",
+                "source_id": "test-2",
+                "customer_id": "cust-2",
+                "lines": [{
+                    "description": "Test service",
+                    "quantity": 1,
+                    "unit_price": 100,
+                    "tax_rate": 18,
+                    "line_total": 100
+                }],
+                "currency": "TRY"
+            }
+            
+            response5 = self.session.post(f"{self.base_url}/api/efatura/invoices", json=invoice_data_2)
+            
+            invoice_id_2 = None
+            if response5.status_code == 200:
+                data5 = response5.json()
+                invoice_id_2 = data5.get("invoice_id")
+            
+            # Test 6: POST /api/efatura/invoices/{invoice_id}/cancel
+            if invoice_id_2:
+                response6 = self.session.post(f"{self.base_url}/api/efatura/invoices/{invoice_id_2}/cancel")
+                
+                test_result6 = {
+                    "name": f"POST /api/efatura/invoices/{invoice_id_2}/cancel - Cancel invoice",
+                    "status": "pass" if response6.status_code == 200 else "fail",
+                    "details": f"Status: {response6.status_code}"
+                }
+                
+                if response6.status_code == 200:
+                    data6 = response6.json()
+                    if data6.get("status") == "canceled":
+                        test_result6["details"] += f" ✅ Invoice canceled successfully: {data6}"
+                    else:
+                        test_result6["details"] += f" ⚠️ Cancel response: {data6}"
+                else:
+                    test_result6["details"] += f" ❌ Response: {response6.text[:200]}"
+                    
+                results["tests"].append(test_result6)
+            
+            # Test 7: GET /api/efatura/invoices/{invoice_id}/events - Timeline
+            if invoice_id:
+                response7 = self.session.get(f"{self.base_url}/api/efatura/invoices/{invoice_id}/events")
+                
+                test_result7 = {
+                    "name": f"GET /api/efatura/invoices/{invoice_id}/events - Timeline",
+                    "status": "pass" if response7.status_code == 200 else "fail",
+                    "details": f"Status: {response7.status_code}"
+                }
+                
+                if response7.status_code == 200:
+                    data7 = response7.json()
+                    events = data7.get("events", [])
+                    test_result7["details"] += f" ✅ Found {len(events)} events in timeline"
+                else:
+                    test_result7["details"] += f" ❌ Response: {response7.text[:200]}"
+                    
+                results["tests"].append(test_result7)
+            
+            # Test 8: GET /api/efatura/invoices - List invoices
+            response8 = self.session.get(f"{self.base_url}/api/efatura/invoices")
+            
+            test_result8 = {
+                "name": "GET /api/efatura/invoices - List invoices",
+                "status": "pass" if response8.status_code == 200 else "fail",
+                "details": f"Status: {response8.status_code}"
+            }
+            
+            if response8.status_code == 200:
+                data8 = response8.json()
+                items = data8.get("items", [])
+                test_result8["details"] += f" ✅ Found {len(items)} invoices in list"
+            else:
+                test_result8["details"] += f" ❌ Response: {response8.text[:200]}"
+                
+            results["tests"].append(test_result8)
             
         except Exception as e:
             results["tests"].append({
-                "name": "2FA flow exception",
+                "name": "E-Fatura Invoice Operations Exception",
                 "status": "fail",
                 "details": f"Exception: {str(e)}"
             })
             
         return results
 
-    def test_e22_ip_whitelist_fixed(self) -> Dict[str, Any]:
-        """Test E2.2 IP Whitelist (FIXED) - Admin paths should be bypassed now"""
-        results = {"group": "E2.2 IP Whitelist (FIXED)", "tests": []}
+    def test_sms_notifications(self) -> Dict[str, Any]:
+        """Test B) SMS Notification - Send + Bulk + Logs operations"""
+        results = {"group": "B) SMS Notification - Send + Bulk + Logs", "tests": []}
         
         try:
-            self.log("🧪 Testing E2.2 IP Whitelist - admin paths should bypass IP check now")
+            self.log("🧪 Testing SMS Notification operations")
             
-            # Test 1: Admin IP whitelist endpoints should work (admin bypass)
-            response = self.session.get(f"{self.base_url}/api/admin/ip-whitelist")
+            # Test 1: GET /api/sms/templates - List templates
+            response = self.session.get(f"{self.base_url}/api/sms/templates")
             
             test_result = {
-                "name": "GET /api/admin/ip-whitelist - admin bypass should work",
+                "name": "GET /api/sms/templates - List templates",
                 "status": "pass" if response.status_code == 200 else "fail",
                 "details": f"Status: {response.status_code}"
             }
             
             if response.status_code == 200:
                 data = response.json()
-                if "allowed_ips" in data and isinstance(data["allowed_ips"], list):
-                    test_result["details"] += f" ✅ Admin endpoint works (bypass): {len(data['allowed_ips'])} IPs in whitelist"
-                else:
-                    test_result["status"] = "fail"
-                    test_result["details"] += f" ❌ Invalid whitelist format: {data}"
+                templates = data.get("templates", {})
+                test_result["details"] += f" ✅ Found {len(templates)} templates: {list(templates.keys())}"
             else:
-                if response.status_code == 403 and "ip_not_whitelisted" in response.text:
-                    test_result["status"] = "fail"
-                    test_result["details"] += " ❌ STILL BLOCKED - admin bypass NOT working"
-                else:
-                    test_result["details"] += f" ❌ Response: {response.text}"
+                test_result["details"] += f" ❌ Response: {response.text[:200]}"
                 
             results["tests"].append(test_result)
             
-            # Test 2: Set IP whitelist with restrictive IPs
-            response2 = self.session.put(f"{self.base_url}/api/admin/ip-whitelist", json={
-                "allowed_ips": ["1.2.3.4", "10.0.0.1"]  # Current IP should NOT be in this list
-            })
+            # Test 2: POST /api/sms/send - Send single SMS
+            sms_data = {
+                "to": "+905551234567",
+                "template_key": "custom",
+                "variables": {"message": "Test SMS mesaji"}
+            }
+            
+            response2 = self.session.post(f"{self.base_url}/api/sms/send", json=sms_data)
             
             test_result2 = {
-                "name": "PUT /api/admin/ip-whitelist - set restrictive IPs (admin bypass)",
+                "name": "POST /api/sms/send - Send single SMS",
                 "status": "pass" if response2.status_code == 200 else "fail",
                 "details": f"Status: {response2.status_code}"
             }
             
             if response2.status_code == 200:
                 data2 = response2.json()
-                if data2.get("allowed_ips") and len(data2["allowed_ips"]) == 2:
-                    test_result2["details"] += " ✅ Whitelist updated - admin can still access despite IP restriction"
+                message_id = data2.get("message_id")
+                if message_id:
+                    test_result2["details"] += f" ✅ SMS sent successfully: message_id={message_id}"
                 else:
-                    test_result2["status"] = "fail"
-                    test_result2["details"] += f" ❌ Update failed: {data2}"
+                    test_result2["details"] += f" ⚠️ SMS response: {data2}"
             else:
-                if response2.status_code == 403 and "ip_not_whitelisted" in response2.text:
-                    test_result2["status"] = "fail"
-                    test_result2["details"] += " ❌ STILL BLOCKED - admin bypass NOT working for PUT"
-                else:
-                    test_result2["details"] += f" ❌ Response: {response2.text}"
+                test_result2["details"] += f" ❌ Response: {response2.text[:200]}"
                 
             results["tests"].append(test_result2)
             
-            # Test 3: Verify other admin endpoints still work (admin bypass)
-            response3 = self.session.get(f"{self.base_url}/api/admin/audit/chain")
+            # Test 3: POST /api/sms/send-bulk - Send bulk SMS
+            bulk_data = {
+                "recipients": ["+905551111111", "+905552222222"],
+                "template_key": "reservation_confirmed",
+                "variables": {
+                    "customer_name": "Ali",
+                    "product_name": "Kapadokya Turu",
+                    "booking_code": "BK123"
+                }
+            }
+            
+            response3 = self.session.post(f"{self.base_url}/api/sms/send-bulk", json=bulk_data)
             
             test_result3 = {
-                "name": "GET /api/admin/audit/chain - other admin endpoints bypass",
+                "name": "POST /api/sms/send-bulk - Send bulk SMS",
                 "status": "pass" if response3.status_code == 200 else "fail",
                 "details": f"Status: {response3.status_code}"
             }
             
             if response3.status_code == 200:
-                test_result3["details"] += " ✅ Other admin endpoints working (bypass confirmed)"
-            else:
-                if response3.status_code == 403 and "ip_not_whitelisted" in response3.text:
-                    test_result3["status"] = "fail"
-                    test_result3["details"] += " ❌ STILL BLOCKED - admin bypass NOT working for other endpoints"
+                data3 = response3.json()
+                batch_id = data3.get("batch_id")
+                if batch_id:
+                    test_result3["details"] += f" ✅ Bulk SMS sent successfully: batch_id={batch_id}"
                 else:
-                    test_result3["details"] += f" ❌ Response: {response3.text}"
+                    test_result3["details"] += f" ⚠️ Bulk SMS response: {data3}"
+            else:
+                test_result3["details"] += f" ❌ Response: {response3.text[:200]}"
                 
             results["tests"].append(test_result3)
             
-            # Test 4: Clear IP whitelist to reset for other tests
-            response4 = self.session.put(f"{self.base_url}/api/admin/ip-whitelist", json={
-                "allowed_ips": []
-            })
+            # Test 4: GET /api/sms/logs - List SMS logs
+            response4 = self.session.get(f"{self.base_url}/api/sms/logs")
             
             test_result4 = {
-                "name": "Clear IP whitelist for other tests",
+                "name": "GET /api/sms/logs - List SMS logs",
                 "status": "pass" if response4.status_code == 200 else "fail",
-                "details": f"Status: {response4.status_code} - Cleared for other tests"
+                "details": f"Status: {response4.status_code}"
             }
             
+            if response4.status_code == 200:
+                data4 = response4.json()
+                items = data4.get("items", [])
+                test_result4["details"] += f" ✅ Found {len(items)} SMS logs"
+            else:
+                test_result4["details"] += f" ❌ Response: {response4.text[:200]}"
+                
             results["tests"].append(test_result4)
             
         except Exception as e:
             results["tests"].append({
-                "name": "IP whitelist exception",
+                "name": "SMS Notifications Exception",
                 "status": "fail",
                 "details": f"Exception: {str(e)}"
             })
             
         return results
 
-    def test_e41_white_label_fixed(self) -> Dict[str, Any]:
-        """Test E4.1 White-Label Settings (should work now)"""
-        results = {"group": "E4.1 White-Label Settings (SHOULD WORK NOW)", "tests": []}
+    def test_qr_tickets(self) -> Dict[str, Any]:
+        """Test C) QR Ticket - Create + Check-in + Cancel + Stats operations"""
+        results = {"group": "C) QR Ticket - Create + Check-in + Cancel + Stats", "tests": []}
         
         try:
-            self.log("🧪 Testing E4.1 White-Label Settings - should work after IP whitelist fix")
+            self.log("🧪 Testing QR Ticket operations")
             
-            # Test 1: Get whitelabel settings
-            response = self.session.get(f"{self.base_url}/api/admin/whitelabel-settings")
+            # Test 1: POST /api/tickets - Create ticket
+            ticket_data = {
+                "reservation_id": "res-001",
+                "product_name": "Kapadokya Balon Turu",
+                "customer_name": "Ahmet Yilmaz",
+                "customer_email": "ahmet@test.com",
+                "event_date": "2026-03-01"
+            }
+            
+            response = self.session.post(f"{self.base_url}/api/tickets", json=ticket_data)
             
             test_result = {
-                "name": "GET /api/admin/whitelabel-settings",
+                "name": "POST /api/tickets - Create ticket",
                 "status": "pass" if response.status_code == 200 else "fail",
                 "details": f"Status: {response.status_code}"
             }
             
+            ticket_code = None
             if response.status_code == 200:
                 data = response.json()
-                if isinstance(data, dict):
-                    test_result["details"] += f" ✅ Whitelabel settings retrieved: {list(data.keys())}"
+                ticket_code = data.get("ticket_code")
+                qr_data = data.get("qr_data")
+                status = data.get("status")
+                
+                if ticket_code and qr_data and status == "active":
+                    test_result["details"] += f" ✅ Ticket created: {ticket_code}, status={status}, has QR data"
                 else:
                     test_result["status"] = "fail"
-                    test_result["details"] += f" ❌ Invalid settings format: {data}"
+                    test_result["details"] += f" ❌ Invalid ticket response: {data}"
             else:
-                if response.status_code == 403 and "ip_not_whitelisted" in response.text:
-                    test_result["status"] = "fail"
-                    test_result["details"] += " ❌ STILL BLOCKED by IP whitelist - not fixed"
-                else:
-                    test_result["details"] += f" ❌ Response: {response.text}"
+                test_result["details"] += f" ❌ Response: {response.text[:200]}"
                 
             results["tests"].append(test_result)
             
-            # Test 2: Update whitelabel settings with all required fields
-            response2 = self.session.put(f"{self.base_url}/api/admin/whitelabel-settings", json={
-                "logo_url": "https://example.com/logo.png",
-                "primary_color": "#007bff",
-                "company_name": "Test Enterprise Inc"
-            })
-            
-            test_result2 = {
-                "name": "PUT /api/admin/whitelabel-settings - update settings",
-                "status": "pass" if response2.status_code == 200 else "fail",
-                "details": f"Status: {response2.status_code}"
-            }
-            
-            if response2.status_code == 200:
-                data2 = response2.json()
-                if data2.get("logo_url") and data2.get("primary_color") and data2.get("company_name"):
-                    test_result2["details"] += " ✅ Whitelabel settings updated successfully"
-                else:
-                    test_result2["status"] = "fail"
-                    test_result2["details"] += f" ❌ Update failed or missing fields: {data2}"
-            else:
-                if response2.status_code == 403 and "ip_not_whitelisted" in response2.text:
-                    test_result2["status"] = "fail"
-                    test_result2["details"] += " ❌ STILL BLOCKED by IP whitelist - PUT not fixed"
-                else:
-                    test_result2["details"] += f" ❌ Response: {response2.text}"
+            # Test 2: POST same data again - Test idempotency
+            if ticket_code:
+                response2 = self.session.post(f"{self.base_url}/api/tickets", json=ticket_data)
                 
-            results["tests"].append(test_result2)
+                test_result2 = {
+                    "name": "POST /api/tickets - Test idempotency (same reservation_id)",
+                    "status": "pass" if response2.status_code == 200 else "fail",
+                    "details": f"Status: {response2.status_code}"
+                }
+                
+                if response2.status_code == 200:
+                    data2 = response2.json()
+                    if data2.get("ticket_code") == ticket_code:
+                        test_result2["details"] += f" ✅ Idempotency works - same ticket returned: {ticket_code}"
+                    else:
+                        test_result2["status"] = "fail"
+                        test_result2["details"] += f" ❌ Different ticket returned: {data2.get('ticket_code')} vs {ticket_code}"
+                else:
+                    test_result2["details"] += f" ❌ Response: {response2.text[:200]}"
+                    
+                results["tests"].append(test_result2)
+            
+            # Test 3: POST /api/tickets/check-in - Check in ticket
+            if ticket_code:
+                checkin_data = {"ticket_code": ticket_code}
+                response3 = self.session.post(f"{self.base_url}/api/tickets/check-in", json=checkin_data)
+                
+                test_result3 = {
+                    "name": f"POST /api/tickets/check-in - Check in {ticket_code}",
+                    "status": "pass" if response3.status_code == 200 else "fail",
+                    "details": f"Status: {response3.status_code}"
+                }
+                
+                if response3.status_code == 200:
+                    data3 = response3.json()
+                    test_result3["details"] += f" ✅ Check-in successful: {data3}"
+                else:
+                    test_result3["details"] += f" ❌ Response: {response3.text[:200]}"
+                    
+                results["tests"].append(test_result3)
+                
+                # Test 4: POST same check-in again - Should return 409
+                response4 = self.session.post(f"{self.base_url}/api/tickets/check-in", json=checkin_data)
+                
+                test_result4 = {
+                    "name": f"POST /api/tickets/check-in - Already checked in (should be 409)",
+                    "status": "pass" if response4.status_code == 409 else "fail",
+                    "details": f"Status: {response4.status_code}"
+                }
+                
+                if response4.status_code == 409:
+                    test_result4["details"] += " ✅ Correctly returned 409 - already checked in"
+                else:
+                    test_result4["details"] += f" ❌ Expected 409, got: {response4.text[:200]}"
+                    
+                results["tests"].append(test_result4)
+            
+            # Test 5: Create another ticket for cancellation test
+            ticket_data_2 = {
+                "reservation_id": "res-002",
+                "product_name": "Istanbul City Tour",
+                "customer_name": "Elif Demir",
+                "customer_email": "elif@test.com",
+                "event_date": "2026-03-02"
+            }
+            
+            response5 = self.session.post(f"{self.base_url}/api/tickets", json=ticket_data_2)
+            
+            ticket_code_2 = None
+            if response5.status_code == 200:
+                data5 = response5.json()
+                ticket_code_2 = data5.get("ticket_code")
+            
+            # Test 6: POST /api/tickets/{ticket_code}/cancel
+            if ticket_code_2:
+                response6 = self.session.post(f"{self.base_url}/api/tickets/{ticket_code_2}/cancel")
+                
+                test_result6 = {
+                    "name": f"POST /api/tickets/{ticket_code_2}/cancel - Cancel ticket",
+                    "status": "pass" if response6.status_code == 200 else "fail",
+                    "details": f"Status: {response6.status_code}"
+                }
+                
+                if response6.status_code == 200:
+                    data6 = response6.json()
+                    if data6.get("status") == "canceled":
+                        test_result6["details"] += f" ✅ Ticket canceled successfully: {data6}"
+                    else:
+                        test_result6["details"] += f" ⚠️ Cancel response: {data6}"
+                else:
+                    test_result6["details"] += f" ❌ Response: {response6.text[:200]}"
+                    
+                results["tests"].append(test_result6)
+                
+                # Test 7: Try to check-in canceled ticket - Should return 410
+                checkin_data_canceled = {"ticket_code": ticket_code_2}
+                response7 = self.session.post(f"{self.base_url}/api/tickets/check-in", json=checkin_data_canceled)
+                
+                test_result7 = {
+                    "name": f"POST /api/tickets/check-in - Canceled ticket (should be 410)",
+                    "status": "pass" if response7.status_code == 410 else "fail",
+                    "details": f"Status: {response7.status_code}"
+                }
+                
+                if response7.status_code == 410:
+                    test_result7["details"] += " ✅ Correctly returned 410 - ticket canceled"
+                else:
+                    test_result7["details"] += f" ❌ Expected 410, got: {response7.text[:200]}"
+                    
+                results["tests"].append(test_result7)
+            
+            # Test 8: GET /api/tickets - List tickets
+            response8 = self.session.get(f"{self.base_url}/api/tickets")
+            
+            test_result8 = {
+                "name": "GET /api/tickets - List tickets",
+                "status": "pass" if response8.status_code == 200 else "fail",
+                "details": f"Status: {response8.status_code}"
+            }
+            
+            if response8.status_code == 200:
+                data8 = response8.json()
+                items = data8.get("items", [])
+                test_result8["details"] += f" ✅ Found {len(items)} tickets in list"
+            else:
+                test_result8["details"] += f" ❌ Response: {response8.text[:200]}"
+                
+            results["tests"].append(test_result8)
+            
+            # Test 9: GET /api/tickets/stats - Statistics
+            response9 = self.session.get(f"{self.base_url}/api/tickets/stats")
+            
+            test_result9 = {
+                "name": "GET /api/tickets/stats - Statistics",
+                "status": "pass" if response9.status_code == 200 else "fail",
+                "details": f"Status: {response9.status_code}"
+            }
+            
+            if response9.status_code == 200:
+                data9 = response9.json()
+                stats = ["total", "active", "checked_in", "canceled"]
+                found_stats = [s for s in stats if s in data9]
+                test_result9["details"] += f" ✅ Stats returned: {found_stats}, values: {data9}"
+            else:
+                test_result9["details"] += f" ❌ Response: {response9.text[:200]}"
+                
+            results["tests"].append(test_result9)
+            
+            # Test 10: GET /api/tickets/lookup/{ticket_code} - Lookup
+            if ticket_code:
+                response10 = self.session.get(f"{self.base_url}/api/tickets/lookup/{ticket_code}")
+                
+                test_result10 = {
+                    "name": f"GET /api/tickets/lookup/{ticket_code} - Lookup ticket",
+                    "status": "pass" if response10.status_code == 200 else "fail",
+                    "details": f"Status: {response10.status_code}"
+                }
+                
+                if response10.status_code == 200:
+                    data10 = response10.json()
+                    if data10.get("ticket_code") == ticket_code:
+                        test_result10["details"] += f" ✅ Ticket lookup successful: {data10.get('product_name')}"
+                    else:
+                        test_result10["status"] = "fail"
+                        test_result10["details"] += f" ❌ Wrong ticket data: {data10}"
+                else:
+                    test_result10["details"] += f" ❌ Response: {response10.text[:200]}"
+                    
+                results["tests"].append(test_result10)
             
         except Exception as e:
             results["tests"].append({
-                "name": "White-label exception",
+                "name": "QR Tickets Exception",
                 "status": "fail",
                 "details": f"Exception: {str(e)}"
             })
             
         return results
 
-    def test_still_working_endpoints(self) -> Dict[str, Any]:
-        """Verify that previously working endpoints still work"""
-        results = {"group": "Previously Working Endpoints (Verification)", "tests": []}
+    def run_feature_modules_tests(self) -> Dict[str, Any]:
+        """Run all feature modules tests"""
+        self.log("🚀 Starting Feature Modules Testing")
         
-        try:
-            self.log("🧪 Verifying previously working endpoints still work")
-            
-            # E3.2 Health endpoints
-            response1 = self.session.get(f"{self.base_url}/api/health/live")
-            test_result1 = {
-                "name": "E3.2 Health /api/health/live",
-                "status": "pass" if response1.status_code == 200 and response1.json().get("status") == "alive" else "fail",
-                "details": f"Status: {response1.status_code}"
-            }
-            results["tests"].append(test_result1)
-            
-            response2 = self.session.get(f"{self.base_url}/api/health/ready")
-            test_result2 = {
-                "name": "E3.2 Health /api/health/ready",
-                "status": "pass" if response2.status_code == 200 and response2.json().get("status") == "ready" else "fail",
-                "details": f"Status: {response2.status_code}"
-            }
-            results["tests"].append(test_result2)
-            
-            # E1.1 RBAC seed
-            response3 = self.session.get(f"{self.base_url}/api/admin/rbac/permissions")
-            test_result3 = {
-                "name": "E1.1 RBAC list permissions",
-                "status": "pass" if response3.status_code == 200 and isinstance(response3.json(), list) else "fail",
-                "details": f"Status: {response3.status_code} - {len(response3.json()) if response3.status_code == 200 else 0} permissions"
-            }
-            results["tests"].append(test_result3)
-            
-            # E4.2 Data export
-            response4 = self.session.post(f"{self.base_url}/api/admin/tenant/export")
-            test_result4 = {
-                "name": "E4.2 Full data export",
-                "status": "pass" if response4.status_code == 200 else "fail",
-                "details": f"Status: {response4.status_code} - {len(response4.content)} bytes" if response4.status_code == 200 else f"Status: {response4.status_code}"
-            }
-            results["tests"].append(test_result4)
-            
-        except Exception as e:
-            results["tests"].append({
-                "name": "Verification exception",
-                "status": "fail",
-                "details": f"Exception: {str(e)}"
-            })
-            
-        return results
-
-    def run_focused_tests(self) -> Dict[str, Any]:
-        """Run focused re-tests on previously failing endpoints"""
-        self.log("🚀 Starting Enterprise Hardening Focused Re-Testing")
-        
-        if not self.find_admin_user():
-            return {"error": "Failed to setup admin user"}
+        if not self.login_admin():
+            return {"error": "Failed to login as admin"}
         
         all_results = []
         
-        # Run focused tests in priority order
+        # Run tests in order
         test_groups = [
-            self.test_e13_immutable_audit_fixed,      # E1.3 - Critical security issue
-            self.test_e21_2fa_flow_clarified,         # E2.1 - Clarified flow
-            self.test_e22_ip_whitelist_fixed,         # E2.2 - Fixed admin bypass
-            self.test_e41_white_label_fixed,          # E4.1 - Should work after IP fix
-            self.test_still_working_endpoints,        # Regression check
+            self.test_efatura_profile_crud,
+            self.test_efatura_invoice_operations,
+            self.test_sms_notifications,
+            self.test_qr_tickets,
         ]
         
         for test_group in test_groups:
@@ -675,16 +710,16 @@ class FeatureModulesTester:
 
 def main():
     """Main test execution"""
-    # Get backend URL from environment 
+    # Backend URL from frontend env
     backend_url = "https://hardening-e1-e4.preview.emergentagent.com"
     
-    print(f"🎯 Testing Enterprise Hardening FIXES at: {backend_url}")
+    print(f"🎯 Testing Feature Modules at: {backend_url}")
     
-    tester = EnterpriseHardeningFocusedTester(backend_url)
-    results = tester.run_focused_tests()
+    tester = FeatureModulesTester(backend_url)
+    results = tester.run_feature_modules_tests()
     
     print("\n" + "="*80)
-    print("📊 ENTERPRISE HARDENING RE-TEST RESULTS")
+    print("📊 FEATURE MODULES TEST RESULTS")
     print("="*80)
     
     if "error" in results:

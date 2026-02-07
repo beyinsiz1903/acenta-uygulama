@@ -53,6 +53,12 @@ class PortfolioSyncTester:
         if self.auth_token and "Authorization" not in req_headers:
             req_headers["Authorization"] = f"Bearer {self.auth_token}"
             
+        # Add tenant header if we have user data
+        if self.user_data and "X-Tenant-Id" not in req_headers:
+            tenant_id = self.user_data.get("tenant_id") or self.user_data.get("organization_id")
+            if tenant_id:
+                req_headers["X-Tenant-Id"] = tenant_id
+            
         try:
             response = requests.request(
                 method=method,

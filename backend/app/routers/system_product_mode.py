@@ -46,6 +46,10 @@ async def get_product_mode(
     if not tenant_id:
         tenant_id = request.headers.get("x-tenant-id") or request.headers.get("X-Tenant-Id")
 
+    # Final fallback: use org_id from authenticated user
+    if not tenant_id:
+        tenant_id = user.get("organization_id")
+
     if not tenant_id:
         # No tenant context (e.g. super_admin without tenant) → enterprise
         mode = DEFAULT_MODE

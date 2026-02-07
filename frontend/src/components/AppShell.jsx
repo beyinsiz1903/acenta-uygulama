@@ -376,10 +376,14 @@ export default function AppShell() {
               <Menu className="h-5 w-5" />
             </Button>
             <div className="hidden md:flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-primary text-primary-foreground grid place-items-center font-semibold text-xs">
-                A
-              </div>
-              <span className="text-[13px] font-semibold text-foreground">Acenta Master</span>
+              {brandLogo ? (
+                <img src={brandLogo} alt={brandName} className="h-7 w-7 rounded-lg object-contain" data-testid="brand-logo" />
+              ) : (
+                <div className="h-7 w-7 rounded-lg bg-primary text-primary-foreground grid place-items-center font-semibold text-xs" style={branding?.primary_color ? { backgroundColor: branding.primary_color } : {}}>
+                  {brandInitial}
+                </div>
+              )}
+              <span className="text-[13px] font-semibold text-foreground" data-testid="brand-name">{brandName}</span>
             </div>
           </div>
 

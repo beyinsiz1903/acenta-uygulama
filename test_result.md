@@ -75,11 +75,14 @@ backend:
     file: "backend/app/routers/system_product_mode.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Returns product_mode, visible_nav_groups, hidden_nav_items, label_overrides. Default enterprise. Tested via curl."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Returns enterprise mode with 7 nav groups, 0 hidden items. Authentication required (401 without token). All response fields correct."
 
   - task: "GET /api/admin/tenants/{tenant_id}/product-mode - admin read"
     implemented: true
@@ -87,11 +90,14 @@ backend:
     file: "backend/app/routers/admin_product_mode.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Returns tenant mode + available_modes list + visibility config. Requires super_admin role."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Returns mode 'enterprise', available_modes ['lite','pro','enterprise'], visibility config. Super_admin role required."
 
   - task: "PATCH /api/admin/tenants/{tenant_id}/product-mode - mode switch with audit"
     implemented: true
@@ -99,11 +105,14 @@ backend:
     file: "backend/app/routers/admin_product_mode.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Changes tenant mode, writes audit log, returns diff. Tested lite->pro->enterprise transitions."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Mode switches working perfectly. enterprise→lite (36 hidden items), lite→pro (25 visible items), same mode returns changed:false. Invalid mode rejected with 400. Audit logging functional."
 
   - task: "GET /api/admin/tenants/{tenant_id}/product-mode-preview - diff preview"
     implemented: true
@@ -111,11 +120,14 @@ backend:
     file: "backend/app/routers/admin_product_mode.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Shows newly_visible and newly_hidden items for target mode switch. Tested all transitions."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Preview API working correctly. enterprise→lite shows 36 newly_hidden items, is_upgrade:false. Invalid mode rejected with 400. All diff calculations accurate."
 
   - task: "Product Modes Config (constants/product_modes.py)"
     implemented: true

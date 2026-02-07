@@ -41,8 +41,15 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:  # type: ignore[override]
         code = "not_found" if exc.status_code == 404 else "http_error"
         detail: Any = exc.detail
-        message = detail if isinstance(detail, str) else "HTTP error"
-        details: Any = {}
+        if isinstance(detail, str):
+            message = detail
+            details: Any = {}
+        elif isinstance(detail, dict):
+            message = detail.get("message", "HTTP error")
+            details = detail
+        else:
+            message = "HTTP error"
+            details = {}
         cid = getattr(request.state, "correlation_id", None)
         if cid:
             details["correlation_id"] = cid

@@ -120,11 +120,14 @@ backend:
     file: "backend/app/routers/admin_import.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Returns import jobs for org, sorted by created_at desc."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING PASSED: Job listing works perfectly. Returns array of jobs for organization. Includes all required fields (id, status, filename, total_rows, success_count, error_count, timestamps). Authentication required (401 without token). Sorting by created_at desc verified."
 
   - task: "GET /api/admin/import/jobs/{job_id} - Job detail + errors"
     implemented: true

@@ -577,9 +577,12 @@ export default function AppShell() {
           {/* Nav sections */}
           <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-3">
             {ADMIN_GROUPED_NAV.map((section) => {
-              const visibleItems = section.items.filter(
-                (it) => !it.feature || (!featuresLoading && hasFeature(it.feature))
-              );
+              // Group-level mode check
+              if (section.minGroupMode) {
+                const groupLevel = MODE_ORDER_MAP[section.minGroupMode] ?? 0;
+                if (groupLevel > currentModeLevel) return null;
+              }
+              const visibleItems = filterNavByMode(section.items);
               if (!visibleItems.length) return null;
               return (
                 <div key={section.group}>

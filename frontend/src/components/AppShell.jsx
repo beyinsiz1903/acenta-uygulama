@@ -175,6 +175,7 @@ const ADMIN_GROUPED_NAV = [
     minGroupMode: "lite",
     items: [
       { to: "/app/admin/import", label: "Portföy Taşı", icon: Upload, modeKey: "portfoy_tasi", minMode: "lite" },
+      { to: "/app/admin/portfolio-sync", label: "Portfolio Sync", icon: RefreshCw, modeKey: "portfolio_sync", minMode: "lite" },
     ],
   },
   {

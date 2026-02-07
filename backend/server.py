@@ -581,6 +581,9 @@ app.include_router(admin_system_runbook_router)
 # Cost/Performance Pack
 app.include_router(admin_system_perf_router)
 
+# Enterprise Demo Pack
+app.include_router(admin_demo_guide_router)
+
 
 @app.get("/")
 async def read_root() -> dict[str, str]:

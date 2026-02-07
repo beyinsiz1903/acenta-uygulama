@@ -77,6 +77,25 @@ class PortfolioSyncTester:
         """Login and get JWT token as specified in review request"""
         self.log("=== AUTHENTICATION ===")
         
+        # First, try to register the user (will fail if exists, that's OK)
+        signup_data = {
+            "email": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD,
+            "name": "Test Admin"
+        }
+        
+        try:
+            signup_response = self.request("POST", "/auth/signup", json_data=signup_data)
+            if signup_response.status_code == 200:
+                self.log("✅ User registered successfully")
+            elif signup_response.status_code == 409:
+                self.log("ℹ️ User already exists (OK)")
+            else:
+                self.log(f"⚠️ User registration: {signup_response.status_code}")
+        except Exception as e:
+            self.log(f"⚠️ User registration error (may already exist): {e}")
+        
+        # Now try to login
         login_data = {
             "email": ADMIN_EMAIL,
             "password": ADMIN_PASSWORD

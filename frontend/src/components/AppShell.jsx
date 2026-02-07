@@ -452,9 +452,15 @@ export default function AppShell() {
         <SheetContent side="left" className="p-0 w-[280px]" data-testid="mobile-nav-sheet">
           <div className="border-b px-4 py-3">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground grid place-items-center font-semibold text-xs">A</div>
+              {brandLogo ? (
+                <img src={brandLogo} alt={brandName} className="h-8 w-8 rounded-lg object-contain" />
+              ) : (
+                <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground grid place-items-center font-semibold text-xs" style={branding?.primary_color ? { backgroundColor: branding.primary_color } : {}}>
+                  {brandInitial}
+                </div>
+              )}
               <div>
-                <div className="text-[13px] font-semibold text-foreground">Acenta Master</div>
+                <div className="text-[13px] font-semibold text-foreground">{brandName}</div>
                 <div className="text-[10px] text-muted-foreground">{user?.email}</div>
               </div>
             </div>

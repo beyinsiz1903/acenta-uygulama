@@ -41,7 +41,7 @@ export default function AdminProductModePage() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
-  const tenantId = getActiveTenantId();
+  const tenantId = getActiveTenantId() || getUser()?.organization_id;
 
   const fetchCurrentMode = useCallback(async () => {
     try {

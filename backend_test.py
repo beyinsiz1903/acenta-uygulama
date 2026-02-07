@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Enterprise Hardening Sprint (E1-E4) Focused Re-test
-Testing previously failing endpoints after fixes
+Feature Modules Testing: E-Fatura Layer, SMS Notification Layer, QR Ticket + Check-in
+Testing 3 new feature modules on backend with provider abstraction, mock providers, tenant isolation, RBAC, audit logging, idempotency
 """
 
 import asyncio
@@ -14,7 +14,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 
-class EnterpriseHardeningFocusedTester:
+class FeatureModulesTester:
     def __init__(self, base_url: str):
         self.base_url = base_url.rstrip('/')
         self.session = requests.Session()

@@ -194,11 +194,11 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
         membership_repo = MembershipRepository(db)
         membership = await membership_repo.find_active_membership(user_id=user_id, tenant_id=tenant_id_str)
         if not membership and not super_admin:
-            raise AppError(
-                status_code=403,
-                code="tenant_access_forbidden",
-                message="User does not have access to this tenant.",
-                details={"tenant_id": tenant_id_str},
+            return _error_response(
+                403,
+                "tenant_access_forbidden",
+                "User does not have access to this tenant.",
+                {"tenant_id": tenant_id_str},
             )
 
         role = membership.get("role") if membership else None

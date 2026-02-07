@@ -109,26 +109,16 @@ class StructuredLoggingMiddleware(BaseHTTPMiddleware):
         # Store request_id for later use
         request.state.request_id = request_id
 
-        exception_occurred = None
+        response = None
         try:
             response = await call_next(request)
         except Exception as exc:
-            exception_occurred = exc
-            # Re-raise after logging
-            raise
-        finally:
+            # Log the exception
             latency_ms = round((time.monotonic() - start) * 1000, 2)
-
-            # Extract context
-            tenant_id = request.headers.get("X-Tenant-Id", "")
-            user_id = _extract_user_id(request)
             path = request.url.path
             method = request.method
-
-            if exception_occurred:
-                status_code = 500
-            else:
-                status_code = response.status_code
+            tenant_id = request.headers.get("X-Tenant-Id", "")
+            user_id = _extract_user_id(request)
 
             log_entry = {
                 "request_id": request_id,
@@ -136,39 +126,63 @@ class StructuredLoggingMiddleware(BaseHTTPMiddleware):
                 "user_id": user_id,
                 "path": path,
                 "method": method,
-                "status_code": status_code,
+                "status_code": 500,
                 "latency_ms": latency_ms,
             }
+            logger.error(json.dumps(log_entry))
 
-            # Log as structured JSON
-            if status_code >= 500:
-                logger.error(json.dumps(log_entry))
-            elif status_code >= 400:
-                logger.warning(json.dumps(log_entry))
-            else:
-                logger.info(json.dumps(log_entry))
-
-            # O3: Store request log in background (don't block the response)
-            # Skip health check paths to avoid noise
+            # O3: Store request log + aggregate exception in background
             if not path.startswith("/api/health") and not path.startswith("/health"):
                 asyncio.create_task(_store_request_log_bg(
-                    path, method, status_code, latency_ms, request_id, tenant_id, user_id
+                    path, method, 500, latency_ms, request_id, tenant_id, user_id
                 ))
 
-            # O3: Log slow requests (>1000ms)
-            if latency_ms > 1000:
-                asyncio.create_task(_log_slow_request_bg(
-                    path, method, latency_ms, request_id, status_code
-                ))
+            tb = traceback.format_exception(type(exc), exc, exc.__traceback__)
+            asyncio.create_task(_aggregate_exception_bg(
+                message=str(exc),
+                stack_trace="".join(tb),
+                request_id=request_id,
+            ))
+            raise
 
-            # O3: Aggregate exceptions
-            if exception_occurred:
-                tb = traceback.format_exception(type(exception_occurred), exception_occurred, exception_occurred.__traceback__)
-                asyncio.create_task(_aggregate_exception_bg(
-                    message=str(exception_occurred),
-                    stack_trace="".join(tb),
-                    request_id=request_id,
-                ))
+        latency_ms = round((time.monotonic() - start) * 1000, 2)
+
+        # Extract context
+        tenant_id = request.headers.get("X-Tenant-Id", "")
+        user_id = _extract_user_id(request)
+        path = request.url.path
+        method = request.method
+        status_code = response.status_code
+
+        log_entry = {
+            "request_id": request_id,
+            "tenant_id": tenant_id,
+            "user_id": user_id,
+            "path": path,
+            "method": method,
+            "status_code": status_code,
+            "latency_ms": latency_ms,
+        }
+
+        # Log as structured JSON
+        if status_code >= 500:
+            logger.error(json.dumps(log_entry))
+        elif status_code >= 400:
+            logger.warning(json.dumps(log_entry))
+        else:
+            logger.info(json.dumps(log_entry))
+
+        # O3: Store request log in background (skip health endpoints)
+        if not path.startswith("/api/health") and not path.startswith("/health"):
+            asyncio.create_task(_store_request_log_bg(
+                path, method, status_code, latency_ms, request_id, tenant_id, user_id
+            ))
+
+        # O3: Log slow requests (>1000ms)
+        if latency_ms > 1000:
+            asyncio.create_task(_log_slow_request_bg(
+                path, method, latency_ms, request_id, status_code
+            ))
 
         # Attach request_id to response header
         response.headers["X-Request-Id"] = request_id

@@ -6,7 +6,6 @@ current_hash = sha256(tenant_id + action + timestamp + previous_hash + actor_id 
 from __future__ import annotations
 
 import hashlib
-import json
 import uuid
 from datetime import datetime
 from typing import Any, Optional
@@ -55,7 +54,9 @@ async def write_chained_audit_log(
 ) -> dict[str, Any]:
     """Write an immutable, hash-chained audit log entry."""
     now = now_utc()
-    timestamp_str = now.isoformat()
+    # Store the exact timestamp string used in hash computation
+    # This avoids datetime serialization mismatches during verification
+    timestamp_str = now.strftime("%Y-%m-%dT%H:%M:%S.%f")
     actor_id = actor.get("actor_id") or actor.get("email") or "system"
 
     previous_hash = await get_last_hash(db, tenant_id)
@@ -87,6 +88,7 @@ async def write_chained_audit_log(
         "origin": origin or {},
         "previous_hash": previous_hash,
         "current_hash": current_hash,
+        "hash_timestamp": timestamp_str,  # Exact string used in hash computation
         "created_at": now,
     }
 
@@ -115,11 +117,20 @@ async def verify_chain_integrity(db, tenant_id: str, limit: int = 1000) -> dict[
                 "actual_previous": entry.get("previous_hash"),
             })
 
-        # Recompute hash
+        # Use stored hash_timestamp for exact recomputation
+        timestamp_str = entry.get("hash_timestamp", "")
+        if not timestamp_str:
+            # Fallback for entries without hash_timestamp
+            created = entry.get("created_at", "")
+            if isinstance(created, datetime):
+                timestamp_str = created.strftime("%Y-%m-%dT%H:%M:%S.%f")
+            else:
+                timestamp_str = str(created)
+
         recomputed = _compute_hash(
             tenant_id=tenant_id,
             action=entry["action"],
-            timestamp=entry["created_at"].isoformat() if isinstance(entry["created_at"], datetime) else str(entry["created_at"]),
+            timestamp=timestamp_str,
             previous_hash=entry["previous_hash"],
             actor_id=str(entry["actor"].get("actor_id", "")),
             entity_id=str(entry["target"].get("id", "")),

@@ -172,6 +172,10 @@ from app.routers.admin_system_uptime import router as admin_system_uptime_router
 from app.routers.admin_system_incidents import router as admin_system_incidents_router
 from app.routers.admin_maintenance import router as admin_maintenance_router
 
+# Production Go-Live Pack (A)
+from app.routers.admin_system_preflight import router as admin_system_preflight_router
+from app.routers.admin_system_runbook import router as admin_system_runbook_router
+
 from app.email_worker import email_dispatch_loop
 from app.indexes import finance_indexes, inbox_indexes, pricing_indexes, public_indexes, voucher_indexes
 from app.indexes import crm_indexes

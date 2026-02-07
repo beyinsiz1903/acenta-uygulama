@@ -66,136 +66,194 @@
 # END - Testing Protocol - DO NOT EDIT OR REMOVE THIS SECTION
 #====================================================================================================
 
-user_problem_statement: "Feature modules: E-Fatura Layer, SMS Notification Layer, QR Ticket + Check-in. All with provider abstraction, mock providers, tenant isolation, RBAC, audit logging, idempotency."
+user_problem_statement: "Operational Excellence Layer: O1) Backup & Restore, O2) Data Integrity Monitoring, O3) Monitoring & Metrics, O4) Disaster Readiness, O5) SLA / Uptime Tracking"
 
 backend:
-  - task: "A) E-Fatura - Profile CRUD"
+  - task: "O1 - Backup System (list/run/delete)"
     implemented: true
-    working: true
-    file: "backend/app/routers/efatura.py"
+    working: "NA"
+    file: "backend/app/routers/admin_system_backups.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "PUT/GET /api/efatura/profile. Tenant-scoped, admin-only."
-      - working: true
-        agent: "testing"
-        comment: "✅ ALL TESTS PASSED (2/2): PUT /api/efatura/profile creates profile successfully with all required fields (legal_name, tax_number, etc.), GET /api/efatura/profile retrieves correct data. Tenant isolation and admin permissions working correctly."
+        comment: "GET/POST/DELETE /api/admin/system/backups. Uses mongodump subprocess. Retention cleanup via APScheduler cron at 04:00."
 
-  - task: "A) E-Fatura - Invoice CRUD + Send + Cancel"
+  - task: "O2 - Integrity Report (audit chain, ledger, orphans)"
     implemented: true
-    working: true
-    file: "backend/app/routers/efatura.py"
+    working: "NA"
+    file: "backend/app/routers/admin_system_integrity.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "POST/GET /api/efatura/invoices, POST send/cancel. Idempotent. MockProvider. Audit logged."
-      - working: true
-        agent: "testing"
-        comment: "✅ ALL TESTS PASSED (7/7): Invoice creation with proper line calculations, idempotency verified (same invoice returned for duplicate requests), send functionality changes status to sent→accepted via MockProvider, cancel functionality works, events timeline tracking, invoice listing. All audit logging functional."
+        comment: "GET /api/admin/system/integrity-report. Checks audit chain per-tenant, ledger integrity, orphan records. Daily APScheduler cron at 03:00."
 
-  - task: "B) SMS Notification - Send + Bulk + Logs"
+  - task: "O3 - System Metrics"
     implemented: true
-    working: true
-    file: "backend/app/routers/sms_notifications.py"
+    working: "NA"
+    file: "backend/app/routers/admin_system_metrics.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "POST /api/sms/send, /api/sms/send-bulk, GET /api/sms/logs, /api/sms/templates. MockProvider."
-      - working: true
-        agent: "testing"
-        comment: "✅ ALL TESTS PASSED (4/4): Template system returns 5 predefined templates, single SMS send returns message_id via MockProvider, bulk SMS send returns batch_id for multiple recipients, SMS logs properly track sent messages. All tenant isolation working correctly."
+        comment: "GET /api/system/metrics. Returns active_tenants, total_users, invoices_today, sms_sent_today, tickets_checked_in_today, avg_request_latency_ms, error_rate_percent, disk_usage_percent."
 
-  - task: "C) QR Ticket - Create + Check-in + Cancel + Stats"
+  - task: "O3 - System Errors (aggregated)"
     implemented: true
-    working: true
-    file: "backend/app/routers/tickets.py"
+    working: "NA"
+    file: "backend/app/routers/admin_system_errors.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "POST /api/tickets, /api/tickets/check-in, /api/tickets/{code}/cancel, GET stats. Idempotent per reservation. Audit logged."
-      - working: true
-        agent: "testing"
-        comment: "✅ ALL TESTS PASSED (9/9): Ticket creation with QR data generation, idempotency per reservation_id verified, check-in process updates status correctly, duplicate check-in properly returns 409, ticket cancellation works, check-in of canceled ticket returns 410, listing and lookup functionality, statistics with proper counts (total, active, checked_in, canceled)."
+        comment: "GET /api/admin/system/errors. Lists aggregated system errors. Slow requests (>1000ms) and unhandled exceptions auto-aggregated via middleware."
+
+  - task: "O4 - Enhanced Health Ready"
+    implemented: true
+    working: "NA"
+    file: "backend/app/routers/enterprise_health.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/health/ready checks Mongo ping, APScheduler, disk >10%, error rate <10%. Returns 503 on critical fail."
+
+  - task: "O4 - Maintenance Mode"
+    implemented: true
+    working: "NA"
+    file: "backend/app/routers/admin_maintenance.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "PATCH /api/admin/tenant/maintenance toggles maintenance_mode on organization. GET /api/admin/tenant/maintenance returns status."
+
+  - task: "O5 - Uptime Tracking"
+    implemented: true
+    working: "NA"
+    file: "backend/app/routers/admin_system_uptime.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/admin/system/uptime?days=30. APScheduler checks every minute. Returns uptime_percent, total_minutes, downtime_minutes."
+
+  - task: "O5 - Incident Tracking (CRUD)"
+    implemented: true
+    working: "NA"
+    file: "backend/app/routers/admin_system_incidents.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET/POST /api/admin/system/incidents, PATCH /api/admin/system/incidents/{id}/resolve. Audit logged."
 
 frontend:
-  - task: "A) E-Fatura - Frontend Page"
+  - task: "O1 - System Backups Page"
     implemented: true
-    working: true
-    file: "/app/frontend/src/pages/AdminEFaturaPage.jsx"
+    working: "NA"
+    file: "frontend/src/pages/admin/AdminSystemBackupsPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "UI implementation for E-Fatura management (invoice creation, listing, and sending)"
-      - working: true
-        agent: "testing"
-        comment: "✅ E2E TEST PASSED: Page loads correctly with proper data-testid. Form appears on 'Yeni Fatura' button click. Successfully created an invoice with description 'Otel konaklama' and 500 TL price. Invoice appeared in list and was able to click send button."
+        comment: "Table view, run backup, delete backup. Route: /app/admin/system-backups"
 
-  - task: "B) SMS Notification - Frontend Page"
+  - task: "O2 - System Integrity Page"
     implemented: true
-    working: true
-    file: "/app/frontend/src/pages/AdminSMSPage.jsx"
+    working: "NA"
+    file: "frontend/src/pages/admin/AdminSystemIntegrityPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "UI implementation for SMS sending and logs"
-      - working: true
-        agent: "testing"
-        comment: "✅ E2E TEST PASSED: Page loads correctly with proper data-testid. Form appears on 'SMS Gonder' button click. Successfully sent SMS with phone '+905551234567' and message 'Test SMS'. SMS appeared in the logs table."
+        comment: "Integrity report with audit chain, ledger, orphan sections. Route: /app/admin/system-integrity"
 
-  - task: "C) QR Ticket - Frontend Page"
+  - task: "O3 - System Metrics Page"
     implemented: true
-    working: true
-    file: "/app/frontend/src/pages/AdminTicketsPage.jsx"
+    working: "NA"
+    file: "frontend/src/pages/admin/AdminSystemMetricsPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "UI implementation for QR Ticket creation, check-in, and management"
-      - working: true
-        agent: "testing"
-        comment: "✅ E2E TEST PASSED: Page loads correctly with proper data-testid. Stats panel visible. Ticket creation form appears on 'Yeni Bilet' button click. Successfully created ticket with reservation ID 'res-e2e-001', product 'Kapadokya Turu', and customer 'Test User'. Ticket appeared in table with code. Check-in panel appeared on toggle button click. Successfully checked in the ticket with success message."
+        comment: "Metric cards for all system metrics. Route: /app/admin/system-metrics"
+
+  - task: "O3 - System Errors Page"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/admin/AdminSystemErrorsPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Error list with severity filter, stack traces. Route: /app/admin/system-errors"
+
+  - task: "O5 - System Uptime Page"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/admin/AdminSystemUptimePage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Big uptime percentage display with period selector. Route: /app/admin/system-uptime"
+
+  - task: "O5 - System Incidents Page"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/admin/AdminSystemIncidentsPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Incident list, create, resolve flow. Route: /app/admin/system-incidents"
 
 metadata:
   created_by: "main_agent"
-  version: "5.0"
-  test_sequence: 9
-  run_ui: true
+  version: "6.0"
+  test_sequence: 10
+  run_ui: false
 
 test_plan:
   current_focus:
-    - "A) E-Fatura - Profile CRUD"
-    - "A) E-Fatura - Invoice CRUD + Send + Cancel"
-    - "B) SMS Notification - Send + Bulk + Logs"
-    - "C) QR Ticket - Create + Check-in + Cancel + Stats"
-    - "A) E-Fatura - Frontend Page"
-    - "B) SMS Notification - Frontend Page"
-    - "C) QR Ticket - Frontend Page"
+    - "O1 - Backup System (list/run/delete)"
+    - "O2 - Integrity Report (audit chain, ledger, orphans)"
+    - "O3 - System Metrics"
+    - "O3 - System Errors (aggregated)"
+    - "O4 - Enhanced Health Ready"
+    - "O4 - Maintenance Mode"
+    - "O5 - Uptime Tracking"
+    - "O5 - Incident Tracking (CRUD)"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
-
-agent_communication:
-  - agent: "testing"
-    message: "✅ COMPREHENSIVE BACKEND TESTING COMPLETED - ALL 22 TESTS PASSED (100% success rate). All 3 feature modules are fully functional: A) E-Fatura Layer with profile CRUD, invoice operations, idempotency, and MockProvider integration. B) SMS Notifications with template system, single/bulk sending, and logging. C) QR Tickets with creation, check-in/cancel workflows, idempotency per reservation, and statistics. All APIs properly implement tenant isolation, RBAC permissions, audit logging, and error handling. Backend services are production-ready."
-  - agent: "testing"
-    message: "✅ E2E FRONTEND TESTING COMPLETED - ALL 3 FEATURE MODULE PAGES PASSED. Successfully tested E-Fatura page (invoice creation and sending), SMS page (message sending and logs), and QR Ticket page (ticket creation, check-in, and management). All UI components render properly with correct data-testid attributes. Forms show and hide correctly. Data flows properly between frontend and backend. No issues found with modal overlays or form handling. UI is responsive and functional."

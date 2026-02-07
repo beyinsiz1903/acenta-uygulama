@@ -106,7 +106,7 @@ class APITester:
         # Login user
         login_data = {
             "email": "test@test.com",
-            "password": "Test1234!"
+            "password": "Test1234567890!"  # Updated to match registration
         }
         
         response = self.make_request("POST", "/auth/login", login_data)

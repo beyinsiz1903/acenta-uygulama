@@ -1,53 +1,135 @@
 #!/usr/bin/env python3
 """
-Google Sheets Live Sync API Testing with Graceful Fallback
+Portfolio Sync Engine Backend API Test Suite
 
-Tests the production-ready Google Sheets integration endpoints when 
-GOOGLE_SERVICE_ACCOUNT_JSON is NOT set (graceful fallback mode).
-
-All endpoints should work without crashing and return proper error messages.
+Tests all new endpoints at /api/admin/sheets/* with focus on:
+- Auth guards (401 without token)
+- Graceful fallback when Google Sheets not configured
+- CRUD operations for hotel sheet connections
+- Tenant isolation
+- Error handling
 """
 
-import asyncio
-import csv
-import io
 import json
-import os
-import tempfile
-import time
-from typing import Any, Dict, Optional
-
-import httpx
-
+import sys
+import requests
+from typing import Dict, Any, Optional
+from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://portfolio-connector.preview.emergentagent.com"
-ADMIN_EMAIL = "admin@acenta.test"
-ADMIN_PASSWORD = "admin123"
-API_BASE = f"{BACKEND_URL}/api"
+BACKEND_URL = "https://portfolio-connector.preview.emergentagent.com/api"
+TEST_USER_EMAIL = "admin@example.com"
+TEST_USER_PASSWORD = "password123"
 
-
-class TestResults:
+class PortfolioSyncTester:
     def __init__(self):
-        self.passed = 0
-        self.failed = 0
-        self.errors = []
+        self.base_url = BACKEND_URL
+        self.auth_token = None
+        self.user_data = None
+        self.test_hotel_id = None
+        self.test_results = []
         
-    def add_result(self, test_name: str, success: bool, error: Optional[str] = None):
-        if success:
-            self.passed += 1
-            print(f"✅ {test_name}")
+    def log(self, message: str, level: str = "INFO"):
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        print(f"[{timestamp}] {level}: {message}")
+        
+    def add_result(self, test_name: str, status: str, details: str = ""):
+        self.test_results.append({
+            "test": test_name,
+            "status": status,
+            "details": details,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+    def request(self, method: str, endpoint: str, headers: Optional[Dict] = None, 
+               json_data: Optional[Dict] = None, params: Optional[Dict] = None) -> requests.Response:
+        """Make HTTP request with proper error handling"""
+        url = f"{self.base_url}{endpoint}"
+        req_headers = {"Content-Type": "application/json"}
+        
+        if headers:
+            req_headers.update(headers)
+            
+        if self.auth_token and "Authorization" not in req_headers:
+            req_headers["Authorization"] = f"Bearer {self.auth_token}"
+            
+        try:
+            response = requests.request(
+                method=method,
+                url=url,
+                headers=req_headers,
+                json=json_data,
+                params=params,
+                timeout=30
+            )
+            self.log(f"{method} {url} -> {response.status_code}")
+            return response
+        except requests.RequestException as e:
+            self.log(f"Request failed: {e}", "ERROR")
+            raise
+            
+    def authenticate(self) -> bool:
+        """Login and get JWT token"""
+        self.log("=== AUTHENTICATION TEST ===")
+        
+        # First, try to create a test user (will fail if exists, that's OK)
+        try:
+            register_data = {
+                "email": TEST_USER_EMAIL,
+                "password": TEST_USER_PASSWORD,
+                "name": "Test Admin",
+                "organization_name": "Test Organization"
+            }
+            response = self.request("POST", "/auth/register", json_data=register_data)
+            if response.status_code in [201, 409]:  # Created or already exists
+                self.log("Test user registration: OK")
+        except Exception as e:
+            self.log(f"User registration failed (may already exist): {e}")
+        
+        # Login
+        login_data = {
+            "email": TEST_USER_EMAIL,
+            "password": TEST_USER_PASSWORD
+        }
+        
+        response = self.request("POST", "/auth/login", json_data=login_data)
+        
+        if response.status_code == 200:
+            data = response.json()
+            self.auth_token = data.get("access_token")
+            self.user_data = data.get("user", {})
+            self.log(f"✅ Authentication successful. User: {self.user_data.get('email')}")
+            self.add_result("Authentication", "PASS", "Successfully logged in")
+            return True
         else:
-            self.failed += 1
-            self.errors.append(f"{test_name}: {error}")
-            print(f"❌ {test_name}: {error}")
-    
-    def summary(self):
-        total = self.passed + self.failed
-        print(f"\n📊 Test Summary: {self.passed}/{total} passed")
-        if self.errors:
-            print("\nFailed tests:")
-            for error in self.errors:
+            self.log(f"❌ Authentication failed: {response.status_code} - {response.text}")
+            self.add_result("Authentication", "FAIL", f"Status: {response.status_code}")
+            return False
+            
+    def create_test_hotel(self) -> bool:
+        """Create a test hotel for sheet connection tests"""
+        self.log("=== CREATING TEST HOTEL ===")
+        
+        hotel_data = {
+            "name": "Test Portfolio Hotel",
+            "city": "Istanbul",
+            "country": "Turkey",
+            "description": "Test hotel for portfolio sync testing",
+            "stars": 4
+        }
+        
+        response = self.request("POST", "/admin/hotels", json_data=hotel_data)
+        
+        if response.status_code == 201:
+            data = response.json()
+            self.test_hotel_id = data.get("_id")
+            self.log(f"✅ Test hotel created: {self.test_hotel_id}")
+            self.add_result("Create Test Hotel", "PASS", f"Hotel ID: {self.test_hotel_id}")
+            return True
+        else:
+            self.log(f"❌ Failed to create test hotel: {response.status_code} - {response.text}")
+            self.add_result("Create Test Hotel", "FAIL", f"Status: {response.status_code}")
+            return False
                 print(f"  - {error}")
 
 

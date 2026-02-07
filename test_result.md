@@ -6,222 +6,157 @@
 # END - Testing Protocol - DO NOT EDIT OR REMOVE THIS SECTION
 #====================================================================================================
 
-user_problem_statement: "Zero Migration Friction Engine + Google Sheets Live Sync (Service Account, Production-Grade with Graceful Fallback)"
+user_problem_statement: "Portfolio Sync Engine — Multi-Hotel Google Sheets Sync (300 otel/300 sheet, on-demand + scheduler, graceful fallback)"
 
 backend:
-  - task: "POST /api/admin/import/hotels/upload"
+  - task: "GET /api/admin/sheets/config - Configuration status"
     implemented: true
-    working: true
-    file: "backend/app/routers/admin_import.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "All tests passed."
-
-  - task: "POST /api/admin/import/hotels/validate"
-    implemented: true
-    working: true
-    file: "backend/app/routers/admin_import.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-
-  - task: "POST /api/admin/import/hotels/execute"
-    implemented: true
-    working: true
-    file: "backend/app/routers/admin_import.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-
-  - task: "GET /api/admin/import/jobs + /jobs/{id}"
-    implemented: true
-    working: true
-    file: "backend/app/routers/admin_import.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-
-  - task: "GET /api/admin/import/export-template"
-    implemented: true
-    working: true
-    file: "backend/app/routers/admin_import.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-
-  - task: "GET /api/admin/import/sheet/config - Configuration status"
-    implemented: true
-    working: true
-    file: "backend/app/routers/admin_import.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Returns configured=false when GOOGLE_SERVICE_ACCOUNT_JSON not set. Returns email when configured."
-      - working: true
-        agent: "testing"
-        comment: "TESTED: Returns {configured: false, service_account_email: null, message: '...'} as expected. No 500 errors. Perfect graceful fallback."
-
-  - task: "POST /api/admin/import/sheet/connect - Enhanced with header detection"
-    implemented: true
-    working: true
-    file: "backend/app/routers/admin_import.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Validates sheet access if configured. Saves connection with full schema. Returns service_account_email + detected_headers."
-      - working: true
-        agent: "testing"
-        comment: "TESTED: Saves connection gracefully even without API key. Returns connection doc with configured=false, detected_headers=[]. All fields present."
-
-  - task: "POST /api/admin/import/sheet/sync - Real sync with graceful fallback"
-    implemented: true
-    working: true
-    file: "backend/app/routers/admin_import.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Returns not_configured gracefully when no API key. Runs full sync cycle when configured."
-      - working: true
-        agent: "testing"
-        comment: "TESTED: Returns {status: 'not_configured', message: '...', configured: false} as expected. No crashes, perfect graceful behavior."
-
-  - task: "GET /api/admin/import/sheet/connection + /sheet/status"
-    implemented: true
-    working: true
-    file: "backend/app/routers/admin_import.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Returns connection details + sync status + recent runs."
-      - working: true
-        agent: "testing"
-        comment: "TESTED: /connection returns connection with connected=true, configured=false. /status returns sync stats with recent_runs=[], last_sync_status may be null."
-
-  - task: "GET /api/admin/import/sheet/connections - List all connections"
-    implemented: true
-    working: true
-    file: "backend/app/routers/admin_import.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "TESTED: Returns array of all sheet connections. Tested with 7 existing connections."
-
-  - task: "Auth Guards - All sheet endpoints require admin auth"
-    implemented: true
-    working: true
-    file: "backend/app/routers/admin_import.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "TESTED: All /sheet/* endpoints return 401 without token. Auth guards working properly."
-
-  - task: "Excel Import Regression Test"
-    implemented: true
-    working: true
-    file: "backend/app/routers/admin_import.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "TESTED: Full Excel import lifecycle (upload->validate->execute) works correctly. No regression from Sheets integration."
-
-  - task: "Graceful Error Handling"
-    implemented: true
-    working: true
-    file: "backend/app/routers/admin_import.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "TESTED: Invalid body for connect returns 400/422. Sync without connection handled gracefully. No 500 errors anywhere."
-
-  - task: "Sheet Sync Service (fingerprint + delta + upsert)"
-    implemented: true
-    working: true
-    file: "backend/app/services/sheet_sync_service.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "SHA256 fingerprinting, delta detection, tenant-scoped upsert, sync lock, scheduled sync."
-
-  - task: "Google Sheets Client (Service Account)"
-    implemented: true
-    working: true
-    file: "backend/app/services/google_sheets_client.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Real Google API client with graceful fallback. is_configured(), get_service_account_email(), fetch_sheet_data()."
-
-  - task: "APScheduler job for auto-sync"
-    implemented: true
-    working: true
-    file: "backend/server.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Runs every GOOGLE_SHEETS_SYNC_INTERVAL_MINUTES (default 5). Processes all sync_enabled connections with lock."
-
-frontend:
-  - task: "Google Sheets Tab - Production UI"
-    implemented: true
-    working: "NA"
-    file: "frontend/src/pages/admin/AdminImportPage.jsx"
+    working: "untested"
+    file: "backend/app/routers/admin_sheets.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: true
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Service account email display, sync status card, connect form, sync now button, how-to guide, graceful fallback. Screenshot verified."
+
+  - task: "POST /api/admin/sheets/connect - Connect hotel sheet"
+    implemented: true
+    working: "untested"
+    file: "backend/app/routers/admin_sheets.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "GET /api/admin/sheets/connections - List connections"
+    implemented: true
+    working: "untested"
+    file: "backend/app/routers/admin_sheets.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "GET /api/admin/sheets/connections/{hotel_id} - Single connection"
+    implemented: true
+    working: "untested"
+    file: "backend/app/routers/admin_sheets.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "PATCH /api/admin/sheets/connections/{hotel_id} - Update connection"
+    implemented: true
+    working: "untested"
+    file: "backend/app/routers/admin_sheets.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "DELETE /api/admin/sheets/connections/{hotel_id} - Delete connection"
+    implemented: true
+    working: "untested"
+    file: "backend/app/routers/admin_sheets.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "POST /api/admin/sheets/sync/{hotel_id} - Manual sync"
+    implemented: true
+    working: "untested"
+    file: "backend/app/routers/admin_sheets.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "POST /api/admin/sheets/sync-all - Sync all connections"
+    implemented: true
+    working: "untested"
+    file: "backend/app/routers/admin_sheets.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+
+  - task: "GET /api/admin/sheets/status - Portfolio health dashboard"
+    implemented: true
+    working: "untested"
+    file: "backend/app/routers/admin_sheets.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "GET /api/admin/sheets/runs - Sync run history"
+    implemented: true
+    working: "untested"
+    file: "backend/app/routers/admin_sheets.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+
+  - task: "GET /api/admin/sheets/stale-hotels - Stale connections"
+    implemented: true
+    working: "untested"
+    file: "backend/app/routers/admin_sheets.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+
+  - task: "POST /api/admin/sheets/preview-mapping - Preview sheet mapping"
+    implemented: true
+    working: "untested"
+    file: "backend/app/routers/admin_sheets.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+
+  - task: "GET /api/admin/sheets/available-hotels - Hotels for connect wizard"
+    implemented: true
+    working: "untested"
+    file: "backend/app/routers/admin_sheets.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+
+  - task: "Auth Guards - All sheet endpoints require admin auth"
+    implemented: true
+    working: "untested"
+    file: "backend/app/routers/admin_sheets.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "Tenant Isolation - Queries scoped to tenant"
+    implemented: true
+    working: "untested"
+    file: "backend/app/routers/admin_sheets.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "Graceful Fallback - System doesn't crash without API key"
+    implemented: true
+    working: "untested"
+    file: "backend/app/services/sheets_provider.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+frontend:
+  - task: "Portfolio Sync Page"
+    implemented: false
+    working: "NA"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
 
 metadata:
   created_by: "main_agent"
-  version: "10.0"
-  test_sequence: 19
+  version: "11.0"
+  test_sequence: 20
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus: ["GET /api/admin/sheets/config", "POST /api/admin/sheets/connect", "GET /api/admin/sheets/connections", "POST /api/admin/sheets/sync/{hotel_id}", "GET /api/admin/sheets/status", "Auth Guards", "Tenant Isolation", "Graceful Fallback"]
   stuck_tasks: []
-  test_all: false
+  test_all: true
   test_priority: "high_first"
 
 agent_communication:
-    - agent: "testing"
-      message: "✅ COMPREHENSIVE TESTING COMPLETE: All Google Sheets Live Sync endpoints tested with graceful fallback when GOOGLE_SERVICE_ACCOUNT_JSON is NOT set. Key findings: (1) All endpoints return proper responses without 500 errors, (2) Connection saving works without API key, (3) Sync operations gracefully return not_configured status, (4) Auth guards work properly, (5) Excel import regression test passed, (6) Error handling is graceful throughout. System is production-ready with proper fallback behavior."
+    - agent: "main"
+      message: "Phase 1 Backend: Portfolio Sync Engine implemented with new router /api/admin/sheets/*, new services (sheets_provider.py, hotel_portfolio_sync_service.py), new collections (hotel_portfolio_sources, sheet_sync_runs, hotel_inventory_snapshots). All endpoints follow existing auth/RBAC/audit patterns. Graceful fallback when GOOGLE_SERVICE_ACCOUNT_JSON is not set. Please test all new endpoints."

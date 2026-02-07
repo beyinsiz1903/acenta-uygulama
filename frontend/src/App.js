@@ -81,6 +81,9 @@ import AdminDemoGuidePage from "./pages/admin/AdminDemoGuidePage";
 // Product Mode Settings
 import AdminProductModePage from "./pages/admin/AdminProductModePage";
 
+// Data & Migration
+import AdminImportPage from "./pages/admin/AdminImportPage";
+
 import AdminMatchesPage from "./pages/AdminMatchesPage";
 import AdminExportsPage from "./pages/AdminExportsPage";
 import AdminMatchDetailPage from "./pages/AdminMatchDetailPage";

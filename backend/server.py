@@ -268,6 +268,18 @@ async def lifespan(app: FastAPI):
         await db.tickets.create_index([("tenant_id", 1), ("ticket_code", 1)], unique=True)
         await db.tickets.create_index([("tenant_id", 1), ("reservation_id", 1)])
         await db.tickets.create_index([("organization_id", 1), ("status", 1)])
+        # Operational Excellence indexes (O1-O5)
+        await db.system_backups.create_index([("created_at", -1)])
+        await db.system_errors.create_index([("signature", 1)], unique=True)
+        await db.system_errors.create_index([("last_seen", -1)])
+        await db.system_errors.create_index([("severity", 1)])
+        await db.system_uptime.create_index([("timestamp", -1)])
+        await db.system_incidents.create_index([("created_at", -1)])
+        await db.system_incidents.create_index([("severity", 1)])
+        # Request logs with TTL (auto-delete after 1 day)
+        await db.request_logs.create_index("timestamp", expireAfterSeconds=86400)
+        await db.request_logs.create_index([("timestamp", -1)])
+        await db.request_logs.create_index([("status_code", 1), ("timestamp", 1)])
     except Exception as e:
         import logging
         logging.getLogger(__name__).warning("Enterprise index creation warning: %s", e)

@@ -218,8 +218,39 @@ async def lifespan(app: FastAPI):
     from app.billing.scheduler import start_scheduler, stop_scheduler
     start_scheduler()
 
+    # Start report schedule checker (E4.3)
+    from apscheduler.schedulers.asyncio import AsyncIOScheduler
+    report_scheduler = AsyncIOScheduler()
+    async def _check_due_reports():
+        try:
+            from app.services.report_scheduler import execute_due_schedules
+            await execute_due_schedules()
+        except Exception as e:
+            import logging
+            logging.getLogger("report_scheduler").error("Report schedule check failed: %s", e)
+    report_scheduler.add_job(_check_due_reports, "interval", minutes=15, id="report_check")
+    report_scheduler.start()
+
+    # Ensure enterprise indexes
+    try:
+        await db.audit_logs_chain.create_index([("tenant_id", 1), ("created_at", 1)])
+        await db.audit_logs_chain.create_index([("tenant_id", 1), ("_id", 1)])
+        await db.approval_requests.create_index([("organization_id", 1), ("status", 1)])
+        await db.approval_requests.create_index([("tenant_id", 1), ("status", 1)])
+        await db.user_2fa.create_index("user_id", unique=True)
+        await db.rate_limits.create_index("expires_at", expireAfterSeconds=0)
+        await db.rate_limits.create_index([("key", 1), ("created_at", 1)])
+        await db.permissions.create_index([("code", 1), ("organization_id", 1)], unique=True)
+        await db.role_permissions.create_index([("role", 1), ("organization_id", 1)], unique=True)
+        await db.report_schedules.create_index([("organization_id", 1)])
+        await db.report_schedules.create_index([("is_active", 1), ("next_run", 1)])
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning("Enterprise index creation warning: %s", e)
+
     yield
 
+    report_scheduler.shutdown(wait=False)
     stop_scheduler()
     await close_mongo()
 

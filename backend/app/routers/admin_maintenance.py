@@ -1,8 +1,11 @@
 """O4 - Maintenance Mode Endpoint.
 
 PATCH /api/admin/tenant/maintenance - Toggle maintenance mode
+GET   /api/admin/tenant/maintenance - Get maintenance status
 """
 from __future__ import annotations
+
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -15,6 +18,24 @@ router = APIRouter(
     prefix="/api/admin/tenant",
     tags=["maintenance"],
 )
+
+
+async def _find_org(db, org_id: str) -> tuple[Any, dict]:
+    """Find organization by ID, handling both string and ObjectId."""
+    org = await db.organizations.find_one({"_id": org_id})
+    if org:
+        return org_id, org
+
+    try:
+        from bson import ObjectId
+        oid = ObjectId(org_id)
+        org = await db.organizations.find_one({"_id": oid})
+        if org:
+            return oid, org
+    except Exception:
+        pass
+
+    return org_id, None
 
 
 class MaintenanceToggle(BaseModel):
@@ -32,8 +53,12 @@ async def toggle_maintenance(
     if not org_id:
         raise HTTPException(status_code=400, detail="Organization not found")
 
+    lookup_id, org = await _find_org(db, org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
     await db.organizations.update_one(
-        {"_id": org_id},
+        {"_id": lookup_id},
         {"$set": {"maintenance_mode": body.maintenance_mode}},
     )
 
@@ -62,5 +87,5 @@ async def get_maintenance_status(
     if not org_id:
         return {"maintenance_mode": False}
 
-    org = await db.organizations.find_one({"_id": org_id})
+    _, org = await _find_org(db, org_id)
     return {"maintenance_mode": bool(org.get("maintenance_mode", False)) if org else False}

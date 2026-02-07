@@ -295,6 +295,11 @@ function App() {
             <Route path="audit-logs" element={<AdminAuditLogPage />} />
             <Route path="analytics" element={<AdminAnalyticsPage />} />
             <Route path="tenant-health" element={<AdminTenantHealthPage />} />
+            {/* Enterprise Hardening (E1-E4) */}
+            <Route path="branding" element={<AdminBrandingPage />} />
+            <Route path="approval-inbox" element={<AdminApprovalInboxPage />} />
+            <Route path="tenant-export" element={<AdminTenantExportPage />} />
+            <Route path="scheduled-reports" element={<AdminScheduledReportsPage />} />
           </Route>
         </Route>
 

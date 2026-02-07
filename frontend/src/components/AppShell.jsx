@@ -9,7 +9,7 @@ import {
   Briefcase, ShieldCheck, TrendingUp, MessageSquare, Globe,
   ClipboardList, Tag, Megaphone, Network, DollarSign,
   Scale, Activity, Eye, Zap, BookOpen, Search,
-  Palette, Download, Calendar, Upload,
+  Palette, Download, Calendar, Upload, RefreshCw,
 } from "lucide-react";
 
 import { Button } from "./ui/button";

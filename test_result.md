@@ -149,15 +149,18 @@ backend:
 
   - task: "E1.3 Immutable Audit Log (hash chain + CSV export)"
     implemented: true
-    working: "NA"
+    working: false
     file: "backend/app/routers/enterprise_audit.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Per-tenant hash chain. Verify integrity. Streaming CSV export."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL: Hash chain integrity verification failing. GET /api/admin/audit/chain returns entries, CSV export works, but GET /api/admin/audit/chain/verify shows chain integrity broken with hash mismatches. This is a security issue that needs immediate attention."
 
   - task: "E2.1 2FA (TOTP) with recovery codes"
     implemented: true

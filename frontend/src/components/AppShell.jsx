@@ -171,6 +171,13 @@ const ADMIN_GROUPED_NAV = [
     ],
   },
   {
+    group: "DATA & MIGRATION",
+    minGroupMode: "lite",
+    items: [
+      { to: "/app/admin/import", label: "Portföy Taşı", icon: Upload, modeKey: "portfoy_tasi", minMode: "lite" },
+    ],
+  },
+  {
     group: "ENTERPRISE",
     minGroupMode: "enterprise",
     items: [

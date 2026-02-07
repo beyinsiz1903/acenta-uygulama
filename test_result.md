@@ -11,159 +11,198 @@ user_problem_statement: "Portfolio Sync Engine — Multi-Hotel Google Sheets Syn
 backend:
   - task: "GET /api/admin/sheets/config - Configuration status"
     implemented: true
-    working: false
+    working: true
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token). Need to resolve tenant configuration or whitelist sheets endpoints."
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Tenant middleware whitelist working. Returns {configured: false, service_account_email: null, message: '...'} when GOOGLE_SERVICE_ACCOUNT_JSON not set. Auth guards working (401 without token)."
 
   - task: "POST /api/admin/sheets/connect - Connect hotel sheet"
     implemented: true
-    working: false
+    working: true
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Tenant middleware whitelist working. Endpoint responds correctly, returns connection doc with configured=false, detected_headers=[] when Google Sheets not configured."
 
   - task: "GET /api/admin/sheets/connections - List connections"
     implemented: true
-    working: false
+    working: true
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Tenant middleware whitelist working. Returns array with 0 connections. Auth guards working (401 without token)."
 
   - task: "GET /api/admin/sheets/connections/{hotel_id} - Single connection"
     implemented: true
-    working: false
+    working: true
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Tenant middleware whitelist working. Returns connection details with connected=true/false appropriately."
 
   - task: "PATCH /api/admin/sheets/connections/{hotel_id} - Update connection"
     implemented: true
-    working: false
+    working: true
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Tenant middleware whitelist working. Update endpoint responds correctly (404 when no connection, which is expected)."
 
   - task: "DELETE /api/admin/sheets/connections/{hotel_id} - Delete connection"
     implemented: true
-    working: false
+    working: true
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Tenant middleware whitelist working. Delete endpoint responds correctly (404 when no connection, which is expected)."
 
   - task: "POST /api/admin/sheets/sync/{hotel_id} - Manual sync"
     implemented: true
-    working: false
+    working: true
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Tenant middleware whitelist working. Returns {status: 'not_configured', configured: false, message: '...'} when GOOGLE_SERVICE_ACCOUNT_JSON not set."
 
   - task: "POST /api/admin/sheets/sync-all - Sync all connections"
     implemented: true
-    working: false
+    working: true
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "medium"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Tenant middleware whitelist working. Returns {status: 'not_configured', configured: false} when GOOGLE_SERVICE_ACCOUNT_JSON not set."
 
   - task: "GET /api/admin/sheets/status - Portfolio health dashboard"
     implemented: true
-    working: false
+    working: true
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Tenant middleware whitelist working. Returns health summary with total, enabled, healthy counts: {total: 0, enabled: 0, healthy: 0, configured: false}."
 
   - task: "GET /api/admin/sheets/runs - Sync run history"
     implemented: true
-    working: false
+    working: true
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "medium"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Tenant middleware whitelist working. Returns array with 0 runs (empty list when no sync runs yet)."
 
   - task: "GET /api/admin/sheets/stale-hotels - Stale connections"
     implemented: true
-    working: false
+    working: true
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "medium"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Tenant middleware whitelist working. Returns array with 0 stale connections (empty list when no connections exist)."
 
   - task: "POST /api/admin/sheets/preview-mapping - Preview sheet mapping"
     implemented: true
-    working: false
+    working: true
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "medium"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Tenant middleware whitelist working. Returns {configured: false, message: '...'} when GOOGLE_SERVICE_ACCOUNT_JSON not set."
 
   - task: "GET /api/admin/sheets/available-hotels - Hotels for connect wizard"
     implemented: true
-    working: false
+    working: true
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "medium"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Tenant middleware whitelist working. Returns array with 0 hotels (empty list when no hotels exist yet)."
 
   - task: "Auth Guards - All sheet endpoints require admin auth"
     implemented: true

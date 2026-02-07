@@ -244,29 +244,27 @@ backend:
           comment: "✅ FIXED: Graceful fallback working. All Portfolio Sync Engine endpoints return appropriate responses when GOOGLE_SERVICE_ACCOUNT_JSON is not configured (configured=false, graceful error messages in Turkish)."
 
 frontend:
-  - task: "Portfolio Sync Page"
-    implemented: false
+  - task: "Portfolio Sync Page + Write-Back Panel"
+    implemented: true
     working: "NA"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
 
 metadata:
   created_by: "main_agent"
-  version: "12.0"
-  test_sequence: 21
+  version: "13.0"
+  test_sequence: 22
   run_ui: false
 
 test_plan:
-  current_focus: ["Portfolio Frontend Implementation"]
+  current_focus: ["Write-back endpoints", "Write-back stats", "Write-back queue"]
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
     - agent: "main"
-      message: "Phase 1 Backend: Portfolio Sync Engine implemented. Fixed tenant middleware whitelist for /api/admin/sheets/*. Re-test all new endpoints. Auth: POST /api/auth/login. No GOOGLE_SERVICE_ACCOUNT_JSON = graceful fallback."
-    - agent: "testing"
-      message: "CRITICAL ISSUE FOUND: All Portfolio Sync Engine endpoints (/api/admin/sheets/*) are blocked by tenant middleware returning 520 errors. Auth guards work properly (401 without token). Issue: Endpoints require X-Tenant-Id header but tenant middleware fails during tenant resolution. Possible fixes: 1) Add /api/admin/sheets/ to middleware whitelist, 2) Fix tenant data structure, 3) Update middleware logic. Created tenant entry for default org but still failing. Need main agent to investigate tenant middleware compatibility with sheets endpoints."
+      message: "Write-Back Phase 2 implemented: sheet_writeback_service.py with idempotent queue, event hooks in reservations.py and booking_lifecycle.py, 4 new endpoints (writeback/stats, writeback/process, writeback/queue, changelog), 30s scheduler, Write-Back Panel in UI. Please test new write-back endpoints."
     - agent: "testing"
       message: "✅ PORTFOLIO SYNC ENGINE BACKEND COMPLETE: Tenant middleware whitelist fixed! All 13 Portfolio Sync Engine endpoints (/api/admin/sheets/*) are now working properly. Key findings: 1) No 500 errors, 2) configured=false when GOOGLE_SERVICE_ACCOUNT_JSON not set, 3) Auth guards functional (401 without token), 4) Graceful error messages in Turkish, 5) All CRUD operations respond correctly. Backend testing complete - all endpoints working as expected in graceful fallback mode."

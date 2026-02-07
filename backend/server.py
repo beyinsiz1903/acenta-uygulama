@@ -578,6 +578,7 @@ app.include_router(admin_system_incidents_router)
 app.include_router(admin_maintenance_router)
 app.include_router(system_product_mode_router)
 app.include_router(admin_product_mode_router)
+app.include_router(admin_import_router)
 
 # Production Go-Live Pack
 app.include_router(admin_system_preflight_router)

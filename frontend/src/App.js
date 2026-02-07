@@ -59,6 +59,15 @@ import AdminScheduledReportsPage from "./pages/AdminScheduledReportsPage";
 import AdminEFaturaPage from "./pages/AdminEFaturaPage";
 import AdminSMSPage from "./pages/AdminSMSPage";
 import AdminTicketsPage from "./pages/AdminTicketsPage";
+
+// Operational Excellence (O1-O5)
+import AdminSystemBackupsPage from "./pages/admin/AdminSystemBackupsPage";
+import AdminSystemIntegrityPage from "./pages/admin/AdminSystemIntegrityPage";
+import AdminSystemMetricsPage from "./pages/admin/AdminSystemMetricsPage";
+import AdminSystemErrorsPage from "./pages/admin/AdminSystemErrorsPage";
+import AdminSystemUptimePage from "./pages/admin/AdminSystemUptimePage";
+import AdminSystemIncidentsPage from "./pages/admin/AdminSystemIncidentsPage";
+
 import AdminMatchesPage from "./pages/AdminMatchesPage";
 import AdminExportsPage from "./pages/AdminExportsPage";
 import AdminMatchDetailPage from "./pages/AdminMatchDetailPage";

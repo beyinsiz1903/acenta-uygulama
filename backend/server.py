@@ -470,6 +470,11 @@ app.include_router(enterprise_schedules_router)
 app.include_router(enterprise_ip_whitelist_router)
 app.include_router(enterprise_whitelabel_router)
 
+# Feature modules
+app.include_router(efatura_router)
+app.include_router(sms_notifications_router)
+app.include_router(tickets_router)
+
 
 @app.get("/")
 async def read_root() -> dict[str, str]:

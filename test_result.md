@@ -66,199 +66,158 @@
 # END - Testing Protocol - DO NOT EDIT OR REMOVE THIS SECTION
 #====================================================================================================
 
-user_problem_statement: "Segmented Product Modes Architecture: Implement lite/pro/enterprise visibility layer for multi-tenant SaaS ERP. Mode stored in tenant_settings (tenant-scoped). Backend capabilities stay intact — only UI surface changes."
+user_problem_statement: "Zero Migration Friction Engine: Excel/CSV hotel import with column mapping, validation, bulk insert, image downloading, Google Sheets sync (MOCKED), import job tracking, and audit log."
 
 backend:
-  - task: "GET /api/system/product-mode - tenant self-read"
+  - task: "POST /api/admin/import/hotels/upload - Upload CSV/XLSX"
     implemented: true
     working: true
-    file: "backend/app/routers/system_product_mode.py"
+    file: "backend/app/routers/admin_import.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
-        comment: "Returns product_mode, visible_nav_groups, hidden_nav_items, label_overrides. Default enterprise. Tested via curl."
-      - working: true
-        agent: "testing"
-        comment: "✅ VERIFIED: Returns enterprise mode with 7 nav groups, 0 hidden items. Authentication required (401 without token). All response fields correct."
+        comment: "Accepts CSV/XLSX, parses headers+rows, creates import_job, returns preview (first 20 rows). Auto-detects mapping. Tested with 3-row CSV."
 
-  - task: "GET /api/admin/tenants/{tenant_id}/product-mode - admin read"
+  - task: "POST /api/admin/import/hotels/validate - Validate with mapping"
     implemented: true
     working: true
-    file: "backend/app/routers/admin_product_mode.py"
+    file: "backend/app/routers/admin_import.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
-        comment: "Returns tenant mode + available_modes list + visibility config. Requires super_admin role."
-      - working: true
-        agent: "testing"
-        comment: "✅ VERIFIED: Returns mode 'enterprise', available_modes ['lite','pro','enterprise'], visibility config. Super_admin role required."
+        comment: "Validates all rows with column mapping. Checks name required, city required, duplicates, price numeric. Returns valid/error counts."
 
-  - task: "PATCH /api/admin/tenants/{tenant_id}/product-mode - mode switch with audit"
+  - task: "POST /api/admin/import/hotels/execute - Bulk import"
     implemented: true
     working: true
-    file: "backend/app/routers/admin_product_mode.py"
+    file: "backend/app/routers/admin_import.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
-        comment: "Changes tenant mode, writes audit log, returns diff. Tested lite->pro->enterprise transitions."
-      - working: true
-        agent: "testing"
-        comment: "✅ VERIFIED: Mode switches working perfectly. enterprise→lite (36 hidden items), lite→pro (25 visible items), same mode returns changed:false. Invalid mode rejected with 400. Audit logging functional."
+        comment: "Background task. Bulk inserts in batches of 100. Downloads images async. Updates job status. Tested: 3 hotels imported successfully."
 
-  - task: "GET /api/admin/tenants/{tenant_id}/product-mode-preview - diff preview"
+  - task: "GET /api/admin/import/jobs - List import jobs"
     implemented: true
     working: true
-    file: "backend/app/routers/admin_product_mode.py"
+    file: "backend/app/routers/admin_import.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
-        comment: "Shows newly_visible and newly_hidden items for target mode switch. Tested all transitions."
-      - working: true
-        agent: "testing"
-        comment: "✅ VERIFIED: Preview API working correctly. enterprise→lite shows 36 newly_hidden items, is_upgrade:false. Invalid mode rejected with 400. All diff calculations accurate."
+        comment: "Returns import jobs for org, sorted by created_at desc."
 
-  - task: "Product Modes Config (constants/product_modes.py)"
+  - task: "GET /api/admin/import/jobs/{job_id} - Job detail + errors"
     implemented: true
     working: true
-    file: "backend/app/constants/product_modes.py"
+    file: "backend/app/routers/admin_import.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
-        comment: "MODE_VISIBILITY config for lite/pro/enterprise. is_at_least(), get_mode_diff(), get_hidden_items_for_mode()."
+        comment: "Returns job detail with errors array. Tested: status=completed, success_count=3, error_count=0."
 
-  - task: "TenantSettingsRepository (tenant_settings collection)"
+  - task: "GET /api/admin/import/export-template - XLSX template download"
     implemented: true
     working: true
-    file: "backend/app/repositories/tenant_settings_repository.py"
+    file: "backend/app/routers/admin_import.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Returns XLSX file with sample headers and 2 example rows."
+
+  - task: "POST /api/admin/import/sheet/connect - Google Sheet connection (MOCKED)"
+    implemented: true
+    working: true
+    file: "backend/app/routers/admin_import.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "MOCKED. Stores connection in sheet_connections collection. Returns saved doc."
+
+  - task: "POST /api/admin/import/sheet/sync - Trigger sync (MOCKED)"
+    implemented: true
+    working: true
+    file: "backend/app/routers/admin_import.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "MOCKED. Updates last_sync_at. Returns mock message."
+
+  - task: "Import Service (parse, validate, bulk insert, image download)"
+    implemented: true
+    working: true
+    file: "backend/app/services/import_service.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "CRUD for tenant_settings. get_product_mode defaults to enterprise. set_product_mode with upsert."
+        comment: "parse_excel (CSV+XLSX), validate_hotels, map_columns, create_hotels_bulk (batch 100), download_hotel_images (retry 2x)."
 
 frontend:
-  - task: "ProductModeContext + Provider"
+  - task: "Admin Import Page (/app/admin/import)"
     implemented: true
-    working: true
-    file: "frontend/src/contexts/ProductModeContext.jsx"
+    working: "NA"
+    file: "frontend/src/pages/admin/AdminImportPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Fetches /api/system/product-mode. Caches in localStorage (5min). Provides mode, isAtLeast(), refresh()."
-      - working: true
-        agent: "testing"
-        comment: "✅ VERIFIED: ProductModeContext correctly fetches mode from API and stores in localStorage. Successfully connects to API and provides mode information to the UI."
+        comment: "3 tabs: Excel Yükle, Google Sheets, Import Geçmişi. 5-step wizard for Excel. Column mapping UI. Validation preview. Screenshot verified."
 
-  - task: "IfMode component"
+  - task: "Sidebar: DATA & MIGRATION group + Portföy Taşı item"
     implemented: true
-    working: true
-    file: "frontend/src/components/IfMode.jsx"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "<IfMode atLeast='pro'>, <IfMode exact='lite'>, <IfMode not='lite'>. Conditional render."
-      - working: true
-        agent: "testing"
-        comment: "✅ VERIFIED: IfMode component correctly implements conditional rendering based on mode. All three modes of operation work: atLeast, exact, and not."
-
-  - task: "Sidebar mode-aware filtering"
-    implemented: true
-    working: true
+    working: "NA"
     file: "frontend/src/components/AppShell.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "ADMIN_GROUPED_NAV items have minMode + modeKey. filterNavByMode filters by mode level + server hidden items list."
-      - working: false
-        agent: "testing"
-        comment: "❌ ISSUE: When switching from Enterprise to Lite mode, sidebar still shows all 7 groups including 'B2B AĞ', 'OPS', and 'ENTERPRISE' that should be hidden in Lite mode. The mode switch is detected but filterNavByMode function is not correctly filtering out hidden navigation items."
-      - working: false
-        agent: "testing"
-        comment: "❌ STILL FAILING: Even after the tenant_id fallback fix, the sidebar is still not filtering out navigation groups correctly after mode switch. All sidebar groups remain visible regardless of current mode. Mode switches complete successfully and API returns correct information, but the UI is not updating to reflect mode changes."
-      - working: true
-        agent: "testing"
-        comment: "✅ FIXED: Comprehensive testing confirms the sidebar now correctly filters navigation groups based on the active product mode. In Lite mode, 'B2B AĞ', 'OPS', and 'ENTERPRISE' groups are correctly hidden. In Pro mode, 'B2B AĞ' and 'OPS' are visible while 'ENTERPRISE' remains hidden. In Enterprise mode, all 7 groups are visible as expected."
-
-  - task: "Admin Product Mode Settings Page"
-    implemented: true
-    working: true
-    file: "frontend/src/pages/admin/AdminProductModePage.jsx"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "3 mode cards (Lite/Pro/Enterprise), current mode badge, preview modal with diff, confirm+apply. Route: /app/admin/product-mode"
-      - working: false
-        agent: "testing"
-        comment: "❌ ISSUES: Mode switching UI works partially - Enterprise to Lite switch shows modal and can be applied, but (1) Subsequent mode switches (Lite→Pro, Pro→Enterprise) fail with click timeout errors; (2) The confirm modal doesn't properly close after first mode change; (3) The 'Gizlenecek' items section in modal isn't showing items that will be hidden in downgrade."
-      - working: true
-        agent: "testing"
-        comment: "✅ FIXED: Mode switching UI is now working correctly. All mode transitions (Lite→Pro→Enterprise) work properly. The modal appears correctly showing items that will be hidden/shown, and closes properly after confirmation. The 'Gizlenecek' section in the modal shows items that will be hidden in downgrade."
-
-  - task: "Route Guard Protection"
-    implemented: true
-    working: true
-    file: "frontend/src/components/AppShell.jsx"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Mode Route Guard implemented in AppShell.jsx useEffect to redirect if current path is hidden by mode."
-      - working: false
-        agent: "testing"
-        comment: "Route guard not redirecting - bug was that hidden groups items werent being added to hiddenPaths."
-      - working: true
-        agent: "main"
-        comment: "FIXED: Route guard now correctly collects hidden paths from both hidden groups (minGroupMode) AND hidden individual items (minMode). Verified via screenshot test: Lite mode + navigate to /app/admin/branding -> redirected to /app."
-
-test_plan:
-  current_focus: []
-  stuck_tasks: []
-  test_all: false
-  test_priority: "high_first"
+        comment: "New DATA & MIGRATION sidebar group with Portföy Taşı link. minMode=lite (visible in all modes)."
 
 metadata:
   created_by: "main_agent"
-  version: "7.4"
-  test_sequence: 16
+  version: "8.0"
+  test_sequence: 17
   run_ui: false
 
-agent_communication:
-  - agent: "testing"
-    message: "✅ Product Mode API Testing COMPLETE - All 4 backend endpoints fully functional. Comprehensive testing with 31 total tests including auth, validation, mode transitions, and error handling. All tests passing 100%. Key findings: 1) Default mode 'enterprise' with 7 nav groups, 2) Mode transitions working (lite→pro→enterprise), 3) Preview API shows accurate diffs (36 items hidden lite mode), 4) Authentication & super_admin role enforcement working, 5) Invalid mode validation (400 errors), 6) Audit logging functional. Ready for production."
-  - agent: "testing"
-    message: "❌ Product Mode Frontend Testing INCOMPLETE - Found critical issues in the UI implementation: 1) After switching modes, sidebar doesn't correctly filter hidden groups (all groups remain visible); 2) Mode switching UI has interaction problems - modal doesn't close properly after first mode change causing subsequent mode switches to fail; 3) Route guard protection is not working - enterprise-only routes accessible in Lite mode. ProductModeContext and IfMode components work correctly, but integration with sidebar filtering and route protection is broken."
-  - agent: "testing"
-    message: "🧪 Product Mode Retest Results - PARTIAL PROGRESS: Good news: The AdminProductModePage component is now fully functional! The modal correctly displays items that will be shown/hidden, and all mode transitions work smoothly. However, the sidebar filtering is still broken - even though mode switches work correctly and API returns proper data, the sidebar continues to show all navigation groups regardless of current mode. Route guard also has issues (enterprise-only routes accessible in Lite mode). Focus should be on fixing the sidebar filtering logic in AppShell.jsx."
-  - agent: "testing"
-    message: "✅ FINAL PRODUCT MODE TESTING COMPLETE: The sidebar mode-aware filtering is now working correctly! After thorough testing, I can confirm that the correct navigation groups show/hide based on the active product mode. In Lite mode, only CORE, CRM, FİNANS, and YÖNETİM groups are visible (B2B AĞ, OPS, and ENTERPRISE are correctly hidden). In Pro mode, B2B AĞ and OPS become visible while ENTERPRISE remains hidden. In Enterprise mode, all 7 groups are visible. The only remaining issue is the route guard - enterprise-only routes (like /app/admin/branding) are still accessible in Lite mode, which is a security concern that should be addressed."
+test_plan:
+  current_focus:
+    - "POST /api/admin/import/hotels/upload - Upload CSV/XLSX"
+    - "POST /api/admin/import/hotels/validate - Validate with mapping"
+    - "POST /api/admin/import/hotels/execute - Bulk import"
+    - "GET /api/admin/import/jobs - List import jobs"
+    - "GET /api/admin/import/jobs/{job_id} - Job detail + errors"
+    - "GET /api/admin/import/export-template - XLSX template download"
+    - "POST /api/admin/import/sheet/connect - Google Sheet connection (MOCKED)"
+    - "POST /api/admin/import/sheet/sync - Trigger sync (MOCKED)"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"

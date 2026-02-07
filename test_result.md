@@ -119,15 +119,18 @@ backend:
 
   - task: "E1.1 Granular RBAC v2"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/app/routers/enterprise_rbac.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Seed, list, upsert permissions/roles endpoints implemented. Additive - backward compat."
+      - working: true
+        agent: "testing"
+        comment: "✅ All RBAC endpoints working: POST /seed (seeded 31 permissions, 5 roles), GET /permissions (31 items), GET /roles (5 items), PUT /roles (role updates working). Response format uses 'permissions_count' instead of 'permissions_created'."
 
   - task: "E1.2 Approval Workflow Engine"
     implemented: true

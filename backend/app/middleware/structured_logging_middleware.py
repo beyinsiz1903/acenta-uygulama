@@ -199,6 +199,11 @@ class StructuredLoggingMiddleware(BaseHTTPMiddleware):
                 path, method, latency_ms, request_id, status_code
             ))
 
+        # B1: Perf sampling (5% of requests)
+        asyncio.create_task(_store_perf_sample_bg(
+            path, method, status_code, latency_ms, tenant_id
+        ))
+
         # Attach request_id to response header
         response.headers["X-Request-Id"] = request_id
 

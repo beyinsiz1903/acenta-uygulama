@@ -19,6 +19,7 @@ import { cn } from "../lib/utils";
 import { api, clearToken, getUser } from "../lib/api";
 import { getMenuForUser } from "../config/menuConfig";
 import { FeatureProvider, useFeatures } from "../contexts/FeatureContext";
+import { ProductModeProvider, useProductMode } from "../contexts/ProductModeContext";
 import { Badge as UIBadge } from "./ui/badge";
 import { fetchPartnerNotificationsSummary } from "../lib/partnerGraph";
 import { getActiveTenantKey, getActiveTenantId, setActiveTenantId, subscribeTenantChange } from "../lib/tenantContext";

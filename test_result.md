@@ -231,9 +231,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Sidebar mode-aware filtering"
+    - "Route Guard Protection"
   stuck_tasks:
-    - "Sidebar mode-aware filtering"
+    - "Route Guard Protection"
   test_all: false
   test_priority: "high_first"
 

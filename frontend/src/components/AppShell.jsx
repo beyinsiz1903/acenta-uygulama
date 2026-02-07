@@ -228,6 +228,29 @@ export default function AppShell() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
 
+  // Enterprise White-Label branding
+  const [branding, setBranding] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get("/admin/whitelabel-settings");
+        if (!cancelled && res.data) {
+          setBranding(res.data);
+          // Apply brand color as CSS variable
+          if (res.data.primary_color) {
+            document.documentElement.style.setProperty("--brand-color", res.data.primary_color);
+          }
+        }
+      } catch { /* No branding or not admin - use defaults */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const brandName = branding?.company_name || branding?.brand_name || "Acenta Master";
+  const brandLogo = branding?.logo_url;
+  const brandInitial = brandName.charAt(0).toUpperCase();
+
   // ── P0: Onboarding auto-redirect ──────────────────────────
   useEffect(() => {
     if (onboardingChecked) return;

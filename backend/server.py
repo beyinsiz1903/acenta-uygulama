@@ -163,6 +163,15 @@ from app.routers.efatura import router as efatura_router
 from app.routers.sms_notifications import router as sms_notifications_router
 from app.routers.tickets import router as tickets_router
 
+# Operational Excellence (O1-O5)
+from app.routers.admin_system_backups import router as admin_system_backups_router
+from app.routers.admin_system_integrity import router as admin_system_integrity_router
+from app.routers.admin_system_metrics import router as admin_system_metrics_router
+from app.routers.admin_system_errors import router as admin_system_errors_router
+from app.routers.admin_system_uptime import router as admin_system_uptime_router
+from app.routers.admin_system_incidents import router as admin_system_incidents_router
+from app.routers.admin_maintenance import router as admin_maintenance_router
+
 from app.email_worker import email_dispatch_loop
 from app.indexes import finance_indexes, inbox_indexes, pricing_indexes, public_indexes, voucher_indexes
 from app.indexes import crm_indexes

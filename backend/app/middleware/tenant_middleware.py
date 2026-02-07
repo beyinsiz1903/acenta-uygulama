@@ -85,6 +85,7 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
             or path.startswith("/api/crm/")
             or path.startswith("/api/admin/system/")
             or path.startswith("/api/admin/import/")
+            or path.startswith("/api/admin/sheets/")
             or path.startswith("/api/system/")
             or path.startswith("/docs")
             or path.startswith("/openapi.json")

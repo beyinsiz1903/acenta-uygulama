@@ -254,13 +254,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "E1.1 Granular RBAC v2"
-    - "E1.2 Approval Workflow Engine"
     - "E1.3 Immutable Audit Log (hash chain + CSV export)"
-    - "E2.1 2FA (TOTP) with recovery codes"
+    - "E2.1 2FA (TOTP) with recovery codes"  
     - "E2.2 Tenant IP Whitelist"
-    - "E4.2 Full Data Export (zip)"
-    - "E4.3 Scheduled Reports"
   stuck_tasks: []
-  test_all: true
+  test_all: false
   test_priority: "high_first"
+
+agent_communication:
+  - agent: "testing"
+    message: "Enterprise Hardening Testing Complete - 24/30 tests passed (80%). CRITICAL ISSUES: E1.3 Audit hash chain integrity broken (security risk), E2.1 2FA verify endpoint confusion, E2.2 IP whitelist blocking legitimate admin operations. E4.1 White-label blocked by IP whitelist issue. All other endpoints (E1.1 RBAC, E1.2 Approvals, E3.2 Health, E3.3 Rate Limiting, E4.2 Export, E4.3 Reports) working correctly."

@@ -197,29 +197,27 @@ class APITester:
             try:
                 data = response.json()
                 backup_status = data.get('status', 'unknown')
-                self.log_test("Trigger Backup", True, f"Backup status: {backup_status}")
+                backup_id = data.get('backup_id') or data.get('_id') or data.get('id')
+                self.log_test("Trigger Backup", True, f"Backup status: {backup_status}, ID: {backup_id}")
                 
-                # Store backup ID for deletion test if successful
-                if backup_status == 'success' and 'backup_id' in data:
-                    backup_id = data['backup_id']
-                    
-                    # Test delete backup
+                # Test delete backup if we have an ID
+                if backup_id:
                     delete_response = self.make_request("DELETE", f"/admin/system/backups/{backup_id}")
                     if delete_response.status_code in [200, 204]:
                         self.log_test("Delete Backup", True, f"Backup {backup_id} deleted")
                     else:
                         self.log_test("Delete Backup", False, f"Status: {delete_response.status_code}")
                 else:
-                    self.log_test("Delete Backup", True, "Skipped - no successful backup to delete")
+                    self.log_test("Delete Backup", True, "Skipped - no backup ID to delete")
                     
             except Exception as e:
                 self.log_test("Trigger Backup", False, f"Failed to parse response: {str(e)}")
         else:
             self.log_test("Trigger Backup", False, f"Status: {response.status_code}, Response: {response.text}")
         
-        # Test delete existing backup if any
+        # Test delete existing backup if any from initial list
         if existing_backups and not hasattr(self, 'backup_deleted'):
-            backup_id = existing_backups[0].get('id')
+            backup_id = existing_backups[0].get('id') or existing_backups[0].get('backup_id') or existing_backups[0].get('_id')
             if backup_id:
                 delete_response = self.make_request("DELETE", f"/admin/system/backups/{backup_id}")
                 if delete_response.status_code in [200, 204]:

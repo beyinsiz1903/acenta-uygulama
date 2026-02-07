@@ -146,6 +146,18 @@ from app.routers.public_campaigns import router as public_campaigns_router
 from app.routers.public_tours import router as public_tours_router
 from app.routers.public_cms_pages import router as public_cms_pages_router
 from app.routers.public_partners import router as public_partners_router
+
+# Enterprise Hardening (E1-E4) routers
+from app.routers.enterprise_rbac import router as enterprise_rbac_router
+from app.routers.enterprise_approvals import router as enterprise_approvals_router
+from app.routers.enterprise_2fa import router as enterprise_2fa_router
+from app.routers.enterprise_health import router as enterprise_health_router
+from app.routers.enterprise_audit import router as enterprise_audit_router
+from app.routers.enterprise_export import router as enterprise_export_router
+from app.routers.enterprise_schedules import router as enterprise_schedules_router
+from app.routers.enterprise_ip_whitelist import router as enterprise_ip_whitelist_router
+from app.routers.enterprise_whitelabel import router as enterprise_whitelabel_router
+
 from app.email_worker import email_dispatch_loop
 from app.indexes import finance_indexes, inbox_indexes, pricing_indexes, public_indexes, voucher_indexes
 from app.indexes import crm_indexes

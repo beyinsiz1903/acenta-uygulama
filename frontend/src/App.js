@@ -335,6 +335,8 @@ function App() {
             {/* Production Go-Live Pack */}
             <Route path="preflight" element={<AdminPreflightPage />} />
             <Route path="runbook" element={<AdminRunbookPage />} />
+            {/* Cost/Performance Pack */}
+            <Route path="perf-dashboard" element={<AdminPerfDashboardPage />} />
           </Route>
         </Route>
 

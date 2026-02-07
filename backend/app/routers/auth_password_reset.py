@@ -103,6 +103,12 @@ async def confirm_password_reset(payload: PasswordResetConfirmIn, request: Reque
     if not new_password or len(new_password.strip()) < 8:
         raise AppError(400, "weak_password", "Şifre en az 8 karakter olmalıdır.")
 
+    # Enterprise password policy check (E2.3)
+    from app.services.password_policy import validate_password
+    violations = validate_password(new_password)
+    if violations:
+        raise AppError(400, "password_policy", "; ".join(violations))
+
     now = now_utc()
 
     # Optimistic consume of token: only if not used and not expired

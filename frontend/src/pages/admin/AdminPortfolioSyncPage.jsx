@@ -623,6 +623,40 @@ export default function AdminPortfolioSyncPage() {
       {/* Health Dashboard */}
       <HealthDashboard status={status} onRefresh={() => loadAll(false)} refreshing={refreshing} />
 
+      {/* Write-Back Panel */}
+      {writebackStats && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <ArrowRight className="w-5 h-5 text-purple-600" /> Write-Back (Sistem &rarr; Sheet)
+            </h2>
+            <span className="text-xs text-gray-400">Rezervasyon olusturulunca sheet'e otomatik yazilir</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-center">
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{writebackStats.queued || 0}</p>
+              <p className="text-xs text-gray-500">Kuyrukta</p>
+            </div>
+            <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3 text-center">
+              <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">{writebackStats.completed || 0}</p>
+              <p className="text-xs text-emerald-600">Tamamlanan</p>
+            </div>
+            <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 text-center">
+              <p className="text-xl font-bold text-red-700 dark:text-red-300">{writebackStats.failed || 0}</p>
+              <p className="text-xs text-red-600">Basarisiz</p>
+            </div>
+            <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 text-center">
+              <p className="text-xl font-bold text-amber-700 dark:text-amber-300">{writebackStats.retry || 0}</p>
+              <p className="text-xs text-amber-600">Yeniden Denenecek</p>
+            </div>
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-center">
+              <p className="text-xl font-bold text-blue-700 dark:text-blue-300">{writebackStats.skipped || 0}</p>
+              <p className="text-xs text-blue-600">Atlanan</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Connections Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">

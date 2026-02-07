@@ -221,8 +221,12 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
-  stuck_tasks: []
+  current_focus:
+    - "Sidebar mode-aware filtering"
+    - "Admin Product Mode Settings Page"
+  stuck_tasks:
+    - "Sidebar mode-aware filtering"
+    - "Admin Product Mode Settings Page"
   test_all: false
   test_priority: "high_first"
 

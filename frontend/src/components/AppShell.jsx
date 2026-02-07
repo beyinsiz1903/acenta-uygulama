@@ -695,7 +695,5 @@ function AppShellInner() {
         </div>
       </footer>
     </div>
-    </ProductModeProvider>
-    </FeatureProvider>
   );
 }

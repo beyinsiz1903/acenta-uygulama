@@ -44,4 +44,15 @@ export const adminNav = [
       { label: "Export Çalıştırma", path: "/app/admin/exports" },
     ],
   },
+  {
+    label: "Operasyonel Mükemmellik",
+    children: [
+      { label: "Sistem Yedekleri", path: "/app/admin/system-backups" },
+      { label: "Veri Bütünlüğü", path: "/app/admin/system-integrity" },
+      { label: "Sistem Metrikleri", path: "/app/admin/system-metrics" },
+      { label: "Sistem Hataları", path: "/app/admin/system-errors" },
+      { label: "Çalışma Süresi", path: "/app/admin/system-uptime" },
+      { label: "Olay Yönetimi", path: "/app/admin/system-incidents" },
+    ],
+  },
 ];

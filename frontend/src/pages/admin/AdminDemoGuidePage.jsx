@@ -48,7 +48,7 @@ export default function AdminDemoGuidePage() {
           <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
         </div>
       ) : !step ? (
-        <div className="text-center py-12 text-gray-500">Y\u00fcklenemedi</div>
+        <div className="text-center py-12 text-gray-500">Yüklenemedi</div>
       ) : (
         <div className="space-y-4" data-testid="demo-guide-content">
           {/* Progress Bar */}

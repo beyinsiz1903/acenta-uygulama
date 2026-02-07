@@ -243,6 +243,66 @@ backend:
           agent: "testing"
           comment: "✅ FIXED: Graceful fallback working. All Portfolio Sync Engine endpoints return appropriate responses when GOOGLE_SERVICE_ACCOUNT_JSON is not configured (configured=false, graceful error messages in Turkish)."
 
+  - task: "GET /api/admin/sheets/writeback/stats - Write-back statistics"
+    implemented: true
+    working: true
+    file: "backend/app/routers/admin_sheets.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ NEW ENDPOINT WORKING: Returns proper stats {queued:0, completed:0, failed:0, retry:0, skipped:0, configured:false}. Auth guards working (401 without token)."
+
+  - task: "POST /api/admin/sheets/writeback/process - Process write-back queue"
+    implemented: true
+    working: true
+    file: "backend/app/routers/admin_sheets.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ NEW ENDPOINT WORKING: Returns {status:'not_configured', configured:false} when GOOGLE_SERVICE_ACCOUNT_JSON not set. Auth guards working (401 without token)."
+
+  - task: "GET /api/admin/sheets/writeback/queue - List write-back queue"
+    implemented: true
+    working: true
+    file: "backend/app/routers/admin_sheets.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ NEW ENDPOINT WORKING: Returns empty array [] as expected. Auth guards working (401 without token)."
+
+  - task: "GET /api/admin/sheets/changelog - Change log entries"
+    implemented: true
+    working: true
+    file: "backend/app/routers/admin_sheets.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ NEW ENDPOINT WORKING: Returns empty array [] as expected. Auth guards working (401 without token)."
+
+  - task: "Write-Back Service Implementation"
+    implemented: true
+    working: true
+    file: "backend/app/services/sheet_writeback_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ SERVICE IMPLEMENTED: Comprehensive write-back service with idempotent queue, event handlers, retry logic, and graceful fallback when not configured."
+
 frontend:
   - task: "Portfolio Sync Page + Write-Back Panel"
     implemented: true

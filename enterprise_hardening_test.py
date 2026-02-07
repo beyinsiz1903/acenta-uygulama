@@ -783,6 +783,7 @@ class EnterpriseHardeningTester:
                 "name": "Test Weekly Report",
                 "report_type": "financial_summary",
                 "frequency": "weekly",
+                "email": self.admin_email,
                 "is_active": True
             })
             

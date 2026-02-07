@@ -1,17 +1,34 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional
 
-from app.auth import create_access_token, get_current_user, verify_password
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+
+from app.auth import create_access_token, get_current_user, verify_password, hash_password
 from app.db import get_db
 from app.schemas import AuthUser, LoginRequest, LoginResponse
-from app.utils import serialize_doc
+from app.utils import serialize_doc, now_utc
+from app.services.password_policy import validate_password
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
+class LoginWith2FARequest(BaseModel):
+    email: str
+    password: str
+    otp_code: Optional[str] = None  # Required if 2FA enabled
+
+
+class SignupRequest(BaseModel):
+    email: str
+    password: str
+    name: Optional[str] = None
+    organization_name: Optional[str] = None
+
+
 @router.post("/login")
-async def login(payload: LoginRequest):
+async def login(payload: LoginWith2FARequest):
     db = await get_db()
 
     # Tenant-agnostic login: resolve user by email, then infer organization
@@ -21,6 +38,22 @@ async def login(payload: LoginRequest):
 
     if not verify_password(payload.password, user.get("password_hash") or ""):
         raise HTTPException(status_code=401, detail="Email veya şifre hatalı")
+
+    # Check 2FA requirement
+    user_id = str(user.get("_id", "")) or user.get("email")
+    from app.services.totp_service import is_2fa_enabled, validate_otp_or_recovery
+
+    if await is_2fa_enabled(user_id):
+        if not payload.otp_code:
+            # Return special response indicating 2FA is required
+            return {
+                "requires_2fa": True,
+                "message": "2FA verification required. Please provide OTP code.",
+            }
+
+        valid, method = await validate_otp_or_recovery(user_id, payload.otp_code)
+        if not valid:
+            raise HTTPException(status_code=401, detail="Invalid 2FA code")
 
     org_id = user.get("organization_id")
     if not org_id:
@@ -85,6 +118,41 @@ async def login(payload: LoginRequest):
     resp_dict = resp.model_dump() if hasattr(resp, 'model_dump') else resp.dict()
     resp_dict["tenant_id"] = tenant_id
     return resp_dict
+
+
+@router.post("/signup")
+async def signup(payload: SignupRequest):
+    """User signup with password policy enforcement."""
+    db = await get_db()
+
+    # Password policy check (E2.3)
+    violations = validate_password(payload.password)
+    if violations:
+        raise HTTPException(
+            status_code=400,
+            detail={"message": "Password does not meet requirements", "violations": violations},
+        )
+
+    # Check if user already exists
+    existing = await db.users.find_one({"email": payload.email})
+    if existing:
+        raise HTTPException(status_code=409, detail="User with this email already exists")
+
+    import uuid
+    user_doc = {
+        "_id": str(uuid.uuid4()),
+        "email": payload.email,
+        "name": payload.name or payload.email.split("@")[0],
+        "password_hash": hash_password(payload.password),
+        "roles": ["agent"],
+        "organization_id": None,
+        "is_active": True,
+        "created_at": now_utc(),
+        "updated_at": now_utc(),
+    }
+
+    await db.users.insert_one(user_doc)
+    return {"message": "User created successfully", "email": payload.email}
 
 
 @router.get("/me")

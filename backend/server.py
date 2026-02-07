@@ -369,7 +369,7 @@ async def lifespan(app: FastAPI):
             [("tenant_id", 1), ("hotel_id", 1), ("started_at", -1)]
         )
         await db.sheet_sync_runs.create_index(
-            [("tenant_id", 1), ("status", 1, "started_at", -1)]
+            [("tenant_id", 1), ("status", 1), ("started_at", -1)]
         )
         await db.sheet_row_fingerprints.create_index(
             [("tenant_id", 1), ("hotel_id", 1), ("row_key", 1)],

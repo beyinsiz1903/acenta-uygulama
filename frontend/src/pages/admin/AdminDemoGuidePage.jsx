@@ -114,7 +114,7 @@ export default function AdminDemoGuidePage() {
 
               {/* Talking Points */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Konu\u015fma Noktalar\u0131</h3>
+                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Konuşma Noktaları</h3>
                 <ul className="space-y-2">
                   {step.talking_points?.map((tp, i) => (
                     <li key={i} className="flex items-start gap-2">

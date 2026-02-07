@@ -702,7 +702,7 @@ class APITester:
     
     def run_all_tests(self):
         """Run complete test suite"""
-        print("🚀 Starting Operational Excellence Backend API Tests")
+        print("🚀 Starting Operational Excellence & Product Mode Backend API Tests")
         print(f"🔗 Backend URL: {BACKEND_URL}")
         
         # Authentication setup
@@ -722,6 +722,11 @@ class APITester:
         self.test_uptime_tracking()
         self.test_incident_tracking()
         self.test_permission_enforcement()
+        
+        # Product Mode API Tests
+        self.test_product_mode_system_endpoint()
+        self.test_product_mode_admin_endpoints()
+        self.test_product_mode_auth_validation()
         
         return self.generate_summary()
     

@@ -185,4 +185,18 @@ class BookingLifecycleService:
             },
         )
 
+        # ── Sheet Write-Back Hook (BOOKING_CONFIRMED) ──
+        if event == "BOOKING_CONFIRMED":
+            try:
+                from app.services.sheet_writeback_service import on_booking_confirmed
+                booking = await self.db.bookings.find_one({"_id": oid, "organization_id": organization_id})
+                if booking:
+                    tenant_id = organization_id
+                    await on_booking_confirmed(self.db, tenant_id, organization_id, booking)
+            except Exception as wb_err:
+                import logging
+                logging.getLogger("sheet_writeback").warning(
+                    "Write-back hook failed for booking %s: %s", booking_id, wb_err
+                )
+
         return doc

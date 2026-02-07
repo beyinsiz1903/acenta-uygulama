@@ -494,6 +494,7 @@ export default function AdminPortfolioSyncPage() {
   const [status, setStatus] = useState(null);
   const [connections, setConnections] = useState([]);
   const [availableHotels, setAvailableHotels] = useState([]);
+  const [writebackStats, setWritebackStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [syncing, setSyncing] = useState(null);
@@ -505,14 +506,16 @@ export default function AdminPortfolioSyncPage() {
     if (showLoader) setLoading(true);
     setRefreshing(true);
     try {
-      const [configRes, statusRes, connsRes] = await Promise.all([
+      const [configRes, statusRes, connsRes, wbRes] = await Promise.all([
         api.get("/admin/sheets/config"),
         api.get("/admin/sheets/status"),
         api.get("/admin/sheets/connections"),
+        api.get("/admin/sheets/writeback/stats").catch(() => ({ data: null })),
       ]);
       setConfig(configRes.data);
       setStatus(statusRes.data);
       setConnections(connsRes.data || []);
+      setWritebackStats(wbRes.data);
     } catch (e) {
       setError(e.response?.data?.error?.message || e.message);
     } finally {

@@ -55,6 +55,7 @@ export const adminNav = [
       { label: "Olay Yönetimi", path: "/app/admin/system-incidents" },
       { label: "Go-Live Kontrolü", path: "/app/admin/preflight" },
       { label: "Ops Runbook", path: "/app/admin/runbook" },
+      { label: "Performans Paneli", path: "/app/admin/perf-dashboard" },
     ],
   },
 ];

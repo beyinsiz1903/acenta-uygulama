@@ -180,11 +180,14 @@ backend:
     file: "backend/app/routers/admin_import.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "MOCKED. Updates last_sync_at. Returns mock message."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING PASSED: Google Sheets sync (MOCKED) works perfectly. Updates last_sync_at timestamp. Returns proper mock response with status='synced', message, sheet_id, last_sync_at. Authentication required. 404 handling for no connection works. Properly marked as MOCKED functionality."
 
   - task: "Import Service (parse, validate, bulk insert, image download)"
     implemented: true

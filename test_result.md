@@ -251,17 +251,60 @@ backend:
 
 frontend:
   - task: "E4.1 White-Label UI (dynamic logo/color/name)"
-    implemented: false
-    working: "NA"
+    implemented: true
+    working: true
     file: "frontend/src/components/AppShell.jsx"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "White-Label UI component implemented with company_name, logo_url, primary_color"
+      - working: true
+        agent: "testing"
+        comment: "✅ White-Label UI working perfectly. Company name, brand color settings persist and update header branding. Successfully tested with 'Enterprise Corp' name and #6366f1 color."
+
+  - task: "E1.2 Approval Inbox UI"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/AdminApprovalInboxPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ Approval Inbox UI working correctly. Successfully created approval via API, approved it through UI, and verified status change. Tab navigation between pending and approved items works."
+
+  - task: "E4.2 Full Data Export UI"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/AdminTenantExportPage.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ Tenant Export UI working as expected. Export button triggers ZIP download with success message. File download functionality working correctly."
+
+  - task: "E4.3 Scheduled Reports UI"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/AdminScheduledReportsPage.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ Scheduled Reports UI functioning properly. Created new schedule with email 'reports@test.com', verified it appeared in list, and successfully deleted it."
 
 metadata:
   created_by: "main_agent"
   version: "4.0"
-  test_sequence: 6
+  test_sequence: 7
   run_ui: false
 
 test_plan:
@@ -275,3 +318,5 @@ agent_communication:
     message: "Enterprise Hardening Testing Complete - 24/30 tests passed (80%). CRITICAL ISSUES: E1.3 Audit hash chain integrity broken (security risk), E2.1 2FA verify endpoint confusion, E2.2 IP whitelist blocking legitimate admin operations. E4.1 White-label blocked by IP whitelist issue. All other endpoints (E1.1 RBAC, E1.2 Approvals, E3.2 Health, E3.3 Rate Limiting, E4.2 Export, E4.3 Reports) working correctly."
   - agent: "testing"
     message: "RE-TEST COMPLETE - ALL PREVIOUSLY FAILING TESTS NOW FIXED! 18/18 tests passed (100%). ✅ E1.3 Audit hash chain integrity FIXED - chain verification now returns valid=true. ✅ E2.1 2FA flow CLARIFIED - verify endpoint correctly activates 2FA (not just verifying OTP). ✅ E2.2 IP whitelist FIXED - admin paths now bypass IP restrictions correctly. ✅ E4.1 White-label WORKING - no longer blocked by IP whitelist. All endpoints functioning correctly. Enterprise hardening implementation complete."
+  - agent: "testing"
+    message: "FRONTEND E2E TESTS COMPLETE - All Enterprise Hardening Sprint UI features are working correctly! ✅ White-Label UI: Company name/color persist and update header branding. ✅ Approval Inbox UI: Creating, viewing, and approving requests works. ✅ Tenant Export UI: Export ZIP download functionality works. ✅ Scheduled Reports UI: Creating and deleting scheduled reports works."

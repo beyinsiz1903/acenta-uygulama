@@ -11,131 +11,195 @@ user_problem_statement: "Portfolio Sync Engine — Multi-Hotel Google Sheets Syn
 backend:
   - task: "GET /api/admin/sheets/config - Configuration status"
     implemented: true
-    working: "untested"
+    working: false
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token). Need to resolve tenant configuration or whitelist sheets endpoints."
 
   - task: "POST /api/admin/sheets/connect - Connect hotel sheet"
     implemented: true
-    working: "untested"
+    working: false
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
 
   - task: "GET /api/admin/sheets/connections - List connections"
     implemented: true
-    working: "untested"
+    working: false
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
 
   - task: "GET /api/admin/sheets/connections/{hotel_id} - Single connection"
     implemented: true
-    working: "untested"
+    working: false
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
 
   - task: "PATCH /api/admin/sheets/connections/{hotel_id} - Update connection"
     implemented: true
-    working: "untested"
+    working: false
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
 
   - task: "DELETE /api/admin/sheets/connections/{hotel_id} - Delete connection"
     implemented: true
-    working: "untested"
+    working: false
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
 
   - task: "POST /api/admin/sheets/sync/{hotel_id} - Manual sync"
     implemented: true
-    working: "untested"
+    working: false
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
 
   - task: "POST /api/admin/sheets/sync-all - Sync all connections"
     implemented: true
-    working: "untested"
+    working: false
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
 
   - task: "GET /api/admin/sheets/status - Portfolio health dashboard"
     implemented: true
-    working: "untested"
+    working: false
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
 
   - task: "GET /api/admin/sheets/runs - Sync run history"
     implemented: true
-    working: "untested"
+    working: false
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
 
   - task: "GET /api/admin/sheets/stale-hotels - Stale connections"
     implemented: true
-    working: "untested"
+    working: false
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
 
   - task: "POST /api/admin/sheets/preview-mapping - Preview sheet mapping"
     implemented: true
-    working: "untested"
+    working: false
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
 
   - task: "GET /api/admin/sheets/available-hotels - Hotels for connect wizard"
     implemented: true
-    working: "untested"
+    working: false
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "Endpoint implemented but tenant middleware issues causing 520 errors. Auth guards working properly (401 without token)."
 
   - task: "Auth Guards - All sheet endpoints require admin auth"
     implemented: true
-    working: "untested"
+    working: true
     file: "backend/app/routers/admin_sheets.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "All 13 Portfolio Sync Engine endpoints properly protected. Return 401 without authentication token as expected."
 
   - task: "Tenant Isolation - Queries scoped to tenant"
     implemented: true
-    working: "untested"
+    working: false
     file: "backend/app/routers/admin_sheets.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "Unable to test tenant isolation due to tenant middleware 520 errors. Endpoints expect X-Tenant-Id header but tenant resolution failing."
 
   - task: "Graceful Fallback - System doesn't crash without API key"
     implemented: true
-    working: "untested"
+    working: "NA"
     file: "backend/app/services/sheets_provider.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Unable to test graceful fallback due to tenant middleware blocking access to endpoints. Implementation appears correct but needs tenant issues resolved first."
 
 frontend:
   - task: "Portfolio Sync Page"

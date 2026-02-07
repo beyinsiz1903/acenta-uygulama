@@ -233,8 +233,22 @@ app = FastAPI(
     openapi_url=f"{API_PREFIX}/openapi.json",
 )
 
+# Enterprise Hardening middleware (E3.1 + E3.3 + E2.2)
+from app.middleware.structured_logging_middleware import StructuredLoggingMiddleware
+from app.middleware.rate_limit_middleware import RateLimitMiddleware
+from app.middleware.ip_whitelist_middleware import IPWhitelistMiddleware
+
 # Correlation-Id middleware (request/response scoped) - should be early in the chain
 app.add_middleware(CorrelationIdMiddleware)
+
+# Structured logging (E3.1)
+app.add_middleware(StructuredLoggingMiddleware)
+
+# Rate limiting (E3.3)
+app.add_middleware(RateLimitMiddleware)
+
+# IP Whitelist (E2.2)
+app.add_middleware(IPWhitelistMiddleware)
 
 # Tenant resolution middleware (header/host/subdomain based)
 app.add_middleware(TenantResolutionMiddleware)

@@ -230,15 +230,18 @@ backend:
 
   - task: "Graceful Fallback - System doesn't crash without API key"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/app/services/sheets_provider.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
         - working: "NA"
           agent: "testing"
           comment: "Unable to test graceful fallback due to tenant middleware blocking access to endpoints. Implementation appears correct but needs tenant issues resolved first."
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Graceful fallback working. All Portfolio Sync Engine endpoints return appropriate responses when GOOGLE_SERVICE_ACCOUNT_JSON is not configured (configured=false, graceful error messages in Turkish)."
 
 frontend:
   - task: "Portfolio Sync Page"

@@ -10,7 +10,7 @@ import time
 from typing import Dict, Any
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://enterprise-ops-8.preview.emergentagent.com"
+BACKEND_URL = "https://hardening-e1-e4.preview.emergentagent.com"
 REQUEST_LINK_URL = f"{BACKEND_URL}/api/public/my-booking/request-link"
 
 def test_request_link_contract():

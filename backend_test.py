@@ -827,7 +827,7 @@ class GTMBackendTester:
 def main():
     """Main test execution"""
     # Get backend URL from environment 
-    backend_url = "https://enterprise-ops-8.preview.emergentagent.com"
+    backend_url = "https://hardening-e1-e4.preview.emergentagent.com"
     
     print(f"🎯 Testing backend at: {backend_url}")
     

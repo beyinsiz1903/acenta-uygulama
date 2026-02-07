@@ -9,7 +9,7 @@ import json
 import uuid
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://enterprise-ops-8.preview.emergentagent.com"
+BASE_URL = "https://hardening-e1-e4.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

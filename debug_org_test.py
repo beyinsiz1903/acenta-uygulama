@@ -49,7 +49,7 @@ def test_api_with_debug():
     try:
         # Login
         login_data = {"email": "admin@acenta.test", "password": "admin123"}
-        response = requests.post("https://enterprise-ops-8.preview.emergentagent.com/api/auth/login", json=login_data, timeout=10)
+        response = requests.post("https://hardening-e1-e4.preview.emergentagent.com/api/auth/login", json=login_data, timeout=10)
         
         if response.status_code != 200:
             print(f"Login failed: {response.status_code} - {response.text}")
@@ -60,7 +60,7 @@ def test_api_with_debug():
         
         # Test customers API with debug
         print("\nTesting customers API...")
-        response = requests.get("https://enterprise-ops-8.preview.emergentagent.com/api/crm/customers", headers=headers, timeout=10)
+        response = requests.get("https://hardening-e1-e4.preview.emergentagent.com/api/crm/customers", headers=headers, timeout=10)
         print(f"Status: {response.status_code}")
         if response.status_code == 200:
             data = response.json()
@@ -70,7 +70,7 @@ def test_api_with_debug():
         
         # Test with search
         print("\nTesting customers API with search=seed...")
-        response = requests.get("https://enterprise-ops-8.preview.emergentagent.com/api/crm/customers?search=seed", headers=headers, timeout=10)
+        response = requests.get("https://hardening-e1-e4.preview.emergentagent.com/api/crm/customers?search=seed", headers=headers, timeout=10)
         print(f"Status: {response.status_code}")
         if response.status_code == 200:
             data = response.json()

@@ -10,7 +10,7 @@ export default defineConfig({
   reporter: 'list',
   
   use: {
-    baseURL: 'https://enterprise-ops-8.preview.emergentagent.com',
+    baseURL: 'https://hardening-e1-e4.preview.emergentagent.com',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },

@@ -12,7 +12,7 @@ import os
 from bson import ObjectId, Decimal128
 import bcrypt
 
-BASE_URL = "https://enterprise-ops-8.preview.emergentagent.com"
+BASE_URL = "https://hardening-e1-e4.preview.emergentagent.com"
 
 def get_mongo_client():
     mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017/test_database")

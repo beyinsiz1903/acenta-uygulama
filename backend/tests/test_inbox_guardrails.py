@@ -18,7 +18,7 @@ import httpx
 
 
 # Test configuration
-BASE_URL = "https://enterprise-ops-8.preview.emergentagent.com"
+BASE_URL = "https://hardening-e1-e4.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

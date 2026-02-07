@@ -14,7 +14,7 @@ from typing import Dict, Any
 
 class LedgerReversalCorrectPathTest:
     def __init__(self):
-        self.backend_url = "https://enterprise-ops-8.preview.emergentagent.com"
+        self.backend_url = "https://hardening-e1-e4.preview.emergentagent.com"
         self.admin_token = None
         
     async def get_admin_token(self) -> str:

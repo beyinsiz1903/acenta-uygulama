@@ -16,7 +16,7 @@ import uuid
 from datetime import datetime, timedelta
 
 class FinalVoucherTest:
-    def __init__(self, base_url="https://enterprise-ops-8.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hardening-e1-e4.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.tests_run = 0

@@ -87,7 +87,30 @@ class APITester:
         """Test user registration and login"""
         print("\n=== AUTHENTICATION SETUP ===")
         
-        # Register user (note: signup endpoint, not register)
+        # Try with existing admin user first (from seed data)
+        login_data = {
+            "email": "admin@acenta.test",
+            "password": "admin123"
+        }
+        
+        response = self.make_request("POST", "/auth/login", login_data)
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                self.token = data.get("access_token")
+                if "user" in data:
+                    self.user_id = data["user"].get("id")
+                    self.organization_id = data["user"].get("organization_id")
+                
+                self.log_test("Admin Login", True, f"Token received. User ID: {self.user_id}")
+                return  # Success - skip registration
+                
+            except Exception as e:
+                self.log_test("Admin Login", False, f"Failed to parse login response: {str(e)}")
+        else:
+            self.log_test("Admin Login", False, f"Status: {response.status_code}, Response: {response.text}")
+        
+        # Fallback: Try to register a new user (note: signup endpoint, not register)
         register_data = {
             "email": "test@test.com",
             "password": "Test1234567890!",  # Updated to meet 10-char requirement
@@ -119,12 +142,6 @@ class APITester:
                     self.organization_id = data["user"].get("organization_id")
                 
                 self.log_test("User Login", True, f"Token received. User ID: {self.user_id}")
-                
-                # Update user role to super_admin if needed
-                if self.token and self.organization_id:
-                    print("🔄 Ensuring user has super_admin role...")
-                    # This would typically require database access to update roles
-                    # For testing, we'll assume the login response includes proper roles
                     
             except Exception as e:
                 self.log_test("User Login", False, f"Failed to parse login response: {str(e)}")

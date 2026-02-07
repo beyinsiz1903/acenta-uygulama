@@ -188,9 +188,9 @@ frontend:
     implemented: true
     working: false
     file: "frontend/src/components/AppShell.jsx"
-    stuck_count: 1
+    stuck_count: 2
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -198,14 +198,17 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ ISSUE: When switching from Enterprise to Lite mode, sidebar still shows all 7 groups including 'B2B AĞ', 'OPS', and 'ENTERPRISE' that should be hidden in Lite mode. The mode switch is detected but filterNavByMode function is not correctly filtering out hidden navigation items."
+      - working: false
+        agent: "testing"
+        comment: "❌ STILL FAILING: Even after the tenant_id fallback fix, the sidebar is still not filtering out navigation groups correctly after mode switch. All sidebar groups remain visible regardless of current mode. Mode switches complete successfully and API returns correct information, but the UI is not updating to reflect mode changes."
 
   - task: "Admin Product Mode Settings Page"
     implemented: true
-    working: false
+    working: true
     file: "frontend/src/pages/admin/AdminProductModePage.jsx"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -213,6 +216,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ ISSUES: Mode switching UI works partially - Enterprise to Lite switch shows modal and can be applied, but (1) Subsequent mode switches (Lite→Pro, Pro→Enterprise) fail with click timeout errors; (2) The confirm modal doesn't properly close after first mode change; (3) The 'Gizlenecek' items section in modal isn't showing items that will be hidden in downgrade."
+      - working: true
+        agent: "testing"
+        comment: "✅ FIXED: Mode switching UI is now working correctly. All mode transitions (Lite→Pro→Enterprise) work properly. The modal appears correctly showing items that will be hidden/shown, and closes properly after confirmation. The 'Gizlenecek' section in the modal shows items that will be hidden in downgrade."
 
 metadata:
   created_by: "main_agent"

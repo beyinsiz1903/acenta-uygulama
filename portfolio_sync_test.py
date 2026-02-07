@@ -105,6 +105,8 @@ class PortfolioSyncTester:
             self.auth_token = data.get("access_token")
             self.user_data = data.get("user", {})
             self.log(f"✅ Authentication successful. User: {self.user_data.get('email')}")
+            self.log(f"   Organization ID: {self.user_data.get('organization_id')}")
+            self.log(f"   Tenant ID: {self.user_data.get('tenant_id')}")
             self.add_result("Authentication", "PASS", "Successfully logged in")
             return True
         else:

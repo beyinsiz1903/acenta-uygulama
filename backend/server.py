@@ -332,6 +332,9 @@ async def lifespan(app: FastAPI):
         await db.request_logs.create_index("timestamp", expireAfterSeconds=86400)
         await db.request_logs.create_index([("timestamp", -1)])
         await db.request_logs.create_index([("status_code", 1), ("timestamp", 1)])
+        # B2: Performance indexes
+        from app.indexes.perf_indexes import ensure_perf_indexes
+        await ensure_perf_indexes(db)
     except Exception as e:
         import logging
         logging.getLogger(__name__).warning("Enterprise index creation warning: %s", e)

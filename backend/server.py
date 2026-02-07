@@ -331,6 +331,7 @@ async def lifespan(app: FastAPI):
 
     yield
 
+    ops_scheduler.shutdown(wait=False)
     report_scheduler.shutdown(wait=False)
     stop_scheduler()
     await close_mongo()

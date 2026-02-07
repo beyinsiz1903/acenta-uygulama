@@ -18,7 +18,7 @@ BACKEND_URL = "https://portfolio-connector.preview.emergentagent.com/api"
 
 # Test credentials as specified in review request  
 ADMIN_EMAIL = "admin@acenta.test"
-ADMIN_PASSWORD = "Test1234!@#$"  # Made longer to meet 10+ char requirement
+ADMIN_PASSWORD = "admin123"  # From seed.py DEFAULT_ADMIN_PASSWORD
 
 class PortfolioSyncTester:
     def __init__(self):

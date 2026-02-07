@@ -170,20 +170,20 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
         active = (status == "active") and bool(is_active_flag)
 
         if not active:
-            raise AppError(
-                status_code=403,
-                code="tenant_inactive",
-                message="Tenant is inactive.",
-                details={"tenant_id": tenant_id_header, "status": status},
+            return _error_response(
+                403,
+                "tenant_inactive",
+                "Tenant is inactive.",
+                {"tenant_id": tenant_id_header, "status": status},
             )
 
         tenant_org_id = tenant_doc.get("organization_id") or tenant_doc.get("org_id")
         if tenant_org_id and str(tenant_org_id) != str(org_id):
-            raise AppError(
-                status_code=403,
-                code="cross_org_tenant_forbidden",
-                message="Tenant does not belong to the same organization as the user.",
-                details={"tenant_org_id": str(tenant_org_id), "user_org_id": str(org_id)},
+            return _error_response(
+                403,
+                "cross_org_tenant_forbidden",
+                "Tenant does not belong to the same organization as the user.",
+                {"tenant_org_id": str(tenant_org_id), "user_org_id": str(org_id)},
             )
 
         tenant_id_str = str(tenant_doc.get("_id"))

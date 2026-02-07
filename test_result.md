@@ -164,15 +164,18 @@ backend:
 
   - task: "E2.1 2FA (TOTP) with recovery codes"
     implemented: true
-    working: "NA"
+    working: false
     file: "backend/app/routers/enterprise_2fa.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Enable, verify, disable endpoints. Login flow checks 2FA. Recovery codes supported."
+      - working: false
+        agent: "testing"
+        comment: "❌ 2FA verification logic issue: POST /api/auth/2fa/enable works (returns secret + 10 recovery codes), POST /api/auth/2fa/verify returns 200 but with confusing response message '2FA activated successfully' instead of verification confirmation. The verify endpoint seems to be activating 2FA rather than just verifying the OTP. GET /api/auth/2fa/status works correctly."
 
   - task: "E2.2 Tenant IP Whitelist"
     implemented: true

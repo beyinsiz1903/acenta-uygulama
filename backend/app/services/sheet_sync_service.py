@@ -250,7 +250,7 @@ async def run_sheet_sync(
         mapped = apply_mapping(headers, rows, col_mapping)
 
         # 3. Validate
-        existing_names = await get_existing_hotel_names(db, org_id)
+        existing_names = await get_existing_hotel_names(db, org_id)  # noqa: F841
         # For upsert mode, don't treat existing names as duplicates
         valid, val_errors = validate_hotels(mapped, set())
         run_doc["rows_processed"] = len(valid)

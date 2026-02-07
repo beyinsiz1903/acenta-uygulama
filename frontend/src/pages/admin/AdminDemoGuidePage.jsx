@@ -66,7 +66,7 @@ export default function AdminDemoGuidePage() {
               disabled={currentStep === 0}
               onClick={() => setCurrentStep(s => s - 1)}
             >
-              <ChevronLeft className="h-4 w-4 mr-1" /> \u00d6nceki
+              <ChevronLeft className="h-4 w-4 mr-1" /> Önceki
             </Button>
             <span className="text-sm text-gray-500">
               {currentStep + 1} / {steps.length}

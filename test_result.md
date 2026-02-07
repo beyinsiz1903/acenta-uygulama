@@ -223,11 +223,20 @@ frontend:
         agent: "testing"
         comment: "✅ FIXED: Mode switching UI is now working correctly. All mode transitions (Lite→Pro→Enterprise) work properly. The modal appears correctly showing items that will be hidden/shown, and closes properly after confirmation. The 'Gizlenecek' section in the modal shows items that will be hidden in downgrade."
 
-metadata:
-  created_by: "main_agent"
-  version: "7.2"
-  test_sequence: 14
-  run_ui: false
+  - task: "Route Guard Protection"
+    implemented: true
+    working: false
+    file: "frontend/src/components/AppShell.jsx"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Mode Route Guard implemented in AppShell.jsx useEffect to redirect if current path is hidden by mode."
+      - working: false
+        agent: "testing"
+        comment: "❌ ISSUE: The route guard is not working properly. When switching to Lite mode and attempting to access an enterprise-only route (/app/admin/branding), the user is not redirected to the dashboard as expected. This is a security concern as it allows users to access features that should be restricted in their current mode."
 
 test_plan:
   current_focus:

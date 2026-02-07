@@ -33,6 +33,12 @@ async def create_user(payload: UserCreateIn, user=Depends(get_current_user)):
 
     from app.auth import hash_password
 
+    # Enterprise password policy check (E2.3)
+    from app.services.password_policy import validate_password
+    violations = validate_password(payload.password)
+    if violations:
+        raise HTTPException(status_code=400, detail={"message": "Password does not meet requirements", "violations": violations})
+
     roles = payload.roles or ["agency_agent"]
 
     # Normalize legacy role names

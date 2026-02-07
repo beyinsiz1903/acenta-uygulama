@@ -66,240 +66,56 @@
 # END - Testing Protocol - DO NOT EDIT OR REMOVE THIS SECTION
 #====================================================================================================
 
-user_problem_statement: "Enterprise Hardening Sprint E1-E4: Governance (RBAC v2, Approval Workflow, Immutable Audit), Security (2FA TOTP, IP Whitelist, Password Policy), Observability (Structured Logging, Health Endpoints, Rate Limiting), Enterprise UX (White-Label, Full Data Export, Scheduled Reports)"
+user_problem_statement: "Feature modules: E-Fatura Layer, SMS Notification Layer, QR Ticket + Check-in. All with provider abstraction, mock providers, tenant isolation, RBAC, audit logging, idempotency."
 
 backend:
-  - task: "E3.2 Health Endpoints (live + ready)"
+  - task: "A) E-Fatura - Profile CRUD"
     implemented: true
-    working: true
-    file: "backend/app/routers/enterprise_health.py"
+    working: "NA"
+    file: "backend/app/routers/efatura.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Verified: /api/health/live returns alive, /api/health/ready returns ready with DB check"
-
-  - task: "E2.3 Password Policy"
-    implemented: true
-    working: true
-    file: "backend/app/services/password_policy.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Verified: weak password returns 400 with violations list, strong password accepted"
-
-  - task: "E3.3 Rate Limiting (login, signup, export, approvals)"
-    implemented: true
-    working: true
-    file: "backend/app/middleware/rate_limit_middleware.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Verified: returns 429 when exceeding limits"
-
-  - task: "E3.1 Structured JSON Logging"
-    implemented: true
-    working: true
-    file: "backend/app/middleware/structured_logging_middleware.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Logs request_id, tenant_id, user_id, path, method, status_code, latency_ms. X-Request-Id header added."
-
-  - task: "E1.1 Granular RBAC v2"
-    implemented: true
-    working: true
-    file: "backend/app/routers/enterprise_rbac.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Seed, list, upsert permissions/roles endpoints implemented. Additive - backward compat."
-      - working: true
-        agent: "testing"
-        comment: "✅ All RBAC endpoints working: POST /seed (seeded 31 permissions, 5 roles), GET /permissions (31 items), GET /roles (5 items), PUT /roles (role updates working). Response format uses 'permissions_count' instead of 'permissions_created'."
+        comment: "PUT/GET /api/efatura/profile. Tenant-scoped, admin-only."
 
-  - task: "E1.2 Approval Workflow Engine"
+  - task: "A) E-Fatura - Invoice CRUD + Send + Cancel"
     implemented: true
-    working: true
-    file: "backend/app/routers/enterprise_approvals.py"
+    working: "NA"
+    file: "backend/app/routers/efatura.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Create, list, approve, reject endpoints. Double-approve blocked (409). Audit logged."
-      - working: true
-        agent: "testing"
-        comment: "✅ All approval workflow endpoints working: POST /approvals (creates approval), GET /approvals (lists), POST /{id}/approve (works), double approve returns 409, reject after approve returns 409. Requires entity_type, entity_id, action fields."
+        comment: "POST/GET /api/efatura/invoices, POST send/cancel. Idempotent. MockProvider. Audit logged."
 
-  - task: "E1.3 Immutable Audit Log (hash chain + CSV export)"
+  - task: "B) SMS Notification - Send + Bulk + Logs"
     implemented: true
-    working: true
-    file: "backend/app/routers/enterprise_audit.py"
+    working: "NA"
+    file: "backend/app/routers/sms_notifications.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Per-tenant hash chain. Verify integrity. Streaming CSV export."
-      - working: false
-        agent: "testing"
-        comment: "❌ CRITICAL: Hash chain integrity verification failing. GET /api/admin/audit/chain returns entries, CSV export works, but GET /api/admin/audit/chain/verify shows chain integrity broken with hash mismatches. This is a security issue that needs immediate attention."
-      - working: true
-        agent: "testing"
-        comment: "✅ FIXED: Hash chain integrity now working correctly. GET /api/admin/audit/chain returns entries, GET /api/admin/audit/chain/verify shows valid=true with 2 entries checked and no errors, CSV export working (875 bytes). Critical security issue resolved."
+        comment: "POST /api/sms/send, /api/sms/send-bulk, GET /api/sms/logs, /api/sms/templates. MockProvider."
 
-  - task: "E2.1 2FA (TOTP) with recovery codes"
+  - task: "C) QR Ticket - Create + Check-in + Cancel + Stats"
     implemented: true
-    working: true
-    file: "backend/app/routers/enterprise_2fa.py"
+    working: "NA"
+    file: "backend/app/routers/tickets.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Enable, verify, disable endpoints. Login flow checks 2FA. Recovery codes supported."
-      - working: false
-        agent: "testing"
-        comment: "❌ 2FA verification logic issue: POST /api/auth/2fa/enable works (returns secret + 10 recovery codes), POST /api/auth/2fa/verify returns 200 but with confusing response message '2FA activated successfully' instead of verification confirmation. The verify endpoint seems to be activating 2FA rather than just verifying the OTP. GET /api/auth/2fa/status works correctly."
-      - working: true
-        agent: "testing"
-        comment: "✅ CLARIFIED: 2FA flow working correctly. Flow is: enable → verify (activates) → login requires OTP. POST /api/auth/2fa/enable gets secret + 10 recovery codes, POST /api/auth/2fa/verify activates 2FA (returns 'activated successfully'), GET /api/auth/2fa/status shows enabled=true, POST /api/auth/2fa/disable works with OTP. The verify endpoint is correctly activating 2FA, not just verifying OTP."
-
-  - task: "E2.2 Tenant IP Whitelist"
-    implemented: true
-    working: true
-    file: "backend/app/routers/enterprise_ip_whitelist.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Middleware checks allowed_ips in tenant settings. Admin CRUD for whitelist."
-      - working: false
-        agent: "testing"
-        comment: "❌ IP Whitelist enforcement too aggressive: GET/PUT /api/admin/ip-whitelist endpoints work correctly, but after setting IP whitelist, all subsequent requests to other admin endpoints are blocked with 403 'ip_not_whitelisted' even when the test should be allowed. The whitelist middleware is blocking legitimate admin operations. Backend logs show 'IP whitelist blocked: tenant=X ip=104.198.214.223'."
-      - working: true
-        agent: "testing"
-        comment: "✅ FIXED: Admin paths now correctly bypass IP whitelist enforcement. GET/PUT /api/admin/ip-whitelist work, can set restrictive IPs and admin endpoints still accessible (bypass confirmed). Other admin endpoints like /api/admin/audit/chain continue working despite IP restrictions. Admin bypass functionality working correctly."
-
-  - task: "E4.1 White-Label Settings"
-    implemented: true
-    working: true
-    file: "backend/app/routers/enterprise_whitelabel.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Extended existing whitelabel with logo_url, primary_color, company_name."
-      - working: false
-        agent: "testing"
-        comment: "❌ Blocked by IP Whitelist: Both GET and PUT /api/admin/whitelabel-settings return 403 'ip_not_whitelisted'. This is related to the IP whitelist enforcement issue - the endpoints themselves may be working but are blocked by the overly aggressive IP whitelist middleware."
-      - working: true
-        agent: "testing"
-        comment: "✅ WORKING: White-label endpoints now working after IP whitelist fix. GET /api/admin/whitelabel-settings returns settings with logo_url, primary_color, company_name, favicon_url, support_email fields. PUT /api/admin/whitelabel-settings successfully updates all settings. No longer blocked by IP whitelist middleware."
-
-  - task: "E4.2 Full Data Export (zip)"
-    implemented: true
-    working: true
-    file: "backend/app/routers/enterprise_export.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "POST /api/admin/tenant/export returns zip with customers, deals, tasks, reservations, payments JSON."
-      - working: true
-        agent: "testing"
-        comment: "✅ Data export working correctly: POST /api/admin/tenant/export returns valid zip file (1206 bytes) with proper content-type headers."
-
-  - task: "E4.3 Scheduled Reports"
-    implemented: true
-    working: true
-    file: "backend/app/routers/enterprise_schedules.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "CRUD for schedules. APScheduler runs every 15 min. Manual execute-due endpoint."
-      - working: true
-        agent: "testing"
-        comment: "✅ All scheduled reports endpoints working: POST /api/admin/report-schedules (creates schedule, requires email field), GET /api/admin/report-schedules (lists), DELETE /{id} (deletes), POST /execute-due (manual trigger). All endpoints returning 200 with correct functionality."
-
-frontend:
-  - task: "E4.1 White-Label UI (dynamic logo/color/name)"
-    implemented: true
-    working: true
-    file: "frontend/src/components/AppShell.jsx"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "White-Label UI component implemented with company_name, logo_url, primary_color"
-      - working: true
-        agent: "testing"
-        comment: "✅ White-Label UI working perfectly. Company name, brand color settings persist and update header branding. Successfully tested with 'Enterprise Corp' name and #6366f1 color."
-
-  - task: "E1.2 Approval Inbox UI"
-    implemented: true
-    working: true
-    file: "frontend/src/pages/AdminApprovalInboxPage.jsx"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "✅ Approval Inbox UI working correctly. Successfully created approval via API, approved it through UI, and verified status change. Tab navigation between pending and approved items works."
-
-  - task: "E4.2 Full Data Export UI"
-    implemented: true
-    working: true
-    file: "frontend/src/pages/AdminTenantExportPage.jsx"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "✅ Tenant Export UI working as expected. Export button triggers ZIP download with success message. File download functionality working correctly."
-
-  - task: "E4.3 Scheduled Reports UI"
-    implemented: true
-    working: true
-    file: "frontend/src/pages/AdminScheduledReportsPage.jsx"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "✅ Scheduled Reports UI functioning properly. Created new schedule with email 'reports@test.com', verified it appeared in list, and successfully deleted it."
+        comment: "POST /api/tickets, /api/tickets/check-in, /api/tickets/{code}/cancel, GET stats. Idempotent per reservation. Audit logged."
 
 metadata:
   created_by: "main_agent"
@@ -308,15 +124,11 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "A) E-Fatura - Profile CRUD"
+    - "A) E-Fatura - Invoice CRUD + Send + Cancel"
+    - "B) SMS Notification - Send + Bulk + Logs"
+    - "C) QR Ticket - Create + Check-in + Cancel + Stats"
   stuck_tasks: []
-  test_all: false
+  test_all: true
   test_priority: "high_first"
-
-agent_communication:
-  - agent: "testing"
-    message: "Enterprise Hardening Testing Complete - 24/30 tests passed (80%). CRITICAL ISSUES: E1.3 Audit hash chain integrity broken (security risk), E2.1 2FA verify endpoint confusion, E2.2 IP whitelist blocking legitimate admin operations. E4.1 White-label blocked by IP whitelist issue. All other endpoints (E1.1 RBAC, E1.2 Approvals, E3.2 Health, E3.3 Rate Limiting, E4.2 Export, E4.3 Reports) working correctly."
-  - agent: "testing"
-    message: "RE-TEST COMPLETE - ALL PREVIOUSLY FAILING TESTS NOW FIXED! 18/18 tests passed (100%). ✅ E1.3 Audit hash chain integrity FIXED - chain verification now returns valid=true. ✅ E2.1 2FA flow CLARIFIED - verify endpoint correctly activates 2FA (not just verifying OTP). ✅ E2.2 IP whitelist FIXED - admin paths now bypass IP restrictions correctly. ✅ E4.1 White-label WORKING - no longer blocked by IP whitelist. All endpoints functioning correctly. Enterprise hardening implementation complete."
-  - agent: "testing"
-    message: "FRONTEND E2E TESTS COMPLETE - All Enterprise Hardening Sprint UI features are working correctly! ✅ White-Label UI: Company name/color persist and update header branding. ✅ Approval Inbox UI: Creating, viewing, and approving requests works. ✅ Tenant Export UI: Export ZIP download functionality works. ✅ Scheduled Reports UI: Creating and deleting scheduled reports works."

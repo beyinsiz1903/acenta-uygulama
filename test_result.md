@@ -75,11 +75,14 @@ backend:
     file: "backend/app/routers/admin_import.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Accepts CSV/XLSX, parses headers+rows, creates import_job, returns preview (first 20 rows). Auto-detects mapping. Tested with 3-row CSV."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING PASSED: CSV upload works perfectly. Returns correct job_id, filename, total_rows, headers, preview, available_fields. File validation works (rejects .txt files). Authentication required (401 without token). Tested with 5-row CSV containing validation scenarios."
 
   - task: "POST /api/admin/import/hotels/validate - Validate with mapping"
     implemented: true

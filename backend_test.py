@@ -87,15 +87,15 @@ class APITester:
         """Test user registration and login"""
         print("\n=== AUTHENTICATION SETUP ===")
         
-        # Register user
+        # Register user (note: signup endpoint, not register)
         register_data = {
             "email": "test@test.com",
-            "password": "Test1234!",
+            "password": "Test1234567890!",  # Updated to meet 10-char requirement
             "name": "Test User",
             "organization_name": "Test Org"
         }
         
-        response = self.make_request("POST", "/auth/register", register_data)
+        response = self.make_request("POST", "/auth/signup", register_data)
         if response.status_code == 201 or response.status_code == 200:
             self.log_test("User Registration", True, f"Status: {response.status_code}")
         elif response.status_code == 409:

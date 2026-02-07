@@ -353,6 +353,7 @@ function App() {
             <Route path="product-mode" element={<AdminProductModePage />} />
             {/* Data & Migration */}
             <Route path="import" element={<AdminImportPage />} />
+            <Route path="portfolio-sync" element={<AdminPortfolioSyncPage />} />
           </Route>
         </Route>
 

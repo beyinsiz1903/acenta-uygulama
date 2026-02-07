@@ -68,6 +68,10 @@ import AdminSystemErrorsPage from "./pages/admin/AdminSystemErrorsPage";
 import AdminSystemUptimePage from "./pages/admin/AdminSystemUptimePage";
 import AdminSystemIncidentsPage from "./pages/admin/AdminSystemIncidentsPage";
 
+// Production Go-Live Pack (A)
+import AdminPreflightPage from "./pages/admin/AdminPreflightPage";
+import AdminRunbookPage from "./pages/admin/AdminRunbookPage";
+
 import AdminMatchesPage from "./pages/AdminMatchesPage";
 import AdminExportsPage from "./pages/AdminExportsPage";
 import AdminMatchDetailPage from "./pages/AdminMatchDetailPage";

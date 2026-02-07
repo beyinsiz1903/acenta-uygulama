@@ -203,7 +203,7 @@ backend:
 
   - task: "E4.1 White-Label Settings"
     implemented: true
-    working: false
+    working: true
     file: "backend/app/routers/enterprise_whitelabel.py"
     stuck_count: 0
     priority: "medium"
@@ -215,6 +215,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "❌ Blocked by IP Whitelist: Both GET and PUT /api/admin/whitelabel-settings return 403 'ip_not_whitelisted'. This is related to the IP whitelist enforcement issue - the endpoints themselves may be working but are blocked by the overly aggressive IP whitelist middleware."
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING: White-label endpoints now working after IP whitelist fix. GET /api/admin/whitelabel-settings returns settings with logo_url, primary_color, company_name, favicon_url, support_email fields. PUT /api/admin/whitelabel-settings successfully updates all settings. No longer blocked by IP whitelist middleware."
 
   - task: "E4.2 Full Data Export (zip)"
     implemented: true

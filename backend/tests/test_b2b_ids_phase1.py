@@ -5,7 +5,7 @@ import pytest
 from httpx import AsyncClient
 
 from app.db import get_db
-from app.main import app  # assuming app is created in app/main.py or adjust import
+from server import app  # FastAPI app is in server.py
 
 
 @pytest.mark.asyncio

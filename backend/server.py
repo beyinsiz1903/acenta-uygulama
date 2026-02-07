@@ -303,6 +303,39 @@ async def lifespan(app: FastAPI):
 
     ops_scheduler.start()
 
+    # ---- Google Sheets Sync Scheduler ----
+    import os as _os
+    sheets_sync_enabled = _os.environ.get("GOOGLE_SHEETS_SYNC_ENABLED", "true").lower() == "true"
+    sheets_sync_interval = int(_os.environ.get("GOOGLE_SHEETS_SYNC_INTERVAL_MINUTES", "5"))
+    if sheets_sync_enabled:
+        sheets_scheduler = AsyncIOScheduler()
+        async def _run_sheets_sync():
+            try:
+                from app.services.sheet_sync_service import run_scheduled_sync
+                _sdb = await get_db()
+                count = await run_scheduled_sync(_sdb)
+                if count > 0:
+                    logging.getLogger("sheets_sync").info("Synced %d sheet connections", count)
+            except Exception as e:
+                logging.getLogger("sheets_sync").error("Sheets sync error: %s", e)
+        sheets_scheduler.add_job(_run_sheets_sync, "interval", minutes=sheets_sync_interval, id="sheets_sync")
+        sheets_scheduler.start()
+
+    # Ensure indexes for import/sheets
+    try:
+        await db.import_jobs.create_index([("organization_id", 1), ("created_at", -1)])
+        await db.import_errors.create_index("job_id")
+        await db.sheet_connections.create_index([("organization_id", 1), ("status", 1)])
+        await db.sheet_sync_runs.create_index([("sheet_connection_id", 1), ("started_at", -1)])
+        await db.sheet_row_fingerprints.create_index(
+            [("tenant_id", 1), ("sheet_connection_id", 1), ("row_key", 1)],
+            unique=True,
+        )
+        await db.sheet_sync_locks.create_index("tenant_id", unique=True)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning("Import/sheets index creation warning: %s", e)
+
     # Ensure enterprise indexes
     try:
         await db.audit_logs_chain.create_index([("tenant_id", 1), ("created_at", 1)])

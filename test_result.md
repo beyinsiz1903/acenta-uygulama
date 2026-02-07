@@ -222,17 +222,15 @@ frontend:
 
 metadata:
   created_by: "main_agent"
-  version: "7.1"
-  test_sequence: 13
+  version: "7.2"
+  test_sequence: 14
   run_ui: false
 
 test_plan:
   current_focus:
     - "Sidebar mode-aware filtering"
-    - "Admin Product Mode Settings Page"
   stuck_tasks:
     - "Sidebar mode-aware filtering"
-    - "Admin Product Mode Settings Page"
   test_all: false
   test_priority: "high_first"
 

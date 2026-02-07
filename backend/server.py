@@ -176,6 +176,9 @@ from app.routers.admin_maintenance import router as admin_maintenance_router
 from app.routers.admin_system_preflight import router as admin_system_preflight_router
 from app.routers.admin_system_runbook import router as admin_system_runbook_router
 
+# Cost/Performance Pack (B)
+from app.routers.admin_system_perf import router as admin_system_perf_router
+
 from app.email_worker import email_dispatch_loop
 from app.indexes import finance_indexes, inbox_indexes, pricing_indexes, public_indexes, voucher_indexes
 from app.indexes import crm_indexes

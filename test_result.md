@@ -265,10 +265,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "E1.3 Immutable Audit Log (hash chain + CSV export)"
-    - "E2.1 2FA (TOTP) with recovery codes"  
-    - "E2.2 Tenant IP Whitelist"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -276,3 +273,5 @@ test_plan:
 agent_communication:
   - agent: "testing"
     message: "Enterprise Hardening Testing Complete - 24/30 tests passed (80%). CRITICAL ISSUES: E1.3 Audit hash chain integrity broken (security risk), E2.1 2FA verify endpoint confusion, E2.2 IP whitelist blocking legitimate admin operations. E4.1 White-label blocked by IP whitelist issue. All other endpoints (E1.1 RBAC, E1.2 Approvals, E3.2 Health, E3.3 Rate Limiting, E4.2 Export, E4.3 Reports) working correctly."
+  - agent: "testing"
+    message: "RE-TEST COMPLETE - ALL PREVIOUSLY FAILING TESTS NOW FIXED! 18/18 tests passed (100%). ✅ E1.3 Audit hash chain integrity FIXED - chain verification now returns valid=true. ✅ E2.1 2FA flow CLARIFIED - verify endpoint correctly activates 2FA (not just verifying OTP). ✅ E2.2 IP whitelist FIXED - admin paths now bypass IP restrictions correctly. ✅ E4.1 White-label WORKING - no longer blocked by IP whitelist. All endpoints functioning correctly. Enterprise hardening implementation complete."

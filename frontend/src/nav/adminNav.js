@@ -53,6 +53,8 @@ export const adminNav = [
       { label: "Sistem Hataları", path: "/app/admin/system-errors" },
       { label: "Çalışma Süresi", path: "/app/admin/system-uptime" },
       { label: "Olay Yönetimi", path: "/app/admin/system-incidents" },
+      { label: "Go-Live Kontrolü", path: "/app/admin/preflight" },
+      { label: "Ops Runbook", path: "/app/admin/runbook" },
     ],
   },
 ];

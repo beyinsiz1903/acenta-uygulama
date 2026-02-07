@@ -354,6 +354,26 @@ export default function AppShell() {
 
   const isAdmin = (user?.roles || []).some((r) => ["super_admin", "admin"].includes(r));
   const { hasFeature, loading: featuresLoading, quotaAlerts } = useFeatures();
+  const { mode: productMode, isAtLeast: isModeAtLeast, hiddenNavItems, labelOverrides, loading: modeLoading } = useProductMode();
+
+  /* Mode-aware nav filter helper */
+  const MODE_ORDER_MAP = { lite: 0, pro: 1, enterprise: 2 };
+  const currentModeLevel = MODE_ORDER_MAP[productMode] ?? 2;
+
+  const filterNavByMode = useCallback((items) => {
+    return items.filter((it) => {
+      // Feature flag filter
+      if (it.feature && !(!featuresLoading && hasFeature(it.feature))) return false;
+      // Mode filter: item's minMode must be <= current mode
+      if (it.minMode) {
+        const itemLevel = MODE_ORDER_MAP[it.minMode] ?? 0;
+        if (itemLevel > currentModeLevel) return false;
+      }
+      // Server-side hidden items check
+      if (it.modeKey && hiddenNavItems.includes(it.modeKey)) return false;
+      return true;
+    });
+  }, [featuresLoading, hasFeature, currentModeLevel, hiddenNavItems]);
 
   const toggleCollapse = () => {
     setCollapsed((v) => {

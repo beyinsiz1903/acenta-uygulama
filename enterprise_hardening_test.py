@@ -442,8 +442,8 @@ class EnterpriseHardeningTester:
             
             if response.status_code == 200:
                 data = response.json()
-                if data.get("permissions_created") is not None and data.get("roles_created") is not None:
-                    test_result["details"] += f" ✅ Seeded {data.get('permissions_created')} permissions, {data.get('roles_created')} roles"
+                if data.get("permissions_count") is not None and data.get("roles_seeded") is not None:
+                    test_result["details"] += f" ✅ Seeded {data.get('permissions_count')} permissions, {len(data.get('roles_seeded', []))} roles"
                 else:
                     test_result["status"] = "fail"
                     test_result["details"] += f" ❌ Invalid seed response: {data}"

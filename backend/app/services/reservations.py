@@ -161,6 +161,17 @@ async def set_reservation_status(org_id: str, reservation_id: str, status: str, 
         for d in updated.get("dates") or []:
             await release_inventory(org_id, updated["product_id"], d, pax)
 
+        # ── Sheet Write-Back Hook (cancellation) ──
+        try:
+            from app.services.sheet_writeback_service import on_reservation_cancelled
+            tenant_id = org_id
+            await on_reservation_cancelled(db, tenant_id, org_id, updated)
+        except Exception as wb_err:
+            import logging
+            logging.getLogger("sheet_writeback").warning(
+                "Write-back cancel hook failed: %s", wb_err
+            )
+
     return updated
 
 

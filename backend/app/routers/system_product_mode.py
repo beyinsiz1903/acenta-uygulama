@@ -33,8 +33,18 @@ async def get_product_mode(
     - Filter sidebar items
     - Show/hide UI components
     - Apply label overrides
+
+    Resolution order for tenant_id:
+    1. request.state.tenant_id (set by TenantResolutionMiddleware)
+    2. X-Tenant-Id header (for paths whitelisted in middleware)
+    3. Fallback to DEFAULT_MODE (enterprise)
     """
     tenant_id = getattr(request.state, "tenant_id", None)
+
+    # Fallback: read from X-Tenant-Id header directly
+    # (this endpoint is under /api/system/ which is whitelisted in tenant middleware)
+    if not tenant_id:
+        tenant_id = request.headers.get("x-tenant-id") or request.headers.get("X-Tenant-Id")
 
     if not tenant_id:
         # No tenant context (e.g. super_admin without tenant) → enterprise

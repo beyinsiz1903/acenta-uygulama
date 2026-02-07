@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
 """
-Zero Migration Friction Engine - Hotel Import API Testing
+Google Sheets Live Sync API Testing with Graceful Fallback
 
-Tests all the import endpoints with comprehensive scenarios including:
-- CSV upload and processing
-- Column mapping and validation 
-- Bulk execution and job tracking
-- Template export
-- Google Sheets integration (MOCKED)
-- Error handling and edge cases
-- Authentication requirements
+Tests the production-ready Google Sheets integration endpoints when 
+GOOGLE_SERVICE_ACCOUNT_JSON is NOT set (graceful fallback mode).
+
+All endpoints should work without crashing and return proper error messages.
 """
 
 import asyncio
@@ -30,15 +26,6 @@ ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 API_BASE = f"{BACKEND_URL}/api"
 
-# Test data - use timestamp to ensure unique names
-import time
-timestamp = str(int(time.time()))
-TEST_CSV_CONTENT = f"""Otel Adı,Şehir,Ülke,Açıklama,Fiyat,Yıldız
-Import Hotel {timestamp}_1,İstanbul,TR,Test hotel,1500,5
-Import Hotel {timestamp}_2,Antalya,TR,Beach hotel,2000,4
-Import Hotel {timestamp}_3,Bodrum,TR,Marina view,3000,5
-Import Hotel {timestamp}_4,,TR,Missing city,,3
-Import Hotel {timestamp}_5,İzmir,TR,Good hotel,abc,4"""
 
 class TestResults:
     def __init__(self):
@@ -64,12 +51,12 @@ class TestResults:
                 print(f"  - {error}")
 
 
-class HotelImportTester:
+class GoogleSheetsLiveSyncTester:
     def __init__(self):
         self.client = httpx.AsyncClient(timeout=30.0)
         self.results = TestResults()
         self.auth_token: Optional[str] = None
-        self.job_id: Optional[str] = None
+        self.connection_id: Optional[str] = None
         
     async def __aenter__(self):
         return self
@@ -106,242 +93,84 @@ class HotelImportTester:
             return {}
         return {"Authorization": f"Bearer {self.auth_token}"}
     
-    async def test_upload_csv(self):
-        """Test CSV upload endpoint."""
+    async def test_sheet_config(self):
+        """Test GET /api/admin/import/sheet/config - should show not configured."""
         try:
-            # Create temporary CSV file
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
-                f.write(TEST_CSV_CONTENT)
-                temp_path = f.name
-            
-            # Upload file
-            with open(temp_path, 'rb') as f:
-                files = {"file": ("test_import.csv", f, "text/csv")}
-                response = await self.client.post(
-                    f"{API_BASE}/admin/import/hotels/upload",
-                    headers=self.get_headers(),
-                    files=files
-                )
-            
-            os.unlink(temp_path)  # Clean up
+            response = await self.client.get(
+                f"{API_BASE}/admin/import/sheet/config",
+                headers=self.get_headers()
+            )
             
             if response.status_code == 200:
                 data = response.json()
-                required_fields = ["job_id", "filename", "total_rows", "headers", "preview", "available_fields"]
+                required_fields = ["configured", "service_account_email", "message"]
                 missing = [f for f in required_fields if f not in data]
                 
                 if missing:
-                    self.results.add_result("CSV Upload", False, f"Missing fields: {missing}")
-                elif data["total_rows"] != 5:
-                    self.results.add_result("CSV Upload", False, f"Expected 5 rows, got {data['total_rows']}")
+                    self.results.add_result("Sheet Config", False, f"Missing fields: {missing}")
+                elif data["configured"] != False:
+                    self.results.add_result("Sheet Config", False, f"Expected configured=false, got {data['configured']}")
+                elif data["service_account_email"] is not None:
+                    self.results.add_result("Sheet Config", False, f"Expected service_account_email=null, got {data['service_account_email']}")
+                elif not data.get("message"):
+                    self.results.add_result("Sheet Config", False, "Expected error message when not configured")
                 else:
-                    self.job_id = data["job_id"]
-                    self.results.add_result("CSV Upload", True)
+                    self.results.add_result("Sheet Config", True)
                     return data
             else:
-                self.results.add_result("CSV Upload", False, f"Status {response.status_code}: {response.text}")
+                self.results.add_result("Sheet Config", False, f"Status {response.status_code}: {response.text}")
                 
         except Exception as e:
-            self.results.add_result("CSV Upload", False, str(e))
+            self.results.add_result("Sheet Config", False, str(e))
         
         return None
     
-    async def test_validate_mapping(self):
-        """Test validation with column mapping."""
-        if not self.job_id:
-            self.results.add_result("Validation with Mapping", False, "No job_id from upload")
-            return None
-            
+    async def test_sheet_connect(self):
+        """Test POST /api/admin/import/sheet/connect - should save gracefully."""
         try:
-            mapping = {
-                "0": "name",
-                "1": "city", 
-                "2": "country",
-                "3": "description",
-                "4": "price",
-                "5": "stars"
+            test_data = {
+                "sheet_id": "test_sheet_123",
+                "worksheet_name": "Hotels",
+                "column_mapping": {
+                    "Otel Adı": "name",
+                    "Şehir": "city"
+                },
+                "sync_enabled": True
             }
             
             response = await self.client.post(
-                f"{API_BASE}/admin/import/hotels/validate",
-                headers=self.get_headers(),
-                json={
-                    "job_id": self.job_id,
-                    "mapping": mapping
-                }
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                required_fields = ["job_id", "total_rows", "valid_count", "error_count"]
-                missing = [f for f in required_fields if f not in data]
-                
-                if missing:
-                    self.results.add_result("Validation with Mapping", False, f"Missing fields: {missing}")
-                elif data["valid_count"] != 3:
-                    self.results.add_result("Validation with Mapping", False, f"Expected 3 valid rows, got {data['valid_count']}")
-                elif data["error_count"] < 2:
-                    self.results.add_result("Validation with Mapping", False, f"Expected >= 2 errors, got {data['error_count']}")
-                else:
-                    self.results.add_result("Validation with Mapping", True)
-                    return data
-            else:
-                self.results.add_result("Validation with Mapping", False, f"Status {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.results.add_result("Validation with Mapping", False, str(e))
-        
-        return None
-    
-    async def test_execute_import(self):
-        """Test executing the import."""
-        if not self.job_id:
-            self.results.add_result("Execute Import", False, "No job_id from upload")
-            return None
-            
-        try:
-            response = await self.client.post(
-                f"{API_BASE}/admin/import/hotels/execute",
-                headers=self.get_headers(),
-                json={"job_id": self.job_id}
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                required_fields = ["job_id", "status", "message"]
-                missing = [f for f in required_fields if f not in data]
-                
-                if missing:
-                    self.results.add_result("Execute Import", False, f"Missing fields: {missing}")
-                elif data["status"] != "processing":
-                    self.results.add_result("Execute Import", False, f"Expected status 'processing', got '{data['status']}'")
-                else:
-                    self.results.add_result("Execute Import", True)
-                    return data
-            else:
-                self.results.add_result("Execute Import", False, f"Status {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.results.add_result("Execute Import", False, str(e))
-        
-        return None
-    
-    async def test_list_jobs(self):
-        """Test listing import jobs."""
-        try:
-            response = await self.client.get(
-                f"{API_BASE}/admin/import/jobs",
-                headers=self.get_headers()
-            )
-            
-            if response.status_code == 200:
-                jobs = response.json()
-                if isinstance(jobs, list):
-                    self.results.add_result("List Import Jobs", True)
-                    return jobs
-                else:
-                    self.results.add_result("List Import Jobs", False, "Response is not a list")
-            else:
-                self.results.add_result("List Import Jobs", False, f"Status {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.results.add_result("List Import Jobs", False, str(e))
-        
-        return None
-    
-    async def test_get_job_detail(self):
-        """Test getting job detail with errors."""
-        if not self.job_id:
-            self.results.add_result("Get Job Detail", False, "No job_id from upload")
-            return None
-            
-        try:
-            # Wait for job to complete
-            await asyncio.sleep(3)
-            
-            response = await self.client.get(
-                f"{API_BASE}/admin/import/jobs/{self.job_id}",
-                headers=self.get_headers()
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                required_fields = ["id", "status", "success_count", "error_count"]
-                missing = [f for f in required_fields if f not in data]
-                
-                if missing:
-                    self.results.add_result("Get Job Detail", False, f"Missing fields: {missing}")
-                elif "errors" not in data:
-                    self.results.add_result("Get Job Detail", False, "Missing errors array")
-                else:
-                    self.results.add_result("Get Job Detail", True)
-                    return data
-            else:
-                self.results.add_result("Get Job Detail", False, f"Status {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.results.add_result("Get Job Detail", False, str(e))
-        
-        return None
-    
-    async def test_export_template(self):
-        """Test downloading XLSX template."""
-        try:
-            response = await self.client.get(
-                f"{API_BASE}/admin/import/export-template",
-                headers=self.get_headers()
-            )
-            
-            if response.status_code == 200:
-                content_type = response.headers.get("content-type", "")
-                content_disposition = response.headers.get("content-disposition", "")
-                
-                if "spreadsheet" in content_type and "attachment" in content_disposition:
-                    self.results.add_result("Export XLSX Template", True)
-                    return True
-                else:
-                    self.results.add_result("Export XLSX Template", False, f"Wrong content type or disposition")
-            else:
-                self.results.add_result("Export XLSX Template", False, f"Status {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.results.add_result("Export XLSX Template", False, str(e))
-        
-        return False
-    
-    async def test_sheet_connect(self):
-        """Test Google Sheet connection (MOCKED)."""
-        try:
-            response = await self.client.post(
                 f"{API_BASE}/admin/import/sheet/connect",
                 headers=self.get_headers(),
-                json={
-                    "sheet_id": "test123",
-                    "worksheet_name": "Sheet1",
-                    "sync_enabled": False
-                }
+                json=test_data
             )
             
             if response.status_code == 200:
                 data = response.json()
-                required_fields = ["id", "sheet_id", "worksheet_name", "status"]
+                required_fields = ["id", "sheet_id", "worksheet_name", "configured", "detected_headers"]
                 missing = [f for f in required_fields if f not in data]
                 
                 if missing:
-                    self.results.add_result("Sheet Connect (MOCKED)", False, f"Missing fields: {missing}")
+                    self.results.add_result("Sheet Connect", False, f"Missing fields: {missing}")
+                elif data["configured"] != False:
+                    self.results.add_result("Sheet Connect", False, f"Expected configured=false, got {data['configured']}")
+                elif data["detected_headers"] != []:
+                    self.results.add_result("Sheet Connect", False, f"Expected empty detected_headers, got {data['detected_headers']}")
+                elif data["sheet_id"] != test_data["sheet_id"]:
+                    self.results.add_result("Sheet Connect", False, f"Sheet ID mismatch")
                 else:
-                    self.results.add_result("Sheet Connect (MOCKED)", True)
+                    self.connection_id = data["id"]
+                    self.results.add_result("Sheet Connect", True)
                     return data
             else:
-                self.results.add_result("Sheet Connect (MOCKED)", False, f"Status {response.status_code}: {response.text}")
+                self.results.add_result("Sheet Connect", False, f"Status {response.status_code}: {response.text}")
                 
         except Exception as e:
-            self.results.add_result("Sheet Connect (MOCKED)", False, str(e))
+            self.results.add_result("Sheet Connect", False, str(e))
         
         return None
     
     async def test_sheet_sync(self):
-        """Test Google Sheet sync (MOCKED)."""
+        """Test POST /api/admin/import/sheet/sync - should return not_configured gracefully."""
         try:
             response = await self.client.post(
                 f"{API_BASE}/admin/import/sheet/sync",
@@ -351,26 +180,108 @@ class HotelImportTester:
             
             if response.status_code == 200:
                 data = response.json()
-                required_fields = ["status", "message", "sheet_id", "last_sync_at"]
+                required_fields = ["status", "message", "configured"]
                 missing = [f for f in required_fields if f not in data]
                 
                 if missing:
-                    self.results.add_result("Sheet Sync (MOCKED)", False, f"Missing fields: {missing}")
-                elif data["status"] != "synced":
-                    self.results.add_result("Sheet Sync (MOCKED)", False, f"Expected status 'synced', got '{data['status']}'")
+                    self.results.add_result("Sheet Sync", False, f"Missing fields: {missing}")
+                elif data["status"] != "not_configured":
+                    self.results.add_result("Sheet Sync", False, f"Expected status='not_configured', got '{data['status']}'")
+                elif data["configured"] != False:
+                    self.results.add_result("Sheet Sync", False, f"Expected configured=false, got {data['configured']}")
+                elif not data.get("message"):
+                    self.results.add_result("Sheet Sync", False, "Expected error message when not configured")
                 else:
-                    self.results.add_result("Sheet Sync (MOCKED)", True)
+                    self.results.add_result("Sheet Sync", True)
                     return data
             else:
-                self.results.add_result("Sheet Sync (MOCKED)", False, f"Status {response.status_code}: {response.text}")
+                self.results.add_result("Sheet Sync", False, f"Status {response.status_code}: {response.text}")
                 
         except Exception as e:
-            self.results.add_result("Sheet Sync (MOCKED)", False, str(e))
+            self.results.add_result("Sheet Sync", False, str(e))
         
         return None
     
-    async def test_list_sheet_connections(self):
-        """Test listing sheet connections."""
+    async def test_sheet_connection(self):
+        """Test GET /api/admin/import/sheet/connection - should return connection details."""
+        try:
+            response = await self.client.get(
+                f"{API_BASE}/admin/import/sheet/connection",
+                headers=self.get_headers()
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if not data.get("connected"):
+                    # No connection exists yet - this is fine
+                    if data.get("connected") == False:
+                        self.results.add_result("Sheet Connection", True, "No connection exists (expected)")
+                        return {"connected": False}
+                    else:
+                        self.results.add_result("Sheet Connection", False, "Invalid response format")
+                else:
+                    # Connection exists - verify format
+                    required_fields = ["connected", "configured", "service_account_email"]
+                    missing = [f for f in required_fields if f not in data]
+                    
+                    if missing:
+                        self.results.add_result("Sheet Connection", False, f"Missing fields: {missing}")
+                    elif data["configured"] != False:
+                        self.results.add_result("Sheet Connection", False, f"Expected configured=false, got {data['configured']}")
+                    else:
+                        self.results.add_result("Sheet Connection", True)
+                        return data
+            else:
+                self.results.add_result("Sheet Connection", False, f"Status {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.results.add_result("Sheet Connection", False, str(e))
+        
+        return None
+    
+    async def test_sheet_status(self):
+        """Test GET /api/admin/import/sheet/status - should return sync status."""
+        try:
+            response = await self.client.get(
+                f"{API_BASE}/admin/import/sheet/status",
+                headers=self.get_headers()
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if not data.get("connected"):
+                    # No connection exists yet
+                    if data.get("connected") == False:
+                        self.results.add_result("Sheet Status", True, "No connection exists (expected)")
+                        return {"connected": False}
+                    else:
+                        self.results.add_result("Sheet Status", False, "Invalid response format")
+                else:
+                    # Connection exists - verify status format
+                    required_fields = ["connected", "configured", "recent_runs"]
+                    missing = [f for f in required_fields if f not in data]
+                    
+                    if missing:
+                        self.results.add_result("Sheet Status", False, f"Missing fields: {missing}")
+                    elif data["configured"] != False:
+                        self.results.add_result("Sheet Status", False, f"Expected configured=false, got {data['configured']}")
+                    elif not isinstance(data["recent_runs"], list):
+                        self.results.add_result("Sheet Status", False, "recent_runs should be a list")
+                    else:
+                        self.results.add_result("Sheet Status", True)
+                        return data
+            else:
+                self.results.add_result("Sheet Status", False, f"Status {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.results.add_result("Sheet Status", False, str(e))
+        
+        return None
+    
+    async def test_sheet_connections_list(self):
+        """Test GET /api/admin/import/sheet/connections - should list all connections."""
         try:
             response = await self.client.get(
                 f"{API_BASE}/admin/import/sheet/connections",
@@ -378,132 +289,35 @@ class HotelImportTester:
             )
             
             if response.status_code == 200:
-                connections = response.json()
-                if isinstance(connections, list) and len(connections) >= 1:
-                    self.results.add_result("List Sheet Connections", True)
-                    return connections
+                data = response.json()
+                
+                if isinstance(data, list):
+                    self.results.add_result("Sheet Connections List", True)
+                    return data
                 else:
-                    self.results.add_result("List Sheet Connections", False, f"Expected list with >= 1 connection, got {len(connections) if isinstance(connections, list) else 'not list'}")
+                    self.results.add_result("Sheet Connections List", False, "Response should be a list")
             else:
-                self.results.add_result("List Sheet Connections", False, f"Status {response.status_code}: {response.text}")
+                self.results.add_result("Sheet Connections List", False, f"Status {response.status_code}: {response.text}")
                 
         except Exception as e:
-            self.results.add_result("List Sheet Connections", False, str(e))
+            self.results.add_result("Sheet Connections List", False, str(e))
         
         return None
     
-    async def test_validation_errors(self):
-        """Test various validation scenarios."""
-        
-        # Test upload without file
+    async def test_excel_import_still_works(self):
+        """Test that Excel import still works (regression test)."""
         try:
-            response = await self.client.post(
-                f"{API_BASE}/admin/import/hotels/upload",
-                headers=self.get_headers()
-            )
-            if response.status_code in [400, 422]:  # Should return error
-                self.results.add_result("Upload Without File", True)
-            else:
-                self.results.add_result("Upload Without File", False, f"Expected 400/422, got {response.status_code}")
-        except Exception as e:
-            self.results.add_result("Upload Without File", False, str(e))
-        
-        # Test upload with invalid format
-        try:
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
-                f.write("Invalid content")
-                temp_path = f.name
-            
-            with open(temp_path, 'rb') as f:
-                files = {"file": ("test.txt", f, "text/plain")}
-                response = await self.client.post(
-                    f"{API_BASE}/admin/import/hotels/upload",
-                    headers=self.get_headers(),
-                    files=files
-                )
-            
-            os.unlink(temp_path)
-            
-            if response.status_code == 400:
-                self.results.add_result("Upload Invalid Format", True)
-            else:
-                self.results.add_result("Upload Invalid Format", False, f"Expected 400, got {response.status_code}")
-        except Exception as e:
-            self.results.add_result("Upload Invalid Format", False, str(e))
-        
-        # Test validate with invalid job_id
-        try:
-            response = await self.client.post(
-                f"{API_BASE}/admin/import/hotels/validate",
-                headers=self.get_headers(),
-                json={
-                    "job_id": "invalid-job-id",
-                    "mapping": {"0": "name"}
-                }
-            )
-            if response.status_code == 404:
-                self.results.add_result("Validate Invalid Job ID", True)
-            else:
-                self.results.add_result("Validate Invalid Job ID", False, f"Expected 404, got {response.status_code}")
-        except Exception as e:
-            self.results.add_result("Validate Invalid Job ID", False, str(e))
-        
-        # Test execute with invalid job_id
-        try:
-            response = await self.client.post(
-                f"{API_BASE}/admin/import/hotels/execute",
-                headers=self.get_headers(),
-                json={"job_id": "invalid-job-id"}
-            )
-            if response.status_code == 404:
-                self.results.add_result("Execute Invalid Job ID", True)
-            else:
-                self.results.add_result("Execute Invalid Job ID", False, f"Expected 404, got {response.status_code}")
-        except Exception as e:
-            self.results.add_result("Execute Invalid Job ID", False, str(e))
-    
-    async def test_authentication_required(self):
-        """Test that admin endpoints require authentication."""
-        endpoints = [
-            ("GET", "/admin/import/jobs"),
-            ("POST", "/admin/import/hotels/upload"),
-            ("GET", "/admin/import/export-template"),
-            ("POST", "/admin/import/sheet/connect"),
-            ("POST", "/admin/import/sheet/sync"),
-            ("GET", "/admin/import/sheet/connections"),
-        ]
-        
-        for method, endpoint in endpoints:
-            try:
-                if method == "GET":
-                    response = await self.client.get(f"{API_BASE}{endpoint}")
-                else:
-                    response = await self.client.post(f"{API_BASE}{endpoint}", json={})
-                    
-                if response.status_code == 401:
-                    self.results.add_result(f"Auth Required - {method} {endpoint}", True)
-                else:
-                    self.results.add_result(f"Auth Required - {method} {endpoint}", False, f"Expected 401, got {response.status_code}")
-            except Exception as e:
-                self.results.add_result(f"Auth Required - {method} {endpoint}", False, str(e))
-    
-    async def test_duplicate_detection(self):
-        """Test duplicate hotel detection."""
-        # First, upload and process the same hotels again
-        try:
-            # Create CSV with same hotel names
-            timestamp2 = str(int(time.time()) + 1000)  # Different timestamp to avoid conflicts
-            duplicate_csv = f"""Otel Adı,Şehir,Ülke,Açıklama,Fiyat,Yıldız
-Import Hotel {timestamp}_1,İstanbul,TR,Duplicate test,1600,5
-Import Hotel {timestamp}_2,Ankara,TR,Another duplicate,1800,4"""
+            # Create test CSV
+            timestamp = str(int(time.time()))
+            test_csv = f"name,city,country\nSheets Test Hotel,Istanbul,TR"
             
             with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
-                f.write(duplicate_csv)
+                f.write(test_csv)
                 temp_path = f.name
             
             # Upload
             with open(temp_path, 'rb') as f:
-                files = {"file": ("duplicate_test.csv", f, "text/csv")}
+                files = {"file": ("test_sheets.csv", f, "text/csv")}
                 response = await self.client.post(
                     f"{API_BASE}/admin/import/hotels/upload",
                     headers=self.get_headers(),
@@ -516,61 +330,121 @@ Import Hotel {timestamp}_2,Ankara,TR,Another duplicate,1800,4"""
                 data = response.json()
                 job_id = data["job_id"]
                 
-                # Validate - should detect duplicates
-                mapping = {"0": "name", "1": "city", "2": "country", "3": "description", "4": "price", "5": "stars"}
+                # Validate
                 response = await self.client.post(
                     f"{API_BASE}/admin/import/hotels/validate",
                     headers=self.get_headers(),
-                    json={"job_id": job_id, "mapping": mapping}
+                    json={
+                        "job_id": job_id,
+                        "mapping": {"0": "name", "1": "city", "2": "country"}
+                    }
                 )
                 
                 if response.status_code == 200:
-                    validation_data = response.json()
-                    if validation_data["error_count"] >= 2:  # Should detect duplicates
-                        self.results.add_result("Duplicate Detection", True)
-                    else:
-                        self.results.add_result("Duplicate Detection", False, f"Expected >= 2 duplicate errors, got {validation_data['error_count']}")
+                    self.results.add_result("Excel Import Still Works", True)
+                    return True
                 else:
-                    self.results.add_result("Duplicate Detection", False, f"Validation failed: {response.status_code}")
+                    self.results.add_result("Excel Import Still Works", False, f"Validation failed: {response.status_code}")
             else:
-                self.results.add_result("Duplicate Detection", False, f"Upload failed: {response.status_code}")
+                self.results.add_result("Excel Import Still Works", False, f"Upload failed: {response.status_code}")
                 
         except Exception as e:
-            self.results.add_result("Duplicate Detection", False, str(e))
+            self.results.add_result("Excel Import Still Works", False, str(e))
+        
+        return False
+    
+    async def test_auth_guards(self):
+        """Test that sheet endpoints require admin authentication."""
+        sheet_endpoints = [
+            ("GET", "/admin/import/sheet/config"),
+            ("POST", "/admin/import/sheet/connect"),
+            ("POST", "/admin/import/sheet/sync"),
+            ("GET", "/admin/import/sheet/connection"),
+            ("GET", "/admin/import/sheet/status"),
+            ("GET", "/admin/import/sheet/connections"),
+        ]
+        
+        for method, endpoint in sheet_endpoints:
+            try:
+                if method == "GET":
+                    response = await self.client.get(f"{API_BASE}{endpoint}")
+                else:
+                    response = await self.client.post(f"{API_BASE}{endpoint}", json={})
+                
+                if response.status_code == 401:
+                    self.results.add_result(f"Auth Guard - {method} {endpoint}", True)
+                else:
+                    self.results.add_result(f"Auth Guard - {method} {endpoint}", False, f"Expected 401, got {response.status_code}")
+            except Exception as e:
+                self.results.add_result(f"Auth Guard - {method} {endpoint}", False, str(e))
+    
+    async def test_graceful_error_handling(self):
+        """Test graceful error handling scenarios."""
+        
+        # Test connect with invalid body
+        try:
+            response = await self.client.post(
+                f"{API_BASE}/admin/import/sheet/connect",
+                headers=self.get_headers(),
+                json={"invalid": "body"}
+            )
+            
+            if response.status_code in [400, 422]:  # Should return validation error
+                self.results.add_result("Connect Invalid Body", True)
+            else:
+                self.results.add_result("Connect Invalid Body", False, f"Expected 400/422, got {response.status_code}")
+        except Exception as e:
+            self.results.add_result("Connect Invalid Body", False, str(e))
+        
+        # Test sync without any connection (should return 404)
+        try:
+            # First clear any existing connections by creating a fresh login
+            response = await self.client.post(
+                f"{API_BASE}/admin/import/sheet/sync",
+                headers=self.get_headers(),
+                json={}
+            )
+            
+            # It should either work (if connection exists) or fail gracefully
+            if response.status_code in [200, 404]:
+                self.results.add_result("Sync Without Connection", True)
+            else:
+                self.results.add_result("Sync Without Connection", False, f"Expected 200/404, got {response.status_code}")
+        except Exception as e:
+            self.results.add_result("Sync Without Connection", False, str(e))
     
     async def run_all_tests(self):
-        """Run all test scenarios."""
-        print("🚀 Starting Zero Migration Friction Engine - Hotel Import API Tests\n")
+        """Run all Google Sheets Live Sync tests."""
+        print("🚀 Starting Google Sheets Live Sync Tests (Graceful Fallback Mode)\n")
+        print("📋 Testing endpoints when GOOGLE_SERVICE_ACCOUNT_JSON is NOT set\n")
         
         # Core functionality tests
         if not await self.authenticate():
             return self.results
         
-        upload_result = await self.test_upload_csv()
-        if upload_result:
-            await self.test_validate_mapping()
-            await self.test_execute_import()
-            await self.test_get_job_detail()
-        
-        await self.test_list_jobs()
-        await self.test_export_template()
-        
-        # Google Sheets (MOCKED) tests
-        await self.test_sheet_connect()
+        # Main endpoints
+        await self.test_sheet_config()
+        await self.test_sheet_connect()  # This creates a connection
         await self.test_sheet_sync()
-        await self.test_list_sheet_connections()
+        await self.test_sheet_connection()
+        await self.test_sheet_status()
+        await self.test_sheet_connections_list()
         
-        # Validation and error handling tests
-        await self.test_validation_errors()
-        await self.test_authentication_required()
-        await self.test_duplicate_detection()
+        # Regression test
+        await self.test_excel_import_still_works()
+        
+        # Security tests
+        await self.test_auth_guards()
+        
+        # Error handling tests
+        await self.test_graceful_error_handling()
         
         return self.results
 
 
 async def main():
     """Run the complete test suite."""
-    async with HotelImportTester() as tester:
+    async with GoogleSheetsLiveSyncTester() as tester:
         results = await tester.run_all_tests()
         results.summary()
 

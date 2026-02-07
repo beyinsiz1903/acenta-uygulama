@@ -365,7 +365,7 @@ class EnterpriseHardeningTester:
                 current_otp = totp.now()
                 
                 response2 = self.session.post(f"{self.base_url}/api/auth/2fa/verify", json={
-                    "otp": current_otp
+                    "otp_code": current_otp
                 })
                 
                 test_result2 = {

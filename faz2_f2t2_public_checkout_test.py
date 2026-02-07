@@ -26,9 +26,9 @@ class PublicCheckoutTester:
                         self.base_url = line.split('=', 1)[1].strip()
                         break
                 else:
-                    self.base_url = "https://hardening-e1-e4.preview.emergentagent.com"
+                    self.base_url = "https://ops-excellence-10.preview.emergentagent.com"
         except:
-            self.base_url = "https://hardening-e1-e4.preview.emergentagent.com"
+            self.base_url = "https://ops-excellence-10.preview.emergentagent.com"
             
         self.client = None
         

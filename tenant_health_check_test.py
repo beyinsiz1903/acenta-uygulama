@@ -24,7 +24,7 @@ import json
 from typing import Dict, Any
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://hardening-e1-e4.preview.emergentagent.com"
+BASE_URL = "https://ops-excellence-10.preview.emergentagent.com"
 TENANT_ID = "tenant_partner_test_a_14beaf25"
 
 def login_super_admin():

@@ -34,7 +34,7 @@ import jwt
 from base64 import b64encode
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://hardening-e1-e4.preview.emergentagent.com"
+BASE_URL = "https://ops-excellence-10.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

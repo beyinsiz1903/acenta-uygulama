@@ -711,7 +711,7 @@ class FeatureModulesTester:
 def main():
     """Main test execution"""
     # Backend URL from frontend env
-    backend_url = "https://hardening-e1-e4.preview.emergentagent.com"
+    backend_url = "https://ops-excellence-10.preview.emergentagent.com"
     
     print(f"🎯 Testing Feature Modules at: {backend_url}")
     

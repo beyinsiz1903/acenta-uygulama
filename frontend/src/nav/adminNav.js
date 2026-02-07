@@ -56,6 +56,7 @@ export const adminNav = [
       { label: "Go-Live Kontrolü", path: "/app/admin/preflight" },
       { label: "Ops Runbook", path: "/app/admin/runbook" },
       { label: "Performans Paneli", path: "/app/admin/perf-dashboard" },
+      { label: "Demo Rehberi", path: "/app/admin/demo-guide" },
     ],
   },
 ];

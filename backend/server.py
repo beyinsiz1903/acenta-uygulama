@@ -171,6 +171,8 @@ from app.routers.admin_system_errors import router as admin_system_errors_router
 from app.routers.admin_system_uptime import router as admin_system_uptime_router
 from app.routers.admin_system_incidents import router as admin_system_incidents_router
 from app.routers.admin_maintenance import router as admin_maintenance_router
+from app.routers.system_product_mode import router as system_product_mode_router
+from app.routers.admin_product_mode import router as admin_product_mode_router
 
 # Production Go-Live Pack (A)
 from app.routers.admin_system_preflight import router as admin_system_preflight_router

@@ -14,7 +14,7 @@ import json
 async def test_mybooking_endpoints():
     """Test MyBooking endpoints with various scenarios"""
     
-    backend_url = "https://ops-excellence-10.preview.emergentagent.com"
+    backend_url = "https://unified-control-4.preview.emergentagent.com"
     
     print("=== MyBooking Hardening Test Results ===\n")
     

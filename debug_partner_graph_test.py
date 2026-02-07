@@ -6,7 +6,7 @@ Debug test for Partner Graph endpoints
 import requests
 import json
 
-BASE_URL = "https://ops-excellence-10.preview.emergentagent.com"
+BASE_URL = "https://unified-control-4.preview.emergentagent.com"
 
 def test_partner_graph_debug():
     # Login

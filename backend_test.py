@@ -11,7 +11,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Backend URL from frontend env
-BACKEND_URL = "https://ops-excellence-10.preview.emergentagent.com/api"
+BACKEND_URL = "https://unified-control-4.preview.emergentagent.com/api"
 
 class APITester:
     def __init__(self):

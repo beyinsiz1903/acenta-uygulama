@@ -25,7 +25,7 @@ from pymongo import MongoClient
 from typing import Dict, Any, Optional
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://ops-excellence-10.preview.emergentagent.com"
+BASE_URL = "https://unified-control-4.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

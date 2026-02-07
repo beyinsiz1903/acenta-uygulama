@@ -1070,7 +1070,7 @@ class EnterpriseHardeningTester:
 def main():
     """Main test execution"""
     # Get backend URL from environment 
-    backend_url = "https://ops-excellence-10.preview.emergentagent.com"
+    backend_url = "https://unified-control-4.preview.emergentagent.com"
     
     print(f"🎯 Testing Enterprise Hardening backend at: {backend_url}")
     

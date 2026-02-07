@@ -186,9 +186,9 @@ frontend:
 
   - task: "Sidebar mode-aware filtering"
     implemented: true
-    working: false
+    working: true
     file: "frontend/src/components/AppShell.jsx"
-    stuck_count: 2
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -201,6 +201,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ STILL FAILING: Even after the tenant_id fallback fix, the sidebar is still not filtering out navigation groups correctly after mode switch. All sidebar groups remain visible regardless of current mode. Mode switches complete successfully and API returns correct information, but the UI is not updating to reflect mode changes."
+      - working: true
+        agent: "testing"
+        comment: "✅ FIXED: Comprehensive testing confirms the sidebar now correctly filters navigation groups based on the active product mode. In Lite mode, 'B2B AĞ', 'OPS', and 'ENTERPRISE' groups are correctly hidden. In Pro mode, 'B2B AĞ' and 'OPS' are visible while 'ENTERPRISE' remains hidden. In Enterprise mode, all 7 groups are visible as expected."
 
   - task: "Admin Product Mode Settings Page"
     implemented: true

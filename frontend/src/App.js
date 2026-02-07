@@ -305,6 +305,10 @@ function App() {
             <Route path="approval-inbox" element={<AdminApprovalInboxPage />} />
             <Route path="tenant-export" element={<AdminTenantExportPage />} />
             <Route path="scheduled-reports" element={<AdminScheduledReportsPage />} />
+            {/* Feature modules */}
+            <Route path="efatura" element={<AdminEFaturaPage />} />
+            <Route path="sms" element={<AdminSMSPage />} />
+            <Route path="tickets" element={<AdminTicketsPage />} />
           </Route>
         </Route>
 

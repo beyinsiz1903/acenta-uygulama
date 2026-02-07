@@ -107,7 +107,6 @@ async def process_writeback_job(db, job: Dict[str, Any]) -> Dict[str, Any]:
         return {"status": "skipped_not_configured"}
 
     sheet_id = conn["sheet_id"]
-    sheet_tab = conn.get("sheet_tab", "Sheet1")
     writeback_tab = conn.get("writeback_tab", "Reservations")
 
     try:

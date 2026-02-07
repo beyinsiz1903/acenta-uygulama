@@ -158,11 +158,11 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
 
         tenant_doc: Optional[dict[str, Any]] = await db.tenants.find_one({"_id": tenant_lookup_id})
         if not tenant_doc:
-            raise AppError(
-                status_code=404,
-                code="tenant_not_found",
-                message="Tenant not found.",
-                details={"tenant_id": tenant_id_header},
+            return _error_response(
+                404,
+                "tenant_not_found",
+                "Tenant not found.",
+                {"tenant_id": tenant_id_header},
             )
 
         status = tenant_doc.get("status", "active")

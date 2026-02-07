@@ -350,6 +350,8 @@ function App() {
             <Route path="demo-guide" element={<AdminDemoGuidePage />} />
             {/* Product Mode Settings */}
             <Route path="product-mode" element={<AdminProductModePage />} />
+            {/* Data & Migration */}
+            <Route path="import" element={<AdminImportPage />} />
           </Route>
         </Route>
 

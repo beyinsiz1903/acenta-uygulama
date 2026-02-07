@@ -494,6 +494,15 @@ app.include_router(efatura_router)
 app.include_router(sms_notifications_router)
 app.include_router(tickets_router)
 
+# Operational Excellence (O1-O5)
+app.include_router(admin_system_backups_router)
+app.include_router(admin_system_integrity_router)
+app.include_router(admin_system_metrics_router)
+app.include_router(admin_system_errors_router)
+app.include_router(admin_system_uptime_router)
+app.include_router(admin_system_incidents_router)
+app.include_router(admin_maintenance_router)
+
 
 @app.get("/")
 async def read_root() -> dict[str, str]:

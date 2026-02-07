@@ -173,6 +173,9 @@ const ADMIN_GROUPED_NAV = [
       { to: "/app/admin/approval-inbox", label: "Onay İstekleri", icon: ShieldCheck },
       { to: "/app/admin/tenant-export", label: "Veri Export", icon: Download },
       { to: "/app/admin/scheduled-reports", label: "Zamanlanmış Raporlar", icon: Calendar },
+      { to: "/app/admin/efatura", label: "E-Fatura", icon: FileText },
+      { to: "/app/admin/sms", label: "SMS Bildirimleri", icon: MessageSquare },
+      { to: "/app/admin/tickets", label: "QR Bilet", icon: Ticket },
     ],
   },
 ];

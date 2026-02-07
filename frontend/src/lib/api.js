@@ -107,6 +107,14 @@ api.interceptors.request.use((config) => {
 
     if (tenantId) {
       config.headers["X-Tenant-Id"] = tenantId;
+    } else {
+      // Final fallback: use organization_id from cached user for tenant-scoped features
+      try {
+        const cachedUser = getUser();
+        if (cachedUser?.organization_id) {
+          config.headers["X-Tenant-Id"] = cachedUser.organization_id;
+        }
+      } catch { /* */ }
     }
   } else if (config.headers && config.headers.Authorization) {
     // Login/register isteklerinde eski token taşınmasın

@@ -329,6 +329,9 @@ function App() {
             <Route path="system-errors" element={<AdminSystemErrorsPage />} />
             <Route path="system-uptime" element={<AdminSystemUptimePage />} />
             <Route path="system-incidents" element={<AdminSystemIncidentsPage />} />
+            {/* Production Go-Live Pack */}
+            <Route path="preflight" element={<AdminPreflightPage />} />
+            <Route path="runbook" element={<AdminRunbookPage />} />
           </Route>
         </Route>
 

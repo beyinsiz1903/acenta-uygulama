@@ -83,6 +83,7 @@ import AdminProductModePage from "./pages/admin/AdminProductModePage";
 
 // Data & Migration
 import AdminImportPage from "./pages/admin/AdminImportPage";
+import AdminPortfolioSyncPage from "./pages/admin/AdminPortfolioSyncPage";
 
 import AdminMatchesPage from "./pages/AdminMatchesPage";
 import AdminExportsPage from "./pages/AdminExportsPage";

@@ -316,58 +316,172 @@ function ExcelUploadTab() {
 
 // ── Tab: Google Sheets (MOCKED) ────────────────────────
 function GoogleSheetsTab() {
+  const [config, setConfig] = useState(null);
+  const [connection, setConnection] = useState(null);
+  const [status, setStatus] = useState(null);
   const [sheetId, setSheetId] = useState("");
   const [worksheet, setWorksheet] = useState("Sheet1");
   const [syncEnabled, setSyncEnabled] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [connections, setConnections] = useState([]);
   const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState(null);
+  const [msgType, setMsgType] = useState("info");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    api.get("/admin/import/sheet/connections").then((r) => setConnections(r.data || [])).catch(() => {});
+    api.get("/admin/import/sheet/config").then((r) => setConfig(r.data)).catch(() => {});
+    api.get("/admin/import/sheet/connection").then((r) => setConnection(r.data)).catch(() => {});
+    api.get("/admin/import/sheet/status").then((r) => setStatus(r.data)).catch(() => {});
   }, []);
+
+  const copyEmail = () => {
+    const email = config?.service_account_email;
+    if (email) {
+      navigator.clipboard.writeText(email).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
+    }
+  };
 
   const handleConnect = async () => {
     if (!sheetId.trim()) return;
-    setSaving(true);
+    setSaving(true); setMessage(null);
     try {
       const res = await api.post("/admin/import/sheet/connect", {
         sheet_id: sheetId, worksheet_name: worksheet, sync_enabled: syncEnabled,
       });
-      setConnections((prev) => [res.data, ...prev]);
-      setMessage("Bağlantı kaydedildi.");
+      setConnection(res.data);
+      setMessage("Bağlantı kaydedildi."); setMsgType("success");
       setSheetId("");
     } catch (err) {
-      setMessage(err.response?.data?.error?.message || "Hata");
+      setMessage(err.response?.data?.error?.message || "Bağlantı hatası"); setMsgType("error");
     }
     setSaving(false);
   };
 
   const handleSync = async () => {
-    setSyncing(true);
+    setSyncing(true); setMessage(null);
     try {
       const res = await api.post("/admin/import/sheet/sync");
-      setMessage(res.data.message);
+      if (res.data.status === "not_configured") {
+        setMessage(res.data.message); setMsgType("warn");
+      } else if (res.data.status === "ok") {
+        setMessage(`Sync tamamlandı: ${res.data.upserts} otel güncellendi.`); setMsgType("success");
+      } else if (res.data.status === "error") {
+        setMessage(`Sync hatası: ${res.data.error_message}`); setMsgType("error");
+      } else {
+        setMessage(`Sync: ${res.data.rows_fetched} satır, ${res.data.upserts} upsert`); setMsgType("info");
+      }
+      api.get("/admin/import/sheet/status").then((r) => setStatus(r.data)).catch(() => {});
     } catch (err) {
-      setMessage(err.response?.data?.error?.message || "Sync hatası");
+      setMessage(err.response?.data?.error?.message || "Sync hatası"); setMsgType("error");
     }
     setSyncing(false);
   };
 
+  const isConfigured = config?.configured;
+
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-3 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300">
-        <AlertTriangle className="h-4 w-4 shrink-0" />
-        Google Sheets senkronizasyonu şu an MOCK modunda. Gerçek API key entegrasyonu için admin ile iletişime geçin.
-      </div>
+      {/* Configuration Status */}
+      {!isConfigured && (
+        <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-4 space-y-2">
+          <div className="flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-300">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            Google Sheets entegrasyonu henüz yapılandırılmamış
+          </div>
+          <p className="text-xs text-amber-600 dark:text-amber-400">
+            Sistem yöneticisi <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">GOOGLE_SERVICE_ACCOUNT_JSON</code> env var'ını eklediğinde otomatik aktif olur.
+          </p>
+          <p className="text-xs text-amber-600 dark:text-amber-400">Bağlantıları şimdiden kaydedebilirsiniz — key geldiğinde plug-and-play çalışır.</p>
+        </div>
+      )}
 
+      {/* Service Account Email (when configured) */}
+      {isConfigured && config?.service_account_email && (
+        <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 p-4 space-y-2">
+          <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+            Sheet'i şu email'e paylaşın:
+          </p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 bg-emerald-100 dark:bg-emerald-900/50 px-3 py-1.5 rounded text-sm font-mono break-all">
+              {config.service_account_email}
+            </code>
+            <button onClick={copyEmail}
+              className="px-3 py-1.5 text-xs rounded-lg border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 flex items-center gap-1 shrink-0">
+              {copied ? <CheckCircle2 className="h-3 w-3 text-emerald-600" /> : <Link2 className="h-3 w-3" />}
+              {copied ? "Kopyalandı!" : "Kopyala"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Sync Status Card */}
+      {status?.connected && (
+        <div className="rounded-xl border p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Sync Durumu</h3>
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
+              status.last_sync_status === "ok" ? "bg-emerald-100 text-emerald-700" :
+              status.last_sync_status === "error" ? "bg-destructive/10 text-destructive" :
+              "bg-muted text-muted-foreground"
+            }`}>
+              {status.last_sync_status || "Henüz sync yok"}
+            </span>
+          </div>
+          <div className="grid grid-cols-4 gap-3">
+            <div className="text-center">
+              <p className="text-lg font-bold">{status.stats?.last_rows || 0}</p>
+              <p className="text-[10px] text-muted-foreground">Satır</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-emerald-600">{status.stats?.last_upserts || 0}</p>
+              <p className="text-[10px] text-muted-foreground">Upsert</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-destructive">{status.stats?.last_errors || 0}</p>
+              <p className="text-[10px] text-muted-foreground">Hata</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs font-medium">{status.last_sync_at ? new Date(status.last_sync_at).toLocaleString("tr-TR") : "-"}</p>
+              <p className="text-[10px] text-muted-foreground">Son Sync</p>
+            </div>
+          </div>
+          {status.last_sync_error && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
+              {status.last_sync_error}
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <button onClick={handleSync} disabled={syncing}
+              className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1.5">
+              <RefreshCw className={`h-3 w-3 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? "Sync ediliyor..." : "Sync Now"}
+            </button>
+            <span className="text-xs text-muted-foreground">
+              Auto-sync: {status.sync_enabled ? "Açık (5dk)" : "Kapalı"}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {message && (
+        <div className={`rounded-lg border p-3 text-sm flex items-center gap-2 ${
+          msgType === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300" :
+          msgType === "error" ? "border-destructive/30 bg-destructive/5 text-destructive" :
+          msgType === "warn" ? "border-amber-200 bg-amber-50 text-amber-700" :
+          "border-border"
+        }`}>
+          {msgType === "success" ? <CheckCircle2 className="h-4 w-4" /> : msgType === "error" ? <AlertTriangle className="h-4 w-4" /> : null}
+          {message}
+        </div>
+      )}
+
+      {/* Connect Form */}
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold">Yeni Bağlantı</h3>
+        <h3 className="text-sm font-semibold">{connection?.connected ? "Yeni Bağlantı Ekle" : "Sheet Bağla"}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="text-xs text-muted-foreground">Sheet ID</label>
-            <input value={sheetId} onChange={(e) => setSheetId(e.target.value)} placeholder="1BxiMVs0XRA..." className="w-full mt-1 px-3 py-2 text-sm rounded-lg border border-border bg-background" />
+            <input value={sheetId} onChange={(e) => setSheetId(e.target.value)} placeholder="1BxiMVs0XRA5..." className="w-full mt-1 px-3 py-2 text-sm rounded-lg border border-border bg-background" />
           </div>
           <div>
             <label className="text-xs text-muted-foreground">Worksheet Adı</label>
@@ -380,36 +494,21 @@ function GoogleSheetsTab() {
         </label>
         <button onClick={handleConnect} disabled={saving || !sheetId.trim()}
           className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1.5">
-          <Link2 className="h-3 w-3" /> {saving ? "Kaydediliyor..." : "Bağlan"}
+          <Link2 className="h-3 w-3" /> {saving ? "Kaydediliyor..." : "Bağlan ve Kaydet"}
         </button>
       </div>
 
-      {message && (
-        <div className="rounded-lg border p-3 text-sm">{message}</div>
-      )}
-
-      {connections.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold mb-2">Bağlantılar</h3>
-          <div className="space-y-2">
-            {connections.map((c) => (
-              <div key={c.id} className="rounded-lg border p-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Sheet className="h-4 w-4 text-emerald-500" />
-                  <div>
-                    <p className="text-sm font-medium">{c.sheet_id?.substring(0, 20)}...</p>
-                    <p className="text-xs text-muted-foreground">{c.worksheet_name} · {c.status}</p>
-                  </div>
-                </div>
-                <button onClick={handleSync} disabled={syncing}
-                  className="px-3 py-1 text-xs rounded-lg border hover:bg-muted flex items-center gap-1">
-                  <RefreshCw className={`h-3 w-3 ${syncing ? "animate-spin" : ""}`} /> Sync
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* How-to Guide */}
+      <div className="rounded-xl border border-border bg-muted/20 p-4">
+        <h3 className="text-sm font-semibold mb-2">Nasıl Yapılır?</h3>
+        <ol className="space-y-1 text-xs text-muted-foreground list-decimal list-inside">
+          <li>Google Sheets'te otel listenizi hazırlayın (ilk satır başlık)</li>
+          <li>{isConfigured ? "Yukarıdaki service account email'ine sheet'i paylaşın (Viewer yeterli)" : "Sistem yöneticisi Google API yapılandırmasını tamamladığında email görünecek"}</li>
+          <li>Sheet URL'deki ID'yi kopyalayın: <code className="bg-muted px-1 rounded">docs.google.com/spreadsheets/d/<strong>SHEET_ID</strong>/edit</code></li>
+          <li>Yukarıdaki forma yapıştırın ve "Bağlan" butonuna tıklayın</li>
+          <li>Auto-sync açıksa sistem 5 dakikada bir otomatik günceller</li>
+        </ol>
+      </div>
     </div>
   );
 }

@@ -223,6 +223,16 @@ function SidebarItem({ to, label, icon: Icon, collapsed, end, onClick }) {
 /*  MAIN APP SHELL                                                     */
 /* ================================================================== */
 export default function AppShell() {
+  return (
+    <FeatureProvider>
+      <ProductModeProvider>
+        <AppShellInner />
+      </ProductModeProvider>
+    </FeatureProvider>
+  );
+}
+
+function AppShellInner() {
   const user = getUser();
   const location = useLocation();
   const navigate = useNavigate();

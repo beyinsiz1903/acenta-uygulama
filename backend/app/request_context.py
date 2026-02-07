@@ -24,6 +24,7 @@ class RequestContext:
   subscription_status: Optional[str] = None
   plan: Optional[str] = None
   is_super_admin: bool = False
+  product_mode: str = "enterprise"  # lite | pro | enterprise — visibility layer
 
 
 _ctx_var: ContextVar[Optional[RequestContext]] = ContextVar("request_ctx", default=None)

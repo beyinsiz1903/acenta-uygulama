@@ -340,6 +340,8 @@ function App() {
             <Route path="runbook" element={<AdminRunbookPage />} />
             {/* Cost/Performance Pack */}
             <Route path="perf-dashboard" element={<AdminPerfDashboardPage />} />
+            {/* Enterprise Demo Pack */}
+            <Route path="demo-guide" element={<AdminDemoGuidePage />} />
           </Route>
         </Route>
 

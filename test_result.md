@@ -179,15 +179,18 @@ backend:
 
   - task: "E2.2 Tenant IP Whitelist"
     implemented: true
-    working: "NA"
+    working: false
     file: "backend/app/routers/enterprise_ip_whitelist.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Middleware checks allowed_ips in tenant settings. Admin CRUD for whitelist."
+      - working: false
+        agent: "testing"
+        comment: "❌ IP Whitelist enforcement too aggressive: GET/PUT /api/admin/ip-whitelist endpoints work correctly, but after setting IP whitelist, all subsequent requests to other admin endpoints are blocked with 403 'ip_not_whitelisted' even when the test should be allowed. The whitelist middleware is blocking legitimate admin operations. Backend logs show 'IP whitelist blocked: tenant=X ip=104.198.214.223'."
 
   - task: "E4.1 White-Label Settings"
     implemented: true

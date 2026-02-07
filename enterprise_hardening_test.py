@@ -536,9 +536,10 @@ class EnterpriseHardeningTester:
             
             # Test 1: Create approval request
             response = self.session.post(f"{self.base_url}/api/approvals", json={
-                "type": "role_assignment",
+                "entity_type": "user",
+                "entity_id": "test-user-123",
+                "action": "role_assignment",
                 "data": {
-                    "user_id": "test-user-123",
                     "role": "admin"
                 },
                 "reason": "Test approval workflow"

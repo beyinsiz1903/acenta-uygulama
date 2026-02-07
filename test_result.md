@@ -186,15 +186,18 @@ frontend:
 
   - task: "Sidebar mode-aware filtering"
     implemented: true
-    working: "NA"
+    working: false
     file: "frontend/src/components/AppShell.jsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
         comment: "ADMIN_GROUPED_NAV items have minMode + modeKey. filterNavByMode filters by mode level + server hidden items list."
+      - working: false
+        agent: "testing"
+        comment: "❌ ISSUE: When switching from Enterprise to Lite mode, sidebar still shows all 7 groups including 'B2B AĞ', 'OPS', and 'ENTERPRISE' that should be hidden in Lite mode. The mode switch is detected but filterNavByMode function is not correctly filtering out hidden navigation items."
 
   - task: "Admin Product Mode Settings Page"
     implemented: true

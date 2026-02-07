@@ -224,15 +224,18 @@ backend:
 
   - task: "E4.3 Scheduled Reports"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/app/routers/enterprise_schedules.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "CRUD for schedules. APScheduler runs every 15 min. Manual execute-due endpoint."
+      - working: true
+        agent: "testing"
+        comment: "✅ All scheduled reports endpoints working: POST /api/admin/report-schedules (creates schedule, requires email field), GET /api/admin/report-schedules (lists), DELETE /{id} (deletes), POST /execute-due (manual trigger). All endpoints returning 200 with correct functionality."
 
 frontend:
   - task: "E4.1 White-Label UI (dynamic logo/color/name)"

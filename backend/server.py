@@ -565,6 +565,10 @@ app.include_router(admin_system_uptime_router)
 app.include_router(admin_system_incidents_router)
 app.include_router(admin_maintenance_router)
 
+# Production Go-Live Pack
+app.include_router(admin_system_preflight_router)
+app.include_router(admin_system_runbook_router)
+
 
 @app.get("/")
 async def read_root() -> dict[str, str]:

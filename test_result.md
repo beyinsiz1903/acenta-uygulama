@@ -216,11 +216,13 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: ["GET /api/admin/sheets/config", "POST /api/admin/sheets/connect", "GET /api/admin/sheets/connections", "POST /api/admin/sheets/sync/{hotel_id}", "GET /api/admin/sheets/status", "Auth Guards", "Tenant Isolation", "Graceful Fallback"]
-  stuck_tasks: []
+  current_focus: ["Tenant Middleware Fix", "GET /api/admin/sheets/config", "POST /api/admin/sheets/connect", "Graceful Fallback"]
+  stuck_tasks: ["Tenant Middleware Configuration", "All Portfolio Sync Endpoints"]
   test_all: true
   test_priority: "high_first"
 
 agent_communication:
     - agent: "main"
       message: "Phase 1 Backend: Portfolio Sync Engine implemented with new router /api/admin/sheets/*, new services (sheets_provider.py, hotel_portfolio_sync_service.py), new collections (hotel_portfolio_sources, sheet_sync_runs, hotel_inventory_snapshots). All endpoints follow existing auth/RBAC/audit patterns. Graceful fallback when GOOGLE_SERVICE_ACCOUNT_JSON is not set. Please test all new endpoints."
+    - agent: "testing"
+      message: "CRITICAL ISSUE FOUND: All Portfolio Sync Engine endpoints (/api/admin/sheets/*) are blocked by tenant middleware returning 520 errors. Auth guards work properly (401 without token). Issue: Endpoints require X-Tenant-Id header but tenant middleware fails during tenant resolution. Possible fixes: 1) Add /api/admin/sheets/ to middleware whitelist, 2) Fix tenant data structure, 3) Update middleware logic. Created tenant entry for default org but still failing. Need main agent to investigate tenant middleware compatibility with sheets endpoints."

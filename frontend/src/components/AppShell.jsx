@@ -166,6 +166,15 @@ const ADMIN_GROUPED_NAV = [
       { to: "/app/settings", label: "Ayarlar", icon: Settings },
     ],
   },
+  {
+    group: "ENTERPRISE",
+    items: [
+      { to: "/app/admin/branding", label: "White-Label", icon: Palette },
+      { to: "/app/admin/approval-inbox", label: "Onay İstekleri", icon: ShieldCheck },
+      { to: "/app/admin/tenant-export", label: "Veri Export", icon: Download },
+      { to: "/app/admin/scheduled-reports", label: "Zamanlanmış Raporlar", icon: Calendar },
+    ],
+  },
 ];
 
 /* ------------------------------------------------------------------ */

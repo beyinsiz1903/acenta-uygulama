@@ -492,9 +492,10 @@ class HotelImportTester:
         # First, upload and process the same hotels again
         try:
             # Create CSV with same hotel names
-            duplicate_csv = """Otel Adı,Şehir,Ülke,Açıklama,Fiyat,Yıldız
-Import Hotel 1,İstanbul,TR,Duplicate test,1600,5
-Import Hotel 2,Ankara,TR,Another duplicate,1800,4"""
+            timestamp2 = str(int(time.time()) + 1000)  # Different timestamp to avoid conflicts
+            duplicate_csv = f"""Otel Adı,Şehir,Ülke,Açıklama,Fiyat,Yıldız
+Import Hotel {timestamp}_1,İstanbul,TR,Duplicate test,1600,5
+Import Hotel {timestamp}_2,Ankara,TR,Another duplicate,1800,4"""
             
             with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
                 f.write(duplicate_csv)

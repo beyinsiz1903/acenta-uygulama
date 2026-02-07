@@ -429,8 +429,6 @@ function AppShellInner() {
   /*  RENDER                                                           */
   /* ================================================================ */
   return (
-    <FeatureProvider>
-    <ProductModeProvider>
     <div className="min-h-screen bg-background">
       {/* ========== TOP BAR ========== */}
       <div className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">

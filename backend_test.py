@@ -450,6 +450,255 @@ class APITester:
         
         # Restore token
         self.token = original_token
+
+    def test_product_mode_system_endpoint(self):
+        """Test GET /api/system/product-mode - tenant self-read"""
+        print("\n=== Product Mode System API ===")
+        
+        response = self.make_request("GET", "/system/product-mode")
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                required_fields = ["product_mode", "visible_nav_groups", "hidden_nav_items", "label_overrides"]
+                
+                missing_fields = [field for field in required_fields if field not in data]
+                if not missing_fields:
+                    mode = data.get("product_mode")
+                    nav_groups = data.get("visible_nav_groups", [])
+                    hidden_items = data.get("hidden_nav_items", [])
+                    
+                    # Default mode should be enterprise when no tenant_settings exists
+                    if mode in ["lite", "pro", "enterprise"]:
+                        self.log_test("System Product Mode", True, f"Mode: {mode}, Groups: {len(nav_groups)}, Hidden: {len(hidden_items)}")
+                    else:
+                        self.log_test("System Product Mode", False, f"Invalid mode returned: {mode}")
+                else:
+                    self.log_test("System Product Mode", False, f"Missing fields: {missing_fields}")
+            except Exception as e:
+                self.log_test("System Product Mode", False, f"Failed to parse response: {str(e)}")
+        elif response.status_code == 401:
+            self.log_test("System Product Mode", False, "Requires authentication (401)")
+        else:
+            self.log_test("System Product Mode", False, f"Status: {response.status_code}, Response: {response.text}")
+
+    def test_product_mode_admin_endpoints(self):
+        """Test admin product mode endpoints - requires super_admin role"""
+        print("\n=== Product Mode Admin API ===")
+        
+        test_tenant_id = "test-tenant-123"
+        
+        # Test GET /api/admin/tenants/{tenant_id}/product-mode
+        response = self.make_request("GET", f"/admin/tenants/{test_tenant_id}/product-mode")
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                required_fields = ["tenant_id", "product_mode", "available_modes", "visible_nav_groups", "hidden_nav_items"]
+                
+                missing_fields = [field for field in required_fields if field not in data]
+                if not missing_fields:
+                    mode = data.get("product_mode")
+                    available = data.get("available_modes", [])
+                    
+                    if mode in ["lite", "pro", "enterprise"] and "lite" in available and "pro" in available and "enterprise" in available:
+                        self.log_test("Admin Get Product Mode", True, f"Mode: {mode}, Available: {available}")
+                    else:
+                        self.log_test("Admin Get Product Mode", False, f"Invalid mode or available modes: {mode}, {available}")
+                else:
+                    self.log_test("Admin Get Product Mode", False, f"Missing fields: {missing_fields}")
+            except Exception as e:
+                self.log_test("Admin Get Product Mode", False, f"Failed to parse response: {str(e)}")
+        elif response.status_code == 403:
+            self.log_test("Admin Get Product Mode", False, "Access denied - requires super_admin role (403)")
+        elif response.status_code == 401:
+            self.log_test("Admin Get Product Mode", False, "Requires authentication (401)")
+        else:
+            self.log_test("Admin Get Product Mode", False, f"Status: {response.status_code}, Response: {response.text}")
+        
+        # Test preview endpoints for different mode transitions
+        self.test_product_mode_preview(test_tenant_id)
+        
+        # Test PATCH endpoint to change mode
+        self.test_product_mode_update(test_tenant_id)
+
+    def test_product_mode_preview(self, tenant_id: str):
+        """Test GET /api/admin/tenants/{tenant_id}/product-mode-preview"""
+        print("\n=== Product Mode Preview API ===")
+        
+        # Test preview from enterprise to lite (should show many newly_hidden)
+        response = self.make_request("GET", f"/admin/tenants/{tenant_id}/product-mode-preview?target_mode=lite")
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                required_fields = ["tenant_id", "current_mode", "from_mode", "to_mode", "is_upgrade", "newly_visible", "newly_hidden"]
+                
+                missing_fields = [field for field in required_fields if field not in data]
+                if not missing_fields:
+                    from_mode = data.get("from_mode")
+                    to_mode = data.get("to_mode")
+                    is_upgrade = data.get("is_upgrade")
+                    newly_hidden = data.get("newly_hidden", [])
+                    newly_visible = data.get("newly_visible", [])
+                    
+                    if to_mode == "lite" and isinstance(is_upgrade, bool):
+                        self.log_test("Preview to Lite", True, f"{from_mode}→{to_mode}, Upgrade: {is_upgrade}, Hidden: {len(newly_hidden)}, Visible: {len(newly_visible)}")
+                    else:
+                        self.log_test("Preview to Lite", False, f"Invalid preview data: {to_mode}, {is_upgrade}")
+                else:
+                    self.log_test("Preview to Lite", False, f"Missing fields: {missing_fields}")
+            except Exception as e:
+                self.log_test("Preview to Lite", False, f"Failed to parse response: {str(e)}")
+        elif response.status_code == 403:
+            self.log_test("Preview to Lite", False, "Access denied - requires super_admin role (403)")
+        else:
+            self.log_test("Preview to Lite", False, f"Status: {response.status_code}, Response: {response.text}")
+        
+        # Test preview from lite to enterprise (should show many newly_visible)
+        response = self.make_request("GET", f"/admin/tenants/{tenant_id}/product-mode-preview?target_mode=enterprise")
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                to_mode = data.get("to_mode")
+                is_upgrade = data.get("is_upgrade")
+                newly_visible = data.get("newly_visible", [])
+                
+                if to_mode == "enterprise" and is_upgrade in [True, False]:
+                    self.log_test("Preview to Enterprise", True, f"To {to_mode}, Upgrade: {is_upgrade}, Newly visible: {len(newly_visible)}")
+                else:
+                    self.log_test("Preview to Enterprise", False, f"Invalid preview data")
+            except Exception as e:
+                self.log_test("Preview to Enterprise", False, f"Failed to parse response: {str(e)}")
+        else:
+            self.log_test("Preview to Enterprise", False, f"Status: {response.status_code}")
+        
+        # Test invalid mode
+        response = self.make_request("GET", f"/admin/tenants/{tenant_id}/product-mode-preview?target_mode=invalid")
+        if response.status_code == 400:
+            self.log_test("Preview Invalid Mode", True, "Correctly rejected invalid mode with 400")
+        else:
+            self.log_test("Preview Invalid Mode", False, f"Expected 400, got {response.status_code}")
+
+    def test_product_mode_update(self, tenant_id: str):
+        """Test PATCH /api/admin/tenants/{tenant_id}/product-mode"""
+        print("\n=== Product Mode Update API ===")
+        
+        # First, get current mode to restore later
+        current_response = self.make_request("GET", f"/admin/tenants/{tenant_id}/product-mode")
+        original_mode = "enterprise"  # default
+        if current_response.status_code == 200:
+            try:
+                data = current_response.json()
+                original_mode = data.get("product_mode", "enterprise")
+            except:
+                pass
+        
+        # Test setting to lite mode
+        response = self.make_request("PATCH", f"/admin/tenants/{tenant_id}/product-mode", {"product_mode": "lite"})
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                required_fields = ["tenant_id", "product_mode", "changed", "is_upgrade", "newly_visible", "newly_hidden"]
+                
+                missing_fields = [field for field in required_fields if field not in data]
+                if not missing_fields:
+                    mode = data.get("product_mode")
+                    changed = data.get("changed")
+                    is_upgrade = data.get("is_upgrade")
+                    
+                    if mode == "lite" and isinstance(changed, bool):
+                        self.log_test("Update to Lite", True, f"Mode: {mode}, Changed: {changed}, Upgrade: {is_upgrade}")
+                    else:
+                        self.log_test("Update to Lite", False, f"Invalid update response")
+                else:
+                    self.log_test("Update to Lite", False, f"Missing fields: {missing_fields}")
+            except Exception as e:
+                self.log_test("Update to Lite", False, f"Failed to parse response: {str(e)}")
+        elif response.status_code == 403:
+            self.log_test("Update to Lite", False, "Access denied - requires super_admin role (403)")
+        else:
+            self.log_test("Update to Lite", False, f"Status: {response.status_code}, Response: {response.text}")
+        
+        # Test setting to pro mode
+        response = self.make_request("PATCH", f"/admin/tenants/{tenant_id}/product-mode", {"product_mode": "pro"})
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                mode = data.get("product_mode")
+                changed = data.get("changed")
+                
+                if mode == "pro":
+                    self.log_test("Update to Pro", True, f"Mode: {mode}, Changed: {changed}")
+                else:
+                    self.log_test("Update to Pro", False, f"Expected mode 'pro', got {mode}")
+            except Exception as e:
+                self.log_test("Update to Pro", False, f"Failed to parse response: {str(e)}")
+        else:
+            self.log_test("Update to Pro", False, f"Status: {response.status_code}")
+        
+        # Test setting same mode again (should return changed: false)
+        response = self.make_request("PATCH", f"/admin/tenants/{tenant_id}/product-mode", {"product_mode": "pro"})
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                changed = data.get("changed")
+                
+                if changed is False:
+                    self.log_test("Update Same Mode", True, "Correctly returned changed: false")
+                else:
+                    self.log_test("Update Same Mode", False, f"Expected changed: false, got {changed}")
+            except Exception as e:
+                self.log_test("Update Same Mode", False, f"Failed to parse response: {str(e)}")
+        else:
+            self.log_test("Update Same Mode", False, f"Status: {response.status_code}")
+        
+        # Test invalid mode
+        response = self.make_request("PATCH", f"/admin/tenants/{tenant_id}/product-mode", {"product_mode": "invalid"})
+        if response.status_code == 400:
+            self.log_test("Update Invalid Mode", True, "Correctly rejected invalid mode with 400")
+        else:
+            self.log_test("Update Invalid Mode", False, f"Expected 400, got {response.status_code}")
+        
+        # Restore original mode
+        if original_mode != "pro":
+            restore_response = self.make_request("PATCH", f"/admin/tenants/{tenant_id}/product-mode", {"product_mode": original_mode})
+            if restore_response.status_code == 200:
+                self.log_test("Restore Original Mode", True, f"Restored to {original_mode}")
+            else:
+                self.log_test("Restore Original Mode", False, f"Failed to restore, status: {restore_response.status_code}")
+
+    def test_product_mode_auth_validation(self):
+        """Test authentication and authorization for product mode endpoints"""
+        print("\n=== Product Mode Auth Validation ===")
+        
+        # Save current token
+        original_token = self.token
+        test_tenant_id = "test-tenant-auth"
+        
+        # Test without authentication
+        self.token = None
+        
+        response = self.make_request("GET", "/system/product-mode")
+        if response.status_code == 401:
+            self.log_test("No Auth - System Product Mode", True, "Correctly rejected with 401")
+        else:
+            self.log_test("No Auth - System Product Mode", False, f"Expected 401, got {response.status_code}")
+        
+        response = self.make_request("GET", f"/admin/tenants/{test_tenant_id}/product-mode")
+        if response.status_code == 401:
+            self.log_test("No Auth - Admin Product Mode", True, "Correctly rejected with 401")
+        else:
+            self.log_test("No Auth - Admin Product Mode", False, f"Expected 401, got {response.status_code}")
+        
+        response = self.make_request("PATCH", f"/admin/tenants/{test_tenant_id}/product-mode", {"product_mode": "lite"})
+        if response.status_code == 401:
+            self.log_test("No Auth - Update Product Mode", True, "Correctly rejected with 401")
+        else:
+            self.log_test("No Auth - Update Product Mode", False, f"Expected 401, got {response.status_code}")
+        
+        # Restore token for potential non-super_admin scenarios
+        self.token = original_token
+        
+        # Note: We can't test non-super_admin scenarios easily since our test user is super_admin
+        # In a real environment, you'd create a regular user token to test 403 responses
     
     def run_all_tests(self):
         """Run complete test suite"""

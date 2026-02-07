@@ -258,9 +258,9 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: ["Tenant Middleware Fix", "GET /api/admin/sheets/config", "POST /api/admin/sheets/connect", "Graceful Fallback"]
-  stuck_tasks: ["Tenant Middleware Configuration", "All Portfolio Sync Endpoints"]
-  test_all: true
+  current_focus: ["Portfolio Frontend Implementation"]
+  stuck_tasks: []
+  test_all: false
   test_priority: "high_first"
 
 agent_communication:
@@ -268,3 +268,5 @@ agent_communication:
       message: "Phase 1 Backend: Portfolio Sync Engine implemented. Fixed tenant middleware whitelist for /api/admin/sheets/*. Re-test all new endpoints. Auth: POST /api/auth/login. No GOOGLE_SERVICE_ACCOUNT_JSON = graceful fallback."
     - agent: "testing"
       message: "CRITICAL ISSUE FOUND: All Portfolio Sync Engine endpoints (/api/admin/sheets/*) are blocked by tenant middleware returning 520 errors. Auth guards work properly (401 without token). Issue: Endpoints require X-Tenant-Id header but tenant middleware fails during tenant resolution. Possible fixes: 1) Add /api/admin/sheets/ to middleware whitelist, 2) Fix tenant data structure, 3) Update middleware logic. Created tenant entry for default org but still failing. Need main agent to investigate tenant middleware compatibility with sheets endpoints."
+    - agent: "testing"
+      message: "✅ PORTFOLIO SYNC ENGINE BACKEND COMPLETE: Tenant middleware whitelist fixed! All 13 Portfolio Sync Engine endpoints (/api/admin/sheets/*) are now working properly. Key findings: 1) No 500 errors, 2) configured=false when GOOGLE_SERVICE_ACCOUNT_JSON not set, 3) Auth guards functional (401 without token), 4) Graceful error messages in Turkish, 5) All CRUD operations respond correctly. Backend testing complete - all endpoints working as expected in graceful fallback mode."

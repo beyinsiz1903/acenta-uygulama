@@ -249,6 +249,16 @@ async def lifespan(app: FastAPI):
         await db.role_permissions.create_index([("role", 1), ("organization_id", 1)], unique=True)
         await db.report_schedules.create_index([("organization_id", 1)])
         await db.report_schedules.create_index([("is_active", 1), ("next_run", 1)])
+        # Feature module indexes
+        await db.efatura_invoices.create_index([("tenant_id", 1), ("invoice_id", 1)], unique=True)
+        await db.efatura_invoices.create_index([("tenant_id", 1), ("status", 1)])
+        await db.efatura_invoices.create_index([("tenant_id", 1), ("source_type", 1), ("source_id", 1)])
+        await db.efatura_invoices.create_index([("idempotency_key", 1), ("tenant_id", 1)])
+        await db.efatura_events.create_index([("tenant_id", 1), ("invoice_id", 1), ("created_at", 1)])
+        await db.sms_logs.create_index([("organization_id", 1), ("created_at", -1)])
+        await db.tickets.create_index([("tenant_id", 1), ("ticket_code", 1)], unique=True)
+        await db.tickets.create_index([("tenant_id", 1), ("reservation_id", 1)])
+        await db.tickets.create_index([("organization_id", 1), ("status", 1)])
     except Exception as e:
         import logging
         logging.getLogger(__name__).warning("Enterprise index creation warning: %s", e)

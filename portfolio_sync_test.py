@@ -18,8 +18,8 @@ from datetime import datetime
 
 # Configuration
 BACKEND_URL = "https://portfolio-connector.preview.emergentagent.com/api"
-TEST_USER_EMAIL = "admin@example.com"
-TEST_USER_PASSWORD = "password123"
+TEST_USER_EMAIL = "admin@acenta.test"
+TEST_USER_PASSWORD = "admin123"
 
 class PortfolioSyncTester:
     def __init__(self):

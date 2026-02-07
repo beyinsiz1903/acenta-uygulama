@@ -345,6 +345,8 @@ function App() {
             <Route path="perf-dashboard" element={<AdminPerfDashboardPage />} />
             {/* Enterprise Demo Pack */}
             <Route path="demo-guide" element={<AdminDemoGuidePage />} />
+            {/* Product Mode Settings */}
+            <Route path="product-mode" element={<AdminProductModePage />} />
           </Route>
         </Route>
 

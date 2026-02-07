@@ -134,15 +134,18 @@ backend:
 
   - task: "E1.2 Approval Workflow Engine"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/app/routers/enterprise_approvals.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Create, list, approve, reject endpoints. Double-approve blocked (409). Audit logged."
+      - working: true
+        agent: "testing"
+        comment: "✅ All approval workflow endpoints working: POST /approvals (creates approval), GET /approvals (lists), POST /{id}/approve (works), double approve returns 409, reject after approve returns 409. Requires entity_type, entity_id, action fields."
 
   - task: "E1.3 Immutable Audit Log (hash chain + CSV export)"
     implemented: true

@@ -90,11 +90,14 @@ backend:
     file: "backend/app/routers/admin_import.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Validates all rows with column mapping. Checks name required, city required, duplicates, price numeric. Returns valid/error counts."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING PASSED: Validation works perfectly. Correctly identified 3 valid rows, 2 errors (missing city, invalid price). Column mapping accurate. Duplicate detection works. Returns proper error messages in Turkish. Error handling for invalid job_id works (404)."
 
   - task: "POST /api/admin/import/hotels/execute - Bulk import"
     implemented: true

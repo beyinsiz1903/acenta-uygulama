@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { formatMoney, formatMoneyCompact } from "../lib/format";
 import {
@@ -9,6 +9,7 @@ import {
   Briefcase, ShieldCheck, TrendingUp, MessageSquare, Globe,
   ClipboardList, Tag, Megaphone, Network, DollarSign,
   Scale, Activity, Eye, Zap, BookOpen, Search,
+  Palette, Download, Calendar,
 } from "lucide-react";
 
 import { Button } from "./ui/button";

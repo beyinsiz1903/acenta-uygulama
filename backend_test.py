@@ -529,9 +529,145 @@ class PortfolioSyncTester:
             else:
                 self.add_result("Delete Connection", "FAIL", f"Status: {response.status_code}")
 
+    def test_writeback_stats(self):
+        """Test 16: GET /api/admin/sheets/writeback/stats - Write-back stats"""
+        self.log("=== TEST 16: WRITEBACK STATS ===")
+        
+        response = self.request("GET", "/admin/sheets/writeback/stats", 
+                               headers=self.get_auth_headers(), expect_status=200)
+        
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                # Expected: {queued:0, completed:0, failed:0, retry:0, skipped:0, configured:false}
+                expected_keys = ["queued", "completed", "failed", "retry", "skipped", "configured"]
+                if all(key in data for key in expected_keys):
+                    if data.get("configured") == False:
+                        self.add_result("Writeback Stats", "PASS", 
+                                      f"All stats present, configured=false: {json.dumps(data)}")
+                    else:
+                        self.add_result("Writeback Stats", "FAIL", 
+                                      f"Expected configured=false, got: {data.get('configured')}")
+                else:
+                    missing = [key for key in expected_keys if key not in data]
+                    self.add_result("Writeback Stats", "FAIL", 
+                                  f"Missing keys: {missing}, got: {json.dumps(data)}")
+            except json.JSONDecodeError:
+                self.add_result("Writeback Stats", "FAIL", "Invalid JSON response")
+        else:
+            self.add_result("Writeback Stats", "FAIL", f"Status: {response.status_code}")
+
+    def test_writeback_process(self):
+        """Test 17: POST /api/admin/sheets/writeback/process - Process write-back queue"""
+        self.log("=== TEST 17: WRITEBACK PROCESS ===")
+        
+        response = self.request("POST", "/admin/sheets/writeback/process", 
+                               headers=self.get_auth_headers(), expect_status=200)
+        
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                # Expected: {status: "not_configured", configured: false}
+                if (data.get("status") == "not_configured" and 
+                    data.get("configured") == False):
+                    self.add_result("Writeback Process", "PASS", 
+                                  f"status=not_configured, configured=false")
+                else:
+                    self.add_result("Writeback Process", "FAIL", 
+                                  f"Expected status=not_configured & configured=false, got: {json.dumps(data)}")
+            except json.JSONDecodeError:
+                self.add_result("Writeback Process", "FAIL", "Invalid JSON response")
+        else:
+            self.add_result("Writeback Process", "FAIL", f"Status: {response.status_code}")
+
+    def test_writeback_queue(self):
+        """Test 18: GET /api/admin/sheets/writeback/queue - List write-back queue"""
+        self.log("=== TEST 18: WRITEBACK QUEUE ===")
+        
+        response = self.request("GET", "/admin/sheets/writeback/queue", 
+                               headers=self.get_auth_headers(), expect_status=200)
+        
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                # Expected: Empty array []
+                if isinstance(data, list):
+                    self.add_result("Writeback Queue", "PASS", 
+                                  f"Returns array with {len(data)} queue items")
+                else:
+                    self.add_result("Writeback Queue", "FAIL", 
+                                  f"Expected array, got: {type(data)}")
+            except json.JSONDecodeError:
+                self.add_result("Writeback Queue", "FAIL", "Invalid JSON response")
+        else:
+            self.add_result("Writeback Queue", "FAIL", f"Status: {response.status_code}")
+
+    def test_changelog(self):
+        """Test 19: GET /api/admin/sheets/changelog - Change log"""
+        self.log("=== TEST 19: CHANGELOG ===")
+        
+        response = self.request("GET", "/admin/sheets/changelog", 
+                               headers=self.get_auth_headers(), expect_status=200)
+        
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                # Expected: Empty array []
+                if isinstance(data, list):
+                    self.add_result("Changelog", "PASS", 
+                                  f"Returns array with {len(data)} change log entries")
+                else:
+                    self.add_result("Changelog", "FAIL", 
+                                  f"Expected array, got: {type(data)}")
+            except json.JSONDecodeError:
+                self.add_result("Changelog", "FAIL", "Invalid JSON response")
+        else:
+            self.add_result("Changelog", "FAIL", f"Status: {response.status_code}")
+
+    def test_existing_endpoints_regression(self):
+        """Test 20: Verify existing endpoints still work (regression test)"""
+        self.log("=== TEST 20: EXISTING ENDPOINTS REGRESSION ===")
+        
+        # Test a few key existing endpoints to ensure they still work
+        tests = [
+            ("GET", "/admin/sheets/config"),
+            ("GET", "/admin/sheets/connections"), 
+            ("GET", "/admin/sheets/status")
+        ]
+        
+        all_passed = True
+        results = []
+        
+        for method, endpoint in tests:
+            response = self.request(method, endpoint, headers=self.get_auth_headers())
+            if response.status_code == 200:
+                results.append(f"{method} {endpoint}: ✅")
+            else:
+                results.append(f"{method} {endpoint}: ❌ {response.status_code}")
+                all_passed = False
+        
+        if all_passed:
+            self.add_result("Existing Endpoints Regression", "PASS", 
+                          "All key endpoints working: " + ", ".join(results))
+        else:
+            self.add_result("Existing Endpoints Regression", "FAIL", 
+                          "Some endpoints failing: " + ", ".join(results))
+
+    def test_writeback_auth_guards(self):
+        """Test 21: Auth guard test on new write-back endpoints"""
+        self.log("=== TEST 21: WRITEBACK AUTH GUARDS ===")
+        
+        # Test writeback stats endpoint without token
+        response = self.request("GET", "/admin/sheets/writeback/stats", expect_status=401)
+        
+        if response.status_code == 401:
+            self.add_result("Writeback Auth Guards", "PASS", "Returns 401 without authentication token")
+        else:
+            self.add_result("Writeback Auth Guards", "FAIL", f"Expected 401, got {response.status_code}")
+
     def test_auth_guards(self):
-        """Test 16: Auth guards - All endpoints should require auth"""
-        self.log("=== TEST 16: AUTH GUARDS ===")
+        """Test 22: Auth guards - All endpoints should require auth"""
+        self.log("=== TEST 22: AUTH GUARDS ===")
         
         # Test config endpoint without token
         response = self.request("GET", "/admin/sheets/config", expect_status=401)

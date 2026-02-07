@@ -156,7 +156,10 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
             # Fallback to string _id; repositories must handle this shape.
             tenant_lookup_id = tenant_id_header
 
+        # Try ObjectId first, then string fallback (covers both storage patterns)
         tenant_doc: Optional[dict[str, Any]] = await db.tenants.find_one({"_id": tenant_lookup_id})
+        if not tenant_doc:
+            tenant_doc = await db.tenants.find_one({"_id": tenant_id_header})
         if not tenant_doc:
             return _error_response(
                 404,

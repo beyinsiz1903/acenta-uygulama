@@ -71,51 +71,63 @@ user_problem_statement: "Feature modules: E-Fatura Layer, SMS Notification Layer
 backend:
   - task: "A) E-Fatura - Profile CRUD"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/app/routers/efatura.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "PUT/GET /api/efatura/profile. Tenant-scoped, admin-only."
+      - working: true
+        agent: "testing"
+        comment: "✅ ALL TESTS PASSED (2/2): PUT /api/efatura/profile creates profile successfully with all required fields (legal_name, tax_number, etc.), GET /api/efatura/profile retrieves correct data. Tenant isolation and admin permissions working correctly."
 
   - task: "A) E-Fatura - Invoice CRUD + Send + Cancel"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/app/routers/efatura.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST/GET /api/efatura/invoices, POST send/cancel. Idempotent. MockProvider. Audit logged."
+      - working: true
+        agent: "testing"
+        comment: "✅ ALL TESTS PASSED (7/7): Invoice creation with proper line calculations, idempotency verified (same invoice returned for duplicate requests), send functionality changes status to sent→accepted via MockProvider, cancel functionality works, events timeline tracking, invoice listing. All audit logging functional."
 
   - task: "B) SMS Notification - Send + Bulk + Logs"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/app/routers/sms_notifications.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/sms/send, /api/sms/send-bulk, GET /api/sms/logs, /api/sms/templates. MockProvider."
+      - working: true
+        agent: "testing"
+        comment: "✅ ALL TESTS PASSED (4/4): Template system returns 5 predefined templates, single SMS send returns message_id via MockProvider, bulk SMS send returns batch_id for multiple recipients, SMS logs properly track sent messages. All tenant isolation working correctly."
 
   - task: "C) QR Ticket - Create + Check-in + Cancel + Stats"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/app/routers/tickets.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/tickets, /api/tickets/check-in, /api/tickets/{code}/cancel, GET stats. Idempotent per reservation. Audit logged."
+      - working: true
+        agent: "testing"
+        comment: "✅ ALL TESTS PASSED (9/9): Ticket creation with QR data generation, idempotency per reservation_id verified, check-in process updates status correctly, duplicate check-in properly returns 409, ticket cancellation works, check-in of canceled ticket returns 410, listing and lookup functionality, statistics with proper counts (total, active, checked_in, canceled)."
 
 metadata:
   created_by: "main_agent"

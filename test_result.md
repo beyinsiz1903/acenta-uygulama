@@ -150,11 +150,14 @@ backend:
     file: "backend/app/routers/admin_import.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Returns XLSX file with sample headers and 2 example rows."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING PASSED: Template export works perfectly. Returns proper XLSX file with correct content-type (application/vnd.openxmlformats-officedocument.spreadsheetml.sheet) and content-disposition (attachment). Authentication required. File structure verified."
 
   - task: "POST /api/admin/import/sheet/connect - Google Sheet connection (MOCKED)"
     implemented: true

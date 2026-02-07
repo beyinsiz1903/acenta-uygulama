@@ -390,26 +390,31 @@ function AppShellInner() {
   useEffect(() => {
     if (modeLoading) return;
     const currentPath = location.pathname;
-    // Build a Set of all allowed paths for this mode
-    const allItems = ADMIN_GROUPED_NAV.flatMap((section) => {
-      // Group-level check
+    // Collect ALL hidden paths (from hidden groups AND hidden individual items)
+    const hiddenPaths = [];
+    ADMIN_GROUPED_NAV.forEach((section) => {
+      // If entire group is hidden by minGroupMode, all its items are hidden
       if (section.minGroupMode) {
         const groupLevel = MODE_ORDER_MAP[section.minGroupMode] ?? 0;
-        if (groupLevel > currentModeLevel) return [];
+        if (groupLevel > currentModeLevel) {
+          section.items.forEach((it) => hiddenPaths.push(it.to));
+          return;
+        }
       }
-      return section.items;
-    });
-    // Check if current path matches any hidden nav item
-    const hiddenPaths = allItems
-      .filter((it) => {
+      // Check individual items
+      section.items.forEach((it) => {
         if (it.minMode) {
           const itemLevel = MODE_ORDER_MAP[it.minMode] ?? 0;
-          if (itemLevel > currentModeLevel) return true;
+          if (itemLevel > currentModeLevel) {
+            hiddenPaths.push(it.to);
+            return;
+          }
         }
-        if (it.modeKey && hiddenNavItems.includes(it.modeKey)) return true;
-        return false;
-      })
-      .map((it) => it.to);
+        if (it.modeKey && hiddenNavItems.includes(it.modeKey)) {
+          hiddenPaths.push(it.to);
+        }
+      });
+    });
     // If current path starts with a hidden path, redirect
     const isBlocked = hiddenPaths.some((hp) => currentPath === hp || currentPath.startsWith(hp + "/"));
     if (isBlocked) {

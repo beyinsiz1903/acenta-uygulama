@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { api } from "../../lib/api";
+import { api, getUser } from "../../lib/api";
 import { useProductMode } from "../../contexts/ProductModeContext";
 import { getActiveTenantId } from "../../lib/tenantContext";
 import {

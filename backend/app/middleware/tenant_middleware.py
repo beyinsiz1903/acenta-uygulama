@@ -114,20 +114,20 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
         user_email = payload.get("sub")
         org_id = payload.get("org")
         if not user_email or not org_id:
-            raise AppError(
-                status_code=401,
-                code="invalid_token_payload",
-                message="Token payload missing required fields.",
-                details=None,
+            return _error_response(
+                401,
+                "invalid_token_payload",
+                "Token payload missing required fields.",
+                None,
             )
 
         user_doc = await db.users.find_one({"email": user_email, "organization_id": org_id})
         if not user_doc:
-            raise AppError(
-                status_code=401,
-                code="user_not_found",
-                message="User not found for token.",
-                details=None,
+            return _error_response(
+                401,
+                "user_not_found",
+                "User not found for token.",
+                None,
             )
 
         user_id = str(user_doc.get("_id"))

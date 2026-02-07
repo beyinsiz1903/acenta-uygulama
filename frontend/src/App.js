@@ -48,6 +48,12 @@ import AdminEmailLogsPage from "./pages/AdminEmailLogsPage";
 import AdminPilotDashboardPage from "./pages/AdminPilotDashboardPage";
 import AdminMetricsPage from "./pages/AdminMetricsPage";
 import AdminMatchAlertsPolicyPage from "./pages/AdminMatchAlertsPolicyPage";
+
+// Enterprise Hardening (E1-E4) pages
+import AdminBrandingPage from "./pages/AdminBrandingPage";
+import AdminApprovalInboxPage from "./pages/AdminApprovalInboxPage";
+import AdminTenantExportPage from "./pages/AdminTenantExportPage";
+import AdminScheduledReportsPage from "./pages/AdminScheduledReportsPage";
 import AdminMatchesPage from "./pages/AdminMatchesPage";
 import AdminExportsPage from "./pages/AdminExportsPage";
 import AdminMatchDetailPage from "./pages/AdminMatchDetailPage";

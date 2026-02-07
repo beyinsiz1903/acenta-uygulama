@@ -86,6 +86,21 @@ async def _log_slow_request_bg(path, method, latency_ms, request_id, status_code
         pass
 
 
+async def _store_perf_sample_bg(path, method, status_code, latency_ms, tenant_id):
+    """Background task to store perf sample (B1)."""
+    try:
+        from app.services.perf_service import store_perf_sample
+        await store_perf_sample(
+            path=path,
+            method=method,
+            status_code=status_code,
+            latency_ms=latency_ms,
+            tenant_id=tenant_id,
+        )
+    except Exception:
+        pass
+
+
 async def _aggregate_exception_bg(message, stack_trace, request_id):
     """Background task to aggregate exceptions."""
     try:

@@ -76,29 +76,10 @@ class AgencyAvailabilityTester:
             self.log(f"Request failed: {e}", "ERROR")
             raise
             
-    def authenticate(self) -> bool:
-        """Login and get JWT token as specified in review request"""
-        self.log("=== AUTHENTICATION ===")
+    def authenticate_admin(self) -> bool:
+        """Login as admin user"""
+        self.log("=== ADMIN AUTHENTICATION ===")
         
-        # First, try to register the user (will fail if exists, that's OK)
-        signup_data = {
-            "email": ADMIN_EMAIL,
-            "password": ADMIN_PASSWORD,
-            "name": "Test Admin"
-        }
-        
-        try:
-            signup_response = self.request("POST", "/auth/signup", json_data=signup_data)
-            if signup_response.status_code == 200:
-                self.log("✅ User registered successfully")
-            elif signup_response.status_code == 409:
-                self.log("ℹ️ User already exists (OK)")
-            else:
-                self.log(f"⚠️ User registration: {signup_response.status_code}")
-        except Exception as e:
-            self.log(f"⚠️ User registration error (may already exist): {e}")
-        
-        # Now try to login
         login_data = {
             "email": ADMIN_EMAIL,
             "password": ADMIN_PASSWORD
@@ -109,24 +90,58 @@ class AgencyAvailabilityTester:
         if response.status_code == 200:
             try:
                 data = response.json()
-                self.auth_token = data.get("access_token")
-                if self.auth_token:
-                    self.add_result("Authentication", "PASS", f"Token obtained for {ADMIN_EMAIL}")
+                self.admin_token = data.get("access_token")
+                if self.admin_token:
+                    self.add_result("Admin Authentication", "PASS", f"Token obtained for {ADMIN_EMAIL}")
                     return True
                 else:
-                    self.add_result("Authentication", "FAIL", "No access_token in response")
+                    self.add_result("Admin Authentication", "FAIL", "No access_token in response")
                     return False
             except json.JSONDecodeError:
-                self.add_result("Authentication", "FAIL", "Invalid JSON response")
+                self.add_result("Admin Authentication", "FAIL", "Invalid JSON response")
                 return False
         else:
-            self.add_result("Authentication", "FAIL", f"Status: {response.status_code}")
+            self.add_result("Admin Authentication", "FAIL", f"Status: {response.status_code}")
             return False
 
-    def get_auth_headers(self) -> Dict[str, str]:
-        """Get headers with Bearer token"""
-        if self.auth_token:
-            return {"Authorization": f"Bearer {self.auth_token}"}
+    def authenticate_agency(self) -> bool:
+        """Login as agency user"""
+        self.log("=== AGENCY AUTHENTICATION ===")
+        
+        login_data = {
+            "email": AGENCY_EMAIL,
+            "password": AGENCY_PASSWORD
+        }
+        
+        response = self.request("POST", "/auth/login", json_data=login_data, expect_status=200)
+        
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                self.agency_token = data.get("access_token")
+                if self.agency_token:
+                    self.add_result("Agency Authentication", "PASS", f"Token obtained for {AGENCY_EMAIL}")
+                    return True
+                else:
+                    self.add_result("Agency Authentication", "FAIL", "No access_token in response")
+                    return False
+            except json.JSONDecodeError:
+                self.add_result("Agency Authentication", "FAIL", "Invalid JSON response")
+                return False
+        else:
+            self.add_result("Agency Authentication", "FAIL", f"Status: {response.status_code}")
+            return False
+
+    def get_admin_headers(self) -> Dict[str, str]:
+        """Get headers with admin Bearer token"""
+        if self.admin_token:
+            return {"Authorization": f"Bearer {self.admin_token}"}
+        return {}
+
+    def get_agency_headers(self) -> Dict[str, str]:
+        """Get headers with agency Bearer token"""
+        if self.agency_token:
+            return {"Authorization": f"Bearer {self.agency_token}"}
         return {}
 
     def test_config_endpoint(self):

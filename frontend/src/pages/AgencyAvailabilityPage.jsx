@@ -878,18 +878,51 @@ export default function AgencyAvailabilityPage() {
           </div>
         ) : (
           /* Detail View */
-          detailLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+          <div className="space-y-4">
+            {/* Tab Navigation */}
+            <div className="flex items-center gap-1 bg-white rounded-xl border border-gray-200 p-1 w-fit">
+              <button
+                onClick={() => setDetailTab("grid")}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  detailTab === "grid"
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                <CalendarDays className="w-4 h-4" />
+                Müsaitlik Grid
+              </button>
+              <button
+                onClick={() => setDetailTab("writeback")}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  detailTab === "writeback"
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                Rezervasyonlar & Geri Yazım
+              </button>
             </div>
-          ) : (
-            <AvailabilityGrid
-              data={detailData}
-              startDate={startDate}
-              endDate={endDate}
-              onDateChange={handleDateChange}
-            />
-          )
+
+            {/* Tab Content */}
+            {detailTab === "grid" ? (
+              detailLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                </div>
+              ) : (
+                <AvailabilityGrid
+                  data={detailData}
+                  startDate={startDate}
+                  endDate={endDate}
+                  onDateChange={handleDateChange}
+                />
+              )
+            ) : (
+              <WriteBackPanel hotelId={selectedHotelId} />
+            )}
+          </div>
         )}
       </div>
     </div>

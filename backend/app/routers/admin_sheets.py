@@ -834,7 +834,7 @@ async def list_agencies_for_hotel(
         "active": True,
     }).to_list(500)
 
-    agency_ids = [l["agency_id"] for l in links]
+    agency_ids = [lnk["agency_id"] for lnk in links]
     if not agency_ids:
         return []
 

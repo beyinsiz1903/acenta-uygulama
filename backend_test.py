@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Portfolio Sync Engine Backend API Test Suite
+Agency Availability API Backend Test Suite
 
-Tests all new endpoints at /api/admin/sheets/* as specified in the review request.
-Focus on auth guards, graceful fallback when Google Sheets not configured, 
-CRUD operations, and error handling.
+Tests the 3 new agency availability endpoints as specified in the review request.
+Focus on auth guards (agency role requirements), authentication flow,
+and API responses for agency users.
 """
 
 import requests
@@ -18,7 +18,9 @@ BACKEND_URL = "https://data-sync-tool-1.preview.emergentagent.com/api"
 
 # Test credentials as specified in review request  
 ADMIN_EMAIL = "admin@acenta.test"
-ADMIN_PASSWORD = "admin123"  # From seed.py DEFAULT_ADMIN_PASSWORD
+ADMIN_PASSWORD = "admin123"
+AGENCY_EMAIL = "agency1@acenta.test"  
+AGENCY_PASSWORD = "agency123"
 
 class PortfolioSyncTester:
     def __init__(self):

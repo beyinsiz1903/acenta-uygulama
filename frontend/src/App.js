@@ -150,6 +150,7 @@ import B2BBookingPage from "./pages/B2BBookingPage";
 import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 import AgencyHotelsPage from "./pages/AgencyHotelsPage";
+import AgencyAvailabilityPage from "./pages/AgencyAvailabilityPage";
 import AgencyHotelDetailPage from "./pages/AgencyHotelDetailPage";
 import AgencyHotelSearchPage from "./pages/AgencyHotelSearchPage";
 import AgencySearchResultsPage from "./pages/AgencySearchResultsPage";

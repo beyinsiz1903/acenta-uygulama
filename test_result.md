@@ -397,8 +397,8 @@ frontend:
           comment: "✅ ENDPOINT WORKING: Auth guards working (401 without token). Agency token returns appropriate error for non-existent job_id: 'İş bulunamadı'. Proper error handling implemented. Role-based auth verified."
 metadata:
   created_by: "main_agent"
-  version: "15.0"
-  test_sequence: 24
+  version: "16.0"
+  test_sequence: 25
   run_ui: false
 
 test_plan:

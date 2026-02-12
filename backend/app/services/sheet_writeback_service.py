@@ -128,10 +128,22 @@ async def process_writeback_job(db, job: Dict[str, Any]) -> Dict[str, Any]:
     try:
         if event_type == "reservation_created":
             result = await _write_reservation_row(sheet_id, writeback_tab, payload)
+            # Auto-decrement allotment
+            await decrement_allotment_for_reservation(db, tenant_id, hotel_id, payload)
         elif event_type == "reservation_cancelled":
             result = await _write_cancellation_row(sheet_id, writeback_tab, payload)
+            # Restore allotment
+            await restore_allotment_for_cancellation(db, tenant_id, hotel_id, payload)
         elif event_type == "booking_confirmed":
             result = await _write_booking_row(sheet_id, writeback_tab, payload)
+            # Auto-decrement allotment for booking
+            await decrement_allotment_for_reservation(db, tenant_id, hotel_id, payload)
+        elif event_type == "booking_cancelled":
+            result = await _write_booking_cancelled_row(sheet_id, writeback_tab, payload)
+            # Restore allotment for cancelled booking
+            await restore_allotment_for_cancellation(db, tenant_id, hotel_id, payload)
+        elif event_type == "booking_amended":
+            result = await _write_booking_amended_row(sheet_id, writeback_tab, payload)
         else:
             result = {"status": "unknown_event_type"}
 

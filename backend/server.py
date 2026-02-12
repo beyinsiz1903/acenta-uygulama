@@ -728,6 +728,10 @@ app.include_router(admin_system_perf_router)
 # Enterprise Demo Pack
 app.include_router(admin_demo_guide_router)
 
+# AI Assistant
+from app.routers.ai_assistant import router as ai_assistant_router
+app.include_router(ai_assistant_router)
+
 
 @app.get("/")
 async def read_root() -> dict[str, str]:

@@ -6,7 +6,8 @@ import {
   XCircle, ChevronLeft, Search, Clock, TrendingUp,
   ArrowRight, Loader2, WifiOff, BarChart3, Eye,
   Filter, ChevronDown, ChevronUp, Activity, Bed,
-  DollarSign, Ban, Calendar,
+  DollarSign, Ban, Calendar, FileSpreadsheet, RotateCcw,
+  Send, User, Hash, BookOpen,
 } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════════════

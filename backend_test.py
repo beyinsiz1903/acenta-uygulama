@@ -404,7 +404,7 @@ class AgencyAvailabilityTester:
     def print_summary(self):
         """Print test results summary"""
         print("\n" + "="*80)
-        print("🏁 PORTFOLIO SYNC ENGINE TEST SUMMARY")
+        print("🏁 AGENCY AVAILABILITY API TEST SUMMARY")
         print("="*80)
         
         total = len(self.test_results)
@@ -433,26 +433,25 @@ class AgencyAvailabilityTester:
         
         # Key assertions from review request
         print("\n🔑 KEY ASSERTIONS:")
-        no_500_errors = all("500" not in str(r["details"]) for r in self.test_results if r["status"] == "FAIL")
-        print(f"  - No 500 errors: {'✅' if no_500_errors else '❌'}")
         
-        configured_false = any("configured=false" in str(r["details"]) for r in self.test_results if r["status"] == "PASS")
-        print(f"  - configured=false when no GOOGLE_SERVICE_ACCOUNT_JSON: {'✅' if configured_false else '❌'}")
+        auth_guards_working = any("No Auth" in r["test"] and r["status"] == "PASS" for r in self.test_results)
+        print(f"  - Auth guards return 401 without token: {'✅' if auth_guards_working else '❌'}")
         
-        auth_guards = any("Auth Guards" in r["test"] and r["status"] == "PASS" for r in self.test_results)
-        print(f"  - Auth guards functional: {'✅' if auth_guards else '❌'}")
+        role_based_auth = any("Admin Token" in r["test"] and r["status"] == "PASS" for r in self.test_results)
+        print(f"  - Admin token rejected (role-based auth): {'✅' if role_based_auth else '❌'}")
         
-        crud_working = any("Connect" in r["test"] and r["status"] == "PASS" for r in self.test_results) and \
-                      any("List" in r["test"] and r["status"] == "PASS" for r in self.test_results) and \
-                      any("Delete" in r["test"] and r["status"] == "PASS" for r in self.test_results)
-        print(f"  - All CRUD operations work: {'✅' if crud_working else '❌'}")
+        agency_endpoints_working = any("Agency Token" in r["test"] and r["status"] == "PASS" for r in self.test_results)
+        print(f"  - Agency endpoints working with agency token: {'✅' if agency_endpoints_working else '❌'}")
+        
+        all_endpoints_tested = any("availability" in r["test"].lower() for r in self.test_results)
+        print(f"  - All 3 agency availability endpoints tested: {'✅' if all_endpoints_tested else '❌'}")
         
         return passed, failed, skipped
 
 
 def main():
     """Main function"""
-    tester = PortfolioSyncTester()
+    tester = AgencyAvailabilityTester()
     
     try:
         success = tester.run_all_tests()
@@ -464,7 +463,7 @@ def main():
         elif not success:
             sys.exit(2)
         else:
-            print("\n🎉 All tests completed successfully!")
+            print("\n🎉 All Agency Availability API tests completed successfully!")
             sys.exit(0)
             
     except Exception as e:

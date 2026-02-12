@@ -19,10 +19,10 @@ BACKEND_URL = "https://data-sync-tool-1.preview.emergentagent.com/api"
 # Test credentials as specified in review request  
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
-AGENCY_EMAIL = "agency1@demo.test"  
+AGENCY_EMAIL = "agency1@acenta.test"  
 AGENCY_PASSWORD = "agency123"
 
-class AgencyAvailabilityTester:
+class AgencyWriteBackTester:
     def __init__(self):
         self.base_url = BACKEND_URL
         self.admin_token = None

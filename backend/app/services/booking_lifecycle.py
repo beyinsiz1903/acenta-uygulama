@@ -199,4 +199,33 @@ class BookingLifecycleService:
                     "Write-back hook failed for booking %s: %s", booking_id, wb_err
                 )
 
+        # ── Sheet Write-Back Hook (BOOKING_CANCELLED) ──
+        if event == "BOOKING_CANCELLED":
+            try:
+                from app.services.sheet_writeback_service import on_booking_cancelled
+                booking = await self.db.bookings.find_one({"_id": oid, "organization_id": organization_id})
+                if booking:
+                    tenant_id = organization_id
+                    await on_booking_cancelled(self.db, tenant_id, organization_id, booking)
+            except Exception as wb_err:
+                import logging
+                logging.getLogger("sheet_writeback").warning(
+                    "Write-back cancel hook failed for booking %s: %s", booking_id, wb_err
+                )
+
+        # ── Sheet Write-Back Hook (BOOKING_AMENDED) ──
+        if event == "BOOKING_AMENDED":
+            try:
+                from app.services.sheet_writeback_service import on_booking_amended
+                booking = await self.db.bookings.find_one({"_id": oid, "organization_id": organization_id})
+                if booking:
+                    tenant_id = organization_id
+                    note = (meta or {}).get("amendment_note", "")
+                    await on_booking_amended(self.db, tenant_id, organization_id, booking, note)
+            except Exception as wb_err:
+                import logging
+                logging.getLogger("sheet_writeback").warning(
+                    "Write-back amend hook failed for booking %s: %s", booking_id, wb_err
+                )
+
         return doc

@@ -397,7 +397,41 @@ frontend:
           comment: "✅ ENDPOINT WORKING: Auth guards working (401 without token). Agency token returns appropriate error for non-existent job_id: 'İş bulunamadı'. Proper error handling implemented. Role-based auth verified."
 metadata:
   created_by: "main_agent"
-  version: "16.0"
+  version: "17.0"
+
+# AI Assistant Feature
+ai_assistant_backend:
+  - task: "POST /api/ai-assistant/briefing - Generate daily briefing with AI"
+    implemented: true
+    working: needs_testing
+    file: "backend/app/routers/ai_assistant.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "POST /api/ai-assistant/chat - Chat with AI assistant"
+    implemented: true
+    working: needs_testing
+    file: "backend/app/routers/ai_assistant.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "GET /api/ai-assistant/chat-history/{session_id} - Get chat history"
+    implemented: true
+    working: needs_testing
+    file: "backend/app/routers/ai_assistant.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+
+  - task: "GET /api/ai-assistant/sessions - List user chat sessions"
+    implemented: true
+    working: needs_testing
+    file: "backend/app/routers/ai_assistant.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
   test_sequence: 25
   run_ui: false
 

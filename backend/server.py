@@ -700,6 +700,7 @@ app.include_router(system_product_mode_router)
 app.include_router(admin_product_mode_router)
 app.include_router(admin_import_router)
 app.include_router(admin_sheets_router)
+app.include_router(agency_availability_router)
 
 # Production Go-Live Pack
 app.include_router(admin_system_preflight_router)

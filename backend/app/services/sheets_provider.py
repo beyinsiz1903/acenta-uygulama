@@ -43,14 +43,30 @@ class SheetsProviderResult:
         }
 
 
+def _get_raw_config() -> str:
+    """Get service account JSON from env or DB cache."""
+    # Priority: env var > DB cached value
+    env_val = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "").strip()
+    if env_val:
+        return env_val
+    return _db_config_cache.get("service_account_json", "")
+
+
+def set_db_config(service_account_json: str) -> None:
+    """Set the DB-cached service account config (called after DB read)."""
+    _db_config_cache["service_account_json"] = service_account_json
+    # Invalidate cached service
+    _client_cache.pop("service", None)
+
+
 def is_configured() -> bool:
     """Check if Google Sheets integration is configured."""
-    return bool(os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "").strip())
+    return bool(_get_raw_config())
 
 
 def get_service_account_email() -> Optional[str]:
     """Extract service account email from JSON config."""
-    raw = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "").strip()
+    raw = _get_raw_config()
     if not raw:
         return None
     try:
@@ -65,7 +81,7 @@ def _get_sheets_service():
     if "service" in _client_cache:
         return _client_cache["service"]
 
-    raw = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "").strip()
+    raw = _get_raw_config()
     if not raw:
         raise RuntimeError("GOOGLE_SERVICE_ACCOUNT_JSON not configured")
 
@@ -87,12 +103,14 @@ def _get_sheets_service():
 def get_config_status() -> Dict[str, Any]:
     """Return configuration status."""
     configured = is_configured()
+    source = "env" if os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "").strip() else ("db" if configured else "none")
     return {
         "configured": configured,
+        "source": source,
         "service_account_email": get_service_account_email() if configured else None,
         "message": None if configured else (
             "Google Sheets entegrasyonu yapilandirilmamis. "
-            "GOOGLE_SERVICE_ACCOUNT_JSON env var gerekli."
+            "Admin panelinden Service Account JSON'u girebilirsiniz."
         ),
     }
 

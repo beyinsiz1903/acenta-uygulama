@@ -350,35 +350,51 @@ frontend:
 
   - task: "GET /api/agency/writeback/stats - Write-back statistics"
     implemented: true
-    working: unknown
+    working: true
     file: "backend/app/routers/agency_writeback.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ ENDPOINT WORKING: Auth guards working (401 without token). Agency token returns proper statistics: {queued=0, completed=8, failed=4, retry=0, total=15}. Role-based auth verified - admin tokens rejected with 403."
 
   - task: "GET /api/agency/writeback/queue - Write-back queue items"
     implemented: true
-    working: unknown
+    working: true
     file: "backend/app/routers/agency_writeback.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ ENDPOINT WORKING: Auth guards working (401 without token). Agency token returns queue with {items: [...], total: N} structure. Query params working (hotel_id, status, limit). Returns 15 queue items, properly filtered by parameters."
 
   - task: "GET /api/agency/writeback/reservations - Reservations with write-back status"
     implemented: true
-    working: unknown
+    working: true
     file: "backend/app/routers/agency_writeback.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ ENDPOINT WORKING: Auth guards working (401 without token). Agency token returns reservations with writeback status: {items: [...], total: N} structure. Query params working (hotel_id, limit). Returns 15 reservation items with proper fields: ref_id, event_type, writeback_status, guest_name, etc."
 
   - task: "POST /api/agency/writeback/retry/{job_id} - Retry failed write-back"
     implemented: true
-    working: unknown
+    working: true
     file: "backend/app/routers/agency_writeback.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ ENDPOINT WORKING: Auth guards working (401 without token). Agency token returns appropriate error for non-existent job_id: 'İş bulunamadı'. Proper error handling implemented. Role-based auth verified."
 metadata:
   created_by: "main_agent"
   version: "15.0"

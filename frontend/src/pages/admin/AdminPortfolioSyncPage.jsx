@@ -680,7 +680,7 @@ export default function AdminPortfolioSyncPage() {
       )}
 
       {/* Config Banner */}
-      <ConfigBanner config={config} />
+      <ConfigBanner config={config} onConfigSaved={() => loadAll(true)} />
 
       {/* Health Dashboard */}
       <HealthDashboard status={status} onRefresh={() => loadAll(false)} refreshing={refreshing} />

@@ -709,6 +709,9 @@ function AppShellInner() {
           © {new Date().getFullYear()} — v1
         </div>
       </footer>
+
+      {/* AI Assistant floating panel */}
+      <AiAssistant />
     </div>
   );
 }

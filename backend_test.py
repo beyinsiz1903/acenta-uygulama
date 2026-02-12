@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Agency Availability API Backend Test Suite
+Agency Write-Back API Backend Test Suite
 
-Tests the 3 new agency availability endpoints as specified in the review request.
+Tests the 4 new agency write-back endpoints as specified in the review request.
 Focus on auth guards (agency role requirements), authentication flow,
 and API responses for agency users.
 """

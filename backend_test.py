@@ -139,6 +139,9 @@ class AIAssistantTester:
                     return True
             except json.JSONDecodeError:
                 pass
+        elif login_response.status_code == 429:
+            self.add_result("Authentication", "FAIL", "Rate limited - try again later")
+            return False
         
         self.add_result("Authentication", "FAIL", "Both admin and fallback authentication failed")
         return False

@@ -16,7 +16,6 @@ async def gather_briefing_data(organization_id: str) -> dict[str, Any]:
     db = await get_db()
     now = datetime.now(timezone.utc)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    week_ago = now - timedelta(days=7)
 
     data: dict[str, Any] = {}
 

@@ -23,6 +23,7 @@ from app.services.sheets_provider import (
     get_sheet_metadata,
     is_configured,
     read_sheet,
+    set_db_config,
 )
 from app.services.hotel_portfolio_sync_service import (
     auto_detect_mapping,

@@ -106,7 +106,7 @@ class AIAssistantTester:
             "name": FALLBACK_NAME
         }
         
-        register_response = self.request("POST", "/auth/register", json_data=register_data)
+        register_response = self.request("POST", "/auth/signup", json_data=register_data)
         self.log(f"Registration response: {register_response.status_code}")
         
         # Try login with fallback credentials

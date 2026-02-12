@@ -347,6 +347,38 @@ frontend:
         - working: "NA"
           agent: "testing"
           comment: "✅ ENDPOINT IMPLEMENTED: Auth guards working (401 without token). Cannot test with agency token due to rate limiting. Code shows proper access control (agency_hotel_links verification), date range params, inventory snapshots query, and grid data structure with dates/room_types/availability data."
+
+  - task: "GET /api/agency/writeback/stats - Write-back statistics"
+    implemented: true
+    working: unknown
+    file: "backend/app/routers/agency_writeback.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "GET /api/agency/writeback/queue - Write-back queue items"
+    implemented: true
+    working: unknown
+    file: "backend/app/routers/agency_writeback.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "GET /api/agency/writeback/reservations - Reservations with write-back status"
+    implemented: true
+    working: unknown
+    file: "backend/app/routers/agency_writeback.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "POST /api/agency/writeback/retry/{job_id} - Retry failed write-back"
+    implemented: true
+    working: unknown
+    file: "backend/app/routers/agency_writeback.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
 metadata:
   created_by: "main_agent"
   version: "15.0"

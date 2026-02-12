@@ -6,7 +6,7 @@
 # END - Testing Protocol - DO NOT EDIT OR REMOVE THIS SECTION
 #====================================================================================================
 
-user_problem_statement: "Portfolio Sync Engine — Multi-Hotel Google Sheets Sync (300 otel/300 sheet, on-demand + scheduler, graceful fallback)"
+user_problem_statement: "AI Assistant - Hybrid (Daily Briefing + Chat) with Gemini 2.5 Flash. App navigation guidance included."
 
 backend:
   - task: "GET /api/admin/sheets/config - Configuration status"

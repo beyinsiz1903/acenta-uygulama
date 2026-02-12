@@ -26,6 +26,7 @@ import { getActiveTenantKey, getActiveTenantId, setActiveTenantId, subscribeTena
 import NotificationDrawer from "./NotificationDrawer";
 import NotificationBell from "./NotificationBell";
 import TrialBanner from "./TrialBanner";
+import AiAssistant from "./AiAssistant";
 
 /* ------------------------------------------------------------------ */
 /*  Sidebar collapse persistence                                       */

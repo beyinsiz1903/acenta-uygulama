@@ -19,7 +19,7 @@ BACKEND_URL = "https://conversational-ai-5.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@test.com"
 ADMIN_PASSWORD = "admin123"
 FALLBACK_EMAIL = "aitest@test.com"
-FALLBACK_PASSWORD = "test1234"
+FALLBACK_PASSWORD = "TestPassword123!"
 FALLBACK_NAME = "AI Tester"
 
 class AIAssistantTester:

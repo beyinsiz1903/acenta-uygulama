@@ -547,6 +547,230 @@ function SyncRunsDrawer({ hotelId, hotelName, onClose }) {
   );
 }
 
+// ── Agency-Specific Connections Section ────────────────────────
+
+function AgencyConnectionsSection() {
+  const [agencyConns, setAgencyConns] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  // Add form state
+  const [hotels, setHotels] = useState([]);
+  const [selectedHotel, setSelectedHotel] = useState("");
+  const [agencies, setAgencies] = useState([]);
+  const [selectedAgency, setSelectedAgency] = useState("");
+  const [sheetId, setSheetId] = useState("");
+  const [sheetTab, setSheetTab] = useState("Sheet1");
+  const [writebackTab, setWritebackTab] = useState("Rezervasyonlar");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  const loadConns = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/admin/sheets/agency-connections");
+      setAgencyConns(res.data || []);
+    } catch { /* silent */ }
+    setLoading(false);
+  };
+
+  const loadHotels = async () => {
+    try {
+      const res = await api.get("/admin/sheets/available-hotels");
+      setHotels(res.data || []);
+    } catch { /* silent */ }
+  };
+
+  const loadAgencies = async (hotelId) => {
+    if (!hotelId) { setAgencies([]); return; }
+    try {
+      const res = await api.get(`/admin/sheets/agencies-for-hotel/${hotelId}`);
+      setAgencies(res.data || []);
+    } catch { /* silent */ }
+  };
+
+  useEffect(() => { loadConns(); loadHotels(); }, []);
+
+  useEffect(() => { loadAgencies(selectedHotel); }, [selectedHotel]);
+
+  const handleSave = async () => {
+    if (!selectedHotel || !selectedAgency || !sheetId) {
+      setError("Otel, Acenta ve Sheet ID zorunlu.");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      await api.post("/admin/sheets/connect-agency", {
+        hotel_id: selectedHotel,
+        agency_id: selectedAgency,
+        sheet_id: sheetId,
+        sheet_tab: sheetTab,
+        writeback_tab: writebackTab,
+      });
+      setShowAdd(false);
+      setSelectedHotel("");
+      setSelectedAgency("");
+      setSheetId("");
+      await loadConns();
+    } catch (e) {
+      setError(e.response?.data?.error?.message || e.message || "Baglanti hatasi");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+      <div
+        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors rounded-t-xl"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="flex items-center gap-2">
+          <Database className="w-5 h-5 text-purple-600" />
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+            Acenta Bazli Sheet Baglantilari
+          </h2>
+          <span className="text-xs text-gray-400">({agencyConns.length})</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowAdd(!showAdd); setExpanded(true); }}
+            className="flex items-center gap-1 px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" /> Acenta Baglantisi
+          </button>
+          {expanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="border-t border-gray-200 dark:border-gray-700 p-4 space-y-4">
+          <p className="text-xs text-gray-500">
+            Her otel icin farkli acentelere ozel sheet baglantilari olusturun. Acenta sadece kendi baglantisindan gelen verileri gorur.
+          </p>
+
+          {/* Add Form */}
+          {showAdd && (
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-3 border border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Yeni Acenta Sheet Baglantisi</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Otel</label>
+                  <select
+                    value={selectedHotel}
+                    onChange={e => setSelectedHotel(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800"
+                  >
+                    <option value="">Otel Secin...</option>
+                    {hotels.map(h => (
+                      <option key={h._id} value={h._id}>{h.name} {h.city ? `(${h.city})` : ""}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Acenta</label>
+                  <select
+                    value={selectedAgency}
+                    onChange={e => setSelectedAgency(e.target.value)}
+                    disabled={!selectedHotel}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 disabled:opacity-50"
+                  >
+                    <option value="">Acenta Secin...</option>
+                    {agencies.filter(a => !a.connected).map(a => (
+                      <option key={a._id} value={a._id}>{a.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Google Sheet ID</label>
+                  <input
+                    type="text"
+                    value={sheetId}
+                    onChange={e => setSheetId(e.target.value)}
+                    placeholder="1BxiMVs0XRA5nFMdKvBdBZjg..."
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Musaitlik Sayfasi</label>
+                    <input
+                      type="text"
+                      value={sheetTab}
+                      onChange={e => setSheetTab(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Rez. Geri Yazim Sayfasi</label>
+                    <input
+                      type="text"
+                      value={writebackTab}
+                      onChange={e => setWritebackTab(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {error && <div className="text-xs text-red-600 bg-red-50 rounded p-2">{error}</div>}
+
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">Vazgec</button>
+                <button onClick={handleSave} disabled={saving} className="px-4 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors">
+                  {saving ? "Kaydediliyor..." : "Bagla"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Connections List */}
+          {loading ? (
+            <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-purple-500" /></div>
+          ) : agencyConns.length === 0 ? (
+            <div className="text-center py-6 text-gray-400">
+              <Database className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Henuz acenta bazli sheet baglantisi yok</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 dark:bg-gray-900/50 border-b">
+                  <tr>
+                    <th className="text-left px-3 py-2 text-xs font-medium text-gray-500">Otel</th>
+                    <th className="text-left px-3 py-2 text-xs font-medium text-gray-500">Acenta</th>
+                    <th className="text-left px-3 py-2 text-xs font-medium text-gray-500">Sheet</th>
+                    <th className="text-center px-3 py-2 text-xs font-medium text-gray-500">Durum</th>
+                    <th className="text-center px-3 py-2 text-xs font-medium text-gray-500">Son Sync</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {agencyConns.map(c => (
+                    <tr key={c._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <td className="px-3 py-2.5 font-medium text-gray-900 dark:text-white text-xs">{c.hotel_name}</td>
+                      <td className="px-3 py-2.5 text-xs text-purple-600 font-medium">{c.agency_name || c.agency_id}</td>
+                      <td className="px-3 py-2.5 text-xs text-gray-500 truncate max-w-[150px]">{c.sheet_title || c.sheet_id}</td>
+                      <td className="px-3 py-2.5 text-center"><StatusBadge status={c.last_sync_status || c.status || "active"} /></td>
+                      <td className="px-3 py-2.5 text-center text-xs text-gray-400">{formatDate(c.last_sync_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 // ═══════════════════════════════════════════════════════════════
 // MAIN PAGE COMPONENT
 // ═══════════════════════════════════════════════════════════════

@@ -128,6 +128,7 @@ const ADMIN_GROUPED_NAV = [
     minGroupMode: "pro",
     items: [
       { to: "/app/partners", label: "Partner Yönetimi", icon: Network, modeKey: "partner_yonetimi", minMode: "pro" },
+      { to: "/app/agency/availability", label: "Müsaitlik Takibi", icon: CalendarDays, modeKey: "musaitlik_takibi", minMode: "pro" },
       { to: "/app/b2b", label: "B2B Acenteler", icon: Building2, feature: "b2b", modeKey: "b2b_acenteler", minMode: "pro" },
       { to: "/app/admin/b2b/marketplace", label: "Marketplace", icon: Globe, modeKey: "marketplace", minMode: "pro" },
       { to: "/app/admin/b2b/funnel", label: "B2B Funnel", icon: TrendingUp, modeKey: "b2b_funnel", minMode: "pro" },

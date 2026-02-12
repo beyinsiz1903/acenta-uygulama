@@ -435,6 +435,7 @@ function App() {
             <Route path="hotels" element={<AgencyHotelsPage />} />
             <Route path="hotels/:hotelId" element={<AgencyHotelDetailPage />} />
             <Route path="hotels/:hotelId/search" element={<AgencyHotelSearchPage />} />
+            <Route path="availability" element={<AgencyAvailabilityPage />} />
             <Route path="search" element={<AgencySearchResultsPage />} />
             <Route path="booking/new" element={<AgencyBookingNewPage />} />
             <Route path="booking/draft/:draftId" element={<AgencyBookingDraftPage />} />

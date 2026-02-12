@@ -311,6 +311,30 @@ frontend:
     priority: "high"
     needs_retesting: true
 
+
+  - task: "GET /api/agency/availability - Hotels with availability summary"
+    implemented: true
+    working: unknown
+    file: "backend/app/routers/agency_availability.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "GET /api/agency/availability/changes - Recent sync changes feed"
+    implemented: true
+    working: unknown
+    file: "backend/app/routers/agency_availability.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "GET /api/agency/availability/{hotel_id} - Detailed availability grid"
+    implemented: true
+    working: unknown
+    file: "backend/app/routers/agency_availability.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
 metadata:
   created_by: "main_agent"
   version: "14.0"

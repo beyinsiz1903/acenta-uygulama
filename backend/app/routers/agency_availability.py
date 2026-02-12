@@ -70,12 +70,29 @@ async def list_hotels_availability(
     hotel_map = {h["_id"]: h for h in hotels}
 
     # Get sheet connection info for each hotel
+    # Priority: agency-specific connection > hotel-level default connection
     tenant_id = user.get("tenant_id") or org_id
-    connections = await db.hotel_portfolio_sources.find({
+    
+    # First get agency-specific connections
+    agency_conns = await db.hotel_portfolio_sources.find({
         "tenant_id": tenant_id,
         "hotel_id": {"$in": hotel_ids},
+        "agency_id": agency_id,
     }).to_list(2000)
-    conn_map = {c["hotel_id"]: c for c in connections}
+    agency_conn_map = {c["hotel_id"]: c for c in agency_conns}
+    
+    # Then get default (no agency_id) connections for hotels without agency-specific ones
+    default_conns = await db.hotel_portfolio_sources.find({
+        "tenant_id": tenant_id,
+        "hotel_id": {"$in": hotel_ids},
+        "agency_id": {"$exists": False},
+    }).to_list(2000)
+    default_conn_map = {c["hotel_id"]: c for c in default_conns}
+    
+    # Merge: agency-specific takes priority
+    conn_map = {}
+    for hid in hotel_ids:
+        conn_map[hid] = agency_conn_map.get(hid) or default_conn_map.get(hid)
 
     # Get availability stats per hotel (today + 30 days)
     today = _date_str(_now())

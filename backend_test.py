@@ -117,6 +117,10 @@ class AIAssistantTester:
                 self.log(f"Registration error: Status {register_response.status_code}")
         else:
             self.log("Registration successful")
+            
+        # Add delay to avoid rate limiting
+        import time
+        time.sleep(2)
         
         # Try login with fallback credentials
         fallback_login_data = {

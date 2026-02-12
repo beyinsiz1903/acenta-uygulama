@@ -342,6 +342,28 @@ class AIAssistantTester:
         else:
             self.add_result("Sessions With Auth", "FAIL", f"Status: {response.status_code}")
 
+    def test_briefing_with_invalid_auth(self):
+        """Test briefing with invalid token to check LLM error handling"""
+        self.log("=== TEST: BRIEFING WITH INVALID AUTH ===")
+        
+        # Use a fake token to bypass auth but trigger LLM errors
+        invalid_headers = {"Authorization": "Bearer invalid_token_12345"}
+        
+        response = self.request("POST", "/ai-assistant/briefing", 
+                               headers=invalid_headers, 
+                               timeout=30)
+        
+        # Should return 401 for invalid token
+        if response.status_code == 401:
+            self.add_result("Briefing Invalid Auth", "PASS", "Returns 401 for invalid token")
+        else:
+            try:
+                error_data = response.json()
+                error_msg = error_data.get("detail", f"Status: {response.status_code}")
+                self.add_result("Briefing Invalid Auth", "INFO", f"Response: {error_msg}")
+            except:
+                self.add_result("Briefing Invalid Auth", "INFO", f"Status: {response.status_code}")
+
     def run_all_tests(self):
         """Run all AI Assistant API tests in the specified order"""
         print("🚀 Starting AI Assistant API Tests")

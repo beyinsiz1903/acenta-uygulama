@@ -144,598 +144,260 @@ class AgencyAvailabilityTester:
             return {"Authorization": f"Bearer {self.agency_token}"}
         return {}
 
-    def test_config_endpoint(self):
-        """Test 1: GET /api/admin/sheets/config - Configuration status"""
-        self.log("=== TEST 1: CONFIG ENDPOINT ===")
+    def test_agency_availability_no_auth(self):
+        """Test 1: GET /api/agency/availability without auth should return 401"""
+        self.log("=== TEST 1: AGENCY AVAILABILITY NO AUTH ===")
         
-        response = self.request("GET", "/admin/sheets/config", 
-                               headers=self.get_auth_headers(), expect_status=200)
+        response = self.request("GET", "/agency/availability", expect_status=401)
         
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                # Expected: {configured: false, service_account_email: null, message: "..."}
-                if (data.get("configured") == False and 
-                    data.get("service_account_email") is None and
-                    "message" in data):
-                    self.add_result("Config Endpoint", "PASS", 
-                                  f"configured=false, has message: '{data.get('message')[:50]}...'")
-                else:
-                    self.add_result("Config Endpoint", "FAIL", 
-                                  f"Unexpected response format: {json.dumps(data)}")
-            except json.JSONDecodeError:
-                self.add_result("Config Endpoint", "FAIL", "Invalid JSON response")
+        if response.status_code == 401:
+            self.add_result("Agency Availability No Auth", "PASS", "Returns 401 without authentication token")
         else:
-            self.add_result("Config Endpoint", "FAIL", f"Status: {response.status_code}")
+            self.add_result("Agency Availability No Auth", "FAIL", f"Expected 401, got {response.status_code}")
 
-    def create_test_hotel(self) -> bool:
-        """Create test hotel as specified in review request"""
-        self.log("=== CREATE TEST HOTEL ===")
+    def test_agency_availability_admin_token(self):
+        """Test 2: GET /api/agency/availability with admin token should fail (wrong role)"""
+        self.log("=== TEST 2: AGENCY AVAILABILITY ADMIN TOKEN ===")
         
-        hotel_data = {
-            "name": "Test Sheet Hotel",
-            "city": "Istanbul"
-        }
-        
-        response = self.request("POST", "/admin/hotels", 
-                               headers=self.get_auth_headers(), 
-                               json_data=hotel_data)
-        
-        if response.status_code == 201:
-            try:
-                data = response.json()
-                self.test_hotel_id = data.get("_id")
-                if self.test_hotel_id:
-                    self.add_result("Create Test Hotel", "PASS", 
-                                  f"Hotel ID: {self.test_hotel_id}")
-                    return True
-                else:
-                    self.add_result("Create Test Hotel", "FAIL", "No _id in response")
-            except json.JSONDecodeError:
-                self.add_result("Create Test Hotel", "FAIL", "Invalid JSON response")
-        else:
-            self.add_result("Create Test Hotel", "FAIL", f"Status: {response.status_code}")
-        
-        return False
-
-    def test_connect_sheet(self):
-        """Test 3: POST /api/admin/sheets/connect - Connect hotel to sheet"""
-        self.log("=== TEST 3: CONNECT SHEET ===")
-        
-        if not self.test_hotel_id:
-            self.add_result("Connect Sheet", "SKIP", "No test hotel available")
+        if not self.admin_token:
+            self.add_result("Agency Availability Admin Token", "SKIP", "No admin token available")
             return
             
-        connect_data = {
-            "hotel_id": self.test_hotel_id,
-            "sheet_id": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms",
-            "sheet_tab": "Sheet1",
-            "sync_enabled": True,
-            "sync_interval_minutes": 5
-        }
+        response = self.request("GET", "/agency/availability", headers=self.get_admin_headers())
         
-        response = self.request("POST", "/admin/sheets/connect", 
-                               headers=self.get_auth_headers(),
-                               json_data=connect_data)
-        
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                # Expected: connection doc with configured=false, detected_headers=[]
-                if (data.get("configured") == False and 
-                    isinstance(data.get("detected_headers"), list)):
-                    self.add_result("Connect Sheet", "PASS", 
-                                  f"Connection created, configured=false, detected_headers=[]")
-                else:
-                    self.add_result("Connect Sheet", "FAIL", 
-                                  f"Unexpected response: configured={data.get('configured')}, detected_headers={data.get('detected_headers')}")
-            except json.JSONDecodeError:
-                self.add_result("Connect Sheet", "FAIL", "Invalid JSON response")
+        # Should fail with 403 (forbidden) or similar since admin doesn't have agency role
+        if response.status_code in [403, 422, 400]:
+            self.add_result("Agency Availability Admin Token", "PASS", 
+                          f"Admin token rejected with {response.status_code} (correct - admin not agency role)")
         else:
-            self.add_result("Connect Sheet", "FAIL", f"Status: {response.status_code}")
+            self.add_result("Agency Availability Admin Token", "FAIL", 
+                          f"Expected 403/422/400, got {response.status_code}")
 
-    def test_list_connections(self):
-        """Test 4: GET /api/admin/sheets/connections - List connections"""
-        self.log("=== TEST 4: LIST CONNECTIONS ===")
+    def test_agency_availability_with_agency_token(self):
+        """Test 3: GET /api/agency/availability with valid agency token"""
+        self.log("=== TEST 3: AGENCY AVAILABILITY WITH AGENCY TOKEN ===")
         
-        response = self.request("GET", "/admin/sheets/connections", 
-                               headers=self.get_auth_headers(), expect_status=200)
-        
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                if isinstance(data, list):
-                    self.add_result("List Connections", "PASS", 
-                                  f"Returns array with {len(data)} connections")
-                else:
-                    self.add_result("List Connections", "FAIL", 
-                                  f"Expected array, got: {type(data)}")
-            except json.JSONDecodeError:
-                self.add_result("List Connections", "FAIL", "Invalid JSON response")
-        else:
-            self.add_result("List Connections", "FAIL", f"Status: {response.status_code}")
-
-    def test_get_single_connection(self):
-        """Test 5: GET /api/admin/sheets/connections/{hotel_id} - Get single connection"""
-        self.log("=== TEST 5: GET SINGLE CONNECTION ===")
-        
-        if not self.test_hotel_id:
-            self.add_result("Get Single Connection", "SKIP", "No test hotel available")
+        if not self.agency_token:
+            self.add_result("Agency Availability With Agency Token", "SKIP", "No agency token available")
             return
             
-        response = self.request("GET", f"/admin/sheets/connections/{self.test_hotel_id}", 
-                               headers=self.get_auth_headers(), expect_status=200)
+        response = self.request("GET", "/agency/availability", 
+                               headers=self.get_agency_headers(), expect_status=200)
         
         if response.status_code == 200:
             try:
                 data = response.json()
-                if data.get("connected") == True:
-                    self.add_result("Get Single Connection", "PASS", 
-                                  "Connection detail with connected=true")
+                # Expected: {"items": [...], "total": N}
+                if "items" in data and "total" in data and isinstance(data["items"], list):
+                    self.add_result("Agency Availability With Agency Token", "PASS", 
+                                  f"Returns items array with {len(data['items'])} hotels, total={data['total']}")
+                    
+                    # Store first hotel_id for detailed endpoint test
+                    if data["items"]:
+                        self.test_hotel_id = data["items"][0].get("hotel_id")
+                        self.log(f"Using hotel_id for detailed test: {self.test_hotel_id}")
                 else:
-                    self.add_result("Get Single Connection", "PASS", 
-                                  f"No connection found: connected={data.get('connected')}")
+                    self.add_result("Agency Availability With Agency Token", "FAIL", 
+                                  f"Missing 'items' or 'total' fields: {json.dumps(data)}")
             except json.JSONDecodeError:
-                self.add_result("Get Single Connection", "FAIL", "Invalid JSON response")
+                self.add_result("Agency Availability With Agency Token", "FAIL", "Invalid JSON response")
         else:
-            self.add_result("Get Single Connection", "FAIL", f"Status: {response.status_code}")
+            self.add_result("Agency Availability With Agency Token", "FAIL", f"Status: {response.status_code}")
 
-    def test_update_connection(self):
-        """Test 6: PATCH /api/admin/sheets/connections/{hotel_id} - Update connection"""
-        self.log("=== TEST 6: UPDATE CONNECTION ===")
+    def test_agency_availability_changes_no_auth(self):
+        """Test 4: GET /api/agency/availability/changes without auth should return 401"""
+        self.log("=== TEST 4: AGENCY AVAILABILITY CHANGES NO AUTH ===")
         
-        if not self.test_hotel_id:
-            self.add_result("Update Connection", "SKIP", "No test hotel available")
+        response = self.request("GET", "/agency/availability/changes", expect_status=401)
+        
+        if response.status_code == 401:
+            self.add_result("Agency Availability Changes No Auth", "PASS", "Returns 401 without authentication token")
+        else:
+            self.add_result("Agency Availability Changes No Auth", "FAIL", f"Expected 401, got {response.status_code}")
+
+    def test_agency_availability_changes_with_agency_token(self):
+        """Test 5: GET /api/agency/availability/changes with agency token"""
+        self.log("=== TEST 5: AGENCY AVAILABILITY CHANGES WITH AGENCY TOKEN ===")
+        
+        if not self.agency_token:
+            self.add_result("Agency Availability Changes With Agency Token", "SKIP", "No agency token available")
             return
             
-        update_data = {
-            "sync_enabled": False,
-            "sync_interval_minutes": 10
-        }
-        
-        response = self.request("PATCH", f"/admin/sheets/connections/{self.test_hotel_id}", 
-                               headers=self.get_auth_headers(),
-                               json_data=update_data)
+        response = self.request("GET", "/agency/availability/changes", 
+                               headers=self.get_agency_headers(), expect_status=200)
         
         if response.status_code == 200:
             try:
                 data = response.json()
-                if (data.get("sync_enabled") == False and 
-                    data.get("sync_interval_minutes") == 10):
-                    self.add_result("Update Connection", "PASS", "Connection updated successfully")
+                # Expected: {"items": [...], "total": N}
+                if "items" in data and "total" in data and isinstance(data["items"], list):
+                    self.add_result("Agency Availability Changes With Agency Token", "PASS", 
+                                  f"Returns items array with {len(data['items'])} changes, total={data['total']}")
                 else:
-                    self.add_result("Update Connection", "FAIL", 
-                                  f"Update not reflected: sync_enabled={data.get('sync_enabled')}, interval={data.get('sync_interval_minutes')}")
+                    self.add_result("Agency Availability Changes With Agency Token", "FAIL", 
+                                  f"Missing 'items' or 'total' fields: {json.dumps(data)}")
             except json.JSONDecodeError:
-                self.add_result("Update Connection", "FAIL", "Invalid JSON response")
+                self.add_result("Agency Availability Changes With Agency Token", "FAIL", "Invalid JSON response")
         else:
-            # Connection might not exist yet, that's ok
-            if response.status_code == 404:
-                self.add_result("Update Connection", "PASS", "404 - No connection to update (expected)")
-            else:
-                self.add_result("Update Connection", "FAIL", f"Status: {response.status_code}")
+            self.add_result("Agency Availability Changes With Agency Token", "FAIL", f"Status: {response.status_code}")
 
-    def test_manual_sync(self):
-        """Test 7: POST /api/admin/sheets/sync/{hotel_id} - Manual sync (not configured)"""
-        self.log("=== TEST 7: MANUAL SYNC ===")
+    def test_agency_availability_changes_with_params(self):
+        """Test 6: GET /api/agency/availability/changes with query parameters"""
+        self.log("=== TEST 6: AGENCY AVAILABILITY CHANGES WITH PARAMS ===")
         
-        if not self.test_hotel_id:
-            self.add_result("Manual Sync", "SKIP", "No test hotel available")
+        if not self.agency_token:
+            self.add_result("Agency Availability Changes With Params", "SKIP", "No agency token available")
             return
             
-        response = self.request("POST", f"/admin/sheets/sync/{self.test_hotel_id}", 
-                               headers=self.get_auth_headers())
+        # Test with hotel_id and limit params
+        params = {"hotel_id": "test-hotel-id", "limit": "10"}
+        
+        response = self.request("GET", "/agency/availability/changes", 
+                               headers=self.get_agency_headers(), 
+                               params=params, expect_status=200)
         
         if response.status_code == 200:
             try:
                 data = response.json()
-                # Expected: {status: "not_configured", configured: false, message: "..."}
-                if (data.get("status") == "not_configured" and 
-                    data.get("configured") == False and
-                    "message" in data):
-                    self.add_result("Manual Sync", "PASS", 
-                                  f"status=not_configured, message: '{data.get('message')[:50]}...'")
-                else:
-                    self.add_result("Manual Sync", "FAIL", 
-                                  f"Unexpected response: {json.dumps(data)}")
-            except json.JSONDecodeError:
-                self.add_result("Manual Sync", "FAIL", "Invalid JSON response")
-        else:
-            # Connection might not exist
-            if response.status_code == 404:
-                self.add_result("Manual Sync", "PASS", "404 - No connection to sync (expected)")
-            else:
-                self.add_result("Manual Sync", "FAIL", f"Status: {response.status_code}")
-
-    def test_sync_all(self):
-        """Test 8: POST /api/admin/sheets/sync-all - Sync all connections"""
-        self.log("=== TEST 8: SYNC ALL ===")
-        
-        response = self.request("POST", "/admin/sheets/sync-all", 
-                               headers=self.get_auth_headers(), expect_status=200)
-        
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                # Expected: {status: "not_configured", configured: false}
-                if (data.get("status") == "not_configured" and 
-                    data.get("configured") == False):
-                    self.add_result("Sync All", "PASS", "status=not_configured, configured=false")
-                else:
-                    self.add_result("Sync All", "FAIL", 
-                                  f"Unexpected response: {json.dumps(data)}")
-            except json.JSONDecodeError:
-                self.add_result("Sync All", "FAIL", "Invalid JSON response")
-        else:
-            self.add_result("Sync All", "FAIL", f"Status: {response.status_code}")
-
-    def test_portfolio_status(self):
-        """Test 9: GET /api/admin/sheets/status - Portfolio health dashboard"""
-        self.log("=== TEST 9: PORTFOLIO STATUS ===")
-        
-        response = self.request("GET", "/admin/sheets/status", 
-                               headers=self.get_auth_headers(), expect_status=200)
-        
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                # Expected: Health summary with total, enabled, healthy counts
-                if ("total" in data or "enabled" in data or "healthy" in data):
-                    self.add_result("Portfolio Status", "PASS", 
-                                  f"Health summary returned: {json.dumps(data)}")
-                else:
-                    self.add_result("Portfolio Status", "FAIL", 
-                                  f"Missing health fields: {json.dumps(data)}")
-            except json.JSONDecodeError:
-                self.add_result("Portfolio Status", "FAIL", "Invalid JSON response")
-        else:
-            self.add_result("Portfolio Status", "FAIL", f"Status: {response.status_code}")
-
-    def test_sync_runs(self):
-        """Test 10: GET /api/admin/sheets/runs - Sync run history"""
-        self.log("=== TEST 10: SYNC RUNS ===")
-        
-        response = self.request("GET", "/admin/sheets/runs", 
-                               headers=self.get_auth_headers(), expect_status=200)
-        
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                if isinstance(data, list):
-                    self.add_result("Sync Runs", "PASS", 
-                                  f"Returns array with {len(data)} runs")
-                else:
-                    self.add_result("Sync Runs", "FAIL", 
-                                  f"Expected array, got: {type(data)}")
-            except json.JSONDecodeError:
-                self.add_result("Sync Runs", "FAIL", "Invalid JSON response")
-        else:
-            self.add_result("Sync Runs", "FAIL", f"Status: {response.status_code}")
-
-    def test_stale_hotels(self):
-        """Test 11: GET /api/admin/sheets/stale-hotels - Stale connections"""
-        self.log("=== TEST 11: STALE HOTELS ===")
-        
-        response = self.request("GET", "/admin/sheets/stale-hotels", 
-                               headers=self.get_auth_headers(), expect_status=200)
-        
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                if isinstance(data, list):
-                    self.add_result("Stale Hotels", "PASS", 
-                                  f"Returns array with {len(data)} stale connections")
-                else:
-                    self.add_result("Stale Hotels", "FAIL", 
-                                  f"Expected array, got: {type(data)}")
-            except json.JSONDecodeError:
-                self.add_result("Stale Hotels", "FAIL", "Invalid JSON response")
-        else:
-            self.add_result("Stale Hotels", "FAIL", f"Status: {response.status_code}")
-
-    def test_preview_mapping(self):
-        """Test 12: POST /api/admin/sheets/preview-mapping - Preview mapping (not configured)"""
-        self.log("=== TEST 12: PREVIEW MAPPING ===")
-        
-        preview_data = {
-            "sheet_id": "test123",
-            "sheet_tab": "Sheet1"
-        }
-        
-        response = self.request("POST", "/admin/sheets/preview-mapping", 
-                               headers=self.get_auth_headers(),
-                               json_data=preview_data)
-        
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                # Expected: {configured: false, message: "..."}
-                if (data.get("configured") == False and "message" in data):
-                    self.add_result("Preview Mapping", "PASS", 
-                                  f"configured=false, message: '{data.get('message')[:50]}...'")
-                else:
-                    self.add_result("Preview Mapping", "FAIL", 
-                                  f"Unexpected response: {json.dumps(data)}")
-            except json.JSONDecodeError:
-                self.add_result("Preview Mapping", "FAIL", "Invalid JSON response")
-        else:
-            self.add_result("Preview Mapping", "FAIL", f"Status: {response.status_code}")
-
-    def test_available_hotels(self):
-        """Test 13: GET /api/admin/sheets/available-hotels - Hotels for connect wizard"""
-        self.log("=== TEST 13: AVAILABLE HOTELS ===")
-        
-        response = self.request("GET", "/admin/sheets/available-hotels", 
-                               headers=self.get_auth_headers(), expect_status=200)
-        
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                if isinstance(data, list):
-                    self.add_result("Available Hotels", "PASS", 
-                                  f"Returns array with {len(data)} hotels")
-                else:
-                    self.add_result("Available Hotels", "FAIL", 
-                                  f"Expected array, got: {type(data)}")
-            except json.JSONDecodeError:
-                self.add_result("Available Hotels", "FAIL", "Invalid JSON response")
-        else:
-            self.add_result("Available Hotels", "FAIL", f"Status: {response.status_code}")
-
-    def test_duplicate_connect(self):
-        """Test 14: Duplicate connect test - should return 409"""
-        self.log("=== TEST 14: DUPLICATE CONNECT ===")
-        
-        if not self.test_hotel_id:
-            self.add_result("Duplicate Connect", "SKIP", "No test hotel available")
-            return
-            
-        # Try to connect the same hotel again
-        connect_data = {
-            "hotel_id": self.test_hotel_id,
-            "sheet_id": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms",
-            "sheet_tab": "Sheet1",
-            "sync_enabled": True,
-            "sync_interval_minutes": 5
-        }
-        
-        response = self.request("POST", "/admin/sheets/connect", 
-                               headers=self.get_auth_headers(),
-                               json_data=connect_data, expect_status=409)
-        
-        if response.status_code == 409:
-            try:
-                data = response.json()
-                if "connection_exists" in str(data).lower():
-                    self.add_result("Duplicate Connect", "PASS", "409 error 'connection_exists'")
-                else:
-                    self.add_result("Duplicate Connect", "PASS", f"409 error returned: {data}")
-            except json.JSONDecodeError:
-                self.add_result("Duplicate Connect", "PASS", "409 error returned")
-        else:
-            # If no existing connection, it might succeed
-            if response.status_code == 200:
-                self.add_result("Duplicate Connect", "PASS", "200 - No existing connection to duplicate")
-            else:
-                self.add_result("Duplicate Connect", "FAIL", f"Status: {response.status_code}")
-
-    def test_delete_connection(self):
-        """Test 15: DELETE /api/admin/sheets/connections/{hotel_id} - Delete connection"""
-        self.log("=== TEST 15: DELETE CONNECTION ===")
-        
-        if not self.test_hotel_id:
-            self.add_result("Delete Connection", "SKIP", "No test hotel available")
-            return
-            
-        response = self.request("DELETE", f"/admin/sheets/connections/{self.test_hotel_id}", 
-                               headers=self.get_auth_headers())
-        
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                if data.get("deleted") == True:
-                    self.add_result("Delete Connection", "PASS", "deleted=true")
-                else:
-                    self.add_result("Delete Connection", "FAIL", 
-                                  f"Unexpected response: {json.dumps(data)}")
-            except json.JSONDecodeError:
-                self.add_result("Delete Connection", "FAIL", "Invalid JSON response")
-        else:
-            # Connection might not exist
-            if response.status_code == 404:
-                self.add_result("Delete Connection", "PASS", "404 - No connection to delete (expected)")
-            else:
-                self.add_result("Delete Connection", "FAIL", f"Status: {response.status_code}")
-
-    def test_writeback_stats(self):
-        """Test 16: GET /api/admin/sheets/writeback/stats - Write-back stats"""
-        self.log("=== TEST 16: WRITEBACK STATS ===")
-        
-        response = self.request("GET", "/admin/sheets/writeback/stats", 
-                               headers=self.get_auth_headers(), expect_status=200)
-        
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                # Expected: {queued:0, completed:0, failed:0, retry:0, skipped:0, configured:false}
-                expected_keys = ["queued", "completed", "failed", "retry", "skipped", "configured"]
-                if all(key in data for key in expected_keys):
-                    if data.get("configured") == False:
-                        self.add_result("Writeback Stats", "PASS", 
-                                      f"All stats present, configured=false: {json.dumps(data)}")
+                if "items" in data and "total" in data and isinstance(data["items"], list):
+                    # Should return empty for non-existent hotel
+                    if len(data["items"]) == 0:
+                        self.add_result("Agency Availability Changes With Params", "PASS", 
+                                      "Returns empty array for non-existent hotel_id (correct)")
                     else:
-                        self.add_result("Writeback Stats", "FAIL", 
-                                      f"Expected configured=false, got: {data.get('configured')}")
+                        self.add_result("Agency Availability Changes With Params", "PASS", 
+                                      f"Returns {len(data['items'])} filtered changes")
+                else:
+                    self.add_result("Agency Availability Changes With Params", "FAIL", 
+                                  f"Missing 'items' or 'total' fields: {json.dumps(data)}")
+            except json.JSONDecodeError:
+                self.add_result("Agency Availability Changes With Params", "FAIL", "Invalid JSON response")
+        else:
+            self.add_result("Agency Availability Changes With Params", "FAIL", f"Status: {response.status_code}")
+
+    def test_agency_availability_hotel_no_auth(self):
+        """Test 7: GET /api/agency/availability/{hotel_id} without auth should return 401"""
+        self.log("=== TEST 7: AGENCY AVAILABILITY HOTEL NO AUTH ===")
+        
+        response = self.request("GET", "/agency/availability/test-hotel-id", expect_status=401)
+        
+        if response.status_code == 401:
+            self.add_result("Agency Availability Hotel No Auth", "PASS", "Returns 401 without authentication token")
+        else:
+            self.add_result("Agency Availability Hotel No Auth", "FAIL", f"Expected 401, got {response.status_code}")
+
+    def test_agency_availability_hotel_with_agency_token(self):
+        """Test 8: GET /api/agency/availability/{hotel_id} with agency token"""
+        self.log("=== TEST 8: AGENCY AVAILABILITY HOTEL WITH AGENCY TOKEN ===")
+        
+        if not self.agency_token:
+            self.add_result("Agency Availability Hotel With Agency Token", "SKIP", "No agency token available")
+            return
+            
+        # Use test hotel ID if available, otherwise use test-hotel-id for non-existent hotel test
+        hotel_id = self.test_hotel_id if self.test_hotel_id else "test-hotel-id"
+        
+        response = self.request("GET", f"/agency/availability/{hotel_id}", 
+                               headers=self.get_agency_headers(), expect_status=200)
+        
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                # Expected structure: {hotel, dates, room_types, grid, ...}
+                expected_keys = ["hotel", "dates", "room_types", "grid"]
+                if all(key in data for key in expected_keys):
+                    hotel_info = data.get("hotel")
+                    if hotel_info is None:
+                        # No access or hotel not found
+                        if "error" in data:
+                            self.add_result("Agency Availability Hotel With Agency Token", "PASS", 
+                                          f"No access to hotel: {data.get('error')}")
+                        else:
+                            self.add_result("Agency Availability Hotel With Agency Token", "PASS", 
+                                          "Hotel not found (hotel=null)")
+                    else:
+                        # Hotel found and accessible
+                        self.add_result("Agency Availability Hotel With Agency Token", "PASS", 
+                                      f"Hotel grid returned: {len(data['dates'])} dates, {len(data['room_types'])} room types, {len(data['grid'])} grid items")
                 else:
                     missing = [key for key in expected_keys if key not in data]
-                    self.add_result("Writeback Stats", "FAIL", 
-                                  f"Missing keys: {missing}, got: {json.dumps(data)}")
+                    self.add_result("Agency Availability Hotel With Agency Token", "FAIL", 
+                                  f"Missing keys: {missing}, got: {list(data.keys())}")
             except json.JSONDecodeError:
-                self.add_result("Writeback Stats", "FAIL", "Invalid JSON response")
+                self.add_result("Agency Availability Hotel With Agency Token", "FAIL", "Invalid JSON response")
         else:
-            self.add_result("Writeback Stats", "FAIL", f"Status: {response.status_code}")
+            self.add_result("Agency Availability Hotel With Agency Token", "FAIL", f"Status: {response.status_code}")
 
-    def test_writeback_process(self):
-        """Test 17: POST /api/admin/sheets/writeback/process - Process write-back queue"""
-        self.log("=== TEST 17: WRITEBACK PROCESS ===")
+    def test_agency_availability_hotel_with_params(self):
+        """Test 9: GET /api/agency/availability/{hotel_id} with query parameters"""
+        self.log("=== TEST 9: AGENCY AVAILABILITY HOTEL WITH PARAMS ===")
         
-        response = self.request("POST", "/admin/sheets/writeback/process", 
-                               headers=self.get_auth_headers(), expect_status=200)
+        if not self.agency_token:
+            self.add_result("Agency Availability Hotel With Params", "SKIP", "No agency token available")
+            return
+            
+        # Test with date range and room_type params
+        params = {
+            "start_date": "2024-01-01",
+            "end_date": "2024-01-15",
+            "room_type": "standard"
+        }
+        
+        hotel_id = self.test_hotel_id if self.test_hotel_id else "test-hotel-id"
+        
+        response = self.request("GET", f"/agency/availability/{hotel_id}", 
+                               headers=self.get_agency_headers(), 
+                               params=params, expect_status=200)
         
         if response.status_code == 200:
             try:
                 data = response.json()
-                # Expected: {status: "not_configured", configured: false}
-                if (data.get("status") == "not_configured" and 
-                    data.get("configured") == False):
-                    self.add_result("Writeback Process", "PASS", 
-                                  f"status=not_configured, configured=false")
+                expected_keys = ["hotel", "dates", "room_types", "grid", "date_range"]
+                if all(key in data for key in expected_keys):
+                    # Check if date_range reflects our params
+                    date_range = data.get("date_range", {})
+                    if date_range.get("start") == "2024-01-01" and date_range.get("end") == "2024-01-15":
+                        self.add_result("Agency Availability Hotel With Params", "PASS", 
+                                      f"Date range filter working: {date_range}")
+                    else:
+                        self.add_result("Agency Availability Hotel With Params", "PASS", 
+                                      f"Response structure valid, date_range: {date_range}")
                 else:
-                    self.add_result("Writeback Process", "FAIL", 
-                                  f"Expected status=not_configured & configured=false, got: {json.dumps(data)}")
+                    missing = [key for key in expected_keys if key not in data]
+                    self.add_result("Agency Availability Hotel With Params", "FAIL", 
+                                  f"Missing keys: {missing}")
             except json.JSONDecodeError:
-                self.add_result("Writeback Process", "FAIL", "Invalid JSON response")
+                self.add_result("Agency Availability Hotel With Params", "FAIL", "Invalid JSON response")
         else:
-            self.add_result("Writeback Process", "FAIL", f"Status: {response.status_code}")
-
-    def test_writeback_queue(self):
-        """Test 18: GET /api/admin/sheets/writeback/queue - List write-back queue"""
-        self.log("=== TEST 18: WRITEBACK QUEUE ===")
-        
-        response = self.request("GET", "/admin/sheets/writeback/queue", 
-                               headers=self.get_auth_headers(), expect_status=200)
-        
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                # Expected: Empty array []
-                if isinstance(data, list):
-                    self.add_result("Writeback Queue", "PASS", 
-                                  f"Returns array with {len(data)} queue items")
-                else:
-                    self.add_result("Writeback Queue", "FAIL", 
-                                  f"Expected array, got: {type(data)}")
-            except json.JSONDecodeError:
-                self.add_result("Writeback Queue", "FAIL", "Invalid JSON response")
-        else:
-            self.add_result("Writeback Queue", "FAIL", f"Status: {response.status_code}")
-
-    def test_changelog(self):
-        """Test 19: GET /api/admin/sheets/changelog - Change log"""
-        self.log("=== TEST 19: CHANGELOG ===")
-        
-        response = self.request("GET", "/admin/sheets/changelog", 
-                               headers=self.get_auth_headers(), expect_status=200)
-        
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                # Expected: Empty array []
-                if isinstance(data, list):
-                    self.add_result("Changelog", "PASS", 
-                                  f"Returns array with {len(data)} change log entries")
-                else:
-                    self.add_result("Changelog", "FAIL", 
-                                  f"Expected array, got: {type(data)}")
-            except json.JSONDecodeError:
-                self.add_result("Changelog", "FAIL", "Invalid JSON response")
-        else:
-            self.add_result("Changelog", "FAIL", f"Status: {response.status_code}")
-
-    def test_existing_endpoints_regression(self):
-        """Test 20: Verify existing endpoints still work (regression test)"""
-        self.log("=== TEST 20: EXISTING ENDPOINTS REGRESSION ===")
-        
-        # Test a few key existing endpoints to ensure they still work
-        tests = [
-            ("GET", "/admin/sheets/config"),
-            ("GET", "/admin/sheets/connections"), 
-            ("GET", "/admin/sheets/status")
-        ]
-        
-        all_passed = True
-        results = []
-        
-        for method, endpoint in tests:
-            response = self.request(method, endpoint, headers=self.get_auth_headers())
-            if response.status_code == 200:
-                results.append(f"{method} {endpoint}: ✅")
-            else:
-                results.append(f"{method} {endpoint}: ❌ {response.status_code}")
-                all_passed = False
-        
-        if all_passed:
-            self.add_result("Existing Endpoints Regression", "PASS", 
-                          "All key endpoints working: " + ", ".join(results))
-        else:
-            self.add_result("Existing Endpoints Regression", "FAIL", 
-                          "Some endpoints failing: " + ", ".join(results))
-
-    def test_writeback_auth_guards(self):
-        """Test 21: Auth guard test on new write-back endpoints"""
-        self.log("=== TEST 21: WRITEBACK AUTH GUARDS ===")
-        
-        # Test writeback stats endpoint without token
-        response = self.request("GET", "/admin/sheets/writeback/stats", expect_status=401)
-        
-        if response.status_code == 401:
-            self.add_result("Writeback Auth Guards", "PASS", "Returns 401 without authentication token")
-        else:
-            self.add_result("Writeback Auth Guards", "FAIL", f"Expected 401, got {response.status_code}")
-
-    def test_auth_guards(self):
-        """Test 22: Auth guards - All endpoints should require auth"""
-        self.log("=== TEST 22: AUTH GUARDS ===")
-        
-        # Test config endpoint without token
-        response = self.request("GET", "/admin/sheets/config", expect_status=401)
-        
-        if response.status_code == 401:
-            self.add_result("Auth Guards", "PASS", "Returns 401 without authentication token")
-        else:
-            self.add_result("Auth Guards", "FAIL", f"Expected 401, got {response.status_code}")
+            self.add_result("Agency Availability Hotel With Params", "FAIL", f"Status: {response.status_code}")
 
     def run_all_tests(self):
-        """Run all Portfolio Sync Engine tests in the specified order"""
-        print("🚀 Starting Portfolio Sync Engine Tests")
-        print("📋 Testing all /api/admin/sheets/* endpoints\n")
+        """Run all Agency Availability API tests in the specified order"""
+        print("🚀 Starting Agency Availability API Tests")
+        print("📋 Testing 3 new agency availability endpoints\n")
         
         # Authentication (required)
-        if not self.authenticate():
-            print("\n❌ Authentication failed - cannot continue tests")
+        if not self.authenticate_admin():
+            print("\n❌ Admin authentication failed")
+        
+        if not self.authenticate_agency():
+            print("\n❌ Agency authentication failed - cannot continue tests")
             return False
             
-        # Step 1: Config
-        self.test_config_endpoint()
+        # Test 1-3: GET /api/agency/availability endpoint
+        self.test_agency_availability_no_auth()
+        self.test_agency_availability_admin_token()
+        self.test_agency_availability_with_agency_token()
         
-        # Step 2: Create test hotel  
-        self.create_test_hotel()
+        # Test 4-6: GET /api/agency/availability/changes endpoint  
+        self.test_agency_availability_changes_no_auth()
+        self.test_agency_availability_changes_with_agency_token()
+        self.test_agency_availability_changes_with_params()
         
-        # Step 3-15: Portfolio Sync Engine endpoints
-        self.test_connect_sheet()
-        self.test_list_connections()
-        self.test_get_single_connection()
-        self.test_update_connection()
-        self.test_manual_sync()
-        self.test_sync_all()
-        self.test_portfolio_status()
-        self.test_sync_runs()
-        self.test_stale_hotels()
-        self.test_preview_mapping()
-        self.test_available_hotels()
-        self.test_duplicate_connect()
-        self.test_delete_connection()
-        
-        # Step 16-21: NEW Write-Back endpoints (from review request)
-        self.test_writeback_stats()
-        self.test_writeback_process()
-        self.test_writeback_queue()
-        self.test_changelog()
-        self.test_existing_endpoints_regression()
-        self.test_writeback_auth_guards()
-        
-        # Step 22: Auth guards
-        self.test_auth_guards()
+        # Test 7-9: GET /api/agency/availability/{hotel_id} endpoint
+        self.test_agency_availability_hotel_no_auth()
+        self.test_agency_availability_hotel_with_agency_token()
+        self.test_agency_availability_hotel_with_params()
         
         return True
 

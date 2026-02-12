@@ -609,6 +609,7 @@ function WriteBackPanel({ hotelId }) {
 
 export default function AgencyAvailabilityPage() {
   const [view, setView] = useState("list"); // list | detail
+  const [detailTab, setDetailTab] = useState("grid"); // grid | writeback
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

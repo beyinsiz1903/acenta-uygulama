@@ -411,6 +411,200 @@ function AvailabilityGrid({ data, startDate, endDate, onDateChange }) {
   );
 }
 
+// ── Write-Back Stats Panel ────────────────────────────────
+
+function WriteBackStatsBar({ stats }) {
+  if (!stats) return null;
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+      {[
+        { label: "Kuyrukta", value: stats.queued || 0, color: "text-blue-600", bg: "bg-blue-50" },
+        { label: "Tamamlandı", value: stats.completed || 0, color: "text-emerald-600", bg: "bg-emerald-50" },
+        { label: "Başarısız", value: stats.failed || 0, color: "text-red-600", bg: "bg-red-50" },
+        { label: "Yeniden Deneme", value: stats.retry || 0, color: "text-amber-600", bg: "bg-amber-50" },
+        { label: "Toplam", value: stats.total || 0, color: "text-gray-700", bg: "bg-gray-50" },
+      ].map((s) => (
+        <div key={s.label} className={`${s.bg} rounded-lg p-2.5 text-center`}>
+          <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
+          <p className="text-[10px] text-gray-500">{s.label}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Write-Back Reservation Row ────────────────────────────
+
+function WriteBackEventBadge({ type }) {
+  const map = {
+    reservation_created: { bg: "bg-blue-50", text: "text-blue-700", label: "Rezervasyon" },
+    reservation_cancelled: { bg: "bg-red-50", text: "text-red-700", label: "Rez. İptal" },
+    booking_confirmed: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Booking Onay" },
+    booking_cancelled: { bg: "bg-red-50", text: "text-red-700", label: "Booking İptal" },
+    booking_amended: { bg: "bg-amber-50", text: "text-amber-700", label: "Değişiklik" },
+  };
+  const s = map[type] || { bg: "bg-gray-50", text: "text-gray-600", label: type };
+  return (
+    <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium ${s.bg} ${s.text}`}>
+      {s.label}
+    </span>
+  );
+}
+
+function WriteBackStatusBadge({ status }) {
+  const map = {
+    queued: { bg: "bg-blue-50", text: "text-blue-600", icon: Clock, label: "Kuyrukta" },
+    completed: { bg: "bg-emerald-50", text: "text-emerald-600", icon: CheckCircle2, label: "Yazıldı" },
+    failed: { bg: "bg-red-50", text: "text-red-600", icon: XCircle, label: "Başarısız" },
+    retry: { bg: "bg-amber-50", text: "text-amber-600", icon: RotateCcw, label: "Yeniden" },
+    skipped_duplicate: { bg: "bg-gray-50", text: "text-gray-500", icon: CheckCircle2, label: "Atlanan" },
+    skipped_no_connection: { bg: "bg-gray-50", text: "text-gray-500", icon: WifiOff, label: "Bağlantı Yok" },
+    skipped_not_configured: { bg: "bg-gray-50", text: "text-gray-500", icon: WifiOff, label: "Ayar Yok" },
+  };
+  const s = map[status] || map.queued;
+  const Icon = s.icon;
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${s.bg} ${s.text}`}>
+      <Icon className="w-3 h-3" />
+      {s.label}
+    </span>
+  );
+}
+
+// ── Write-Back Panel (shown in detail view) ───────────────
+
+function WriteBackPanel({ hotelId }) {
+  const [stats, setStats] = useState(null);
+  const [reservations, setReservations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [retrying, setRetrying] = useState(null);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [statsRes, resRes] = await Promise.all([
+        api.get("/agency/writeback/stats"),
+        api.get("/agency/writeback/reservations", {
+          params: { hotel_id: hotelId || undefined, limit: 30 },
+        }),
+      ]);
+      setStats(statsRes.data);
+      setReservations(resRes.data?.items || []);
+    } catch {
+      // silent
+    } finally {
+      setLoading(false);
+    }
+  }, [hotelId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleRetry = async (jobId) => {
+    setRetrying(jobId);
+    try {
+      await api.post(`/agency/writeback/retry/${jobId}`);
+      await fetchData();
+    } catch {
+      // silent
+    } finally {
+      setRetrying(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Stats */}
+      <WriteBackStatsBar stats={stats} />
+
+      {/* Info */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
+        <FileSpreadsheet className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+        <div className="text-xs text-blue-700">
+          <p className="font-medium">E-Tablo Geri Yazım</p>
+          <p className="mt-0.5">Rezervasyon ve booking işlemleri otomatik olarak otel e-tablosuna yazılır. Müsaitlik (allotment) otomatik güncellenir.</p>
+        </div>
+      </div>
+
+      {/* Reservation List */}
+      {reservations.length === 0 ? (
+        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+          <BookOpen className="w-10 h-10 mx-auto text-gray-300 mb-2" />
+          <p className="text-sm text-gray-500">Henüz write-back kaydı yok</p>
+          <p className="text-xs text-gray-400 mt-1">Rezervasyon veya booking yapıldığında otomatik olarak burada görünecek.</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500">İşlem</th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500">Otel</th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500">Misafir</th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500">Tarih</th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500">Oda</th>
+                  <th className="text-right px-3 py-2.5 text-xs font-medium text-gray-500">Tutar</th>
+                  <th className="text-center px-3 py-2.5 text-xs font-medium text-gray-500">Sheet</th>
+                  <th className="text-center px-3 py-2.5 text-xs font-medium text-gray-500"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {reservations.map((r) => (
+                  <tr key={r.job_id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="px-3 py-2.5">
+                      <WriteBackEventBadge type={r.event_type} />
+                    </td>
+                    <td className="px-3 py-2.5 text-xs text-gray-700">{r.hotel_name}</td>
+                    <td className="px-3 py-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <User className="w-3 h-3 text-gray-400" />
+                        <span className="text-xs text-gray-800">{r.guest_name || "—"}</span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2.5 text-xs text-gray-600">
+                      {r.check_in && r.check_out ? `${r.check_in} → ${r.check_out}` : "—"}
+                    </td>
+                    <td className="px-3 py-2.5 text-xs text-gray-600">{r.room_type || "—"}</td>
+                    <td className="px-3 py-2.5 text-xs text-right font-medium text-gray-800">
+                      {r.amount ? formatPrice(r.amount) : "—"}
+                    </td>
+                    <td className="px-3 py-2.5 text-center">
+                      <WriteBackStatusBadge status={r.writeback_status} />
+                    </td>
+                    <td className="px-3 py-2.5 text-center">
+                      {(r.writeback_status === "failed" || r.writeback_status === "retry") && (
+                        <button
+                          onClick={() => handleRetry(r.job_id)}
+                          disabled={retrying === r.job_id}
+                          className="p-1 rounded hover:bg-blue-50 text-blue-500 disabled:opacity-50"
+                          title="Yeniden Dene"
+                        >
+                          <RotateCcw className={`w-3.5 h-3.5 ${retrying === r.job_id ? "animate-spin" : ""}`} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 // ── Main Page Component ──────────────────────────────────
 
 export default function AgencyAvailabilityPage() {

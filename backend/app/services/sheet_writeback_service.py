@@ -206,6 +206,7 @@ async def _write_reservation_row(
         payload.get("status", "pending"),
         payload.get("channel", "direct"),
         payload.get("created_at", ""),
+        payload.get("agency_name", ""),
     ]
     result = append_rows(sheet_id, tab, [row])
     return result.to_dict()
@@ -217,7 +218,7 @@ async def _write_cancellation_row(
     """Append a cancellation note row."""
     row = [
         payload.get("reservation_id", ""),
-        "IPTAL",
+        "İPTAL",
         payload.get("check_in", ""),
         payload.get("check_out", ""),
         str(payload.get("pax", 1)),
@@ -227,6 +228,7 @@ async def _write_cancellation_row(
         "cancelled",
         payload.get("channel", ""),
         payload.get("cancelled_at", ""),
+        payload.get("cancel_reason", ""),
     ]
     result = append_rows(sheet_id, tab, [row])
     return result.to_dict()
@@ -248,9 +250,151 @@ async def _write_booking_row(
         payload.get("state", "confirmed"),
         payload.get("channel", ""),
         payload.get("created_at", ""),
+        payload.get("agency_name", ""),
     ]
     result = append_rows(sheet_id, tab, [row])
     return result.to_dict()
+
+
+async def _write_booking_cancelled_row(
+    sheet_id: str, tab: str, payload: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Append a booking cancellation row."""
+    row = [
+        payload.get("booking_id", ""),
+        "BOOKING İPTAL",
+        payload.get("check_in", ""),
+        payload.get("check_out", ""),
+        str(payload.get("pax", 1)),
+        payload.get("room_type", ""),
+        str(payload.get("refund_amount", 0)),
+        payload.get("currency", "TRY"),
+        "cancelled",
+        payload.get("channel", ""),
+        payload.get("cancelled_at", ""),
+        payload.get("cancel_reason", ""),
+    ]
+    result = append_rows(sheet_id, tab, [row])
+    return result.to_dict()
+
+
+async def _write_booking_amended_row(
+    sheet_id: str, tab: str, payload: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Append a booking amendment row."""
+    row = [
+        payload.get("booking_id", ""),
+        "DEĞİŞİKLİK",
+        payload.get("check_in", ""),
+        payload.get("check_out", ""),
+        str(payload.get("pax", 1)),
+        payload.get("room_type", ""),
+        str(payload.get("new_amount", 0)),
+        payload.get("currency", "TRY"),
+        "amended",
+        payload.get("channel", ""),
+        payload.get("amended_at", ""),
+        payload.get("amendment_note", ""),
+    ]
+    result = append_rows(sheet_id, tab, [row])
+    return result.to_dict()
+
+
+# ── Allotment Management ───────────────────────────────────────
+
+async def _adjust_allotment(
+    db,
+    tenant_id: str,
+    hotel_id: str,
+    room_type: str,
+    dates: List[str],
+    delta: int,
+    source: str = "writeback",
+) -> Dict[str, Any]:
+    """Adjust allotment in hotel_inventory_snapshots.
+
+    delta > 0 = increase (e.g. cancellation restores rooms)
+    delta < 0 = decrease (e.g. reservation takes rooms)
+    """
+    updated = 0
+    errors = []
+
+    for date_str in dates:
+        try:
+            result = await db.hotel_inventory_snapshots.update_one(
+                {
+                    "tenant_id": tenant_id,
+                    "hotel_id": hotel_id,
+                    "date": date_str,
+                    "room_type": room_type,
+                },
+                {
+                    "$inc": {"allotment": delta},
+                    "$set": {
+                        "updated_at": _now(),
+                        "updated_by": source,
+                    },
+                },
+            )
+            if result.modified_count > 0:
+                updated += 1
+
+            # Prevent negative allotment
+            if delta < 0:
+                await db.hotel_inventory_snapshots.update_one(
+                    {
+                        "tenant_id": tenant_id,
+                        "hotel_id": hotel_id,
+                        "date": date_str,
+                        "room_type": room_type,
+                        "allotment": {"$lt": 0},
+                    },
+                    {"$set": {"allotment": 0}},
+                )
+        except Exception as e:
+            errors.append({"date": date_str, "error": str(e)})
+
+    return {"updated": updated, "errors": errors}
+
+
+async def decrement_allotment_for_reservation(
+    db, tenant_id: str, hotel_id: str, reservation: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Decrement allotment when reservation is created."""
+    room_type = reservation.get("room_type", "Standard")
+    pax = int(reservation.get("pax", 1))
+    check_in = reservation.get("start_date") or reservation.get("check_in", "")
+    check_out = reservation.get("end_date") or reservation.get("check_out", "")
+
+    if not check_in or not check_out:
+        return {"status": "skipped", "reason": "no_dates"}
+
+    dates = _date_range(check_in, check_out)
+    if not dates:
+        return {"status": "skipped", "reason": "empty_date_range"}
+
+    # Each reservation takes 1 room (could be pax-based in future)
+    result = await _adjust_allotment(db, tenant_id, hotel_id, room_type, dates, -1, "reservation")
+    return {"status": "decremented", **result}
+
+
+async def restore_allotment_for_cancellation(
+    db, tenant_id: str, hotel_id: str, reservation: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Restore allotment when reservation/booking is cancelled."""
+    room_type = reservation.get("room_type", "Standard")
+    check_in = reservation.get("start_date") or reservation.get("check_in", "")
+    check_out = reservation.get("end_date") or reservation.get("check_out", "")
+
+    if not check_in or not check_out:
+        return {"status": "skipped", "reason": "no_dates"}
+
+    dates = _date_range(check_in, check_out)
+    if not dates:
+        return {"status": "skipped", "reason": "empty_date_range"}
+
+    result = await _adjust_allotment(db, tenant_id, hotel_id, room_type, dates, +1, "cancellation")
+    return {"status": "restored", **result}
 
 
 # ── Event Handlers (called from reservation/booking services) ──

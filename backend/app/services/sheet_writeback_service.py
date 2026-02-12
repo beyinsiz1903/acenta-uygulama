@@ -374,7 +374,6 @@ async def decrement_allotment_for_reservation(
 ) -> Dict[str, Any]:
     """Decrement allotment when reservation is created."""
     room_type = reservation.get("room_type", "Standard")
-    pax = int(reservation.get("pax", 1))
     check_in = reservation.get("start_date") or reservation.get("check_in", "")
     check_out = reservation.get("end_date") or reservation.get("check_out", "")
 

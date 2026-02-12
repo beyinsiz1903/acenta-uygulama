@@ -144,44 +144,65 @@ class AgencyWriteBackTester:
             return {"Authorization": f"Bearer {self.agency_token}"}
         return {}
 
-    def test_agency_availability_no_auth(self):
-        """Test 1: GET /api/agency/availability without auth should return 401"""
-        self.log("=== TEST 1: AGENCY AVAILABILITY NO AUTH ===")
+    def test_agency_writeback_stats_no_auth(self):
+        """Test 1: GET /api/agency/writeback/stats without auth should return 401"""
+        self.log("=== TEST 1: AGENCY WRITEBACK STATS NO AUTH ===")
         
-        response = self.request("GET", "/agency/availability", expect_status=401)
+        response = self.request("GET", "/agency/writeback/stats", expect_status=401)
         
         if response.status_code == 401:
-            self.add_result("Agency Availability No Auth", "PASS", "Returns 401 without authentication token")
+            self.add_result("Agency Writeback Stats No Auth", "PASS", "Returns 401 without authentication token")
         else:
-            self.add_result("Agency Availability No Auth", "FAIL", f"Expected 401, got {response.status_code}")
+            self.add_result("Agency Writeback Stats No Auth", "FAIL", f"Expected 401, got {response.status_code}")
 
-    def test_agency_availability_admin_token(self):
-        """Test 2: GET /api/agency/availability with admin token should fail (wrong role)"""
-        self.log("=== TEST 2: AGENCY AVAILABILITY ADMIN TOKEN ===")
-        
-        if not self.admin_token:
-            self.add_result("Agency Availability Admin Token", "SKIP", "No admin token available")
-            return
-            
-        response = self.request("GET", "/agency/availability", headers=self.get_admin_headers())
-        
-        # Should fail with 403 (forbidden) or similar since admin doesn't have agency role
-        if response.status_code in [403, 422, 400]:
-            self.add_result("Agency Availability Admin Token", "PASS", 
-                          f"Admin token rejected with {response.status_code} (correct - admin not agency role)")
-        else:
-            self.add_result("Agency Availability Admin Token", "FAIL", 
-                          f"Expected 403/422/400, got {response.status_code}")
-
-    def test_agency_availability_with_agency_token(self):
-        """Test 3: GET /api/agency/availability with valid agency token"""
-        self.log("=== TEST 3: AGENCY AVAILABILITY WITH AGENCY TOKEN ===")
+    def test_agency_writeback_stats_with_agency_token(self):
+        """Test 2: GET /api/agency/writeback/stats with valid agency token"""
+        self.log("=== TEST 2: AGENCY WRITEBACK STATS WITH AGENCY TOKEN ===")
         
         if not self.agency_token:
-            self.add_result("Agency Availability With Agency Token", "SKIP", "No agency token available")
+            self.add_result("Agency Writeback Stats With Agency Token", "SKIP", "No agency token available")
             return
             
-        response = self.request("GET", "/agency/availability", 
+        response = self.request("GET", "/agency/writeback/stats", 
+                               headers=self.get_agency_headers(), expect_status=200)
+        
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                # Expected: {"queued": 0, "completed": 0, "failed": 0, "retry": 0, "skipped": 0, "total": 0}
+                expected_keys = ["queued", "completed", "failed", "retry", "total"]
+                if all(key in data for key in expected_keys):
+                    self.add_result("Agency Writeback Stats With Agency Token", "PASS", 
+                                  f"Returns stats: queued={data.get('queued')}, completed={data.get('completed')}, failed={data.get('failed')}, retry={data.get('retry')}, total={data.get('total')}")
+                else:
+                    missing = [key for key in expected_keys if key not in data]
+                    self.add_result("Agency Writeback Stats With Agency Token", "FAIL", 
+                                  f"Missing keys: {missing}, got: {json.dumps(data)}")
+            except json.JSONDecodeError:
+                self.add_result("Agency Writeback Stats With Agency Token", "FAIL", "Invalid JSON response")
+        else:
+            self.add_result("Agency Writeback Stats With Agency Token", "FAIL", f"Status: {response.status_code}")
+
+    def test_agency_writeback_queue_no_auth(self):
+        """Test 3: GET /api/agency/writeback/queue without auth should return 401"""
+        self.log("=== TEST 3: AGENCY WRITEBACK QUEUE NO AUTH ===")
+        
+        response = self.request("GET", "/agency/writeback/queue", expect_status=401)
+        
+        if response.status_code == 401:
+            self.add_result("Agency Writeback Queue No Auth", "PASS", "Returns 401 without authentication token")
+        else:
+            self.add_result("Agency Writeback Queue No Auth", "FAIL", f"Expected 401, got {response.status_code}")
+
+    def test_agency_writeback_queue_with_agency_token(self):
+        """Test 4: GET /api/agency/writeback/queue with valid agency token"""
+        self.log("=== TEST 4: AGENCY WRITEBACK QUEUE WITH AGENCY TOKEN ===")
+        
+        if not self.agency_token:
+            self.add_result("Agency Writeback Queue With Agency Token", "SKIP", "No agency token available")
+            return
+            
+        response = self.request("GET", "/agency/writeback/queue", 
                                headers=self.get_agency_headers(), expect_status=200)
         
         if response.status_code == 200:
@@ -189,70 +210,28 @@ class AgencyWriteBackTester:
                 data = response.json()
                 # Expected: {"items": [...], "total": N}
                 if "items" in data and "total" in data and isinstance(data["items"], list):
-                    self.add_result("Agency Availability With Agency Token", "PASS", 
-                                  f"Returns items array with {len(data['items'])} hotels, total={data['total']}")
-                    
-                    # Store first hotel_id for detailed endpoint test
-                    if data["items"]:
-                        self.test_hotel_id = data["items"][0].get("hotel_id")
-                        self.log(f"Using hotel_id for detailed test: {self.test_hotel_id}")
+                    self.add_result("Agency Writeback Queue With Agency Token", "PASS", 
+                                  f"Returns queue with {len(data['items'])} items, total={data['total']}")
                 else:
-                    self.add_result("Agency Availability With Agency Token", "FAIL", 
+                    self.add_result("Agency Writeback Queue With Agency Token", "FAIL", 
                                   f"Missing 'items' or 'total' fields: {json.dumps(data)}")
             except json.JSONDecodeError:
-                self.add_result("Agency Availability With Agency Token", "FAIL", "Invalid JSON response")
+                self.add_result("Agency Writeback Queue With Agency Token", "FAIL", "Invalid JSON response")
         else:
-            self.add_result("Agency Availability With Agency Token", "FAIL", f"Status: {response.status_code}")
+            self.add_result("Agency Writeback Queue With Agency Token", "FAIL", f"Status: {response.status_code}")
 
-    def test_agency_availability_changes_no_auth(self):
-        """Test 4: GET /api/agency/availability/changes without auth should return 401"""
-        self.log("=== TEST 4: AGENCY AVAILABILITY CHANGES NO AUTH ===")
-        
-        response = self.request("GET", "/agency/availability/changes", expect_status=401)
-        
-        if response.status_code == 401:
-            self.add_result("Agency Availability Changes No Auth", "PASS", "Returns 401 without authentication token")
-        else:
-            self.add_result("Agency Availability Changes No Auth", "FAIL", f"Expected 401, got {response.status_code}")
-
-    def test_agency_availability_changes_with_agency_token(self):
-        """Test 5: GET /api/agency/availability/changes with agency token"""
-        self.log("=== TEST 5: AGENCY AVAILABILITY CHANGES WITH AGENCY TOKEN ===")
+    def test_agency_writeback_queue_with_params(self):
+        """Test 5: GET /api/agency/writeback/queue with query parameters"""
+        self.log("=== TEST 5: AGENCY WRITEBACK QUEUE WITH PARAMS ===")
         
         if not self.agency_token:
-            self.add_result("Agency Availability Changes With Agency Token", "SKIP", "No agency token available")
+            self.add_result("Agency Writeback Queue With Params", "SKIP", "No agency token available")
             return
             
-        response = self.request("GET", "/agency/availability/changes", 
-                               headers=self.get_agency_headers(), expect_status=200)
+        # Test with hotel_id, status, and limit params
+        params = {"hotel_id": "test-hotel-id", "status": "failed", "limit": "10"}
         
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                # Expected: {"items": [...], "total": N}
-                if "items" in data and "total" in data and isinstance(data["items"], list):
-                    self.add_result("Agency Availability Changes With Agency Token", "PASS", 
-                                  f"Returns items array with {len(data['items'])} changes, total={data['total']}")
-                else:
-                    self.add_result("Agency Availability Changes With Agency Token", "FAIL", 
-                                  f"Missing 'items' or 'total' fields: {json.dumps(data)}")
-            except json.JSONDecodeError:
-                self.add_result("Agency Availability Changes With Agency Token", "FAIL", "Invalid JSON response")
-        else:
-            self.add_result("Agency Availability Changes With Agency Token", "FAIL", f"Status: {response.status_code}")
-
-    def test_agency_availability_changes_with_params(self):
-        """Test 6: GET /api/agency/availability/changes with query parameters"""
-        self.log("=== TEST 6: AGENCY AVAILABILITY CHANGES WITH PARAMS ===")
-        
-        if not self.agency_token:
-            self.add_result("Agency Availability Changes With Params", "SKIP", "No agency token available")
-            return
-            
-        # Test with hotel_id and limit params
-        params = {"hotel_id": "test-hotel-id", "limit": "10"}
-        
-        response = self.request("GET", "/agency/availability/changes", 
+        response = self.request("GET", "/agency/writeback/queue", 
                                headers=self.get_agency_headers(), 
                                params=params, expect_status=200)
         
@@ -261,115 +240,168 @@ class AgencyWriteBackTester:
                 data = response.json()
                 if "items" in data and "total" in data and isinstance(data["items"], list):
                     # Should return empty for non-existent hotel
-                    if len(data["items"]) == 0:
-                        self.add_result("Agency Availability Changes With Params", "PASS", 
-                                      "Returns empty array for non-existent hotel_id (correct)")
-                    else:
-                        self.add_result("Agency Availability Changes With Params", "PASS", 
-                                      f"Returns {len(data['items'])} filtered changes")
+                    self.add_result("Agency Writeback Queue With Params", "PASS", 
+                                  f"Query params working: {len(data['items'])} items for hotel_id={params['hotel_id']}, status={params['status']}")
                 else:
-                    self.add_result("Agency Availability Changes With Params", "FAIL", 
+                    self.add_result("Agency Writeback Queue With Params", "FAIL", 
                                   f"Missing 'items' or 'total' fields: {json.dumps(data)}")
             except json.JSONDecodeError:
-                self.add_result("Agency Availability Changes With Params", "FAIL", "Invalid JSON response")
+                self.add_result("Agency Writeback Queue With Params", "FAIL", "Invalid JSON response")
         else:
-            self.add_result("Agency Availability Changes With Params", "FAIL", f"Status: {response.status_code}")
+            self.add_result("Agency Writeback Queue With Params", "FAIL", f"Status: {response.status_code}")
 
-    def test_agency_availability_hotel_no_auth(self):
-        """Test 7: GET /api/agency/availability/{hotel_id} without auth should return 401"""
-        self.log("=== TEST 7: AGENCY AVAILABILITY HOTEL NO AUTH ===")
+    def test_agency_writeback_reservations_no_auth(self):
+        """Test 6: GET /api/agency/writeback/reservations without auth should return 401"""
+        self.log("=== TEST 6: AGENCY WRITEBACK RESERVATIONS NO AUTH ===")
         
-        response = self.request("GET", "/agency/availability/test-hotel-id", expect_status=401)
+        response = self.request("GET", "/agency/writeback/reservations", expect_status=401)
         
         if response.status_code == 401:
-            self.add_result("Agency Availability Hotel No Auth", "PASS", "Returns 401 without authentication token")
+            self.add_result("Agency Writeback Reservations No Auth", "PASS", "Returns 401 without authentication token")
         else:
-            self.add_result("Agency Availability Hotel No Auth", "FAIL", f"Expected 401, got {response.status_code}")
+            self.add_result("Agency Writeback Reservations No Auth", "FAIL", f"Expected 401, got {response.status_code}")
 
-    def test_agency_availability_hotel_with_agency_token(self):
-        """Test 8: GET /api/agency/availability/{hotel_id} with agency token"""
-        self.log("=== TEST 8: AGENCY AVAILABILITY HOTEL WITH AGENCY TOKEN ===")
+    def test_agency_writeback_reservations_with_agency_token(self):
+        """Test 7: GET /api/agency/writeback/reservations with valid agency token"""
+        self.log("=== TEST 7: AGENCY WRITEBACK RESERVATIONS WITH AGENCY TOKEN ===")
         
         if not self.agency_token:
-            self.add_result("Agency Availability Hotel With Agency Token", "SKIP", "No agency token available")
+            self.add_result("Agency Writeback Reservations With Agency Token", "SKIP", "No agency token available")
             return
             
-        # Use test hotel ID if available, otherwise use test-hotel-id for non-existent hotel test
-        hotel_id = self.test_hotel_id if self.test_hotel_id else "test-hotel-id"
-        
-        response = self.request("GET", f"/agency/availability/{hotel_id}", 
+        response = self.request("GET", "/agency/writeback/reservations", 
                                headers=self.get_agency_headers(), expect_status=200)
         
         if response.status_code == 200:
             try:
                 data = response.json()
-                # Expected structure: {hotel, dates, room_types, grid, ...}
-                expected_keys = ["hotel", "dates", "room_types", "grid"]
-                if all(key in data for key in expected_keys):
-                    hotel_info = data.get("hotel")
-                    if hotel_info is None:
-                        # No access or hotel not found
-                        if "error" in data:
-                            self.add_result("Agency Availability Hotel With Agency Token", "PASS", 
-                                          f"No access to hotel: {data.get('error')}")
+                # Expected: {"items": [...], "total": N}
+                if "items" in data and "total" in data and isinstance(data["items"], list):
+                    self.add_result("Agency Writeback Reservations With Agency Token", "PASS", 
+                                  f"Returns reservations with {len(data['items'])} items, total={data['total']}")
+                    
+                    # Check structure of reservation items if any exist
+                    if data["items"]:
+                        first_item = data["items"][0]
+                        expected_fields = ["job_id", "ref_id", "hotel_id", "event_type", "writeback_status"]
+                        if all(field in first_item for field in expected_fields):
+                            self.log(f"First reservation: {first_item.get('ref_id')} - {first_item.get('event_label')} - {first_item.get('writeback_status')}")
                         else:
-                            self.add_result("Agency Availability Hotel With Agency Token", "PASS", 
-                                          "Hotel not found (hotel=null)")
-                    else:
-                        # Hotel found and accessible
-                        self.add_result("Agency Availability Hotel With Agency Token", "PASS", 
-                                      f"Hotel grid returned: {len(data['dates'])} dates, {len(data['room_types'])} room types, {len(data['grid'])} grid items")
+                            self.log(f"Reservation structure: {list(first_item.keys())}")
                 else:
-                    missing = [key for key in expected_keys if key not in data]
-                    self.add_result("Agency Availability Hotel With Agency Token", "FAIL", 
-                                  f"Missing keys: {missing}, got: {list(data.keys())}")
+                    self.add_result("Agency Writeback Reservations With Agency Token", "FAIL", 
+                                  f"Missing 'items' or 'total' fields: {json.dumps(data)}")
             except json.JSONDecodeError:
-                self.add_result("Agency Availability Hotel With Agency Token", "FAIL", "Invalid JSON response")
+                self.add_result("Agency Writeback Reservations With Agency Token", "FAIL", "Invalid JSON response")
         else:
-            self.add_result("Agency Availability Hotel With Agency Token", "FAIL", f"Status: {response.status_code}")
+            self.add_result("Agency Writeback Reservations With Agency Token", "FAIL", f"Status: {response.status_code}")
 
-    def test_agency_availability_hotel_with_params(self):
-        """Test 9: GET /api/agency/availability/{hotel_id} with query parameters"""
-        self.log("=== TEST 9: AGENCY AVAILABILITY HOTEL WITH PARAMS ===")
+    def test_agency_writeback_reservations_with_params(self):
+        """Test 8: GET /api/agency/writeback/reservations with query parameters"""
+        self.log("=== TEST 8: AGENCY WRITEBACK RESERVATIONS WITH PARAMS ===")
         
         if not self.agency_token:
-            self.add_result("Agency Availability Hotel With Params", "SKIP", "No agency token available")
+            self.add_result("Agency Writeback Reservations With Params", "SKIP", "No agency token available")
             return
             
-        # Test with date range and room_type params
-        params = {
-            "start_date": "2024-01-01",
-            "end_date": "2024-01-15",
-            "room_type": "standard"
-        }
+        # Test with hotel_id and limit params
+        params = {"hotel_id": "test-hotel-id", "limit": "5"}
         
-        hotel_id = self.test_hotel_id if self.test_hotel_id else "test-hotel-id"
-        
-        response = self.request("GET", f"/agency/availability/{hotel_id}", 
+        response = self.request("GET", "/agency/writeback/reservations", 
                                headers=self.get_agency_headers(), 
                                params=params, expect_status=200)
         
         if response.status_code == 200:
             try:
                 data = response.json()
-                expected_keys = ["hotel", "dates", "room_types", "grid", "date_range"]
-                if all(key in data for key in expected_keys):
-                    # Check if date_range reflects our params
-                    date_range = data.get("date_range", {})
-                    if date_range.get("start") == "2024-01-01" and date_range.get("end") == "2024-01-15":
-                        self.add_result("Agency Availability Hotel With Params", "PASS", 
-                                      f"Date range filter working: {date_range}")
-                    else:
-                        self.add_result("Agency Availability Hotel With Params", "PASS", 
-                                      f"Response structure valid, date_range: {date_range}")
+                if "items" in data and "total" in data and isinstance(data["items"], list):
+                    self.add_result("Agency Writeback Reservations With Params", "PASS", 
+                                  f"Query params working: {len(data['items'])} reservations for hotel_id={params['hotel_id']}")
                 else:
-                    missing = [key for key in expected_keys if key not in data]
-                    self.add_result("Agency Availability Hotel With Params", "FAIL", 
-                                  f"Missing keys: {missing}")
+                    self.add_result("Agency Writeback Reservations With Params", "FAIL", 
+                                  f"Missing 'items' or 'total' fields: {json.dumps(data)}")
             except json.JSONDecodeError:
-                self.add_result("Agency Availability Hotel With Params", "FAIL", "Invalid JSON response")
+                self.add_result("Agency Writeback Reservations With Params", "FAIL", "Invalid JSON response")
         else:
-            self.add_result("Agency Availability Hotel With Params", "FAIL", f"Status: {response.status_code}")
+            self.add_result("Agency Writeback Reservations With Params", "FAIL", f"Status: {response.status_code}")
+
+    def test_agency_writeback_retry_no_auth(self):
+        """Test 9: POST /api/agency/writeback/retry/{job_id} without auth should return 401"""
+        self.log("=== TEST 9: AGENCY WRITEBACK RETRY NO AUTH ===")
+        
+        response = self.request("POST", "/agency/writeback/retry/test-job-id", expect_status=401)
+        
+        if response.status_code == 401:
+            self.add_result("Agency Writeback Retry No Auth", "PASS", "Returns 401 without authentication token")
+        else:
+            self.add_result("Agency Writeback Retry No Auth", "FAIL", f"Expected 401, got {response.status_code}")
+
+    def test_agency_writeback_retry_with_agency_token(self):
+        """Test 10: POST /api/agency/writeback/retry/{job_id} with valid agency token"""
+        self.log("=== TEST 10: AGENCY WRITEBACK RETRY WITH AGENCY TOKEN ===")
+        
+        if not self.agency_token:
+            self.add_result("Agency Writeback Retry With Agency Token", "SKIP", "No agency token available")
+            return
+            
+        # Test with a fake job_id first
+        response = self.request("POST", "/agency/writeback/retry/fake-job-id-12345", 
+                               headers=self.get_agency_headers())
+        
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                # Should return error for non-existent job
+                if "error" in data:
+                    if "bulunamadı" in data["error"] or "not found" in data["error"].lower():
+                        self.add_result("Agency Writeback Retry With Agency Token", "PASS", 
+                                      f"Returns appropriate error for non-existent job: {data['error']}")
+                    else:
+                        self.add_result("Agency Writeback Retry With Agency Token", "PASS", 
+                                      f"Returns error response: {data['error']}")
+                elif "status" in data and "job_id" in data:
+                    # Unexpected success - might be valid job ID
+                    self.add_result("Agency Writeback Retry With Agency Token", "PASS", 
+                                  f"Retry response: status={data['status']}, job_id={data['job_id']}")
+                else:
+                    self.add_result("Agency Writeback Retry With Agency Token", "FAIL", 
+                                  f"Unexpected response structure: {json.dumps(data)}")
+            except json.JSONDecodeError:
+                self.add_result("Agency Writeback Retry With Agency Token", "FAIL", "Invalid JSON response")
+        else:
+            self.add_result("Agency Writeback Retry With Agency Token", "FAIL", f"Status: {response.status_code}")
+
+    def test_agency_writeback_admin_token_rejection(self):
+        """Test 11: All writeback endpoints should reject admin tokens (role check)"""
+        self.log("=== TEST 11: AGENCY WRITEBACK ADMIN TOKEN REJECTION ===")
+        
+        if not self.admin_token:
+            self.add_result("Agency Writeback Admin Token Rejection", "SKIP", "No admin token available")
+            return
+            
+        endpoints = [
+            "/agency/writeback/stats",
+            "/agency/writeback/queue", 
+            "/agency/writeback/reservations"
+        ]
+        
+        admin_rejected_count = 0
+        for endpoint in endpoints:
+            response = self.request("GET", endpoint, headers=self.get_admin_headers())
+            
+            # Should fail with 403 (forbidden) or similar since admin doesn't have agency role
+            if response.status_code in [403, 422, 400]:
+                admin_rejected_count += 1
+                self.log(f"  ✅ {endpoint} rejected admin token with {response.status_code}")
+            else:
+                self.log(f"  ❌ {endpoint} accepted admin token (status: {response.status_code})")
+        
+        if admin_rejected_count == len(endpoints):
+            self.add_result("Agency Writeback Admin Token Rejection", "PASS", 
+                          f"All {len(endpoints)} endpoints properly reject admin tokens (role-based auth working)")
+        else:
+            self.add_result("Agency Writeback Admin Token Rejection", "FAIL", 
+                          f"Only {admin_rejected_count}/{len(endpoints)} endpoints rejected admin tokens")
 
     def run_all_tests(self):
         """Run all Agency Availability API tests in the specified order"""

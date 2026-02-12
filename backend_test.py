@@ -395,6 +395,9 @@ class AIAssistantTester:
         if auth_ok:
             self.test_sessions_with_auth()
         
+        # Test with invalid auth to check system behavior
+        self.test_briefing_with_invalid_auth()
+        
         return True
 
     def print_summary(self):

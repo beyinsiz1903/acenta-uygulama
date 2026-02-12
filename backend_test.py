@@ -25,9 +25,8 @@ FALLBACK_NAME = "AI Tester"
 class AIAssistantTester:
     def __init__(self):
         self.base_url = BACKEND_URL
-        self.admin_token = None
-        self.agency_token = None
-        self.test_hotel_id = None
+        self.auth_token = None
+        self.session_id = None
         self.test_results = []
         
     def log(self, message: str, level: str = "INFO"):
@@ -46,7 +45,7 @@ class AIAssistantTester:
         
     def request(self, method: str, endpoint: str, headers: Optional[Dict] = None, 
                json_data: Optional[Dict] = None, params: Optional[Dict] = None, 
-               expect_status: Optional[int] = None) -> requests.Response:
+               expect_status: Optional[int] = None, timeout: int = 15) -> requests.Response:
         """Make HTTP request with proper error handling"""
         url = f"{self.base_url}{endpoint}"
         req_headers = {"Content-Type": "application/json"}

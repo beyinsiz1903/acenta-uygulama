@@ -5,7 +5,7 @@ import { test, expect } from "@playwright/test";
 // render olup olmadığını doğrular. Data varlığını değil, sadece başlık ve
 // ana bölümlerin görünürlüğünü kontrol eder.
 
-const BASE_URL = "https://data-sync-tool-1.preview.emergentagent.com";
+const BASE_URL = "https://conversational-ai-5.preview.emergentagent.com";
 
 async function login(page, email: string, password: string) {
   await page.goto(`${BASE_URL}/login`);

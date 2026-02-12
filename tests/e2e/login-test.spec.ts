@@ -1,7 +1,7 @@
 // tests/e2e/login-test.spec.ts
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "https://data-sync-tool-1.preview.emergentagent.com";
+const BASE_URL = "https://conversational-ai-5.preview.emergentagent.com";
 
 test.describe("Login Functionality Test", () => {
   test("login process with debug information", async ({ page }) => {

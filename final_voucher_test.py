@@ -16,7 +16,7 @@ import uuid
 from datetime import datetime, timedelta
 
 class FinalVoucherTest:
-    def __init__(self, base_url="https://data-sync-tool-1.preview.emergentagent.com"):
+    def __init__(self, base_url="https://conversational-ai-5.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.tests_run = 0

@@ -591,3 +591,272 @@ async def list_change_log(
 
     docs = await db.sheet_change_log.find(query).sort("created_at", -1).to_list(limit)
     return [serialize_doc(d) for d in docs]
+
+
+# ══════════════════════════════════════════════════════════════
+# SERVICE ACCOUNT MANAGEMENT
+# ══════════════════════════════════════════════════════════════
+
+class SaveServiceAccountRequest(BaseModel):
+    service_account_json: str = Field(..., description="Google Service Account JSON")
+
+
+@router.post("/service-account", dependencies=[AdminDep])
+async def save_service_account(
+    body: SaveServiceAccountRequest,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Save Google Service Account JSON to database."""
+    import json as _json
+    raw = body.service_account_json.strip()
+
+    # Validate JSON
+    try:
+        parsed = _json.loads(raw)
+    except _json.JSONDecodeError:
+        raise AppError(400, "invalid_json", "Gecersiz JSON formati.")
+
+    # Validate required fields
+    required_fields = ["client_email", "private_key", "project_id"]
+    missing = [f for f in required_fields if f not in parsed]
+    if missing:
+        raise AppError(400, "missing_fields", f"Eksik alanlar: {', '.join(missing)}")
+
+    client_email = parsed.get("client_email", "")
+    project_id = parsed.get("project_id", "")
+
+    tenant_id = user.get("tenant_id") or user["organization_id"]
+
+    # Save to DB
+    await db.platform_config.update_one(
+        {"tenant_id": tenant_id, "config_key": "google_service_account"},
+        {
+            "$set": {
+                "config_value": raw,
+                "client_email": client_email,
+                "project_id": project_id,
+                "updated_at": now_utc(),
+                "updated_by": user.get("email", ""),
+            },
+            "$setOnInsert": {
+                "_id": str(uuid.uuid4()),
+                "tenant_id": tenant_id,
+                "config_key": "google_service_account",
+                "created_at": now_utc(),
+            },
+        },
+        upsert=True,
+    )
+
+    # Update in-memory cache
+    set_db_config(raw)
+
+    # Audit log
+    await append_audit_log(
+        scope="sheets_config",
+        tenant_id=tenant_id,
+        actor_user_id=user.get("_id", ""),
+        actor_email=user.get("email", ""),
+        action="service_account_saved",
+        after={"client_email": client_email, "project_id": project_id},
+    )
+
+    return {
+        "status": "saved",
+        "client_email": client_email,
+        "project_id": project_id,
+        "configured": True,
+    }
+
+
+@router.delete("/service-account", dependencies=[AdminDep])
+async def delete_service_account(
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Remove Google Service Account configuration."""
+    tenant_id = user.get("tenant_id") or user["organization_id"]
+    await db.platform_config.delete_one({
+        "tenant_id": tenant_id,
+        "config_key": "google_service_account",
+    })
+    set_db_config("")
+
+    await append_audit_log(
+        scope="sheets_config",
+        tenant_id=tenant_id,
+        actor_user_id=user.get("_id", ""),
+        actor_email=user.get("email", ""),
+        action="service_account_deleted",
+    )
+
+    return {"status": "deleted", "configured": False}
+
+
+# ══════════════════════════════════════════════════════════════
+# AGENCY-SPECIFIC SHEET CONNECTIONS
+# ══════════════════════════════════════════════════════════════
+
+class ConnectAgencySheetRequest(BaseModel):
+    hotel_id: str
+    agency_id: str
+    sheet_id: str
+    sheet_tab: str = "Sheet1"
+    writeback_tab: str = "Rezervasyonlar"
+    mapping: Dict[str, str] = Field(default_factory=dict)
+    sync_enabled: bool = True
+    sync_interval_minutes: int = 5
+
+
+@router.post("/connect-agency", dependencies=[AdminDep])
+async def connect_agency_sheet(
+    body: ConnectAgencySheetRequest,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Connect a Google Sheet to a hotel×agency pair."""
+    org_id = user["organization_id"]
+    tenant_id = user.get("tenant_id") or org_id
+
+    # Validate hotel
+    hotel = await db.hotels.find_one({"_id": body.hotel_id, "organization_id": org_id})
+    if not hotel:
+        raise AppError(404, "hotel_not_found", "Otel bulunamadi.")
+
+    # Validate agency
+    agency = await db.agencies.find_one({"_id": body.agency_id, "organization_id": org_id})
+    if not agency:
+        raise AppError(404, "agency_not_found", "Acenta bulunamadi.")
+
+    # Check existing
+    existing = await db.hotel_portfolio_sources.find_one({
+        "tenant_id": tenant_id,
+        "hotel_id": body.hotel_id,
+        "agency_id": body.agency_id,
+        "source_type": "google_sheets",
+    })
+    if existing:
+        raise AppError(409, "connection_exists", "Bu otel-acenta ikilisi icin zaten bir sheet baglantisi var.")
+
+    # Try to read headers
+    detected_headers = []
+    detected_mapping = {}
+    if is_configured():
+        read_result = read_sheet(body.sheet_id, body.sheet_tab, "1:1")
+        if read_result.success:
+            detected_headers = read_result.data.get("headers", [])
+            if detected_headers and not body.mapping:
+                detected_mapping = auto_detect_mapping(detected_headers)
+
+    effective_mapping = body.mapping if body.mapping else detected_mapping
+
+    doc = {
+        "_id": str(uuid.uuid4()),
+        "tenant_id": tenant_id,
+        "organization_id": org_id,
+        "hotel_id": body.hotel_id,
+        "hotel_name": hotel.get("name", ""),
+        "agency_id": body.agency_id,
+        "agency_name": agency.get("name", ""),
+        "source_type": "google_sheets",
+        "sheet_id": body.sheet_id,
+        "sheet_tab": body.sheet_tab,
+        "writeback_tab": body.writeback_tab,
+        "mapping": effective_mapping,
+        "sync_enabled": body.sync_enabled,
+        "sync_interval_minutes": body.sync_interval_minutes,
+        "last_sync_at": None,
+        "last_sync_status": None,
+        "last_error": None,
+        "last_fingerprint": None,
+        "status": "active",
+        "created_at": now_utc(),
+        "updated_at": now_utc(),
+        "created_by": user.get("email", ""),
+    }
+    await db.hotel_portfolio_sources.insert_one(doc)
+
+    await append_audit_log(
+        scope="portfolio_sync",
+        tenant_id=tenant_id,
+        actor_user_id=user.get("_id", ""),
+        actor_email=user.get("email", ""),
+        action="agency_sheet_connected",
+        after={
+            "hotel_id": body.hotel_id,
+            "agency_id": body.agency_id,
+            "sheet_id": body.sheet_id,
+        },
+    )
+
+    result = serialize_doc(doc)
+    result["configured"] = is_configured()
+    result["detected_headers"] = detected_headers
+    return result
+
+
+@router.get("/agency-connections", dependencies=[AdminDep])
+async def list_agency_connections(
+    hotel_id: Optional[str] = Query(None),
+    agency_id: Optional[str] = Query(None),
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """List agency-specific sheet connections."""
+    tenant_id = user.get("tenant_id") or user["organization_id"]
+    query: Dict[str, Any] = {
+        "tenant_id": tenant_id,
+        "agency_id": {"$exists": True, "$ne": None},
+    }
+    if hotel_id:
+        query["hotel_id"] = hotel_id
+    if agency_id:
+        query["agency_id"] = agency_id
+
+    docs = await db.hotel_portfolio_sources.find(query).sort("created_at", -1).to_list(500)
+    return [serialize_doc(d) for d in docs]
+
+
+@router.get("/agencies-for-hotel/{hotel_id}", dependencies=[AdminDep])
+async def list_agencies_for_hotel(
+    hotel_id: str,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """List agencies linked to a hotel (for connection wizard dropdown)."""
+    org_id = user["organization_id"]
+    tenant_id = user.get("tenant_id") or org_id
+
+    links = await db.agency_hotel_links.find({
+        "organization_id": org_id,
+        "hotel_id": hotel_id,
+        "active": True,
+    }).to_list(500)
+
+    agency_ids = [l["agency_id"] for l in links]
+    if not agency_ids:
+        return []
+
+    agencies = await db.agencies.find(
+        {"_id": {"$in": agency_ids}},
+    ).to_list(500)
+
+    # Check which already have connections
+    existing_conns = await db.hotel_portfolio_sources.find({
+        "tenant_id": tenant_id,
+        "hotel_id": hotel_id,
+        "agency_id": {"$in": agency_ids},
+    }).to_list(500)
+    connected_agency_ids = {c["agency_id"] for c in existing_conns}
+
+    return [
+        {
+            "_id": a["_id"],
+            "name": a.get("name", ""),
+            "contact_email": a.get("contact_email", ""),
+            "connected": a["_id"] in connected_agency_ids,
+        }
+        for a in agencies
+    ]
+

@@ -6,16 +6,18 @@ Event-driven: triggered after reservation creation or booking confirmation.
 Features:
 - Idempotent: uses writeback_marker to prevent duplicate writes
 - Retry with dead-letter: failed write-backs are queued for retry
-- Allotment decrement: updates capacity in sheet
+- Allotment auto-decrement: updates capacity in hotel_inventory_snapshots
 - Tenant-isolated: all operations scoped to tenant
+- Multi-event: reservation_created, reservation_cancelled, booking_confirmed,
+  booking_cancelled, booking_amended
 
-Phase 2 of Portfolio Sync Engine.
+Phase 2+ of Portfolio Sync Engine.
 """
 from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from app.services.sheets_provider import (
@@ -30,6 +32,20 @@ logger = logging.getLogger(__name__)
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _date_range(start: str, end: str) -> List[str]:
+    """Generate list of date strings between start and end (inclusive start, exclusive end)."""
+    dates = []
+    try:
+        d = datetime.strptime(start, "%Y-%m-%d")
+        end_d = datetime.strptime(end, "%Y-%m-%d")
+        while d < end_d:
+            dates.append(d.strftime("%Y-%m-%d"))
+            d += timedelta(days=1)
+    except (ValueError, TypeError):
+        pass
+    return dates
 
 
 # ── Write-Back Queue ───────────────────────────────────────────

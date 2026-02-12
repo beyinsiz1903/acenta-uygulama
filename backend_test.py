@@ -404,9 +404,9 @@ class AgencyWriteBackTester:
                           f"Only {admin_rejected_count}/{len(endpoints)} endpoints rejected admin tokens")
 
     def run_all_tests(self):
-        """Run all Agency Availability API tests in the specified order"""
-        print("🚀 Starting Agency Availability API Tests")
-        print("📋 Testing 3 new agency availability endpoints\n")
+        """Run all Agency Write-Back API tests in the specified order"""
+        print("🚀 Starting Agency Write-Back API Tests")
+        print("📋 Testing 4 new agency write-back endpoints\n")
         
         # Authentication (try to authenticate, but continue even if rate limited)
         admin_auth_ok = self.authenticate_admin()
@@ -417,24 +417,31 @@ class AgencyWriteBackTester:
         if not agency_auth_ok:
             print("⚠️ Agency authentication failed - will test auth guards only")
             
-        # Test 1-3: GET /api/agency/availability endpoint
-        self.test_agency_availability_no_auth()
+        # Test 1-2: GET /api/agency/writeback/stats endpoint
+        self.test_agency_writeback_stats_no_auth()
+        if agency_auth_ok:
+            self.test_agency_writeback_stats_with_agency_token()
+        
+        # Test 3-5: GET /api/agency/writeback/queue endpoint  
+        self.test_agency_writeback_queue_no_auth()
+        if agency_auth_ok:
+            self.test_agency_writeback_queue_with_agency_token()
+            self.test_agency_writeback_queue_with_params()
+        
+        # Test 6-8: GET /api/agency/writeback/reservations endpoint
+        self.test_agency_writeback_reservations_no_auth()
+        if agency_auth_ok:
+            self.test_agency_writeback_reservations_with_agency_token()
+            self.test_agency_writeback_reservations_with_params()
+        
+        # Test 9-10: POST /api/agency/writeback/retry/{job_id} endpoint
+        self.test_agency_writeback_retry_no_auth()
+        if agency_auth_ok:
+            self.test_agency_writeback_retry_with_agency_token()
+        
+        # Test 11: Role-based authentication (admin tokens should be rejected)
         if admin_auth_ok:
-            self.test_agency_availability_admin_token()
-        if agency_auth_ok:
-            self.test_agency_availability_with_agency_token()
-        
-        # Test 4-6: GET /api/agency/availability/changes endpoint  
-        self.test_agency_availability_changes_no_auth()
-        if agency_auth_ok:
-            self.test_agency_availability_changes_with_agency_token()
-            self.test_agency_availability_changes_with_params()
-        
-        # Test 7-9: GET /api/agency/availability/{hotel_id} endpoint
-        self.test_agency_availability_hotel_no_auth()
-        if agency_auth_ok:
-            self.test_agency_availability_hotel_with_agency_token()
-            self.test_agency_availability_hotel_with_params()
+            self.test_agency_writeback_admin_token_rejection()
         
         return True
 

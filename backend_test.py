@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
-Agency Write-Back API Backend Test Suite
+AI Assistant Backend Test Suite
 
-Tests the 4 new agency write-back endpoints as specified in the review request.
-Focus on auth guards (agency role requirements), authentication flow,
-and API responses for agency users.
+Tests the 4 AI Assistant endpoints as specified in the review request.
+Focus on authentication flow, LLM integration, and API responses.
 """
 
 import requests
@@ -17,12 +16,13 @@ from datetime import datetime
 BACKEND_URL = "https://conversational-ai-5.preview.emergentagent.com/api"
 
 # Test credentials as specified in review request  
-ADMIN_EMAIL = "admin@acenta.test"
+ADMIN_EMAIL = "admin@test.com"
 ADMIN_PASSWORD = "admin123"
-AGENCY_EMAIL = "agency1@acenta.test"  
-AGENCY_PASSWORD = "agency123"
+FALLBACK_EMAIL = "aitest@test.com"
+FALLBACK_PASSWORD = "test1234"
+FALLBACK_NAME = "AI Tester"
 
-class AgencyWriteBackTester:
+class AIAssistantTester:
     def __init__(self):
         self.base_url = BACKEND_URL
         self.admin_token = None

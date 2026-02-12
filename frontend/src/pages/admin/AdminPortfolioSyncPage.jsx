@@ -737,6 +737,9 @@ export default function AdminPortfolioSyncPage() {
         syncing={syncing}
       />
 
+      {/* Agency-Specific Connections Section */}
+      <AgencyConnectionsSection />
+
       {/* Wizard Modal */}
       {showWizard && (
         <ConnectWizard

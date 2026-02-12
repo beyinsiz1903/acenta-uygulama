@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink, Outlet } from "react-router-dom";
+import AiAssistant from "../components/AiAssistant";
 
 export default function B2BLayout() {
   return (
@@ -28,6 +29,7 @@ export default function B2BLayout() {
       <main className="flex-1 p-4">
         <Outlet />
       </main>
+      <AiAssistant />
     </div>
   );
 }

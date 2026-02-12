@@ -60,7 +60,7 @@ class AIAssistantTester:
                 headers=req_headers,
                 json=json_data,
                 params=params,
-                timeout=30
+                timeout=timeout
             )
             
             status_str = f"{response.status_code}"
@@ -75,379 +75,294 @@ class AIAssistantTester:
             self.log(f"Request failed: {e}", "ERROR")
             raise
             
-    def authenticate_admin(self) -> bool:
-        """Login as admin user"""
-        self.log("=== ADMIN AUTHENTICATION ===")
+    def authenticate(self) -> bool:
+        """Try admin login first, if fails try register and login with fallback credentials"""
+        self.log("=== AUTHENTICATION ===")
         
-        login_data = {
+        # Try admin login first
+        admin_login_data = {
             "email": ADMIN_EMAIL,
             "password": ADMIN_PASSWORD
         }
         
-        response = self.request("POST", "/auth/login", json_data=login_data, expect_status=200)
+        response = self.request("POST", "/auth/login", json_data=admin_login_data)
         
         if response.status_code == 200:
             try:
                 data = response.json()
-                self.admin_token = data.get("access_token")
-                if self.admin_token:
+                self.auth_token = data.get("access_token")
+                if self.auth_token:
                     self.add_result("Admin Authentication", "PASS", f"Token obtained for {ADMIN_EMAIL}")
                     return True
-                else:
-                    self.add_result("Admin Authentication", "FAIL", "No access_token in response")
-                    return False
             except json.JSONDecodeError:
-                self.add_result("Admin Authentication", "FAIL", "Invalid JSON response")
-                return False
-        else:
-            self.add_result("Admin Authentication", "FAIL", f"Status: {response.status_code}")
-            return False
-
-    def authenticate_agency(self) -> bool:
-        """Login as agency user"""
-        self.log("=== AGENCY AUTHENTICATION ===")
+                pass
         
-        login_data = {
-            "email": AGENCY_EMAIL,
-            "password": AGENCY_PASSWORD
+        # If admin login failed, try register and login with fallback
+        self.log("Admin login failed, trying fallback registration...")
+        
+        register_data = {
+            "email": FALLBACK_EMAIL,
+            "password": FALLBACK_PASSWORD,
+            "name": FALLBACK_NAME
         }
         
-        response = self.request("POST", "/auth/login", json_data=login_data, expect_status=200)
+        register_response = self.request("POST", "/auth/register", json_data=register_data)
+        self.log(f"Registration response: {register_response.status_code}")
         
-        if response.status_code == 200:
+        # Try login with fallback credentials
+        fallback_login_data = {
+            "email": FALLBACK_EMAIL,
+            "password": FALLBACK_PASSWORD
+        }
+        
+        login_response = self.request("POST", "/auth/login", json_data=fallback_login_data)
+        
+        if login_response.status_code == 200:
             try:
-                data = response.json()
-                self.agency_token = data.get("access_token")
-                if self.agency_token:
-                    self.add_result("Agency Authentication", "PASS", f"Token obtained for {AGENCY_EMAIL}")
+                data = login_response.json()
+                self.auth_token = data.get("access_token")
+                if self.auth_token:
+                    self.add_result("Fallback Authentication", "PASS", f"Token obtained for {FALLBACK_EMAIL}")
                     return True
-                else:
-                    self.add_result("Agency Authentication", "FAIL", "No access_token in response")
-                    return False
             except json.JSONDecodeError:
-                self.add_result("Agency Authentication", "FAIL", "Invalid JSON response")
-                return False
-        else:
-            self.add_result("Agency Authentication", "FAIL", f"Status: {response.status_code}")
-            return False
-
-    def get_admin_headers(self) -> Dict[str, str]:
-        """Get headers with admin Bearer token"""
-        if self.admin_token:
-            return {"Authorization": f"Bearer {self.admin_token}"}
-        return {}
-
-    def get_agency_headers(self) -> Dict[str, str]:
-        """Get headers with agency Bearer token"""
-        if self.agency_token:
-            return {"Authorization": f"Bearer {self.agency_token}"}
-        return {}
-
-    def test_agency_writeback_stats_no_auth(self):
-        """Test 1: GET /api/agency/writeback/stats without auth should return 401"""
-        self.log("=== TEST 1: AGENCY WRITEBACK STATS NO AUTH ===")
+                pass
         
-        response = self.request("GET", "/agency/writeback/stats", expect_status=401)
+        self.add_result("Authentication", "FAIL", "Both admin and fallback authentication failed")
+        return False
+
+    def get_auth_headers(self) -> Dict[str, str]:
+        """Get headers with Bearer token"""
+        if self.auth_token:
+            return {"Authorization": f"Bearer {self.auth_token}"}
+        return {}
+
+    def test_briefing_no_auth(self):
+        """Test 1: POST /api/ai-assistant/briefing without auth should return 401"""
+        self.log("=== TEST 1: BRIEFING NO AUTH ===")
+        
+        response = self.request("POST", "/ai-assistant/briefing", expect_status=401)
         
         if response.status_code == 401:
-            self.add_result("Agency Writeback Stats No Auth", "PASS", "Returns 401 without authentication token")
+            self.add_result("Briefing No Auth", "PASS", "Returns 401 without authentication token")
         else:
-            self.add_result("Agency Writeback Stats No Auth", "FAIL", f"Expected 401, got {response.status_code}")
+            self.add_result("Briefing No Auth", "FAIL", f"Expected 401, got {response.status_code}")
 
-    def test_agency_writeback_stats_with_agency_token(self):
-        """Test 2: GET /api/agency/writeback/stats with valid agency token"""
-        self.log("=== TEST 2: AGENCY WRITEBACK STATS WITH AGENCY TOKEN ===")
+    def test_briefing_with_auth(self):
+        """Test 2: POST /api/ai-assistant/briefing with valid auth token"""
+        self.log("=== TEST 2: BRIEFING WITH AUTH ===")
         
-        if not self.agency_token:
-            self.add_result("Agency Writeback Stats With Agency Token", "SKIP", "No agency token available")
+        if not self.auth_token:
+            self.add_result("Briefing With Auth", "SKIP", "No auth token available")
             return
             
-        response = self.request("GET", "/agency/writeback/stats", 
-                               headers=self.get_agency_headers(), expect_status=200)
+        response = self.request("POST", "/ai-assistant/briefing", 
+                               headers=self.get_auth_headers(), 
+                               expect_status=200,
+                               timeout=30)  # Longer timeout for LLM calls
         
         if response.status_code == 200:
             try:
                 data = response.json()
-                # Expected: {"queued": 0, "completed": 0, "failed": 0, "retry": 0, "skipped": 0, "total": 0}
-                expected_keys = ["queued", "completed", "failed", "retry", "total"]
+                # Expected: {"briefing": "...", "raw_data": {...}, "generated_at": "..."}
+                expected_keys = ["briefing", "raw_data", "generated_at"]
                 if all(key in data for key in expected_keys):
-                    self.add_result("Agency Writeback Stats With Agency Token", "PASS", 
-                                  f"Returns stats: queued={data.get('queued')}, completed={data.get('completed')}, failed={data.get('failed')}, retry={data.get('retry')}, total={data.get('total')}")
+                    briefing_length = len(data.get("briefing", ""))
+                    self.add_result("Briefing With Auth", "PASS", 
+                                  f"Returns briefing data: briefing_length={briefing_length}, raw_data keys={list(data.get('raw_data', {}).keys())}")
                 else:
                     missing = [key for key in expected_keys if key not in data]
-                    self.add_result("Agency Writeback Stats With Agency Token", "FAIL", 
-                                  f"Missing keys: {missing}, got: {json.dumps(data)}")
+                    self.add_result("Briefing With Auth", "FAIL", 
+                                  f"Missing keys: {missing}, got: {list(data.keys())}")
             except json.JSONDecodeError:
-                self.add_result("Agency Writeback Stats With Agency Token", "FAIL", "Invalid JSON response")
+                self.add_result("Briefing With Auth", "FAIL", "Invalid JSON response")
         else:
-            self.add_result("Agency Writeback Stats With Agency Token", "FAIL", f"Status: {response.status_code}")
+            try:
+                error_data = response.json()
+                error_msg = error_data.get("detail", f"Status: {response.status_code}")
+                self.add_result("Briefing With Auth", "FAIL", f"API Error: {error_msg}")
+            except:
+                self.add_result("Briefing With Auth", "FAIL", f"Status: {response.status_code}")
 
-    def test_agency_writeback_queue_no_auth(self):
-        """Test 3: GET /api/agency/writeback/queue without auth should return 401"""
-        self.log("=== TEST 3: AGENCY WRITEBACK QUEUE NO AUTH ===")
+    def test_chat_no_auth(self):
+        """Test 3: POST /api/ai-assistant/chat without auth should return 401"""
+        self.log("=== TEST 3: CHAT NO AUTH ===")
         
-        response = self.request("GET", "/agency/writeback/queue", expect_status=401)
+        chat_data = {
+            "message": "Merhaba, bugün ne var?",
+            "session_id": None
+        }
+        
+        response = self.request("POST", "/ai-assistant/chat", json_data=chat_data, expect_status=401)
         
         if response.status_code == 401:
-            self.add_result("Agency Writeback Queue No Auth", "PASS", "Returns 401 without authentication token")
+            self.add_result("Chat No Auth", "PASS", "Returns 401 without authentication token")
         else:
-            self.add_result("Agency Writeback Queue No Auth", "FAIL", f"Expected 401, got {response.status_code}")
+            self.add_result("Chat No Auth", "FAIL", f"Expected 401, got {response.status_code}")
 
-    def test_agency_writeback_queue_with_agency_token(self):
-        """Test 4: GET /api/agency/writeback/queue with valid agency token"""
-        self.log("=== TEST 4: AGENCY WRITEBACK QUEUE WITH AGENCY TOKEN ===")
+    def test_chat_with_auth(self):
+        """Test 4: POST /api/ai-assistant/chat with valid auth token"""
+        self.log("=== TEST 4: CHAT WITH AUTH ===")
         
-        if not self.agency_token:
-            self.add_result("Agency Writeback Queue With Agency Token", "SKIP", "No agency token available")
+        if not self.auth_token:
+            self.add_result("Chat With Auth", "SKIP", "No auth token available")
             return
             
-        response = self.request("GET", "/agency/writeback/queue", 
-                               headers=self.get_agency_headers(), expect_status=200)
+        chat_data = {
+            "message": "Merhaba, bugün ne var?",
+            "session_id": None
+        }
+        
+        response = self.request("POST", "/ai-assistant/chat", 
+                               headers=self.get_auth_headers(),
+                               json_data=chat_data,
+                               expect_status=200,
+                               timeout=30)  # Longer timeout for LLM calls
         
         if response.status_code == 200:
             try:
                 data = response.json()
-                # Expected: {"items": [...], "total": N}
-                if "items" in data and "total" in data and isinstance(data["items"], list):
-                    self.add_result("Agency Writeback Queue With Agency Token", "PASS", 
-                                  f"Returns queue with {len(data['items'])} items, total={data['total']}")
+                # Expected: {"response": "...", "session_id": "..."}
+                expected_keys = ["response", "session_id"]
+                if all(key in data for key in expected_keys):
+                    self.session_id = data.get("session_id")  # Save for later tests
+                    response_length = len(data.get("response", ""))
+                    self.add_result("Chat With Auth", "PASS", 
+                                  f"Returns chat response: session_id={self.session_id}, response_length={response_length}")
                 else:
-                    self.add_result("Agency Writeback Queue With Agency Token", "FAIL", 
-                                  f"Missing 'items' or 'total' fields: {json.dumps(data)}")
+                    missing = [key for key in expected_keys if key not in data]
+                    self.add_result("Chat With Auth", "FAIL", 
+                                  f"Missing keys: {missing}, got: {list(data.keys())}")
             except json.JSONDecodeError:
-                self.add_result("Agency Writeback Queue With Agency Token", "FAIL", "Invalid JSON response")
+                self.add_result("Chat With Auth", "FAIL", "Invalid JSON response")
         else:
-            self.add_result("Agency Writeback Queue With Agency Token", "FAIL", f"Status: {response.status_code}")
-
-    def test_agency_writeback_queue_with_params(self):
-        """Test 5: GET /api/agency/writeback/queue with query parameters"""
-        self.log("=== TEST 5: AGENCY WRITEBACK QUEUE WITH PARAMS ===")
-        
-        if not self.agency_token:
-            self.add_result("Agency Writeback Queue With Params", "SKIP", "No agency token available")
-            return
-            
-        # Test with hotel_id, status, and limit params
-        params = {"hotel_id": "test-hotel-id", "status": "failed", "limit": "10"}
-        
-        response = self.request("GET", "/agency/writeback/queue", 
-                               headers=self.get_agency_headers(), 
-                               params=params, expect_status=200)
-        
-        if response.status_code == 200:
             try:
-                data = response.json()
-                if "items" in data and "total" in data and isinstance(data["items"], list):
-                    # Should return empty for non-existent hotel
-                    self.add_result("Agency Writeback Queue With Params", "PASS", 
-                                  f"Query params working: {len(data['items'])} items for hotel_id={params['hotel_id']}, status={params['status']}")
-                else:
-                    self.add_result("Agency Writeback Queue With Params", "FAIL", 
-                                  f"Missing 'items' or 'total' fields: {json.dumps(data)}")
-            except json.JSONDecodeError:
-                self.add_result("Agency Writeback Queue With Params", "FAIL", "Invalid JSON response")
-        else:
-            self.add_result("Agency Writeback Queue With Params", "FAIL", f"Status: {response.status_code}")
+                error_data = response.json()
+                error_msg = error_data.get("detail", f"Status: {response.status_code}")
+                self.add_result("Chat With Auth", "FAIL", f"API Error: {error_msg}")
+            except:
+                self.add_result("Chat With Auth", "FAIL", f"Status: {response.status_code}")
 
-    def test_agency_writeback_reservations_no_auth(self):
-        """Test 6: GET /api/agency/writeback/reservations without auth should return 401"""
-        self.log("=== TEST 6: AGENCY WRITEBACK RESERVATIONS NO AUTH ===")
+    def test_chat_history_no_auth(self):
+        """Test 5: GET /api/ai-assistant/chat-history/{session_id} without auth should return 401"""
+        self.log("=== TEST 5: CHAT HISTORY NO AUTH ===")
         
-        response = self.request("GET", "/agency/writeback/reservations", expect_status=401)
+        test_session_id = "test-session-id"
+        response = self.request("GET", f"/ai-assistant/chat-history/{test_session_id}", expect_status=401)
         
         if response.status_code == 401:
-            self.add_result("Agency Writeback Reservations No Auth", "PASS", "Returns 401 without authentication token")
+            self.add_result("Chat History No Auth", "PASS", "Returns 401 without authentication token")
         else:
-            self.add_result("Agency Writeback Reservations No Auth", "FAIL", f"Expected 401, got {response.status_code}")
+            self.add_result("Chat History No Auth", "FAIL", f"Expected 401, got {response.status_code}")
 
-    def test_agency_writeback_reservations_with_agency_token(self):
-        """Test 7: GET /api/agency/writeback/reservations with valid agency token"""
-        self.log("=== TEST 7: AGENCY WRITEBACK RESERVATIONS WITH AGENCY TOKEN ===")
+    def test_chat_history_with_auth(self):
+        """Test 6: GET /api/ai-assistant/chat-history/{session_id} with valid auth token"""
+        self.log("=== TEST 6: CHAT HISTORY WITH AUTH ===")
         
-        if not self.agency_token:
-            self.add_result("Agency Writeback Reservations With Agency Token", "SKIP", "No agency token available")
+        if not self.auth_token:
+            self.add_result("Chat History With Auth", "SKIP", "No auth token available")
             return
             
-        response = self.request("GET", "/agency/writeback/reservations", 
-                               headers=self.get_agency_headers(), expect_status=200)
+        # Use session_id from previous chat test if available
+        session_id = self.session_id or "test-session-id"
+        
+        response = self.request("GET", f"/ai-assistant/chat-history/{session_id}", 
+                               headers=self.get_auth_headers(), 
+                               expect_status=200)
         
         if response.status_code == 200:
             try:
                 data = response.json()
-                # Expected: {"items": [...], "total": N}
-                if "items" in data and "total" in data and isinstance(data["items"], list):
-                    self.add_result("Agency Writeback Reservations With Agency Token", "PASS", 
-                                  f"Returns reservations with {len(data['items'])} items, total={data['total']}")
-                    
-                    # Check structure of reservation items if any exist
-                    if data["items"]:
-                        first_item = data["items"][0]
-                        expected_fields = ["job_id", "ref_id", "hotel_id", "event_type", "writeback_status"]
-                        if all(field in first_item for field in expected_fields):
-                            self.log(f"First reservation: {first_item.get('ref_id')} - {first_item.get('event_label')} - {first_item.get('writeback_status')}")
-                        else:
-                            self.log(f"Reservation structure: {list(first_item.keys())}")
+                # Expected: {"messages": [...], "session_id": "..."}
+                expected_keys = ["messages", "session_id"]
+                if all(key in data for key in expected_keys):
+                    message_count = len(data.get("messages", []))
+                    self.add_result("Chat History With Auth", "PASS", 
+                                  f"Returns chat history: session_id={data.get('session_id')}, message_count={message_count}")
                 else:
-                    self.add_result("Agency Writeback Reservations With Agency Token", "FAIL", 
-                                  f"Missing 'items' or 'total' fields: {json.dumps(data)}")
+                    missing = [key for key in expected_keys if key not in data]
+                    self.add_result("Chat History With Auth", "FAIL", 
+                                  f"Missing keys: {missing}, got: {list(data.keys())}")
             except json.JSONDecodeError:
-                self.add_result("Agency Writeback Reservations With Agency Token", "FAIL", "Invalid JSON response")
+                self.add_result("Chat History With Auth", "FAIL", "Invalid JSON response")
         else:
-            self.add_result("Agency Writeback Reservations With Agency Token", "FAIL", f"Status: {response.status_code}")
+            self.add_result("Chat History With Auth", "FAIL", f"Status: {response.status_code}")
 
-    def test_agency_writeback_reservations_with_params(self):
-        """Test 8: GET /api/agency/writeback/reservations with query parameters"""
-        self.log("=== TEST 8: AGENCY WRITEBACK RESERVATIONS WITH PARAMS ===")
+    def test_sessions_no_auth(self):
+        """Test 7: GET /api/ai-assistant/sessions without auth should return 401"""
+        self.log("=== TEST 7: SESSIONS NO AUTH ===")
         
-        if not self.agency_token:
-            self.add_result("Agency Writeback Reservations With Params", "SKIP", "No agency token available")
-            return
-            
-        # Test with hotel_id and limit params
-        params = {"hotel_id": "test-hotel-id", "limit": "5"}
-        
-        response = self.request("GET", "/agency/writeback/reservations", 
-                               headers=self.get_agency_headers(), 
-                               params=params, expect_status=200)
-        
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                if "items" in data and "total" in data and isinstance(data["items"], list):
-                    self.add_result("Agency Writeback Reservations With Params", "PASS", 
-                                  f"Query params working: {len(data['items'])} reservations for hotel_id={params['hotel_id']}")
-                else:
-                    self.add_result("Agency Writeback Reservations With Params", "FAIL", 
-                                  f"Missing 'items' or 'total' fields: {json.dumps(data)}")
-            except json.JSONDecodeError:
-                self.add_result("Agency Writeback Reservations With Params", "FAIL", "Invalid JSON response")
-        else:
-            self.add_result("Agency Writeback Reservations With Params", "FAIL", f"Status: {response.status_code}")
-
-    def test_agency_writeback_retry_no_auth(self):
-        """Test 9: POST /api/agency/writeback/retry/{job_id} without auth should return 401"""
-        self.log("=== TEST 9: AGENCY WRITEBACK RETRY NO AUTH ===")
-        
-        response = self.request("POST", "/agency/writeback/retry/test-job-id", expect_status=401)
+        response = self.request("GET", "/ai-assistant/sessions", expect_status=401)
         
         if response.status_code == 401:
-            self.add_result("Agency Writeback Retry No Auth", "PASS", "Returns 401 without authentication token")
+            self.add_result("Sessions No Auth", "PASS", "Returns 401 without authentication token")
         else:
-            self.add_result("Agency Writeback Retry No Auth", "FAIL", f"Expected 401, got {response.status_code}")
+            self.add_result("Sessions No Auth", "FAIL", f"Expected 401, got {response.status_code}")
 
-    def test_agency_writeback_retry_with_agency_token(self):
-        """Test 10: POST /api/agency/writeback/retry/{job_id} with valid agency token"""
-        self.log("=== TEST 10: AGENCY WRITEBACK RETRY WITH AGENCY TOKEN ===")
+    def test_sessions_with_auth(self):
+        """Test 8: GET /api/ai-assistant/sessions with valid auth token"""
+        self.log("=== TEST 8: SESSIONS WITH AUTH ===")
         
-        if not self.agency_token:
-            self.add_result("Agency Writeback Retry With Agency Token", "SKIP", "No agency token available")
+        if not self.auth_token:
+            self.add_result("Sessions With Auth", "SKIP", "No auth token available")
             return
             
-        # Test with a fake job_id first
-        response = self.request("POST", "/agency/writeback/retry/fake-job-id-12345", 
-                               headers=self.get_agency_headers())
+        response = self.request("GET", "/ai-assistant/sessions", 
+                               headers=self.get_auth_headers(), 
+                               expect_status=200)
         
         if response.status_code == 200:
             try:
                 data = response.json()
-                # Should return error for non-existent job
-                if "error" in data:
-                    if "bulunamadı" in data["error"] or "not found" in data["error"].lower():
-                        self.add_result("Agency Writeback Retry With Agency Token", "PASS", 
-                                      f"Returns appropriate error for non-existent job: {data['error']}")
-                    else:
-                        self.add_result("Agency Writeback Retry With Agency Token", "PASS", 
-                                      f"Returns error response: {data['error']}")
-                elif "status" in data and "job_id" in data:
-                    # Unexpected success - might be valid job ID
-                    self.add_result("Agency Writeback Retry With Agency Token", "PASS", 
-                                  f"Retry response: status={data['status']}, job_id={data['job_id']}")
+                # Expected: {"sessions": [...]}
+                if "sessions" in data and isinstance(data["sessions"], list):
+                    session_count = len(data.get("sessions", []))
+                    self.add_result("Sessions With Auth", "PASS", 
+                                  f"Returns user sessions: session_count={session_count}")
                 else:
-                    self.add_result("Agency Writeback Retry With Agency Token", "FAIL", 
-                                  f"Unexpected response structure: {json.dumps(data)}")
+                    self.add_result("Sessions With Auth", "FAIL", 
+                                  f"Missing 'sessions' field or not a list: {list(data.keys())}")
             except json.JSONDecodeError:
-                self.add_result("Agency Writeback Retry With Agency Token", "FAIL", "Invalid JSON response")
+                self.add_result("Sessions With Auth", "FAIL", "Invalid JSON response")
         else:
-            self.add_result("Agency Writeback Retry With Agency Token", "FAIL", f"Status: {response.status_code}")
-
-    def test_agency_writeback_admin_token_rejection(self):
-        """Test 11: All writeback endpoints should reject admin tokens (role check)"""
-        self.log("=== TEST 11: AGENCY WRITEBACK ADMIN TOKEN REJECTION ===")
-        
-        if not self.admin_token:
-            self.add_result("Agency Writeback Admin Token Rejection", "SKIP", "No admin token available")
-            return
-            
-        endpoints = [
-            "/agency/writeback/stats",
-            "/agency/writeback/queue", 
-            "/agency/writeback/reservations"
-        ]
-        
-        admin_rejected_count = 0
-        for endpoint in endpoints:
-            response = self.request("GET", endpoint, headers=self.get_admin_headers())
-            
-            # Should fail with 403 (forbidden) or similar since admin doesn't have agency role
-            if response.status_code in [403, 422, 400]:
-                admin_rejected_count += 1
-                self.log(f"  ✅ {endpoint} rejected admin token with {response.status_code}")
-            else:
-                self.log(f"  ❌ {endpoint} accepted admin token (status: {response.status_code})")
-        
-        if admin_rejected_count == len(endpoints):
-            self.add_result("Agency Writeback Admin Token Rejection", "PASS", 
-                          f"All {len(endpoints)} endpoints properly reject admin tokens (role-based auth working)")
-        else:
-            self.add_result("Agency Writeback Admin Token Rejection", "FAIL", 
-                          f"Only {admin_rejected_count}/{len(endpoints)} endpoints rejected admin tokens")
+            self.add_result("Sessions With Auth", "FAIL", f"Status: {response.status_code}")
 
     def run_all_tests(self):
-        """Run all Agency Write-Back API tests in the specified order"""
-        print("🚀 Starting Agency Write-Back API Tests")
-        print("📋 Testing 4 new agency write-back endpoints\n")
+        """Run all AI Assistant API tests in the specified order"""
+        print("🚀 Starting AI Assistant API Tests")
+        print("📋 Testing 4 AI Assistant endpoints\n")
         
-        # Authentication (try to authenticate, but continue even if rate limited)
-        admin_auth_ok = self.authenticate_admin()
-        agency_auth_ok = self.authenticate_agency()
+        # Authentication (try to authenticate)
+        auth_ok = self.authenticate()
         
-        if not admin_auth_ok:
-            print("⚠️ Admin authentication failed - will test auth guards only")
-        if not agency_auth_ok:
-            print("⚠️ Agency authentication failed - will test auth guards only")
+        if not auth_ok:
+            print("⚠️ Authentication failed - will test auth guards only")
             
-        # Test 1-2: GET /api/agency/writeback/stats endpoint
-        self.test_agency_writeback_stats_no_auth()
-        if agency_auth_ok:
-            self.test_agency_writeback_stats_with_agency_token()
+        # Test 1-2: POST /api/ai-assistant/briefing endpoint
+        self.test_briefing_no_auth()
+        if auth_ok:
+            self.test_briefing_with_auth()
         
-        # Test 3-5: GET /api/agency/writeback/queue endpoint  
-        self.test_agency_writeback_queue_no_auth()
-        if agency_auth_ok:
-            self.test_agency_writeback_queue_with_agency_token()
-            self.test_agency_writeback_queue_with_params()
+        # Test 3-4: POST /api/ai-assistant/chat endpoint  
+        self.test_chat_no_auth()
+        if auth_ok:
+            self.test_chat_with_auth()
         
-        # Test 6-8: GET /api/agency/writeback/reservations endpoint
-        self.test_agency_writeback_reservations_no_auth()
-        if agency_auth_ok:
-            self.test_agency_writeback_reservations_with_agency_token()
-            self.test_agency_writeback_reservations_with_params()
+        # Test 5-6: GET /api/ai-assistant/chat-history/{session_id} endpoint
+        self.test_chat_history_no_auth()
+        if auth_ok:
+            self.test_chat_history_with_auth()
         
-        # Test 9-10: POST /api/agency/writeback/retry/{job_id} endpoint
-        self.test_agency_writeback_retry_no_auth()
-        if agency_auth_ok:
-            self.test_agency_writeback_retry_with_agency_token()
-        
-        # Test 11: Role-based authentication (admin tokens should be rejected)
-        if admin_auth_ok:
-            self.test_agency_writeback_admin_token_rejection()
+        # Test 7-8: GET /api/ai-assistant/sessions endpoint
+        self.test_sessions_no_auth()
+        if auth_ok:
+            self.test_sessions_with_auth()
         
         return True
 
     def print_summary(self):
         """Print test results summary"""
         print("\n" + "="*80)
-        print("🏁 AGENCY WRITE-BACK API TEST SUMMARY")
+        print("🏁 AI ASSISTANT API TEST SUMMARY")
         print("="*80)
         
         total = len(self.test_results)
@@ -480,21 +395,21 @@ class AIAssistantTester:
         auth_guards_working = any("No Auth" in r["test"] and r["status"] == "PASS" for r in self.test_results)
         print(f"  - Auth guards return 401 without token: {'✅' if auth_guards_working else '❌'}")
         
-        role_based_auth = any("Admin Token Rejection" in r["test"] and r["status"] == "PASS" for r in self.test_results)
-        print(f"  - Admin token rejected (role-based auth): {'✅' if role_based_auth else '❌'}")
+        ai_endpoints_working = any("With Auth" in r["test"] and r["status"] == "PASS" for r in self.test_results)
+        print(f"  - AI Assistant endpoints working with token: {'✅' if ai_endpoints_working else '❌'}")
         
-        agency_endpoints_working = any("Agency Token" in r["test"] and r["status"] == "PASS" for r in self.test_results)
-        print(f"  - Agency endpoints working with agency token: {'✅' if agency_endpoints_working else '❌'}")
+        llm_calls_working = any("Briefing With Auth" in r["test"] and r["status"] == "PASS" for r in self.test_results) or any("Chat With Auth" in r["test"] and r["status"] == "PASS" for r in self.test_results)
+        print(f"  - LLM integration working (briefing/chat): {'✅' if llm_calls_working else '❌'}")
         
-        all_endpoints_tested = any("writeback" in r["test"].lower() for r in self.test_results)
-        print(f"  - All 4 agency write-back endpoints tested: {'✅' if all_endpoints_tested else '❌'}")
+        all_endpoints_tested = any("ai-assistant" in r["test"].lower() for r in self.test_results)
+        print(f"  - All 4 AI Assistant endpoints tested: {'✅' if all_endpoints_tested else '❌'}")
         
         return passed, failed, skipped
 
 
 def main():
     """Main function"""
-    tester = AgencyWriteBackTester()
+    tester = AIAssistantTester()
     
     try:
         success = tester.run_all_tests()
@@ -506,7 +421,7 @@ def main():
         elif not success:
             sys.exit(2)
         else:
-            print("\n🎉 All Agency Write-Back API tests completed successfully!")
+            print("\n🎉 All AI Assistant API tests completed successfully!")
             sys.exit(0)
             
     except Exception as e:

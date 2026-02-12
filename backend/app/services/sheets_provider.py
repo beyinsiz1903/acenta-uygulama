@@ -17,6 +17,7 @@ from typing import Any, Dict, List, Optional, Tuple
 logger = logging.getLogger(__name__)
 
 _client_cache: Dict[str, Any] = {}
+_db_config_cache: Dict[str, Any] = {}
 
 
 class SheetsProviderResult:

@@ -248,6 +248,20 @@ async def lifespan(app: FastAPI):
     from app.billing.scheduler import start_scheduler, stop_scheduler
     start_scheduler()
 
+    # Load Google Service Account config from DB
+    try:
+        from app.services.sheets_provider import set_db_config
+        config_doc = await db.platform_config.find_one({"config_key": "google_service_account"})
+        if config_doc and config_doc.get("config_value"):
+            set_db_config(config_doc["config_value"])
+            import logging
+            logging.getLogger("sheets_provider").info(
+                "Loaded Google Service Account from DB: %s", config_doc.get("client_email", "?")
+            )
+    except Exception as e:
+        import logging
+        logging.getLogger("sheets_provider").warning("Failed to load sheets config from DB: %s", e)
+
     # Start report schedule checker (E4.3)
     from apscheduler.schedulers.asyncio import AsyncIOScheduler
     report_scheduler = AsyncIOScheduler()

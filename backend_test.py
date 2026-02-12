@@ -109,6 +109,15 @@ class AIAssistantTester:
         register_response = self.request("POST", "/auth/signup", json_data=register_data)
         self.log(f"Registration response: {register_response.status_code}")
         
+        if register_response.status_code != 200:
+            try:
+                error_data = register_response.json()
+                self.log(f"Registration error: {error_data}")
+            except:
+                self.log(f"Registration error: Status {register_response.status_code}")
+        else:
+            self.log("Registration successful")
+        
         # Try login with fallback credentials
         fallback_login_data = {
             "email": FALLBACK_EMAIL,

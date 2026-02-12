@@ -702,6 +702,7 @@ export default function AgencyAvailabilityPage() {
   const handleSelectHotel = (hotelId) => {
     setSelectedHotelId(hotelId);
     setView("detail");
+    setDetailTab("grid");
     fetchDetail(hotelId, startDate, endDate);
   };
 
@@ -709,6 +710,7 @@ export default function AgencyAvailabilityPage() {
     setView("list");
     setDetailData(null);
     setSelectedHotelId(null);
+    setDetailTab("grid");
   };
 
   const handleDateChange = (sd, ed) => {

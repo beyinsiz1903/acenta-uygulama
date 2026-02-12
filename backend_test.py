@@ -22,10 +22,11 @@ ADMIN_PASSWORD = "admin123"
 AGENCY_EMAIL = "agency1@acenta.test"  
 AGENCY_PASSWORD = "agency123"
 
-class PortfolioSyncTester:
+class AgencyAvailabilityTester:
     def __init__(self):
         self.base_url = BACKEND_URL
-        self.auth_token = None
+        self.admin_token = None
+        self.agency_token = None
         self.test_hotel_id = None
         self.test_results = []
         

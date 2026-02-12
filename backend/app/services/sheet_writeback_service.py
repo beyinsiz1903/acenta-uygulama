@@ -521,12 +521,95 @@ async def on_booking_confirmed(
         "state": booking.get("state", "confirmed"),
         "channel": booking.get("channel", ""),
         "created_at": str(booking.get("created_at", "")),
+        "agency_name": booking.get("agency_name", ""),
     }
 
     return await enqueue_writeback(
         db, tenant_id, hotel_id,
         "booking_confirmed", payload,
         source_id=str(booking.get("_id", "")),
+    )
+
+
+async def on_booking_cancelled(
+    db,
+    tenant_id: str,
+    org_id: str,
+    booking: Dict[str, Any],
+) -> Optional[str]:
+    """Called after a booking is cancelled. Enqueues cancellation write-back."""
+    hotel_id = str(booking.get("hotel_id") or "")
+    if not hotel_id:
+        return None
+
+    conn = await db.hotel_portfolio_sources.find_one({
+        "tenant_id": tenant_id,
+        "hotel_id": hotel_id,
+        "status": "active",
+    })
+    if not conn:
+        return None
+
+    payload = {
+        "booking_id": str(booking.get("_id", "")),
+        "guest_name": booking.get("guest_name", ""),
+        "check_in": booking.get("check_in", ""),
+        "check_out": booking.get("check_out", ""),
+        "pax": booking.get("pax", 1),
+        "room_type": booking.get("room_type", ""),
+        "refund_amount": booking.get("refund_amount", 0),
+        "currency": booking.get("currency", "TRY"),
+        "channel": booking.get("channel", ""),
+        "cancelled_at": str(_now()),
+        "cancel_reason": booking.get("cancel_reason", ""),
+    }
+
+    return await enqueue_writeback(
+        db, tenant_id, hotel_id,
+        "booking_cancelled", payload,
+        source_id=f"{booking.get('_id', '')}_cancel",
+    )
+
+
+async def on_booking_amended(
+    db,
+    tenant_id: str,
+    org_id: str,
+    booking: Dict[str, Any],
+    amendment_note: str = "",
+) -> Optional[str]:
+    """Called after a booking is amended. Enqueues amendment write-back."""
+    hotel_id = str(booking.get("hotel_id") or "")
+    if not hotel_id:
+        return None
+
+    conn = await db.hotel_portfolio_sources.find_one({
+        "tenant_id": tenant_id,
+        "hotel_id": hotel_id,
+        "status": "active",
+    })
+    if not conn:
+        return None
+
+    payload = {
+        "booking_id": str(booking.get("_id", "")),
+        "guest_name": booking.get("guest_name", ""),
+        "check_in": booking.get("check_in", ""),
+        "check_out": booking.get("check_out", ""),
+        "pax": booking.get("pax", 1),
+        "room_type": booking.get("room_type", ""),
+        "new_amount": booking.get("amount", 0),
+        "currency": booking.get("currency", "TRY"),
+        "channel": booking.get("channel", ""),
+        "amended_at": str(_now()),
+        "amendment_note": amendment_note,
+    }
+
+    amend_seq = booking.get("amend_seq", 1)
+    return await enqueue_writeback(
+        db, tenant_id, hotel_id,
+        "booking_amended", payload,
+        source_id=f"{booking.get('_id', '')}_amend_{amend_seq}",
     )
 
 

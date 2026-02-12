@@ -8,7 +8,7 @@ import sys
 from datetime import datetime
 
 class MultiTenantTesterFixed:
-    def __init__(self, base_url="https://portfolio-connector.preview.emergentagent.com"):
+    def __init__(self, base_url="https://data-sync-tool-1.preview.emergentagent.com"):
         self.base_url = base_url
         self.super_admin_token = None
         self.agency1_token = None

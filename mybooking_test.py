@@ -10,7 +10,7 @@ async def test_mybooking_behavior():
     """Test MyBooking create-token and request-link behavior"""
     
     # Get backend URL from environment
-    backend_url = "https://portfolio-connector.preview.emergentagent.com"
+    backend_url = "https://data-sync-tool-1.preview.emergentagent.com"
     
     db = await get_db()
     

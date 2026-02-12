@@ -25,7 +25,7 @@ from typing import Dict, Any, List
 import bcrypt
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://portfolio-connector.preview.emergentagent.com"
+BASE_URL = "https://data-sync-tool-1.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

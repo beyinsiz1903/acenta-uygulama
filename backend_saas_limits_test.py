@@ -31,7 +31,7 @@ from app.metrics import METRIC_BOOKINGS_CREATED
 os.environ.setdefault("DEV_MODE", "true")
 
 # Use the external URL from frontend/.env
-BACKEND_URL = "https://portfolio-connector.preview.emergentagent.com"
+BACKEND_URL = "https://data-sync-tool-1.preview.emergentagent.com"
 
 
 def make_token(email: str, org_id: str, roles: list[str] | None = None, minutes: int = 60 * 12) -> str:

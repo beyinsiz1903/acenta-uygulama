@@ -15,7 +15,7 @@ sys.path.insert(0, '/app/backend')
 from app.db import connect_mongo, get_db
 
 class SignedDownloadComprehensiveTest:
-    def __init__(self, base_url="https://portfolio-connector.preview.emergentagent.com"):
+    def __init__(self, base_url="https://data-sync-tool-1.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0

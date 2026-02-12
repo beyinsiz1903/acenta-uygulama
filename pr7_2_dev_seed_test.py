@@ -19,7 +19,7 @@ from app.db import get_db
 
 class DevSeedTester:
     def __init__(self):
-        self.backend_url = "https://portfolio-connector.preview.emergentagent.com/api"
+        self.backend_url = "https://data-sync-tool-1.preview.emergentagent.com/api"
         self.db = None
         self.org_id = "695e03c80b04ed31c4eaa899"  # Admin user's organization (moved seed data here)
         self.test_results = {

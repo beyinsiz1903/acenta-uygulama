@@ -14,7 +14,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 
 # Get backend URL from environment
-BACKEND_URL = "https://portfolio-connector.preview.emergentagent.com/api"
+BACKEND_URL = "https://data-sync-tool-1.preview.emergentagent.com/api"
 
 # Test credentials as specified in review request  
 ADMIN_EMAIL = "admin@acenta.test"

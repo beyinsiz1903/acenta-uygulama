@@ -6,7 +6,7 @@ Debug test for Partner Graph endpoints
 import requests
 import json
 
-BASE_URL = "https://portfolio-connector.preview.emergentagent.com"
+BASE_URL = "https://data-sync-tool-1.preview.emergentagent.com"
 
 def test_partner_graph_debug():
     # Login

@@ -23,7 +23,7 @@ import uuid
 from typing import Dict, Any, List, Optional
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://portfolio-connector.preview.emergentagent.com"
+BASE_URL = "https://data-sync-tool-1.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

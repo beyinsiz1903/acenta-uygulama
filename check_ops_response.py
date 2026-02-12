@@ -12,7 +12,7 @@ def check_ops_bookings_response():
     try:
         # Login
         login_data = {"email": "admin@acenta.test", "password": "admin123"}
-        response = requests.post("https://portfolio-connector.preview.emergentagent.com/api/auth/login", json=login_data, timeout=10)
+        response = requests.post("https://data-sync-tool-1.preview.emergentagent.com/api/auth/login", json=login_data, timeout=10)
         
         if response.status_code != 200:
             print(f"Login failed: {response.status_code} - {response.text}")
@@ -22,7 +22,7 @@ def check_ops_bookings_response():
         headers = {"Authorization": f"Bearer {token}"}
         
         # Get bookings
-        response = requests.get("https://portfolio-connector.preview.emergentagent.com/api/api/ops/bookings", headers=headers, timeout=10)
+        response = requests.get("https://data-sync-tool-1.preview.emergentagent.com/api/api/ops/bookings", headers=headers, timeout=10)
         
         if response.status_code == 200:
             data = response.json()

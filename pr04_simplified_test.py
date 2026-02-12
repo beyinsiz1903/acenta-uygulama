@@ -14,7 +14,7 @@ import os
 from bson import ObjectId
 
 # Configuration
-BASE_URL = "https://portfolio-connector.preview.emergentagent.com"
+BASE_URL = "https://data-sync-tool-1.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

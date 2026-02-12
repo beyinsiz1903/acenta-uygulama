@@ -349,8 +349,8 @@ frontend:
           comment: "✅ ENDPOINT IMPLEMENTED: Auth guards working (401 without token). Cannot test with agency token due to rate limiting. Code shows proper access control (agency_hotel_links verification), date range params, inventory snapshots query, and grid data structure with dates/room_types/availability data."
 metadata:
   created_by: "main_agent"
-  version: "14.0"
-  test_sequence: 23
+  version: "15.0"
+  test_sequence: 24
   run_ui: false
 
 test_plan:

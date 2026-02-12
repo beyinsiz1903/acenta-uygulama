@@ -448,7 +448,7 @@ class AgencyWriteBackTester:
     def print_summary(self):
         """Print test results summary"""
         print("\n" + "="*80)
-        print("🏁 AGENCY AVAILABILITY API TEST SUMMARY")
+        print("🏁 AGENCY WRITE-BACK API TEST SUMMARY")
         print("="*80)
         
         total = len(self.test_results)
@@ -481,21 +481,21 @@ class AgencyWriteBackTester:
         auth_guards_working = any("No Auth" in r["test"] and r["status"] == "PASS" for r in self.test_results)
         print(f"  - Auth guards return 401 without token: {'✅' if auth_guards_working else '❌'}")
         
-        role_based_auth = any("Admin Token" in r["test"] and r["status"] == "PASS" for r in self.test_results)
+        role_based_auth = any("Admin Token Rejection" in r["test"] and r["status"] == "PASS" for r in self.test_results)
         print(f"  - Admin token rejected (role-based auth): {'✅' if role_based_auth else '❌'}")
         
         agency_endpoints_working = any("Agency Token" in r["test"] and r["status"] == "PASS" for r in self.test_results)
         print(f"  - Agency endpoints working with agency token: {'✅' if agency_endpoints_working else '❌'}")
         
-        all_endpoints_tested = any("availability" in r["test"].lower() for r in self.test_results)
-        print(f"  - All 3 agency availability endpoints tested: {'✅' if all_endpoints_tested else '❌'}")
+        all_endpoints_tested = any("writeback" in r["test"].lower() for r in self.test_results)
+        print(f"  - All 4 agency write-back endpoints tested: {'✅' if all_endpoints_tested else '❌'}")
         
         return passed, failed, skipped
 
 
 def main():
     """Main function"""
-    tester = AgencyAvailabilityTester()
+    tester = AgencyWriteBackTester()
     
     try:
         success = tester.run_all_tests()
@@ -507,7 +507,7 @@ def main():
         elif not success:
             sys.exit(2)
         else:
-            print("\n🎉 All Agency Availability API tests completed successfully!")
+            print("\n🎉 All Agency Write-Back API tests completed successfully!")
             sys.exit(0)
             
     except Exception as e:

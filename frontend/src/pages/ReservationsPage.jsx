@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Ticket, Search, CheckCircle2, XCircle, ExternalLink, Plus } from "lucide-react";
+import { Ticket, Search, CheckCircle2, XCircle, ExternalLink, Plus, MessageCircle } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
 import { formatMoney, statusBadge } from "../lib/format";

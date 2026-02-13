@@ -108,24 +108,22 @@ function MiniDonutCard({ title, data, colors, loading, emptyText }) {
       {hasData ? (
         <div className="flex items-center gap-3">
           <div className="shrink-0" style={{ width: 80, height: 80, minWidth: 80, minHeight: 80 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={data}
-                  dataKey="value"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={24}
-                  outerRadius={38}
-                  strokeWidth={1}
-                  stroke="hsl(var(--card))"
-                >
-                  {data.map((entry, i) => (
-                    <Cell key={i} fill={colors[entry.name] || colors.other || "#94a3b8"} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
+            <PieChart width={80} height={80}>
+              <Pie
+                data={data}
+                dataKey="value"
+                cx="50%"
+                cy="50%"
+                innerRadius={24}
+                outerRadius={38}
+                strokeWidth={1}
+                stroke="hsl(var(--card))"
+              >
+                {data.map((entry, i) => (
+                  <Cell key={i} fill={colors[entry.name] || colors.other || "#94a3b8"} />
+                ))}
+              </Pie>
+            </PieChart>
           </div>
           <div className="flex-1 space-y-1.5 min-w-0">
             {data.map((d) => (

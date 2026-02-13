@@ -6,7 +6,7 @@ export default function PartnerLayout() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-base font-semibold">Partners</h1>
+        <h1 className="text-base font-semibold">İş Ortakları</h1>
         <p className="text-xs text-muted-foreground">
           Partner davetleri, ilişkiler ve mutabakatları buradan yönetin.
         </p>

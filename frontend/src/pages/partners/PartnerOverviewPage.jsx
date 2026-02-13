@@ -92,7 +92,7 @@ export default function PartnerOverviewPage() {
       <div className="space-y-1">
         <h2 className="text-base font-semibold">Partners  Genel Bakış</h2>
         <p className="text-xs text-muted-foreground">
-          Partner ekosisteminize genel bir bakış: bekleyen davetler, aktif ilişkiler ve mutabakat durumu.
+          İş ortaklarınıza genel bir bakış: bekleyen davetler, aktif ilişkiler ve mutabakat durumu.
         </p>
       </div>
 
@@ -125,7 +125,7 @@ export default function PartnerOverviewPage() {
           <CardHeader className="pb-2 flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs">
               <Users className="h-4 w-4" />
-              <CardTitle className="text-sm font-medium">Aktif Partnerler</CardTitle>
+              <CardTitle className="text-sm font-medium">Aktif İş Ortakları</CardTitle>
             </div>
             <Button asChild size="sm" variant="outline">
               <Link to="/app/partners/relationships">İlişkilere Git</Link>
@@ -134,7 +134,7 @@ export default function PartnerOverviewPage() {
           <CardContent>
             <div className="text-2xl font-semibold">{activePartners}</div>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Aktif durumda olan B2B partner ilişkilerinizin sayısı.
+              Aktif durumda olan iş ortaklığı sayınız.
             </p>
           </CardContent>
         </Card>
@@ -178,7 +178,7 @@ export default function PartnerOverviewPage() {
           {loading && !relationships.length ? (
             <p className="text-xs text-muted-foreground">Yükleniyor…</p>
           ) : relationships.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Henüz partner ilişkisi bulunmuyor.</p>
+            <p className="text-xs text-muted-foreground">Henüz iş ortaklığı bulunmuyor.</p>
           ) : (
             <div className="space-y-1">
               {relationships.map((r) => (

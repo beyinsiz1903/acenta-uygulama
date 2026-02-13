@@ -13,7 +13,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 
 # Get backend URL from environment
-BACKEND_URL = "https://test-data-populator.preview.emergentagent.com/api"
+BACKEND_URL = "https://availability-perms.preview.emergentagent.com/api"
 
 # Test credentials as specified in review request  
 ADMIN_EMAIL = "admin@test.com"

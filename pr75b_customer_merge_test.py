@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List
 
 # Configuration
-BACKEND_URL = "https://test-data-populator.preview.emergentagent.com/api"
+BACKEND_URL = "https://availability-perms.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

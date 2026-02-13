@@ -19,7 +19,7 @@ from uuid import uuid4
 import httpx
 
 # Backend URL from environment
-BACKEND_URL = os.getenv("REACT_APP_BACKEND_URL", "https://test-data-populator.preview.emergentagent.com")
+BACKEND_URL = os.getenv("REACT_APP_BACKEND_URL", "https://availability-perms.preview.emergentagent.com")
 API_BASE = f"{BACKEND_URL}/api"
 
 # Test credentials

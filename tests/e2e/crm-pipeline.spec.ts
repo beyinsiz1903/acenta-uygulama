@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const BASE = "https://test-data-populator.preview.emergentagent.com";
+const BASE = "https://availability-perms.preview.emergentagent.com";
 const UID = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 test("crm-pipeline: deal lifecycle lead->contacted->proposal->won + task complete", async ({ request }) => {

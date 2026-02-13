@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://test-data-populator.preview.emergentagent.com"
+BASE_URL = "https://availability-perms.preview.emergentagent.com"
 
 class EnterpriseTestSuite:
     def __init__(self):

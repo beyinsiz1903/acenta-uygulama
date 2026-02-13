@@ -347,6 +347,53 @@ frontend:
     priority: "high"
     needs_retesting: true
 
+  - task: "Reservation Detail - 400 fix"
+    implemented: true
+    working: true
+    file: "backend/app/routers/reservations.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Reservation detail panel opens successfully when clicking 'Aç' button on reservations page. It now shows correct reservation details (PNR, Voucher, Status, amounts) without the previous '400' error."
+
+  - task: "B2B Partner Network - 403 fix"
+    implemented: true
+    working: true
+    file: "backend/app/security/deps_b2b.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: B2B Partner Network page now loads successfully for admin users. 'Müsait Listingler' section shows 'Henüz müsait tur yok...' message and 'Taleplerim' section shows 'Henüz talep oluşturmadınız.' message. No 403 errors anymore."
+
+  - task: "Availability Calendar - Auth fix"
+    implemented: true
+    working: true
+    file: "backend/app/routers/agency_availability.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Availability Calendar page (/app/agency/availability) now shows 'Müsaitlik Takibi' content for admin users instead of 'Yetkiniz Yok' unauthorized message."
+
+  - task: "Ops Tasks UI - Text overlap fix"
+    implemented: true
+    working: true
+    file: "frontend/src/app/ops/tasks/page.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Ops Tasks page has been redesigned with proper column spacing in the task list. The page now uses a form layout with appropriate spacing for input fields and filter sections. No text overlap issues were observed."
 
   - task: "GET /api/agency/availability - Hotels with availability summary"
     implemented: true

@@ -78,7 +78,7 @@ export default function AdminB2BFunnelPage() {
         </CardHeader>
         <CardContent>
           {loading && !hasData && (
-            <p className="text-xs text-muted-foreground">Funnel verileri yükleniyor...</p>
+            <p className="text-xs text-muted-foreground">Veriler yükleniyor...</p>
           )}
 
           {error && (

@@ -203,6 +203,44 @@ async def create_reservation(
 
     res = await db.tour_reservations.insert_one(reservation_doc)
 
+    # Also create entry in main reservations collection for ReservationsPage visibility
+    main_reservation = {
+        "organization_id": org_id,
+        "pnr": reservation_code,
+        "status": "CONFIRMED",
+        "source": "tour",
+        "channel": "Tur Rezervasyonu",
+        "product_title": tour.get("name") or "Tur Rezervasyonu",
+        "tour_id": oid,
+        "tour_reservation_id": res.inserted_id,
+        "customer_name": guest_name,
+        "customer_email": guest_email,
+        "customer_phone": guest_phone,
+        "guest_name": guest_name,
+        "guest_email": guest_email,
+        "guest_phone": guest_phone,
+        "check_in": travel_date,
+        "check_out": travel_date,
+        "total_price": total,
+        "net_price": subtotal,
+        "paid_amount": 0,
+        "currency": currency,
+        "amounts": {
+            "sell": total,
+            "net": subtotal,
+        },
+        "pax": {
+            "adults": adults,
+            "children": children,
+        },
+        "notes": notes,
+        "payment_status": "unpaid",
+        "created_by": user.get("user_id") or str(user.get("_id", "")),
+        "created_at": now,
+        "updated_at": now,
+    }
+    await db.reservations.insert_one(main_reservation)
+
     return JSONResponse(
         status_code=201,
         content={

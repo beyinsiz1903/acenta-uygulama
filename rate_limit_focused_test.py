@@ -20,7 +20,7 @@ import secrets
 import os
 
 # Test configuration
-BACKEND_URL = "https://ui-bug-fixes-13.preview.emergentagent.com/api"
+BACKEND_URL = "https://tour-reserve.preview.emergentagent.com/api"
 
 class RateLimitFocusedTester:
     def __init__(self):

@@ -11,7 +11,7 @@ def test_exposure_page():
     
     # Step 1: Login as admin
     print("Step 1: Admin login")
-    login_url = "https://ui-bug-fixes-13.preview.emergentagent.com/api/auth/login"
+    login_url = "https://tour-reserve.preview.emergentagent.com/api/auth/login"
     login_data = {
         "email": "admin@acenta.test",
         "password": "admin123"
@@ -31,7 +31,7 @@ def test_exposure_page():
     
     # Step 2: Test the exposure API endpoint
     print("\nStep 2: Testing /api/ops/finance/exposure endpoint")
-    exposure_url = "https://ui-bug-fixes-13.preview.emergentagent.com/api/ops/finance/exposure"
+    exposure_url = "https://tour-reserve.preview.emergentagent.com/api/ops/finance/exposure"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
@@ -81,7 +81,7 @@ def test_exposure_page():
     
     # Step 3: Test the frontend page directly
     print("\nStep 3: Testing frontend page accessibility")
-    frontend_url = "https://ui-bug-fixes-13.preview.emergentagent.com/app/admin/finance/exposure"
+    frontend_url = "https://tour-reserve.preview.emergentagent.com/app/admin/finance/exposure"
     
     try:
         # Just check if the page returns 200 (basic accessibility test)

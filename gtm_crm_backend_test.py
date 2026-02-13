@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://ui-bug-fixes-13.preview.emergentagent.com"
+BASE_URL = "https://tour-reserve.preview.emergentagent.com"
 
 class GTMCRMTester:
     def __init__(self):

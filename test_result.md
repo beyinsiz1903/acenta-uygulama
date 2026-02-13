@@ -714,7 +714,7 @@ session2_bug_fixes_backend:
     status_history:
         - working: true
           agent: "testing"
-          comment: "✅ HEALTHY: Backend server running properly on https://ui-bug-fixes-13.preview.emergentagent.com. Root endpoint (/) returns 200, health endpoint (/health) returns 200. All core services responding correctly."
+          comment: "✅ HEALTHY: Backend server running properly on https://tour-reserve.preview.emergentagent.com. Root endpoint (/) returns 200, health endpoint (/health) returns 200. All core services responding correctly."
 
 agent_communication:
     - agent: "main"
@@ -740,4 +740,4 @@ agent_communication:
     - agent: "testing"
       message: "✅ INCIDENTS 404 BUG FIX VERIFIED: The main backend bug fix is working correctly! **PRIMARY FIX**: GET /api/admin/ops/incidents now returns 401 (auth required) instead of 404. The get_current_org dependency issue has been resolved by switching to user.get('organization_id') directly. **ADDITIONAL VERIFICATION**: 1) Voucher endpoint maintains proper auth behavior (returns 401 without token as expected), 2) Backend service is healthy and running properly, 3) All endpoints are accessible and properly protected. **LIMITATION**: Cannot perform full authenticated testing due to login endpoint 520 errors (likely bcrypt compatibility issue), but the core 404 fix is confirmed working through auth guard testing."
     - agent: "testing"
-      message: "✅ SESSION 2 BUG FIXES FULLY TESTED: All 3 requested bug fixes are working correctly! **FIX 1 - Olaylar (Incidents) 404 fix**: GET /api/admin/ops/incidents now returns 401 (not 404) without auth. Fixed by using user.get('organization_id') directly instead of get_current_org dependency. Also now allows 'admin' role. **FIX 2 - Voucher auth fix**: GET /api/reservations/{id}/voucher returns 401 without auth, confirming endpoint exists and requires authentication. Frontend can now call this via authenticated API. **FIX 3 - General health**: Backend server healthy and responding properly on https://ui-bug-fixes-13.preview.emergentagent.com. All core endpoints working. No issues detected."
+      message: "✅ SESSION 2 BUG FIXES FULLY TESTED: All 3 requested bug fixes are working correctly! **FIX 1 - Olaylar (Incidents) 404 fix**: GET /api/admin/ops/incidents now returns 401 (not 404) without auth. Fixed by using user.get('organization_id') directly instead of get_current_org dependency. Also now allows 'admin' role. **FIX 2 - Voucher auth fix**: GET /api/reservations/{id}/voucher returns 401 without auth, confirming endpoint exists and requires authentication. Frontend can now call this via authenticated API. **FIX 3 - General health**: Backend server healthy and responding properly on https://tour-reserve.preview.emergentagent.com. All core endpoints working. No issues detected."

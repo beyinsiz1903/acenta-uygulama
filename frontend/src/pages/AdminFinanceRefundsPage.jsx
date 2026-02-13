@@ -151,8 +151,8 @@ function RefundQueueList({
       <CardContent className="flex-1 overflow-y-auto">
         {items.length === 0 ? (
           <EmptyState
-            title="Henüz refund case yok"
-            description="Bu ortamda refund akışı henüz veri üretmemiş olabilir."
+            title="Henüz iade talebi yok"
+            description="Henüz bir iade talebi oluşturulmamış."
           />
         ) : (
           <div className="overflow-x-auto">
@@ -175,7 +175,7 @@ function RefundQueueList({
                   <TableHead className="text-xs">Booking</TableHead>
                   <TableHead className="text-xs">Booking Status</TableHead>
                   <TableHead className="text-xs text-right">Requested</TableHead>
-                  <TableHead className="text-xs text-right">Refundable</TableHead>
+                  <TableHead className="text-xs text-right">İade Edilebilir</TableHead>
                   <TableHead className="text-xs text-right">Penalty</TableHead>
                   <TableHead className="text-xs">Status</TableHead>
                   <TableHead className="text-xs">Decision</TableHead>
@@ -1394,7 +1394,7 @@ function RefundDetailPanel({
           <div className="text-xs font-semibold text-muted-foreground">Computed</div>
           <div className="flex flex-wrap gap-4 text-xs">
             <div>
-              <div className="text-muted-foreground">Refundable</div>
+              <div className="text-muted-foreground">İade Edilebilir</div>
               <div>{computed.refundable != null ? computed.refundable.toFixed(2) : "-"}</div>
             </div>
             <div>

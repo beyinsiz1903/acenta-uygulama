@@ -16,7 +16,7 @@ from app.db import get_db
 from app.services.search_cache import canonical_search_payload, cache_key
 from app.utils import now_utc
 
-router = APIRouter(prefix="/api/agency", tags=["agency-search"])
+router = APIRouter(prefix="/agency", tags=["agency-search"])
 
 
 class OccupancyIn(BaseModel):

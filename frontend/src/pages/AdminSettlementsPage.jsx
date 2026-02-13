@@ -292,7 +292,7 @@ export default function AdminSettlementsPage() {
                         <TableCell colSpan={9} className="py-10">
                           <EmptyState
                             title="Kayıt yok"
-                            description="Seçilen tarih aralığı ve filtrelere göre işlemler için settlement satırı bulunamadı."
+                            description="Seçilen tarih aralığı ve filtrelere göre işlem kaydı bulunamadı."
                           />
                         </TableCell>
                       </TableRow>

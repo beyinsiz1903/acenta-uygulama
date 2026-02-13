@@ -257,9 +257,7 @@ export default function AdminSettlementsPage() {
               <div className="space-y-1">
                 <CardTitle className="text-sm">İşlem satırları</CardTitle>
                 <p className="text-xs text-muted-foreground">
-                  Booking payment transactions, acenta ve booking bilgileriyle zenginle
-tirilmi
- satrlar.
+                  Ödeme işlemleri, acente ve rezervasyon bilgileriyle birlikte görüntülenen satırlar.
                 </p>
               </div>
               <div className="text-[11px] text-muted-foreground flex flex-col items-end">

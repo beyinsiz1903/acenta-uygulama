@@ -190,15 +190,15 @@ export default function OpsTasksPage() {
           {rows.length > 0 && (
             <div className="border rounded-md overflow-hidden">
               <div className="grid grid-cols-9 gap-2 bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground">
-                <div>Due</div>
+                <div>Son Tarih</div>
                 <div>Öncelik</div>
                 <div>Başlık</div>
-                <div>Case</div>
-                <div>Booking</div>
-                <div>Tip</div>
+                <div>Talep</div>
+                <div>Rezervasyon</div>
+                <div>Tür</div>
                 <div>Atanan</div>
                 <div>Durum</div>
-                <div>Aksiyonlar</div>
+                <div>İşlemler</div>
               </div>
               {rows.map((t) => {
                 const overdue = t.is_overdue && ["open", "in_progress"].includes(t.status);
@@ -345,7 +345,7 @@ function NewTaskForm({ onCreated }) {
       <CardContent>
     <form onSubmit={onSubmit} className="grid gap-2 md:grid-cols-3 text-xs">
       <div className="space-y-1 md:col-span-1">
-        <div className="text-[11px] text-muted-foreground">Refund Case ID *</div>
+        <div className="text-[11px] text-muted-foreground">Talep Numarası *</div>
         <Input
           className="h-8"
           value={entityId}
@@ -359,7 +359,7 @@ function NewTaskForm({ onCreated }) {
           className="h-8"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Görev başlığı"
+          placeholder="Görev adı"
         />
       </div>
       <div className="space-y-1 md:col-span-3">
@@ -368,7 +368,7 @@ function NewTaskForm({ onCreated }) {
           className="h-8"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Ops notu (opsiyonel)"
+          placeholder="Açıklama (isteğe bağlı)"
         />
       </div>
       <div className="space-y-1">

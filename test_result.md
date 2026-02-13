@@ -464,19 +464,19 @@ frontend:
 
 metadata:
   created_by: "main_agent"
-  version: "19.0"
-  test_sequence: 27
+  version: "20.0"
+  test_sequence: 28
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus: ["bug_fixes_reservation_400", "bug_fixes_b2b_403", "bug_fixes_availability_auth", "bug_fixes_ops_tasks_ui"]
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
     - agent: "main"
-      message: "Write-Back Phase 2 implemented: sheet_writeback_service.py with idempotent queue, event hooks in reservations.py and booking_lifecycle.py, 4 new endpoints (writeback/stats, writeback/process, writeback/queue, changelog), 30s scheduler, Write-Back Panel in UI. Please test new write-back endpoints."
+      message: "Bug fixes implemented: 1) Reservation 400 fix - reservations.py and services/reservations.py now handle both ObjectId and string _id (demo seed uses string IDs like 'demo_res_0_abc'), 2) B2B 403 fix - deps_b2b.py ALLOWED_B2B_ROLES now includes super_admin and admin, 3) Availability auth fix - agency routes in App.js now allow admin/super_admin roles, agency_availability.py and agency_writeback.py also updated, 4) OpsTasksPage text overlap fix - changed from grid-cols-9 to proper HTML table with column widths and text truncation. Please test reservation detail endpoint, B2B listings endpoint, and verify no regressions."
     - agent: "testing"
       message: "✅ PORTFOLIO SYNC ENGINE BACKEND COMPLETE: Tenant middleware whitelist fixed! All 13 Portfolio Sync Engine endpoints (/api/admin/sheets/*) are now working properly. Key findings: 1) No 500 errors, 2) configured=false when GOOGLE_SERVICE_ACCOUNT_JSON not set, 3) Auth guards functional (401 without token), 4) Graceful error messages in Turkish, 5) All CRUD operations respond correctly. Backend testing complete - all endpoints working as expected in graceful fallback mode."
     - agent: "testing"

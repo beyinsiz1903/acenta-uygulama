@@ -185,12 +185,7 @@ async def set_reservation_status(org_id: str, reservation_id: str, status: str, 
 
 async def apply_payment(org_id: str, reservation_id: str, amount: float) -> dict[str, Any]:
     db = await get_db()
-    try:
-        res_oid = to_object_id(reservation_id)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Geçersiz id")
-
-    res = await db.reservations.find_one({"organization_id": org_id, "_id": res_oid})
+    res = await _find_reservation_by_id(db, org_id, reservation_id)
     if not res:
         raise HTTPException(status_code=404, detail="Rezervasyon bulunamadı")
 

@@ -111,7 +111,7 @@ export default function OpsTasksPage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-lg font-semibold">Görev Takibi</h1>
-          <p className="text-xs text-muted-foreground">Refund süreçleri için SLA görevleri</p>
+          <p className="text-xs text-muted-foreground">İade ve operasyon süreçlerinin takibi</p>
         </div>
       </div>
 

@@ -146,14 +146,15 @@ export default function AdminTicketsPage() {
             </tr></thead>
             <tbody>
               {tickets.map(t => (
-                <tr key={t.id} className="border-b last:border-0 hover:bg-muted/30" data-testid={`ticket-row-${t.ticket_code}`}>
-                  <td className="px-4 py-3 font-mono text-xs">{t.ticket_code}</td>
+                <tr key={t.id} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer" data-testid={`ticket-row-${t.ticket_code}`} onClick={() => setSelectedTicket(t)}>
+                  <td className="px-4 py-3 font-mono text-xs text-primary underline">{t.ticket_code}</td>
                   <td className="px-4 py-3">{t.product_name}</td>
                   <td className="px-4 py-3 text-muted-foreground">{t.customer_name}</td>
                   <td className="px-4 py-3"><Badge variant="outline" className={getStatus(t.status).className}>{getStatus(t.status).label}</Badge></td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">{t.event_date || (t.created_at ? new Date(t.created_at).toLocaleDateString("tr-TR") : "-")}</td>
-                  <td className="px-4 py-3 text-right">
-                    {t.status === "active" && <Button size="sm" variant="ghost" className="h-7 text-xs text-destructive" onClick={() => handleCancel(t.ticket_code)}><XCircle className="h-3 w-3 mr-1" /> Iptal</Button>}
+                  <td className="px-4 py-3 text-right flex items-center justify-end gap-1">
+                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={(e) => { e.stopPropagation(); setSelectedTicket(t); }}><QrCode className="h-3 w-3 mr-1" /> QR</Button>
+                    {t.status === "active" && <Button size="sm" variant="ghost" className="h-7 text-xs text-destructive" onClick={(e) => { e.stopPropagation(); handleCancel(t.ticket_code); }}><XCircle className="h-3 w-3 mr-1" /> Iptal</Button>}
                     {t.status === "checked_in" && <span className="text-xs text-blue-600">Giris: {t.checked_in_at ? new Date(t.checked_in_at).toLocaleTimeString("tr-TR") : ""}</span>}
                   </td>
                 </tr>

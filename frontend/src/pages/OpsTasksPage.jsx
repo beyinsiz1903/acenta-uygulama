@@ -188,65 +188,80 @@ export default function OpsTasksPage() {
           )}
 
           {rows.length > 0 && (
-            <div className="border rounded-md overflow-hidden">
-              <div className="grid grid-cols-9 gap-2 bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground">
-                <div>Son Tarih</div>
-                <div>Öncelik</div>
-                <div>Başlık</div>
-                <div>Talep</div>
-                <div>Rezervasyon</div>
-                <div>Tür</div>
-                <div>Atanan</div>
-                <div>Durum</div>
-                <div>İşlemler</div>
-              </div>
+            <div className="border rounded-md overflow-x-auto">
+              <table className="w-full text-[11px]">
+                <thead>
+                  <tr className="bg-muted text-muted-foreground font-semibold">
+                    <th className="px-2 py-1.5 text-left whitespace-nowrap" style={{width:'110px'}}>Son Tarih</th>
+                    <th className="px-2 py-1.5 text-left whitespace-nowrap" style={{width:'70px'}}>Öncelik</th>
+                    <th className="px-2 py-1.5 text-left" style={{minWidth:'120px'}}>Başlık</th>
+                    <th className="px-2 py-1.5 text-left" style={{minWidth:'100px'}}>Talep</th>
+                    <th className="px-2 py-1.5 text-left" style={{minWidth:'100px'}}>Rezervasyon</th>
+                    <th className="px-2 py-1.5 text-left whitespace-nowrap" style={{width:'80px'}}>Tür</th>
+                    <th className="px-2 py-1.5 text-left" style={{minWidth:'110px'}}>Atanan</th>
+                    <th className="px-2 py-1.5 text-left whitespace-nowrap" style={{width:'90px'}}>Durum</th>
+                    <th className="px-2 py-1.5 text-left whitespace-nowrap" style={{width:'120px'}}>İşlemler</th>
+                  </tr>
+                </thead>
+                <tbody>
               {rows.map((t) => {
                 const overdue = t.is_overdue && ["open", "in_progress"].includes(t.status);
                 return (
-                  <div
+                  <tr
                     key={t.task_id}
-                    className="grid grid-cols-9 gap-2 border-t px-2 py-1 items-center text-[11px]"
+                    className="border-t align-middle"
                   >
-                    <div className="flex items-center gap-1">
-                      {overdue && <Clock className="h-3 w-3 text-destructive" />}
-                      <span className={overdue ? "text-destructive font-semibold" : ""}>
-                        {formatDateTime(t.due_at)}
-                      </span>
-                    </div>
-                    <div>{priorityBadge(t.priority)}</div>
-                    <div className="truncate" title={t.title}>
-                      {t.title}
-                    </div>
-                    <div>
+                    <td className="px-2 py-1.5 whitespace-nowrap">
+                      <div className="flex items-center gap-1">
+                        {overdue && <Clock className="h-3 w-3 text-destructive flex-shrink-0" />}
+                        <span className={overdue ? "text-destructive font-semibold" : ""}>
+                          {formatDateTime(t.due_at)}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-2 py-1.5">{priorityBadge(t.priority)}</td>
+                    <td className="px-2 py-1.5">
+                      <div className="truncate max-w-[180px]" title={t.title}>
+                        {t.title}
+                      </div>
+                    </td>
+                    <td className="px-2 py-1.5">
                       {t.entity_id ? (
                         <Button
                           variant="link"
                           size="xs"
-                          className="px-0 text-[11px]"
+                          className="px-0 text-[11px] truncate max-w-[120px] block"
+                          title={t.entity_id}
                           onClick={() => navigate(`/app/admin/finance/refunds?case=${t.entity_id}`)}
                         >
-                          {t.entity_id}
+                          {t.entity_id.length > 12 ? t.entity_id.slice(0, 8) + "..." : t.entity_id}
                         </Button>
                       ) : (
                         "-"
                       )}
-                    </div>
-                    <div>
+                    </td>
+                    <td className="px-2 py-1.5">
                       {t.booking_id ? (
                         <Link
                           to={`/app/ops/bookings/${t.booking_id}`}
-                          className="text-blue-600 hover:underline"
+                          className="text-blue-600 hover:underline truncate block max-w-[120px]"
+                          title={t.booking_id}
                         >
-                          {t.booking_id}
+                          {t.booking_id.length > 12 ? t.booking_id.slice(0, 8) + "..." : t.booking_id}
                         </Link>
                       ) : (
                         "-"
                       )}
-                    </div>
-                    <div>{t.task_type}</div>
-                    <div>{t.assignee_email || "-"}</div>
-                    <div>{statusBadge(t.status)}</div>
-                    <div className="flex items-center gap-1">
+                    </td>
+                    <td className="px-2 py-1.5 truncate max-w-[80px]" title={t.task_type}>{t.task_type}</td>
+                    <td className="px-2 py-1.5">
+                      <div className="truncate max-w-[130px]" title={t.assignee_email}>
+                        {t.assignee_email || "-"}
+                      </div>
+                    </td>
+                    <td className="px-2 py-1.5">{statusBadge(t.status)}</td>
+                    <td className="px-2 py-1.5">
+                      <div className="flex items-center gap-1 flex-nowrap">
                       {t.status === "open" && (
                         <Button
                           size="xs"

@@ -8,7 +8,7 @@ from app.db import get_db
 from app.schemas import ProductIn
 from app.utils import now_utc, serialize_doc, to_object_id
 
-router = APIRouter(prefix="/api/products", tags=["products"])
+router = APIRouter(prefix="/products", tags=["products"])
 
 
 def _oid_or_400(id_str: str) -> ObjectId:

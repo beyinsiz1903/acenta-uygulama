@@ -10,6 +10,7 @@ load_dotenv(Path(__file__).parent / ".env")
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.config import API_PREFIX, APP_NAME, APP_VERSION, CORS_ORIGINS
 from app.db import close_mongo, connect_mongo, get_db

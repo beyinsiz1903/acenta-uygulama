@@ -10,7 +10,7 @@ export default defineConfig({
   reporter: 'list',
   
   use: {
-    baseURL: 'https://tour-reserve.preview.emergentagent.com',
+    baseURL: 'https://nostalgic-ganguly-1.preview.emergentagent.com',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },

@@ -24,7 +24,7 @@ import os
 import uuid
 
 # Configuration
-BACKEND_URL = "https://tour-reserve.preview.emergentagent.com"
+BACKEND_URL = "https://nostalgic-ganguly-1.preview.emergentagent.com"
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
 DATABASE_NAME = os.environ.get("DB_NAME", "test_database")
 

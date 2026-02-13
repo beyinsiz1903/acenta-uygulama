@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://tour-reserve.preview.emergentagent.com/api",
-    "frontend_url": "https://tour-reserve.preview.emergentagent.com",
+    "backend_url": "https://nostalgic-ganguly-1.preview.emergentagent.com/api",
+    "frontend_url": "https://nostalgic-ganguly-1.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

@@ -32,7 +32,7 @@ from bson import ObjectId, Decimal128
 import bcrypt
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://tour-reserve.preview.emergentagent.com"
+BASE_URL = "https://nostalgic-ganguly-1.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

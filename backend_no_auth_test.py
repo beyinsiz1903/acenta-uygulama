@@ -17,7 +17,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 
 # Get backend URL from environment
-BACKEND_URL = "https://availability-perms.preview.emergentagent.com/api"
+BACKEND_URL = "https://ui-bug-fixes-13.preview.emergentagent.com/api"
 
 class BugFixNoAuthTester:
     def __init__(self):

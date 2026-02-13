@@ -19,7 +19,7 @@ from app.db import get_db
 
 class DevSeedTester:
     def __init__(self):
-        self.backend_url = "https://availability-perms.preview.emergentagent.com/api"
+        self.backend_url = "https://ui-bug-fixes-13.preview.emergentagent.com/api"
         self.db = None
         self.org_id = "695e03c80b04ed31c4eaa899"  # Admin user's organization (moved seed data here)
         self.test_results = {

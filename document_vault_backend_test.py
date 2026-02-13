@@ -27,7 +27,7 @@ from bson import ObjectId
 from typing import Dict, Any, Optional
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://availability-perms.preview.emergentagent.com"
+BASE_URL = "https://ui-bug-fixes-13.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

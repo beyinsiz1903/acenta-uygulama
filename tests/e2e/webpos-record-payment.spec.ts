@@ -1,7 +1,7 @@
 // tests/e2e/webpos-record-payment.spec.ts
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "https://availability-perms.preview.emergentagent.com";
+const BASE_URL = "https://ui-bug-fixes-13.preview.emergentagent.com";
 
 async function login(page) {
   await page.goto(`${BASE_URL}/login`);

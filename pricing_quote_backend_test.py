@@ -11,7 +11,7 @@ import uuid
 from datetime import datetime, timedelta
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://availability-perms.preview.emergentagent.com"
+BASE_URL = "https://ui-bug-fixes-13.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

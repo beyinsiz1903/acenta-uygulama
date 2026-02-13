@@ -1,6 +1,6 @@
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBhY2VudGEudGVzdCIsIm9yZyI6ImFhYzIzMWIwLTg2OTItNDY3My1iYTIwLTJiNDkwNWE5ZWJlMCIsInJvbGVzIjpbInN1cGVyX2FkbWluIl0sImlhdCI6MTc3MDQxNzk5MSwiZXhwIjoxNzcwNDYxMTkxfQ.sihgbSFBN3Mnv70H2nJ-SOCEPLQEsZBT9INlpyuBeOA",
   "tenantId": "c2c10633-7331-4490-a50b-b0e7b5048cde",
-  "baseURL": "https://availability-perms.preview.emergentagent.com",
+  "baseURL": "https://ui-bug-fixes-13.preview.emergentagent.com",
   "email": "admin@acenta.test"
 }

@@ -14,7 +14,7 @@ from app.errors import AppError
 from app.services.inbox import append_user_message
 
 
-router = APIRouter(prefix="/api/inbox", tags=["inbox"])
+router = APIRouter(prefix="/inbox", tags=["inbox"])
 
 
 class InboxThreadSummary(BaseModel):

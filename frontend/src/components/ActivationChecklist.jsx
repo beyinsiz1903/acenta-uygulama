@@ -42,7 +42,7 @@ export default function ActivationChecklist() {
             <span className="text-blue-600 font-bold text-sm">{pct}%</span>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">Aktivasyon Kontrol Listesi</h3>
+            <h3 className="text-sm font-semibold text-gray-900">Başlangıç Adımları</h3>
             <p className="text-xs text-gray-500">{done}/{total} tamamlandi</p>
           </div>
         </div>

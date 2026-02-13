@@ -6,7 +6,6 @@ from fastapi import APIRouter, Depends, Query, Request
 
 from app.auth import get_current_user, require_roles
 from app.config import API_PREFIX
-from app.context.org_context import get_current_org
 from app.db import get_db
 from app.errors import AppError
 from app.schemas_ops_incidents import (

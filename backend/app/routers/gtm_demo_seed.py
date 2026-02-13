@@ -297,7 +297,7 @@ async def seed_demo_data(
     body: DemoSeedRequest,
     request: Request,
     db=Depends(get_db),
-    user=Depends(require_roles(["super_admin", "tenant_admin"])),
+    user=Depends(require_roles(["super_admin", "tenant_admin", "admin"])),
 ):
     """1-click demo data seeder. Tenant-scoped, idempotent."""
     user_id = user.get("id") or user.get("_id") or user.get("email")

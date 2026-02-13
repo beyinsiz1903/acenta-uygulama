@@ -278,6 +278,82 @@ class BugFixTester:
                 except:
                     self.add_result("B2B Listings Admin Access", "PASS", f"Admin access allowed (status: {response.status_code})")
 
+    # ======== BUG FIX: INCIDENTS 404 FIX ========
+    
+    def test_incidents_endpoint_no_404(self):
+        """Test: GET /api/admin/ops/incidents should NOT return 404 for admin users"""
+        self.log("=== BUG FIX: INCIDENTS PAGE 404 FIX ===")
+        
+        if not self.admin_token:
+            self.add_result("Incidents Endpoint Access", "SKIP", "No admin token available")
+            return
+        
+        response = self.request("GET", "/admin/ops/incidents", 
+                               headers={"Authorization": f"Bearer {self.admin_token}"})
+        
+        if response.status_code == 404:
+            self.add_result("Incidents Endpoint Access", "FAIL", "Still returns 404 - incidents bug not fixed")
+        elif response.status_code == 401:
+            self.add_result("Incidents Endpoint Access", "FAIL", "Returns 401 - auth token may be invalid")
+        elif response.status_code == 403:
+            try:
+                data = response.json()
+                error_detail = data.get("detail", "")
+                self.add_result("Incidents Endpoint Access", "FAIL", f"Returns 403: {error_detail}")
+            except:
+                self.add_result("Incidents Endpoint Access", "FAIL", "Returns 403 for admin user")
+        elif response.status_code == 200:
+            try:
+                data = response.json()
+                total = data.get("total", 0)
+                items = data.get("items", [])
+                self.add_result("Incidents Endpoint Access", "PASS", f"Returns 200 with {total} incidents, {len(items)} items - 404 bug fixed!")
+            except:
+                self.add_result("Incidents Endpoint Access", "PASS", "Returns 200 OK - 404 bug fixed!")
+        else:
+            # Other status codes are acceptable as long as it's not 404
+            self.add_result("Incidents Endpoint Access", "PASS", f"Returns {response.status_code} (not 404) - bug appears fixed")
+
+    def test_incidents_endpoint_without_auth(self):
+        """Test: GET /api/admin/ops/incidents should return 401 without auth token"""
+        self.log("=== INCIDENTS AUTH GUARD TEST ===")
+        
+        response = self.request("GET", "/admin/ops/incidents", expect_status=401)
+        
+        if response.status_code == 401:
+            self.add_result("Incidents Auth Guard", "PASS", "Returns 401 without auth token (auth guard working)")
+        else:
+            self.add_result("Incidents Auth Guard", "FAIL", f"Expected 401, got {response.status_code}")
+
+    def test_voucher_endpoint_behavior(self):
+        """Test: GET /api/reservations/{id}/voucher behavior (expects 401 without auth)"""
+        self.log("=== VOUCHER ENDPOINT AUTH TEST ===")
+        
+        # Test without auth - should return 401
+        response = self.request("GET", "/reservations/test_id/voucher", expect_status=401)
+        
+        if response.status_code == 401:
+            self.add_result("Voucher Auth Required", "PASS", "Voucher endpoint requires auth as expected")
+        else:
+            self.add_result("Voucher Auth Required", "FAIL", f"Expected 401, got {response.status_code}")
+        
+        # Test with auth - should return HTML content or 404
+        if self.auth_token:
+            response = self.request("GET", "/reservations/demo_res_0_abc/voucher", 
+                                   headers=self.get_auth_headers())
+            
+            if response.status_code in [200, 404]:
+                if response.status_code == 200:
+                    content_type = response.headers.get('content-type', '')
+                    if 'text/html' in content_type:
+                        self.add_result("Voucher With Auth", "PASS", "Returns HTML content with auth token")
+                    else:
+                        self.add_result("Voucher With Auth", "INFO", f"Returns 200 but content-type: {content_type}")
+                else:
+                    self.add_result("Voucher With Auth", "PASS", "Returns 404 for non-existent reservation (expected)")
+            else:
+                self.add_result("Voucher With Auth", "INFO", f"With auth token returns {response.status_code}")
+
     # ======== BUG FIX 3: AGENCY AVAILABILITY AUTH FIX ========
     
     def test_agency_availability_admin_access(self):

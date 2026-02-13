@@ -230,14 +230,14 @@ function InboxPage() {
           {threadsLoading && (
             <div className="p-4 flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Inbox yükleniyor...
+              Gelen kutusu yükleniyor...
             </div>
           )}
 
           {!threadsLoading && threadsError && (
             <div className="p-4">
               <ErrorState
-                title="Inbox yüklenemedi"
+                title="Gelen kutusu yüklenemedi"
                 description={threadsError}
                 onRetry={() => loadThreads()}
               />

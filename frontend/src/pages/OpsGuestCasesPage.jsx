@@ -327,7 +327,7 @@ function OpsGuestCasesPage() {
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-4">
       <PageHeader
-        title="Case Yönetimi"
+        title="Talep Yönetimi"
         subtitle="Tüm kaynaklardan (guest_portal/ops_panel/system) gelen caseleri tek ekranda yönetin."
         icon={<Filter className="h-6 w-6 text-muted-foreground" />}
         actions={

@@ -430,7 +430,7 @@ class BugFixTester:
 
 def main():
     """Main function"""
-    tester = AIAssistantTester()
+    tester = BugFixTester()
     
     try:
         success = tester.run_all_tests()
@@ -442,7 +442,7 @@ def main():
         elif not success:
             sys.exit(2)
         else:
-            print("\n🎉 All AI Assistant API tests completed successfully!")
+            print("\n🎉 All bug fix tests completed successfully!")
             sys.exit(0)
             
     except Exception as e:

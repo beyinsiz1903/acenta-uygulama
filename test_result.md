@@ -502,7 +502,7 @@ metadata:
   created_by: "main_agent"
   version: "21.0"
   test_sequence: 29
-  run_ui: false
+  run_ui: true
 
 test_plan:
   current_focus: ["bug_fixes_ops_tasks_ui"]

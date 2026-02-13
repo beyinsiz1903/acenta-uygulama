@@ -428,6 +428,13 @@ class BugFixTester:
             print("⚠️ Authentication failed - cannot test bug fixes")
             return False
             
+        # Bug Fix: Incidents 404 Fix
+        self.test_incidents_endpoint_no_404()
+        self.test_incidents_endpoint_without_auth()
+        
+        # Bug Fix: Voucher Auth Behavior
+        self.test_voucher_endpoint_behavior()
+        
         # Bug Fix 1: Reservation 400 Fix (4 tests)
         self.test_reservation_string_id_404_not_400()
         self.test_reservation_invalid_id_404_not_400()

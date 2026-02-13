@@ -345,11 +345,11 @@ export default function AdminSettlementsPage() {
               </p>
               <ul className="list-disc list-inside space-y-1">
                 <li>
-                  Muhasebe takımı: Ön muhasebe kayıtlarınızdan önce settlement matematiğini doya doya gördüğünüz yer.
+                  Muhasebe: Ödeme işlemlerinin detaylı dökümünü ve hesaplamalarını bu sayfadan takip edebilirsiniz.
                 </li>
                 <li>
-                  Pilot KPI: Admin / pilot dashboard içinde <strong>agenciesViewedSettlements</strong> ve
-                  <strong>hotelsViewedSettlements</strong> metrikleri bu sayfanın audit loglarına dayanır.
+                  Bilgi: Mutabakat sayfasının kullanım verileri
+                  yönetim panelinde izlenebilir.
                 </li>
                 <li>
                   CSV dışa aktarım: Muhasebe ekibine Excel/ERP import için aynı veri setini götürmek içindir.

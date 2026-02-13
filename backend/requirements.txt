@@ -110,5 +110,4 @@ openpyxl>=3.1.0
 aiofiles>=23.0.0
 google-auth>=2.0.0
 google-api-python-client>=2.0.0
---extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
-emergentintegrations
+# emergentintegrations - Emergent platform tarafından otomatik sağlanır, CI'da gerekli değil

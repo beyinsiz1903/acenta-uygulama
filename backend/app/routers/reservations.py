@@ -14,11 +14,24 @@ from app.utils import serialize_doc, to_object_id
 router = APIRouter(prefix="/reservations", tags=["reservations"])
 
 
-def _oid_or_400(id_str: str) -> ObjectId:
+def _oid_or_none(id_str: str):
+    """Try converting to ObjectId; return None if not a valid ObjectId."""
     try:
         return to_object_id(id_str)
     except Exception:
-        raise HTTPException(status_code=400, detail="Geçersiz id")
+        return None
+
+
+async def _find_reservation(db, org_id: str, reservation_id: str):
+    """Find reservation by _id (supports both ObjectId and string IDs)."""
+    oid = _oid_or_none(reservation_id)
+    if oid:
+        doc = await db.reservations.find_one({"organization_id": org_id, "_id": oid})
+        if doc:
+            return doc
+    # Fallback: try string _id (e.g., demo_seed IDs like "demo_res_0_abc...")
+    doc = await db.reservations.find_one({"organization_id": org_id, "_id": reservation_id})
+    return doc
 
 
 @router.post("/reserve", dependencies=[Depends(get_current_user)])

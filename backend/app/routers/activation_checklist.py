@@ -27,7 +27,7 @@ DEFAULT_CHECKLIST_ITEMS = [
     {"key": "create_reservation", "label": "İlk rezervasyon gir", "completed_at": None},
     {"key": "record_payment", "label": "İlk ödeme kaydını oluştur", "completed_at": None},
     {"key": "view_report", "label": "İlk raporu görüntüle", "completed_at": None},
-    {"key": "open_deal", "label": "İlk pipeline deal aç", "completed_at": None},
+    {"key": "open_deal", "label": "İlk satış fırsatını oluştur", "completed_at": None},
     {"key": "assign_task", "label": "İlk görev ata", "completed_at": None},
 ]
 

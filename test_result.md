@@ -552,10 +552,48 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus: []
+  current_focus: ["voucher_auth_fix", "talep_yonetimi_encoding_fix", "olaylar_404_fix"]
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+
+# New Bug Fixes (Session 2)
+new_bug_fixes:
+  - task: "Voucher screen auth error fix"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/ReservationsPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Fixed voucher opening in new tab without auth token. Now fetches voucher HTML via authenticated API call and displays using blob URL."
+
+  - task: "OpsGuestCasesPage Turkish character encoding fix"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/OpsGuestCasesPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Fixed corrupted Turkish characters: Açık, Kapalı, sıfırla, Yükleniyor, Gösterilecek, Seçtiğiniz, bulunamadı, Tümü, İptal, İade, Oluşturulma, kayıt, Önceki"
+
+  - task: "Olaylar (Incidents) page 404 fix"
+    implemented: true
+    working: true
+    file: "backend/app/routers/ops_incidents.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Fixed 404 error caused by get_current_org dependency looking up organizations collection. Changed to use user.get('organization_id') directly, matching pattern used by ops_cases.py and other working endpoints. Also added 'admin' role to allowed roles."
 
 # Bug Fix Testing Tasks
 bug_fixes_backend:

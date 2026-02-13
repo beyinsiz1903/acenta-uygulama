@@ -64,10 +64,10 @@ export default function AdminB2BFunnelPage() {
         <CardHeader className="flex items-center justify-between gap-2">
           <div>
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
-              <ActivityIcon className="h-4 w-4" /> B2B Funnel
+              <ActivityIcon className="h-4 w-4" /> Satış Hunisi
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
-              Bayi iframe / partner kanal üzerinden gelen public quote trafiğini görüntüler.
+              Bayiler ve iş ortakları üzerinden gelen teklif trafiğini görüntüler.
             </p>
           </div>
           {hasData && (

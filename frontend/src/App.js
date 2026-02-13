@@ -175,6 +175,8 @@ import CrmEventsPage from "./pages/crm/CrmEventsPage";
 import CrmPipelinePage from "./pages/crm/CrmPipelinePage";
 import CrmDuplicateCustomersPage from "./pages/crm/CrmDuplicateCustomersPage";
 import OpsTasksPage from "./pages/OpsTasksPage";
+import ToursListPage from "./pages/ToursListPage";
+import TourDetailPage from "./pages/TourDetailPage";
 
 import HotelBookingsPage from "./pages/HotelBookingsPage";
 import HotelStopSellPage from "./pages/HotelStopSellPage";

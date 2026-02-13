@@ -148,8 +148,7 @@ async def cancel(reservation_id: str, user=Depends(get_current_user)):
 @router.get("/{reservation_id}/voucher", dependencies=[Depends(get_current_user)])
 async def voucher(reservation_id: str, user=Depends(get_current_user)):
     db = await get_db()
-    res_oid = _oid_or_400(reservation_id)
-    res = await db.reservations.find_one({"organization_id": user["organization_id"], "_id": res_oid})
+    res = await _find_reservation(db, user["organization_id"], reservation_id)
     if not res:
         raise HTTPException(status_code=404, detail="Rezervasyon bulunamadı")
 

@@ -130,10 +130,11 @@ async def get_incident_detail(
     include_supplier_health: bool = Query(True),
     db=Depends(get_db),
     user=Depends(get_current_user),
-    org=Depends(get_current_org),
-    _roles=Depends(require_roles(["agency_admin", "super_admin"])),
+    _roles=Depends(require_roles(["agency_admin", "super_admin", "admin"])),
 ) -> OpsIncidentDetailOut:
-    organization_id: str = org["id"]
+    organization_id: str = user.get("organization_id", "")
+    if not organization_id:
+        raise AppError(400, "invalid_user_context", "User is missing organization_id")
     doc = await db.ops_incidents.find_one(
         {"organization_id": organization_id, "incident_id": incident_id}, {"_id": 0}
     )

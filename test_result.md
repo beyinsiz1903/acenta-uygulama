@@ -505,7 +505,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: ["bug_fixes_reservation_400", "bug_fixes_b2b_403", "bug_fixes_availability_auth", "bug_fixes_ops_tasks_ui"]
+  current_focus: ["bug_fixes_ops_tasks_ui"]
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

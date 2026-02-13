@@ -510,6 +510,80 @@ test_plan:
   test_all: false
   test_priority: "high_first"
 
+# Bug Fix Testing Tasks
+bug_fixes_backend:
+  - task: "GET /api/reservations/{id} - 400 to 404 fix for string IDs"
+    implemented: true
+    working: "NA"
+    file: "backend/app/routers/reservations.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "✅ ENDPOINT ACCESSIBLE: Auth guards working properly (401 without token). Code review shows _find_reservation function supports both ObjectId and string IDs with proper 404 handling. Cannot test with auth token due to bcrypt compatibility issue causing 500 errors on login endpoint."
+
+  - task: "POST /api/reservations/{id}/confirm - 400 to 404 fix for string IDs"
+    implemented: true
+    working: "NA"
+    file: "backend/app/routers/reservations.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "✅ ENDPOINT ACCESSIBLE: Auth guards working properly (401 without token). Code uses set_reservation_status service which calls _find_reservation_by_id supporting both ObjectId and string IDs. Cannot test authenticated behavior due to login endpoint errors."
+
+  - task: "POST /api/reservations/{id}/cancel - 400 to 404 fix for string IDs"
+    implemented: true
+    working: "NA"
+    file: "backend/app/routers/reservations.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "✅ ENDPOINT ACCESSIBLE: Auth guards working properly (401 without token). Code uses set_reservation_status service which calls _find_reservation_by_id supporting both ObjectId and string IDs. Cannot test authenticated behavior due to login endpoint errors."
+
+  - task: "GET /api/b2b/listings/my - 403 to 200 fix for admin roles"
+    implemented: true
+    working: "NA"
+    file: "backend/app/routers/b2b_exchange.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "✅ ENDPOINT ACCESSIBLE: Auth guards working properly (401 without token). Code review shows deps_b2b.py ALLOWED_B2B_ROLES includes admin and super_admin roles. Endpoint should allow admin users. Cannot test authenticated behavior due to login endpoint errors."
+
+  - task: "GET /api/agency/availability - 403 to 200 fix for admin roles"
+    implemented: true
+    working: "NA"
+    file: "backend/app/routers/agency_availability.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "✅ ENDPOINT ACCESSIBLE: Auth guards working properly (401 without token). Code review shows AgencyDep = require_roles(['agency_admin', 'agency_agent', 'admin', 'super_admin']) - admin roles are included. Cannot test authenticated behavior due to login endpoint errors."
+
+  - task: "Authentication System - bcrypt compatibility issue"
+    implemented: true
+    working: false
+    file: "backend/app/auth.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ CRITICAL ISSUE: Login endpoint returning 500 errors due to bcrypt compatibility issue. Error: 'module bcrypt has no attribute __about__'. This prevents testing of authenticated endpoints. Signup works but login fails with internal server error causing Cloudflare 520 responses."
+
 agent_communication:
     - agent: "main"
       message: "Bug fixes implemented: 1) Reservation 400 fix - reservations.py and services/reservations.py now handle both ObjectId and string _id (demo seed uses string IDs like 'demo_res_0_abc'), 2) B2B 403 fix - deps_b2b.py ALLOWED_B2B_ROLES now includes super_admin and admin, 3) Availability auth fix - agency routes in App.js now allow admin/super_admin roles, agency_availability.py and agency_writeback.py also updated, 4) OpsTasksPage text overlap fix - changed from grid-cols-9 to proper HTML table with column widths and text truncation. Please test reservation detail endpoint, B2B listings endpoint, and verify no regressions."
@@ -525,5 +599,7 @@ agent_communication:
       message: "✅ AI ASSISTANT API TESTED: All 4 AI Assistant endpoints properly implemented! 1) Auth guards working perfectly (all return 401 without token), 2) Invalid tokens also return 401 (proper validation), 3) Code review shows excellent implementation: emergentintegrations.llm.chat integration, data gathering service, Turkish language support, chat history persistence, session management, 4) EMERGENT_LLM_KEY properly configured. **LIMITATION**: Cannot test actual LLM functionality due to authentication rate limiting (retry_after_seconds: 300), but endpoints appear production-ready based on code structure and auth behavior."
     - agent: "testing"
       message: "✅ AI ASSISTANT UI TESTED: The AI Assistant frontend functionality is fully implemented and working correctly. Successfully tested: 1) Floating AI button with pulse indicator renders correctly at bottom-right, 2) Panel opens showing 'Booking AI' header and two tabs, 3) Chat works - messages sent receive proper responses, 4) Briefing tab shows stats cards and AI-generated briefing text, 5) New session button works to reset conversation, 6) Close button works. The component integrates properly with all backend endpoints. The application correctly implements a hybrid AI assistant with both chat and briefing capabilities using Gemini 2.5 Flash."
+    - agent: "testing"
+      message: "⚠️ BUG FIX TESTING PARTIALLY COMPLETE: Tested 3 specific bug fixes for acenta booking system. **AUTHENTICATION ISSUE BLOCKING FULL TESTING**: Login endpoint has bcrypt compatibility error causing 500 internal server errors. **VERIFIED BY CODE REVIEW**: 1) Reservation 400→404 fix implemented correctly in reservations.py with _find_reservation_by_id supporting both ObjectId and string IDs, 2) B2B 403→200 fix implemented with admin/super_admin added to ALLOWED_B2B_ROLES in deps_b2b.py, 3) Agency availability 403→200 fix implemented with admin roles in agency_availability.py. All target endpoints are accessible and have proper auth guards (401 without token). **CRITICAL**: Fix bcrypt dependency issue to enable full authenticated testing."
     - agent: "testing"
       message: "✅ BUG FIXES FULLY TESTED & VERIFIED: All 3 critical bug fixes are working correctly! **BUG FIX 1 - Reservation 400 Fix**: All reservation endpoints (GET, /confirm, /cancel) now return 404 (not 400) for string/invalid IDs like 'demo_res_test_123'. Properly handles both ObjectId and string _id values. **BUG FIX 2 - B2B 403 Fix**: B2B endpoints now accept admin/super_admin roles. GET /api/b2b/listings/my no longer returns 403 'B2B access only' for admin users. **BUG FIX 3 - Agency Availability Auth Fix**: Both GET /api/agency/availability and /changes endpoints accept admin/super_admin roles, return 200 with data instead of 403. All bug fixes tested with admin@acenta.test (super_admin role). No regressions detected."

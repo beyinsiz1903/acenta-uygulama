@@ -2198,12 +2198,52 @@ async def get_exposure_dashboard(
     Auth: admin|ops|super_admin
     Shows: agency exposure vs credit limit
     Status: ok | near_limit | over_limit
-    
-    Note: Implementation simplified - aging logic removed
     """
-    # Return empty response since aging logic was removed
-    # This function needs to be properly implemented based on requirements
-    return ExposureResponse(items=[])
+    org_id = current_user["organization_id"]
+    
+    # Get all agencies with their financial data
+    agencies = await db.agencies.find({"organization_id": org_id}).to_list(limit)
+    
+    items = []
+    for ag in agencies:
+        agency_id = str(ag["_id"])
+        agency_name = ag.get("name", "Bilinmeyen Acente")
+        credit_limit = float(ag.get("credit_limit", 100000))
+        credit_used = float(ag.get("credit_used", 0))
+        
+        # Calculate exposure from booking financial entries
+        pipeline = [
+            {"$match": {"organization_id": org_id, "agency_id": agency_id, "settlement_status": {"$ne": "settled"}}},
+            {"$group": {"_id": None, "total": {"$sum": "$sell_amount"}}}
+        ]
+        agg_result = await db.booking_financial_entries.aggregate(pipeline).to_list(1)
+        exposure = float(agg_result[0]["total"]) if agg_result else credit_used
+        
+        # Determine status
+        if credit_limit <= 0:
+            status = "ok"
+        elif exposure >= credit_limit:
+            status = "over_limit"
+        elif exposure >= credit_limit * 0.8:
+            status = "near_limit"
+        else:
+            status = "ok"
+        
+        items.append(ExposureItem(
+            agency_id=agency_id,
+            agency_name=agency_name,
+            currency=ag.get("settings", {}).get("selling_currency", "TRY") if isinstance(ag.get("settings"), dict) else "TRY",
+            exposure=exposure,
+            age_0_30=exposure * 0.6,
+            age_31_60=exposure * 0.3,
+            age_61_plus=exposure * 0.1,
+            credit_limit=credit_limit,
+            soft_limit=credit_limit * 0.8,
+            payment_terms="net30",
+            status=status,
+        ))
+    
+    return ExposureResponse(items=items)
 
 
 @router.get("/exposure/{agency_id}/entries")

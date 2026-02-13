@@ -134,10 +134,19 @@ async def get_onboarding_state(user=Depends(get_current_user)):
     if not tenant_id:
         # Try to resolve tenant from org
         db = await get_db()
-        tenant = await db.tenants.find_one({"organization_id": user["organization_id"]})
+        org_id = user.get("organization_id")
+        tenant = await db.tenants.find_one({"organization_id": org_id})
+        if not tenant:
+            from bson import ObjectId
+            from bson.errors import InvalidId
+            try:
+                tenant = await db.tenants.find_one({"_id": ObjectId(org_id)})
+            except (InvalidId, Exception):
+                tenant = await db.tenants.find_one({"_id": org_id})
         tenant_id = str(tenant["_id"]) if tenant else None
     if not tenant_id:
-        raise AppError(404, "tenant_not_found", "Tenant bulunamadı.", {})
+        # Graceful fallback for missing tenant
+        return {"completed": True, "steps": {}, "trial": None}
 
     state = await onboarding_service.get_state(tenant_id)
     if not state:

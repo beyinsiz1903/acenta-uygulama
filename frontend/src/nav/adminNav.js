@@ -12,7 +12,7 @@ export const adminNav = [
       { label: "Bağlantı Yönetimi", path: "/app/admin/links" },
       { label: "CMS Sayfaları", path: "/app/admin/cms/pages" },
       { label: "Kampanyalar", path: "/app/admin/campaigns" },
-      { label: "Partnerler", path: "/app/admin/partners" },
+      { label: "İş Ortakları", path: "/app/admin/partners" },
       { label: "B2B Pazar Yeri", path: "/app/admin/b2b/marketplace" },
       { label: "Katalog", path: "/app/admin/catalog" },
       { label: "Otel Kataloğu", path: "/app/admin/catalog/hotels" },

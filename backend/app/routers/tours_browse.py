@@ -83,10 +83,10 @@ async def list_tours(
     items = [_tour_to_dict(doc) for doc in docs]
 
     # Get unique categories and destinations for filter dropdowns
-    all_cats_cursor = db.tours.distinct("category", {"organization_id": org_id, "status": "active"})
-    all_dests_cursor = db.tours.distinct("destination", {"organization_id": org_id, "status": "active"})
-    categories = [c for c in (await all_cats_cursor if hasattr(all_cats_cursor, '__await__') else all_cats_cursor) if c]
-    destinations = [d for d in (await all_dests_cursor if hasattr(all_dests_cursor, '__await__') else all_dests_cursor) if d]
+    categories_raw = await db.tours.distinct("category", {"organization_id": org_id, "status": "active"})
+    destinations_raw = await db.tours.distinct("destination", {"organization_id": org_id, "status": "active"})
+    categories = [c for c in categories_raw if c]
+    destinations = [d for d in destinations_raw if d]
 
     return JSONResponse(
         status_code=200,

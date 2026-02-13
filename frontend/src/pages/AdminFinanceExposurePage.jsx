@@ -71,8 +71,8 @@ function ExposureTable({ items, filter, statusFilter, onRowClick }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-xs">Agency</TableHead>
-            <TableHead className="text-xs text-right">Exposure</TableHead>
+            <TableHead className="text-xs">Acente</TableHead>
+            <TableHead className="text-xs text-right">Açık Bakiye</TableHead>
             <TableHead className="text-xs text-right">0–30</TableHead>
             <TableHead className="text-xs text-right">31–60</TableHead>
             <TableHead className="text-xs text-right">61+</TableHead>

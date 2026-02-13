@@ -92,12 +92,18 @@ async def list_reservations(status: str | None = None, q: str | None = None, use
 @router.get("/{reservation_id}", dependencies=[Depends(get_current_user)])
 async def get_reservation(reservation_id: str, user=Depends(get_current_user)):
     db = await get_db()
-    res_oid = _oid_or_400(reservation_id)
-    doc = await db.reservations.find_one({"organization_id": user["organization_id"], "_id": res_oid})
+    doc = await _find_reservation(db, user["organization_id"], reservation_id)
     if not doc:
         raise HTTPException(status_code=404, detail="Rezervasyon bulunamadı")
 
-    payments = await db.payments.find({"organization_id": user["organization_id"], "reservation_id": res_oid}).sort("created_at", -1).to_list(200)
+    # Query payments by both ObjectId and string reservation_id
+    oid = _oid_or_none(reservation_id)
+    payment_query = {"organization_id": user["organization_id"]}
+    if oid:
+        payment_query["reservation_id"] = {"$in": [oid, reservation_id]}
+    else:
+        payment_query["reservation_id"] = reservation_id
+    payments = await db.payments.find(payment_query).sort("created_at", -1).to_list(200)
     out = serialize_doc(doc)
     out["payments"] = [serialize_doc(p) for p in payments]
     out["due_amount"] = round(float(out.get("total_price") or 0) - float(out.get("paid_amount") or 0), 2)

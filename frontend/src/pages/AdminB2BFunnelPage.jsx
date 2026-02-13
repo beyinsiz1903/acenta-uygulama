@@ -56,7 +56,7 @@ export default function AdminB2BFunnelPage() {
       <div className="space-y-1">
         <h1 className="text-2xl font-bold text-foreground">Satış Hunisi Özeti</h1>
         <p className="text-sm text-muted-foreground">
-          Son 30 gün içinde partner (bayi) bazında oluşan public funnel tekliflerinin kısa finansal özetini gösterir.
+          Son 30 gün içinde bayiler üzerinden gelen teklif ve satışların finansal özetini gösterir.
         </p>
       </div>
 

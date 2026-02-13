@@ -387,7 +387,7 @@ function AdminFinanceExposurePageInner() {
           {loading && items.length === 0 ? (
             <div className="text-xs text-muted-foreground">Yükleniyor...</div>
           ) : error ? (
-            <ErrorState title="Exposure yüklenemedi" description={error} />
+            <ErrorState title="Bakiye bilgisi yüklenemedi" description={error} />
           ) : (
             <ExposureTable
               items={items}

@@ -303,6 +303,42 @@ backend:
           agent: "testing"
           comment: "✅ SERVICE IMPLEMENTED: Comprehensive write-back service with idempotent queue, event handlers, retry logic, and graceful fallback when not configured."
 
+  - task: "Bug Fix: Reservation 400 to 404 for String IDs"
+    implemented: true
+    working: true
+    file: "backend/app/routers/reservations.py,backend/app/services/reservations.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ BUG FIX VERIFIED: All reservation endpoints now return 404 (not 400) for string/invalid IDs. Tested: GET /reservations/{string_id}, POST /reservations/{string_id}/confirm, POST /reservations/{string_id}/cancel. The _find_reservation helper correctly handles both ObjectId and string _id values, with proper fallback for demo seed data like 'demo_res_0_abc'."
+
+  - task: "Bug Fix: B2B 403 to Allow Admin Roles"
+    implemented: true
+    working: true
+    file: "backend/app/security/deps_b2b.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ BUG FIX VERIFIED: B2B endpoints now accept admin and super_admin roles. ALLOWED_B2B_ROLES updated to include ['agency', 'b2b', 'agency_admin', 'agency_agent', 'b2b_agent', 'super_admin', 'admin']. Tested GET /api/b2b/listings/my - no longer returns 403 'B2B access only' for admin users."
+
+  - task: "Bug Fix: Agency Availability Auth for Admin Roles"
+    implemented: true
+    working: true
+    file: "backend/app/routers/agency_availability.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ BUG FIX VERIFIED: Agency availability endpoints now accept admin and super_admin roles. AgencyDep dependency updated to require ['agency_admin', 'agency_agent', 'admin', 'super_admin']. Tested: GET /api/agency/availability returns 200 with 0 items, GET /api/agency/availability/changes returns 200 with 0 items. Admin users can now access these endpoints without 403 errors."
+
 frontend:
   - task: "Portfolio Sync Page + Write-Back Panel"
     implemented: true

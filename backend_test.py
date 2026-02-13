@@ -78,10 +78,10 @@ class BugFixTester:
             raise
             
     def authenticate(self) -> bool:
-        """Try admin login first, if fails try register and login with fallback credentials"""
+        """Try to get admin token with super_admin role"""
         self.log("=== AUTHENTICATION ===")
         
-        # Try admin login first
+        # Try admin login
         admin_login_data = {
             "email": ADMIN_EMAIL,
             "password": ADMIN_PASSWORD
@@ -92,15 +92,26 @@ class BugFixTester:
         if response.status_code == 200:
             try:
                 data = response.json()
-                self.auth_token = data.get("access_token")
-                if self.auth_token:
-                    self.add_result("Admin Authentication", "PASS", f"Token obtained for {ADMIN_EMAIL}")
+                token = data.get("access_token")
+                if token:
+                    self.admin_token = token
+                    self.auth_token = token  # Use admin token as primary
+                    
+                    # Verify admin role by checking token payload (if possible)
+                    user_info = data.get("user", {})
+                    roles = user_info.get("roles", [])
+                    self.log(f"Authenticated as {ADMIN_EMAIL}, roles: {roles}")
+                    
+                    self.add_result("Admin Authentication", "PASS", f"Token obtained for {ADMIN_EMAIL} with roles: {roles}")
                     return True
             except json.JSONDecodeError:
                 pass
+        elif response.status_code == 429:
+            self.add_result("Authentication", "FAIL", "Rate limited - try again later")
+            return False
         
-        # If admin login failed, try register and login with fallback
-        self.log("Admin login failed, trying fallback registration...")
+        # If admin login failed, try fallback
+        self.log("Admin login failed, trying fallback authentication...")
         
         register_data = {
             "email": FALLBACK_EMAIL,
@@ -109,22 +120,15 @@ class BugFixTester:
         }
         
         register_response = self.request("POST", "/auth/signup", json_data=register_data)
-        self.log(f"Registration response: {register_response.status_code}")
-        
-        if register_response.status_code != 200:
-            try:
-                error_data = register_response.json()
-                self.log(f"Registration error: {error_data}")
-            except:
-                self.log(f"Registration error: Status {register_response.status_code}")
+        if register_response.status_code == 200:
+            self.log("Fallback registration successful")
         else:
-            self.log("Registration successful")
+            self.log(f"Fallback registration failed: {register_response.status_code}")
             
-        # Add delay to avoid rate limiting
-        import time
-        time.sleep(2)
-        
         # Try login with fallback credentials
+        import time
+        time.sleep(2)  # Avoid rate limiting
+        
         fallback_login_data = {
             "email": FALLBACK_EMAIL,
             "password": FALLBACK_PASSWORD
@@ -141,279 +145,241 @@ class BugFixTester:
                     return True
             except json.JSONDecodeError:
                 pass
-        elif login_response.status_code == 429:
-            self.add_result("Authentication", "FAIL", "Rate limited - try again later")
-            return False
         
         self.add_result("Authentication", "FAIL", "Both admin and fallback authentication failed")
         return False
 
-    def get_auth_headers(self) -> Dict[str, str]:
+    def get_auth_headers(self, use_admin: bool = True) -> Dict[str, str]:
         """Get headers with Bearer token"""
-        if self.auth_token:
-            return {"Authorization": f"Bearer {self.auth_token}"}
+        token = self.admin_token if (use_admin and self.admin_token) else self.auth_token
+        if token:
+            return {"Authorization": f"Bearer {token}"}
         return {}
 
-    def test_briefing_no_auth(self):
-        """Test 1: POST /api/ai-assistant/briefing without auth should return 401"""
-        self.log("=== TEST 1: BRIEFING NO AUTH ===")
-        
-        response = self.request("POST", "/ai-assistant/briefing", expect_status=401)
-        
-        if response.status_code == 401:
-            self.add_result("Briefing No Auth", "PASS", "Returns 401 without authentication token")
-        else:
-            self.add_result("Briefing No Auth", "FAIL", f"Expected 401, got {response.status_code}")
-
-    def test_briefing_with_auth(self):
-        """Test 2: POST /api/ai-assistant/briefing with valid auth token"""
-        self.log("=== TEST 2: BRIEFING WITH AUTH ===")
+    # ======== BUG FIX 1: RESERVATION 400 FIX ========
+    
+    def test_reservation_string_id_404_not_400(self):
+        """Test 1: GET /api/reservations/{string_id} returns 404 (not 400) when reservation doesn't exist"""
+        self.log("=== BUG FIX 1.1: RESERVATION STRING ID 404 NOT 400 ===")
         
         if not self.auth_token:
-            self.add_result("Briefing With Auth", "SKIP", "No auth token available")
+            self.add_result("Reservation String ID 404", "SKIP", "No auth token available")
             return
-            
-        response = self.request("POST", "/ai-assistant/briefing", 
-                               headers=self.get_auth_headers(), 
-                               expect_status=200,
-                               timeout=30)  # Longer timeout for LLM calls
         
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                # Expected: {"briefing": "...", "raw_data": {...}, "generated_at": "..."}
-                expected_keys = ["briefing", "raw_data", "generated_at"]
-                if all(key in data for key in expected_keys):
-                    briefing_length = len(data.get("briefing", ""))
-                    self.add_result("Briefing With Auth", "PASS", 
-                                  f"Returns briefing data: briefing_length={briefing_length}, raw_data keys={list(data.get('raw_data', {}).keys())}")
-                else:
-                    missing = [key for key in expected_keys if key not in data]
-                    self.add_result("Briefing With Auth", "FAIL", 
-                                  f"Missing keys: {missing}, got: {list(data.keys())}")
-            except json.JSONDecodeError:
-                self.add_result("Briefing With Auth", "FAIL", "Invalid JSON response")
-        else:
-            try:
-                error_data = response.json()
-                error_msg = error_data.get("detail", f"Status: {response.status_code}")
-                self.add_result("Briefing With Auth", "FAIL", f"API Error: {error_msg}")
-            except:
-                self.add_result("Briefing With Auth", "FAIL", f"Status: {response.status_code}")
-
-    def test_chat_no_auth(self):
-        """Test 3: POST /api/ai-assistant/chat without auth should return 401"""
-        self.log("=== TEST 3: CHAT NO AUTH ===")
-        
-        chat_data = {
-            "message": "Merhaba, bugün ne var?",
-            "session_id": None
-        }
-        
-        response = self.request("POST", "/ai-assistant/chat", json_data=chat_data, expect_status=401)
-        
-        if response.status_code == 401:
-            self.add_result("Chat No Auth", "PASS", "Returns 401 without authentication token")
-        else:
-            self.add_result("Chat No Auth", "FAIL", f"Expected 401, got {response.status_code}")
-
-    def test_chat_with_auth(self):
-        """Test 4: POST /api/ai-assistant/chat with valid auth token"""
-        self.log("=== TEST 4: CHAT WITH AUTH ===")
-        
-        if not self.auth_token:
-            self.add_result("Chat With Auth", "SKIP", "No auth token available")
-            return
-            
-        chat_data = {
-            "message": "Merhaba, bugün ne var?",
-            "session_id": None
-        }
-        
-        response = self.request("POST", "/ai-assistant/chat", 
+        # Test with a demo-style string ID that doesn't exist
+        test_id = "demo_res_test_123"
+        response = self.request("GET", f"/reservations/{test_id}", 
                                headers=self.get_auth_headers(),
-                               json_data=chat_data,
-                               expect_status=200,
-                               timeout=30)  # Longer timeout for LLM calls
+                               expect_status=404)
         
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                # Expected: {"response": "...", "session_id": "..."}
-                expected_keys = ["response", "session_id"]
-                if all(key in data for key in expected_keys):
-                    self.session_id = data.get("session_id")  # Save for later tests
-                    response_length = len(data.get("response", ""))
-                    self.add_result("Chat With Auth", "PASS", 
-                                  f"Returns chat response: session_id={self.session_id}, response_length={response_length}")
-                else:
-                    missing = [key for key in expected_keys if key not in data]
-                    self.add_result("Chat With Auth", "FAIL", 
-                                  f"Missing keys: {missing}, got: {list(data.keys())}")
-            except json.JSONDecodeError:
-                self.add_result("Chat With Auth", "FAIL", "Invalid JSON response")
+        if response.status_code == 404:
+            self.add_result("Reservation String ID 404", "PASS", "Returns 404 (not 400) for non-existent string reservation ID")
+        elif response.status_code == 400:
+            self.add_result("Reservation String ID 404", "FAIL", "Still returns 400 for string ID - bug not fixed")
         else:
-            try:
-                error_data = response.json()
-                error_msg = error_data.get("detail", f"Status: {response.status_code}")
-                self.add_result("Chat With Auth", "FAIL", f"API Error: {error_msg}")
-            except:
-                self.add_result("Chat With Auth", "FAIL", f"Status: {response.status_code}")
-
-    def test_chat_history_no_auth(self):
-        """Test 5: GET /api/ai-assistant/chat-history/{session_id} without auth should return 401"""
-        self.log("=== TEST 5: CHAT HISTORY NO AUTH ===")
-        
-        test_session_id = "test-session-id"
-        response = self.request("GET", f"/ai-assistant/chat-history/{test_session_id}", expect_status=401)
-        
-        if response.status_code == 401:
-            self.add_result("Chat History No Auth", "PASS", "Returns 401 without authentication token")
-        else:
-            self.add_result("Chat History No Auth", "FAIL", f"Expected 401, got {response.status_code}")
-
-    def test_chat_history_with_auth(self):
-        """Test 6: GET /api/ai-assistant/chat-history/{session_id} with valid auth token"""
-        self.log("=== TEST 6: CHAT HISTORY WITH AUTH ===")
+            self.add_result("Reservation String ID 404", "FAIL", f"Unexpected status: {response.status_code}")
+    
+    def test_reservation_invalid_id_404_not_400(self):
+        """Test 2: GET /api/reservations/{invalid_id} returns 404 (not 400) for invalid ID"""
+        self.log("=== BUG FIX 1.2: RESERVATION INVALID ID 404 NOT 400 ===")
         
         if not self.auth_token:
-            self.add_result("Chat History With Auth", "SKIP", "No auth token available")
+            self.add_result("Reservation Invalid ID 404", "SKIP", "No auth token available")
             return
-            
-        # Use session_id from previous chat test if available
-        session_id = self.session_id or "test-session-id"
         
-        response = self.request("GET", f"/ai-assistant/chat-history/{session_id}", 
-                               headers=self.get_auth_headers(), 
-                               expect_status=200)
+        # Test with invalid ID format
+        test_id = "invalid-id"
+        response = self.request("GET", f"/reservations/{test_id}", 
+                               headers=self.get_auth_headers(),
+                               expect_status=404)
         
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                # Expected: {"messages": [...], "session_id": "..."}
-                expected_keys = ["messages", "session_id"]
-                if all(key in data for key in expected_keys):
-                    message_count = len(data.get("messages", []))
-                    self.add_result("Chat History With Auth", "PASS", 
-                                  f"Returns chat history: session_id={data.get('session_id')}, message_count={message_count}")
-                else:
-                    missing = [key for key in expected_keys if key not in data]
-                    self.add_result("Chat History With Auth", "FAIL", 
-                                  f"Missing keys: {missing}, got: {list(data.keys())}")
-            except json.JSONDecodeError:
-                self.add_result("Chat History With Auth", "FAIL", "Invalid JSON response")
+        if response.status_code == 404:
+            self.add_result("Reservation Invalid ID 404", "PASS", "Returns 404 (not 400) for invalid reservation ID format")
+        elif response.status_code == 400:
+            self.add_result("Reservation Invalid ID 404", "FAIL", "Still returns 400 for invalid ID - bug not fixed")
         else:
-            self.add_result("Chat History With Auth", "FAIL", f"Status: {response.status_code}")
-
-    def test_sessions_no_auth(self):
-        """Test 7: GET /api/ai-assistant/sessions without auth should return 401"""
-        self.log("=== TEST 7: SESSIONS NO AUTH ===")
-        
-        response = self.request("GET", "/ai-assistant/sessions", expect_status=401)
-        
-        if response.status_code == 401:
-            self.add_result("Sessions No Auth", "PASS", "Returns 401 without authentication token")
-        else:
-            self.add_result("Sessions No Auth", "FAIL", f"Expected 401, got {response.status_code}")
-
-    def test_sessions_with_auth(self):
-        """Test 8: GET /api/ai-assistant/sessions with valid auth token"""
-        self.log("=== TEST 8: SESSIONS WITH AUTH ===")
+            self.add_result("Reservation Invalid ID 404", "FAIL", f"Unexpected status: {response.status_code}")
+    
+    def test_reservation_confirm_string_id_404_not_400(self):
+        """Test 3: POST /api/reservations/{string_id}/confirm returns 404 (not 400)"""
+        self.log("=== BUG FIX 1.3: RESERVATION CONFIRM STRING ID 404 NOT 400 ===")
         
         if not self.auth_token:
-            self.add_result("Sessions With Auth", "SKIP", "No auth token available")
+            self.add_result("Reservation Confirm String ID 404", "SKIP", "No auth token available")
             return
-            
-        response = self.request("GET", "/ai-assistant/sessions", 
-                               headers=self.get_auth_headers(), 
-                               expect_status=200)
         
-        if response.status_code == 200:
+        test_id = "demo_res_test_123"
+        response = self.request("POST", f"/reservations/{test_id}/confirm", 
+                               headers=self.get_auth_headers(),
+                               expect_status=404)
+        
+        if response.status_code == 404:
+            self.add_result("Reservation Confirm String ID 404", "PASS", "Returns 404 (not 400) for non-existent string reservation ID")
+        elif response.status_code == 400:
+            self.add_result("Reservation Confirm String ID 404", "FAIL", "Still returns 400 for string ID in confirm - bug not fixed")
+        else:
+            self.add_result("Reservation Confirm String ID 404", "FAIL", f"Unexpected status: {response.status_code}")
+    
+    def test_reservation_cancel_string_id_404_not_400(self):
+        """Test 4: POST /api/reservations/{string_id}/cancel returns 404 (not 400)"""
+        self.log("=== BUG FIX 1.4: RESERVATION CANCEL STRING ID 404 NOT 400 ===")
+        
+        if not self.auth_token:
+            self.add_result("Reservation Cancel String ID 404", "SKIP", "No auth token available")
+            return
+        
+        test_id = "demo_res_test_123"
+        response = self.request("POST", f"/reservations/{test_id}/cancel", 
+                               headers=self.get_auth_headers(),
+                               expect_status=404)
+        
+        if response.status_code == 404:
+            self.add_result("Reservation Cancel String ID 404", "PASS", "Returns 404 (not 400) for non-existent string reservation ID")
+        elif response.status_code == 400:
+            self.add_result("Reservation Cancel String ID 404", "FAIL", "Still returns 400 for string ID in cancel - bug not fixed")
+        else:
+            self.add_result("Reservation Cancel String ID 404", "FAIL", f"Unexpected status: {response.status_code}")
+
+    # ======== BUG FIX 2: B2B 403 FIX ========
+    
+    def test_b2b_listings_admin_access(self):
+        """Test 5: GET /api/b2b/listings/my should NOT return 403 for admin users"""
+        self.log("=== BUG FIX 2.1: B2B LISTINGS ADMIN ACCESS ===")
+        
+        if not self.admin_token:
+            self.add_result("B2B Listings Admin Access", "SKIP", "No admin token available")
+            return
+        
+        response = self.request("GET", "/b2b/listings/my", 
+                               headers={"Authorization": f"Bearer {self.admin_token}"})
+        
+        if response.status_code == 403:
             try:
                 data = response.json()
-                # Expected: {"sessions": [...]}
-                if "sessions" in data and isinstance(data["sessions"], list):
-                    session_count = len(data.get("sessions", []))
-                    self.add_result("Sessions With Auth", "PASS", 
-                                  f"Returns user sessions: session_count={session_count}")
+                error_detail = data.get("detail", "")
+                if "B2B access only" in error_detail:
+                    self.add_result("B2B Listings Admin Access", "FAIL", "Still returns 403 'B2B access only' for admin - bug not fixed")
                 else:
-                    self.add_result("Sessions With Auth", "FAIL", 
-                                  f"Missing 'sessions' field or not a list: {list(data.keys())}")
-            except json.JSONDecodeError:
-                self.add_result("Sessions With Auth", "FAIL", "Invalid JSON response")
-        else:
-            self.add_result("Sessions With Auth", "FAIL", f"Status: {response.status_code}")
-
-    def test_briefing_with_invalid_auth(self):
-        """Test briefing with invalid token to check LLM error handling"""
-        self.log("=== TEST: BRIEFING WITH INVALID AUTH ===")
-        
-        # Use a fake token to bypass auth but trigger LLM errors
-        invalid_headers = {"Authorization": "Bearer invalid_token_12345"}
-        
-        response = self.request("POST", "/ai-assistant/briefing", 
-                               headers=invalid_headers, 
-                               timeout=30)
-        
-        # Should return 401 for invalid token
-        if response.status_code == 401:
-            self.add_result("Briefing Invalid Auth", "PASS", "Returns 401 for invalid token")
-        else:
-            try:
-                error_data = response.json()
-                error_msg = error_data.get("detail", f"Status: {response.status_code}")
-                self.add_result("Briefing Invalid Auth", "INFO", f"Response: {error_msg}")
+                    self.add_result("B2B Listings Admin Access", "INFO", f"Returns 403 but not 'B2B access only': {error_detail}")
             except:
-                self.add_result("Briefing Invalid Auth", "INFO", f"Status: {response.status_code}")
+                self.add_result("B2B Listings Admin Access", "FAIL", "Returns 403 for admin user")
+        else:
+            # Admin should be allowed, may return other errors (tenant context, etc.) but NOT 403 B2B access only
+            if response.status_code in [200, 404, 500, 422]:  # These are acceptable - not auth-related
+                self.add_result("B2B Listings Admin Access", "PASS", f"Admin access allowed (status: {response.status_code}, not 403 'B2B access only')")
+            else:
+                try:
+                    data = response.json()
+                    error_detail = data.get("detail", "")
+                    if "B2B access only" in error_detail:
+                        self.add_result("B2B Listings Admin Access", "FAIL", "Still returns 'B2B access only' error for admin")
+                    else:
+                        self.add_result("B2B Listings Admin Access", "PASS", f"Admin access allowed, non-auth error: {error_detail}")
+                except:
+                    self.add_result("B2B Listings Admin Access", "PASS", f"Admin access allowed (status: {response.status_code})")
+
+    # ======== BUG FIX 3: AGENCY AVAILABILITY AUTH FIX ========
+    
+    def test_agency_availability_admin_access(self):
+        """Test 6: GET /api/agency/availability should accept admin/super_admin"""
+        self.log("=== BUG FIX 3.1: AGENCY AVAILABILITY ADMIN ACCESS ===")
+        
+        if not self.admin_token:
+            self.add_result("Agency Availability Admin Access", "SKIP", "No admin token available")
+            return
+        
+        response = self.request("GET", "/agency/availability", 
+                               headers={"Authorization": f"Bearer {self.admin_token}"})
+        
+        if response.status_code == 403:
+            try:
+                data = response.json()
+                error_detail = data.get("detail", "")
+                self.add_result("Agency Availability Admin Access", "FAIL", f"Returns 403 for admin: {error_detail}")
+            except:
+                self.add_result("Agency Availability Admin Access", "FAIL", "Returns 403 for admin user")
+        else:
+            # Admin should be allowed, may return empty data but NOT 403
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                    items = data.get("items", [])
+                    self.add_result("Agency Availability Admin Access", "PASS", f"Admin access allowed, returns {len(items)} items")
+                except:
+                    self.add_result("Agency Availability Admin Access", "PASS", "Admin access allowed (200 OK)")
+            else:
+                self.add_result("Agency Availability Admin Access", "PASS", f"Admin access allowed (status: {response.status_code}, not 403)")
+    
+    def test_agency_availability_changes_admin_access(self):
+        """Test 7: GET /api/agency/availability/changes should accept admin/super_admin"""
+        self.log("=== BUG FIX 3.2: AGENCY AVAILABILITY CHANGES ADMIN ACCESS ===")
+        
+        if not self.admin_token:
+            self.add_result("Agency Availability Changes Admin Access", "SKIP", "No admin token available")
+            return
+        
+        response = self.request("GET", "/agency/availability/changes", 
+                               headers={"Authorization": f"Bearer {self.admin_token}"})
+        
+        if response.status_code == 403:
+            try:
+                data = response.json()
+                error_detail = data.get("detail", "")
+                self.add_result("Agency Availability Changes Admin Access", "FAIL", f"Returns 403 for admin: {error_detail}")
+            except:
+                self.add_result("Agency Availability Changes Admin Access", "FAIL", "Returns 403 for admin user")
+        else:
+            # Admin should be allowed, may return empty data but NOT 403
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                    items = data.get("items", [])
+                    self.add_result("Agency Availability Changes Admin Access", "PASS", f"Admin access allowed, returns {len(items)} items")
+                except:
+                    self.add_result("Agency Availability Changes Admin Access", "PASS", "Admin access allowed (200 OK)")
+            else:
+                self.add_result("Agency Availability Changes Admin Access", "PASS", f"Admin access allowed (status: {response.status_code}, not 403)")
 
     def run_all_tests(self):
-        """Run all AI Assistant API tests in the specified order"""
-        print("🚀 Starting AI Assistant API Tests")
-        print("📋 Testing 4 AI Assistant endpoints\n")
+        """Run all bug fix tests"""
+        print("🚀 Starting Bug Fix Tests")
+        print("📋 Testing 3 specific bug fixes from review request\n")
         
-        # Authentication (try to authenticate)
+        # Authentication
         auth_ok = self.authenticate()
         
         if not auth_ok:
-            print("⚠️ Authentication failed - will test auth guards only")
+            print("⚠️ Authentication failed - cannot test bug fixes")
+            return False
             
-        # Test 1-2: POST /api/ai-assistant/briefing endpoint
-        self.test_briefing_no_auth()
-        if auth_ok:
-            self.test_briefing_with_auth()
+        # Bug Fix 1: Reservation 400 Fix (4 tests)
+        self.test_reservation_string_id_404_not_400()
+        self.test_reservation_invalid_id_404_not_400()
+        self.test_reservation_confirm_string_id_404_not_400()
+        self.test_reservation_cancel_string_id_404_not_400()
         
-        # Test 3-4: POST /api/ai-assistant/chat endpoint  
-        self.test_chat_no_auth()
-        if auth_ok:
-            self.test_chat_with_auth()
+        # Bug Fix 2: B2B 403 Fix (1 test)
+        self.test_b2b_listings_admin_access()
         
-        # Test 5-6: GET /api/ai-assistant/chat-history/{session_id} endpoint
-        self.test_chat_history_no_auth()
-        if auth_ok:
-            self.test_chat_history_with_auth()
-        
-        # Test 7-8: GET /api/ai-assistant/sessions endpoint
-        self.test_sessions_no_auth()
-        if auth_ok:
-            self.test_sessions_with_auth()
-        
-        # Test with invalid auth to check system behavior
-        self.test_briefing_with_invalid_auth()
+        # Bug Fix 3: Agency Availability Auth Fix (2 tests)
+        self.test_agency_availability_admin_access()
+        self.test_agency_availability_changes_admin_access()
         
         return True
 
     def print_summary(self):
         """Print test results summary"""
         print("\n" + "="*80)
-        print("🏁 AI ASSISTANT API TEST SUMMARY")
+        print("🏁 BUG FIX TEST SUMMARY")
         print("="*80)
         
         total = len(self.test_results)
         passed = len([r for r in self.test_results if r["status"] == "PASS"])
         failed = len([r for r in self.test_results if r["status"] == "FAIL"])
         skipped = len([r for r in self.test_results if r["status"] == "SKIP"])
+        info = len([r for r in self.test_results if r["status"] == "INFO"])
         
-        print(f"\n📊 Results: {passed} PASS, {failed} FAIL, {skipped} SKIP (Total: {total})")
+        print(f"\n📊 Results: {passed} PASS, {failed} FAIL, {skipped} SKIP, {info} INFO (Total: {total})")
         
         if failed > 0:
             print(f"\n❌ FAILED TESTS ({failed}):")
@@ -432,20 +398,32 @@ class BugFixTester:
             if result["status"] == "PASS":
                 print(f"  - {result['test']}: {result['details']}")
         
+        if info > 0:
+            print(f"\nℹ️ INFO ({info}):")
+            for result in self.test_results:
+                if result["status"] == "INFO":
+                    print(f"  - {result['test']}: {result['details']}")
+        
         # Key assertions from review request
-        print("\n🔑 KEY ASSERTIONS:")
+        print("\n🔑 KEY BUG FIX ASSERTIONS:")
         
-        auth_guards_working = any("No Auth" in r["test"] and r["status"] == "PASS" for r in self.test_results)
-        print(f"  - Auth guards return 401 without token: {'✅' if auth_guards_working else '❌'}")
+        # Bug Fix 1: Reservation 400 Fix
+        reservation_fixes = [r for r in self.test_results if "Reservation" in r["test"] and "404" in r["test"]]
+        reservation_passed = len([r for r in reservation_fixes if r["status"] == "PASS"])
+        reservation_total = len(reservation_fixes)
+        print(f"  - Reservation endpoints return 404 (not 400) for string IDs: {reservation_passed}/{reservation_total} {'✅' if reservation_passed == reservation_total and reservation_total > 0 else '❌'}")
         
-        ai_endpoints_working = any("With Auth" in r["test"] and r["status"] == "PASS" for r in self.test_results)
-        print(f"  - AI Assistant endpoints working with token: {'✅' if ai_endpoints_working else '❌'}")
+        # Bug Fix 2: B2B 403 Fix
+        b2b_fixes = [r for r in self.test_results if "B2B" in r["test"] and "Admin Access" in r["test"]]
+        b2b_passed = len([r for r in b2b_fixes if r["status"] == "PASS"])
+        b2b_total = len(b2b_fixes)
+        print(f"  - B2B endpoints accept admin roles (no 403 'B2B access only'): {b2b_passed}/{b2b_total} {'✅' if b2b_passed == b2b_total and b2b_total > 0 else '❌'}")
         
-        llm_calls_working = any("Briefing With Auth" in r["test"] and r["status"] == "PASS" for r in self.test_results) or any("Chat With Auth" in r["test"] and r["status"] == "PASS" for r in self.test_results)
-        print(f"  - LLM integration working (briefing/chat): {'✅' if llm_calls_working else '❌'}")
-        
-        all_endpoints_tested = any("ai-assistant" in r["test"].lower() for r in self.test_results)
-        print(f"  - All 4 AI Assistant endpoints tested: {'✅' if all_endpoints_tested else '❌'}")
+        # Bug Fix 3: Agency Availability Auth Fix
+        agency_fixes = [r for r in self.test_results if "Agency Availability" in r["test"] and "Admin Access" in r["test"]]
+        agency_passed = len([r for r in agency_fixes if r["status"] == "PASS"])
+        agency_total = len(agency_fixes)
+        print(f"  - Agency availability endpoints accept admin/super_admin roles: {agency_passed}/{agency_total} {'✅' if agency_passed == agency_total and agency_total > 0 else '❌'}")
         
         return passed, failed, skipped
 

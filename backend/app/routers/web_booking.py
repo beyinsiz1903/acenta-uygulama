@@ -13,7 +13,7 @@ from app.services.enforcement import ensure_match_not_blocked
 
 logger = logging.getLogger("acenta-master")
 
-router = APIRouter(prefix="/api/web", tags=["web-bookings"])
+router = APIRouter(prefix="/web", tags=["web-bookings"])
 
 
 class WebGuestIn(BaseModel):

@@ -339,7 +339,7 @@ function AdminFinanceExposurePageInner() {
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle className="text-sm font-medium">Exposure summary</CardTitle>
+            <CardTitle className="text-sm font-medium">Bakiye özeti</CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
               Bu tablo, ledger bazlı hareketlerden hesaplanan exposure ve yaşlandırma
               bucket&apos;larını gösterir.

@@ -24,11 +24,11 @@ FALLBACK_EMAIL = "aitest@test.com"
 FALLBACK_PASSWORD = "TestPassword123!"
 FALLBACK_NAME = "AI Tester"
 
-class AIAssistantTester:
+class BugFixTester:
     def __init__(self):
         self.base_url = BACKEND_URL
         self.auth_token = None
-        self.session_id = None
+        self.admin_token = None
         self.test_results = []
         
     def log(self, message: str, level: str = "INFO"):

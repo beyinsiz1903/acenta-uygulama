@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
-AI Assistant Backend Test Suite
+Bug Fix Testing Suite
 
-Tests the 4 AI Assistant endpoints as specified in the review request.
-Focus on authentication flow, LLM integration, and API responses.
+Tests the specific bug fixes mentioned in the review request:
+1. Reservation 400 Fix - handles both MongoDB ObjectId and string IDs
+2. B2B 403 Fix - accepts super_admin and admin roles in B2B endpoints
+3. Agency Availability Auth Fix - accepts admin/super_admin roles
 """
 
 import requests
@@ -16,7 +18,7 @@ from datetime import datetime
 BACKEND_URL = "https://availability-perms.preview.emergentagent.com/api"
 
 # Test credentials as specified in review request  
-ADMIN_EMAIL = "admin@test.com"
+ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 FALLBACK_EMAIL = "aitest@test.com"
 FALLBACK_PASSWORD = "TestPassword123!"

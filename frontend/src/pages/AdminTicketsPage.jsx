@@ -22,6 +22,7 @@ export default function AdminTicketsPage() {
   const [creating, setCreating] = useState(false);
   const [checkinCode, setCheckinCode] = useState("");
   const [checkinResult, setCheckinResult] = useState(null);
+  const [selectedTicket, setSelectedTicket] = useState(null);
   const [form, setForm] = useState({
     reservation_id: "", product_name: "", customer_name: "",
     customer_email: "", customer_phone: "", event_date: "", seat_info: "",

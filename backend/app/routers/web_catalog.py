@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.db import get_db
 
-router = APIRouter(prefix="/api/web", tags=["web-catalog"])
+router = APIRouter(prefix="/web", tags=["web-catalog"])
 
 
 @router.get("/hotels")

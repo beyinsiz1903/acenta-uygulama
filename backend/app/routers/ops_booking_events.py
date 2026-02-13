@@ -11,7 +11,7 @@ from app.db import get_db
 from app.errors import AppError
 
 
-router = APIRouter(prefix="/api/ops", tags=["ops-booking-events"])
+router = APIRouter(prefix="/ops", tags=["ops-booking-events"])
 
 OpsUserDep = Depends(require_roles(["admin", "ops", "super_admin"]))
 

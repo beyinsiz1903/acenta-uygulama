@@ -114,6 +114,15 @@ if (config.enableVisualEdits || config.enableHealthCheck) {
       };
     }
 
+    // Disable WebSocket for hot reload in preview/production environments
+    devServerConfig.webSocketServer = false;
+
+    return devServerConfig;
+  };
+} else {
+  // Even without visual edits/health check, disable WebSocket in preview environments
+  webpackConfig.devServer = (devServerConfig) => {
+    devServerConfig.webSocketServer = false;
     return devServerConfig;
   };
 }

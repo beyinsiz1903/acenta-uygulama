@@ -68,7 +68,7 @@ const sidebarIconMap = {
   "Turlar": Globe,
   "CMS Sayfaları": BookOpen,
   "Kampanyalar": Megaphone,
-  "Partnerler": Network,
+  "İş Ortakları": Network,
   "B2B Marketplace": Globe,
   "Katalog": Search,
   "Otel Kataloğu": Hotel,
@@ -482,7 +482,7 @@ function AppShellInner() {
               }
             >
               <Inbox className="h-3.5 w-3.5 mr-1" />
-              <span className="hidden sm:inline text-[11px]">Partner</span>
+              <span className="hidden sm:inline text-[11px]">İş Ortakları</span>
               {partnerSummary?.counts?.invites_received > 0 && (
                 <UIBadge
                   variant="destructive"

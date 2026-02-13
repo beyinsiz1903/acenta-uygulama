@@ -228,7 +228,7 @@ export default function AdminSettlementsPage() {
     <div className="space-y-6">
       <PageHeader
         title="B2B Tahsilat Mutabakatı"
-        subtitle="Booking payment transactions üzerinden hesaplanan brüt / acenta payı / platform payı listesi."
+        subtitle="Ödeme işlemleri üzerinden hesaplanan brüt tutar, acente payı ve platform payı listesi."
       />
 
       {error && !loading && (

@@ -78,7 +78,7 @@ export default function LoginPage() {
           </div>
           <h1 className="mt-3 text-2xl font-semibold text-foreground">Acenta Master</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Acenta operasyonlarını tek panelden yönet.
+            Acenta operasyonlarınızı tek yerden yönetin.
           </p>
         </div>
 
@@ -95,7 +95,7 @@ export default function LoginPage() {
           <CardContent>
             <form onSubmit={onSubmit} className="space-y-4" data-testid="login-form">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">E-posta</Label>
                 <Input
                   id="email"
                   value={email}

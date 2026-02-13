@@ -137,14 +137,22 @@ async def create_reservation(*, org_id: str, user_email: str, payload: dict[str,
     return saved
 
 
-async def set_reservation_status(org_id: str, reservation_id: str, status: str, user_email: str) -> dict[str, Any]:
-    db = await get_db()
+async def _find_reservation_by_id(db, org_id: str, reservation_id: str):
+    """Find reservation by _id supporting both ObjectId and string IDs."""
     try:
         res_oid = to_object_id(reservation_id)
+        doc = await db.reservations.find_one({"organization_id": org_id, "_id": res_oid})
+        if doc:
+            return doc
     except Exception:
-        raise HTTPException(status_code=400, detail="Geçersiz id")
+        pass
+    # Fallback: try string _id (e.g., demo_seed IDs)
+    return await db.reservations.find_one({"organization_id": org_id, "_id": reservation_id})
 
-    res = await db.reservations.find_one({"organization_id": org_id, "_id": res_oid})
+
+async def set_reservation_status(org_id: str, reservation_id: str, status: str, user_email: str) -> dict[str, Any]:
+    db = await get_db()
+    res = await _find_reservation_by_id(db, org_id, reservation_id)
     if not res:
         raise HTTPException(status_code=404, detail="Rezervasyon bulunamadı")
 

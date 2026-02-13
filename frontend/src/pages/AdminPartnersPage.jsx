@@ -158,7 +158,7 @@ export default function AdminPartnersPage() {
       <div className="flex items-center gap-2">
         <Users className="h-5 w-5" />
         <div>
-          <h1 className="text-lg font-semibold">Partnerler & Marketplace</h1>
+          <h1 className="text-lg font-semibold">İş Ortakları & Marketplace</h1>
           <p className="text-xs text-muted-foreground">
             Agentis.pro benzeri bir ağ için partner profillerinizi yönetin. Bu ekranda partner temel
             bilgilerini, durumunu ve varsayılan B2B markup oranlarını yapılandırabilirsiniz.

@@ -110,7 +110,7 @@ export default function AdminLinksPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Link Yönetimi</h1>
+          <h1 className="text-2xl font-bold text-foreground">Bağlantı Yönetimi</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Acenta-otel bağlantıları
           </p>
@@ -129,7 +129,7 @@ export default function AdminLinksPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Link Yönetimi</h1>
+          <h1 className="text-2xl font-bold text-foreground">Bağlantı Yönetimi</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Acenta-otel bağlantıları
           </p>
@@ -162,7 +162,7 @@ export default function AdminLinksPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Link Yönetimi</h1>
+          <h1 className="text-2xl font-bold text-foreground">Bağlantı Yönetimi</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Acenta-otel bağlantıları
           </p>
@@ -190,7 +190,7 @@ export default function AdminLinksPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Link Yönetimi</h1>
+          <h1 className="text-2xl font-bold text-foreground">Bağlantı Yönetimi</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {enriched.length} acenta-otel bağlantısı
           </p>

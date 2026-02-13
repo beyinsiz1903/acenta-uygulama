@@ -247,8 +247,8 @@ function InboxPage() {
           {!threadsLoading && !threadsError && threads.length === 0 && (
             <div className="p-4">
               <EmptyState
-                title="Herhangi bir thread yok"
-                description="Henüz bu organizasyon için bir inbox kaydı oluşmamış."
+                title="Henüz mesaj yok"
+                description="Henüz bir mesaj kaydı bulunmuyor."
               />
             </div>
           )}
@@ -307,8 +307,8 @@ function InboxPage() {
         {!selectedThreadId && (
           <div className="flex-1 flex items-center justify-center">
             <EmptyState
-              title="Bir thread seçin"
-              description="Soldaki listeden bir thread seçerek mesajları görüntüleyin."
+              title="Bir konu seçin"
+              description="Soldaki listeden bir konu seçerek mesajları görüntüleyin."
             />
           </div>
         )}
@@ -353,7 +353,7 @@ function InboxPage() {
 
               {!loadingMessages && !errMessages && messages.length === 0 && (
                 <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">
-                  Bu thread için henüz mesaj yok.
+                  Bu konu için henüz mesaj yok.
                 </div>
               )}
 

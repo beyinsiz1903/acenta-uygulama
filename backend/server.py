@@ -534,6 +534,12 @@ app.add_middleware(
 # Structured exception handlers (AppError, validation, 404, 500, ...)
 register_exception_handlers(app)
 
+# Mount static files for tour uploads
+import os as _os
+_uploads_dir = _os.path.join(_os.path.dirname(__file__), "uploads", "tours")
+_os.makedirs(_uploads_dir, exist_ok=True)
+app.mount("/api/uploads/tours", StaticFiles(directory=_uploads_dir), name="tour_uploads")
+
 # Include routers
 app.include_router(auth_router)
 app.include_router(auth_password_reset_router)

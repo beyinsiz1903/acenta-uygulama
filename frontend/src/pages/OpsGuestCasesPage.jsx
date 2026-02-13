@@ -74,10 +74,10 @@ function RiskBadge({ kind }) {
   let cls = "border text-[9px] px-1.5 py-0.5 rounded-full inline-flex";
 
   if (kind === "sla_breach") {
-    label = "SLA BREACH";
+    label = "GECİKMİŞ";
     cls += " bg-red-100 text-red-900 border-red-200";
   } else if (kind === "active_risk") {
-    label = "ACTIVE RISK";
+    label = "RİSKLİ";
     cls += " bg-amber-100 text-amber-900 border-amber-200";
   } else if (kind === "fresh") {
     label = "FRESH";
@@ -99,13 +99,13 @@ function WaitingBadge({ waitingOn }) {
   let cls = "border text-[9px] px-1.5 py-0.5 rounded-full inline-flex";
 
   if (w === "customer") {
-    label = "WAITING: CUSTOMER";
+    label = "MÜŞTERİ BEKLİYOR";
     cls += " bg-sky-100 text-sky-900 border-sky-200";
   } else if (w === "supplier") {
-    label = "WAITING: SUPPLIER";
+    label = "TEDARİKÇİ BEKLİYOR";
     cls += " bg-violet-100 text-violet-900 border-violet-200";
   } else if (w === "ops") {
-    label = "WAITING: OPS";
+    label = "OPERASYON BEKLİYOR";
     cls += " bg-slate-100 text-slate-900 border-slate-200";
   } else if (w === "other") {
     label = "WAITING: OTHER";
@@ -409,7 +409,7 @@ function OpsGuestCasesPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tümü</SelectItem>
-              <SelectItem value="guest_portal">Guest portal</SelectItem>
+              <SelectItem value="guest_portal">Misafir paneli</SelectItem>
               <SelectItem value="ops_panel">Ops panel</SelectItem>
               <SelectItem value="system">Sistem</SelectItem>
             </SelectContent>
@@ -463,9 +463,9 @@ function OpsGuestCasesPage() {
         </div>
       </div>
 
-      {/* SLA Queue Filter Bar */}
+      {/* Öncelik Sırası Filter Bar */}
       <div className="rounded-2xl border bg-card p-3 mb-3 flex flex-wrap items-center gap-2">
-        <span className="text-xs font-medium text-muted-foreground mr-2">SLA Queue</span>
+        <span className="text-xs font-medium text-muted-foreground mr-2">Öncelik Sırası</span>
         <Button
           type="button"
           size="xs"
@@ -482,7 +482,7 @@ function OpsGuestCasesPage() {
           data-testid="cases-filter-sla-breach"
           onClick={() => setSlaFilter("sla_breach")}
         >
-          SLA BREACH
+          GECİKMİŞ
         </Button>
         <Button
           type="button"
@@ -491,7 +491,7 @@ function OpsGuestCasesPage() {
           data-testid="cases-filter-active-risk"
           onClick={() => setSlaFilter("active_risk")}
         >
-          ACTIVE RISK
+          RİSKLİ
         </Button>
         <Button
           type="button"
@@ -509,7 +509,7 @@ function OpsGuestCasesPage() {
           data-testid="cases-filter-waiting-customer"
           onClick={() => setSlaFilter("waiting_customer")}
         >
-          WAITING: CUSTOMER
+          MÜŞTERİ BEKLİYOR
         </Button>
         <Button
           type="button"
@@ -518,7 +518,7 @@ function OpsGuestCasesPage() {
           data-testid="cases-filter-waiting-supplier"
           onClick={() => setSlaFilter("waiting_supplier")}
         >
-          WAITING: SUPPLIER
+          TEDARİKÇİ BEKLİYOR
         </Button>
         <Button
           type="button"
@@ -527,7 +527,7 @@ function OpsGuestCasesPage() {
           data-testid="cases-filter-waiting-ops"
           onClick={() => setSlaFilter("waiting_ops")}
         >
-          WAITING: OPS
+          OPERASYON BEKLİYOR
         </Button>
       </div>
 
@@ -700,7 +700,7 @@ function OpsGuestCasesPage() {
                         {(() => {
                           switch (c.source) {
                             case "guest_portal":
-                              return "Guest portal";
+                              return "Misafir paneli";
                             case "ops_panel":
                               return "Ops panel";
                             case "system":

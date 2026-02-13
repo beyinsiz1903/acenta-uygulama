@@ -490,6 +490,18 @@ class BugFixTester:
         # Key assertions from review request
         print("\n🔑 KEY BUG FIX ASSERTIONS:")
         
+        # Bug Fix: Incidents 404 Fix
+        incidents_fixes = [r for r in self.test_results if "Incidents Endpoint" in r["test"]]
+        incidents_passed = len([r for r in incidents_fixes if r["status"] == "PASS"])
+        incidents_total = len(incidents_fixes)
+        print(f"  - Incidents page returns 200 (not 404) for admin users: {incidents_passed}/{incidents_total} {'✅' if incidents_passed >= 1 else '❌'}")
+        
+        # Bug Fix: Voucher Auth Behavior
+        voucher_fixes = [r for r in self.test_results if "Voucher" in r["test"]]
+        voucher_passed = len([r for r in voucher_fixes if r["status"] == "PASS"])
+        voucher_total = len(voucher_fixes)
+        print(f"  - Voucher endpoint auth behavior working correctly: {voucher_passed}/{voucher_total} {'✅' if voucher_passed >= 1 else '❌'}")
+        
         # Bug Fix 1: Reservation 400 Fix
         reservation_fixes = [r for r in self.test_results if "Reservation" in r["test"] and "404" in r["test"]]
         reservation_passed = len([r for r in reservation_fixes if r["status"] == "PASS"])

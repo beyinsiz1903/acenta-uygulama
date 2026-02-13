@@ -12,7 +12,7 @@ from app.services.booking_outcomes import OPERATIONAL_REASONS, resolve_outcome_f
 from app.services.audit import write_audit_log
 from app.utils import now_utc
 
-router = APIRouter(prefix="/api/admin/booking-outcomes", tags=["admin-booking-outcomes"])
+router = APIRouter(prefix="/admin/booking-outcomes", tags=["admin-booking-outcomes"])
 
 
 class BookingOutcomeItem(BaseModel):

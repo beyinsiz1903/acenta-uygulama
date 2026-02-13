@@ -603,7 +603,7 @@ app.include_router(b2b_announcements_router)
 app.include_router(finance_router, prefix=API_PREFIX)
 app.include_router(bookings_router, prefix=API_PREFIX)
 app.include_router(booking_outcomes_router, prefix=API_PREFIX)
-app.include_router(inbox_router, prefix=API_PREFIX)
+# inbox_router removed - inbox_v2 handles all /api/inbox routes
 app.include_router(reports_router)
 app.include_router(inbox_v2_router)
 app.include_router(crm_customer_inbox_router)

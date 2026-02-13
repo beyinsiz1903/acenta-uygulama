@@ -22,7 +22,7 @@ from app.services import stripe_adapter
 from app.services import stripe_handlers
 
 
-router = APIRouter(prefix="/api/payments/stripe", tags=["payments_stripe"])
+router = APIRouter(prefix="/payments/stripe", tags=["payments_stripe"])
 
 
 class CreateIntentRequest(BaseModel):

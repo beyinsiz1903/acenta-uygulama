@@ -406,6 +406,8 @@ function App() {
           <Route path="ops/bookings/:bookingId" element={<OpsBookingDetailPage />} />
           <Route path="ops/tasks" element={<OpsTasksPage />} />
           <Route path="ops/incidents" element={<AdminOpsIncidentsPage />} />
+          <Route path="tours" element={<ToursListPage />} />
+          <Route path="tours/:tourId" element={<TourDetailPage />} />
         </Route>
 
         {/* B2B Portal Routes (New, outside /app shell, dedicated layout) */}

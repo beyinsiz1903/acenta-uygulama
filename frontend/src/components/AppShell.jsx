@@ -65,6 +65,7 @@ const sidebarIconMap = {
   "Mutabakat": Scale,
   "Exposure & Aging": BarChart3,
   "B2B Dashboard": BarChart3,
+  "Turlarimiz": Globe,
   "Turlar": Globe,
   "CMS Sayfaları": BookOpen,
   "Kampanyalar": Megaphone,

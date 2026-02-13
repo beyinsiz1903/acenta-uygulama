@@ -2,8 +2,9 @@ import React, { useEffect, useState, useCallback } from "react";
 import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
-import { QrCode, CheckCircle, Plus, Search, RefreshCw, XCircle, BarChart3 } from "lucide-react";
+import { QrCode, CheckCircle, Plus, Search, RefreshCw, XCircle, BarChart3, X, Download, Printer } from "lucide-react";
 import { cn } from "../lib/utils";
+import { QRCodeSVG } from "qrcode.react";
 
 const STATUS_MAP = {
   active: { label: "Aktif", className: "bg-green-100 text-green-700" },

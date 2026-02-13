@@ -107,7 +107,7 @@ function MiniDonutCard({ title, data, colors, loading, emptyText }) {
       <p className="text-[13px] font-medium text-foreground mb-3">{title}</p>
       {hasData ? (
         <div className="flex items-center gap-3">
-          <div className="shrink-0" style={{ width: 80, height: 80 }}>
+          <div className="shrink-0" style={{ width: 80, height: 80, minWidth: 80, minHeight: 80 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie

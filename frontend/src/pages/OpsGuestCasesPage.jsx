@@ -360,10 +360,10 @@ function OpsGuestCasesPage() {
               <SelectValue placeholder="Durum" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="open">A fk</SelectItem>
+              <SelectItem value="open">Açık</SelectItem>
               <SelectItem value="waiting">Beklemede</SelectItem>
               <SelectItem value="in_progress">Devam ediyor</SelectItem>
-              <SelectItem value="closed">Kapal f</SelectItem>
+              <SelectItem value="closed">Kapalı</SelectItem>
               <SelectItem value="all">Tümü</SelectItem>
             </SelectContent>
           </Select>
@@ -447,7 +447,7 @@ function OpsGuestCasesPage() {
             }}
             disabled={loading}
           >
-            Filtreleri s1f1rla
+            Filtreleri sıfırla
           </Button>
           <Button
             type="button"
@@ -544,11 +544,11 @@ function OpsGuestCasesPage() {
             />
           </div>
         ) : loading && !hasVisible ? (
-          <div className="p-6 text-sm text-muted-foreground">Y1kleniyor...</div>
+          <div className="p-6 text-sm text-muted-foreground">Yükleniyor...</div>
         ) : !hasVisible ? (
           <EmptyState
-            title="G1sterilecek case yok"
-            description="Se15ftirdifiniz filtrelere uyan bir misafir talebi bulunamad1."
+            title="Gösterilecek case yok"
+            description="Seçtiğiniz filtrelere uyan bir misafir talebi bulunamadı."
           />
         ) : (
           <div className="overflow-x-auto">

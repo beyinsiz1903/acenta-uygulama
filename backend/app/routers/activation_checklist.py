@@ -36,15 +36,22 @@ VALID_KEYS = {item["key"] for item in DEFAULT_CHECKLIST_ITEMS}
 
 # ─── Helper: resolve tenant_id ─────────────────────────────────────
 async def _resolve_tenant_id(user: dict) -> str:
-    from app.errors import AppError
     tenant_id = user.get("tenant_id")
     if not tenant_id:
         db = await get_db()
-        tenant = await db.tenants.find_one({"organization_id": user["organization_id"]})
+        org_id = user.get("organization_id")
+        tenant = await db.tenants.find_one({"organization_id": org_id})
+        if not tenant:
+            from bson import ObjectId
+            from bson.errors import InvalidId
+            try:
+                tenant = await db.tenants.find_one({"_id": ObjectId(org_id)})
+            except (InvalidId, Exception):
+                tenant = await db.tenants.find_one({"_id": org_id})
         if tenant:
             tenant_id = str(tenant["_id"])
     if not tenant_id:
-        raise AppError(404, "tenant_not_found", "Tenant bulunamadı.", {})
+        tenant_id = user.get("organization_id") or "unknown"
     return tenant_id
 
 

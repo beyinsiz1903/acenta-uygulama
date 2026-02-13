@@ -25,7 +25,7 @@ logger = logging.getLogger("rate_limit")
 
 # Rate limit rules: path_prefix -> (max_attempts, window_seconds, key_type)
 RATE_LIMIT_RULES = {
-    "/api/auth/login": (5, 300, "ip"),  # 5 per 5 min by IP
+    "/api/auth/login": (50, 300, "ip"),  # 50 per 5 min by IP
     "/api/auth/signup": (3, 300, "ip"),  # 3 per 5 min by IP
     "/api/admin/tenant/export": (5, 600, "user"),  # 5 per 10 min by user
     "/api/admin/audit/export": (5, 600, "user"),  # 5 per 10 min by user

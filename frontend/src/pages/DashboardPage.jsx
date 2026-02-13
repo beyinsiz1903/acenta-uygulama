@@ -683,8 +683,8 @@ export default function DashboardPage() {
               </div>
             </div>
           ) : chartData.length > 0 ? (
-            <div style={{ minHeight: 280 }} data-testid="sales-chart">
-              <ResponsiveContainer width="100%" height={280}>
+            <div style={{ minHeight: 280, minWidth: 200 }} data-testid="sales-chart">
+              <ResponsiveContainer width="100%" height={280} minWidth={200}>
                 <BarChart data={chartData} margin={{ left: 0, right: 4, top: 8, bottom: 0 }}>
                   <XAxis
                     dataKey="day"

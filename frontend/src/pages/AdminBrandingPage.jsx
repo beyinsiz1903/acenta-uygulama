@@ -118,6 +118,8 @@ export default function AdminBrandingPage() {
         applyBrandColor(settings.primary_color);
         applyForeground(settings.primary_color);
       }
+      // Notify AppShell to refresh branding (company name, logo, etc.)
+      window.dispatchEvent(new CustomEvent("branding-updated", { detail: settings }));
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (e) {

@@ -113,12 +113,12 @@ tour_enhancement_frontend:
 
 metadata:
   created_by: "main_agent"
-  version: "22.0"
-  test_sequence: 30
+  version: "23.0"
+  test_sequence: 31
   run_ui: true
 
 test_plan:
-  current_focus: ["tour_enhancement_frontend"]
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

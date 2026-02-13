@@ -9,7 +9,7 @@ from typing import List
 from app.auth import get_current_user
 
 
-ALLOWED_B2B_ROLES = {"agency", "b2b", "agency_admin", "agency_agent", "b2b_agent"}
+ALLOWED_B2B_ROLES = {"agency", "b2b", "agency_admin", "agency_agent", "b2b_agent", "super_admin", "admin"}
 
 
 class CurrentB2BUser(BaseModel):

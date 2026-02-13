@@ -100,6 +100,14 @@ export default function AdminBrandingPage() {
 
   useEffect(() => { loadSettings(); }, [loadSettings]);
 
+  // Live preview: apply color immediately when user picks a color
+  useEffect(() => {
+    if (settings.primary_color && settings.primary_color.startsWith("#") && settings.primary_color.length >= 4) {
+      applyBrandColor(settings.primary_color);
+      applyForeground(settings.primary_color);
+    }
+  }, [settings.primary_color]);
+
   const handleSave = async () => {
     try {
       setSaving(true);

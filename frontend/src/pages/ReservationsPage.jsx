@@ -239,10 +239,24 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
 
   const badge = statusBadge(data?.status);
 
-  const openVoucher = useCallback(() => {
+  const openVoucher = useCallback(async () => {
     if (!reservationId) return;
-    // REACT_APP_BACKEND_URL kullanılmalı, hardcode yok.
-    window.open(`${process.env.REACT_APP_BACKEND_URL}/api/reservations/${reservationId}/voucher`, "_blank");
+    try {
+      // Fetch voucher HTML with auth token via api instance
+      const resp = await api.get(`/reservations/${reservationId}/voucher`, {
+        responseType: "text",
+        headers: { Accept: "text/html" },
+      });
+      const html = typeof resp.data === "string" ? resp.data : String(resp.data);
+      const blob = new Blob([html], { type: "text/html; charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      // Cleanup blob URL after a short delay
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch (e) {
+      console.error("Voucher açılamadı:", e);
+      alert("Voucher açılamadı. Lütfen tekrar deneyin.");
+    }
   }, [reservationId]);
 
   const sendWhatsApp = useCallback(() => {

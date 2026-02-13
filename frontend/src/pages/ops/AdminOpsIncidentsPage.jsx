@@ -119,74 +119,8 @@ function SupplierHealthBadge({ badge }) {
       —
     </Badge>
   );
-function SeverityBadge({ severity }) {
-  const s = String(severity || "").toLowerCase();
-  if (!s) return <span className="text-[11px] text-muted-foreground">-</span>;
-
-  if (s === "critical") {
-    return (
-      <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5">
-        CRITICAL
-      </Badge>
-    );
-  }
-  if (s === "high") {
-    return (
-      <Badge
-        variant="outline"
-        className="text-[10px] px-1.5 py-0.5 border-red-300 text-red-900 bg-red-50"
-      >
-        HIGH
-      </Badge>
-    );
-  }
-  if (s === "medium") {
-    return (
-      <Badge
-        variant="outline"
-        className="text-[10px] px-1.5 py-0.5 border-amber-300 text-amber-900 bg-amber-50"
-      >
-        MEDIUM
-      </Badge>
-    );
-  }
-  return (
-    <Badge
-      variant="outline"
-      className="text-[10px] px-1.5 py-0.5 border-slate-300 text-slate-800 bg-slate-50"
-    >
-      LOW
-    </Badge>
-  );
 }
 
-function StatusBadge({ status }) {
-  const s = String(status || "").toLowerCase();
-  if (s === "open") {
-    return (
-      <Badge
-        variant="outline"
-        className="text-[10px] px-1.5 py-0.5 border-red-300 text-red-900 bg-red-50"
-      >
-        OPEN
-      </Badge>
-    );
-  }
-  if (s === "resolved") {
-    return (
-      <Badge
-        variant="outline"
-        className="text-[10px] px-1.5 py-0.5 border-slate-200 text-slate-700 bg-slate-50"
-      >
-        RESOLVED
-      </Badge>
-    );
-  }
-  return <span className="text-[11px] text-muted-foreground">{status || "-"}</span>;
-}
-
-
-}
 
 export default function AdminOpsIncidentsPage() {
   const [filters, setFilters] = useState({

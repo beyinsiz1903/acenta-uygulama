@@ -9,7 +9,7 @@ from app.schemas import PaymentCreateIn
 from app.services.reservations import apply_payment
 from app.utils import now_utc, serialize_doc, to_object_id
 
-router = APIRouter(prefix="/api/payments", tags=["payments"])
+router = APIRouter(prefix="/payments", tags=["payments"])
 
 
 def _oid_or_400(id_str: str) -> ObjectId:

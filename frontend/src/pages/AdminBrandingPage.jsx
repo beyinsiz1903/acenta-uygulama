@@ -105,9 +105,10 @@ export default function AdminBrandingPage() {
       setSaving(true);
       setSaved(false);
       await api.put("/admin/whitelabel-settings", settings);
-      // Apply CSS variable immediately
+      // Apply theme color immediately across the entire app
       if (settings.primary_color) {
-        document.documentElement.style.setProperty("--brand-color", settings.primary_color);
+        applyBrandColor(settings.primary_color);
+        applyForeground(settings.primary_color);
       }
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);

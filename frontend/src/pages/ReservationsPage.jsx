@@ -245,6 +245,48 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
     window.open(`${process.env.REACT_APP_BACKEND_URL}/api/reservations/${reservationId}/voucher`, "_blank");
   }, [reservationId]);
 
+  const sendWhatsApp = useCallback(() => {
+    if (!data) return;
+    const guestName = data.customer_name || data.guest_name || "Misafir";
+    const pnr = data.pnr || "-";
+    const voucherNo = data.voucher_no || "-";
+    const status = data.status || "-";
+    const total = data.total_price || 0;
+    const currency = data.currency || "TRY";
+    const startDate = data.start_date || "";
+    const endDate = data.end_date || "";
+    const productTitle = data.product_title || "";
+
+    const message = [
+      `🏨 Rezervasyon Bilgisi`,
+      ``,
+      `📋 PNR: ${pnr}`,
+      `📄 Voucher No: ${voucherNo}`,
+      productTitle ? `🏠 Ürün: ${productTitle}` : "",
+      `👤 Misafir: ${guestName}`,
+      `📅 Tarih: ${startDate}${endDate ? " - " + endDate : ""}`,
+      `💰 Toplam: ${Number(total).toLocaleString("tr-TR")} ${currency}`,
+      `📊 Durum: ${status}`,
+      ``,
+      `Voucher linki:`,
+      `${process.env.REACT_APP_BACKEND_URL}/api/reservations/${reservationId}/voucher`,
+    ].filter(Boolean).join("\n");
+
+    const phone = (data.customer_phone || data.guest_phone || "").replace(/[^0-9+]/g, "");
+    const encoded = encodeURIComponent(message);
+
+    if (phone) {
+      // Clean phone number: remove leading 0, add country code if needed
+      let cleanPhone = phone.replace(/^\+/, "");
+      if (cleanPhone.startsWith("0")) cleanPhone = "90" + cleanPhone.slice(1);
+      if (!cleanPhone.startsWith("90") && cleanPhone.length === 10) cleanPhone = "90" + cleanPhone;
+      window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");
+    } else {
+      // No phone number - open WhatsApp with just message
+      window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_blank");
+    }
+  }, [data, reservationId]);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="p-0">

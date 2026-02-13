@@ -552,7 +552,7 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus: ["voucher_auth_fix", "talep_yonetimi_encoding_fix", "olaylar_404_fix"]
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

@@ -106,7 +106,7 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus: ["tour_enhancement_backend"]
+  current_focus: ["tour_enhancement_frontend"]
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

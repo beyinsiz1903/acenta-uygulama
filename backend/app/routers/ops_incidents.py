@@ -159,10 +159,11 @@ async def resolve_incident_endpoint(
     request: Request,
     db=Depends(get_db),
     user=Depends(get_current_user),
-    org=Depends(get_current_org),
-    _roles=Depends(require_roles(["agency_admin", "super_admin"])),
+    _roles=Depends(require_roles(["agency_admin", "super_admin", "admin"])),
 ):
-    organization_id: str = org["id"]
+    organization_id: str = user.get("organization_id", "")
+    if not organization_id:
+        raise AppError(400, "invalid_user_context", "User is missing organization_id")
 
     # Resolve via service (includes validation and status checks)
     incident = await resolve_incident(

@@ -342,6 +342,15 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
                       <ExternalLink className="h-4 w-4" />
                       Voucher
                     </Button>
+                    <Button
+                      onClick={sendWhatsApp}
+                      variant="outline"
+                      className="gap-2 text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
+                      data-testid="res-whatsapp"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      WhatsApp
+                    </Button>
                   </div>
                   <div className="mt-3 text-xs text-muted-foreground">
                     Not: Aksiyonlar status’e göre backend’de doğrulanır.

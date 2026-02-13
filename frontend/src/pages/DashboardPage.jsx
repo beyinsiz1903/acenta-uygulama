@@ -544,7 +544,7 @@ export default function DashboardPage() {
       {/* ---------- HEADER ---------- */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-[18px] font-semibold text-foreground">Dashboard</h2>
+          <h2 className="text-[18px] font-semibold text-foreground">Genel Bakış</h2>
           <p className="text-[12px] text-muted-foreground mt-0.5">
             Rezervasyon ve operasyon özetini buradan takip edebilirsin.
           </p>

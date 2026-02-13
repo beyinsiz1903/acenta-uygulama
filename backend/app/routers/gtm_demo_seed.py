@@ -59,15 +59,26 @@ class DemoSeedResponse(BaseModel):
 
 # ─── Helper: resolve tenant_id ─────────────────────────────────────
 async def _resolve_tenant_id(user: dict) -> str:
-    from app.errors import AppError
     tenant_id = user.get("tenant_id")
+    org_id = user.get("organization_id")
     if not tenant_id:
         db = await get_db()
-        tenant = await db.tenants.find_one({"organization_id": user["organization_id"]})
+        tenant = await db.tenants.find_one({"organization_id": org_id})
         if tenant:
             tenant_id = str(tenant["_id"])
     if not tenant_id:
-        raise AppError(404, "tenant_not_found", "Tenant bulunamadı.", {})
+        # Auto-create tenant for the organization if none exists
+        import uuid as _uuid
+        db = await get_db()
+        tenant_id = str(_uuid.uuid4())
+        await db.tenants.insert_one({
+            "_id": tenant_id,
+            "organization_id": org_id,
+            "name": f"Tenant for {org_id}",
+            "status": "active",
+            "created_at": _now(),
+        })
+        logger.info("Auto-created tenant %s for org %s", tenant_id, org_id)
     return tenant_id
 
 

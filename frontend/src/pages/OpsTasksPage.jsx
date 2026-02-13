@@ -286,9 +286,12 @@ export default function OpsTasksPage() {
                         </Button>
                       )}
                     </div>
-                  </div>
+                    </td>
+                  </tr>
                 );
               })}
+                </tbody>
+              </table>
             </div>
           )}
         </CardContent>

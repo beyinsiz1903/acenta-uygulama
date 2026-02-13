@@ -24,7 +24,7 @@ from app.utils import serialize_doc
 
 router = APIRouter(prefix="/api/agency/availability", tags=["agency_availability"])
 
-AgencyDep = Depends(require_roles(["agency_admin", "agency_agent"]))
+AgencyDep = Depends(require_roles(["agency_admin", "agency_agent", "admin", "super_admin"]))
 
 
 def _now() -> datetime:

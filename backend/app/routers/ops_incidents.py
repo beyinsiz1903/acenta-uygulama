@@ -56,10 +56,11 @@ async def list_incidents(
     offset: Optional[int] = Query(0, ge=0),
     db=Depends(get_db),
     user=Depends(get_current_user),
-    org=Depends(get_current_org),
-    _roles=Depends(require_roles(["agency_admin", "super_admin"])),
+    _roles=Depends(require_roles(["agency_admin", "super_admin", "admin"])),
 ) -> OpsIncidentListResponse:
-    organization_id: str = org["id"]
+    organization_id: str = user.get("organization_id", "")
+    if not organization_id:
+        raise AppError(400, "invalid_user_context", "User is missing organization_id")
 
     flt: Dict[str, Any] = {"organization_id": organization_id}
     if type is not None:

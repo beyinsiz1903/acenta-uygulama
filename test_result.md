@@ -219,6 +219,19 @@ test_plan:
         agent: "testing"
         comment: "Admin image upload auth guard tested successfully. Properly returns 401 without authentication token. File upload endpoint protection working correctly."
 
+console_warnings_fix:
+  - task: "Fix Recharts chart width(-1)/height(-1) warnings in DashboardPage"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/DashboardPage.jsx"
+    fix: "Replaced ResponsiveContainer with direct PieChart width/height props in MiniDonutCard"
+
+  - task: "Fix Missing 'description' or 'aria-describedby' for DialogContent warnings"
+    implemented: true
+    working: true
+    file: "frontend/src/components/ui/dialog.jsx"
+    fix: "Added hidden fallback DialogPrimitive.Description in base DialogContent component"
+
 agent_communication:
   - agent: "main"
     message: "Tour enhancement feature implemented. Backend: Enhanced tour model with images, description, itinerary, includes/excludes, highlights, duration, max_participants. New endpoints: GET/POST /api/tours for logged-in users, POST /api/tours/:id/reserve for reservations, full CRUD at /api/admin/tours, image upload. Frontend: ToursListPage with hero banner, search, filter, beautiful cards. TourDetailPage with image gallery, tabs (details/program/includes), reservation sidebar. AdminToursPage with full editing including image upload, itinerary editor, includes/excludes editor. Seed data: 4 sample tours created (Kapadokya, Ege, Dogu Anadolu, Istanbul). Login: admin@acenta.test / admin123"

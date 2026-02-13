@@ -163,6 +163,113 @@ export default function AdminTicketsPage() {
           </table>
         </div>
       )}
+
+      {/* QR Code Modal */}
+      {selectedTicket && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedTicket(null)}>
+          <div className="bg-background rounded-xl shadow-2xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()} data-testid="qr-modal">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold flex items-center gap-2">
+                <QrCode className="h-5 w-5" /> Bilet QR Kodu
+              </h3>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedTicket(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="flex flex-col items-center">
+              {/* QR Code */}
+              <div className="bg-white p-4 rounded-lg border mb-4" id="qr-print-area">
+                <QRCodeSVG
+                  value={selectedTicket.qr_data || selectedTicket.ticket_code}
+                  size={220}
+                  level="H"
+                  includeMargin={true}
+                />
+                <div className="text-center mt-2">
+                  <div className="font-mono text-sm font-bold tracking-wider">{selectedTicket.ticket_code}</div>
+                </div>
+              </div>
+
+              {/* Ticket Details */}
+              <div className="w-full space-y-2 text-sm mb-4">
+                <div className="flex justify-between py-1 border-b">
+                  <span className="text-muted-foreground">Ürün</span>
+                  <span className="font-medium">{selectedTicket.product_name}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b">
+                  <span className="text-muted-foreground">Müşteri</span>
+                  <span className="font-medium">{selectedTicket.customer_name}</span>
+                </div>
+                {selectedTicket.event_date && (
+                  <div className="flex justify-between py-1 border-b">
+                    <span className="text-muted-foreground">Tarih</span>
+                    <span className="font-medium">{selectedTicket.event_date}</span>
+                  </div>
+                )}
+                <div className="flex justify-between py-1 border-b">
+                  <span className="text-muted-foreground">Durum</span>
+                  <Badge variant="outline" className={getStatus(selectedTicket.status).className}>{getStatus(selectedTicket.status).label}</Badge>
+                </div>
+                {selectedTicket.seat_info && (
+                  <div className="flex justify-between py-1 border-b">
+                    <span className="text-muted-foreground">Koltuk</span>
+                    <span className="font-medium">{selectedTicket.seat_info}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 w-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => {
+                    const svgEl = document.querySelector("#qr-print-area svg");
+                    if (!svgEl) return;
+                    const svgData = new XMLSerializer().serializeToString(svgEl);
+                    const canvas = document.createElement("canvas");
+                    const ctx = canvas.getContext("2d");
+                    const img = new window.Image();
+                    img.onload = () => {
+                      canvas.width = img.width;
+                      canvas.height = img.height;
+                      ctx.fillStyle = "#fff";
+                      ctx.fillRect(0, 0, canvas.width, canvas.height);
+                      ctx.drawImage(img, 0, 0);
+                      const a = document.createElement("a");
+                      a.download = `QR_${selectedTicket.ticket_code}.png`;
+                      a.href = canvas.toDataURL("image/png");
+                      a.click();
+                    };
+                    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-1" /> İndir
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => {
+                    const printContent = document.getElementById("qr-print-area");
+                    if (!printContent) return;
+                    const w = window.open("", "_blank");
+                    w.document.write(`<html><head><title>QR Bilet - ${selectedTicket.ticket_code}</title><style>body{display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;font-family:sans-serif;}div{text-align:center;}</style></head><body>`);
+                    w.document.write(printContent.innerHTML);
+                    w.document.write("</body></html>");
+                    w.document.close();
+                    w.print();
+                  }}
+                >
+                  <Printer className="h-4 w-4 mr-1" /> Yazdır
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

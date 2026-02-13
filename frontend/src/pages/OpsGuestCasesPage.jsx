@@ -379,13 +379,13 @@ function OpsGuestCasesPage() {
             }}
           >
             <SelectTrigger className="h-8 text-sm">
-              <SelectValue placeholder="T1m1" />
+              <SelectValue placeholder="Tümü" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tümü</SelectItem>
-              <SelectItem value="cancel"> İptal talebi</SelectItem>
+              <SelectItem value="cancel">İptal talebi</SelectItem>
               <SelectItem value="amend">Değişiklik talebi</SelectItem>
-              <SelectItem value="refund">İade</SelectItem>
+              <SelectItem value="refund">İade</SelectItem>
               <SelectItem value="payment_followup">Ödeme takibi</SelectItem>
               <SelectItem value="voucher_issue">Voucher sorunu</SelectItem>
               <SelectItem value="missing_docs">Eksik evrak</SelectItem>
@@ -405,7 +405,7 @@ function OpsGuestCasesPage() {
             }}
           >
             <SelectTrigger className="h-8 text-sm">
-              <SelectValue placeholder="T1m1" />
+              <SelectValue placeholder="Tümü" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tümü</SelectItem>
@@ -576,7 +576,7 @@ function OpsGuestCasesPage() {
                   <th className="px-3 py-2 text-left font-medium text-xs text-muted-foreground">Durum</th>
                   <th className="px-3 py-2 text-left font-medium text-xs text-muted-foreground">Kaynak</th>
                   <th className="px-3 py-2 text-left font-medium text-xs text-muted-foreground">
-                    Olufturulma
+                    Oluşturulma
                   </th>
                 </tr>
               </thead>
@@ -627,11 +627,11 @@ function OpsGuestCasesPage() {
                         {(() => {
                           switch (c.type) {
                             case "cancel":
-                              return "İptal talebi";
+                              return "İptal talebi";
                             case "amend":
                               return "Değişiklik talebi";
                             case "refund":
-                              return "İade";
+                              return "İade";
                             case "payment_followup":
                               return "Ödeme takibi";
                             case "voucher_issue":
@@ -725,7 +725,7 @@ function OpsGuestCasesPage() {
         {hasAny && !error && (
           <div className="flex items-center justify-between px-3 py-2 border-t text-xs text-muted-foreground">
             <span>
-              Toplam {total} kay1t
+              Toplam {total} kayıt
             </span>
             <div className="flex items-center gap-2">
               <Button
@@ -736,7 +736,7 @@ function OpsGuestCasesPage() {
                   setPage((p) => Math.max(1, p - 1));
                 }}
               >
-                Önceki
+                Önceki
               </Button>
               <span>
                 Sayfa {page}

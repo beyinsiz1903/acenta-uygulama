@@ -128,7 +128,7 @@ export default function AdminCouponsPage() {
           <div className="text-sm font-semibold">Yeni Kupon</div>
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
             <span>Alanlar:</span>
-            <span>Kod, Tip, Değer, Scope, Min. Tutar, Limitler, Geçerlilik</span>
+            <span>Kod, Tip, Değer, Kapsam, Min. Tutar, Limitler, Geçerlilik</span>
           </div>
         </div>
 
@@ -166,7 +166,7 @@ export default function AdminCouponsPage() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Scope</Label>
+            <Label className="text-[11px]">Kapsam</Label>
             <select
               className="h-8 w-full rounded-md border bg-background px-2 text-xs"
               value={scope}

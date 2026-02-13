@@ -568,7 +568,7 @@ function OpsGuestCasesPage() {
                       onChange={toggleSelectAllVisible}
                     />
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-xs text-muted-foreground">Case ID</th>
+                  <th className="px-3 py-2 text-left font-medium text-xs text-muted-foreground">Talep No</th>
                   <th className="px-3 py-2 text-left font-medium text-xs text-muted-foreground">
                     Rezervasyon Kodu
                   </th>

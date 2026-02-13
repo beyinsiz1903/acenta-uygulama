@@ -34,7 +34,8 @@ async def ensure_crm_indexes(db):
     )
 
     # Unique-ish index for contact values per org and type (email/phone).
-    # This, combined with normalization, helps prevent duplicate customers.
+    # NOTE: partialFilterExpression with $ne is not supported in all MongoDB versions.
+    # Using $exists only as a safer alternative.
     await _safe_create(
         db.customers,
         [
@@ -42,9 +43,8 @@ async def ensure_crm_indexes(db):
             ("contacts.type", ASCENDING),
             ("contacts.value", ASCENDING),
         ],
-        name="crm_customers_by_org_contact_unique",
-        unique=True,
-        partialFilterExpression={"contacts": {"$exists": True, "$ne": []}},
+        name="crm_customers_by_org_contact",
+        partialFilterExpression={"contacts": {"$exists": True}},
     )
 
     # future CRM collections (deals, tasks, activities) - prepared for next PRs

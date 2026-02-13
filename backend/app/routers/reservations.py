@@ -88,6 +88,29 @@ async def get_reservation(reservation_id: str, user=Depends(get_current_user)):
     out = serialize_doc(doc)
     out["payments"] = [serialize_doc(p) for p in payments]
     out["due_amount"] = round(float(out.get("total_price") or 0) - float(out.get("paid_amount") or 0), 2)
+
+    # Enrich with customer info
+    try:
+        customer_id = doc.get("customer_id")
+        if customer_id:
+            customer = await db.customers.find_one({"organization_id": user["organization_id"], "_id": customer_id})
+            if customer:
+                out["customer_name"] = customer.get("name", "")
+                out["customer_phone"] = customer.get("phone", "")
+                out["customer_email"] = customer.get("email", "")
+    except Exception:
+        pass
+
+    # Enrich with product info
+    try:
+        product_id = doc.get("product_id")
+        if product_id:
+            product = await db.products.find_one({"organization_id": user["organization_id"], "_id": product_id})
+            if product:
+                out["product_title"] = product.get("title", "")
+    except Exception:
+        pass
+
     return out
 
 

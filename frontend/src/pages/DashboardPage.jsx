@@ -526,8 +526,8 @@ export default function DashboardPage() {
         'Beklemede': totals.pending,
         'Onaylı': totals.confirmed,
         'Ödendi': totals.paid,
-        'Açık Case': caseCounters.open,
-        'İşlemde Case': caseCounters.in_progress,
+        'Açık Talep': caseCounters.open,
+        'İşlemdeki Talep': caseCounters.in_progress,
       },
       chartData,
       attentionItems,
@@ -633,7 +633,7 @@ export default function DashboardPage() {
           comfort={isComfort}
         />
         <KpiCard
-          label="Açık Case"
+          label="Açık Talep"
           value={caseCounters.open}
           icon={AlertCircle}
           color="#ef4444"
@@ -642,7 +642,7 @@ export default function DashboardPage() {
           comfort={isComfort}
         />
         <KpiCard
-          label="İşlemde Case"
+          label="İşlemdeki Talep"
           value={caseCounters.in_progress}
           icon={Activity}
           color="#8b5cf6"
@@ -736,11 +736,11 @@ export default function DashboardPage() {
             emptyText="Rezervasyon verisi yok"
           />
           <MiniDonutCard
-            title="Case Dağılımı"
+            title="Talep Dağılımı"
             data={caseDonutData}
             colors={CASE_COLORS}
             loading={loading}
-            emptyText="Case verisi yok"
+            emptyText="Talep verisi yok"
           />
           <TopProductsCard loading={loading} />
         </div>

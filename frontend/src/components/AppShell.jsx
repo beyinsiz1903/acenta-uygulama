@@ -109,10 +109,11 @@ const ADMIN_GROUPED_NAV = [
   {
     group: "TEMEL",
     items: [
-      { to: "/app", label: "Genel Bakış", icon: LayoutGrid, end: true, modeKey: "dashboard", minMode: "lite" },
+      { to: "/app", label: "Genel Bakis", icon: LayoutGrid, end: true, modeKey: "dashboard", minMode: "lite" },
+      { to: "/app/tours", label: "Turlarimiz", icon: Globe, modeKey: "turlarimiz", minMode: "lite" },
       { to: "/app/reservations", label: "Rezervasyonlar", icon: Ticket, modeKey: "rezervasyonlar", minMode: "lite" },
-      { to: "/app/products", label: "Ürünler", icon: Layers, modeKey: "urunler", minMode: "lite" },
-      { to: "/app/inventory", label: "Müsaitlik", icon: CalendarDays, feature: "inventory", modeKey: "musaitlik", minMode: "lite" },
+      { to: "/app/products", label: "Urunler", icon: Layers, modeKey: "urunler", minMode: "lite" },
+      { to: "/app/inventory", label: "Musaitlik", icon: CalendarDays, feature: "inventory", modeKey: "musaitlik", minMode: "lite" },
     ],
   },
   {

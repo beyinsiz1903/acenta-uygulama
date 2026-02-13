@@ -332,7 +332,7 @@ function AdminFinanceExposurePageInner() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Agency Exposure & Aging"
+        title="Acente Açık Bakiye Takibi"
         description="Acentelerin toplam maruziyeti ve tahsilat yaşlandırmasını tek ekranda gör."
       />
 

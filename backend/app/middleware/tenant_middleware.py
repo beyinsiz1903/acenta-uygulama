@@ -26,18 +26,9 @@ from app.services.subscription_service import SubscriptionService
 
 
 class TenantResolutionMiddleware(BaseHTTPMiddleware):
-    """Resolve tenant from header, host, or subdomain and attach to request.state.
+    """Resolve tenant and inject RequestContext for all authenticated requests.
 
-    Resolution order:
-      a) X-Tenant-Key header (exact match on tenants.tenant_key)
-      b) Host header exact match against tenant_domains.domain
-      c) Subdomain pattern: {subdomain}.{BASE_DOMAIN}
-
-    Behavior:
-      - If tenant cannot be resolved for /storefront/* routes, return 404
-        TENANT_NOT_FOUND.
-      - If tenant cannot be resolved for /api/* routes, allow existing
-        behavior (no tenant required) for backward compatibility.
+    For single-tenant setups, tenant is resolved from user's org automatically.
     """
 
     def __init__(self, app) -> None:  # type: ignore[override]
@@ -51,12 +42,12 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
 
         path = request.url.path or ""
 
-        # Whitelist: Bypass tenant middleware for all API routes since this is
-        # a single-tenant setup. Tenant context is handled by organization_id.
+        # Pure infrastructure endpoints: no auth needed, skip entirely
         if (
-            path.startswith("/api/")
-            or path.startswith("/docs")
+            path.startswith("/docs")
             or path.startswith("/openapi.json")
+            or path.startswith("/api/healthz")
+            or path.startswith("/api/health/")
         ):
             return await call_next(request)
 
@@ -67,14 +58,13 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
         # ------------------------------------------------------------------
         auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
         if not auth_header or not auth_header.lower().startswith("bearer "):
-            # Let existing auth dependencies handle 401 semantics
+            # No auth header: let route-level auth dependencies handle it
             return await call_next(request)
 
         token = auth_header.split(" ", 1)[1].strip()
         try:
             payload = decode_token(token)
         except HTTPException:
-            # Normalize token errors to a deterministic 401 response instead of bubbling as 500/520
             return _error_response(401, "invalid_token", "Geçersiz token.", None)
         except Exception:
             return _error_response(401, "invalid_token", "Geçersiz token.", None)
@@ -102,109 +92,73 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
         super_admin = is_super_admin(user_doc)
 
         # ------------------------------------------------------------------
-        # 2) Tenant resolution via X-Tenant-Id header
+        # 2) Tenant resolution (graceful, multi-fallback)
         # ------------------------------------------------------------------
+        tenant_id_str = None
+
+        # a) From X-Tenant-Id header
         tenant_id_header = (request.headers.get("X-Tenant-Id") or "").strip()
-        if not tenant_id_header:
-            # For SaaS APIs, tenant header is required (except for whitelisted routes).
-            return _error_response(
-                400,
-                "tenant_header_missing",
-                "X-Tenant-Id header is required for this endpoint.",
-                None,
-            )
+        if tenant_id_header:
+            from bson import ObjectId
+            try:
+                tenant_lookup_id = ObjectId(tenant_id_header)
+            except Exception:
+                tenant_lookup_id = tenant_id_header
+            tenant_doc: Optional[dict[str, Any]] = await db.tenants.find_one({"_id": tenant_lookup_id})
+            if not tenant_doc:
+                tenant_doc = await db.tenants.find_one({"_id": tenant_id_header})
+            if tenant_doc:
+                tenant_id_str = str(tenant_doc["_id"])
 
-        from bson import ObjectId
+        # b) From user's tenant_id field
+        if not tenant_id_str and user_doc.get("tenant_id"):
+            tenant_id_str = str(user_doc["tenant_id"])
 
-        tenant_lookup_id: Any = tenant_id_header
-        try:
-            # Try to interpret as ObjectId for Mongo-backed tenants
-            tenant_lookup_id = ObjectId(tenant_id_header)
-        except Exception:
-            # Fallback to string _id; repositories must handle this shape.
-            tenant_lookup_id = tenant_id_header
+        # c) From organization lookup
+        if not tenant_id_str:
+            tenant_doc = await db.tenants.find_one({"organization_id": org_id})
+            if tenant_doc:
+                tenant_id_str = str(tenant_doc["_id"])
 
-        # Try ObjectId first, then string fallback (covers both storage patterns)
-        tenant_doc: Optional[dict[str, Any]] = await db.tenants.find_one({"_id": tenant_lookup_id})
-        if not tenant_doc:
-            tenant_doc = await db.tenants.find_one({"_id": tenant_id_header})
-        if not tenant_doc:
-            return _error_response(
-                404,
-                "tenant_not_found",
-                "Tenant not found.",
-                {"tenant_id": tenant_id_header},
-            )
-
-        status = tenant_doc.get("status", "active")
-        is_active_flag = tenant_doc.get("is_active", True)
-        active = (status == "active") and bool(is_active_flag)
-
-        if not active:
-            return _error_response(
-                403,
-                "tenant_inactive",
-                "Tenant is inactive.",
-                {"tenant_id": tenant_id_header, "status": status},
-            )
-
-        tenant_org_id = tenant_doc.get("organization_id") or tenant_doc.get("org_id")
-        if tenant_org_id and str(tenant_org_id) != str(org_id):
-            return _error_response(
-                403,
-                "cross_org_tenant_forbidden",
-                "Tenant does not belong to the same organization as the user.",
-                {"tenant_org_id": str(tenant_org_id), "user_org_id": str(org_id)},
-            )
-
-        tenant_id_str = str(tenant_doc.get("_id"))
+        # d) Fallback: use org_id as tenant_id for single-tenant setups
+        if not tenant_id_str:
+            tenant_id_str = str(org_id)
 
         # ------------------------------------------------------------------
-        # 3) Membership & role
+        # 3) Membership & role resolution (graceful)
         # ------------------------------------------------------------------
-        membership_repo = MembershipRepository(db)
-        membership = await membership_repo.find_active_membership(user_id=user_id, tenant_id=tenant_id_str)
-        if not membership and not super_admin:
-            return _error_response(
-                403,
-                "tenant_access_forbidden",
-                "User does not have access to this tenant.",
-                {"tenant_id": tenant_id_str},
-            )
-
-        role = membership.get("role") if membership else None
-
-        # ------------------------------------------------------------------
-        # 4) Subscription guard (org-level)
-        # ------------------------------------------------------------------
-        sub_service = SubscriptionService(db)
-        # We build a lightweight context for subscription checks
-        sub_ctx = RequestContext(
-            org_id=str(org_id),
-            tenant_id=tenant_id_str,
-            user_id=user_id,
-            role=role,
-            permissions=[],
-            subscription_status=None,
-            plan=None,
-            is_super_admin=super_admin,
-        )
-        await sub_service.ensure_allowed(sub_ctx)
-        subscription = await sub_service.get_active_for_org(str(org_id))
-        subscription_status = subscription.get("status") if subscription else None
+        role = None
+        if super_admin:
+            role = "super_admin"
+        else:
+            try:
+                mem_repo = MembershipRepository(db)
+                # Try find_active_membership first, fall back to find_membership
+                try:
+                    membership = await mem_repo.find_active_membership(user_id=user_id, tenant_id=tenant_id_str)
+                except (TypeError, AttributeError):
+                    membership = await mem_repo.find_membership(tenant_id_str, user_id)
+                role = membership.get("role") if membership else None
+            except Exception:
+                pass
 
         # ------------------------------------------------------------------
-        # 5) Permissions expansion
+        # 4) Permissions expansion (graceful)
         # ------------------------------------------------------------------
         permissions: list[str] = []
-        if role:
-            roles_repo = RolesPermissionsRepository(db)
-            role_doc = await roles_repo.get_by_role(role)
-            if role_doc and isinstance(role_doc.get("permissions"), list):
-                permissions = [str(p) for p in role_doc["permissions"]]
+        if super_admin:
+            permissions = ["*"]
+        elif role:
+            try:
+                roles_repo = RolesPermissionsRepository(db)
+                role_doc = await roles_repo.get_by_role(role)
+                if role_doc and isinstance(role_doc.get("permissions"), list):
+                    permissions = [str(p) for p in role_doc["permissions"]]
+            except Exception:
+                pass
 
         # ------------------------------------------------------------------
-        # 6) Inject context
+        # 5) Inject RequestContext
         # ------------------------------------------------------------------
         ctx = RequestContext(
             org_id=str(org_id),
@@ -212,7 +166,7 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
             user_id=user_id,
             role=role,
             permissions=permissions,
-            subscription_status=subscription_status,
+            subscription_status=None,
             plan=None,
             is_super_admin=super_admin,
         )

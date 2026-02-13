@@ -3,6 +3,58 @@ import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Palette, Image, Building2, Save, RefreshCw } from "lucide-react";
 
+function hexToHsl(hex) {
+  let r = 0, g = 0, b = 0;
+  hex = hex.replace("#", "");
+  if (hex.length === 3) {
+    r = parseInt(hex[0] + hex[0], 16);
+    g = parseInt(hex[1] + hex[1], 16);
+    b = parseInt(hex[2] + hex[2], 16);
+  } else if (hex.length === 6) {
+    r = parseInt(hex.substring(0, 2), 16);
+    g = parseInt(hex.substring(2, 4), 16);
+    b = parseInt(hex.substring(4, 6), 16);
+  }
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+      default: break;
+    }
+  }
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
+
+function applyBrandColor(hexColor) {
+  if (!hexColor || !hexColor.startsWith("#")) return;
+  const hsl = hexToHsl(hexColor);
+  document.documentElement.style.setProperty("--primary", hsl);
+  document.documentElement.style.setProperty("--ring", hsl);
+  document.documentElement.style.setProperty("--brand-color", hexColor);
+}
+
+function relativeLuminance(hex) {
+  let r = 0, g = 0, b = 0;
+  hex = hex.replace("#", "");
+  r = parseInt(hex.substring(0, 2), 16) / 255;
+  g = parseInt(hex.substring(2, 4), 16) / 255;
+  b = parseInt(hex.substring(4, 6), 16) / 255;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function applyForeground(hexColor) {
+  if (!hexColor || !hexColor.startsWith("#")) return;
+  const lum = relativeLuminance(hexColor);
+  const fg = lum > 0.5 ? "224 26% 16%" : "210 40% 98%";
+  document.documentElement.style.setProperty("--primary-foreground", fg);
+}
+
 const DEFAULT_COLORS = [
   "#3b82f6", "#6366f1", "#8b5cf6", "#ec4899", "#f43f5e",
   "#ef4444", "#f97316", "#eab308", "#22c55e", "#14b8a6",

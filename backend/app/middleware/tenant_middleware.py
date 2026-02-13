@@ -86,6 +86,7 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
             or path.startswith("/api/payments")
             or path.startswith("/api/settings")
             or path.startswith("/api/ops/")
+            or path.startswith("/api/ops-cases")
             or path.startswith("/api/finance")
             or path.startswith("/api/partner")
             or path.startswith("/api/search")

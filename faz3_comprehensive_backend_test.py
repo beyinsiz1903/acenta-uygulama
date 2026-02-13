@@ -33,7 +33,7 @@ from bson import ObjectId
 import os
 
 # Configuration
-BASE_URL = "https://conversational-ai-5.preview.emergentagent.com"
+BASE_URL = "https://test-data-populator.preview.emergentagent.com"
 
 # MongoDB connection (using same connection as backend)
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017/test_database")

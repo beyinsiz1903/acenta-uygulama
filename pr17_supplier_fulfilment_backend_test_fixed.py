@@ -32,7 +32,7 @@ from bson import ObjectId, Decimal128
 import bcrypt
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://conversational-ai-5.preview.emergentagent.com"
+BASE_URL = "https://test-data-populator.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

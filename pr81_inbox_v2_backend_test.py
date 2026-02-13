@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://conversational-ai-5.preview.emergentagent.com"
+BACKEND_URL = "https://test-data-populator.preview.emergentagent.com"
 
 class InboxV2Tester:
     def __init__(self):

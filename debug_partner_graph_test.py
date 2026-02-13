@@ -6,7 +6,7 @@ Debug test for Partner Graph endpoints
 import requests
 import json
 
-BASE_URL = "https://conversational-ai-5.preview.emergentagent.com"
+BASE_URL = "https://test-data-populator.preview.emergentagent.com"
 
 def test_partner_graph_debug():
     # Login

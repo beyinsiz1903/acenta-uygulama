@@ -14,7 +14,7 @@ import asyncio
 import sys
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://conversational-ai-5.preview.emergentagent.com"
+BASE_URL = "https://test-data-populator.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

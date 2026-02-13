@@ -500,8 +500,8 @@ frontend:
 
 metadata:
   created_by: "main_agent"
-  version: "20.0"
-  test_sequence: 28
+  version: "21.0"
+  test_sequence: 29
   run_ui: false
 
 test_plan:

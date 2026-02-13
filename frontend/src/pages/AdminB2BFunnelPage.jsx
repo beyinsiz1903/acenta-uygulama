@@ -90,8 +90,8 @@ export default function AdminB2BFunnelPage() {
 
           {!loading && !error && !hasData && (
             <EmptyState
-              title="Henüz funnel verisi yok"
-              description="Son 30 gün içinde partner kanalından gelen public quote kaydı bulunamadı. Bayi iframe entegrasyonu ile ilk trafiğinizi oluşturduktan sonra buradaki tablo dolacaktır."
+              title="Henüz veri yok"
+              description="Son 30 gün içinde bayiler üzerinden gelen teklif kaydı bulunamadı. İş ortaklarınız üzerinden ilk satışlarınızı oluşturduktan sonra bu alan dolacaktır."
               icon={<ActivityIcon className="h-8 w-8 text-muted-foreground" />}
               className="py-8"
             />

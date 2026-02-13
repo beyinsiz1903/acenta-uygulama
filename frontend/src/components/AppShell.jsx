@@ -267,7 +267,31 @@ function AppShellInner() {
           setBranding(res.data);
           // Apply brand color as CSS variable
           if (res.data.primary_color) {
-            document.documentElement.style.setProperty("--brand-color", res.data.primary_color);
+            // Convert hex to HSL and apply to --primary CSS variable
+            const hex = res.data.primary_color;
+            if (hex && hex.startsWith("#")) {
+              const h = hex.replace("#", "");
+              let r = parseInt(h.substring(0, 2), 16) / 255;
+              let g = parseInt(h.substring(2, 4), 16) / 255;
+              let b = parseInt(h.substring(4, 6), 16) / 255;
+              const max = Math.max(r, g, b), min = Math.min(r, g, b);
+              let hue = 0, sat = 0, lit = (max + min) / 2;
+              if (max !== min) {
+                const d = max - min;
+                sat = lit > 0.5 ? d / (2 - max - min) : d / (max + min);
+                if (max === r) hue = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+                else if (max === g) hue = ((b - r) / d + 2) / 6;
+                else hue = ((r - g) / d + 4) / 6;
+              }
+              const hsl = `${Math.round(hue * 360)} ${Math.round(sat * 100)}% ${Math.round(lit * 100)}%`;
+              document.documentElement.style.setProperty("--primary", hsl);
+              document.documentElement.style.setProperty("--ring", hsl);
+              document.documentElement.style.setProperty("--brand-color", hex);
+              // Auto foreground: light text for dark colors, dark text for light colors
+              const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+              const fg = lum > 0.5 ? "224 26% 16%" : "210 40% 98%";
+              document.documentElement.style.setProperty("--primary-foreground", fg);
+            }
           }
         }
       } catch { /* No branding or not admin - use defaults */ }

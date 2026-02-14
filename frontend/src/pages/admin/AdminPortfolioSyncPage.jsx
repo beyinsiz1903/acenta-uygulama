@@ -156,7 +156,7 @@ function ConfigBanner({ config, onConfigSaved }) {
             onChange={e => setJsonInput(e.target.value)}
             placeholder='{"type": "service_account", "project_id": "...", "client_email": "...", "private_key": "..."}'
             rows={6}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-xs font-mono bg-gray-50 dark:bg-gray-900 text-foreground dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-xs font-mono bg-gray-50 dark:bg-gray-900 text-foreground dark:text-foreground focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           {saveError && (
             <div className="text-xs text-red-600 bg-red-50 rounded p-2">{saveError}</div>
@@ -654,7 +654,7 @@ function AgencyConnectionsSection() {
           {/* Add Form */}
           {showAdd && (
             <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-3 border border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-semibold text-foreground dark:text-gray-200">Yeni Acenta Sheet Baglantisi</h3>
+              <h3 className="text-sm font-semibold text-foreground dark:text-foreground">Yeni Acenta Sheet Baglantisi</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>

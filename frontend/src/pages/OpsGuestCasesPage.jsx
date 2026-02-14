@@ -651,7 +651,7 @@ function OpsGuestCasesPage() {
                           }
                         })()}
                       </td>
-                      <td className="px-3 py-2 text-xs">
+                      <td className="px-3 py-2.5 text-[12px]">
                         <div className={`flex flex-col gap-1 ${dimClass}`}>
                           <div>
                             {(() => {

@@ -335,7 +335,7 @@ export default function AdminOpsIncidentsPage() {
               onClick={goNext}
               disabled={!canNext}
             >
-              Next
+              {t("opsIncidents.next")}
             </Button>
           </div>
         </CardContent>

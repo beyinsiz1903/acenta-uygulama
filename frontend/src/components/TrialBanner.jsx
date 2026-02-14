@@ -36,6 +36,7 @@ export default function TrialBanner() {
 }
 
 function UpgradeModal({ onClose }) {
+  const { t } = useI18n();
   const [plans, setPlans] = useState([]);
   const [sel, setSel] = useState("");
   const [submitting, setSubmitting] = useState(false);

@@ -405,7 +405,7 @@ function OpsGuestCasesPage() {
               setPage(1);
             }}
           >
-            <SelectTrigger className="h-8 text-sm">
+            <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="Tümü" />
             </SelectTrigger>
             <SelectContent>
@@ -418,9 +418,9 @@ function OpsGuestCasesPage() {
         </div>
 
         <div className="flex flex-col gap-1 flex-1">
-          <label className="text-xs font-medium text-muted-foreground">Ara</label>
+          <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Ara</label>
           <Input
-            className="h-8 text-sm"
+            className="h-8 text-xs"
             placeholder="Case ID veya rezervasyon kodu"
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -433,11 +433,12 @@ function OpsGuestCasesPage() {
           />
         </div>
 
-        <div className="flex gap-2 md:ml-auto">
+        <div className="flex gap-1.5 md:ml-auto">
           <Button
             type="button"
             variant="outline"
             size="sm"
+            className="text-xs font-medium h-8"
             onClick={() => {
               setStatus("open");
               setType("");
@@ -448,11 +449,12 @@ function OpsGuestCasesPage() {
             }}
             disabled={loading}
           >
-            Filtreleri sıfırla
+            Sıfırla
           </Button>
           <Button
             type="button"
             size="sm"
+            className="text-xs font-medium h-8"
             onClick={() => {
               setPage(1);
               onRefetch();
@@ -465,8 +467,8 @@ function OpsGuestCasesPage() {
       </div>
 
       {/* Öncelik Sırası Filter Bar */}
-      <div className="rounded-2xl border bg-card p-3 mb-3 flex flex-wrap items-center gap-2">
-        <span className="text-xs font-medium text-muted-foreground mr-2">Öncelik Sırası</span>
+      <div className="rounded-xl border border-border/60 bg-card p-3 flex flex-wrap items-center gap-1.5">
+        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 mr-2">Öncelik Sırası</span>
         <Button
           type="button"
           size="xs"

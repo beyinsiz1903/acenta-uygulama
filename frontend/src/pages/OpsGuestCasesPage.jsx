@@ -95,20 +95,20 @@ function RiskBadge({ kind }) {
 function WaitingBadge({ waitingOn }) {
   const w = normalizeWaitingOn(waitingOn);
   let label = "";
-  let cls = "border text-[9px] px-1.5 py-0.5 rounded-full inline-flex";
+  let cls = "border text-[9px] font-medium tracking-wide px-1.5 py-0.5 rounded-full inline-flex items-center gap-1";
 
   if (w === "customer") {
-    label = "MÜŞTERİ BEKLİYOR";
-    cls += " bg-sky-100 text-sky-900 border-sky-200";
+    label = "Müşteri bkl.";
+    cls += " bg-sky-50 text-sky-700 border-sky-200";
   } else if (w === "supplier") {
-    label = "TEDARİKÇİ BEKLİYOR";
-    cls += " bg-violet-100 text-violet-900 border-violet-200";
+    label = "Tedarikçi bkl.";
+    cls += " bg-violet-50 text-violet-700 border-violet-200";
   } else if (w === "ops") {
-    label = "OPERASYON BEKLİYOR";
-    cls += " bg-slate-100 text-slate-900 border-slate-200";
+    label = "Ops bkl.";
+    cls += " bg-slate-50 text-slate-600 border-slate-200";
   } else if (w === "other") {
-    label = "WAITING: OTHER";
-    cls += " bg-slate-100 text-slate-900 border-slate-200";
+    label = "Diğer bkl.";
+    cls += " bg-slate-50 text-slate-600 border-slate-200";
   } else {
     return null;
   }

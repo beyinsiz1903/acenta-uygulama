@@ -43,19 +43,23 @@ const sheetVariants = cva(
   }
 )
 
-const SheetContent = React.forwardRef(({ side = "right", className, children, ...props }, ref) => (
-  <SheetPortal>
-    <SheetOverlay />
-    <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
-      <SheetPrimitive.Close
-        className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full border bg-background/80 shadow-sm opacity-90 ring-offset-background transition hover:opacity-100 hover:bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </SheetPrimitive.Close>
-      {children}
-    </SheetPrimitive.Content>
-  </SheetPortal>
-))
+const SheetContent = React.forwardRef(({ side = "right", className, children, ...props }, ref) => {
+  const descId = React.useId();
+  return (
+    <SheetPortal>
+      <SheetOverlay />
+      <SheetPrimitive.Content ref={ref} aria-describedby={descId} className={cn(sheetVariants({ side }), className)} {...props}>
+        <span id={descId} className="sr-only">Panel içeriği</span>
+        <SheetPrimitive.Close
+          className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full border bg-background/80 shadow-sm opacity-90 ring-offset-background transition hover:opacity-100 hover:bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </SheetPrimitive.Close>
+        {children}
+      </SheetPrimitive.Content>
+    </SheetPortal>
+  );
+})
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
 const SheetHeader = ({

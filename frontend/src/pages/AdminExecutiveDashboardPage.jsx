@@ -424,7 +424,7 @@ export default function AdminExecutiveDashboardPage() {
                   margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="channel" tick={{ fontSize: 11 }} />
+                  <XAxis dataKey="channel" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
                   <Tooltip
                     formatter={(value, key) =>

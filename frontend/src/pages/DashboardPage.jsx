@@ -1056,8 +1056,8 @@ export default function DashboardPage() {
             <div style={{ minHeight: 280, minWidth: 200 }} data-testid="sales-chart">
               <ResponsiveContainer width="100%" height={280} minWidth={200}>
                 <BarChart data={chartData} margin={{ left: 0, right: 4, top: 8, bottom: 0 }}>
-                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={40} />
+                  <XAxis dataKey="day" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={40} />
                   <Tooltip content={<ChartTooltip metric={chartMetric} />} cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }} />
                   <Bar dataKey={chartMetric} fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} maxBarSize={32} />
                 </BarChart>

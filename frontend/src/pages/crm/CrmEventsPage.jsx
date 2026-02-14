@@ -94,7 +94,7 @@ function EventRow({ event, onToggle }) {
         }}
       >
         <div style={{ minWidth: 0, flex: "1 1 200px" }}>
-          <div style={{ fontSize: 13, color: "#111", fontWeight: 600 }}>
+          <div style={{ fontSize: 14, color: "#111", fontWeight: 600 }}>
             {event.entity_type} {event.action}{" "}
             {entityLink ? (
               <a
@@ -124,7 +124,7 @@ function EventRow({ event, onToggle }) {
                     }}
                     style={{
                       marginLeft: 8,
-                      fontSize: 11,
+                      fontSize: 12,
                       padding: "2px 6px",
                       borderRadius: 999,
                       border: "1px solid #e5e7eb",
@@ -148,7 +148,7 @@ function EventRow({ event, onToggle }) {
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <span
             style={{
-              fontSize: 11,
+              fontSize: 12,
               padding: "2px 8px",
               borderRadius: 999,
               border: "1px solid #e5e7eb",
@@ -236,7 +236,7 @@ function EventRow({ event, onToggle }) {
                         key={idx}
                         href={chip.href}
                         style={{
-                          fontSize: 11,
+                          fontSize: 12,
                           padding: "4px 8px",
                           borderRadius: 999,
                           border: "1px solid #e5e7eb",
@@ -424,8 +424,8 @@ export default function CrmEventsPage() {
         }}
       >
         <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>CRM Olaylar</h1>
-          <div style={{ marginTop: 4, fontSize: 13, color: "#6b7280" }}>
+          <h1 style={{ margin: 0, fontSize: 20 }}>CRM Olaylar</h1>
+          <div style={{ marginTop: 4, fontSize: 14, color: "#6b7280" }}>
             Kritik CRM işlemlerinin kim tarafından, ne zaman yapıldığını izleyin.
           </div>
         </div>
@@ -552,7 +552,7 @@ export default function CrmEventsPage() {
             minWidth: 220,
           }}
         >
-          <label style={{ fontSize: 11, color: "#6b7280" }}>Gelişmiş tarih aralığı (opsiyonel)</label>
+          <label style={{ fontSize: 12, color: "#6b7280" }}>Gelişmiş tarih aralığı (opsiyonel)</label>
           <div style={{ display: "flex", gap: 6 }}>
             <input
               type="datetime-local"
@@ -590,7 +590,7 @@ export default function CrmEventsPage() {
             background: loading ? "#4b5563" : "#111827",
             color: "#ffffff",
             cursor: loading ? "not-allowed" : "pointer",
-            fontSize: 13,
+            fontSize: 14,
           }}
         >
           {loading ? "Y\u00fckleniyor..." : "Filtrele"}
@@ -607,7 +607,7 @@ export default function CrmEventsPage() {
             border: "1px solid #f2caca",
             background: "#fff5f5",
             color: "#8a1f1f",
-            fontSize: 13,
+            fontSize: 14,
           }}
         >
           {errMsg}
@@ -621,7 +621,7 @@ export default function CrmEventsPage() {
             padding: 10,
             borderBottom: "1px solid #eee",
             background: "#fafafa",
-            fontSize: 13,
+            fontSize: 14,
             color: "#666",
             display: "flex",
             justifyContent: "space-between",
@@ -668,7 +668,7 @@ export default function CrmEventsPage() {
             background: !hasNext ? "#f3f4f6" : "#ffffff",
             color: "#111827",
             cursor: !hasNext ? "not-allowed" : "pointer",
-            fontSize: 13,
+            fontSize: 14,
           }}
         >
           {hasNext ? "Daha fazla yükle" : "Kayıt kalmadı"}

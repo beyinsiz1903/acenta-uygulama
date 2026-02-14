@@ -120,7 +120,7 @@ function TimelineTab({ customerId }) {
               onClick={() => setFilter(f.value)}
               data-testid={`timeline-filter-${f.value || "all"}`}
               style={{
-                padding: "4px 10px", borderRadius: 999, fontSize: 11, border: "1px solid #ddd",
+                padding: "4px 10px", borderRadius: 999, fontSize: 12, border: "1px solid #ddd",
                 background: filter === f.value ? "#2563eb" : "#fff",
                 color: filter === f.value ? "#fff" : "#555",
                 cursor: "pointer",
@@ -135,17 +135,17 @@ function TimelineTab({ customerId }) {
           {[1,2,3].map((i) => <div key={i} style={{ height: 48, background: "#f3f4f6", borderRadius: 8, animation: "pulse 1.5s infinite" }} />)}
         </div>
       ) : items.length === 0 ? (
-        <div style={{ color: "#999", fontSize: 13, textAlign: "center", padding: 24 }}>Bu musteri icin aktivite yok</div>
+        <div style={{ color: "#999", fontSize: 14, textAlign: "center", padding: 24 }}>Bu musteri icin aktivite yok</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {items.map((item, i) => (
             <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 4px", borderBottom: "1px solid #f3f4f6" }} data-testid="timeline-item">
               <span style={{ fontSize: 18, lineHeight: 1, marginTop: 2 }}>{TL_ICONS[item.type] || "\u{1F4CC}"}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#222" }}>{item.title}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#222" }}>{item.title}</div>
                 {item.subtitle && <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>{item.subtitle}</div>}
               </div>
-              <div style={{ fontSize: 11, color: "#999", whiteSpace: "nowrap" }} title={item.ts ? new Date(item.ts).toLocaleString("tr-TR") : ""}>
+              <div style={{ fontSize: 12, color: "#999", whiteSpace: "nowrap" }} title={item.ts ? new Date(item.ts).toLocaleString("tr-TR") : ""}>
                 {relTime(item.ts)}
               </div>
             </div>
@@ -423,7 +423,7 @@ export default function CrmCustomerDetailPage() {
             border: "1px solid #f2caca",
             background: "#fff5f5",
             color: "#8a1f1f",
-            fontSize: 13,
+            fontSize: 14,
           }}
         >
           <div style={{ fontWeight: 600, marginBottom: 4 }}>Bu müşteri kaydı birleştirildi.</div>
@@ -453,14 +453,14 @@ export default function CrmCustomerDetailPage() {
       <div style={{ marginTop: 12, border: "1px solid #eee", borderRadius: 12, padding: 14 }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: 22 }}>{customer.name}</h1>
+            <h1 style={{ margin: 0, fontSize: 20 }}>{customer.name}</h1>
 
             <div style={{ marginTop: 6 }}>
               <Badge>{customer.type === "corporate" ? "Kurumsal" : "Bireysel"}</Badge>
               {customer.tc_vkn ? <Badge>TC/VKN: {customer.tc_vkn}</Badge> : null}
             </div>
 
-            <div style={{ marginTop: 8, fontSize: 13, color: "#444" }}>
+            <div style={{ marginTop: 8, fontSize: 14, color: "#444" }}>
               <PrimaryContactLine contacts={customer.contacts} />
             </div>
           </div>
@@ -495,7 +495,7 @@ export default function CrmCustomerDetailPage() {
                 {(customer.tags || []).length ? (
                   (customer.tags || []).map((t) => <Badge key={t}>{t}</Badge>)
                 ) : (
-                  <div style={{ color: "#666", fontSize: 13 }}>Etiket yok</div>
+                  <div style={{ color: "#666", fontSize: 14 }}>Etiket yok</div>
                 )}
               </div>
             ) : (
@@ -584,13 +584,13 @@ export default function CrmCustomerDetailPage() {
               </div>
 
               {inboxLoading && (
-                <div style={{ marginTop: 8, fontSize: 13, color: "#666" }}>Inbox yükleniyor...</div>
+                <div style={{ marginTop: 8, fontSize: 14, color: "#666" }}>Inbox yükleniyor...</div>
               )}
               {!inboxLoading && inboxErr && (
-                <div style={{ marginTop: 8, fontSize: 13, color: "#8a1f1f" }}>Inbox yükleme hatası: {inboxErr}</div>
+                <div style={{ marginTop: 8, fontSize: 14, color: "#8a1f1f" }}>Inbox yükleme hatası: {inboxErr}</div>
               )}
               {!inboxLoading && !inboxErr && inboxThreads.length === 0 && (
-                <div style={{ marginTop: 8, fontSize: 13, color: "#666" }}>Bu müşteri için henüz inbox kaydı yok.</div>
+                <div style={{ marginTop: 8, fontSize: 14, color: "#666" }}>Bu müşteri için henüz inbox kaydı yok.</div>
               )}
               {!inboxLoading && !inboxErr && inboxThreads.length > 0 && (
                 <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
@@ -605,7 +605,7 @@ export default function CrmCustomerDetailPage() {
                         alignItems: "center",
                         justifyContent: "space-between",
                         gap: 8,
-                        fontSize: 13,
+                        fontSize: 14,
                       }}
                     >
                       <div style={{ minWidth: 0 }}>
@@ -658,7 +658,7 @@ export default function CrmCustomerDetailPage() {
                     ))}
                   </ul>
                 ) : (
-                  <div style={{ color: "#666", fontSize: 13 }}>Bu müşteri için henüz rezervasyon yok.</div>
+                  <div style={{ color: "#666", fontSize: 14 }}>Bu müşteri için henüz rezervasyon yok.</div>
                 )}
               </div>
             </div>
@@ -683,7 +683,7 @@ export default function CrmCustomerDetailPage() {
                     ))}
                   </ul>
                 ) : (
-                  <div style={{ color: "#666", fontSize: 13 }}>Henüz açık fırsat yok. (PR#3 ile dolacak)</div>
+                  <div style={{ color: "#666", fontSize: 14 }}>Henüz açık fırsat yok. (PR#3 ile dolacak)</div>
                 )}
               </div>
             </div>
@@ -705,7 +705,7 @@ export default function CrmCustomerDetailPage() {
                     ))}
                   </ul>
                 ) : (
-                  <div style={{ color: "#666", fontSize: 13 }}>Henüz açık görev yok. (PR#3 ile dolacak)</div>
+                  <div style={{ color: "#666", fontSize: 14 }}>Henüz açık görev yok. (PR#3 ile dolacak)</div>
                 )}
               </div>
             </div>
@@ -722,7 +722,7 @@ export default function CrmCustomerDetailPage() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <div>
               <div style={{ fontWeight: 700 }}>Aktiviteler</div>
-              <div style={{ marginTop: 4, fontSize: 13, color: "#666" }}>
+              <div style={{ marginTop: 4, fontSize: 14, color: "#666" }}>
                 {"Notlar / görüşmeler / e-postalar"}
               </div>
             </div>
@@ -740,7 +740,7 @@ export default function CrmCustomerDetailPage() {
                 padding: 10,
                 borderRadius: 10,
                 border: "1px solid #ddd",
-                fontSize: 13,
+                fontSize: 14,
                 resize: "vertical",
               }}
             />
@@ -758,7 +758,7 @@ export default function CrmCustomerDetailPage() {
                   background: "#111",
                   color: "white",
                   cursor: creating || !newBody.trim() ? "not-allowed" : "pointer",
-                  fontSize: 13,
+                  fontSize: 14,
                 }}
               >
                 {creating ? "Ekleniyor..." : "Not ekle"}
@@ -769,7 +769,7 @@ export default function CrmCustomerDetailPage() {
           {/* Activity list */}
           <div style={{ marginTop: 12 }}>
             {activitiesLoading && (
-              <div style={{ color: "#666", fontSize: 13 }}>Aktiviteler yükleniyor...</div>
+              <div style={{ color: "#666", fontSize: 14 }}>Aktiviteler yükleniyor...</div>
             )}
             {!activitiesLoading && activitiesErr && (
               <div
@@ -779,14 +779,14 @@ export default function CrmCustomerDetailPage() {
                   border: "1px solid #f2caca",
                   background: "#fff5f5",
                   color: "#8a1f1f",
-                  fontSize: 13,
+                  fontSize: 14,
                 }}
               >
                 {activitiesErr}
               </div>
             )}
             {!activitiesLoading && !activitiesErr && !activities.length && (
-              <div style={{ color: "#666", fontSize: 13 }}>Bu müşteri için henüz aktivite kaydı yok.</div>
+              <div style={{ color: "#666", fontSize: 14 }}>Bu müşteri için henüz aktivite kaydı yok.</div>
             )}
             {!activitiesLoading && !activitiesErr && activities.length > 0 && (
               <ul style={{ listStyle: "none", margin: 0, padding: 0, marginTop: 8 }}>
@@ -802,10 +802,10 @@ export default function CrmCustomerDetailPage() {
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: "#444" }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#444" }}>
                         {act.type === "note" ? "Not" : act.type}
                       </div>
-                      <div style={{ fontSize: 11, color: "#666" }}>
+                      <div style={{ fontSize: 12, color: "#666" }}>
                         {act.created_at
                           ? new Date(act.created_at).toLocaleString("tr-TR")
                           : ""}
@@ -814,7 +814,7 @@ export default function CrmCustomerDetailPage() {
                     <div
                       style={{
                         marginTop: 4,
-                        fontSize: 13,
+                        fontSize: 14,
                         color: "#333",
                         whiteSpace: "pre-wrap",
                         wordBreak: "break-word",

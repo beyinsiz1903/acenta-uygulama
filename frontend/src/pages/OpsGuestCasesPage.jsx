@@ -325,30 +325,31 @@ function OpsGuestCasesPage() {
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-4">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-5">
       <PageHeader
         title="Talep Yönetimi"
-        subtitle="Tüm kaynaklardan gelen talepleri tek ekranda yönetin."
-        icon={<Filter className="h-6 w-6 text-muted-foreground" />}
+        subtitle="Tüm kaynaklardan gelen talepleri tek ekranda yönetin"
+        icon={<Filter className="h-5 w-5 text-muted-foreground" />}
         actions={
           <Button
             variant="outline"
             size="sm"
+            className="gap-1.5 text-xs font-medium h-8"
             onClick={() => {
               setPage(1);
               onRefetch();
             }}
             disabled={loading}
           >
-            <RefreshCw className="h-4 w-4 mr-1" /> Yenile
+            <RefreshCw className="h-3.5 w-3.5" /> Yenile
           </Button>
         }
       />
 
       {/* Filter bar */}
-      <div className="rounded-2xl border bg-card p-3 md:p-4 flex flex-col md:flex-row gap-3 md:items-end">
-        <div className="flex flex-col gap-1 w-full md:w-[180px]">
-          <label className="text-xs font-medium text-muted-foreground">Durum</label>
+      <div className="rounded-xl border border-border/60 bg-card p-3 md:p-4 flex flex-col md:flex-row gap-2.5 md:items-end">
+        <div className="flex flex-col gap-1 w-full md:w-[160px]">
+          <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Durum</label>
           <Select
             value={status}
             onValueChange={(val) => {
@@ -356,7 +357,7 @@ function OpsGuestCasesPage() {
               setPage(1);
             }}
           >
-            <SelectTrigger className="h-8 text-sm">
+            <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="Durum" />
             </SelectTrigger>
             <SelectContent>
@@ -369,8 +370,8 @@ function OpsGuestCasesPage() {
           </Select>
         </div>
 
-        <div className="flex flex-col gap-1 w-full md:w-[180px]">
-          <label className="text-xs font-medium text-muted-foreground">Tip</label>
+        <div className="flex flex-col gap-1 w-full md:w-[160px]">
+          <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Tip</label>
           <Select
             value={type || "all"}
             onValueChange={(val) => {
@@ -378,7 +379,7 @@ function OpsGuestCasesPage() {
               setPage(1);
             }}
           >
-            <SelectTrigger className="h-8 text-sm">
+            <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="Tümü" />
             </SelectTrigger>
             <SelectContent>
@@ -395,8 +396,8 @@ function OpsGuestCasesPage() {
           </Select>
         </div>
 
-        <div className="flex flex-col gap-1 w-full md:w-[180px]">
-          <label className="text-xs font-medium text-muted-foreground">Kaynak</label>
+        <div className="flex flex-col gap-1 w-full md:w-[160px]">
+          <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Kaynak</label>
           <Select
             value={source || "all"}
             onValueChange={(val) => {

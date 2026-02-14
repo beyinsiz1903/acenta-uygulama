@@ -105,7 +105,7 @@ function SupplierHealthBadge({ badge }) {
               className="text-2xs bg-emerald-50 text-emerald-900 border-emerald-200"
               data-testid="ops-incidents-health-closed"
             >
-              Circuit: CLOSED
+              {t("opsIncidents.circuit_closed")}
             </Badge>
           </TooltipTrigger>
           <TooltipContent side="top" className="text-xs">

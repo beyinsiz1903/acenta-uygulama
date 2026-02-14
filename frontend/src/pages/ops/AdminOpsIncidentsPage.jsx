@@ -55,6 +55,7 @@ function StatusBadge({ status }) {
 }
 
 function SupplierHealthBadge({ badge }) {
+  const { t } = useI18n();
   if (!badge) {
     return <span className="text-xs text-muted-foreground">—</span>;
   }

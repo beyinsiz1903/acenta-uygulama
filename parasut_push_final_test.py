@@ -466,7 +466,7 @@ class ParasutFinalTester:
 
 async def main():
     """Ana test çalıştırıcısı"""
-    backend_url = "https://ui-consistency-50.preview.emergentagent.com"
+    backend_url = "https://better-menu-labels.preview.emergentagent.com"
     
     print(f"🚀 Paraşüt Push V1 Backend API Final Regression Test")
     print(f"Backend URL: {backend_url}")

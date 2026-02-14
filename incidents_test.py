@@ -9,7 +9,7 @@ import json
 import sys
 from datetime import datetime
 
-BACKEND_URL = "https://ui-consistency-50.preview.emergentagent.com/api"
+BACKEND_URL = "https://better-menu-labels.preview.emergentagent.com/api"
 
 class IncidentsFixTester:
     def __init__(self):

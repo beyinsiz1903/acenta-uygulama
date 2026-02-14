@@ -20,7 +20,7 @@ import secrets
 import os
 
 # Test configuration
-BACKEND_URL = "https://ui-consistency-50.preview.emergentagent.com/api"
+BACKEND_URL = "https://better-menu-labels.preview.emergentagent.com/api"
 
 class RateLimitFocusedTester:
     def __init__(self):

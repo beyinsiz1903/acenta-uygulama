@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://ui-consistency-50.preview.emergentagent.com"
+BASE_URL = "https://better-menu-labels.preview.emergentagent.com"
 
 def login_agency():
     """Login as agency user and return token, org_id, agency_id, email"""

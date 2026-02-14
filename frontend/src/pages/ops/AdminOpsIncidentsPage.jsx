@@ -580,7 +580,7 @@ export default function AdminOpsIncidentsPage() {
                             : "-"}
                         </div>
                         <div>
-                          <span className="font-semibold">Error rate:</span>{" "}
+                          <span className="font-semibold">{t("opsIncidents.error_rate")}:</span>{" "}
                           {detail.supplier_health.error_rate != null
                             ? `${Math.round(detail.supplier_health.error_rate * 100)}%`
                             : "-"}

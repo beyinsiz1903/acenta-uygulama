@@ -326,7 +326,7 @@ export default function AdminOpsIncidentsPage() {
               onClick={goPrev}
               disabled={!canPrev}
             >
-              Prev
+              {t("opsIncidents.prev")}
             </Button>
             <Button
               size="sm"

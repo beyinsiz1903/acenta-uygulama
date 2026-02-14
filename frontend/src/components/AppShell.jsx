@@ -640,7 +640,7 @@ function AppShellInner() {
               onClick={toggleCollapse}
               className="h-7 w-7 rounded-md flex items-center justify-center hover:bg-muted/50 transition-colors text-muted-foreground"
               data-testid="sidebar-toggle"
-              title={collapsed ? "Genişlet" : "Daralt"}
+              title={collapsed ? t("topbar.expand") : t("topbar.collapse")}
             >
               {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
             </button>

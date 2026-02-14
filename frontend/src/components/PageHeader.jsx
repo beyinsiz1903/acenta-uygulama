@@ -12,14 +12,14 @@ export function PageHeader({ title, subtitle, icon, actions, className }) {
     <div className={cn("flex items-start justify-between gap-4", className)}>
       <div className="flex items-start gap-3 min-w-0">
         {icon ? (
-          <div className="mt-1 shrink-0">{icon}</div>
+          <div className="mt-0.5 shrink-0 opacity-50">{icon}</div>
         ) : null}
         <div className="min-w-0">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground truncate">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground truncate">
             {title}
           </h1>
           {subtitle ? (
-            <p className="mt-1 text-sm text-muted-foreground break-words">
+            <p className="mt-0.5 text-xs font-medium text-muted-foreground/70 break-words">
               {subtitle}
             </p>
           ) : null}

@@ -126,46 +126,126 @@ export default function CrmDuplicateCustomersPage() {
   }
 
   return (
-    <div style={{ padding: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+    <div className="p-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <button
           onClick={() => navigate(-1)}
-          style={{
-            padding: "8px 10px",
-            borderRadius: 10,
-            border: "1px solid #ddd",
-            background: "#fff",
-            cursor: "pointer",
-          }}
+          className="px-2.5 py-2 rounded-lg border border-border bg-card cursor-pointer text-sm font-medium text-foreground hover:bg-muted transition-colors"
         >
           ← Geri
         </button>
-        <h1 style={{ margin: 0, fontSize: 22 }}>CRM Duplicate Müşteriler</h1>
+        <h1 className="m-0 text-xl font-bold text-foreground">CRM Duplicate Müşteriler</h1>
       </div>
 
       {errMsg ? (
-        <div
-          style={{
-            marginTop: 12,
-            padding: 12,
-            borderRadius: 12,
-            border: "1px solid #f2caca",
-            background: "#fff5f5",
-            color: "#8a1f1f",
-            fontSize: 13,
-          }}
-        >
+        <div className="mt-3 p-3 rounded-xl border border-destructive/30 bg-destructive/5 text-destructive text-sm">
           {errMsg}
         </div>
       ) : null}
 
-      <div style={{ marginTop: 12, fontSize: 13, color: "#666" }}>
+      <div className="mt-3 text-sm text-muted-foreground">
         {loading
-          ? "Y\u00fckleniyor..."
+          ? "Yükleniyor..."
           : clusters.length
-          ? `${clusters.length} contact anahtar\u0131 i\u00e7in duplicate bulundu.`
-          : "Duplicate m\u00fc\u015fteri bulunamad\u0131."}
+          ? `${clusters.length} contact anahtarı için duplicate bulundu.`
+          : "Duplicate müşteri bulunamadı."}
       </div>
+
+      <div className="mt-3 flex flex-col gap-3">
+        {!loading && clusters.length === 0 ? (
+          <div className="p-6 rounded-2xl border border-border bg-muted text-center max-w-md mx-auto mt-6">
+            <div className="text-3xl mb-2">👥</div>
+            <div className="text-sm font-semibold mb-1 text-foreground">Duplicate müşteri bulunamadı.</div>
+            <div className="text-xs text-muted-foreground">
+              CRM verinizde aynı iletişim anahtarına sahip birden fazla müşteri kaydı tespit edilmedi.
+            </div>
+          </div>
+        ) : (
+          clusters.map((cluster) => {
+          const key = contactKey(cluster.contact);
+          const preview = previewByKey[key];
+          const isLoading = loadingKey === key;
+          const isMerging = mergingKey === key;
+          return (
+            <div key={key} className="border border-border rounded-xl p-3 bg-muted/50">
+              <div className="flex justify-between gap-3 flex-wrap">
+                <div>
+                  <div className="text-xs text-muted-foreground">Contact</div>
+                  <div className="text-sm font-semibold text-foreground">
+                    {cluster.contact?.type}: {cluster.contact?.value}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleDryRun(cluster)}
+                    disabled={isLoading || isMerging}
+                    className="px-2.5 py-1.5 rounded-full border border-foreground bg-card text-xs disabled:cursor-not-allowed cursor-pointer hover:bg-muted transition-colors"
+                  >
+                    {isLoading ? "Dry-run..." : "Dry-run"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleMerge(cluster)}
+                    disabled={isMerging || !cluster.duplicates?.length}
+                    className="px-2.5 py-1.5 rounded-full border border-foreground bg-foreground text-primary-foreground text-xs disabled:cursor-not-allowed cursor-pointer hover:opacity-90 transition-opacity"
+                  >
+                    {isMerging ? "Merge yapılıyor..." : "Merge et"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-2.5 grid grid-cols-[1fr_2fr] gap-2.5">
+                <div className="border border-border rounded-lg p-2 bg-card">
+                  <div className="text-xs text-muted-foreground">Primary</div>
+                  <div className="text-sm font-semibold text-foreground">{cluster.primary?.name || cluster.primary?.id}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    ID: <code>{cluster.primary?.id}</code>
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {formatDate(cluster.primary?.updated_at)}
+                  </div>
+                </div>
+
+                <div className="border border-border rounded-lg p-2 bg-card">
+                  <div className="text-xs text-muted-foreground">Duplicates</div>
+                  {cluster.duplicates?.length ? (
+                    <ul className="m-0 pl-4 mt-1">
+                      {cluster.duplicates.map((d) => (
+                        <li key={d.id} className="mb-1">
+                          <div className="text-sm font-medium text-foreground">{d.name || d.id}</div>
+                          <div className="text-xs text-muted-foreground">
+                            ID: <code>{d.id}</code>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {formatDate(d.updated_at)}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="mt-1 text-xs text-muted-foreground">Duplicate kayıt yok.</div>
+                  )}
+                </div>
+              </div>
+
+              {preview ? (
+                <div className="mt-2.5 p-2 rounded-lg border border-dashed border-border bg-muted text-xs text-foreground">
+                  <div className="font-semibold mb-1">Etki özeti (dry-run)</div>
+                  <div>Bookings: {preview.rewired?.bookings?.matched || 0} hedef, {preview.rewired?.bookings?.modified || 0} değişiklik</div>
+                  <div>Deals: {preview.rewired?.deals?.matched || 0} hedef, {preview.rewired?.deals?.modified || 0} değişiklik</div>
+                  <div>Tasks: {preview.rewired?.tasks?.matched || 0} hedef, {preview.rewired?.tasks?.modified || 0} değişiklik</div>
+                  <div>Activities: {preview.rewired?.activities?.matched || 0} hedef, {preview.rewired?.activities?.modified || 0} değişiklik</div>
+                </div>
+              ) : null}
+            </div>
+          );
+        })
+        )}
+      </div>
+    </div>
+  );
+}
 
       <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 12 }}>
         {!loading && clusters.length === 0 ? (

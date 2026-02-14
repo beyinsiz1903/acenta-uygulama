@@ -704,7 +704,7 @@ function OpsGuestCasesPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-2 text-xs">
+                      <td className="px-3 py-2.5 text-[12px] text-foreground/60">
                         {(() => {
                           switch (c.source) {
                             case "guest_portal":
@@ -714,12 +714,12 @@ function OpsGuestCasesPage() {
                             case "system":
                               return "Sistem";
                             default:
-                              return c.source || "-";
+                              return c.source || "—";
                           }
                         })()}
                       </td>
-                      <td className="px-3 py-2 text-xs text-muted-foreground">
-                        {created ? created.toLocaleString("tr-TR") : "-"}
+                      <td className="px-3 py-2.5 text-[11px] text-muted-foreground/60">
+                        {created ? created.toLocaleString("tr-TR") : "—"}
                       </td>
                     </tr>
                   );

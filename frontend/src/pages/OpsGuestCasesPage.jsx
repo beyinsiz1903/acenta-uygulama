@@ -731,7 +731,7 @@ function OpsGuestCasesPage() {
 
         {/* Basit pagination */}
         {hasAny && !error && (
-          <div className="flex items-center justify-between px-3 py-2 border-t text-xs text-muted-foreground">
+          <div className="flex items-center justify-between px-4 py-2.5 border-t text-[11px] text-muted-foreground/60">
             <span>
               Toplam {total} kayıt
             </span>

@@ -324,7 +324,7 @@ class VoucherTester:
         voucher_tests_total = 0
         
         for reservation in reservations[:3]:  # Test first 3 reservations
-            reservation_id = reservation.get("_id")
+            reservation_id = reservation.get("id", reservation.get("_id"))
             pnr = reservation.get("pnr", "N/A")
             
             if reservation_id:

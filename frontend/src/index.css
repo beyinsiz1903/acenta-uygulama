@@ -105,6 +105,16 @@ code {
     body {
         @apply bg-background text-foreground;
     }
+    /* Typography: Manrope for headings, Inter for body */
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Manrope', 'Inter', system-ui, sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+    }
+    h1 { @apply text-2xl sm:text-3xl; }
+    h2 { @apply text-xl sm:text-2xl; }
+    h3 { @apply text-lg; }
+    h4 { @apply text-base; }
 }
 
 @layer base {

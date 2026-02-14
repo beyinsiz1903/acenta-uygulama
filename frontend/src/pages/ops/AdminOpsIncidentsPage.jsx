@@ -90,7 +90,7 @@ function SupplierHealthBadge({ badge }) {
         className="text-2xs"
         data-testid="ops-incidents-health-open"
       >
-        Circuit: OPEN
+        {t("opsIncidents.circuit_open")}
       </Badge>
     );
   }

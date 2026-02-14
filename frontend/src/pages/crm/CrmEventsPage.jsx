@@ -27,8 +27,6 @@ function getEntityLink(event) {
 
 async function copyTextToClipboard(text) {
   if (!text) return { ok: false, method: "empty" };
-
-  // 1) Modern API
   try {
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);
@@ -37,8 +35,6 @@ async function copyTextToClipboard(text) {
   } catch (e) {
     // fall through to fallback
   }
-
-  // 2) execCommand fallback
   try {
     const ta = document.createElement("textarea");
     ta.value = text;
@@ -49,13 +45,28 @@ async function copyTextToClipboard(text) {
     document.body.appendChild(ta);
     ta.select();
     ta.setSelectionRange(0, ta.value.length);
-
     const ok = document.execCommand("copy");
     document.body.removeChild(ta);
     return { ok, method: "execCommand" };
   } catch (e) {
     return { ok: false, method: "failed" };
   }
+}
+
+function RangeButton({ active, onClick, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`px-2.5 py-2 rounded-full border text-xs cursor-pointer transition-colors ${
+        active
+          ? "border-foreground bg-foreground text-primary-foreground"
+          : "border-border bg-card text-foreground hover:bg-muted"
+      }`}
+    >
+      {children}
+    </button>
+  );
 }
 
 function EventRow({ event, onToggle }) {
@@ -78,29 +89,13 @@ function EventRow({ event, onToggle }) {
   const entityLink = getEntityLink(event);
 
   return (
-    <div
-      style={{
-        borderBottom: "1px solid #f3f3f3",
-        padding: "10px 12px",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
-        <div style={{ minWidth: 0, flex: "1 1 200px" }}>
-          <div style={{ fontSize: 14, color: "#111", fontWeight: 600 }}>
+    <div className="border-b border-border/50 px-3 py-2.5">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="min-w-0 flex-[1_1_200px]">
+          <div className="text-sm text-foreground font-semibold">
             {event.entity_type} {event.action}{" "}
             {entityLink ? (
-              <a
-                href={entityLink}
-                style={{ color: "#2563eb", textDecoration: "underline" }}
-              >
+              <a href={entityLink} className="text-primary underline">
                 {event.entity_id}
               </a>
             ) : (
@@ -115,22 +110,12 @@ function EventRow({ event, onToggle }) {
                       if (!event.entity_id) return;
                       const res = await copyTextToClipboard(event.entity_id);
                       if (res.ok) {
-                        toast.success("ID kopyaland\u0131.");
+                        toast.success("ID kopyalandı.");
                       } else {
-                        toast.error(
-                          "ID kopyalanamad\u0131. Kopyalamak i\u00e7in ID'yi se\u00e7ip Ctrl+C yap\u0131n."
-                        );
+                        toast.error("ID kopyalanamadı. Kopyalamak için ID'yi seçip Ctrl+C yapın.");
                       }
                     }}
-                    style={{
-                      marginLeft: 8,
-                      fontSize: 12,
-                      padding: "2px 6px",
-                      borderRadius: 999,
-                      border: "1px solid #e5e7eb",
-                      background: "#f9fafb",
-                      cursor: "pointer",
-                    }}
+                    className="ml-2 text-xs px-1.5 py-0.5 rounded-full border border-border bg-muted cursor-pointer hover:bg-accent transition-colors"
                     aria-label="ID kopyala"
                     title="ID kopyala"
                   >
@@ -140,37 +125,24 @@ function EventRow({ event, onToggle }) {
               </>
             )}
           </div>
-          <div style={{ marginTop: 2, fontSize: 12, color: "#4b5563" }}>{createdAtLabel}</div>
+          <div className="mt-0.5 text-xs text-muted-foreground">{createdAtLabel}</div>
         </div>
 
-        <div style={{ minWidth: 0, flex: "1 1 160px", fontSize: 12, color: "#4b5563" }}>{actorLabel}</div>
+        <div className="min-w-0 flex-[1_1_160px] text-xs text-muted-foreground">{actorLabel}</div>
 
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span
-            style={{
-              fontSize: 12,
-              padding: "2px 8px",
-              borderRadius: 999,
-              border: "1px solid #e5e7eb",
-              background: "#f9fafb",
-              color: "#4b5563",
-            }}
-          >
+        <div className="flex gap-2 items-center">
+          <span className="text-xs px-2 py-0.5 rounded-full border border-border bg-muted text-muted-foreground">
             {event.source || "api"}
           </span>
 
           <button
             type="button"
             onClick={toggle}
-            style={{
-              padding: "6px 10px",
-              borderRadius: 999,
-              border: "1px solid #111827",
-              background: open ? "#111827" : "#ffffff",
-              color: open ? "#ffffff" : "#111827",
-              cursor: "pointer",
-              fontSize: 12,
-            }}
+            className={`px-2.5 py-1.5 rounded-full border text-xs cursor-pointer transition-colors ${
+              open
+                ? "border-foreground bg-foreground text-primary-foreground"
+                : "border-foreground bg-card text-foreground hover:bg-muted"
+            }`}
           >
             {open ? "Detayı kapat" : "Detay"}
           </button>
@@ -178,16 +150,7 @@ function EventRow({ event, onToggle }) {
       </div>
 
       {open ? (
-        <div
-          style={{
-            marginTop: 8,
-            padding: 10,
-            borderRadius: 10,
-            border: "1px solid #e5e7eb",
-            background: "#f9fafb",
-            fontSize: 12,
-          }}
-        >
+        <div className="mt-2 p-2.5 rounded-lg border border-border bg-muted text-xs">
           {(() => {
             const p = event.payload || {};
             const chips = [];
@@ -223,26 +186,12 @@ function EventRow({ event, onToggle }) {
             return (
               <>
                 {chips.length ? (
-                  <div
-                    style={{
-                      marginBottom: 8,
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 6,
-                    }}
-                  >
+                  <div className="mb-2 flex flex-wrap gap-1.5">
                     {chips.map((chip, idx) => (
                       <a
                         key={idx}
                         href={chip.href}
-                        style={{
-                          fontSize: 12,
-                          padding: "4px 8px",
-                          borderRadius: 999,
-                          border: "1px solid #e5e7eb",
-                          background: "#f9fafb",
-                          color: "#111827",
-                        }}
+                        className="text-xs px-2 py-1 rounded-full border border-border bg-card text-foreground hover:bg-accent transition-colors"
                       >
                         {chip.label}
                       </a>
@@ -251,20 +200,11 @@ function EventRow({ event, onToggle }) {
                 ) : null}
 
                 {hasPayload ? (
-                  <pre
-                    style={{
-                      margin: 0,
-                      whiteSpace: "pre-wrap",
-                      wordBreak: "break-word",
-                      fontSize: 12,
-                      fontFamily:
-                        "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-                    }}
-                  >
+                  <pre className="m-0 whitespace-pre-wrap break-words text-xs font-mono">
                     {JSON.stringify(p, null, 2)}
                   </pre>
                 ) : (
-                  <div style={{ fontSize: 12, color: "#6b7280" }}>Payload yok.</div>
+                  <div className="text-xs text-muted-foreground">Payload yok.</div>
                 )}
               </>
             );
@@ -281,7 +221,7 @@ export default function CrmEventsPage() {
   const [entityType, setEntityType] = useState("");
   const [entityId, setEntityId] = useState("");
   const [action, setAction] = useState("");
-  const [range, setRange] = useState("7d"); // 24h | 7d | 30d
+  const [range, setRange] = useState("7d");
   const [fromOverride, setFromOverride] = useState("");
   const [toOverride, setToOverride] = useState("");
 
@@ -301,7 +241,6 @@ export default function CrmEventsPage() {
   const hasNext = total > items.length;
 
   function computeRange() {
-    // If manual from/to provided, use them
     if (fromOverride || toOverride) {
       return {
         from: fromOverride || undefined,
@@ -371,7 +310,6 @@ export default function CrmEventsPage() {
   }
 
   useEffect(() => {
-    // initial load with default 7d range
     load(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -392,18 +330,10 @@ export default function CrmEventsPage() {
 
   if (!isAdmin) {
     return (
-      <div style={{ padding: 16 }}>
-        <div
-          style={{
-            padding: 16,
-            borderRadius: 12,
-            border: "1px solid #fee2e2",
-            background: "#fef2f2",
-            color: "#b91c1c",
-          }}
-        >
-          <h1 style={{ margin: 0, fontSize: 20 }}>Erişim kısıtlı</h1>
-          <p style={{ marginTop: 8, fontSize: 14 }}>
+      <div className="p-4">
+        <div className="p-4 rounded-xl border border-destructive/30 bg-destructive/5 text-destructive">
+          <h1 className="m-0 text-xl font-bold">Erişim kısıtlı</h1>
+          <p className="mt-2 text-sm">
             Bu sayfaya yalnızca admin kullanıcılar erişebilir.
           </p>
         </div>
@@ -412,20 +342,12 @@ export default function CrmEventsPage() {
   }
 
   return (
-    <div style={{ padding: 16 }}>
+    <div className="p-4">
       {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
+      <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h1 style={{ margin: 0, fontSize: 20 }}>CRM Olaylar</h1>
-          <div style={{ marginTop: 4, fontSize: 14, color: "#6b7280" }}>
+          <h1 className="m-0 text-xl font-bold text-foreground">CRM Olaylar</h1>
+          <div className="mt-1 text-sm text-muted-foreground">
             Kritik CRM işlemlerinin kim tarafından, ne zaman yapıldığını izleyin.
           </div>
         </div>
@@ -434,21 +356,12 @@ export default function CrmEventsPage() {
       {/* Filters */}
       <form
         onSubmit={applyFilters}
-        style={{
-          marginTop: 14,
-          padding: 12,
-          borderRadius: 12,
-          border: "1px solid #eee",
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 10,
-          alignItems: "center",
-        }}
+        className="mt-3.5 p-3 rounded-xl border border-border flex flex-wrap gap-2.5 items-center"
       >
         <select
           value={entityType}
           onChange={(e) => setEntityType(e.target.value)}
-          style={{ padding: 10, borderRadius: 10, border: "1px solid #ddd", minWidth: 180 }}
+          className="p-2.5 rounded-lg border border-border min-w-[180px] text-sm bg-card text-foreground"
         >
           <option value="">Tüm tipler</option>
           <option value="customer">Müşteri</option>
@@ -463,118 +376,42 @@ export default function CrmEventsPage() {
           value={entityId}
           onChange={(e) => setEntityId(e.target.value)}
           placeholder="Entity ID (opsiyonel)"
-          style={{
-            padding: 10,
-            borderRadius: 10,
-            border: "1px solid #ddd",
-            minWidth: 220,
-            flex: "1 1 220px",
-          }}
+          className="p-2.5 rounded-lg border border-border min-w-[220px] flex-[1_1_220px] text-sm bg-card text-foreground placeholder:text-muted-foreground"
         />
 
         <input
           value={action}
           onChange={(e) => setAction(e.target.value)}
           placeholder="Aksiyon (created/updated/...)"
-          style={{
-            padding: 10,
-            borderRadius: 10,
-            border: "1px solid #ddd",
-            minWidth: 200,
-          }}
+          className="p-2.5 rounded-lg border border-border min-w-[200px] text-sm bg-card text-foreground placeholder:text-muted-foreground"
         />
 
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          <button
-            type="button"
-            onClick={() => {
-              setRange("24h");
-              setFromOverride("");
-              setToOverride("");
-            }}
-            style={{
-              padding: "8px 10px",
-              borderRadius: 999,
-              border: range === "24h" ? "1px solid #111" : "1px solid #ddd",
-              background: range === "24h" ? "#111" : "#fff",
-              color: range === "24h" ? "#fff" : "#333",
-              cursor: "pointer",
-              fontSize: 12,
-            }}
->
+        <div className="flex gap-1.5 flex-wrap">
+          <RangeButton active={range === "24h"} onClick={() => { setRange("24h"); setFromOverride(""); setToOverride(""); }}>
             Son 24 saat
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setRange("7d");
-              setFromOverride("");
-              setToOverride("");
-            }}
-            style={{
-              padding: "8px 10px",
-              borderRadius: 999,
-              border: range === "7d" ? "1px solid #111" : "1px solid #ddd",
-              background: range === "7d" ? "#111" : "#fff",
-              color: range === "7d" ? "#fff" : "#333",
-              cursor: "pointer",
-              fontSize: 12,
-            }}
->
+          </RangeButton>
+          <RangeButton active={range === "7d"} onClick={() => { setRange("7d"); setFromOverride(""); setToOverride(""); }}>
             Son 7 gün
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setRange("30d");
-              setFromOverride("");
-              setToOverride("");
-            }}
-            style={{
-              padding: "8px 10px",
-              borderRadius: 999,
-              border: range === "30d" ? "1px solid #111" : "1px solid #ddd",
-              background: range === "30d" ? "#111" : "#fff",
-              color: range === "30d" ? "#fff" : "#333",
-              cursor: "pointer",
-              fontSize: 12,
-            }}
->
+          </RangeButton>
+          <RangeButton active={range === "30d"} onClick={() => { setRange("30d"); setFromOverride(""); setToOverride(""); }}>
             Son 30 gün
-          </button>
+          </RangeButton>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 6,
-            minWidth: 220,
-          }}
-        >
-          <label style={{ fontSize: 12, color: "#6b7280" }}>Gelişmiş tarih aralığı (opsiyonel)</label>
-          <div style={{ display: "flex", gap: 6 }}>
+        <div className="flex flex-col gap-1.5 min-w-[220px]">
+          <label className="text-xs text-muted-foreground">Gelişmiş tarih aralığı (opsiyonel)</label>
+          <div className="flex gap-1.5">
             <input
               type="datetime-local"
               value={fromOverride}
               onChange={(e) => setFromOverride(e.target.value)}
-              style={{
-                flex: 1,
-                padding: 8,
-                borderRadius: 10,
-                border: "1px solid #ddd",
-              }}
+              className="flex-1 p-2 rounded-lg border border-border text-sm bg-card text-foreground"
             />
             <input
               type="datetime-local"
               value={toOverride}
               onChange={(e) => setToOverride(e.target.value)}
-              style={{
-                flex: 1,
-                padding: 8,
-                borderRadius: 10,
-                border: "1px solid #ddd",
-              }}
+              className="flex-1 p-2 rounded-lg border border-border text-sm bg-card text-foreground"
             />
           </div>
         </div>
@@ -582,66 +419,37 @@ export default function CrmEventsPage() {
         <button
           type="submit"
           disabled={loading}
-          style={{
-            marginLeft: "auto",
-            padding: "10px 12px",
-            borderRadius: 10,
-            border: "1px solid #111827",
-            background: loading ? "#4b5563" : "#111827",
-            color: "#ffffff",
-            cursor: loading ? "not-allowed" : "pointer",
-            fontSize: 14,
-          }}
+          className="ml-auto px-3 py-2.5 rounded-lg border border-foreground bg-foreground text-primary-foreground text-sm cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
         >
-          {loading ? "Y\u00fckleniyor..." : "Filtrele"}
+          {loading ? "Yükleniyor..." : "Filtrele"}
         </button>
       </form>
 
       {/* Error */}
       {errMsg ? (
-        <div
-          style={{
-            marginTop: 12,
-            padding: 12,
-            borderRadius: 12,
-            border: "1px solid #f2caca",
-            background: "#fff5f5",
-            color: "#8a1f1f",
-            fontSize: 14,
-          }}
-        >
+        <div className="mt-3 p-3 rounded-xl border border-destructive/30 bg-destructive/5 text-destructive text-sm">
           {errMsg}
         </div>
       ) : null}
 
       {/* List */}
-      <div style={{ marginTop: 12, borderRadius: 12, border: "1px solid #eee", overflow: "hidden" }}>
-        <div
-          style={{
-            padding: 10,
-            borderBottom: "1px solid #eee",
-            background: "#fafafa",
-            fontSize: 14,
-            color: "#666",
-            display: "flex",
-            justifyContent: "space-between",
-          }}
-        >
-          <span>{loading ? "Y\u00fckleniyor..." : "Olaylar"}</span>
+      <div className="mt-3 rounded-xl border border-border overflow-hidden">
+        <div className="p-2.5 border-b border-border bg-muted/50 text-sm text-muted-foreground flex justify-between">
+          <span>{loading ? "Yükleniyor..." : "Olaylar"}</span>
           <span>
             Toplam: <b>{total}</b>
           </span>
         </div>
 
         {!loading && items.length === 0 ? (
-          <div style={{ padding: 18 }}>
-            <div style={{ fontSize: 16, fontWeight: 600 }}>Bu filtreler için kayıt yok.</div>
-            <div style={{ marginTop: 6, color: "#666" }}>
+          <div className="p-5">
+            <div className="text-base font-semibold text-foreground">Bu filtreler için kayıt yok.</div>
+            <div className="mt-1.5 text-sm text-muted-foreground">
               Farklı bir tarih aralığı veya entity filtresi deneyebilirsiniz.
             </div>
           </div>
         ) : (
-          <div style={{ maxHeight: 520, overflowY: "auto" }}>
+          <div className="max-h-[520px] overflow-y-auto">
             {items.map((ev) => (
               <EventRow key={ev.id} event={ev} />
             ))}
@@ -650,26 +458,16 @@ export default function CrmEventsPage() {
       </div>
 
       {/* Load more */}
-      <div
-        style={{
-          marginTop: 12,
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
+      <div className="mt-3 flex justify-center">
         <button
           type="button"
           disabled={!hasNext || loading}
           onClick={loadMore}
-          style={{
-            padding: "8px 12px",
-            borderRadius: 999,
-            border: "1px solid #ddd",
-            background: !hasNext ? "#f3f4f6" : "#ffffff",
-            color: "#111827",
-            cursor: !hasNext ? "not-allowed" : "pointer",
-            fontSize: 14,
-          }}
+          className={`px-3 py-2 rounded-full border text-sm cursor-pointer transition-colors ${
+            hasNext
+              ? "border-border bg-card text-foreground hover:bg-muted"
+              : "border-border bg-muted text-muted-foreground cursor-not-allowed"
+          }`}
         >
           {hasNext ? "Daha fazla yükle" : "Kayıt kalmadı"}
         </button>

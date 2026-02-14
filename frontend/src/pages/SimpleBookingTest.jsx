@@ -71,29 +71,29 @@ export default function SimpleBookingTest() {
   }
 
   return (
-    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto", fontFamily: "Inter, system-ui, sans-serif" }}>
-      <h1>Booking Wizard Test Page</h1>
+    <div className="p-5 max-w-[800px] mx-auto font-body">
+      <h1 className="text-xl font-bold text-foreground">Booking Wizard Test Page</h1>
       
-      <div style={{ marginBottom: "20px", padding: "15px", border: "1px solid #ddd", borderRadius: "8px" }}>
-        <h2>Rezervasyon Özeti</h2>
-        <p><strong>Otel:</strong> Test Hotel</p>
-        <p><strong>Tarih:</strong> 2025-01-15 - 2025-01-17 (2 gece)</p>
-        <p><strong>Misafir:</strong> 2 yetişkin</p>
-        <p><strong>Oda Tipi:</strong> Standard Room</p>
-        <p><strong>Toplam:</strong> 200 TRY</p>
+      <div className="mb-5 p-4 border border-border rounded-lg">
+        <h2 className="text-lg font-bold text-foreground">Rezervasyon Özeti</h2>
+        <p className="text-sm text-foreground"><strong>Otel:</strong> Test Hotel</p>
+        <p className="text-sm text-foreground"><strong>Tarih:</strong> 2025-01-15 - 2025-01-17 (2 gece)</p>
+        <p className="text-sm text-foreground"><strong>Misafir:</strong> 2 yetişkin</p>
+        <p className="text-sm text-foreground"><strong>Oda Tipi:</strong> Standard Room</p>
+        <p className="text-sm text-foreground"><strong>Toplam:</strong> 200 TRY</p>
       </div>
 
-      <div style={{ padding: "15px", border: "1px solid #ddd", borderRadius: "8px" }}>
-        <h2>Misafir Bilgileri</h2>
+      <div className="p-4 border border-border rounded-lg">
+        <h2 className="text-lg font-bold text-foreground">Misafir Bilgileri</h2>
         
         <form
           onSubmit={handleCreateDraft}
           onKeyDown={handleFormKeyDown}
           data-testid="booking-wizard-form"
-          style={{ display: "flex", flexDirection: "column", gap: "15px" }}
+          className="flex flex-col gap-4"
         >
           <div>
-            <label htmlFor="guest-name" style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
+            <label htmlFor="guest-name" className="block mb-1 font-semibold text-sm text-foreground">
               Misafir Adı Soyadı *
             </label>
             <input
@@ -103,19 +103,13 @@ export default function SimpleBookingTest() {
               onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
               placeholder="Örn: Ahmet Yılmaz"
               disabled={loading}
-              style={{ 
-                width: "100%", 
-                padding: "8px", 
-                border: "1px solid #ccc", 
-                borderRadius: "4px",
-                fontSize: "14px"
-              }}
+              className="w-full p-2 border border-border rounded bg-card text-sm text-foreground placeholder:text-muted-foreground"
             />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="guest-phone" style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
+              <label htmlFor="guest-phone" className="block mb-1 font-semibold text-sm text-foreground">
                 Telefon
               </label>
               <input
@@ -125,18 +119,12 @@ export default function SimpleBookingTest() {
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="+90 5XX XXX XX XX"
                 disabled={loading}
-                style={{ 
-                  width: "100%", 
-                  padding: "8px", 
-                  border: "1px solid #ccc", 
-                  borderRadius: "4px",
-                  fontSize: "14px"
-                }}
+                className="w-full p-2 border border-border rounded bg-card text-sm text-foreground placeholder:text-muted-foreground"
               />
             </div>
 
             <div>
-              <label htmlFor="guest-email" style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
+              <label htmlFor="guest-email" className="block mb-1 font-semibold text-sm text-foreground">
                 Email (opsiyonel)
               </label>
               <input
@@ -146,19 +134,13 @@ export default function SimpleBookingTest() {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="ornek@email.com"
                 disabled={loading}
-                style={{ 
-                  width: "100%", 
-                  padding: "8px", 
-                  border: "1px solid #ccc", 
-                  borderRadius: "4px",
-                  fontSize: "14px"
-                }}
+                className="w-full p-2 border border-border rounded bg-card text-sm text-foreground placeholder:text-muted-foreground"
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="special-requests" style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
+            <label htmlFor="special-requests" className="block mb-1 font-semibold text-sm text-foreground">
               Özel İstekler (opsiyonel)
             </label>
             <textarea
@@ -168,28 +150,14 @@ export default function SimpleBookingTest() {
               placeholder="Örn: Geç check-in, yüksek kat tercihi..."
               rows={3}
               disabled={loading}
-              style={{ 
-                width: "100%", 
-                padding: "8px", 
-                border: "1px solid #ccc", 
-                borderRadius: "4px",
-                fontSize: "14px",
-                resize: "vertical"
-              }}
+              className="w-full p-2 border border-border rounded bg-card text-sm text-foreground resize-y placeholder:text-muted-foreground"
             />
           </div>
 
           {formError && (
             <div
               data-testid="booking-wizard-error"
-              style={{ 
-                padding: "10px", 
-                backgroundColor: "#fee", 
-                border: "1px solid #fcc", 
-                borderRadius: "4px",
-                color: "#c00",
-                fontSize: "14px"
-              }}
+              className="p-2.5 bg-destructive/5 border border-destructive/30 rounded text-destructive text-sm"
             >
               {formError}
             </div>
@@ -199,24 +167,15 @@ export default function SimpleBookingTest() {
             type="submit"
             disabled={loading}
             data-testid="booking-wizard-create-send"
-            style={{ 
-              padding: "12px 24px", 
-              backgroundColor: loading ? "#ccc" : "#007bff", 
-              color: "white", 
-              border: "none", 
-              borderRadius: "4px",
-              fontSize: "16px",
-              fontWeight: "bold",
-              cursor: loading ? "not-allowed" : "pointer"
-            }}
+            className="py-3 px-6 bg-primary text-primary-foreground border-none rounded text-base font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
           >
             {loading ? "Gönderiliyor..." : "Oluştur & Gönder"}
           </button>
 
-          <p style={{ fontSize: "12px", color: "hsl(220, 10%, 45%)", textAlign: "center", margin: "10px 0" }}>
+          <p className="text-xs text-muted-foreground text-center my-2.5">
             Rezervasyonu gönderdikten sonra otele iletilir; durumunu Rezervasyonlarım ekranından takip edebilirsiniz.
-            <span style={{ display: "block", marginTop: "5px" }} data-testid="booking-wizard-shortcut-hint">
-              Kısayol: <span style={{ fontFamily: "Roboto Mono, ui-monospace, monospace", backgroundColor: "#f5f5f5", padding: "2px 4px", borderRadius: "2px" }}>Ctrl/⌘ + Enter</span>
+            <span className="block mt-1" data-testid="booking-wizard-shortcut-hint">
+              Kısayol: <span className="font-mono bg-muted px-1 py-0.5 rounded-sm">Ctrl/⌘ + Enter</span>
             </span>
           </p>
         </form>

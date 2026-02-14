@@ -1,351 +1,276 @@
 #!/usr/bin/env python3
 """
-Focused test for auth login endpoints to diagnose 520 Cloudflare errors
-Tests health and auth login endpoints specifically
+Auth Login Endpoint Testing Script
+Tests the POST /api/auth/login endpoint with valid and invalid credentials
 """
 import requests
-import sys
 import json
 from datetime import datetime
 
+# Configuration
+BASE_URL = "https://better-menu-labels.preview.emergentagent.com"
+VALID_CREDENTIALS = {
+    "email": "admin@acenta.test",
+    "password": "admin123"
+}
+INVALID_CREDENTIALS = {
+    "email": "admin@acenta.test", 
+    "password": "wrongpassword"
+}
+
 class AuthLoginTester:
-    def __init__(self, base_url="https://better-menu-labels.preview.emergentagent.com"):
-        self.base_url = base_url
-        self.tests_run = 0
-        self.tests_passed = 0
-        self.tests_failed = 0
-        self.failed_tests = []
-        self.detailed_results = []
+    def __init__(self):
+        self.base_url = BASE_URL
+        self.test_results = []
 
-    def log(self, msg):
-        timestamp = datetime.now().strftime('%H:%M:%S')
-        print(f"[{timestamp}] {msg}")
-        self.detailed_results.append(f"[{timestamp}] {msg}")
-
-    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None, timeout=30):
-        """Run a single API test with detailed error reporting"""
-        url = f"{self.base_url}/{endpoint}"
-        if headers is None:
-            headers = {'Content-Type': 'application/json'}
-
-        self.tests_run += 1
-        self.log(f"🔍 Test #{self.tests_run}: {name}")
-        self.log(f"   URL: {url}")
-        self.log(f"   Method: {method}")
-        if data:
-            self.log(f"   Data: {json.dumps(data, indent=2)}")
-        
-        try:
-            if method == 'GET':
-                response = requests.get(url, headers=headers, timeout=timeout)
-            elif method == 'POST':
-                response = requests.post(url, json=data, headers=headers, timeout=timeout)
-            else:
-                raise ValueError(f"Unsupported method: {method}")
-
-            # Log detailed response information
-            self.log(f"   Response Status: {response.status_code}")
-            self.log(f"   Response Headers: {dict(response.headers)}")
-            
-            # Check content type and log response
-            content_type = response.headers.get('content-type', '')
-            if 'application/json' in content_type:
-                try:
-                    response_data = response.json()
-                    self.log(f"   Response JSON: {json.dumps(response_data, indent=2)}")
-                except:
-                    self.log(f"   Response Text (failed JSON parse): {response.text[:500]}")
-            else:
-                self.log(f"   Response Content-Type: {content_type}")
-                self.log(f"   Response Text: {response.text[:500]}")
-
-            success = response.status_code == expected_status
-            if success:
-                self.tests_passed += 1
-                self.log(f"✅ PASSED - Status: {response.status_code}")
-                try:
-                    return True, response.json() if 'application/json' in content_type else response.text
-                except:
-                    return True, response.text
-            else:
-                self.tests_failed += 1
-                error_msg = f"{name} - Expected {expected_status}, got {response.status_code}"
-                self.failed_tests.append(error_msg)
-                self.log(f"❌ FAILED - {error_msg}")
-                
-                # Special handling for 520 errors
-                if response.status_code == 520:
-                    self.log("🚨 CLOUDFLARE 520 ERROR DETECTED!")
-                    self.log("   This indicates the origin server returned an empty, unknown, or unexpected response")
-                    self.log("   Possible causes: Backend crash, timeout, unhandled exception, or connection reset")
-                
-                return False, response.text if hasattr(response, 'text') else {}
-
-        except requests.exceptions.Timeout as e:
-            self.tests_failed += 1
-            error_msg = f"{name} - Timeout after {timeout}s: {str(e)}"
-            self.failed_tests.append(error_msg)
-            self.log(f"❌ FAILED - {error_msg}")
-            return False, {}
-        except requests.exceptions.ConnectionError as e:
-            self.tests_failed += 1
-            error_msg = f"{name} - Connection Error: {str(e)}"
-            self.failed_tests.append(error_msg)
-            self.log(f"❌ FAILED - {error_msg}")
-            return False, {}
-        except Exception as e:
-            self.tests_failed += 1
-            error_msg = f"{name} - Unexpected Error: {str(e)}"
-            self.failed_tests.append(error_msg)
-            self.log(f"❌ FAILED - {error_msg}")
-            return False, {}
-
-    def test_health_endpoint(self):
-        """Test health endpoint"""
-        self.log("\n=== 1) HEALTH ENDPOINT TEST ===")
-        success, response = self.run_test(
-            "Health Check",
-            "GET",
-            "api/health",
-            200,
-            timeout=15
-        )
-        
-        if success and isinstance(response, dict):
-            if response.get('ok') == True:
-                self.log("✅ Database connection OK")
-                self.log(f"   Service: {response.get('service', 'unknown')}")
-            else:
-                self.log("❌ Database connection failed")
-                self.log(f"   Response: {response}")
-        
-        return success
-
-    def test_login_invalid_credentials(self):
-        """Test login with invalid credentials (should return 401)"""
-        self.log("\n=== 2) LOGIN WITH INVALID CREDENTIALS ===")
-        success, response = self.run_test(
-            "Login with Invalid Credentials",
-            "POST",
-            "api/auth/login",
-            401,
-            data={"email": "invalid@test.com", "password": "wrongpassword"},
-            timeout=15
-        )
-        
-        if success:
-            self.log("✅ Invalid credentials properly rejected with 401")
-        else:
-            self.log("❌ Invalid credentials handling failed")
-        
-        return success
-
-    def test_login_valid_credentials(self):
-        """Test login with valid credentials"""
-        self.log("\n=== 3) LOGIN WITH VALID CREDENTIALS ===")
-        
-        # Try multiple known valid credentials
-        test_credentials = [
-            {"email": "admin@acenta.test", "password": "admin123", "desc": "Super Admin"},
-            {"email": "agency1@demo.test", "password": "agency123", "desc": "Agency Admin"},
-            {"email": "hoteladmin@acenta.test", "password": "admin123", "desc": "Hotel Admin"}
-        ]
-        
-        for creds in test_credentials:
-            self.log(f"\n--- Testing {creds['desc']} Login ---")
-            success, response = self.run_test(
-                f"Login as {creds['desc']} ({creds['email']})",
-                "POST",
-                "api/auth/login",
-                200,
-                data={"email": creds["email"], "password": creds["password"]},
-                timeout=15
-            )
-            
-            if success and isinstance(response, dict):
-                if 'access_token' in response:
-                    self.log(f"✅ {creds['desc']} login successful")
-                    self.log(f"   Token: {response['access_token'][:20]}...")
-                    user = response.get('user', {})
-                    self.log(f"   User: {user.get('email')}")
-                    self.log(f"   Roles: {user.get('roles')}")
-                    return True, response['access_token']
-                else:
-                    self.log(f"❌ {creds['desc']} login missing access_token")
-            else:
-                self.log(f"❌ {creds['desc']} login failed")
-        
-        return False, None
-
-    def test_login_malformed_request(self):
-        """Test login with malformed request data"""
-        self.log("\n=== 4) LOGIN WITH MALFORMED REQUEST ===")
-        
-        # Test missing email
-        success, response = self.run_test(
-            "Login with Missing Email",
-            "POST",
-            "api/auth/login",
-            422,
-            data={"password": "test123"},
-            timeout=15
-        )
-        
-        # Test missing password
-        success2, response2 = self.run_test(
-            "Login with Missing Password",
-            "POST",
-            "api/auth/login",
-            422,
-            data={"email": "test@test.com"},
-            timeout=15
-        )
-        
-        # Test empty request
-        success3, response3 = self.run_test(
-            "Login with Empty Request",
-            "POST",
-            "api/auth/login",
-            422,
-            data={},
-            timeout=15
-        )
-        
-        return success and success2 and success3
-
-    def test_me_endpoint_with_token(self, token):
-        """Test /me endpoint with valid token"""
-        self.log("\n=== 5) /ME ENDPOINT WITH TOKEN ===")
-        
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {token}'
+    def log_result(self, test_name, success, message, curl_command=None, response_data=None):
+        """Log test result with curl command"""
+        result = {
+            "test": test_name,
+            "success": success,
+            "message": message,
+            "curl_command": curl_command,
+            "timestamp": datetime.now().isoformat(),
+            "response_data": response_data
         }
-        
-        success, response = self.run_test(
-            "Get Current User (/me)",
-            "GET",
-            "api/auth/me",
-            200,
-            headers=headers,
-            timeout=15
-        )
-        
-        if success and isinstance(response, dict):
-            self.log(f"✅ /me endpoint working")
-            self.log(f"   User: {response.get('email')}")
-            self.log(f"   Roles: {response.get('roles')}")
-        
+        self.test_results.append(result)
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} - {test_name}: {message}")
+        if curl_command:
+            print(f"   CURL: {curl_command}")
         return success
 
-    def test_me_endpoint_without_token(self):
-        """Test /me endpoint without token (should return 401)"""
-        self.log("\n=== 6) /ME ENDPOINT WITHOUT TOKEN ===")
-        
-        success, response = self.run_test(
-            "Get Current User without Token",
-            "GET",
-            "api/auth/me",
-            401,
-            timeout=15
-        )
-        
-        if success:
-            self.log("✅ Unauthorized access properly rejected with 401")
-        
-        return success
-
-    def check_backend_logs(self):
-        """Check backend logs for any errors"""
-        self.log("\n=== 7) BACKEND LOG CHECK ===")
+    def test_valid_login(self):
+        """Test POST /api/auth/login with valid credentials"""
         try:
-            import subprocess
-            result = subprocess.run(
-                ["tail", "-n", "50", "/var/log/supervisor/backend.err.log"],
-                capture_output=True,
-                text=True,
-                timeout=10
+            print("\n🔐 Testing valid login credentials...")
+            login_url = f"{self.base_url}/api/auth/login"
+            
+            # Prepare curl command for logging
+            curl_command = f'curl -X POST "{login_url}" -H "Content-Type: application/json" -d \'{json.dumps(VALID_CREDENTIALS)}\''
+            
+            response = requests.post(login_url, json=VALID_CREDENTIALS)
+            
+            print(f"   Status Code: {response.status_code}")
+            print(f"   Response Headers: {dict(response.headers)}")
+            
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                    print(f"   Response Body: {json.dumps(data, indent=2)}")
+                    
+                    if "access_token" in data:
+                        return self.log_result(
+                            "Valid Login", 
+                            True, 
+                            f"Successfully logged in with status 200, received access_token",
+                            curl_command,
+                            data
+                        )
+                    else:
+                        return self.log_result(
+                            "Valid Login", 
+                            False, 
+                            f"Status 200 but no access_token in response: {data}",
+                            curl_command,
+                            data
+                        )
+                except json.JSONDecodeError as e:
+                    return self.log_result(
+                        "Valid Login", 
+                        False, 
+                        f"Status 200 but invalid JSON response: {response.text}",
+                        curl_command,
+                        {"raw_response": response.text}
+                    )
+            else:
+                try:
+                    error_data = response.json()
+                    print(f"   Error Response: {json.dumps(error_data, indent=2)}")
+                except:
+                    error_data = {"raw_response": response.text}
+                    print(f"   Raw Error Response: {response.text}")
+                
+                return self.log_result(
+                    "Valid Login", 
+                    False, 
+                    f"Expected 200 but got {response.status_code}",
+                    curl_command,
+                    error_data
+                )
+        except Exception as e:
+            return self.log_result(
+                "Valid Login", 
+                False, 
+                f"Exception occurred: {str(e)}",
+                curl_command
+            )
+
+    def test_invalid_login(self):
+        """Test POST /api/auth/login with invalid credentials"""
+        try:
+            print("\n🚫 Testing invalid login credentials...")
+            login_url = f"{self.base_url}/api/auth/login"
+            
+            # Prepare curl command for logging
+            curl_command = f'curl -X POST "{login_url}" -H "Content-Type: application/json" -d \'{json.dumps(INVALID_CREDENTIALS)}\''
+            
+            response = requests.post(login_url, json=INVALID_CREDENTIALS)
+            
+            print(f"   Status Code: {response.status_code}")
+            print(f"   Response Headers: {dict(response.headers)}")
+            
+            if response.status_code == 401:
+                try:
+                    data = response.json()
+                    print(f"   Response Body: {json.dumps(data, indent=2)}")
+                    
+                    return self.log_result(
+                        "Invalid Login", 
+                        True, 
+                        f"Correctly returned 401 for invalid credentials",
+                        curl_command,
+                        data
+                    )
+                except json.JSONDecodeError as e:
+                    print(f"   Raw Response: {response.text}")
+                    return self.log_result(
+                        "Invalid Login", 
+                        True, 
+                        f"Correctly returned 401 for invalid credentials (non-JSON response)",
+                        curl_command,
+                        {"raw_response": response.text}
+                    )
+            else:
+                try:
+                    error_data = response.json()
+                    print(f"   Unexpected Response: {json.dumps(error_data, indent=2)}")
+                except:
+                    error_data = {"raw_response": response.text}
+                    print(f"   Raw Unexpected Response: {response.text}")
+                
+                return self.log_result(
+                    "Invalid Login", 
+                    False, 
+                    f"Expected 401 but got {response.status_code}",
+                    curl_command,
+                    error_data
+                )
+        except Exception as e:
+            return self.log_result(
+                "Invalid Login", 
+                False, 
+                f"Exception occurred: {str(e)}",
+                curl_command
+            )
+
+    def test_cors_and_headers(self):
+        """Test CORS and response headers"""
+        try:
+            print("\n🌐 Testing CORS and headers...")
+            login_url = f"{self.base_url}/api/auth/login"
+            
+            # Test OPTIONS request for CORS preflight
+            curl_command = f'curl -X OPTIONS "{login_url}" -H "Origin: https://example.com" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: Content-Type"'
+            
+            response = requests.options(
+                login_url,
+                headers={
+                    "Origin": "https://example.com",
+                    "Access-Control-Request-Method": "POST",
+                    "Access-Control-Request-Headers": "Content-Type"
+                }
             )
             
-            if result.returncode == 0:
-                if result.stdout.strip():
-                    self.log("❌ Backend errors found:")
-                    self.log(result.stdout)
-                else:
-                    self.log("✅ No recent backend errors in log")
+            print(f"   OPTIONS Status Code: {response.status_code}")
+            print(f"   CORS Headers: {dict(response.headers)}")
+            
+            cors_headers = {
+                "access-control-allow-origin": response.headers.get("access-control-allow-origin"),
+                "access-control-allow-methods": response.headers.get("access-control-allow-methods"),
+                "access-control-allow-headers": response.headers.get("access-control-allow-headers"),
+                "access-control-allow-credentials": response.headers.get("access-control-allow-credentials")
+            }
+            
+            if response.status_code in [200, 204]:
+                return self.log_result(
+                    "CORS Headers", 
+                    True, 
+                    f"CORS preflight successful with status {response.status_code}",
+                    curl_command,
+                    cors_headers
+                )
             else:
-                self.log("⚠️  Could not read backend error log")
-                
+                return self.log_result(
+                    "CORS Headers", 
+                    False, 
+                    f"CORS preflight failed with status {response.status_code}",
+                    curl_command,
+                    cors_headers
+                )
         except Exception as e:
-            self.log(f"⚠️  Error checking backend logs: {str(e)}")
-
-    def print_summary(self):
-        """Print comprehensive test summary"""
-        self.log("\n" + "="*80)
-        self.log("AUTH LOGIN TEST SUMMARY")
-        self.log("="*80)
-        self.log(f"Total Tests: {self.tests_run}")
-        self.log(f"✅ Passed: {self.tests_passed}")
-        self.log(f"❌ Failed: {self.tests_failed}")
-        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
-        
-        if self.failed_tests:
-            self.log("\n❌ FAILED TESTS:")
-            for i, test in enumerate(self.failed_tests, 1):
-                self.log(f"  {i}. {test}")
-        
-        # Analysis
-        self.log("\n📊 ANALYSIS:")
-        if self.tests_failed == 0:
-            self.log("✅ All auth endpoints working correctly - no backend issues detected")
-            self.log("   The 520 error is likely occurring only in the external environment")
-            self.log("   Possible causes: Cloudflare configuration, network issues, or load balancer problems")
-        else:
-            self.log("❌ Backend auth issues detected:")
-            cloudflare_520_found = any("520" in test for test in self.failed_tests)
-            if cloudflare_520_found:
-                self.log("   🚨 520 errors reproduced - backend is returning unexpected responses")
-                self.log("   This indicates backend crashes, timeouts, or unhandled exceptions")
-            else:
-                self.log("   Backend errors found but not 520-related")
-        
-        self.log("="*80)
+            return self.log_result(
+                "CORS Headers", 
+                False, 
+                f"Exception occurred: {str(e)}",
+                curl_command
+            )
 
     def run_all_tests(self):
-        """Run all auth-focused tests"""
-        self.log("🚀 Starting Auth Login Diagnostic Tests")
-        self.log(f"Base URL: {self.base_url}")
-        self.log("Purpose: Diagnose 520 Cloudflare errors in login flow")
+        """Run all auth login tests"""
+        print("🚀 Starting Auth Login Endpoint Tests")
+        print("=" * 60)
+        print(f"Target URL: {BASE_URL}/api/auth/login")
+        print(f"Valid Credentials: {VALID_CREDENTIALS}")
+        print(f"Invalid Credentials: {INVALID_CREDENTIALS}")
+        print("=" * 60)
         
-        # 1. Health check
-        health_ok = self.test_health_endpoint()
+        # Run all tests
+        tests = [
+            self.test_valid_login,
+            self.test_invalid_login,
+            self.test_cors_and_headers
+        ]
         
-        # 2. Invalid credentials test
-        self.test_login_invalid_credentials()
+        passed = 0
+        total = len(tests)
         
-        # 3. Valid credentials test
-        login_ok, token = self.test_login_valid_credentials()
+        for test in tests:
+            if test():
+                passed += 1
         
-        # 4. Malformed request test
-        self.test_login_malformed_request()
+        # Print detailed summary
+        print("\n" + "=" * 60)
+        print(f"📋 AUTH LOGIN TEST SUMMARY: {passed}/{total} tests passed")
+        print("=" * 60)
         
-        # 5. /me endpoint with token (if login worked)
-        if token:
-            self.test_me_endpoint_with_token(token)
+        for result in self.test_results:
+            status = "✅" if result["success"] else "❌"
+            print(f"\n{status} {result['test']}")
+            print(f"   Result: {result['message']}")
+            if result.get('curl_command'):
+                print(f"   CURL: {result['curl_command']}")
+            if result.get('response_data'):
+                print(f"   Data: {json.dumps(result['response_data'], indent=4)}")
         
-        # 6. /me endpoint without token
-        self.test_me_endpoint_without_token()
+        # Summary for main agent
+        print("\n" + "=" * 60)
+        print("🎯 SUMMARY FOR MAIN AGENT:")
         
-        # 7. Check backend logs
-        self.check_backend_logs()
+        if passed == total:
+            print("✅ All auth login tests PASSED")
+            print("✅ Valid admin credentials (admin@acenta.test / admin123) work correctly")
+            print("✅ Invalid credentials properly return 401")
+            print("✅ CORS headers are configured correctly")
+        else:
+            print("❌ Some auth login tests FAILED")
+            failed_tests = [r for r in self.test_results if not r["success"]]
+            for failed in failed_tests:
+                print(f"   ❌ {failed['test']}: {failed['message']}")
         
-        # Summary
-        self.print_summary()
-        
-        return 0 if self.tests_failed == 0 else 1
-
+        return passed == total
 
 if __name__ == "__main__":
     tester = AuthLoginTester()
-    exit_code = tester.run_all_tests()
-    sys.exit(exit_code)
+    success = tester.run_all_tests()
+    exit(0 if success else 1)

@@ -24,7 +24,7 @@ function Badge({ children }) {
 
 function PrimaryContactLine({ contacts }) {
   const primary = (contacts || []).filter((c) => c?.is_primary);
-  if (!primary.length) return <span style={{ color: "#666" }}>Birincil iletişim yok</span>;
+  if (!primary.length) return <span style={{ color: "hsl(220, 10%, 45%)" }}>Birincil iletişim yok</span>;
 
   return (
     <>
@@ -135,17 +135,17 @@ function TimelineTab({ customerId }) {
           {[1,2,3].map((i) => <div key={i} style={{ height: 48, background: "#f3f4f6", borderRadius: 8, animation: "pulse 1.5s infinite" }} />)}
         </div>
       ) : items.length === 0 ? (
-        <div style={{ color: "#999", fontSize: 14, textAlign: "center", padding: 24 }}>Bu musteri icin aktivite yok</div>
+        <div style={{ color: "hsl(220, 10%, 55%)", fontSize: 14, textAlign: "center", padding: 24 }}>Bu musteri icin aktivite yok</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {items.map((item, i) => (
             <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 4px", borderBottom: "1px solid #f3f4f6" }} data-testid="timeline-item">
               <span style={{ fontSize: 18, lineHeight: 1, marginTop: 2 }}>{TL_ICONS[item.type] || "\u{1F4CC}"}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#222" }}>{item.title}</div>
-                {item.subtitle && <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>{item.subtitle}</div>}
+                <div style={{ fontSize: 14, fontWeight: 600, color: "hsl(224, 26%, 16%)" }}>{item.title}</div>
+                {item.subtitle && <div style={{ fontSize: 12, color: "hsl(220, 10%, 45%)", marginTop: 2 }}>{item.subtitle}</div>}
               </div>
-              <div style={{ fontSize: 12, color: "#999", whiteSpace: "nowrap" }} title={item.ts ? new Date(item.ts).toLocaleString("tr-TR") : ""}>
+              <div style={{ fontSize: 12, color: "hsl(220, 10%, 55%)", whiteSpace: "nowrap" }} title={item.ts ? new Date(item.ts).toLocaleString("tr-TR") : ""}>
                 {relTime(item.ts)}
               </div>
             </div>
@@ -328,7 +328,7 @@ export default function CrmCustomerDetailPage() {
   if (loading) {
     return (
       <div style={{ padding: 16 }}>
-        <div style={{ color: "#666" }}>Yükleniyor{"\u2026"}</div>
+        <div style={{ color: "hsl(220, 10%, 45%)" }}>Yükleniyor{"\u2026"}</div>
       </div>
     );
   }
@@ -356,7 +356,7 @@ export default function CrmCustomerDetailPage() {
             border: "1px solid #f2caca",
             background: "#fff5f5",
             borderRadius: 12,
-            color: "#8a1f1f",
+            color: "hsl(0, 84.2%, 60.2%)",
           }}
         >
           {errMsg}
@@ -381,7 +381,7 @@ export default function CrmCustomerDetailPage() {
           {"\u2190"} Geri
         </button>
 
-        <div style={{ marginTop: 12, color: "#666" }}>Müşteri bulunamadı.</div>
+        <div style={{ marginTop: 12, color: "hsl(220, 10%, 45%)" }}>Müşteri bulunamadı.</div>
       </div>
     );
   }
@@ -409,7 +409,7 @@ export default function CrmCustomerDetailPage() {
           {"\u2190"} Geri
         </button>
 
-        <div style={{ color: "#666", fontSize: 12 }}>
+        <div style={{ color: "hsl(220, 10%, 45%)", fontSize: 12 }}>
           ID: <code>{customer.id}</code>
         </div>
       </div>
@@ -422,7 +422,7 @@ export default function CrmCustomerDetailPage() {
             borderRadius: 12,
             border: "1px solid #f2caca",
             background: "#fff5f5",
-            color: "#8a1f1f",
+            color: "hsl(0, 84.2%, 60.2%)",
             fontSize: 14,
           }}
         >
@@ -460,7 +460,7 @@ export default function CrmCustomerDetailPage() {
               {customer.tc_vkn ? <Badge>TC/VKN: {customer.tc_vkn}</Badge> : null}
             </div>
 
-            <div style={{ marginTop: 8, fontSize: 14, color: "#444" }}>
+            <div style={{ marginTop: 8, fontSize: 14, color: "hsl(224, 26%, 20%)" }}>
               <PrimaryContactLine contacts={customer.contacts} />
             </div>
           </div>
@@ -468,7 +468,7 @@ export default function CrmCustomerDetailPage() {
           {/* Tags */}
           <div style={{ minWidth: 280, flex: "1 1 280px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ fontSize: 12, color: "#666" }}>Etiketler</div>
+              <div style={{ fontSize: 12, color: "hsl(220, 10%, 45%)" }}>Etiketler</div>
 
               {!editingTags ? (
                 <button
@@ -495,7 +495,7 @@ export default function CrmCustomerDetailPage() {
                 {(customer.tags || []).length ? (
                   (customer.tags || []).map((t) => <Badge key={t}>{t}</Badge>)
                 ) : (
-                  <div style={{ color: "#666", fontSize: 14 }}>Etiket yok</div>
+                  <div style={{ color: "hsl(220, 10%, 45%)", fontSize: 14 }}>Etiket yok</div>
                 )}
               </div>
             ) : (
@@ -546,7 +546,7 @@ export default function CrmCustomerDetailPage() {
                       borderRadius: 10,
                       border: "1px solid #f2caca",
                       background: "#fff5f5",
-                      color: "#8a1f1f",
+                      color: "hsl(0, 84.2%, 60.2%)",
                     }}
                   >
                     {tagsErr}
@@ -579,18 +579,18 @@ export default function CrmCustomerDetailPage() {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                 <h2 style={{ margin: 0, fontSize: 16 }}>Inbox</h2>
                 {inboxTotal > 0 ? (
-                  <span style={{ fontSize: 12, color: "#666" }}>{inboxTotal} thread</span>
+                  <span style={{ fontSize: 12, color: "hsl(220, 10%, 45%)" }}>{inboxTotal} thread</span>
                 ) : null}
               </div>
 
               {inboxLoading && (
-                <div style={{ marginTop: 8, fontSize: 14, color: "#666" }}>Inbox yükleniyor...</div>
+                <div style={{ marginTop: 8, fontSize: 14, color: "hsl(220, 10%, 45%)" }}>Inbox yükleniyor...</div>
               )}
               {!inboxLoading && inboxErr && (
-                <div style={{ marginTop: 8, fontSize: 14, color: "#8a1f1f" }}>Inbox yükleme hatası: {inboxErr}</div>
+                <div style={{ marginTop: 8, fontSize: 14, color: "hsl(0, 84.2%, 60.2%)" }}>Inbox yükleme hatası: {inboxErr}</div>
               )}
               {!inboxLoading && !inboxErr && inboxThreads.length === 0 && (
-                <div style={{ marginTop: 8, fontSize: 14, color: "#666" }}>Bu müşteri için henüz inbox kaydı yok.</div>
+                <div style={{ marginTop: 8, fontSize: 14, color: "hsl(220, 10%, 45%)" }}>Bu müşteri için henüz inbox kaydı yok.</div>
               )}
               {!inboxLoading && !inboxErr && inboxThreads.length > 0 && (
                 <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
@@ -612,7 +612,7 @@ export default function CrmCustomerDetailPage() {
                         <div style={{ fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                           {t.subject || "(Konu yok)"}
                         </div>
-                        <div style={{ marginTop: 2, fontSize: 12, color: "#666" }}>
+                        <div style={{ marginTop: 2, fontSize: 12, color: "hsl(220, 10%, 45%)" }}>
                           {t.channel || "internal"} • {formatDateTime(t.last_message_at)}
                         </div>
                       </div>
@@ -649,7 +649,7 @@ export default function CrmCustomerDetailPage() {
                     {recentBookings.map((b) => (
                       <li key={b.id} style={{ marginBottom: 8 }}>
                         <div style={{ fontWeight: 600 }}>{b.id}</div>
-                        <div style={{ fontSize: 12, color: "#666" }}>
+                        <div style={{ fontSize: 12, color: "hsl(220, 10%, 45%)" }}>
                           {(b.status || "-") + " • " +
                             (b.total_amount ? `${b.total_amount} ${b.currency || ""}` : "") +
                             (b.created_at ? ` • ${new Date(b.created_at).toLocaleString("tr-TR")}` : "")}
@@ -658,7 +658,7 @@ export default function CrmCustomerDetailPage() {
                     ))}
                   </ul>
                 ) : (
-                  <div style={{ color: "#666", fontSize: 14 }}>Bu müşteri için henüz rezervasyon yok.</div>
+                  <div style={{ color: "hsl(220, 10%, 45%)", fontSize: 14 }}>Bu müşteri için henüz rezervasyon yok.</div>
                 )}
               </div>
             </div>
@@ -676,14 +676,14 @@ export default function CrmCustomerDetailPage() {
                     {openDeals.map((d) => (
                       <li key={d.id} style={{ marginBottom: 8 }}>
                         <div style={{ fontWeight: 600 }}>{d.title || d.id}</div>
-                        <div style={{ fontSize: 12, color: "#666" }}>
+                        <div style={{ fontSize: 12, color: "hsl(220, 10%, 45%)" }}>
                           Stage: {d.stage || "-"} {d.amount ? ` • ${d.amount} ${d.currency || ""}` : ""}
                         </div>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <div style={{ color: "#666", fontSize: 14 }}>Henüz açık fırsat yok. (PR#3 ile dolacak)</div>
+                  <div style={{ color: "hsl(220, 10%, 45%)", fontSize: 14 }}>Henüz açık fırsat yok. (PR#3 ile dolacak)</div>
                 )}
               </div>
             </div>
@@ -698,14 +698,14 @@ export default function CrmCustomerDetailPage() {
                     {openTasks.map((t) => (
                       <li key={t.id} style={{ marginBottom: 8 }}>
                         <div style={{ fontWeight: 600 }}>{t.title || t.id}</div>
-                        <div style={{ fontSize: 12, color: "#666" }}>
+                        <div style={{ fontSize: 12, color: "hsl(220, 10%, 45%)" }}>
                           Due: {t.due_date ? new Date(t.due_date).toLocaleString("tr-TR") : "-"} • Priority: {t.priority || "-"}
                         </div>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <div style={{ color: "#666", fontSize: 14 }}>Henüz açık görev yok. (PR#3 ile dolacak)</div>
+                  <div style={{ color: "hsl(220, 10%, 45%)", fontSize: 14 }}>Henüz açık görev yok. (PR#3 ile dolacak)</div>
                 )}
               </div>
             </div>
@@ -722,7 +722,7 @@ export default function CrmCustomerDetailPage() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <div>
               <div style={{ fontWeight: 700 }}>Aktiviteler</div>
-              <div style={{ marginTop: 4, fontSize: 14, color: "#666" }}>
+              <div style={{ marginTop: 4, fontSize: 14, color: "hsl(220, 10%, 45%)" }}>
                 {"Notlar / görüşmeler / e-postalar"}
               </div>
             </div>
@@ -745,7 +745,7 @@ export default function CrmCustomerDetailPage() {
               }}
             />
             <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-              <div style={{ fontSize: 12, color: "#666" }}>
+              <div style={{ fontSize: 12, color: "hsl(220, 10%, 45%)" }}>
                 {activitiesTotal ? `${activitiesTotal} aktivite` : "Henüz aktivite yok"}
               </div>
               <button
@@ -769,7 +769,7 @@ export default function CrmCustomerDetailPage() {
           {/* Activity list */}
           <div style={{ marginTop: 12 }}>
             {activitiesLoading && (
-              <div style={{ color: "#666", fontSize: 14 }}>Aktiviteler yükleniyor...</div>
+              <div style={{ color: "hsl(220, 10%, 45%)", fontSize: 14 }}>Aktiviteler yükleniyor...</div>
             )}
             {!activitiesLoading && activitiesErr && (
               <div
@@ -778,7 +778,7 @@ export default function CrmCustomerDetailPage() {
                   borderRadius: 10,
                   border: "1px solid #f2caca",
                   background: "#fff5f5",
-                  color: "#8a1f1f",
+                  color: "hsl(0, 84.2%, 60.2%)",
                   fontSize: 14,
                 }}
               >
@@ -786,7 +786,7 @@ export default function CrmCustomerDetailPage() {
               </div>
             )}
             {!activitiesLoading && !activitiesErr && !activities.length && (
-              <div style={{ color: "#666", fontSize: 14 }}>Bu müşteri için henüz aktivite kaydı yok.</div>
+              <div style={{ color: "hsl(220, 10%, 45%)", fontSize: 14 }}>Bu müşteri için henüz aktivite kaydı yok.</div>
             )}
             {!activitiesLoading && !activitiesErr && activities.length > 0 && (
               <ul style={{ listStyle: "none", margin: 0, padding: 0, marginTop: 8 }}>
@@ -802,10 +802,10 @@ export default function CrmCustomerDetailPage() {
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#444" }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "hsl(224, 26%, 20%)" }}>
                         {act.type === "note" ? "Not" : act.type}
                       </div>
-                      <div style={{ fontSize: 12, color: "#666" }}>
+                      <div style={{ fontSize: 12, color: "hsl(220, 10%, 45%)" }}>
                         {act.created_at
                           ? new Date(act.created_at).toLocaleString("tr-TR")
                           : ""}
@@ -815,7 +815,7 @@ export default function CrmCustomerDetailPage() {
                       style={{
                         marginTop: 4,
                         fontSize: 14,
-                        color: "#333",
+                        color: "hsl(224, 26%, 20%)",
                         whiteSpace: "pre-wrap",
                         wordBreak: "break-word",
                       }}

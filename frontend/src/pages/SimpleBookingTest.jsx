@@ -213,7 +213,7 @@ export default function SimpleBookingTest() {
             {loading ? "Gönderiliyor..." : "Oluştur & Gönder"}
           </button>
 
-          <p style={{ fontSize: "12px", color: "#666", textAlign: "center", margin: "10px 0" }}>
+          <p style={{ fontSize: "12px", color: "hsl(220, 10%, 45%)", textAlign: "center", margin: "10px 0" }}>
             Rezervasyonu gönderdikten sonra otele iletilir; durumunu Rezervasyonlarım ekranından takip edebilirsiniz.
             <span style={{ display: "block", marginTop: "5px" }} data-testid="booking-wizard-shortcut-hint">
               Kısayol: <span style={{ fontFamily: "monospace", backgroundColor: "#f5f5f5", padding: "2px 4px", borderRadius: "2px" }}>Ctrl/⌘ + Enter</span>

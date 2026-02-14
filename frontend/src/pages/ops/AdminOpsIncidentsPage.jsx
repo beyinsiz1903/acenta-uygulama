@@ -531,7 +531,7 @@ export default function AdminOpsIncidentsPage() {
 
                     <div className="space-y-1">
                       <div className="text-xs font-semibold text-muted-foreground">
-                        Source
+                        {t("opsIncidents.source_block")}
                       </div>
                       <div className="space-y-0.5">
                         <div>

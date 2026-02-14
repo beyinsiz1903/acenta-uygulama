@@ -125,6 +125,7 @@ function SupplierHealthBadge({ badge }) {
 
 
 export default function AdminOpsIncidentsPage() {
+  const { t } = useI18n();
   const [filters, setFilters] = useState({
     type: undefined,
     severity: undefined,

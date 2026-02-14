@@ -377,14 +377,14 @@ export default function AdminOpsIncidentsPage() {
           {hasRows && (
             <div className="border rounded-md overflow-hidden" data-testid="ops-incidents-rows">
               <div className="grid grid-cols-8 gap-2 bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground">
-                <div>Created At</div>
-                <div>Severity</div>
-                <div>Status</div>
-                <div>Type</div>
-                <div>Summary</div>
-                <div>Source</div>
-                <div>Supplier Health</div>
-                <div>ID</div>
+                <div>{t("opsIncidents.created_at")}</div>
+                <div>{t("opsIncidents.severity")}</div>
+                <div>{t("opsIncidents.status")}</div>
+                <div>{t("opsIncidents.type")}</div>
+                <div>{t("opsIncidents.summary")}</div>
+                <div>{t("opsIncidents.source")}</div>
+                <div>{t("opsIncidents.supplier_health")}</div>
+                <div>{t("opsIncidents.id")}</div>
               </div>
               {items.map((inc) => {
                 const src = inc.source_ref || {};
@@ -429,14 +429,14 @@ export default function AdminOpsIncidentsPage() {
           {loading && !hasRows && (
             <div className="border rounded-md overflow-hidden">
               <div className="grid grid-cols-8 gap-2 bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground">
-                <div>Created At</div>
-                <div>Severity</div>
-                <div>Status</div>
-                <div>Type</div>
-                <div>Summary</div>
-                <div>Source</div>
-                <div>Supplier Health</div>
-                <div>ID</div>
+                <div>{t("opsIncidents.created_at")}</div>
+                <div>{t("opsIncidents.severity")}</div>
+                <div>{t("opsIncidents.status")}</div>
+                <div>{t("opsIncidents.type")}</div>
+                <div>{t("opsIncidents.summary")}</div>
+                <div>{t("opsIncidents.source")}</div>
+                <div>{t("opsIncidents.supplier_health")}</div>
+                <div>{t("opsIncidents.id")}</div>
               </div>
               {Array.from({ length: 5 }).map((_, i) => (
                 <div

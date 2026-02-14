@@ -156,12 +156,12 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">Ürünler</h2>
-          <p className="text-sm text-muted-foreground">
-            Tur / konaklama / transfer ürünlerini yönetin.
+          <h2 className="text-xl font-semibold tracking-tight text-foreground">Ürünler</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground/70 font-medium">
+            Tur, konaklama ve transfer ürünlerini yönetin
           </p>
         </div>
         <Button
@@ -169,84 +169,89 @@ export default function ProductsPage() {
             setEditing(null);
             setOpenForm(true);
           }}
-          className="gap-2"
+          size="sm"
+          className="gap-1.5 text-xs font-medium h-9"
           data-testid="product-new"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-3.5 w-3.5" />
           Yeni Ürün
         </Button>
       </div>
 
-      <Card className="rounded-2xl shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Layers className="h-4 w-4 text-muted-foreground" />
-            Katalog
-          </CardTitle>
-          <div className="mt-3 grid grid-cols-1 md:grid-cols-4 gap-3">
-            <div className="relative md:col-span-2">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+      <Card className="rounded-xl shadow-sm border-border/60">
+        <CardHeader className="pb-3 px-5 pt-5">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5">
+            <div className="relative md:col-span-5">
+              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-muted-foreground/50" />
               <Input
-                placeholder="Ara (başlık)"
+                placeholder="Ürün adı ile ara..."
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                className="pl-9"
+                className="pl-9 h-9 text-xs"
                 data-testid="product-search"
               />
             </div>
-            <Select value={type} onValueChange={setType}>
-              <SelectTrigger data-testid="product-filter-type">
-                <SelectValue placeholder="Tüm tipler" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tümü</SelectItem>
-                {TYPES.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={load} data-testid="product-filter-apply">
-              Filtrele
-            </Button>
+            <div className="md:col-span-4">
+              <Select value={type} onValueChange={setType}>
+                <SelectTrigger data-testid="product-filter-type" className="h-9 text-xs">
+                  <SelectValue placeholder="Tüm tipler" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tüm Tipler</SelectItem>
+                  {TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-3">
+              <Button variant="outline" onClick={load} className="w-full h-9 gap-1.5 text-xs font-medium" data-testid="product-filter-apply">
+                <Search className="h-3 w-3" />
+                Filtrele
+              </Button>
+            </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-5 pb-5">
           {error && error !== "Not Found" ? (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700" data-testid="product-list-error">
+            <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-600 mb-3" data-testid="product-list-error">
               {error}
             </div>
           ) : null}
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-lg border border-border/40">
             <Table data-testid="product-table">
               <TableHeader>
-                <TableRow>
-                  <TableHead>Tip</TableHead>
-                  <TableHead>Başlık</TableHead>
-                  <TableHead>Açıklama</TableHead>
-                  <TableHead className="text-right">İşlem</TableHead>
+                <TableRow className="bg-muted/30 hover:bg-muted/30">
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Tip</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Başlık</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Açıklama</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9 text-right">İşlem</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="py-6 text-muted-foreground">Yükleniyor...</TableCell>
+                    <TableCell colSpan={4} className="py-12 text-center">
+                      <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        Yükleniyor...
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="py-6">
+                    <TableCell colSpan={4} className="py-8">
                       <EmptyState
                         title="Henüz ürün yok"
                         description="Katalogunuza ilk ürünü ekleyerek rezervasyon akışını test etmeye başlayın."
                         action={
                           <Button
-                            onClick={() => {
-                              setEditing(null);
-                              setOpenForm(true);
-                            }}
+                            onClick={() => { setEditing(null); setOpenForm(true); }}
                             size="sm"
+                            className="text-xs"
                           >
                             İlk ürünü oluştur
                           </Button>
@@ -255,44 +260,48 @@ export default function ProductsPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filtered.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell>
-                        <span className="rounded-full border bg-accent px-2 py-1 text-xs font-medium text-foreground/80">
-                          {r.type}
-                        </span>
-                      </TableCell>
-                      <TableCell className="font-medium text-foreground">{r.title}</TableCell>
-                      <TableCell className="text-muted-foreground">{r.description || "-"}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="inline-flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-2"
-                            onClick={() => {
-                              setEditing(r);
-                              setOpenForm(true);
-                            }}
-                            data-testid={`product-edit-${r.id}`}
-                          >
-                            <Pencil className="h-4 w-4" />
-                            Düzenle
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            className="gap-2"
-                            onClick={() => remove(r.id)}
-                            data-testid={`product-delete-${r.id}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            Sil
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  filtered.map((r) => {
+                    const typeLabel = TYPES.find(t => t.value === r.type)?.label || r.type;
+                    const typeColor = r.type === "tour" ? "text-violet-700 bg-violet-50 border-violet-200"
+                      : r.type === "accommodation" || r.type === "hotel" ? "text-blue-700 bg-blue-50 border-blue-200"
+                      : r.type === "transfer" ? "text-amber-700 bg-amber-50 border-amber-200"
+                      : "text-slate-700 bg-slate-50 border-slate-200";
+                    return (
+                      <TableRow key={r.id} className="group hover:bg-muted/20 transition-colors">
+                        <TableCell className="py-3">
+                          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide ${typeColor}`}>
+                            {typeLabel}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-[13px] font-semibold tracking-tight text-foreground py-3">{r.title}</TableCell>
+                        <TableCell className="text-[12px] text-muted-foreground/70 py-3 max-w-[300px] truncate">{r.description || "—"}</TableCell>
+                        <TableCell className="text-right py-3">
+                          <div className="inline-flex gap-1.5">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="gap-1 text-[11px] font-medium h-7 text-primary hover:text-primary"
+                              onClick={() => { setEditing(r); setOpenForm(true); }}
+                              data-testid={`product-edit-${r.id}`}
+                            >
+                              <Pencil className="h-3 w-3" />
+                              Düzenle
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="gap-1 text-[11px] font-medium h-7 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                              onClick={() => remove(r.id)}
+                              data-testid={`product-delete-${r.id}`}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              Sil
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>

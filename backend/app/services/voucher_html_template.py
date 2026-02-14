@@ -138,7 +138,7 @@ def _build_includes_excludes_html(includes, excludes):
     if includes:
         for item in includes:
             text = item if isinstance(item, str) else (item.get("text") or item.get("name") or str(item))
-            html += f'<div style="font-size:13px;color:#374151;padding:4px 0;padding-left:22px;position:relative;">'
+            html += '<div style="font-size:13px;color:#374151;padding:4px 0;padding-left:22px;position:relative;">'
             html += f'<span style="position:absolute;left:0;color:#059669;">&#8226;</span>{text}</div>'
     else:
         html += '<div style="font-size:13px;color:#9ca3af;">Bilgi bulunmamaktadır.</div>'
@@ -151,7 +151,7 @@ def _build_includes_excludes_html(includes, excludes):
     if excludes:
         for item in excludes:
             text = item if isinstance(item, str) else (item.get("text") or item.get("name") or str(item))
-            html += f'<div style="font-size:13px;color:#374151;padding:4px 0;padding-left:22px;position:relative;">'
+            html += '<div style="font-size:13px;color:#374151;padding:4px 0;padding-left:22px;position:relative;">'
             html += f'<span style="position:absolute;left:0;color:#dc2626;">&#8226;</span>{text}</div>'
     else:
         html += '<div style="font-size:13px;color:#9ca3af;">Bilgi bulunmamaktadır.</div>'
@@ -1061,7 +1061,7 @@ def generate_reservation_voucher_html(
 
     # ===== PRICE BREAKDOWN =====
     price_items_html = _build_price_items_html(price_items, currency)
-    html += f"""
+    html += """
       <!-- ===== ÖDEME DETAYLARI ===== -->
       <div class="section">
         <div class="section-title">

@@ -23,10 +23,10 @@ export default function TrialBanner() {
       <div className={`flex items-center justify-between px-4 py-2 text-sm ${urgent ? "bg-red-50 text-red-700 border-b border-red-200" : "bg-amber-50 text-amber-700 border-b border-amber-200"}`} data-testid="trial-banner">
         <div className="flex items-center gap-2">
           <Zap size={16} className={urgent ? "text-red-500" : "text-amber-500"} />
-          <span>Deneme sureniz: <strong>{daysLeft} gun</strong> kaldi</span>
+          <span>{t("trial.banner_text", { days: daysLeft })}</span>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setShowUpgrade(true)} className={`px-3 py-1 rounded-full text-xs font-semibold ${urgent ? "bg-red-600 text-white hover:bg-red-700" : "bg-amber-600 text-white hover:bg-amber-700"} transition-colors`} data-testid="upgrade-cta">Plani yukselt</button>
+          <button onClick={() => setShowUpgrade(true)} className={`px-3 py-1 rounded-full text-xs font-semibold ${urgent ? "bg-red-600 text-white hover:bg-red-700" : "bg-amber-600 text-white hover:bg-amber-700"} transition-colors`} data-testid="upgrade-cta">{t("trial.upgrade_cta")}</button>
           <button onClick={() => setDismissed(true)} className="p-0.5 hover:bg-black/5 rounded"><X size={14} /></button>
         </div>
       </div>

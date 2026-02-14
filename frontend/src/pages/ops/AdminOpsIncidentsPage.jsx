@@ -317,7 +317,7 @@ export default function AdminOpsIncidentsPage() {
 
           <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
             <span>
-              Page {currentPage} / {pageCount}
+              {t("opsIncidents.page")} {currentPage} / {pageCount}
             </span>
             <Button
               size="sm"

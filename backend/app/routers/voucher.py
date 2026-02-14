@@ -118,7 +118,16 @@ async def send_voucher_email(
 
     view = build_booking_public_view(booking)
 
-    html = _build_voucher_html(view)
+    # Fetch organization for branding
+    org_doc = None
+    try:
+        org_doc = await db.organizations.find_one({"_id": user["organization_id"]})
+        if not org_doc:
+            org_doc = await db.organizations.find_one({})
+    except Exception:
+        pass
+
+    html = _build_voucher_html(view, organization=org_doc)
     text = (
         f"Rezervasyon voucher\n"
         f"Hotel: {view.get('hotel_name') or '-'}\n"

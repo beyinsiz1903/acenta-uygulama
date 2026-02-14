@@ -148,79 +148,83 @@ async def cancel(reservation_id: str, user=Depends(get_current_user)):
 @router.get("/{reservation_id}/voucher", dependencies=[Depends(get_current_user)])
 async def voucher(reservation_id: str, user=Depends(get_current_user)):
     db = await get_db()
-    res = await _find_reservation(db, user["organization_id"], reservation_id)
+    org_id = user["organization_id"]
+    res = await _find_reservation(db, org_id, reservation_id)
     if not res:
         raise HTTPException(status_code=404, detail="Rezervasyon bulunamadı")
 
-    product = await db.products.find_one({"organization_id": user["organization_id"], "_id": res["product_id"]})
-    customer = await db.customers.find_one({"organization_id": user["organization_id"], "_id": res["customer_id"]})
+    # Fetch related data for comprehensive voucher
+    product = None
+    customer = None
+    organization = None
+    tour = None
+    tour_reservation = None
+    rate_plan = None
+    agency = None
 
-    html = f"""<!doctype html>
-<html lang=\"tr\">
-<head>
-  <meta charset=\"utf-8\" />
-  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
-  <title>Voucher {res.get('voucher_no')}</title>
-  <style>
-    body {{ font-family: Arial, sans-serif; background:#f7fafc; padding:24px; }}
-    .voucher {{ background:#ffffff; border:1px solid #e5e7eb; border-radius:14px; padding:24px; max-width:900px; margin:0 auto; }}
-    .row {{ display:flex; gap:24px; flex-wrap:wrap; }}
-    .col {{ flex:1; min-width:280px; }}
-    .muted {{ color:#6b7280; font-size:12px; }}
-    h1 {{ margin:0 0 8px 0; font-size:22px; }}
-    h2 {{ margin:18px 0 8px 0; font-size:14px; color:#111827; }}
-    .badge {{ display:inline-block; background:#e0f2fe; color:#075985; padding:4px 10px; border-radius:999px; font-size:12px; }}
-    table {{ width:100%; border-collapse:collapse; }}
-    td, th {{ border-top:1px solid #e5e7eb; padding:10px 0; text-align:left; font-size:13px; }}
-    @media print {{ .no-print {{ display:none !important; }} body {{ background:#fff; padding:0; }} .voucher {{ border:none; }} }}
-  </style>
-</head>
-<body>
-  <div class=\"voucher\">
-    <div class=\"row\">
-      <div class=\"col\">
-        <h1>Voucher</h1>
-        <div class=\"muted\">Voucher No</div>
-        <div class=\"badge\">{res.get('voucher_no')}</div>
-      </div>
-      <div class=\"col\">
-        <div class=\"muted\">PNR</div>
-        <div style=\"font-weight:700\">{res.get('pnr')}</div>
-        <div class=\"muted\" style=\"margin-top:8px\">Durum</div>
-        <div>{res.get('status')}</div>
-      </div>
-    </div>
+    # Organization
+    try:
+        organization = await db.organizations.find_one({"_id": org_id})
+        if not organization:
+            organization = await db.organizations.find_one({})
+    except Exception:
+        pass
 
-    <h2>Müşteri</h2>
-    <div>{(customer or {}).get('name','-')} — {(customer or {}).get('phone','')} {(customer or {}).get('email','')}</div>
+    # Product
+    try:
+        if res.get("product_id"):
+            product = await db.products.find_one({"organization_id": org_id, "_id": res["product_id"]})
+    except Exception:
+        pass
 
-    <h2>Ürün</h2>
-    <div style=\"font-weight:600\">{(product or {}).get('title','-')}</div>
-    <div class=\"muted\">{(product or {}).get('type','')}</div>
+    # Customer
+    try:
+        if res.get("customer_id"):
+            customer = await db.customers.find_one({"organization_id": org_id, "_id": res["customer_id"]})
+    except Exception:
+        pass
 
-    <h2>Tarih & Pax</h2>
-    <div>{res.get('start_date')} {(' - ' + res.get('end_date')) if res.get('end_date') else ''} — Pax: {res.get('pax')}</div>
+    # Tour data (if tour reservation)
+    try:
+        tour_id = res.get("tour_id")
+        if tour_id:
+            tour = await db.tours.find_one({"_id": tour_id, "organization_id": org_id})
+    except Exception:
+        pass
 
-    <h2>Ücret Detayı</h2>
-    <table>
-      <thead>
-        <tr><th>Tarih</th><th>Birim</th><th>Pax</th><th>Toplam</th></tr>
-      </thead>
-      <tbody>
-        {''.join([f"<tr><td>{it.get('date')}</td><td>{it.get('unit_price')} {res.get('currency')}</td><td>{it.get('pax')}</td><td>{it.get('total')} {res.get('currency')}</td></tr>" for it in (res.get('price_items') or [])])}
-      </tbody>
-      <tfoot>
-        <tr><td colspan=\"3\" style=\"font-weight:700\">Genel Toplam</td><td style=\"font-weight:700\">{res.get('total_price')} {res.get('currency')}</td></tr>
-      </tfoot>
-    </table>
+    # Tour reservation data
+    try:
+        tour_res_id = res.get("tour_reservation_id")
+        if tour_res_id:
+            tour_reservation = await db.tour_reservations.find_one({"_id": tour_res_id})
+    except Exception:
+        pass
 
-    <div class=\"muted\" style=\"margin-top:18px\">Not: Bu belge bilgilendirme amaçlıdır.</div>
+    # Rate plan
+    try:
+        if res.get("product_id"):
+            rate_plan = await db.rate_plans.find_one({"organization_id": org_id, "product_id": res["product_id"]})
+    except Exception:
+        pass
 
-    <div class=\"no-print\" style=\"margin-top:18px\">
-      <button onclick="window.print()" style="background:#0e7490;color:#fff;border:none;border-radius:10px;padding:10px 14px;cursor:pointer">Yazdır</button>
-    </div>
-  </div>
-</body>
-</html>"""
+    # Agency
+    try:
+        if res.get("agency_id"):
+            agency = await db.agencies.find_one({"organization_id": org_id, "_id": res["agency_id"]})
+    except Exception:
+        pass
+
+    from app.services.voucher_html_template import generate_reservation_voucher_html
+
+    html = generate_reservation_voucher_html(
+        reservation=res,
+        product=product,
+        customer=customer,
+        organization=organization,
+        tour=tour,
+        tour_reservation=tour_reservation,
+        rate_plan=rate_plan,
+        agency=agency,
+    )
 
     return Response(content=html, media_type="text/html")

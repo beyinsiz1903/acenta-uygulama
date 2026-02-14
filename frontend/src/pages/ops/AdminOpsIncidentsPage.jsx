@@ -554,7 +554,7 @@ export default function AdminOpsIncidentsPage() {
                   </div>
 
                   <div className="space-y-1">
-                    <div className="text-xs font-semibold text-muted-foreground">Summary</div>
+                    <div className="text-xs font-semibold text-muted-foreground">{t("opsIncidents.summary_label")}</div>
                     <div className="text-xs text-foreground whitespace-pre-wrap">
                       {detail.summary || "-"}
                     </div>

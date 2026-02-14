@@ -161,7 +161,11 @@ export default function InventoryPage() {
   }, [loadProducts]);
 
   useEffect(() => {
-    if (!productId) return;
+    if (!productId) {
+      setLoading(false);
+      setRows([]);
+      return;
+    }
     const t = setTimeout(() => {
       loadInventory(productId);
     }, 0);

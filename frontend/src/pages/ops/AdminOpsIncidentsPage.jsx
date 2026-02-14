@@ -563,7 +563,7 @@ export default function AdminOpsIncidentsPage() {
                   {detail.supplier_health && (
                     <div className="space-y-2" data-testid="ops-incident-drawer-health">
                       <div className="text-xs font-semibold text-muted-foreground">
-                        Supplier Health
+                        {t("opsIncidents.supplier_health_block")}
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
                         <SupplierHealthBadge badge={detail.supplier_health} />

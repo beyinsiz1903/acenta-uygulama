@@ -16,7 +16,7 @@ from pymongo import MongoClient
 sys.path.append('/app/backend')
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://nostalgic-ganguly-1.preview.emergentagent.com"
+BASE_URL = "https://booking-suite-pro.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

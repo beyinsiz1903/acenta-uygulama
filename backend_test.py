@@ -3,7 +3,7 @@
 """
 Backend API Test Suite for Tour Enhancement APIs
 
-Tests all tour-related endpoints on https://nostalgic-ganguly-1.preview.emergentagent.com
+Tests all tour-related endpoints on https://booking-suite-pro.preview.emergentagent.com
 - Authentication (POST /api/auth/login)
 - Tours browsing (GET /api/tours, GET /api/tours/{id}) 
 - Tour reservations (POST /api/tours/{id}/reserve)
@@ -19,7 +19,7 @@ from typing import Dict, Any, Optional
 
 class TourAPITester:
     def __init__(self):
-        self.base_url = "https://nostalgic-ganguly-1.preview.emergentagent.com"
+        self.base_url = "https://booking-suite-pro.preview.emergentagent.com"
         self.token: Optional[str] = None
         self.headers: Dict[str, str] = {
             "Content-Type": "application/json",

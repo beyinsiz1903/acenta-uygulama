@@ -12,7 +12,7 @@ from pymongo import MongoClient
 import os
 
 # Configuration
-BASE_URL = "https://nostalgic-ganguly-1.preview.emergentagent.com"
+BASE_URL = "https://booking-suite-pro.preview.emergentagent.com"
 
 def get_mongo_client():
     mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017/test_database")

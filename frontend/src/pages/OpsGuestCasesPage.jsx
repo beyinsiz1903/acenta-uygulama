@@ -535,7 +535,7 @@ function OpsGuestCasesPage() {
       </div>
 
       {/* Content */}
-      <div className="rounded-2xl border bg-card">
+      <div className="rounded-xl border border-border/60 bg-card">
         {error ? (
           <div className="p-4">
             <ErrorState
@@ -547,7 +547,12 @@ function OpsGuestCasesPage() {
             />
           </div>
         ) : loading && !hasVisible ? (
-          <div className="p-6 text-sm text-muted-foreground">Yükleniyor...</div>
+          <div className="p-8 text-center">
+            <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              Yükleniyor...
+            </div>
+          </div>
         ) : !hasVisible ? (
           <EmptyState
             title="Gösterilecek case yok"
@@ -555,10 +560,10 @@ function OpsGuestCasesPage() {
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-muted/40 border-b">
+            <table className="min-w-full">
+              <thead className="bg-muted/30 border-b">
                 <tr>
-                  <th className="px-3 py-2 text-left font-medium text-xs text-muted-foreground w-8">
+                  <th className="px-3 py-2 text-left w-8">
                     <input
                       type="checkbox"
                       className="h-3 w-3"
@@ -571,16 +576,12 @@ function OpsGuestCasesPage() {
                       onChange={toggleSelectAllVisible}
                     />
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-xs text-muted-foreground">Talep No</th>
-                  <th className="px-3 py-2 text-left font-medium text-xs text-muted-foreground">
-                    Rezervasyon Kodu
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium text-xs text-muted-foreground">Tip</th>
-                  <th className="px-3 py-2 text-left font-medium text-xs text-muted-foreground">Durum</th>
-                  <th className="px-3 py-2 text-left font-medium text-xs text-muted-foreground">Kaynak</th>
-                  <th className="px-3 py-2 text-left font-medium text-xs text-muted-foreground">
-                    Oluşturulma
-                  </th>
+                  <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Talep No</th>
+                  <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Rez. Kodu</th>
+                  <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Tip</th>
+                  <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Durum</th>
+                  <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Kaynak</th>
+                  <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Oluşturulma</th>
                 </tr>
               </thead>
               <tbody>

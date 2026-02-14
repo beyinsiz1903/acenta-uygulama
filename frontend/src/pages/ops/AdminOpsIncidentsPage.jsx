@@ -472,7 +472,7 @@ export default function AdminOpsIncidentsPage() {
             <div className="flex items-center justify-between px-4 py-3 border-b">
               <div className="flex flex-col gap-0.5">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Ops Incident
+                  {t("opsIncidents.drawer_badge")}
                 </span>
                 <span className="text-sm font-semibold">
                   {detail?.incident_id || selectedIncidentId || "Incident"}

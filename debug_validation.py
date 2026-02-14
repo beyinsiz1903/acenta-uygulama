@@ -7,7 +7,7 @@ import asyncio
 import tempfile
 import httpx
 
-BACKEND_URL = "https://booking-suite-pro.preview.emergentagent.com"
+BACKEND_URL = "https://booking-platform-48.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"

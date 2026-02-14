@@ -1,7 +1,7 @@
 // tests/e2e/reports-page.spec.ts
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "https://booking-suite-pro.preview.emergentagent.com";
+const BASE_URL = "https://booking-platform-48.preview.emergentagent.com";
 
 async function login(page) {
   await page.goto(`${BASE_URL}/login`);

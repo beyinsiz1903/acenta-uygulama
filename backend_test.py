@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Comprehensive Backend Testing Script for Voucher Endpoints
-Testing on: https://booking-suite-pro.preview.emergentagent.com/api
+Testing on: https://booking-platform-48.preview.emergentagent.com/api
 """
 
 import requests
@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 import sys
 
 # Backend API Base URL
-BASE_URL = "https://booking-suite-pro.preview.emergentagent.com/api"
+BASE_URL = "https://booking-platform-48.preview.emergentagent.com/api"
 
 # Test credentials
 CREDENTIALS = {

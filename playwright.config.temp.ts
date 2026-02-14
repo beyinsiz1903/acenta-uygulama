@@ -10,7 +10,7 @@ export default defineConfig({
   reporter: 'list',
   
   use: {
-    baseURL: 'https://booking-suite-pro.preview.emergentagent.com',
+    baseURL: 'https://booking-platform-48.preview.emergentagent.com',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },

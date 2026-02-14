@@ -17,7 +17,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://booking-suite-pro.preview.emergentagent.com/api"
+BACKEND_URL = "https://booking-platform-48.preview.emergentagent.com/api"
 TEST_USER_EMAIL = "admin@acenta.test"
 TEST_USER_PASSWORD = "admin123"
 

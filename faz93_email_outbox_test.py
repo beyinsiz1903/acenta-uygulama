@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from unittest.mock import patch, MagicMock
 
 class FAZ93EmailOutboxTester:
-    def __init__(self, base_url="https://booking-suite-pro.preview.emergentagent.com"):
+    def __init__(self, base_url="https://booking-platform-48.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.hotel_token = None

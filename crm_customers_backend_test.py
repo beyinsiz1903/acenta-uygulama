@@ -23,7 +23,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Backend URL from frontend/.env
-BASE_URL = "https://booking-suite-pro.preview.emergentagent.com"
+BASE_URL = "https://booking-platform-48.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 class CRMCustomersTest:

@@ -22,7 +22,7 @@ from typing import Dict, Any, List
 from bson import ObjectId
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://booking-suite-pro.preview.emergentagent.com"
+BASE_URL = "https://booking-platform-48.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

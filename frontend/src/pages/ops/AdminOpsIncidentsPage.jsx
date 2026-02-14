@@ -492,13 +492,13 @@ export default function AdminOpsIncidentsPage() {
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 text-xs">
               {detailLoading ? (
                 <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Loading incident...
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t("opsIncidents.loading")}
                 </div>
               ) : detailError ? (
                 <ErrorState description={detailError} compact />
               ) : !detail ? (
                 <div className="text-sm text-muted-foreground py-6">
-                  Incident detail not found.
+                  {t("opsIncidents.detail_not_found")}
                 </div>
               ) : (
                 <>

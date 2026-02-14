@@ -252,8 +252,8 @@ export default function AdminOpsIncidentsPage() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Ops Incidents"
-        subtitle="Risk review ve tedarikçi kaynaklı ops olaylarınızı tek ekranda görüntüleyin."
+        title={t("opsIncidents.title")}
+        subtitle={t("opsIncidents.subtitle")}
       />
 
       <Card>

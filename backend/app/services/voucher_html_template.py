@@ -247,9 +247,6 @@ def generate_reservation_voucher_html(
         )
         product_description = _safe(tour_data.get("description"), "")
         product_type_label = "Tur"
-        duration_text = _safe(tour_data.get("duration"), "")
-        departure_city = _safe(tour_data.get("departure_city"), "")
-        max_participants = tour_data.get("max_participants")
     else:
         product_name = _safe(
             prod.get("title") or prod.get("name", {}).get("tr") if isinstance(prod.get("name"), dict) else prod.get("name") or prod.get("title"),

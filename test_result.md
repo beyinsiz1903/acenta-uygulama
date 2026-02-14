@@ -8,6 +8,32 @@
 
 user_problem_statement: "Tur resimleri, bilgileri, rezervasyon alanlari ve ucak bileti arama/satis alanlari"
 
+# Voucher Redesign Feature
+voucher_redesign:
+  - task: "GET /api/reservations/:id/voucher - Comprehensive corporate reservation voucher (hotel)"
+    implemented: true
+    working: true
+    file: "backend/app/routers/reservations.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "GET /api/reservations/:id/voucher - Comprehensive corporate reservation voucher (tour)"
+    implemented: true
+    working: true
+    file: "backend/app/routers/reservations.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "B2B Voucher HTML template redesign"
+    implemented: true
+    working: true
+    file: "backend/app/routers/voucher.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
 # Tour Enhancement Feature
 tour_enhancement_backend:
   - task: "GET /api/tours - List tours with filters for logged-in users"

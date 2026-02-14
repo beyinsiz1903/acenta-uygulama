@@ -4,6 +4,7 @@ import { X, Zap } from "lucide-react";
 import { useI18n } from "../contexts/I18nContext";
 
 export default function TrialBanner() {
+  const { t } = useI18n();
   const [trial, setTrial] = useState(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [dismissed, setDismissed] = useState(false);

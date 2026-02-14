@@ -294,7 +294,6 @@ def generate_reservation_voucher_html(
     paid_amount = res.get("paid_amount") or 0
     due_amount = round(float(total_price or 0) - float(paid_amount or 0), 2)
     discount_amount = res.get("discount_amount") or 0
-    commission_amount = res.get("commission_amount") or 0
     price_items = res.get("price_items") or []
 
     # Payment status

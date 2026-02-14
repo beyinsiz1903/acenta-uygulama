@@ -1,6 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Ticket, Search, CheckCircle2, XCircle, ExternalLink, Plus, MessageCircle } from "lucide-react";
+import {
+  Ticket, Search, CheckCircle2, XCircle, ExternalLink, Plus, MessageCircle,
+  Calendar, CreditCard, User, Hash, FileText, Clock, ArrowRight, Banknote,
+  CircleDollarSign, Tag, Receipt
+} from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
 import { formatMoney, statusBadge } from "../lib/format";
@@ -20,6 +24,50 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "../components/ui/sheet";
 import EmptyState from "../components/EmptyState";
 
+/* ───────── Status helpers ───────── */
+function statusConfig(status) {
+  const s = (status || "").toLowerCase();
+  if (s === "confirmed" || s === "CONFIRMED")
+    return { label: "Onaylandı", color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", dot: "bg-emerald-500" };
+  if (s === "paid" || s === "PAID")
+    return { label: "Ödendi", color: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200", dot: "bg-blue-500" };
+  if (s === "cancelled" || s === "CANCELLED")
+    return { label: "İptal", color: "text-rose-700", bg: "bg-rose-50", border: "border-rose-200", dot: "bg-rose-500" };
+  if (s === "completed" || s === "COMPLETED")
+    return { label: "Tamamlandı", color: "text-violet-700", bg: "bg-violet-50", border: "border-violet-200", dot: "bg-violet-500" };
+  return { label: "Beklemede", color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200", dot: "bg-amber-500" };
+}
+
+function StatusPill({ status }) {
+  const cfg = statusConfig(status);
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide ${cfg.bg} ${cfg.color} ${cfg.border} border`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
+      {cfg.label}
+    </span>
+  );
+}
+
+/* ───────── Info Card Component ───────── */
+function InfoCard({ icon: Icon, label, value, accent, className = "" }) {
+  return (
+    <div className={`group relative overflow-hidden rounded-xl border border-border/60 bg-gradient-to-br from-background to-muted/30 p-3.5 transition-all hover:shadow-sm hover:border-primary/20 ${className}`}>
+      <div className="flex items-start gap-3">
+        {Icon && (
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/5 text-primary/60 group-hover:bg-primary/10 transition-colors">
+            <Icon className="h-3.5 w-3.5" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">{label}</div>
+          <div className={`mt-0.5 text-[13px] font-semibold tracking-tight truncate ${accent ? "text-primary" : "text-foreground"}`}>{value || "—"}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Reservation Form (create) ───────── */
 function ReservationForm({ open, onOpenChange, onSaved }) {
   const [products, setProducts] = useState([]);
   const [customers, setCustomers] = useState([]);
@@ -73,12 +121,12 @@ function ReservationForm({ open, onOpenChange, onSaved }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Yeni Rezervasyon</DialogTitle>
+          <DialogTitle className="text-lg font-semibold tracking-tight">Yeni Rezervasyon</DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="space-y-2">
-            <Label>Ürün</Label>
+            <Label className="text-xs font-medium text-muted-foreground">Ürün</Label>
             <Select value={productId} onValueChange={setProductId}>
               <SelectTrigger data-testid="res-form-product">
                 <SelectValue placeholder="Ürün seç" />
@@ -93,7 +141,7 @@ function ReservationForm({ open, onOpenChange, onSaved }) {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Müşteri</Label>
+            <Label className="text-xs font-medium text-muted-foreground">Müşteri</Label>
             <Select value={customerId} onValueChange={setCustomerId}>
               <SelectTrigger data-testid="res-form-customer">
                 <SelectValue placeholder="Müşteri seç" />
@@ -108,31 +156,25 @@ function ReservationForm({ open, onOpenChange, onSaved }) {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Başlangıç</Label>
+            <Label className="text-xs font-medium text-muted-foreground">Başlangıç</Label>
             <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} data-testid="res-form-start" />
           </div>
           <div className="space-y-2">
-            <Label>Bitiş (opsiyonel)</Label>
+            <Label className="text-xs font-medium text-muted-foreground">Bitiş</Label>
             <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} data-testid="res-form-end" />
           </div>
           <div className="space-y-2">
-            <Label>Pax</Label>
-            <Input type="number" value={pax} onChange={(e) => setPax(e.target.value)} data-testid="res-form-pax" />
+            <Label className="text-xs font-medium text-muted-foreground">Kişi Sayısı</Label>
+            <Input type="number" min={1} value={pax} onChange={(e) => setPax(e.target.value)} data-testid="res-form-pax" />
           </div>
         </div>
 
-        {error ? (
-          <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700" data-testid="res-form-error">
-            {error}
-          </div>
-        ) : null}
+        {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-600">{error}</div> : null}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Vazgeç
-          </Button>
-          <Button onClick={save} disabled={loading} data-testid="res-form-save">
-            {loading ? "Oluşturuluyor..." : "Rezervasyon Oluştur"}
+          <Button variant="outline" onClick={() => onOpenChange(false)}>İptal</Button>
+          <Button onClick={save} disabled={loading} className="gap-2">
+            {loading ? "Kaydediliyor..." : "Kaydet"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -140,6 +182,7 @@ function ReservationForm({ open, onOpenChange, onSaved }) {
   );
 }
 
+/* ───────── Payment Form ───────── */
 function PaymentForm({ reservationId, currency, onSaved }) {
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("cash");
@@ -167,18 +210,25 @@ function PaymentForm({ reservationId, currency, onSaved }) {
     }
   }
 
+  const methodLabels = { cash: "Nakit", bank_transfer: "Havale", card: "Kredi Kartı", manual: "Manuel" };
+
   return (
-    <div className="rounded-2xl border bg-card p-4">
-      <div className="text-sm font-semibold text-foreground">Tahsilat Ekle</div>
-      <div className="mt-3 grid grid-cols-1 md:grid-cols-4 gap-3">
-        <div className="space-y-2">
-          <Label>Tutar</Label>
-          <Input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" data-testid="pay-amount" />
+    <div className="rounded-xl border border-border/60 bg-gradient-to-br from-background to-muted/20 p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/5">
+          <Banknote className="h-3.5 w-3.5 text-primary/60" />
         </div>
-        <div className="space-y-2">
-          <Label>Yöntem</Label>
+        <span className="text-[13px] font-semibold tracking-tight text-foreground">Tahsilat Ekle</span>
+      </div>
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-4">
+        <div className="space-y-1.5">
+          <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Tutar</Label>
+          <Input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" placeholder="0.00" className="h-9 text-[13px]" data-testid="pay-amount" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Yöntem</Label>
           <Select value={method} onValueChange={setMethod}>
-            <SelectTrigger data-testid="pay-method">
+            <SelectTrigger data-testid="pay-method" className="h-9 text-[13px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -189,20 +239,22 @@ function PaymentForm({ reservationId, currency, onSaved }) {
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2 md:col-span-2">
-          <Label>Referans</Label>
-          <Input value={reference} onChange={(e) => setReference(e.target.value)} data-testid="pay-ref" />
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Referans</Label>
+          <Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="Dekont no / açıklama" className="h-9 text-[13px]" data-testid="pay-ref" />
         </div>
       </div>
       <div className="mt-3">
-        <Button onClick={addPayment} disabled={loading} className="gap-2" data-testid="pay-save">
-          {loading ? "Ekleniyor..." : "Tahsilatı Kaydet"}
+        <Button onClick={addPayment} disabled={loading} size="sm" className="gap-1.5 text-xs font-medium" data-testid="pay-save">
+          <CreditCard className="h-3 w-3" />
+          {loading ? "Kaydediliyor..." : "Tahsilatı Kaydet"}
         </Button>
       </div>
     </div>
   );
 }
 
+/* ───────── Reservation Detail Sheet ───────── */
 function ReservationDetails({ open, onOpenChange, reservationId }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
@@ -232,17 +284,14 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
   }
 
   async function cancel() {
-    if (!window.confirm("Rezervasyonu iptal etmek istiyor musun?")) return;
+    if (!window.confirm("Rezervasyonu iptal etmek istiyor musunuz?")) return;
     await api.post(`/reservations/${reservationId}/cancel`);
     await load();
   }
 
-  const badge = statusBadge(data?.status);
-
   const openVoucher = useCallback(async () => {
     if (!reservationId) return;
     try {
-      // Fetch voucher HTML with auth token via api instance
       const resp = await api.get(`/reservations/${reservationId}/voucher`, {
         responseType: "text",
         headers: { Accept: "text/html" },
@@ -251,7 +300,6 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
       const blob = new Blob([html], { type: "text/html; charset=utf-8" });
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank");
-      // Cleanup blob URL after a short delay
       setTimeout(() => URL.revokeObjectURL(url), 5000);
     } catch (e) {
       console.error("Voucher açılamadı:", e);
@@ -290,152 +338,205 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
     const encoded = encodeURIComponent(message);
 
     if (phone) {
-      // Clean phone number: remove leading 0, add country code if needed
       let cleanPhone = phone.replace(/^\+/, "");
       if (cleanPhone.startsWith("0")) cleanPhone = "90" + cleanPhone.slice(1);
       if (!cleanPhone.startsWith("90") && cleanPhone.length === 10) cleanPhone = "90" + cleanPhone;
       window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");
     } else {
-      // No phone number - open WhatsApp with just message
       window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_blank");
     }
   }, [data, reservationId]);
 
+  const dueAmount = data ? (data.due_amount ?? Math.max(0, (data.total_price || 0) - (data.paid_amount || 0))) : 0;
+  const paidPercent = data && data.total_price > 0 ? Math.min(100, Math.round(((data.paid_amount || 0) / data.total_price) * 100)) : 0;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="p-0">
-        <div className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-5 py-4">
-          <SheetHeader>
-            <SheetTitle>Rezervasyon Detayı</SheetTitle>
-          </SheetHeader>
+      <SheetContent side="right" className="p-0 w-full sm:w-[580px] sm:max-w-none">
+        {/* ── Header ── */}
+        <div className="sticky top-0 z-10 border-b bg-gradient-to-r from-slate-50 to-background backdrop-blur supports-[backdrop-filter]:bg-background/90">
+          <div className="px-5 py-4">
+            <SheetHeader>
+              <div className="flex items-center justify-between">
+                <SheetTitle className="text-base font-semibold tracking-tight text-foreground">
+                  Rezervasyon Detayı
+                </SheetTitle>
+                {data && <StatusPill status={data.status} />}
+              </div>
+            </SheetHeader>
+            {data && (
+              <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1"><Hash className="h-3 w-3" /> {data.pnr}</span>
+                <span className="text-border">|</span>
+                <span className="flex items-center gap-1"><FileText className="h-3 w-3" /> {data.voucher_no || "—"}</span>
+                {data.channel && (
+                  <>
+                    <span className="text-border">|</span>
+                    <span className="flex items-center gap-1"><Tag className="h-3 w-3" /> {data.channel}</span>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="max-h-[calc(100vh-64px)] overflow-y-auto px-5 py-4">
-          {loading ? <div className="text-sm text-muted-foreground">Yükleniyor...</div> : null}
-          {error ? (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700" data-testid="res-detail-error">
-            {error}
-          </div>
-        ) : null}
+        {/* ── Body ── */}
+        <div className="max-h-[calc(100vh-140px)] overflow-y-auto">
+          <div className="px-5 py-4 space-y-5">
+            {loading && (
+              <div className="flex items-center justify-center py-12">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <span className="ml-2 text-xs text-muted-foreground">Yükleniyor...</span>
+              </div>
+            )}
+            {error && (
+              <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs text-rose-600 font-medium" data-testid="res-detail-error">
+                {error}
+              </div>
+            )}
 
-          {data ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                <div className="rounded-2xl border bg-accent/40 p-3">
-                  <div className="text-xs text-muted-foreground">PNR</div>
-                  <div className="text-sm font-semibold text-foreground">{data.pnr}</div>
+            {data && (
+              <>
+                {/* ── Financial Summary ── */}
+                <div className="rounded-xl border border-border/60 bg-gradient-to-br from-primary/[0.02] to-primary/[0.06] p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+                      <CircleDollarSign className="h-3.5 w-3.5 text-primary" />
+                    </div>
+                    <span className="text-[13px] font-semibold tracking-tight text-foreground">Finansal Özet</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="rounded-lg bg-background/80 border border-border/40 p-3 text-center">
+                      <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Toplam</div>
+                      <div className="mt-1 text-base font-bold tracking-tight text-foreground">{formatMoney(data.total_price, data.currency)}</div>
+                    </div>
+                    <div className="rounded-lg bg-background/80 border border-border/40 p-3 text-center">
+                      <div className="text-[10px] font-medium uppercase tracking-wider text-emerald-600/70">Ödenen</div>
+                      <div className="mt-1 text-base font-bold tracking-tight text-emerald-600">{formatMoney(data.paid_amount, data.currency)}</div>
+                    </div>
+                    <div className="rounded-lg bg-background/80 border border-border/40 p-3 text-center">
+                      <div className="text-[10px] font-medium uppercase tracking-wider text-amber-600/70">Kalan</div>
+                      <div className={`mt-1 text-base font-bold tracking-tight ${dueAmount > 0 ? "text-amber-600" : "text-emerald-600"}`}>
+                        {formatMoney(dueAmount, data.currency)}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
+                      <span>Ödeme İlerlemesi</span>
+                      <span className="font-semibold text-foreground">%{paidPercent}</span>
+                    </div>
+                    <div className="h-1.5 w-full rounded-full bg-border/40 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${paidPercent >= 100 ? "bg-emerald-500" : "bg-primary"}`}
+                        style={{ width: `${paidPercent}%` }}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="rounded-2xl border bg-accent/40 p-3">
-                <div className="text-xs text-muted-foreground">Voucher</div>
-                <div className="text-sm font-semibold text-foreground">{data.voucher_no}</div>
-              </div>
-              <div className="rounded-2xl border bg-accent/40 p-3">
-                <div className="text-xs text-muted-foreground">Durum</div>
-                <div className="text-sm font-semibold text-foreground">{badge.label}</div>
-              </div>
-            </div>
 
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                <div className="rounded-2xl border bg-card p-4">
-                  <div className="text-xs text-muted-foreground">Aksiyonlar</div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Button onClick={confirm} variant="outline" className="gap-2" data-testid="res-confirm">
-                      <CheckCircle2 className="h-4 w-4" />
+                {/* ── Detail Cards ── */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2.5">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">Rezervasyon Bilgileri</span>
+                    <div className="flex-1 h-px bg-border/40" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <InfoCard icon={Hash} label="PNR" value={data.pnr} accent />
+                    <InfoCard icon={FileText} label="Voucher No" value={data.voucher_no} />
+                    <InfoCard icon={Calendar} label="Başlangıç" value={data.start_date || data.check_in || "—"} />
+                    <InfoCard icon={Calendar} label="Bitiş" value={data.end_date || data.check_out || "—"} />
+                    <InfoCard icon={User} label="Misafir" value={data.customer_name || data.guest_name} />
+                    <InfoCard icon={Tag} label="Kanal" value={data.channel} />
+                    {data.product_title && (
+                      <InfoCard icon={Ticket} label="Ürün" value={data.product_title} className="col-span-2" />
+                    )}
+                  </div>
+                </div>
+
+                {/* ── Actions ── */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2.5">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">İşlemler</span>
+                    <div className="flex-1 h-px bg-border/40" />
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button onClick={confirm} variant="outline" size="sm" className="gap-1.5 text-xs font-medium h-8 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800" data-testid="res-confirm">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
                       Onayla
                     </Button>
-                    <Button onClick={cancel} variant="destructive" className="gap-2" data-testid="res-cancel">
-                      <XCircle className="h-4 w-4" />
-                      İptal
+                    <Button onClick={cancel} variant="outline" size="sm" className="gap-1.5 text-xs font-medium h-8 border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700" data-testid="res-cancel">
+                      <XCircle className="h-3.5 w-3.5" />
+                      İptal Et
                     </Button>
-                    <Button
-                      onClick={openVoucher}
-                      variant="outline"
-                      className="gap-2"
-                      data-testid="res-voucher"
-                    >
-                      <ExternalLink className="h-4 w-4" />
+                    <Button onClick={openVoucher} variant="outline" size="sm" className="gap-1.5 text-xs font-medium h-8 border-primary/30 text-primary hover:bg-primary/5" data-testid="res-voucher">
+                      <ExternalLink className="h-3.5 w-3.5" />
                       Voucher
                     </Button>
-                    <Button
-                      onClick={sendWhatsApp}
-                      variant="outline"
-                      className="gap-2 text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
-                      data-testid="res-whatsapp"
-                    >
-                      <MessageCircle className="h-4 w-4" />
+                    <Button onClick={sendWhatsApp} variant="outline" size="sm" className="gap-1.5 text-xs font-medium h-8 border-emerald-200 text-emerald-600 hover:bg-emerald-50" data-testid="res-whatsapp">
+                      <MessageCircle className="h-3.5 w-3.5" />
                       WhatsApp
                     </Button>
                   </div>
-                  <div className="mt-3 text-xs text-muted-foreground">
-                    Not: Aksiyonlar status’e göre backend’de doğrulanır.
-                  </div>
                 </div>
 
-                <div className="rounded-2xl border bg-card p-4 md:col-span-2">
-                  <div className="text-xs text-muted-foreground">Özet</div>
-                  <div className="mt-3 grid grid-cols-2 gap-3">
-                    <div>
-                      <div className="text-xs text-muted-foreground">Toplam</div>
-                      <div className="text-sm font-semibold text-foreground">{formatMoney(data.total_price, data.currency)}</div>
+                {/* ── Payment Form ── */}
+                <PaymentForm reservationId={reservationId} currency={data.currency} onSaved={load} />
+
+                {/* ── Payment History ── */}
+                <div className="rounded-xl border border-border/60 bg-gradient-to-br from-background to-muted/20 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/5">
+                        <Receipt className="h-3.5 w-3.5 text-primary/60" />
+                      </div>
+                      <span className="text-[13px] font-semibold tracking-tight text-foreground">Tahsilatlar</span>
                     </div>
-                    <div>
-                      <div className="text-xs text-muted-foreground">Ödenen</div>
-                      <div className="text-sm font-semibold text-foreground">{formatMoney(data.paid_amount, data.currency)}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-muted-foreground">Kalan</div>
-                      <div className="text-sm font-semibold text-foreground">{formatMoney(data.due_amount, data.currency)}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-muted-foreground">Kanal</div>
-                      <div className="text-sm font-semibold text-foreground">{data.channel}</div>
-                    </div>
+                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary/10 px-1.5 text-[10px] font-bold text-primary">
+                      {(data.payments || []).length}
+                    </span>
                   </div>
+
+                  {(data.payments || []).length === 0 ? (
+                    <div className="py-4 text-center text-xs text-muted-foreground/60">Henüz tahsilat kaydı bulunmuyor.</div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {(data.payments || []).map((p) => (
+                        <div key={p.id} className="flex items-center justify-between rounded-lg border border-border/40 bg-background/60 px-3 py-2.5 transition-colors hover:bg-muted/30">
+                          <div>
+                            <div className="text-xs font-medium text-foreground">{p.method === "cash" ? "Nakit" : p.method === "bank_transfer" ? "Havale" : p.method === "card" ? "Kredi Kartı" : p.method}</div>
+                            <div className="text-[10px] text-muted-foreground/60 mt-0.5">
+                              {p.reference || "—"} · {p.created_at ? new Date(p.created_at).toLocaleDateString("tr-TR") : ""}
+                            </div>
+                          </div>
+                          <div className="text-xs font-bold text-emerald-600">
+                            +{formatMoney(p.amount, p.currency)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-
-
-
-            <PaymentForm reservationId={reservationId} currency={data.currency} onSaved={load} />
-
-            <div className="rounded-2xl border bg-card p-4">
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold text-foreground">Tahsilatlar</div>
-                <span className="rounded-full border bg-accent px-2 py-1 text-xs font-medium text-foreground/80">
-                  {(data.payments || []).length}
-                </span>
-              </div>
-              <div className="mt-2 text-sm text-muted-foreground">
-                {(data.payments || []).length === 0 ? "Kayıt yok." : null}
-              </div>
-              <div className="mt-2 space-y-2">
-                {(data.payments || []).map((p) => (
-                  <div key={p.id} className="flex items-center justify-between rounded-xl border bg-accent/40 px-3 py-2">
-                    <div className="text-sm text-foreground/80">
-                      {p.method} — {p.reference || "-"}
-                      <div className="text-xs text-muted-foreground">{p.created_at}</div>
-                    </div>
-                    <div className="text-sm font-semibold text-foreground">
-                      {formatMoney(p.amount, p.currency)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            </div>
-          ) : null}
+              </>
+            )}
+          </div>
         </div>
 
-        <SheetFooter className="gap-2 border-t px-5 py-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)} data-testid="res-detail-close">
+        {/* ── Footer ── */}
+        <div className="sticky bottom-0 border-t bg-background/95 backdrop-blur px-5 py-3">
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="text-xs font-medium" data-testid="res-detail-close">
             Kapat
           </Button>
-        </SheetFooter>
+        </div>
       </SheetContent>
     </Sheet>
   );
 }
 
+/* ═══════════════════════ MAIN PAGE ═══════════════════════ */
 export default function ReservationsPage() {
   const [searchParams] = useSearchParams();
   const statusParam = searchParams.get("status") || "";
@@ -483,84 +584,108 @@ export default function ReservationsPage() {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      {/* ── Page Header ── */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">Rezervasyonlar</h2>
-          <p className="text-sm text-muted-foreground">Durum akışı + voucher + tahsilat.</p>
+          <h2 className="text-xl font-semibold tracking-tight text-foreground">Rezervasyonlar</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground/70 font-medium">Durum akışı, voucher ve tahsilat yönetimi</p>
         </div>
-        <Button onClick={() => setOpenForm(true)} className="gap-2" data-testid="res-new">
-          <Plus className="h-4 w-4" />
+        <Button onClick={() => setOpenForm(true)} size="sm" className="gap-1.5 text-xs font-medium h-9" data-testid="res-new">
+          <Plus className="h-3.5 w-3.5" />
           Yeni Rezervasyon
         </Button>
       </div>
 
-      <Card className="rounded-2xl shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Ticket className="h-4 w-4 text-muted-foreground" />
-            Liste
-          </CardTitle>
-          <div className="mt-3 grid grid-cols-1 md:grid-cols-4 gap-3">
-            <div className="relative md:col-span-2">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+      {/* ── Status Badges ── */}
+      {Object.keys(badges).length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {Object.entries(badges).map(([k, v]) => {
+            const cfg = statusConfig(k);
+            return (
+              <div key={k} className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 ${cfg.bg} ${cfg.border}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
+                <span className={`text-[11px] font-medium ${cfg.color}`}>{cfg.label}</span>
+                <span className={`text-[11px] font-bold ${cfg.color}`}>{v}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Filters + Table ── */}
+      <Card className="rounded-xl shadow-sm border-border/60">
+        <CardHeader className="pb-3 px-5 pt-5">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5">
+            <div className="relative md:col-span-5">
+              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-muted-foreground/50" />
               <Input
-                placeholder="Ara (PNR)"
+                placeholder="PNR veya müşteri ara..."
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                className="pl-9"
+                className="pl-9 h-9 text-xs"
                 data-testid="res-search"
               />
             </div>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger data-testid="res-filter-status">
-                <SelectValue placeholder="Tüm durumlar" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tümü</SelectItem>
-                <SelectItem value="pending">Beklemede</SelectItem>
-                <SelectItem value="confirmed">Onaylı</SelectItem>
-                <SelectItem value="paid">Ödendi</SelectItem>
-                <SelectItem value="cancelled">İptal</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={load} data-testid="res-filter-apply">
-              Filtrele
-            </Button>
+            <div className="md:col-span-4">
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger data-testid="res-filter-status" className="h-9 text-xs">
+                  <SelectValue placeholder="Tüm durumlar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tüm Durumlar</SelectItem>
+                  <SelectItem value="pending">Beklemede</SelectItem>
+                  <SelectItem value="confirmed">Onaylandı</SelectItem>
+                  <SelectItem value="paid">Ödendi</SelectItem>
+                  <SelectItem value="cancelled">İptal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-3">
+              <Button variant="outline" onClick={load} className="w-full h-9 gap-1.5 text-xs font-medium" data-testid="res-filter-apply">
+                <Search className="h-3 w-3" />
+                Filtrele
+              </Button>
+            </div>
           </div>
         </CardHeader>
-        <CardContent>
-          {error ? (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700" data-testid="res-list-error">
+        <CardContent className="px-5 pb-5">
+          {error && (
+            <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-600 mb-3" data-testid="res-list-error">
               {error}
             </div>
-          ) : null}
+          )}
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-lg border border-border/40">
             <Table data-testid="res-table">
               <TableHeader>
-                <TableRow>
-                  <TableHead>PNR</TableHead>
-                  <TableHead>Durum</TableHead>
-                  <TableHead>Toplam</TableHead>
-                  <TableHead>Ödenen</TableHead>
-                  <TableHead>Kanal</TableHead>
-                  <TableHead className="text-right">İşlem</TableHead>
+                <TableRow className="bg-muted/30 hover:bg-muted/30">
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">PNR</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Durum</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Toplam</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Ödenen</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Kanal</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9 text-right">İşlem</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-6 text-muted-foreground">Yükleniyor...</TableCell>
+                    <TableCell colSpan={6} className="py-12 text-center">
+                      <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        Yükleniyor...
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ) : rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-6">
+                    <TableCell colSpan={6} className="py-8">
                       <EmptyState
                         title="Henüz rezervasyon yok"
                         description="İlk manuel rezervasyonu oluşturarak satış akışını uçtan uca test edebilirsiniz."
                         action={
-                          <Button onClick={() => setOpenForm(true)} size="sm">
+                          <Button onClick={() => setOpenForm(true)} size="sm" className="text-xs">
                             İlk rezervasyonu oluştur
                           </Button>
                         }
@@ -568,81 +693,44 @@ export default function ReservationsPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  rows.map((r) => {
-                    const b = statusBadge(r.status);
-                    return (
-                      <TableRow key={r.id}>
-                        <TableCell className="font-medium text-foreground">{r.pnr}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <span className="rounded-full border bg-accent px-2 py-1 text-xs font-medium text-foreground/80">
-                              {b.label}
-                            </span>
-                            {r.has_open_case ? (
-                              <button
-                                type="button"
-                                className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800"
-                                onClick={() => {
-                                  window.location.href = `/ops/cases?booking_id=${r.id}&status=open,waiting,in_progress`;
-                                }}
-                                data-testid={`badge-open-case-${r.id}`}
-                              >
-                                OPEN CASE
-                              </button>
-                            ) : null}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-foreground/80">{formatMoney(r.total_price, r.currency)}</TableCell>
-                        <TableCell className="text-foreground/80">{formatMoney(r.paid_amount, r.currency)}</TableCell>
-                        <TableCell className="text-muted-foreground">{r.channel}</TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setDetailId(r.id);
-                              setOpenDetail(true);
-                            }}
-                            data-testid={`res-open-${r.id}`}
-                          >
-                            Aç
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
+                  rows.map((r) => (
+                    <TableRow key={r.id} className="group cursor-pointer hover:bg-muted/20 transition-colors" onClick={() => { setDetailId(r.id); setOpenDetail(true); }}>
+                      <TableCell className="text-[13px] font-semibold tracking-tight text-foreground py-3">{r.pnr}</TableCell>
+                      <TableCell className="py-3">
+                        <div className="flex items-center gap-1.5">
+                          <StatusPill status={r.status} />
+                          {r.has_open_case && (
+                            <button
+                              type="button"
+                              className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[9px] font-bold text-amber-800 tracking-wide"
+                              onClick={(e) => { e.stopPropagation(); window.location.href = `/ops/cases?booking_id=${r.id}&status=open,waiting,in_progress`; }}
+                              data-testid={`badge-open-case-${r.id}`}
+                            >
+                              OPEN CASE
+                            </button>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-[13px] font-medium text-foreground/80 py-3">{formatMoney(r.total_price, r.currency)}</TableCell>
+                      <TableCell className="text-[13px] font-medium text-foreground/80 py-3">{formatMoney(r.paid_amount, r.currency)}</TableCell>
+                      <TableCell className="text-[12px] text-muted-foreground py-3">{r.channel}</TableCell>
+                      <TableCell className="text-right py-3">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1 text-[11px] font-medium h-7 text-primary hover:text-primary opacity-60 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => { e.stopPropagation(); setDetailId(r.id); setOpenDetail(true); }}
+                          data-testid={`res-open-${r.id}`}
+                        >
+                          Detay
+                          <ArrowRight className="h-3 w-3" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 )}
               </TableBody>
             </Table>
-          </div>
-
-          <div className="mt-3 text-xs text-muted-foreground space-y-1">
-            <div className="font-medium text-[11px] text-foreground/80">Durum sayaçları</div>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(badges).length === 0 ? (
-                <span className="text-muted-foreground">Henüz rezervasyon yok.</span>
-              ) : (
-                Object.entries(badges).map(([k, v]) => (
-                  <span
-                    key={k}
-                    className="inline-flex items-center gap-1 rounded-full border bg-accent px-2 py-0.5 text-[11px] font-medium text-foreground/80"
-                  >
-                    <span>
-                      {k === "pending"
-                        ? "Beklemede"
-                        : k === "confirmed"
-                        ? "Onaylı"
-                        : k === "paid"
-                        ? "Ödendi"
-                        : k === "cancelled"
-                        ? "İptal"
-                        : k}
-                    </span>
-                    <span className="text-foreground">{v}</span>
-                  </span>
-                ))
-              )}
-            </div>
           </div>
         </CardContent>
       </Card>

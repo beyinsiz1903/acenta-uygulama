@@ -297,7 +297,7 @@ export default function AdminOpsIncidentsPage() {
           </div>
 
           <div className="space-y-1">
-            <div className="text-xs text-muted-foreground">Severity</div>
+            <div className="text-xs text-muted-foreground">{t("opsIncidents.severity")}</div>
             <Select
               value={filters.severity ?? "all"}
               onValueChange={(v) => onChangeFilter("severity", v === "all" ? undefined : v)}

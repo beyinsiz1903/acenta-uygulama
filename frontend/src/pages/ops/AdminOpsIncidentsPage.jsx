@@ -258,7 +258,7 @@ export default function AdminOpsIncidentsPage() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-3">
-          <CardTitle className="text-sm">Filters</CardTitle>
+          <CardTitle className="text-sm">{t("opsIncidents.filters")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3 text-xs items-end">
           <div className="space-y-1">

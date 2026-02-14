@@ -246,6 +246,7 @@ export default function AppShell() {
 }
 
 function AppShellInner() {
+  const { t, lang } = useI18n();
   const user = getUser();
   const location = useLocation();
   const navigate = useNavigate();

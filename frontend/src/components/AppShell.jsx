@@ -26,6 +26,7 @@ import { getActiveTenantKey, getActiveTenantId, setActiveTenantId, subscribeTena
 import NotificationDrawer from "./NotificationDrawer";
 import NotificationBell from "./NotificationBell";
 import TrialBanner from "./TrialBanner";
+import { LanguageSwitcher, useI18n } from "../contexts/I18nContext";
 import AiAssistant from "./AiAssistant";
 
 /* ------------------------------------------------------------------ */

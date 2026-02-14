@@ -188,8 +188,21 @@ export default function OpsTasksPage() {
             </div>
           )}
 
+          {loading && !rows.length && (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mb-3" />
+              <p className="text-xs text-muted-foreground">Görevler yükleniyor...</p>
+            </div>
+          )}
+
           {!loading && !rows.length && !error && (
-            <div className="text-xs text-muted-foreground">Görev bulunamadı.</div>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mb-2">
+                <ClipboardCheck className="h-4 w-4 text-muted-foreground/60" />
+              </div>
+              <p className="text-sm font-medium text-muted-foreground">Görev bulunamadı</p>
+              <p className="text-xs text-muted-foreground/60 mt-0.5">Yeni görev ekleyerek başlayabilirsiniz.</p>
+            </div>
           )}
 
           {rows.length > 0 && (

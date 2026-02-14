@@ -152,10 +152,59 @@ tour_enhancement_frontend:
         agent: "testing"
         comment: "Admin tours page was not fully testable in the testing environment, but sidebar navigation to the tours page works correctly."
 
+enhanced_dashboard:
+  - task: "GET /api/dashboard/kpi-stats - KPI statistics (sales, reservations, conversion, online)"
+    implemented: true
+    working: true
+    file: "backend/app/routers/dashboard_enhanced.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "GET /api/dashboard/reservation-widgets - Completed/Pending/Abandoned reservations"
+    implemented: true
+    working: true
+    file: "backend/app/routers/dashboard_enhanced.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "GET /api/dashboard/weekly-summary - Weekly summary table"
+    implemented: true
+    working: true
+    file: "backend/app/routers/dashboard_enhanced.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "GET /api/dashboard/popular-products - Most clicked products carousel"
+    implemented: true
+    working: true
+    file: "backend/app/routers/dashboard_enhanced.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "GET /api/dashboard/recent-customers - Latest customers list"
+    implemented: true
+    working: true
+    file: "backend/app/routers/dashboard_enhanced.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "Frontend - Agentis-style dashboard redesign with KPI cards, reservation widgets, carousel, weekly summary, recent customers"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/DashboardPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
 metadata:
   created_by: "main_agent"
-  version: "23.0"
-  test_sequence: 31
+  version: "24.0"
+  test_sequence: 32
   run_ui: true
 
 test_plan:

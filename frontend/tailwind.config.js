@@ -7,6 +7,14 @@ module.exports = {
   ],
   theme: {
   	extend: {
+  		fontFamily: {
+  			heading: ['Manrope', 'Inter', 'system-ui', 'sans-serif'],
+  			body: ['Inter', 'system-ui', 'sans-serif'],
+  			mono: ['Roboto Mono', 'ui-monospace', 'monospace'],
+  		},
+  		fontSize: {
+  			'2xs': ['0.625rem', { lineHeight: '0.875rem' }],
+  		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',

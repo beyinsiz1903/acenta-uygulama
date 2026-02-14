@@ -658,26 +658,30 @@ function OpsGuestCasesPage() {
                               switch (c.status) {
                                 case "open":
                                   return (
-                                    <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[11px]">
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 text-[10px] font-semibold tracking-wide">
+                                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                                       Açık
                                     </span>
                                   );
                                 case "waiting":
                                   return (
-                                    <span className="inline-flex items-center rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-[11px]">
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 text-[10px] font-semibold tracking-wide">
+                                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                                       Beklemede
                                     </span>
                                   );
                                 case "in_progress":
                                   return (
-                                    <span className="inline-flex items-center rounded-full bg-blue-50 text-blue-700 px-2 py-0.5 text-[11px]">
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 text-[10px] font-semibold tracking-wide">
+                                      <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
                                       Devam ediyor
                                     </span>
                                   );
                                 case "closed":
                                 default:
                                   return (
-                                    <span className="inline-flex items-center rounded-full bg-muted text-muted-foreground px-2 py-0.5 text-[11px]">
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 text-slate-500 border border-slate-200 px-2 py-0.5 text-[10px] font-semibold tracking-wide">
+                                      <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
                                       Kapalı
                                     </span>
                                   );

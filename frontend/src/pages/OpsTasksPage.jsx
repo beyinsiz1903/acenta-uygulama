@@ -79,10 +79,15 @@ export default function OpsTasksPage() {
       if (statusFilter) params.status = statusFilter;
       if (assigneeFilter === "me" && myEmail) params.assignee_email = myEmail;
       if (overdueOnly) params.overdue = true;
-      const resp = await api.get("/ops/tasks", { params });
+      const resp = await api.get("/ops/tasks", { params, timeout: 15000 });
       setTasks(resp.data?.items || []);
     } catch (e) {
-      setError(apiErrorMessage(e));
+      const msg = apiErrorMessage(e);
+      if (msg === "Not Found" || msg === "Request failed with status code 404") {
+        setTasks([]);
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }

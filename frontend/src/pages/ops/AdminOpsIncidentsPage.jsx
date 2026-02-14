@@ -353,11 +353,11 @@ export default function AdminOpsIncidentsPage() {
 
           {!loading && !error && !hasRows && (
             <EmptyState
-              title="No incidents"
+              title={t("opsIncidents.no_incidents_title")}
               description={
                 isDefaultFilters
-                  ? "Şu anda bu ortamda hiç ops incident yok."
-                  : "There are no ops incidents for the selected filters."
+                  ? t("opsIncidents.no_incidents_default_desc")
+                  : t("opsIncidents.no_incidents_filtered_desc")
               }
               action={
                 !isDefaultFilters && (

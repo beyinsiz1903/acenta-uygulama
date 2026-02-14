@@ -84,9 +84,9 @@ function UpgradeModal({ onClose }) {
             </div>
             {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
             <div className="flex gap-2 justify-end">
-              <button onClick={onClose} className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50">Iptal</button>
+              <button onClick={onClose} className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50">{t("trial.modal_cancel")}</button>
               <button onClick={handleSubmit} disabled={!sel||submitting} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
-                {submitting ? "Gonderiliyor..." : "Talep Gonder"}
+                {submitting ? t("trial.modal_submitting") : t("trial.modal_submit")}
               </button>
             </div>
           </>

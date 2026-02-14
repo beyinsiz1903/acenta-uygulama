@@ -50,7 +50,7 @@ function StatusBadge({ status }) {
     <span
       className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs border ${
         isDone
-          ? "border-green-600 bg-green-50 text-green-800"
+          ? "border-green-500 bg-green-50 text-green-800"
           : "border-yellow-500 bg-yellow-50 text-yellow-800"
       }`}
     >
@@ -61,20 +61,20 @@ function StatusBadge({ status }) {
 
 function PriorityBadge({ priority }) {
   const map = {
-    low: { label: "Düşük", cls: "bg-gray-100 text-gray-600" },
-    normal: { label: "Normal", cls: "bg-blue-50 text-blue-700" },
-    high: { label: "Yüksek", cls: "bg-red-50 text-red-700" },
+    low: { label: "Düşük", classes: "text-gray-600 bg-gray-100" },
+    normal: { label: "Normal", classes: "text-blue-700 bg-blue-50" },
+    high: { label: "Yüksek", classes: "text-red-700 bg-red-50" },
   };
   const conf = map[priority || "normal"];
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs border border-transparent ${conf.cls}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs border border-transparent ${conf.classes}`}>
       {conf.label}
     </span>
   );
 }
 
 export default function CrmTasksPage() {
-  const [activeTab, setActiveTab] = useState("today"); // "today" | "overdue" | "week"
+  const [activeTab, setActiveTab] = useState("today");
   const [loading, setLoading] = useState(false);
   const [errMsg, setErrMsg] = useState("");
   const [data, setData] = useState({ items: [], total: 0, page: 1, page_size: 50 });
@@ -82,7 +82,7 @@ export default function CrmTasksPage() {
 
   const tabConfig = useMemo(
     () => ({
-      today: { label: "Bug\u00fcn", due: "today" },
+      today: { label: "Bugün", due: "today" },
       overdue: { label: "Gecikenler", due: "overdue" },
       week: { label: "Bu Hafta", due: "week" },
     }),
@@ -97,7 +97,7 @@ export default function CrmTasksPage() {
       const res = await listTasks({ due: cfg.due, status: "open" });
       setData(res || { items: [], total: 0, page: 1, page_size: 50 });
     } catch (e) {
-      setErrMsg(e.message || "G\u00f6revler y\u00fcklenemedi.");
+      setErrMsg(e.message || "Görevler yüklenemedi.");
     } finally {
       setLoading(false);
     }
@@ -115,7 +115,7 @@ export default function CrmTasksPage() {
       await patchTask(taskId, { status: "done" });
       await refresh();
     } catch (e) {
-      setErrMsg(e.message || "G\u00f6rev g\u00fcncellenemedi.");
+      setErrMsg(e.message || "Görev güncellenemedi.");
     } finally {
       setUpdatingId("");
     }
@@ -124,37 +124,19 @@ export default function CrmTasksPage() {
   const items = data.items || [];
 
   return (
-    <div style={{ padding: 16 }}>
+    <div className="p-4">
       {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
+      <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>CRM • Görevler</h1>
-          <div style={{ color: "#666", marginTop: 4, fontSize: 13 }}>
+          <h1 className="m-0 text-xl font-bold text-foreground">CRM • Görevler</h1>
+          <div className="text-sm text-muted-foreground mt-1">
             Bugün, geciken ve bu hafta içindeki açık görevlerinizi izleyin.
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div
-        style={{
-          marginTop: 14,
-          padding: 8,
-          borderRadius: 999,
-          border: "1px solid #eee",
-          display: "inline-flex",
-          gap: 6,
-          background: "#fafafa",
-        }}
-      >
+      <div className="mt-3.5 p-2 rounded-full border border-border inline-flex gap-1.5 bg-muted/50">
         <TabButton active={activeTab === "today"} onClick={() => setActiveTab("today")}>
           Bugün
         </TabButton>
@@ -168,148 +150,89 @@ export default function CrmTasksPage() {
 
       {/* Error */}
       {errMsg ? (
-        <div
-          style={{
-            marginTop: 12,
-            padding: 12,
-            borderRadius: 12,
-            border: "1px solid #f2caca",
-            background: "#fff5f5",
-            color: "#8a1f1f",
-          }}
-        >
+        <div className="mt-3 p-3 rounded-xl border border-destructive/30 bg-destructive/5 text-destructive text-sm">
           {errMsg}
         </div>
       ) : null}
 
       {/* List */}
-      <div style={{ marginTop: 12, border: "1px solid #eee", borderRadius: 12, overflow: "hidden" }}>
-        <div
-          style={{
-            padding: 10,
-            borderBottom: "1px solid #eee",
-            background: "#fafafa",
-            fontSize: 13,
-            color: "#666",
-            display: "flex",
-            justifyContent: "space-between",
-          }}
-        >
+      <div className="mt-3 border border-border rounded-xl overflow-hidden">
+        <div className="p-2.5 border-b border-border bg-muted/50 text-sm text-muted-foreground flex justify-between">
           <span>
             {loading ? "Yükleniyor…" : "Görevler"} ({data.total || 0})
           </span>
         </div>
 
         {!loading && !items.length ? (
-          <div style={{ padding: 18 }}>
-            <div style={{ fontSize: 16, fontWeight: 600 }}>Bu filtrede görev yok.</div>
-            <div style={{ marginTop: 6, color: "#666" }}>
+          <div className="p-5">
+            <div className="text-base font-semibold text-foreground">Bu filtrede görev yok.</div>
+            <div className="mt-1.5 text-sm text-muted-foreground">
               Farklı bir sekme deneyebilir veya yeni görevler oluşturabilirsiniz.
             </div>
           </div>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <table className="w-full border-collapse">
             <thead>
-              <tr style={{ background: "#fff" }}>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: 12,
-                    fontSize: 12,
-                    color: "#666",
-                    borderBottom: "1px solid #eee",
-                    width: "45%",
-                  }}
-                >
-                  Ba\u015fl\u0131k
+              <tr className="bg-card">
+                <th className="text-left p-3 text-xs text-muted-foreground border-b border-border w-[45%] font-medium">
+                  Başlık
                 </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: 12,
-                    fontSize: 12,
-                    color: "#666",
-                    borderBottom: "1px solid #eee",
-                    width: "20%",
-                  }}
-                >
-                  Durum / \u00d6ncelik
+                <th className="text-left p-3 text-xs text-muted-foreground border-b border-border w-[20%] font-medium">
+                  Durum / Öncelik
                 </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: 12,
-                    fontSize: 12,
-                    color: "#666",
-                    borderBottom: "1px solid #eee",
-                    width: "25%",
-                  }}
-                >
-                  Biti\u015f Tarihi
+                <th className="text-left p-3 text-xs text-muted-foreground border-b border-border w-[25%] font-medium">
+                  Bitiş Tarihi
                 </th>
-                <th
-                  style={{
-                    textAlign: "right",
-                    padding: 12,
-                    fontSize: 12,
-                    color: "#666",
-                    borderBottom: "1px solid #eee",
-                    width: "10%",
-                  }}
-                >
-                  \u0130\u015flemler
+                <th className="text-right p-3 text-xs text-muted-foreground border-b border-border w-[10%] font-medium">
+                  İşlemler
                 </th>
               </tr>
             </thead>
 
             <tbody>
               {items.map((t) => (
-                <tr key={t.id} style={{ cursor: "default" }}>
-                  <td style={{ padding: 12, borderBottom: "1px solid #f3f3f3" }}>
-                    <div style={{ fontWeight: 600 }}>{t.title}</div>
-                    <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>
+                <tr key={t.id} className="cursor-default hover:bg-muted/30 transition-colors">
+                  <td className="p-3 border-b border-border/50">
+                    <div className="font-semibold text-sm text-foreground">{t.title}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
                       {t.related_type && t.related_id ? (
                         <span>
                           {t.related_type}: {t.related_id}
                         </span>
                       ) : (
-                        <span>Ba\u011flant\u0131 yok</span>
+                        <span>Bağlantı yok</span>
                       )}
                     </div>
                   </td>
 
-                  <td style={{ padding: 12, borderBottom: "1px solid #f3f3f3" }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <td className="p-3 border-b border-border/50">
+                    <div className="flex flex-col gap-1">
                       <StatusBadge status={t.status} />
                       <PriorityBadge priority={t.priority} />
                     </div>
                   </td>
 
-                  <td style={{ padding: 12, borderBottom: "1px solid #f3f3f3" }}>
-                    <div style={{ fontSize: 13 }}>{formatDateTime(t.due_date)}</div>
-                    <div style={{ fontSize: 11, color: "#666", marginTop: 2 }}>{formatRelative(t.due_date)}</div>
+                  <td className="p-3 border-b border-border/50">
+                    <div className="text-sm text-foreground">{formatDateTime(t.due_date)}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{formatRelative(t.due_date)}</div>
                   </td>
 
-                  <td style={{ padding: 12, borderBottom: "1px solid #f3f3f3", textAlign: "right" }}>
+                  <td className="p-3 border-b border-border/50 text-right">
                     <button
                       type="button"
                       disabled={updatingId === t.id || t.status === "done"}
                       onClick={() => markDone(t.id)}
-                      style={{
-                        padding: "6px 10px",
-                        borderRadius: 999,
-                        border: "1px solid #16a34a",
-                        background: t.status === "done" ? "#e5e7eb" : "#16a34a",
-                        color: t.status === "done" ? "#4b5563" : "#ecfdf3",
-                        cursor: t.status === "done" ? "not-allowed" : "pointer",
-                        fontSize: 12,
-                      }}
+                      className={`px-2.5 py-1.5 rounded-full border text-xs cursor-pointer transition-colors ${
+                        t.status === "done"
+                          ? "border-border bg-muted text-muted-foreground cursor-not-allowed"
+                          : "border-green-600 bg-green-600 text-white hover:bg-green-700"
+                      }`}
                     >
                       {updatingId === t.id
-                        ? `\u0130\u015faretleniyor${"\\u2026"}`
+                        ? "İşaretleniyor…"
                         : t.status === "done"
-                        ? "Tamamland\u0131"
-                        : "Tamamland\u0131 olarak i\u015faretle"}
+                        ? "Tamamlandı"
+                        : "Tamamlandı olarak işaretle"}
                     </button>
                   </td>
                 </tr>

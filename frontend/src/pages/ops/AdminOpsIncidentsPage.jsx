@@ -72,11 +72,11 @@ function SupplierHealthBadge({ badge }) {
               className="text-2xs bg-slate-50 text-foreground border-slate-200"
               data-testid="ops-incidents-health-no-health"
             >
-              NO HEALTH
+              {t("opsIncidents.no_health")}
             </Badge>
           </TooltipTrigger>
           <TooltipContent side="top" className="text-xs">
-            Health snapshot not found (fail-open).
+            {t("opsIncidents.no_health_tooltip")}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

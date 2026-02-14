@@ -703,7 +703,7 @@ function AppShellInner() {
           {!collapsed && (
             <div className="border-t border-border/40 px-3 py-2">
               <div className="text-2xs text-muted-foreground/50">
-                {(user?.roles || ["-"])[0]} · {new Date().toLocaleDateString("tr-TR")}
+                {(user?.roles || ["-"])[0]} · {new Date().toLocaleDateString(lang === "en" ? "en-US" : "tr-TR")}
               </div>
             </div>
           )}

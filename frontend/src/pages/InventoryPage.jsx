@@ -453,6 +453,26 @@ export default function InventoryPage() {
                               Yükleniyor...
                             </TableCell>
                           </TableRow>
+                        ) : !productId ? (
+                          <TableRow>
+                            <TableCell colSpan={7} className="py-8 px-3 text-center text-muted-foreground">
+                              <div className="flex flex-col items-center gap-2">
+                                <CalendarDays className="h-8 w-8 text-muted-foreground/40" />
+                                <p className="text-sm font-medium">Henüz ürün yok</p>
+                                <p className="text-xs">Müsaitlik verisi görüntülemek için önce bir ürün oluşturun.</p>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ) : gridRows.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={7} className="py-8 px-3 text-center text-muted-foreground">
+                              <div className="flex flex-col items-center gap-2">
+                                <CalendarDays className="h-8 w-8 text-muted-foreground/40" />
+                                <p className="text-sm font-medium">Bu ay için envanter verisi yok</p>
+                                <p className="text-xs">Toplu güncelle bölümünden veri ekleyebilirsiniz.</p>
+                              </div>
+                            </TableCell>
+                          </TableRow>
                         ) : (
                           gridRows.map((r) => (
                             <TableRow key={r.date}>

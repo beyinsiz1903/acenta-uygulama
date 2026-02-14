@@ -71,7 +71,7 @@ export default function SimpleBookingTest() {
   }
 
   return (
-    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto", fontFamily: "Arial, sans-serif" }}>
+    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto", fontFamily: "Inter, system-ui, sans-serif" }}>
       <h1>Booking Wizard Test Page</h1>
       
       <div style={{ marginBottom: "20px", padding: "15px", border: "1px solid #ddd", borderRadius: "8px" }}>
@@ -216,7 +216,7 @@ export default function SimpleBookingTest() {
           <p style={{ fontSize: "12px", color: "hsl(220, 10%, 45%)", textAlign: "center", margin: "10px 0" }}>
             Rezervasyonu gönderdikten sonra otele iletilir; durumunu Rezervasyonlarım ekranından takip edebilirsiniz.
             <span style={{ display: "block", marginTop: "5px" }} data-testid="booking-wizard-shortcut-hint">
-              Kısayol: <span style={{ fontFamily: "monospace", backgroundColor: "#f5f5f5", padding: "2px 4px", borderRadius: "2px" }}>Ctrl/⌘ + Enter</span>
+              Kısayol: <span style={{ fontFamily: "Roboto Mono, ui-monospace, monospace", backgroundColor: "#f5f5f5", padding: "2px 4px", borderRadius: "2px" }}>Ctrl/⌘ + Enter</span>
             </span>
           </p>
         </form>

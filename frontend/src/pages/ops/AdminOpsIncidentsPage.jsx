@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Badge } from "../../components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "../../components/ui/tooltip";
 import { X, Loader2, AlertTriangle } from "lucide-react";
+import { useI18n } from "../../contexts/I18nContext";
 
 function formatDateTime(value) {
   if (!value) return "-";

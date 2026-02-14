@@ -159,7 +159,11 @@ enhanced_dashboard:
     file: "backend/app/routers/dashboard_enhanced.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "KPI Stats endpoint tested successfully on https://booking-platform-48.preview.emergentagent.com. Returns all required fields: total_sales, total_reservations, completed_reservations, conversion_rate, online_count, currency='TRY'. Auth guard working correctly (401 without token). Data types validated correctly."
 
   - task: "GET /api/dashboard/reservation-widgets - Completed/Pending/Abandoned reservations"
     implemented: true
@@ -167,7 +171,11 @@ enhanced_dashboard:
     file: "backend/app/routers/dashboard_enhanced.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Reservation Widgets endpoint tested successfully. Returns proper structure with completed/pending/abandoned arrays and corresponding count fields. Auth guard working correctly (401 without token). All array and count validations passed."
 
   - task: "GET /api/dashboard/weekly-summary - Weekly summary table"
     implemented: true
@@ -175,7 +183,11 @@ enhanced_dashboard:
     file: "backend/app/routers/dashboard_enhanced.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Weekly Summary endpoint tested successfully. Returns exactly 7 days with all required fields (date, day_name, full_date, tours, reservations, pax, payments, is_today). Correctly marks exactly one day as is_today=true. Auth guard working correctly (401 without token)."
 
   - task: "GET /api/dashboard/popular-products - Most clicked products carousel"
     implemented: true
@@ -183,7 +195,11 @@ enhanced_dashboard:
     file: "backend/app/routers/dashboard_enhanced.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Popular Products endpoint tested successfully. Returns array with proper structure including required fields: product_id, product_name, image_url, reservation_count, view_count, total_revenue. Data type validations passed. Auth guard working correctly (401 without token)."
 
   - task: "GET /api/dashboard/recent-customers - Latest customers list"
     implemented: true
@@ -191,7 +207,11 @@ enhanced_dashboard:
     file: "backend/app/routers/dashboard_enhanced.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Recent Customers endpoint tested successfully. Returns array with proper structure including required fields: id, name, email, created_at. Auth guard working correctly (401 without token). All field validations passed."
 
   - task: "Frontend - Agentis-style dashboard redesign with KPI cards, reservation widgets, carousel, weekly summary, recent customers"
     implemented: true

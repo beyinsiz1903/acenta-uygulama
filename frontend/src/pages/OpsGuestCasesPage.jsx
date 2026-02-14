@@ -467,71 +467,35 @@ function OpsGuestCasesPage() {
       </div>
 
       {/* Öncelik Sırası Filter Bar */}
-      <div className="rounded-xl border border-border/60 bg-card p-3 flex flex-wrap items-center gap-1.5">
-        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 mr-2">Öncelik Sırası</span>
-        <Button
-          type="button"
-          size="xs"
-          variant={slaFilter === "all" ? "default" : "outline"}
-          data-testid="cases-filter-all"
-          onClick={() => setSlaFilter("all")}
-        >
-          All
-        </Button>
-        <Button
-          type="button"
-          size="xs"
-          variant={slaFilter === "sla_breach" ? "default" : "outline"}
-          data-testid="cases-filter-sla-breach"
-          onClick={() => setSlaFilter("sla_breach")}
-        >
-          GECİKMİŞ
-        </Button>
-        <Button
-          type="button"
-          size="xs"
-          variant={slaFilter === "active_risk" ? "default" : "outline"}
-          data-testid="cases-filter-active-risk"
-          onClick={() => setSlaFilter("active_risk")}
-        >
-          RİSKLİ
-        </Button>
-        <Button
-          type="button"
-          size="xs"
-          variant={slaFilter === "fresh" ? "default" : "outline"}
-          data-testid="cases-filter-fresh"
-          onClick={() => setSlaFilter("fresh")}
-        >
-          FRESH
-        </Button>
-        <Button
-          type="button"
-          size="xs"
-          variant={slaFilter === "waiting_customer" ? "default" : "outline"}
-          data-testid="cases-filter-waiting-customer"
-          onClick={() => setSlaFilter("waiting_customer")}
-        >
-          MÜŞTERİ BEKLİYOR
-        </Button>
-        <Button
-          type="button"
-          size="xs"
-          variant={slaFilter === "waiting_supplier" ? "default" : "outline"}
-          data-testid="cases-filter-waiting-supplier"
-          onClick={() => setSlaFilter("waiting_supplier")}
-        >
-          TEDARİKÇİ BEKLİYOR
-        </Button>
-        <Button
-          type="button"
-          size="xs"
-          variant={slaFilter === "waiting_ops" ? "default" : "outline"}
-          data-testid="cases-filter-waiting-ops"
-          onClick={() => setSlaFilter("waiting_ops")}
-        >
-          OPERASYON BEKLİYOR
-        </Button>
+      <div className="rounded-xl border border-border/60 bg-card px-3 py-2.5 flex flex-wrap items-center gap-1.5">
+        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50 mr-1.5">Öncelik</span>
+        {[
+          { key: "all", label: "Tümü", dot: "bg-slate-400" },
+          { key: "sla_breach", label: "Gecikmiş", dot: "bg-red-500" },
+          { key: "active_risk", label: "Riskli", dot: "bg-amber-500" },
+          { key: "fresh", label: "Yeni", dot: "bg-emerald-500" },
+          { key: "waiting_customer", label: "Müşteri", dot: "bg-sky-500" },
+          { key: "waiting_supplier", label: "Tedarikçi", dot: "bg-violet-500" },
+          { key: "waiting_ops", label: "Operasyon", dot: "bg-slate-500" },
+        ].map((f) => {
+          const isActive = slaFilter === f.key;
+          return (
+            <button
+              key={f.key}
+              type="button"
+              data-testid={`cases-filter-${f.key === "all" ? "all" : f.key === "sla_breach" ? "sla-breach" : f.key === "active_risk" ? "active-risk" : f.key === "waiting_customer" ? "waiting-customer" : f.key === "waiting_supplier" ? "waiting-supplier" : f.key === "waiting_ops" ? "waiting-ops" : f.key}`}
+              onClick={() => setSlaFilter(f.key)}
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium tracking-wide transition-all ${
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "bg-muted/40 text-muted-foreground hover:bg-muted/70 border border-transparent hover:border-border/40"
+              }`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-white" : f.dot}`} />
+              {f.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Content */}

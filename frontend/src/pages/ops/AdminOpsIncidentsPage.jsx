@@ -574,7 +574,7 @@ export default function AdminOpsIncidentsPage() {
 
                       <div className="mt-1 grid gap-1 md:grid-cols-2 text-xs text-muted-foreground">
                         <div>
-                          <span className="font-semibold">Success rate:</span>{" "}
+                          <span className="font-semibold">{t("opsIncidents.success_rate")}:</span>{" "}
                           {detail.supplier_health.success_rate != null
                             ? `${Math.round(detail.supplier_health.success_rate * 100)}%`
                             : "-"}

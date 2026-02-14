@@ -48,18 +48,13 @@ function StatusBadge({ status }) {
   const isDone = status === "done";
   return (
     <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        padding: "2px 8px",
-        borderRadius: 999,
-        fontSize: 11,
-        border: "1px solid " + (isDone ? "#16a34a" : "#eab308"),
-        background: isDone ? "#dcfce7" : "#fef9c3",
-        color: isDone ? "#166534" : "#854d0e",
-      }}
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs border ${
+        isDone
+          ? "border-green-600 bg-green-50 text-green-800"
+          : "border-yellow-500 bg-yellow-50 text-yellow-800"
+      }`}
     >
-      {isDone ? "Tamamland\u0131" : "A\u00e7\u0131k"}
+      {isDone ? "Tamamlandı" : "Açık"}
     </span>
   );
 }

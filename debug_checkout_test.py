@@ -7,7 +7,7 @@ from datetime import date, timedelta
 async def test_checkout_responses():
     """Debug the actual responses from checkout endpoints"""
     
-    async with httpx.AsyncClient(base_url="https://booking-platform-48.preview.emergentagent.com") as client:
+    async with httpx.AsyncClient(base_url="https://ui-consistency-50.preview.emergentagent.com") as client:
         
         # Test 1: Create a quote first
         quote_payload = {

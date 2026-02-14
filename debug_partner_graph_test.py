@@ -6,7 +6,7 @@ Debug test for Partner Graph endpoints
 import requests
 import json
 
-BASE_URL = "https://booking-platform-48.preview.emergentagent.com"
+BASE_URL = "https://ui-consistency-50.preview.emergentagent.com"
 
 def test_partner_graph_debug():
     # Login

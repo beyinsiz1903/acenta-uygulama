@@ -14,7 +14,7 @@ from typing import Any, Dict, Optional
 import httpx
 
 # Configuration
-BACKEND_URL = "https://booking-platform-48.preview.emergentagent.com"
+BACKEND_URL = "https://ui-consistency-50.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 API_BASE = f"{BACKEND_URL}/api"

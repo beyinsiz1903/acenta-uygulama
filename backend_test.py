@@ -8,7 +8,7 @@ import json
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://booking-platform-48.preview.emergentagent.com"
+BASE_URL = "https://ui-consistency-50.preview.emergentagent.com"
 LOGIN_CREDENTIALS = {
     "email": "demo@acenta.test",
     "password": "Demo12345!x"

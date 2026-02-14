@@ -12,7 +12,7 @@ def check_admin_roles():
     try:
         # Login
         login_data = {"email": "admin@acenta.test", "password": "admin123"}
-        response = requests.post("https://booking-platform-48.preview.emergentagent.com/api/auth/login", json=login_data, timeout=10)
+        response = requests.post("https://ui-consistency-50.preview.emergentagent.com/api/auth/login", json=login_data, timeout=10)
         
         if response.status_code != 200:
             print(f"Login failed: {response.status_code} - {response.text}")
@@ -23,7 +23,7 @@ def check_admin_roles():
         
         # Check user info
         print("Checking user info...")
-        response = requests.get("https://booking-platform-48.preview.emergentagent.com/api/auth/me", headers=headers, timeout=10)
+        response = requests.get("https://ui-consistency-50.preview.emergentagent.com/api/auth/me", headers=headers, timeout=10)
         if response.status_code == 200:
             user_data = response.json()
             print(f"User roles: {user_data.get('roles')}")
@@ -42,7 +42,7 @@ def check_admin_roles():
         ]
         
         for params in test_params:
-            url = f"https://booking-platform-48.preview.emergentagent.com/api/ops/bookings{params}"
+            url = f"https://ui-consistency-50.preview.emergentagent.com/api/ops/bookings{params}"
             print(f"\nTesting: {url}")
             response = requests.get(url, headers=headers, timeout=10)
             print(f"Status: {response.status_code}")

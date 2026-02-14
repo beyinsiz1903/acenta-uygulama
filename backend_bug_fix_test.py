@@ -15,7 +15,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 
 # Get backend URL from environment
-BACKEND_URL = "https://booking-platform-48.preview.emergentagent.com/api"
+BACKEND_URL = "https://ui-consistency-50.preview.emergentagent.com/api"
 
 # Test credentials
 ADMIN_EMAIL = "admin@acenta.test"

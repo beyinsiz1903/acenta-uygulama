@@ -5,7 +5,7 @@ import { test, expect } from "@playwright/test";
 // render olup olmadığını doğrular. Data varlığını değil, sadece başlık ve
 // ana bölümlerin görünürlüğünü kontrol eder.
 
-const BASE_URL = "https://booking-platform-48.preview.emergentagent.com";
+const BASE_URL = "https://ui-consistency-50.preview.emergentagent.com";
 
 async function login(page, email: string, password: string) {
   await page.goto(`${BASE_URL}/login`);

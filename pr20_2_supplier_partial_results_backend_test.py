@@ -26,7 +26,7 @@ from typing import Dict, Any
 import jwt
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://booking-platform-48.preview.emergentagent.com"
+BASE_URL = "https://ui-consistency-50.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

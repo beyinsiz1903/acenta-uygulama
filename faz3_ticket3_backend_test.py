@@ -30,7 +30,7 @@ from app.services.email_outbox import dispatch_pending_emails
 from app.utils import now_utc
 
 # Test configuration
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://booking-platform-48.preview.emergentagent.com')
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ui-consistency-50.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class FAZ3Ticket3BackendTest:

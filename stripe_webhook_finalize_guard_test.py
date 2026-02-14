@@ -13,7 +13,7 @@ import os
 from bson import ObjectId
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://booking-platform-48.preview.emergentagent.com"
+BASE_URL = "https://ui-consistency-50.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

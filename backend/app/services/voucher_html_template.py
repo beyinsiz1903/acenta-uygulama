@@ -309,10 +309,6 @@ def generate_reservation_voucher_html(
     # Tour specific pricing from tour_reservation
     tour_pricing = tour_res.get("pricing") or {}
     if is_tour and tour_pricing:
-        base_price_per_person = tour_pricing.get("base_price", 0)
-        participants = tour_pricing.get("participants", 0)
-        subtotal = tour_pricing.get("subtotal", 0)
-        taxes = tour_pricing.get("taxes", 0)
         total_price = tour_pricing.get("total", total_price)
         currency = tour_pricing.get("currency", currency)
 

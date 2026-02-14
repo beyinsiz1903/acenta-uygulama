@@ -188,7 +188,6 @@ def generate_reservation_voucher_html(
 
     # Organization info
     org_name = _safe(org.get("name"), "Acenta")
-    org_settings = org.get("settings") or {}
 
     # Reservation basics
     voucher_no = _safe(res.get("voucher_no"), res.get("pnr", "-"))

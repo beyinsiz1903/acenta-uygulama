@@ -598,7 +598,7 @@ export default function AdminOpsIncidentsPage() {
                             : "-"}
                         </div>
                         <div className="md:col-span-2">
-                          <span className="font-semibold">Last error codes:</span>{" "}
+                          <span className="font-semibold">{t("opsIncidents.last_error_codes")}:</span>{" "}
                           {(detail.supplier_health.last_error_codes || []).join(", ") || "-"}
                         </div>
                       </div>

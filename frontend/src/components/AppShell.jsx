@@ -555,7 +555,7 @@ function AppShellInner() {
               className="gap-1.5 h-8 text-xs"
             >
               <LogOut className="h-3.5 w-3.5" />
-              Çıkış
+              {t("topbar.logout")}
             </Button>
           </div>
         </div>

@@ -61,24 +61,13 @@ function StatusBadge({ status }) {
 
 function PriorityBadge({ priority }) {
   const map = {
-    low: { label: "D\u00fc\u015f\u00fck", color: "#4b5563", bg: "#e5e7eb" },
-    normal: { label: "Normal", color: "#1d4ed8", bg: "#dbeafe" },
-    high: { label: "Y\u00fcksek", color: "#b91c1c", bg: "#fee2e2" },
+    low: { label: "Düşük", cls: "bg-gray-100 text-gray-600" },
+    normal: { label: "Normal", cls: "bg-blue-50 text-blue-700" },
+    high: { label: "Yüksek", cls: "bg-red-50 text-red-700" },
   };
   const conf = map[priority || "normal"];
   return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        padding: "2px 8px",
-        borderRadius: 999,
-        fontSize: 11,
-        border: "1px solid transparent",
-        background: conf.bg,
-        color: conf.color,
-      }}
-    >
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs border border-transparent ${conf.cls}`}>
       {conf.label}
     </span>
   );

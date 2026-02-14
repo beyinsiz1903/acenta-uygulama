@@ -262,7 +262,7 @@ export default function AdminOpsIncidentsPage() {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3 text-xs items-end">
           <div className="space-y-1">
-            <div className="text-xs text-muted-foreground">Status</div>
+            <div className="text-xs text-muted-foreground">{t("opsIncidents.status")}</div>
             <Select
               value={filters.status ?? "all"}
               onValueChange={(v) => onChangeFilter("status", v === "all" ? undefined : v)}

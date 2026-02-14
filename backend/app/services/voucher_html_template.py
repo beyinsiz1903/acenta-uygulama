@@ -1185,7 +1185,7 @@ def generate_reservation_voucher_html(
           <div class="policy-item">Bu voucher, yukarıda belirtilen hizmetler için geçerlidir ve başkasına devredilemez.</div>
           <div class="policy-item">{'Otele giriş sırasında bu voucher belgesinin (basılı veya dijital) ibrazı zorunludur.' if not is_tour else 'Tur hareket noktasında bu voucher belgesinin (basılı veya dijital) ibrazı zorunludur.'}</div>
           <div class="policy-item">Voucher üzerinde belirtilen tarih ve saatlere uyulması misafirimizin sorumluluğundadır.</div>
-          <div class="policy-item">{'Check-in saati 14:00, check-out saati 12:00\'dir (otelin politikasına göre değişebilir).' if not is_tour else 'Tur hareket saati, tur programında belirtilen saattir. Hareket saatinden en az 15 dakika önce buluşma noktasında hazır bulunmanız gerekmektedir.'}</div>
+          <div class="policy-item">{"Check-in saati 14:00, check-out saati 12:00 dir (otelin politikasına göre değişebilir)." if not is_tour else "Tur hareket saati, tur programında belirtilen saattir. Hareket saatinden en az 15 dakika önce buluşma noktasında hazır bulunmanız gerekmektedir."}</div>
           <div class="policy-item">Fiyatlara KDV dahildir (aksi belirtilmedikçe).</div>
           <div class="policy-item">Mücbir sebepler (doğal afet, savaş, salgın vb.) durumunda şirketimiz hizmet koşullarında değişiklik yapma hakkını saklı tutar.</div>
           <div class="policy-item">Ekstra hizmetler (minibar, oda servisi, ekstra turlar vb.) bu voucher kapsamında değildir ve ayrıca faturalandırılır.</div>

@@ -71,23 +71,22 @@ function normalizeWaitingOn(v) {
 function RiskBadge({ kind }) {
   if (!kind || kind === "na") return null;
   let label = "";
-  let cls = "border text-[9px] px-1.5 py-0.5 rounded-full inline-flex";
+  let cls = "border text-[9px] font-medium tracking-wide px-1.5 py-0.5 rounded-full inline-flex items-center gap-1";
 
   if (kind === "sla_breach") {
-    label = "GECİKMİŞ";
-    cls += " bg-red-100 text-red-900 border-red-200";
+    label = "Gecikmiş";
+    cls += " bg-red-50 text-red-700 border-red-200";
   } else if (kind === "active_risk") {
-    label = "RİSKLİ";
-    cls += " bg-amber-100 text-amber-900 border-amber-200";
+    label = "Riskli";
+    cls += " bg-amber-50 text-amber-700 border-amber-200";
   } else if (kind === "fresh") {
-    label = "FRESH";
-    cls += " bg-emerald-100 text-emerald-900 border-emerald-200";
+    label = "Yeni";
+    cls += " bg-emerald-50 text-emerald-700 border-emerald-200";
   } else if (kind === "no_date") {
-    label = "NO DATE";
-    cls += " bg-slate-100 text-slate-700 border-slate-200";
+    label = "Tarihsiz";
+    cls += " bg-slate-50 text-slate-500 border-slate-200";
   } else {
-    label = "N/A";
-    cls += " bg-slate-100 text-slate-700 border-slate-200";
+    return null;
   }
 
   return <span className={cls}>{label}</span>;

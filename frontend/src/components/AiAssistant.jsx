@@ -37,7 +37,7 @@ function renderMarkdown(text) {
     if (processed.trim().startsWith("- ") || processed.trim().startsWith("• ")) {
       return (
         <div key={i} className="flex items-start gap-1.5 ml-2 my-0.5">
-          <span className="text-primary mt-1.5 shrink-0 text-[8px]">●</span>
+          <span className="text-primary mt-1.5 shrink-0 text-2xs">●</span>
           <span dangerouslySetInnerHTML={{ __html: processed.replace(/^[\-•]\s*/, "") }} />
         </div>
       );
@@ -77,7 +77,7 @@ function BriefingCard({ data, onRefresh, loading }) {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
           <Sparkles className="h-3.5 w-3.5 text-primary" />
-          <span className="text-[11px] font-semibold text-primary">Günlük Özet</span>
+          <span className="text-xs font-semibold text-primary">Günlük Özet</span>
         </div>
         <button
           onClick={onRefresh}
@@ -92,7 +92,7 @@ function BriefingCard({ data, onRefresh, loading }) {
           <div key={s.label} className="bg-background/80 rounded-lg p-2 flex items-center gap-2">
             <s.icon className={`h-3.5 w-3.5 ${s.color}`} />
             <div>
-              <div className="text-[10px] text-muted-foreground leading-none">{s.label}</div>
+              <div className="text-2xs text-muted-foreground leading-none">{s.label}</div>
               <div className="text-sm font-bold leading-tight">{s.value}</div>
             </div>
           </div>
@@ -100,7 +100,7 @@ function BriefingCard({ data, onRefresh, loading }) {
       </div>
       {rev.length > 0 && (
         <div className="mt-2 bg-background/80 rounded-lg p-2">
-          <div className="text-[10px] text-muted-foreground mb-0.5">💰 Toplam Gelir</div>
+          <div className="text-2xs text-muted-foreground mb-0.5">💰 Toplam Gelir</div>
           {rev.map((r) => (
             <div key={r.currency} className="text-xs font-semibold">
               {Number(r.total_revenue).toLocaleString("tr-TR")} {r.currency}
@@ -254,7 +254,7 @@ export default function AiAssistant() {
               </div>
               <div>
                 <div className="text-sm font-semibold text-white leading-tight">Booking AI</div>
-                <div className="text-[10px] text-white/70 leading-none">Akıllı Asistan</div>
+                <div className="text-2xs text-white/70 leading-none">Akıllı Asistan</div>
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -278,7 +278,7 @@ export default function AiAssistant() {
           <div className="flex border-b shrink-0">
             <button
               onClick={() => setTab("chat")}
-              className={`flex-1 py-2 text-[11px] font-medium flex items-center justify-center gap-1.5 transition-colors ${
+              className={`flex-1 py-2 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors ${
                 tab === "chat"
                   ? "text-primary border-b-2 border-primary"
                   : "text-muted-foreground hover:text-foreground"
@@ -288,7 +288,7 @@ export default function AiAssistant() {
             </button>
             <button
               onClick={() => setTab("briefing")}
-              className={`flex-1 py-2 text-[11px] font-medium flex items-center justify-center gap-1.5 transition-colors ${
+              className={`flex-1 py-2 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors ${
                 tab === "briefing"
                   ? "text-primary border-b-2 border-primary"
                   : "text-muted-foreground hover:text-foreground"
@@ -308,7 +308,7 @@ export default function AiAssistant() {
                       <Bot className="h-8 w-8 text-primary" />
                     </div>
                     <div className="text-sm font-semibold mb-1">Merhaba! 👋</div>
-                    <div className="text-[11px] text-muted-foreground mb-4">
+                    <div className="text-xs text-muted-foreground mb-4">
                       Booking AI olarak size yardımcı olmaya hazırım.
                       Rezervasyonlar, gelir, müşteriler hakkında sorular sorabilirsiniz.
                     </div>
@@ -324,7 +324,7 @@ export default function AiAssistant() {
                             setInput(q);
                             setTimeout(() => inputRef.current?.focus(), 50);
                           }}
-                          className="text-left text-[11px] px-3 py-2 rounded-lg border border-border hover:bg-muted/50 hover:border-primary/30 transition-colors text-muted-foreground hover:text-foreground"
+                          className="text-left text-xs px-3 py-2 rounded-lg border border-border hover:bg-muted/50 hover:border-primary/30 transition-colors text-muted-foreground hover:text-foreground"
                         >
                           {q}
                         </button>
@@ -341,7 +341,7 @@ export default function AiAssistant() {
                   <div className="flex justify-start mb-2">
                     <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-2.5 flex items-center gap-2">
                       <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
-                      <span className="text-[11px] text-muted-foreground">Düşünüyorum...</span>
+                      <span className="text-xs text-muted-foreground">Düşünüyorum...</span>
                     </div>
                   </div>
                 )}
@@ -353,7 +353,7 @@ export default function AiAssistant() {
                 {briefingLoading && !briefingData && (
                   <div className="flex flex-col items-center justify-center h-64">
                     <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
-                    <span className="text-[11px] text-muted-foreground">Brifing hazırlanıyor...</span>
+                    <span className="text-xs text-muted-foreground">Brifing hazırlanıyor...</span>
                   </div>
                 )}
 
@@ -366,10 +366,10 @@ export default function AiAssistant() {
                 )}
 
                 {briefingText && (
-                  <div className="mx-3 mt-3 mb-3 bg-muted/50 rounded-xl p-3 text-[12px] leading-relaxed border">
+                  <div className="mx-3 mt-3 mb-3 bg-muted/50 rounded-xl p-3 text-xs leading-relaxed border">
                     <div className="flex items-center gap-1.5 mb-2">
                       <Sparkles className="h-3.5 w-3.5 text-primary" />
-                      <span className="text-[11px] font-semibold">AI Brifing</span>
+                      <span className="text-xs font-semibold">AI Brifing</span>
                     </div>
                     {renderMarkdown(briefingText)}
                   </div>

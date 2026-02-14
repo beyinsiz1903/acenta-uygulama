@@ -157,7 +157,7 @@ export default function BookSearchPage() {
                   <option value="tour">Turlar</option>
                 </select>
               </div>
-              <div className="text-[11px] text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 Org: <span className="font-mono">{org}</span>
               </div>
             </div>
@@ -192,7 +192,7 @@ export default function BookSearchPage() {
                 />
                 <div className="border-t pt-2 mt-2 text-xs space-y-1">
                   <div className="font-medium">Demo / debug girişi</div>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Test veya demo ortamında, doğrudan bir ürün ID yazarak akışa devam edebilirsiniz.
                   </p>
                   <div className="flex gap-2 items-center">

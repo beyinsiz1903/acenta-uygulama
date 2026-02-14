@@ -307,11 +307,11 @@ export default function AdminHotelsPage() {
                   </TableCell>
                   <TableCell>
                     {hotel.force_sales_open ? (
-                      <div className="space-y-1 text-[11px]">
+                      <div className="space-y-1 text-xs">
                         <Badge className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20">
                           Override: Açık (full satış)
                         </Badge>
-                        <div className="text-[10px] text-muted-foreground">
+                        <div className="text-2xs text-muted-foreground">
                           Bitiş: {hotel.force_sales_open_expires_at ? formatDateTime(hotel.force_sales_open_expires_at) : "-"}
                           {hotel.force_sales_open_reason && (
                             <>
@@ -321,7 +321,7 @@ export default function AdminHotelsPage() {
                         </div>
                       </div>
                     ) : (
-                      <Badge variant="outline" className="text-[11px]">
+                      <Badge variant="outline" className="text-xs">
                         Override: Kapalı
                       </Badge>
                     )}
@@ -336,7 +336,7 @@ export default function AdminHotelsPage() {
                     <Button
                       variant={hotel.force_sales_open ? "outline" : "secondary"}
                       size="sm"
-                      className="text-[11px]"
+                      className="text-xs"
                       onClick={() => handleToggleForceSales(hotel)}
                     >
                       {hotel.force_sales_open ? "Override Kapat" : "Override Aç"}

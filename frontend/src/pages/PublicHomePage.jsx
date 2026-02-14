@@ -168,12 +168,12 @@ export default function PublicHomePage() {
                         <div className="space-y-0.5">
                           <div className="text-sm font-medium line-clamp-1">{c.name}</div>
                           {c.description && (
-                            <div className="text-[11px] text-muted-foreground line-clamp-2">
+                            <div className="text-xs text-muted-foreground line-clamp-2">
                               {c.description}
                             </div>
                           )}
                         </div>
-                        <Button asChild size="sm" variant="outline" className="ml-3 text-[11px] px-3 py-1">
+                        <Button asChild size="sm" variant="outline" className="ml-3 text-xs px-3 py-1">
                           <Link to={url}>İncele</Link>
                         </Button>
                       </li>
@@ -207,14 +207,14 @@ export default function PublicHomePage() {
                           <div className="space-y-0.5">
                             <div className="text-sm font-medium line-clamp-1">{item.title}</div>
                             {item.summary && (
-                              <div className="text-[11px] text-muted-foreground line-clamp-2">{item.summary}</div>
+                              <div className="text-xs text-muted-foreground line-clamp-2">{item.summary}</div>
                             )}
                           </div>
                           <Button
                             asChild
                             size="sm"
                             variant="outline"
-                            className="ml-3 text-[11px] px-3 py-1"
+                            className="ml-3 text-xs px-3 py-1"
                           >
                             <Link to={url}>İncele</Link>
                           </Button>
@@ -246,7 +246,7 @@ export default function PublicHomePage() {
                           <div className="space-y-0.5">
                             <div className="text-sm font-medium line-clamp-1">{tour.name}</div>
                             {tour.destination && (
-                              <div className="text-[11px] text-muted-foreground line-clamp-1">
+                              <div className="text-xs text-muted-foreground line-clamp-1">
                                 {tour.destination}
                               </div>
                             )}
@@ -255,7 +255,7 @@ export default function PublicHomePage() {
                             asChild
                             size="sm"
                             variant="outline"
-                            className="ml-3 text-[11px] px-3 py-1"
+                            className="ml-3 text-xs px-3 py-1"
                           >
                             <Link to={url}>Detay</Link>
                           </Button>
@@ -271,7 +271,7 @@ export default function PublicHomePage() {
       </main>
 
       <footer
-        className="w-full border-t mt-8 text-[11px] text-muted-foreground"
+        className="w-full border-t mt-8 text-xs text-muted-foreground"
         style={{ borderColor: "var(--color-border)" }}
       >
         <div className="mx-auto max-w-4xl px-4 py-3 flex items-center justify-between">

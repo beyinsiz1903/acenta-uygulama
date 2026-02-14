@@ -8,13 +8,13 @@ import { AlertCircle, Loader2 } from "lucide-react";
 function ErrorBanner({ message, onRetry }) {
   if (!message) return null;
   return (
-    <div className="mb-3 flex items-center justify-between gap-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-[11px] text-destructive">
+    <div className="mb-3 flex items-center justify-between gap-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
       <div className="flex items-center gap-2">
         <AlertCircle className="h-4 w-4" />
         <span>{message}</span>
       </div>
       {onRetry && (
-        <Button type="button" size="xs" variant="outline" className="h-7 text-[11px]" onClick={onRetry}>
+        <Button type="button" size="xs" variant="outline" className="h-7 text-xs" onClick={onRetry}>
           Tekrar dene
         </Button>
       )}
@@ -59,7 +59,7 @@ export default function PricingTracePanel({ bookingId }) {
           type="button"
           size="xs"
           variant="outline"
-          className="h-7 text-[11px]"
+          className="h-7 text-xs"
           onClick={load}
           disabled={loading}
         >
@@ -71,13 +71,13 @@ export default function PricingTracePanel({ bookingId }) {
       <ErrorBanner message={error} onRetry={load} />
 
       {!loading && !pricing && !audit && (
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Bu rezervasyon için fiyat kırılımı veya audit kaydı bulunmuyor.
         </p>
       )}
 
       {loading && (
-        <p className="text-[11px] text-muted-foreground flex items-center gap-2">
+        <p className="text-xs text-muted-foreground flex items-center gap-2">
           <Loader2 className="h-3 w-3 animate-spin" /> Fiyat iz kaydı yükleniyor...
         </p>
       )}
@@ -87,25 +87,25 @@ export default function PricingTracePanel({ bookingId }) {
           <CardHeader className="py-2 px-3">
             <CardTitle className="text-xs font-semibold">Pricing Özeti</CardTitle>
           </CardHeader>
-          <CardContent className="px-3 pb-3 pt-2 text-[11px] grid grid-cols-2 gap-2">
+          <CardContent className="px-3 pb-3 pt-2 text-xs grid grid-cols-2 gap-2">
             <div className="flex flex-col">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Base</span>
+              <span className="text-2xs text-muted-foreground uppercase tracking-wide">Base</span>
               <span className="font-mono">
                 {pricing.base_amount} {pricing.currency}
               </span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Final</span>
+              <span className="text-2xs text-muted-foreground uppercase tracking-wide">Final</span>
               <span className="font-mono">
                 {pricing.final_amount} {pricing.currency}
               </span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Komisyon</span>
+              <span className="text-2xs text-muted-foreground uppercase tracking-wide">Komisyon</span>
               <span className="font-mono">{pricing.commission_amount ?? "0.00"}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Margin</span>
+              <span className="text-2xs text-muted-foreground uppercase tracking-wide">Margin</span>
               <span className="font-mono">{pricing.margin_amount ?? "0.00"}</span>
             </div>
           </CardContent>
@@ -117,11 +117,11 @@ export default function PricingTracePanel({ bookingId }) {
           <CardHeader className="py-2 px-3">
             <CardTitle className="text-xs font-semibold">Uygulanan Kurallar</CardTitle>
           </CardHeader>
-          <CardContent className="px-3 pb-3 pt-2 text-[11px] space-y-1">
+          <CardContent className="px-3 pb-3 pt-2 text-xs space-y-1">
             {pricing.applied_rules.map((r, idx) => (
               <div key={r.rule_id || idx} className="flex items-center justify-between gap-2 border-b last:border-0 py-1">
                 <div className="flex flex-col">
-                  <span className="font-mono text-[10px] text-muted-foreground">
+                  <span className="font-mono text-2xs text-muted-foreground">
                     {r.rule_id || "(id-yok)"}
                   </span>
                   <span>
@@ -130,7 +130,7 @@ export default function PricingTracePanel({ bookingId }) {
                 </div>
                 <div className="flex items-center gap-2">
                   {typeof r.priority !== "undefined" && (
-                    <Badge variant="outline" className="text-[10px]">
+                    <Badge variant="outline" className="text-2xs">
                       prio {r.priority}
                     </Badge>
                   )}
@@ -146,22 +146,22 @@ export default function PricingTracePanel({ bookingId }) {
           <CardHeader className="py-2 px-3">
             <CardTitle className="text-xs font-semibold">Pricing Audit</CardTitle>
           </CardHeader>
-          <CardContent className="px-3 pb-3 pt-2 text-[11px] space-y-2">
+          <CardContent className="px-3 pb-3 pt-2 text-xs space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <div className="flex flex-col">
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Action</span>
+                <span className="text-2xs text-muted-foreground uppercase tracking-wide">Action</span>
                 <span>{audit.action}</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Created At</span>
+                <span className="text-2xs text-muted-foreground uppercase tracking-wide">Created At</span>
                 <span>{audit.created_at}</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Tenant</span>
+                <span className="text-2xs text-muted-foreground uppercase tracking-wide">Tenant</span>
                 <span>{audit.meta?.tenant_id ?? "-"}</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Kurallar</span>
+                <span className="text-2xs text-muted-foreground uppercase tracking-wide">Kurallar</span>
                 <span>
                   {(audit.meta?.applied_rule_ids || []).join(", ") || "-"}
                 </span>

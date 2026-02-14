@@ -67,7 +67,7 @@ function PublicMyBookingRequestPage() {
           </Button>
         </form>
 
-        <p className="text-[11px] text-muted-foreground text-center">
+        <p className="text-xs text-muted-foreground text-center">
           Güvenlik için, doğru bilgiler girilmiş olsa bile sadece “istek alındı”
           mesajı gösterilir; rezervasyonun varlığı bu ekrandan teyit edilmez.
         </p>

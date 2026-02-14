@@ -128,7 +128,7 @@ function AvailabilityCell({ cell }) {
       {isStopped ? (
         <div className="flex flex-col items-center gap-0.5">
           <Ban className="w-3.5 h-3.5 text-red-500" />
-          <span className="text-[10px] font-medium text-red-600">KAPALI</span>
+          <span className="text-2xs font-medium text-red-600">KAPALI</span>
         </div>
       ) : (
         <>
@@ -136,7 +136,7 @@ function AvailabilityCell({ cell }) {
             <p className={`text-xs font-bold ${textColor}`}>{formatPrice(cell.price)}</p>
           )}
           {allotment !== null && allotment !== undefined && (
-            <p className={`text-[10px] ${isSoldOut ? "text-gray-400" : isLow ? "text-amber-600 font-semibold" : "text-emerald-600"}`}>
+            <p className={`text-2xs ${isSoldOut ? "text-gray-400" : isLow ? "text-amber-600 font-semibold" : "text-emerald-600"}`}>
               {isSoldOut ? "Tükendi" : `${allotment} oda`}
             </p>
           )}
@@ -172,15 +172,15 @@ function HotelCard({ hotel, onSelect }) {
       <div className="grid grid-cols-3 gap-3 mb-3">
         <div className="text-center p-2 bg-blue-50 rounded-lg">
           <p className="text-lg font-bold text-blue-700">{hotel.available_dates_count}</p>
-          <p className="text-[10px] text-blue-500">Müsait Gün</p>
+          <p className="text-2xs text-blue-500">Müsait Gün</p>
         </div>
         <div className="text-center p-2 bg-emerald-50 rounded-lg">
           <p className="text-lg font-bold text-emerald-700">{hotel.room_types_count}</p>
-          <p className="text-[10px] text-emerald-500">Oda Tipi</p>
+          <p className="text-2xs text-emerald-500">Oda Tipi</p>
         </div>
         <div className="text-center p-2 bg-purple-50 rounded-lg">
           <p className="text-lg font-bold text-purple-700">{hotel.total_allotment}</p>
-          <p className="text-[10px] text-purple-500">Toplam Oda</p>
+          <p className="text-2xs text-purple-500">Toplam Oda</p>
         </div>
       </div>
 
@@ -234,9 +234,9 @@ function ChangesTimeline({ changes }) {
                 : `${ch.rows_read} satır kontrol edildi, değişiklik yok`
               }
             </p>
-            <p className="text-[10px] text-gray-400 mt-1">{formatDate(ch.started_at)}</p>
+            <p className="text-2xs text-gray-400 mt-1">{formatDate(ch.started_at)}</p>
           </div>
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+          <span className={`px-2 py-0.5 rounded-full text-2xs font-medium ${
             ch.status === "success" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
           }`}>
             {ch.trigger === "scheduled" ? "Otomatik" : "Manuel"}
@@ -370,7 +370,7 @@ function AvailabilityGrid({ data, startDate, endDate, onDateChange }) {
                   {dates.map((d) => (
                     <th key={d} className="text-center px-1 py-2.5 text-xs font-medium text-gray-500 min-w-[85px]">
                       <div>{formatShortDate(d)}</div>
-                      <div className="text-[10px] text-gray-400 font-normal">{formatDayName(d)}</div>
+                      <div className="text-2xs text-gray-400 font-normal">{formatDayName(d)}</div>
                     </th>
                   ))}
                 </tr>
@@ -426,7 +426,7 @@ function WriteBackStatsBar({ stats }) {
       ].map((s) => (
         <div key={s.label} className={`${s.bg} rounded-lg p-2.5 text-center`}>
           <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
-          <p className="text-[10px] text-gray-500">{s.label}</p>
+          <p className="text-2xs text-gray-500">{s.label}</p>
         </div>
       ))}
     </div>
@@ -445,7 +445,7 @@ function WriteBackEventBadge({ type }) {
   };
   const s = map[type] || { bg: "bg-gray-50", text: "text-gray-600", label: type };
   return (
-    <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium ${s.bg} ${s.text}`}>
+    <span className={`inline-flex px-2 py-0.5 rounded-full text-2xs font-medium ${s.bg} ${s.text}`}>
       {s.label}
     </span>
   );
@@ -464,7 +464,7 @@ function WriteBackStatusBadge({ status }) {
   const s = map[status] || map.queued;
   const Icon = s.icon;
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${s.bg} ${s.text}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium ${s.bg} ${s.text}`}>
       <Icon className="w-3 h-3" />
       {s.label}
     </span>

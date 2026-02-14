@@ -54,8 +54,8 @@ function BigKpiCard({ label, value, icon: Icon, color, bgColor, loading, suffix 
       >
         <Icon className="h-5 w-5" style={{ color }} />
       </div>
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">{label}</p>
-      <p className="text-[28px] font-bold leading-tight text-foreground tracking-tight">
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{label}</p>
+      <p className="text-2xl font-bold leading-tight text-foreground tracking-tight">
         {value}{suffix || ""}
       </p>
     </div>
@@ -90,10 +90,10 @@ function ReservationWidget({ title, icon: Icon, iconColor, items, count, loading
   return (
     <div className="rounded-xl border border-border/60 bg-card p-4 hover:shadow-sm transition-shadow">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[15px] font-bold text-foreground">{title}</h3>
+        <h3 className="text-sm font-bold text-foreground">{title}</h3>
         <div className="flex items-center gap-2">
           {count > 0 && (
-            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: `${iconColor}15`, color: iconColor }}>
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: `${iconColor}15`, color: iconColor }}>
               {count}
             </span>
           )}
@@ -110,14 +110,14 @@ function ReservationWidget({ title, icon: Icon, iconColor, items, count, loading
               onClick={() => item.id && navigate(`/app/reservations`)}
             >
               <div className="flex-1 min-w-0 mr-3">
-                <p className="text-[13px] text-foreground truncate font-medium">
+                <p className="text-sm text-foreground truncate font-medium">
                   {item.product_name || item.guest_name || "—"}
                 </p>
                 {item.check_in && item.check_in !== "None" && (
-                  <p className="text-[10px] text-muted-foreground/60 mt-0.5">{item.check_in}</p>
+                  <p className="text-2xs text-muted-foreground/60 mt-0.5">{item.check_in}</p>
                 )}
               </div>
-              <p className="text-[13px] font-medium text-foreground whitespace-nowrap">
+              <p className="text-sm font-medium text-foreground whitespace-nowrap">
                 {item.guest_name || ""}
               </p>
             </div>
@@ -128,7 +128,7 @@ function ReservationWidget({ title, icon: Icon, iconColor, items, count, loading
           <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mb-2">
             <Icon className="h-4 w-4 text-muted-foreground/60" />
           </div>
-          <p className="text-[12px] text-muted-foreground">{emptyText || "Henüz kayıt yok"}</p>
+          <p className="text-xs text-muted-foreground">{emptyText || "Henüz kayıt yok"}</p>
         </div>
       )}
     </div>
@@ -162,7 +162,7 @@ function WeeklySummaryTable({ data, loading }) {
   return (
     <div className="rounded-xl border border-border/60 bg-card p-4 hover:shadow-sm transition-shadow">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-[15px] font-bold text-foreground">Haftalık Özet</h3>
+        <h3 className="text-sm font-bold text-foreground">Haftalık Özet</h3>
         <Calendar className="h-5 w-5 text-blue-500" />
       </div>
 
@@ -170,11 +170,11 @@ function WeeklySummaryTable({ data, loading }) {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border/30">
-              <th className="text-[11px] font-semibold text-muted-foreground text-left py-2 pr-2">Gün</th>
-              <th className="text-[11px] font-semibold text-muted-foreground text-center py-2 px-2">Tur</th>
-              <th className="text-[11px] font-semibold text-blue-500 text-center py-2 px-2">Rezervasyon</th>
-              <th className="text-[11px] font-semibold text-muted-foreground text-center py-2 px-2">Koltuk</th>
-              <th className="text-[11px] font-semibold text-muted-foreground text-center py-2 pl-2">Ödeme</th>
+              <th className="text-xs font-semibold text-muted-foreground text-left py-2 pr-2">Gün</th>
+              <th className="text-xs font-semibold text-muted-foreground text-center py-2 px-2">Tur</th>
+              <th className="text-xs font-semibold text-blue-500 text-center py-2 px-2">Rezervasyon</th>
+              <th className="text-xs font-semibold text-muted-foreground text-center py-2 px-2">Koltuk</th>
+              <th className="text-xs font-semibold text-muted-foreground text-center py-2 pl-2">Ödeme</th>
             </tr>
           </thead>
           <tbody>
@@ -187,35 +187,35 @@ function WeeklySummaryTable({ data, loading }) {
               >
                 <td className="py-2.5 pr-2">
                   <div className="flex flex-col">
-                    <span className={`text-[15px] font-bold ${row.is_today ? "text-blue-600 dark:text-blue-400" : "text-foreground"}`}>
+                    <span className={`text-sm font-bold ${row.is_today ? "text-blue-600 dark:text-blue-400" : "text-foreground"}`}>
                       {row.date}
                     </span>
-                    <span className="text-[10px] text-muted-foreground">{row.day_name}</span>
+                    <span className="text-2xs text-muted-foreground">{row.day_name}</span>
                   </div>
                 </td>
                 <td className="py-2.5 px-2 text-center">
-                  <span className="text-[14px] font-semibold text-foreground">
+                  <span className="text-sm font-semibold text-foreground">
                     {row.tours > 100 ? "100+" : row.tours}
                   </span>
-                  <span className="text-[10px] text-muted-foreground block">Tur</span>
+                  <span className="text-2xs text-muted-foreground block">Tur</span>
                 </td>
                 <td className="py-2.5 px-2 text-center">
-                  <span className={`text-[14px] font-semibold ${row.reservations > 0 ? "text-blue-600" : "text-blue-400"}`}>
+                  <span className={`text-sm font-semibold ${row.reservations > 0 ? "text-blue-600" : "text-blue-400"}`}>
                     {row.reservations}
                   </span>
-                  <span className="text-[10px] text-blue-400 block">Rezervasyon</span>
+                  <span className="text-2xs text-blue-400 block">Rezervasyon</span>
                 </td>
                 <td className="py-2.5 px-2 text-center">
-                  <span className={`text-[14px] font-semibold ${row.pax > 0 ? "text-foreground" : "text-muted-foreground"}`}>
+                  <span className={`text-sm font-semibold ${row.pax > 0 ? "text-foreground" : "text-muted-foreground"}`}>
                     {row.pax}
                   </span>
-                  <span className="text-[10px] text-muted-foreground block">Koltuk</span>
+                  <span className="text-2xs text-muted-foreground block">Koltuk</span>
                 </td>
                 <td className="py-2.5 pl-2 text-center">
-                  <span className={`text-[14px] font-semibold ${row.payments > 0 ? "text-emerald-600" : "text-muted-foreground"}`}>
+                  <span className={`text-sm font-semibold ${row.payments > 0 ? "text-emerald-600" : "text-muted-foreground"}`}>
                     {row.payments > 0 ? `₺${row.payments.toLocaleString("tr-TR")}` : "0"}
                   </span>
-                  <span className="text-[10px] text-muted-foreground block">Ödeme</span>
+                  <span className="text-2xs text-muted-foreground block">Ödeme</span>
                 </td>
               </tr>
             ))}
@@ -273,7 +273,7 @@ function PopularProductsCarousel({ products, loading }) {
   return (
     <div className="rounded-xl border border-border/60 bg-card p-4 hover:shadow-sm transition-shadow">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-[15px] font-bold text-foreground">En Çok Tıklananlar</h3>
+        <h3 className="text-sm font-bold text-foreground">En Çok Tıklananlar</h3>
         <div className="flex gap-1">
           <button
             onClick={() => scroll(-1)}
@@ -316,20 +316,20 @@ function PopularProductsCarousel({ products, loading }) {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 <div className="absolute bottom-2 left-2 right-2">
-                  <p className="text-white text-[13px] font-semibold truncate drop-shadow-lg">
+                  <p className="text-white text-sm font-semibold truncate drop-shadow-lg">
                     {product.product_name}
                   </p>
                   <div className="flex items-center gap-3 mt-1">
-                    <span className="flex items-center gap-1 text-white/90 text-[10px]">
+                    <span className="flex items-center gap-1 text-white/90 text-2xs">
                       <Eye className="h-3 w-3" /> {product.view_count} Ziyaret
                     </span>
-                    <span className="flex items-center gap-1 text-white/90 text-[10px]">
+                    <span className="flex items-center gap-1 text-white/90 text-2xs">
                       <Ticket className="h-3 w-3" /> {product.reservation_count} Satış
                     </span>
                   </div>
                 </div>
                 {idx === 0 && product.reservation_count > 0 && (
-                  <div className="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  <div className="absolute top-2 right-2 bg-red-500 text-white text-2xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                     1
                   </div>
                 )}
@@ -342,8 +342,8 @@ function PopularProductsCarousel({ products, loading }) {
           <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
             <Star className="h-5 w-5 text-muted-foreground/50" />
           </div>
-          <p className="text-[12px] text-muted-foreground">Henüz popüler ürün yok</p>
-          <p className="text-[11px] text-muted-foreground/60 mt-0.5">Ürünler eklendikçe burada görünecek</p>
+          <p className="text-xs text-muted-foreground">Henüz popüler ürün yok</p>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">Ürünler eklendikçe burada görünecek</p>
         </div>
       )}
     </div>
@@ -384,7 +384,7 @@ function RecentCustomersList({ customers, loading }) {
   return (
     <div className="rounded-xl border border-border/60 bg-card p-4 hover:shadow-sm transition-shadow">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[15px] font-bold text-foreground">Son Üyeler</h3>
+        <h3 className="text-sm font-bold text-foreground">Son Üyeler</h3>
         <UserPlus className="h-5 w-5 text-blue-500" />
       </div>
 
@@ -396,14 +396,14 @@ function RecentCustomersList({ customers, loading }) {
               className="flex items-center justify-between py-2.5 border-b border-border/15 last:border-0 hover:bg-muted/20 -mx-2 px-2 rounded-lg transition-colors"
             >
               <div className="flex-1 min-w-0 mr-3">
-                <p className="text-[13px] font-semibold text-foreground truncate">
+                <p className="text-sm font-semibold text-foreground truncate">
                   {customer.name}
                 </p>
-                <p className="text-[11px] text-muted-foreground truncate">
+                <p className="text-xs text-muted-foreground truncate">
                   {customer.email}
                 </p>
               </div>
-              <p className="text-[12px] text-muted-foreground whitespace-nowrap">
+              <p className="text-xs text-muted-foreground whitespace-nowrap">
                 {formatDate(customer.created_at)}
               </p>
             </div>
@@ -414,7 +414,7 @@ function RecentCustomersList({ customers, loading }) {
           <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mb-2">
             <Users className="h-4 w-4 text-muted-foreground/60" />
           </div>
-          <p className="text-[12px] text-muted-foreground">Henüz müşteri kaydı yok</p>
+          <p className="text-xs text-muted-foreground">Henüz müşteri kaydı yok</p>
         </div>
       )}
     </div>
@@ -455,8 +455,8 @@ function KpiCard({ label, value, icon: Icon, to, color, loading, comfort }) {
         <Icon className="h-4.5 w-4.5" style={{ color: color || "hsl(var(--primary))" }} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] leading-tight text-muted-foreground truncate">{label}</p>
-        <p className={`${comfort ? "text-[34px]" : "text-[28px]"} font-semibold leading-tight text-foreground tracking-tight`}>{value}</p>
+        <p className="text-xs leading-tight text-muted-foreground truncate">{label}</p>
+        <p className={`${comfort ? "text-3xl" : "text-2xl"} font-semibold leading-tight text-foreground tracking-tight`}>{value}</p>
       </div>
       {to && (
         <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors shrink-0" />
@@ -489,7 +489,7 @@ function MiniDonutCard({ title, data, colors, loading, emptyText }) {
 
   return (
     <div className="rounded-[10px] border border-border/60 bg-card p-4">
-      <p className="text-[13px] font-medium text-foreground mb-3">{title}</p>
+      <p className="text-sm font-medium text-foreground mb-3">{title}</p>
       {hasData ? (
         <div className="flex items-center gap-3">
           <div className="shrink-0" style={{ width: 80, height: 80, minWidth: 80, minHeight: 80 }}>
@@ -512,7 +512,7 @@ function MiniDonutCard({ title, data, colors, loading, emptyText }) {
           </div>
           <div className="flex-1 space-y-1.5 min-w-0">
             {data.map((d) => (
-              <div key={d.name} className="flex items-center gap-2 text-[11px]">
+              <div key={d.name} className="flex items-center gap-2 text-xs">
                 <span
                   className="h-2 w-2 rounded-full shrink-0"
                   style={{ backgroundColor: colors[d.name] || "#94a3b8" }}
@@ -528,7 +528,7 @@ function MiniDonutCard({ title, data, colors, loading, emptyText }) {
           <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mb-2">
             <BarChart3 className="h-4 w-4 text-muted-foreground/60" />
           </div>
-          <p className="text-[11px] text-muted-foreground">{emptyText || "Veri yok"}</p>
+          <p className="text-xs text-muted-foreground">{emptyText || "Veri yok"}</p>
         </div>
       )}
     </div>
@@ -545,7 +545,7 @@ function ChipGroup({ options, value, onChange }) {
         <button
           key={opt.value}
           onClick={() => onChange(opt.value)}
-          className={`px-3 py-1 text-[11px] font-medium transition-colors
+          className={`px-3 py-1 text-xs font-medium transition-colors
             ${value === opt.value
               ? "bg-primary text-primary-foreground"
               : "bg-card text-muted-foreground hover:bg-muted/50"
@@ -567,8 +567,8 @@ function ChartTooltip({ active, payload, label, metric }) {
   const val = payload[0]?.value;
   return (
     <div className="rounded-lg border border-border/60 bg-card px-3 py-2 shadow-md">
-      <p className="text-[11px] text-muted-foreground">{label}</p>
-      <p className="text-[14px] font-semibold text-foreground">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-sm font-semibold text-foreground">
         {metric === "revenue"
           ? `₺${Number(val || 0).toLocaleString("tr-TR", { minimumFractionDigits: 0 })}`
           : val}
@@ -606,7 +606,7 @@ function AttentionList({ items, loading }) {
     <div className="rounded-[10px] border border-border/60 bg-card p-4">
       <div className="flex items-center gap-2 mb-4">
         <ListChecks className="h-4 w-4 text-amber-500" />
-        <p className="text-[14px] font-medium text-foreground">Hemen İlgilenilmesi Gerekenler</p>
+        <p className="text-sm font-medium text-foreground">Hemen İlgilenilmesi Gerekenler</p>
       </div>
       {hasItems ? (
         <div className="space-y-1">
@@ -625,9 +625,9 @@ function AttentionList({ items, loading }) {
               >
                 <item.icon className="h-3.5 w-3.5" style={{ color: item.color }} />
               </div>
-              <p className="text-[13px] text-foreground truncate flex-1">{item.label}</p>
+              <p className="text-sm text-foreground truncate flex-1">{item.label}</p>
               <span
-                className="text-[13px] font-semibold tabular-nums px-2 py-0.5 rounded-md min-w-[32px] text-center"
+                className="text-sm font-semibold tabular-nums px-2 py-0.5 rounded-md min-w-[32px] text-center"
                 style={{
                   color: item.count > 0 ? item.color : undefined,
                   backgroundColor: item.count > 0 ? `${item.color}10` : undefined,
@@ -644,7 +644,7 @@ function AttentionList({ items, loading }) {
           <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center mb-2">
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
           </div>
-          <p className="text-[12px] text-muted-foreground">Tüm işler yolunda görünüyor</p>
+          <p className="text-xs text-muted-foreground">Tüm işler yolunda görünüyor</p>
         </div>
       )}
     </div>
@@ -678,7 +678,7 @@ function ActivityTimeline({ loading, events }) {
     <div className="rounded-[10px] border border-border/60 bg-card p-4">
       <div className="flex items-center gap-2 mb-4">
         <Activity className="h-4 w-4 text-blue-500" />
-        <p className="text-[14px] font-medium text-foreground">Son Aktiviteler</p>
+        <p className="text-sm font-medium text-foreground">Son Aktiviteler</p>
       </div>
       {events && events.length > 0 ? (
         <div className="space-y-0.5">
@@ -692,8 +692,8 @@ function ActivityTimeline({ loading, events }) {
                   <Activity className="h-3 w-3 text-blue-500" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[12px] text-foreground truncate">{ev.action || 'Bilinmeyen olay'}</p>
-                  <p className="text-[10px] text-muted-foreground/60">{time}</p>
+                  <p className="text-xs text-foreground truncate">{ev.action || 'Bilinmeyen olay'}</p>
+                  <p className="text-2xs text-muted-foreground/60">{time}</p>
                 </div>
               </div>
             );
@@ -704,8 +704,8 @@ function ActivityTimeline({ loading, events }) {
           <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mb-2">
             <Clock className="h-4 w-4 text-muted-foreground/60" />
           </div>
-          <p className="text-[12px] text-muted-foreground">Henüz aktivite kaydı yok</p>
-          <p className="text-[11px] text-muted-foreground/60 mt-0.5">
+          <p className="text-xs text-muted-foreground">Henüz aktivite kaydı yok</p>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">
             Rezervasyon ve case işlemleri burada görünecek
           </p>
         </div>
@@ -902,8 +902,8 @@ export default function DashboardPage() {
       {/* ---------- HEADER ---------- */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-[20px] font-bold text-foreground">Genel Bakış</h2>
-          <p className="text-[12px] text-muted-foreground mt-0.5">
+          <h2 className="text-xl font-bold text-foreground">Genel Bakış</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Rezervasyon ve operasyon özetini buradan takip edebilirsin.
           </p>
         </div>
@@ -911,13 +911,13 @@ export default function DashboardPage() {
           <DemoSeedButton />
           <Link
             to="/app/products"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium rounded-lg border border-border/60 bg-card text-foreground hover:bg-muted/50 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border/60 bg-card text-foreground hover:bg-muted/50 transition-colors"
           >
             Ürünler
           </Link>
           <Link
             to="/app/reservations"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             Rezervasyonlar
           </Link>
@@ -1015,7 +1015,7 @@ export default function DashboardPage() {
 
       {/* ---------- ERROR ---------- */}
       {error && (
-        <div className="rounded-[10px] border border-rose-200 bg-rose-50 dark:border-rose-800 dark:bg-rose-950/30 px-4 py-2.5 text-[12px] text-rose-700 dark:text-rose-300" data-testid="dash-error">
+        <div className="rounded-[10px] border border-rose-200 bg-rose-50 dark:border-rose-800 dark:bg-rose-950/30 px-4 py-2.5 text-xs text-rose-700 dark:text-rose-300" data-testid="dash-error">
           {error}
         </div>
       )}
@@ -1034,7 +1034,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4">
         <div className="rounded-[10px] border border-border/60 bg-card p-4">
           <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-            <p className="text-[14px] font-medium text-foreground">Satış Grafiği</p>
+            <p className="text-sm font-medium text-foreground">Satış Grafiği</p>
             <ChipGroup
               options={[
                 { label: "Satış", value: "revenue" },
@@ -1068,8 +1068,8 @@ export default function DashboardPage() {
               <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
                 <BarChart3 className="h-5 w-5 text-muted-foreground/50" />
               </div>
-              <p className="text-[13px] text-muted-foreground">Grafik verisi bulunamadı</p>
-              <p className="text-[11px] text-muted-foreground/60 mt-0.5">Son {chartDays} günde satış kaydı yok</p>
+              <p className="text-sm text-muted-foreground">Grafik verisi bulunamadı</p>
+              <p className="text-xs text-muted-foreground/60 mt-0.5">Son {chartDays} günde satış kaydı yok</p>
             </div>
           )}
         </div>

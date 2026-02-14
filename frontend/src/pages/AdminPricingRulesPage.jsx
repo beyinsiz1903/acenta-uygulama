@@ -18,7 +18,7 @@ import { AlertCircle, Loader2, Trash2, Pencil } from "lucide-react";
 function FieldError({ text }) {
   if (!text) return null;
   return (
-    <div className="mt-2 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[11px] text-destructive">
+    <div className="mt-2 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
       <AlertCircle className="h-4 w-4 mt-0.5" />
       <div>{text}</div>
     </div>
@@ -46,7 +46,7 @@ function formatDate(value) {
 function ValidityCell({ from, to }) {
   if (!from && !to) return <span className="text-xs text-muted-foreground">Sonsuz</span>;
   return (
-    <div className="flex flex-col text-[11px]">
+    <div className="flex flex-col text-xs">
       <span>{from ? formatDate(from) : "-"}</span>
       <span className="text-muted-foreground">{to ? formatDate(to) : "-"}</span>
     </div>
@@ -162,11 +162,11 @@ function RuleFormDialog({ open, onOpenChange, mode, initial, onSaved }) {
             {isEdit ? "Fiyat Kuralını Düzenle" : "Yeni Fiyat Kuralı"}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-3 text-[11px]">
+        <form onSubmit={handleSubmit} className="space-y-3 text-xs">
           <FieldError text={error} />
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
-              <Label className="text-[11px]">Rule Type</Label>
+              <Label className="text-xs">Rule Type</Label>
               <select
                 className="h-8 w-full rounded-md border bg-background px-2 text-xs"
                 value={ruleType}
@@ -180,7 +180,7 @@ function RuleFormDialog({ open, onOpenChange, mode, initial, onSaved }) {
               </select>
             </div>
             <div className="space-y-1">
-              <Label className="text-[11px]">Değer</Label>
+              <Label className="text-xs">Değer</Label>
               <Input
                 className="h-8 text-xs"
                 value={value}
@@ -192,7 +192,7 @@ function RuleFormDialog({ open, onOpenChange, mode, initial, onSaved }) {
 
           <div className="grid grid-cols-3 gap-2">
             <div className="space-y-1">
-              <Label className="text-[11px]">Öncelik (priority)</Label>
+              <Label className="text-xs">Öncelik (priority)</Label>
               <Input
                 type="number"
                 className="h-8 text-xs"
@@ -201,7 +201,7 @@ function RuleFormDialog({ open, onOpenChange, mode, initial, onSaved }) {
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-[11px]">Supplier</Label>
+              <Label className="text-xs">Supplier</Label>
               <Input
                 className="h-8 text-xs"
                 value={supplier}
@@ -215,7 +215,7 @@ function RuleFormDialog({ open, onOpenChange, mode, initial, onSaved }) {
                 checked={!!stackable}
                 onCheckedChange={(val) => setStackable(val)}
               />
-              <Label htmlFor="stackable" className="text-[11px]">
+              <Label htmlFor="stackable" className="text-xs">
                 Stackable
               </Label>
             </div>
@@ -223,7 +223,7 @@ function RuleFormDialog({ open, onOpenChange, mode, initial, onSaved }) {
 
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
-              <Label className="text-[11px]">Valid From</Label>
+              <Label className="text-xs">Valid From</Label>
               <Input
                 type="datetime-local"
                 className="h-8 text-xs"
@@ -232,7 +232,7 @@ function RuleFormDialog({ open, onOpenChange, mode, initial, onSaved }) {
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-[11px]">Valid To</Label>
+              <Label className="text-xs">Valid To</Label>
               <Input
                 type="datetime-local"
                 className="h-8 text-xs"
@@ -303,7 +303,7 @@ export default function AdminPricingRulesPage() {
       <div className="flex items-center justify-between">
         <div>
           <div className="text-lg font-semibold">Pricing Kuralları</div>
-          <div className="text-[11px] text-muted-foreground max-w-xl">
+          <div className="text-xs text-muted-foreground max-w-xl">
             Agentis tarzı B2B fiyatlandırma için kullanılan basit markup/komisyon kuralları. Priorite yüksekten düşüğe
             doğru uygulanır.
           </div>
@@ -333,13 +333,13 @@ export default function AdminPricingRulesPage() {
       </div>
 
       {error && (
-        <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-[11px] text-destructive flex items-center gap-2">
+        <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive flex items-center gap-2">
           <AlertCircle className="h-4 w-4" />
           <span>{error}</span>
         </div>
       )}
 
-      <div className="rounded-md border p-3 text-[11px] space-y-2">
+      <div className="rounded-md border p-3 text-xs space-y-2">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
             <Switch
@@ -347,12 +347,12 @@ export default function AdminPricingRulesPage() {
               checked={activeOnly}
               onCheckedChange={(val) => setActiveOnly(val)}
             />
-            <Label htmlFor="active_only" className="text-[11px]">
+            <Label htmlFor="active_only" className="text-xs">
               Sadece aktif kurallar (validity penceresi içinde)
             </Label>
           </div>
           <div className="flex items-center gap-2">
-            <Label className="text-[11px]">Rule Type</Label>
+            <Label className="text-xs">Rule Type</Label>
             <select
               className="h-8 rounded-md border bg-background px-2 text-xs"
               value={ruleTypeFilter}
@@ -366,7 +366,7 @@ export default function AdminPricingRulesPage() {
             </select>
           </div>
           <div className="flex items-center gap-2">
-            <Label className="text-[11px]">Supplier</Label>
+            <Label className="text-xs">Supplier</Label>
             <Input
               className="h-8 text-xs w-[160px]"
               placeholder="mock_v1"
@@ -378,7 +378,7 @@ export default function AdminPricingRulesPage() {
       </div>
 
       <div className="rounded-md border overflow-hidden">
-        <Table className="text-[11px]">
+        <Table className="text-xs">
           <TableHeader>
             <TableRow className="bg-muted/40">
               <TableHead className="w-[110px]">Rule Type</TableHead>

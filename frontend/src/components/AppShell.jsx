@@ -216,7 +216,7 @@ function SidebarItem({ to, label, icon: Icon, collapsed, end, onClick }) {
       onClick={onClick}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-colors",
+          "flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors",
           isActive
             ? "bg-primary text-primary-foreground shadow-sm"
             : "text-muted-foreground hover:bg-accent hover:text-foreground",
@@ -498,7 +498,7 @@ function AppShellInner() {
                   {brandInitial}
                 </div>
               )}
-              <span className="text-[13px] font-semibold text-foreground" data-testid="brand-name">{brandName}</span>
+              <span className="text-sm font-semibold text-foreground" data-testid="brand-name">{brandName}</span>
             </div>
           </div>
 
@@ -514,11 +514,11 @@ function AppShellInner() {
               }
             >
               <Inbox className="h-3.5 w-3.5 mr-1" />
-              <span className="hidden sm:inline text-[11px]">İş Ortakları</span>
+              <span className="hidden sm:inline text-xs">İş Ortakları</span>
               {partnerSummary?.counts?.invites_received > 0 && (
                 <UIBadge
                   variant="destructive"
-                  className="ml-1 h-4 min-w-[1.25rem] px-1 text-[10px] flex items-center justify-center rounded-full"
+                  className="ml-1 h-4 min-w-[1.25rem] px-1 text-2xs flex items-center justify-center rounded-full"
                 >
                   {partnerSummary.counts.invites_received}
                 </UIBadge>
@@ -541,8 +541,8 @@ function AppShellInner() {
             <ThemeToggle />
 
             <div className="hidden sm:block text-right">
-              <div className="text-[12px] font-medium text-foreground">{user?.name || user?.email}</div>
-              <div className="text-[10px] text-muted-foreground">{(user?.roles || []).join(", ")}</div>
+              <div className="text-xs font-medium text-foreground">{user?.name || user?.email}</div>
+              <div className="text-2xs text-muted-foreground">{(user?.roles || []).join(", ")}</div>
             </div>
 
             <Button
@@ -550,7 +550,7 @@ function AppShellInner() {
               size="sm"
               data-testid="logout-btn"
               onClick={() => { clearToken(); window.location.href = "/login"; }}
-              className="gap-1.5 h-8 text-[11px]"
+              className="gap-1.5 h-8 text-xs"
             >
               <LogOut className="h-3.5 w-3.5" />
               Çıkış
@@ -575,8 +575,8 @@ function AppShellInner() {
                 </div>
               )}
               <div>
-                <div className="text-[13px] font-semibold text-foreground">{brandName}</div>
-                <div className="text-[10px] text-muted-foreground">{user?.email}</div>
+                <div className="text-sm font-semibold text-foreground">{brandName}</div>
+                <div className="text-2xs text-muted-foreground">{user?.email}</div>
               </div>
             </div>
           </div>
@@ -591,7 +591,7 @@ function AppShellInner() {
               if (!visibleItems.length) return null;
               return (
               <div key={section.group} className="mb-3">
-                <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
+                <div className="px-2 py-1 text-2xs font-bold text-muted-foreground/70 uppercase tracking-wider">
                   {section.group}
                 </div>
                 {visibleItems.map((item) => (
@@ -612,7 +612,7 @@ function AppShellInner() {
             <Button
               variant="outline"
               size="sm"
-              className="w-full gap-2 text-[11px]"
+              className="w-full gap-2 text-xs"
               onClick={() => { setMobileNavOpen(false); clearToken(); window.location.href = "/login"; }}
               data-testid="mobile-logout"
             >
@@ -648,16 +648,16 @@ function AppShellInner() {
           {!collapsed && (
             <div className="grid grid-cols-3 gap-1 px-2 py-2 border-b border-border/40">
               <div className="rounded-md bg-muted/30 p-1.5 text-center">
-                <div className="text-[9px] text-muted-foreground">Toplam</div>
-                <div className="text-[12px] font-semibold text-foreground" data-testid="sb-total">{sidebarStats.total}</div>
+                <div className="text-2xs text-muted-foreground">Toplam</div>
+                <div className="text-xs font-semibold text-foreground" data-testid="sb-total">{sidebarStats.total}</div>
               </div>
               <div className="rounded-md bg-muted/30 p-1.5 text-center">
-                <div className="text-[9px] text-muted-foreground">Bekleyen</div>
-                <div className="text-[12px] font-semibold text-foreground" data-testid="sb-pending">{sidebarStats.pending}</div>
+                <div className="text-2xs text-muted-foreground">Bekleyen</div>
+                <div className="text-xs font-semibold text-foreground" data-testid="sb-pending">{sidebarStats.pending}</div>
               </div>
               <div className="rounded-md bg-muted/30 p-1.5 text-center">
-                <div className="text-[9px] text-muted-foreground">Ciro 7G</div>
-                <div className="text-[12px] font-semibold text-foreground" data-testid="sb-rev7">{formatMoneyCompact(sidebarStats.revenue7d, "TRY")}</div>
+                <div className="text-2xs text-muted-foreground">Ciro 7G</div>
+                <div className="text-xs font-semibold text-foreground" data-testid="sb-rev7">{formatMoneyCompact(sidebarStats.revenue7d, "TRY")}</div>
               </div>
             </div>
           )}
@@ -675,7 +675,7 @@ function AppShellInner() {
               return (
                 <div key={section.group}>
                   {!collapsed && (
-                    <div className="px-2 py-0.5 text-[9px] font-bold text-muted-foreground/60 uppercase tracking-wider">
+                    <div className="px-2 py-0.5 text-2xs font-bold text-muted-foreground/60 uppercase tracking-wider">
                       {section.group}
                     </div>
                   )}
@@ -700,7 +700,7 @@ function AppShellInner() {
           {/* Footer */}
           {!collapsed && (
             <div className="border-t border-border/40 px-3 py-2">
-              <div className="text-[9px] text-muted-foreground/50">
+              <div className="text-2xs text-muted-foreground/50">
                 {(user?.roles || ["-"])[0]} · {new Date().toLocaleDateString("tr-TR")}
               </div>
             </div>
@@ -715,7 +715,7 @@ function AppShellInner() {
               {quotaAlerts.map((q) => (
                 <div
                   key={q.metric}
-                  className={`rounded-lg border px-4 py-2 text-[12px] flex items-center justify-between ${
+                  className={`rounded-lg border px-4 py-2 text-xs flex items-center justify-between ${
                     q.exceeded
                       ? "border-destructive/40 bg-destructive/5 text-destructive"
                       : "border-amber-500/40 bg-amber-500/5 text-amber-700"
@@ -725,7 +725,7 @@ function AppShellInner() {
                     <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                     <span>{q.exceeded ? "Quota aşıldı" : "Quota'ya yaklaşıyorsunuz"}: {q.used}/{q.quota} ({Math.round(q.ratio * 100)}%)</span>
                   </div>
-                  {q.recommendation && <span className="text-[10px] font-medium shrink-0 ml-3">{q.recommendation}</span>}
+                  {q.recommendation && <span className="text-2xs font-medium shrink-0 ml-3">{q.recommendation}</span>}
                 </div>
               ))}
             </div>
@@ -737,7 +737,7 @@ function AppShellInner() {
       </div>
 
       <footer className="border-t bg-background">
-        <div className="px-4 py-3 text-[10px] text-muted-foreground">
+        <div className="px-4 py-3 text-2xs text-muted-foreground">
           © {new Date().getFullYear()} — v1
         </div>
       </footer>

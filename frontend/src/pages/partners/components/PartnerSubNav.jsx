@@ -46,7 +46,7 @@ export default function PartnerSubNav() {
             )}
 
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-[11px] text-muted-foreground tracking-wide">
+              <span className="text-xs text-muted-foreground tracking-wide">
                 {group.label}
               </span>
 

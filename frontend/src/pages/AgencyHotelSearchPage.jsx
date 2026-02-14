@@ -393,11 +393,11 @@ export default function AgencyHotelSearchPage() {
 
     return (
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
+        <Badge variant="outline" className="text-2xs uppercase tracking-wide">
           Kaynak: {label}
         </Badge>
         {cacheHint && (
-          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+          <span className="rounded-full bg-muted px-2 py-0.5 text-2xs text-muted-foreground">
             {cacheHint}
           </span>
         )}
@@ -450,7 +450,7 @@ export default function AgencyHotelSearchPage() {
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>{selectedRatePlan?.name}</span>
             {selectedRatePlan?.board && (
-              <Badge variant="secondary" className="text-[10px]">
+              <Badge variant="secondary" className="text-2xs">
                 {selectedRatePlan.board}
               </Badge>
             )}

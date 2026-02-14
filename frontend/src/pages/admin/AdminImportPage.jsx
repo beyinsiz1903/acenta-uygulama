@@ -419,7 +419,7 @@ function GoogleSheetsTab() {
         <div className="rounded-xl border p-4 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold">Sync Durumu</h3>
-            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-medium ${
               status.last_sync_status === "ok" ? "bg-emerald-100 text-emerald-700" :
               status.last_sync_status === "error" ? "bg-destructive/10 text-destructive" :
               "bg-muted text-muted-foreground"
@@ -430,19 +430,19 @@ function GoogleSheetsTab() {
           <div className="grid grid-cols-4 gap-3">
             <div className="text-center">
               <p className="text-lg font-bold">{status.stats?.last_rows || 0}</p>
-              <p className="text-[10px] text-muted-foreground">Satır</p>
+              <p className="text-2xs text-muted-foreground">Satır</p>
             </div>
             <div className="text-center">
               <p className="text-lg font-bold text-emerald-600">{status.stats?.last_upserts || 0}</p>
-              <p className="text-[10px] text-muted-foreground">Upsert</p>
+              <p className="text-2xs text-muted-foreground">Upsert</p>
             </div>
             <div className="text-center">
               <p className="text-lg font-bold text-destructive">{status.stats?.last_errors || 0}</p>
-              <p className="text-[10px] text-muted-foreground">Hata</p>
+              <p className="text-2xs text-muted-foreground">Hata</p>
             </div>
             <div className="text-center">
               <p className="text-xs font-medium">{status.last_sync_at ? new Date(status.last_sync_at).toLocaleString("tr-TR") : "-"}</p>
-              <p className="text-[10px] text-muted-foreground">Son Sync</p>
+              <p className="text-2xs text-muted-foreground">Son Sync</p>
             </div>
           </div>
           {status.last_sync_error && (
@@ -559,7 +559,7 @@ function ImportHistoryTab() {
                 <tr key={j.id} className="border-t hover:bg-muted/30">
                   <td className="px-3 py-2 text-xs font-medium">{j.filename || "-"}</td>
                   <td className="px-3 py-2 text-xs">{j.source}</td>
-                  <td className="px-3 py-2"><span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium ${statusBadge(j.status)}`}>{j.status}</span></td>
+                  <td className="px-3 py-2"><span className={`inline-flex px-2 py-0.5 rounded-full text-2xs font-medium ${statusBadge(j.status)}`}>{j.status}</span></td>
                   <td className="px-3 py-2 text-xs text-right">{j.total_rows}</td>
                   <td className="px-3 py-2 text-xs text-right text-emerald-600">{j.success_count}</td>
                   <td className="px-3 py-2 text-xs text-right text-destructive">{j.error_count}</td>

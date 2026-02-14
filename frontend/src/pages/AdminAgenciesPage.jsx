@@ -177,7 +177,7 @@ export default function AdminAgenciesPage() {
                 placeholder="Örn: 64f... (var olan bir acenta ID'si)"
                 disabled={createLoading}
               />
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Boş bırakırsanız ana acenta olarak kalır. Geçersiz veya kendisine eşit ID gönderildiğinde backend hata döner (SELF_PARENT_NOT_ALLOWED, PARENT_CYCLE_DETECTED).
               </p>
             </div>
@@ -264,7 +264,7 @@ export default function AdminAgenciesPage() {
             <div className="space-y-4 text-sm">
               <div className="space-y-1">
                 <div className="font-medium">{editingAgency.name}</div>
-                <div className="text-[11px] text-muted-foreground font-mono">{editingAgency.id}</div>
+                <div className="text-xs text-muted-foreground font-mono">{editingAgency.id}</div>
               </div>
 
               {editError && <p className="text-xs text-red-600">{editError}</p>}
@@ -280,7 +280,7 @@ export default function AdminAgenciesPage() {
                   placeholder="Örn: 64f... (boş bırakmak için tamamını silin)"
                   disabled={editLoading}
                 />
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Boş bırakırsanız ana acenta olur. Geçersiz veya kendisine eşit ID gönderildiğinde backend
                   SELF_PARENT_NOT_ALLOWED / PARENT_CYCLE_DETECTED hatası döner.
                 </p>

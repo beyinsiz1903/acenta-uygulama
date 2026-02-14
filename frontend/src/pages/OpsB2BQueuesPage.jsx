@@ -534,7 +534,7 @@ export default function OpsB2BQueuesPage() {
                 <div className="py-8 text-center text-sm text-muted-foreground">Kriterlere uyan booking bulunamadı.</div>
               ) : (
                 <div className="border rounded-xl overflow-hidden">
-                  <div className="grid grid-cols-6 gap-2 bg-muted/60 px-3 py-2 text-[11px] font-medium text-muted-foreground">
+                  <div className="grid grid-cols-6 gap-2 bg-muted/60 px-3 py-2 text-xs font-medium text-muted-foreground">
                     <div>Booking ID</div>
                     <div>Agency</div>
                     <div>Status</div>
@@ -564,14 +564,14 @@ export default function OpsB2BQueuesPage() {
                         <div className="flex flex-col gap-1">
                           <StatusBadge status={b.status} />
                           {b.credit_status && b.credit_status !== "ok" && (
-                            <div className="text-[10px]">
+                            <div className="text-2xs">
                               {b.credit_status === "near_limit" && (
-                                <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                                <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-2xs font-medium text-amber-700">
                                   Limite yakın
                                 </span>
                               )}
                               {b.credit_status === "over_limit" && (
-                                <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-700">
+                                <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-2xs font-medium text-red-700">
                                   Limit aşıldı
                                 </span>
                               )}
@@ -689,7 +689,7 @@ export default function OpsB2BQueuesPage() {
                         <Textarea
                           value={safeJson(bookingDetail.risk_snapshot)}
                           readOnly
-                          className="font-mono text-[11px] h-40"
+                          className="font-mono text-xs h-40"
                         />
                       </div>
 
@@ -698,7 +698,7 @@ export default function OpsB2BQueuesPage() {
                         <Textarea
                           value={safeJson(bookingDetail.policy_snapshot)}
                           readOnly
-                          className="font-mono text-[11px] h-40"
+                          className="font-mono text-xs h-40"
                         />
                       </div>
                     </>
@@ -711,7 +711,7 @@ export default function OpsB2BQueuesPage() {
                         <div className="font-semibold">Voucher</div>
                         <button
                           type="button"
-                          className="text-[11px] text-muted-foreground underline-offset-2 hover:underline"
+                          className="text-xs text-muted-foreground underline-offset-2 hover:underline"
                           onClick={() => loadVoucherHistory(bookingDetail.booking_id)}
                           disabled={voucherHistoryLoading}
                         >
@@ -720,26 +720,26 @@ export default function OpsB2BQueuesPage() {
                       </div>
 
                       {voucherHistoryLoading && (
-                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Loader2 className="h-3 w-3 animate-spin" /> Yükleniyor...
                         </div>
                       )}
 
                       {voucherHistoryError && (
-                        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-2 text-[11px] text-destructive">
+                        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
                           <AlertCircle className="h-3 w-3 mt-0.5" />
                           <div>{voucherHistoryError}</div>
                         </div>
                       )}
 
                       {!voucherHistoryLoading && !voucherHistoryError && voucherHistory.length === 0 && (
-                        <div className="text-[11px] text-muted-foreground">
+                        <div className="text-xs text-muted-foreground">
                           Bu booking için henüz voucher yok.
                         </div>
                       )}
 
                       {/* Generate button */}
-                      <div className="flex flex-wrap gap-2 text-[11px]">
+                      <div className="flex flex-wrap gap-2 text-xs">
                         {!hasActiveVoucher && (
                           <Button
                             type="button"
@@ -764,7 +764,7 @@ export default function OpsB2BQueuesPage() {
                       </div>
 
                       {hasActiveVoucher && (
-                        <div className="flex flex-wrap items-center gap-3 text-[11px]">
+                        <div className="flex flex-wrap items-center gap-3 text-xs">
                           <a
                             href={`${process.env.REACT_APP_BACKEND_URL}/api/ops/bookings/${bookingDetail.booking_id}/voucher`}
                             target="_blank"
@@ -777,7 +777,7 @@ export default function OpsB2BQueuesPage() {
                             type="button"
                             size="sm"
                             variant="outline"
-                            className="h-7 px-2 text-[11px]"
+                            className="h-7 px-2 text-xs"
                             onClick={() => {
                               const c = bookingDetail.customer || {};
                               setVoucherResendEmail(c.email || "");
@@ -792,7 +792,7 @@ export default function OpsB2BQueuesPage() {
                       )}
 
                       {voucherResendOpen && (
-                        <div className="mt-3 space-y-2 rounded-md border bg-muted/30 p-3 text-[11px]">
+                        <div className="mt-3 space-y-2 rounded-md border bg-muted/30 p-3 text-xs">
                           <div className="flex items-center justify-between">
                             <div className="font-semibold">Voucher Gönder</div>
                             <button
@@ -805,24 +805,24 @@ export default function OpsB2BQueuesPage() {
                           </div>
                           <div className="grid grid-cols-1 gap-2">
                             <div className="space-y-1">
-                              <Label htmlFor="voucher_resend_email" className="text-[11px]">
+                              <Label htmlFor="voucher_resend_email" className="text-xs">
                                 Alıcı Email
                               </Label>
                               <Input
                                 id="voucher_resend_email"
                                 type="email"
-                                className="h-8 text-[11px]"
+                                className="h-8 text-xs"
                                 value={voucherResendEmail}
                                 onChange={(e) => setVoucherResendEmail(e.target.value)}
                               />
                             </div>
                             <div className="space-y-1">
-                              <Label htmlFor="voucher_resend_msg" className="text-[11px]">
+                              <Label htmlFor="voucher_resend_msg" className="text-xs">
                                 Mesaj (opsiyonel)
                               </Label>
                               <Textarea
                                 id="voucher_resend_msg"
-                                className="h-20 text-[11px]"
+                                className="h-20 text-xs"
                                 value={voucherResendMessage}
                                 onChange={(e) => setVoucherResendMessage(e.target.value)}
                               />
@@ -830,7 +830,7 @@ export default function OpsB2BQueuesPage() {
                           </div>
 
                           {voucherResendError && (
-                            <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-2 text-[11px] text-destructive">
+                            <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-2 text-xs text-destructive">
                               <AlertCircle className="h-3 w-3 mt-0.5" />
                               <div>{voucherResendError}</div>
                             </div>
@@ -841,7 +841,7 @@ export default function OpsB2BQueuesPage() {
                               type="button"
                               size="sm"
                               variant="ghost"
-                              className="h-7 px-2 text-[11px]"
+                              className="h-7 px-2 text-xs"
                               onClick={() => setVoucherResendOpen(false)}
                               disabled={voucherResendLoading}
                             >
@@ -850,7 +850,7 @@ export default function OpsB2BQueuesPage() {
                             <Button
                               type="button"
                               size="sm"
-                              className="h-7 px-3 text-[11px]"
+                              className="h-7 px-3 text-xs"
                               disabled={voucherResendLoading}
                               onClick={async () => {
                                 setVoucherResendError("");
@@ -883,13 +883,13 @@ export default function OpsB2BQueuesPage() {
                       {/* History list */}
                       {voucherHistory.length > 0 && (
                         <div className="mt-2 border rounded-lg overflow-hidden">
-                          <div className="grid grid-cols-4 gap-2 bg-muted/60 px-2 py-1 text-[11px] font-medium text-muted-foreground">
+                          <div className="grid grid-cols-4 gap-2 bg-muted/60 px-2 py-1 text-xs font-medium text-muted-foreground">
                             <div>Version</div>
                             <div>Status</div>
                             <div>Created</div>
                             <div>Created By</div>
                           </div>
-                          <div className="max-h-40 overflow-y-auto text-[11px]">
+                          <div className="max-h-40 overflow-y-auto text-xs">
                             {voucherHistory.map((v) => (
                               <div
                                 key={v.voucher_id}
@@ -899,7 +899,7 @@ export default function OpsB2BQueuesPage() {
                                 <div>
                                   <Badge
                                     variant={v.status === "active" ? "secondary" : "outline"}
-                                    className="text-[10px]"
+                                    className="text-2xs"
                                   >
                                     {v.status}
                                   </Badge>
@@ -960,10 +960,10 @@ export default function OpsB2BQueuesPage() {
                                   </div>
                                   <div className="flex-1">
                                     <div className="text-xs font-medium">{eventLabel(ev)}</div>
-                                    <div className="mt-0.5 text-[11px] text-muted-foreground">
+                                    <div className="mt-0.5 text-xs text-muted-foreground">
                                       {eventSubline(ev)}
                                     </div>
-                                    <div className="mt-1 text-[11px] text-muted-foreground">
+                                    <div className="mt-1 text-xs text-muted-foreground">
                                       {ev.actor?.email ? `${ev.actor.email}` : "-"}
                                       {ev.actor?.role ? ` · ${ev.actor.role}` : ""}
                                       {ev.actor?.agency_id ? ` · ${ev.actor.agency_id}` : ""}
@@ -979,7 +979,7 @@ export default function OpsB2BQueuesPage() {
                                 </div>
 
                                 {expanded && (
-                                  <pre className="mt-3 overflow-auto rounded-md bg-muted/40 p-2 text-[11px] leading-relaxed">
+                                  <pre className="mt-3 overflow-auto rounded-md bg-muted/40 p-2 text-xs leading-relaxed">
                                     {safeJson({ type: ev.type, actor: ev.actor, meta: ev.meta })}
                                   </pre>
                                 )}
@@ -1091,7 +1091,7 @@ export default function OpsB2BQueuesPage() {
                 <div className="py-8 text-center text-sm text-muted-foreground">Kriterlere uyan case bulunamadı.</div>
               ) : (
                 <div className="border rounded-xl overflow-hidden">
-                  <div className="grid grid-cols-6 gap-2 bg-muted/60 px-3 py-2 text-[11px] font-medium text-muted-foreground">
+                  <div className="grid grid-cols-6 gap-2 bg-muted/60 px-3 py-2 text-xs font-medium text-muted-foreground">
                     <div>Case ID</div>
                     <div>Type</div>
                     <div>Status</div>
@@ -1202,7 +1202,7 @@ export default function OpsB2BQueuesPage() {
                   <div className="space-y-2">
                     <div className="font-semibold">Aksiyonlar</div>
                     {caseDetail.decision && (
-                      <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <span className="font-medium">Son karar:</span>
                         <span>{caseDetail.decision}</span>
                         {caseDetail.decision_by_email && (
@@ -1242,7 +1242,7 @@ export default function OpsB2BQueuesPage() {
                         <XCircle className="h-4 w-4" /> Reddet (Reject)
                       </Button>
                     </div>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       approve → case closed + booking CANCELLED, reject → case closed (booking aynı kalır).
                     </p>
                   </div>

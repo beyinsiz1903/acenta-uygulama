@@ -232,7 +232,7 @@ export default function ResetPasswordPage() {
             placeholder="Yeni şifreniz"
             autoComplete="new-password"
           />
-          <p className="text-[11px] text-muted-foreground">En az 8 karakter olmalıdır.</p>
+          <p className="text-xs text-muted-foreground">En az 8 karakter olmalıdır.</p>
         </div>
 
         <div className="space-y-2">

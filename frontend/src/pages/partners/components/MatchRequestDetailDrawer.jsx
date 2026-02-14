@@ -66,30 +66,30 @@ function ActivityTimeline({ entityId }) {
     <div className="rounded-lg border bg-muted/40 p-3 space-y-2" data-testid="activity-timeline">
       <span className="font-medium text-xs">Aktivite</span>
       {loading ? (
-        <p className="text-[11px] text-muted-foreground">Yükleniyor...</p>
+        <p className="text-xs text-muted-foreground">Yükleniyor...</p>
       ) : error ? (
-        <p className="text-[11px] text-destructive">Aktivite yüklenemedi.</p>
+        <p className="text-xs text-destructive">Aktivite yüklenemedi.</p>
       ) : events.length === 0 ? (
-        <p className="text-[11px] text-muted-foreground">Henüz aktivite yok.</p>
+        <p className="text-xs text-muted-foreground">Henüz aktivite yok.</p>
       ) : (
         <div className="space-y-1">
           {events.map((evt) => (
             <div key={evt.id} className="flex items-start gap-2 rounded-md border bg-background/80 px-2 py-1.5">
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-medium">
+                <p className="text-xs font-medium">
                   {EVENT_TYPE_LABELS[evt.event_type] || evt.event_type}
                 </p>
                 {evt.payload?.from && evt.payload?.to && (
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-2xs text-muted-foreground">
                     {statusLabel(evt.payload.from)} &rarr; {statusLabel(evt.payload.to)}
                     {evt.payload.requested_price ? ` | ${evt.payload.requested_price} TRY` : ""}
                   </p>
                 )}
                 {evt.payload?.title && (
-                  <p className="text-[10px] text-muted-foreground truncate">{evt.payload.title}</p>
+                  <p className="text-2xs text-muted-foreground truncate">{evt.payload.title}</p>
                 )}
               </div>
-              <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+              <span className="text-2xs text-muted-foreground whitespace-nowrap">
                 {new Date(evt.created_at).toLocaleString("tr-TR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
               </span>
             </div>
@@ -189,10 +189,10 @@ export default function MatchRequestDetailDrawer({
 
               <div className="space-y-1">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] text-muted-foreground">Talep ID</span>
+                  <span className="text-xs text-muted-foreground">Talep ID</span>
                   <button
                     type="button"
-                    className="max-w-[220px] truncate font-mono text-[11px] underline-offset-2 hover:underline"
+                    className="max-w-[220px] truncate font-mono text-xs underline-offset-2 hover:underline"
                     title="Talep ID'yi kopyala"
                     onClick={() => handleCopy(request.id)}
                   >
@@ -200,14 +200,14 @@ export default function MatchRequestDetailDrawer({
                   </button>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] text-muted-foreground">Durum</span>
-                  <span className="text-[11px]">{statusLabel(request.status)}</span>
+                  <span className="text-xs text-muted-foreground">Durum</span>
+                  <span className="text-xs">{statusLabel(request.status)}</span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] text-muted-foreground">Satıcı tenant</span>
+                  <span className="text-xs text-muted-foreground">Satıcı tenant</span>
                   <button
                     type="button"
-                    className="max-w-[220px] truncate font-mono text-[11px] underline-offset-2 hover:underline"
+                    className="max-w-[220px] truncate font-mono text-xs underline-offset-2 hover:underline"
                     title="Satıcı tenant ID'yi kopyala"
                     onClick={() => handleCopy(request.seller_tenant_id)}
                   >
@@ -215,10 +215,10 @@ export default function MatchRequestDetailDrawer({
                   </button>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] text-muted-foreground">Sağlayıcı tenant</span>
+                  <span className="text-xs text-muted-foreground">Sağlayıcı tenant</span>
                   <button
                     type="button"
-                    className="max-w-[220px] truncate font-mono text-[11px] underline-offset-2 hover:underline"
+                    className="max-w-[220px] truncate font-mono text-xs underline-offset-2 hover:underline"
                     title="Sağlayıcı tenant ID'yi kopyala"
                     onClick={() => handleCopy(request.provider_tenant_id)}
                   >
@@ -236,10 +236,10 @@ export default function MatchRequestDetailDrawer({
 
               <div className="space-y-1">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] text-muted-foreground">Listing ID</span>
+                  <span className="text-xs text-muted-foreground">Listing ID</span>
                   <button
                     type="button"
-                    className="max-w-[220px] truncate font-mono text-[11px] underline-offset-2 hover:underline"
+                    className="max-w-[220px] truncate font-mono text-xs underline-offset-2 hover:underline"
                     title="Listing ID'yi kopyala"
                     onClick={() => handleCopy(request.listing_id)}
                   >
@@ -247,14 +247,14 @@ export default function MatchRequestDetailDrawer({
                   </button>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] text-muted-foreground">Başlık</span>
-                  <span className="max-w-[220px] truncate text-[11px]">
+                  <span className="text-xs text-muted-foreground">Başlık</span>
+                  <span className="max-w-[220px] truncate text-xs">
                     {listing?.title || "Başlık bulunamadı"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] text-muted-foreground">Sağlayıcı komisyonu</span>
-                  <span className="text-[11px]">
+                  <span className="text-xs text-muted-foreground">Sağlayıcı komisyonu</span>
+                  <span className="text-xs">
                     {listing?.provider_commission_rate != null
                       ? `${listing.provider_commission_rate}%`
                       : "—"}
@@ -267,27 +267,27 @@ export default function MatchRequestDetailDrawer({
             <div className="rounded-lg border bg-muted/40 p-3 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-medium">Fiyat kırılımı</span>
-                <span className="text-[11px] text-muted-foreground">(tahmini + kayıtlı)</span>
+                <span className="text-xs text-muted-foreground">(tahmini + kayıtlı)</span>
               </div>
 
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-muted-foreground">Talep fiyatı</span>
-                  <span className="font-mono text-[11px]">{fp(priceInfo.requestedPrice)}</span>
+                  <span className="text-xs text-muted-foreground">Talep fiyatı</span>
+                  <span className="font-mono text-xs">{fp(priceInfo.requestedPrice)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-muted-foreground">Platform ücreti ({(priceInfo.platformFeeRate * 100).toFixed(2)}%)</span>
-                  <span className="font-mono text-[11px]">{fp(priceInfo.platformFeeAmount)}</span>
+                  <span className="text-xs text-muted-foreground">Platform ücreti ({(priceInfo.platformFeeRate * 100).toFixed(2)}%)</span>
+                  <span className="font-mono text-xs">{fp(priceInfo.platformFeeAmount)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-muted-foreground">Sağlayıcı komisyonu</span>
-                  <span className="font-mono text-[11px]">
+                  <span className="text-xs text-muted-foreground">Sağlayıcı komisyonu</span>
+                  <span className="font-mono text-xs">
                     {priceInfo.providerCommission != null ? fp(priceInfo.providerCommission) : "—"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-muted-foreground">Size kalan (tahmini)</span>
-                  <span className="font-mono text-[11px]">
+                  <span className="text-xs text-muted-foreground">Size kalan (tahmini)</span>
+                  <span className="font-mono text-xs">
                     {priceInfo.sellerRemain != null ? fp(priceInfo.sellerRemain) : "—"}
                   </span>
                 </div>
@@ -300,7 +300,7 @@ export default function MatchRequestDetailDrawer({
                 <span className="font-medium">Durum geçmişi</span>
               </div>
               {history.length === 0 ? (
-                <p className="text-[11px] text-muted-foreground">Durum geçmişi bulunamadı.</p>
+                <p className="text-xs text-muted-foreground">Durum geçmişi bulunamadı.</p>
               ) : (
                 <div className="space-y-1">
                   {history.map((h, idx) => (
@@ -310,7 +310,7 @@ export default function MatchRequestDetailDrawer({
                     >
                       <div className="flex items-center gap-2">
                         {statusBadgeNode(h.status)}
-                        <span className="text-[11px] text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           {new Date(h.at || new Date()).toLocaleString("tr-TR")}
                         </span>
                       </div>
@@ -324,7 +324,7 @@ export default function MatchRequestDetailDrawer({
                           onClick={() => handleCopy(h.by_user_id)}
                         >
                           <span className="sr-only">Kopyala</span>
-                          <span className="text-[10px]">ID</span>
+                          <span className="text-2xs">ID</span>
                         </Button>
                       )}
                     </div>

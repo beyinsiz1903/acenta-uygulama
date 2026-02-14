@@ -163,7 +163,7 @@ export default function AdminSupplierSettlementBridgePage() {
                   toplamını gösterir.
                 </p>
               </div>
-              <div className="text-[11px] text-muted-foreground flex flex-col items-end">
+              <div className="text-xs text-muted-foreground flex flex-col items-end">
                 <span>{merged.length} tedarikçi</span>
                 {payableSummary && (
                   <span>Toplam payable: {formatMoney(payableSummary.total_payable, payableSummary.currency)}</span>
@@ -198,22 +198,22 @@ export default function AdminSupplierSettlementBridgePage() {
                     ) : (
                       merged.map((row) => (
                         <TableRow key={row.supplier_id} className="hover:bg-accent/40">
-                          <TableCell className="text-[11px]">
+                          <TableCell className="text-xs">
                             <div className="flex flex-col">
                               <span className="font-mono truncate max-w-[160px]">{row.supplier_id}</span>
-                              <span className="text-[11px] text-muted-foreground truncate max-w-[200px]">
+                              <span className="text-xs text-muted-foreground truncate max-w-[200px]">
                                 {row.supplier_name}
                               </span>
                             </div>
                           </TableCell>
-                          <TableCell className="text-[11px]">{row.currency}</TableCell>
-                          <TableCell className="text-[11px] text-right">
+                          <TableCell className="text-xs">{row.currency}</TableCell>
+                          <TableCell className="text-xs text-right">
                             {formatMoney(row.payable_balance, row.currency)}
                           </TableCell>
-                          <TableCell className="text-[11px] text-right">
+                          <TableCell className="text-xs text-right">
                             {formatMoney(row.open_settlements_total, row.currency)}
                           </TableCell>
-                          <TableCell className="text-[11px] text-right">
+                          <TableCell className="text-xs text-right">
                             {formatMoney(row.paid_total, row.currency)}
                           </TableCell>
                         </TableRow>

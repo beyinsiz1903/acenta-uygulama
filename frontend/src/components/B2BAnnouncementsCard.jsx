@@ -70,14 +70,14 @@ export function B2BAnnouncementsCard() {
           </p>
         </div>
         {items.length > 0 && (
-          <Badge variant="outline" className="text-[11px]">
+          <Badge variant="outline" className="text-xs">
             {items.length} duyuru
           </Badge>
         )}
       </CardHeader>
       <CardContent className="space-y-3 text-xs">
         {error && (
-          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-2 text-[11px] text-destructive">
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
             <AlertCircle className="h-4 w-4 mt-0.5" />
             <div>{error}</div>
           </div>
@@ -87,8 +87,8 @@ export function B2BAnnouncementsCard() {
           <ul className="space-y-2">
             {items.map((it) => (
               <li key={it.id} className="rounded-lg border bg-muted/40 px-3 py-2">
-                <div className="text-[11px] font-semibold text-foreground">{it.title}</div>
-                <div className="mt-1 text-[11px] text-muted-foreground whitespace-pre-line">{it.body}</div>
+                <div className="text-xs font-semibold text-foreground">{it.title}</div>
+                <div className="mt-1 text-xs text-muted-foreground whitespace-pre-line">{it.body}</div>
               </li>
             ))}
           </ul>

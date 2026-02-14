@@ -161,14 +161,14 @@ function LeadCard({ lead, dragging, status }) {
               {lead.customer_name || lead.customer_id}
             </div>
             {tone ? (
-              <span className={"shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold " + tone}>
+              <span className={"shrink-0 rounded-full border px-2 py-0.5 text-xs font-semibold " + tone}>
                 {(status || lead.status || "new").toUpperCase()}
               </span>
             ) : null}
           </div>
 
           <div className="mt-1 flex flex-wrap items-center gap-2">
-            <span className="rounded-full border bg-accent px-2 py-0.5 text-[11px] font-medium text-foreground/80">
+            <span className="rounded-full border bg-accent px-2 py-0.5 text-xs font-medium text-foreground/80">
               {lead.source || "-"}
             </span>
             {lead.notes ? (
@@ -215,7 +215,7 @@ function KanbanColumn({ col, items }) {
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className={"rounded-lg border px-2 py-1 text-[11px] font-semibold " + (col.tone || "bg-accent text-foreground/80 border-border")}
+          <div className={"rounded-lg border px-2 py-1 text-xs font-semibold " + (col.tone || "bg-accent text-foreground/80 border-border")}
           >
             {col.label}
           </div>

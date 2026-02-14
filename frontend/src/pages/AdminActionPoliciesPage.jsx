@@ -35,7 +35,7 @@ function RuleRow({ rule, index, onChange, onRemove }) {
     <tr className="border-b last:border-0">
       <td className="px-2 py-2 text-xs align-top">
         <div className="font-medium mb-1">Yüksek risk</div>
-        <div className="text-[11px] text-muted-foreground">nedenler_any</div>
+        <div className="text-xs text-muted-foreground">nedenler_any</div>
       </td>
       <td className="px-2 py-2 align-top">
         <div className="flex flex-col gap-1 text-xs">
@@ -72,7 +72,7 @@ function RuleRow({ rule, index, onChange, onRemove }) {
             </option>
           ))}
         </select>
-        <div className="mt-1 text-[11px] flex items-center gap-1">
+        <div className="mt-1 text-xs flex items-center gap-1">
           <input
             id={`requires-approval-${index}`}
             type="checkbox"

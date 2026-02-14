@@ -212,13 +212,13 @@ function VersionsPanel({ productId, productStatus }) {
         </div>
       </div>
       <div className="rounded-md border p-3 space-y-3">
-        <div className="text-[11px] font-semibold">Bağlı oda tipleri</div>
-        <div className="text-[11px] text-muted-foreground">
+        <div className="text-xs font-semibold">Bağlı oda tipleri</div>
+        <div className="text-xs text-muted-foreground">
           Aşağıdan seçtiğiniz room type ve rate plan ID&apos;leri, draft içeriğinde
           <code className="mx-1 rounded bg-muted px-1">room_type_ids</code> ve
           <code className="mx-1 rounded bg-muted px-1">rate_plan_ids</code> alanlarına otomatik eklenecektir.
         </div>
-        <div className="grid grid-cols-2 gap-3 text-[11px]">
+        <div className="grid grid-cols-2 gap-3 text-xs">
           <div className="space-y-1">
             <div className="font-medium">Oda tipleri</div>
             <div className="max-h-32 overflow-y-auto space-y-1">
@@ -236,7 +236,7 @@ function VersionsPanel({ productId, productStatus }) {
                 </label>
               ))}
               {!roomTypes.length && (
-                <div className="text-[11px] text-muted-foreground">Henüz room type yok.</div>
+                <div className="text-xs text-muted-foreground">Henüz room type yok.</div>
               )}
             </div>
           </div>
@@ -257,7 +257,7 @@ function VersionsPanel({ productId, productStatus }) {
                 </label>
               ))}
               {!ratePlans.length && (
-                <div className="text-[11px] text-muted-foreground">Henüz rate plan yok.</div>
+                <div className="text-xs text-muted-foreground">Henüz rate plan yok.</div>
               )}
             </div>
           </div>
@@ -290,7 +290,7 @@ function VersionsPanel({ productId, productStatus }) {
                 {v.status !== "published" && (
                   <Button
                     size="xs"
-                    className="h-7 px-2 text-[11px]"
+                    className="h-7 px-2 text-xs"
                     onClick={() => publish(v.version_id)}
                     disabled={productStatus !== "active"}
                     title={
@@ -513,12 +513,12 @@ export default function AdminCatalogPage() {
               {selected ? "Ürün detayı" : "Ürün oluştur"}
             </div>
             {selected && selected.status !== "active" && (
-              <div className="ml-4 rounded-md border border-amber-400/60 bg-amber-50 px-2 py-1 text-[11px] text-amber-900">
+              <div className="ml-4 rounded-md border border-amber-400/60 bg-amber-50 px-2 py-1 text-xs text-amber-900">
                 Ürün pasif, yayınlama devre dışı.
               </div>
             )}
             {selected?.product_id && (
-              <div className="text-[11px] text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 ID: <span className="font-mono">{selected.product_id}</span>
               </div>
             )}

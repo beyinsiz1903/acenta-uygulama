@@ -17,15 +17,15 @@ function EventRow({ item }) {
         <Activity className="h-3.5 w-3.5 text-blue-500" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[12px] text-foreground truncate">
+        <p className="text-xs text-foreground truncate">
           {item.action || item.type || 'Bilinmeyen olay'}
         </p>
-        <p className="text-[11px] text-muted-foreground truncate">
+        <p className="text-xs text-muted-foreground truncate">
           {item.actor?.email || item.actor?.name || ''}
           {item.target?.type ? ` → ${item.target.type}` : ''}
           {item.target?.id ? ` #${item.target.id.slice(0, 8)}` : ''}
         </p>
-        <p className="text-[10px] text-muted-foreground/60 mt-0.5">{time}</p>
+        <p className="text-2xs text-muted-foreground/60 mt-0.5">{time}</p>
       </div>
     </div>
   );
@@ -79,7 +79,7 @@ export default function NotificationDrawer({ open, onClose }) {
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
             <Bell className="h-4 w-4 text-primary" />
-            <span className="text-[14px] font-medium text-foreground">Bildirimler</span>
+            <span className="text-sm font-medium text-foreground">Bildirimler</span>
           </div>
           <button
             onClick={onClose}
@@ -93,7 +93,7 @@ export default function NotificationDrawer({ open, onClose }) {
         <div className="flex border-b border-border">
           <button
             onClick={() => setTab('activities')}
-            className={`flex-1 px-4 py-2 text-[12px] font-medium transition-colors border-b-2 ${
+            className={`flex-1 px-4 py-2 text-xs font-medium transition-colors border-b-2 ${
               tab === 'activities'
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -103,7 +103,7 @@ export default function NotificationDrawer({ open, onClose }) {
           </button>
           <button
             onClick={() => setTab('alerts')}
-            className={`flex-1 px-4 py-2 text-[12px] font-medium transition-colors border-b-2 ${
+            className={`flex-1 px-4 py-2 text-xs font-medium transition-colors border-b-2 ${
               tab === 'alerts'
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -136,8 +136,8 @@ export default function NotificationDrawer({ open, onClose }) {
                   <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
                     <Clock className="h-5 w-5 text-muted-foreground/50" />
                   </div>
-                  <p className="text-[13px] text-muted-foreground">Henüz aktivite yok</p>
-                  <p className="text-[11px] text-muted-foreground/60 mt-0.5">Son 7 günde kayıtlı olay bulunamadı</p>
+                  <p className="text-sm text-muted-foreground">Henüz aktivite yok</p>
+                  <p className="text-xs text-muted-foreground/60 mt-0.5">Son 7 günde kayıtlı olay bulunamadı</p>
                 </div>
               )}
             </>
@@ -148,8 +148,8 @@ export default function NotificationDrawer({ open, onClose }) {
               <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
                 <AlertTriangle className="h-5 w-5 text-muted-foreground/50" />
               </div>
-              <p className="text-[13px] text-muted-foreground">Aktif uyarı yok</p>
-              <p className="text-[11px] text-muted-foreground/60 mt-0.5">Kritik uyarılar burada görünecek</p>
+              <p className="text-sm text-muted-foreground">Aktif uyarı yok</p>
+              <p className="text-xs text-muted-foreground/60 mt-0.5">Kritik uyarılar burada görünecek</p>
             </div>
           )}
         </div>

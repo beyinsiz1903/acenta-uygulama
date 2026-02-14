@@ -163,7 +163,7 @@ export default function OpsSupplierAccrualsPage() {
                   Her satır, belirli bir booking için hesaplanan supplier accrual kaydını temsil eder.
                 </p>
               </div>
-              <div className="text-[11px] text-muted-foreground flex flex-col items-end">
+              <div className="text-xs text-muted-foreground flex flex-col items-end">
                 <span>{items.length} accrual</span>
                 <span>Toplam net ödenecek: {formatMoney(totalNet, items[0]?.currency || "EUR")}</span>
               </div>
@@ -202,28 +202,28 @@ export default function OpsSupplierAccrualsPage() {
                     ) : (
                       items.map((it) => (
                         <TableRow key={it.accrual_id} className="hover:bg-accent/40">
-                          <TableCell className="text-[11px] font-mono truncate max-w-[160px]">
+                          <TableCell className="text-xs font-mono truncate max-w-[160px]">
                             {it.accrual_id}
                           </TableCell>
-                          <TableCell className="text-[11px] font-mono truncate max-w-[140px]">
+                          <TableCell className="text-xs font-mono truncate max-w-[140px]">
                             {it.booking_id || "-"}
                           </TableCell>
-                          <TableCell className="text-[11px] font-mono truncate max-w-[140px]">
+                          <TableCell className="text-xs font-mono truncate max-w-[140px]">
                             {it.supplier_id || "-"}
                           </TableCell>
-                          <TableCell className="text-[11px]">{it.currency || "EUR"}</TableCell>
-                          <TableCell className="text-[11px] text-right">
+                          <TableCell className="text-xs">{it.currency || "EUR"}</TableCell>
+                          <TableCell className="text-xs text-right">
                             {formatMoney(it.net_payable, it.currency)}
                           </TableCell>
-                          <TableCell className="text-[11px]">
+                          <TableCell className="text-xs">
                             <StatusBadge status={it.status} />
                           </TableCell>
-                          <TableCell className="text-[11px]">{formatDate(it.accrued_at)}</TableCell>
-                          <TableCell className="text-[11px]">
+                          <TableCell className="text-xs">{formatDate(it.accrued_at)}</TableCell>
+                          <TableCell className="text-xs">
                             {it.settlement_id ? (
                               <button
                                 type="button"
-                                className="inline-flex items-center gap-1 text-[11px] text-primary underline-offset-2 hover:underline"
+                                className="inline-flex items-center gap-1 text-xs text-primary underline-offset-2 hover:underline"
                                 onClick={() =>
                                   window.location.assign(
                                     `/app/admin/finance/settlement-runs/${it.settlement_id}`,
@@ -234,7 +234,7 @@ export default function OpsSupplierAccrualsPage() {
                                 {String(it.settlement_id).slice(0, 8)}...
                               </button>
                             ) : (
-                              <span className="text-muted-foreground text-[11px]">-</span>
+                              <span className="text-muted-foreground text-xs">-</span>
                             )}
                           </TableCell>
                         </TableRow>

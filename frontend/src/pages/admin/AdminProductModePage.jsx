@@ -117,7 +117,7 @@ export default function AdminProductModePage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-lg font-semibold">{MODE_META[tenantMode]?.label} Mod</span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary">Aktif</span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-medium bg-primary/10 text-primary">Aktif</span>
             </div>
             <p className="text-sm text-muted-foreground">{MODE_META[tenantMode]?.description}</p>
           </div>
@@ -146,7 +146,7 @@ export default function AdminProductModePage() {
               className={`relative rounded-xl border-2 p-5 text-left transition-all hover:shadow-md ${isCurrent ? `${meta.borderColor} ${meta.bgLight} ring-2 ring-primary/20 cursor-default` : "border-border hover:border-muted-foreground/30 bg-card cursor-pointer"}`}>
               {isCurrent && (
                 <div className="absolute top-3 right-3">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary text-primary-foreground">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-medium bg-primary text-primary-foreground">
                     <Check className="h-3 w-3 mr-0.5" /> Aktif
                   </span>
                 </div>
@@ -202,7 +202,7 @@ export default function AdminProductModePage() {
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {preview.newly_hidden.map((item) => (
-                        <span key={item} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-destructive/10 text-destructive border border-destructive/20">
+                        <span key={item} className="inline-flex items-center px-2 py-0.5 rounded text-2xs bg-destructive/10 text-destructive border border-destructive/20">
                           {item.replace(/_/g, " ")}
                         </span>
                       ))}
@@ -217,7 +217,7 @@ export default function AdminProductModePage() {
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {preview.newly_visible.map((item) => (
-                        <span key={item} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                        <span key={item} className="inline-flex items-center px-2 py-0.5 rounded text-2xs bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
                           {item.replace(/_/g, " ")}
                         </span>
                       ))}

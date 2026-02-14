@@ -281,7 +281,7 @@ export default function AdminMatchesPage() {
                           <div className="flex items-center gap-1 text-xs">
                             <span
                               className={
-                                "inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] " +
+                                "inline-flex items-center rounded-full px-2 py-0.5 border text-2xs " +
                                 (verifiedOnly ? "border-emerald-500 text-emerald-600" : "border-muted-foreground/40")
                               }
                               title={
@@ -311,7 +311,7 @@ export default function AdminMatchesPage() {
                           {Array.isArray(item.high_risk_reasons) && item.high_risk_reasons.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
                               {item.high_risk_reasons.map((r) => (
-                                <Badge key={r} variant="outline" className="text-[10px] px-1 py-0">
+                                <Badge key={r} variant="outline" className="text-2xs px-1 py-0">
                                   {r}
                                 </Badge>
                               ))}
@@ -346,7 +346,7 @@ export default function AdminMatchesPage() {
                                   item.action_status}
                               </Badge>
                               {item.action_status === "blocked" && (
-                                <p className="mt-1 text-[10px] text-muted-foreground max-w-[220px]">
+                                <p className="mt-1 text-2xs text-muted-foreground max-w-[220px]">
                                   Blokeli: Uyarı/Export gönderimi yapılmaz. Teslimatlar engellenir (blocked).
                                 </p>
                               )}
@@ -417,7 +417,7 @@ export default function AdminMatchesPage() {
                   )}
                   {Array.isArray(selectedMatch?.high_risk_reasons) &&
                     selectedMatch.high_risk_reasons.map((r) => (
-                      <Badge key={r} variant="outline" className="text-[10px] px-1 py-0">
+                      <Badge key={r} variant="outline" className="text-2xs px-1 py-0">
                         {r}
                       </Badge>
                     ))}
@@ -447,7 +447,7 @@ export default function AdminMatchesPage() {
                     <span>
                       Bu eşleşme şu anda politika tarafından blokeli. Yeni rezervasyonlar reddedilecek (MATCH_BLOCKED).
                     </span>
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       Blokenin kaldırılması için aşağıdan talep oluşturun. Onaylanması için bir adminin Approvals kuyruğunda aksiyon alması gerekir.
                     </span>
                   </div>
@@ -467,7 +467,7 @@ export default function AdminMatchesPage() {
                 </Button>
               </DrawerClose>
               {eventsData && (
-                <p className="px-4 pb-1 text-[11px] text-muted-foreground">
+                <p className="px-4 pb-1 text-xs text-muted-foreground">
                   Showing:{" "}
                   {eventsOnlyCancelled ? "Sadece iptaller" : "tüm statüler"}
                   {", "}
@@ -490,7 +490,7 @@ export default function AdminMatchesPage() {
                   <div className="flex items-center gap-2">
                     {unblockRequest.alreadyPending && (
                       <span
-                        className="text-[11px] text-muted-foreground"
+                        className="text-xs text-muted-foreground"
                         data-testid="match-drawer-request-unblock-pending"
                       >
                         Bloke kaldırma talebi zaten onay bekliyor.
@@ -696,17 +696,17 @@ export default function AdminMatchesPage() {
                               <TableCell className="text-xs">{ev.status}</TableCell>
                               <TableCell className="text-xs">
                                 {ev.cancel_tag === "behavioral" && (
-                                  <Badge variant="outline" className="text-[10px] px-1 py-0">
+                                  <Badge variant="outline" className="text-2xs px-1 py-0">
                                     davranışsal
                                   </Badge>
                                 )}
                                 {ev.cancel_tag === "operational" && (
-                                  <Badge variant="outline" className="text-[10px] px-1 py-0">
+                                  <Badge variant="outline" className="text-2xs px-1 py-0">
                                     operasyonel
                                   </Badge>
                                 )}
                                 {ev.cancel_tag === "none" && (
-                                  <span className="text-[10px] text-muted-foreground">yok</span>
+                                  <span className="text-2xs text-muted-foreground">yok</span>
                                 )}
                               </TableCell>
                               <TableCell className="text-xs font-mono max-w-[260px] truncate">

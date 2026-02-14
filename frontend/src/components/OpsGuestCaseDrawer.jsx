@@ -77,7 +77,7 @@ function RiskBadge({ kind }) {
   if (!kind || kind === "na") return null;
 
   let label = "";
-  let cls = "border text-[10px] px-2 py-0.5 rounded-full inline-flex font-semibold";
+  let cls = "border text-2xs px-2 py-0.5 rounded-full inline-flex font-semibold";
 
   if (kind === "sla_breach") {
     label = "SLA BREACH";
@@ -104,7 +104,7 @@ function WaitingBadge({ waitingOn }) {
   if (!w || w === "none") return null;
 
   let label = "";
-  let cls = "border text-[10px] px-2 py-0.5 rounded-full inline-flex font-semibold";
+  let cls = "border text-2xs px-2 py-0.5 rounded-full inline-flex font-semibold";
 
   if (w === "customer") {
     label = "MÜŞTERİ BEKLENİYOR";
@@ -226,7 +226,7 @@ function bucketLabel(bucket) {
 function EventBadge({ kind, isSystem }) {
   const k = String(kind || "event").toLowerCase();
   let label = k.toUpperCase();
-  let cls = "border text-[9px] px-1.5 py-0.5 rounded-full inline-flex";
+  let cls = "border text-2xs px-1.5 py-0.5 rounded-full inline-flex";
 
   if (k.includes("status")) {
     label = "DURUM";
@@ -616,7 +616,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                   <div className="text-xs text-muted-foreground">Durum</div>
                   <div className="flex items-center gap-2">
                     <select
-                      className="rounded-md border px-2 py-1 text-[11px] bg-background"
+                      className="rounded-md border px-2 py-1 text-xs bg-background"
                       value={effectiveStatusValue}
                       onChange={(e) => setEditStatus(e.target.value)}
                       disabled={disableStatusSelect}
@@ -634,26 +634,26 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                         switch (data.status) {
                           case "open":
                             return (
-                              <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[11px]">
+                              <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-xs">
                                 Açık
                               </span>
                             );
                           case "waiting":
                             return (
-                              <span className="inline-flex items-center rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-[11px]">
+                              <span className="inline-flex items-center rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-xs">
                                 Beklemede
                               </span>
                             );
                           case "in_progress":
                             return (
-                              <span className="inline-flex items-center rounded-full bg-blue-50 text-blue-700 px-2 py-0.5 text-[11px]">
+                              <span className="inline-flex items-center rounded-full bg-blue-50 text-blue-700 px-2 py-0.5 text-xs">
                                 Devam ediyor
                               </span>
                             );
                           case "closed":
                           default:
                             return (
-                              <span className="inline-flex items-center rounded-full bg-muted text-muted-foreground px-2 py-0.5 text-[11px]">
+                              <span className="inline-flex items-center rounded-full bg-muted text-muted-foreground px-2 py-0.5 text-xs">
                                 Kapalı
                               </span>
                             );
@@ -661,7 +661,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                       })()}
                     </div>
                   </div>
-                  <div className="text-[11px] text-muted-foreground">
+                  <div className="text-xs text-muted-foreground">
                     Kapama sadece aşağıdaki {"Case'i kapat"} aksiyonundan yapılabilir.
                   </div>
                 </div>
@@ -676,7 +676,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
               <div className="space-y-1">
                 <div className="text-xs font-medium text-muted-foreground">Bekleme Durumu</div>
                 <select
-                  className="rounded-md border px-2 py-1 text-[11px] bg-background"
+                  className="rounded-md border px-2 py-1 text-xs bg-background"
                   value={normalizedDraftWaiting === "none" ? "" : editWaitingOn}
                   onChange={(e) => setEditWaitingOn(e.target.value)}
                   disabled={isClosed || saving}
@@ -710,7 +710,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                 <div className="flex items-center gap-2">
                   <div className="font-semibold text-sm">Timeline</div>
                   <div className="ml-auto flex items-center gap-2">
-                    <label className="text-[11px] text-muted-foreground flex items-center gap-1">
+                    <label className="text-xs text-muted-foreground flex items-center gap-1">
                       <input
                         type="checkbox"
                         checked={hideSystem}
@@ -719,7 +719,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                       />
                       Hide system
                     </label>
-                    <label className="text-[11px] text-muted-foreground flex items-center gap-1">
+                    <label className="text-xs text-muted-foreground flex items-center gap-1">
                       <input
                         type="checkbox"
                         checked={onlyStatus}
@@ -731,7 +731,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                   </div>
                 </div>
 
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   Newest first 0 grouped by day
                 </div>
 
@@ -741,7 +741,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                       key={g.bucket}
                       data-testid={`timeline-group-${g.bucket}`}
                     >
-                      <div className="text-[11px] font-semibold text-muted-foreground mb-1">
+                      <div className="text-xs font-semibold text-muted-foreground mb-1">
                         {bucketLabel(g.bucket)}
                       </div>
                       <div className="space-y-2">
@@ -757,12 +757,12 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                                 <div className="text-xs font-medium truncate">
                                   {ev.message || "(no message)"}
                                 </div>
-                                <div className="text-[11px] text-muted-foreground">
+                                <div className="text-xs text-muted-foreground">
                                   {formatTs(ev.ts)}
                                   {ev.actor ? ` 0 ${ev.actor}` : ""}
                                 </div>
                                 {ev.patch ? (
-                                  <pre className="mt-1 text-[10px] bg-muted/40 rounded p-2 overflow-x-auto">
+                                  <pre className="mt-1 text-2xs bg-muted/40 rounded p-2 overflow-x-auto">
                                     {JSON.stringify(ev.patch, null, 2)}
                                   </pre>
                                 ) : null}
@@ -776,7 +776,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
 
                   {!timelineGroups.length && !timelineLoading && !timelineError && (
                     <div
-                      className="text-[11px] text-muted-foreground"
+                      className="text-xs text-muted-foreground"
                       data-testid="timeline-empty"
                     >
 
@@ -829,7 +829,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                     setEditWaitingOn(initialSnapshot.waiting_on || "");
                     setEditNote(initialSnapshot.note || "");
                   }}
-                  className="text-[11px]"
+                  className="text-xs"
                   disabled={!isDirty || saving}
                   data-testid="case-edit-reset"
                 >
@@ -838,7 +838,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                 <Button
                   type="button"
                   size="sm"
-                  className="text-[11px]"
+                  className="text-xs"
                   onClick={handleSave}
                   disabled={isClosed || saving || !isDirty}
                   data-testid="case-edit-apply"
@@ -893,7 +893,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
               {data.request_context && (
                 <div className="space-y-1">
                   <div className="text-xs font-medium text-muted-foreground">0stek baflam1</div>
-                  <div className="rounded-xl border bg-muted/20 px-3 py-2 text-[11px] text-muted-foreground space-y-1">
+                  <div className="rounded-xl border bg-muted/20 px-3 py-2 text-xs text-muted-foreground space-y-1">
                     {data.request_context.ip && (
                       <div>IP: {data.request_context.ip}</div>
                     )}
@@ -907,7 +907,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
               {data.closed_by && (
                 <div className="space-y-1">
                   <div className="text-xs font-medium text-muted-foreground">Kapatma bilgisi</div>
-                  <div className="rounded-xl border bg-muted/20 px-3 py-2 text-[11px] text-muted-foreground space-y-1">
+                  <div className="rounded-xl border bg-muted/20 px-3 py-2 text-xs text-muted-foreground space-y-1">
                     {data.closed_by.email && <div>Kapat1lan kullan1c1: {data.closed_by.email}</div>}
                     {data.close_note && <div>Kapan1f notu: {data.close_note}</div>}
                   </div>
@@ -919,7 +919,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                 <div className="flex items-center justify-between">
                   <div className="text-xs font-medium text-muted-foreground">Case&apos;i kapat</div>
                   {isClosed && (
-                    <span className="text-[11px] text-muted-foreground">Bu case zaten kapal1.</span>
+                    <span className="text-xs text-muted-foreground">Bu case zaten kapal1.</span>
                   )}
                 </div>
                 {!isClosed && (

@@ -29,7 +29,7 @@ export function BookingReferenceBanner({
               href={extranetUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-[11px] underline text-muted-foreground"
+              className="text-xs underline text-muted-foreground"
               data-testid={tid("open-hotel-extranet")}
             >
               Otel panelinde aç

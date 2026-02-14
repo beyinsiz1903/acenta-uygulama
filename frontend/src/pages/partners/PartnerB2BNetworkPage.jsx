@@ -481,7 +481,7 @@ export default function PartnerB2BNetworkPage() {
             <Link2 className="h-4 w-4" />
             <CardTitle className="text-sm font-medium">Mod</CardTitle>
           </div>
-          <div className="inline-flex rounded-md border bg-background p-0.5 text-[11px]">
+          <div className="inline-flex rounded-md border bg-background p-0.5 text-xs">
             <button
               type="button"
               className={`px-3 py-1 rounded-sm ${
@@ -510,12 +510,12 @@ export default function PartnerB2BNetworkPage() {
             <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="text-sm font-medium">Müsait Listingler</CardTitle>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Aktif partner ilişkileriniz olan sağlayıcıların yayınladığı listingler.
                 </p>
               </div>
               {availableLoading && (
-                <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Loader2 className="h-3 w-3 animate-spin" />
                   <span>Yükleniyor…</span>
                 </div>
@@ -523,19 +523,19 @@ export default function PartnerB2BNetworkPage() {
             </CardHeader>
             <CardContent className="text-xs">
               {availableError && (
-                <p className="mb-2 text-[11px] text-destructive">{availableError}</p>
+                <p className="mb-2 text-xs text-destructive">{availableError}</p>
               )}
               {!availableLoading && !sellerHasListings && !availableError && (
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Henüz müsait tur yok. Aktif partner ilişkiniz yoksa burada liste göremezsiniz.
                 </p>
               )}
               {sellerHasListings && (
                 <>
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[11px] text-muted-foreground">Sadece duruma göre filtreleyin.</p>
+                    <p className="text-xs text-muted-foreground">Sadece duruma göre filtreleyin.</p>
                     <select
-                      className="h-7 rounded-md border bg-background px-2 text-[11px]"
+                      className="h-7 rounded-md border bg-background px-2 text-xs"
                       value={sellerStatusFilter}
                       onChange={(e) => setSellerStatusFilter(e.target.value)}
                     >
@@ -580,7 +580,7 @@ export default function PartnerB2BNetworkPage() {
                               <Button
                                 type="button"
                                 size="xs"
-                                className="h-7 px-2 text-[11px]"
+                                className="h-7 px-2 text-xs"
                                 onClick={() => openRequestModal(l)}
                               >
                                 Talep Gönder
@@ -600,12 +600,12 @@ export default function PartnerB2BNetworkPage() {
             <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="text-sm font-medium">Taleplerim</CardTitle>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Diğer sağlayıcıların listingleri için gönderdiğiniz talepler.
                 </p>
               </div>
               {myRequestsLoading && (
-                <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Loader2 className="h-3 w-3 animate-spin" />
                   <span>Yükleniyor…</span>
                 </div>
@@ -613,10 +613,10 @@ export default function PartnerB2BNetworkPage() {
             </CardHeader>
             <CardContent className="text-xs">
               {myRequestsError && (
-                <p className="mb-2 text-[11px] text-destructive">{myRequestsError}</p>
+                <p className="mb-2 text-xs text-destructive">{myRequestsError}</p>
               )}
               {!myRequestsLoading && !sellerHasRequests && !myRequestsError && (
-                <p className="text-[11px] text-muted-foreground">Henüz talep oluşturmadınız.</p>
+                <p className="text-xs text-muted-foreground">Henüz talep oluşturmadınız.</p>
               )}
               {sellerHasRequests && (
                 <div className="overflow-x-auto">
@@ -655,7 +655,7 @@ export default function PartnerB2BNetworkPage() {
                               type="button"
                               size="xs"
                               variant="outline"
-                              className="h-7 px-2 text-[11px]"
+                              className="h-7 px-2 text-xs"
                               onClick={() => openDetailForRequest(r, "seller")}
                             >
                               Detay
@@ -676,28 +676,28 @@ export default function PartnerB2BNetworkPage() {
             <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="text-sm font-medium">Listinglerim</CardTitle>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   B2B ağınızda diğer acentelere açtığınız listingler.
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 {myListingsLoading && (
-                  <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Loader2 className="h-3 w-3 animate-spin" />
                     <span>Yükleniyor…</span>
                   </div>
                 )}
-                <Button type="button" size="xs" className="h-7 px-2 text-[11px]" onClick={startNewListing}>
+                <Button type="button" size="xs" className="h-7 px-2 text-xs" onClick={startNewListing}>
                   Yeni Listing
                 </Button>
               </div>
             </CardHeader>
             <CardContent className="text-xs">
               {myListingsError && (
-                <p className="mb-2 text-[11px] text-destructive">{myListingsError}</p>
+                <p className="mb-2 text-xs text-destructive">{myListingsError}</p>
               )}
               {!myListingsLoading && !providerHasListings && !myListingsError && (
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Henüz tur listelemediniz. &quot;Yeni Listing&quot; ile başlayın.
                 </p>
               )}
@@ -736,7 +736,7 @@ export default function PartnerB2BNetworkPage() {
                             <Button
                               type="button"
                               size="xs"
-                              className="h-7 px-2 text-[11px]"
+                              className="h-7 px-2 text-xs"
                               onClick={() => startEditListing(l)}
                             >
                               Düzenle
@@ -755,12 +755,12 @@ export default function PartnerB2BNetworkPage() {
             <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="text-sm font-medium">Gelen Talepler</CardTitle>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Diğer acentelerin listinglerinize gönderdiği talepler.
                 </p>
               </div>
               {incomingLoading && (
-                <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Loader2 className="h-3 w-3 animate-spin" />
                   <span>Yükleniyor…</span>
                 </div>
@@ -768,10 +768,10 @@ export default function PartnerB2BNetworkPage() {
             </CardHeader>
             <CardContent className="text-xs">
               {incomingError && (
-                <p className="mb-2 text-[11px] text-destructive">{incomingError}</p>
+                <p className="mb-2 text-xs text-destructive">{incomingError}</p>
               )}
               {!incomingLoading && !providerHasIncoming && !incomingError && (
-                <p className="text-[11px] text-muted-foreground">Henüz gelen talep yok.</p>
+                <p className="text-xs text-muted-foreground">Henüz gelen talep yok.</p>
               )}
               {providerHasIncoming && (
                 <div className="overflow-x-auto">
@@ -805,7 +805,7 @@ export default function PartnerB2BNetworkPage() {
                             <TableCell className="text-xs">
                               <span className="font-mono">{shortenId(r.listing_id)}</span>
                               {listingTitleById[r.listing_id] && (
-                                <span className="ml-1 text-[11px] text-muted-foreground truncate inline-block max-w-[140px]">
+                                <span className="ml-1 text-xs text-muted-foreground truncate inline-block max-w-[140px]">
                                   {listingTitleById[r.listing_id]}
                                 </span>
                               )}
@@ -822,7 +822,7 @@ export default function PartnerB2BNetworkPage() {
                                   <Button
                                     type="button"
                                     size="xs"
-                                    className="h-7 px-2 text-[11px]"
+                                    className="h-7 px-2 text-xs"
                                     disabled={isBusy}
                                     onClick={() => handleMatchAction(r, "approve")}
                                   >
@@ -835,7 +835,7 @@ export default function PartnerB2BNetworkPage() {
                                     type="button"
                                     size="xs"
                                     variant="outline"
-                                    className="h-7 px-2 text-[11px]"
+                                    className="h-7 px-2 text-xs"
                                     disabled={isBusy}
                                     onClick={() => handleMatchAction(r, "reject")}
                                   >
@@ -851,7 +851,7 @@ export default function PartnerB2BNetworkPage() {
                                   type="button"
                                   size="xs"
                                   variant="outline"
-                                  className="h-7 px-2 text-[11px]"
+                                  className="h-7 px-2 text-xs"
                                   disabled={isBusy}
                                   onClick={() => handleMatchAction(r, "complete")}
                                 >
@@ -862,7 +862,7 @@ export default function PartnerB2BNetworkPage() {
                                 </Button>
                               )}
                               {!canApproveOrReject && !canComplete && (
-                                <span className="text-[11px] text-muted-foreground">İşlem yok</span>
+                                <span className="text-xs text-muted-foreground">İşlem yok</span>
                               )}
                             </TableCell>
                             <TableCell className="text-xs text-right">
@@ -870,7 +870,7 @@ export default function PartnerB2BNetworkPage() {
                                 type="button"
                                 size="xs"
                                 variant="outline"
-                                className="h-7 px-2 text-[11px]"
+                                className="h-7 px-2 text-xs"
                                 onClick={() => openDetailForRequest(r, "provider")}
                               >
                                 Detay
@@ -901,19 +901,19 @@ export default function PartnerB2BNetworkPage() {
             <form onSubmit={handleSubmitRequest} className="space-y-3 text-xs">
               <div className="space-y-0.5">
                 <div className="font-medium truncate">{selectedListing.title || "Listing"}</div>
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   ID: <span className="font-mono">{selectedListing.id}</span>
                 </div>
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   Taban fiyat: <span className="font-mono">{formatTry(selectedListing.base_price)}</span>
                 </div>
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   Sağlayıcı komisyonu: {selectedListing.provider_commission_rate}%
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-medium" htmlFor="requested-price">
+                <label className="text-xs font-medium" htmlFor="requested-price">
                   Talep fiyatı (TRY)
                 </label>
                 <Input
@@ -928,23 +928,23 @@ export default function PartnerB2BNetworkPage() {
               </div>
 
               <div className="rounded-md border bg-muted/40 px-3 py-2 space-y-1">
-                <div className="text-[11px] font-medium">Fiyat kırılımı (tahmini)</div>
-                <div className="flex items-center justify-between text-[11px]">
+                <div className="text-xs font-medium">Fiyat kırılımı (tahmini)</div>
+                <div className="flex items-center justify-between text-xs">
                   <span>Platform ücreti (1%)</span>
                   <span className="font-mono">{formatTry(breakdown.platformFee)}</span>
                 </div>
-                <div className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center justify-between text-xs">
                   <span>Sağlayıcı komisyonu ({selectedListing.provider_commission_rate}%)</span>
                   <span className="font-mono">{formatTry(breakdown.providerCommission)}</span>
                 </div>
-                <div className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center justify-between text-xs">
                   <span>Size kalan (tahmini)</span>
                   <span className="font-mono">{formatTry(breakdown.sellerRemain)}</span>
                 </div>
               </div>
 
               {requestError && (
-                <p className="text-[11px] text-destructive">{requestError}</p>
+                <p className="text-xs text-destructive">{requestError}</p>
               )}
 
               <div className="flex justify-end gap-2">
@@ -978,7 +978,7 @@ export default function PartnerB2BNetworkPage() {
 
           <form onSubmit={handleSaveListing} className="space-y-3 text-xs">
             <div className="space-y-1">
-              <label className="text-[11px] font-medium" htmlFor="listing-title">
+              <label className="text-xs font-medium" htmlFor="listing-title">
                 Başlık
               </label>
               <Input
@@ -990,7 +990,7 @@ export default function PartnerB2BNetworkPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-medium" htmlFor="listing-category">
+              <label className="text-xs font-medium" htmlFor="listing-category">
                 Kategori (opsiyonel)
               </label>
               <Input
@@ -1003,7 +1003,7 @@ export default function PartnerB2BNetworkPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-[11px] font-medium" htmlFor="listing-base-price">
+                <label className="text-xs font-medium" htmlFor="listing-base-price">
                   Taban fiyat (TRY)
                 </label>
                 <Input
@@ -1017,7 +1017,7 @@ export default function PartnerB2BNetworkPage() {
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[11px] font-medium" htmlFor="listing-commission">
+                <label className="text-xs font-medium" htmlFor="listing-commission">
                   Sağlayıcı komisyonu (%)
                 </label>
                 <Input
@@ -1034,7 +1034,7 @@ export default function PartnerB2BNetworkPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-medium" htmlFor="listing-description">
+              <label className="text-xs font-medium" htmlFor="listing-description">
                 Açıklama (opsiyonel)
               </label>
               <Textarea
@@ -1046,8 +1046,8 @@ export default function PartnerB2BNetworkPage() {
             </div>
 
             <div className="space-y-1">
-              <span className="text-[11px] font-medium">Durum</span>
-              <div className="inline-flex rounded-md border bg-background p-0.5 text-[11px]">
+              <span className="text-xs font-medium">Durum</span>
+              <div className="inline-flex rounded-md border bg-background p-0.5 text-xs">
                 <button
                   type="button"
                   className={`px-3 py-1 rounded-sm ${
@@ -1074,7 +1074,7 @@ export default function PartnerB2BNetworkPage() {
             </div>
 
             {listingModalError && (
-              <p className="text-[11px] text-destructive">{listingModalError}</p>
+              <p className="text-xs text-destructive">{listingModalError}</p>
             )}
 
             <div className="flex justify-end gap-2">

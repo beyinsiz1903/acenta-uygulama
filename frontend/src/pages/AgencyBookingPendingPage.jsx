@@ -151,7 +151,7 @@ export default function AgencyBookingPendingPage() {
 
             {!!pendingNote?.trim() && (
               <span
-                className="text-[11px] px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/20 text-amber-700"
+                className="text-xs px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/20 text-amber-700"
                 data-testid="pending-note-badge"
               >
                 Not var

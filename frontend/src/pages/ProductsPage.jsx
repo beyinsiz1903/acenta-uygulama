@@ -225,10 +225,10 @@ export default function ProductsPage() {
             <Table data-testid="product-table">
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
-                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Tip</TableHead>
-                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Başlık</TableHead>
-                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Açıklama</TableHead>
-                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9 text-right">İşlem</TableHead>
+                  <TableHead className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Tip</TableHead>
+                  <TableHead className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Başlık</TableHead>
+                  <TableHead className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Açıklama</TableHead>
+                  <TableHead className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70 h-9 text-right">İşlem</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -269,18 +269,18 @@ export default function ProductsPage() {
                     return (
                       <TableRow key={r.id} className="group hover:bg-muted/20 transition-colors">
                         <TableCell className="py-3">
-                          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide ${typeColor}`}>
+                          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-2xs font-semibold tracking-wide ${typeColor}`}>
                             {typeLabel}
                           </span>
                         </TableCell>
-                        <TableCell className="text-[13px] font-semibold tracking-tight text-foreground py-3">{r.title}</TableCell>
-                        <TableCell className="text-[12px] text-muted-foreground/70 py-3 max-w-[300px] truncate">{r.description || "—"}</TableCell>
+                        <TableCell className="text-sm font-semibold tracking-tight text-foreground py-3">{r.title}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground/70 py-3 max-w-[300px] truncate">{r.description || "—"}</TableCell>
                         <TableCell className="text-right py-3">
                           <div className="inline-flex gap-1.5">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="gap-1 text-[11px] font-medium h-7 text-primary hover:text-primary"
+                              className="gap-1 text-xs font-medium h-7 text-primary hover:text-primary"
                               onClick={() => { setEditing(r); setOpenForm(true); }}
                               data-testid={`product-edit-${r.id}`}
                             >
@@ -290,7 +290,7 @@ export default function ProductsPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="gap-1 text-[11px] font-medium h-7 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                              className="gap-1 text-xs font-medium h-7 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
                               onClick={() => remove(r.id)}
                               data-testid={`product-delete-${r.id}`}
                             >

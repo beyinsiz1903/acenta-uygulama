@@ -275,7 +275,7 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
             {/* Senaryolar */}
             <div className="flex flex-wrap items-end gap-2 text-xs">
               <div className="flex flex-col gap-1 min-w-[160px]">
-                <span className="text-[11px] text-muted-foreground">Senaryo</span>
+                <span className="text-xs text-muted-foreground">Senaryo</span>
                 <select
                   className="h-8 rounded-md border bg-background px-2 text-xs"
                   value={selectedScenarioId}
@@ -558,7 +558,7 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
             {/* Context form */}
             <div className="flex flex-col gap-2">
               {/* Occupancy presets */}
-              <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                 <span>Hızlı occupancy:</span>
                 {OCC_PRESETS.map((p) => (
                   <Button
@@ -566,7 +566,7 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
                     type="button"
                     size="xs"
                     variant={selectedPreset === p.key ? "secondary" : "outline"}
-                    className="h-6 px-2 text-[11px]"
+                    className="h-6 px-2 text-xs"
                     onClick={() => {
                       setCtx((s) =>
                         s
@@ -720,7 +720,7 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
             {normalized ? (
               <div className="flex flex-col gap-3">
                 {/* Request summary badges */}
-                <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+                <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                   <Badge variant="outline">
                     Check-in: {ctx.check_in}
                   </Badge>
@@ -856,25 +856,25 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
                 <div className="border rounded-md p-2">
                   <div className="text-xs font-medium mb-1">Uygulanan Kurallar</div>
                   {normalized.ruleHits.length === 0 ? (
-                    <div className="text-[11px] text-muted-foreground">Kural uygulanmadı.</div>
+                    <div className="text-xs text-muted-foreground">Kural uygulanmadı.</div>
                   ) : (
-                    <ul className="space-y-1 text-[11px] text-muted-foreground">
+                    <ul className="space-y-1 text-xs text-muted-foreground">
                       {normalized.ruleHits.map((r, i) => {
                         const code = r.code || r.rule_id || "-";
                         return (
                           <li key={i} className="border rounded px-2 py-1">
-                            <div className="font-mono text-[11px]">{code}</div>
+                            <div className="font-mono text-xs">{code}</div>
                             {r.effect ? <div>{r.effect}</div> : null}
                             {r.priority != null ? (
-                              <div className="text-[10px]">Öncelik: {fmtInt(r.priority)}</div>
+                              <div className="text-2xs">Öncelik: {fmtInt(r.priority)}</div>
                             ) : null}
                             {r.scope ? (
-                              <div className="text-[10px] mt-1">
+                              <div className="text-2xs mt-1">
                                 scope: {JSON.stringify(r.scope)}
                               </div>
                             ) : null}
                             {r.action ? (
-                              <div className="text-[10px] mt-1">
+                              <div className="text-2xs mt-1">
                                 action: {JSON.stringify(r.action)}
                               </div>
                             ) : null}
@@ -889,9 +889,9 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
                 <div className="border rounded-md p-2">
                   <div className="text-xs font-medium mb-1">Notlar</div>
                   {normalized.notes.length === 0 ? (
-                    <div className="text-[11px] text-muted-foreground">Not bulunmuyor.</div>
+                    <div className="text-xs text-muted-foreground">Not bulunmuyor.</div>
                   ) : (
-                    <ul className="list-disc pl-5 space-y-1 text-[11px] text-muted-foreground">
+                    <ul className="list-disc pl-5 space-y-1 text-xs text-muted-foreground">
                       {normalized.notes.map((n, i) => (
                         <li key={i}>{typeof n === "string" ? n : n.text ?? JSON.stringify(n)}</li>
                       ))}

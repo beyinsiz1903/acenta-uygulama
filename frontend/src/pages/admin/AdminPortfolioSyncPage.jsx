@@ -115,7 +115,7 @@ function ConfigBanner({ config, onConfigSaved }) {
               <Copy className="w-3.5 h-3.5 inline" /> {copied ? "Kopyalandi!" : "Kopyala"}
             </button>
           </p>
-          <p className="text-[10px] text-emerald-500 mt-1">
+          <p className="text-2xs text-emerald-500 mt-1">
             Kaynak: {config.source === "env" ? "Environment Variable" : "Admin Paneli"}
           </p>
         </div>

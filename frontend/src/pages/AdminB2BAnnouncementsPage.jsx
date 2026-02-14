@@ -195,7 +195,7 @@ export default function AdminB2BAnnouncementsPage() {
                     <TableRow key={it.id}>
                       <TableCell className="text-xs max-w-[260px]">
                         <div className="font-medium truncate">{it.title}</div>
-                        <div className="mt-1 text-[11px] text-muted-foreground line-clamp-2">{it.body}</div>
+                        <div className="mt-1 text-xs text-muted-foreground line-clamp-2">{it.body}</div>
                       </TableCell>
                       <TableCell className="text-xs">
                         <AudienceBadge audience={it.audience} />
@@ -207,10 +207,10 @@ export default function AdminB2BAnnouncementsPage() {
                           <Badge variant="outline">Pasif</Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-[11px] text-muted-foreground">
+                      <TableCell className="text-xs text-muted-foreground">
                         {it.valid_until ? `${it.valid_from?.slice(0, 10)} → ${it.valid_until?.slice(0, 10)}` : "Süresiz"}
                       </TableCell>
-                      <TableCell className="text-[11px] text-muted-foreground">
+                      <TableCell className="text-xs text-muted-foreground">
                         {it.created_by || "-"}
                       </TableCell>
                       <TableCell className="text-xs text-right">

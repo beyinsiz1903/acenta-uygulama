@@ -108,12 +108,12 @@ function UserForm({ open, onOpenChange, onSaved }) {
                       }}
                     />
                     <span>{role.label}</span>
-                    <span className="ml-auto font-mono text-[10px] text-muted-foreground">{role.id}</span>
+                    <span className="ml-auto font-mono text-2xs text-muted-foreground">{role.id}</span>
                   </label>
                 );
               })}
             </div>
-            <div className="text-[11px] text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               En az bir rol seçilmeli. Sadece deneysel kullanıcılar için admin/sales/ops/accounting/b2b_agent.
             </div>
           </div>

@@ -237,7 +237,7 @@ export default function BookCheckoutPage() {
             }
           />
           {isE2E && (
-            <div data-testid="e2e-guard" className="mt-2 text-[10px] text-muted-foreground">
+            <div data-testid="e2e-guard" className="mt-2 text-2xs text-muted-foreground">
               GUARD_RENDERED: missing org/quote_id
             </div>
           )}
@@ -322,14 +322,14 @@ export default function BookCheckoutPage() {
             {providerError && (
               <button
                 type="button"
-                className="text-[11px] underline"
+                className="text-xs underline"
                 onClick={() => setShowProviderDetails((v) => !v)}
               >
                 {showProviderDetails ? "Detayı gizle" : "Detay"}
               </button>
             )}
             {showProviderDetails && providerError && (
-              <pre className="text-[10px] bg-slate-100 rounded p-2 overflow-x-auto">
+              <pre className="text-2xs bg-slate-100 rounded p-2 overflow-x-auto">
                 {JSON.stringify(
                   {
                     code: providerError?.code,
@@ -372,16 +372,16 @@ export default function BookCheckoutPage() {
           <div className="mt-4 border-t pt-3 space-y-1 text-xs">
             <div className="flex items-center justify-between">
               <div className="font-medium">Kupon</div>
-              <div className="text-[11px] text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 Kod: <span className="font-mono">{couponResult.code}</span>
               </div>
             </div>
-            <div className="text-[11px]">
+            <div className="text-xs">
               Durum: <span className="font-mono">{couponResult.status}</span>
               {couponResult.reason && ` • ${couponResult.reason}`}
             </div>
             {couponResult.status === "APPLIED" && (
-              <div className="text-[11px]">
+              <div className="text-xs">
                 İndirim: {couponResult.amount_cents / 100} {couponResult.currency}
               </div>
             )}
@@ -395,13 +395,13 @@ export default function BookCheckoutPage() {
                 <p>Ödeme sırasında bir hata oluştu. Lütfen tekrar deneyin.</p>
                 <button
                   type="button"
-                  className="text-[11px] underline"
+                  className="text-xs underline"
                   onClick={() => setShowProviderDetails((v) => !v)}
                 >
                   {showProviderDetails ? "Detayı gizle" : "Detay"}
                 </button>
                 {showProviderDetails && (
-                  <pre className="text-[10px] bg-slate-100 rounded p-2 overflow-x-auto">
+                  <pre className="text-2xs bg-slate-100 rounded p-2 overflow-x-auto">
                     {JSON.stringify(
                       {
                         code: providerError?.code,

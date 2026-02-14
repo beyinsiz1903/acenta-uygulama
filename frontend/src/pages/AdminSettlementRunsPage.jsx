@@ -267,7 +267,7 @@ export default function AdminSettlementRunsPage() {
                   Her satır, belirli bir tedarikçi ve para birimi için oluşturulmuş settlement run’ı temsil eder.
                 </p>
               </div>
-              <div className="text-[11px] text-muted-foreground flex flex-col items-end">
+              <div className="text-xs text-muted-foreground flex flex-col items-end">
                 <span>{totals.count} run</span>
                 <span>Toplam net ödenecek: {formatMoney(totals.totalNet, items[0]?.currency || "EUR")}</span>
               </div>
@@ -311,19 +311,19 @@ export default function AdminSettlementRunsPage() {
                             className="hover:bg-accent/40 cursor-pointer"
                             onClick={() => window.location.assign(`/app/admin/finance/settlement-runs/${it.settlement_id}`)}
                           >
-                            <TableCell className="text-[11px] font-mono truncate max-w-[160px]">
+                            <TableCell className="text-xs font-mono truncate max-w-[160px]">
                               {it.supplier_id}
                             </TableCell>
-                            <TableCell className="text-[11px]">{it.currency}</TableCell>
-                            <TableCell className="text-[11px]">
+                            <TableCell className="text-xs">{it.currency}</TableCell>
+                            <TableCell className="text-xs">
                               <StatusBadge status={it.status} />
                             </TableCell>
-                            <TableCell className="text-[11px] text-right">
+                            <TableCell className="text-xs text-right">
                               {formatMoney(net, it.currency)}
                             </TableCell>
-                            <TableCell className="text-[11px]">{formatDate(it.created_at)}</TableCell>
-                            <TableCell className="text-[11px]">{formatDate(it.approved_at)}</TableCell>
-                            <TableCell className="text-[11px]">{formatDate(it.paid_at)}</TableCell>
+                            <TableCell className="text-xs">{formatDate(it.created_at)}</TableCell>
+                            <TableCell className="text-xs">{formatDate(it.approved_at)}</TableCell>
+                            <TableCell className="text-xs">{formatDate(it.paid_at)}</TableCell>
                           </TableRow>
                         );
                       })

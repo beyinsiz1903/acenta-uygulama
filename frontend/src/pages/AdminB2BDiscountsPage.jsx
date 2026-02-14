@@ -167,7 +167,7 @@ function AdminB2BDiscountsPage() {
         <div className="font-semibold text-sm mb-1">İndirim Grubu Oluştur</div>
         <div className="grid gap-3 md:grid-cols-3">
           <div className="space-y-1">
-            <label className="text-[11px] font-medium">Ad</label>
+            <label className="text-xs font-medium">Ad</label>
             <Input
               data-testid="b2b-discount-name"
               value={name}
@@ -176,7 +176,7 @@ function AdminB2BDiscountsPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-medium">Öncelik</label>
+            <label className="text-xs font-medium">Öncelik</label>
             <Input
               type="number"
               data-testid="b2b-discount-priority"
@@ -185,7 +185,7 @@ function AdminB2BDiscountsPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-medium">İndirim %</label>
+            <label className="text-xs font-medium">İndirim %</label>
             <Input
               type="number"
               min={0}
@@ -200,7 +200,7 @@ function AdminB2BDiscountsPage() {
 
         <div className="grid gap-3 md:grid-cols-3">
           <div className="space-y-1">
-            <label className="text-[11px] font-medium">Acenta ID</label>
+            <label className="text-xs font-medium">Acenta ID</label>
             <Input
               data-testid="b2b-discount-agency-id"
               value={agencyId}
@@ -208,7 +208,7 @@ function AdminB2BDiscountsPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-medium">Ürün ID</label>
+            <label className="text-xs font-medium">Ürün ID</label>
             <Input
               data-testid="b2b-discount-product-id"
               value={productId}
@@ -216,7 +216,7 @@ function AdminB2BDiscountsPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-medium">Ürün Tipi</label>
+            <label className="text-xs font-medium">Ürün Tipi</label>
             <select
               className="h-9 w-full rounded-md border bg-background px-2 text-sm"
               data-testid="b2b-discount-product-type"
@@ -230,7 +230,7 @@ function AdminB2BDiscountsPage() {
 
         <div className="grid gap-3 md:grid-cols-3">
           <div className="space-y-1">
-            <label className="text-[11px] font-medium">Geçerlilik Başlangıcı</label>
+            <label className="text-xs font-medium">Geçerlilik Başlangıcı</label>
             <Input
               type="date"
               data-testid="b2b-discount-valid-from"
@@ -239,7 +239,7 @@ function AdminB2BDiscountsPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-medium">Geçerlilik Bitişi</label>
+            <label className="text-xs font-medium">Geçerlilik Bitişi</label>
             <Input
               type="date"
               data-testid="b2b-discount-valid-to"
@@ -248,7 +248,7 @@ function AdminB2BDiscountsPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-medium">Notlar</label>
+            <label className="text-xs font-medium">Notlar</label>
             <Textarea
               rows={2}
               data-testid="b2b-discount-notes"
@@ -299,10 +299,10 @@ function AdminB2BDiscountsPage() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <div className="text-xs font-semibold">{g.name}</div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         ID: {g.id} · Priority: {g.priority}
                       </div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         Kapsam: agency={g.scope?.agency_id || "*"}, product={g.scope?.product_id || "*"}, type={
                           g.scope?.product_type || "*"
                         }
@@ -312,7 +312,7 @@ function AdminB2BDiscountsPage() {
                       <div className="flex items-center gap-1">
                         <span
                           data-testid={`b2b-discount-validity-${g.id}`}
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${badge.color}`}
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-2xs font-semibold ${badge.color}`}
                         >
                           {badge.label}
                         </span>
@@ -327,13 +327,13 @@ function AdminB2BDiscountsPage() {
                           {g.status === "active" ? "Aktif" : "Pasif"}
                         </Button>
                       </div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         Kurallar: {ruleSummary}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px]">
+                  <div className="flex items-center justify-between text-xs">
                     <button
                       type="button"
                       className="underline"
@@ -348,17 +348,17 @@ function AdminB2BDiscountsPage() {
 
                   {expandedId === g.id && (
                     <div className="mt-2 space-y-2">
-                      <div className="text-[11px] font-semibold">Kurallar</div>
+                      <div className="text-xs font-semibold">Kurallar</div>
                       <div className="space-y-1">
                         {rules.length === 0 ? (
-                          <div className="text-[11px] text-muted-foreground">
+                          <div className="text-xs text-muted-foreground">
                             Henüz kural yok.
                           </div>
                         ) : (
                           rules.map((r, idx) => (
                             <div
                               key={`${g.id}-rule-${idx}`}
-                              className="flex items-center justify-between rounded border bg-muted/40 px-2 py-1 text-[11px]"
+                              className="flex items-center justify-between rounded border bg-muted/40 px-2 py-1 text-xs"
                             >
                               <span>
                                 {r.type} {r.value}% ({r.applies_to})
@@ -385,7 +385,7 @@ function AdminB2BDiscountsPage() {
                           max={100}
                           step={0.1}
                           placeholder="Yeni kural %"
-                          className="h-8 w-24 text-[11px]"
+                          className="h-8 w-24 text-xs"
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               e.preventDefault();

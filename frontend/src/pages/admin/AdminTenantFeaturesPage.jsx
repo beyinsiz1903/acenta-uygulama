@@ -118,7 +118,7 @@ function SubscriptionPanel({ tenantId }) {
         </div>
         <div>
           <p className="text-muted-foreground mb-0.5">Durum</p>
-          <Badge className={`${displayStatus?.color} text-[10px] px-1.5 py-0`} data-testid="sub-status-badge">
+          <Badge className={`${displayStatus?.color} text-2xs px-1.5 py-0`} data-testid="sub-status-badge">
             {displayStatus?.label}
           </Badge>
         </div>
@@ -129,7 +129,7 @@ function SubscriptionPanel({ tenantId }) {
             <span>{formatTRDate(sub.current_period_end)}</span>
           </div>
           {renewalDays !== null && renewalDays > 0 && (
-            <p className="text-[10px] text-muted-foreground">{renewalDays} gün kaldı</p>
+            <p className="text-2xs text-muted-foreground">{renewalDays} gün kaldı</p>
           )}
         </div>
         <div>
@@ -231,7 +231,7 @@ function UsagePanel({ tenantId }) {
               </div>
             )}
             {data.exceeded && (
-              <p className="text-[10px] text-destructive">Quota aşıldı!</p>
+              <p className="text-2xs text-destructive">Quota aşıldı!</p>
             )}
           </div>
         );
@@ -266,7 +266,7 @@ function TenantListItem({ tenant, selected, onSelect }) {
           <p className="text-xs text-muted-foreground truncate">{tenant.slug}</p>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
-          <Badge variant={tenant.status === "active" ? "default" : "secondary"} className="text-[10px] px-1.5 py-0">
+          <Badge variant={tenant.status === "active" ? "default" : "secondary"} className="text-2xs px-1.5 py-0">
             {tenant.status}
           </Badge>
           <button type="button" onClick={handleCopy} className="p-1 rounded hover:bg-muted text-muted-foreground" title="ID kopyala">
@@ -291,7 +291,7 @@ function FeatureCheckboxRow({ feature, checked, isFromPlan, onChange, disabled }
         <div className="flex items-center gap-1.5">
           <span className="text-sm font-medium text-foreground">{feature.label}</span>
           {isFromPlan && checked && (
-            <Badge variant="outline" className="text-[9px] px-1 py-0 text-muted-foreground">Plan</Badge>
+            <Badge variant="outline" className="text-2xs px-1 py-0 text-muted-foreground">Plan</Badge>
           )}
         </div>
         {feature.description && (
@@ -488,7 +488,7 @@ export default function AdminTenantFeaturesPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-[11px] text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Plan ile gelen: {(planMatrix[currentPlan] || []).length} modül
                     </p>
                   </div>

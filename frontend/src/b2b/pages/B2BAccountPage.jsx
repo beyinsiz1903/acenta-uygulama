@@ -78,10 +78,10 @@ export default function B2BAccountPage() {
         >
           <span className="mt-0.5 text-sm">!</span>
           <div>
-            <div className="font-semibold text-[13px]">
+            <div className="font-semibold text-sm">
               {isOverLimit ? "Kredi limiti aşıldı" : "Kredi limitinize yaklaştınız"}
             </div>
-            <div className="mt-0.5 text-[11px]">
+            <div className="mt-0.5 text-xs">
               Kredi limitiniz EUR bazında hesaplanır. Yeni rezervasyonlarda reddedilme
               riskini azaltmak için ödeme yapmayı veya limit artışı talep etmeyi
               değerlendirebilirsiniz.
@@ -120,7 +120,7 @@ export default function B2BAccountPage() {
                     {m.date ? new Date(m.date).toLocaleString() : ""}
                   </div>
                   <div className="text-sm font-medium">{m.description}</div>
-                  <div className="text-[11px] text-muted-foreground">
+                  <div className="text-xs text-muted-foreground">
                     {m.type} · {m.direction === "credit" ? "Alacak" : "Borç"}
                   </div>
                 </div>
@@ -185,7 +185,7 @@ function ExposureKpi({ exposure, creditLimit, status, currency }) {
     <div className="rounded-2xl border bg-card shadow-sm p-4 space-y-2">
       <div className="flex items-center justify-between gap-2">
         <div className="text-xs text-muted-foreground">Kredi Limiti</div>
-        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${badgeClass}`}>
+        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${badgeClass}`}>
           {badgeText}
         </span>
       </div>

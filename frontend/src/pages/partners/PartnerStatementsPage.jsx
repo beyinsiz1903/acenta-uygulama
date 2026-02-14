@@ -207,7 +207,7 @@ export default function PartnerStatementsPage() {
             className="flex flex-col gap-3 text-xs md:flex-row md:flex-wrap md:items-end"
           >
             <div className="flex flex-col gap-1 w-full md:w-auto">
-              <label htmlFor="month" className="text-[11px] font-medium">
+              <label htmlFor="month" className="text-xs font-medium">
                 Ay (YYYY-MM)
               </label>
               <Input
@@ -220,8 +220,8 @@ export default function PartnerStatementsPage() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-medium">Perspektif</span>
-              <div className="inline-flex rounded-md border bg-background p-0.5 text-[11px]">
+              <span className="text-xs font-medium">Perspektif</span>
+              <div className="inline-flex rounded-md border bg-background p-0.5 text-xs">
                 <button
                   type="button"
                   className={`px-2 py-1 rounded-sm ${
@@ -248,7 +248,7 @@ export default function PartnerStatementsPage() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-medium flex items-center gap-1">
+              <span className="text-xs font-medium flex items-center gap-1">
                 <Filter className="h-3 w-3" /> Durum
               </span>
               <div className="flex flex-wrap gap-1">
@@ -259,7 +259,7 @@ export default function PartnerStatementsPage() {
                       key={opt.value}
                       type="button"
                       onClick={() => toggleStatus(opt.value)}
-                      className={`h-6 rounded-full border px-2 text-[11px] ${
+                      className={`h-6 rounded-full border px-2 text-xs ${
                         active
                           ? "bg-primary text-primary-foreground border-primary"
                           : "text-muted-foreground"
@@ -273,7 +273,7 @@ export default function PartnerStatementsPage() {
             </div>
 
             <div className="flex flex-col gap-1 w-full md:w-60">
-              <label htmlFor="counterparty" className="text-[11px] font-medium">
+              <label htmlFor="counterparty" className="text-xs font-medium">
                 Karşı Tenant ID (opsiyonel)
               </label>
               <Input
@@ -297,7 +297,7 @@ export default function PartnerStatementsPage() {
           </form>
 
           {error && (
-            <div className="mt-3 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-[11px] text-destructive">
+            <div className="mt-3 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
               {error}
             </div>
           )}
@@ -309,7 +309,7 @@ export default function PartnerStatementsPage() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-[11px] font-medium">Toplam kayıt</CardTitle>
+              <CardTitle className="text-xs font-medium">Toplam kayıt</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-lg font-semibold">{totals.count}</div>
@@ -317,7 +317,7 @@ export default function PartnerStatementsPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-[11px] font-medium">Brüt toplam</CardTitle>
+              <CardTitle className="text-xs font-medium">Brüt toplam</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-lg font-semibold">{formatAmount(totals.gross_total, totals.currency)}</div>
@@ -325,7 +325,7 @@ export default function PartnerStatementsPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-[11px] font-medium">Komisyon toplamı</CardTitle>
+              <CardTitle className="text-xs font-medium">Komisyon toplamı</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-lg font-semibold">{formatAmount(totals.commission_total, totals.currency)}</div>
@@ -333,7 +333,7 @@ export default function PartnerStatementsPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-[11px] font-medium">Net toplam</CardTitle>
+              <CardTitle className="text-xs font-medium">Net toplam</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-lg font-semibold">{formatAmount(totals.net_total, totals.currency)}</div>
@@ -356,11 +356,11 @@ export default function PartnerStatementsPage() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{c.currency}</span>
-                    <Badge variant="outline" className="text-[10px]">
+                    <Badge variant="outline" className="text-2xs">
                       {c.count} kayıt
                     </Badge>
                   </div>
-                  <div className="text-[11px] text-muted-foreground space-y-0.5">
+                  <div className="text-xs text-muted-foreground space-y-0.5">
                     <div>Brüt: {formatAmount(c.gross_total, c.currency)}</div>
                     <div>Komisyon: {formatAmount(c.commission_total, c.currency)}</div>
                     <div>Net: {formatAmount(c.net_total, c.currency)}</div>
@@ -377,7 +377,7 @@ export default function PartnerStatementsPage() {
         <CardHeader className="pb-2 flex items-center justify-between">
           <CardTitle className="text-sm font-medium">Kayıtlar</CardTitle>
           {loading && (
-            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Loader2 className="h-3 w-3 animate-spin" />
               <span>Yükleniyor…</span>
             </div>

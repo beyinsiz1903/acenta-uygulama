@@ -219,7 +219,7 @@ export default function AdminToursPage() {
                       <X className="h-3.5 w-3.5 text-red-500" />
                     </button>
                   </div>
-                  {form.cover_image === img && <Badge className="absolute bottom-1 left-1 text-[10px] px-1.5 py-0">Kapak</Badge>}
+                  {form.cover_image === img && <Badge className="absolute bottom-1 left-1 text-2xs px-1.5 py-0">Kapak</Badge>}
                 </div>
               ))}
             </div>

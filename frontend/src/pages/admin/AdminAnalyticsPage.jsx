@@ -123,9 +123,9 @@ export default function AdminAnalyticsPage() {
                   const pct = Math.max(5, Math.round((t.mrr_gross_active / maxMRR) * 100));
                   return (
                     <div key={t.period} className="flex-1 flex flex-col items-center gap-1">
-                      <span className="text-[10px] text-muted-foreground">{formatTRY(t.mrr_gross_active)}</span>
+                      <span className="text-2xs text-muted-foreground">{formatTRY(t.mrr_gross_active)}</span>
                       <div className="w-full rounded-t bg-primary/80 transition-all" style={{ height: `${pct}%` }} />
-                      <span className="text-[10px] text-muted-foreground">{t.period}</span>
+                      <span className="text-2xs text-muted-foreground">{t.period}</span>
                     </div>
                   );
                 })}
@@ -153,7 +153,7 @@ export default function AdminAnalyticsPage() {
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-foreground">Quota Kullanımı (B2B Talep)</h3>
                 {(usage?.exceeded_count || 0) > 0 && (
-                  <Badge variant="destructive" className="text-[10px]">{usage.exceeded_count} aşım</Badge>
+                  <Badge variant="destructive" className="text-2xs">{usage.exceeded_count} aşım</Badge>
                 )}
               </div>
               <div className="space-y-1.5">
@@ -173,7 +173,7 @@ export default function AdminAnalyticsPage() {
               <div className="flex items-center gap-2">
                 <ArrowUpRight className="h-4 w-4 text-purple-500" />
                 <h3 className="text-sm font-medium text-foreground">Enterprise Adayları</h3>
-                <Badge className="bg-purple-500/10 text-purple-700 border-purple-500/20 text-[10px]">
+                <Badge className="bg-purple-500/10 text-purple-700 border-purple-500/20 text-2xs">
                   {usage.enterprise_candidates_count} tenant
                 </Badge>
               </div>
@@ -231,7 +231,7 @@ export default function AdminAnalyticsPage() {
               {pushStatus.last_finalize && (
                 <div className="rounded border bg-muted/30 px-3 py-2 text-xs flex items-center justify-between">
                   <span>Son Finalize: <strong>{pushStatus.last_finalize.period}</strong></span>
-                  <Badge variant={pushStatus.last_finalize.status === "success" ? "default" : "destructive"} className="text-[10px]">
+                  <Badge variant={pushStatus.last_finalize.status === "success" ? "default" : "destructive"} className="text-2xs">
                     {pushStatus.last_finalize.status}
                   </Badge>
                   <span>Pushed: {pushStatus.last_finalize.pushed_count} | Errors: {pushStatus.last_finalize.error_count}</span>
@@ -240,7 +240,7 @@ export default function AdminAnalyticsPage() {
               {pushStatus.cron && (
                 <div className="rounded border bg-muted/30 px-3 py-2 text-xs flex items-center gap-3">
                   <span>Finalize Cron:</span>
-                  <Badge variant={pushStatus.cron.scheduler_running ? "default" : "secondary"} className="text-[10px]">
+                  <Badge variant={pushStatus.cron.scheduler_running ? "default" : "secondary"} className="text-2xs">
                     {pushStatus.cron.scheduler_running ? "Active" : "Disabled"}
                   </Badge>
                   {pushStatus.cron.next_run_at && <span className="text-muted-foreground">Next: {new Date(pushStatus.cron.next_run_at).toLocaleString("tr-TR")}</span>}
@@ -250,7 +250,7 @@ export default function AdminAnalyticsPage() {
           )}
 
           {revenue?.generated_at && (
-            <p className="text-[10px] text-muted-foreground text-right">
+            <p className="text-2xs text-muted-foreground text-right">
               Oluşturulma: {new Date(revenue.generated_at).toLocaleString("tr-TR")}
             </p>
           )}

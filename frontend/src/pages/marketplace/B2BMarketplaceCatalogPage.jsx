@@ -90,7 +90,7 @@ export default function B2BMarketplaceCatalogPage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="text-lg font-semibold">B2B Marketplace</div>
-          <div className="max-w-xl text-[11px] text-muted-foreground">
+          <div className="max-w-xl text-xs text-muted-foreground">
             Diğer tenantların yayınladığı marketplace listinglerini buradan görebilir, kiminle çalışmak istediğinizi
             keşfedebilirsiniz. V1 de sadece katalog görünürlüğü vardır; rezervasyon akışı ayrıdır.
           </div>
@@ -98,10 +98,10 @@ export default function B2BMarketplaceCatalogPage() {
       </div>
 
       {/* Tenant key selector */}
-      <div className="rounded-md border bg-white p-3 text-[11px]">
+      <div className="rounded-md border bg-white p-3 text-xs">
         <div className="flex flex-wrap items-center gap-3">
           <div className="space-y-1">
-            <Label className="text-[11px]">Tenant Key (buyer)</Label>
+            <Label className="text-xs">Tenant Key (buyer)</Label>
             <Input
               className="h-8 text-xs min-w-[200px]"
               value={tenantKey}
@@ -110,7 +110,7 @@ export default function B2BMarketplaceCatalogPage() {
             />
           </div>
           {!tenantKey && (
-            <div className="flex items-center gap-1 text-[11px] text-destructive">
+            <div className="flex items-center gap-1 text-xs text-destructive">
               <AlertCircle className="h-4 w-4" />
               <span>Marketplace erişimi için bir tenant key girin.</span>
             </div>
@@ -119,18 +119,18 @@ export default function B2BMarketplaceCatalogPage() {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-[11px] text-destructive">
+        <div className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
           <AlertCircle className="h-4 w-4" />
           <span>{error}</span>
         </div>
       )}
 
       <form
-        className="grid grid-cols-1 gap-3 rounded-md border bg-white p-3 text-[11px] sm:grid-cols-5"
+        className="grid grid-cols-1 gap-3 rounded-md border bg-white p-3 text-xs sm:grid-cols-5"
         onSubmit={handleSearch}
       >
         <div className="space-y-1 sm:col-span-2">
-          <Label className="text-[11px]">Arama</Label>
+          <Label className="text-xs">Arama</Label>
           <Input
             className="h-8 text-xs"
             placeholder="Başlık veya açıklama"
@@ -139,7 +139,7 @@ export default function B2BMarketplaceCatalogPage() {
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-[11px]">Kategori</Label>
+          <Label className="text-xs">Kategori</Label>
           <Input
             className="h-8 text-xs"
             placeholder="hotel / tour / transfer"
@@ -148,7 +148,7 @@ export default function B2BMarketplaceCatalogPage() {
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-[11px]">Tag</Label>
+          <Label className="text-xs">Tag</Label>
           <Input
             className="h-8 text-xs"
             placeholder="örn. antalya"
@@ -157,7 +157,7 @@ export default function B2BMarketplaceCatalogPage() {
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-[11px]">Fiyat Aralığı</Label>
+          <Label className="text-xs">Fiyat Aralığı</Label>
           <div className="flex gap-1">
             <Input
               className="h-8 text-xs"
@@ -181,7 +181,7 @@ export default function B2BMarketplaceCatalogPage() {
       </form>
 
       {!loading && items.length === 0 && tenantKey && !error && (
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Şu an için bu tenant için görünür bir marketplace listingi bulunmuyor. Erişimi olan satıcılar henüz
           yayınlamamış olabilir.
         </p>
@@ -192,13 +192,13 @@ export default function B2BMarketplaceCatalogPage() {
           <Card
             key={item.id}
             data-testid="marketplace-card"
-            className="flex flex-col justify-between p-3 text-[11px]"
+            className="flex flex-col justify-between p-3 text-xs"
           >
             <div className="space-y-1">
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <div className="text-xs font-semibold">{item.title}</div>
-                  <div className="text-[10px] text-muted-foreground">
+                  <div className="text-2xs text-muted-foreground">
                     Kategori: {item.category || "-"}
                   </div>
                 </div>
@@ -206,21 +206,21 @@ export default function B2BMarketplaceCatalogPage() {
                   {item.price} {item.currency}
                 </div>
               </div>
-              <div className="text-[10px] text-muted-foreground">
+              <div className="text-2xs text-muted-foreground">
                 Seller tenant: <span className="font-mono">{item.seller_tenant_id}</span>
               </div>
               <div className="mt-1 flex flex-wrap gap-1">
                 {(item.tags || []).map((t) => (
                   <span
                     key={t}
-                    className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground"
+                    className="rounded-full bg-muted px-2 py-0.5 text-2xs text-muted-foreground"
                   >
                     #{t}
                   </span>
                 ))}
               </div>
             </div>
-            <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
+            <div className="mt-2 flex items-center justify-between text-2xs text-muted-foreground">
               <span>
                 Bu kart sadece katalog içindir; rezervasyon/teklif akışı ayrı PR'larda eklenecektir.
               </span>
@@ -228,7 +228,7 @@ export default function B2BMarketplaceCatalogPage() {
                 <Button
                   type="button"
                   size="xs"
-                  className="h-7 text-[11px]"
+                  className="h-7 text-xs"
                   variant="default"
                   onClick={async () => {
                     try {
@@ -279,7 +279,7 @@ export default function B2BMarketplaceCatalogPage() {
                 <Button
                   type="button"
                   size="xs"
-                  className="h-7 text-[11px]"
+                  className="h-7 text-xs"
                   variant="outline"
                   onClick={async () => {
                     try {

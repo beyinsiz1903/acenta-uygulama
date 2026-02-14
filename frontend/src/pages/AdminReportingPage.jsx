@@ -8,7 +8,7 @@ import { Badge } from "../components/ui/badge";
 function FieldError({ text }) {
   if (!text) return null;
   return (
-    <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[11px] text-destructive">
+    <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
       {text}
     </div>
   );
@@ -95,7 +95,7 @@ export default function AdminReportingPage() {
             <Badge
               variant="outline"
               data-testid="payments-e2e-proof-pending-badge"
-              className="border-amber-300 bg-amber-50 text-[10px] font-medium text-amber-800"
+              className="border-amber-300 bg-amber-50 text-2xs font-medium text-amber-800"
             >
               Payments e2e: proof pending (env)
             </Badge>
@@ -104,8 +104,8 @@ export default function AdminReportingPage() {
             Son X gün için ciro özeti, en çok satan ürünler ve funnel KPI&apos;larını görüntüleyin.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-[11px]">
-          <Label htmlFor="reporting-days" className="text-[11px]">
+        <div className="flex items-center gap-2 text-xs">
+          <Label htmlFor="reporting-days" className="text-xs">
             Son
           </Label>
           <select
@@ -121,44 +121,44 @@ export default function AdminReportingPage() {
         </div>
       </div>
 
-      <Card className="p-3 text-[11px] space-y-2">
+      <Card className="p-3 text-xs space-y-2">
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold">Ciro Özeti</div>
-          {summaryLoading && <div className="text-[11px] text-muted-foreground">Yükleniyor...</div>}
+          {summaryLoading && <div className="text-xs text-muted-foreground">Yükleniyor...</div>}
         </div>
         <FieldError text={summaryError} />
         {summary && (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-2 mt-2">
             <div className="rounded-md border px-2 py-2">
-              <div className="text-[10px] text-muted-foreground">Rezervasyonlar</div>
+              <div className="text-2xs text-muted-foreground">Rezervasyonlar</div>
               <div className="text-sm font-semibold">{summary.bookings.count}</div>
             </div>
             <div className="rounded-md border px-2 py-2">
-              <div className="text-[10px] text-muted-foreground">Sell Total</div>
+              <div className="text-2xs text-muted-foreground">Sell Total</div>
               <div className="text-sm font-semibold">
                 {formatMoney(summary.bookings.sell_total)} {summary.bookings.currency}
               </div>
             </div>
             <div className="rounded-md border px-2 py-2">
-              <div className="text-[10px] text-muted-foreground">Net Total</div>
+              <div className="text-2xs text-muted-foreground">Net Total</div>
               <div className="text-sm font-semibold">
                 {formatMoney(summary.bookings.net_total)} {summary.bookings.currency}
               </div>
             </div>
             <div className="rounded-md border px-2 py-2">
-              <div className="text-[10px] text-muted-foreground">Markup Total</div>
+              <div className="text-2xs text-muted-foreground">Markup Total</div>
               <div className="text-sm font-semibold">
                 {formatMoney(summary.bookings.markup_total)} {summary.bookings.currency}
               </div>
             </div>
             <div className="rounded-md border px-2 py-2">
-              <div className="text-[10px] text-muted-foreground">Avg Sell</div>
+              <div className="text-2xs text-muted-foreground">Avg Sell</div>
               <div className="text-sm font-semibold">
                 {formatMoney(summary.bookings.avg_sell)} {summary.bookings.currency}
               </div>
             </div>
             <div className="rounded-md border px-2 py-2">
-              <div className="text-[10px] text-muted-foreground">Paid / Unpaid</div>
+              <div className="text-2xs text-muted-foreground">Paid / Unpaid</div>
               <div className="text-sm font-semibold">
                 {summary.payments.paid_count} / {summary.payments.unpaid_count}
               </div>
@@ -167,10 +167,10 @@ export default function AdminReportingPage() {
         )}
       </Card>
 
-      <Card className="p-3 text-[11px] space-y-2">
+      <Card className="p-3 text-xs space-y-2">
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold">En Çok Satan Ürünler (ciroya göre)</div>
-          {topLoading && <div className="text-[11px] text-muted-foreground">Yükleniyor...</div>}
+          {topLoading && <div className="text-xs text-muted-foreground">Yükleniyor...</div>}
         </div>
         <FieldError text={topError} />
         <div className="mt-2 rounded-md border overflow-hidden">
@@ -190,42 +190,42 @@ export default function AdminReportingPage() {
               </div>
             ))}
             {!topProducts.length && !topLoading && (
-              <div className="px-2 py-3 text-[11px] text-muted-foreground">Son {days} günde ürün bulunamadı.</div>
+              <div className="px-2 py-3 text-xs text-muted-foreground">Son {days} günde ürün bulunamadı.</div>
             )}
           </div>
         </div>
       </Card>
 
-      <Card className="p-3 text-[11px] space-y-2">
+      <Card className="p-3 text-xs space-y-2">
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold">Funnel Özeti</div>
-          {funnelLoading && <div className="text-[11px] text-muted-foreground">Yükleniyor...</div>}
+          {funnelLoading && <div className="text-xs text-muted-foreground">Yükleniyor...</div>}
         </div>
         <FieldError text={funnelError} />
         {funnel && (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-2 mt-2">
             <div className="rounded-md border px-2 py-2">
-              <div className="text-[10px] text-muted-foreground">Teklifler</div>
+              <div className="text-2xs text-muted-foreground">Teklifler</div>
               <div className="text-sm font-semibold">{funnel.quote_count}</div>
             </div>
             <div className="rounded-md border px-2 py-2">
-              <div className="text-[10px] text-muted-foreground">Checkout Başlatıldı</div>
+              <div className="text-2xs text-muted-foreground">Checkout Başlatıldı</div>
               <div className="text-sm font-semibold">{funnel.checkout_started_count}</div>
             </div>
             <div className="rounded-md border px-2 py-2">
-              <div className="text-[10px] text-muted-foreground">Rezervasyonlar</div>
+              <div className="text-2xs text-muted-foreground">Rezervasyonlar</div>
               <div className="text-sm font-semibold">{funnel.booking_created_count}</div>
             </div>
             <div className="rounded-md border px-2 py-2">
-              <div className="text-[10px] text-muted-foreground">Başarılı Ödemeler</div>
+              <div className="text-2xs text-muted-foreground">Başarılı Ödemeler</div>
               <div className="text-sm font-semibold">{funnel.payment_succeeded_count}</div>
             </div>
             <div className="rounded-md border px-2 py-2">
-              <div className="text-[10px] text-muted-foreground">Başarısız Ödemeler</div>
+              <div className="text-2xs text-muted-foreground">Başarısız Ödemeler</div>
               <div className="text-sm font-semibold">{funnel.payment_failed_count}</div>
             </div>
             <div className="rounded-md border px-2 py-2">
-              <div className="text-[10px] text-muted-foreground">Dönüşüm</div>
+              <div className="text-2xs text-muted-foreground">Dönüşüm</div>
               <div className="text-sm font-semibold">{(Number(funnel.conversion || 0) * 100).toFixed(1)}%</div>
             </div>
           </div>

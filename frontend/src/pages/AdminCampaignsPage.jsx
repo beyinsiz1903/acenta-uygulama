@@ -11,7 +11,7 @@ import { Badge } from "../components/ui/badge";
 function FieldError({ text }) {
   if (!text) return null;
   return (
-    <div className="mt-2 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[11px] text-destructive">
+    <div className="mt-2 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
       <AlertCircle className="h-4 w-4 mt-0.5" />
       <div>{text}</div>
     </div>
@@ -129,10 +129,10 @@ export default function AdminCampaignsPage() {
         </p>
       </div>
 
-      <Card className="p-3 space-y-3 text-[11px]">
+      <Card className="p-3 space-y-3 text-xs">
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold">Yeni Kampanya</div>
-          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>Alanlar:</span>
             <span>Ad, Slug, Kanal, Tarih, Kupon Kodları</span>
           </div>
@@ -142,7 +142,7 @@ export default function AdminCampaignsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
           <div className="space-y-1">
-            <Label className="text-[11px]">Ad</Label>
+            <Label className="text-xs">Ad</Label>
             <Input
               className="h-8 text-xs"
               value={name}
@@ -151,7 +151,7 @@ export default function AdminCampaignsPage() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Slug</Label>
+            <Label className="text-xs">Slug</Label>
             <Input
               className="h-8 text-xs"
               value={slug}
@@ -160,8 +160,8 @@ export default function AdminCampaignsPage() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Kanallar</Label>
-            <div className="flex gap-2 text-[11px]">
+            <Label className="text-xs">Kanallar</Label>
+            <div className="flex gap-2 text-xs">
               <button
                 type="button"
                 className={`px-2 py-1 rounded-md border ${
@@ -186,7 +186,7 @@ export default function AdminCampaignsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
           <div className="space-y-1 md:col-span-2">
-            <Label className="text-[11px]">Açıklama</Label>
+            <Label className="text-xs">Açıklama</Label>
             <Input
               className="h-8 text-xs"
               value={description}
@@ -195,7 +195,7 @@ export default function AdminCampaignsPage() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Kupon Kodları</Label>
+            <Label className="text-xs">Kupon Kodları</Label>
             <Input
               className="h-8 text-xs"
               value={couponCodes}
@@ -207,7 +207,7 @@ export default function AdminCampaignsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
           <div className="space-y-1">
-            <Label className="text-[11px]">Başlangıç</Label>
+            <Label className="text-xs">Başlangıç</Label>
             <Input
               type="datetime-local"
               className="h-8 text-xs"
@@ -216,7 +216,7 @@ export default function AdminCampaignsPage() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Bitiş</Label>
+            <Label className="text-xs">Bitiş</Label>
             <Input
               type="datetime-local"
               className="h-8 text-xs"
@@ -234,7 +234,7 @@ export default function AdminCampaignsPage() {
         </div>
       </Card>
 
-      <Card className="p-3 space-y-2 text-[11px]">
+      <Card className="p-3 space-y-2 text-xs">
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold">Mevcut Kampanyalar</div>
           <Button size="sm" variant="outline" onClick={load} disabled={loading}>
@@ -259,7 +259,7 @@ export default function AdminCampaignsPage() {
                 <div className="truncate" title={c.name}>
                   {c.name}
                 </div>
-                <div className="font-mono text-[11px] truncate" title={c.slug}>
+                <div className="font-mono text-xs truncate" title={c.slug}>
                   {c.slug}
                 </div>
                 <div className="flex flex-wrap gap-1">
@@ -283,7 +283,7 @@ export default function AdminCampaignsPage() {
                   <Button
                     size="xs"
                     variant="outline"
-                    className="h-6 px-2 text-[10px]"
+                    className="h-6 px-2 text-2xs"
                     onClick={() => toggleActive(c)}
                   >
                     {c.active ? "Pasifleştir" : "Aktifleştir"}
@@ -292,7 +292,7 @@ export default function AdminCampaignsPage() {
               </div>
             ))}
             {!items.length && !loading && (
-              <div className="px-2 py-3 text-[11px] text-muted-foreground">Henüz kampanya yok.</div>
+              <div className="px-2 py-3 text-xs text-muted-foreground">Henüz kampanya yok.</div>
             )}
           </div>
         </div>

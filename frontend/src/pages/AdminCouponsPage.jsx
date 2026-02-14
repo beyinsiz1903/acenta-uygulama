@@ -10,7 +10,7 @@ import { AlertCircle, Loader2 } from "lucide-react";
 function FieldError({ text }) {
   if (!text) return null;
   return (
-    <div className="mt-2 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[11px] text-destructive">
+    <div className="mt-2 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
       <AlertCircle className="h-4 w-4 mt-0.5" />
       <div>{text}</div>
     </div>
@@ -123,10 +123,10 @@ export default function AdminCouponsPage() {
         </p>
       </div>
 
-      <Card className="p-3 space-y-3 text-[11px]">
+      <Card className="p-3 space-y-3 text-xs">
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold">Yeni Kupon</div>
-          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>Alanlar:</span>
             <span>Kod, Tip, Değer, Kapsam, Min. Tutar, Limitler, Geçerlilik</span>
           </div>
@@ -136,7 +136,7 @@ export default function AdminCouponsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
           <div className="space-y-1">
-            <Label className="text-[11px]">Kod</Label>
+            <Label className="text-xs">Kod</Label>
             <Input
               className="h-8 text-xs uppercase"
               value={code}
@@ -145,7 +145,7 @@ export default function AdminCouponsPage() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">İndirim Tipi</Label>
+            <Label className="text-xs">İndirim Tipi</Label>
             <select
               className="h-8 w-full rounded-md border bg-background px-2 text-xs"
               value={discountType}
@@ -156,7 +156,7 @@ export default function AdminCouponsPage() {
             </select>
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Değer</Label>
+            <Label className="text-xs">Değer</Label>
             <Input
               type="number"
               className="h-8 text-xs"
@@ -166,7 +166,7 @@ export default function AdminCouponsPage() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Kapsam</Label>
+            <Label className="text-xs">Kapsam</Label>
             <select
               className="h-8 w-full rounded-md border bg-background px-2 text-xs"
               value={scope}
@@ -181,7 +181,7 @@ export default function AdminCouponsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
           <div className="space-y-1">
-            <Label className="text-[11px]">Min. Tutar</Label>
+            <Label className="text-xs">Min. Tutar</Label>
             <Input
               type="number"
               className="h-8 text-xs"
@@ -191,7 +191,7 @@ export default function AdminCouponsPage() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Toplam Kullanım Limiti</Label>
+            <Label className="text-xs">Toplam Kullanım Limiti</Label>
             <Input
               type="number"
               className="h-8 text-xs"
@@ -201,7 +201,7 @@ export default function AdminCouponsPage() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Kişi Başına Limit</Label>
+            <Label className="text-xs">Kişi Başına Limit</Label>
             <Input
               type="number"
               className="h-8 text-xs"
@@ -211,7 +211,7 @@ export default function AdminCouponsPage() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Geçerlilik Başlangıç</Label>
+            <Label className="text-xs">Geçerlilik Başlangıç</Label>
             <Input
               type="datetime-local"
               className="h-8 text-xs"
@@ -223,7 +223,7 @@ export default function AdminCouponsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
           <div className="space-y-1">
-            <Label className="text-[11px]">Geçerlilik Bitiş</Label>
+            <Label className="text-xs">Geçerlilik Bitiş</Label>
             <Input
               type="datetime-local"
               className="h-8 text-xs"
@@ -241,7 +241,7 @@ export default function AdminCouponsPage() {
         </div>
       </Card>
 
-      <Card className="p-3 space-y-2 text-[11px]">
+      <Card className="p-3 space-y-2 text-xs">
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold">Mevcut Kuponlar</div>
           <Button size="sm" variant="outline" onClick={load} disabled={loading}>
@@ -264,7 +264,7 @@ export default function AdminCouponsPage() {
           <div className="max-h-72 overflow-y-auto">
             {items.map((c) => (
               <div key={c.id} className="grid grid-cols-8 border-t px-2 py-2 items-center">
-                <div className="font-mono text-[11px] truncate" title={c.code}>
+                <div className="font-mono text-xs truncate" title={c.code}>
                   {c.code}
                 </div>
                 <div>{c.discount_type === "PERCENT" ? "%" : "₺"}</div>
@@ -277,7 +277,7 @@ export default function AdminCouponsPage() {
                     {c.usage_limit ? ` / ${c.usage_limit}` : ""}
                   </span>
                   {c.per_customer_limit && (
-                    <span className="ml-1 text-[10px] text-muted-foreground">(kişi: {c.per_customer_limit})</span>
+                    <span className="ml-1 text-2xs text-muted-foreground">(kişi: {c.per_customer_limit})</span>
                   )}
                 </div>
                 <div>
@@ -289,7 +289,7 @@ export default function AdminCouponsPage() {
                   <Button
                     size="xs"
                     variant="outline"
-                    className="h-6 px-2 text-[10px]"
+                    className="h-6 px-2 text-2xs"
                     onClick={() => toggleActive(c)}
                   >
                     {c.active ? "Pasifleştir" : "Aktifleştir"}
@@ -298,7 +298,7 @@ export default function AdminCouponsPage() {
               </div>
             ))}
             {!items.length && !loading && (
-              <div className="px-2 py-3 text-[11px] text-muted-foreground">Henüz kupon yok.</div>
+              <div className="px-2 py-3 text-xs text-muted-foreground">Henüz kupon yok.</div>
             )}
           </div>
         </div>

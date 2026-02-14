@@ -24,18 +24,18 @@ function TenantHeader({ loading, error, tenant }) {
           )}
           <div>
             <div className="text-base font-semibold leading-tight">{title || "Storefront"}</div>
-            <div className="text-[10px] text-muted-foreground">
+            <div className="text-2xs text-muted-foreground">
               {tenant?.tenant_key ? `Tenant: ${tenant.tenant_key}` : "White-label B2C vitrini"}
             </div>
           </div>
         </div>
         {loading && (
-          <div className="text-[11px] text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             Tema yükleniyor...
           </div>
         )}
         {error && (
-          <div className="text-[11px] text-destructive" title={error}>
+          <div className="text-xs text-destructive" title={error}>
             Tema yüklenemedi
           </div>
         )}
@@ -209,11 +209,11 @@ export default function StorefrontSearchPage() {
       <main className="flex-1">
         <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-6">
           <form
-            className="grid grid-cols-1 gap-3 rounded-md border bg-white p-3 text-[11px] sm:grid-cols-4"
+            className="grid grid-cols-1 gap-3 rounded-md border bg-white p-3 text-xs sm:grid-cols-4"
             onSubmit={handleSearch}
           >
             <div className="space-y-1">
-              <Label className="text-[11px]">Şehir</Label>
+              <Label className="text-xs">Şehir</Label>
               <Input
                 className="h-8 text-xs"
                 value={city}
@@ -222,7 +222,7 @@ export default function StorefrontSearchPage() {
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-[11px]">Giriş</Label>
+              <Label className="text-xs">Giriş</Label>
               <Input
                 type="date"
                 className="h-8 text-xs"
@@ -231,7 +231,7 @@ export default function StorefrontSearchPage() {
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-[11px]">Çıkış</Label>
+              <Label className="text-xs">Çıkış</Label>
               <Input
                 type="date"
                 className="h-8 text-xs"
@@ -240,7 +240,7 @@ export default function StorefrontSearchPage() {
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-[11px]">Misafir</Label>
+              <Label className="text-xs">Misafir</Label>
               <Input
                 type="number"
                 min={1}
@@ -263,14 +263,14 @@ export default function StorefrontSearchPage() {
           </form>
 
           {error && (
-            <div className="flex items-center justify-between gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-[11px] text-destructive">
+            <div className="flex items-center justify-between gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
               <span>{error}</span>
               {error.includes("Arama oturumu süresi doldu") && (
                 <Button
                   type="button"
                   variant="outline"
                   size="xs"
-                  className="h-7 text-[11px]"
+                  className="h-7 text-xs"
                   onClick={handleRetryExpired}
                 >
                   Tekrar ara
@@ -289,7 +289,7 @@ export default function StorefrontSearchPage() {
           {!loading && offers.length > 0 && (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {offers.map((offer) => (
-                <Card key={offer.offer_id} className="flex flex-col justify-between p-3 text-[11px]">
+                <Card key={offer.offer_id} className="flex flex-col justify-between p-3 text-xs">
                   <div className="space-y-1">
                     <div className="text-xs font-semibold">Teklif #{offer.offer_id}</div>
                     <div className="text-xs text-muted-foreground">

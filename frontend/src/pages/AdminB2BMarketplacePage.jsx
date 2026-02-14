@@ -231,7 +231,7 @@ export default function AdminB2BMarketplacePage() {
               <Users className="h-4 w-4" />
               <div>
                 <CardTitle className="text-sm font-semibold">Partnerler</CardTitle>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   B2B partner profillerinizi listeleyin ve birini seçerek sağ tarafta ürün yetkilerini yönetin.
                 </p>
               </div>
@@ -246,11 +246,11 @@ export default function AdminB2BMarketplacePage() {
                   onChange={(e) => setPartnerSearch(e.target.value)}
                 />
               </div>
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <span>Durum:</span>
                   <select
-                    className="h-7 rounded-md border bg-background px-1 text-[11px]"
+                    className="h-7 rounded-md border bg-background px-1 text-xs"
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                   >
@@ -273,14 +273,14 @@ export default function AdminB2BMarketplacePage() {
               <div className="mt-2 max-h-[420px] overflow-y-auto border rounded-xl divide-y">
 
                 {partnersError && (
-                  <div className="p-3 text-[11px] text-destructive flex items-start gap-2">
+                  <div className="p-3 text-xs text-destructive flex items-start gap-2">
                     <AlertCircle className="h-3 w-3 mt-0.5" />
                     <span>{partnersError}</span>
                   </div>
                 )}
 
                 {!partnersError && filteredPartners.length === 0 && !partnersLoading && (
-                  <div className="p-4 text-center text-[11px] text-muted-foreground">
+                  <div className="p-4 text-center text-xs text-muted-foreground">
                     Henüz partner yok. Önce Partnerler ekranından bir partner oluşturun.
                   </div>
                 )}
@@ -298,7 +298,7 @@ export default function AdminB2BMarketplacePage() {
                   >
                     <div className="flex flex-col">
                       <span className="font-medium truncate max-w-[160px]">{p.name}</span>
-                      <span className="text-[10px] text-muted-foreground truncate max-w-[180px]">
+                      <span className="text-2xs text-muted-foreground truncate max-w-[180px]">
                         {p.contact_email || "-"}
                       </span>
                     </div>
@@ -346,9 +346,9 @@ export default function AdminB2BMarketplacePage() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap gap-2 items-center text-[11px]">
+                <div className="flex flex-wrap gap-2 items-center text-xs">
                   <select
-                    className="h-8 rounded-md border bg-background px-2 text-[11px]"
+                    className="h-8 rounded-md border bg-background px-2 text-xs"
                     value={productTypeFilter}
                     onChange={(e) => setProductTypeFilter(e.target.value)}
                   >
@@ -357,7 +357,7 @@ export default function AdminB2BMarketplacePage() {
                     <option value="tour">Tur</option>
                   </select>
                   <select
-                    className="h-8 rounded-md border bg-background px-2 text-[11px]"
+                    className="h-8 rounded-md border bg-background px-2 text-xs"
                     value={productStatusFilter}
                     onChange={(e) => setProductStatusFilter(e.target.value)}
                   >
@@ -368,7 +368,7 @@ export default function AdminB2BMarketplacePage() {
                   <div className="relative">
                     <Search className="absolute left-2 top-2.5 h-3 w-3 text-muted-foreground" />
                     <Input
-                      className="pl-7 h-8 text-[11px] w-48"
+                      className="pl-7 h-8 text-xs w-48"
                       placeholder="Ad / Kod / Şehir filtrele"
                       value={productSearchInput}
                       onChange={(e) => {
@@ -417,13 +417,13 @@ export default function AdminB2BMarketplacePage() {
                               <TooltipTrigger asChild>
                                 <button
                                   type="button"
-                                  className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-muted-foreground/40 text-[10px] text-muted-foreground hover:bg-muted/40 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                  className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-muted-foreground/40 text-2xs text-muted-foreground hover:bg-muted/40 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                   aria-label="Komisyon hesaplama açıklaması"
                                 >
                                   <Info className="h-3 w-3" />
                                 </button>
                               </TooltipTrigger>
-                              <TooltipContent side="top" className="max-w-[260px] text-[11px] leading-snug">
+                              <TooltipContent side="top" className="max-w-[260px] text-xs leading-snug">
                                 <div className="font-semibold mb-1">Komisyon Hesabı</div>
                                 <p>Komisyon, liste marjdan hesaplanır.</p>
                                 <p>Liste Marj = Liste Satış − Net (Tedarikçi).</p>
@@ -440,7 +440,7 @@ export default function AdminB2BMarketplacePage() {
                           <TableCell className="text-xs">
                             <div className="flex flex-col">
                               <span className="font-medium truncate max-w-[260px]">{p.title}</span>
-                              <span className="text-[11px] text-muted-foreground font-mono">{p.product_id}</span>
+                              <span className="text-xs text-muted-foreground font-mono">{p.product_id}</span>
                             </div>
                           </TableCell>
                           <TableCell className="text-xs">
@@ -461,7 +461,7 @@ export default function AdminB2BMarketplacePage() {
                                 type="button"
                                 size="sm"
                                 variant={p.is_enabled ? "outline" : "secondary"}
-                                className="h-7 text-[11px] px-3"
+                                className="h-7 text-xs px-3"
                                 disabled={savingKey === p.product_id}
                                 onClick={() => handleToggle(p)}
                               >
@@ -474,7 +474,7 @@ export default function AdminB2BMarketplacePage() {
                               <Button
                                 size="sm"
                                 variant="secondary"
-                                className="h-7 text-[11px] px-3"
+                                className="h-7 text-xs px-3"
                                 onClick={() => {
                                   const productId = p.product_id ?? p._id ?? p.id;
                                   if (!productId) {
@@ -504,7 +504,7 @@ export default function AdminB2BMarketplacePage() {
                             <input
                               type="number"
                               step="0.1"
-                              className="h-8 w-20 rounded-md border bg-background px-2 text-right text-[11px]"
+                              className="h-8 w-20 rounded-md border bg-background px-2 text-right text-xs"
                               defaultValue={
                                 typeof p.commission_rate === "number" ? String(p.commission_rate) : ""
                               }
@@ -522,11 +522,11 @@ export default function AdminB2BMarketplacePage() {
 
               {/* Pagination controls */}
               {!productsLoading && (
-                <div className="flex items-center justify-between mt-3 text-[11px] text-muted-foreground">
+                <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
                   <span>Sayfa {productPage}</span>
                   <div className="flex items-center gap-2">
                     <select
-                      className="h-7 rounded-md border bg-background px-2 text-[11px]"
+                      className="h-7 rounded-md border bg-background px-2 text-xs"
                       value={productLimit}
                       onChange={(e) => {
                         setProductPage(1);

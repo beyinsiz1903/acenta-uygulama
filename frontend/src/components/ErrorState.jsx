@@ -35,7 +35,7 @@ export function ErrorState({
         <p className="text-sm text-muted-foreground max-w-md">{description}</p>
       ) : null}
       {(errorCode || requestId) && (
-        <div className="text-[11px] text-muted-foreground space-x-2">
+        <div className="text-xs text-muted-foreground space-x-2">
           {errorCode && (
             <span>
               Kod: <span className="font-mono">{errorCode}</span>

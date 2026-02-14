@@ -168,7 +168,7 @@ export default function AdminB2BDashboardPage() {
             <div className="text-xs text-muted-foreground">
               Limit aşıldı: {summary.overLimit} · Limite yakın: {summary.nearLimit}
             </div>
-            <div className="mt-1 text-[11px] text-muted-foreground">
+            <div className="mt-1 text-xs text-muted-foreground">
               Toplam Limit: {formatAmount(summary.totalLimit)} · Toplam Exposure: {formatAmount(summary.totalExposure)}
             </div>
           </CardContent>
@@ -185,10 +185,10 @@ export default function AdminB2BDashboardPage() {
             <div className="text-xs text-muted-foreground">
               Son 30 günde partner kanalından gelen teklif adedi.
             </div>
-            <div className="mt-1 text-[11px] text-muted-foreground">
+            <div className="mt-1 text-xs text-muted-foreground">
               Toplam teklif tutarı: {formatAmount(summary.funnelAmountCents / 100)}
             </div>
-            <div className="mt-1 text-[11px] text-muted-foreground">
+            <div className="mt-1 text-xs text-muted-foreground">
               Aktif duyuru sayısı: {summary.activeAnnouncements}
             </div>
           </CardContent>
@@ -227,7 +227,7 @@ export default function AdminB2BDashboardPage() {
                       <TableCell className="text-xs">
                         <div className="flex flex-col">
                           <span className="font-medium truncate max-w-[220px]">{a.name}</span>
-                          <span className="text-[10px] text-muted-foreground font-mono">{a.id}</span>
+                          <span className="text-2xs text-muted-foreground font-mono">{a.id}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-xs">

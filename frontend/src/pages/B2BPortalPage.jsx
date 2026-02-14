@@ -51,20 +51,20 @@ function AccountStatusBadge({ status }) {
   const value = (status || "").toLowerCase();
   if (value === "over_limit") {
     return (
-      <Badge variant="destructive" className="text-[11px]">
+      <Badge variant="destructive" className="text-xs">
         Limit aşıldı
       </Badge>
     );
   }
   if (value === "near_limit") {
     return (
-      <Badge variant="secondary" className="text-[11px]">
+      <Badge variant="secondary" className="text-xs">
         Limite yakın
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="text-[11px]">
+    <Badge variant="outline" className="text-xs">
       Normal
     </Badge>
   );
@@ -145,7 +145,7 @@ function AccountSummaryCard() {
         )}
 
         {error && (
-          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-[11px] text-destructive">
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
             <AlertCircle className="h-4 w-4 mt-0.5" />
             <div>{error}</div>
           </div>
@@ -155,7 +155,7 @@ function AccountSummaryCard() {
           <>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               <div>
-                <div className="text-[11px] text-muted-foreground">Toplam Limit</div>
+                <div className="text-xs text-muted-foreground">Toplam Limit</div>
                 <div className="mt-0.5 text-sm font-semibold">
                   {creditLimit != null ? (
                     <>
@@ -167,7 +167,7 @@ function AccountSummaryCard() {
                 </div>
               </div>
               <div>
-                <div className="text-[11px] text-muted-foreground">Kullanılan Limit</div>
+                <div className="text-xs text-muted-foreground">Kullanılan Limit</div>
                 <div className="mt-0.5 text-sm font-semibold">
                   {exposure != null ? (
                     <>
@@ -179,7 +179,7 @@ function AccountSummaryCard() {
                 </div>
               </div>
               <div>
-                <div className="text-[11px] text-muted-foreground">Kalan Limit</div>
+                <div className="text-xs text-muted-foreground">Kalan Limit</div>
                 <div className="mt-0.5 text-sm font-semibold">
                   {remainingLimit != null ? (
                     <>
@@ -191,7 +191,7 @@ function AccountSummaryCard() {
                 </div>
               </div>
               <div>
-                <div className="text-[11px] text-muted-foreground">Toplam Risk (net)</div>
+                <div className="text-xs text-muted-foreground">Toplam Risk (net)</div>
                 <div className="mt-0.5 text-sm font-semibold">
                   {net != null ? (
                     <>
@@ -205,13 +205,13 @@ function AccountSummaryCard() {
             </div>
 
             {dataSourceLabel && (
-              <p className="text-[11px] text-muted-foreground">{dataSourceLabel}</p>
+              <p className="text-xs text-muted-foreground">{dataSourceLabel}</p>
             )}
           </>
         )}
 
         {!loading && !error && !summary && (
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Hesap özetiniz şu anda gösterilemiyor.
           </p>
         )}
@@ -269,7 +269,7 @@ function B2BDashboardKpiRow({ sessionQuotes, sessionBookings }) {
       </CardHeader>
       <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
         {error && (
-          <div className="col-span-2 md:col-span-4 text-[11px] text-destructive flex items-start gap-2">
+          <div className="col-span-2 md:col-span-4 text-xs text-destructive flex items-start gap-2">
             <AlertCircle className="h-3 w-3 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -277,19 +277,19 @@ function B2BDashboardKpiRow({ sessionQuotes, sessionBookings }) {
         {!error && (
           <>
             <div className="space-y-1">
-              <div className="text-[11px] text-muted-foreground">Son 30 günde booking</div>
+              <div className="text-xs text-muted-foreground">Son 30 günde booking</div>
               <div className="text-sm font-semibold">
                 {loading && !stats ? "..." : stats ? stats.total : "-"}
               </div>
             </div>
             <div className="space-y-1">
-              <div className="text-[11px] text-muted-foreground">Onaylanan</div>
+              <div className="text-xs text-muted-foreground">Onaylanan</div>
               <div className="text-sm font-semibold">
                 {loading && !stats ? "..." : stats ? stats.confirmed : "-"}
               </div>
             </div>
             <div className="space-y-1">
-              <div className="text-[11px] text-muted-foreground">Toplam ciro (son N)</div>
+              <div className="text-xs text-muted-foreground">Toplam ciro (son N)</div>
               <div className="text-sm font-semibold">
                 {loading && !stats
                   ? "..."
@@ -299,8 +299,8 @@ function B2BDashboardKpiRow({ sessionQuotes, sessionBookings }) {
               </div>
             </div>
             <div className="space-y-1">
-              <div className="text-[11px] text-muted-foreground">Bu oturumda</div>
-              <div className="text-[11px]">
+              <div className="text-xs text-muted-foreground">Bu oturumda</div>
+              <div className="text-xs">
                 <span className="font-semibold">{sessionQuotes}</span> quote, {" "}
                 <span className="font-semibold">{sessionBookings}</span> booking
               </div>
@@ -375,7 +375,7 @@ function PricePreviewDialog({ open, onOpenChange, checkIn, checkOut, adults, chi
               <div className="font-medium">{dateLabel}</div>
               <div className="text-xs text-muted-foreground">{occLabel}</div>
               {nightsMismatch && (
-                <div className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-1">
+                <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-1">
                   Tarih aralığı ile teklifin gece sayısı tam olarak uyuşmuyor; bu sadece hızlı bir özet bilgisidir.
                 </div>
               )}
@@ -412,7 +412,7 @@ function PricePreviewDialog({ open, onOpenChange, checkIn, checkOut, adults, chi
               </div>
             </div>
 
-            <div className="rounded-md border bg-muted/40 px-3 py-2 text-[11px] text-muted-foreground">
+            <div className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
               Bu özet, seçili sonuca ait verilerden türetilmiştir. Kesin tutar için rezervasyon akışındaki detay
               ekranını kullanın.
             </div>
@@ -563,14 +563,14 @@ function BookingListTab() {
               {!loading && !error && items.length > 0 && filteredItems.length === 0 && (
                 <div className="text-sm text-muted-foreground">
                   Sonuç bulunamadı.
-                  <div className="text-[11px] text-muted-foreground">Arama terimini kısaltmayı deneyin.</div>
+                  <div className="text-xs text-muted-foreground">Arama terimini kısaltmayı deneyin.</div>
                 </div>
               )}
 
               {filteredItems.length > 0 && (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
-                <thead className="border-b bg-muted/50 text-[11px] uppercase tracking-wide text-muted-foreground">
+                <thead className="border-b bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-2 py-2">Booking ID</th>
                     <th className="px-2 py-2">Misafir</th>
@@ -586,7 +586,7 @@ function BookingListTab() {
                   {filteredItems.map((b) => {
                   const s = String(b.status || "").toUpperCase();
         {!loading && !error && items.length > 0 && (
-          <p className="text-[11px] text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Bazı rezervasyonlarda tarih bilgisi okunamadığı için tarih filtresi bu kayıtlara uygulanmayabilir.
           </p>
         )}
@@ -596,12 +596,12 @@ function BookingListTab() {
 
                   return (
                     <tr key={b.booking_id} className="border-b last:border-0">
-                      <td className="px-2 py-2 font-mono text-[11px] max-w-[160px] truncate" title={b.booking_id}>
+                      <td className="px-2 py-2 font-mono text-xs max-w-[160px] truncate" title={b.booking_id}>
                         {b.booking_id}
                       </td>
                       <td className="px-2 py-2 text-xs">{b.primary_guest_name || "-"}</td>
         {!loading && !error && items.length > 0 && (
-          <div className="text-[11px] text-muted-foreground flex items-center justify-between mt-2">
+          <div className="text-xs text-muted-foreground flex items-center justify-between mt-2">
             <span>
               {filteredItems.length}/{items.length} sonuç
             </span>
@@ -610,7 +610,7 @@ function BookingListTab() {
                 type="button"
                 size="xs"
                 variant="ghost"
-                className="text-[11px]"
+                className="text-xs"
                 onClick={() => {
                   setCheckInFilter("");
                   setCheckOutFilter("");
@@ -648,7 +648,7 @@ function BookingListTab() {
                               href={voucherUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center text-[11px] text-primary hover:underline"
+                              className="inline-flex items-center text-xs text-primary hover:underline"
                             >
                               Voucher
                             </a>
@@ -656,7 +656,7 @@ function BookingListTab() {
                           <Button
                             size="xs"
                             variant="ghost"
-                            className="h-7 px-2 text-[11px]"
+                            className="h-7 px-2 text-xs"
                             disabled
                             title="İptal için 'Quote / Book / Cancel' sekmesindeki iptal adımını kullanın."
                           >
@@ -1167,13 +1167,13 @@ export default function B2BPortalPage() {
                   </Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <div>
-                      <Label className="text-[11px] text-muted-foreground">Şehir</Label>
+                      <Label className="text-xs text-muted-foreground">Şehir</Label>
                       <Input value={city} onChange={(e) => setCity(e.target.value)} />
-                      {cityError && <div className="text-[11px] text-destructive mt-1">{cityError}</div>}
+                      {cityError && <div className="text-xs text-destructive mt-1">{cityError}</div>}
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <Label className="text-[11px] text-muted-foreground">Yetişkin</Label>
+                        <Label className="text-xs text-muted-foreground">Yetişkin</Label>
                         <Input
                           type="number"
                           min={1}
@@ -1183,7 +1183,7 @@ export default function B2BPortalPage() {
                         />
                       </div>
                       <div>
-                        <Label className="text-[11px] text-muted-foreground">Çocuk</Label>
+                        <Label className="text-xs text-muted-foreground">Çocuk</Label>
                         <Input
                           type="number"
                           min={0}
@@ -1197,14 +1197,14 @@ export default function B2BPortalPage() {
 
                   {/* Marketplace ürün listesi: referans amaçlı */}
                   {marketplaceLoading && (
-                    <p className="mt-1 text-[11px] text-muted-foreground">Yetkili ürünler yükleniyor...</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Yetkili ürünler yükleniyor...</p>
                   )}
                   {!marketplaceLoading && marketplaceError && (
-                    <p className="mt-1 text-[11px] text-destructive">{marketplaceError}</p>
+                    <p className="mt-1 text-xs text-destructive">{marketplaceError}</p>
                   )}
                   {!marketplaceLoading && !marketplaceError && marketplaceProducts.length > 0 && (
                     <div className="mt-2 max-h-32 overflow-y-auto rounded-md border bg-muted/40">
-                      <table className="w-full text-[11px]">
+                      <table className="w-full text-xs">
                         <thead>
                           <tr className="text-muted-foreground">
                             <th className="px-2 py-1 text-left font-medium">Ürün</th>
@@ -1219,16 +1219,16 @@ export default function B2BPortalPage() {
                               <td className="px-2 py-1">
                                 <div className="flex flex-col">
                                   <span className="font-medium truncate max-w-[160px]">{p.title}</span>
-                                  <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[200px]">
+                                  <span className="font-mono text-2xs text-muted-foreground truncate max-w-[200px]">
                                     {p.product_id}
                                   </span>
                                 </div>
                               </td>
-                              <td className="px-2 py-1 text-[10px] capitalize">{p.type || "-"}</td>
-                              <td className="px-2 py-1 text-[10px]">
+                              <td className="px-2 py-1 text-2xs capitalize">{p.type || "-"}</td>
+                              <td className="px-2 py-1 text-2xs">
                                 {p.status === "active" ? "Aktif" : "Pasif"}
                               </td>
-                              <td className="px-2 py-1 text-[10px] text-right">
+                              <td className="px-2 py-1 text-2xs text-right">
                                 {typeof p.commission_rate === "number" ? `${p.commission_rate}%` : "-"}
                               </td>
                             </tr>
@@ -1255,13 +1255,13 @@ export default function B2BPortalPage() {
               <AlertCircle className="h-4 w-4 mt-0.5" />
               <div className="flex-1 flex flex-col gap-1">
                 <div className="font-medium">Arama başarısız.</div>
-                <div className="text-[11px] text-destructive/90">{searchError}</div>
+                <div className="text-xs text-destructive/90">{searchError}</div>
                 <div>
                   <Button
                     type="button"
                     variant="outline"
                     size="xs"
-                    className="text-[11px]"
+                    className="text-xs"
                     disabled={searchLoading}
                     onClick={(e) => {
                       e.preventDefault();
@@ -1276,7 +1276,7 @@ export default function B2BPortalPage() {
           )}
 
           {/* Tarih özet satırı */}
-          <div className="mt-2 text-[11px] text-muted-foreground">
+          <div className="mt-2 text-xs text-muted-foreground">
             {checkIn && checkOut && nights ? (
               <span>
                 Çıkış: {checkOut} ({nights} gece)
@@ -1323,7 +1323,7 @@ export default function B2BPortalPage() {
                     }}
                   />
                   {dateError && (
-                    <div className="text-[11px] text-destructive mt-1">{dateError}</div>
+                    <div className="text-xs text-destructive mt-1">{dateError}</div>
                   )}
                 </div>
 
@@ -1400,15 +1400,15 @@ export default function B2BPortalPage() {
                                 <div className="text-lg font-semibold">
                                   {item.selling_total} {item.selling_currency}
                                 </div>
-                                <div className="text-[11px] text-muted-foreground">
+                                <div className="text-xs text-muted-foreground">
                                   {item.nights} gece · {item.occupancy?.adults || adults || 0} yetişkin
                                 </div>
-                                <div className="text-[11px] text-muted-foreground">
+                                <div className="text-xs text-muted-foreground">
                                   Net: {item.base_net} {item.base_currency}
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
                               <span>Plan: {item.board}</span>
                               {isSelected && <span className="text-primary font-medium">Seçili</span>}
                             {isSelected && (
@@ -1417,7 +1417,7 @@ export default function B2BPortalPage() {
                                   type="button"
                                   size="xs"
                                   variant="ghost"
-                                  className="text-[11px] text-muted-foreground hover:text-destructive"
+                                  className="text-xs text-muted-foreground hover:text-destructive"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setSelectedOffer(null);
@@ -1438,7 +1438,7 @@ export default function B2BPortalPage() {
 
                   {/* Hızlı fiyat önizleme butonu */}
                   <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       Seçili otel ve tarihler için hızlı fiyat özetini görüntüleyebilirsiniz.
                     </p>
                     <Button
@@ -1491,7 +1491,7 @@ export default function B2BPortalPage() {
                         {isExpired ? "Süresi doldu" : `Kalan: ${formatRemaining(remainingMs)}`}
                       </Badge>
                     </div>
-                    <div className="text-[11px] text-muted-foreground mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                       Son geçerlilik: {expiresAtDate ? expiresAtDate.toLocaleString("tr-TR") : quote.expires_at}
                     </div>
                   </div>
@@ -1601,7 +1601,7 @@ export default function B2BPortalPage() {
               </div>
 
               {booking.finance_flags?.near_limit && (
-                <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 flex items-start gap-2">
+                <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 flex items-start gap-2">
                   <span className="mt-0.5 text-sm">!</span>
                   <div>
                     <div className="font-semibold">Kredi limitinize yaklaştınız</div>

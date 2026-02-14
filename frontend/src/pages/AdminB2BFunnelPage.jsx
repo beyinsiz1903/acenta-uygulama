@@ -115,7 +115,7 @@ export default function AdminB2BFunnelPage() {
                       <TableCell className="text-xs">
                         <div className="flex flex-col">
                           <span className="font-medium truncate max-w-[220px]">{it.partner}</span>
-                          <span className="text-[10px] text-muted-foreground">partner_id</span>
+                          <span className="text-2xs text-muted-foreground">partner_id</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-xs text-right font-mono">
@@ -124,10 +124,10 @@ export default function AdminB2BFunnelPage() {
                       <TableCell className="text-xs text-right font-mono">
                         {formatAmountCents(it.total_amount_cents, "EUR")}
                       </TableCell>
-                      <TableCell className="text-[11px] text-muted-foreground">
+                      <TableCell className="text-xs text-muted-foreground">
                         {it.first_quote_at || "-"}
                       </TableCell>
-                      <TableCell className="text-[11px] text-muted-foreground">
+                      <TableCell className="text-xs text-muted-foreground">
                         {it.last_quote_at || "-"}
                       </TableCell>
                     </TableRow>

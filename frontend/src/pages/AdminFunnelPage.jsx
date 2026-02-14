@@ -9,7 +9,7 @@ import { Card } from "../components/ui/card";
 function FieldError({ text }) {
   if (!text) return null;
   return (
-    <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[11px] text-destructive">
+    <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
       {text}
     </div>
   );
@@ -116,11 +116,11 @@ export default function AdminFunnelPage() {
         </p>
       </div>
 
-      <Card className="p-3 space-y-3 text-[11px]">
+      <Card className="p-3 space-y-3 text-xs">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <Label htmlFor="funnel-days" className="text-[11px]">
+              <Label htmlFor="funnel-days" className="text-xs">
                 Son
               </Label>
               <select
@@ -135,7 +135,7 @@ export default function AdminFunnelPage() {
                 <option value={30}>30 gün</option>
               </select>
             </div>
-            <div className="flex items-center gap-1 border rounded-md bg-background p-0.5 text-[10px]">
+            <div className="flex items-center gap-1 border rounded-md bg-background p-0.5 text-2xs">
               <button
                 type="button"
                 data-testid="funnel-kpi-channel-all"
@@ -168,44 +168,44 @@ export default function AdminFunnelPage() {
               </button>
             </div>
           </div>
-          {summaryLoading && <div className="text-[11px] text-muted-foreground">Ykleniyor...</div>}
+          {summaryLoading && <div className="text-xs text-muted-foreground">Ykleniyor...</div>}
         </div>
 
         {summaryError && <FieldError text={summaryError} />}
 
         <div className="grid grid-cols-2 md:grid-cols-6 gap-2 mt-2">
           <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-quotes">
-            <div className="text-[10px] text-muted-foreground">Teklifler</div>
+            <div className="text-2xs text-muted-foreground">Teklifler</div>
             <div className="text-sm font-semibold">{currentSummary.quote_count}</div>
           </div>
           <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-checkout-started">
-            <div className="text-[10px] text-muted-foreground">Checkout Başlatıldı</div>
+            <div className="text-2xs text-muted-foreground">Checkout Başlatıldı</div>
             <div className="text-sm font-semibold">{currentSummary.checkout_started_count}</div>
           </div>
           <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-bookings">
-            <div className="text-[10px] text-muted-foreground">Rezervasyonlar</div>
+            <div className="text-2xs text-muted-foreground">Rezervasyonlar</div>
             <div className="text-sm font-semibold">{currentSummary.booking_created_count}</div>
           </div>
           <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-pay-succeeded">
-            <div className="text-[10px] text-muted-foreground">Başarılı Ödemeler</div>
+            <div className="text-2xs text-muted-foreground">Başarılı Ödemeler</div>
             <div className="text-sm font-semibold">{currentSummary.payment_succeeded_count}</div>
           </div>
           <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-pay-failed">
-            <div className="text-[10px] text-muted-foreground">Başarısız Ödemeler</div>
+            <div className="text-2xs text-muted-foreground">Başarısız Ödemeler</div>
             <div className="text-sm font-semibold">{currentSummary.payment_failed_count}</div>
           </div>
           <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-conversion">
-            <div className="text-[10px] text-muted-foreground">Dönüşüm</div>
+            <div className="text-2xs text-muted-foreground">Dönüşüm</div>
             <div className="text-sm font-semibold">{formatPercent(currentSummary.conversion)}</div>
           </div>
         </div>
       </Card>
 
       {/* Alerts Panel */}
-      <Card className="p-3 space-y-3 text-[11px]" data-testid="funnel-alerts-panel">
+      <Card className="p-3 space-y-3 text-xs" data-testid="funnel-alerts-panel">
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold">Funnel Alerts</div>
-          {alertsLoading && <div className="text-[11px] text-muted-foreground">Yükleniyor...</div>}
+          {alertsLoading && <div className="text-xs text-muted-foreground">Yükleniyor...</div>}
         </div>
 
         {alertsError && <FieldError text={alertsError} />}
@@ -213,7 +213,7 @@ export default function AdminFunnelPage() {
         {!alertsLoading && !alertsError && (
           <div className="space-y-2">
             {alerts.length === 0 ? (
-              <div className="text-[11px] text-muted-foreground p-2 bg-green-50 border border-green-200 rounded-md">
+              <div className="text-xs text-muted-foreground p-2 bg-green-50 border border-green-200 rounded-md">
                 ✅ Sağlıklı - {days} günde alert bulunamadı
               </div>
             ) : (
@@ -221,12 +221,12 @@ export default function AdminFunnelPage() {
                 {alerts.map((alert, index) => (
                   <div
                     key={index}
-                    className="p-2 bg-red-50 border border-red-200 rounded-md text-[11px]"
+                    className="p-2 bg-red-50 border border-red-200 rounded-md text-xs"
                     data-testid={`funnel-alert-item-${alert.code}-${alert.channel}`}
                   >
                     <div className="font-semibold text-red-700">{alert.code}</div>
                     <div className="text-red-600">{alert.message}</div>
-                    <div className="text-red-500 text-[10px]">Channel: {alert.channel}</div>
+                    <div className="text-red-500 text-2xs">Channel: {alert.channel}</div>
                   </div>
                 ))}
               </div>
@@ -235,10 +235,10 @@ export default function AdminFunnelPage() {
         )}
       </Card>
 
-      <Card className="p-3 space-y-3 text-[11px]">
+      <Card className="p-3 space-y-3 text-xs">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
           <div className="space-y-1">
-            <Label className="text-[11px]">Correlation ID</Label>
+            <Label className="text-xs">Correlation ID</Label>
             <Input
               className="h-8 text-xs font-mono"
               value={correlationId}
@@ -247,7 +247,7 @@ export default function AdminFunnelPage() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Entity ID (booking/quote)</Label>
+            <Label className="text-xs">Entity ID (booking/quote)</Label>
             <Input
               className="h-8 text-xs font-mono"
               value={entityId}
@@ -256,7 +256,7 @@ export default function AdminFunnelPage() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Channel</Label>
+            <Label className="text-xs">Channel</Label>
             <select
               className="h-8 w-full rounded-md border bg-background px-2 text-xs"
               value={channel}
@@ -278,10 +278,10 @@ export default function AdminFunnelPage() {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Card className="p-3 space-y-2 text-[11px]">
+        <Card className="p-3 space-y-2 text-xs">
           <div className="flex items-center justify-between">
             <div className="text-sm font-semibold">Event Listesi</div>
-            <div className="text-[11px] text-muted-foreground">Sonuç: {events.length}</div>
+            <div className="text-xs text-muted-foreground">Sonuç: {events.length}</div>
           </div>
 
           <div className="mt-2 rounded-md border overflow-hidden">
@@ -310,7 +310,7 @@ export default function AdminFunnelPage() {
                 </button>
               ))}
               {!events.length && (
-                <div className="px-2 py-3 text-[11px] text-muted-foreground">
+                <div className="px-2 py-3 text-xs text-muted-foreground">
                   Henüz event yok veya filtre boş sonuç döndürdü.
                 </div>
               )}
@@ -318,10 +318,10 @@ export default function AdminFunnelPage() {
           </div>
         </Card>
 
-        <Card className="p-3 space-y-2 text-[11px]">
+        <Card className="p-3 space-y-2 text-xs">
           <div className="text-sm font-semibold">Detay</div>
           {!selected && (
-            <div className="text-[11px] text-muted-foreground mt-2">
+            <div className="text-xs text-muted-foreground mt-2">
               Soldan bir event seçin.
             </div>
           )}
@@ -342,7 +342,7 @@ export default function AdminFunnelPage() {
                 <div className="font-semibold">Context</div>
                 <Textarea
                   readOnly
-                  className="font-mono text-[11px] min-h-[120px]"
+                  className="font-mono text-xs min-h-[120px]"
                   value={JSON.stringify(selected.context || {}, null, 2)}
                 />
               </div>
@@ -351,7 +351,7 @@ export default function AdminFunnelPage() {
                 <div className="font-semibold">Trace</div>
                 <Textarea
                   readOnly
-                  className="font-mono text-[11px] min-h-[120px]"
+                  className="font-mono text-xs min-h-[120px]"
                   value={JSON.stringify(selected.trace || {}, null, 2)}
                 />
               </div>

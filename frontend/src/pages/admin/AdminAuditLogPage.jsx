@@ -18,10 +18,10 @@ function DiffSummary({ before, after }) {
   return (
     <div className="flex flex-wrap gap-1">
       {added.map((f) => (
-        <Badge key={`+${f}`} variant="default" className="text-[10px] px-1.5 py-0 bg-green-600">+{f}</Badge>
+        <Badge key={`+${f}`} variant="default" className="text-2xs px-1.5 py-0 bg-green-600">+{f}</Badge>
       ))}
       {removed.map((f) => (
-        <Badge key={`-${f}`} variant="destructive" className="text-[10px] px-1.5 py-0">-{f}</Badge>
+        <Badge key={`-${f}`} variant="destructive" className="text-2xs px-1.5 py-0">-{f}</Badge>
       ))}
       {added.length === 0 && removed.length === 0 && (
         <span className="text-xs text-muted-foreground">Değişiklik yok</span>
@@ -163,7 +163,7 @@ export default function AdminAuditLogPage() {
                   <tr key={log.id || `log_${idx}`} className="border-t hover:bg-muted/30">
                     <td className="px-4 py-2.5 whitespace-nowrap text-xs">{formatDate(log.created_at)}</td>
                     <td className="px-4 py-2.5">
-                      <Badge variant="outline" className="text-[11px]">{log.action}</Badge>
+                      <Badge variant="outline" className="text-xs">{log.action}</Badge>
                     </td>
                     <td className="px-4 py-2.5 text-xs">
                       {tenantNameMap[log.tenant_id] || log.tenant_id?.slice(0, 12) + "..."}

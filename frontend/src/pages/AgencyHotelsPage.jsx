@@ -360,15 +360,15 @@ export default function AgencyHotelsPage() {
                             <div className="text-lg font-semibold">
                               {item.selling_total} {item.selling_currency}
                             </div>
-                            <div className="text-[11px] text-muted-foreground">
+                            <div className="text-xs text-muted-foreground">
                               {item.nights} gece · {item.occupancy?.adults || 0} yetişkin
                             </div>
-                            <div className="text-[11px] text-muted-foreground">
+                            <div className="text-xs text-muted-foreground">
                               Net: {item.base_net} {item.base_currency}
                             </div>
                           </div>
                         </div>
-                        <div className="text-[11px] text-muted-foreground flex items-center justify-between">
+                        <div className="text-xs text-muted-foreground flex items-center justify-between">
                           <span>Plan: {item.board}</span>
                           {isSelected && <span className="text-primary font-medium">Seçili</span>}
                         </div>
@@ -434,7 +434,7 @@ export default function AgencyHotelsPage() {
                 <div className="space-y-1">
                   <div className="font-semibold text-foreground">Otel</div>
                   <div className="text-sm">{selectedOffer?.hotel_name}</div>
-                  <div className="text-[11px] text-muted-foreground">
+                  <div className="text-xs text-muted-foreground">
                     {city}, {selectedOffer?.country}
                   </div>
                 </div>
@@ -443,7 +443,7 @@ export default function AgencyHotelsPage() {
                   <div className="text-sm">
                     {checkIn} → {checkOut}
                   </div>
-                  <div className="text-[11px] text-muted-foreground">
+                  <div className="text-xs text-muted-foreground">
                     {quote.offer?.currency} {quote.offer?.sell} · {adults} yetişkin
                   </div>
                 </div>
@@ -452,7 +452,7 @@ export default function AgencyHotelsPage() {
                   <div className="text-lg font-semibold">
                     {quote.offer?.sell} {quote.offer?.currency}
                   </div>
-                  <div className="text-[11px] text-muted-foreground">Quote ID: {quote.quote_id}</div>
+                  <div className="text-xs text-muted-foreground">Quote ID: {quote.quote_id}</div>
                 </div>
               </div>
 
@@ -558,7 +558,7 @@ export default function AgencyHotelsPage() {
                       <div className="font-semibold text-foreground">
                         Rezervasyon Oluşturuldu
                       </div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         Booking ID: <span className="font-mono">{booking.booking_id}</span>
                       </div>
                     </div>
@@ -609,7 +609,7 @@ export default function AgencyHotelsPage() {
                   </div>
 
                   {booking.finance_flags?.near_limit && (
-                    <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 flex items-start gap-2">
+                    <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 flex items-start gap-2">
                       <span className="mt-0.5 text-sm">!</span>
                       <div>
                         <div className="font-semibold">Kredi limitinize yaklaştınız</div>
@@ -819,15 +819,15 @@ export default function AgencyHotelsPage() {
                             <div className="text-lg font-semibold">
                               {item.selling_total} {item.selling_currency}
                             </div>
-                            <div className="text-[11px] text-muted-foreground">
+                            <div className="text-xs text-muted-foreground">
                               {item.nights} gece · {item.occupancy?.adults || 0} yetişkin
                             </div>
-                            <div className="text-[11px] text-muted-foreground">
+                            <div className="text-xs text-muted-foreground">
                               Net: {item.base_net} {item.base_currency}
                             </div>
                           </div>
                         </div>
-                        <div className="text-[11px] text-muted-foreground flex items-center justify-between">
+                        <div className="text-xs text-muted-foreground flex items-center justify-between">
                           <span>Plan: {item.board}</span>
                           {isSelected && <span className="text-primary font-medium">Seçili</span>}
                         </div>
@@ -893,7 +893,7 @@ export default function AgencyHotelsPage() {
                 <div className="space-y-1">
                   <div className="font-semibold text-foreground">Otel</div>
                   <div className="text-sm">{selectedOffer?.hotel_name}</div>
-                  <div className="text-[11px] text-muted-foreground">
+                  <div className="text-xs text-muted-foreground">
                     {city}, {selectedOffer?.country}
                   </div>
                 </div>
@@ -902,7 +902,7 @@ export default function AgencyHotelsPage() {
                   <div className="text-sm">
                     {checkIn} → {checkOut}
                   </div>
-                  <div className="text-[11px] text-muted-foreground">
+                  <div className="text-xs text-muted-foreground">
                     {quote.offer?.currency} {quote.offer?.sell} · {adults} yetişkin
                   </div>
                 </div>
@@ -911,7 +911,7 @@ export default function AgencyHotelsPage() {
                   <div className="text-lg font-semibold">
                     {quote.offer?.sell} {quote.offer?.currency}
                   </div>
-                  <div className="text-[11px] text-muted-foreground">Quote ID: {quote.quote_id}</div>
+                  <div className="text-xs text-muted-foreground">Quote ID: {quote.quote_id}</div>
                 </div>
               </div>
 
@@ -1017,7 +1017,7 @@ export default function AgencyHotelsPage() {
                       <div className="font-semibold text-foreground">
                         Rezervasyon Oluşturuldu
                       </div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         Booking ID: <span className="font-mono">{booking.booking_id}</span>
                       </div>
                     </div>
@@ -1068,7 +1068,7 @@ export default function AgencyHotelsPage() {
                   </div>
 
                   {booking.finance_flags?.near_limit && (
-                    <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 flex items-start gap-2">
+                    <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 flex items-start gap-2">
                       <span className="mt-0.5 text-sm">!</span>
                       <div>
                         <div className="font-semibold">Kredi limitinize yaklaştınız</div>

@@ -41,7 +41,7 @@ function statusConfig(status) {
 function StatusPill({ status }) {
   const cfg = statusConfig(status);
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide ${cfg.bg} ${cfg.color} ${cfg.border} border`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold tracking-wide ${cfg.bg} ${cfg.color} ${cfg.border} border`}>
       <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
       {cfg.label}
     </span>
@@ -59,8 +59,8 @@ function InfoCard({ icon: Icon, label, value, accent, className = "" }) {
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">{label}</div>
-          <div className={`mt-0.5 text-[13px] font-semibold tracking-tight truncate ${accent ? "text-primary" : "text-foreground"}`}>{value || "—"}</div>
+          <div className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/70">{label}</div>
+          <div className={`mt-0.5 text-sm font-semibold tracking-tight truncate ${accent ? "text-primary" : "text-foreground"}`}>{value || "—"}</div>
         </div>
       </div>
     </div>
@@ -218,17 +218,17 @@ function PaymentForm({ reservationId, currency, onSaved }) {
         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/5">
           <Banknote className="h-3.5 w-3.5 text-primary/60" />
         </div>
-        <span className="text-[13px] font-semibold tracking-tight text-foreground">Tahsilat Ekle</span>
+        <span className="text-sm font-semibold tracking-tight text-foreground">Tahsilat Ekle</span>
       </div>
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-4">
         <div className="space-y-1.5">
-          <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Tutar</Label>
-          <Input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" placeholder="0.00" className="h-9 text-[13px]" data-testid="pay-amount" />
+          <Label className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/70">Tutar</Label>
+          <Input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" placeholder="0.00" className="h-9 text-sm" data-testid="pay-amount" />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Yöntem</Label>
+          <Label className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/70">Yöntem</Label>
           <Select value={method} onValueChange={setMethod}>
-            <SelectTrigger data-testid="pay-method" className="h-9 text-[13px]">
+            <SelectTrigger data-testid="pay-method" className="h-9 text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -240,8 +240,8 @@ function PaymentForm({ reservationId, currency, onSaved }) {
           </Select>
         </div>
         <div className="space-y-1.5 sm:col-span-2">
-          <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Referans</Label>
-          <Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="Dekont no / açıklama" className="h-9 text-[13px]" data-testid="pay-ref" />
+          <Label className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/70">Referans</Label>
+          <Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="Dekont no / açıklama" className="h-9 text-sm" data-testid="pay-ref" />
         </div>
       </div>
       <div className="mt-3">
@@ -365,7 +365,7 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
               </div>
             </SheetHeader>
             {data && (
-              <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground">
+              <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><Hash className="h-3 w-3" /> {data.pnr}</span>
                 <span className="text-border">|</span>
                 <span className="flex items-center gap-1"><FileText className="h-3 w-3" /> {data.voucher_no || "—"}</span>
@@ -403,20 +403,20 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
                     <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
                       <CircleDollarSign className="h-3.5 w-3.5 text-primary" />
                     </div>
-                    <span className="text-[13px] font-semibold tracking-tight text-foreground">Finansal Özet</span>
+                    <span className="text-sm font-semibold tracking-tight text-foreground">Finansal Özet</span>
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
                     <div className="rounded-lg bg-background/80 border border-border/40 p-3 text-center">
-                      <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Toplam</div>
+                      <div className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/70">Toplam</div>
                       <div className="mt-1 text-base font-bold tracking-tight text-foreground">{formatMoney(data.total_price, data.currency)}</div>
                     </div>
                     <div className="rounded-lg bg-background/80 border border-border/40 p-3 text-center">
-                      <div className="text-[10px] font-medium uppercase tracking-wider text-emerald-600/70">Ödenen</div>
+                      <div className="text-2xs font-medium uppercase tracking-wider text-emerald-600/70">Ödenen</div>
                       <div className="mt-1 text-base font-bold tracking-tight text-emerald-600">{formatMoney(data.paid_amount, data.currency)}</div>
                     </div>
                     <div className="rounded-lg bg-background/80 border border-border/40 p-3 text-center">
-                      <div className="text-[10px] font-medium uppercase tracking-wider text-amber-600/70">Kalan</div>
+                      <div className="text-2xs font-medium uppercase tracking-wider text-amber-600/70">Kalan</div>
                       <div className={`mt-1 text-base font-bold tracking-tight ${dueAmount > 0 ? "text-amber-600" : "text-emerald-600"}`}>
                         {formatMoney(dueAmount, data.currency)}
                       </div>
@@ -425,7 +425,7 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
 
                   {/* Progress bar */}
                   <div className="mt-3">
-                    <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
+                    <div className="flex items-center justify-between text-2xs text-muted-foreground mb-1">
                       <span>Ödeme İlerlemesi</span>
                       <span className="font-semibold text-foreground">%{paidPercent}</span>
                     </div>
@@ -441,7 +441,7 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
                 {/* ── Detail Cards ── */}
                 <div>
                   <div className="flex items-center gap-2 mb-2.5">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">Rezervasyon Bilgileri</span>
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">Rezervasyon Bilgileri</span>
                     <div className="flex-1 h-px bg-border/40" />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -460,7 +460,7 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
                 {/* ── Actions ── */}
                 <div>
                   <div className="flex items-center gap-2 mb-2.5">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">İşlemler</span>
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">İşlemler</span>
                     <div className="flex-1 h-px bg-border/40" />
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -493,9 +493,9 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
                       <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/5">
                         <Receipt className="h-3.5 w-3.5 text-primary/60" />
                       </div>
-                      <span className="text-[13px] font-semibold tracking-tight text-foreground">Tahsilatlar</span>
+                      <span className="text-sm font-semibold tracking-tight text-foreground">Tahsilatlar</span>
                     </div>
-                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary/10 px-1.5 text-[10px] font-bold text-primary">
+                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary/10 px-1.5 text-2xs font-bold text-primary">
                       {(data.payments || []).length}
                     </span>
                   </div>
@@ -508,7 +508,7 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
                         <div key={p.id} className="flex items-center justify-between rounded-lg border border-border/40 bg-background/60 px-3 py-2.5 transition-colors hover:bg-muted/30">
                           <div>
                             <div className="text-xs font-medium text-foreground">{p.method === "cash" ? "Nakit" : p.method === "bank_transfer" ? "Havale" : p.method === "card" ? "Kredi Kartı" : p.method}</div>
-                            <div className="text-[10px] text-muted-foreground/60 mt-0.5">
+                            <div className="text-2xs text-muted-foreground/60 mt-0.5">
                               {p.reference || "—"} · {p.created_at ? new Date(p.created_at).toLocaleDateString("tr-TR") : ""}
                             </div>
                           </div>
@@ -605,8 +605,8 @@ export default function ReservationsPage() {
             return (
               <div key={k} className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 ${cfg.bg} ${cfg.border}`}>
                 <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
-                <span className={`text-[11px] font-medium ${cfg.color}`}>{cfg.label}</span>
-                <span className={`text-[11px] font-bold ${cfg.color}`}>{v}</span>
+                <span className={`text-xs font-medium ${cfg.color}`}>{cfg.label}</span>
+                <span className={`text-xs font-bold ${cfg.color}`}>{v}</span>
               </div>
             );
           })}
@@ -660,12 +660,12 @@ export default function ReservationsPage() {
             <Table data-testid="res-table">
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
-                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">PNR</TableHead>
-                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Durum</TableHead>
-                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Toplam</TableHead>
-                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Ödenen</TableHead>
-                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Kanal</TableHead>
-                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 h-9 text-right">İşlem</TableHead>
+                  <TableHead className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">PNR</TableHead>
+                  <TableHead className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Durum</TableHead>
+                  <TableHead className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Toplam</TableHead>
+                  <TableHead className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Ödenen</TableHead>
+                  <TableHead className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70 h-9">Kanal</TableHead>
+                  <TableHead className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70 h-9 text-right">İşlem</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -695,14 +695,14 @@ export default function ReservationsPage() {
                 ) : (
                   rows.map((r) => (
                     <TableRow key={r.id} className="group cursor-pointer hover:bg-muted/20 transition-colors" onClick={() => { setDetailId(r.id); setOpenDetail(true); }}>
-                      <TableCell className="text-[13px] font-semibold tracking-tight text-foreground py-3">{r.pnr}</TableCell>
+                      <TableCell className="text-sm font-semibold tracking-tight text-foreground py-3">{r.pnr}</TableCell>
                       <TableCell className="py-3">
                         <div className="flex items-center gap-1.5">
                           <StatusPill status={r.status} />
                           {r.has_open_case && (
                             <button
                               type="button"
-                              className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[9px] font-bold text-amber-800 tracking-wide"
+                              className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-2xs font-bold text-amber-800 tracking-wide"
                               onClick={(e) => { e.stopPropagation(); window.location.href = `/ops/cases?booking_id=${r.id}&status=open,waiting,in_progress`; }}
                               data-testid={`badge-open-case-${r.id}`}
                             >
@@ -711,14 +711,14 @@ export default function ReservationsPage() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-[13px] font-medium text-foreground/80 py-3">{formatMoney(r.total_price, r.currency)}</TableCell>
-                      <TableCell className="text-[13px] font-medium text-foreground/80 py-3">{formatMoney(r.paid_amount, r.currency)}</TableCell>
-                      <TableCell className="text-[12px] text-muted-foreground py-3">{r.channel}</TableCell>
+                      <TableCell className="text-sm font-medium text-foreground/80 py-3">{formatMoney(r.total_price, r.currency)}</TableCell>
+                      <TableCell className="text-sm font-medium text-foreground/80 py-3">{formatMoney(r.paid_amount, r.currency)}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground py-3">{r.channel}</TableCell>
                       <TableCell className="text-right py-3">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="gap-1 text-[11px] font-medium h-7 text-primary hover:text-primary opacity-60 group-hover:opacity-100 transition-opacity"
+                          className="gap-1 text-xs font-medium h-7 text-primary hover:text-primary opacity-60 group-hover:opacity-100 transition-opacity"
                           onClick={(e) => { e.stopPropagation(); setDetailId(r.id); setOpenDetail(true); }}
                           data-testid={`res-open-${r.id}`}
                         >

@@ -168,7 +168,7 @@ export default function PartnerRelationshipsPage() {
           <div>
             <CardTitle className="text-sm font-medium">Filtreler</CardTitle>
           </div>
-          <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
             <div className="flex flex-col gap-1">
               <span className="font-medium flex items-center gap-1">
                 <Filter className="h-3 w-3" /> Durum
@@ -181,7 +181,7 @@ export default function PartnerRelationshipsPage() {
                       key={opt.value}
                       type="button"
                       onClick={() => toggleStatus(opt.value)}
-                      className={`h-6 rounded-full border px-2 text-[11px] ${
+                      className={`h-6 rounded-full border px-2 text-xs ${
                         active
                           ? "bg-primary text-primary-foreground border-primary"
                           : "text-muted-foreground"
@@ -195,8 +195,8 @@ export default function PartnerRelationshipsPage() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-medium">Rol</span>
-              <div className="inline-flex rounded-md border bg-background p-0.5 text-[11px]">
+              <span className="text-xs font-medium">Rol</span>
+              <div className="inline-flex rounded-md border bg-background p-0.5 text-xs">
                 <button
                   type="button"
                   className={`px-2 py-1 rounded-sm ${
@@ -253,7 +253,7 @@ export default function PartnerRelationshipsPage() {
         </CardHeader>
         <CardContent>
           {error && (
-            <div className="mt-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-[11px] text-destructive">
+            <div className="mt-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
               {error}
             </div>
           )}
@@ -264,7 +264,7 @@ export default function PartnerRelationshipsPage() {
         <CardHeader className="pb-2 flex items-center justify-between">
           <CardTitle className="text-sm font-medium">İlişki listesi</CardTitle>
           {loading && (
-            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Loader2 className="h-3 w-3 animate-spin" />
               <span>Yükleniyor…</span>
             </div>

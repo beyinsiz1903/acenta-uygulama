@@ -34,7 +34,7 @@ function StatusPill({ status }) {
   if (raw === "completed" || raw === "voucher_issued") cls = "bg-blue-50 text-blue-700";
   if (raw === "pending") cls = "bg-amber-50 text-amber-700";
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${cls}`}>
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>
       {label}
     </span>
   );
@@ -73,18 +73,18 @@ function FinanceRiskSummary({ booking }) {
     <div className="mt-3 border rounded-xl p-3 bg-muted/40 text-xs flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
         <div className="space-y-0.5">
-          <div className="text-[11px] font-semibold text-muted-foreground">Finansal Risk Özeti</div>
-          <div className="text-[11px] text-muted-foreground">
+          <div className="text-xs font-semibold text-muted-foreground">Finansal Risk Özeti</div>
+          <div className="text-xs text-muted-foreground">
             Bu rezervasyonun ajans kredi limiti ile ilişkili durumunu gösterir.
           </div>
         </div>
-        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${badgeClass}`}>
+        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${badgeClass}`}>
           {badgeText}
         </span>
       </div>
-      <div className="text-[11px] text-muted-foreground">{description}</div>
+      <div className="text-xs text-muted-foreground">{description}</div>
       {hasFlags && (
-        <div className="mt-1 text-[10px] text-muted-foreground flex flex-wrap gap-2">
+        <div className="mt-1 text-2xs text-muted-foreground flex flex-wrap gap-2">
           {Object.entries(flags).map(([key, value]) => (
             <span key={key} className="inline-flex items-center rounded-full border px-2 py-0.5">
               <span className="font-mono mr-1">{key}</span>
@@ -187,7 +187,7 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
       <div className="flex items-center justify-between gap-2 mb-2">
         <div>
           <div className="text-xs font-semibold text-muted-foreground">CRM {"\u00d6zeti"}</div>
-          <div className="text-[11px] text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             {"M\u00fc\u015fteri kart\u0131, a\u00e7\u0131k f\u0131rsatlar ve g\u00f6revleri tek bak\u0131\u015fta g\u00f6r\u00fcn."}
           </div>
         </div>
@@ -215,14 +215,14 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
               {linking ? "Ba\u011flan\u0131yor..." : "M\u00fc\u015fteri ba\u011fla"}
             </Button>
           </form>
-          {linkError && <div className="text-[11px] text-red-600">{linkError}</div>}
+          {linkError && <div className="text-xs text-red-600">{linkError}</div>}
         </div>
       ) : (
         <div className="space-y-3 text-xs">
           {loading ? (
             <div className="text-muted-foreground">{"CRM bilgileri y\u00fckleniyor..."}</div>
           ) : error ? (
-            <div className="text-red-600 text-[11px]">{error}</div>
+            <div className="text-red-600 text-xs">{error}</div>
           ) : !detail ? (
             <div className="text-muted-foreground">{"CRM kayd\u0131 bulunamad\u0131."}</div>
           ) : (
@@ -235,13 +235,13 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
                     {(detail.customer?.tags || []).slice(0, 5).map((tag) => (
                       <span
                         key={tag}
-                        className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] text-muted-foreground"
+                        className="inline-flex items-center rounded-full border px-2 py-0.5 text-2xs text-muted-foreground"
                       >
                         {tag}
                       </span>
                     ))}
                   </div>
-                  <div className="text-[11px] text-muted-foreground">
+                  <div className="text-xs text-muted-foreground">
                     {(() => {
                       const contacts = detail.customer?.contacts || [];
                       if (!contacts.length) return "Birincil ileti\u015fim bilgisi yok.";
@@ -256,7 +256,7 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
                     type="button"
                     size="xs"
                     variant="outline"
-                    className="text-[11px]"
+                    className="text-xs"
                     onClick={() => {
                       window.open(`/app/crm/customers/${customerId}`, "_blank");
                     }}
@@ -269,19 +269,19 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
               {/* Open deals & tasks */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="border rounded-lg p-2 bg-background">
-                  <div className="text-[11px] font-semibold mb-1">{"A\u00e7\u0131k F\u0131rsatlar"}</div>
+                  <div className="text-xs font-semibold mb-1">{"A\u00e7\u0131k F\u0131rsatlar"}</div>
                   {(detail.open_deals || []).length === 0 ? (
-                    <div className="text-[11px] text-muted-foreground">
+                    <div className="text-xs text-muted-foreground">
                       {"Bu m\u00fc\u015fteri i\u00e7in a\u00e7\u0131k f\u0131rsat yok."}
                     </div>
                   ) : (
                     <ul className="space-y-1">
                       {detail.open_deals.slice(0, 3).map((deal) => (
                         <li key={deal.id || deal.title} className="border rounded-md px-2 py-1">
-                          <div className="text-[11px] font-medium truncate">
+                          <div className="text-xs font-medium truncate">
                             {deal.title || deal.id}
                           </div>
-                          <div className="flex items-center justify-between gap-2 mt-0.5 text-[10px] text-muted-foreground">
+                          <div className="flex items-center justify-between gap-2 mt-0.5 text-2xs text-muted-foreground">
                             <span>{deal.stage || "stage"}</span>
                             <span>
                               {deal.amount != null ? `${deal.amount} ${deal.currency || ""}` : ""}
@@ -294,9 +294,9 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
                 </div>
 
                 <div className="border rounded-lg p-2 bg-background">
-                  <div className="text-[11px] font-semibold mb-1">{"A\u00e7\u0131k G\u00f6revler"}</div>
+                  <div className="text-xs font-semibold mb-1">{"A\u00e7\u0131k G\u00f6revler"}</div>
                   {(detail.open_tasks || []).length === 0 ? (
-                    <div className="text-[11px] text-muted-foreground">
+                    <div className="text-xs text-muted-foreground">
                       {"Bu m\u00fc\u015fteri i\u00e7in a\u00e7\u0131k g\u00f6rev yok."}
                     </div>
                   ) : (
@@ -304,8 +304,8 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
                       {detail.open_tasks.slice(0, 3).map((task) => (
                         <li key={task.id || task.title} className="border rounded-md px-2 py-1 flex items-center justify-between gap-2">
                           <div className="min-w-0">
-                            <div className="text-[11px] font-medium truncate">{task.title}</div>
-                            <div className="text-[10px] text-muted-foreground flex flex-wrap gap-1 mt-0.5">
+                            <div className="text-xs font-medium truncate">{task.title}</div>
+                            <div className="text-2xs text-muted-foreground flex flex-wrap gap-1 mt-0.5">
                               <span>{task.priority || "normal"}</span>
                               {task.due_date && (
                                 <span>
@@ -318,7 +318,7 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
                             type="button"
                             size="xs"
                             variant="outline"
-                            className="text-[10px] whitespace-nowrap"
+                            className="text-2xs whitespace-nowrap"
                             disabled={completingId === task.id}
                             onClick={() => handleCompleteTask(task.id)}
                           >
@@ -424,12 +424,12 @@ function ParasutPushPanel({ bookingId }) {
       <div className="flex items-center justify-between gap-2">
         <div className="space-y-0.5">
           <div className="text-xs font-semibold text-muted-foreground">Paraşüt Fatura Push</div>
-          <div className="text-[11px] text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             Bu panel, bu booking&apos;i Paraşüt&apos;e fatura olarak göndermek için kullanılır. Sadece yetkili admin
             kullanıcılar erişebilir.
           </div>
           {idempotentHint && (
-            <div className="text-[11px] text-emerald-700 mt-1">
+            <div className="text-xs text-emerald-700 mt-1">
               {idempotentHint}
             </div>
           )}
@@ -445,22 +445,22 @@ function ParasutPushPanel({ bookingId }) {
       </div>
 
       {loading && (
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Loader2 className="h-3 w-3 animate-spin" /> Paraşüt logları yükleniyor...
         </div>
       )}
       {!loading && error && <ErrorState description={error} />}
 
       {!loading && !error && logs.length === 0 && (
-        <div className="text-[11px] text-muted-foreground">
+        <div className="text-xs text-muted-foreground">
           Bu booking için henüz Paraşüt push logu yok.
         </div>
       )}
 
       {!loading && !error && logs.length > 0 && (
-        <div className="mt-1 rounded-lg border overflow-hidden text-[11px]">
+        <div className="mt-1 rounded-lg border overflow-hidden text-xs">
           <table className="min-w-full">
-            <thead className="bg-muted/40 text-[10px] text-muted-foreground">
+            <thead className="bg-muted/40 text-2xs text-muted-foreground">
               <tr>
                 <th className="px-2 py-1 text-left">Durum</th>
                 <th className="px-2 py-1 text-left">Tip</th>
@@ -490,7 +490,7 @@ function ParasutPushPanel({ bookingId }) {
                 return (
                   <tr key={log.id} className="border-t">
                     <td className="px-2 py-1">
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] ${statusClass}`}>
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-2xs ${statusClass}`}>
                         {statusLabel}
                       </span>
                     </td>
@@ -752,7 +752,7 @@ export default function OpsBookingDetailPage() {
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <div className="text-xs text-muted-foreground">Click-to-Pay</div>
-                        <div className="text-[11px] text-muted-foreground">
+                        <div className="text-xs text-muted-foreground">
                           Misafire ödeme linki göndererek kalan tahsilatı tek adımda tamamlayın.
                         </div>
                       </div>
@@ -784,7 +784,7 @@ export default function OpsBookingDetailPage() {
                         Ödeme linki oluştur
                       </Button>
                     </div>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       Link, 24 saat sonra otomatik olarak geçersiz hale gelir. Ödeme başarıyla tamamlandığında
                       Stripe webhook ve ledger akışı mevcut payment-state görünümünü güncelleyecektir.
                     </p>
@@ -889,12 +889,12 @@ export default function OpsBookingDetailPage() {
                         >
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-medium">{title}</span>
-                            <span className="text-[11px] text-muted-foreground">
+                            <span className="text-xs text-muted-foreground">
                               {formatDateTime(when)}
                             </span>
                           </div>
                           {subtitle && (
-                            <div className="mt-0.5 text-[11px] text-muted-foreground">
+                            <div className="mt-0.5 text-xs text-muted-foreground">
                               {subtitle}
                             </div>
                           )}
@@ -920,7 +920,7 @@ export default function OpsBookingDetailPage() {
                 )}
                 {!casesLoading && !casesError && cases.length > 0 && (
                   <div className="border rounded-xl overflow-hidden text-xs">
-                    <div className="grid grid-cols-4 gap-2 bg-muted/60 px-3 py-2 text-[11px] font-medium text-muted-foreground">
+                    <div className="grid grid-cols-4 gap-2 bg-muted/60 px-3 py-2 text-xs font-medium text-muted-foreground">
                       <div>Case ID</div>
                       <div>Type</div>
                       <div>Kaynak</div>

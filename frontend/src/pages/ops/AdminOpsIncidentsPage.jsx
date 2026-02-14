@@ -22,7 +22,7 @@ function formatDateTime(value) {
 }
 
 function SeverityBadge({ severity }) {
-  if (!severity) return <span className="text-[11px] text-muted-foreground">—</span>;
+  if (!severity) return <span className="text-xs text-muted-foreground">—</span>;
   
   const variants = {
     critical: "destructive",
@@ -32,14 +32,14 @@ function SeverityBadge({ severity }) {
   };
   
   return (
-    <Badge variant={variants[severity] || "outline"} className="text-[10px] capitalize">
+    <Badge variant={variants[severity] || "outline"} className="text-2xs capitalize">
       {severity}
     </Badge>
   );
 }
 
 function StatusBadge({ status }) {
-  if (!status) return <span className="text-[11px] text-muted-foreground">—</span>;
+  if (!status) return <span className="text-xs text-muted-foreground">—</span>;
   
   const variants = {
     open: "destructive",
@@ -47,7 +47,7 @@ function StatusBadge({ status }) {
   };
   
   return (
-    <Badge variant={variants[status] || "outline"} className="text-[10px] capitalize">
+    <Badge variant={variants[status] || "outline"} className="text-2xs capitalize">
       {status}
     </Badge>
   );
@@ -55,7 +55,7 @@ function StatusBadge({ status }) {
 
 function SupplierHealthBadge({ badge }) {
   if (!badge) {
-    return <span className="text-[11px] text-muted-foreground">—</span>;
+    return <span className="text-xs text-muted-foreground">—</span>;
   }
 
   const notes = badge.notes || [];
@@ -67,13 +67,13 @@ function SupplierHealthBadge({ badge }) {
           <TooltipTrigger asChild>
             <Badge
               variant="outline"
-              className="text-[10px] bg-slate-50 text-slate-700 border-slate-200"
+              className="text-2xs bg-slate-50 text-slate-700 border-slate-200"
               data-testid="ops-incidents-health-no-health"
             >
               NO HEALTH
             </Badge>
           </TooltipTrigger>
-          <TooltipContent side="top" className="text-[11px]">
+          <TooltipContent side="top" className="text-xs">
             Health snapshot not found (fail-open).
           </TooltipContent>
         </Tooltip>
@@ -85,7 +85,7 @@ function SupplierHealthBadge({ badge }) {
     return (
       <Badge
         variant="destructive"
-        className="text-[10px]"
+        className="text-2xs"
         data-testid="ops-incidents-health-open"
       >
         Circuit: OPEN
@@ -100,13 +100,13 @@ function SupplierHealthBadge({ badge }) {
           <TooltipTrigger asChild>
             <Badge
               variant="outline"
-              className="text-[10px] bg-emerald-50 text-emerald-900 border-emerald-200"
+              className="text-2xs bg-emerald-50 text-emerald-900 border-emerald-200"
               data-testid="ops-incidents-health-closed"
             >
               Circuit: CLOSED
             </Badge>
           </TooltipTrigger>
-          <TooltipContent side="top" className="text-[11px]">
+          <TooltipContent side="top" className="text-xs">
             Circuit is closed; supplier is allowed for routing.
           </TooltipContent>
         </Tooltip>
@@ -115,7 +115,7 @@ function SupplierHealthBadge({ badge }) {
   }
 
   return (
-    <Badge variant="outline" className="text-[10px]" data-testid="ops-incidents-health-unknown">
+    <Badge variant="outline" className="text-2xs" data-testid="ops-incidents-health-unknown">
       —
     </Badge>
   );
@@ -259,7 +259,7 @@ export default function AdminOpsIncidentsPage() {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3 text-xs items-end">
           <div className="space-y-1">
-            <div className="text-[11px] text-muted-foreground">Status</div>
+            <div className="text-xs text-muted-foreground">Status</div>
             <Select
               value={filters.status ?? "all"}
               onValueChange={(v) => onChangeFilter("status", v === "all" ? undefined : v)}
@@ -276,7 +276,7 @@ export default function AdminOpsIncidentsPage() {
           </div>
 
           <div className="space-y-1">
-            <div className="text-[11px] text-muted-foreground">Type</div>
+            <div className="text-xs text-muted-foreground">Type</div>
             <Select
               value={filters.type ?? "all"}
               onValueChange={(v) => onChangeFilter("type", v === "all" ? undefined : v)}
@@ -294,7 +294,7 @@ export default function AdminOpsIncidentsPage() {
           </div>
 
           <div className="space-y-1">
-            <div className="text-[11px] text-muted-foreground">Severity</div>
+            <div className="text-xs text-muted-foreground">Severity</div>
             <Select
               value={filters.severity ?? "all"}
               onValueChange={(v) => onChangeFilter("severity", v === "all" ? undefined : v)}
@@ -312,14 +312,14 @@ export default function AdminOpsIncidentsPage() {
             </Select>
           </div>
 
-          <div className="ml-auto flex items-center gap-2 text-[11px] text-muted-foreground">
+          <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
             <span>
               Page {currentPage} / {pageCount}
             </span>
             <Button
               size="sm"
               variant="outline"
-              className="h-7 px-2 text-[11px]"
+              className="h-7 px-2 text-xs"
               onClick={goPrev}
               disabled={!canPrev}
             >
@@ -328,7 +328,7 @@ export default function AdminOpsIncidentsPage() {
             <Button
               size="sm"
               variant="outline"
-              className="h-7 px-2 text-[11px]"
+              className="h-7 px-2 text-xs"
               onClick={goNext}
               disabled={!canNext}
             >
@@ -373,7 +373,7 @@ export default function AdminOpsIncidentsPage() {
 
           {hasRows && (
             <div className="border rounded-md overflow-hidden" data-testid="ops-incidents-rows">
-              <div className="grid grid-cols-8 gap-2 bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground">
+              <div className="grid grid-cols-8 gap-2 bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground">
                 <div>Created At</div>
                 <div>Severity</div>
                 <div>Status</div>
@@ -393,7 +393,7 @@ export default function AdminOpsIncidentsPage() {
                     key={inc.incident_id}
                     type="button"
                     onClick={() => onRowClick(inc)}
-                    className="grid grid-cols-8 gap-2 border-t px-2 py-1 items-center text-[11px] w-full text-left hover:bg-accent/60 focus:outline-none focus:ring-1 focus:ring-primary/40"
+                    className="grid grid-cols-8 gap-2 border-t px-2 py-1 items-center text-xs w-full text-left hover:bg-accent/60 focus:outline-none focus:ring-1 focus:ring-primary/40"
                     data-testid="ops-incidents-row"
                     data-row-id={inc.incident_id}
                   >
@@ -425,7 +425,7 @@ export default function AdminOpsIncidentsPage() {
 
           {loading && !hasRows && (
             <div className="border rounded-md overflow-hidden">
-              <div className="grid grid-cols-8 gap-2 bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground">
+              <div className="grid grid-cols-8 gap-2 bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground">
                 <div>Created At</div>
                 <div>Severity</div>
                 <div>Status</div>
@@ -438,7 +438,7 @@ export default function AdminOpsIncidentsPage() {
               {Array.from({ length: 5 }).map((_, i) => (
                 <div
                   key={i}
-                  className="grid grid-cols-8 gap-2 border-t px-2 py-1 items-center text-[11px] animate-pulse"
+                  className="grid grid-cols-8 gap-2 border-t px-2 py-1 items-center text-xs animate-pulse"
                 >
                   <div className="h-3 bg-muted rounded w-20"></div>
                   <div className="h-3 bg-muted rounded w-16"></div>
@@ -501,7 +501,7 @@ export default function AdminOpsIncidentsPage() {
                 <>
                   <div className="grid gap-3 md:grid-cols-2">
                     <div className="space-y-1">
-                      <div className="text-[11px] font-semibold text-muted-foreground">
+                      <div className="text-xs font-semibold text-muted-foreground">
                         Meta
                       </div>
                       <div className="space-y-0.5">
@@ -527,7 +527,7 @@ export default function AdminOpsIncidentsPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <div className="text-[11px] font-semibold text-muted-foreground">
+                      <div className="text-xs font-semibold text-muted-foreground">
                         Source
                       </div>
                       <div className="space-y-0.5">
@@ -551,7 +551,7 @@ export default function AdminOpsIncidentsPage() {
                   </div>
 
                   <div className="space-y-1">
-                    <div className="text-[11px] font-semibold text-muted-foreground">Summary</div>
+                    <div className="text-xs font-semibold text-muted-foreground">Summary</div>
                     <div className="text-xs text-foreground whitespace-pre-wrap">
                       {detail.summary || "-"}
                     </div>
@@ -559,17 +559,17 @@ export default function AdminOpsIncidentsPage() {
 
                   {detail.supplier_health && (
                     <div className="space-y-2" data-testid="ops-incident-drawer-health">
-                      <div className="text-[11px] font-semibold text-muted-foreground">
+                      <div className="text-xs font-semibold text-muted-foreground">
                         Supplier Health
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
                         <SupplierHealthBadge badge={detail.supplier_health} />
-                        <span className="text-[11px] text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           Supplier: {detail.supplier_health.supplier_code}
                         </span>
                       </div>
 
-                      <div className="mt-1 grid gap-1 md:grid-cols-2 text-[11px] text-muted-foreground">
+                      <div className="mt-1 grid gap-1 md:grid-cols-2 text-xs text-muted-foreground">
                         <div>
                           <span className="font-semibold">Success rate:</span>{" "}
                           {detail.supplier_health.success_rate != null
@@ -601,7 +601,7 @@ export default function AdminOpsIncidentsPage() {
                       </div>
 
                       {detail.supplier_health.notes && detail.supplier_health.notes.length > 0 && (
-                        <div className="mt-1 text-[11px] text-muted-foreground">
+                        <div className="mt-1 text-xs text-muted-foreground">
                           <span className="font-semibold">Notes:</span>{" "}
                           {detail.supplier_health.notes.join(", ")}
                         </div>
@@ -611,8 +611,8 @@ export default function AdminOpsIncidentsPage() {
 
                   {detail.meta && Object.keys(detail.meta || {}).length > 0 && (
                     <div className="space-y-1">
-                      <div className="text-[11px] font-semibold text-muted-foreground">Meta</div>
-                      <pre className="bg-muted/40 rounded p-2 text-[10px] overflow-x-auto max-h-60">
+                      <div className="text-xs font-semibold text-muted-foreground">Meta</div>
+                      <pre className="bg-muted/40 rounded p-2 text-2xs overflow-x-auto max-h-60">
                         {JSON.stringify(detail.meta, null, 2)}
                       </pre>
                     </div>

@@ -33,8 +33,8 @@ function ColHeader({ stage, count }) {
   return (
     <div className="flex items-center justify-between mb-2 px-1">
       <div className="flex items-center gap-1.5">
-        <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold border" style={{ background: m.bg, color: m.color, borderColor: m.color + "33" }}>{m.title}</span>
-        <span className="text-[11px] text-gray-400">{count}</span>
+        <span className="px-2 py-0.5 rounded-full text-xs font-semibold border" style={{ background: m.bg, color: m.color, borderColor: m.color + "33" }}>{m.title}</span>
+        <span className="text-xs text-gray-400">{count}</span>
       </div>
       <div className="w-2 h-2 rounded-full" style={{ background: m.dot }} />
     </div>
@@ -65,10 +65,10 @@ function DealCard({ deal, onClick, isDragging }) {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <div className="text-[13px] font-semibold text-gray-900 truncate">{deal.title || deal.id}</div>
-          <div className="text-[11px] text-gray-500 mt-1">{deal.amount != null ? `${deal.amount} ${deal.currency || "TRY"}` : ""}</div>
+          <div className="text-sm font-semibold text-gray-900 truncate">{deal.title || deal.id}</div>
+          <div className="text-xs text-gray-500 mt-1">{deal.amount != null ? `${deal.amount} ${deal.currency || "TRY"}` : ""}</div>
           {deal.next_action_at && (
-            <div className="text-[10px] text-gray-400 mt-0.5">Aksiyon: {new Date(deal.next_action_at).toLocaleDateString("tr-TR")}</div>
+            <div className="text-2xs text-gray-400 mt-0.5">Aksiyon: {new Date(deal.next_action_at).toLocaleDateString("tr-TR")}</div>
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
@@ -92,7 +92,7 @@ function KanbanColumn({ stage, deals, onCardClick }) {
       <ColHeader stage={stage} count={deals.length} />
       <div className="flex-1 overflow-y-auto max-h-[520px] pr-1">
         {deals.length === 0 ? (
-          <div className="text-center py-6 text-[11px] text-gray-400 border border-dashed rounded-xl p-3">Henuz firsat yok</div>
+          <div className="text-center py-6 text-xs text-gray-400 border border-dashed rounded-xl p-3">Henuz firsat yok</div>
         ) : (
           deals.map((d) => <DealCard key={d.id} deal={d} onClick={onCardClick} />)
         )}
@@ -106,8 +106,8 @@ function DragOverlayCard({ deal }) {
   if (!deal) return null;
   return (
     <div className="rounded-xl border-2 border-blue-400 bg-white p-2.5 shadow-xl w-[200px]">
-      <div className="text-[13px] font-semibold text-gray-900 truncate">{deal.title || deal.id}</div>
-      <div className="text-[11px] text-gray-500 mt-1">{deal.amount != null ? `${deal.amount} ${deal.currency || "TRY"}` : ""}</div>
+      <div className="text-sm font-semibold text-gray-900 truncate">{deal.title || deal.id}</div>
+      <div className="text-xs text-gray-500 mt-1">{deal.amount != null ? `${deal.amount} ${deal.currency || "TRY"}` : ""}</div>
     </div>
   );
 }

@@ -164,7 +164,7 @@ export default function AdminB2BAgenciesSummaryPage() {
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="inline-flex rounded-lg bg-muted p-1 text-[11px] text-muted-foreground">
+            <div className="inline-flex rounded-lg bg-muted p-1 text-xs text-muted-foreground">
               <button
                 type="button"
                 className={`px-2 py-1 rounded-md ${riskFilter === "all" ? "bg-background text-foreground shadow" : ""}`}
@@ -252,10 +252,10 @@ export default function AdminB2BAgenciesSummaryPage() {
             <div className="mt-4 space-y-4">
               <div className="space-y-1 text-sm">
                 <div className="font-medium">{selected.name}</div>
-                <div className="text-[11px] text-muted-foreground font-mono">{selected.id}</div>
+                <div className="text-xs text-muted-foreground font-mono">{selected.id}</div>
               </div>
 
-              <div className="inline-flex rounded-lg bg-muted p-1 text-[11px] text-muted-foreground">
+              <div className="inline-flex rounded-lg bg-muted p-1 text-xs text-muted-foreground">
                 <button
                   type="button"
                   className={`px-2 py-1 rounded-md ${
@@ -407,7 +407,7 @@ export default function AdminB2BAgenciesSummaryPage() {
                   </p>
                   <div className="space-y-1 text-xs">
                     <div className="font-medium">Iframe URL</div>
-                    <code className="block rounded-md bg-muted px-2 py-1 text-[11px] whitespace-pre-wrap break-all">
+                    <code className="block rounded-md bg-muted px-2 py-1 text-xs whitespace-pre-wrap break-all">
                       {buildEmbedUrl(selected)}
 
               {sheetTab === "visibility" && (
@@ -439,7 +439,7 @@ export default function AdminB2BAgenciesSummaryPage() {
                   </div>
                   <div className="space-y-1 text-xs">
                     <div className="font-medium">Örnek iframe kodu</div>
-                    <code className="block rounded-md bg-muted px-2 py-2 text-[11px] whitespace-pre overflow-x-auto">
+                    <code className="block rounded-md bg-muted px-2 py-2 text-xs whitespace-pre overflow-x-auto">
                       {`<iframe\n  src="${buildEmbedUrl(selected)}"\n  width="100%"\n  height="800"\n  style="border:0;"\n  loading="lazy"\n></iframe>`}
                     </code>
                   </div>
@@ -461,7 +461,7 @@ export default function AdminB2BAgenciesSummaryPage() {
                         <TableCell className="text-xs">
                           <div className="flex flex-col">
                             <span className="font-medium truncate max-w-[220px]">{it.name}</span>
-                            <span className="text-[10px] text-muted-foreground font-mono">{it.id}</span>
+                            <span className="text-2xs text-muted-foreground font-mono">{it.id}</span>
                           </div>
                         </TableCell>
                         <TableCell className="text-xs">
@@ -479,10 +479,10 @@ export default function AdminB2BAgenciesSummaryPage() {
                         <TableCell className="text-xs">
                           <RiskBadge status={it.risk_status} />
                         </TableCell>
-                        <TableCell className="text-[11px] text-muted-foreground">
+                        <TableCell className="text-xs text-muted-foreground">
                           {it.payment_terms || "-"}
                         </TableCell>
-                        <TableCell className="text-[11px] text-muted-foreground font-mono">
+                        <TableCell className="text-xs text-muted-foreground font-mono">
                           {it.parent_agency_id || "-"}
                         </TableCell>
                         <TableCell className="text-xs text-right font-mono">

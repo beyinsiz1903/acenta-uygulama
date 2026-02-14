@@ -867,7 +867,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                             return (
                               <>
                                 <div className="flex items-center justify-between">
-                                  <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                                  <span className="text-2xs uppercase tracking-wide text-muted-foreground">
                                     Eski Toplam
                                   </span>
                                   <span className="font-medium">
@@ -875,7 +875,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                  <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                                  <span className="text-2xs uppercase tracking-wide text-muted-foreground">
                                     Yeni Toplam
                                   </span>
                                   <span className="font-medium">
@@ -883,7 +883,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                  <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                                  <span className="text-2xs uppercase tracking-wide text-muted-foreground">
                                     Fark (EUR)
                                   </span>
                                   <span className={`font-semibold ${toneClass}`}>
@@ -942,45 +942,45 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                     {!ledgerLoading && !ledgerError && ledgerSummary && (
                       <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                          <span className="text-2xs text-muted-foreground uppercase tracking-wide">
                             Para Birimi
                           </span>
                           <span>{ledgerSummary.currency}</span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                          <span className="text-2xs text-muted-foreground uppercase tracking-wide">
                             Kayıt Sayısı
                           </span>
                           <span>{ledgerSummary.postings_count}</span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                          <span className="text-2xs text-muted-foreground uppercase tracking-wide">
                             Toplam Debit
                           </span>
                           <span>{Number(ledgerSummary.total_debit).toFixed(2)}</span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                          <span className="text-2xs text-muted-foreground uppercase tracking-wide">
                             Toplam Credit
                           </span>
                           <span>{Number(ledgerSummary.total_credit).toFixed(2)}</span>
                         </div>
                         <div className="flex flex-col col-span-2">
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                          <span className="text-2xs text-muted-foreground uppercase tracking-wide">
                             Fark (Debit - Credit)
                           </span>
                           <span>{Number(ledgerSummary.diff).toFixed(4)}</span>
                         </div>
                         {ledgerSummary.events && ledgerSummary.events.length > 0 && (
                           <div className="flex flex-col col-span-2">
-                            <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                            <span className="text-2xs text-muted-foreground uppercase tracking-wide">
                               Event Seti
                             </span>
                             <span>{ledgerSummary.events.join(", ")}</span>
                           </div>
                         )}
                         <div className="flex flex-col col-span-2">
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                          <span className="text-2xs text-muted-foreground uppercase tracking-wide">
                             Kaynak Koleksiyon
                           </span>
                           <span>{ledgerSummary.source_collection}</span>
@@ -1067,7 +1067,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-[1.2fr_0.8fr] gap-3 text-xs items-end">
                     <div className="flex flex-col gap-1">
-                      <label className="text-[11px] text-muted-foreground uppercase tracking-wide">
+                      <label className="text-xs text-muted-foreground uppercase tracking-wide">
                         Tahsilat Tutarı (EUR)
                       </label>
                       <input
@@ -1078,13 +1078,13 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                         onChange={(e) => setPaymentAmountInput(e.target.value)}
                         className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       />
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         Varsayılan olarak kalan tahsilat tutarı öne gelir. Değiştirerek kısmi ödeme alabilirsiniz.
                       </p>
                     </div>
 
                     <div className="flex flex-col gap-1">
-                      <label className="text-[11px] text-muted-foreground uppercase tracking-wide">
+                      <label className="text-xs text-muted-foreground uppercase tracking-wide">
                         PaymentIntent ID
                       </label>
                       <input
@@ -1094,7 +1094,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                         placeholder="pi_..."
                         className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       />
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         Create Intent ile üretilen son PaymentIntent ID otomatik dolacaktır.
                       </p>
                     </div>
@@ -1195,7 +1195,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                     </Button>
 
                     {pollingPayment && (
-                      <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <Loader2 className="h-3 w-3 animate-spin" /> Webhook bekleniyor...
                       </span>
                     )}
@@ -1246,7 +1246,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                               <span className="font-medium">
                                 {tx.type === "capture_succeeded" ? "Capture" : tx.type === "refund_succeeded" ? "Refund" : tx.type}
                               </span>
-                              <span className="text-[11px] text-muted-foreground">
+                              <span className="text-xs text-muted-foreground">
                                 {tx.occurred_at || tx.created_at}
                               </span>
                             </div>

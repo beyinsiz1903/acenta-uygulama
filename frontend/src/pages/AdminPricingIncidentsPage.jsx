@@ -7,7 +7,7 @@ import { Card } from "../components/ui/card";
 function FieldError({ text }) {
   if (!text) return null;
   return (
-    <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[11px] text-destructive">
+    <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
       {text}
     </div>
   );
@@ -74,12 +74,12 @@ export default function AdminPricingIncidentsPage() {
         </p>
       </div>
 
-      <Card className="p-3 text-[11px] space-y-3">
+      <Card className="p-3 text-xs space-y-3">
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:gap-3">
           <div className="flex-1 space-y-1">
             <label
               htmlFor="pricing-incident-booking-id"
-              className="text-[11px] font-medium"
+              className="text-xs font-medium"
             >
               Booking ID
             </label>
@@ -89,13 +89,13 @@ export default function AdminPricingIncidentsPage() {
               placeholder="Mongo _id veya string booking id"
               value={bookingId}
               onChange={(e) => setBookingId(e.target.value)}
-              className="h-8 text-[11px]"
+              className="h-8 text-xs"
             />
           </div>
           <div className="flex-1 space-y-1">
             <label
               htmlFor="pricing-incident-quote-id"
-              className="text-[11px] font-medium"
+              className="text-xs font-medium"
             >
               Quote ID (opsiyonel)
             </label>
@@ -105,18 +105,18 @@ export default function AdminPricingIncidentsPage() {
               placeholder="B2B quote ObjectId"
               value={quoteId}
               onChange={(e) => setQuoteId(e.target.value)}
-              className="h-8 text-[11px]"
+              className="h-8 text-xs"
             />
           </div>
           <div className="flex flex-col gap-2 md:w-[220px]">
             <div className="space-y-1">
-              <label className="text-[11px] font-medium" htmlFor="pricing-incident-mode">
+              <label className="text-xs font-medium" htmlFor="pricing-incident-mode">
                 Mode
               </label>
               <select
                 id="pricing-incident-mode"
                 data-testid="pricing-incident-mode"
-                className="h-8 w-full rounded-md border bg-background px-2 text-[11px]"
+                className="h-8 w-full rounded-md border bg-background px-2 text-xs"
                 value={mode}
                 onChange={(e) => setMode(e.target.value)}
               >
@@ -128,7 +128,7 @@ export default function AdminPricingIncidentsPage() {
             <div className="flex flex-row gap-2 md:flex-col">
               <Button
               size="sm"
-              className="h-8 text-[11px] w-full"
+              className="h-8 text-xs w-full"
               data-testid="pricing-incident-fetch"
               onClick={onFetch}
               disabled={loading}
@@ -138,7 +138,7 @@ export default function AdminPricingIncidentsPage() {
             <Button
               size="sm"
               variant="outline"
-              className="h-8 text-[11px] w-full"
+              className="h-8 text-xs w-full"
               data-testid="pricing-incident-copy"
               onClick={onCopy}
               disabled={!bundle}
@@ -152,9 +152,9 @@ export default function AdminPricingIncidentsPage() {
         <FieldError text={error} />
       </Card>
 
-      <Card className="p-3 text-[11px] space-y-3" data-testid="pricing-incident-result">
+      <Card className="p-3 text-xs space-y-3" data-testid="pricing-incident-result">
         {!bundle ? (
-          <div className="text-[11px] text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             Henüz debug bundle yok. Üstten Booking ID/Quote ID girip &quot;Fetch&quot; ile yükleyin.
           </div>
         ) : (
@@ -165,22 +165,22 @@ export default function AdminPricingIncidentsPage() {
             >
               <div className="font-semibold text-xs">Summary</div>
               {trace?.rule_name && (
-                <span className="inline-flex items-center rounded-full border bg-muted px-2 py-0.5 text-[10px] font-semibold">
+                <span className="inline-flex items-center rounded-full border bg-muted px-2 py-0.5 text-2xs font-semibold">
                   {trace.rule_name}
                 </span>
               )}
               {trace?.fallback && (
-                <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-900">
+                <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-2xs font-semibold text-amber-900">
                   FALLBACK (DEFAULT_10)
                 </span>
               )}
               {checksTotal > 0 && (
-                <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-900 border border-emerald-200">
+                <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-2xs font-semibold text-emerald-900 border border-emerald-200">
                   {checksPass}/{checksTotal} checks OK
                 </span>
               )}
               {bundle?.payments && (
-                <span className="inline-flex items-center rounded-full bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-900 border border-slate-200">
+                <span className="inline-flex items-center rounded-full bg-slate-50 px-2 py-0.5 text-2xs font-semibold text-slate-900 border border-slate-200">
                   Payment: {bundle.payments.status || "unknown"}
                 </span>
               )}
@@ -188,19 +188,19 @@ export default function AdminPricingIncidentsPage() {
 
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
-                <div className="font-semibold text-[11px]">Booking</div>
+                <div className="font-semibold text-xs">Booking</div>
                 {!bundle.booking ? (
-                  <div className="text-[11px] text-muted-foreground">Booking yok.</div>
+                  <div className="text-xs text-muted-foreground">Booking yok.</div>
                 ) : (
                   <div className="space-y-1">
                     <div>
                       <span className="font-mono">{bundle.booking.booking_id}</span>
                     </div>
-                    <div className="text-[11px] text-muted-foreground">
+                    <div className="text-xs text-muted-foreground">
                       Status: {bundle.booking.status || "?"}
                     </div>
                     {amounts && (
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         Net: {amounts.net} {bundle.booking.currency} · Sell: {amounts.sell} {bundle.booking.currency}
                       </div>
                     )}
@@ -209,16 +209,16 @@ export default function AdminPricingIncidentsPage() {
               </div>
 
               <div className="space-y-1">
-                <div className="font-semibold text-[11px]">Quote</div>
+                <div className="font-semibold text-xs">Quote</div>
                 {!bundle.quote ? (
-                  <div className="text-[11px] text-muted-foreground">Quote yok.</div>
+                  <div className="text-xs text-muted-foreground">Quote yok.</div>
                 ) : (
                   <div className="space-y-1">
                     <div>
                       <span className="font-mono">{bundle.quote.quote_id}</span>
                     </div>
                     {bundle.quote.offers_preview && bundle.quote.offers_preview.length > 0 && (
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         Offer: {bundle.quote.offers_preview[0].net} → {bundle.quote.offers_preview[0].sell} {bundle.quote.offers_preview[0].currency}
                       </div>
                     )}
@@ -227,18 +227,18 @@ export default function AdminPricingIncidentsPage() {
               </div>
 
               <div className="space-y-1">
-                <div className="font-semibold text-[11px]">Rule</div>
+                <div className="font-semibold text-xs">Rule</div>
                 {!rule ? (
-                  <div className="text-[11px] text-muted-foreground">Rule yok (DEFAULT_10 olabilir).</div>
+                  <div className="text-xs text-muted-foreground">Rule yok (DEFAULT_10 olabilir).</div>
                 ) : (
                   <div className="space-y-1">
-                    <div className="text-[11px] text-muted-foreground">
+                    <div className="text-xs text-muted-foreground">
                       ID: <span className="font-mono">{rule.rule_id || rule.id}</span>
                     </div>
-                    <div className="text-[11px] text-muted-foreground">
+                    <div className="text-xs text-muted-foreground">
                       Priority: {rule.priority} · Status: {rule.status}
                     </div>
-                    <div className="text-[11px] text-muted-foreground">
+                    <div className="text-xs text-muted-foreground">
                       Action: {rule.action?.type} {rule.action?.value}
                     </div>
                   </div>
@@ -251,8 +251,8 @@ export default function AdminPricingIncidentsPage() {
                 className="space-y-1"
                 data-testid="incident-explain"
               >
-                <div className="font-semibold text-[11px]">Explain</div>
-                <ul className="list-disc pl-4 text-[11px] text-muted-foreground">
+                <div className="font-semibold text-xs">Explain</div>
+                <ul className="list-disc pl-4 text-xs text-muted-foreground">
                   {bundle.explain.map((line, idx) => (
                     <li key={idx}>{line}</li>
                   ))}
@@ -265,15 +265,15 @@ export default function AdminPricingIncidentsPage() {
                 className="space-y-1"
                 data-testid="incident-checks"
               >
-                <div className="font-semibold text-[11px]">Checks</div>
+                <div className="font-semibold text-xs">Checks</div>
                 <div className="grid gap-1 md:grid-cols-2">
                   {Object.entries(bundle.checks).map(([key, value]) => (
                     <div
                       key={key}
-                      className="flex items-center justify-between rounded border bg-muted/40 px-2 py-1 text-[10px]"
+                      className="flex items-center justify-between rounded border bg-muted/40 px-2 py-1 text-2xs"
                       data-testid={`check-${key}`}
                     >
-                      <span className="text-[10px] font-mono">{key}</span>
+                      <span className="text-2xs font-mono">{key}</span>
                       <span
                         className={
                           value === true
@@ -299,13 +299,13 @@ export default function AdminPricingIncidentsPage() {
               >
                 <button
                   type="button"
-                  className="text-[11px] font-semibold underline"
+                  className="text-xs font-semibold underline"
                   onClick={() => setShowRaw((v) => !v)}
                 >
                   {showRaw ? "Hide raw JSON" : "Show raw JSON"}
                 </button>
                 {showRaw && (
-                  <pre className="bg-muted/40 rounded p-2 text-[10px] overflow-x-auto max-h-80">
+                  <pre className="bg-muted/40 rounded p-2 text-2xs overflow-x-auto max-h-80">
                     {JSON.stringify(bundle, null, 2)}
                   </pre>
                 )}

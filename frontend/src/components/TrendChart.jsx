@@ -133,7 +133,7 @@ export function TrendChart({ data = [], height = 220, testId }) {
         )}
       </div>
 
-      <div className="mt-2 text-[11px] text-muted-foreground">
+      <div className="mt-2 text-xs text-muted-foreground">
         Çizgiler: <span className="font-medium">confirmed</span> (kesikli) / <span className="font-medium">pending</span> (düz)
       </div>
     </div>

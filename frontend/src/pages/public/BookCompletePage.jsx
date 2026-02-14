@@ -119,7 +119,7 @@ export default function BookCompletePage() {
             }
           />
           {isE2E && (
-            <div data-testid="e2e-guard" className="mt-2 text-[10px] text-muted-foreground">
+            <div data-testid="e2e-guard" className="mt-2 text-2xs text-muted-foreground">
               GUARD_RENDERED: missing booking_code
             </div>
           )}
@@ -136,7 +136,7 @@ export default function BookCompletePage() {
           Bu sayfa, ödeme akışı tamamlandığında rezervasyon özetini gösterir. Şu anda backend checkout akışının
           iskeleti test ediliyor.
         </p>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Rezervasyonunuz oluşturuldu. Ödeme tamamlanana kadar durum <span className="font-mono">PENDING_PAYMENT</span>
           olabilir.
         </p>
@@ -159,33 +159,33 @@ export default function BookCompletePage() {
           <div className="mt-3 space-y-2 text-xs text-left">
             <div className="flex items-center justify-between">
               <div className="font-medium">Durum</div>
-              <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium">
+              <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium">
                 {statusBadge}
               </span>
             </div>
             <div>
-              <div className="text-[11px] text-muted-foreground">Ürün</div>
+              <div className="text-xs text-muted-foreground">Ürün</div>
               <div className="font-medium">{summary.product?.title || "Rezervasyonunuz"}</div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <div className="text-[11px] text-muted-foreground">Giriş / Çıkış</div>
+                <div className="text-xs text-muted-foreground">Giriş / Çıkış</div>
                 <div>
                   {summary.date_from || "-"} → {summary.date_to || "-"}
                 </div>
               </div>
               <div>
-                <div className="text-[11px] text-muted-foreground">Gece</div>
+                <div className="text-xs text-muted-foreground">Gece</div>
                 <div>{summary.nights ?? "-"}</div>
               </div>
               <div>
-                <div className="text-[11px] text-muted-foreground">Kişi / Oda</div>
+                <div className="text-xs text-muted-foreground">Kişi / Oda</div>
                 <div>
                   {summary.pax?.adults || 0} yetişkin, {summary.pax?.children || 0} çocuk, {summary.pax?.rooms || 1} oda
                 </div>
               </div>
               <div>
-                <div className="text-[11px] text-muted-foreground">Tutar</div>
+                <div className="text-xs text-muted-foreground">Tutar</div>
                 <div>
                   {formatAmount(summary.price?.amount_cents, summary.price?.currency)}
                 </div>
@@ -206,7 +206,7 @@ export default function BookCompletePage() {
 
         <div className="mt-4 border-t pt-3 text-left text-xs space-y-2">
           <div className="font-medium">E-posta ile rezervasyon linki gönder</div>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             E-posta adresinizi girdiğinizde, bu rezervasyonla eşleşen bir kayıt bulunursa birkaç dakika
             içinde My Booking bağlantısı e-posta ile göndereceğiz.
           </p>
@@ -243,8 +243,8 @@ export default function BookCompletePage() {
               {linkRequestLoading ? "Gönderiliyor..." : "Link gönder"}
             </Button>
           </div>
-          {linkRequestMessage && <p className="text-[11px] text-green-700">{linkRequestMessage}</p>}
-          {linkRequestError && <p className="text-[11px] text-red-600">{linkRequestError}</p>}
+          {linkRequestMessage && <p className="text-xs text-green-700">{linkRequestMessage}</p>}
+          {linkRequestError && <p className="text-xs text-red-600">{linkRequestError}</p>}
         </div>
       </Card>
     </div>

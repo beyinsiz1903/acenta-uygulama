@@ -88,7 +88,7 @@ export default function NotificationBell() {
       >
         <Bell className="h-5 w-5" />
         {unread > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 h-4 min-w-[16px] rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center px-1" data-testid="unread-badge">
+          <span className="absolute -top-0.5 -right-0.5 h-4 min-w-[16px] rounded-full bg-rose-500 text-white text-2xs font-bold flex items-center justify-center px-1" data-testid="unread-badge">
             {unread > 99 ? "99+" : unread}
           </span>
         )}
@@ -124,8 +124,8 @@ export default function NotificationBell() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-xs font-medium truncate ${!n.is_read ? "text-foreground" : "text-muted-foreground"}`}>{n.title}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{n.message}</p>
-                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                    <p className="text-xs text-muted-foreground truncate">{n.message}</p>
+                    <p className="text-2xs text-muted-foreground/60 mt-0.5">
                       {n.created_at ? new Date(n.created_at).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : ""}
                     </p>
                   </div>

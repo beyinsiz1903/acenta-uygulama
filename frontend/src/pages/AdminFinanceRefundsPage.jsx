@@ -54,15 +54,15 @@ function statusBadge(status) {
 
   switch (status) {
     case "open":
-      return <Badge variant="outline" className="text-[10px] px-1 py-0">Açık</Badge>;
+      return <Badge variant="outline" className="text-2xs px-1 py-0">Açık</Badge>;
     case "in_progress":
-      return <Badge variant="default" className="text-[10px] px-1 py-0">Devam ediyor</Badge>;
+      return <Badge variant="default" className="text-2xs px-1 py-0">Devam ediyor</Badge>;
     case "done":
-      return <Badge variant="secondary" className="text-[10px] px-1 py-0">Tamamlandı</Badge>;
+      return <Badge variant="secondary" className="text-2xs px-1 py-0">Tamamlandı</Badge>;
     case "cancelled":
-      return <Badge variant="destructive" className="text-[10px] px-1 py-0">İptal</Badge>;
+      return <Badge variant="destructive" className="text-2xs px-1 py-0">İptal</Badge>;
     default:
-      return <Badge variant="outline" className="text-[10px] px-1 py-0">{status}</Badge>;
+      return <Badge variant="outline" className="text-2xs px-1 py-0">{status}</Badge>;
   }
 }
 
@@ -71,13 +71,13 @@ function priorityBadge(priority) {
 
   switch (priority) {
     case "high":
-      return <Badge variant="destructive" className="text-[10px] px-1 py-0">Yüksek</Badge>;
+      return <Badge variant="destructive" className="text-2xs px-1 py-0">Yüksek</Badge>;
     case "medium":
-      return <Badge variant="default" className="text-[10px] px-1 py-0">Orta</Badge>;
+      return <Badge variant="default" className="text-2xs px-1 py-0">Orta</Badge>;
     case "low":
-      return <Badge variant="outline" className="text-[10px] px-1 py-0">Düşük</Badge>;
+      return <Badge variant="outline" className="text-2xs px-1 py-0">Düşük</Badge>;
     default:
-      return <Badge variant="outline" className="text-[10px] px-1 py-0">{priority}</Badge>;
+      return <Badge variant="outline" className="text-2xs px-1 py-0">{priority}</Badge>;
   }
 }
 
@@ -110,7 +110,7 @@ function RefundQueueList({
         <div className="flex items-center justify-between gap-3">
           <div>
             <CardTitle className="text-sm font-medium">İade Kuyruğu</CardTitle>
-            <p className="text-[10px] text-muted-foreground mt-0.5">
+            <p className="text-2xs text-muted-foreground mt-0.5">
               Seç kutusu: bu sayfadaki kayıtları seçer (tüm filtrelenmiş kayıtları değil).
             </p>
             <p className="text-xs text-muted-foreground mt-1">
@@ -465,7 +465,7 @@ function MiniRefundHistory({ bookingId }) {
           className="flex flex-wrap items-center justify-between gap-2 border-b last:border-0 py-1"
         >
           <div className="flex flex-col gap-0.5">
-            <div className="text-[11px] text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               {it.updated_at
                 ? new Date(it.updated_at).toLocaleString()
                 : "-"}
@@ -479,7 +479,7 @@ function MiniRefundHistory({ bookingId }) {
                     ? "destructive"
                     : "secondary"
                 }
-                className="text-[10px] px-1 py-0"
+                className="text-2xs px-1 py-0"
               >
                 {it.decision || "-"}
               </Badge>
@@ -629,7 +629,7 @@ function RefundDocumentsSection({ caseData }) {
       {/* Upload form */}
       <div className="flex flex-wrap items-end gap-2 text-xs">
         <div className="flex flex-col gap-1">
-          <span className="text-[11px] text-muted-foreground">Etiket</span>
+          <span className="text-xs text-muted-foreground">Etiket</span>
           <select
             className="border rounded px-2 py-1 text-xs bg-background"
             value={tag}
@@ -643,7 +643,7 @@ function RefundDocumentsSection({ caseData }) {
           </select>
         </div>
         <div className="flex flex-col gap-1 min-w-[160px] flex-1">
-          <span className="text-[11px] text-muted-foreground">Not (opsiyonel)</span>
+          <span className="text-xs text-muted-foreground">Not (opsiyonel)</span>
           <Input
             type="text"
             value={note}
@@ -652,7 +652,7 @@ function RefundDocumentsSection({ caseData }) {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <span className="text-[11px] text-muted-foreground">Dosya</span>
+          <span className="text-xs text-muted-foreground">Dosya</span>
           <Input
             type="file"
             onChange={(e) => setFile(e.target.files?.[0] || null)}
@@ -690,7 +690,7 @@ function RefundDocumentsSection({ caseData }) {
                 className="flex items-center justify-between gap-2 rounded border bg-background px-2 py-1"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <Badge variant="outline" className="text-[10px] uppercase">
+                  <Badge variant="outline" className="text-2xs uppercase">
                     {badgeText}
                   </Badge>
                   <button
@@ -701,7 +701,7 @@ function RefundDocumentsSection({ caseData }) {
                 >
                   {doc.filename}
                 </button>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {doc.size_bytes != null ? `${Math.round(doc.size_bytes / 1024)} KB` : ""}
                 </span>
                 {isPdfDoc(doc) && (
@@ -743,7 +743,7 @@ function RefundDocumentsSection({ caseData }) {
                   </Button>
                 )}
                 </div>
-                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span>{doc.created_by_email}</span>
                   <span>
                     {doc.created_at ? new Date(doc.created_at).toLocaleString() : ""}
@@ -907,7 +907,7 @@ function RefundTasksSection({ caseData }) {
                     {statusBadge(t.status)}
                     {priorityBadge(t.priority)}
                     {overdue && (
-                      <span className="text-[10px] text-destructive flex items-center gap-1">
+                      <span className="text-2xs text-destructive flex items-center gap-1">
                         <Clock className="h-3 w-3" /> SLA aşıldı
                       </span>
                     )}
@@ -915,7 +915,7 @@ function RefundTasksSection({ caseData }) {
                   <div className="truncate font-medium" title={t.title}>
                     {t.title}
                   </div>
-                  <div className="text-[11px] text-muted-foreground flex flex-wrap gap-2">
+                  <div className="text-xs text-muted-foreground flex flex-wrap gap-2">
                     <span>Tip: {t.task_type}</span>
                     {t.due_at && <span>Due: {new Date(t.due_at).toLocaleString()}</span>}
                     {t.assignee_email && <span>Atanan: {t.assignee_email}</span>}
@@ -1040,7 +1040,7 @@ function RefundTaskCreateDialogButton({ caseData, onCreated }) {
         </DialogHeader>
         <div className="space-y-3 mt-2 text-sm">
           <div className="text-xs text-muted-foreground">
-            case: <span className="font-mono text-[11px]">{caseData?.case_id}</span>
+            case: <span className="font-mono text-xs">{caseData?.case_id}</span>
           </div>
           <div className="space-y-1">
             <div className="text-xs text-muted-foreground">Başlık *</div>
@@ -1062,7 +1062,7 @@ function RefundTaskCreateDialogButton({ caseData, onCreated }) {
           </div>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="space-y-1">
-              <div className="text-[11px] text-muted-foreground">Öncelik</div>
+              <div className="text-xs text-muted-foreground">Öncelik</div>
               <select
                 className="h-8 rounded-md border bg-background px-2 text-xs"
                 value={priority}
@@ -1075,7 +1075,7 @@ function RefundTaskCreateDialogButton({ caseData, onCreated }) {
               </select>
             </div>
             <div className="space-y-1">
-              <div className="text-[11px] text-muted-foreground">Atanan e-posta</div>
+              <div className="text-xs text-muted-foreground">Atanan e-posta</div>
               <Input
                 type="email"
                 value={assigneeEmail}
@@ -1086,7 +1086,7 @@ function RefundTaskCreateDialogButton({ caseData, onCreated }) {
           </div>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="space-y-1">
-              <div className="text-[11px] text-muted-foreground">Son tarih (due_at)</div>
+              <div className="text-xs text-muted-foreground">Son tarih (due_at)</div>
               <Input
                 type="datetime-local"
                 value={dueAt}
@@ -1094,7 +1094,7 @@ function RefundTaskCreateDialogButton({ caseData, onCreated }) {
               />
             </div>
             <div className="space-y-1">
-              <div className="text-[11px] text-muted-foreground">SLA (saat)</div>
+              <div className="text-xs text-muted-foreground">SLA (saat)</div>
               <Input
                 type="number"
                 min={0}
@@ -1104,7 +1104,7 @@ function RefundTaskCreateDialogButton({ caseData, onCreated }) {
             </div>
           </div>
           <div className="space-y-1 text-xs">
-            <div className="text-[11px] text-muted-foreground">Etiketler (virgülle ayırın)</div>
+            <div className="text-xs text-muted-foreground">Etiketler (virgülle ayırın)</div>
             <Input
               type="text"
               value={tags}
@@ -2036,7 +2036,7 @@ export default function AdminFinanceRefundsPage() {
           Preset Sil
         </Button>
         {presets.length === 0 && (
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             Filtreleri ayarlayıp Preset Kaydet ile tekrar kullanabilirsiniz.
           </span>
         )}

@@ -33,7 +33,7 @@ function AgingBar({ age0, age31, age61, exposure }) {
         <div className="bg-amber-500" style={{ width: `${p31}%` }} />
         <div className="bg-red-500" style={{ width: `${p61}%` }} />
       </div>
-      <div className="flex justify-between text-[10px] text-muted-foreground">
+      <div className="flex justify-between text-2xs text-muted-foreground">
         <span>0–30d</span>
         <span>31–60d</span>
         <span>61+d</span>
@@ -92,7 +92,7 @@ function ExposureTable({ items, filter, statusFilter, onRowClick }) {
               <TableCell className="text-xs">
                 <div className="flex flex-col">
                   <span className="font-medium truncate max-w-[200px]">{it.agency_name}</span>
-                  <span className="text-[10px] text-muted-foreground font-mono">{it.agency_id}</span>
+                  <span className="text-2xs text-muted-foreground font-mono">{it.agency_id}</span>
                 </div>
               </TableCell>
               <TableCell className="text-xs text-right font-mono">
@@ -121,7 +121,7 @@ function ExposureTable({ items, filter, statusFilter, onRowClick }) {
               <TableCell className="text-xs">
                 <StatusBadge status={it.status} />
               </TableCell>
-              <TableCell className="text-[10px] text-muted-foreground">
+              <TableCell className="text-2xs text-muted-foreground">
                 {it.payment_terms}
               </TableCell>
             </TableRow>
@@ -185,7 +185,7 @@ function ExposureDrilldownDrawer({ open, onOpenChange, agency }) {
             <span className="text-sm font-semibold">
               {agency?.agency_name || "Seçili acente"}
             </span>
-            <span className="text-[11px] text-muted-foreground font-mono">{agency?.agency_id}</span>
+            <span className="text-xs text-muted-foreground font-mono">{agency?.agency_id}</span>
           </DrawerTitle>
           <DrawerDescription className="text-xs">
             Ledger bazlı hareketleri ve aging bucket&apos;lar[D[D[D[D[D[Dını acente seviyesinde inceleyin.
@@ -193,7 +193,7 @@ function ExposureDrilldownDrawer({ open, onOpenChange, agency }) {
         </DrawerHeader>
         <div className="p-4 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="inline-flex rounded-lg bg-muted p-1 text-[11px] text-muted-foreground">
+            <div className="inline-flex rounded-lg bg-muted p-1 text-xs text-muted-foreground">
               {["all", "0_30", "31_60", "61_plus"].map((b) => (
                 <button
                   key={b}
@@ -243,13 +243,13 @@ function ExposureDrilldownDrawer({ open, onOpenChange, agency }) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-[11px]">Posted At</TableHead>
-                    <TableHead className="text-[11px] text-right">Age (gün)</TableHead>
-                    <TableHead className="text-[11px] text-right">Tutar</TableHead>
-                    <TableHead className="text-[11px]">Yön</TableHead>
-                    <TableHead className="text-[11px]">Kaynak</TableHead>
-                    <TableHead className="text-[11px]">Booking</TableHead>
-                    <TableHead className="text-[11px]">Not</TableHead>
+                    <TableHead className="text-xs">Posted At</TableHead>
+                    <TableHead className="text-xs text-right">Age (gün)</TableHead>
+                    <TableHead className="text-xs text-right">Tutar</TableHead>
+                    <TableHead className="text-xs">Yön</TableHead>
+                    <TableHead className="text-xs">Kaynak</TableHead>
+                    <TableHead className="text-xs">Booking</TableHead>
+                    <TableHead className="text-xs">Not</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -262,14 +262,14 @@ function ExposureDrilldownDrawer({ open, onOpenChange, agency }) {
                         {e.amount.toFixed(2)} {currency}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-2xs">
                           {e.direction} · {e.source_type}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-mono text-[11px]">
+                      <TableCell className="font-mono text-xs">
                         {e.source_id || "-"}
                       </TableCell>
-                      <TableCell className="font-mono text-[11px]">
+                      <TableCell className="font-mono text-xs">
                         {e.booking_id ? (
                           <a
                             href={`/ops/bookings/${e.booking_id}`}
@@ -346,7 +346,7 @@ function AdminFinanceExposurePageInner() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="inline-flex rounded-lg bg-muted p-1 text-[11px] text-muted-foreground">
+            <div className="inline-flex rounded-lg bg-muted p-1 text-xs text-muted-foreground">
               <button
                 type="button"
                 className={`px-2 py-1 rounded-md ${

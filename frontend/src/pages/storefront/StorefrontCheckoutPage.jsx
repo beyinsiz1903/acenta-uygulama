@@ -94,16 +94,16 @@ export default function StorefrontCheckoutPage() {
         </div>
 
         {error && (
-          <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-[11px] text-destructive">
+          <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
             {error}
           </div>
         )}
 
         {!result && (
-          <Card className="p-3 text-[11px]">
+          <Card className="p-3 text-xs">
             <form className="space-y-3" onSubmit={handleSubmit}>
               <div className="space-y-1">
-                <Label className="text-[11px]">Ad Soyad</Label>
+                <Label className="text-xs">Ad Soyad</Label>
                 <Input
                   className="h-8 text-xs"
                   value={fullName}
@@ -112,7 +112,7 @@ export default function StorefrontCheckoutPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px]">E-posta</Label>
+                <Label className="text-xs">E-posta</Label>
                 <Input
                   type="email"
                   className="h-8 text-xs"
@@ -122,7 +122,7 @@ export default function StorefrontCheckoutPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px]">Telefon</Label>
+                <Label className="text-xs">Telefon</Label>
                 <Input
                   className="h-8 text-xs"
                   value={phone}
@@ -146,28 +146,28 @@ export default function StorefrontCheckoutPage() {
         )}
 
         {result && (
-          <Card className="p-3 text-[11px] space-y-2">
+          <Card className="p-3 text-xs space-y-2">
             <h2 className="text-sm font-semibold">Rezervasyon Taslağı Oluşturuldu</h2>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Rezervasyonunuz henüz taslak durumundadır. Acenta / B2B portal üzerinden bu rezervasyonu onaylayabilir,
               ödemesini alabilir veya iptal edebilirsiniz.
             </p>
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
+            <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="flex flex-col">
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Booking ID</span>
+                <span className="text-2xs text-muted-foreground uppercase tracking-wide">Booking ID</span>
                 <span className="font-mono">{result.booking_id}</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Durum</span>
+                <span className="text-2xs text-muted-foreground uppercase tracking-wide">Durum</span>
                 <span>{result.state}</span>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2 pt-2 text-[11px] text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-2 pt-2 text-xs text-muted-foreground">
               <Button
                 type="button"
                 size="xs"
                 variant="outline"
-                className="h-7 text-[11px]"
+                className="h-7 text-xs"
                 onClick={handleBackToSearch}
               >
                 Yeni arama yap
@@ -176,13 +176,13 @@ export default function StorefrontCheckoutPage() {
                 type="button"
                 size="xs"
                 variant="outline"
-                className="h-7 text-[11px]"
+                className="h-7 text-xs"
                 onClick={() => navigator.clipboard?.writeText(result.booking_id || "")}
               >
                 Rezervasyon numarasını kopyala
               </Button>
             </div>
-            <div className="pt-1 text-[11px] text-muted-foreground">
+            <div className="pt-1 text-xs text-muted-foreground">
               Bu ekran POC amaçlıdır; ileriki fazlarda B2C ödeme ve voucher akışları eklenecektir.
             </div>
           </Card>

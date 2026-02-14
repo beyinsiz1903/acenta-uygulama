@@ -10,7 +10,7 @@ import { Badge } from "../components/ui/badge";
 function FieldError({ text }) {
   if (!text) return null;
   return (
-    <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[11px] text-destructive">
+    <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
       {text}
     </div>
   );
@@ -174,7 +174,7 @@ export default function AdminVillaCalendarPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-semibold">Villa Takvimi</h1>
-            <Badge variant="secondary" className="text-[10px]">
+            <Badge variant="secondary" className="text-2xs">
               iCal + Takvim v1
             </Badge>
           </div>
@@ -183,14 +183,14 @@ export default function AdminVillaCalendarPage() {
             takvim üzerinde görün.
           </p>
           {productId && (
-            <div className="text-[11px] text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               Product ID: <span className="font-mono">{productId}</span>
             </div>
           )}
         </div>
         <Link
           to="/app/admin/catalog"
-          className="text-[11px] text-muted-foreground hover:underline"
+          className="text-xs text-muted-foreground hover:underline"
         >
           ← Kataloğa dön
         </Link>
@@ -198,7 +198,7 @@ export default function AdminVillaCalendarPage() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Calendar */}
-        <Card className="p-3 text-[11px] lg:col-span-2">
+        <Card className="p-3 text-xs lg:col-span-2">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Button
@@ -218,14 +218,14 @@ export default function AdminVillaCalendarPage() {
             </div>
             <div className="text-sm font-semibold">{monthLabel}</div>
             {calendarLoading && (
-              <div className="text-[11px] text-muted-foreground">Yükleniyor...</div>
+              <div className="text-xs text-muted-foreground">Yükleniyor...</div>
             )}
           </div>
 
           <FieldError text={calendarError} />
 
           <div className="mt-2 rounded-md border">
-            <div className="grid grid-cols-7 border-b bg-muted/40 py-1 text-center text-[10px] font-semibold">
+            <div className="grid grid-cols-7 border-b bg-muted/40 py-1 text-center text-2xs font-semibold">
               <div>Pzt</div>
               <div>Sal</div>
               <div>Çar</div>
@@ -234,7 +234,7 @@ export default function AdminVillaCalendarPage() {
               <div>Cmt</div>
               <div>Paz</div>
             </div>
-            <div className="grid grid-cols-7 text-[11px]">
+            <div className="grid grid-cols-7 text-xs">
               {days.map((d) => {
                 const isBlocked = blockedSet.has(d.dateStr);
                 const baseClasses = "h-10 border-r border-b px-1 py-1";
@@ -254,9 +254,9 @@ export default function AdminVillaCalendarPage() {
                     className={cls}
                     data-testid={`villa-calendar-day-${d.dateStr}`}
                   >
-                    <div className="text-[10px] font-semibold">{dayNum}</div>
+                    <div className="text-2xs font-semibold">{dayNum}</div>
                     {isBlocked && (
-                      <div className="mt-1 rounded bg-red-500/10 text-[9px] text-red-800">
+                      <div className="mt-1 rounded bg-red-500/10 text-2xs text-red-800">
                         Bloklu
                       </div>
                     )}
@@ -266,7 +266,7 @@ export default function AdminVillaCalendarPage() {
             </div>
           </div>
 
-          <div className="mt-3 flex items-center gap-3 text-[10px] text-muted-foreground">
+          <div className="mt-3 flex items-center gap-3 text-2xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <span className="h-3 w-3 rounded bg-red-500/20" />
               <span>Bloklu gün (iCal)</span>
@@ -275,11 +275,11 @@ export default function AdminVillaCalendarPage() {
         </Card>
 
         {/* iCal Feeds Panel */}
-        <Card className="p-3 text-[11px] space-y-3">
+        <Card className="p-3 text-xs space-y-3">
           <div className="flex items-center justify-between">
             <div className="text-sm font-semibold">iCal Feed&apos;ler</div>
             {feedsLoading && (
-              <div className="text-[11px] text-muted-foreground">Yükleniyor...</div>
+              <div className="text-xs text-muted-foreground">Yükleniyor...</div>
             )}
           </div>
 
@@ -288,7 +288,7 @@ export default function AdminVillaCalendarPage() {
           <div className="space-y-2">
             <Label
               htmlFor="villa-ical-feed-url"
-              className="text-[11px]"
+              className="text-xs"
             >
               Yeni iCal URL
             </Label>
@@ -297,7 +297,7 @@ export default function AdminVillaCalendarPage() {
                 id="villa-ical-feed-url"
                 data-testid="villa-ical-feed-url-input"
                 placeholder="https://... veya mock://demo"
-                className="h-8 text-[11px]"
+                className="h-8 text-xs"
                 value={newFeedUrl}
                 onChange={(e) => setNewFeedUrl(e.target.value)}
               />
@@ -310,20 +310,20 @@ export default function AdminVillaCalendarPage() {
                 {savingFeed ? "Ekleniyor..." : "Ekle"}
               </Button>
             </div>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-2xs text-muted-foreground">
               Test ortamı için <code className="rounded bg-muted px-1">mock://</code> ile
               başlayan URL kullanarak örnek bloklar oluşturabilirsiniz.
             </p>
           </div>
 
           <div className="mt-3 rounded-md border overflow-hidden">
-            <div className="grid grid-cols-4 bg-muted/40 px-2 py-2 text-[10px] font-semibold">
+            <div className="grid grid-cols-4 bg-muted/40 px-2 py-2 text-2xs font-semibold">
               <div>URL</div>
               <div>Status</div>
               <div>Last Sync</div>
               <div className="text-right">Aksiyon</div>
             </div>
-            <div className="max-h-60 overflow-y-auto text-[11px]">
+            <div className="max-h-60 overflow-y-auto text-xs">
               {feeds.map((f) => (
                 <div
                   key={f.id}
@@ -336,7 +336,7 @@ export default function AdminVillaCalendarPage() {
                   <div>
                     <Badge
                       variant={f.status === "active" ? "secondary" : "outline"}
-                      className="text-[10px]"
+                      className="text-2xs"
                     >
                       {f.status || "-"}
                     </Badge>
@@ -347,7 +347,7 @@ export default function AdminVillaCalendarPage() {
                   <div className="text-right">
                     <Button
                       size="xs"
-                      className="h-7 px-2 text-[10px]"
+                      className="h-7 px-2 text-2xs"
                       data-testid={`villa-ical-feed-sync-btn-${f.id}`}
                       onClick={() => syncFeed(f.id)}
                       disabled={syncingFeedId === f.id}
@@ -358,7 +358,7 @@ export default function AdminVillaCalendarPage() {
                 </div>
               ))}
               {!feeds.length && !feedsLoading && (
-                <div className="px-2 py-4 text-[11px] text-muted-foreground">
+                <div className="px-2 py-4 text-xs text-muted-foreground">
                   Henüz feed yok.
                 </div>
               )}

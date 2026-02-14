@@ -219,7 +219,7 @@ export default function AdminExecutiveDashboardPage() {
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="inline-flex rounded-lg bg-muted p-1 text-[11px] text-muted-foreground">
+            <div className="inline-flex rounded-lg bg-muted p-1 text-xs text-muted-foreground">
               <button
                 type="button"
                 className={`px-2 py-1 rounded-md ${
@@ -470,7 +470,7 @@ export default function AdminExecutiveDashboardPage() {
                           <span className="font-medium truncate max-w-[220px]">
                             {row.agency_name || row.agency_id}
                           </span>
-                          <span className="text-[10px] font-mono text-muted-foreground">
+                          <span className="text-2xs font-mono text-muted-foreground">
                             {row.agency_id}
                           </span>
                         </div>
@@ -526,7 +526,7 @@ export default function AdminExecutiveDashboardPage() {
                           {(row.coupon_codes || []).map((code) => (
                             <span
                               key={code}
-                              className="inline-flex items-center rounded-md border bg-muted px-1.5 py-0.5 font-mono text-[10px]"
+                              className="inline-flex items-center rounded-md border bg-muted px-1.5 py-0.5 font-mono text-2xs"
                             >
                               {code}
                             </span>

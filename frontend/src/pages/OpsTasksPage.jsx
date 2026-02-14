@@ -121,7 +121,7 @@ export default function OpsTasksPage() {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3 text-xs">
           <div className="space-y-1">
-            <div className="text-[11px] text-muted-foreground">Durum</div>
+            <div className="text-xs text-muted-foreground">Durum</div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="h-8 w-40 text-xs">
                 <SelectValue placeholder="Durum" />
@@ -138,7 +138,7 @@ export default function OpsTasksPage() {
           </div>
 
           <div className="space-y-1">
-            <div className="text-[11px] text-muted-foreground">Atanan</div>
+            <div className="text-xs text-muted-foreground">Atanan</div>
             <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
               <SelectTrigger className="h-8 w-32 text-xs">
                 <SelectValue placeholder="Atanan" />
@@ -189,7 +189,7 @@ export default function OpsTasksPage() {
 
           {rows.length > 0 && (
             <div className="border rounded-md overflow-x-auto">
-              <table className="w-full text-[11px]">
+              <table className="w-full text-xs">
                 <thead>
                   <tr className="bg-muted text-muted-foreground font-semibold">
                     <th className="px-2 py-1.5 text-left whitespace-nowrap" style={{width:'110px'}}>Son Tarih</th>
@@ -230,7 +230,7 @@ export default function OpsTasksPage() {
                         <Button
                           variant="link"
                           size="xs"
-                          className="px-0 text-[11px] truncate max-w-[120px] block"
+                          className="px-0 text-xs truncate max-w-[120px] block"
                           title={t.entity_id}
                           onClick={() => navigate(`/app/admin/finance/refunds?case=${t.entity_id}`)}
                         >
@@ -363,7 +363,7 @@ function NewTaskForm({ onCreated }) {
       <CardContent>
     <form onSubmit={onSubmit} className="grid gap-2 md:grid-cols-3 text-xs">
       <div className="space-y-1 md:col-span-1">
-        <div className="text-[11px] text-muted-foreground">Talep Numarası *</div>
+        <div className="text-xs text-muted-foreground">Talep Numarası *</div>
         <Input
           className="h-8"
           value={entityId}
@@ -372,7 +372,7 @@ function NewTaskForm({ onCreated }) {
         />
       </div>
       <div className="space-y-1 md:col-span-2">
-        <div className="text-[11px] text-muted-foreground">Başlık *</div>
+        <div className="text-xs text-muted-foreground">Başlık *</div>
         <Input
           className="h-8"
           value={title}
@@ -381,7 +381,7 @@ function NewTaskForm({ onCreated }) {
         />
       </div>
       <div className="space-y-1 md:col-span-3">
-        <div className="text-[11px] text-muted-foreground">Açıklama</div>
+        <div className="text-xs text-muted-foreground">Açıklama</div>
         <Input
           className="h-8"
           value={description}
@@ -390,7 +390,7 @@ function NewTaskForm({ onCreated }) {
         />
       </div>
       <div className="space-y-1">
-        <div className="text-[11px] text-muted-foreground">Öncelik</div>
+        <div className="text-xs text-muted-foreground">Öncelik</div>
         <Select value={priority} onValueChange={setPriority}>
           <SelectTrigger className="h-8 text-xs">
             <SelectValue />
@@ -404,7 +404,7 @@ function NewTaskForm({ onCreated }) {
         </Select>
       </div>
       <div className="space-y-1">
-        <div className="text-[11px] text-muted-foreground">Son tarih (due_at)</div>
+        <div className="text-xs text-muted-foreground">Son tarih (due_at)</div>
         <Input
           className="h-8"
           type="datetime-local"
@@ -413,7 +413,7 @@ function NewTaskForm({ onCreated }) {
         />
       </div>
       <div className="space-y-1">
-        <div className="text-[11px] text-muted-foreground">SLA (saat)</div>
+        <div className="text-xs text-muted-foreground">SLA (saat)</div>
         <Input
           className="h-8"
           type="number"
@@ -423,7 +423,7 @@ function NewTaskForm({ onCreated }) {
         />
       </div>
       <div className="space-y-1">
-        <div className="text-[11px] text-muted-foreground">Atanan e-posta</div>
+        <div className="text-xs text-muted-foreground">Atanan e-posta</div>
         <Input
           className="h-8"
           value={assigneeEmail}
@@ -432,7 +432,7 @@ function NewTaskForm({ onCreated }) {
         />
       </div>
       <div className="space-y-1 md:col-span-2">
-        <div className="text-[11px] text-muted-foreground">Etiketler (virgülle ayırın)</div>
+        <div className="text-xs text-muted-foreground">Etiketler (virgülle ayırın)</div>
         <Input
           className="h-8"
           value={tags}

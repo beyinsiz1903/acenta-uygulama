@@ -99,13 +99,13 @@ export default function PublicCampaignPage() {
                   {campaign.coupon_codes.map((code) => (
                     <span
                       key={code}
-                      className="inline-flex items-center rounded-md border bg-muted px-2 py-1 font-mono text-[11px]"
+                      className="inline-flex items-center rounded-md border bg-muted px-2 py-1 font-mono text-xs"
                     >
                       {code}
                     </span>
                   ))}
                 </div>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Rezervasyon adımında bu kodları kullanarak indiriminizi uygulayabilirsiniz.
                 </p>
               </div>

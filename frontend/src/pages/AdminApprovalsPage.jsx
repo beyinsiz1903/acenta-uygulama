@@ -158,7 +158,7 @@ export default function AdminApprovalsPage() {
             )}
           </div>
           <pre
-            className="mt-2 max-h-64 overflow-auto rounded bg-muted p-2 text-[11px]"
+            className="mt-2 max-h-64 overflow-auto rounded bg-muted p-2 text-xs"
             data-testid="scale-proof-pack"
           >
             {proof ? JSON.stringify(proof, null, 2) : "// no proof run yet"}
@@ -229,12 +229,12 @@ export default function AdminApprovalsPage() {
                           {formatDateTime(item.requested_at)}
                         </td>
                         <td className="px-2 py-2 text-xs">
-                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium">
+                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
                             {item.task_type || "-"}
                           </span>
                         </td>
                         <td className="px-2 py-2 text-xs">
-                          <div className="font-mono text-[11px]">{matchId}</div>
+                          <div className="font-mono text-xs">{matchId}</div>
                         </td>
                         <td className="px-2 py-2 text-xs">{item.requested_by_email || "-"}</td>
                         <td className="px-2 py-2 text-right">

@@ -17,7 +17,7 @@ import { AlertCircle, Loader2, Pencil, Upload, Archive } from "lucide-react";
 function FieldError({ text }) {
   if (!text) return null;
   return (
-    <div className="mt-2 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[11px] text-destructive">
+    <div className="mt-2 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
       <AlertCircle className="mt-0.5 h-4 w-4" />
       <div>{text}</div>
     </div>
@@ -129,10 +129,10 @@ function ListingFormDialog({ open, onOpenChange, initial, onSaved, tenantKey }) 
             {isEdit ? "Listing Düzenle" : "Yeni Listing"}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-3 text-[11px]">
+        <form onSubmit={handleSubmit} className="space-y-3 text-xs">
           <FieldError text={error} />
           <div className="space-y-1">
-            <Label className="text-[11px]">Title</Label>
+            <Label className="text-xs">Title</Label>
             <Input
               className="h-8 text-xs"
               value={title}
@@ -141,7 +141,7 @@ function ListingFormDialog({ open, onOpenChange, initial, onSaved, tenantKey }) 
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Description</Label>
+            <Label className="text-xs">Description</Label>
             <textarea
               className="min-h-[60px] w-full rounded-md border bg-background p-2 text-xs"
               value={description}
@@ -151,7 +151,7 @@ function ListingFormDialog({ open, onOpenChange, initial, onSaved, tenantKey }) 
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div className="space-y-1">
-              <Label className="text-[11px]">Category</Label>
+              <Label className="text-xs">Category</Label>
               <Input
                 className="h-8 text-xs"
                 value={category}
@@ -160,7 +160,7 @@ function ListingFormDialog({ open, onOpenChange, initial, onSaved, tenantKey }) 
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-[11px]">Base Price</Label>
+              <Label className="text-xs">Base Price</Label>
               <Input
                 className="h-8 text-xs"
                 value={basePrice}
@@ -169,7 +169,7 @@ function ListingFormDialog({ open, onOpenChange, initial, onSaved, tenantKey }) 
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-[11px]">Tags (virgülle)</Label>
+              <Label className="text-xs">Tags (virgülle)</Label>
               <Input
                 className="h-8 text-xs"
                 value={tags}
@@ -179,7 +179,7 @@ function ListingFormDialog({ open, onOpenChange, initial, onSaved, tenantKey }) 
             </div>
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Pricing Hint (JSON, opsiyonel)</Label>
+            <Label className="text-xs">Pricing Hint (JSON, opsiyonel)</Label>
             <textarea
               className="min-h-[60px] w-full rounded-md border bg-background p-2 text-xs font-mono"
               value={pricingHintText}
@@ -279,7 +279,7 @@ export default function AdminMarketplaceListingsPage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="text-lg font-semibold">Marketplace Listings</div>
-          <div className="max-w-xl text-[11px] text-muted-foreground">
+          <div className="max-w-xl text-xs text-muted-foreground">
             Tenant bazlı marketplace ürünleri. Bu ekrandan kendi tenantiniz için draft/published/archived listingleri
             yönetebilirsiniz.
           </div>
@@ -311,10 +311,10 @@ export default function AdminMarketplaceListingsPage() {
       </div>
 
       {/* Tenant key selector */}
-      <div className="rounded-md border bg-white p-3 text-[11px]">
+      <div className="rounded-md border bg-white p-3 text-xs">
         <div className="flex flex-wrap items-center gap-3">
           <div className="space-y-1">
-            <Label className="text-[11px]">Tenant Key</Label>
+            <Label className="text-xs">Tenant Key</Label>
             <Input
               className="h-8 text-xs min-w-[200px]"
               value={tenantKey}
@@ -323,7 +323,7 @@ export default function AdminMarketplaceListingsPage() {
             />
           </div>
           {!tenantKey && (
-            <div className="text-[11px] text-destructive flex items-center gap-1">
+            <div className="text-xs text-destructive flex items-center gap-1">
               <AlertCircle className="h-4 w-4" />
               <span>Listingleri görmek için önce bir tenant key girin.</span>
             </div>
@@ -332,15 +332,15 @@ export default function AdminMarketplaceListingsPage() {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-[11px] text-destructive">
+        <div className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
           <AlertCircle className="h-4 w-4" />
           <span>{error}</span>
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-3 text-[11px]">
+      <div className="flex flex-wrap items-center gap-3 text-xs">
         <div className="flex items-center gap-2">
-          <Label className="text-[11px]">Status</Label>
+          <Label className="text-xs">Status</Label>
           <select
             className="h-8 rounded-md border bg-background px-2 text-xs"
             value={statusFilter}
@@ -355,7 +355,7 @@ export default function AdminMarketplaceListingsPage() {
       </div>
 
       <div className="rounded-md border overflow-hidden">
-        <Table className="text-[11px]">
+        <Table className="text-xs">
           <TableHeader>
             <TableRow className="bg-muted/40">
               <TableHead>Title</TableHead>

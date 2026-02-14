@@ -47,12 +47,12 @@ function CalendarDayCell({ date, activeModifiers, inv, cnFn }) {
         closed ? "bg-rose-50/50" : "bg-background"
       )}
     >
-      <div className={cnFn("text-[12px] leading-none", activeModifiers.selected ? "text-primary-foreground" : "text-foreground")}>
+      <div className={cnFn("text-xs leading-none", activeModifiers.selected ? "text-primary-foreground" : "text-foreground")}>
         {date.getDate()}
       </div>
       <div
         className={cnFn(
-          "mt-0.5 text-[10px] leading-none",
+          "mt-0.5 text-2xs leading-none",
           activeModifiers.selected
             ? "text-white/80"
             : closed
@@ -63,7 +63,7 @@ function CalendarDayCell({ date, activeModifiers, inv, cnFn }) {
         {cap}
       </div>
       {price != null ? (
-        <div className={cnFn("mt-0.5 text-[10px] leading-none", activeModifiers.selected ? "text-primary-foreground" : "text-foreground/80")}>
+        <div className={cnFn("mt-0.5 text-2xs leading-none", activeModifiers.selected ? "text-primary-foreground" : "text-foreground/80")}>
           {Number(price).toFixed(0)}
         </div>
       ) : null}

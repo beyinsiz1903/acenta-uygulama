@@ -71,7 +71,7 @@ function normalizeWaitingOn(v) {
 function RiskBadge({ kind }) {
   if (!kind || kind === "na") return null;
   let label = "";
-  let cls = "border text-[9px] font-medium tracking-wide px-1.5 py-0.5 rounded-full inline-flex items-center gap-1";
+  let cls = "border text-2xs font-medium tracking-wide px-1.5 py-0.5 rounded-full inline-flex items-center gap-1";
 
   if (kind === "sla_breach") {
     label = "Gecikmiş";
@@ -95,7 +95,7 @@ function RiskBadge({ kind }) {
 function WaitingBadge({ waitingOn }) {
   const w = normalizeWaitingOn(waitingOn);
   let label = "";
-  let cls = "border text-[9px] font-medium tracking-wide px-1.5 py-0.5 rounded-full inline-flex items-center gap-1";
+  let cls = "border text-2xs font-medium tracking-wide px-1.5 py-0.5 rounded-full inline-flex items-center gap-1";
 
   if (w === "customer") {
     label = "Müşteri bkl.";
@@ -348,7 +348,7 @@ function OpsGuestCasesPage() {
       {/* Filter bar */}
       <div className="rounded-xl border border-border/60 bg-card p-3 md:p-4 flex flex-col md:flex-row gap-2.5 md:items-end">
         <div className="flex flex-col gap-1 w-full md:w-[160px]">
-          <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Durum</label>
+          <label className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/70">Durum</label>
           <Select
             value={status}
             onValueChange={(val) => {
@@ -370,7 +370,7 @@ function OpsGuestCasesPage() {
         </div>
 
         <div className="flex flex-col gap-1 w-full md:w-[160px]">
-          <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Tip</label>
+          <label className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/70">Tip</label>
           <Select
             value={type || "all"}
             onValueChange={(val) => {
@@ -396,7 +396,7 @@ function OpsGuestCasesPage() {
         </div>
 
         <div className="flex flex-col gap-1 w-full md:w-[160px]">
-          <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Kaynak</label>
+          <label className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/70">Kaynak</label>
           <Select
             value={source || "all"}
             onValueChange={(val) => {
@@ -417,7 +417,7 @@ function OpsGuestCasesPage() {
         </div>
 
         <div className="flex flex-col gap-1 flex-1">
-          <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Ara</label>
+          <label className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/70">Ara</label>
           <Input
             className="h-8 text-xs"
             placeholder="Case ID veya rezervasyon kodu"
@@ -467,7 +467,7 @@ function OpsGuestCasesPage() {
 
       {/* Öncelik Sırası Filter Bar */}
       <div className="rounded-xl border border-border/60 bg-card px-3 py-2.5 flex flex-wrap items-center gap-1.5">
-        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50 mr-1.5">Öncelik</span>
+        <span className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/50 mr-1.5">Öncelik</span>
         {[
           { key: "all", label: "Tümü", dot: "bg-slate-400" },
           { key: "sla_breach", label: "Gecikmiş", dot: "bg-red-500" },
@@ -484,7 +484,7 @@ function OpsGuestCasesPage() {
               type="button"
               data-testid={`cases-filter-${f.key === "all" ? "all" : f.key === "sla_breach" ? "sla-breach" : f.key === "active_risk" ? "active-risk" : f.key === "waiting_customer" ? "waiting-customer" : f.key === "waiting_supplier" ? "waiting-supplier" : f.key === "waiting_ops" ? "waiting-ops" : f.key}`}
               onClick={() => setSlaFilter(f.key)}
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium tracking-wide transition-all ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-2xs font-medium tracking-wide transition-all ${
                 isActive
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "bg-muted/40 text-muted-foreground hover:bg-muted/70 border border-transparent hover:border-border/40"
@@ -539,12 +539,12 @@ function OpsGuestCasesPage() {
                       onChange={toggleSelectAllVisible}
                     />
                   </th>
-                  <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Talep No</th>
-                  <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Rez. Kodu</th>
-                  <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Tip</th>
-                  <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Durum</th>
-                  <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Kaynak</th>
-                  <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Oluşturulma</th>
+                  <th className="px-3 py-2 text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70">Talep No</th>
+                  <th className="px-3 py-2 text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70">Rez. Kodu</th>
+                  <th className="px-3 py-2 text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70">Tip</th>
+                  <th className="px-3 py-2 text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70">Durum</th>
+                  <th className="px-3 py-2 text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70">Kaynak</th>
+                  <th className="px-3 py-2 text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70">Oluşturulma</th>
                 </tr>
               </thead>
               <tbody>
@@ -586,11 +586,11 @@ function OpsGuestCasesPage() {
                           data-testid={`cases-select-one-${c.case_id}`}
                         />
                       </td>
-                      <td className="px-3 py-2.5 font-mono text-[11px] font-medium text-primary tracking-tight">
+                      <td className="px-3 py-2.5 font-mono text-xs font-medium text-primary tracking-tight">
                         {c.case_id}
                       </td>
-                      <td className="px-3 py-2.5 text-[12px] font-medium text-foreground/80">{c.booking_code || "—"}</td>
-                      <td className="px-3 py-2.5 text-[12px] text-foreground/70">
+                      <td className="px-3 py-2.5 text-xs font-medium text-foreground/80">{c.booking_code || "—"}</td>
+                      <td className="px-3 py-2.5 text-xs text-foreground/70">
                         {(() => {
                           switch (c.type) {
                             case "cancel":
@@ -614,28 +614,28 @@ function OpsGuestCasesPage() {
                           }
                         })()}
                       </td>
-                      <td className="px-3 py-2.5 text-[12px]">
+                      <td className="px-3 py-2.5 text-xs">
                         <div className={`flex flex-col gap-1 ${dimClass}`}>
                           <div>
                             {(() => {
                               switch (c.status) {
                                 case "open":
                                   return (
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 text-[10px] font-semibold tracking-wide">
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 text-2xs font-semibold tracking-wide">
                                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                                       Açık
                                     </span>
                                   );
                                 case "waiting":
                                   return (
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 text-[10px] font-semibold tracking-wide">
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 text-2xs font-semibold tracking-wide">
                                       <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                                       Beklemede
                                     </span>
                                   );
                                 case "in_progress":
                                   return (
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 text-[10px] font-semibold tracking-wide">
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 text-2xs font-semibold tracking-wide">
                                       <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
                                       Devam ediyor
                                     </span>
@@ -643,7 +643,7 @@ function OpsGuestCasesPage() {
                                 case "closed":
                                 default:
                                   return (
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 text-slate-500 border border-slate-200 px-2 py-0.5 text-[10px] font-semibold tracking-wide">
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 text-slate-500 border border-slate-200 px-2 py-0.5 text-2xs font-semibold tracking-wide">
                                       <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
                                       Kapalı
                                     </span>
@@ -667,7 +667,7 @@ function OpsGuestCasesPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 text-[12px] text-foreground/60">
+                      <td className="px-3 py-2.5 text-xs text-foreground/60">
                         {(() => {
                           switch (c.source) {
                             case "guest_portal":
@@ -681,7 +681,7 @@ function OpsGuestCasesPage() {
                           }
                         })()}
                       </td>
-                      <td className="px-3 py-2.5 text-[11px] text-muted-foreground/60">
+                      <td className="px-3 py-2.5 text-xs text-muted-foreground/60">
                         {created ? created.toLocaleString("tr-TR") : "—"}
                       </td>
                     </tr>
@@ -694,7 +694,7 @@ function OpsGuestCasesPage() {
 
         {/* Basit pagination */}
         {hasAny && !error && (
-          <div className="flex items-center justify-between px-4 py-2.5 border-t text-[11px] text-muted-foreground/60">
+          <div className="flex items-center justify-between px-4 py-2.5 border-t text-xs text-muted-foreground/60">
             <span>
               Toplam {total} kayıt
             </span>
@@ -872,7 +872,7 @@ function OpsGuestCasesPage() {
 
           {bulkResult && (
             <div
-              className="mt-2 text-[11px] text-muted-foreground"
+              className="mt-2 text-xs text-muted-foreground"
               data-testid="cases-bulk-last-action"
             >
               Last bulk: updated {bulkResult.updated || 0}, failed {bulkResult.failed || 0}

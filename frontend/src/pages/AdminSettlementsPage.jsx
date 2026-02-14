@@ -80,10 +80,10 @@ function SettlementStatusSummary({ items }) {
         </div>
         {currencies.length > 1 && (
           <div className="pt-2 border-t mt-2 space-y-1">
-            <div className="text-[11px] font-medium text-muted-foreground">Para birimi bazında dağılım</div>
+            <div className="text-xs font-medium text-muted-foreground">Para birimi bazında dağılım</div>
             <div className="space-y-1">
               {currencies.map((c) => (
-                <div key={c.currency} className="flex items-center justify-between text-[11px]">
+                <div key={c.currency} className="flex items-center justify-between text-xs">
                   <div className="font-mono">{c.currency}</div>
                   <div className="flex items-center gap-3">
                     <span>Brüt: {formatCents(c.gross, c.currency)}</span>
@@ -260,7 +260,7 @@ export default function AdminSettlementsPage() {
                   Ödeme işlemleri, acente ve rezervasyon bilgileriyle birlikte görüntülenen satırlar.
                 </p>
               </div>
-              <div className="text-[11px] text-muted-foreground flex flex-col items-end">
+              <div className="text-xs text-muted-foreground flex flex-col items-end">
                 <span>{items.length} satr</span>
               </div>
             </CardHeader>
@@ -299,27 +299,27 @@ export default function AdminSettlementsPage() {
                     ) : (
                       items.map((it) => (
                         <TableRow key={it.tx_id} className="hover:bg-accent/40">
-                          <TableCell className="text-[11px]">
+                          <TableCell className="text-xs">
                             {it.date ? new Date(it.date).toLocaleString() : "-"}
                           </TableCell>
-                          <TableCell className="text-[11px]">
+                          <TableCell className="text-xs">
                             <div className="font-mono truncate max-w-[140px]">{it.booking_code || it.booking_id}</div>
                           </TableCell>
-                          <TableCell className="text-[11px] font-mono truncate max-w-[120px]">
+                          <TableCell className="text-xs font-mono truncate max-w-[120px]">
                             {it.agency_id || "-"}
                           </TableCell>
-                          <TableCell className="text-[11px]">{it.currency || "EUR"}</TableCell>
-                          <TableCell className="text-[11px] text-right">
+                          <TableCell className="text-xs">{it.currency || "EUR"}</TableCell>
+                          <TableCell className="text-xs text-right">
                             {formatCents(it.gross_cents, it.currency)}
                           </TableCell>
-                          <TableCell className="text-[11px] text-right">
+                          <TableCell className="text-xs text-right">
                             {formatCents(it.agency_cut_cents, it.currency)}
                           </TableCell>
-                          <TableCell className="text-[11px] text-right">
+                          <TableCell className="text-xs text-right">
                             {formatCents(it.platform_cut_cents, it.currency)}
                           </TableCell>
-                          <TableCell className="text-[11px]">{it.payment_method || "-"}</TableCell>
-                          <TableCell className="text-[11px]">{it.channel || "-"}</TableCell>
+                          <TableCell className="text-xs">{it.payment_method || "-"}</TableCell>
+                          <TableCell className="text-xs">{it.channel || "-"}</TableCell>
                         </TableRow>
                       ))
                     )}

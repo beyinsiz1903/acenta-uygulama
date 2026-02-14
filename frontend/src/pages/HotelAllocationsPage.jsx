@@ -256,7 +256,7 @@ export default function HotelAllocationsPage() {
                 onChange={(e) => setAllotment(e.target.value)}
               />
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Bu allotment kuralı, Syroce üzerinden satış yapan <span className="font-semibold">tüm acentalar</span> için geçerlidir.
               Belirttiğiniz sayı, aynı anda satılabilecek oda sayısını doğrudan sınırlar.
             </p>

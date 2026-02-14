@@ -81,10 +81,10 @@ export default function StorefrontOfferPage() {
           </Button>
         </div>
 
-        {loading && <p className="text-[11px] text-muted-foreground">Teklif yükleniyor...</p>}
+        {loading && <p className="text-xs text-muted-foreground">Teklif yükleniyor...</p>}
 
         {error && !loading && (
-          <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-[11px] text-destructive">
+          <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
             {error}
           </div>
         )}
@@ -97,17 +97,17 @@ export default function StorefrontOfferPage() {
         )}
 
         {!loading && !error && offer && (
-          <Card className="p-3 text-[11px] space-y-2">
+          <Card className="p-3 text-xs space-y-2">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs font-semibold">Teklif #{offer.offer_id}</div>
-                <div className="text-[10px] text-muted-foreground">Supplier: {offer.supplier || "mock"}</div>
+                <div className="text-2xs text-muted-foreground">Supplier: {offer.supplier || "mock"}</div>
               </div>
               <div className="text-sm font-bold">
                 {offer.total_amount} {offer.currency}
               </div>
             </div>
-            <div className="text-[10px] text-muted-foreground">
+            <div className="text-2xs text-muted-foreground">
               Bu ekran, B2C vitrinde hızlı teklif detaylarını göstermek için minimaldir. Tam ürün/kampanya içerikleri
               ileriki fazlarda eklenecektir.
             </div>

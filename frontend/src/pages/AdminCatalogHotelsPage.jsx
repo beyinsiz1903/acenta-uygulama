@@ -480,7 +480,7 @@ export default function AdminCatalogHotelsPage() {
               {selected ? "Hotel Detail" : "Create Hotel"}
             </div>
             {selected?.product_id && (
-              <div className="text-[11px] text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 ID: <span className="font-mono">{selected.product_id}</span>
               </div>
             )}

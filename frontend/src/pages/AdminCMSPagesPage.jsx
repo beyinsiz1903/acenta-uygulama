@@ -142,7 +142,7 @@ export default function AdminCMSPagesPage() {
                 onChange={(e) => setLinkedCampaignSlug(e.target.value)}
                 placeholder="opsiyonel: yaz-firsatlari-2026"
               />
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Bu sayfa kampanya landing olacaksa, ilgili kampanya slug girin.
               </p>
             </div>

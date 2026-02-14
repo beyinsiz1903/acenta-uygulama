@@ -228,7 +228,7 @@ export default function AdminSettlementRunDetailPage() {
               </div>
               <div className="flex flex-col items-end gap-1 text-right">
                 <StatusBadge status={run.status} />
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   Toplam {totals.totalItems} satır, net ödenecek {formatMoney(totals.totalNet, run.currency)}
                 </div>
               </div>
@@ -236,19 +236,19 @@ export default function AdminSettlementRunDetailPage() {
             <CardContent className="space-y-2 text-xs text-muted-foreground">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <div>
-                  <div className="font-medium text-[11px]">Oluşturulma</div>
+                  <div className="font-medium text-xs">Oluşturulma</div>
                   <div>{formatDate(run.created_at)}</div>
                 </div>
                 <div>
-                  <div className="font-medium text-[11px]">Onay</div>
+                  <div className="font-medium text-xs">Onay</div>
                   <div>{formatDate(run.approved_at)}</div>
                 </div>
                 <div>
-                  <div className="font-medium text-[11px]">Ödeme</div>
+                  <div className="font-medium text-xs">Ödeme</div>
                   <div>{formatDate(run.paid_at)}</div>
                 </div>
                 <div>
-                  <div className="font-medium text-[11px]">Durum</div>
+                  <div className="font-medium text-xs">Durum</div>
                   <div>{run.status}</div>
                 </div>
               </div>
@@ -256,15 +256,15 @@ export default function AdminSettlementRunDetailPage() {
                 <div className="mt-2 p-2 rounded-md bg-red-50 text-red-700 flex items-start gap-2">
                   <AlertCircle className="h-3 w-3 mt-0.5" />
                   <div>
-                    <div className="text-[11px] font-semibold">İptal sebebi</div>
-                    <div className="text-[11px] whitespace-pre-line">{run.cancel_reason}</div>
+                    <div className="text-xs font-semibold">İptal sebebi</div>
+                    <div className="text-xs whitespace-pre-line">{run.cancel_reason}</div>
                   </div>
                 </div>
               )}
               {run.payment_reference && (
                 <div className="mt-1">
-                  <div className="text-[11px] font-semibold">Payment reference</div>
-                  <div className="text-[11px] font-mono break-all">{run.payment_reference}</div>
+                  <div className="text-xs font-semibold">Payment reference</div>
+                  <div className="text-xs font-mono break-all">{run.payment_reference}</div>
                 </div>
               )}
             </CardContent>
@@ -296,19 +296,19 @@ export default function AdminSettlementRunDetailPage() {
                     ) : (
                       run.line_items.map((li) => (
                         <TableRow key={li.accrual_id}>
-                          <TableCell className="text-[11px] font-mono truncate max-w-[160px]">
+                          <TableCell className="text-xs font-mono truncate max-w-[160px]">
                             {li.accrual_id}
                           </TableCell>
-                          <TableCell className="text-[11px] font-mono truncate max-w-[160px]">
+                          <TableCell className="text-xs font-mono truncate max-w-[160px]">
                             {li.booking_id || "-"}
                           </TableCell>
-                          <TableCell className="text-[11px] text-right">
+                          <TableCell className="text-xs text-right">
                             {formatMoney(li.net_payable, run.currency)}
                           </TableCell>
-                          <TableCell className="text-[11px]">
+                          <TableCell className="text-xs">
                             {li.status_at_approval || "-"}
                           </TableCell>
-                          <TableCell className="text-[11px]">{formatDate(li.accrued_at)}</TableCell>
+                          <TableCell className="text-xs">{formatDate(li.accrued_at)}</TableCell>
                         </TableRow>
                       ))
                     )}
@@ -331,7 +331,7 @@ export default function AdminSettlementRunDetailPage() {
               </p>
 
               <div className="space-y-2">
-                <div className="font-semibold text-[11px]">Taslak → Onaylı</div>
+                <div className="font-semibold text-xs">Taslak → Onaylı</div>
                 <p>
                   Run taslak durumdayken, içindeki accrual’lar kilitlidir. Onayladığınızda, satır snapshot’ı alınır ve
                   toplamlar dondurulur.
@@ -346,7 +346,7 @@ export default function AdminSettlementRunDetailPage() {
               </div>
 
               <div className="space-y-2 pt-3 border-t">
-                <div className="font-semibold text-[11px]">Taslak durumunda satır ekleme</div>
+                <div className="font-semibold text-xs">Taslak durumunda satır ekleme</div>
                 <p>
                   Demo ortamında accrual listesi için ayrı bir ekran yok, ancak teknik ekip belirli accrual_id değerlerini
                   bildiğinde bu alandan ilgili taslak run’a ekleyebilir.
@@ -371,7 +371,7 @@ export default function AdminSettlementRunDetailPage() {
               </div>
 
               <div className="space-y-2 pt-3 border-t">
-                <div className="font-semibold text-[11px]">Taslak / Onaylı → İptal</div>
+                <div className="font-semibold text-xs">Taslak / Onaylı → İptal</div>
                 <p>
                   İptal edilen run, kilitlediği accrual’ları eski durumuna geri döndürür. Lütfen iptal sebebini ayrıntılı
                   yazın.
@@ -394,7 +394,7 @@ export default function AdminSettlementRunDetailPage() {
               </div>
 
               <div className="space-y-2 pt-3 border-t">
-                <div className="font-semibold text-[11px]">Onaylı → Ödendi</div>
+                <div className="font-semibold text-xs">Onaylı → Ödendi</div>
                 <p>
                   Ödendi olarak işaretlediğinizde, supplier payable hesabı ile platform cash hesabı arasında
                   <strong>SETTLEMENT_PAID</strong> ledger postingi oluşturulur ve accrual’lar <strong>settled</strong>
@@ -415,7 +415,7 @@ export default function AdminSettlementRunDetailPage() {
                 </Button>
               </div>
 
-              <div className="pt-3 border-t text-[11px]">
+              <div className="pt-3 border-t text-xs">
                 <p className="font-semibold mb-1">Notlar</p>
                 <ul className="list-disc list-inside space-y-1">
                   <li>Taslak durumdayken accrual ekleme/çıkarma yalnızca API üzerinden yapılabilir.</li>

@@ -10,7 +10,7 @@ import { Loader2, AlertCircle } from "lucide-react";
 function FieldError({ text }) {
   if (!text) return null;
   return (
-    <div className="mt-2 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[11px] text-destructive">
+    <div className="mt-2 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
       <AlertCircle className="h-4 w-4 mt-0.5" />
       <div>{text}</div>
     </div>
@@ -89,10 +89,10 @@ function ContractsTab() {
 
       <FieldError text={err} />
 
-      <div className="rounded-md border p-3 space-y-2 text-[11px]">
+      <div className="rounded-md border p-3 space-y-2 text-xs">
         <div className="grid grid-cols-3 gap-2">
           <div className="space-y-1">
-            <Label className="text-[11px]">Code</Label>
+            <Label className="text-xs">Code</Label>
             <Input
               className="h-8 text-xs"
               value={code}
@@ -101,7 +101,7 @@ function ContractsTab() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Status</Label>
+            <Label className="text-xs">Status</Label>
             <select
               className="h-8 w-full rounded-md border bg-background px-2 text-xs"
               value={status}
@@ -116,22 +116,22 @@ function ContractsTab() {
 
         <div className="grid grid-cols-3 gap-2">
           <div className="space-y-1">
-            <Label className="text-[11px]">Supplier ID</Label>
+            <Label className="text-xs">Supplier ID</Label>
             <Input className="h-8 text-xs" value={supplierId} onChange={(e) => setSupplierId(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Agency ID</Label>
+            <Label className="text-xs">Agency ID</Label>
             <Input className="h-8 text-xs" value={agencyId} onChange={(e) => setAgencyId(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Channel ID</Label>
+            <Label className="text-xs">Channel ID</Label>
             <Input className="h-8 text-xs" value={channelId} onChange={(e) => setChannelId(e.target.value)} />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1">
-            <Label className="text-[11px]">Markets (comma-separated)</Label>
+            <Label className="text-xs">Markets (comma-separated)</Label>
             <Input
               className="h-8 text-xs"
               value={markets}
@@ -140,7 +140,7 @@ function ContractsTab() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Product IDs (comma-separated)</Label>
+            <Label className="text-xs">Product IDs (comma-separated)</Label>
             <Input
               className="h-8 text-xs"
               value={productIds}
@@ -157,7 +157,7 @@ function ContractsTab() {
         </div>
       </div>
 
-      <div className="rounded-md border overflow-hidden text-[11px]">
+      <div className="rounded-md border overflow-hidden text-xs">
         <div className="grid grid-cols-7 bg-muted/40 px-2 py-2 font-semibold">
           <div>Code</div>
           <div>Supplier</div>
@@ -180,7 +180,7 @@ function ContractsTab() {
             </div>
           ))}
           {!items.length && (
-            <div className="px-2 py-3 text-[11px] text-muted-foreground">Henüz sözleşme yok.</div>
+            <div className="px-2 py-3 text-xs text-muted-foreground">Henüz sözleşme yok.</div>
           )}
         </div>
       </div>
@@ -256,37 +256,37 @@ function RateGridsTab() {
 
       <FieldError text={err} />
 
-      <div className="rounded-md border p-3 space-y-2 text-[11px]">
+      <div className="rounded-md border p-3 space-y-2 text-xs">
         <div className="grid grid-cols-3 gap-2">
           <div className="space-y-1">
-            <Label className="text-[11px]">Contract ID</Label>
+            <Label className="text-xs">Contract ID</Label>
             <Input className="h-8 text-xs" value={contractId} onChange={(e) => setContractId(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Product ID</Label>
+            <Label className="text-xs">Product ID</Label>
             <Input className="h-8 text-xs" value={productId} onChange={(e) => setProductId(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Rate Plan ID</Label>
+            <Label className="text-xs">Rate Plan ID</Label>
             <Input className="h-8 text-xs" value={ratePlanId} onChange={(e) => setRatePlanId(e.target.value)} />
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-2">
           <div className="space-y-1">
-            <Label className="text-[11px]">Room Type ID</Label>
+            <Label className="text-xs">Room Type ID</Label>
             <Input className="h-8 text-xs" value={roomTypeId} onChange={(e) => setRoomTypeId(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Currency</Label>
+            <Label className="text-xs">Currency</Label>
             <Input className="h-8 text-xs" value={currency} onChange={(e) => setCurrency(e.target.value)} />
           </div>
         </div>
 
         <div className="space-y-1">
-          <Label className="text-[11px]">Rows (JSON)</Label>
+          <Label className="text-xs">Rows (JSON)</Label>
           <Textarea
-            className="font-mono text-[11px] min-h-[100px]"
+            className="font-mono text-xs min-h-[100px]"
             value={rowsJson}
             onChange={(e) => setRowsJson(e.target.value)}
           />
@@ -299,7 +299,7 @@ function RateGridsTab() {
         </div>
       </div>
 
-      <div className="rounded-md border overflow-hidden text-[11px]">
+      <div className="rounded-md border overflow-hidden text-xs">
         <div className="grid grid-cols-5 bg-muted/40 px-2 py-2 font-semibold">
           <div>Product</div>
           <div>Rate Plan</div>
@@ -318,7 +318,7 @@ function RateGridsTab() {
             </div>
           ))}
           {!items.length && (
-            <div className="px-2 py-3 text-[11px] text-muted-foreground">Henüz grid tanımlı değil.</div>
+            <div className="px-2 py-3 text-xs text-muted-foreground">Henüz grid tanımlı değil.</div>
           )}
         </div>
       </div>
@@ -390,10 +390,10 @@ function RulesTab() {
 
       <FieldError text={err} />
 
-      <div className="rounded-md border p-3 space-y-2 text-[11px]">
+      <div className="rounded-md border p-3 space-y-2 text-xs">
         <div className="grid grid-cols-3 gap-2">
           <div className="space-y-1">
-            <Label className="text-[11px]">Code</Label>
+            <Label className="text-xs">Code</Label>
             <Input
               className="h-8 text-xs"
               value={code}
@@ -402,7 +402,7 @@ function RulesTab() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Status</Label>
+            <Label className="text-xs">Status</Label>
             <select
               className="h-8 w-full rounded-md border bg-background px-2 text-xs"
               value={status}
@@ -414,7 +414,7 @@ function RulesTab() {
             </select>
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Priority</Label>
+            <Label className="text-xs">Priority</Label>
             <Input
               type="number"
               className="h-8 text-xs"
@@ -426,17 +426,17 @@ function RulesTab() {
 
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1">
-            <Label className="text-[11px]">Scope (JSON)</Label>
+            <Label className="text-xs">Scope (JSON)</Label>
             <Textarea
-              className="font-mono text-[11px] min-h-[100px]"
+              className="font-mono text-xs min-h-[100px]"
               value={scopeJson}
               onChange={(e) => setScopeJson(e.target.value)}
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Action (JSON)</Label>
+            <Label className="text-xs">Action (JSON)</Label>
             <Textarea
-              className="font-mono text-[11px] min-h-[100px]"
+              className="font-mono text-xs min-h-[100px]"
               value={actionJson}
               onChange={(e) => setActionJson(e.target.value)}
             />
@@ -450,7 +450,7 @@ function RulesTab() {
         </div>
       </div>
 
-      <div className="rounded-md border overflow-hidden text-[11px]">
+      <div className="rounded-md border overflow-hidden text-xs">
         <div className="grid grid-cols-5 bg-muted/40 px-2 py-2 font-semibold">
           <div>Code</div>
           <div>Status</div>
@@ -473,7 +473,7 @@ function RulesTab() {
             </div>
           ))}
           {!items.length && (
-            <div className="px-2 py-3 text-[11px] text-muted-foreground">Henüz kural tanımlı değil.</div>
+            <div className="px-2 py-3 text-xs text-muted-foreground">Henüz kural tanımlı değil.</div>
           )}
         </div>
       </div>
@@ -529,7 +529,7 @@ function markupLevel(action) {
 function ValidityRangeBadge({ kind }) {
   if (!kind) return null;
   let label = "";
-  let cls = "border text-[9px] px-1.5 py-0.5 rounded-full";
+  let cls = "border text-2xs px-1.5 py-0.5 rounded-full";
 
   if (kind === "active_now") {
     label = "ACTIVE NOW";
@@ -561,7 +561,7 @@ function shortJson(obj, n = 40) {
 function MarkupLevelBadge({ level }) {
   if (!level) return null;
   let label = "";
-  let cls = "border text-[9px] px-1.5 py-0.5 rounded-full";
+  let cls = "border text-2xs px-1.5 py-0.5 rounded-full";
 
   if (level === "high") {
     label = "HIGH";
@@ -697,10 +697,10 @@ function SimpleRulesTab() {
 
       <FieldError text={err} />
 
-      <div className="rounded-md border p-3 space-y-2 text-[11px]">
+      <div className="rounded-md border p-3 space-y-2 text-xs">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <div className="space-y-1">
-            <Label className="text-[11px]">Priority</Label>
+            <Label className="text-xs">Priority</Label>
             <Input
               type="number"
               className="h-8 text-xs"
@@ -709,7 +709,7 @@ function SimpleRulesTab() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Agency ID (opsiyonel)</Label>
+            <Label className="text-xs">Agency ID (opsiyonel)</Label>
             <Input
               className="h-8 text-xs"
               value={agencyId}
@@ -718,7 +718,7 @@ function SimpleRulesTab() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Product ID (opsiyonel)</Label>
+            <Label className="text-xs">Product ID (opsiyonel)</Label>
             <Input
               className="h-8 text-xs"
               value={productId}
@@ -727,7 +727,7 @@ function SimpleRulesTab() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Product Type</Label>
+            <Label className="text-xs">Product Type</Label>
             <select
               className="h-8 w-full rounded-md border bg-background px-2 text-xs"
               value={productType}
@@ -740,7 +740,7 @@ function SimpleRulesTab() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <div className="space-y-1">
-            <Label className="text-[11px]">Geçerlilik Başlangıç</Label>
+            <Label className="text-xs">Geçerlilik Başlangıç</Label>
             <Input
               type="date"
               className="h-8 text-xs"
@@ -749,7 +749,7 @@ function SimpleRulesTab() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Geçerlilik Bitiş</Label>
+            <Label className="text-xs">Geçerlilik Bitiş</Label>
             <Input
               type="date"
               className="h-8 text-xs"
@@ -758,7 +758,7 @@ function SimpleRulesTab() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Markup %</Label>
+            <Label className="text-xs">Markup %</Label>
             <Input
               type="number"
               className="h-8 text-xs"
@@ -770,9 +770,9 @@ function SimpleRulesTab() {
         </div>
 
         <div className="space-y-1">
-          <Label className="text-[11px]">Notlar</Label>
+          <Label className="text-xs">Notlar</Label>
           <Textarea
-            className="font-sans text-[11px] min-h-[60px]"
+            className="font-sans text-xs min-h-[60px]"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Örn: B2B portal için genel %10 markup"
@@ -787,7 +787,7 @@ function SimpleRulesTab() {
         </div>
       </div>
 
-      <div className="rounded-md border overflow-hidden text-[11px]">
+      <div className="rounded-md border overflow-hidden text-xs">
         <div className="grid grid-cols-8 bg-muted/40 px-2 py-2 font-semibold">
           <div>ID</div>
           <div>Name</div>
@@ -832,7 +832,7 @@ function SimpleRulesTab() {
                 <div className={`font-mono truncate ${dimClass}`} title={r.rule_id}>
                   {r.rule_id}
                 </div>
-                <div className={`truncate text-[11px] ${dimClass}`} title={ruleName || ""}>
+                <div className={`truncate text-xs ${dimClass}`} title={ruleName || ""}>
                   {ruleName || <span className="text-muted-foreground">(no name)</span>}
                 </div>
                 <div className="flex items-center gap-2">
@@ -840,7 +840,7 @@ function SimpleRulesTab() {
                   <Button
                     size="xs"
                     variant="outline"
-                    className="h-6 text-[10px]"
+                    className="h-6 text-2xs"
                     onClick={() => toggleStatus(r)}
                     disabled={saving}
                   >
@@ -857,7 +857,7 @@ function SimpleRulesTab() {
                 <div className={`truncate ${dimClass}`} title={JSON.stringify(r.validity)}>
                   {r.validity?.from} → {r.validity?.to}
                 </div>
-                <div className="flex flex-col gap-1 text-[10px]">
+                <div className="flex flex-col gap-1 text-2xs">
                   <div data-testid={`validity-badge-${r.rule_id}`}>
                     <ValidityRangeBadge kind={validityKind} />
                   </div>
@@ -869,7 +869,7 @@ function SimpleRulesTab() {
             );
           })}
           {!items.length && (
-            <div className="px-2 py-3 text-[11px] text-muted-foreground">Henüz simple rule yok.</div>
+            <div className="px-2 py-3 text-xs text-muted-foreground">Henüz simple rule yok.</div>
           )}
         </div>
       </div>
@@ -892,13 +892,13 @@ export default function AdminPricingPage() {
       <div className="flex items-center justify-between">
         <div>
           <div className="text-lg font-semibold">Pricing</div>
-          <div className="text-[11px] text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             Contracts + rate grids + rules (v2 skeleton)
           </div>
         </div>
       </div>
 
-      <div className="flex gap-2 border-b pb-2 text-[11px]">
+      <div className="flex gap-2 border-b pb-2 text-xs">
         {tabs.map((t) => (
           <button
             key={t.key}

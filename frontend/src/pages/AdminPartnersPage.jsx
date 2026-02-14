@@ -274,7 +274,7 @@ export default function AdminPartnersPage() {
                   onChange={(e) => setDefaultMarkup(e.target.value)}
                   placeholder="0"
                 />
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Pozitif değerler partner satış fiyatına eklenecek marjı temsil eder.
                 </p>
               </div>
@@ -304,7 +304,7 @@ export default function AdminPartnersPage() {
           <CardTitle className="text-sm font-medium flex items-center justify-between">
             <span>Partner listesi</span>
             {loading && (
-              <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                 <Loader2 className="h-3 w-3 animate-spin" /> Yükleniyor...
               </span>
             )}
@@ -339,7 +339,7 @@ export default function AdminPartnersPage() {
                         <div className="flex flex-col">
                           <span className="font-medium truncate max-w-[220px]">{p.name}</span>
                           {p.notes && (
-                            <span className="text-[10px] text-muted-foreground truncate max-w-[260px]">
+                            <span className="text-2xs text-muted-foreground truncate max-w-[260px]">
                               {p.notes}
                             </span>
                           )}
@@ -365,7 +365,7 @@ export default function AdminPartnersPage() {
                             type="button"
                             size="xs"
                             variant="outline"
-                            className="h-6 px-2 text-[10px]"
+                            className="h-6 px-2 text-2xs"
                             onClick={() => updateStatus(p.id, "approved")}
                           >
                             Onayla
@@ -374,7 +374,7 @@ export default function AdminPartnersPage() {
                             type="button"
                             size="xs"
                             variant="outline"
-                            className="h-6 px-2 text-[10px]"
+                            className="h-6 px-2 text-2xs"
                             onClick={() => updateStatus(p.id, "blocked")}
                           >
                             Engelle
@@ -383,7 +383,7 @@ export default function AdminPartnersPage() {
                             type="button"
                             size="xs"
                             variant="outline"
-                            className="h-6 px-2 text-[10px]"
+                            className="h-6 px-2 text-2xs"
                             onClick={() => updateStatus(p.id, "pending")}
                           >
                             Beklemeye al
@@ -392,7 +392,7 @@ export default function AdminPartnersPage() {
                       </TableCell>
                     </TableRow>
                   ))}
-              <div className="flex items-center justify-between mt-3 text-[11px] text-muted-foreground">
+              <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
                 <span>
                   Sayfa {page}
                 </span>
@@ -445,7 +445,7 @@ export default function AdminPartnersPage() {
               </div>
 
               {summaryError && (
-                <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-2 text-[11px] text-destructive">
+                <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-2 text-xs text-destructive">
                   <AlertCircle className="h-3 w-3 mt-0.5" />
                   <span>{summaryError}</span>
                 </div>
@@ -460,13 +460,13 @@ export default function AdminPartnersPage() {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <div className="rounded-md border bg-muted/40 p-2">
-                      <div className="text-[11px] text-muted-foreground">Toplam rezervasyon</div>
+                      <div className="text-xs text-muted-foreground">Toplam rezervasyon</div>
                       <div className="text-sm font-semibold">
                         {summaryPartner.summary.total_bookings}
                       </div>
                     </div>
                     <div className="rounded-md border bg-muted/40 p-2">
-                      <div className="text-[11px] text-muted-foreground">Toplam ciro</div>
+                      <div className="text-xs text-muted-foreground">Toplam ciro</div>
                       <div className="text-sm font-semibold">
                         {(summaryPartner.summary.total_amount_cents / 100).toFixed(2)} {summaryPartner.summary.currency}
                       </div>
@@ -475,30 +475,30 @@ export default function AdminPartnersPage() {
 
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                      <div className="text-[11px] font-medium text-muted-foreground">Kanal kırılımı</div>
+                      <div className="text-xs font-medium text-muted-foreground">Kanal kırılımı</div>
                       {Object.keys(summaryPartner.summary.by_channel || {}).length === 0 ? (
-                        <div className="text-[11px] text-muted-foreground">Kayıt yok</div>
+                        <div className="text-xs text-muted-foreground">Kayıt yok</div>
                       ) : (
                         <ul className="space-y-0.5">
                           {Object.entries(summaryPartner.summary.by_channel).map(([ch, cnt]) => (
                             <li key={ch} className="flex justify-between">
-                              <span className="capitalize text-[11px] text-muted-foreground">{ch}</span>
-                              <span className="text-[11px] font-medium">{cnt}</span>
+                              <span className="capitalize text-xs text-muted-foreground">{ch}</span>
+                              <span className="text-xs font-medium">{cnt}</span>
                             </li>
                           ))}
                         </ul>
                       )}
                     </div>
                     <div className="space-y-1">
-                      <div className="text-[11px] font-medium text-muted-foreground">Ürün tipi kırılımı</div>
+                      <div className="text-xs font-medium text-muted-foreground">Ürün tipi kırılımı</div>
                       {Object.keys(summaryPartner.summary.by_product_type || {}).length === 0 ? (
-                        <div className="text-[11px] text-muted-foreground">Kayıt yok</div>
+                        <div className="text-xs text-muted-foreground">Kayıt yok</div>
                       ) : (
                         <ul className="space-y-0.5">
                           {Object.entries(summaryPartner.summary.by_product_type).map(([pt, cnt]) => (
                             <li key={pt} className="flex justify-between">
-                              <span className="capitalize text-[11px] text-muted-foreground">{pt}</span>
-                              <span className="text-[11px] font-medium">{cnt}</span>
+                              <span className="capitalize text-xs text-muted-foreground">{pt}</span>
+                              <span className="text-xs font-medium">{cnt}</span>
                             </li>
                           ))}
                         </ul>
@@ -506,7 +506,7 @@ export default function AdminPartnersPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
+                  <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                     <div>
                       <span className="block font-medium text-foreground">İlk rezervasyon</span>
                       <span>{summaryPartner.summary.first_booking_at || "-"}</span>
@@ -518,7 +518,7 @@ export default function AdminPartnersPage() {
                   </div>
 
                   {summaryPartner.summary.linked_agency_name && (
-                    <div className="rounded-md border bg-muted/40 p-2 text-[11px]">
+                    <div className="rounded-md border bg-muted/40 p-2 text-xs">
                       <div className="text-muted-foreground">Bağlı acenta</div>
                       <div className="font-medium">{summaryPartner.summary.linked_agency_name}</div>
                     </div>

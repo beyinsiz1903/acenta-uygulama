@@ -132,7 +132,7 @@ export default function PartnerDiscoveryPage() {
               />
             </div>
             {loading && (
-              <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 <span>Aranıyor…</span>
               </div>
@@ -140,19 +140,19 @@ export default function PartnerDiscoveryPage() {
           </div>
 
           {query && query.trim().length < 2 && (
-            <p className="text-[11px] text-muted-foreground">Arama için en az 2 karakter girin.</p>
+            <p className="text-xs text-muted-foreground">Arama için en az 2 karakter girin.</p>
           )}
 
           {error && (
-            <p className="text-[11px] text-destructive">{error}</p>
+            <p className="text-xs text-destructive">{error}</p>
           )}
 
           {showInitialHint && (
-            <p className="text-[11px] text-muted-foreground">Bir tenant arayarak davet gönderebilirsin.</p>
+            <p className="text-xs text-muted-foreground">Bir tenant arayarak davet gönderebilirsin.</p>
           )}
 
           {showNoResults && (
-            <p className="text-[11px] text-muted-foreground">Sonuç bulunamadı.</p>
+            <p className="text-xs text-muted-foreground">Sonuç bulunamadı.</p>
           )}
 
           {results.length > 0 && (
@@ -164,12 +164,12 @@ export default function PartnerDiscoveryPage() {
                 >
                   <div className="min-w-0">
                     <div className="truncate text-xs font-medium">{t.name || t.slug}</div>
-                    <div className="text-[11px] text-muted-foreground truncate font-mono">{t.slug}</div>
+                    <div className="text-xs text-muted-foreground truncate font-mono">{t.slug}</div>
                   </div>
                   <Button
                     type="button"
                     size="xs"
-                    className="h-7 px-3 text-[11px]"
+                    className="h-7 px-3 text-xs"
                     onClick={() => handleOpenInvite(t)}
                   >
                     Davet Et
@@ -194,11 +194,11 @@ export default function PartnerDiscoveryPage() {
             <form onSubmit={handleSendInvite} className="space-y-3 text-xs">
               <div className="space-y-0.5">
                 <div className="font-medium truncate">{inviteTarget.name || inviteTarget.slug}</div>
-                <div className="text-[11px] text-muted-foreground font-mono truncate">{inviteTarget.slug}</div>
+                <div className="text-xs text-muted-foreground font-mono truncate">{inviteTarget.slug}</div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-medium" htmlFor="invite-note">
+                <label className="text-xs font-medium" htmlFor="invite-note">
                   Not (opsiyonel)
                 </label>
                 <Textarea
@@ -211,7 +211,7 @@ export default function PartnerDiscoveryPage() {
                   className="h-24 text-xs"
                   placeholder="Opsiyonel: bu davet için kısa bir not ekleyebilirsiniz (maks. 280 karakter)."
                 />
-                <div className="text-[10px] text-muted-foreground text-right">{note.length}/280</div>
+                <div className="text-2xs text-muted-foreground text-right">{note.length}/280</div>
               </div>
 
               <div className="flex justify-end gap-2">

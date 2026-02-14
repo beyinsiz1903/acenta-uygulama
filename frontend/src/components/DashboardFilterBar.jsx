@@ -14,7 +14,7 @@ function Chip({ label, active, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`px-2.5 py-1 text-[11px] font-medium rounded-md border transition-colors
+      className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors
         ${active
           ? 'bg-primary text-primary-foreground border-primary'
           : 'bg-card text-muted-foreground border-border/60 hover:bg-muted/50'
@@ -32,12 +32,12 @@ function Chip({ label, active, onClick }) {
 function MiniSelect({ value, onChange, options, label }) {
   return (
     <div className="flex items-center gap-1.5">
-      {label && <span className="text-[11px] text-muted-foreground">{label}</span>}
+      {label && <span className="text-xs text-muted-foreground">{label}</span>}
       <div className="relative">
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="appearance-none bg-card border border-border/60 rounded-md px-2.5 py-1 pr-6 text-[11px] font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="appearance-none bg-card border border-border/60 rounded-md px-2.5 py-1 pr-6 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
         >
           {options.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
@@ -108,7 +108,7 @@ export default function DashboardFilterBar({
         {/* Density toggle */}
         <button
           onClick={() => onDensityChange(density === 'compact' ? 'comfort' : 'compact')}
-          className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md border border-border/60 bg-card text-muted-foreground hover:bg-muted/50 transition-colors"
+          className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md border border-border/60 bg-card text-muted-foreground hover:bg-muted/50 transition-colors"
           title={density === 'compact' ? 'Rahat görünüm' : 'Kompakt görünüm'}
           data-testid="density-toggle"
         >
@@ -121,7 +121,7 @@ export default function DashboardFilterBar({
         {/* Export */}
         <button
           onClick={onExport}
-          className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md border border-border/60 bg-card text-muted-foreground hover:bg-muted/50 transition-colors"
+          className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md border border-border/60 bg-card text-muted-foreground hover:bg-muted/50 transition-colors"
           title="CSV olarak dışa aktar"
           data-testid="filter-export"
         >
@@ -131,7 +131,7 @@ export default function DashboardFilterBar({
         {/* Expand on mobile */}
         <button
           onClick={() => setExpanded(!expanded)}
-          className="sm:hidden flex items-center gap-1 px-2 py-1 text-[11px] rounded-md border border-border/60 bg-card text-muted-foreground"
+          className="sm:hidden flex items-center gap-1 px-2 py-1 text-xs rounded-md border border-border/60 bg-card text-muted-foreground"
         >
           <ChevronDown className={`h-3 w-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
         </button>
@@ -139,7 +139,7 @@ export default function DashboardFilterBar({
         {/* Apply / Reset */}
         <button
           onClick={onApply}
-          className="px-3 py-1 text-[11px] font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          className="px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           data-testid="filter-apply"
         >
           Uygula
@@ -148,7 +148,7 @@ export default function DashboardFilterBar({
         {!isDefault && (
           <button
             onClick={onReset}
-            className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md border border-border/60 text-muted-foreground hover:bg-muted/50 transition-colors"
+            className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md border border-border/60 text-muted-foreground hover:bg-muted/50 transition-colors"
             data-testid="filter-reset"
           >
             <RotateCcw className="h-3 w-3" /> Sıfırla
@@ -170,7 +170,7 @@ export default function DashboardFilterBar({
 
       {/* Disclaimer */}
       {filters.status !== 'all' && (
-        <p className="text-[10px] text-muted-foreground/70 mt-1.5">
+        <p className="text-2xs text-muted-foreground/70 mt-1.5">
           Bazı metrikler özet veridir; filtreler grafikleri ve listeleri etkiler.
         </p>
       )}

@@ -272,15 +272,15 @@ function InboxPage() {
                     >
                       {t.subject || "(Konu yok)"}
                     </span>
-                    <span className="text-[10px] uppercase text-muted-foreground">
+                    <span className="text-2xs uppercase text-muted-foreground">
                       {t.channel || t.type || "internal"}
                     </span>
                   </div>
                   <div className="mt-0.5 flex items-center justify-between gap-2">
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       {formatDate(t.last_message_at)}
                     </p>
-                    <span className="inline-flex items-center gap-1 rounded-full border bg-accent px-2 py-0.5 text-[10px] font-medium text-foreground/80">
+                    <span className="inline-flex items-center gap-1 rounded-full border bg-accent px-2 py-0.5 text-2xs font-medium text-foreground/80">
                       <span>
                         {t.status === "open"
                           ? "Açık"
@@ -290,7 +290,7 @@ function InboxPage() {
                           ? "Tamamlandı"
                           : t.status || "Durum"}
                       </span>
-                      <span className="text-foreground text-[10px]" data-testid="inbox-thread-count">
+                      <span className="text-foreground text-2xs" data-testid="inbox-thread-count">
                         {t.message_count ?? 0} mesaj
                       </span>
                     </span>
@@ -367,7 +367,7 @@ function InboxPage() {
                         m.direction === "internal" ? "bg-primary/5 ml-auto" : "bg-muted"
                       }`}
                     >
-                      <div className="mb-1 flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                      <div className="mb-1 flex items-center justify-between gap-2 text-2xs text-muted-foreground">
                         <span>{m.direction === "internal" ? "İç not" : "Dış mesaj"}</span>
                         <span>{formatDate(m.created_at)}</span>
                       </div>

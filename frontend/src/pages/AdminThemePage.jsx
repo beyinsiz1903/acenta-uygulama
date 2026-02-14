@@ -9,7 +9,7 @@ import { Card } from "../components/ui/card";
 function FieldError({ text }) {
   if (!text) return null;
   return (
-    <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[11px] text-destructive">
+    <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
       {text}
     </div>
   );
@@ -110,12 +110,12 @@ export default function AdminThemePage() {
         </p>
       </div>
 
-      <Card className="p-3 space-y-3 text-[11px]">
+      <Card className="p-3 space-y-3 text-xs">
         <FieldError text={err} />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
           <div className="space-y-1">
-            <Label htmlFor="theme-company-name" className="text-[11px]">
+            <Label htmlFor="theme-company-name" className="text-xs">
               Şirket Adı
             </Label>
             <Input
@@ -127,7 +127,7 @@ export default function AdminThemePage() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Logo URL</Label>
+            <Label className="text-xs">Logo URL</Label>
             <Input
               className="h-8 text-xs"
               value={logoUrl}
@@ -135,7 +135,7 @@ export default function AdminThemePage() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Favicon URL</Label>
+            <Label className="text-xs">Favicon URL</Label>
             <Input
               className="h-8 text-xs"
               value={faviconUrl}
@@ -146,7 +146,7 @@ export default function AdminThemePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
           <div className="space-y-1">
-            <Label className="text-[11px]">Primary</Label>
+            <Label className="text-xs">Primary</Label>
             <div className="flex items-center gap-2">
               <Input
                 type="color"
@@ -163,7 +163,7 @@ export default function AdminThemePage() {
             </div>
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Primary Foreground</Label>
+            <Label className="text-xs">Primary Foreground</Label>
             <div className="flex items-center gap-2">
               <Input
                 type="color"
@@ -179,7 +179,7 @@ export default function AdminThemePage() {
             </div>
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Background</Label>
+            <Label className="text-xs">Background</Label>
             <div className="flex items-center gap-2">
               <Input
                 type="color"
@@ -198,7 +198,7 @@ export default function AdminThemePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
           <div className="space-y-1">
-            <Label className="text-[11px]">Foreground</Label>
+            <Label className="text-xs">Foreground</Label>
             <div className="flex items-center gap-2">
               <Input
                 type="color"
@@ -214,7 +214,7 @@ export default function AdminThemePage() {
             </div>
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Muted</Label>
+            <Label className="text-xs">Muted</Label>
             <div className="flex items-center gap-2">
               <Input
                 type="color"
@@ -230,7 +230,7 @@ export default function AdminThemePage() {
             </div>
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Muted Foreground</Label>
+            <Label className="text-xs">Muted Foreground</Label>
             <div className="flex items-center gap-2">
               <Input
                 type="color"
@@ -249,7 +249,7 @@ export default function AdminThemePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
           <div className="space-y-1">
-            <Label className="text-[11px]">Border</Label>
+            <Label className="text-xs">Border</Label>
             <div className="flex items-center gap-2">
               <Input
                 type="color"
@@ -267,9 +267,9 @@ export default function AdminThemePage() {
         </div>
 
         <div className="space-y-1 mt-2">
-          <Label className="text-[11px]">Font Family</Label>
+          <Label className="text-xs">Font Family</Label>
           <Textarea
-            className="font-mono text-[11px] min-h-[60px]"
+            className="font-mono text-xs min-h-[60px]"
             value={fontFamily}
             onChange={(e) => setFontFamily(e.target.value)}
           />

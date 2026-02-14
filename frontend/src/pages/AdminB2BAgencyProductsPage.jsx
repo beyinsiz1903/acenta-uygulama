@@ -79,7 +79,7 @@ export default function AdminB2BAgencyProductsPage() {
           düşer ve public quote almaya çalıştığında bloklanır.
         </p>
         {agencyId && (
-          <p className="mt-1 text-[11px] text-muted-foreground font-mono">Agency ID: {agencyId}</p>
+          <p className="mt-1 text-xs text-muted-foreground font-mono">Agency ID: {agencyId}</p>
         )}
       </div>
 
@@ -161,7 +161,7 @@ export default function AdminB2BAgencyProductsPage() {
                         <TableCell className="text-xs">
                           <div className="flex flex-col">
                             <span className="font-medium truncate max-w-[260px]">{it.title}</span>
-                            <span className="text-[11px] text-muted-foreground font-mono">{it.id}</span>
+                            <span className="text-xs text-muted-foreground font-mono">{it.id}</span>
                           </div>
                         </TableCell>
                         <TableCell className="text-xs">
@@ -181,7 +181,7 @@ export default function AdminB2BAgencyProductsPage() {
                             type="button"
                             size="sm"
                             variant={it.blocked ? "destructive" : "outline"}
-                            className="text-[11px] px-3 py-1"
+                            className="text-xs px-3 py-1"
                             disabled={savingId === it.id}
                             onClick={() => toggleBlocked(it.id, it.blocked)}
                           >

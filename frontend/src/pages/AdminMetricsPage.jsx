@@ -207,11 +207,11 @@ function DetailedQueuesTable({ activeQueueTab, normalizedQueues, dqHotel, dqMinA
                 </td>
                 <td className="py-2 px-2">
                   {hasNote ? (
-                    <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                    <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-700">
                       Not var
                     </span>
                   ) : (
-                    <span className="text-[11px] text-muted-foreground">Yok</span>
+                    <span className="text-xs text-muted-foreground">Yok</span>
                   )}
                 </td>
               </tr>
@@ -1013,7 +1013,7 @@ export default function AdminMetricsPage() {
                         <div className="text-sm font-medium truncate">
                           {idx + 1}. {h.hotel_name || h.hotel_id}
                         </div>
-                        <div className="text-[11px] text-muted-foreground truncate">
+                        <div className="text-xs text-muted-foreground truncate">
                           {h.hotel_id}
                         </div>
                       </div>
@@ -1319,7 +1319,7 @@ export default function AdminMetricsPage() {
         </div>
       )}
 
-      <div className="mt-4 text-[11px] text-muted-foreground">
+      <div className="mt-4 text-xs text-muted-foreground">
         Not: Bu ekran read-only&apos;dır. Metrikler booking kayıtlarından hesaplanır.
       </div>
     </div>

@@ -94,7 +94,7 @@ function ReceivedTable({ items, onAccept, busyId, onCopyId }) {
                     <Button
                       type="button"
                       size="xs"
-                      className="h-7 px-2 text-[11px]"
+                      className="h-7 px-2 text-xs"
                       disabled={isBusy}
                       onClick={() => onAccept(r)}
                     >
@@ -102,7 +102,7 @@ function ReceivedTable({ items, onAccept, busyId, onCopyId }) {
                       Kabul Et
                     </Button>
                   ) : (
-                    <span className="text-[11px] text-muted-foreground">İşlem yok</span>
+                    <span className="text-xs text-muted-foreground">İşlem yok</span>
                   )}
                 </TableCell>
               </TableRow>
@@ -151,7 +151,7 @@ function SentTable({ items, onActivate, busyId, onCopyId }) {
                     <Button
                       type="button"
                       size="xs"
-                      className="h-7 px-2 text-[11px]"
+                      className="h-7 px-2 text-xs"
                       disabled={isBusy}
                       onClick={() => onActivate(r)}
                     >
@@ -159,7 +159,7 @@ function SentTable({ items, onActivate, busyId, onCopyId }) {
                       Etkinleştir
                     </Button>
                   ) : (
-                    <span className="text-[11px] text-muted-foreground">İşlem yok</span>
+                    <span className="text-xs text-muted-foreground">İşlem yok</span>
                   )}
                 </TableCell>
               </TableRow>
@@ -252,12 +252,12 @@ export default function PartnerInboxPage() {
         <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle className="text-sm font-medium">Gelen Kutusu</CardTitle>
-            <p className="text-[11px] text-muted-foreground">
-              Tenant: <span className="font-mono text-foreground text-[11px]">{data.tenant_id || "-"}</span>
+            <p className="text-xs text-muted-foreground">
+              Tenant: <span className="font-mono text-foreground text-xs">{data.tenant_id || "-"}</span>
             </p>
           </div>
           {loading && (
-            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Loader2 className="h-3 w-3 animate-spin" />
               <span>Yükleniyor...</span>
             </div>
@@ -265,7 +265,7 @@ export default function PartnerInboxPage() {
         </CardHeader>
         <CardContent>
           {error && (
-            <div className="mb-3 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-[11px] text-destructive">
+            <div className="mb-3 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
               {error.includes("401")
                 ? "Oturum süreniz dolmuş olabilir. Lütfen tekrar giriş yapın."
                 : error.includes("403")
@@ -307,7 +307,7 @@ export default function PartnerInboxPage() {
             </TabsContent>
 
             {/* Aktif partnerler placeholder (gelecek sürüm) */}
-            <div className="mt-6 text-[11px] text-muted-foreground">
+            <div className="mt-6 text-xs text-muted-foreground">
               Aktif partnerler yakında burada listelenecek.
             </div>
           </Tabs>

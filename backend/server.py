@@ -743,6 +743,11 @@ app.include_router(admin_demo_guide_router)
 from app.routers.ai_assistant import router as ai_assistant_router
 app.include_router(ai_assistant_router)
 
+# Enhanced Dashboard
+from app.routers.dashboard_enhanced import router as dashboard_enhanced_router
+app.include_router(dashboard_enhanced_router)
+
+
 
 @app.get("/")
 async def read_root() -> dict[str, str]:

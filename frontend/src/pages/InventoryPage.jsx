@@ -423,7 +423,13 @@ export default function InventoryPage() {
                       }}
                     />
 
-                    {loading ? <div className="mt-3 text-sm text-muted-foreground">Yükleniyor...</div> : null}
+                    {loading ? <div className="mt-3 text-sm text-muted-foreground">Yükleniyor...</div> : !productId ? (
+                      <div className="mt-4 flex flex-col items-center gap-2 py-4 text-center">
+                        <CalendarDays className="h-8 w-8 text-muted-foreground/40" />
+                        <p className="text-sm font-medium text-muted-foreground">Henüz ürün yok</p>
+                        <p className="text-xs text-muted-foreground/70">Müsaitlik takvimini görüntülemek için önce bir ürün oluşturun.</p>
+                      </div>
+                    ) : null}
 
                       <div className="mt-3 text-xs text-muted-foreground">
                         Hücre içeriği: <span className="font-medium">müsait/toplam</span> ve opsiyonel fiyat.

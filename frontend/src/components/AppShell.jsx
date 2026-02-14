@@ -505,6 +505,7 @@ function AppShellInner() {
           </div>
 
           <div className="flex items-center gap-2">
+            <LanguageSwitcher />
             {/* Partner inbox */}
             <NavLink
               to="/app/partners"

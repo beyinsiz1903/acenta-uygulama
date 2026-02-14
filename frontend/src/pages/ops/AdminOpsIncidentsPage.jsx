@@ -505,7 +505,7 @@ export default function AdminOpsIncidentsPage() {
                   <div className="grid gap-3 md:grid-cols-2">
                     <div className="space-y-1">
                       <div className="text-xs font-semibold text-muted-foreground">
-                        Meta
+                        {t("opsIncidents.meta")}
                       </div>
                       <div className="space-y-0.5">
                         <div>

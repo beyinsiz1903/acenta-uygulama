@@ -43,38 +43,10 @@ async def _get_booking_for_voucher(db, organization_id: str, booking_id: str) ->
     return booking
 
 
-def _build_voucher_html(view: dict[str, Any]) -> str:
-    # Very simple HTML for now; FAZ-9.2 üzerinde geliştirilecek
-    hotel = view.get("hotel_name") or "-"
-    guest = view.get("guest_name") or "-"
-    check_in = view.get("check_in_date") or "-"
-    check_out = view.get("check_out_date") or "-"
-    room = view.get("room_type") or "-"
-    board = view.get("board_type") or "-"
-    total = view.get("total_amount")
-    currency = view.get("currency") or ""
-    status_tr = view.get("status_tr") or view.get("status") or "-"
-    status_en = view.get("status_en") or "-"
-
-    if total is not None:
-        total_str = f"{total:.2f} {currency}".strip()
-    else:
-        total_str = "-"
-
-    return f"""<html><body>
-<h1>Rezervasyon Voucher / Booking Voucher</h1>
-<p>Bu belge konaklama bilgilerinizi özetler. Lütfen otele girişte bu sayfayı veya PDF halini referans olarak gösterin.</p>
-<p>This document summarizes your stay. Please present this page or the PDF version at check-in as a reference.</p>
-<hr />
-<p><strong>Otel / Hotel:</strong> {hotel}</p>
-<p><strong>Misafir / Guest:</strong> {guest}</p>
-<p><strong>Check-in:</strong> {check_in}</p>
-<p><strong>Check-out:</strong> {check_out}</p>
-<p><strong>Oda / Room:</strong> {room}</p>
-<p><strong>Pansiyon / Board:</strong> {board}</p>
-<p><strong>Tutar / Total:</strong> {total_str}</p>
-<p><strong>Durum / Status:</strong> {status_tr} / {status_en}</p>
-</body></html>"""
+def _build_voucher_html(view: dict[str, Any], organization: dict[str, Any] | None = None) -> str:
+    """Build comprehensive B2B booking voucher HTML."""
+    from app.services.voucher_html_template import generate_b2b_voucher_html
+    return generate_b2b_voucher_html(view, organization)
 
 
 async def _get_or_create_voucher_for_booking(db, organization_id: str, booking_id: str) -> dict[str, Any]:

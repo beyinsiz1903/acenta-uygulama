@@ -53,7 +53,7 @@ function UpgradeModal({ onClose }) {
     try {
       await createUpgradeRequest({ requested_plan: sel });
       setSuccess(true);
-    } catch (e) { setError(e?.message || "Talep gonderilemedi"); }
+    } catch (e) { setError(e?.message || t("trial.modal_error")); }
     finally { setSubmitting(false); }
   }
 
@@ -61,15 +61,15 @@ function UpgradeModal({ onClose }) {
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6" onClick={e => e.stopPropagation()} data-testid="upgrade-modal">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold">Plan Yukseltme</h2>
+          <h2 className="text-lg font-bold">{t("trial.modal_title")}</h2>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded"><X size={18} /></button>
         </div>
         {success ? (
           <div className="text-center py-6">
             <Zap className="mx-auto text-green-600 mb-2" size={32} />
-            <h3 className="text-lg font-semibold text-green-700 mb-1">Talep Gonderildi!</h3>
-            <p className="text-sm text-muted-foreground">Yoneticiniz talebinizi inceleyecek.</p>
-            <button onClick={onClose} className="mt-4 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm">Kapat</button>
+            <h3 className="text-lg font-semibold text-green-700 mb-1">{t("trial.modal_success_title")}</h3>
+            <p className="text-sm text-muted-foreground">{t("trial.modal_success_text")}</p>
+            <button onClick={onClose} className="mt-4 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm">{t("trial.modal_close")}</button>
           </div>
         ) : (
           <>

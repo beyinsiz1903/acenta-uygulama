@@ -207,7 +207,19 @@ async def get_voucher_public_html(token: str, format: str = "html"):
         raise HTTPException(status_code=404, detail="VOUCHER_NOT_FOUND")
 
     view = voucher.get("snapshot") or {}
-    html = _build_voucher_html(view)
+
+    # Fetch organization for branding
+    org_doc = None
+    try:
+        org_id = voucher.get("organization_id")
+        if org_id:
+            org_doc = await db.organizations.find_one({"_id": org_id})
+        if not org_doc:
+            org_doc = await db.organizations.find_one({})
+    except Exception:
+        pass
+
+    html = _build_voucher_html(view, organization=org_doc)
 
     if format.lower() == "pdf":
         pdf_bytes = HTML(string=html).write_pdf()

@@ -605,7 +605,7 @@ export default function AdminOpsIncidentsPage() {
 
                       {detail.supplier_health.notes && detail.supplier_health.notes.length > 0 && (
                         <div className="mt-1 text-xs text-muted-foreground">
-                          <span className="font-semibold">Notes:</span>{" "}
+                          <span className="font-semibold">{t("opsIncidents.notes")}:</span>{" "}
                           {detail.supplier_health.notes.join(", ")}
                         </div>
                       )}

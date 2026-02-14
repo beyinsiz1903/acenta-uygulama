@@ -592,7 +592,7 @@ export default function AdminOpsIncidentsPage() {
                             : "-"}
                         </div>
                         <div>
-                          <span className="font-semibold">p95 latency:</span>{" "}
+                          <span className="font-semibold">{t("opsIncidents.p95_latency")}:</span>{" "}
                           {detail.supplier_health.p95_latency_ms != null
                             ? `${detail.supplier_health.p95_latency_ms} ms`
                             : "-"}

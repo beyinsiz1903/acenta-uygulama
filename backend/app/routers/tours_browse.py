@@ -207,6 +207,8 @@ async def create_reservation(
     main_reservation = {
         "organization_id": org_id,
         "pnr": reservation_code,
+        "voucher_no": f"VCH-TR-{uuid4().hex[:8].upper()}",
+        "idempotency_key": f"tour_{reservation_code}_{uuid4().hex[:8]}",
         "status": "CONFIRMED",
         "source": "tour",
         "channel": "Tur Rezervasyonu",

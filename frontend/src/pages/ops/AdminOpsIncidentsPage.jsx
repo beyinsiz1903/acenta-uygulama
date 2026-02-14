@@ -475,7 +475,7 @@ export default function AdminOpsIncidentsPage() {
                   {t("opsIncidents.drawer_badge")}
                 </span>
                 <span className="text-sm font-semibold">
-                  {detail?.incident_id || selectedIncidentId || "Incident"}
+                  {detail?.incident_id || selectedIncidentId || t("opsIncidents.drawer_fallback_title")}
                 </span>
               </div>
               <Button

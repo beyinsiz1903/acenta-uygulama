@@ -72,7 +72,7 @@ class VoucherTester:
                 for idx, res in enumerate(reservations[:3]):  # Show first 3
                     pnr = res.get("pnr", "N/A")
                     status = res.get("status", "N/A")
-                    res_id = res.get("_id", "N/A")
+                    res_id = res.get("id", res.get("_id", "N/A"))
                     self.log(f"   {idx+1}. ID: {res_id}, PNR: {pnr}, Status: {status}")
                 
                 return reservations

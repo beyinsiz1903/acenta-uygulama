@@ -5,18 +5,7 @@ import { getCustomer, patchCustomer, listActivities, createActivity, listCustome
 
 function Badge({ children }) {
   return (
-    <span
-      style={{
-        display: "inline-flex",
-        padding: "2px 8px",
-        borderRadius: 999,
-        border: "1px solid #ddd",
-        fontSize: 12,
-        lineHeight: "18px",
-        marginRight: 6,
-        marginBottom: 6,
-      }}
-    >
+    <span className="inline-flex px-2 py-0.5 rounded-full border border-border text-xs leading-[18px] mr-1.5 mb-1.5">
       {children}
     </span>
   );
@@ -24,12 +13,12 @@ function Badge({ children }) {
 
 function PrimaryContactLine({ contacts }) {
   const primary = (contacts || []).filter((c) => c?.is_primary);
-  if (!primary.length) return <span style={{ color: "hsl(220, 10%, 45%)" }}>Birincil iletişim yok</span>;
+  if (!primary.length) return <span className="text-muted-foreground">Birincil iletişim yok</span>;
 
   return (
     <>
       {primary.map((c, idx) => (
-        <span key={idx} style={{ marginRight: 12 }}>
+        <span key={idx} className="mr-3">
           {c.type === "email" ? "✉️" : "📞"} {c.value}
         </span>
       ))}
@@ -39,22 +28,18 @@ function PrimaryContactLine({ contacts }) {
 
 function Tabs({ value, onChange, items }) {
   return (
-    <div style={{ display: "flex", gap: 8, borderBottom: "1px solid #eee", marginTop: 12 }}>
+    <div className="flex gap-2 border-b border-border mt-3">
       {items.map((it) => {
         const active = it.value === value;
         return (
           <button
             key={it.value}
             onClick={() => onChange(it.value)}
-            style={{
-              padding: "10px 10px",
-              border: "none",
-              borderBottom: active ? "2px solid #111" : "2px solid transparent",
-              background: "transparent",
-              cursor: "pointer",
-              fontWeight: active ? 700 : 500,
-              color: active ? "#111" : "#666",
-            }}
+            className={`px-2.5 py-2.5 border-none bg-transparent cursor-pointer text-sm transition-colors ${
+              active
+                ? "border-b-2 border-foreground font-bold text-foreground"
+                : "border-b-2 border-transparent font-medium text-muted-foreground hover:text-foreground"
+            }`}
           >
             {it.label}
           </button>
@@ -110,42 +95,41 @@ function TimelineTab({ customerId }) {
   }, [customerId, filter]);
 
   return (
-    <div style={{ marginTop: 12, border: "1px solid #eee", borderRadius: 12, padding: 12 }} data-testid="customer-timeline">
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
-        <div style={{ fontWeight: 700, fontSize: 16 }}>Timeline</div>
-        <div style={{ display: "flex", gap: 4 }}>
+    <div className="mt-3 border border-border rounded-xl p-3" data-testid="customer-timeline">
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="font-bold text-base text-foreground">Timeline</div>
+        <div className="flex gap-1">
           {TL_FILTERS.map((f) => (
             <button
               key={f.value}
               onClick={() => setFilter(f.value)}
               data-testid={`timeline-filter-${f.value || "all"}`}
-              style={{
-                padding: "4px 10px", borderRadius: 999, fontSize: 12, border: "1px solid #ddd",
-                background: filter === f.value ? "#2563eb" : "#fff",
-                color: filter === f.value ? "#fff" : "#555",
-                cursor: "pointer",
-              }}
+              className={`px-2.5 py-1 rounded-full text-xs border cursor-pointer transition-colors ${
+                filter === f.value
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-muted-foreground hover:bg-muted"
+              }`}
             >{f.label}</button>
           ))}
         </div>
       </div>
 
       {loading ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {[1,2,3].map((i) => <div key={i} style={{ height: 48, background: "#f3f4f6", borderRadius: 8, animation: "pulse 1.5s infinite" }} />)}
+        <div className="flex flex-col gap-2">
+          {[1,2,3].map((i) => <div key={i} className="h-12 bg-muted rounded-lg animate-pulse" />)}
         </div>
       ) : items.length === 0 ? (
-        <div style={{ color: "hsl(220, 10%, 55%)", fontSize: 14, textAlign: "center", padding: 24 }}>Bu musteri icin aktivite yok</div>
+        <div className="text-muted-foreground text-sm text-center p-6">Bu musteri icin aktivite yok</div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <div className="flex flex-col gap-0.5">
           {items.map((item, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 4px", borderBottom: "1px solid #f3f4f6" }} data-testid="timeline-item">
-              <span style={{ fontSize: 18, lineHeight: 1, marginTop: 2 }}>{TL_ICONS[item.type] || "\u{1F4CC}"}</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "hsl(224, 26%, 16%)" }}>{item.title}</div>
-                {item.subtitle && <div style={{ fontSize: 12, color: "hsl(220, 10%, 45%)", marginTop: 2 }}>{item.subtitle}</div>}
+            <div key={i} className="flex items-start gap-2.5 py-2 px-1 border-b border-border/30" data-testid="timeline-item">
+              <span className="text-lg leading-none mt-0.5">{TL_ICONS[item.type] || "\u{1F4CC}"}</span>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-foreground">{item.title}</div>
+                {item.subtitle && <div className="text-xs text-muted-foreground mt-0.5">{item.subtitle}</div>}
               </div>
-              <div style={{ fontSize: 12, color: "hsl(220, 10%, 55%)", whiteSpace: "nowrap" }} title={item.ts ? new Date(item.ts).toLocaleString("tr-TR") : ""}>
+              <div className="text-xs text-muted-foreground whitespace-nowrap" title={item.ts ? new Date(item.ts).toLocaleString("tr-TR") : ""}>
                 {relTime(item.ts)}
               </div>
             </div>
@@ -162,19 +146,17 @@ export default function CrmCustomerDetailPage() {
 
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState("");
-  const [detail, setDetail] = useState(null); // CustomerDetailOut
+  const [detail, setDetail] = useState(null);
 
   const customer = detail?.customer;
 
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Tags editing
   const [editingTags, setEditingTags] = useState(false);
   const [tagsText, setTagsText] = useState("");
   const [savingTags, setSavingTags] = useState(false);
   const [tagsErr, setTagsErr] = useState("");
 
-  // Activities state
   const [activities, setActivities] = useState([]);
   const [activitiesTotal, setActivitiesTotal] = useState(0);
   const [activitiesLoading, setActivitiesLoading] = useState(false);
@@ -182,7 +164,6 @@ export default function CrmCustomerDetailPage() {
   const [newBody, setNewBody] = useState("");
   const [creating, setCreating] = useState(false);
 
-  // Inbox threads state
   const [inboxThreads, setInboxThreads] = useState([]);
   const [inboxTotal, setInboxTotal] = useState(0);
   const [inboxLoading, setInboxLoading] = useState(false);
@@ -281,7 +262,7 @@ export default function CrmCustomerDetailPage() {
       setActivities(res?.items || []);
       setActivitiesTotal(res?.total || 0);
     } catch (e) {
-      setActivitiesErr(e.message || "Aktiviteler y\u00fcklenemedi.");
+      setActivitiesErr(e.message || "Aktiviteler yüklenemedi.");
       setActivities([]);
     } finally {
       setActivitiesLoading(false);
@@ -324,41 +305,28 @@ export default function CrmCustomerDetailPage() {
     }
   }
 
-  // ---- Render states ----
+  const BackButton = () => (
+    <button
+      onClick={() => navigate(-1)}
+      className="px-2.5 py-2 rounded-lg border border-border bg-card cursor-pointer text-sm font-medium text-foreground hover:bg-muted transition-colors"
+    >
+      ← Geri
+    </button>
+  );
+
   if (loading) {
     return (
-      <div style={{ padding: 16 }}>
-        <div style={{ color: "hsl(220, 10%, 45%)" }}>Yükleniyor{"\u2026"}</div>
+      <div className="p-4">
+        <div className="text-muted-foreground text-sm">Yükleniyor…</div>
       </div>
     );
   }
 
   if (errMsg) {
     return (
-      <div style={{ padding: 16 }}>
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            padding: "8px 10px",
-            borderRadius: 10,
-            border: "1px solid #ddd",
-            background: "#fff",
-            cursor: "pointer",
-          }}
-        >
-          {"\u2190"} Geri
-        </button>
-
-        <div
-          style={{
-            marginTop: 12,
-            padding: 12,
-            border: "1px solid #f2caca",
-            background: "#fff5f5",
-            borderRadius: 12,
-            color: "hsl(0, 84.2%, 60.2%)",
-          }}
-        >
+      <div className="p-4">
+        <BackButton />
+        <div className="mt-3 p-3 border border-destructive/30 bg-destructive/5 rounded-xl text-destructive text-sm">
           {errMsg}
         </div>
       </div>
@@ -367,21 +335,9 @@ export default function CrmCustomerDetailPage() {
 
   if (!customer) {
     return (
-      <div style={{ padding: 16 }}>
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            padding: "8px 10px",
-            borderRadius: 10,
-            border: "1px solid #ddd",
-            background: "#fff",
-            cursor: "pointer",
-          }}
-        >
-          {"\u2190"} Geri
-        </button>
-
-        <div style={{ marginTop: 12, color: "hsl(220, 10%, 45%)" }}>Müşteri bulunamadı.</div>
+      <div className="p-4">
+        <BackButton />
+        <div className="mt-3 text-muted-foreground text-sm">Müşteri bulunamadı.</div>
       </div>
     );
   }
@@ -394,81 +350,51 @@ export default function CrmCustomerDetailPage() {
   const isMerged = Boolean(customer.is_merged && mergedIntoId);
 
   return (
-    <div style={{ padding: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            padding: "8px 10px",
-            borderRadius: 10,
-            border: "1px solid #ddd",
-            background: "#fff",
-            cursor: "pointer",
-          }}
-        >
-          {"\u2190"} Geri
-        </button>
-
-        <div style={{ color: "hsl(220, 10%, 45%)", fontSize: 12 }}>
+    <div className="p-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <BackButton />
+        <div className="text-xs text-muted-foreground">
           ID: <code>{customer.id}</code>
         </div>
       </div>
 
       {isMerged ? (
-        <div
-          style={{
-            marginTop: 12,
-            padding: 12,
-            borderRadius: 12,
-            border: "1px solid #f2caca",
-            background: "#fff5f5",
-            color: "hsl(0, 84.2%, 60.2%)",
-            fontSize: 14,
-          }}
-        >
-          <div style={{ fontWeight: 600, marginBottom: 4 }}>Bu müşteri kaydı birleştirildi.</div>
+        <div className="mt-3 p-3 rounded-xl border border-destructive/30 bg-destructive/5 text-destructive text-sm">
+          <div className="font-semibold mb-1">Bu müşteri kaydı birleştirildi.</div>
           <div>
-            Tüm işlemler <code>{mergedIntoId}</code> IDli ana kayıt üzerinden yürütülüyor.
+            Tüm işlemler <code>{mergedIntoId}</code> IDli ana kayıt üzerinden yürütülüyor.
             {" "}
             <button
               type="button"
               onClick={() => navigate(`/app/crm/customers/${mergedIntoId}`)}
-              style={{
-                marginLeft: 4,
-                padding: "4px 8px",
-                borderRadius: 999,
-                border: "1px solid #111",
-                background: "#fff",
-                cursor: "pointer",
-                fontSize: 12,
-              }}
+              className="ml-1 px-2 py-1 rounded-full border border-foreground bg-card cursor-pointer text-xs hover:bg-muted transition-colors"
             >
-              Ana kay\u0131da a\u00e7
+              Ana kayıda aç
             </button>
           </div>
         </div>
       ) : null}
 
       {/* Header card */}
-      <div style={{ marginTop: 12, border: "1px solid #eee", borderRadius: 12, padding: 14 }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+      <div className="mt-3 border border-border rounded-xl p-3.5">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <h1 style={{ margin: 0, fontSize: 20 }}>{customer.name}</h1>
+            <h1 className="m-0 text-xl font-bold text-foreground">{customer.name}</h1>
 
-            <div style={{ marginTop: 6 }}>
+            <div className="mt-1.5">
               <Badge>{customer.type === "corporate" ? "Kurumsal" : "Bireysel"}</Badge>
               {customer.tc_vkn ? <Badge>TC/VKN: {customer.tc_vkn}</Badge> : null}
             </div>
 
-            <div style={{ marginTop: 8, fontSize: 14, color: "hsl(224, 26%, 20%)" }}>
+            <div className="mt-2 text-sm text-foreground">
               <PrimaryContactLine contacts={customer.contacts} />
             </div>
           </div>
 
           {/* Tags */}
-          <div style={{ minWidth: 280, flex: "1 1 280px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ fontSize: 12, color: "hsl(220, 10%, 45%)" }}>Etiketler</div>
+          <div className="min-w-[280px] flex-[1_1_280px]">
+            <div className="flex items-center justify-between">
+              <div className="text-xs text-muted-foreground">Etiketler</div>
 
               {!editingTags ? (
                 <button
@@ -477,13 +403,7 @@ export default function CrmCustomerDetailPage() {
                     setTagsText(computedTagsText);
                     setEditingTags(true);
                   }}
-                  style={{
-                    padding: "8px 10px",
-                    borderRadius: 10,
-                    border: "1px solid #ddd",
-                    background: "#fff",
-                    cursor: "pointer",
-                  }}
+                  className="px-2.5 py-2 rounded-lg border border-border bg-card cursor-pointer text-sm hover:bg-muted transition-colors"
                 >
                   Düzenle
                 </button>
@@ -491,33 +411,27 @@ export default function CrmCustomerDetailPage() {
             </div>
 
             {!editingTags ? (
-              <div style={{ marginTop: 8 }}>
+              <div className="mt-2">
                 {(customer.tags || []).length ? (
                   (customer.tags || []).map((t) => <Badge key={t}>{t}</Badge>)
                 ) : (
-                  <div style={{ color: "hsl(220, 10%, 45%)", fontSize: 14 }}>Etiket yok</div>
+                  <div className="text-muted-foreground text-sm">Etiket yok</div>
                 )}
               </div>
             ) : (
-              <div style={{ marginTop: 8 }}>
+              <div className="mt-2">
                 <input
                   value={tagsText}
                   onChange={(e) => setTagsText(e.target.value)}
                   placeholder="vip, istanbul, corporate"
-                  style={{ width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ddd" }}
+                  className="w-full p-2.5 rounded-lg border border-border text-sm bg-card text-foreground"
                 />
 
-                <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end", gap: 10 }}>
+                <div className="mt-2 flex justify-end gap-2.5">
                   <button
                     onClick={() => setEditingTags(false)}
                     disabled={savingTags}
-                    style={{
-                      padding: "8px 10px",
-                      borderRadius: 10,
-                      border: "1px solid #ddd",
-                      background: "#fff",
-                      cursor: "pointer",
-                    }}
+                    className="px-2.5 py-2 rounded-lg border border-border bg-card cursor-pointer text-sm hover:bg-muted transition-colors"
                   >
                     İptal
                   </button>
@@ -525,30 +439,14 @@ export default function CrmCustomerDetailPage() {
                   <button
                     onClick={saveTags}
                     disabled={savingTags}
-                    style={{
-                      padding: "8px 10px",
-                      borderRadius: 10,
-                      border: "1px solid #111",
-                      background: "#111",
-                      color: "white",
-                      cursor: "pointer",
-                    }}
+                    className="px-2.5 py-2 rounded-lg border border-foreground bg-foreground text-primary-foreground cursor-pointer text-sm hover:opacity-90 transition-opacity"
                   >
-                    {savingTags ? `Kaydediliyor${"\u2026"}` : "Kaydet"}
+                    {savingTags ? "Kaydediliyor…" : "Kaydet"}
                   </button>
                 </div>
 
                 {tagsErr ? (
-                  <div
-                    style={{
-                      marginTop: 10,
-                      padding: 10,
-                      borderRadius: 10,
-                      border: "1px solid #f2caca",
-                      background: "#fff5f5",
-                      color: "hsl(0, 84.2%, 60.2%)",
-                    }}
-                  >
+                  <div className="mt-2.5 p-2.5 rounded-lg border border-destructive/30 bg-destructive/5 text-destructive text-sm">
                     {tagsErr}
                   </div>
                 ) : null}
@@ -571,48 +469,39 @@ export default function CrmCustomerDetailPage() {
 
       {/* Tab content */}
       {activeTab === "overview" ? (
-        <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1.5fr)", gap: 16 }}>
+        <div className="mt-3 grid grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)] gap-4">
           {/* Left column */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="flex flex-col gap-3">
             {/* Inbox panel */}
-            <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                <h2 style={{ margin: 0, fontSize: 16 }}>Inbox</h2>
+            <div className="border border-border rounded-xl p-3">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="m-0 text-base font-bold text-foreground">Inbox</h2>
                 {inboxTotal > 0 ? (
-                  <span style={{ fontSize: 12, color: "hsl(220, 10%, 45%)" }}>{inboxTotal} thread</span>
+                  <span className="text-xs text-muted-foreground">{inboxTotal} thread</span>
                 ) : null}
               </div>
 
               {inboxLoading && (
-                <div style={{ marginTop: 8, fontSize: 14, color: "hsl(220, 10%, 45%)" }}>Inbox yükleniyor...</div>
+                <div className="mt-2 text-sm text-muted-foreground">Inbox yükleniyor...</div>
               )}
               {!inboxLoading && inboxErr && (
-                <div style={{ marginTop: 8, fontSize: 14, color: "hsl(0, 84.2%, 60.2%)" }}>Inbox yükleme hatası: {inboxErr}</div>
+                <div className="mt-2 text-sm text-destructive">Inbox yükleme hatası: {inboxErr}</div>
               )}
               {!inboxLoading && !inboxErr && inboxThreads.length === 0 && (
-                <div style={{ marginTop: 8, fontSize: 14, color: "hsl(220, 10%, 45%)" }}>Bu müşteri için henüz inbox kaydı yok.</div>
+                <div className="mt-2 text-sm text-muted-foreground">Bu müşteri için henüz inbox kaydı yok.</div>
               )}
               {!inboxLoading && !inboxErr && inboxThreads.length > 0 && (
-                <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
+                <div className="mt-2 flex flex-col gap-1.5">
                   {inboxThreads.map((t) => (
                     <div
                       key={t.id}
-                      style={{
-                        padding: 8,
-                        borderRadius: 10,
-                        border: "1px solid #eee",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 8,
-                        fontSize: 14,
-                      }}
+                      className="p-2 rounded-lg border border-border flex items-center justify-between gap-2 text-sm"
                     >
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      <div className="min-w-0">
+                        <div className="font-medium text-foreground whitespace-nowrap overflow-hidden text-ellipsis">
                           {t.subject || "(Konu yok)"}
                         </div>
-                        <div style={{ marginTop: 2, fontSize: 12, color: "hsl(220, 10%, 45%)" }}>
+                        <div className="mt-0.5 text-xs text-muted-foreground">
                           {t.channel || "internal"} • {formatDateTime(t.last_message_at)}
                         </div>
                       </div>
@@ -621,17 +510,9 @@ export default function CrmCustomerDetailPage() {
                         onClick={() => {
                           window.location.href = `/app/inbox?thread=${t.id}`;
                         }}
-                        style={{
-                          padding: "6px 10px",
-                          borderRadius: 999,
-                          border: "1px solid #111",
-                          background: "#fff",
-                          cursor: "pointer",
-                          fontSize: 12,
-                          whiteSpace: "nowrap",
-                        }}
-> 
-                        Inbox’ta aç
+                        className="px-2.5 py-1.5 rounded-full border border-foreground bg-card cursor-pointer text-xs whitespace-nowrap hover:bg-muted transition-colors"
+                      >
+                        Inbox'ta aç
                       </button>
                     </div>
                   ))}
@@ -640,16 +521,16 @@ export default function CrmCustomerDetailPage() {
             </div>
 
             {/* Recent bookings */}
-            <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
-              <div style={{ fontWeight: 700 }}>Son Rezervasyonlar</div>
+            <div className="border border-border rounded-xl p-3">
+              <div className="font-bold text-sm text-foreground">Son Rezervasyonlar</div>
 
-              <div style={{ marginTop: 8 }}>
+              <div className="mt-2">
                 {recentBookings.length ? (
-                  <ul style={{ margin: 0, paddingLeft: 16 }}>
+                  <ul className="m-0 pl-4">
                     {recentBookings.map((b) => (
-                      <li key={b.id} style={{ marginBottom: 8 }}>
-                        <div style={{ fontWeight: 600 }}>{b.id}</div>
-                        <div style={{ fontSize: 12, color: "hsl(220, 10%, 45%)" }}>
+                      <li key={b.id} className="mb-2">
+                        <div className="font-semibold text-sm text-foreground">{b.id}</div>
+                        <div className="text-xs text-muted-foreground">
                           {(b.status || "-") + " • " +
                             (b.total_amount ? `${b.total_amount} ${b.currency || ""}` : "") +
                             (b.created_at ? ` • ${new Date(b.created_at).toLocaleString("tr-TR")}` : "")}
@@ -658,54 +539,54 @@ export default function CrmCustomerDetailPage() {
                     ))}
                   </ul>
                 ) : (
-                  <div style={{ color: "hsl(220, 10%, 45%)", fontSize: 14 }}>Bu müşteri için henüz rezervasyon yok.</div>
+                  <div className="text-muted-foreground text-sm">Bu müşteri için henüz rezervasyon yok.</div>
                 )}
               </div>
             </div>
           </div>
 
           {/* Right column */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="flex flex-col gap-3">
             {/* Open deals */}
-            <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
-              <div style={{ fontWeight: 700 }}>Açık Fırsatlar</div>
+            <div className="border border-border rounded-xl p-3">
+              <div className="font-bold text-sm text-foreground">Açık Fırsatlar</div>
 
-              <div style={{ marginTop: 8 }}>
+              <div className="mt-2">
                 {openDeals.length ? (
-                  <ul style={{ margin: 0, paddingLeft: 16 }}>
+                  <ul className="m-0 pl-4">
                     {openDeals.map((d) => (
-                      <li key={d.id} style={{ marginBottom: 8 }}>
-                        <div style={{ fontWeight: 600 }}>{d.title || d.id}</div>
-                        <div style={{ fontSize: 12, color: "hsl(220, 10%, 45%)" }}>
+                      <li key={d.id} className="mb-2">
+                        <div className="font-semibold text-sm text-foreground">{d.title || d.id}</div>
+                        <div className="text-xs text-muted-foreground">
                           Stage: {d.stage || "-"} {d.amount ? ` • ${d.amount} ${d.currency || ""}` : ""}
                         </div>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <div style={{ color: "hsl(220, 10%, 45%)", fontSize: 14 }}>Henüz açık fırsat yok. (PR#3 ile dolacak)</div>
+                  <div className="text-muted-foreground text-sm">Henüz açık fırsat yok. (PR#3 ile dolacak)</div>
                 )}
               </div>
             </div>
 
             {/* Open tasks */}
-            <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
-              <div style={{ fontWeight: 700 }}>Açık Görevler</div>
+            <div className="border border-border rounded-xl p-3">
+              <div className="font-bold text-sm text-foreground">Açık Görevler</div>
 
-              <div style={{ marginTop: 8 }}>
+              <div className="mt-2">
                 {openTasks.length ? (
-                  <ul style={{ margin: 0, paddingLeft: 16 }}>
+                  <ul className="m-0 pl-4">
                     {openTasks.map((t) => (
-                      <li key={t.id} style={{ marginBottom: 8 }}>
-                        <div style={{ fontWeight: 600 }}>{t.title || t.id}</div>
-                        <div style={{ fontSize: 12, color: "hsl(220, 10%, 45%)" }}>
+                      <li key={t.id} className="mb-2">
+                        <div className="font-semibold text-sm text-foreground">{t.title || t.id}</div>
+                        <div className="text-xs text-muted-foreground">
                           Due: {t.due_date ? new Date(t.due_date).toLocaleString("tr-TR") : "-"} • Priority: {t.priority || "-"}
                         </div>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <div style={{ color: "hsl(220, 10%, 45%)", fontSize: 14 }}>Henüz açık görev yok. (PR#3 ile dolacak)</div>
+                  <div className="text-muted-foreground text-sm">Henüz açık görev yok. (PR#3 ile dolacak)</div>
                 )}
               </div>
             </div>
@@ -718,48 +599,33 @@ export default function CrmCustomerDetailPage() {
       ) : null}
 
       {activeTab === "activities" ? (
-        <div style={{ marginTop: 12, border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <div className="mt-3 border border-border rounded-xl p-3">
+          <div className="flex items-center justify-between gap-3">
             <div>
-              <div style={{ fontWeight: 700 }}>Aktiviteler</div>
-              <div style={{ marginTop: 4, fontSize: 14, color: "hsl(220, 10%, 45%)" }}>
-                {"Notlar / görüşmeler / e-postalar"}
+              <div className="font-bold text-sm text-foreground">Aktiviteler</div>
+              <div className="mt-1 text-sm text-muted-foreground">
+                Notlar / görüşmeler / e-postalar
               </div>
             </div>
           </div>
 
           {/* New activity form */}
-          <form onSubmit={handleCreateActivity} style={{ marginTop: 12 }}>
+          <form onSubmit={handleCreateActivity} className="mt-3">
             <textarea
               value={newBody}
               onChange={(e) => setNewBody(e.target.value)}
-              placeholder={"Kısa bir not yazın..."}
+              placeholder="Kısa bir not yazın..."
               rows={3}
-              style={{
-                width: "100%",
-                padding: 10,
-                borderRadius: 10,
-                border: "1px solid #ddd",
-                fontSize: 14,
-                resize: "vertical",
-              }}
+              className="w-full p-2.5 rounded-lg border border-border text-sm resize-y bg-card text-foreground placeholder:text-muted-foreground"
             />
-            <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-              <div style={{ fontSize: 12, color: "hsl(220, 10%, 45%)" }}>
+            <div className="mt-2 flex justify-between items-center gap-2">
+              <div className="text-xs text-muted-foreground">
                 {activitiesTotal ? `${activitiesTotal} aktivite` : "Henüz aktivite yok"}
               </div>
               <button
                 type="submit"
                 disabled={creating || !newBody.trim()}
-                style={{
-                  padding: "8px 10px",
-                  borderRadius: 10,
-                  border: "1px solid #111",
-                  background: "#111",
-                  color: "white",
-                  cursor: creating || !newBody.trim() ? "not-allowed" : "pointer",
-                  fontSize: 14,
-                }}
+                className="px-2.5 py-2 rounded-lg border border-foreground bg-foreground text-primary-foreground text-sm disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer hover:opacity-90 transition-opacity"
               >
                 {creating ? "Ekleniyor..." : "Not ekle"}
               </button>
@@ -767,59 +633,36 @@ export default function CrmCustomerDetailPage() {
           </form>
 
           {/* Activity list */}
-          <div style={{ marginTop: 12 }}>
+          <div className="mt-3">
             {activitiesLoading && (
-              <div style={{ color: "hsl(220, 10%, 45%)", fontSize: 14 }}>Aktiviteler yükleniyor...</div>
+              <div className="text-muted-foreground text-sm">Aktiviteler yükleniyor...</div>
             )}
             {!activitiesLoading && activitiesErr && (
-              <div
-                style={{
-                  padding: 10,
-                  borderRadius: 10,
-                  border: "1px solid #f2caca",
-                  background: "#fff5f5",
-                  color: "hsl(0, 84.2%, 60.2%)",
-                  fontSize: 14,
-                }}
-              >
+              <div className="p-2.5 rounded-lg border border-destructive/30 bg-destructive/5 text-destructive text-sm">
                 {activitiesErr}
               </div>
             )}
             {!activitiesLoading && !activitiesErr && !activities.length && (
-              <div style={{ color: "hsl(220, 10%, 45%)", fontSize: 14 }}>Bu müşteri için henüz aktivite kaydı yok.</div>
+              <div className="text-muted-foreground text-sm">Bu müşteri için henüz aktivite kaydı yok.</div>
             )}
             {!activitiesLoading && !activitiesErr && activities.length > 0 && (
-              <ul style={{ listStyle: "none", margin: 0, padding: 0, marginTop: 8 }}>
+              <ul className="list-none m-0 p-0 mt-2">
                 {activities.map((act) => (
                   <li
                     key={act.id}
-                    style={{
-                      border: "1px solid #eee",
-                      borderRadius: 10,
-                      padding: 10,
-                      marginBottom: 8,
-                      background: "#fafafa",
-                    }}
+                    className="border border-border rounded-lg p-2.5 mb-2 bg-muted/50"
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "hsl(224, 26%, 20%)" }}>
+                    <div className="flex justify-between gap-2">
+                      <div className="text-xs font-semibold text-foreground">
                         {act.type === "note" ? "Not" : act.type}
                       </div>
-                      <div style={{ fontSize: 12, color: "hsl(220, 10%, 45%)" }}>
+                      <div className="text-xs text-muted-foreground">
                         {act.created_at
                           ? new Date(act.created_at).toLocaleString("tr-TR")
                           : ""}
                       </div>
                     </div>
-                    <div
-                      style={{
-                        marginTop: 4,
-                        fontSize: 14,
-                        color: "hsl(224, 26%, 20%)",
-                        whiteSpace: "pre-wrap",
-                        wordBreak: "break-word",
-                      }}
-                    >
+                    <div className="mt-1 text-sm text-foreground whitespace-pre-wrap break-words">
                       {act.body}
                     </div>
                   </li>

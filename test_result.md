@@ -33,6 +33,9 @@ voucher_redesign:
       - working: true
         agent: "testing"
         comment: "Tour voucher endpoint tested successfully. Tour reservation (PNR: TR-9457AAA4) for 'Kapadokya Rüya Turu' returns comprehensive HTML voucher with all required sections including tour-specific content: tour information, tour highlights, tour program (day-by-day itinerary), includes/excludes services, travel dates, guest information, payment details, cancellation policy, terms & conditions, contact information. All HTML sections verified and working correctly."
+      - working: true
+        agent: "testing"
+        comment: "Frontend voucher viewing functionality tested. Verified that clicking the Voucher button in reservation details opens a new tab with the HTML voucher content. The voucher for tour reservation (TR-9457AAA4) displays correctly with PNR badge, Voucher No, Tour name (Kapadokya Rüya Turu), guest information section, and print button. Some sections may not match the expected UI styling in the design but the core functionality to view reservation voucher works correctly."
 
   - task: "B2B Voucher HTML template redesign"
     implemented: true

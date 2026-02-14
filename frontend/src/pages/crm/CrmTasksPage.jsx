@@ -33,16 +33,11 @@ function TabButton({ active, onClick, children }) {
     <button
       type="button"
       onClick={onClick}
-      style={{
-        padding: "8px 10px",
-        borderRadius: 999,
-        border: active ? "1px solid #111" : "1px solid #ddd",
-        background: active ? "#111" : "#fff",
-        color: active ? "#fff" : "#333",
-        cursor: "pointer",
-        fontSize: 13,
-        fontWeight: active ? 600 : 500,
-      }}
+      className={`px-2.5 py-2 rounded-full border text-sm cursor-pointer transition-colors ${
+        active
+          ? "border-foreground bg-foreground text-primary-foreground font-semibold"
+          : "border-border bg-card text-foreground font-medium hover:bg-muted"
+      }`}
     >
       {children}
     </button>

@@ -344,7 +344,7 @@ export default function AdminOpsIncidentsPage() {
       <Card data-testid="ops-incidents-table">
         <CardHeader className="flex flex-row items-center justify-between gap-3">
           <CardTitle className="text-sm flex items-center gap-2">
-            Incidents
+            {t("opsIncidents.incidents")}
             {loading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
           </CardTitle>
         </CardHeader>

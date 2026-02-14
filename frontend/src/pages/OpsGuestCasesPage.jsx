@@ -623,11 +623,11 @@ function OpsGuestCasesPage() {
                           data-testid={`cases-select-one-${c.case_id}`}
                         />
                       </td>
-                      <td className="px-3 py-2 font-mono text-xs text-primary-foreground/90 bg-primary/5">
+                      <td className="px-3 py-2.5 font-mono text-[11px] font-medium text-primary tracking-tight">
                         {c.case_id}
                       </td>
-                      <td className="px-3 py-2 text-xs">{c.booking_code || "-"}</td>
-                      <td className="px-3 py-2 text-xs">
+                      <td className="px-3 py-2.5 text-[12px] font-medium text-foreground/80">{c.booking_code || "—"}</td>
+                      <td className="px-3 py-2.5 text-[12px] text-foreground/70">
                         {(() => {
                           switch (c.type) {
                             case "cancel":

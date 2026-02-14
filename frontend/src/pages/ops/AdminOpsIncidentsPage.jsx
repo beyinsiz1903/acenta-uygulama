@@ -586,7 +586,7 @@ export default function AdminOpsIncidentsPage() {
                             : "-"}
                         </div>
                         <div>
-                          <span className="font-semibold">Avg latency:</span>{" "}
+                          <span className="font-semibold">{t("opsIncidents.avg_latency")}:</span>{" "}
                           {detail.supplier_health.avg_latency_ms != null
                             ? `${detail.supplier_health.avg_latency_ms} ms`
                             : "-"}

@@ -213,7 +213,7 @@ export default function AdminToursPage() {
                   <img src={resolveImg(img)} alt={"Tour " + (i+1)} className="w-full h-24 object-cover" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
                     <button type="button" className="bg-white rounded-full p-1.5 shadow" onClick={() => setCoverImg(img)}>
-                      <CheckCircle className={"h-3.5 w-3.5 " + (form.cover_image === img ? "text-green-500" : "text-gray-600")} />
+                      <CheckCircle className={"h-3.5 w-3.5 " + (form.cover_image === img ? "text-green-500" : "text-muted-foreground")} />
                     </button>
                     <button type="button" className="bg-white rounded-full p-1.5 shadow" onClick={() => removeImage(i)}>
                       <X className="h-3.5 w-3.5 text-red-500" />

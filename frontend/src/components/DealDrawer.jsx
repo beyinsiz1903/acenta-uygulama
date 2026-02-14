@@ -11,7 +11,7 @@ function Skeleton({ className = "" }) {
 
 function Badge({ stage }) {
   return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STAGE_COLORS[stage] || "bg-gray-100 text-gray-600"}`}>
+    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STAGE_COLORS[stage] || "bg-gray-100 text-muted-foreground"}`}>
       {STAGE_LABELS[stage] || stage}
     </span>
   );
@@ -21,7 +21,7 @@ function TabButton({ active, label, icon: Icon, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 transition-colors ${active ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+      className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 transition-colors ${active ? "border-blue-600 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
     >
       <Icon size={14} /> {label}
     </button>
@@ -69,7 +69,7 @@ function OverviewTab({ deal, onUpdate }) {
       {fields.map((f) => (
         <div key={f.key} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
           <div>
-            <div className="text-xs text-gray-500">{f.label}</div>
+            <div className="text-xs text-muted-foreground">{f.label}</div>
             {editing === f.key ? (
               <div className="flex items-center gap-2 mt-1">
                 <input value={val} onChange={(e) => setVal(e.target.value)} className="text-sm border rounded px-2 py-1 w-40" autoFocus
@@ -77,15 +77,15 @@ function OverviewTab({ deal, onUpdate }) {
                 <button onClick={() => save(f.key)} disabled={saving} className="text-blue-600 text-xs font-medium">
                   {saving ? "..." : "Kaydet"}
                 </button>
-                <button onClick={() => setEditing(null)} className="text-gray-400 text-xs">Iptal</button>
+                <button onClick={() => setEditing(null)} className="text-muted-foreground/60 text-xs">Iptal</button>
               </div>
             ) : (
-              <div className="text-sm font-medium text-gray-900 cursor-pointer" onClick={() => startEdit(f.key, f.key === "amount" ? String(deal.amount || "") : (deal[f.key] || ""))}>
+              <div className="text-sm font-medium text-foreground cursor-pointer" onClick={() => startEdit(f.key, f.key === "amount" ? String(deal.amount || "") : (deal[f.key] || ""))}>
                 {f.value}
               </div>
             )}
           </div>
-          {editing !== f.key && <ChevronRight size={14} className="text-gray-300" />}
+          {editing !== f.key && <ChevronRight size={14} className="text-muted-foreground/40" />}
         </div>
       ))}
     </div>
@@ -134,16 +134,16 @@ function TasksTab({ dealId }) {
         </button>
       </form>
       {tasks.length === 0 ? (
-        <div className="text-center py-8 text-gray-400 text-sm">Bu deal icin gorev yok</div>
+        <div className="text-center py-8 text-muted-foreground/60 text-sm">Bu deal icin gorev yok</div>
       ) : (
         tasks.map((t) => (
           <div key={t.id} className={`flex items-center gap-3 p-2.5 border rounded-lg ${t.status === "done" ? "bg-green-50" : "hover:bg-gray-50"}`}>
             <button onClick={() => t.status !== "done" && handleComplete(t.id)} className="shrink-0">
-              {t.status === "done" ? <CheckCircle size={18} className="text-green-500" /> : <Circle size={18} className="text-gray-300" />}
+              {t.status === "done" ? <CheckCircle size={18} className="text-green-500" /> : <Circle size={18} className="text-muted-foreground/40" />}
             </button>
             <div className="flex-1 min-w-0">
-              <div className={`text-sm truncate ${t.status === "done" ? "line-through text-gray-400" : "text-gray-800"}`}>{t.title}</div>
-              {t.due_date && <div className="text-xs text-gray-400">{new Date(t.due_date).toLocaleDateString("tr-TR")}</div>}
+              <div className={`text-sm truncate ${t.status === "done" ? "line-through text-muted-foreground/60" : "text-foreground"}`}>{t.title}</div>
+              {t.due_date && <div className="text-xs text-muted-foreground/60">{new Date(t.due_date).toLocaleDateString("tr-TR")}</div>}
             </div>
           </div>
         ))
@@ -190,12 +190,12 @@ function NotesTab({ dealId }) {
         </button>
       </form>
       {notes.length === 0 ? (
-        <div className="text-center py-8 text-gray-400 text-sm">Henuz not yok</div>
+        <div className="text-center py-8 text-muted-foreground/60 text-sm">Henuz not yok</div>
       ) : (
         notes.map((n, i) => (
           <div key={n.id || i} className="p-3 border rounded-lg bg-gray-50">
-            <p className="text-sm text-gray-800 whitespace-pre-wrap">{n.content}</p>
-            <div className="mt-1 text-xs text-gray-400 flex items-center gap-2">
+            <p className="text-sm text-foreground whitespace-pre-wrap">{n.content}</p>
+            <div className="mt-1 text-xs text-muted-foreground/60 flex items-center gap-2">
               <span>{n.created_by_email || ""}</span>
               <span>{relativeTime(n.created_at)}</span>
             </div>
@@ -221,16 +221,16 @@ function ActivityTab({ dealId }) {
   }, [dealId]);
 
   if (loading) return <div className="space-y-3 py-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-8 w-full" />)}</div>;
-  if (items.length === 0) return <div className="text-center py-8 text-gray-400 text-sm">Aktivite yok</div>;
+  if (items.length === 0) return <div className="text-center py-8 text-muted-foreground/60 text-sm">Aktivite yok</div>;
 
   return (
     <div className="py-3 space-y-2">
       {items.map((item, i) => (
         <div key={item.id || i} className="flex items-start gap-3 p-2 border-b border-gray-100 last:border-0">
-          <Activity size={14} className="text-gray-400 mt-0.5 shrink-0" />
+          <Activity size={14} className="text-muted-foreground/60 mt-0.5 shrink-0" />
           <div className="min-w-0">
-            <div className="text-sm text-gray-700">{item.action || "Event"}</div>
-            <div className="text-xs text-gray-400">{item.actor?.email || ""} &middot; {relativeTime(item.created_at)}</div>
+            <div className="text-sm text-foreground">{item.action || "Event"}</div>
+            <div className="text-xs text-muted-foreground/60">{item.actor?.email || ""} &middot; {relativeTime(item.created_at)}</div>
           </div>
         </div>
       ))}
@@ -280,12 +280,12 @@ export default function DealDrawer({ dealId, onClose, onStageChanged }) {
               <><Skeleton className="h-5 w-48 mb-2" /><Skeleton className="h-4 w-32" /></>
             ) : deal ? (
               <>
-                <h2 className="text-lg font-bold text-gray-900 truncate">{deal.title || deal.id}</h2>
+                <h2 className="text-lg font-bold text-foreground truncate">{deal.title || deal.id}</h2>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <Badge stage={deal.stage} />
-                  <span className="text-sm text-gray-600">{deal.amount != null ? `${deal.amount} ${deal.currency || "TRY"}` : ""}</span>
+                  <span className="text-sm text-muted-foreground">{deal.amount != null ? `${deal.amount} ${deal.currency || "TRY"}` : ""}</span>
                 </div>
-                <div className="text-xs text-gray-400 mt-1">
+                <div className="text-xs text-muted-foreground/60 mt-1">
                   {deal.owner_user_id && <span>Sahip: {deal.owner_user_id}</span>}
                   {deal.next_action_at && <span className="ml-2">Aksiyon: {new Date(deal.next_action_at).toLocaleDateString("tr-TR")}</span>}
                 </div>

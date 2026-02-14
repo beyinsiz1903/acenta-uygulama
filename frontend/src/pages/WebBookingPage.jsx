@@ -121,7 +121,7 @@ export default function WebBookingPage() {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="w-full max-w-xl rounded-xl bg-white shadow-sm border p-6 space-y-4">
         <h1 className="text-2xl font-semibold mb-2">Rezervasyon Talebi</h1>
-        <p className="text-sm text-slate-600 mb-4">
+        <p className="text-sm text-muted-foreground mb-4">
           Bu form üzerinden hızlıca rezervasyon talebi oluşturabilirsiniz. Talebiniz acenta ekibi tarafından işlenerek
           otele iletilir.
         </p>
@@ -135,7 +135,7 @@ export default function WebBookingPage() {
 
         <form className="space-y-3" onSubmit={handleSubmit}>
           <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-700">Otel *</label>
+            <label className="text-xs font-medium text-foreground">Otel *</label>
             <select
               name="hotel_id"
               value={form.hotel_id}
@@ -153,7 +153,7 @@ export default function WebBookingPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-700">Oda Tipi</label>
+            <label className="text-xs font-medium text-foreground">Oda Tipi</label>
             <select
               name="room_type_id"
               value={form.room_type_id}
@@ -170,7 +170,7 @@ export default function WebBookingPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-700">Paket (opsiyonel)</label>
+            <label className="text-xs font-medium text-foreground">Paket (opsiyonel)</label>
             <select
               name="package_id"
               value={form.package_id}
@@ -189,7 +189,7 @@ export default function WebBookingPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-700">Giriş Tarihi *</label>
+              <label className="text-xs font-medium text-foreground">Giriş Tarihi *</label>
               <input
                 type="date"
                 name="check_in"
@@ -200,7 +200,7 @@ export default function WebBookingPage() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-700">Çıkış Tarihi *</label>
+              <label className="text-xs font-medium text-foreground">Çıkış Tarihi *</label>
               <input
                 type="date"
                 name="check_out"
@@ -214,7 +214,7 @@ export default function WebBookingPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-700">Yetişkin</label>
+              <label className="text-xs font-medium text-foreground">Yetişkin</label>
               <input
                 type="number"
                 name="adults"
@@ -226,7 +226,7 @@ export default function WebBookingPage() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-700">Çocuk</label>
+              <label className="text-xs font-medium text-foreground">Çocuk</label>
               <input
                 type="number"
                 name="children"
@@ -240,7 +240,7 @@ export default function WebBookingPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-700">Toplam Fiyat (TRY)</label>
+            <label className="text-xs font-medium text-foreground">Toplam Fiyat (TRY)</label>
             <input
               type="number"
               name="price_total"
@@ -252,7 +252,7 @@ export default function WebBookingPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-700">Ad Soyad *</label>
+            <label className="text-xs font-medium text-foreground">Ad Soyad *</label>
             <input
               type="text"
               name="full_name"
@@ -264,7 +264,7 @@ export default function WebBookingPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-700">Email *</label>
+            <label className="text-xs font-medium text-foreground">Email *</label>
             <input
               type="email"
               name="email"
@@ -276,7 +276,7 @@ export default function WebBookingPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-700">Telefon *</label>
+            <label className="text-xs font-medium text-foreground">Telefon *</label>
             <input
               type="text"
               name="phone"

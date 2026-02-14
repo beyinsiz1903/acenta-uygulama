@@ -6,12 +6,12 @@ import { FileText, Send, Plus, X, Eye, RefreshCw } from "lucide-react";
 import { cn } from "../lib/utils";
 
 const STATUS_MAP = {
-  draft: { label: "Taslak", className: "bg-gray-100 text-gray-700" },
+  draft: { label: "Taslak", className: "bg-gray-100 text-foreground" },
   queued: { label: "Kuyrukta", className: "bg-blue-100 text-blue-700" },
   sent: { label: "Gonderildi", className: "bg-indigo-100 text-indigo-700" },
   accepted: { label: "Kabul Edildi", className: "bg-green-100 text-green-700" },
   rejected: { label: "Reddedildi", className: "bg-red-100 text-red-700" },
-  canceled: { label: "Iptal", className: "bg-gray-200 text-gray-500" },
+  canceled: { label: "Iptal", className: "bg-gray-200 text-muted-foreground" },
 };
 
 export default function AdminEFaturaPage() {

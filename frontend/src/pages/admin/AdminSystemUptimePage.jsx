@@ -29,7 +29,7 @@ export default function AdminSystemUptimePage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Signal className="h-6 w-6 text-green-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Sistem Çalışma Süresi</h1>
+          <h1 className="text-2xl font-bold text-foreground">Sistem Çalışma Süresi</h1>
         </div>
         <div className="flex gap-2">
           <select
@@ -50,22 +50,22 @@ export default function AdminSystemUptimePage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
+          <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground/60" />
         </div>
       ) : !stats ? (
-        <div className="text-center py-12 text-gray-500" data-testid="empty-state">
-          <Signal className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+        <div className="text-center py-12 text-muted-foreground" data-testid="empty-state">
+          <Signal className="h-12 w-12 mx-auto mb-3 text-muted-foreground/40" />
           <p>Veri bulunamadı</p>
         </div>
       ) : (
         <div className="space-y-6" data-testid="uptime-data">
           {/* Big uptime percentage */}
           <div className="bg-white border rounded-lg p-8 text-center">
-            <p className="text-sm text-gray-500 mb-2">Çalışma Süresi</p>
+            <p className="text-sm text-muted-foreground mb-2">Çalışma Süresi</p>
             <p className={`text-6xl font-bold ${uptimeColor(stats.uptime_percent)}`}>
               {stats.uptime_percent}%
             </p>
-            <p className="text-sm text-gray-400 mt-2">Son {stats.period_days} gün</p>
+            <p className="text-sm text-muted-foreground/60 mt-2">Son {stats.period_days} gün</p>
           </div>
 
           {/* Stats grid */}
@@ -73,27 +73,27 @@ export default function AdminSystemUptimePage() {
             <div className="bg-white border rounded-lg p-4 flex items-center gap-3">
               <ArrowUp className="h-5 w-5 text-green-500" />
               <div>
-                <p className="text-sm text-gray-500">Çalışma</p>
-                <p className="text-xl font-bold text-gray-900">{stats.up_minutes || 0} dk</p>
+                <p className="text-sm text-muted-foreground">Çalışma</p>
+                <p className="text-xl font-bold text-foreground">{stats.up_minutes || 0} dk</p>
               </div>
             </div>
             <div className="bg-white border rounded-lg p-4 flex items-center gap-3">
               <ArrowDown className="h-5 w-5 text-red-500" />
               <div>
-                <p className="text-sm text-gray-500">Kesinti</p>
-                <p className="text-xl font-bold text-gray-900">{stats.downtime_minutes || 0} dk</p>
+                <p className="text-sm text-muted-foreground">Kesinti</p>
+                <p className="text-xl font-bold text-foreground">{stats.downtime_minutes || 0} dk</p>
               </div>
             </div>
             <div className="bg-white border rounded-lg p-4 flex items-center gap-3">
               <Signal className="h-5 w-5 text-blue-500" />
               <div>
-                <p className="text-sm text-gray-500">Toplam Ölçüm</p>
-                <p className="text-xl font-bold text-gray-900">{stats.total_minutes || 0} dk</p>
+                <p className="text-sm text-muted-foreground">Toplam Ölçüm</p>
+                <p className="text-xl font-bold text-foreground">{stats.total_minutes || 0} dk</p>
               </div>
             </div>
           </div>
 
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground/60">
             Son güncelleme: {stats.computed_at ? new Date(stats.computed_at).toLocaleString("tr-TR") : "-"}
           </p>
         </div>

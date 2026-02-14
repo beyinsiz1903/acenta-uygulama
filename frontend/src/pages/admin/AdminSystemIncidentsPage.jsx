@@ -62,7 +62,7 @@ export default function AdminSystemIncidentsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <AlertOctagon className="h-6 w-6 text-orange-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Olay Yönetimi</h1>
+          <h1 className="text-2xl font-bold text-foreground">Olay Yönetimi</h1>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={load} disabled={loading}>
@@ -138,24 +138,24 @@ export default function AdminSystemIncidentsPage() {
       {/* List */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
+          <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground/60" />
         </div>
       ) : incidents.length === 0 ? (
-        <div className="text-center py-12 text-gray-500" data-testid="empty-state">
-          <AlertOctagon className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+        <div className="text-center py-12 text-muted-foreground" data-testid="empty-state">
+          <AlertOctagon className="h-12 w-12 mx-auto mb-3 text-muted-foreground/40" />
           <p>Olay bulunamadı</p>
         </div>
       ) : (
         <div className="space-y-3" data-testid="incidents-list">
           {incidents.map((inc) => {
-            const sv = SEVERITY_MAP[inc.severity] || { label: inc.severity, className: "bg-gray-100 text-gray-600" };
+            const sv = SEVERITY_MAP[inc.severity] || { label: inc.severity, className: "bg-gray-100 text-muted-foreground" };
             const resolved = !!inc.end_time;
             return (
               <div key={inc.incident_id || inc._id} className={`bg-white border rounded-lg p-4 ${resolved ? "opacity-70" : ""}`}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <Badge className={sv.className}>{sv.label}</Badge>
-                    <span className="font-medium text-gray-900">{inc.title}</span>
+                    <span className="font-medium text-foreground">{inc.title}</span>
                     {resolved && <Badge className="bg-green-100 text-green-700">Çözüldü</Badge>}
                   </div>
                   {!resolved && (
@@ -164,9 +164,9 @@ export default function AdminSystemIncidentsPage() {
                     </Button>
                   )}
                 </div>
-                {inc.root_cause && <p className="text-sm text-gray-600 mb-1">Neden: {inc.root_cause}</p>}
+                {inc.root_cause && <p className="text-sm text-muted-foreground mb-1">Neden: {inc.root_cause}</p>}
                 {inc.resolution_notes && <p className="text-sm text-green-700 mb-1">Çözüm: {inc.resolution_notes}</p>}
-                <div className="flex gap-4 text-xs text-gray-400">
+                <div className="flex gap-4 text-xs text-muted-foreground/60">
                   <span><Clock className="h-3 w-3 inline mr-1" />Başlangıç: {inc.start_time ? new Date(inc.start_time).toLocaleString("tr-TR") : "-"}</span>
                   {resolved && <span><Clock className="h-3 w-3 inline mr-1" />Bitiş: {new Date(inc.end_time).toLocaleString("tr-TR")}</span>}
                   {inc.affected_tenants?.length > 0 && <span>Etkilenen: {inc.affected_tenants.join(", ")}</span>}

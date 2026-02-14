@@ -10,7 +10,7 @@ const STATUS_MAP = {
   active: { label: "Aktif", className: "bg-green-100 text-green-700" },
   checked_in: { label: "Giris Yapildi", className: "bg-blue-100 text-blue-700" },
   canceled: { label: "Iptal", className: "bg-red-100 text-red-700" },
-  expired: { label: "Suresi Dolmus", className: "bg-gray-100 text-gray-500" },
+  expired: { label: "Suresi Dolmus", className: "bg-gray-100 text-muted-foreground" },
 };
 
 export default function AdminTicketsPage() {

@@ -539,7 +539,7 @@ function ValidityRangeBadge({ kind }) {
     cls += " bg-sky-100 text-sky-800 border-sky-200";
   } else if (kind === "expired") {
     label = "EXPIRED";
-    cls += " bg-slate-100 text-slate-700 border-slate-200";
+    cls += " bg-slate-100 text-foreground border-slate-200";
   } else {
     label = "NO VALIDITY";
     cls += " bg-amber-100 text-amber-800 border-amber-200";
@@ -574,7 +574,7 @@ function MarkupLevelBadge({ level }) {
     cls += " bg-emerald-100 text-emerald-900 border-emerald-200";
   } else {
     label = "N/A";
-    cls += " bg-slate-100 text-slate-700 border-slate-200";
+    cls += " bg-slate-100 text-foreground border-slate-200";
   }
 
   return <span className={cls}>{label}</span>;

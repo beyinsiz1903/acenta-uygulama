@@ -35,7 +35,7 @@ export default function AdminDemoGuidePage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Presentation className="h-6 w-6 text-violet-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Demo Rehberi</h1>
+          <h1 className="text-2xl font-bold text-foreground">Demo Rehberi</h1>
           {data && <Badge variant="outline">{data.total_time}</Badge>}
         </div>
         <Button variant="outline" size="sm" onClick={load} disabled={loading}>
@@ -45,10 +45,10 @@ export default function AdminDemoGuidePage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
+          <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground/60" />
         </div>
       ) : !step ? (
-        <div className="text-center py-12 text-gray-500">Yüklenemedi</div>
+        <div className="text-center py-12 text-muted-foreground">Yüklenemedi</div>
       ) : (
         <div className="space-y-4" data-testid="demo-guide-content">
           {/* Progress Bar */}
@@ -68,7 +68,7 @@ export default function AdminDemoGuidePage() {
             >
               <ChevronLeft className="h-4 w-4 mr-1" /> Önceki
             </Button>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-muted-foreground">
               {currentStep + 1} / {steps.length}
             </span>
             <Button
@@ -109,19 +109,19 @@ export default function AdminDemoGuidePage() {
               {/* Message */}
               <div className="flex items-start gap-3 bg-violet-50 rounded-lg p-4">
                 <MessageCircle className="h-5 w-5 text-violet-500 flex-shrink-0 mt-0.5" />
-                <p className="text-gray-800 italic">"{step.message}"</p>
+                <p className="text-foreground italic">"{step.message}"</p>
               </div>
 
               {/* Talking Points */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Konuşma Noktaları</h3>
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase mb-2">Konuşma Noktaları</h3>
                 <ul className="space-y-2">
                   {step.talking_points?.map((tp, i) => (
                     <li key={i} className="flex items-start gap-2">
                       <span className="flex-shrink-0 w-5 h-5 rounded-full bg-violet-100 text-violet-700 text-xs flex items-center justify-center font-bold mt-0.5">
                         {i + 1}
                       </span>
-                      <span className="text-sm text-gray-700">{tp}</span>
+                      <span className="text-sm text-foreground">{tp}</span>
                     </li>
                   ))}
                 </ul>
@@ -130,7 +130,7 @@ export default function AdminDemoGuidePage() {
               {/* Sub-screens */}
               {step.sub_screens && step.sub_screens.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Ek Ekranlar</h3>
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase mb-2">Ek Ekranlar</h3>
                   <div className="flex flex-wrap gap-2">
                     {step.sub_screens.map((ss, i) => (
                       <button
@@ -157,7 +157,7 @@ export default function AdminDemoGuidePage() {
                 className={`flex-shrink-0 px-3 py-1.5 rounded text-xs font-medium transition-colors ${
                   i === currentStep
                     ? "bg-violet-600 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    : "bg-gray-100 text-muted-foreground hover:bg-gray-200"
                 }`}
               >
                 {s.time.split("-")[0]}

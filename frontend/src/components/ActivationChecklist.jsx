@@ -42,8 +42,8 @@ export default function ActivationChecklist() {
             <span className="text-blue-600 font-bold text-sm">{pct}%</span>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">Başlangıç Adımları</h3>
-            <p className="text-xs text-gray-500">{done}/{total} tamamlandi</p>
+            <h3 className="text-sm font-semibold text-foreground">Başlangıç Adımları</h3>
+            <p className="text-xs text-muted-foreground">{done}/{total} tamamlandi</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -69,8 +69,8 @@ export default function ActivationChecklist() {
                 data-testid={`checklist-item-${item.key}`}>
                 {isDone ? <CheckCircle size={18} className="text-green-500 shrink-0" />
                   : completing === item.key ? <div className="w-[18px] h-[18px] border-2 border-blue-500 border-t-transparent rounded-full animate-spin shrink-0" />
-                  : <Circle size={18} className="text-gray-300 shrink-0" />}
-                <span className={`text-sm ${isDone ? "text-green-700 line-through" : "text-gray-700"}`}>{item.label}</span>
+                  : <Circle size={18} className="text-muted-foreground/40 shrink-0" />}
+                <span className={`text-sm ${isDone ? "text-green-700 line-through" : "text-foreground"}`}>{item.label}</span>
               </div>
             );
           })}

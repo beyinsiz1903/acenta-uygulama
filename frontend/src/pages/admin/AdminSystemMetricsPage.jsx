@@ -17,14 +17,14 @@ export default function AdminSystemMetricsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const MetricCard = ({ icon: Icon, label, value, suffix, color = "text-gray-900" }) => (
+  const MetricCard = ({ icon: Icon, label, value, suffix, color = "text-foreground" }) => (
     <div className="bg-white border rounded-lg p-4 flex items-start gap-3">
       <div className="p-2 bg-gray-50 rounded-lg">
-        <Icon className="h-5 w-5 text-gray-500" />
+        <Icon className="h-5 w-5 text-muted-foreground" />
       </div>
       <div>
-        <p className="text-sm text-gray-500">{label}</p>
-        <p className={`text-2xl font-bold ${color}`}>{value !== undefined && value !== null ? value : "-"}{suffix && <span className="text-sm font-normal text-gray-400 ml-1">{suffix}</span>}</p>
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className={`text-2xl font-bold ${color}`}>{value !== undefined && value !== null ? value : "-"}{suffix && <span className="text-sm font-normal text-muted-foreground/60 ml-1">{suffix}</span>}</p>
       </div>
     </div>
   );
@@ -34,7 +34,7 @@ export default function AdminSystemMetricsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Activity className="h-6 w-6 text-blue-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Sistem Metrikleri</h1>
+          <h1 className="text-2xl font-bold text-foreground">Sistem Metrikleri</h1>
         </div>
         <Button variant="outline" size="sm" onClick={load} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
@@ -44,10 +44,10 @@ export default function AdminSystemMetricsPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
+          <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground/60" />
         </div>
       ) : !metrics ? (
-        <div className="text-center py-12 text-gray-500" data-testid="empty-state">
+        <div className="text-center py-12 text-muted-foreground" data-testid="empty-state">
           <p>Metrikler yüklenemedi</p>
         </div>
       ) : (
@@ -71,10 +71,10 @@ export default function AdminSystemMetricsPage() {
               label="Disk Kullanımı" 
               value={metrics.disk_usage_percent} 
               suffix="%"
-              color={metrics.disk_usage_percent > 85 ? "text-red-600" : "text-gray-900"}
+              color={metrics.disk_usage_percent > 85 ? "text-red-600" : "text-foreground"}
             />
           </div>
-          <p className="text-xs text-gray-400">Son güncelleme: {metrics.computed_at ? new Date(metrics.computed_at).toLocaleString("tr-TR") : "-"}</p>
+          <p className="text-xs text-muted-foreground/60">Son güncelleme: {metrics.computed_at ? new Date(metrics.computed_at).toLocaleString("tr-TR") : "-"}</p>
         </div>
       )}
     </div>

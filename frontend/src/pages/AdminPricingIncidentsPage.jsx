@@ -180,7 +180,7 @@ export default function AdminPricingIncidentsPage() {
                 </span>
               )}
               {bundle?.payments && (
-                <span className="inline-flex items-center rounded-full bg-slate-50 px-2 py-0.5 text-2xs font-semibold text-slate-900 border border-slate-200">
+                <span className="inline-flex items-center rounded-full bg-slate-50 px-2 py-0.5 text-2xs font-semibold text-foreground border border-slate-200">
                   Payment: {bundle.payments.status || "unknown"}
                 </span>
               )}

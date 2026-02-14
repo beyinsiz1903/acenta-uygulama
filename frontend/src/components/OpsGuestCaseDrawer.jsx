@@ -90,10 +90,10 @@ function RiskBadge({ kind }) {
     cls += " bg-emerald-100 text-emerald-900 border-emerald-200";
   } else if (kind === "no_date") {
     label = "NO DATE";
-    cls += " bg-slate-100 text-slate-700 border-slate-200";
+    cls += " bg-slate-100 text-foreground border-slate-200";
   } else {
     label = "N/A";
-    cls += " bg-slate-100 text-slate-700 border-slate-200";
+    cls += " bg-slate-100 text-foreground border-slate-200";
   }
 
   return <span className={cls}>{label}</span>;
@@ -114,10 +114,10 @@ function WaitingBadge({ waitingOn }) {
     cls += " bg-violet-100 text-violet-900 border-violet-200";
   } else if (w === "ops") {
     label = "OPS BEKLENİYOR";
-    cls += " bg-slate-100 text-slate-900 border-slate-200";
+    cls += " bg-slate-100 text-foreground border-slate-200";
   } else {
     label = "DİĞER BEKLENİYOR";
-    cls += " bg-slate-100 text-slate-900 border-slate-200";
+    cls += " bg-slate-100 text-foreground border-slate-200";
   }
 
   return <span className={cls}>{label}</span>;
@@ -242,7 +242,7 @@ function EventBadge({ kind, isSystem }) {
     cls += " bg-emerald-100 text-emerald-900 border-emerald-200";
   } else {
     label = "OLAY";
-    cls += " bg-slate-100 text-slate-800 border-slate-200";
+    cls += " bg-slate-100 text-foreground border-slate-200";
   }
 
   if (isSystem) {

@@ -67,7 +67,7 @@ function SupplierHealthBadge({ badge }) {
           <TooltipTrigger asChild>
             <Badge
               variant="outline"
-              className="text-2xs bg-slate-50 text-slate-700 border-slate-200"
+              className="text-2xs bg-slate-50 text-foreground border-slate-200"
               data-testid="ops-incidents-health-no-health"
             >
               NO HEALTH

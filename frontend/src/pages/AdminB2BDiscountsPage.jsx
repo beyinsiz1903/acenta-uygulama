@@ -8,7 +8,7 @@ import { Textarea } from "../components/ui/textarea";
 
 function validityBadge(validity) {
   if (!validity || (!validity.from && !validity.to)) {
-    return { label: "Geçerlilik yok", color: "bg-slate-100 text-slate-700" };
+    return { label: "Geçerlilik yok", color: "bg-slate-100 text-foreground" };
   }
   const now = new Date();
   const from = validity.from ? new Date(validity.from) : null;

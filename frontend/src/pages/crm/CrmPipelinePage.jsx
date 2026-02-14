@@ -34,7 +34,7 @@ function ColHeader({ stage, count }) {
     <div className="flex items-center justify-between mb-2 px-1">
       <div className="flex items-center gap-1.5">
         <span className="px-2 py-0.5 rounded-full text-xs font-semibold border" style={{ background: m.bg, color: m.color, borderColor: m.color + "33" }}>{m.title}</span>
-        <span className="text-xs text-gray-400">{count}</span>
+        <span className="text-xs text-muted-foreground/60">{count}</span>
       </div>
       <div className="w-2 h-2 rounded-full" style={{ background: m.dot }} />
     </div>
@@ -65,18 +65,18 @@ function DealCard({ deal, onClick, isDragging }) {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold text-gray-900 truncate">{deal.title || deal.id}</div>
-          <div className="text-xs text-gray-500 mt-1">{deal.amount != null ? `${deal.amount} ${deal.currency || "TRY"}` : ""}</div>
+          <div className="text-sm font-semibold text-foreground truncate">{deal.title || deal.id}</div>
+          <div className="text-xs text-muted-foreground mt-1">{deal.amount != null ? `${deal.amount} ${deal.currency || "TRY"}` : ""}</div>
           {deal.next_action_at && (
-            <div className="text-2xs text-gray-400 mt-0.5">Aksiyon: {new Date(deal.next_action_at).toLocaleDateString("tr-TR")}</div>
+            <div className="text-2xs text-muted-foreground/60 mt-0.5">Aksiyon: {new Date(deal.next_action_at).toLocaleDateString("tr-TR")}</div>
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {locked ? (
-            <Lock size={12} className="text-gray-400" />
+            <Lock size={12} className="text-muted-foreground/60" />
           ) : (
             <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
-              <GripVertical size={14} className="text-gray-400" />
+              <GripVertical size={14} className="text-muted-foreground/60" />
             </div>
           )}
         </div>
@@ -92,7 +92,7 @@ function KanbanColumn({ stage, deals, onCardClick }) {
       <ColHeader stage={stage} count={deals.length} />
       <div className="flex-1 overflow-y-auto max-h-[520px] pr-1">
         {deals.length === 0 ? (
-          <div className="text-center py-6 text-xs text-gray-400 border border-dashed rounded-xl p-3">Henuz firsat yok</div>
+          <div className="text-center py-6 text-xs text-muted-foreground/60 border border-dashed rounded-xl p-3">Henuz firsat yok</div>
         ) : (
           deals.map((d) => <DealCard key={d.id} deal={d} onClick={onCardClick} />)
         )}
@@ -106,8 +106,8 @@ function DragOverlayCard({ deal }) {
   if (!deal) return null;
   return (
     <div className="rounded-xl border-2 border-blue-400 bg-white p-2.5 shadow-xl w-[200px]">
-      <div className="text-sm font-semibold text-gray-900 truncate">{deal.title || deal.id}</div>
-      <div className="text-xs text-gray-500 mt-1">{deal.amount != null ? `${deal.amount} ${deal.currency || "TRY"}` : ""}</div>
+      <div className="text-sm font-semibold text-foreground truncate">{deal.title || deal.id}</div>
+      <div className="text-xs text-muted-foreground mt-1">{deal.amount != null ? `${deal.amount} ${deal.currency || "TRY"}` : ""}</div>
     </div>
   );
 }
@@ -261,8 +261,8 @@ export default function CrmPipelinePage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">CRM Pipeline</h1>
-          <div className="text-sm text-gray-500 mt-0.5">Toplam acik firsat: <b>{totalOpen}</b></div>
+          <h1 className="text-xl font-bold text-foreground">CRM Pipeline</h1>
+          <div className="text-sm text-muted-foreground mt-0.5">Toplam acik firsat: <b>{totalOpen}</b></div>
         </div>
         <button onClick={() => setNewDealOpen(true)} className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700" data-testid="new-deal-btn">
           <Plus size={16} /> Yeni Firsat
@@ -281,7 +281,7 @@ export default function CrmPipelinePage() {
         <DragOverlay>{activeDeal ? <DragOverlayCard deal={activeDeal} /> : null}</DragOverlay>
       </DndContext>
 
-      {loading && <div className="text-center text-sm text-gray-400 mt-3">Yukleniyor...</div>}
+      {loading && <div className="text-center text-sm text-muted-foreground/60 mt-3">Yukleniyor...</div>}
 
       {/* New deal modal */}
       <NewDealModal open={newDealOpen} onClose={() => setNewDealOpen(false)} onCreated={refresh} />

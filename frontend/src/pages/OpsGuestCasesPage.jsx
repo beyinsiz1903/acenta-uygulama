@@ -84,7 +84,7 @@ function RiskBadge({ kind }) {
     cls += " bg-emerald-50 text-emerald-700 border-emerald-200";
   } else if (kind === "no_date") {
     label = "Tarihsiz";
-    cls += " bg-slate-50 text-slate-500 border-slate-200";
+    cls += " bg-slate-50 text-muted-foreground border-slate-200";
   } else {
     return null;
   }
@@ -105,10 +105,10 @@ function WaitingBadge({ waitingOn }) {
     cls += " bg-violet-50 text-violet-700 border-violet-200";
   } else if (w === "ops") {
     label = "Ops bkl.";
-    cls += " bg-slate-50 text-slate-600 border-slate-200";
+    cls += " bg-slate-50 text-muted-foreground border-slate-200";
   } else if (w === "other") {
     label = "Diğer bkl.";
-    cls += " bg-slate-50 text-slate-600 border-slate-200";
+    cls += " bg-slate-50 text-muted-foreground border-slate-200";
   } else {
     return null;
   }
@@ -643,7 +643,7 @@ function OpsGuestCasesPage() {
                                 case "closed":
                                 default:
                                   return (
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 text-slate-500 border border-slate-200 px-2 py-0.5 text-2xs font-semibold tracking-wide">
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 text-muted-foreground border border-slate-200 px-2 py-0.5 text-2xs font-semibold tracking-wide">
                                       <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
                                       Kapalı
                                     </span>

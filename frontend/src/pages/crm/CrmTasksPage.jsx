@@ -61,7 +61,7 @@ function StatusBadge({ status }) {
 
 function PriorityBadge({ priority }) {
   const map = {
-    low: { label: "Düşük", classes: "text-gray-600 bg-gray-100" },
+    low: { label: "Düşük", classes: "text-muted-foreground bg-gray-100" },
     normal: { label: "Normal", classes: "text-blue-700 bg-blue-50" },
     high: { label: "Yüksek", classes: "text-red-700 bg-red-50" },
   };

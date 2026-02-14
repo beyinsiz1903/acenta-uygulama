@@ -265,7 +265,7 @@ export default function ProductsPage() {
                     const typeColor = r.type === "tour" ? "text-violet-700 bg-violet-50 border-violet-200"
                       : r.type === "accommodation" || r.type === "hotel" ? "text-blue-700 bg-blue-50 border-blue-200"
                       : r.type === "transfer" ? "text-amber-700 bg-amber-50 border-amber-200"
-                      : "text-slate-700 bg-slate-50 border-slate-200";
+                      : "text-foreground bg-slate-50 border-slate-200";
                     return (
                       <TableRow key={r.id} className="group hover:bg-muted/20 transition-colors">
                         <TableCell className="py-3">

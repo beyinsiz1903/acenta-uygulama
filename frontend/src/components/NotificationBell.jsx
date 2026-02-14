@@ -73,7 +73,7 @@ export default function NotificationBell() {
     quota_warning: "text-amber-500 bg-amber-50",
     payment_overdue: "text-rose-500 bg-rose-50",
     case_open: "text-blue-500 bg-blue-50",
-    system: "text-gray-500 bg-gray-50",
+    system: "text-muted-foreground bg-gray-50",
     b2b_match: "text-green-500 bg-green-50",
     payment_recorded: "text-green-500 bg-green-50",
     onboarding: "text-blue-500 bg-blue-50",

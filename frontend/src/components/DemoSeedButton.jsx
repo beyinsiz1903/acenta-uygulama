@@ -36,12 +36,12 @@ export default function DemoSeedButton() {
                   <><AlertCircle className="mx-auto text-amber-500 mb-2" size={32} /><p className="text-amber-700 font-medium">Zaten demo verisi mevcut</p></>
                 ) : (
                   <><CheckCircle className="mx-auto text-green-500 mb-2" size={32} /><p className="text-green-700 font-medium">Demo verisi olusturuldu!</p>
-                  <div className="mt-3 text-sm text-gray-600 space-y-1">
+                  <div className="mt-3 text-sm text-muted-foreground space-y-1">
                     {Object.entries(result.counts||{}).map(([k,v])=>(<div key={k}>{k}: <strong>{v}</strong></div>))}
                   </div>
                   <a href="/app" className="inline-block mt-4 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm">Dashboard'a don</a></>
                 )}
-                <button onClick={()=>{setResult(null);setShow(false);}} className="block mx-auto mt-3 text-sm text-gray-500">Kapat</button>
+                <button onClick={()=>{setResult(null);setShow(false);}} className="block mx-auto mt-3 text-sm text-muted-foreground">Kapat</button>
               </div>
             ) : (
               <>

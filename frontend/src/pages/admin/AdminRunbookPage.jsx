@@ -37,7 +37,7 @@ export default function AdminRunbookPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <BookOpen className="h-6 w-6 text-orange-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Ops Runbook</h1>
+          <h1 className="text-2xl font-bold text-foreground">Ops Runbook</h1>
         </div>
         <Button variant="outline" size="sm" onClick={load} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
@@ -47,18 +47,18 @@ export default function AdminRunbookPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
+          <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground/60" />
         </div>
       ) : entries.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <BookOpen className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+        <div className="text-center py-12 text-muted-foreground">
+          <BookOpen className="h-12 w-12 mx-auto mb-3 text-muted-foreground/40" />
           <p>Runbook girdisi bulunamadı</p>
         </div>
       ) : (
         <div className="space-y-4" data-testid="runbook-entries">
           {entries.map((entry) => {
             const isOpen = expanded[entry.id];
-            const svStyle = SEVERITY_STYLE[entry.severity] || "bg-gray-100 text-gray-600";
+            const svStyle = SEVERITY_STYLE[entry.severity] || "bg-gray-100 text-muted-foreground";
             return (
               <div key={entry.id} className="bg-white border rounded-lg overflow-hidden shadow-sm">
                 {/* Header */}
@@ -66,10 +66,10 @@ export default function AdminRunbookPage() {
                   className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors"
                   onClick={() => toggle(entry.id)}
                 >
-                  {isOpen ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
+                  {isOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground/60" /> : <ChevronRight className="h-4 w-4 text-muted-foreground/60" />}
                   <Badge className={svStyle}>{entry.severity}</Badge>
-                  <span className="font-semibold text-gray-900 flex-1 text-left">{entry.title}</span>
-                  <span className="text-xs text-gray-400">Hedef: {entry.target_time}</span>
+                  <span className="font-semibold text-foreground flex-1 text-left">{entry.title}</span>
+                  <span className="text-xs text-muted-foreground/60">Hedef: {entry.target_time}</span>
                 </button>
 
                 {/* Steps */}
@@ -82,11 +82,11 @@ export default function AdminRunbookPage() {
                             {step.order}
                           </span>
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">{step.action}</p>
-                            <p className="text-xs text-gray-500 mt-0.5">{step.detail}</p>
+                            <p className="text-sm font-medium text-foreground">{step.action}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{step.detail}</p>
                             <div className="flex gap-2 mt-1">
                               {step.api && (
-                                <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-mono">
+                                <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-muted-foreground px-2 py-0.5 rounded font-mono">
                                   <Terminal className="h-3 w-3" /> {step.api}
                                 </span>
                               )}

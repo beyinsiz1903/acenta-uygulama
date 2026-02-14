@@ -54,7 +54,7 @@ export default function AdminSystemBackupsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Database className="h-6 w-6 text-indigo-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Sistem Yedekleri</h1>
+          <h1 className="text-2xl font-bold text-foreground">Sistem Yedekleri</h1>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={load} disabled={loading}>
@@ -70,11 +70,11 @@ export default function AdminSystemBackupsPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
+          <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground/60" />
         </div>
       ) : backups.length === 0 ? (
-        <div className="text-center py-12 text-gray-500" data-testid="empty-state">
-          <Database className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+        <div className="text-center py-12 text-muted-foreground" data-testid="empty-state">
+          <Database className="h-12 w-12 mx-auto mb-3 text-muted-foreground/40" />
           <p>Henüz yedek bulunmuyor</p>
         </div>
       ) : (
@@ -82,26 +82,26 @@ export default function AdminSystemBackupsPage() {
           <table className="min-w-full divide-y divide-gray-200" data-testid="backups-table">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dosya</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tür</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Boyut</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Durum</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tarih</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">İşlemler</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Dosya</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Tür</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Boyut</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Durum</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Tarih</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">İşlemler</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {backups.map((b) => {
-                const st = STATUS_MAP[b.status] || { label: b.status, className: "bg-gray-100 text-gray-600" };
+                const st = STATUS_MAP[b.status] || { label: b.status, className: "bg-gray-100 text-muted-foreground" };
                 return (
                   <tr key={b.backup_id || b._id}>
-                    <td className="px-4 py-3 text-sm font-mono text-gray-700">{b.filename}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600 capitalize">{b.type}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{formatSize(b.size_bytes)}</td>
+                    <td className="px-4 py-3 text-sm font-mono text-foreground">{b.filename}</td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground capitalize">{b.type}</td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">{formatSize(b.size_bytes)}</td>
                     <td className="px-4 py-3">
                       <Badge className={st.className}>{st.label}</Badge>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-500">
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
                       <Clock className="h-3 w-3 inline mr-1" />
                       {b.created_at ? new Date(b.created_at).toLocaleString("tr-TR") : "-"}
                     </td>

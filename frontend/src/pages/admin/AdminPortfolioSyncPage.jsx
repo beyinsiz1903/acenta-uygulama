@@ -21,9 +21,9 @@ function StatusBadge({ status }) {
     error: { bg: "bg-red-50 dark:bg-red-900/30", text: "text-red-700 dark:text-red-300", icon: XCircle, label: "Hata" },
     failed: { bg: "bg-red-50 dark:bg-red-900/30", text: "text-red-700 dark:text-red-300", icon: XCircle, label: "Basarisiz" },
     partial: { bg: "bg-amber-50 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-300", icon: AlertTriangle, label: "Kismi" },
-    not_configured: { bg: "bg-gray-50 dark:bg-gray-800", text: "text-gray-500 dark:text-gray-400", icon: WifiOff, label: "Yapilandirilmamis" },
+    not_configured: { bg: "bg-gray-50 dark:bg-gray-800", text: "text-muted-foreground dark:text-muted-foreground/60", icon: WifiOff, label: "Yapilandirilmamis" },
     running: { bg: "bg-blue-50 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-300", icon: Loader2, label: "Calisiyor" },
-    skipped: { bg: "bg-gray-50 dark:bg-gray-800", text: "text-gray-500 dark:text-gray-400", icon: Clock, label: "Atlandi" },
+    skipped: { bg: "bg-gray-50 dark:bg-gray-800", text: "text-muted-foreground dark:text-muted-foreground/60", icon: Clock, label: "Atlandi" },
     active: { bg: "bg-emerald-50 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-300", icon: CheckCircle2, label: "Aktif" },
   };
   const s = map[status] || map.error;
@@ -52,8 +52,8 @@ function StatCard({ icon: Icon, label, value, color = "blue" }) {
           <Icon className="w-5 h-5" />
         </div>
         <div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
+          <p className="text-2xl font-bold text-foreground dark:text-white">{value}</p>
+          <p className="text-xs text-muted-foreground dark:text-muted-foreground/60">{label}</p>
         </div>
       </div>
     </div>
@@ -144,8 +144,8 @@ function ConfigBanner({ config, onConfigSaved }) {
 
       {showSetup && (
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 space-y-3">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Google Service Account JSON</h3>
-          <p className="text-xs text-gray-500">
+          <h3 className="text-sm font-semibold text-foreground dark:text-white">Google Service Account JSON</h3>
+          <p className="text-xs text-muted-foreground">
             1. <a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Google Cloud Console</a>'dan bir Service Account olusturun.
             2. JSON anahtarini indirin.
             3. Asagiya yapistirin.
@@ -156,7 +156,7 @@ function ConfigBanner({ config, onConfigSaved }) {
             onChange={e => setJsonInput(e.target.value)}
             placeholder='{"type": "service_account", "project_id": "...", "client_email": "...", "private_key": "..."}'
             rows={6}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-xs font-mono bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-xs font-mono bg-gray-50 dark:bg-gray-900 text-foreground dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           {saveError && (
             <div className="text-xs text-red-600 bg-red-50 rounded p-2">{saveError}</div>
@@ -183,7 +183,7 @@ function HealthDashboard({ status, onRefresh, refreshing }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-foreground dark:text-white flex items-center gap-2">
           <BarChart3 className="w-5 h-5 text-blue-600" /> Portfolio Saglik Paneli
         </h2>
         <button
@@ -212,9 +212,9 @@ function ConnectionsTable({ connections, onSync, onToggle, onDelete, onViewRuns,
   if (!connections || connections.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 text-center">
-        <Sheet className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">Henuz Sheet Baglantisi Yok</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400">Otelleri Google Sheet'lerine baglamak icin "Yeni Baglanti" butonunu kullanin.</p>
+        <Sheet className="w-12 h-12 mx-auto text-muted-foreground/40 dark:text-muted-foreground mb-3" />
+        <h3 className="text-lg font-medium text-foreground dark:text-white mb-1">Henuz Sheet Baglantisi Yok</h3>
+        <p className="text-sm text-muted-foreground dark:text-muted-foreground/60">Otelleri Google Sheet'lerine baglamak icin "Yeni Baglanti" butonunu kullanin.</p>
       </div>
     );
   }
@@ -225,29 +225,29 @@ function ConnectionsTable({ connections, onSync, onToggle, onDelete, onViewRuns,
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-300">Otel</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-300">Sheet</th>
-              <th className="text-center px-4 py-3 font-medium text-gray-600 dark:text-gray-300">Durum</th>
-              <th className="text-center px-4 py-3 font-medium text-gray-600 dark:text-gray-300">Son Sync</th>
-              <th className="text-center px-4 py-3 font-medium text-gray-600 dark:text-gray-300">Sync</th>
-              <th className="text-center px-4 py-3 font-medium text-gray-600 dark:text-gray-300">Islemler</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground dark:text-muted-foreground/40">Otel</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground dark:text-muted-foreground/40">Sheet</th>
+              <th className="text-center px-4 py-3 font-medium text-muted-foreground dark:text-muted-foreground/40">Durum</th>
+              <th className="text-center px-4 py-3 font-medium text-muted-foreground dark:text-muted-foreground/40">Son Sync</th>
+              <th className="text-center px-4 py-3 font-medium text-muted-foreground dark:text-muted-foreground/40">Sync</th>
+              <th className="text-center px-4 py-3 font-medium text-muted-foreground dark:text-muted-foreground/40">Islemler</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
             {connections.map((c) => (
               <tr key={c._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                 <td className="px-4 py-3">
-                  <p className="font-medium text-gray-900 dark:text-white">{c.hotel_name || "—"}</p>
-                  <p className="text-xs text-gray-400 truncate max-w-[180px]">{c.hotel_id}</p>
+                  <p className="font-medium text-foreground dark:text-white">{c.hotel_name || "—"}</p>
+                  <p className="text-xs text-muted-foreground/60 truncate max-w-[180px]">{c.hotel_id}</p>
                 </td>
                 <td className="px-4 py-3">
-                  <p className="text-gray-700 dark:text-gray-300 text-xs truncate max-w-[200px]" title={c.sheet_id}>{c.sheet_title || c.sheet_id}</p>
-                  <p className="text-xs text-gray-400">{c.sheet_tab}</p>
+                  <p className="text-foreground dark:text-muted-foreground/40 text-xs truncate max-w-[200px]" title={c.sheet_id}>{c.sheet_title || c.sheet_id}</p>
+                  <p className="text-xs text-muted-foreground/60">{c.sheet_tab}</p>
                 </td>
                 <td className="px-4 py-3 text-center">
                   <StatusBadge status={c.last_sync_status || c.status || "active"} />
                 </td>
-                <td className="px-4 py-3 text-center text-xs text-gray-500 dark:text-gray-400">
+                <td className="px-4 py-3 text-center text-xs text-muted-foreground dark:text-muted-foreground/60">
                   {formatDate(c.last_sync_at)}
                 </td>
                 <td className="px-4 py-3 text-center">
@@ -273,7 +273,7 @@ function ConnectionsTable({ connections, onSync, onToggle, onDelete, onViewRuns,
                     </button>
                     <button
                       onClick={() => onViewRuns(c)}
-                      className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+                      className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-muted-foreground dark:text-muted-foreground/60 transition-colors"
                       title="Sync Gecmisi"
                     >
                       <Eye className="w-4 h-4" />
@@ -345,11 +345,11 @@ function ConnectWizard({ hotels, onConnect, onClose }) {
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Yeni Sheet Baglantisi</h2>
-            <p className="text-xs text-gray-500 mt-0.5">Adim {step} / 3</p>
+            <h2 className="text-lg font-semibold text-foreground dark:text-white">Yeni Sheet Baglantisi</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Adim {step} / 3</p>
           </div>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
 
@@ -358,12 +358,12 @@ function ConnectWizard({ hotels, onConnect, onClose }) {
           {[1, 2, 3].map(s => (
             <div key={s} className="flex items-center gap-2 flex-1">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                s <= step ? "bg-blue-600 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-500"
+                s <= step ? "bg-blue-600 text-white" : "bg-gray-200 dark:bg-gray-700 text-muted-foreground"
               }`}>{s}</div>
-              <span className={`text-xs hidden sm:block ${s <= step ? "text-blue-600 font-medium" : "text-gray-400"}`}>
+              <span className={`text-xs hidden sm:block ${s <= step ? "text-blue-600 font-medium" : "text-muted-foreground/60"}`}>
                 {s === 1 ? "Otel Sec" : s === 2 ? "Sheet Bilgisi" : "Ayarlar"}
               </span>
-              {s < 3 && <ChevronRight className="w-4 h-4 text-gray-300 hidden sm:block" />}
+              {s < 3 && <ChevronRight className="w-4 h-4 text-muted-foreground/40 hidden sm:block" />}
             </div>
           ))}
         </div>
@@ -380,26 +380,26 @@ function ConnectWizard({ hotels, onConnect, onClose }) {
           {step === 1 && (
             <div className="space-y-3">
               <div className="relative">
-                <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground/60" />
                 <input
                   type="text"
                   placeholder="Otel ara..."
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 text-foreground dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <div className="max-h-60 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-100 dark:divide-gray-700">
                 {availableHotels.length === 0 ? (
-                  <div className="p-4 text-sm text-gray-500 text-center">Baglanabilir otel bulunamadi</div>
+                  <div className="p-4 text-sm text-muted-foreground text-center">Baglanabilir otel bulunamadi</div>
                 ) : availableHotels.map(h => (
                   <button
                     key={h._id}
                     onClick={() => { setSelectedHotel(h); setStep(2); }}
                     className={`w-full text-left px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors ${selectedHotel?._id === h._id ? "bg-blue-50 dark:bg-blue-900/20" : ""}`}
                   >
-                    <p className="font-medium text-gray-900 dark:text-white text-sm">{h.name}</p>
-                    <p className="text-xs text-gray-400">{h.city}</p>
+                    <p className="font-medium text-foreground dark:text-white text-sm">{h.name}</p>
+                    <p className="text-xs text-muted-foreground/60">{h.city}</p>
                   </button>
                 ))}
               </div>
@@ -414,23 +414,23 @@ function ConnectWizard({ hotels, onConnect, onClose }) {
                 <span>Otel: <strong>{selectedHotel?.name}</strong> — Sheet ID'yi URL'den kopyalayin: docs.google.com/spreadsheets/d/<strong>[SHEET_ID]</strong>/edit</span>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Google Sheet ID</label>
+                <label className="block text-sm font-medium text-foreground dark:text-muted-foreground/40 mb-1">Google Sheet ID</label>
                 <input
                   type="text"
                   value={sheetId}
                   onChange={e => setSheetId(e.target.value)}
                   placeholder="1BxiMVs0XRA5nFMdKvBdBZjg..."
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 text-foreground dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sayfa (Tab)</label>
+                <label className="block text-sm font-medium text-foreground dark:text-muted-foreground/40 mb-1">Sayfa (Tab)</label>
                 <input
                   type="text"
                   value={sheetTab}
                   onChange={e => setSheetTab(e.target.value)}
                   placeholder="Sheet1"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 text-foreground dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <div className="flex gap-2 justify-end">
@@ -444,13 +444,13 @@ function ConnectWizard({ hotels, onConnect, onClose }) {
           {step === 3 && (
             <div className="space-y-4">
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-gray-500">Otel:</span> <span className="font-medium text-gray-900 dark:text-white">{selectedHotel?.name}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Sheet ID:</span> <span className="font-mono text-xs text-gray-700 dark:text-gray-300 truncate max-w-[300px]">{sheetId}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Sayfa:</span> <span className="font-medium text-gray-900 dark:text-white">{sheetTab}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Otel:</span> <span className="font-medium text-foreground dark:text-white">{selectedHotel?.name}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Sheet ID:</span> <span className="font-mono text-xs text-foreground dark:text-muted-foreground/40 truncate max-w-[300px]">{sheetId}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Sayfa:</span> <span className="font-medium text-foreground dark:text-white">{sheetTab}</span></div>
               </div>
 
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Otomatik Sync</label>
+                <label className="text-sm font-medium text-foreground dark:text-muted-foreground/40">Otomatik Sync</label>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" checked={syncEnabled} onChange={e => setSyncEnabled(e.target.checked)} className="sr-only peer" />
                   <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
@@ -458,11 +458,11 @@ function ConnectWizard({ hotels, onConnect, onClose }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sync Araligi (dakika)</label>
+                <label className="block text-sm font-medium text-foreground dark:text-muted-foreground/40 mb-1">Sync Araligi (dakika)</label>
                 <select
                   value={syncInterval}
                   onChange={e => setSyncInterval(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 text-foreground dark:text-white"
                 >
                   <option value={1}>1 dk</option>
                   <option value={5}>5 dk</option>
@@ -509,11 +509,11 @@ function SyncRunsDrawer({ hotelId, hotelName, onClose }) {
       <div className="bg-white dark:bg-gray-800 w-full max-w-lg h-full shadow-2xl overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-10">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Sync Gecmisi</h2>
-            <p className="text-xs text-gray-500">{hotelName}</p>
+            <h2 className="text-lg font-semibold text-foreground dark:text-white">Sync Gecmisi</h2>
+            <p className="text-xs text-muted-foreground">{hotelName}</p>
           </div>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
 
@@ -521,19 +521,19 @@ function SyncRunsDrawer({ hotelId, hotelName, onClose }) {
           {loading ? (
             <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-blue-600" /></div>
           ) : runs.length === 0 ? (
-            <div className="text-center py-12 text-gray-500 text-sm">Henuz sync calismadi</div>
+            <div className="text-center py-12 text-muted-foreground text-sm">Henuz sync calismadi</div>
           ) : runs.map(r => (
             <div key={r._id} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <StatusBadge status={r.status} />
-                <span className="text-xs text-gray-400">{formatDate(r.started_at)}</span>
+                <span className="text-xs text-muted-foreground/60">{formatDate(r.started_at)}</span>
               </div>
               <div className="grid grid-cols-3 gap-2 text-xs">
-                <div><span className="text-gray-400">Okunan:</span> <span className="font-medium text-gray-700 dark:text-gray-300">{r.rows_read || 0}</span></div>
-                <div><span className="text-gray-400">Degisen:</span> <span className="font-medium text-gray-700 dark:text-gray-300">{r.rows_changed || 0}</span></div>
-                <div><span className="text-gray-400">Upsert:</span> <span className="font-medium text-gray-700 dark:text-gray-300">{r.upserted || 0}</span></div>
+                <div><span className="text-muted-foreground/60">Okunan:</span> <span className="font-medium text-foreground dark:text-muted-foreground/40">{r.rows_read || 0}</span></div>
+                <div><span className="text-muted-foreground/60">Degisen:</span> <span className="font-medium text-foreground dark:text-muted-foreground/40">{r.rows_changed || 0}</span></div>
+                <div><span className="text-muted-foreground/60">Upsert:</span> <span className="font-medium text-foreground dark:text-muted-foreground/40">{r.upserted || 0}</span></div>
               </div>
-              {r.duration_ms > 0 && <p className="text-xs text-gray-400">Sure: {r.duration_ms}ms | Trigger: {r.trigger}</p>}
+              {r.duration_ms > 0 && <p className="text-xs text-muted-foreground/60">Sure: {r.duration_ms}ms | Trigger: {r.trigger}</p>}
               {r.errors && r.errors.length > 0 && (
                 <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
                   {r.errors.slice(0, 3).map((e, i) => <p key={i}>{e.message || JSON.stringify(e)}</p>)}
@@ -629,10 +629,10 @@ function AgencyConnectionsSection() {
       >
         <div className="flex items-center gap-2">
           <Database className="w-5 h-5 text-purple-600" />
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-base font-semibold text-foreground dark:text-white">
             Acenta Bazli Sheet Baglantilari
           </h2>
-          <span className="text-xs text-gray-400">({agencyConns.length})</span>
+          <span className="text-xs text-muted-foreground/60">({agencyConns.length})</span>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -641,24 +641,24 @@ function AgencyConnectionsSection() {
           >
             <Plus className="w-3.5 h-3.5" /> Acenta Baglantisi
           </button>
-          {expanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
+          {expanded ? <ChevronDown className="w-4 h-4 text-muted-foreground/60" /> : <ChevronRight className="w-4 h-4 text-muted-foreground/60" />}
         </div>
       </div>
 
       {expanded && (
         <div className="border-t border-gray-200 dark:border-gray-700 p-4 space-y-4">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             Her otel icin farkli acentelere ozel sheet baglantilari olusturun. Acenta sadece kendi baglantisindan gelen verileri gorur.
           </p>
 
           {/* Add Form */}
           {showAdd && (
             <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-3 border border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Yeni Acenta Sheet Baglantisi</h3>
+              <h3 className="text-sm font-semibold text-foreground dark:text-gray-200">Yeni Acenta Sheet Baglantisi</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Otel</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Otel</label>
                   <select
                     value={selectedHotel}
                     onChange={e => setSelectedHotel(e.target.value)}
@@ -672,7 +672,7 @@ function AgencyConnectionsSection() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Acenta</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Acenta</label>
                   <select
                     value={selectedAgency}
                     onChange={e => setSelectedAgency(e.target.value)}
@@ -687,7 +687,7 @@ function AgencyConnectionsSection() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Google Sheet ID</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Google Sheet ID</label>
                   <input
                     type="text"
                     value={sheetId}
@@ -699,7 +699,7 @@ function AgencyConnectionsSection() {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Musaitlik Sayfasi</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Musaitlik Sayfasi</label>
                     <input
                       type="text"
                       value={sheetTab}
@@ -708,7 +708,7 @@ function AgencyConnectionsSection() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Rez. Geri Yazim Sayfasi</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Rez. Geri Yazim Sayfasi</label>
                     <input
                       type="text"
                       value={writebackTab}
@@ -734,7 +734,7 @@ function AgencyConnectionsSection() {
           {loading ? (
             <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-purple-500" /></div>
           ) : agencyConns.length === 0 ? (
-            <div className="text-center py-6 text-gray-400">
+            <div className="text-center py-6 text-muted-foreground/60">
               <Database className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">Henuz acenta bazli sheet baglantisi yok</p>
             </div>
@@ -743,21 +743,21 @@ function AgencyConnectionsSection() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 dark:bg-gray-900/50 border-b">
                   <tr>
-                    <th className="text-left px-3 py-2 text-xs font-medium text-gray-500">Otel</th>
-                    <th className="text-left px-3 py-2 text-xs font-medium text-gray-500">Acenta</th>
-                    <th className="text-left px-3 py-2 text-xs font-medium text-gray-500">Sheet</th>
-                    <th className="text-center px-3 py-2 text-xs font-medium text-gray-500">Durum</th>
-                    <th className="text-center px-3 py-2 text-xs font-medium text-gray-500">Son Sync</th>
+                    <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Otel</th>
+                    <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Acenta</th>
+                    <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Sheet</th>
+                    <th className="text-center px-3 py-2 text-xs font-medium text-muted-foreground">Durum</th>
+                    <th className="text-center px-3 py-2 text-xs font-medium text-muted-foreground">Son Sync</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {agencyConns.map(c => (
                     <tr key={c._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <td className="px-3 py-2.5 font-medium text-gray-900 dark:text-white text-xs">{c.hotel_name}</td>
+                      <td className="px-3 py-2.5 font-medium text-foreground dark:text-white text-xs">{c.hotel_name}</td>
                       <td className="px-3 py-2.5 text-xs text-purple-600 font-medium">{c.agency_name || c.agency_id}</td>
-                      <td className="px-3 py-2.5 text-xs text-gray-500 truncate max-w-[150px]">{c.sheet_title || c.sheet_id}</td>
+                      <td className="px-3 py-2.5 text-xs text-muted-foreground truncate max-w-[150px]">{c.sheet_title || c.sheet_id}</td>
                       <td className="px-3 py-2.5 text-center"><StatusBadge status={c.last_sync_status || c.status || "active"} /></td>
-                      <td className="px-3 py-2.5 text-center text-xs text-gray-400">{formatDate(c.last_sync_at)}</td>
+                      <td className="px-3 py-2.5 text-center text-xs text-muted-foreground/60">{formatDate(c.last_sync_at)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -868,10 +868,10 @@ export default function AdminPortfolioSyncPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground dark:text-white flex items-center gap-2">
             <Sheet className="w-7 h-7 text-blue-600" /> Portfolio Sync Engine
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground dark:text-muted-foreground/60 mt-1">
             Otel sheet'lerini bagla, fiyat ve musaitlik verisini otomatik sync et
           </p>
         </div>
@@ -913,15 +913,15 @@ export default function AdminPortfolioSyncPage() {
       {writebackStats && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-foreground dark:text-white flex items-center gap-2">
               <ArrowRight className="w-5 h-5 text-purple-600" /> Write-Back (Sistem &rarr; Sheet)
             </h2>
-            <span className="text-xs text-gray-400">Rezervasyon olusturulunca sheet'e otomatik yazilir</span>
+            <span className="text-xs text-muted-foreground/60">Rezervasyon olusturulunca sheet'e otomatik yazilir</span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-center">
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{writebackStats.queued || 0}</p>
-              <p className="text-xs text-gray-500">Kuyrukta</p>
+              <p className="text-xl font-bold text-foreground dark:text-white">{writebackStats.queued || 0}</p>
+              <p className="text-xs text-muted-foreground">Kuyrukta</p>
             </div>
             <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3 text-center">
               <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">{writebackStats.completed || 0}</p>
@@ -945,9 +945,9 @@ export default function AdminPortfolioSyncPage() {
 
       {/* Connections Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-foreground dark:text-white flex items-center gap-2">
           <Link2 className="w-5 h-5 text-blue-600" /> Sheet Baglantilari
-          <span className="text-sm font-normal text-gray-400">({connections.length})</span>
+          <span className="text-sm font-normal text-muted-foreground/60">({connections.length})</span>
         </h2>
       </div>
 

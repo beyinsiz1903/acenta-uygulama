@@ -51,7 +51,7 @@ export default function AdminPreflightPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Rocket className="h-6 w-6 text-indigo-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Production Go-Live Kontrolü</h1>
+          <h1 className="text-2xl font-bold text-foreground">Production Go-Live Kontrolü</h1>
         </div>
         <Button variant="outline" size="sm" onClick={load} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
@@ -63,11 +63,11 @@ export default function AdminPreflightPage() {
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
             <RefreshCw className="h-8 w-8 animate-spin text-indigo-400 mx-auto mb-3" />
-            <p className="text-gray-500">Preflight kontrolleri çalıştırılıyor...</p>
+            <p className="text-muted-foreground">Preflight kontrolleri çalıştırılıyor...</p>
           </div>
         </div>
       ) : !data ? (
-        <div className="text-center py-12 text-gray-500">Sonuç alınamadı</div>
+        <div className="text-center py-12 text-muted-foreground">Sonuç alınamadı</div>
       ) : (
         <div className="space-y-6" data-testid="preflight-results">
           {/* Verdict Banner */}
@@ -83,13 +83,13 @@ export default function AdminPreflightPage() {
 
           {/* Category Groups */}
           {Object.entries(data.categories || {}).map(([catKey, checks]) => {
-            const meta = CATEGORY_META[catKey] || { label: catKey, icon: Shield, color: "text-gray-600" };
+            const meta = CATEGORY_META[catKey] || { label: catKey, icon: Shield, color: "text-muted-foreground" };
             const CatIcon = meta.icon;
             return (
               <div key={catKey} className="bg-white border rounded-lg overflow-hidden">
                 <div className="px-4 py-3 bg-gray-50 border-b flex items-center gap-2">
                   <CatIcon className={`h-4 w-4 ${meta.color}`} />
-                  <h3 className="font-semibold text-gray-800">{meta.label}</h3>
+                  <h3 className="font-semibold text-foreground">{meta.label}</h3>
                   <Badge variant="outline" className="ml-auto">{checks.length}</Badge>
                 </div>
                 <div className="divide-y divide-gray-100">
@@ -100,8 +100,8 @@ export default function AdminPreflightPage() {
                       <div key={i} className={`px-4 py-3 flex items-center gap-3 ${si.bg}`}>
                         <StatusIcon className={`h-5 w-5 flex-shrink-0 ${si.color}`} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900">{check.name}</p>
-                          <p className="text-xs text-gray-500 truncate">{check.detail}</p>
+                          <p className="text-sm font-medium text-foreground">{check.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{check.detail}</p>
                         </div>
                         {check.critical && check.status === "fail" && (
                           <Badge className="bg-red-100 text-red-700 text-xs">Kritik</Badge>
@@ -114,7 +114,7 @@ export default function AdminPreflightPage() {
             );
           })}
 
-          <p className="text-xs text-gray-400 text-right">
+          <p className="text-xs text-muted-foreground/60 text-right">
             Kontrol zamanı: {data.checked_at ? new Date(data.checked_at).toLocaleString("tr-TR") : "-"}
           </p>
         </div>

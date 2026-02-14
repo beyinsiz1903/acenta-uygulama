@@ -81,7 +81,7 @@ function SyncBadge({ status }) {
     error: { bg: "bg-red-50", text: "text-red-700", icon: XCircle, label: "Hata" },
     failed: { bg: "bg-red-50", text: "text-red-700", icon: XCircle, label: "Başarısız" },
     partial: { bg: "bg-amber-50", text: "text-amber-700", icon: AlertTriangle, label: "Kısmi" },
-    not_configured: { bg: "bg-gray-100", text: "text-gray-500", icon: WifiOff, label: "Bağlı Değil" },
+    not_configured: { bg: "bg-gray-100", text: "text-muted-foreground", icon: WifiOff, label: "Bağlı Değil" },
   };
   const s = map[status] || map.not_configured;
   const Icon = s.icon;
@@ -99,7 +99,7 @@ function AvailabilityCell({ cell }) {
   if (!cell || (cell.price === null && cell.allotment === null)) {
     return (
       <div className="p-1.5 text-center rounded bg-gray-50 border border-gray-100 min-w-[80px]">
-        <span className="text-xs text-gray-300">—</span>
+        <span className="text-xs text-muted-foreground/40">—</span>
       </div>
     );
   }
@@ -117,7 +117,7 @@ function AvailabilityCell({ cell }) {
     textColor = "text-red-700";
   } else if (isSoldOut) {
     bgClass = "bg-gray-100 border-gray-200";
-    textColor = "text-gray-500";
+    textColor = "text-muted-foreground";
   } else if (isLow) {
     bgClass = "bg-amber-50 border-amber-200";
     textColor = "text-amber-700";
@@ -136,7 +136,7 @@ function AvailabilityCell({ cell }) {
             <p className={`text-xs font-bold ${textColor}`}>{formatPrice(cell.price)}</p>
           )}
           {allotment !== null && allotment !== undefined && (
-            <p className={`text-2xs ${isSoldOut ? "text-gray-400" : isLow ? "text-amber-600 font-semibold" : "text-emerald-600"}`}>
+            <p className={`text-2xs ${isSoldOut ? "text-muted-foreground/60" : isLow ? "text-amber-600 font-semibold" : "text-emerald-600"}`}>
               {isSoldOut ? "Tükendi" : `${allotment} oda`}
             </p>
           )}
@@ -160,10 +160,10 @@ function HotelCard({ hotel, onSelect }) {
             <Hotel className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+            <h3 className="font-semibold text-foreground group-hover:text-blue-600 transition-colors">
               {hotel.hotel_name}
             </h3>
-            <p className="text-xs text-gray-500">{hotel.city} {hotel.stars ? `· ${"★".repeat(hotel.stars)}` : ""}</p>
+            <p className="text-xs text-muted-foreground">{hotel.city} {hotel.stars ? `· ${"★".repeat(hotel.stars)}` : ""}</p>
           </div>
         </div>
         <SyncBadge status={hotel.sheet_connected ? (hotel.last_sync_status || "success") : "not_configured"} />
@@ -184,7 +184,7 @@ function HotelCard({ hotel, onSelect }) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-gray-400">
+      <div className="flex items-center justify-between text-xs text-muted-foreground/60">
         <span className="flex items-center gap-1">
           <Clock className="w-3 h-3" />
           {hotel.last_data_update ? relativeTime(hotel.last_data_update) : "Veri yok"}
@@ -210,7 +210,7 @@ function HotelCard({ hotel, onSelect }) {
 function ChangesTimeline({ changes }) {
   if (!changes || changes.length === 0) {
     return (
-      <div className="text-center py-6 text-gray-400">
+      <div className="text-center py-6 text-muted-foreground/60">
         <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
         <p className="text-sm">Henüz değişiklik kaydı yok</p>
       </div>
@@ -227,14 +227,14 @@ function ChangesTimeline({ changes }) {
             {ch.upserted > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-800 truncate">{ch.hotel_name}</p>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-sm font-medium text-foreground truncate">{ch.hotel_name}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
               {ch.upserted > 0
                 ? `${ch.upserted} satır güncellendi (${ch.rows_read} okundu)`
                 : `${ch.rows_read} satır kontrol edildi, değişiklik yok`
               }
             </p>
-            <p className="text-2xs text-gray-400 mt-1">{formatDate(ch.started_at)}</p>
+            <p className="text-2xs text-muted-foreground/60 mt-1">{formatDate(ch.started_at)}</p>
           </div>
           <span className={`px-2 py-0.5 rounded-full text-2xs font-medium ${
             ch.status === "success" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
@@ -276,23 +276,23 @@ function AvailabilityGrid({ data, startDate, endDate, onDateChange }) {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <Hotel className="w-5 h-5 text-blue-600" />
             {hotel.name}
           </h2>
-          <p className="text-sm text-gray-500">{hotel.city} {hotel.stars ? `· ${"★".repeat(hotel.stars)}` : ""}</p>
+          <p className="text-sm text-muted-foreground">{hotel.city} {hotel.stars ? `· ${"★".repeat(hotel.stars)}` : ""}</p>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-1.5">
-            <Calendar className="w-4 h-4 text-gray-400" />
+            <Calendar className="w-4 h-4 text-muted-foreground/60" />
             <input
               type="date"
               value={startDate}
               onChange={(e) => onDateChange(e.target.value, endDate)}
               className="text-sm border-0 outline-none bg-transparent"
             />
-            <span className="text-gray-300">→</span>
+            <span className="text-muted-foreground/40">→</span>
             <input
               type="date"
               value={endDate}
@@ -307,25 +307,25 @@ function AvailabilityGrid({ data, startDate, endDate, onDateChange }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-white rounded-lg border border-gray-200 p-3 text-center">
           <p className="text-2xl font-bold text-blue-600">{dates.length}</p>
-          <p className="text-xs text-gray-500">Tarih</p>
+          <p className="text-xs text-muted-foreground">Tarih</p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-3 text-center">
           <p className="text-2xl font-bold text-emerald-600">{totalRooms}</p>
-          <p className="text-xs text-gray-500">Toplam Oda</p>
+          <p className="text-xs text-muted-foreground">Toplam Oda</p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-3 text-center">
           <p className="text-2xl font-bold text-purple-600">{room_types.length}</p>
-          <p className="text-xs text-gray-500">Oda Tipi</p>
+          <p className="text-xs text-muted-foreground">Oda Tipi</p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-3 text-center">
           <p className="text-2xl font-bold text-red-500">{stopSaleCount}</p>
-          <p className="text-xs text-gray-500">Kapalı Hücre</p>
+          <p className="text-xs text-muted-foreground">Kapalı Hücre</p>
         </div>
       </div>
 
       {/* Sync Info */}
       {data.last_sync_at && (
-        <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-gray-50 rounded-lg px-3 py-2">
           <RefreshCw className="w-3.5 h-3.5" />
           <span>Son senkronizasyon: {formatDate(data.last_sync_at)}</span>
           <SyncBadge status={data.last_sync_status || "success"} />
@@ -363,14 +363,14 @@ function AvailabilityGrid({ data, startDate, endDate, onDateChange }) {
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left px-3 py-2.5 text-xs font-semibold text-gray-600 sticky left-0 bg-gray-50 z-10 min-w-[120px]">
+                  <th className="text-left px-3 py-2.5 text-xs font-semibold text-muted-foreground sticky left-0 bg-gray-50 z-10 min-w-[120px]">
                     <Bed className="w-3.5 h-3.5 inline mr-1" />
                     Oda Tipi
                   </th>
                   {dates.map((d) => (
-                    <th key={d} className="text-center px-1 py-2.5 text-xs font-medium text-gray-500 min-w-[85px]">
+                    <th key={d} className="text-center px-1 py-2.5 text-xs font-medium text-muted-foreground min-w-[85px]">
                       <div>{formatShortDate(d)}</div>
-                      <div className="text-2xs text-gray-400 font-normal">{formatDayName(d)}</div>
+                      <div className="text-2xs text-muted-foreground/60 font-normal">{formatDayName(d)}</div>
                     </th>
                   ))}
                 </tr>
@@ -378,7 +378,7 @@ function AvailabilityGrid({ data, startDate, endDate, onDateChange }) {
               <tbody className="divide-y divide-gray-100">
                 {room_types.map((rt) => (
                   <tr key={rt} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-3 py-2 text-sm font-medium text-gray-800 sticky left-0 bg-white z-10 border-r border-gray-100">
+                    <td className="px-3 py-2 text-sm font-medium text-foreground sticky left-0 bg-white z-10 border-r border-gray-100">
                       {rt}
                     </td>
                     {dates.map((d) => {
@@ -397,9 +397,9 @@ function AvailabilityGrid({ data, startDate, endDate, onDateChange }) {
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <CalendarDays className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-          <h3 className="text-lg font-medium text-gray-700 mb-1">Müsaitlik Verisi Bulunamadı</h3>
-          <p className="text-sm text-gray-400">
+          <CalendarDays className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
+          <h3 className="text-lg font-medium text-foreground mb-1">Müsaitlik Verisi Bulunamadı</h3>
+          <p className="text-sm text-muted-foreground/60">
             {data.sheet_connected
               ? "Sheet bağlantısı mevcut ancak seçilen tarih aralığında veri yok. Farklı tarih deneyin."
               : "Bu otel için henüz e-tablo bağlantısı yapılmamış. Admin ile iletişime geçin."
@@ -422,11 +422,11 @@ function WriteBackStatsBar({ stats }) {
         { label: "Tamamlandı", value: stats.completed || 0, color: "text-emerald-600", bg: "bg-emerald-50" },
         { label: "Başarısız", value: stats.failed || 0, color: "text-red-600", bg: "bg-red-50" },
         { label: "Yeniden Deneme", value: stats.retry || 0, color: "text-amber-600", bg: "bg-amber-50" },
-        { label: "Toplam", value: stats.total || 0, color: "text-gray-700", bg: "bg-gray-50" },
+        { label: "Toplam", value: stats.total || 0, color: "text-foreground", bg: "bg-gray-50" },
       ].map((s) => (
         <div key={s.label} className={`${s.bg} rounded-lg p-2.5 text-center`}>
           <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
-          <p className="text-2xs text-gray-500">{s.label}</p>
+          <p className="text-2xs text-muted-foreground">{s.label}</p>
         </div>
       ))}
     </div>
@@ -443,7 +443,7 @@ function WriteBackEventBadge({ type }) {
     booking_cancelled: { bg: "bg-red-50", text: "text-red-700", label: "Booking İptal" },
     booking_amended: { bg: "bg-amber-50", text: "text-amber-700", label: "Değişiklik" },
   };
-  const s = map[type] || { bg: "bg-gray-50", text: "text-gray-600", label: type };
+  const s = map[type] || { bg: "bg-gray-50", text: "text-muted-foreground", label: type };
   return (
     <span className={`inline-flex px-2 py-0.5 rounded-full text-2xs font-medium ${s.bg} ${s.text}`}>
       {s.label}
@@ -457,9 +457,9 @@ function WriteBackStatusBadge({ status }) {
     completed: { bg: "bg-emerald-50", text: "text-emerald-600", icon: CheckCircle2, label: "Yazıldı" },
     failed: { bg: "bg-red-50", text: "text-red-600", icon: XCircle, label: "Başarısız" },
     retry: { bg: "bg-amber-50", text: "text-amber-600", icon: RotateCcw, label: "Yeniden" },
-    skipped_duplicate: { bg: "bg-gray-50", text: "text-gray-500", icon: CheckCircle2, label: "Atlanan" },
-    skipped_no_connection: { bg: "bg-gray-50", text: "text-gray-500", icon: WifiOff, label: "Bağlantı Yok" },
-    skipped_not_configured: { bg: "bg-gray-50", text: "text-gray-500", icon: WifiOff, label: "Ayar Yok" },
+    skipped_duplicate: { bg: "bg-gray-50", text: "text-muted-foreground", icon: CheckCircle2, label: "Atlanan" },
+    skipped_no_connection: { bg: "bg-gray-50", text: "text-muted-foreground", icon: WifiOff, label: "Bağlantı Yok" },
+    skipped_not_configured: { bg: "bg-gray-50", text: "text-muted-foreground", icon: WifiOff, label: "Ayar Yok" },
   };
   const s = map[status] || map.queued;
   const Icon = s.icon;
@@ -538,9 +538,9 @@ function WriteBackPanel({ hotelId }) {
       {/* Reservation List */}
       {reservations.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-          <BookOpen className="w-10 h-10 mx-auto text-gray-300 mb-2" />
-          <p className="text-sm text-gray-500">Henüz write-back kaydı yok</p>
-          <p className="text-xs text-gray-400 mt-1">Rezervasyon veya booking yapıldığında otomatik olarak burada görünecek.</p>
+          <BookOpen className="w-10 h-10 mx-auto text-muted-foreground/40 mb-2" />
+          <p className="text-sm text-muted-foreground">Henüz write-back kaydı yok</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">Rezervasyon veya booking yapıldığında otomatik olarak burada görünecek.</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -548,14 +548,14 @@ function WriteBackPanel({ hotelId }) {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500">İşlem</th>
-                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500">Otel</th>
-                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500">Misafir</th>
-                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500">Tarih</th>
-                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500">Oda</th>
-                  <th className="text-right px-3 py-2.5 text-xs font-medium text-gray-500">Tutar</th>
-                  <th className="text-center px-3 py-2.5 text-xs font-medium text-gray-500">Sheet</th>
-                  <th className="text-center px-3 py-2.5 text-xs font-medium text-gray-500"></th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-muted-foreground">İşlem</th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-muted-foreground">Otel</th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-muted-foreground">Misafir</th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-muted-foreground">Tarih</th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-muted-foreground">Oda</th>
+                  <th className="text-right px-3 py-2.5 text-xs font-medium text-muted-foreground">Tutar</th>
+                  <th className="text-center px-3 py-2.5 text-xs font-medium text-muted-foreground">Sheet</th>
+                  <th className="text-center px-3 py-2.5 text-xs font-medium text-muted-foreground"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -564,18 +564,18 @@ function WriteBackPanel({ hotelId }) {
                     <td className="px-3 py-2.5">
                       <WriteBackEventBadge type={r.event_type} />
                     </td>
-                    <td className="px-3 py-2.5 text-xs text-gray-700">{r.hotel_name}</td>
+                    <td className="px-3 py-2.5 text-xs text-foreground">{r.hotel_name}</td>
                     <td className="px-3 py-2.5">
                       <div className="flex items-center gap-1.5">
-                        <User className="w-3 h-3 text-gray-400" />
-                        <span className="text-xs text-gray-800">{r.guest_name || "—"}</span>
+                        <User className="w-3 h-3 text-muted-foreground/60" />
+                        <span className="text-xs text-foreground">{r.guest_name || "—"}</span>
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 text-xs text-gray-600">
+                    <td className="px-3 py-2.5 text-xs text-muted-foreground">
                       {r.check_in && r.check_out ? `${r.check_in} → ${r.check_out}` : "—"}
                     </td>
-                    <td className="px-3 py-2.5 text-xs text-gray-600">{r.room_type || "—"}</td>
-                    <td className="px-3 py-2.5 text-xs text-right font-medium text-gray-800">
+                    <td className="px-3 py-2.5 text-xs text-muted-foreground">{r.room_type || "—"}</td>
+                    <td className="px-3 py-2.5 text-xs text-right font-medium text-foreground">
                       {r.amount ? formatPrice(r.amount) : "—"}
                     </td>
                     <td className="px-3 py-2.5 text-center">
@@ -753,17 +753,17 @@ export default function AgencyAvailabilityPage() {
             {view === "detail" && (
               <button
                 onClick={handleBack}
-                className="p-2 rounded-lg hover:bg-white border border-gray-200 text-gray-600 transition-colors"
+                className="p-2 rounded-lg hover:bg-white border border-gray-200 text-muted-foreground transition-colors"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
             )}
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
                 <CalendarDays className="w-6 h-6 text-blue-600" />
                 Müsaitlik Takibi
               </h1>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <p className="text-sm text-muted-foreground mt-0.5">
                 {view === "list"
                   ? "E-tablolardan otomatik senkronize edilen otel müsaitlikleri"
                   : "Detaylı tarih ve oda tipi bazlı müsaitlik"
@@ -774,7 +774,7 @@ export default function AgencyAvailabilityPage() {
 
           <div className="flex items-center gap-2">
             {/* Auto-refresh toggle */}
-            <label className="flex items-center gap-2 text-xs text-gray-500 cursor-pointer select-none">
+            <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={autoRefresh}
@@ -810,7 +810,7 @@ export default function AgencyAvailabilityPage() {
             <div className="lg:col-span-2 space-y-4">
               {/* Search */}
               <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
                 <input
                   type="text"
                   value={searchTerm}
@@ -826,11 +826,11 @@ export default function AgencyAvailabilityPage() {
                 </div>
               ) : filteredHotels.length === 0 ? (
                 <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                  <Hotel className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                  <h3 className="text-lg font-medium text-gray-700 mb-1">
+                  <Hotel className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
+                  <h3 className="text-lg font-medium text-foreground mb-1">
                     {hotels.length === 0 ? "Henüz Bağlı Otel Yok" : "Sonuç Bulunamadı"}
                   </h3>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-muted-foreground/60">
                     {hotels.length === 0
                       ? "Bu acenta hesabına bağlı otel bulunmuyor."
                       : "Arama kriterlerinize uygun otel yok."
@@ -849,7 +849,7 @@ export default function AgencyAvailabilityPage() {
             {/* Changes Sidebar */}
             <div className="space-y-4">
               <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-                <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-4">
+                <h3 className="font-semibold text-foreground flex items-center gap-2 mb-4">
                   <Activity className="w-4 h-4 text-blue-600" />
                   Son Güncellemeler
                 </h3>
@@ -886,7 +886,7 @@ export default function AgencyAvailabilityPage() {
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   detailTab === "grid"
                     ? "bg-blue-600 text-white shadow-sm"
-                    : "text-gray-600 hover:bg-gray-100"
+                    : "text-muted-foreground hover:bg-gray-100"
                 }`}
               >
                 <CalendarDays className="w-4 h-4" />
@@ -897,7 +897,7 @@ export default function AgencyAvailabilityPage() {
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   detailTab === "writeback"
                     ? "bg-blue-600 text-white shadow-sm"
-                    : "text-gray-600 hover:bg-gray-100"
+                    : "text-muted-foreground hover:bg-gray-100"
                 }`}
               >
                 <FileSpreadsheet className="w-4 h-4" />

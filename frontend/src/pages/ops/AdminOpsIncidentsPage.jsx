@@ -279,7 +279,7 @@ export default function AdminOpsIncidentsPage() {
           </div>
 
           <div className="space-y-1">
-            <div className="text-xs text-muted-foreground">Type</div>
+            <div className="text-xs text-muted-foreground">{t("opsIncidents.type")}</div>
             <Select
               value={filters.type ?? "all"}
               onValueChange={(v) => onChangeFilter("type", v === "all" ? undefined : v)}

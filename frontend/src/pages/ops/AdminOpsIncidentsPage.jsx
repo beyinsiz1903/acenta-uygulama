@@ -271,9 +271,9 @@ export default function AdminOpsIncidentsPage() {
                 <SelectValue placeholder={t("opsIncidents.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="open">Open</SelectItem>
-                <SelectItem value="resolved">Resolved</SelectItem>
+                <SelectItem value="all">{t("opsIncidents.all")}</SelectItem>
+                <SelectItem value="open">{t("opsIncidents.open")}</SelectItem>
+                <SelectItem value="resolved">{t("opsIncidents.resolved")}</SelectItem>
               </SelectContent>
             </Select>
           </div>

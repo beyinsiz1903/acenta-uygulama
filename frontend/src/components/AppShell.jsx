@@ -618,7 +618,7 @@ function AppShellInner() {
               onClick={() => { setMobileNavOpen(false); clearToken(); window.location.href = "/login"; }}
               data-testid="mobile-logout"
             >
-              <LogOut className="h-3.5 w-3.5" /> Çıkış
+              <LogOut className="h-3.5 w-3.5" /> {t("topbar.logout")}
             </Button>
           </div>
         </SheetContent>

@@ -367,7 +367,7 @@ export default function AdminOpsIncidentsPage() {
                     onClick={clearFilters}
                     className="text-xs"
                   >
-                    Clear filters
+                    {t("opsIncidents.clear_filters")}
                   </Button>
                 )
               }

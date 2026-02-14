@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { getTrialStatus, createUpgradeRequest, getPlans } from "../lib/gtm";
 import { X, Zap } from "lucide-react";
+import { useI18n } from "../contexts/I18nContext";
 
 export default function TrialBanner() {
   const [trial, setTrial] = useState(null);

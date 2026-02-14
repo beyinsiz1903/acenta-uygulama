@@ -1,541 +1,356 @@
 #!/usr/bin/env python3
-
 """
-Backend API Test Suite for Tour Enhancement APIs
-
-Tests all tour-related endpoints on https://booking-suite-pro.preview.emergentagent.com
-- Authentication (POST /api/auth/login)
-- Tours browsing (GET /api/tours, GET /api/tours/{id}) 
-- Tour reservations (POST /api/tours/{id}/reserve)
-- Admin tour management (GET/PUT/DELETE /api/admin/tours/{id})
-- Image upload (POST /api/admin/tours/upload-image)
+Comprehensive Backend Testing Script for Voucher Endpoints
+Testing on: https://booking-suite-pro.preview.emergentagent.com/api
 """
 
 import requests
 import json
-import sys
 from typing import Dict, Any, Optional
+import re
+from bs4 import BeautifulSoup
+import sys
 
+# Backend API Base URL
+BASE_URL = "https://booking-suite-pro.preview.emergentagent.com/api"
 
-class TourAPITester:
+# Test credentials
+CREDENTIALS = {
+    "email": "admin@acenta.test",
+    "password": "admin123"
+}
+
+class VoucherTester:
     def __init__(self):
-        self.base_url = "https://booking-suite-pro.preview.emergentagent.com"
-        self.token: Optional[str] = None
-        self.headers: Dict[str, str] = {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
+        self.session = requests.Session()
+        self.auth_token = None
         self.results = []
         
     def log(self, message: str, level: str = "INFO"):
-        """Log messages with level indicator"""
+        """Log test results"""
         print(f"[{level}] {message}")
+        self.results.append(f"[{level}] {message}")
         
-    def record_result(self, test_name: str, success: bool, details: str, response_data: Any = None):
-        """Record test result"""
-        result = {
-            "test": test_name,
-            "success": success,
-            "details": details,
-            "response": response_data
-        }
-        self.results.append(result)
-        status = "✅ PASS" if success else "❌ FAIL"
-        self.log(f"{status} {test_name}: {details}")
-        
-    def make_request(self, method: str, endpoint: str, data: Any = None, auth_required: bool = True) -> requests.Response:
-        """Make HTTP request with proper headers"""
-        url = f"{self.base_url}{endpoint}"
-        headers = self.headers.copy()
-        
-        if auth_required and self.token:
-            headers["Authorization"] = f"Bearer {self.token}"
-            
+    def login(self) -> bool:
+        """Login and get authentication token"""
         try:
-            if method.upper() == "GET":
-                response = requests.get(url, headers=headers, timeout=30)
-            elif method.upper() == "POST":
-                response = requests.post(url, headers=headers, json=data, timeout=30)
-            elif method.upper() == "PUT":
-                response = requests.put(url, headers=headers, json=data, timeout=30)
-            elif method.upper() == "DELETE":
-                response = requests.delete(url, headers=headers, timeout=30)
-            else:
-                raise ValueError(f"Unsupported HTTP method: {method}")
-                
-            return response
-        except requests.RequestException as e:
-            self.log(f"Request failed: {str(e)}", "ERROR")
-            raise
-            
-    def test_login(self) -> bool:
-        """Test POST /api/auth/login - Get authentication token"""
-        self.log("Testing authentication...")
-        
-        login_data = {
-            "email": "admin@acenta.test",
-            "password": "admin123"
-        }
-        
-        try:
-            response = self.make_request("POST", "/api/auth/login", login_data, auth_required=False)
+            response = self.session.post(
+                f"{BASE_URL}/auth/login",
+                json=CREDENTIALS,
+                headers={"Content-Type": "application/json"}
+            )
             
             if response.status_code == 200:
                 data = response.json()
-                if "access_token" in data:
-                    self.token = data["access_token"]
-                    self.record_result("Login", True, f"Successfully authenticated. Token length: {len(self.token)}", data)
+                self.auth_token = data.get("access_token")
+                if self.auth_token:
+                    self.session.headers.update({
+                        "Authorization": f"Bearer {self.auth_token}"
+                    })
+                    self.log("✅ Login successful")
                     return True
                 else:
-                    self.record_result("Login", False, f"No access_token in response: {data}")
+                    self.log("❌ Login failed: No access token in response", "ERROR")
                     return False
             else:
-                self.record_result("Login", False, f"Status {response.status_code}: {response.text}")
+                self.log(f"❌ Login failed: {response.status_code} - {response.text}", "ERROR")
                 return False
                 
         except Exception as e:
-            self.record_result("Login", False, f"Exception during login: {str(e)}")
+            self.log(f"❌ Login error: {e}", "ERROR")
             return False
-            
-    def test_tours_list(self) -> Optional[str]:
-        """Test GET /api/tours - List tours with authentication"""
-        self.log("Testing tours list...")
-        
+    
+    def test_list_reservations(self) -> Optional[list]:
+        """Test GET /api/reservations to get existing reservations"""
         try:
-            response = self.make_request("GET", "/api/tours")
+            response = self.session.get(f"{BASE_URL}/reservations")
             
             if response.status_code == 200:
-                data = response.json()
-                if "items" in data:
-                    tours_count = len(data["items"])
-                    self.record_result("Tours List", True, f"Retrieved {tours_count} tours successfully", {
-                        "count": tours_count,
-                        "has_filters": "filters" in data,
-                        "total": data.get("total", 0)
-                    })
-                    # Return first tour ID for detail testing
-                    if data["items"]:
-                        return data["items"][0]["id"]
-                    return None
-                else:
-                    self.record_result("Tours List", False, f"No 'items' in response: {data}")
+                reservations = response.json()
+                self.log(f"✅ Found {len(reservations)} reservations")
+                
+                for idx, res in enumerate(reservations[:3]):  # Show first 3
+                    pnr = res.get("pnr", "N/A")
+                    status = res.get("status", "N/A")
+                    res_id = res.get("_id", "N/A")
+                    self.log(f"   {idx+1}. ID: {res_id}, PNR: {pnr}, Status: {status}")
+                
+                return reservations
+                
             else:
-                self.record_result("Tours List", False, f"Status {response.status_code}: {response.text}")
+                self.log(f"❌ Failed to list reservations: {response.status_code} - {response.text}", "ERROR")
+                return None
                 
         except Exception as e:
-            self.record_result("Tours List", False, f"Exception: {str(e)}")
-            
-        return None
-        
-    def test_tours_list_with_filters(self) -> bool:
-        """Test GET /api/tours with query parameters"""
-        self.log("Testing tours list with filters...")
-        
-        test_params = [
-            ("q", "Kapadokya"),
-            ("destination", "Istanbul"), 
-            ("category", "Cultural"),
-            ("min_price", "100"),
-            ("max_price", "500"),
-            ("page", "1"),
-            ("page_size", "10")
-        ]
-        
-        success_count = 0
-        for param, value in test_params:
-            try:
-                endpoint = f"/api/tours?{param}={value}"
-                response = self.make_request("GET", endpoint)
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    success_count += 1
-                    self.log(f"Filter {param}={value} works: {len(data.get('items', []))} results")
-                else:
-                    self.log(f"Filter {param}={value} failed: {response.status_code}", "WARN")
-                    
-            except Exception as e:
-                self.log(f"Filter {param}={value} exception: {str(e)}", "ERROR")
-                
-        success = success_count >= 4  # At least half should work
-        self.record_result("Tours List Filters", success, f"{success_count}/{len(test_params)} filters working")
-        return success
-        
-    def test_tour_detail(self, tour_id: str) -> bool:
-        """Test GET /api/tours/{tour_id} - Get tour detail"""
-        if not tour_id:
-            self.record_result("Tour Detail", False, "No tour ID available for testing")
-            return False
-            
-        self.log(f"Testing tour detail for ID: {tour_id}")
-        
-        try:
-            response = self.make_request("GET", f"/api/tours/{tour_id}")
-            
-            if response.status_code == 200:
-                data = response.json()
-                required_fields = ["id", "name", "description", "base_price"]
-                missing_fields = [f for f in required_fields if f not in data]
-                
-                if not missing_fields:
-                    self.record_result("Tour Detail", True, f"Tour detail retrieved successfully. Name: {data.get('name', 'N/A')}", {
-                        "tour_name": data.get("name"),
-                        "has_images": len(data.get("images", [])) > 0,
-                        "has_itinerary": len(data.get("itinerary", [])) > 0,
-                        "has_includes": len(data.get("includes", [])) > 0
-                    })
-                    return True
-                else:
-                    self.record_result("Tour Detail", False, f"Missing required fields: {missing_fields}")
-            else:
-                self.record_result("Tour Detail", False, f"Status {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.record_result("Tour Detail", False, f"Exception: {str(e)}")
-            
-        return False
-        
-    def test_tour_reservation(self, tour_id: str) -> bool:
-        """Test POST /api/tours/{tour_id}/reserve - Create reservation"""
-        if not tour_id:
-            self.record_result("Tour Reservation", False, "No tour ID available for testing")
-            return False
-            
-        self.log(f"Testing tour reservation for ID: {tour_id}")
-        
-        reservation_data = {
-            "travel_date": "2025-08-15",
-            "adults": 2,
-            "children": 1, 
-            "guest_name": "John Doe",
-            "guest_email": "john.doe@example.com",
-            "guest_phone": "+905551234567",
-            "notes": "Test reservation from API testing"
-        }
-        
-        try:
-            response = self.make_request("POST", f"/api/tours/{tour_id}/reserve", reservation_data)
-            
-            if response.status_code == 201:
-                data = response.json()
-                required_fields = ["reservation_code", "total", "status"]
-                missing_fields = [f for f in required_fields if f not in data]
-                
-                if not missing_fields:
-                    self.record_result("Tour Reservation", True, f"Reservation created: {data.get('reservation_code')}", {
-                        "reservation_code": data.get("reservation_code"),
-                        "total": data.get("total"),
-                        "currency": data.get("currency"),
-                        "status": data.get("status")
-                    })
-                    return True
-                else:
-                    self.record_result("Tour Reservation", False, f"Missing fields in response: {missing_fields}")
-            else:
-                self.record_result("Tour Reservation", False, f"Status {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.record_result("Tour Reservation", False, f"Exception: {str(e)}")
-            
-        return False
-        
-    def test_admin_tours_list(self) -> Optional[str]:
-        """Test GET /api/admin/tours - Admin list tours"""
-        self.log("Testing admin tours list...")
-        
-        try:
-            response = self.make_request("GET", "/api/admin/tours")
-            
-            if response.status_code == 200:
-                data = response.json()
-                if isinstance(data, list):
-                    tours_count = len(data)
-                    self.record_result("Admin Tours List", True, f"Retrieved {tours_count} tours in admin panel", {
-                        "count": tours_count
-                    })
-                    # Return first tour ID for admin operations
-                    if data:
-                        return data[0]["id"]
-                    return None
-                else:
-                    self.record_result("Admin Tours List", False, f"Expected list, got: {type(data)}")
-            else:
-                self.record_result("Admin Tours List", False, f"Status {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.record_result("Admin Tours List", False, f"Exception: {str(e)}")
-            
-        return None
-        
-    def test_admin_tour_detail(self, tour_id: str) -> bool:
-        """Test GET /api/admin/tours/{tour_id} - Admin get single tour"""
-        if not tour_id:
-            self.record_result("Admin Tour Detail", False, "No tour ID available for testing")
-            return False
-            
-        self.log(f"Testing admin tour detail for ID: {tour_id}")
-        
-        try:
-            response = self.make_request("GET", f"/api/admin/tours/{tour_id}")
-            
-            if response.status_code == 200:
-                data = response.json()
-                required_fields = ["id", "name", "description"]
-                missing_fields = [f for f in required_fields if f not in data]
-                
-                if not missing_fields:
-                    self.record_result("Admin Tour Detail", True, f"Admin tour detail retrieved: {data.get('name', 'N/A')}", {
-                        "tour_name": data.get("name"),
-                        "status": data.get("status"),
-                        "base_price": data.get("base_price")
-                    })
-                    return True
-                else:
-                    self.record_result("Admin Tour Detail", False, f"Missing required fields: {missing_fields}")
-            else:
-                self.record_result("Admin Tour Detail", False, f"Status {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.record_result("Admin Tour Detail", False, f"Exception: {str(e)}")
-            
-        return False
-        
-    def test_admin_tour_update(self, tour_id: str) -> bool:
-        """Test PUT /api/admin/tours/{tour_id} - Update tour"""
-        if not tour_id:
-            self.record_result("Admin Tour Update", False, "No tour ID available for testing")
-            return False
-            
-        self.log(f"Testing admin tour update for ID: {tour_id}")
-        
-        update_data = {
-            "name": "Updated Tour Name (API Test)",
-            "description": "Updated description from API testing"
-        }
-        
-        try:
-            response = self.make_request("PUT", f"/api/admin/tours/{tour_id}", update_data)
-            
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("name") == update_data["name"]:
-                    self.record_result("Admin Tour Update", True, f"Tour updated successfully: {data.get('name')}", {
-                        "updated_name": data.get("name"),
-                        "updated_description": data.get("description")
-                    })
-                    
-                    # Revert the change
-                    try:
-                        revert_data = {
-                            "name": data.get("name", "").replace(" (API Test)", ""),
-                            "description": data.get("description", "").replace(" from API testing", "")
-                        }
-                        self.make_request("PUT", f"/api/admin/tours/{tour_id}", revert_data)
-                        self.log("Successfully reverted tour changes")
-                    except:
-                        self.log("Failed to revert tour changes", "WARN")
-                        
-                    return True
-                else:
-                    self.record_result("Admin Tour Update", False, f"Update not reflected. Expected: {update_data['name']}, Got: {data.get('name')}")
-            else:
-                self.record_result("Admin Tour Update", False, f"Status {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.record_result("Admin Tour Update", False, f"Exception: {str(e)}")
-            
-        return False
-        
-    def test_admin_tour_delete_auth(self, tour_id: str) -> bool:
-        """Test DELETE /api/admin/tours/{tour_id} - Test auth guard only (don't actually delete)"""
-        if not tour_id:
-            self.record_result("Admin Tour Delete Auth", False, "No tour ID available for testing")
-            return False
-            
-        self.log(f"Testing admin tour delete auth guard for ID: {tour_id}")
-        
-        # Test without token first
-        try:
-            headers_no_auth = self.headers.copy()
-            # Remove auth header if present
-            if "Authorization" in headers_no_auth:
-                del headers_no_auth["Authorization"]
-                
-            url = f"{self.base_url}/api/admin/tours/{tour_id}"
-            response = requests.delete(url, headers=headers_no_auth, timeout=30)
-            
-            if response.status_code == 401:
-                self.record_result("Admin Tour Delete Auth (No Token)", True, "Correctly returned 401 without auth token", {
-                    "status_code": response.status_code,
-                    "response": response.text[:200]
-                })
-                
-                # Test with valid token (but don't actually delete - just verify access)
-                auth_response = self.make_request("GET", f"/api/admin/tours/{tour_id}")
-                if auth_response.status_code == 200:
-                    self.record_result("Admin Tour Delete Auth (With Token)", True, "Auth guard working - can access with token")
-                    return True
-                else:
-                    self.record_result("Admin Tour Delete Auth (With Token)", False, f"Cannot access with token: {auth_response.status_code}")
-                    
-            else:
-                self.record_result("Admin Tour Delete Auth (No Token)", False, f"Expected 401, got {response.status_code}")
-                
-        except Exception as e:
-            self.record_result("Admin Tour Delete Auth", False, f"Exception: {str(e)}")
-            
-        return False
-        
-    def test_admin_image_upload_auth(self) -> bool:
-        """Test POST /api/admin/tours/upload-image - Test auth guard only"""
-        self.log("Testing admin image upload auth guard...")
-        
-        # Test without token
-        try:
-            headers_no_auth = self.headers.copy()
-            if "Authorization" in headers_no_auth:
-                del headers_no_auth["Authorization"]
-                
-            # Remove content-type for file upload
-            if "Content-Type" in headers_no_auth:
-                del headers_no_auth["Content-Type"]
-                
-            url = f"{self.base_url}/api/admin/tours/upload-image"
-            
-            # Create a small test file
-            files = {'file': ('test.jpg', b'fake image data', 'image/jpeg')}
-            response = requests.post(url, headers=headers_no_auth, files=files, timeout=30)
-            
-            if response.status_code == 401:
-                self.record_result("Admin Image Upload Auth", True, "Correctly returned 401 without auth token", {
-                    "status_code": response.status_code
-                })
-                return True
-            else:
-                self.record_result("Admin Image Upload Auth", False, f"Expected 401, got {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.record_result("Admin Image Upload Auth", False, f"Exception: {str(e)}")
-            
-        return False
-        
-    def test_auth_guards(self) -> bool:
-        """Test all endpoints without authentication to verify 401 responses"""
-        self.log("Testing authentication guards...")
-        
-        endpoints_to_test = [
-            ("GET", "/api/tours"),
-            ("GET", "/api/tours/test-id"),
-            ("POST", "/api/tours/test-id/reserve"),
-            ("GET", "/api/admin/tours"),
-            ("GET", "/api/admin/tours/test-id"),
-            ("PUT", "/api/admin/tours/test-id"),
-            ("DELETE", "/api/admin/tours/test-id")
-        ]
-        
-        success_count = 0
-        headers_no_auth = {"Content-Type": "application/json", "Accept": "application/json"}
-        
-        for method, endpoint in endpoints_to_test:
-            try:
-                url = f"{self.base_url}{endpoint}"
-                
-                if method == "GET":
-                    response = requests.get(url, headers=headers_no_auth, timeout=30)
-                elif method == "POST":
-                    response = requests.post(url, headers=headers_no_auth, json={}, timeout=30)
-                elif method == "PUT":
-                    response = requests.put(url, headers=headers_no_auth, json={}, timeout=30)
-                elif method == "DELETE":
-                    response = requests.delete(url, headers=headers_no_auth, timeout=30)
-                    
-                if response.status_code == 401:
-                    success_count += 1
-                    self.log(f"✓ {method} {endpoint} correctly returns 401")
-                else:
-                    self.log(f"✗ {method} {endpoint} returned {response.status_code}, expected 401", "WARN")
-                    
-            except Exception as e:
-                self.log(f"✗ {method} {endpoint} exception: {str(e)}", "ERROR")
-                
-        success = success_count >= len(endpoints_to_test) * 0.7  # 70% should work
-        self.record_result("Auth Guards", success, f"{success_count}/{len(endpoints_to_test)} endpoints correctly protected")
-        return success
-        
-    def run_all_tests(self):
-        """Run complete test suite"""
-        self.log("=" * 60)
-        self.log("Starting Tour Enhancement Backend API Tests")
-        self.log(f"Target URL: {self.base_url}")
-        self.log("=" * 60)
-        
-        # 1. Authentication
-        if not self.test_login():
-            self.log("Authentication failed - stopping tests", "ERROR")
-            return
-            
-        # 2. Test auth guards first
-        self.test_auth_guards()
-        
-        # 3. Test tours endpoints
-        tour_id = self.test_tours_list()
-        self.test_tours_list_with_filters()
-        
-        if tour_id:
-            self.test_tour_detail(tour_id)
-            self.test_tour_reservation(tour_id)
-        
-        # 4. Test admin endpoints
-        admin_tour_id = self.test_admin_tours_list()
-        
-        if admin_tour_id:
-            self.test_admin_tour_detail(admin_tour_id)
-            self.test_admin_tour_update(admin_tour_id)
-            self.test_admin_tour_delete_auth(admin_tour_id)
-            
-        # 5. Test image upload auth
-        self.test_admin_image_upload_auth()
-        
-        # 6. Summary
-        self.print_summary()
-        
-    def print_summary(self):
-        """Print test results summary"""
-        self.log("=" * 60)
-        self.log("TEST RESULTS SUMMARY")
-        self.log("=" * 60)
-        
-        passed = [r for r in self.results if r["success"]]
-        failed = [r for r in self.results if not r["success"]]
-        
-        self.log(f"Total Tests: {len(self.results)}")
-        self.log(f"Passed: {len(passed)}")
-        self.log(f"Failed: {len(failed)}")
-        self.log("")
-        
-        if failed:
-            self.log("FAILED TESTS:")
-            for result in failed:
-                self.log(f"  ❌ {result['test']}: {result['details']}", "ERROR")
-            self.log("")
-            
-        if passed:
-            self.log("PASSED TESTS:")
-            for result in passed:
-                self.log(f"  ✅ {result['test']}: {result['details']}")
-                
-        self.log("=" * 60)
-        
-        # Return exit code
-        return 0 if len(failed) == 0 else 1
+            self.log(f"❌ Error listing reservations: {e}", "ERROR")
+            return None
 
+    def create_test_reservation(self) -> Optional[Dict[str, Any]]:
+        """Create a test reservation if needed"""
+        try:
+            # First get products
+            products_response = self.session.get(f"{BASE_URL}/products")
+            if products_response.status_code != 200:
+                self.log(f"❌ Failed to get products: {products_response.status_code}", "ERROR")
+                return None
+                
+            products = products_response.json()
+            if not products:
+                self.log("❌ No products available for reservation", "ERROR")
+                return None
+                
+            product = products[0]
+            product_id = product.get("_id")
+            self.log(f"✅ Using product: {product.get('title', 'Unknown')} (ID: {product_id})")
+            
+            # Create reservation payload
+            reservation_data = {
+                "product_id": product_id,
+                "start_date": "2024-03-15",
+                "end_date": "2024-03-17",
+                "pax": {"adults": 2, "children": 0},
+                "customer_name": "Test Customer",
+                "customer_email": "test@example.com",
+                "customer_phone": "+90 555 123 4567"
+            }
+            
+            response = self.session.post(
+                f"{BASE_URL}/reservations/reserve",
+                json=reservation_data,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if response.status_code in [200, 201]:
+                reservation = response.json()
+                self.log(f"✅ Created test reservation: {reservation.get('pnr', 'N/A')}")
+                return reservation
+            else:
+                self.log(f"❌ Failed to create reservation: {response.status_code} - {response.text}", "ERROR")
+                return None
+                
+        except Exception as e:
+            self.log(f"❌ Error creating reservation: {e}", "ERROR")
+            return None
+
+    def test_voucher_endpoint(self, reservation_id: str, pnr: str) -> bool:
+        """Test voucher endpoint for a specific reservation"""
+        try:
+            self.log(f"\n🎫 Testing voucher for reservation {reservation_id} (PNR: {pnr})")
+            
+            response = self.session.get(f"{BASE_URL}/reservations/{reservation_id}/voucher")
+            
+            if response.status_code == 200:
+                content_type = response.headers.get("Content-Type", "")
+                
+                if "text/html" in content_type:
+                    html_content = response.text
+                    self.log(f"✅ Voucher endpoint returned HTML (Length: {len(html_content)} chars)")
+                    
+                    # Parse HTML and verify required sections
+                    return self.verify_voucher_html(html_content, pnr)
+                else:
+                    self.log(f"❌ Voucher endpoint returned wrong content type: {content_type}", "ERROR")
+                    return False
+            else:
+                self.log(f"❌ Voucher endpoint failed: {response.status_code} - {response.text}", "ERROR")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ Error testing voucher endpoint: {e}", "ERROR")
+            return False
+
+    def verify_voucher_html(self, html_content: str, pnr: str) -> bool:
+        """Verify the voucher HTML contains required sections"""
+        try:
+            soup = BeautifulSoup(html_content, 'html.parser')
+            passed_checks = 0
+            total_checks = 0
+            
+            # Check 1: Basic voucher text
+            total_checks += 1
+            if any(text in html_content.upper() for text in ["REZERVASYON VOUCHER", "RESERVATION VOUCHER", "BOOKING VOUCHER"]):
+                self.log("✅ Found voucher title text")
+                passed_checks += 1
+            else:
+                self.log("❌ Missing voucher title text", "ERROR")
+            
+            # Check 2: PNR and Voucher No in header
+            total_checks += 1
+            if pnr in html_content:
+                self.log(f"✅ Found PNR {pnr} in voucher")
+                passed_checks += 1
+            else:
+                self.log(f"❌ PNR {pnr} not found in voucher", "ERROR")
+            
+            # Check 3: Hotel/Accommodation Info Section
+            total_checks += 1
+            if any(text in html_content for text in ["Otel / Konaklama Bilgileri", "Otel Bilgileri", "Tur Bilgileri"]):
+                self.log("✅ Found hotel/product information section")
+                passed_checks += 1
+            else:
+                self.log("❌ Missing hotel/product information section", "ERROR")
+            
+            # Check 4: Guest Information Section
+            total_checks += 1
+            if "Misafir Bilgileri" in html_content:
+                self.log("✅ Found guest information section")
+                passed_checks += 1
+            else:
+                self.log("❌ Missing guest information section", "ERROR")
+            
+            # Check 5: Date Information Section
+            total_checks += 1
+            if any(text in html_content for text in ["Konaklama Tarihleri", "Seyahat Tarihi"]):
+                self.log("✅ Found date information section")
+                passed_checks += 1
+            else:
+                self.log("❌ Missing date information section", "ERROR")
+            
+            # Check 6: Payment Details Section
+            total_checks += 1
+            if "Ödeme Detayları" in html_content:
+                self.log("✅ Found payment details section")
+                passed_checks += 1
+            else:
+                self.log("❌ Missing payment details section", "ERROR")
+            
+            # Check 7: Cancellation Policy Section
+            total_checks += 1
+            if "İptal ve Değişiklik Politikası" in html_content:
+                self.log("✅ Found cancellation policy section")
+                passed_checks += 1
+            else:
+                self.log("❌ Missing cancellation policy section", "ERROR")
+            
+            # Check 8: Terms and Conditions Section
+            total_checks += 1
+            if "Genel Şartlar ve Koşullar" in html_content:
+                self.log("✅ Found terms and conditions section")
+                passed_checks += 1
+            else:
+                self.log("❌ Missing terms and conditions section", "ERROR")
+            
+            # Check 9: Contact and Emergency Section
+            total_checks += 1
+            if "İletişim ve Acil Durum" in html_content:
+                self.log("✅ Found contact and emergency section")
+                passed_checks += 1
+            else:
+                self.log("❌ Missing contact and emergency section", "ERROR")
+            
+            # Check 10: Money formatting (Turkish format with commas/dots)
+            total_checks += 1
+            money_patterns = re.findall(r'\d{1,3}(?:\.\d{3})*(?:,\d{2})?\s*(?:TRY|USD|EUR|\₺)', html_content)
+            if money_patterns:
+                self.log(f"✅ Found proper money formatting: {money_patterns[:2]}")  # Show first 2 examples
+                passed_checks += 1
+            else:
+                self.log("❌ No proper money formatting found", "ERROR")
+            
+            # Check if this is a tour reservation (PNR starts with TR-)
+            is_tour = pnr.startswith("TR-")
+            if is_tour:
+                self.log(f"🎯 Detected tour reservation (PNR: {pnr})")
+                passed_checks += self.verify_tour_specific_sections(html_content)
+                total_checks += 4  # 4 additional tour checks
+            
+            success_rate = (passed_checks / total_checks) * 100
+            self.log(f"📊 Voucher verification: {passed_checks}/{total_checks} checks passed ({success_rate:.1f}%)")
+            
+            return success_rate >= 80  # Pass if 80% or more checks pass
+            
+        except Exception as e:
+            self.log(f"❌ Error verifying voucher HTML: {e}", "ERROR")
+            return False
+
+    def verify_tour_specific_sections(self, html_content: str) -> int:
+        """Verify tour-specific sections in voucher"""
+        tour_checks = 0
+        
+        # Check 1: Tour Information section
+        if "Tur Bilgileri" in html_content:
+            self.log("✅ Found tour information section")
+            tour_checks += 1
+        else:
+            self.log("❌ Missing tour information section", "ERROR")
+        
+        # Check 2: Tour Highlights section
+        if "Tur Öne Çıkanlar" in html_content:
+            self.log("✅ Found tour highlights section")
+            tour_checks += 1
+        else:
+            self.log("❌ Missing tour highlights section", "ERROR")
+        
+        # Check 3: Tour Program/Itinerary section
+        if "Tur Programı" in html_content:
+            self.log("✅ Found tour program section")
+            tour_checks += 1
+        else:
+            self.log("❌ Missing tour program section", "ERROR")
+        
+        # Check 4: Includes/Excludes section
+        if "Dahil ve Hariç Hizmetler" in html_content:
+            self.log("✅ Found includes/excludes section")
+            tour_checks += 1
+        else:
+            self.log("❌ Missing includes/excludes section", "ERROR")
+            
+        return tour_checks
+
+    def run_tests(self):
+        """Run all voucher tests"""
+        self.log("🚀 Starting Voucher Endpoint Tests")
+        self.log("=" * 60)
+        
+        # Step 1: Login
+        if not self.login():
+            self.log("❌ Test suite failed: Cannot login", "ERROR")
+            return
+        
+        # Step 2: Get reservations
+        reservations = self.test_list_reservations()
+        
+        if not reservations:
+            self.log("⚠️ No existing reservations, creating test reservation")
+            test_reservation = self.create_test_reservation()
+            if test_reservation:
+                reservations = [test_reservation]
+            else:
+                self.log("❌ Cannot create test reservation", "ERROR")
+                return
+        
+        # Step 3: Test vouchers for each reservation (max 3)
+        voucher_tests_passed = 0
+        voucher_tests_total = 0
+        
+        for reservation in reservations[:3]:  # Test first 3 reservations
+            reservation_id = reservation.get("_id")
+            pnr = reservation.get("pnr", "N/A")
+            
+            if reservation_id:
+                voucher_tests_total += 1
+                if self.test_voucher_endpoint(reservation_id, pnr):
+                    voucher_tests_passed += 1
+        
+        # Final results
+        self.log("\n" + "=" * 60)
+        self.log("📈 FINAL RESULTS")
+        self.log(f"✅ Voucher tests passed: {voucher_tests_passed}/{voucher_tests_total}")
+        
+        if voucher_tests_passed == voucher_tests_total and voucher_tests_total > 0:
+            self.log("🎉 ALL VOUCHER TESTS PASSED!")
+            return True
+        elif voucher_tests_passed > 0:
+            self.log("⚠️ SOME VOUCHER TESTS FAILED")
+            return False
+        else:
+            self.log("❌ ALL VOUCHER TESTS FAILED")
+            return False
 
 def main():
-    """Main test runner"""
-    tester = TourAPITester()
-    exit_code = tester.run_all_tests()
-    sys.exit(exit_code)
-
+    tester = VoucherTester()
+    success = tester.run_tests()
+    sys.exit(0 if success else 1)
 
 if __name__ == "__main__":
     main()

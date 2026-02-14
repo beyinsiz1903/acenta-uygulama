@@ -268,7 +268,7 @@ export default function AdminOpsIncidentsPage() {
               onValueChange={(v) => onChangeFilter("status", v === "all" ? undefined : v)}
             >
               <SelectTrigger className="h-8 w-40 text-xs" data-testid="ops-incidents-filter-status">
-                <SelectValue placeholder="All" />
+                <SelectValue placeholder={t("opsIncidents.all")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All</SelectItem>
@@ -285,7 +285,7 @@ export default function AdminOpsIncidentsPage() {
               onValueChange={(v) => onChangeFilter("type", v === "all" ? undefined : v)}
             >
               <SelectTrigger className="h-8 w-48 text-xs" data-testid="ops-incidents-filter-type">
-                <SelectValue placeholder="All" />
+                <SelectValue placeholder={t("opsIncidents.all")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All</SelectItem>
@@ -303,7 +303,7 @@ export default function AdminOpsIncidentsPage() {
               onValueChange={(v) => onChangeFilter("severity", v === "all" ? undefined : v)}
             >
               <SelectTrigger className="h-8 w-40 text-xs" data-testid="ops-incidents-filter-severity">
-                <SelectValue placeholder="All" />
+                <SelectValue placeholder={t("opsIncidents.all")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All</SelectItem>

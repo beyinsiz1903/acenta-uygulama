@@ -22,6 +22,23 @@ router = APIRouter(prefix="/api/tours", tags=["tours_browse"])
 
 def _tour_to_dict(doc: dict) -> dict:
     """Convert a MongoDB tour document to a serializable dict."""
+    created = doc.get("created_at")
+    updated = doc.get("updated_at")
+    # Handle duration: could be string like "4 Gün / 3 Gece" or int days
+    duration_raw = doc.get("duration") or doc.get("duration_days") or ""
+    if isinstance(duration_raw, int):
+        duration_days = duration_raw
+        duration = f"{duration_raw} Gün"
+    elif isinstance(duration_raw, str):
+        duration = duration_raw
+        # Try to extract number of days
+        import re
+        m = re.search(r'(\d+)', duration_raw)
+        duration_days = int(m.group(1)) if m else 1
+    else:
+        duration_days = 1
+        duration = ""
+
     return {
         "id": str(doc.get("_id")),
         "name": doc.get("name") or "",
@@ -32,7 +49,8 @@ def _tour_to_dict(doc: dict) -> dict:
         "base_price": float(doc.get("base_price") or 0.0),
         "currency": (doc.get("currency") or "EUR").upper(),
         "status": doc.get("status") or "active",
-        "duration_days": int(doc.get("duration_days") or 1),
+        "duration": duration,
+        "duration_days": duration_days,
         "max_participants": int(doc.get("max_participants") or 0),
         "cover_image": doc.get("cover_image") or "",
         "images": doc.get("images") or [],
@@ -40,8 +58,8 @@ def _tour_to_dict(doc: dict) -> dict:
         "includes": doc.get("includes") or [],
         "excludes": doc.get("excludes") or [],
         "highlights": doc.get("highlights") or [],
-        "created_at": doc.get("created_at"),
-        "updated_at": doc.get("updated_at"),
+        "created_at": created.isoformat() if hasattr(created, "isoformat") else str(created) if created else None,
+        "updated_at": updated.isoformat() if hasattr(updated, "isoformat") else str(updated) if updated else None,
     }
 
 

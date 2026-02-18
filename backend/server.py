@@ -523,9 +523,12 @@ app.add_middleware(TenantResolutionMiddleware)
 from app.routers.storefront import router as storefront_router
 
 # CORS configuration
+# Use allow_origin_regex to echo back the requesting Origin dynamically.
+# This is required because we use credentials and need a non-wildcard
+# Access-Control-Allow-Origin for each host (syroce.com, agency.syroce.com, etc.).
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
+    allow_origin_regex=r".*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

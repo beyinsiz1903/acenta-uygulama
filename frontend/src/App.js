@@ -235,7 +235,6 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">Yükleniyor...</div>}>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<PublicHomePage />} />

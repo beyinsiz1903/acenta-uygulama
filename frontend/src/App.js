@@ -479,7 +479,6 @@ function App() {
         {/* Fallback */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-      </Suspense>
       <Toaster position="top-right" richColors closeButton />
     </BrowserRouter>
   );

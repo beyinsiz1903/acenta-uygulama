@@ -132,6 +132,8 @@ class HotelWorkflowTester:
                                     # We can work with existing reservations for testing workflow
                                     self.log_result(test_name, True, f"No tours but found {len(res_data)} reservations to test workflow with")
                                     return "use_existing_reservations"
+                        # Let's try to create a reservation using the main reservation endpoint
+                        await self.test_create_direct_reservation()
                         return False
                 else:
                     text = await resp.text()

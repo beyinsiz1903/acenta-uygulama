@@ -8,7 +8,7 @@
  * - useRevokeAllSessions: Mutation for revoking all sessions
  */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, getToken, setToken, setUser, clearToken } from "../lib/api";
+import { api, getToken, setToken, setUser, clearToken, setRefreshToken } from "../lib/api";
 
 // Query keys namespace
 export const authKeys = {

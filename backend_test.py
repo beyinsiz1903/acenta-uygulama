@@ -424,7 +424,8 @@ class HotelWorkflowTester:
                 print("📝 Working with existing reservations instead of creating new ones")
                 await self.test_existing_reservations_workflow()
             elif not tours_result:
-                print("\n❌ Could not get tours and no existing reservations - cannot continue")
+                print("\n❌ Could not get tours and no existing reservations - testing endpoints directly")
+                await self.test_create_direct_reservation()
                 return
             else:
                 # Standard tour-based workflow

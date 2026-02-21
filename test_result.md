@@ -223,12 +223,65 @@ enhanced_dashboard:
 
 metadata:
   created_by: "main_agent"
-  version: "24.0"
-  test_sequence: 32
+  version: "25.0"
+  test_sequence: 33
   run_ui: true
 
+security_hardening:
+  - task: "POST /api/auth/logout - JWT token revocation via blacklist"
+    implemented: true
+    working: pending
+    file: "backend/app/routers/auth.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "POST /api/auth/revoke-all-sessions - Revoke all user sessions"
+    implemented: true
+    working: pending
+    file: "backend/app/routers/auth.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "Security Headers Middleware - X-Content-Type-Options, X-Frame-Options, HSTS, etc."
+    implemented: true
+    working: pending
+    file: "backend/app/middleware/security_headers_middleware.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "Enhanced Rate Limiting - Global rate limit + expanded endpoint rules"
+    implemented: true
+    working: pending
+    file: "backend/app/middleware/rate_limit_middleware.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "Error Handling Standardization - ErrorCode enum + helper functions"
+    implemented: true
+    working: pending
+    file: "backend/app/errors.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "Unit Test Automation - pytest tests for auth/security/rate-limit/errors"
+    implemented: true
+    working: true
+    file: "backend/tests/test_jwt_revocation.py, test_security_headers.py, test_rate_limiting.py, test_error_handling.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "26/26 pytest tests passing: 6 JWT revocation tests, 4 security headers tests, 3 rate limiting tests, 13 error handling tests"
+
 test_plan:
-  current_focus: []
+  current_focus: ["security_hardening"]
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

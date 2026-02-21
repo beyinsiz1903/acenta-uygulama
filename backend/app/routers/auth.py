@@ -76,6 +76,15 @@ async def login(payload: LoginWith2FARequest):
         subject=user["email"],
         organization_id=org_id,
         roles=roles_list,
+        minutes=15,  # Short-lived access token (refresh token pattern)
+    )
+
+    # Create refresh token
+    from app.services.refresh_token_service import create_refresh_token
+    rt_doc = await create_refresh_token(
+        user_email=user["email"],
+        organization_id=org_id,
+        roles=roles_list,
     )
 
     user_out = serialize_doc(user)

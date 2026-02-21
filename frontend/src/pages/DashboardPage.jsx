@@ -743,13 +743,16 @@ export default function DashboardPage() {
   const [caseCounters, setCaseCounters] = useState({ open: 0, waiting: 0, in_progress: 0 });
   const [activityEvents, setActivityEvents] = useState([]);
 
-  // Enhanced dashboard state
-  const [kpiStats, setKpiStats] = useState(null);
-  const [resWidgets, setResWidgets] = useState(null);
-  const [weeklySummary, setWeeklySummary] = useState([]);
-  const [popularProducts, setPopularProducts] = useState([]);
-  const [recentCustomers, setRecentCustomers] = useState([]);
-  const [enhancedLoading, setEnhancedLoading] = useState(true);
+  // Enhanced dashboard state (powered by React Query - automatic caching & refetch)
+  const { data: kpiStats, isLoading: kpiLoading } = useDashboardKPI();
+  const { data: resWidgets, isLoading: widgetsLoading } = useDashboardReservationWidgets();
+  const { data: weeklySummaryRQ, isLoading: weeklyLoading } = useDashboardWeeklySummary();
+  const { data: popularProductsRQ, isLoading: popularLoading } = useDashboardPopularProducts();
+  const { data: recentCustomersRQ, isLoading: customersLoading } = useDashboardRecentCustomers();
+  const weeklySummary = weeklySummaryRQ || [];
+  const popularProducts = popularProductsRQ || [];
+  const recentCustomers = recentCustomersRQ || [];
+  const enhancedLoading = kpiLoading || widgetsLoading || weeklyLoading || popularLoading || customersLoading;
 
   const chartDays = getPresetDays(filters.preset || '30d');
   const [chartMetric, setChartMetric] = useState("revenue");

@@ -591,43 +591,75 @@ test_plan:
 hotel_approval_workflow:
   - task: "POST /api/reservations/:id/reject - Reject a pending reservation with reason"
     implemented: true
-    working: unknown
+    working: true
     file: "backend/app/routers/reservations.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Reject endpoint tested successfully. Created pending reservation (TR-716813D1) and successfully rejected it with reason 'Oda müsait değil'. Verified: status changed to 'rejected', rejection_reason stored correctly, rejected_at timestamp present, rejected_by field shows admin@acenta.test, status_history array contains 1 transition entry."
 
   - task: "POST /api/reservations/:id/confirm - Confirm only pending reservations (status transition validation)"
     implemented: true
-    working: unknown
+    working: true
     file: "backend/app/routers/reservations.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Confirm endpoint tested successfully. Created pending reservation (TR-D6A8F44C) and successfully confirmed it. Verified: status changed to 'confirmed', confirmed_at timestamp present, confirmed_by field shows admin@acenta.test, status_history array contains 1 transition entry."
 
   - task: "Status transition validation - can_transition() enforcement in set_reservation_status"
     implemented: true
-    working: unknown
+    working: true
     file: "backend/app/services/reservations.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Status transition validation working perfectly. Tested invalid transitions: (1) rejected->confirmed returns 409 error with Turkish message 'Geçersiz durum geçişi: Reddedildi → Onaylandı yapılamaz', (2) confirmed->confirmed returns 409 error preventing double confirmation. can_transition() function properly enforces business rules."
 
   - task: "Status history tracking - status_history array with from/to/changed_by/changed_at/reason"
     implemented: true
-    working: unknown
+    working: true
     file: "backend/app/services/reservations.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Status history tracking working correctly. Every status change creates proper history entry with: from_status (e.g. pending), to_status (e.g. rejected/confirmed), changed_by (admin@acenta.test), changed_at (ISO timestamp), reason (for rejections). Verified on both reject and confirm workflows."
 
   - task: "Tour reservation fix - new tour reservations created as 'pending' instead of 'CONFIRMED'"
     implemented: true
-    working: unknown
+    working: true
     file: "backend/app/routers/tours_browse.py"
     stuck_count: 0
     priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Tour reservations correctly create with 'pending' status. Both test reservations (TR-716813D1, TR-D6A8F44C) were created with status: 'pending' as expected, not 'CONFIRMED'. This allows proper approval workflow where reservations start pending and require manual approval."
+
+  - task: "POST /api/reservations/:id/cancel - Cancel reservation from confirmed status"
+    implemented: true
+    working: false
+    file: "backend/app/routers/reservations.py"
+    stuck_count: 1
+    priority: "high"
     needs_retesting: true
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "Cancel endpoint experiencing Cloudflare 520 infrastructure error. The endpoint exists and is implemented correctly (confirmed by code review), but external Cloudflare proxy returns 'Web server is returning an unknown error' when attempting confirmed->cancelled transition. This appears to be a temporary server/infrastructure issue, not an application code bug."
 
 agent_communication:
   - agent: "main"

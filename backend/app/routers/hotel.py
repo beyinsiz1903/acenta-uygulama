@@ -227,6 +227,128 @@ async def approve_hotel_booking(booking_id: str, request: Request, user=Depends(
     return build_booking_public_view(updated)
 
 
+class BookingRejectIn(BaseModel):
+    reason: Optional[str] = Field(default=None, max_length=2000)
+
+
+@router.post(
+    "/bookings/{booking_id}/reject",
+    dependencies=[Depends(require_roles(["hotel_admin", "hotel_staff"]))],
+)
+async def reject_hotel_booking(booking_id: str, payload: BookingRejectIn, request: Request, user=Depends(get_current_user)):
+    """Hotel panelinden gelen red aksiyonu.
+
+    Status machine: draft -> pending -> rejected
+    - Sadece pending veya draft durumundaki rezervasyonlar reddedilebilir
+    - cancelled durumundaki rezervasyonlar için 409 döner
+    """
+    db = await get_db()
+    hotel_id = _ensure_hotel_id(user)
+
+    booking = await db.bookings.find_one(
+        {
+            "organization_id": user["organization_id"],
+            "hotel_id": hotel_id,
+            "_id": booking_id,
+        }
+    )
+
+    if not booking:
+        raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
+
+    before = dict(booking)
+    status = (booking.get("status") or "").lower()
+
+    if status == "cancelled":
+        raise HTTPException(status_code=409, detail="CANNOT_REJECT_CANCELLED_BOOKING")
+
+    if status == "confirmed":
+        raise HTTPException(status_code=409, detail="CANNOT_REJECT_CONFIRMED_BOOKING")
+
+    if status == "rejected":
+        # Idempotent
+        return build_booking_public_view(booking)
+
+    now = now_utc()
+    reject_reason = payload.reason
+
+    # Validate cancel reason code if provided
+    if reject_reason:
+        from app.constants.cancel_reasons import validate_cancel_reason
+        reject_reason = validate_cancel_reason(reject_reason) or reject_reason
+
+    await db.bookings.update_one(
+        {
+            "organization_id": user["organization_id"],
+            "hotel_id": hotel_id,
+            "_id": booking_id,
+        },
+        {
+            "$set": {
+                "status": "rejected",
+                "rejected_at": now,
+                "reject_reason": reject_reason,
+                "rejected_by": user.get("email"),
+                "updated_at": now,
+            }
+        },
+    )
+
+    updated = await db.bookings.find_one(
+        {
+            "organization_id": user["organization_id"],
+            "hotel_id": hotel_id,
+            "_id": booking_id,
+        }
+    )
+
+    if not updated:
+        raise HTTPException(status_code=500, detail="BOOKING_UPDATE_FAILED")
+
+    # Event outbox
+    await write_booking_event(
+        db,
+        organization_id=user["organization_id"],
+        event_type="booking.rejected",
+        booking_id=booking_id,
+        hotel_id=str(updated.get("hotel_id")),
+        agency_id=str(updated.get("agency_id")),
+        payload={"source": "hotel_panel", "reason": reject_reason},
+    )
+
+    # Audit log
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="booking.reject",
+        target_type="booking",
+        target_id=booking_id,
+        before=before,
+        after=updated,
+        meta={"source": "hotel_panel", "reason": reject_reason},
+    )
+
+    # Send rejection email notification
+    try:
+        from app.services.email_outbox import enqueue_booking_email
+        guest_email = updated.get("guest_email") or updated.get("contact_email")
+        agency_email = updated.get("agency_email")
+        to_addresses = [a for a in [guest_email, agency_email] if a]
+        if to_addresses:
+            await enqueue_booking_email(
+                db,
+                organization_id=user["organization_id"],
+                booking=updated,
+                event_type="booking.rejected",
+                to_addresses=to_addresses,
+            )
+    except Exception:
+        pass  # Email failure should not block rejection
+
+    return build_booking_public_view(updated)
+
 
 class BookingNoteIn(BaseModel):
     note: str = Field(min_length=1, max_length=4000)

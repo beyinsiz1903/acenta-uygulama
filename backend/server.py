@@ -232,6 +232,10 @@ async def lifespan(app: FastAPI):
     await ensure_offers_indexes(db)
     # Supplier adapters are lazily initialized in AdapterRegistry._ensure_defaults_loaded()
 
+    # JWT Token Blacklist indexes
+    from app.services.token_blacklist import ensure_blacklist_indexes
+    await ensure_blacklist_indexes()
+
     # GTM + CRM indexes
     try:
         await db.demo_seed_runs.create_index("tenant_id", unique=True)

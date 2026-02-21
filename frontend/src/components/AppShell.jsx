@@ -251,6 +251,7 @@ function AppShellInner() {
   const user = getUser();
   const location = useLocation();
   const navigate = useNavigate();
+  const logoutMutation = useLogout();
 
   const [resSummary, setResSummary] = useState([]);
   const [sales, setSales] = useState([]);

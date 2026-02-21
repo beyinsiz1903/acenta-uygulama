@@ -17,7 +17,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 
 # Get backend URL from environment
-BACKEND_URL = "https://jwt-revocation-add.preview.emergentagent.com/api"
+BACKEND_URL = "https://booking-lifecycle-2.preview.emergentagent.com/api"
 
 class BugFixNoAuthTester:
     def __init__(self):

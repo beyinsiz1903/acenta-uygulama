@@ -9,7 +9,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://jwt-revocation-add.preview.emergentagent.com"
+BASE_URL = "https://booking-lifecycle-2.preview.emergentagent.com"
 LOGIN_CREDENTIALS = {
     "email": "admin@acenta.test",
     "password": "admin123"

@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://jwt-revocation-add.preview.emergentagent.com"
+BASE_URL = "https://booking-lifecycle-2.preview.emergentagent.com"
 
 class GTMCRMTester:
     def __init__(self):

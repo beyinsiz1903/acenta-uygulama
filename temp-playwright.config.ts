@@ -10,7 +10,7 @@ export default defineConfig({
   reporter: 'list',
   
   use: {
-    baseURL: 'https://jwt-revocation-add.preview.emergentagent.com',
+    baseURL: 'https://booking-lifecycle-2.preview.emergentagent.com',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },

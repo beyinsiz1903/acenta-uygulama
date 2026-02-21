@@ -152,6 +152,19 @@ async def cancel(reservation_id: str, user=Depends(get_current_user)):
     return serialize_doc(doc)
 
 
+@router.post("/{reservation_id}/reject", dependencies=[Depends(get_current_user)])
+async def reject(reservation_id: str, payload: RejectPayload, user=Depends(get_current_user)):
+    """Reject a pending reservation with an optional reason."""
+    doc = await set_reservation_status(
+        user["organization_id"],
+        reservation_id,
+        "rejected",
+        user.get("email"),
+        reason=payload.reason or None,
+    )
+    return serialize_doc(doc)
+
+
 @router.get("/{reservation_id}/voucher", dependencies=[Depends(get_current_user)])
 async def voucher(reservation_id: str, user=Depends(get_current_user)):
     db = await get_db()

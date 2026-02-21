@@ -379,11 +379,15 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const [actionError, setActionError] = useState("");
 
   const load = useCallback(async () => {
     if (!reservationId) return;
     setLoading(true);
     setError("");
+    setActionError("");
     try {
       const resp = await api.get(`/reservations/${reservationId}`);
       setData(resp.data);
@@ -399,15 +403,47 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
   }, [open, load]);
 
   async function confirm() {
-    await api.post(`/reservations/${reservationId}/confirm`);
-    await load();
+    setActionError("");
+    try {
+      await api.post(`/reservations/${reservationId}/confirm`);
+      await load();
+    } catch (e) {
+      setActionError(apiErrorMessage(e));
+    }
   }
 
   async function cancel() {
     if (!window.confirm("Rezervasyonu iptal etmek istiyor musunuz?")) return;
-    await api.post(`/reservations/${reservationId}/cancel`);
-    await load();
+    setActionError("");
+    try {
+      await api.post(`/reservations/${reservationId}/cancel`);
+      await load();
+    } catch (e) {
+      setActionError(apiErrorMessage(e));
+    }
   }
+
+  async function handleReject(reason) {
+    setRejecting(true);
+    setActionError("");
+    try {
+      await api.post(`/reservations/${reservationId}/reject`, { reason });
+      setRejectOpen(false);
+      await load();
+    } catch (e) {
+      setActionError(apiErrorMessage(e));
+    } finally {
+      setRejecting(false);
+    }
+  }
+
+  // Determine which actions are available based on current status
+  const currentStatus = (data?.status || "").toLowerCase();
+  const isPending = currentStatus === "pending";
+  const isConfirmed = currentStatus === "confirmed";
+  const isRejected = currentStatus === "rejected";
+  const isCancelled = currentStatus === "cancelled";
+  const isTerminal = isCancelled || currentStatus === "refunded";
 
   const openVoucher = useCallback(async () => {
     if (!reservationId) return;

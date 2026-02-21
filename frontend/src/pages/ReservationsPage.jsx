@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import {
   Ticket, Search, CheckCircle2, XCircle, ExternalLink, Plus, MessageCircle,
   Calendar, CreditCard, User, Hash, FileText, Clock, ArrowRight, Banknote,
-  CircleDollarSign, Tag, Receipt
+  CircleDollarSign, Tag, Receipt, ShieldX, AlertTriangle, History
 } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";

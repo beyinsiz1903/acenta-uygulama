@@ -29,13 +29,17 @@ function statusConfig(status) {
   const s = (status || "").toLowerCase();
   if (s === "confirmed" || s === "CONFIRMED")
     return { label: "Onaylandı", color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", dot: "bg-emerald-500" };
+  if (s === "rejected" || s === "REJECTED")
+    return { label: "Reddedildi", color: "text-red-700", bg: "bg-red-50", border: "border-red-200", dot: "bg-red-500" };
   if (s === "paid" || s === "PAID")
     return { label: "Ödendi", color: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200", dot: "bg-blue-500" };
   if (s === "cancelled" || s === "CANCELLED")
     return { label: "İptal", color: "text-rose-700", bg: "bg-rose-50", border: "border-rose-200", dot: "bg-rose-500" };
   if (s === "completed" || s === "COMPLETED")
     return { label: "Tamamlandı", color: "text-violet-700", bg: "bg-violet-50", border: "border-violet-200", dot: "bg-violet-500" };
-  return { label: "Beklemede", color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200", dot: "bg-amber-500" };
+  if (s === "draft")
+    return { label: "Taslak", color: "text-slate-700", bg: "bg-slate-50", border: "border-slate-200", dot: "bg-slate-400" };
+  return { label: "Onay Bekliyor", color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200", dot: "bg-amber-500" };
 }
 
 function StatusPill({ status }) {

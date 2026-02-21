@@ -151,21 +151,68 @@ async def _find_reservation_by_id(db, org_id: str, reservation_id: str):
     return await db.reservations.find_one({"organization_id": org_id, "_id": reservation_id})
 
 
-async def set_reservation_status(org_id: str, reservation_id: str, status: str, user_email: str) -> dict[str, Any]:
+async def set_reservation_status(
+    org_id: str,
+    reservation_id: str,
+    status: str,
+    user_email: str,
+    reason: str | None = None,
+) -> dict[str, Any]:
     db = await get_db()
     res = await _find_reservation_by_id(db, org_id, reservation_id)
     if not res:
         raise HTTPException(status_code=404, detail="Rezervasyon bulunamadı")
 
+    current_status = (res.get("status") or "pending").lower()
+    target_status = status.lower()
+
+    # Validate status transition
+    if not can_transition(current_status, target_status):
+        current_label = get_status_label(current_status, "tr")
+        target_label = get_status_label(target_status, "tr")
+        raise HTTPException(
+            status_code=409,
+            detail=f"Geçersiz durum geçişi: '{current_label}' → '{target_label}' yapılamaz.",
+        )
+
+    # Build status history entry
+    history_entry = {
+        "from_status": current_status,
+        "to_status": target_status,
+        "changed_by": user_email,
+        "changed_at": now_utc().isoformat(),
+        "reason": reason,
+    }
+
+    update_fields: dict[str, Any] = {
+        "status": target_status,
+        "updated_at": now_utc(),
+        "updated_by": user_email,
+    }
+
+    # Store rejection reason at top level for easy access
+    if target_status == "rejected" and reason:
+        update_fields["rejection_reason"] = reason
+        update_fields["rejected_at"] = now_utc()
+        update_fields["rejected_by"] = user_email
+
+    # Store confirmation metadata
+    if target_status == "confirmed":
+        update_fields["confirmed_at"] = now_utc()
+        update_fields["confirmed_by"] = user_email
+
     await db.reservations.update_one(
         {"_id": res["_id"]},
-        {"$set": {"status": status, "updated_at": now_utc(), "updated_by": user_email}},
+        {
+            "$set": update_fields,
+            "$push": {"status_history": history_entry},
+        },
     )
 
     updated = await db.reservations.find_one({"_id": res["_id"]})
     assert updated
 
-    if status == "cancelled":
+    if target_status == "cancelled":
         pax = int(updated.get("pax") or 1)
         for d in updated.get("dates") or []:
             await release_inventory(org_id, updated["product_id"], d, pax)

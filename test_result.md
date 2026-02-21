@@ -452,3 +452,78 @@ agent_communication:
 
   - agent: "testing"
     message: "🔐 SECURITY HARDENING TESTING COMPLETE - 3 out of 5 security features fully verified and working. WORKING FEATURES: (1) Security Headers Middleware - All required headers present and correct: X-Content-Type-Options: nosniff, X-Frame-Options: DENY, X-XSS-Protection, HSTS, Referrer-Policy, Permissions-Policy, Cache-Control: no-store for API endpoints. (2) Enhanced Rate Limiting - X-RateLimit-Policy header present, functional rate limiting with 429 responses including proper error format (error.code: rate_limit_exceeded). (3) Error Handling Standardization - All error responses follow standardized structure with error.code field for 401, 404, 429 errors. BLOCKED FEATURES: JWT token revocation and session management tests could not be performed due to authentication issues. Login fails with 401 for admin@acenta.test credentials, suggesting missing user seed data or incorrect credentials. This blocks testing of POST /api/auth/logout and POST /api/auth/revoke-all-sessions endpoints."
+
+# =====================================================
+# NEW: Platform Hardening & Security Features
+# =====================================================
+
+new_features_hardening:
+  - task: "Hotel approval/reject workflow with pending status"
+    endpoints:
+      - "POST /api/hotel/bookings/{id}/approve"
+      - "POST /api/hotel/bookings/{id}/reject"
+    status: "implemented"
+    
+  - task: "JWT Refresh Token + Revocation"
+    endpoints:
+      - "POST /api/auth/login (now returns refresh_token)"
+      - "POST /api/auth/refresh"
+      - "GET /api/auth/sessions"
+      - "POST /api/auth/sessions/{id}/revoke"
+    status: "implemented"
+    
+  - task: "KVKK/GDPR compliance"
+    endpoints:
+      - "POST /api/gdpr/consent"
+      - "GET /api/gdpr/consents"
+      - "POST /api/gdpr/export-my-data"
+      - "POST /api/gdpr/delete-my-data"
+      - "POST /api/gdpr/admin/anonymize"
+    status: "implemented"
+    
+  - task: "Agency pricing/content overrides"
+    endpoints:
+      - "GET/POST /api/admin/agency-contracts/pricing"
+      - "GET/POST /api/admin/agency-contracts/content"
+    status: "implemented"
+    
+  - task: "Multi-currency reconciliation"
+    endpoints:
+      - "GET /api/finance/currency/supported"
+      - "GET /api/finance/currency/rates"
+      - "POST /api/finance/currency/convert"
+      - "POST /api/finance/currency/reconciliation"
+    status: "implemented"
+    
+  - task: "Cancel reason codes"
+    endpoints:
+      - "GET /api/reference/cancel-reasons"
+    status: "implemented"
+    
+  - task: "Cache management"
+    endpoints:
+      - "GET /api/admin/cache/stats"
+      - "POST /api/admin/cache/invalidate"
+    status: "implemented"
+    
+  - task: "Inventory snapshots"
+    endpoints:
+      - "POST /api/inventory/snapshots/compute"
+      - "GET /api/inventory/snapshots/{hotel_id}"
+    status: "implemented"
+    
+  - task: "Health dashboard + Prometheus"
+    endpoints:
+      - "GET /api/system/health-dashboard"
+      - "GET /api/system/prometheus"
+      - "GET /api/system/ping"
+    status: "implemented"
+    
+  - task: "Distributed locks"
+    endpoints:
+      - "GET /api/admin/locks/"
+    status: "implemented"
+
+  credentials:
+    admin: "admin@acenta.test / admin123"
+

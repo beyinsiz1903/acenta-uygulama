@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
+from typing import Optional
+
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Body, Depends, HTTPException, Response
+from pydantic import BaseModel
 
 from app.auth import get_current_user
 from app.db import get_db
@@ -12,6 +15,10 @@ from app.services.reservations import create_reservation, set_reservation_status
 from app.utils import serialize_doc, to_object_id
 
 router = APIRouter(prefix="/reservations", tags=["reservations"])
+
+
+class RejectPayload(BaseModel):
+    reason: str = ""
 
 
 def _oid_or_none(id_str: str):

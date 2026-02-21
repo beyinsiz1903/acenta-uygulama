@@ -554,7 +554,7 @@ function AppShellInner() {
               variant="outline"
               size="sm"
               data-testid="logout-btn"
-              onClick={() => { clearToken(); window.location.href = "/login"; }}
+              onClick={() => { logoutMutation.mutate(undefined, { onSettled: () => window.location.href = "/login" }); }}
               className="gap-1.5 h-8 text-xs"
             >
               <LogOut className="h-3.5 w-3.5" />

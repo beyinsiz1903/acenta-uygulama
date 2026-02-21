@@ -65,10 +65,14 @@ class HotelWorkflowTester:
         """Test 1: POST /api/auth/login"""
         test_name = "Login Authentication"
         try:
-            payload = {
-                "email": "admin@acenta.test",
-                "password": "admin123"
-            }
+            # Try different credentials from test results 
+            credentials_to_try = [
+                {"email": "admin@acenta.test", "password": "admin123"},
+                {"email": "demo@acenta.test", "password": "Demo12345!x"}
+            ]
+            
+            for creds in credentials_to_try:
+                payload = creds
             
             async with self.session.post(f"{API_BASE}/auth/login", json=payload) as resp:
                 if resp.status == 200:

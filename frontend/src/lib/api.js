@@ -182,10 +182,74 @@ export function parseErrorDetails(err) {
   };
 }
 
+// Track refresh in progress to avoid multiple simultaneous refreshes
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+function onRefreshed(token) {
+  refreshSubscribers.forEach(cb => cb(token));
+  refreshSubscribers = [];
+}
+
+function addRefreshSubscriber(cb) {
+  refreshSubscribers.push(cb);
+}
+
 api.interceptors.response.use(
   (resp) => resp,
-  (err) => {
-    if (err?.response?.status === 401) {
+  async (err) => {
+    const originalRequest = err.config;
+
+    if (err?.response?.status === 401 && !originalRequest._retry) {
+      // Skip refresh for login/auth routes and my-booking
+      const url = originalRequest?.url || "";
+      if (url.includes("/auth/login") || url.includes("/auth/refresh") || url.includes("/auth/register")) {
+        return Promise.reject(err);
+      }
+
+      const refreshToken = getRefreshToken();
+      if (refreshToken && typeof window !== "undefined" && !window.location.pathname.startsWith("/my-booking")) {
+        if (isRefreshing) {
+          // Wait for the refresh to complete
+          return new Promise((resolve) => {
+            addRefreshSubscriber((newToken) => {
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+              resolve(api(originalRequest));
+            });
+          });
+        }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        try {
+          const refreshResp = await axios.post(
+            `${resolvedBaseURL}/auth/refresh`,
+            { refresh_token: refreshToken },
+            { headers: { "Content-Type": "application/json" } }
+          );
+
+          const newAccessToken = refreshResp.data.access_token;
+          const newRefreshToken = refreshResp.data.refresh_token;
+
+          setToken(newAccessToken);
+          if (newRefreshToken) {
+            setRefreshToken(newRefreshToken);
+          }
+
+          isRefreshing = false;
+          onRefreshed(newAccessToken);
+
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          return api(originalRequest);
+        } catch (refreshErr) {
+          isRefreshing = false;
+          refreshSubscribers = [];
+          // Refresh failed, fall through to normal 401 handling
+        }
+      }
+
+      // Normal 401 handling (no refresh token or refresh failed)
       try {
         if (typeof window !== "undefined") {
           const { pathname, search, hash, origin } = window.location;

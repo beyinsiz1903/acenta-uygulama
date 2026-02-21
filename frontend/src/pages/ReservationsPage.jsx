@@ -613,34 +613,99 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
                   </div>
                 </div>
 
+                {/* ── Rejection Alert ── */}
+                {isRejected && data.rejection_reason && (
+                  <div className="rounded-xl border-2 border-red-200 bg-red-50/80 p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-100">
+                        <ShieldX className="h-4 w-4 text-red-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-red-800">Rezervasyon Reddedildi</div>
+                        <div className="mt-1 text-xs text-red-700 leading-relaxed">{data.rejection_reason}</div>
+                        <div className="mt-2 flex items-center gap-2 text-2xs text-red-500/80">
+                          {data.rejected_by && <span>{data.rejected_by}</span>}
+                          {data.rejected_at && (
+                            <>
+                              <span>·</span>
+                              <span>{new Date(data.rejected_at).toLocaleString("tr-TR")}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* ── Actions ── */}
                 <div>
                   <div className="flex items-center gap-2 mb-2.5">
                     <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">İşlemler</span>
                     <div className="flex-1 h-px bg-border/40" />
                   </div>
+
+                  {actionError && (
+                    <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-600 mb-2.5 flex items-center gap-1.5" data-testid="action-error">
+                      <AlertTriangle className="h-3 w-3 shrink-0" />
+                      {actionError}
+                    </div>
+                  )}
+
                   <div className="flex flex-wrap gap-2">
-                    <Button onClick={confirm} variant="outline" size="sm" className="gap-1.5 text-xs font-medium h-8 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800" data-testid="res-confirm">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      Onayla
-                    </Button>
-                    <Button onClick={cancel} variant="outline" size="sm" className="gap-1.5 text-xs font-medium h-8 border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700" data-testid="res-cancel">
-                      <XCircle className="h-3.5 w-3.5" />
-                      İptal Et
-                    </Button>
-                    <Button onClick={openVoucher} variant="outline" size="sm" className="gap-1.5 text-xs font-medium h-8 border-primary/30 text-primary hover:bg-primary/5" data-testid="res-voucher">
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      Voucher
-                    </Button>
-                    <Button onClick={sendWhatsApp} variant="outline" size="sm" className="gap-1.5 text-xs font-medium h-8 border-emerald-200 text-emerald-600 hover:bg-emerald-50" data-testid="res-whatsapp">
-                      <MessageCircle className="h-3.5 w-3.5" />
-                      WhatsApp
-                    </Button>
+                    {/* Onayla - only when pending */}
+                    {isPending && (
+                      <Button onClick={confirm} variant="outline" size="sm" className="gap-1.5 text-xs font-medium h-8 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800" data-testid="res-confirm">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        Onayla
+                      </Button>
+                    )}
+                    {/* Reddet - only when pending */}
+                    {isPending && (
+                      <Button onClick={() => setRejectOpen(true)} variant="outline" size="sm" className="gap-1.5 text-xs font-medium h-8 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700" data-testid="res-reject">
+                        <ShieldX className="h-3.5 w-3.5" />
+                        Reddet
+                      </Button>
+                    )}
+                    {/* İptal - when pending or confirmed */}
+                    {(isPending || isConfirmed) && (
+                      <Button onClick={cancel} variant="outline" size="sm" className="gap-1.5 text-xs font-medium h-8 border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700" data-testid="res-cancel">
+                        <XCircle className="h-3.5 w-3.5" />
+                        İptal Et
+                      </Button>
+                    )}
+                    {/* Voucher - always visible if confirmed */}
+                    {isConfirmed && (
+                      <Button onClick={openVoucher} variant="outline" size="sm" className="gap-1.5 text-xs font-medium h-8 border-primary/30 text-primary hover:bg-primary/5" data-testid="res-voucher">
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        Voucher
+                      </Button>
+                    )}
+                    {/* WhatsApp - always available */}
+                    {!isTerminal && (
+                      <Button onClick={sendWhatsApp} variant="outline" size="sm" className="gap-1.5 text-xs font-medium h-8 border-emerald-200 text-emerald-600 hover:bg-emerald-50" data-testid="res-whatsapp">
+                        <MessageCircle className="h-3.5 w-3.5" />
+                        WhatsApp
+                      </Button>
+                    )}
                   </div>
+
+                  {/* Status info message for terminal states */}
+                  {isTerminal && (
+                    <div className="mt-2 rounded-lg bg-muted/30 border border-border/40 px-3 py-2 text-2xs text-muted-foreground/70 italic">
+                      Bu rezervasyon sonlandırılmıştır. İşlem yapılamaz.
+                    </div>
+                  )}
+                  {isRejected && !isTerminal && (
+                    <div className="mt-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-2xs text-amber-700">
+                      Reddedilen rezervasyon taslak durumuna geri alınabilir veya iptal edilebilir.
+                    </div>
+                  )}
                 </div>
 
-                {/* ── Payment Form ── */}
-                <PaymentForm reservationId={reservationId} currency={data.currency} onSaved={load} />
+                {/* ── Payment Form - only for confirmed/pending ── */}
+                {(isPending || isConfirmed) && (
+                  <PaymentForm reservationId={reservationId} currency={data.currency} onSaved={load} />
+                )}
 
                 {/* ── Payment History ── */}
                 <div className="rounded-xl border border-border/60 bg-gradient-to-br from-background to-muted/20 p-4">
@@ -676,6 +741,9 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
                     </div>
                   )}
                 </div>
+
+                {/* ── Status Timeline ── */}
+                <StatusTimeline history={data.status_history} />
               </>
             )}
           </div>
@@ -688,6 +756,14 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
           </Button>
         </div>
       </SheetContent>
+
+      {/* Reject Dialog */}
+      <RejectDialog
+        open={rejectOpen}
+        onOpenChange={setRejectOpen}
+        onConfirm={handleReject}
+        loading={rejecting}
+      />
     </Sheet>
   );
 }

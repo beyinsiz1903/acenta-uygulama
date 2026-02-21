@@ -20,12 +20,22 @@ AdminDep = Depends(require_roles(["super_admin"]))
 @router.get("/", dependencies=[AdminDep])
 async def list_hotels(active: Optional[bool] = None, user=Depends(get_current_user), db=Depends(get_db)) -> List[Dict[str, Any]]:
     org_id = user["organization_id"]
+
+    # Cache: hotel list (5 min TTL)
+    ck = f"hotel_list:{org_id}:{active}"
+    cached = await cache_get(ck)
+    if cached:
+        return cached
+
     flt: Dict[str, Any] = {"organization_id": org_id}
     if active is not None:
         flt["active"] = active
 
     docs = await db.hotels.find(flt).sort("created_at", -1).to_list(500)
-    return [serialize_doc(d) for d in docs]
+    result = [serialize_doc(d) for d in docs]
+
+    await cache_set(ck, result, category="hotel_detail")
+    return result
 
 
 @router.post("/", dependencies=[AdminDep])

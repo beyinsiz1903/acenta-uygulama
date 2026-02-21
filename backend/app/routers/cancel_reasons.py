@@ -5,7 +5,7 @@ from fastapi import APIRouter
 
 from app.constants.cancel_reasons import get_cancel_reasons_list
 
-router = APIRouter(prefix="/api/bookings", tags=["cancel-reasons"])
+router = APIRouter(prefix="/api/reference", tags=["cancel-reasons"])
 
 
 @router.get("/cancel-reasons")

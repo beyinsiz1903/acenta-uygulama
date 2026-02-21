@@ -21,6 +21,13 @@ import {
   resolveFilters, saveToLocalStorage, saveDensity, filtersToQuery,
   getPresetDays, getPresetDateRange, DEFAULT_FILTERS, exportDashboardCSV,
 } from "../lib/dashboardFilters";
+import {
+  useDashboardKPI,
+  useDashboardReservationWidgets,
+  useDashboardWeeklySummary,
+  useDashboardPopularProducts,
+  useDashboardRecentCustomers,
+} from "../hooks/useDashboard";
 
 /* ------------------------------------------------------------------ */
 /*  COLORS                                                             */

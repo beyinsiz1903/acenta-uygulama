@@ -528,12 +528,6 @@ class HotelWorkflowTester:
             
             # Test 10: Test cancel from confirmed
             await self.test_cancel_from_confirmed(self.second_reservation_id)
-                
-        except Exception as e:
-            print(f"\n❌ Unexpected error during testing: {str(e)}")
-            
-        finally:
-            await self.print_summary()
             
     async def print_summary(self):
         """Print test summary"""

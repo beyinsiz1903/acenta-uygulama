@@ -140,4 +140,9 @@ async def my_hotels(user=Depends(get_current_user)):
         row["cm_status"] = cm_status_by_hotel.get(hid, "not_configured")
         items.append(row)
 
-    return {"items": items}
+    result = {"items": items}
+
+    # Cache the result
+    await cache_set(cache_key, result, category="agency_hotel_links")
+
+    return result

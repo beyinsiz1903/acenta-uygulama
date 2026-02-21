@@ -509,6 +509,8 @@ from app.middleware.structured_logging_middleware import StructuredLoggingMiddle
 from app.middleware.rate_limit_middleware import RateLimitMiddleware
 from app.middleware.ip_whitelist_middleware import IPWhitelistMiddleware
 from app.middleware.security_headers_middleware import SecurityHeadersMiddleware
+from app.middleware.error_tracking_middleware import ErrorTrackingMiddleware
+from app.middleware.prometheus_middleware import PrometheusMiddleware
 
 # Correlation-Id middleware (request/response scoped) - should be early in the chain
 app.add_middleware(CorrelationIdMiddleware)

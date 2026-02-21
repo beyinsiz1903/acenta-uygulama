@@ -497,6 +497,7 @@ function App() {
       </Routes>
       <Toaster position="top-right" richColors closeButton />
     </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 

@@ -195,10 +195,66 @@ async def revoke_all_sessions(user=Depends(get_current_user)):
 
     email = user.get("email", "")
     count = await blacklist_all_user_tokens(email, reason="user_revoke_all")
+
+    # Also revoke all refresh tokens
+    from app.services.refresh_token_service import revoke_all_user_refresh_tokens
+    rt_count = await revoke_all_user_refresh_tokens(email, reason="user_revoke_all")
+
     return {
         "message": "Tüm oturumlar iptal edildi",
         "revoked_count": count,
+        "refresh_tokens_revoked": rt_count,
     }
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
+@router.post("/refresh")
+async def refresh_access_token(payload: RefreshTokenRequest):
+    """Refresh access token using a refresh token.
+
+    Implements token rotation: old refresh token is revoked,
+    new access + refresh token pair is issued.
+    """
+    from app.services.refresh_token_service import rotate_refresh_token
+
+    new_rt = await rotate_refresh_token(payload.refresh_token)
+    if not new_rt:
+        raise HTTPException(status_code=401, detail="Geçersiz veya süresi dolmuş refresh token")
+
+    # Generate new access token
+    new_access_token = create_access_token(
+        subject=new_rt["user_email"],
+        organization_id=new_rt["organization_id"],
+        roles=new_rt["roles"],
+        minutes=15,  # Short-lived access token
+    )
+
+    return {
+        "access_token": new_access_token,
+        "refresh_token": new_rt["_id"],
+        "token_type": "bearer",
+        "expires_in": 900,  # 15 minutes
+    }
+
+
+@router.get("/sessions")
+async def list_sessions(user=Depends(get_current_user)):
+    """List active sessions for the current user."""
+    from app.services.refresh_token_service import get_active_sessions
+    return await get_active_sessions(user["email"])
+
+
+@router.post("/sessions/{session_id}/revoke")
+async def revoke_session(session_id: str, user=Depends(get_current_user)):
+    """Revoke a specific session."""
+    from app.services.refresh_token_service import revoke_refresh_token
+    revoked = await revoke_refresh_token(session_id, reason="user_revoke")
+    if not revoked:
+        raise HTTPException(status_code=404, detail="Session not found or already revoked")
+    return {"status": "revoked"}
 
 
 @router.get("/me")

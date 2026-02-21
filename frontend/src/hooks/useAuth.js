@@ -41,6 +41,7 @@ export function useLogin() {
     onSuccess: (data) => {
       if (data.access_token) {
         setToken(data.access_token);
+        if (data.refresh_token) setRefreshToken(data.refresh_token);
         if (data.user) setUser(data.user);
         // Update the user query cache
         queryClient.setQueryData(authKeys.user(), data.user);

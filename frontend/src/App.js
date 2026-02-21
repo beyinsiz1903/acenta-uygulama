@@ -249,6 +249,7 @@ function App() {
   }
 
   return (
+    <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <Routes>
         {/* Public Routes */}

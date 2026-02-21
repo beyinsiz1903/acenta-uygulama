@@ -74,18 +74,22 @@ class HotelWorkflowTester:
             for creds in credentials_to_try:
                 payload = creds
             
-            async with self.session.post(f"{API_BASE}/auth/login", json=payload) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    if "access_token" in data:
-                        self.access_token = data["access_token"]
-                        self.log_result(test_name, True, f"Login successful, token obtained")
-                        return True
+            
+                async with self.session.post(f"{API_BASE}/auth/login", json=payload) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        if "access_token" in data:
+                            self.access_token = data["access_token"]
+                            self.log_result(test_name, True, f"Login successful with {payload['email']}, token obtained")
+                            return True
+                        else:
+                            self.log_result(test_name, False, f"No access_token in response for {payload['email']}: {data}")
                     else:
-                        self.log_result(test_name, False, f"No access_token in response: {data}")
-                else:
-                    text = await resp.text()
-                    self.log_result(test_name, False, f"HTTP {resp.status}: {text}")
+                        text = await resp.text()
+                        print(f"Failed login attempt for {payload['email']}: HTTP {resp.status}: {text}")
+                        
+            # If all attempts failed
+            self.log_result(test_name, False, "All credential combinations failed")
                     
         except Exception as e:
             self.log_result(test_name, False, f"Exception: {str(e)}")

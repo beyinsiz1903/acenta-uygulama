@@ -8,6 +8,7 @@ from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.schemas import HotelCreateIn, HotelForceSalesOverrideIn
 from app.services.audit import write_audit_log
+from app.services.mongo_cache_service import cache_get, cache_set, cache_invalidate_pattern
 from app.utils import now_utc, serialize_doc
 
 

@@ -166,9 +166,16 @@ async def approve_hotel_booking(booking_id: str, request: Request, user=Depends(
     if status == "cancelled":
         raise HTTPException(status_code=409, detail="CANNOT_APPROVE_CANCELLED_BOOKING")
 
+    if status == "rejected":
+        raise HTTPException(status_code=409, detail="CANNOT_APPROVE_REJECTED_BOOKING")
+
     if status == "confirmed":
         # Idempotent davranış: zaten onaylı ise mevcut kaydı döndür
         return build_booking_public_view(booking)
+
+    # Status machine: only draft or pending can be approved
+    if status not in ("draft", "pending", ""):
+        raise HTTPException(status_code=409, detail=f"CANNOT_APPROVE_IN_STATUS_{status.upper()}")
 
     now = now_utc()
 

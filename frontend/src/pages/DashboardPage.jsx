@@ -788,33 +788,7 @@ export default function DashboardPage() {
     return () => { cancelled = true; };
   }, [chartDays]);
 
-  /* ---------- fetch enhanced dashboard data ---------- */
-  useEffect(() => {
-    let cancelled = false;
-    const loadEnhanced = async () => {
-      setEnhancedLoading(true);
-      const safe = async (fn) => {
-        try { return await fn(); }
-        catch { return null; }
-      };
-      const [kpi, widgets, weekly, popular, customers] = await Promise.all([
-        safe(() => api.get("/dashboard/kpi-stats")),
-        safe(() => api.get("/dashboard/reservation-widgets")),
-        safe(() => api.get("/dashboard/weekly-summary")),
-        safe(() => api.get("/dashboard/popular-products")),
-        safe(() => api.get("/dashboard/recent-customers")),
-      ]);
-      if (cancelled) return;
-      if (kpi?.data) setKpiStats(kpi.data);
-      if (widgets?.data) setResWidgets(widgets.data);
-      if (weekly?.data) setWeeklySummary(weekly.data);
-      if (popular?.data) setPopularProducts(popular.data);
-      if (customers?.data) setRecentCustomers(customers.data);
-      setEnhancedLoading(false);
-    };
-    loadEnhanced();
-    return () => { cancelled = true; };
-  }, []);
+  /* ---------- enhanced dashboard data is now managed by React Query hooks ---------- */
 
   /* ---------- derived data ---------- */
   const totals = useMemo(() => {

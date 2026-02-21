@@ -428,6 +428,12 @@ class HotelWorkflowTester:
                 # Standard tour-based workflow
                 await self.run_tour_based_workflow()
                 
+        except Exception as e:
+            print(f"\n❌ Unexpected error during testing: {str(e)}")
+            
+        finally:
+            await self.print_summary()
+            
     async def test_existing_reservations_workflow(self):
         """Test workflow using existing reservations"""
         print("🔍 Testing workflow with existing reservations...")

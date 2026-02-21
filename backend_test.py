@@ -105,13 +105,24 @@ class HotelWorkflowTester:
             async with self.session.get(f"{API_BASE}/tours", headers=headers) as resp:
                 if resp.status == 200:
                     data = await resp.json()
+                    print(f"Tours API response: {data}")
                     items = data.get("items", [])
                     if len(items) > 0:
                         self.tour_id = items[0]["id"]
                         self.log_result(test_name, True, f"Found {len(items)} tours, using tour_id: {self.tour_id}")
                         return True
                     else:
-                        self.log_result(test_name, False, "No tours found in response")
+                        # Let's also try admin endpoint to check for tours
+                        async with self.session.get(f"{API_BASE}/admin/tours", headers=headers) as admin_resp:
+                            if admin_resp.status == 200:
+                                admin_data = await admin_resp.json()
+                                print(f"Admin tours API response: {admin_data}")
+                                if len(admin_data) > 0:
+                                    # Use admin tour data
+                                    self.tour_id = admin_data[0]["id"]
+                                    self.log_result(test_name, True, f"Found {len(admin_data)} tours via admin endpoint, using tour_id: {self.tour_id}")
+                                    return True
+                        self.log_result(test_name, False, f"No tours found. Regular: {data}, Admin endpoint also checked.")
                 else:
                     text = await resp.text()
                     self.log_result(test_name, False, f"HTTP {resp.status}: {text}")

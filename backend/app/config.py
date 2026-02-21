@@ -35,7 +35,12 @@ def _env_flag(name: str, default: bool = True) -> bool:
 API_PREFIX = "/api"
 APP_NAME = "Booking Suite API"
 APP_VERSION = "1.0.0"
-CORS_ORIGINS = ["*"]  # Allow all origins for development
+# CORS origins - domain-based whitelist (comma-separated in env, fallback to regex for dev)
+_cors_raw = os.environ.get("CORS_ORIGINS", "")
+if _cors_raw and _cors_raw.strip() != "*":
+    CORS_ORIGINS = [o.strip() for o in _cors_raw.split(",") if o.strip()]
+else:
+    CORS_ORIGINS = ["*"]  # Development fallback - use CORS_ORIGINS env for production
 
 # Feature flags (FAZ 0)
 ENABLE_VOUCHER_PDF: bool = _env_flag("ENABLE_VOUCHER_PDF", default=True)

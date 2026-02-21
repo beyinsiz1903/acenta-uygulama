@@ -504,14 +504,18 @@ app = FastAPI(
 from app.middleware.structured_logging_middleware import StructuredLoggingMiddleware
 from app.middleware.rate_limit_middleware import RateLimitMiddleware
 from app.middleware.ip_whitelist_middleware import IPWhitelistMiddleware
+from app.middleware.security_headers_middleware import SecurityHeadersMiddleware
 
 # Correlation-Id middleware (request/response scoped) - should be early in the chain
 app.add_middleware(CorrelationIdMiddleware)
 
+# Security headers (all responses)
+app.add_middleware(SecurityHeadersMiddleware)
+
 # Structured logging (E3.1)
 app.add_middleware(StructuredLoggingMiddleware)
 
-# Rate limiting (E3.3)
+# Rate limiting (E3.3 + Enhanced)
 app.add_middleware(RateLimitMiddleware)
 
 # IP Whitelist (E2.2)

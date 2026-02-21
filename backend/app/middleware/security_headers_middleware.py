@@ -48,6 +48,17 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "camera=(), microphone=(), geolocation=(), payment=()"
         )
 
+        # Content Security Policy (CSP)
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: https:; "
+            "font-src 'self' data:; "
+            "connect-src 'self' https:; "
+            "frame-ancestors 'none'"
+        )
+
         # Prevent caching of API responses (for /api paths)
         path = request.url.path or ""
         if path.startswith("/api") and "Cache-Control" not in response.headers:

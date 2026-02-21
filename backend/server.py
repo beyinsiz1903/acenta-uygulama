@@ -236,6 +236,30 @@ async def lifespan(app: FastAPI):
     from app.services.token_blacklist import ensure_blacklist_indexes
     await ensure_blacklist_indexes()
 
+    # Refresh Token indexes
+    from app.services.refresh_token_service import ensure_refresh_token_indexes
+    await ensure_refresh_token_indexes()
+
+    # GDPR indexes
+    from app.services.gdpr_service import ensure_gdpr_indexes
+    await ensure_gdpr_indexes()
+
+    # Agency Contracts indexes
+    from app.services.agency_contracts_service import ensure_agency_contract_indexes
+    await ensure_agency_contract_indexes()
+
+    # Cache indexes
+    from app.services.mongo_cache_service import ensure_cache_indexes
+    await ensure_cache_indexes()
+
+    # Inventory Snapshot indexes
+    from app.services.inventory_snapshot_service import ensure_inventory_snapshot_indexes
+    await ensure_inventory_snapshot_indexes()
+
+    # Distributed Lock indexes
+    from app.services.distributed_lock_service import ensure_lock_indexes
+    await ensure_lock_indexes()
+
     # GTM + CRM indexes
     try:
         await db.demo_seed_runs.create_index("tenant_id", unique=True)

@@ -5,6 +5,7 @@ from typing import Any
 from bson import ObjectId
 from fastapi import HTTPException
 
+from app.constants.booking_statuses import can_transition, get_status_label
 from app.db import get_db
 from app.services.inventory import consume_inventory, release_inventory
 from app.services.pricing import calc_price_for_date

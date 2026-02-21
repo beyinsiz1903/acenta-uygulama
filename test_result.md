@@ -579,12 +579,57 @@ platform_hardening:
         comment: "Distributed locks endpoint working perfectly. Returns array of active locks (0 active locks currently). Authentication required (super_admin role) and working correctly. Endpoint ready for production use."
 
 test_plan:
-  current_focus: ["platform_hardening"]
+  current_focus: ["hotel_approval_workflow"]
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
+# =====================================================
+# HOTEL APPROVAL/REJECT WORKFLOW
+# =====================================================
+
+hotel_approval_workflow:
+  - task: "POST /api/reservations/:id/reject - Reject a pending reservation with reason"
+    implemented: true
+    working: unknown
+    file: "backend/app/routers/reservations.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "POST /api/reservations/:id/confirm - Confirm only pending reservations (status transition validation)"
+    implemented: true
+    working: unknown
+    file: "backend/app/routers/reservations.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "Status transition validation - can_transition() enforcement in set_reservation_status"
+    implemented: true
+    working: unknown
+    file: "backend/app/services/reservations.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "Status history tracking - status_history array with from/to/changed_by/changed_at/reason"
+    implemented: true
+    working: unknown
+    file: "backend/app/services/reservations.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "Tour reservation fix - new tour reservations created as 'pending' instead of 'CONFIRMED'"
+    implemented: true
+    working: unknown
+    file: "backend/app/routers/tours_browse.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
 agent_communication:
-  - agent: "testing"
-    message: "🚀 PLATFORM HARDENING TESTING COMPLETE - 8 out of 9 platform hardening features fully working. WORKING FEATURES: (1) JWT Login - returns access_token, refresh_token, expires_in with proper user/org data, (2) Sessions Management - lists active sessions correctly, (3) Cancel Reason Codes - 19 standardized codes with Turkish labels, (4) Multi-currency - 4 supported currencies + EUR→TRY conversion working, (5) System Health - ping/pong + health dashboard + Prometheus metrics (2127 chars), (6) GDPR Compliance - consent submission/retrieval working, (7) Security Headers - all required headers present (X-Content-Type-Options, X-Frame-Options, HSTS, CSP, Referrer-Policy), (8) Cache Stats - returns proper cache statistics, (9) Distributed Locks - returns active locks array. INFRASTRUCTURE ISSUE: POST /api/auth/refresh experiencing Cloudflare 520 error (server-side issue, not application code bug). Login generates valid refresh tokens but refresh endpoint returns 'Web server is returning an unknown error' - appears to be temporary infrastructure problem."
+  - agent: "main"
+    message: "Hotel approval/reject workflow implemented. Backend: (1) Status transition validation enforced using can_transition() from booking_statuses.py - prevents invalid transitions like pending->pending or confirmed->confirmed. (2) New POST /api/reservations/:id/reject endpoint with rejection reason. (3) Status history tracking - every status change recorded with from_status, to_status, changed_by, changed_at, reason. (4) Rejection metadata stored: rejection_reason, rejected_at, rejected_by. (5) Confirmation metadata stored: confirmed_at, confirmed_by. (6) Tour reservations now create with status 'pending' instead of 'CONFIRMED'. Frontend: (1) StatusPill updated with 'Reddedildi' (rejected) status. (2) Reject button with reason dialog (modal with textarea). (3) Conditional button visibility - Onayla/Reddet only for pending, İptal for pending/confirmed, Voucher only for confirmed. (4) Rejection alert banner showing reason, who rejected, when. (5) Status timeline component showing full history. (6) Filter dropdown includes rejected status. Login: admin@acenta.test / admin123"
 

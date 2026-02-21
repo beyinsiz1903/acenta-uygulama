@@ -10,6 +10,7 @@ export const adminNav = [
       { label: "Oteller", path: "/app/admin/hotels" },
       { label: "Turlar", path: "/app/admin/tours" },
       { label: "Bağlantı Yönetimi", path: "/app/admin/links" },
+      { label: "Acenta Sözleşmeleri", path: "/app/admin/agency-contracts" },
       { label: "CMS Sayfaları", path: "/app/admin/cms/pages" },
       { label: "Kampanyalar", path: "/app/admin/campaigns" },
       { label: "İş Ortakları", path: "/app/admin/partners" },

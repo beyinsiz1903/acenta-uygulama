@@ -256,6 +256,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
     <BrowserRouter>
+      <Suspense fallback={<PageLoader />}>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<PublicHomePage />} />

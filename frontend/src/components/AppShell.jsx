@@ -17,6 +17,7 @@ import { Sheet, SheetContent } from "./ui/sheet";
 import ThemeToggle from "./ThemeToggle";
 import { cn } from "../lib/utils";
 import { api, clearToken, getUser } from "../lib/api";
+import { useLogout } from "../hooks/useAuth";
 import { getMenuForUser } from "../config/menuConfig";
 import { FeatureProvider, useFeatures } from "../contexts/FeatureContext";
 import { ProductModeProvider, useProductMode } from "../contexts/ProductModeContext";

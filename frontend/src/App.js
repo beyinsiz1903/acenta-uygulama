@@ -57,6 +57,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import AdminHotelsPage from "./pages/AdminHotelsPage";
 import AdminToursPage from "./pages/AdminToursPage";
 import AdminLinksPage from "./pages/AdminLinksPage";
+import AdminAgencyContractsPage from "./pages/AdminAgencyContractsPage";
 import AdminCMSPagesPage from "./pages/AdminCMSPagesPage";
 import AdminAuditLogsPage from "./pages/AdminAuditLogsPage";
 import AdminEmailLogsPage from "./pages/AdminEmailLogsPage";

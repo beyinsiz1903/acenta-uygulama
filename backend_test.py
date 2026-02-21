@@ -1,661 +1,475 @@
 #!/usr/bin/env python3
 """
-Platform Hardening Features Backend Testing Script
-Tests all newly implemented platform hardening & security features
+Hotel Approval/Reject Workflow Backend Testing
+
+Tests the following scenarios:
+1. Login authentication  
+2. List tours to get tour_id
+3. Create tour reservation (should be 'pending', not 'CONFIRMED')
+4. Find and verify new reservation status
+5. Test REJECT workflow with reason
+6. Test invalid transitions on rejected reservations
+7. Test CONFIRM workflow
+8. Test invalid double confirm
+9. Test cancel from confirmed status
+10. Verify status history tracking
 """
 
 import asyncio
 import json
+import aiohttp
 import sys
-from typing import Any, Dict, Optional
+from datetime import datetime
+from typing import Dict, Any, Optional
 
-import httpx
+# Backend URL
+BASE_URL = "https://hotel-reject-system.preview.emergentagent.com"
+API_BASE = f"{BASE_URL}/api"
 
-
-class PlatformHardeningTester:
-    def __init__(self, base_url: str = "https://hotel-reject-system.preview.emergentagent.com"):
-        self.base_url = base_url.rstrip('/')
-        self.session = httpx.AsyncClient(timeout=30.0)
+class HotelWorkflowTester:
+    def __init__(self):
+        self.session: Optional[aiohttp.ClientSession] = None
         self.access_token: Optional[str] = None
-        self.refresh_token: Optional[str] = None
+        self.test_results = []
+        self.tour_id: Optional[str] = None
+        self.first_reservation_id: Optional[str] = None
+        self.second_reservation_id: Optional[str] = None
+        
+    async def setup(self):
+        """Setup HTTP session"""
+        self.session = aiohttp.ClientSession()
         
     async def cleanup(self):
-        """Close the HTTP session"""
-        await self.session.aclose()
-
+        """Cleanup resources"""
+        if self.session:
+            await self.session.close()
+            
+    def log_result(self, test_name: str, success: bool, details: str):
+        """Log test result"""
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} {test_name}: {details}")
+        self.test_results.append({
+            'test': test_name,
+            'success': success,
+            'details': details,
+            'timestamp': datetime.now().isoformat()
+        })
+        
     def get_auth_headers(self) -> Dict[str, str]:
-        """Get authorization headers with Bearer token"""
+        """Get authentication headers"""
         if not self.access_token:
             return {}
         return {"Authorization": f"Bearer {self.access_token}"}
-
-    async def test_login_and_refresh_token(self) -> Dict[str, Any]:
-        """Test 1: Login & Refresh Token functionality"""
-        print("\n🔐 Testing Login & Refresh Token...")
         
-        # Test login
-        login_payload = {
-            "email": "admin@acenta.test",
-            "password": "admin123"
-        }
-        
+    async def test_login(self):
+        """Test 1: POST /api/auth/login"""
+        test_name = "Login Authentication"
         try:
-            response = await self.session.post(
-                f"{self.base_url}/api/auth/login",
-                json=login_payload,
-                headers={"Content-Type": "application/json"}
-            )
-            
-            if response.status_code != 200:
-                return {
-                    "success": False,
-                    "error": f"Login failed with status {response.status_code}: {response.text}"
-                }
-            
-            data = response.json()
-            
-            # Check required fields
-            required_fields = ["access_token", "refresh_token", "expires_in"]
-            missing_fields = [field for field in required_fields if field not in data]
-            if missing_fields:
-                return {
-                    "success": False,
-                    "error": f"Missing required fields in login response: {missing_fields}"
-                }
-            
-            self.access_token = data["access_token"]
-            self.refresh_token = data["refresh_token"]
-            
-            print(f"✅ Login successful - got access_token and refresh_token")
-            
-            # Test refresh token
-            refresh_payload = {
-                "refresh_token": self.refresh_token
+            payload = {
+                "email": "admin@acenta.test",
+                "password": "admin123"
             }
             
-            refresh_response = await self.session.post(
-                f"{self.base_url}/api/auth/refresh",
-                json=refresh_payload,
-                headers={"Content-Type": "application/json"}
-            )
-            
-            if refresh_response.status_code != 200:
-                return {
-                    "success": False,
-                    "error": f"Refresh token failed with status {refresh_response.status_code}: {refresh_response.text}"
-                }
-            
-            refresh_data = refresh_response.json()
-            
-            # Check refresh response
-            refresh_required_fields = ["access_token", "refresh_token", "expires_in"]
-            missing_refresh_fields = [field for field in refresh_required_fields if field not in refresh_data]
-            if missing_refresh_fields:
-                return {
-                    "success": False,
-                    "error": f"Missing fields in refresh response: {missing_refresh_fields}"
-                }
-            
-            # Update tokens
-            self.access_token = refresh_data["access_token"]
-            self.refresh_token = refresh_data["refresh_token"]
-            
-            print(f"✅ Refresh token successful - got new tokens")
-            
-            return {
-                "success": True,
-                "login_status": response.status_code,
-                "refresh_status": refresh_response.status_code,
-                "has_access_token": bool(self.access_token),
-                "has_refresh_token": bool(self.refresh_token),
-                "expires_in": data.get("expires_in")
-            }
-            
-        except Exception as e:
-            return {
-                "success": False,
-                "error": f"Exception during login/refresh test: {str(e)}"
-            }
-
-    async def test_sessions(self) -> Dict[str, Any]:
-        """Test 2: Sessions management"""
-        print("\n📊 Testing Sessions...")
-        
-        if not self.access_token:
-            return {
-                "success": False,
-                "error": "No access token available - login test must run first"
-            }
-        
-        try:
-            response = await self.session.get(
-                f"{self.base_url}/api/auth/sessions",
-                headers=self.get_auth_headers()
-            )
-            
-            if response.status_code != 200:
-                return {
-                    "success": False,
-                    "error": f"Sessions request failed with status {response.status_code}: {response.text}"
-                }
-            
-            data = response.json()
-            
-            # Should return array of sessions
-            if not isinstance(data, list):
-                return {
-                    "success": False,
-                    "error": f"Sessions response should be an array, got: {type(data)}"
-                }
-            
-            print(f"✅ Sessions endpoint working - returned {len(data)} session(s)")
-            
-            return {
-                "success": True,
-                "status_code": response.status_code,
-                "session_count": len(data),
-                "sessions": data[:2] if data else []  # Return first 2 sessions for inspection
-            }
-            
-        except Exception as e:
-            return {
-                "success": False,
-                "error": f"Exception during sessions test: {str(e)}"
-            }
-
-    async def test_cancel_reason_codes(self) -> Dict[str, Any]:
-        """Test 3: Cancel Reason Codes (no auth required)"""
-        print("\n📋 Testing Cancel Reason Codes...")
-        
-        try:
-            response = await self.session.get(
-                f"{self.base_url}/api/reference/cancel-reasons"
-            )
-            
-            if response.status_code != 200:
-                return {
-                    "success": False,
-                    "error": f"Cancel reasons request failed with status {response.status_code}: {response.text}"
-                }
-            
-            data = response.json()
-            
-            # Should return list of cancel reason codes
-            if not isinstance(data, list):
-                return {
-                    "success": False,
-                    "error": f"Cancel reasons should be a list, got: {type(data)}"
-                }
-            
-            if not data:
-                return {
-                    "success": False,
-                    "error": "Cancel reasons list is empty"
-                }
-            
-            # Check structure of first item
-            first_item = data[0]
-            if not isinstance(first_item, dict) or "code" not in first_item or "label" not in first_item:
-                return {
-                    "success": False,
-                    "error": f"Cancel reason items should have 'code' and 'label' fields. Got: {first_item}"
-                }
-            
-            print(f"✅ Cancel reasons working - returned {len(data)} codes")
-            
-            return {
-                "success": True,
-                "status_code": response.status_code,
-                "reason_count": len(data),
-                "sample_reasons": data[:3]  # Return first 3 for inspection
-            }
-            
-        except Exception as e:
-            return {
-                "success": False,
-                "error": f"Exception during cancel reasons test: {str(e)}"
-            }
-
-    async def test_multi_currency(self) -> Dict[str, Any]:
-        """Test 4: Multi-currency functionality"""
-        print("\n💱 Testing Multi-currency...")
-        
-        try:
-            # Test 1: Get supported currencies (no auth required)
-            currencies_response = await self.session.get(
-                f"{self.base_url}/api/finance/currency/supported"
-            )
-            
-            if currencies_response.status_code != 200:
-                return {
-                    "success": False,
-                    "error": f"Supported currencies failed with status {currencies_response.status_code}: {currencies_response.text}"
-                }
-            
-            currencies_data = currencies_response.json()
-            
-            if not isinstance(currencies_data, list):
-                return {
-                    "success": False,
-                    "error": f"Supported currencies should be a list, got: {type(currencies_data)}"
-                }
-            
-            print(f"✅ Supported currencies working - {len(currencies_data)} currencies")
-            
-            # Test 2: Currency conversion (requires auth)
-            if not self.access_token:
-                return {
-                    "success": False,
-                    "error": "No access token for currency conversion test"
-                }
-            
-            convert_payload = {
-                "amount": 100,
-                "from_currency": "EUR",
-                "to_currency": "TRY"
-            }
-            
-            convert_response = await self.session.post(
-                f"{self.base_url}/api/finance/currency/convert",
-                json=convert_payload,
-                headers={**self.get_auth_headers(), "Content-Type": "application/json"}
-            )
-            
-            if convert_response.status_code != 200:
-                return {
-                    "success": False,
-                    "error": f"Currency convert failed with status {convert_response.status_code}: {convert_response.text}"
-                }
-            
-            convert_data = convert_response.json()
-            
-            print(f"✅ Currency conversion working - EUR to TRY conversion successful")
-            
-            return {
-                "success": True,
-                "currencies_status": currencies_response.status_code,
-                "convert_status": convert_response.status_code,
-                "supported_currencies": currencies_data,
-                "conversion_result": convert_data
-            }
-            
-        except Exception as e:
-            return {
-                "success": False,
-                "error": f"Exception during multi-currency test: {str(e)}"
-            }
-
-    async def test_health_dashboard(self) -> Dict[str, Any]:
-        """Test 5: Health Dashboard & Prometheus"""
-        print("\n🏥 Testing Health Dashboard & Prometheus...")
-        
-        try:
-            # Test 1: Simple ping (no auth)
-            ping_response = await self.session.get(
-                f"{self.base_url}/api/system/ping"
-            )
-            
-            if ping_response.status_code != 200:
-                return {
-                    "success": False,
-                    "error": f"Ping failed with status {ping_response.status_code}: {ping_response.text}"
-                }
-            
-            ping_data = ping_response.json()
-            if ping_data.get("status") != "pong":
-                return {
-                    "success": False,
-                    "error": f"Ping should return status: pong, got: {ping_data}"
-                }
-            
-            print(f"✅ Ping/pong working")
-            
-            # Test 2: Health dashboard (requires auth)
-            if not self.access_token:
-                return {
-                    "success": False,
-                    "error": "No access token for health dashboard test"
-                }
-            
-            health_response = await self.session.get(
-                f"{self.base_url}/api/system/health-dashboard",
-                headers=self.get_auth_headers()
-            )
-            
-            if health_response.status_code != 200:
-                return {
-                    "success": False,
-                    "error": f"Health dashboard failed with status {health_response.status_code}: {health_response.text}"
-                }
-            
-            health_data = health_response.json()
-            
-            print(f"✅ Health dashboard working")
-            
-            # Test 3: Prometheus metrics (requires auth)
-            prometheus_response = await self.session.get(
-                f"{self.base_url}/api/system/prometheus",
-                headers=self.get_auth_headers()
-            )
-            
-            if prometheus_response.status_code != 200:
-                return {
-                    "success": False,
-                    "error": f"Prometheus metrics failed with status {prometheus_response.status_code}: {prometheus_response.text}"
-                }
-            
-            prometheus_data = prometheus_response.text
-            
-            # Should return Prometheus-style text metrics
-            if not prometheus_data or not isinstance(prometheus_data, str):
-                return {
-                    "success": False,
-                    "error": "Prometheus metrics should return text format"
-                }
-            
-            print(f"✅ Prometheus metrics working - {len(prometheus_data)} characters")
-            
-            return {
-                "success": True,
-                "ping_status": ping_response.status_code,
-                "health_status": health_response.status_code,
-                "prometheus_status": prometheus_response.status_code,
-                "ping_response": ping_data,
-                "health_checks_available": bool(health_data),
-                "prometheus_metrics_length": len(prometheus_data)
-            }
-            
-        except Exception as e:
-            return {
-                "success": False,
-                "error": f"Exception during health/prometheus test: {str(e)}"
-            }
-
-    async def test_gdpr(self) -> Dict[str, Any]:
-        """Test 6: GDPR functionality"""
-        print("\n🛡️ Testing GDPR...")
-        
-        if not self.access_token:
-            return {
-                "success": False,
-                "error": "No access token available for GDPR test"
-            }
-        
-        try:
-            # Test 1: Submit consent
-            consent_payload = {
-                "consent_type": "marketing",
-                "granted": True
-            }
-            
-            consent_response = await self.session.post(
-                f"{self.base_url}/api/gdpr/consent",
-                json=consent_payload,
-                headers={**self.get_auth_headers(), "Content-Type": "application/json"}
-            )
-            
-            if consent_response.status_code != 200:
-                return {
-                    "success": False,
-                    "error": f"GDPR consent failed with status {consent_response.status_code}: {consent_response.text}"
-                }
-            
-            consent_data = consent_response.json()
-            
-            print(f"✅ GDPR consent submission working")
-            
-            # Test 2: Get consents
-            consents_response = await self.session.get(
-                f"{self.base_url}/api/gdpr/consents",
-                headers=self.get_auth_headers()
-            )
-            
-            if consents_response.status_code != 200:
-                return {
-                    "success": False,
-                    "error": f"GDPR consents list failed with status {consents_response.status_code}: {consents_response.text}"
-                }
-            
-            consents_data = consents_response.json()
-            
-            print(f"✅ GDPR consents retrieval working - {len(consents_data) if isinstance(consents_data, list) else 0} consent(s)")
-            
-            return {
-                "success": True,
-                "consent_status": consent_response.status_code,
-                "consents_status": consents_response.status_code,
-                "consent_recorded": bool(consent_data.get("status") == "ok"),
-                "consents_count": len(consents_data) if isinstance(consents_data, list) else 0
-            }
-            
-        except Exception as e:
-            return {
-                "success": False,
-                "error": f"Exception during GDPR test: {str(e)}"
-            }
-
-    async def test_security_headers(self) -> Dict[str, Any]:
-        """Test 7: Security Headers on API responses"""
-        print("\n🔒 Testing Security Headers...")
-        
-        try:
-            # Test on a simple endpoint
-            response = await self.session.get(
-                f"{self.base_url}/api/system/ping"
-            )
-            
-            if response.status_code != 200:
-                return {
-                    "success": False,
-                    "error": f"Failed to get response for headers check: {response.status_code}"
-                }
-            
-            headers = response.headers
-            
-            # Expected security headers
-            expected_headers = {
-                "X-Content-Type-Options": "nosniff",
-                "X-Frame-Options": "DENY", 
-                "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-                "Content-Security-Policy": None,  # Check if present
-                "Referrer-Policy": "strict-origin-when-cross-origin"
-            }
-            
-            found_headers = {}
-            missing_headers = []
-            
-            for header_name, expected_value in expected_headers.items():
-                header_value = headers.get(header_name)
-                if header_value:
-                    found_headers[header_name] = header_value
-                    if expected_value and header_value != expected_value:
-                        print(f"⚠️ Header {header_name} value mismatch: expected '{expected_value}', got '{header_value}'")
+            async with self.session.post(f"{API_BASE}/auth/login", json=payload) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if "access_token" in data:
+                        self.access_token = data["access_token"]
+                        self.log_result(test_name, True, f"Login successful, token obtained")
+                        return True
+                    else:
+                        self.log_result(test_name, False, f"No access_token in response: {data}")
                 else:
-                    missing_headers.append(header_name)
-            
-            success = len(missing_headers) == 0
-            
-            if success:
-                print(f"✅ Security headers working - all expected headers present")
-            else:
-                print(f"❌ Missing security headers: {missing_headers}")
-            
-            return {
-                "success": success,
-                "found_headers": found_headers,
-                "missing_headers": missing_headers,
-                "status_code": response.status_code
-            }
-            
+                    text = await resp.text()
+                    self.log_result(test_name, False, f"HTTP {resp.status}: {text}")
+                    
         except Exception as e:
-            return {
-                "success": False,
-                "error": f"Exception during security headers test: {str(e)}"
-            }
-
-    async def test_cache_stats(self) -> Dict[str, Any]:
-        """Test 8: Cache Stats"""
-        print("\n💾 Testing Cache Stats...")
+            self.log_result(test_name, False, f"Exception: {str(e)}")
+            
+        return False
         
-        if not self.access_token:
-            return {
-                "success": False,
-                "error": "No access token available for cache stats test"
+    async def test_list_tours(self):
+        """Test 2: GET /api/tours - Get tour_id for reservation"""
+        test_name = "List Tours"
+        try:
+            headers = self.get_auth_headers()
+            
+            async with self.session.get(f"{API_BASE}/tours", headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    items = data.get("items", [])
+                    if len(items) > 0:
+                        self.tour_id = items[0]["id"]
+                        self.log_result(test_name, True, f"Found {len(items)} tours, using tour_id: {self.tour_id}")
+                        return True
+                    else:
+                        self.log_result(test_name, False, "No tours found in response")
+                else:
+                    text = await resp.text()
+                    self.log_result(test_name, False, f"HTTP {resp.status}: {text}")
+                    
+        except Exception as e:
+            self.log_result(test_name, False, f"Exception: {str(e)}")
+            
+        return False
+        
+    async def test_create_tour_reservation(self, guest_name: str):
+        """Test 3 & 7: POST /api/tours/{tour_id}/reserve - Create reservation"""
+        test_name = f"Create Tour Reservation ({guest_name})"
+        try:
+            if not self.tour_id:
+                self.log_result(test_name, False, "No tour_id available")
+                return None
+                
+            headers = self.get_auth_headers()
+            payload = {
+                "travel_date": "2025-08-15",
+                "adults": 2,
+                "children": 0,
+                "guest_name": guest_name,
+                "guest_email": f"{guest_name.lower().replace(' ', '.')}@test.com",
+                "guest_phone": "+905551234567"
             }
+            
+            async with self.session.post(f"{API_BASE}/tours/{self.tour_id}/reserve", 
+                                       json=payload, headers=headers) as resp:
+                if resp.status == 201:
+                    data = await resp.json()
+                    reservation_code = data.get("reservation_code")
+                    status = data.get("status")
+                    
+                    if status == "pending":
+                        self.log_result(test_name, True, 
+                                      f"Reservation created: {reservation_code}, status: {status} (correctly pending)")
+                        return reservation_code
+                    else:
+                        self.log_result(test_name, False, 
+                                      f"Reservation created but status is '{status}' instead of 'pending'")
+                        return reservation_code
+                else:
+                    text = await resp.text()
+                    self.log_result(test_name, False, f"HTTP {resp.status}: {text}")
+                    
+        except Exception as e:
+            self.log_result(test_name, False, f"Exception: {str(e)}")
+            
+        return None
+        
+    async def test_find_reservation_by_pnr(self, reservation_code: str):
+        """Test 4: GET /api/reservations - Find reservation by PNR"""
+        test_name = f"Find Reservation by PNR ({reservation_code})"
+        try:
+            headers = self.get_auth_headers()
+            
+            async with self.session.get(f"{API_BASE}/reservations?q={reservation_code}", 
+                                      headers=headers) as resp:
+                if resp.status == 200:
+                    reservations = await resp.json()
+                    if len(reservations) > 0:
+                        reservation = reservations[0]
+                        reservation_id = reservation.get("id")
+                        status = reservation.get("status")
+                        pnr = reservation.get("pnr")
+                        
+                        if pnr == reservation_code and status == "pending":
+                            self.log_result(test_name, True, 
+                                          f"Found reservation ID: {reservation_id}, status: {status}")
+                            return reservation_id
+                        else:
+                            self.log_result(test_name, False, 
+                                          f"Found reservation but PNR: {pnr}, status: {status}")
+                            return reservation_id
+                    else:
+                        self.log_result(test_name, False, "No reservations found")
+                else:
+                    text = await resp.text()
+                    self.log_result(test_name, False, f"HTTP {resp.status}: {text}")
+                    
+        except Exception as e:
+            self.log_result(test_name, False, f"Exception: {str(e)}")
+            
+        return None
+        
+    async def test_reject_reservation(self, reservation_id: str):
+        """Test 5: POST /api/reservations/{reservation_id}/reject"""
+        test_name = "Reject Reservation"
+        try:
+            headers = self.get_auth_headers()
+            payload = {"reason": "Oda müsait değil"}
+            
+            async with self.session.post(f"{API_BASE}/reservations/{reservation_id}/reject",
+                                       json=payload, headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    status = data.get("status")
+                    rejection_reason = data.get("rejection_reason")
+                    rejected_at = data.get("rejected_at")
+                    rejected_by = data.get("rejected_by")
+                    status_history = data.get("status_history", [])
+                    
+                    success = True
+                    details = []
+                    
+                    if status != "rejected":
+                        success = False
+                        details.append(f"Status is '{status}', expected 'rejected'")
+                    else:
+                        details.append(f"Status: {status}")
+                        
+                    if rejection_reason != "Oda müsait değil":
+                        success = False
+                        details.append(f"Rejection reason: '{rejection_reason}', expected 'Oda müsait değil'")
+                    else:
+                        details.append(f"Rejection reason: {rejection_reason}")
+                        
+                    if not rejected_at:
+                        success = False
+                        details.append("Missing rejected_at")
+                    else:
+                        details.append(f"Rejected at: {rejected_at}")
+                        
+                    if not rejected_by:
+                        success = False
+                        details.append("Missing rejected_by")
+                    else:
+                        details.append(f"Rejected by: {rejected_by}")
+                        
+                    if len(status_history) == 0:
+                        success = False
+                        details.append("Missing status_history")
+                    else:
+                        details.append(f"Status history entries: {len(status_history)}")
+                        
+                    self.log_result(test_name, success, "; ".join(details))
+                    return success
+                else:
+                    text = await resp.text()
+                    self.log_result(test_name, False, f"HTTP {resp.status}: {text}")
+                    
+        except Exception as e:
+            self.log_result(test_name, False, f"Exception: {str(e)}")
+            
+        return False
+        
+    async def test_invalid_transition_rejected_to_confirmed(self, reservation_id: str):
+        """Test 6: POST /api/reservations/{reservation_id}/confirm on rejected reservation"""
+        test_name = "Invalid Transition (Rejected -> Confirmed)"
+        try:
+            headers = self.get_auth_headers()
+            
+            async with self.session.post(f"{API_BASE}/reservations/{reservation_id}/confirm",
+                                       headers=headers) as resp:
+                if resp.status == 409:
+                    text = await resp.text()
+                    self.log_result(test_name, True, f"Correctly returned 409 error: {text}")
+                    return True
+                else:
+                    text = await resp.text()
+                    self.log_result(test_name, False, 
+                                  f"Expected 409 error but got HTTP {resp.status}: {text}")
+                    
+        except Exception as e:
+            self.log_result(test_name, False, f"Exception: {str(e)}")
+            
+        return False
+        
+    async def test_confirm_reservation(self, reservation_id: str):
+        """Test 8: POST /api/reservations/{reservation_id}/confirm"""
+        test_name = "Confirm Reservation"
+        try:
+            headers = self.get_auth_headers()
+            
+            async with self.session.post(f"{API_BASE}/reservations/{reservation_id}/confirm",
+                                       headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    status = data.get("status")
+                    confirmed_at = data.get("confirmed_at")
+                    confirmed_by = data.get("confirmed_by")
+                    status_history = data.get("status_history", [])
+                    
+                    success = True
+                    details = []
+                    
+                    if status != "confirmed":
+                        success = False
+                        details.append(f"Status is '{status}', expected 'confirmed'")
+                    else:
+                        details.append(f"Status: {status}")
+                        
+                    if not confirmed_at:
+                        success = False
+                        details.append("Missing confirmed_at")
+                    else:
+                        details.append(f"Confirmed at: {confirmed_at}")
+                        
+                    if not confirmed_by:
+                        success = False
+                        details.append("Missing confirmed_by")
+                    else:
+                        details.append(f"Confirmed by: {confirmed_by}")
+                        
+                    if len(status_history) == 0:
+                        success = False
+                        details.append("Missing status_history")
+                    else:
+                        details.append(f"Status history entries: {len(status_history)}")
+                        
+                    self.log_result(test_name, success, "; ".join(details))
+                    return success
+                else:
+                    text = await resp.text()
+                    self.log_result(test_name, False, f"HTTP {resp.status}: {text}")
+                    
+        except Exception as e:
+            self.log_result(test_name, False, f"Exception: {str(e)}")
+            
+        return False
+        
+    async def test_double_confirm(self, reservation_id: str):
+        """Test 9: POST /api/reservations/{reservation_id}/confirm again (should fail)"""
+        test_name = "Double Confirm (Invalid Transition)"
+        try:
+            headers = self.get_auth_headers()
+            
+            async with self.session.post(f"{API_BASE}/reservations/{reservation_id}/confirm",
+                                       headers=headers) as resp:
+                if resp.status == 409:
+                    text = await resp.text()
+                    self.log_result(test_name, True, f"Correctly returned 409 error: {text}")
+                    return True
+                else:
+                    text = await resp.text()
+                    self.log_result(test_name, False, 
+                                  f"Expected 409 error but got HTTP {resp.status}: {text}")
+                    
+        except Exception as e:
+            self.log_result(test_name, False, f"Exception: {str(e)}")
+            
+        return False
+        
+    async def test_cancel_from_confirmed(self, reservation_id: str):
+        """Test 10: POST /api/reservations/{reservation_id}/cancel from confirmed"""
+        test_name = "Cancel from Confirmed"
+        try:
+            headers = self.get_auth_headers()
+            
+            async with self.session.post(f"{API_BASE}/reservations/{reservation_id}/cancel",
+                                       headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    status = data.get("status")
+                    
+                    if status == "cancelled":
+                        self.log_result(test_name, True, f"Successfully cancelled reservation, status: {status}")
+                        return True
+                    else:
+                        self.log_result(test_name, False, f"Unexpected status: {status}")
+                else:
+                    text = await resp.text()
+                    self.log_result(test_name, False, f"HTTP {resp.status}: {text}")
+                    
+        except Exception as e:
+            self.log_result(test_name, False, f"Exception: {str(e)}")
+            
+        return False
+        
+    async def run_all_tests(self):
+        """Run the complete hotel approval/reject workflow test suite"""
+        print("🚀 Starting Hotel Approval/Reject Workflow Testing")
+        print(f"🌐 Testing against: {BASE_URL}")
+        print("=" * 80)
         
         try:
-            response = await self.session.get(
-                f"{self.base_url}/api/admin/cache/stats",
-                headers=self.get_auth_headers()
-            )
+            # Test 1: Login
+            if not await self.test_login():
+                print("\n❌ Login failed - cannot continue with tests")
+                return
+                
+            # Test 2: List tours
+            if not await self.test_list_tours():
+                print("\n❌ Could not get tours - cannot continue")
+                return
+                
+            # Test 3: Create first reservation for rejection test
+            first_reservation_code = await self.test_create_tour_reservation("Test Reject Guest")
+            if not first_reservation_code:
+                print("\n❌ Could not create first reservation")
+                return
+                
+            # Test 4: Find first reservation
+            self.first_reservation_id = await self.test_find_reservation_by_pnr(first_reservation_code)
+            if not self.first_reservation_id:
+                print("\n❌ Could not find first reservation")
+                return
+                
+            # Test 5: Test reject workflow
+            await self.test_reject_reservation(self.first_reservation_id)
             
-            if response.status_code != 200:
-                return {
-                    "success": False,
-                    "error": f"Cache stats failed with status {response.status_code}: {response.text}"
-                }
+            # Test 6: Test invalid transition (rejected -> confirmed)
+            await self.test_invalid_transition_rejected_to_confirmed(self.first_reservation_id)
             
-            data = response.json()
-            
-            print(f"✅ Cache stats working")
-            
-            return {
-                "success": True,
-                "status_code": response.status_code,
-                "cache_stats": data
-            }
-            
+            # Test 7: Create second reservation for confirmation test
+            second_reservation_code = await self.test_create_tour_reservation("Test Confirm Guest")
+            if not second_reservation_code:
+                print("\n❌ Could not create second reservation")
+                return
+                
+            # Find second reservation
+            self.second_reservation_id = await self.test_find_reservation_by_pnr(second_reservation_code)
+            if not self.second_reservation_id:
+                print("\n❌ Could not find second reservation")
+                return
+                
+            # Test 8: Test confirm workflow
+            if await self.test_confirm_reservation(self.second_reservation_id):
+                # Test 9: Test double confirm (invalid)
+                await self.test_double_confirm(self.second_reservation_id)
+                
+                # Test 10: Test cancel from confirmed
+                await self.test_cancel_from_confirmed(self.second_reservation_id)
+                
         except Exception as e:
-            return {
-                "success": False,
-                "error": f"Exception during cache stats test: {str(e)}"
-            }
-
-    async def test_distributed_locks(self) -> Dict[str, Any]:
-        """Test 9: Distributed Locks"""
-        print("\n🔐 Testing Distributed Locks...")
-        
-        if not self.access_token:
-            return {
-                "success": False,
-                "error": "No access token available for distributed locks test"
-            }
-        
-        try:
-            response = await self.session.get(
-                f"{self.base_url}/api/admin/locks/",
-                headers=self.get_auth_headers()
-            )
+            print(f"\n❌ Unexpected error during testing: {str(e)}")
             
-            if response.status_code != 200:
-                return {
-                    "success": False,
-                    "error": f"Distributed locks failed with status {response.status_code}: {response.text}"
-                }
+        finally:
+            await self.print_summary()
             
-            data = response.json()
-            
-            print(f"✅ Distributed locks working - {len(data) if isinstance(data, list) else 0} active lock(s)")
-            
-            return {
-                "success": True,
-                "status_code": response.status_code,
-                "active_locks_count": len(data) if isinstance(data, list) else 0,
-                "locks": data if isinstance(data, list) else []
-            }
-            
-        except Exception as e:
-            return {
-                "success": False,
-                "error": f"Exception during distributed locks test: {str(e)}"
-            }
-
-    async def run_all_tests(self) -> Dict[str, Any]:
-        """Run all platform hardening tests"""
-        print("🚀 Starting Platform Hardening Backend Tests...")
-        print(f"🌐 Base URL: {self.base_url}")
+    async def print_summary(self):
+        """Print test summary"""
+        print("\n" + "=" * 80)
+        print("📊 TEST SUMMARY")
+        print("=" * 80)
         
-        results = {}
+        total_tests = len(self.test_results)
+        passed_tests = sum(1 for r in self.test_results if r['success'])
+        failed_tests = total_tests - passed_tests
         
-        # Test 1: Login & Refresh Token (prerequisite for other tests)
-        results["login_refresh"] = await self.test_login_and_refresh_token()
+        print(f"Total Tests: {total_tests}")
+        print(f"✅ Passed: {passed_tests}")
+        print(f"❌ Failed: {failed_tests}")
+        print(f"Success Rate: {passed_tests/total_tests*100:.1f}%" if total_tests > 0 else "N/A")
         
-        # Test 2: Sessions
-        results["sessions"] = await self.test_sessions()
+        if failed_tests > 0:
+            print("\n🚨 FAILED TESTS:")
+            for result in self.test_results:
+                if not result['success']:
+                    print(f"❌ {result['test']}: {result['details']}")
         
-        # Test 3: Cancel Reason Codes (no auth required)
-        results["cancel_reasons"] = await self.test_cancel_reason_codes()
-        
-        # Test 4: Multi-currency
-        results["multi_currency"] = await self.test_multi_currency()
-        
-        # Test 5: Health Dashboard & Prometheus
-        results["health_dashboard"] = await self.test_health_dashboard()
-        
-        # Test 6: GDPR
-        results["gdpr"] = await self.test_gdpr()
-        
-        # Test 7: Security Headers
-        results["security_headers"] = await self.test_security_headers()
-        
-        # Test 8: Cache Stats
-        results["cache_stats"] = await self.test_cache_stats()
-        
-        # Test 9: Distributed Locks
-        results["distributed_locks"] = await self.test_distributed_locks()
-        
-        return results
-
+        print("\n📝 DETAILED RESULTS:")
+        for result in self.test_results:
+            status = "✅ PASS" if result['success'] else "❌ FAIL"
+            print(f"{status} {result['test']}: {result['details']}")
 
 async def main():
     """Main test runner"""
-    tester = PlatformHardeningTester()
+    tester = HotelWorkflowTester()
     
     try:
-        results = await tester.run_all_tests()
-        
-        print("\n" + "="*80)
-        print("🎯 PLATFORM HARDENING TESTS SUMMARY")
-        print("="*80)
-        
-        passed_count = 0
-        total_count = 0
-        
-        for test_name, result in results.items():
-            total_count += 1
-            status = "✅ PASS" if result.get("success") else "❌ FAIL"
-            print(f"{status} {test_name.replace('_', ' ').title()}")
-            
-            if result.get("success"):
-                passed_count += 1
-            else:
-                error = result.get("error", "Unknown error")
-                print(f"    Error: {error}")
-        
-        print("="*80)
-        print(f"📊 Results: {passed_count}/{total_count} tests passed")
-        
-        if passed_count == total_count:
-            print("🎉 All platform hardening features are working correctly!")
-        else:
-            print(f"⚠️  {total_count - passed_count} test(s) failed - requires attention")
-            
-        # Write detailed results to file for debugging
-        with open("platform_hardening_test_results.json", "w") as f:
-            json.dump(results, f, indent=2, default=str)
-        
-        print(f"📝 Detailed results saved to platform_hardening_test_results.json")
-        
-        return passed_count == total_count
-        
-    except Exception as e:
-        print(f"\n💥 Critical error during testing: {e}")
-        return False
-    
+        await tester.setup()
+        await tester.run_all_tests()
     finally:
         await tester.cleanup()
 
-
 if __name__ == "__main__":
-    success = asyncio.run(main())
-    sys.exit(0 if success else 1)
+    asyncio.run(main())

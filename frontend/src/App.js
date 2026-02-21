@@ -16,195 +16,199 @@ const queryClient = new QueryClient({
   },
 });
 
+// ─── Eager imports (critical path) ───
 import LoginPage from "./pages/LoginPage";
 import B2BLoginPage from "./b2b/B2BLoginPage";
 import B2BAuthGuard from "./b2b/B2BAuthGuard";
 import B2BLayout from "./b2b/B2BLayout";
-import B2BBookingsPage from "./b2b/pages/B2BBookingsPage";
-import B2BBookingDetailPage from "./b2b/pages/B2BBookingDetailPage";
-import B2BAccountPage from "./b2b/pages/B2BAccountPage";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import RequireAuth from "./components/RequireAuth";
 import AppShell from "./components/AppShell";
 import AdminLayout from "./layouts/AdminLayout";
 import AgencyLayout from "./layouts/AgencyLayout";
-import PublicMyBookingRequestPage from "./pages/PublicMyBookingRequestPage";
-import PublicMyBookingDetailPage from "./pages/PublicMyBookingDetailPage";
-import PublicClickToPayPage from "./pages/public/PublicClickToPayPage";
-import BookSearchPage from "./pages/public/BookSearchPage";
-import BookProductPage from "./pages/public/BookProductPage";
-import BookCheckoutPage from "./pages/public/BookCheckoutPage";
-import BookCompletePage from "./pages/public/BookCompletePage";
-import BookTourProductPage from "./pages/public/BookTourProductPage";
-import BookTourCheckoutPage from "./pages/public/BookTourCheckoutPage";
-import PublicCMSPage from "./pages/public/PublicCMSPage";
-import PublicCampaignPage from "./pages/public/PublicCampaignPage";
-import PublicPartnerApplyPage from "./pages/public/PublicPartnerApplyPage";
-import SignupPage from "./pages/public/SignupPage";
-import PricingPage from "./pages/public/PricingPage";
-import WebPOSPage from "./pages/WebPOSPage";
-import AdvancedReportsPage from "./pages/AdvancedReportsPage";
-import OnboardingWizardPage from "./pages/OnboardingWizardPage";
-import PublicHomePage from "./pages/PublicHomePage";
-import StorefrontSearchPage from "./pages/storefront/StorefrontSearchPage";
-import StorefrontOfferPage from "./pages/storefront/StorefrontOfferPage";
-import StorefrontCheckoutPage from "./pages/storefront/StorefrontCheckoutPage";
-
 import HotelLayout from "./layouts/HotelLayout";
-import AdminAgenciesPage from "./pages/AdminAgenciesPage";
-import AdminAgencyUsersPage from "./pages/AdminAgencyUsersPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import AdminHotelsPage from "./pages/AdminHotelsPage";
-import AdminToursPage from "./pages/AdminToursPage";
-import AdminLinksPage from "./pages/AdminLinksPage";
-import AdminAgencyContractsPage from "./pages/AdminAgencyContractsPage";
-import AdminCMSPagesPage from "./pages/AdminCMSPagesPage";
-import AdminAuditLogsPage from "./pages/AdminAuditLogsPage";
-import AdminEmailLogsPage from "./pages/AdminEmailLogsPage";
-import AdminPilotDashboardPage from "./pages/AdminPilotDashboardPage";
-import AdminMetricsPage from "./pages/AdminMetricsPage";
-import AdminMatchAlertsPolicyPage from "./pages/AdminMatchAlertsPolicyPage";
-
-// Enterprise Hardening (E1-E4) pages
-import AdminBrandingPage from "./pages/AdminBrandingPage";
-import AdminApprovalInboxPage from "./pages/AdminApprovalInboxPage";
-import AdminTenantExportPage from "./pages/AdminTenantExportPage";
-import AdminScheduledReportsPage from "./pages/AdminScheduledReportsPage";
-
-// Feature modules (E-Fatura, SMS, Tickets)
-import AdminEFaturaPage from "./pages/AdminEFaturaPage";
-import AdminSMSPage from "./pages/AdminSMSPage";
-import AdminTicketsPage from "./pages/AdminTicketsPage";
-
-// Operational Excellence (O1-O5)
-import AdminSystemBackupsPage from "./pages/admin/AdminSystemBackupsPage";
-import AdminSystemIntegrityPage from "./pages/admin/AdminSystemIntegrityPage";
-import AdminSystemMetricsPage from "./pages/admin/AdminSystemMetricsPage";
-import AdminSystemErrorsPage from "./pages/admin/AdminSystemErrorsPage";
-import AdminSystemUptimePage from "./pages/admin/AdminSystemUptimePage";
-import AdminSystemIncidentsPage from "./pages/admin/AdminSystemIncidentsPage";
-
-// Production Go-Live Pack (A)
-import AdminPreflightPage from "./pages/admin/AdminPreflightPage";
-import AdminRunbookPage from "./pages/admin/AdminRunbookPage";
-
-// Cost/Performance Pack (B)
-import AdminPerfDashboardPage from "./pages/admin/AdminPerfDashboardPage";
-
-// Enterprise Demo Pack (C)
-import AdminDemoGuidePage from "./pages/admin/AdminDemoGuidePage";
-
-// Product Mode Settings
-import AdminProductModePage from "./pages/admin/AdminProductModePage";
-
-// Data & Migration
-import AdminImportPage from "./pages/admin/AdminImportPage";
-import AdminPortfolioSyncPage from "./pages/admin/AdminPortfolioSyncPage";
-
-import AdminMatchesPage from "./pages/AdminMatchesPage";
-import AdminExportsPage from "./pages/AdminExportsPage";
-import AdminMatchDetailPage from "./pages/AdminMatchDetailPage";
-import AdminMatchRiskTrendsPage from "./pages/AdminMatchRiskTrendsPage";
-import AdminActionPoliciesPage from "./pages/AdminActionPoliciesPage";
-import AdminApprovalsPage from "./pages/AdminApprovalsPage";
-import AdminCatalogPage from "./pages/AdminCatalogPage";
-import AdminCatalogHotelsPage from "./pages/AdminCatalogHotelsPage";
-import AdminPricingPage from "./pages/AdminPricingPage";
-import AdminPricingRulesPage from "./pages/AdminPricingRulesPage";
-import AdminFunnelPage from "./pages/AdminFunnelPage";
-import AdminB2BFunnelPage from "./pages/AdminB2BFunnelPage";
-import AdminB2BAnnouncementsPage from "./pages/AdminB2BAnnouncementsPage";
-import AdminB2BDashboardPage from "./pages/AdminB2BDashboardPage";
-import AdminExecutiveDashboardPage from "./pages/AdminExecutiveDashboardPage";
-import AdminB2BMarketplacePage from "./pages/AdminB2BMarketplacePage";
-import AdminMarketplaceListingsPage from "./pages/marketplace/AdminMarketplaceListingsPage";
-import B2BMarketplaceCatalogPage from "./pages/marketplace/B2BMarketplaceCatalogPage";
-import AdminThemePage from "./pages/AdminThemePage";
-import AdminReportingPage from "./pages/AdminReportingPage";
-import AdminVillaCalendarPage from "./pages/AdminVillaCalendarPage";
-import AdminPricingIncidentsPage from "./pages/AdminPricingIncidentsPage";
-import AdminB2BDiscountsPage from "./pages/AdminB2BDiscountsPage";
-import AdminCouponsPage from "./pages/AdminCouponsPage";
-import AdminCampaignsPage from "./pages/AdminCampaignsPage";
-import AdminIntegrationsPage from "./pages/AdminIntegrationsPage";
-import AdminPartnersPage from "./pages/AdminPartnersPage";
-import AdminJobsPage from "./pages/AdminJobsPage";
-import AdminApiKeysPage from "./pages/AdminApiKeysPage";
-import OpsB2BQueuesPage from "./pages/OpsB2BQueuesPage";
-import InboxPage from "./pages/InboxPage";
-import PartnerInboxPage from "./pages/partners/PartnerInboxPage";
-import PartnerDiscoveryPage from "./pages/partners/PartnerDiscoveryPage";
-import AdminFinanceRefundsPage from "./pages/AdminFinanceRefundsPage";
-import PartnerInvitesPage from "./pages/partners/PartnerInvitesPage";
-import PartnerRelationshipsPage from "./pages/partners/PartnerRelationshipsPage";
-import PartnerStatementsPage from "./pages/partners/PartnerStatementsPage";
-import PartnerLayout from "./pages/partners/PartnerLayout";
-import PartnerOverviewPage from "./pages/partners/PartnerOverviewPage";
-import PartnerB2BNetworkPage from "./pages/partners/PartnerB2BNetworkPage";
-
-
-import AdminOpsIncidentsPage from "./pages/ops/AdminOpsIncidentsPage";
-import AdminFinanceExposurePage from "./pages/AdminFinanceExposurePage";
-import AdminB2BAgenciesSummaryPage from "./pages/AdminB2BAgenciesSummaryPage";
-import AdminB2BAgencyProductsPage from "./pages/AdminB2BAgencyProductsPage";
-import AdminSettlementsPage from "./pages/AdminSettlementsPage";
-import AdminSettlementRunsPage from "./pages/AdminSettlementRunsPage";
-import AdminSettlementRunDetailPage from "./pages/AdminSettlementRunDetailPage";
-import OpsSupplierAccrualsPage from "./pages/OpsSupplierAccrualsPage";
-import AdminSupplierSettlementBridgePage from "./pages/AdminSupplierSettlementBridgePage";
-import AdminTenantFeaturesPage from "./pages/admin/AdminTenantFeaturesPage";
-import AdminAuditLogPage from "./pages/admin/AdminAuditLogPage";
-import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
-import AdminTenantHealthPage from "./pages/admin/AdminTenantHealthPage";
-import DashboardPage from "./pages/DashboardPage";
-import ProductsPage from "./pages/ProductsPage";
-import InventoryPage from "./pages/InventoryPage";
-import ReservationsPage from "./pages/ReservationsPage";
-import CustomersPage from "./pages/CustomersPage";
-import B2BPage from "./pages/B2BPage";
-import B2BBookingPage from "./pages/B2BBookingPage";
-import ReportsPage from "./pages/ReportsPage";
-import SettingsPage from "./pages/SettingsPage";
-import AgencyHotelsPage from "./pages/AgencyHotelsPage";
-import AgencyAvailabilityPage from "./pages/AgencyAvailabilityPage";
-import AgencyHotelDetailPage from "./pages/AgencyHotelDetailPage";
-import AgencyHotelSearchPage from "./pages/AgencyHotelSearchPage";
-import AgencySearchResultsPage from "./pages/AgencySearchResultsPage";
-import AgencyBookingNewPage from "./pages/AgencyBookingNewPage";
-import AgencyBookingTestPage from "./pages/AgencyBookingTestPage";
-import SimpleBookingTest from "./pages/SimpleBookingTest";
-import WebBookingPage from "./pages/WebBookingPage";
-import AgencyBookingDraftPage from "./pages/AgencyBookingDraftPage";
-import AgencyBookingConfirmedPage from "./pages/AgencyBookingConfirmedPage";
-import AgencyBookingPendingPage from "./pages/AgencyBookingPendingPage";
 import { Navigate } from "react-router-dom";
-import AgencyBookingsListPage from "./pages/AgencyBookingsListPage";
-import AgencySettlementsPage from "./pages/AgencySettlementsPage";
-import AgencyHelpPage from "./pages/AgencyHelpPage";
-import B2BPortalPage from "./pages/B2BPortalPage";
-import OpsGuestCasesPage from "./pages/OpsGuestCasesPage";
-import OpsBookingDetailPage from "./pages/ops/OpsBookingDetailPage";
-import CrmCustomersPage from "./pages/crm/CrmCustomersPage";
-import CrmCustomerDetailPage from "./pages/crm/CrmCustomerDetailPage";
-import CrmTasksPage from "./pages/crm/CrmTasksPage";
-import CrmEventsPage from "./pages/crm/CrmEventsPage";
-import CrmPipelinePage from "./pages/crm/CrmPipelinePage";
-import CrmDuplicateCustomersPage from "./pages/crm/CrmDuplicateCustomersPage";
-import OpsTasksPage from "./pages/OpsTasksPage";
-import ToursListPage from "./pages/ToursListPage";
-import TourDetailPage from "./pages/TourDetailPage";
-
-import HotelBookingsPage from "./pages/HotelBookingsPage";
-import HotelStopSellPage from "./pages/HotelStopSellPage";
-import HotelAllocationsPage from "./pages/HotelAllocationsPage";
-import HotelSettlementsPage from "./pages/HotelSettlementsPage";
-import HotelIntegrationsPage from "./pages/HotelIntegrationsPage";
-import HotelHelpPage from "./pages/HotelHelpPage";
 import NotFoundPage from "./pages/NotFoundPage";
-import ErrorContextPage from "./pages/ErrorContextPage";
 import { Toaster } from "./components/ui/sonner";
 import { useTheme } from "./theme/useTheme";
 import { getBrandNameFromThemeCache } from "./hooks/useSeo";
+
+// ─── Loading fallback ───
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-[50vh]">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-3 border-primary border-t-transparent" />
+        <span className="text-sm text-muted-foreground font-medium">Yükleniyor...</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Lazy imports (code-split pages) ───
+const B2BBookingsPage = lazy(() => import("./b2b/pages/B2BBookingsPage"));
+const B2BBookingDetailPage = lazy(() => import("./b2b/pages/B2BBookingDetailPage"));
+const B2BAccountPage = lazy(() => import("./b2b/pages/B2BAccountPage"));
+const PublicMyBookingRequestPage = lazy(() => import("./pages/PublicMyBookingRequestPage"));
+const PublicMyBookingDetailPage = lazy(() => import("./pages/PublicMyBookingDetailPage"));
+const PublicClickToPayPage = lazy(() => import("./pages/public/PublicClickToPayPage"));
+const BookSearchPage = lazy(() => import("./pages/public/BookSearchPage"));
+const BookProductPage = lazy(() => import("./pages/public/BookProductPage"));
+const BookCheckoutPage = lazy(() => import("./pages/public/BookCheckoutPage"));
+const BookCompletePage = lazy(() => import("./pages/public/BookCompletePage"));
+const BookTourProductPage = lazy(() => import("./pages/public/BookTourProductPage"));
+const BookTourCheckoutPage = lazy(() => import("./pages/public/BookTourCheckoutPage"));
+const PublicCMSPage = lazy(() => import("./pages/public/PublicCMSPage"));
+const PublicCampaignPage = lazy(() => import("./pages/public/PublicCampaignPage"));
+const PublicPartnerApplyPage = lazy(() => import("./pages/public/PublicPartnerApplyPage"));
+const SignupPage = lazy(() => import("./pages/public/SignupPage"));
+const PricingPage = lazy(() => import("./pages/public/PricingPage"));
+const WebPOSPage = lazy(() => import("./pages/WebPOSPage"));
+const AdvancedReportsPage = lazy(() => import("./pages/AdvancedReportsPage"));
+const OnboardingWizardPage = lazy(() => import("./pages/OnboardingWizardPage"));
+const PublicHomePage = lazy(() => import("./pages/PublicHomePage"));
+const StorefrontSearchPage = lazy(() => import("./pages/storefront/StorefrontSearchPage"));
+const StorefrontOfferPage = lazy(() => import("./pages/storefront/StorefrontOfferPage"));
+const StorefrontCheckoutPage = lazy(() => import("./pages/storefront/StorefrontCheckoutPage"));
+
+const AdminAgenciesPage = lazy(() => import("./pages/AdminAgenciesPage"));
+const AdminAgencyUsersPage = lazy(() => import("./pages/AdminAgencyUsersPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const AdminHotelsPage = lazy(() => import("./pages/AdminHotelsPage"));
+const AdminToursPage = lazy(() => import("./pages/AdminToursPage"));
+const AdminLinksPage = lazy(() => import("./pages/AdminLinksPage"));
+const AdminAgencyContractsPage = lazy(() => import("./pages/AdminAgencyContractsPage"));
+const AdminCMSPagesPage = lazy(() => import("./pages/AdminCMSPagesPage"));
+const AdminAuditLogsPage = lazy(() => import("./pages/AdminAuditLogsPage"));
+const AdminEmailLogsPage = lazy(() => import("./pages/AdminEmailLogsPage"));
+const AdminPilotDashboardPage = lazy(() => import("./pages/AdminPilotDashboardPage"));
+const AdminMetricsPage = lazy(() => import("./pages/AdminMetricsPage"));
+const AdminMatchAlertsPolicyPage = lazy(() => import("./pages/AdminMatchAlertsPolicyPage"));
+
+// Enterprise Hardening (E1-E4) pages
+const AdminBrandingPage = lazy(() => import("./pages/AdminBrandingPage"));
+const AdminApprovalInboxPage = lazy(() => import("./pages/AdminApprovalInboxPage"));
+const AdminTenantExportPage = lazy(() => import("./pages/AdminTenantExportPage"));
+const AdminScheduledReportsPage = lazy(() => import("./pages/AdminScheduledReportsPage"));
+
+// Feature modules
+const AdminEFaturaPage = lazy(() => import("./pages/AdminEFaturaPage"));
+const AdminSMSPage = lazy(() => import("./pages/AdminSMSPage"));
+const AdminTicketsPage = lazy(() => import("./pages/AdminTicketsPage"));
+
+// Operational Excellence
+const AdminSystemBackupsPage = lazy(() => import("./pages/admin/AdminSystemBackupsPage"));
+const AdminSystemIntegrityPage = lazy(() => import("./pages/admin/AdminSystemIntegrityPage"));
+const AdminSystemMetricsPage = lazy(() => import("./pages/admin/AdminSystemMetricsPage"));
+const AdminSystemErrorsPage = lazy(() => import("./pages/admin/AdminSystemErrorsPage"));
+const AdminSystemUptimePage = lazy(() => import("./pages/admin/AdminSystemUptimePage"));
+const AdminSystemIncidentsPage = lazy(() => import("./pages/admin/AdminSystemIncidentsPage"));
+const AdminPreflightPage = lazy(() => import("./pages/admin/AdminPreflightPage"));
+const AdminRunbookPage = lazy(() => import("./pages/admin/AdminRunbookPage"));
+const AdminPerfDashboardPage = lazy(() => import("./pages/admin/AdminPerfDashboardPage"));
+const AdminDemoGuidePage = lazy(() => import("./pages/admin/AdminDemoGuidePage"));
+const AdminProductModePage = lazy(() => import("./pages/admin/AdminProductModePage"));
+const AdminImportPage = lazy(() => import("./pages/admin/AdminImportPage"));
+const AdminPortfolioSyncPage = lazy(() => import("./pages/admin/AdminPortfolioSyncPage"));
+
+const AdminMatchesPage = lazy(() => import("./pages/AdminMatchesPage"));
+const AdminExportsPage = lazy(() => import("./pages/AdminExportsPage"));
+const AdminMatchDetailPage = lazy(() => import("./pages/AdminMatchDetailPage"));
+const AdminMatchRiskTrendsPage = lazy(() => import("./pages/AdminMatchRiskTrendsPage"));
+const AdminActionPoliciesPage = lazy(() => import("./pages/AdminActionPoliciesPage"));
+const AdminApprovalsPage = lazy(() => import("./pages/AdminApprovalsPage"));
+const AdminCatalogPage = lazy(() => import("./pages/AdminCatalogPage"));
+const AdminCatalogHotelsPage = lazy(() => import("./pages/AdminCatalogHotelsPage"));
+const AdminPricingPage = lazy(() => import("./pages/AdminPricingPage"));
+const AdminPricingRulesPage = lazy(() => import("./pages/AdminPricingRulesPage"));
+const AdminFunnelPage = lazy(() => import("./pages/AdminFunnelPage"));
+const AdminB2BFunnelPage = lazy(() => import("./pages/AdminB2BFunnelPage"));
+const AdminB2BAnnouncementsPage = lazy(() => import("./pages/AdminB2BAnnouncementsPage"));
+const AdminB2BDashboardPage = lazy(() => import("./pages/AdminB2BDashboardPage"));
+const AdminExecutiveDashboardPage = lazy(() => import("./pages/AdminExecutiveDashboardPage"));
+const AdminB2BMarketplacePage = lazy(() => import("./pages/AdminB2BMarketplacePage"));
+const AdminMarketplaceListingsPage = lazy(() => import("./pages/marketplace/AdminMarketplaceListingsPage"));
+const B2BMarketplaceCatalogPage = lazy(() => import("./pages/marketplace/B2BMarketplaceCatalogPage"));
+const AdminThemePage = lazy(() => import("./pages/AdminThemePage"));
+const AdminReportingPage = lazy(() => import("./pages/AdminReportingPage"));
+const AdminVillaCalendarPage = lazy(() => import("./pages/AdminVillaCalendarPage"));
+const AdminPricingIncidentsPage = lazy(() => import("./pages/AdminPricingIncidentsPage"));
+const AdminB2BDiscountsPage = lazy(() => import("./pages/AdminB2BDiscountsPage"));
+const AdminCouponsPage = lazy(() => import("./pages/AdminCouponsPage"));
+const AdminCampaignsPage = lazy(() => import("./pages/AdminCampaignsPage"));
+const AdminIntegrationsPage = lazy(() => import("./pages/AdminIntegrationsPage"));
+const AdminPartnersPage = lazy(() => import("./pages/AdminPartnersPage"));
+const AdminJobsPage = lazy(() => import("./pages/AdminJobsPage"));
+const AdminApiKeysPage = lazy(() => import("./pages/AdminApiKeysPage"));
+const OpsB2BQueuesPage = lazy(() => import("./pages/OpsB2BQueuesPage"));
+const InboxPage = lazy(() => import("./pages/InboxPage"));
+const PartnerInboxPage = lazy(() => import("./pages/partners/PartnerInboxPage"));
+const PartnerDiscoveryPage = lazy(() => import("./pages/partners/PartnerDiscoveryPage"));
+const AdminFinanceRefundsPage = lazy(() => import("./pages/AdminFinanceRefundsPage"));
+const PartnerInvitesPage = lazy(() => import("./pages/partners/PartnerInvitesPage"));
+const PartnerRelationshipsPage = lazy(() => import("./pages/partners/PartnerRelationshipsPage"));
+const PartnerStatementsPage = lazy(() => import("./pages/partners/PartnerStatementsPage"));
+const PartnerLayout = lazy(() => import("./pages/partners/PartnerLayout"));
+const PartnerOverviewPage = lazy(() => import("./pages/partners/PartnerOverviewPage"));
+const PartnerB2BNetworkPage = lazy(() => import("./pages/partners/PartnerB2BNetworkPage"));
+
+const AdminOpsIncidentsPage = lazy(() => import("./pages/ops/AdminOpsIncidentsPage"));
+const AdminFinanceExposurePage = lazy(() => import("./pages/AdminFinanceExposurePage"));
+const AdminB2BAgenciesSummaryPage = lazy(() => import("./pages/AdminB2BAgenciesSummaryPage"));
+const AdminB2BAgencyProductsPage = lazy(() => import("./pages/AdminB2BAgencyProductsPage"));
+const AdminSettlementsPage = lazy(() => import("./pages/AdminSettlementsPage"));
+const AdminSettlementRunsPage = lazy(() => import("./pages/AdminSettlementRunsPage"));
+const AdminSettlementRunDetailPage = lazy(() => import("./pages/AdminSettlementRunDetailPage"));
+const OpsSupplierAccrualsPage = lazy(() => import("./pages/OpsSupplierAccrualsPage"));
+const AdminSupplierSettlementBridgePage = lazy(() => import("./pages/AdminSupplierSettlementBridgePage"));
+const AdminTenantFeaturesPage = lazy(() => import("./pages/admin/AdminTenantFeaturesPage"));
+const AdminAuditLogPage = lazy(() => import("./pages/admin/AdminAuditLogPage"));
+const AdminAnalyticsPage = lazy(() => import("./pages/admin/AdminAnalyticsPage"));
+const AdminTenantHealthPage = lazy(() => import("./pages/admin/AdminTenantHealthPage"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const ProductsPage = lazy(() => import("./pages/ProductsPage"));
+const InventoryPage = lazy(() => import("./pages/InventoryPage"));
+const ReservationsPage = lazy(() => import("./pages/ReservationsPage"));
+const CustomersPage = lazy(() => import("./pages/CustomersPage"));
+const B2BPage = lazy(() => import("./pages/B2BPage"));
+const B2BBookingPage = lazy(() => import("./pages/B2BBookingPage"));
+const ReportsPage = lazy(() => import("./pages/ReportsPage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const AgencyHotelsPage = lazy(() => import("./pages/AgencyHotelsPage"));
+const AgencyAvailabilityPage = lazy(() => import("./pages/AgencyAvailabilityPage"));
+const AgencyHotelDetailPage = lazy(() => import("./pages/AgencyHotelDetailPage"));
+const AgencyHotelSearchPage = lazy(() => import("./pages/AgencyHotelSearchPage"));
+const AgencySearchResultsPage = lazy(() => import("./pages/AgencySearchResultsPage"));
+const AgencyBookingNewPage = lazy(() => import("./pages/AgencyBookingNewPage"));
+const AgencyBookingTestPage = lazy(() => import("./pages/AgencyBookingTestPage"));
+const SimpleBookingTest = lazy(() => import("./pages/SimpleBookingTest"));
+const WebBookingPage = lazy(() => import("./pages/WebBookingPage"));
+const AgencyBookingDraftPage = lazy(() => import("./pages/AgencyBookingDraftPage"));
+const AgencyBookingConfirmedPage = lazy(() => import("./pages/AgencyBookingConfirmedPage"));
+const AgencyBookingPendingPage = lazy(() => import("./pages/AgencyBookingPendingPage"));
+const AgencyBookingsListPage = lazy(() => import("./pages/AgencyBookingsListPage"));
+const AgencySettlementsPage = lazy(() => import("./pages/AgencySettlementsPage"));
+const AgencyHelpPage = lazy(() => import("./pages/AgencyHelpPage"));
+const B2BPortalPage = lazy(() => import("./pages/B2BPortalPage"));
+const OpsGuestCasesPage = lazy(() => import("./pages/OpsGuestCasesPage"));
+const OpsBookingDetailPage = lazy(() => import("./pages/ops/OpsBookingDetailPage"));
+const CrmCustomersPage = lazy(() => import("./pages/crm/CrmCustomersPage"));
+const CrmCustomerDetailPage = lazy(() => import("./pages/crm/CrmCustomerDetailPage"));
+const CrmTasksPage = lazy(() => import("./pages/crm/CrmTasksPage"));
+const CrmEventsPage = lazy(() => import("./pages/crm/CrmEventsPage"));
+const CrmPipelinePage = lazy(() => import("./pages/crm/CrmPipelinePage"));
+const CrmDuplicateCustomersPage = lazy(() => import("./pages/crm/CrmDuplicateCustomersPage"));
+const OpsTasksPage = lazy(() => import("./pages/OpsTasksPage"));
+const ToursListPage = lazy(() => import("./pages/ToursListPage"));
+const TourDetailPage = lazy(() => import("./pages/TourDetailPage"));
+
+const HotelBookingsPage = lazy(() => import("./pages/HotelBookingsPage"));
+const HotelStopSellPage = lazy(() => import("./pages/HotelStopSellPage"));
+const HotelAllocationsPage = lazy(() => import("./pages/HotelAllocationsPage"));
+const HotelSettlementsPage = lazy(() => import("./pages/HotelSettlementsPage"));
+const HotelIntegrationsPage = lazy(() => import("./pages/HotelIntegrationsPage"));
+const HotelHelpPage = lazy(() => import("./pages/HotelHelpPage"));
+const ErrorContextPage = lazy(() => import("./pages/ErrorContextPage"));
 
 function App() {
   // Load theme on app mount

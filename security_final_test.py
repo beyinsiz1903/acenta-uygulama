@@ -86,7 +86,7 @@ class SecurityTester:
             print("\n⚡ Testing Rate Limiting...")
             
             # Make an API request and check for X-RateLimit-Policy header
-            url = f"{self.base_url}/api/health"  # Use health endpoint to avoid rate limits
+            url = f"{self.base_url}/api/auth/me"  # Use auth endpoint which will have rate limit headers
             response = requests.get(url)
             
             # Check for X-RateLimit-Policy header

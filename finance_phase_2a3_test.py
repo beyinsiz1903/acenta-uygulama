@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from bson import ObjectId
 
 class FinancePhase2A3Tester:
-    def __init__(self, base_url="https://better-menu-labels.preview.emergentagent.com"):
+    def __init__(self, base_url="https://jwt-revocation-add.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0

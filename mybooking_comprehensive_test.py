@@ -14,7 +14,7 @@ import json
 async def test_mybooking_endpoints():
     """Test MyBooking endpoints with various scenarios"""
     
-    backend_url = "https://better-menu-labels.preview.emergentagent.com"
+    backend_url = "https://jwt-revocation-add.preview.emergentagent.com"
     
     print("=== MyBooking Hardening Test Results ===\n")
     

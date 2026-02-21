@@ -6,7 +6,7 @@ Debug test for Partner Graph endpoints
 import requests
 import json
 
-BASE_URL = "https://better-menu-labels.preview.emergentagent.com"
+BASE_URL = "https://jwt-revocation-add.preview.emergentagent.com"
 
 def test_partner_graph_debug():
     # Login

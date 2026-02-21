@@ -19,6 +19,15 @@ export function setToken(token) {
 export function clearToken() {
   localStorage.removeItem("acenta_token");
   localStorage.removeItem("acenta_user");
+  localStorage.removeItem("acenta_refresh_token");
+}
+
+export function getRefreshToken() {
+  return localStorage.getItem("acenta_refresh_token") || "";
+}
+
+export function setRefreshToken(token) {
+  localStorage.setItem("acenta_refresh_token", token);
 }
 
 export function getUser() {

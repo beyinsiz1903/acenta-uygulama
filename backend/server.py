@@ -518,6 +518,12 @@ app.add_middleware(CorrelationIdMiddleware)
 # Security headers (all responses)
 app.add_middleware(SecurityHeadersMiddleware)
 
+# Error tracking (Sentry-like)
+app.add_middleware(ErrorTrackingMiddleware)
+
+# Prometheus metrics collection
+app.add_middleware(PrometheusMiddleware)
+
 # Structured logging (E3.1)
 app.add_middleware(StructuredLoggingMiddleware)
 

@@ -82,8 +82,14 @@ async def rotate_refresh_token(old_token_id: str) -> Optional[dict[str, Any]]:
         return None
 
     # Check expiry
-    if old_token.get("expires_at") and old_token["expires_at"] < now:
-        return None
+    expires_at = old_token.get("expires_at")
+    if expires_at:
+        # Handle timezone-naive datetimes from MongoDB
+        if expires_at.tzinfo is None:
+            from datetime import timezone as _tz
+            expires_at = expires_at.replace(tzinfo=_tz.utc)
+        if expires_at < now:
+            return None
 
     # Revoke old token
     await db[COLLECTION].update_one(

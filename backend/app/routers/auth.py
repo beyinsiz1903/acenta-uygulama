@@ -155,6 +155,51 @@ async def signup(payload: SignupRequest):
     return {"message": "User created successfully", "email": payload.email}
 
 
+@router.post("/logout")
+async def logout(user=Depends(get_current_user), credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))):
+    """Logout endpoint - revokes the current JWT token.
+
+    Adds the token's JTI to the blacklist so it can no longer be used.
+    """
+    if credentials:
+        from app.auth import decode_token
+        from app.services.token_blacklist import blacklist_token
+        from datetime import datetime, timezone
+
+        try:
+            payload = decode_token(credentials.credentials)
+            jti = payload.get("jti")
+            exp = payload.get("exp")
+            if jti and exp:
+                expires_at = datetime.fromtimestamp(exp, tz=timezone.utc)
+                await blacklist_token(
+                    jti=jti,
+                    user_email=payload.get("sub", ""),
+                    expires_at=expires_at,
+                    reason="logout",
+                )
+        except Exception:
+            pass  # Token already expired or invalid - still allow logout
+
+    return {"message": "Başarıyla çıkış yapıldı", "status": "ok"}
+
+
+@router.post("/revoke-all-sessions")
+async def revoke_all_sessions(user=Depends(get_current_user)):
+    """Revoke all active sessions for the current user.
+
+    Useful for security incidents or password changes.
+    """
+    from app.services.token_blacklist import blacklist_all_user_tokens
+
+    email = user.get("email", "")
+    count = await blacklist_all_user_tokens(email, reason="user_revoke_all")
+    return {
+        "message": "Tüm oturumlar iptal edildi",
+        "revoked_count": count,
+    }
+
+
 @router.get("/me")
 async def me(user=Depends(get_current_user)):
     # Helpful for frontend refresh

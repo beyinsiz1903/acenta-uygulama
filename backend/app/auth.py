@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
@@ -32,10 +33,12 @@ def verify_password(password: str, password_hash: str) -> bool:
 
 def create_access_token(*, subject: str, organization_id: str, roles: list[str], minutes: int = 60 * 12) -> str:
     now = datetime.now(timezone.utc)
+    jti = str(uuid.uuid4())  # Unique token ID for revocation support
     payload = {
         "sub": subject,
         "org": organization_id,
         "roles": roles,
+        "jti": jti,
         "iat": int(now.timestamp()),
         "exp": int((now + timedelta(minutes=minutes)).timestamp()),
     }
@@ -56,6 +59,13 @@ async def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] =
         raise HTTPException(status_code=401, detail="Giriş gerekli")
 
     payload = decode_token(credentials.credentials)
+
+    # JWT Revocation check: verify token is not blacklisted
+    jti = payload.get("jti")
+    if jti:
+        from app.services.token_blacklist import is_token_blacklisted
+        if await is_token_blacklisted(jti):
+            raise HTTPException(status_code=401, detail="Token iptal edilmiş")
 
     db = await get_db()
     user = await db.users.find_one({"email": payload.get("sub"), "organization_id": payload.get("org")})

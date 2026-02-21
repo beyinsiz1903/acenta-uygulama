@@ -59,6 +59,12 @@ async def my_hotels(user=Depends(get_current_user)):
     if not agency_id:
         raise HTTPException(status_code=400, detail="Bu kullanıcı bir acenteye bağlı değil")
 
+    # Cache: agency hotel links (30 min TTL)
+    cache_key = f"agency_hotels:{user['organization_id']}:{agency_id}"
+    cached = await cache_get(cache_key)
+    if cached:
+        return cached
+
     links = await db.agency_hotel_links.find(
         {
             "organization_id": user["organization_id"],

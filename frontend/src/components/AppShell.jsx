@@ -618,7 +618,7 @@ function AppShellInner() {
               variant="outline"
               size="sm"
               className="w-full gap-2 text-xs"
-              onClick={() => { setMobileNavOpen(false); clearToken(); window.location.href = "/login"; }}
+              onClick={() => { setMobileNavOpen(false); logoutMutation.mutate(undefined, { onSettled: () => window.location.href = "/login" }); }}
               data-testid="mobile-logout"
             >
               <LogOut className="h-3.5 w-3.5" /> {t("topbar.logout")}

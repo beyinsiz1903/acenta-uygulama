@@ -213,7 +213,12 @@ async def set_reservation_status(
     assert updated
 
     if target_status == "cancelled":
-        pax = int(updated.get("pax") or 1)
+        pax_raw = updated.get("pax")
+        if isinstance(pax_raw, dict):
+            pax = int(pax_raw.get("adults") or 0) + int(pax_raw.get("children") or 0)
+            pax = max(pax, 1)
+        else:
+            pax = int(pax_raw or 1)
         for d in updated.get("dates") or []:
             await release_inventory(org_id, updated["product_id"], d, pax)
 

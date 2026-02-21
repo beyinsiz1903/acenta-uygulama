@@ -18,7 +18,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 # Use the production URL from frontend .env
-BASE_URL = "https://booking-lifecycle-2.preview.emergentagent.com"
+BASE_URL = "https://hotel-reject-system.preview.emergentagent.com"
 
 def test_public_booking_summary_happy_path():
     """Test GET /api/public/bookings/by-code/PB-TEST123?org=org_public_summary"""

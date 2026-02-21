@@ -24,7 +24,7 @@ from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorClient
 
 # Configuration
-BACKEND_URL = "https://booking-lifecycle-2.preview.emergentagent.com"
+BACKEND_URL = "https://hotel-reject-system.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

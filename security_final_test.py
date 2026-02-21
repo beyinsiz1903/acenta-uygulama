@@ -9,7 +9,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://booking-lifecycle-2.preview.emergentagent.com"
+BASE_URL = "https://hotel-reject-system.preview.emergentagent.com"
 
 class SecurityTester:
     def __init__(self):

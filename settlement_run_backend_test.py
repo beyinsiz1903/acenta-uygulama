@@ -20,7 +20,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://booking-lifecycle-2.preview.emergentagent.com"
+BACKEND_URL = "https://hotel-reject-system.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin and return JWT token"""

@@ -13,7 +13,7 @@ import httpx
 
 
 class PlatformHardeningTester:
-    def __init__(self, base_url: str = "https://booking-lifecycle-2.preview.emergentagent.com"):
+    def __init__(self, base_url: str = "https://hotel-reject-system.preview.emergentagent.com"):
         self.base_url = base_url.rstrip('/')
         self.session = httpx.AsyncClient(timeout=30.0)
         self.access_token: Optional[str] = None

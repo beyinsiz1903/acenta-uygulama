@@ -9,7 +9,7 @@ import json
 import sys
 from datetime import datetime
 
-BACKEND_URL = "https://booking-lifecycle-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://hotel-reject-system.preview.emergentagent.com/api"
 
 class IncidentsFixTester:
     def __init__(self):

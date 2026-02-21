@@ -10,7 +10,7 @@ export default defineConfig({
   reporter: 'list',
   
   use: {
-    baseURL: 'https://booking-lifecycle-2.preview.emergentagent.com',
+    baseURL: 'https://hotel-reject-system.preview.emergentagent.com',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },

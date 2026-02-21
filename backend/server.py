@@ -773,6 +773,42 @@ app.include_router(ai_assistant_router)
 from app.routers.dashboard_enhanced import router as dashboard_enhanced_router
 app.include_router(dashboard_enhanced_router)
 
+# =====================================================
+# NEW MODULES: Security, Compliance, Optimization
+# =====================================================
+
+# GDPR/KVKK Compliance
+from app.routers.gdpr import router as gdpr_router
+app.include_router(gdpr_router)
+
+# Agency Contracts (pricing + content overrides)
+from app.routers.agency_contracts import router as agency_contracts_router
+app.include_router(agency_contracts_router)
+
+# Multi-currency Reconciliation
+from app.routers.multicurrency import router as multicurrency_router
+app.include_router(multicurrency_router)
+
+# Cancel Reason Codes
+from app.routers.cancel_reasons import router as cancel_reasons_router
+app.include_router(cancel_reasons_router)
+
+# Cache Management
+from app.routers.cache_management import router as cache_management_router
+app.include_router(cache_management_router)
+
+# Inventory Snapshots
+from app.routers.inventory_snapshots_api import router as inventory_snapshots_api_router
+app.include_router(inventory_snapshots_api_router)
+
+# Distributed Locks (admin)
+from app.routers.distributed_locks import router as distributed_locks_router
+app.include_router(distributed_locks_router)
+
+# Health Dashboard + Prometheus
+from app.routers.health_dashboard import router as health_dashboard_router
+app.include_router(health_dashboard_router)
+
 
 
 @app.get("/")

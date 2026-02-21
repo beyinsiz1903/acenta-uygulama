@@ -671,3 +671,71 @@ agent_communication:
   - agent: "testing"
     message: "✅ HOTEL APPROVAL/REJECT WORKFLOW TESTING COMPLETE - Comprehensive testing performed on all 5 core workflow tasks with excellent results (5/6 features working, 1 infrastructure issue). Results: (1) REJECT WORKFLOW: POST /api/reservations/:id/reject working perfectly - created pending reservation TR-716813D1, successfully rejected with reason 'Oda müsait değil', verified rejection_reason/rejected_at/rejected_by fields and status_history tracking. (2) CONFIRM WORKFLOW: POST /api/reservations/:id/confirm working perfectly - created pending reservation TR-D6A8F44C, successfully confirmed, verified confirmed_at/confirmed_by fields and status_history. (3) STATUS TRANSITION VALIDATION: can_transition() enforcement working correctly - rejected→confirmed returns 409 'Geçersiz durum geçişi', confirmed→confirmed blocked properly. (4) STATUS HISTORY TRACKING: Every status change creates proper history entries with from_status/to_status/changed_by/changed_at/reason fields. (5) TOUR RESERVATION FIX: New reservations correctly created as 'pending' (not CONFIRMED) enabling proper approval workflow. INFRASTRUCTURE ISSUE: Cancel endpoint (confirmed→cancelled) returning Cloudflare 520 error - appears to be temporary proxy issue, not application code bug."
 
+# =====================================================
+# AGENCY CONTRACTS (PRICING + CONTENT OVERRIDES)
+# =====================================================
+
+agency_contracts:
+  - task: "GET /api/admin/agency-contracts/pricing - List agency pricing contracts"
+    implemented: true
+    working: true
+    file: "backend/app/routers/agency_contracts.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Pricing contracts list endpoint working. Returns 200 with array of contracts. Supports agency_id and hotel_id query filters."
+
+  - task: "POST /api/admin/agency-contracts/pricing - Upsert agency pricing contract"
+    implemented: true
+    working: true
+    file: "backend/app/routers/agency_contracts.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Created pricing contract with markup_percent=15, discount_percent=8, fixed_commission=200 for Test Acenta A + Grand Hotel Istanbul. Upsert logic works (creates or updates by agency_id+hotel_id)."
+
+  - task: "GET /api/admin/agency-contracts/content - List agency content overrides"
+    implemented: true
+    working: true
+    file: "backend/app/routers/agency_contracts.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Content overrides list endpoint working. Returns 200 with array of overrides."
+
+  - task: "POST /api/admin/agency-contracts/content - Upsert agency content override"
+    implemented: true
+    working: true
+    file: "backend/app/routers/agency_contracts.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Created content override with display_name='Grand VIP Hotel Istanbul', 2 images, star_rating=5, custom_tags=[VIP, Premium, Ozel Fiyat]. Upsert logic works."
+
+  - task: "Frontend - AdminAgencyContractsPage with pricing and content tabs"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/AdminAgencyContractsPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Admin page created with dual tab layout (Fiyatlandırma / İçerik Özelleştirmeleri). Features: agency/hotel filter dropdowns, create/edit forms with all fields, table views with status badges, delete functionality. Route at /app/admin/agency-contracts. Nav entry added."
+
+  - agent: "main"
+    message: "Agency contracts feature implemented. Backend APIs already existed (agency_contracts.py router + agency_contracts_service.py). Created AdminAgencyContractsPage.jsx with: (1) Dual tab layout - Pricing Contracts and Content Overrides. (2) Agency/hotel filter dropdowns. (3) Create/edit pricing contract form (markup_percent, discount_percent, fixed_commission, currency, valid_from/to). (4) Create/edit content override form (display_name, description, images, star_rating, custom_tags). (5) Table views with inline status badges and action buttons. (6) Route at /app/admin/agency-contracts. (7) Sidebar nav entry 'Acenta Sözleşmeleri'. All API endpoints tested: pricing CRUD, content CRUD - all returning 200. Test data created: pricing contract (markup=15%, discount=8%, commission=200 TRY) and content override (VIP name, 2 images, 5-star, VIP/Premium tags)."
+

@@ -258,6 +258,122 @@ function PaymentForm({ reservationId, currency, onSaved }) {
   );
 }
 
+/* ───────── Reject Dialog ───────── */
+function RejectDialog({ open, onOpenChange, onConfirm, loading }) {
+  const [reason, setReason] = useState("");
+
+  useEffect(() => {
+    if (open) setReason("");
+  }, [open]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+            <ShieldX className="h-5 w-5 text-red-500" />
+            Rezervasyonu Reddet
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Bu rezervasyonu reddetmek istediğinizden emin misiniz? Lütfen red sebebini belirtin.
+          </p>
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground">Red Sebebi</Label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Örn: Oda müsait değil, tarihler uygun değil, fiyat güncellemesi gerekli..."
+              className="flex min-h-[100px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+              data-testid="reject-reason"
+            />
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            Vazgeç
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => onConfirm(reason)}
+            disabled={loading}
+            className="gap-1.5"
+            data-testid="reject-confirm"
+          >
+            <ShieldX className="h-3.5 w-3.5" />
+            {loading ? "Reddediliyor..." : "Reddet"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ───────── Status Timeline ───────── */
+function StatusTimeline({ history }) {
+  if (!history || history.length === 0) return null;
+
+  const statusLabels = {
+    draft: "Taslak",
+    pending: "Onay Bekliyor",
+    confirmed: "Onaylandı",
+    rejected: "Reddedildi",
+    cancelled: "İptal Edildi",
+    paid: "Ödendi",
+  };
+
+  return (
+    <div className="rounded-xl border border-border/60 bg-gradient-to-br from-background to-muted/20 p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/5">
+          <History className="h-3.5 w-3.5 text-primary/60" />
+        </div>
+        <span className="text-sm font-semibold tracking-tight text-foreground">Durum Geçmişi</span>
+      </div>
+      <div className="relative space-y-0">
+        {history.slice().reverse().map((entry, idx) => {
+          const toCfg = statusConfig(entry.to_status);
+          return (
+            <div key={idx} className="relative flex gap-3 pb-3 last:pb-0">
+              {/* Timeline line */}
+              {idx < history.length - 1 && (
+                <div className="absolute left-[11px] top-6 h-full w-px bg-border/60" />
+              )}
+              {/* Dot */}
+              <div className={`relative z-10 mt-1 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border-2 ${toCfg.border} ${toCfg.bg}`}>
+                <div className={`h-2 w-2 rounded-full ${toCfg.dot}`} />
+              </div>
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`text-xs font-semibold ${toCfg.color}`}>
+                    {statusLabels[entry.to_status] || entry.to_status}
+                  </span>
+                  <span className="text-2xs text-muted-foreground/50">←</span>
+                  <span className="text-2xs text-muted-foreground/70">
+                    {statusLabels[entry.from_status] || entry.from_status}
+                  </span>
+                </div>
+                <div className="mt-0.5 flex items-center gap-2 text-2xs text-muted-foreground/60">
+                  <span>{entry.changed_by || "—"}</span>
+                  <span>·</span>
+                  <span>{entry.changed_at ? new Date(entry.changed_at).toLocaleString("tr-TR") : "—"}</span>
+                </div>
+                {entry.reason && (
+                  <div className="mt-1 rounded-md bg-red-50 border border-red-100 px-2 py-1 text-2xs text-red-700">
+                    <strong>Sebep:</strong> {entry.reason}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ───────── Reservation Detail Sheet ───────── */
 function ReservationDetails({ open, onOpenChange, reservationId }) {
   const [data, setData] = useState(null);

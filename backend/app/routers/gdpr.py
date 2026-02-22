@@ -1,10 +1,14 @@
-"""GDPR/KVKK Compliance Router.
+"""GDPR/KVKK Full Compliance Router.
 
 Endpoints for:
-- Data export (right to portability)
+- Data export (right to portability) - comprehensive
 - Data deletion (right to erasure)
-- Consent management
-- GDPR request history
+- Consent management (KVKK consent types)
+- Data anonymization
+- GDPR/KVKK request history
+- Data retention policy
+- Data processing log (Veri İşleme Kaydı - KVKK Madde 16)
+- Consent types reference
 """
 from __future__ import annotations
 
@@ -16,10 +20,13 @@ from pydantic import BaseModel, Field
 from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.services.gdpr_service import (
+    KVKK_CONSENT_TYPES,
     anonymize_user_data,
     delete_user_data,
     export_user_data,
+    get_data_processing_log,
     get_latest_consent,
+    get_retention_policy,
     get_user_consents,
     record_consent,
 )
@@ -29,12 +36,14 @@ router = APIRouter(prefix="/api/gdpr", tags=["gdpr"])
 
 
 class ConsentRequest(BaseModel):
-    consent_type: str = Field(description="marketing|analytics|third_party|data_processing")
+    consent_type: str = Field(description="acik_riza|marketing|analytics|third_party|data_processing|profiling|international_transfer|cookie_essential|cookie_analytics|cookie_marketing")
     granted: bool
+    legal_basis: Optional[str] = None
+    version: str = "1.0"
 
 
 class DataExportRequest(BaseModel):
-    target_email: Optional[str] = None  # Admin can export for another user
+    target_email: Optional[str] = None
 
 
 class DataDeletionRequest(BaseModel):
@@ -45,6 +54,24 @@ class DataDeletionRequest(BaseModel):
 class AnonymizeRequest(BaseModel):
     target_email: str
     confirm: bool = Field(description="Must be true to proceed")
+
+
+# --- Reference endpoints ---
+
+@router.get("/consent-types")
+async def list_consent_types():
+    """List all KVKK consent types."""
+    return {
+        "consent_types": [
+            {"key": k, "label": v} for k, v in KVKK_CONSENT_TYPES.items()
+        ]
+    }
+
+
+@router.get("/retention-policy")
+async def get_retention():
+    """Get data retention policy (KVKK Madde 7)."""
+    return await get_retention_policy()
 
 
 # --- User endpoints ---
@@ -66,6 +93,8 @@ async def submit_consent(
         granted=payload.granted,
         ip_address=ip,
         user_agent=ua,
+        legal_basis=payload.legal_basis or "",
+        version=payload.version,
     )
     return {"status": "ok", "consent": doc}
 
@@ -90,7 +119,7 @@ async def get_consent_status(
 
 @router.post("/export-my-data")
 async def export_my_data(user=Depends(get_current_user)):
-    """Export all personal data (GDPR right to portability)."""
+    """Export all personal data (KVKK Madde 11 - Veri taşınabilirliği)."""
     return await export_user_data(user["email"], user["organization_id"])
 
 
@@ -99,15 +128,14 @@ async def request_deletion(
     payload: DataDeletionRequest,
     user=Depends(get_current_user),
 ):
-    """Request deletion of personal data."""
+    """Request deletion of personal data (KVKK Madde 7)."""
     if not payload.confirm:
-        raise HTTPException(status_code=400, detail="Confirm must be true")
+        raise HTTPException(status_code=400, detail="Onay gereklidir (confirm: true)")
 
-    # Users can only delete their own data
     if payload.target_email != user["email"]:
         roles = set(user.get("roles") or [])
         if not roles.intersection({"super_admin"}):
-            raise HTTPException(status_code=403, detail="Can only delete own data")
+            raise HTTPException(status_code=403, detail="Sadece kendi verilerinizi silebilirsiniz")
 
     result = await delete_user_data(
         user_email=payload.target_email,
@@ -140,9 +168,9 @@ async def admin_anonymize(
     payload: AnonymizeRequest,
     user=Depends(get_current_user),
 ):
-    """Admin: Anonymize user data."""
+    """Admin: Anonymize user data (KVKK anonim hale getirme)."""
     if not payload.confirm:
-        raise HTTPException(status_code=400, detail="Confirm must be true")
+        raise HTTPException(status_code=400, detail="Onay gereklidir (confirm: true)")
 
     result = await anonymize_user_data(
         user_email=payload.target_email,
@@ -157,9 +185,21 @@ async def admin_anonymize(
     dependencies=[Depends(require_roles(["super_admin"]))],
 )
 async def list_gdpr_requests(user=Depends(get_current_user)):
-    """Admin: List all GDPR requests."""
+    """Admin: List all GDPR/KVKK requests."""
     db = await get_db()
     docs = await db.gdpr_requests.find(
         {"organization_id": user["organization_id"]}
     ).sort("created_at", -1).to_list(200)
     return [serialize_doc(d) for d in docs]
+
+
+@router.get(
+    "/admin/processing-log",
+    dependencies=[Depends(require_roles(["super_admin"]))],
+)
+async def list_processing_log(
+    limit: int = 200,
+    user=Depends(get_current_user),
+):
+    """Admin: KVKK Madde 16 - Veri İşleme Envanteri."""
+    return await get_data_processing_log(user["organization_id"], limit)

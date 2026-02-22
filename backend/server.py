@@ -571,10 +571,9 @@ import logging as _logging
 import sys as _sys
 _cors_logger = _logging.getLogger("cors")
 
-print(f"[server.py] CORS_ORIGINS value: {CORS_ORIGINS}, type: {type(CORS_ORIGINS)}, equals ['*']: {CORS_ORIGINS == ['*']}", file=_sys.stderr)
-
 if CORS_ORIGINS == ["*"]:
-    print("[server.py] Using CORS: allow ALL origins (regex)", file=_sys.stderr)
+    _cors_logger.warning("CORS: Allowing ALL origins (development mode). Set CORS_ORIGINS env for production.")
+    print("[CORS] Mode: allow-all (dev)", file=_sys.stderr)
     app.add_middleware(
         CORSMiddleware,
         allow_origin_regex=r".*",
@@ -584,7 +583,8 @@ if CORS_ORIGINS == ["*"]:
         expose_headers=["X-Request-ID", "X-RateLimit-Policy"],
     )
 else:
-    print(f"[server.py] Using CORS: whitelist {len(CORS_ORIGINS)} domains: {CORS_ORIGINS}", file=_sys.stderr)
+    _cors_logger.info("CORS: Whitelisted %d domains: %s", len(CORS_ORIGINS), CORS_ORIGINS)
+    print(f"[CORS] Mode: whitelist ({len(CORS_ORIGINS)} domains)", file=_sys.stderr)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=CORS_ORIGINS,

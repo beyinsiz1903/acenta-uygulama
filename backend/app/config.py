@@ -11,6 +11,16 @@ All flags default to **True** so that:
 
 from typing import Callable
 import os
+from pathlib import Path
+
+# Ensure .env is loaded even when config.py is imported before server.py's load_dotenv
+try:
+    from dotenv import load_dotenv
+    _env_path = Path(__file__).parent.parent / ".env"
+    if _env_path.exists():
+        load_dotenv(_env_path, override=False)
+except ImportError:
+    pass
 
 
 def _env_flag(name: str, default: bool = True) -> bool:

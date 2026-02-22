@@ -209,6 +209,10 @@ from app.services.jobs import run_job_worker_loop
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Initialize Sentry before anything else
+    from app.middleware.error_tracking_middleware import init_sentry
+    init_sentry()
+
     await connect_mongo()
     db = await get_db()
 

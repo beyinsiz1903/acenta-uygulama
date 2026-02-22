@@ -16,10 +16,15 @@ from pathlib import Path
 # Ensure .env is loaded even when config.py is imported before server.py's load_dotenv
 try:
     from dotenv import load_dotenv
-    _env_path = Path(__file__).parent.parent / ".env"
-    if _env_path.exists():
-        load_dotenv(_env_path, override=True)
-except ImportError:
+    # Try multiple paths to find .env
+    for _try_path in [
+        Path(__file__).parent.parent / ".env",
+        Path("/app/backend/.env"),
+    ]:
+        if _try_path.exists():
+            load_dotenv(_try_path, override=True)
+            break
+except (ImportError, Exception):
     pass
 
 

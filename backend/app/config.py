@@ -54,16 +54,20 @@ APP_VERSION = "1.0.0"
 _cors_raw = os.environ.get("CORS_ORIGINS", "")
 _env = os.environ.get("ENV", "dev").lower()
 
+import sys
+print(f"[config.py] CORS_ORIGINS env raw: {repr(_cors_raw)}, ENV: {repr(_env)}", file=sys.stderr)
+
 if _cors_raw and _cors_raw.strip() != "*":
     CORS_ORIGINS = [o.strip() for o in _cors_raw.split(",") if o.strip()]
 elif _env in ("production", "prod", "staging"):
-    # Production: strict whitelist (must set CORS_ORIGINS env var)
     CORS_ORIGINS = [
         "https://app.yourdomain.com",
         "https://admin.yourdomain.com",
     ]
 else:
     CORS_ORIGINS = ["*"]  # Development/preview fallback
+
+print(f"[config.py] CORS_ORIGINS resolved: {CORS_ORIGINS}", file=sys.stderr)
 
 # Sentry error tracking
 SENTRY_DSN = os.environ.get("SENTRY_DSN", "")

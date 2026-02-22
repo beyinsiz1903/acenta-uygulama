@@ -579,7 +579,7 @@ platform_hardening:
         comment: "Distributed locks endpoint working perfectly. Returns array of active locks (0 active locks currently). Authentication required (super_admin role) and working correctly. Endpoint ready for production use."
 
 test_plan:
-  current_focus: ["hotel_approval_workflow"]
+  current_focus: ["cors_sentry_kvkk"]
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

@@ -564,21 +564,29 @@ from app.routers.storefront import router as storefront_router
 
 # CORS configuration
 # Use domain whitelist if configured, otherwise echo back requesting Origin
+import logging as _logging
+_cors_logger = _logging.getLogger("cors")
+_cors_logger.info("CORS origins: %s", CORS_ORIGINS)
+
 if CORS_ORIGINS == ["*"]:
+    _cors_logger.warning("CORS: Allowing ALL origins (development mode). Set CORS_ORIGINS env for production.")
     app.add_middleware(
         CORSMiddleware,
         allow_origin_regex=r".*",
         allow_credentials=True,
-        allow_methods=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
         allow_headers=["*"],
+        expose_headers=["X-Request-ID", "X-RateLimit-Policy"],
     )
 else:
+    _cors_logger.info("CORS: Whitelisted %d domains: %s", len(CORS_ORIGINS), CORS_ORIGINS)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=CORS_ORIGINS,
         allow_credentials=True,
-        allow_methods=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
         allow_headers=["*"],
+        expose_headers=["X-Request-ID", "X-RateLimit-Policy"],
     )
 
 # Structured exception handlers (AppError, validation, 404, 500, ...)

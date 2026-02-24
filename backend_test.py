@@ -2,11 +2,13 @@
 """
 Backend API Testing Script for Syroce Tourism Platform
 Tests the backend API endpoints after security fixes.
+Includes Redis cache layer testing.
 """
 
 import requests
 import json
 import sys
+import subprocess
 from typing import Dict, Any
 
 # Backend URL from frontend/.env

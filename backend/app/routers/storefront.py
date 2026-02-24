@@ -47,16 +47,16 @@ def _decimal_to_str(value: Decimal) -> str:
 
 @router.get("/health")
 async def storefront_health(request: Request) -> Dict[str, Any]:
-    """Simple health endpoint that requires a resolved tenant.
-
-    v2: also returns brand_name and theme_config from the tenant document so that
-    the storefront UI can render a branded experience per tenant.
-    """
+    """Simple health endpoint that requires a resolved tenant."""
 
     ctx = _tenant_context(request)
     if not ctx["tenant_id"]:
-        # Should normally be handled by middleware, but keep an explicit guard
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="TENANT_NOT_FOUND")
+
+    # Redis L1 cache (5 min — tenant branding rarely changes)
+    hit, ck = await try_cache_get("sf_health", ctx["tenant_id"])
+    if hit:
+        return hit
 
     data: Dict[str, Any] = {"ok": True, "tenant_key": ctx["tenant_key"], "tenant_id": ctx["tenant_id"]}
 

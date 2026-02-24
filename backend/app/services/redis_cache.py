@@ -4,12 +4,21 @@ Architecture:
   L1 (Redis, ~1ms)  →  L2 (MongoDB TTL, ~5ms)  →  DB Query (~20ms+)
 
 Redis is optional: if unavailable, falls through silently to MongoDB/DB.
-Uses JSON serialization for values. Supports:
+Supports:
   - Simple get/set with TTL
   - Read-through caching
   - Pattern-based invalidation
   - Tenant-scoped keys
   - Stats & health check
+  - **Sentinel HA** (auto-failover to replica on master failure)
+
+Configuration (env vars):
+  REDIS_URL           = redis://localhost:6379/0          (standalone)
+  REDIS_MODE          = standalone | sentinel              (default: standalone)
+  REDIS_SENTINEL_URLS = host1:26379,host2:26379,host3:26379
+  REDIS_SENTINEL_MASTER = mymaster                        (default: mymaster)
+  REDIS_SENTINEL_PASSWORD = <optional>
+  REDIS_SENTINEL_DB   = 0
 """
 from __future__ import annotations
 
@@ -21,28 +30,53 @@ from typing import Any, Callable, Optional
 logger = logging.getLogger("redis_cache")
 
 _pool = None
+_sentinel_obj = None
 
 
 def _get_redis_url() -> str:
     return os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 
 
+def _get_redis_mode() -> str:
+    return os.environ.get("REDIS_MODE", "standalone").lower()
+
+
 def _get_pool():
-    """Lazy-init connection pool (singleton)."""
-    global _pool
+    """Lazy-init connection pool (singleton).
+
+    Supports two modes:
+      1. standalone  — single Redis via REDIS_URL
+      2. sentinel    — HA Redis via Sentinel cluster
+    """
+    global _pool, _sentinel_obj
     if _pool is not None:
         return _pool
     try:
         import redis
-        url = _get_redis_url()
-        _pool = redis.ConnectionPool.from_url(
-            url,
-            max_connections=20,
-            decode_responses=True,
-            socket_connect_timeout=2,
-            socket_timeout=1,
-            retry_on_timeout=True,
-        )
+
+        mode = _get_redis_mode()
+
+        if mode == "sentinel":
+            return _init_sentinel_pool(redis)
+        else:
+            return _init_standalone_pool(redis)
+    except Exception as e:
+        logger.warning("Redis pool init failed: %s", e)
+        return None
+
+
+def _init_standalone_pool(redis_mod):
+    """Create a standard connection pool from REDIS_URL."""
+    global _pool
+    url = _get_redis_url()
+    _pool = redis_mod.ConnectionPool.from_url(
+        url,
+        max_connections=20,
+        decode_responses=True,
+        socket_connect_timeout=2,
+        socket_timeout=1,
+        retry_on_timeout=True,
+    )
         logger.info("Redis pool created: %s", url.split("@")[-1] if "@" in url else url)
         return _pool
     except Exception as e:

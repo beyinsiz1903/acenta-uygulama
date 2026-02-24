@@ -156,13 +156,14 @@ function UserForm({ open, onOpenChange, onSaved }) {
           ) : null}
 
           <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Vazgeç
-          </Button>
-          <Button onClick={save} disabled={loading} data-testid="user-save">
-            {loading ? "Kaydediliyor..." : "Kaydet"}
-          </Button>
-        </DialogFooter>
+            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
+              Vazgeç
+            </Button>
+            <Button type="submit" disabled={isSubmitting} data-testid="user-save">
+              {isSubmitting ? "Kaydediliyor..." : "Kaydet"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

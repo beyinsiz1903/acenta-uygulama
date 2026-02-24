@@ -1,0 +1,31 @@
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "E402",   # module import not at top (intentional lazy imports)
+    "E741",   # ambiguous variable name (legacy code, l/O/I used intentionally)
+    "F403",   # undefined-local-with-import-star (legacy)
+    "F601",   # multi-value-repeated-key-literal (legacy)
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Pre-existing undefined names in type hints (from __future__ annotations)
+"app/services/org_service.py" = ["F821"]
+"app/services/crm_customers.py" = ["F821"]
+"app/services/offers/normalizers/*" = ["F821"]
+# Lazy imports in voucher router (WeasyPrint, email)
+"app/routers/voucher.py" = ["F821"]
+# Admin B2B marketplace uses lazy audit imports
+"app/routers/admin_b2b_marketplace.py" = ["F821"]
+# Unused variables in complex aggregation pipelines
+"app/routers/dashboard_enhanced.py" = ["F841"]
+"app/routers/b2b_bookings.py" = ["F841"]
+"app/routers/ops_finance.py" = ["F841"]
+"app/services/booking_service.py" = ["F841"]
+"app/services/b2b_booking.py" = ["F841"]
+"app/services/settlement_service.py" = ["F841"]
+"app/services/pricing_v2.py" = ["F841"]

@@ -10,6 +10,7 @@ from app.schemas import HotelCreateIn, HotelForceSalesOverrideIn
 from app.services.audit import write_audit_log
 from app.services.mongo_cache_service import cache_get, cache_set, cache_invalidate_pattern
 from app.services.redis_cache import redis_get, redis_set, redis_invalidate_pattern as redis_inv_pattern
+from app.services.cache_invalidation import invalidate_hotels
 from app.utils import now_utc, serialize_doc
 
 

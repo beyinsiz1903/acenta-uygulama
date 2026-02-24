@@ -81,3 +81,41 @@
 - Health endpoint shows redis: healthy
 - Cache architecture: L1 Redis → L2 MongoDB → DB Query
 - Integrated with: search, hotel detail, agency hotel links
+
+### Redis Cache Layer Testing Results (Testing Agent)
+
+#### ✅ PASSED Tests:
+
+1. **Health Ready Endpoint with Redis** (`GET /api/health/ready`)
+   - Status: 200 OK
+   - Response includes `{"redis": "healthy", "redis_memory": "1.05M"}` 
+   - All health checks passing including Redis connectivity
+
+2. **Redis CLI Verification**
+   - `redis-cli ping` → Returns "PONG" ✅
+   - `redis-cli info memory` → Shows memory stats successfully ✅  
+   - `redis-cli dbsize` → Returns key count (0 when clean) ✅
+
+3. **Redis Cache Operations with sc: Prefix**
+   - `redis-cli SET sc:test:key "hello" EX 60` → Returns "OK" ✅
+   - `redis-cli GET sc:test:key` → Returns "hello" ✅
+   - `redis-cli DEL sc:test:key` → Returns "1" (deleted) ✅
+   - Key deletion verification works correctly ✅
+
+4. **Key Prefix Pattern Verification** 
+   - Application correctly uses "sc:" prefix for all cache keys ✅
+   - Cache keys follow pattern: `sc:tenant_id:key_name` or `sc:key_name` ✅
+
+#### 📋 Test Summary:
+- **Redis Service**: Healthy and running on localhost:6379
+- **Health Integration**: Redis status properly reported in /api/health/ready
+- **CLI Access**: All redis-cli commands work as expected  
+- **Cache Operations**: SET/GET/DEL operations work with proper TTL
+- **Key Naming**: Proper "sc:" prefix pattern implemented
+- **Memory Usage**: Currently using 1.05M, showing healthy memory stats
+
+#### 🔍 Additional Notes:
+- Redis is integrated into the FastAPI health check system via `redis_health()` function
+- Cache service includes fallback to MongoDB if Redis unavailable
+- Connection pool configured with 20 max connections, 2s timeout
+- All Redis operations use JSON serialization for values

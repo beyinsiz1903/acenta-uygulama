@@ -80,10 +80,11 @@
 - Redis running on localhost:6379 via supervisor
 - Health endpoint shows redis: healthy
 - Cache architecture: L1 Redis → L2 MongoDB → DB Query
-- 14 router files with Redis integration, 60 cache operations
-- Cached endpoints: public_search, public_tours, public_cms_pages, public_campaigns, dashboard (KPI/weekly/popular), products, pricing_rules, crm_customers, crm_deals, tenant_features, admin_hotels, agency
-- TTL strategy: Public (2-10 min), Dashboard (30s-5 min), CRM (1 min), Tenant features (5 min), CMS (10 min)
-- Cache invalidation on create/update for products and CRM customers
+- 20 router files with Redis integration, 78 cache operations
+- B2B endpoints: b2b_portal/account_summary, b2b_bookings_list, b2b_announcements, b2b_exchange/listings, b2b_hotels_search
+- Storefront endpoints: storefront/health, storefront/search
+- Public endpoints: public_search, public_tours, public_cms_pages, public_campaigns
+- Admin/App endpoints: dashboard (KPI/weekly/popular), products, pricing_rules, crm_customers, crm_deals, tenant_features, admin_hotels, agency
 
 ### Redis Cache Layer Testing Results (Testing Agent)
 

@@ -515,6 +515,16 @@ async def lifespan(app: FastAPI):
         import logging
         logging.getLogger(__name__).warning("Enterprise index creation warning: %s", e)
 
+    # ---- Cache Warm-up (Redis L1) ----
+    try:
+        from app.services.cache_warmup import run_cache_warmup
+        warmup_result = await run_cache_warmup()
+        import logging as _wlog
+        _wlog.getLogger("cache_warmup").info("Warm-up result: %s", warmup_result.get("status", "unknown"))
+    except Exception as e:
+        import logging as _wlog
+        _wlog.getLogger("cache_warmup").warning("Warm-up failed (non-critical): %s", e)
+
     yield
 
     # Shutdown Redis pool

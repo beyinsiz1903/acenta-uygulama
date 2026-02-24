@@ -83,3 +83,24 @@ async def delete_cache_entry(key: str):
     await redis_delete(key)
     await cache_delete(key)
     return {"status": "deleted", "layers": ["redis", "mongo"]}
+
+
+
+@router.post(
+    "/warmup",
+    dependencies=[Depends(require_roles(["super_admin"]))],
+)
+async def trigger_cache_warmup():
+    """Manually trigger cache warm-up (pre-loads tenant features, CMS, campaigns)."""
+    result = await run_cache_warmup()
+    return result
+
+
+@router.post(
+    "/flush-org/{org_id}",
+    dependencies=[Depends(require_roles(["super_admin"]))],
+)
+async def flush_org_cache(org_id: str):
+    """Flush ALL caches for a specific organization."""
+    await invalidate_all_for_org(org_id)
+    return {"status": "flushed", "organization_id": org_id}

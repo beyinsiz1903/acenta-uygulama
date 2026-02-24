@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, conint
 from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.errors import AppError
+from app.services.endpoint_cache import try_cache_get, cache_and_return
 
 router = APIRouter(prefix="/api/b2b", tags=["b2b-hotels-search"])
 

@@ -54,9 +54,8 @@ export default function B2BBookingsPage() {
         q: (paramsOverride && paramsOverride.q) || (q.trim() || undefined),
         limit: 20,
       };
-      // NOTE: Backend path is /api/api/b2b/bookings, and api baseURL already includes /api,
-      // so we must call /api/b2b/bookings here to hit the correct endpoint.
-      const resp = await api.get("/api/b2b/bookings", { params });
+      // Backend route: /api/b2b/bookings — api client baseURL already includes /api
+      const resp = await api.get("/b2b/bookings", { params });
       setItems(resp.data?.items || []);
     } catch (err) {
       setError(apiErrorMessage(err));

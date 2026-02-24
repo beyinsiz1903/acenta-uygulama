@@ -57,6 +57,14 @@ async def list_b2b_bookings_agency(
     if not org_id or not agency_id:
         raise AppError(403, "forbidden", "Only agency users can list B2B bookings")
 
+    # Redis L1 cache (30 sec — booking list refreshes frequently, skip text search)
+    if not q:
+        st_key = ",".join(status) if status else "all"
+        cache_p = {"aid": agency_id, "st": st_key, "limit": limit}
+        hit, ck = await try_cache_get("b2b_bkgs", org_id, cache_p)
+        if hit:
+            return hit
+
     query: Dict[str, Any] = {
         "organization_id": org_id,
         "agency_id": agency_id,

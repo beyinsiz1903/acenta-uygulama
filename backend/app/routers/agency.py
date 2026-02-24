@@ -147,7 +147,8 @@ async def my_hotels(user=Depends(get_current_user)):
 
     result = {"items": items}
 
-    # Cache the result
+    # Cache the result: L1 Redis (5 min) + L2 MongoDB (30 min)
+    await redis_set(cache_key, result, ttl_seconds=300)
     await cache_set(cache_key, result, category="agency_hotel_links")
 
     return result

@@ -147,4 +147,5 @@ async def patch_hotel_force_sales(
     except Exception:
         pass
 
+    await invalidate_hotels(org_id)
     return serialize_doc(saved)

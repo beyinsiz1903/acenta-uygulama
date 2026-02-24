@@ -68,10 +68,9 @@ async def storefront_health(request: Request) -> Dict[str, Any]:
             data["brand_name"] = tenant_doc.get("brand_name")
             data["theme_config"] = tenant_doc.get("theme_config") or {}
     except Exception:
-        # Swallow errors here to keep health deterministic; UI can fall back.
         pass
 
-    return data
+    return await cache_and_return(ck, data, ttl=300)
 
 
 @router.get("/search")

@@ -189,4 +189,7 @@ async def search_b2b_hotels(
     # Deterministic order for demo: by hotel_name, then board
     items.sort(key=lambda x: (x.hotel_name.lower(), x.board))
 
-    return HotelSearchResponse(items=items)
+    result = HotelSearchResponse(items=items)
+    # Cache (2 min)
+    await cache_and_return(ck, result.model_dump(), ttl=120)
+    return result

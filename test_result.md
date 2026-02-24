@@ -78,13 +78,13 @@
 
 ### Redis Cache Layer Implementation
 - Redis running on localhost:6379 via supervisor
-- Health endpoint shows redis: healthy
-- Cache architecture: L1 Redis → L2 MongoDB → DB Query
 - 20 router files with Redis integration, 78 cache operations
-- B2B endpoints: b2b_portal/account_summary, b2b_bookings_list, b2b_announcements, b2b_exchange/listings, b2b_hotels_search
-- Storefront endpoints: storefront/health, storefront/search
-- Public endpoints: public_search, public_tours, public_cms_pages, public_campaigns
-- Admin/App endpoints: dashboard (KPI/weekly/popular), products, pricing_rules, crm_customers, crm_deals, tenant_features, admin_hotels, agency
+- **NEW: Cache invalidation** on all write operations (create/update/delete) across products, hotels, CRM, pricing, CMS, campaigns, tours, B2B
+- **NEW: Redis Sentinel HA** support (REDIS_MODE=sentinel + REDIS_SENTINEL_URLS)
+- **NEW: Cache warm-up** on startup (pre-loads tenant features, CMS nav, campaigns)
+- **NEW: Admin endpoints**: POST /api/admin/cache/warmup, POST /api/admin/cache/flush-org/{org_id}
+- Test: GET /api/health/ready → redis: healthy
+- Test: public endpoints create Redis keys (sc: prefix)
 
 ### Redis Cache Layer Testing Results (Testing Agent)
 

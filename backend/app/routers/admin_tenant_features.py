@@ -12,6 +12,7 @@ from app.db import get_db
 from app.errors import AppError
 from app.services.audit_log_service import append_audit_log
 from app.services.feature_service import feature_service
+from app.services.cache_invalidation import invalidate_tenant_features
 
 router = APIRouter(prefix="/api/admin/tenants", tags=["admin_tenant_features"])
 

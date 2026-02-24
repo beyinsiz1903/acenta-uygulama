@@ -54,6 +54,10 @@ async def public_search_tours(
         )
 
     payload = {"items": items, "page": page, "page_size": page_size, "total": total}
+    # Cache in Redis (3 min TTL)
+    if not q:
+        _, ck = await try_cache_get("pub_tours", org, cache_params)
+        await cache_and_return(ck, payload, ttl=180)
     return JSONResponse(status_code=200, content=payload)
 
 
@@ -63,6 +67,13 @@ async def public_get_tour(
     org: str = Query(..., min_length=1, description="Organization id (tenant)"),
     db=Depends(get_db),
 ) -> JSONResponse:
+    # Redis L1 cache for tour detail (5 min)
+    hit, ck = await try_cache_get("tour_detail", org, {"id": tour_id})
+    if hit:
+        resp = JSONResponse(status_code=200, content=hit)
+        resp.headers["X-Cache"] = "HIT"
+        return resp
+
     from bson import ObjectId
     from bson.errors import InvalidId
     

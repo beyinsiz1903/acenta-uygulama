@@ -112,7 +112,7 @@ async def list_accounting_transactions(
             continue
 
         ts = _pick_tx_timestamp(tx)
-        amounts = booking.get("amounts") or {}
+        _amounts = booking.get("amounts") or {}
         guest = booking.get("guest") or {}
 
         item = {

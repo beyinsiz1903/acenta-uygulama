@@ -48,7 +48,7 @@ class SubscriptionService:
             except Exception:
                 period_start = None
         else:
-            period_start = _ensure_aware(period_start_raw)
+            _period_start = _ensure_aware(period_start_raw)
 
         if isinstance(period_end_raw, str):
             try:

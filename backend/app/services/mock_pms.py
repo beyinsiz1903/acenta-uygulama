@@ -27,7 +27,7 @@ class MockPmsClient(PmsClient):
         hotel_id = payload.get("hotel_id")
         check_in = payload.get("check_in")
         check_out = payload.get("check_out")
-        occupancy = payload.get("occupancy") or {"adults": 2, "children": 0}
+        _occupancy = payload.get("occupancy") or {"adults": 2, "children": 0}
         currency = payload.get("currency") or "TRY"
 
         if not hotel_id or not check_in or not check_out:

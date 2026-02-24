@@ -46,7 +46,7 @@ async def dispatch_pending_integration_sync(db, *, limit: int = 10) -> int:
 
         try:
             # Ensure integration exists and update last_sync_at
-            integ = await _ensure_cm_integration(db, org_id, str(hotel_id))
+            _integ = await _ensure_cm_integration(db, org_id, str(hotel_id))
 
             await db.hotel_integrations.update_one(
                 {

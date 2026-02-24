@@ -287,7 +287,7 @@ async def get_customer_detail(
     if not customer:
         return None
 
-    recent_bookings: list[dict] = []
+    _recent_bookings: list[dict] = []
 
     # When bookings.customer_id is present, load recent bookings for this customer.
     # Sort by created_at desc; if created_at is missing, fall back to updated_at.
@@ -297,7 +297,7 @@ async def get_customer_detail(
         {"created_at": 1, "updated_at": 1},
     )
     if sample_booking and not sample_booking.get("created_at") and sample_booking.get("updated_at"):
-        booking_sort_field = "updated_at"
+        _booking_sort_field = "updated_at"
 
 
 async def find_duplicate_customers(db: Database, organization_id: str) -> List[Dict[str, Any]]:
@@ -614,7 +614,7 @@ async def get_customer_detail_v2(
         {"created_at": 1, "updated_at": 1},
     )
     if sample_booking and not sample_booking.get("created_at") and sample_booking.get("updated_at"):
-        booking_sort_field = "updated_at"
+        _booking_sort_field = "updated_at"
 
     cursor = (
         db.bookings.find(

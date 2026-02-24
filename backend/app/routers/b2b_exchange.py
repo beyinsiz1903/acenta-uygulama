@@ -240,7 +240,7 @@ async def list_available_listings(  # type: ignore[no-untyped-def]
     _: None = Depends(require_b2b_feature("b2b")),
 ):
     db = await get_db()
-    rel_repo = PartnerRelationshipRepository(db)
+    _rel_repo = PartnerRelationshipRepository(db)
 
     # Aktif partner ilişkileri: tenant seller veya buyer olabilir; karşı taraf provider olabilir.
     tenant_id = tenant_ctx.tenant_id

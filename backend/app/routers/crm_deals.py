@@ -86,6 +86,7 @@ async def http_create_deal(
         source="api",
     )
 
+    await invalidate_crm_deals(org_id)
     return deal
 
 

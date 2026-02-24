@@ -238,7 +238,7 @@ async def weekly_summary(user=Depends(get_current_user)):
             "is_today": day_start.date() == today.date(),
         })
 
-    return result
+    return await cache_and_return(ck, result, ttl=120)
 
 
 @router.get("/popular-products")
@@ -247,6 +247,13 @@ async def popular_products(
     user=Depends(get_current_user),
 ):
     """En Çok Tıklananlar: Popular products by views/bookings."""
+    org_id = user["organization_id"]
+
+    # Redis L1 cache (5 min TTL)
+    hit, ck = await try_cache_get("dash_popular", org_id, {"limit": limit})
+    if hit:
+        return hit
+
     db = await get_db()
     org_id = user["organization_id"]
 

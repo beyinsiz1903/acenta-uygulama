@@ -155,8 +155,14 @@ async def reservation_widgets(
 @router.get("/weekly-summary")
 async def weekly_summary(user=Depends(get_current_user)):
     """Haftalık Özet: Day-by-day stats for the current week."""
-    db = await get_db()
     org_id = user["organization_id"]
+
+    # Redis L1 cache (2 min TTL)
+    hit, ck = await try_cache_get("dash_weekly", org_id)
+    if hit:
+        return hit
+
+    db = await get_db()
 
     today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     # Get dates for current week (Monday to Sunday)

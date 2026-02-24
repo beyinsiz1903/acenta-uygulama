@@ -1,2 +1,2 @@
 # Schemas package
-from .main import *
+from .main import *  # noqa: F401, F403

@@ -29,10 +29,15 @@ async def search_available_hotels(
     skip: int = 0,
 ) -> dict[str, Any]:
     """Optimized hotel availability search using aggregation pipeline."""
-    # Check cache first
+    # Check cache: L1 Redis → L2 MongoDB
     cache_key = f"search:{organization_id}:{check_in}:{check_out}:{guests}:{room_type}:{min_price}:{max_price}:{agency_id}:{limit}:{skip}"
+    redis_hit = await redis_get(cache_key)
+    if redis_hit:
+        return redis_hit
     cached = await cache_get(cache_key)
     if cached:
+        # Promote to Redis L1
+        await redis_set(cache_key, cached, ttl_seconds=120)
         return cached
 
     db = await get_db()

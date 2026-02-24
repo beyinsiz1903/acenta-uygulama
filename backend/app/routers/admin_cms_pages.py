@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends
 from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.utils import serialize_doc
+from app.services.cache_invalidation import invalidate_cms_pages
 
 router = APIRouter(prefix="/api/admin/cms/pages", tags=["admin_cms_pages"])
 

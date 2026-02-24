@@ -9,7 +9,7 @@ from app.db import get_db
 from app.auth import require_roles
 from app.constants.features import FEATURE_CRM
 from app.services.endpoint_cache import try_cache_get, cache_and_return
-from app.services.redis_cache import redis_invalidate_pattern
+from app.services.cache_invalidation import invalidate_crm_customers
 from app.schemas_crm import (
     CustomerCreate,
     CustomerPatch,

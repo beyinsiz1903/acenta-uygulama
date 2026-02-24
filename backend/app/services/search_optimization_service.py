@@ -11,6 +11,7 @@ from typing import Any, Optional
 
 from app.db import get_db
 from app.services.mongo_cache_service import cache_get, cache_set
+from app.services.redis_cache import redis_get, redis_set
 
 logger = logging.getLogger("search_optimization")
 

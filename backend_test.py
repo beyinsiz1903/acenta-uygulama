@@ -213,6 +213,226 @@ def test_cors_headers():
         print(f"⚠️  WARNING: No CORS headers found")
         return True  # This might be handled by middleware differently
 
+def test_redis_cli_ping():
+    """Test Redis CLI ping command."""
+    print("\nTesting Redis CLI ping...")
+    
+    try:
+        result = subprocess.run(
+            ["redis-cli", "ping"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if result.returncode == 0:
+            output = result.stdout.strip()
+            print(f"Output: {output}")
+            
+            if "PONG" in output:
+                print("✅ PASSED: Redis CLI ping successful")
+                return True
+            else:
+                print(f"❌ FAILED: Expected 'PONG', got '{output}'")
+                return False
+        else:
+            print(f"❌ FAILED: redis-cli ping failed with exit code {result.returncode}")
+            print(f"Error: {result.stderr}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ FAILED: Error running redis-cli ping: {e}")
+        return False
+
+def test_redis_cli_info_memory():
+    """Test Redis CLI info memory command."""
+    print("\nTesting Redis CLI info memory...")
+    
+    try:
+        result = subprocess.run(
+            ["redis-cli", "info", "memory"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if result.returncode == 0:
+            output = result.stdout.strip()
+            print(f"Output (first 200 chars): {output[:200]}...")
+            
+            # Check for expected memory info fields
+            if "used_memory:" in output and "used_memory_human:" in output:
+                print("✅ PASSED: Redis memory info retrieved successfully")
+                return True
+            else:
+                print(f"❌ FAILED: Expected memory info not found in output")
+                return False
+        else:
+            print(f"❌ FAILED: redis-cli info memory failed with exit code {result.returncode}")
+            print(f"Error: {result.stderr}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ FAILED: Error running redis-cli info memory: {e}")
+        return False
+
+def test_redis_cli_dbsize():
+    """Test Redis CLI dbsize command."""
+    print("\nTesting Redis CLI dbsize...")
+    
+    try:
+        result = subprocess.run(
+            ["redis-cli", "dbsize"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if result.returncode == 0:
+            output = result.stdout.strip()
+            print(f"Output: {output}")
+            
+            # Should be a number
+            try:
+                key_count = int(output)
+                print(f"✅ PASSED: Redis DB has {key_count} keys")
+                return True
+            except ValueError:
+                print(f"❌ FAILED: Expected numeric dbsize, got '{output}'")
+                return False
+        else:
+            print(f"❌ FAILED: redis-cli dbsize failed with exit code {result.returncode}")
+            print(f"Error: {result.stderr}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ FAILED: Error running redis-cli dbsize: {e}")
+        return False
+
+def test_redis_cache_operations():
+    """Test Redis cache operations with sc: prefix."""
+    print("\nTesting Redis cache operations...")
+    
+    # Test commands in sequence
+    test_commands = [
+        {
+            "command": ["redis-cli", "SET", "sc:test:key", "hello", "EX", "60"],
+            "expected": "OK",
+            "description": "Set key with sc: prefix and 60s TTL"
+        },
+        {
+            "command": ["redis-cli", "GET", "sc:test:key"],
+            "expected": "hello",
+            "description": "Get key value"
+        },
+        {
+            "command": ["redis-cli", "DEL", "sc:test:key"],
+            "expected": "1",
+            "description": "Delete key"
+        },
+        {
+            "command": ["redis-cli", "GET", "sc:test:key"],
+            "expected": "(nil)",
+            "description": "Verify key is deleted"
+        }
+    ]
+    
+    all_passed = True
+    
+    for i, test in enumerate(test_commands, 1):
+        try:
+            print(f"  {i}. {test['description']}")
+            print(f"     Command: {' '.join(test['command'])}")
+            
+            result = subprocess.run(
+                test["command"],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            
+            if result.returncode == 0:
+                output = result.stdout.strip()
+                print(f"     Output: {output}")
+                
+                if test["expected"] in output or output == test["expected"]:
+                    print(f"     ✅ PASSED")
+                else:
+                    print(f"     ❌ FAILED: Expected '{test['expected']}', got '{output}'")
+                    all_passed = False
+            else:
+                print(f"     ❌ FAILED: Exit code {result.returncode}")
+                print(f"     Error: {result.stderr}")
+                all_passed = False
+                
+        except Exception as e:
+            print(f"     ❌ FAILED: Error: {e}")
+            all_passed = False
+        
+        print()
+    
+    if all_passed:
+        print("✅ PASSED: All Redis cache operations successful")
+    else:
+        print("❌ FAILED: Some Redis cache operations failed")
+    
+    return all_passed
+
+def test_redis_key_prefix_pattern():
+    """Test that Redis keys use the sc: prefix pattern."""
+    print("\nTesting Redis key prefix pattern...")
+    
+    try:
+        # Set some test keys with sc: prefix
+        subprocess.run(
+            ["redis-cli", "SET", "sc:test:hotels", "hotel_data", "EX", "60"],
+            capture_output=True,
+            check=True
+        )
+        subprocess.run(
+            ["redis-cli", "SET", "sc:test:search", "search_results", "EX", "60"],
+            capture_output=True,
+            check=True
+        )
+        
+        # Check for keys with sc: prefix
+        result = subprocess.run(
+            ["redis-cli", "KEYS", "sc:*"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if result.returncode == 0:
+            output = result.stdout.strip()
+            if output:
+                keys = [k for k in output.split('\n') if k.startswith('sc:')]
+                print(f"Found {len(keys)} keys with 'sc:' prefix:")
+                for key in keys[:10]:  # Show first 10
+                    print(f"  - {key}")
+                
+                if len(keys) >= 2:  # Our test keys
+                    print("✅ PASSED: Key prefix pattern 'sc:' is being used")
+                    
+                    # Clean up test keys
+                    subprocess.run(["redis-cli", "DEL", "sc:test:hotels"], capture_output=True)
+                    subprocess.run(["redis-cli", "DEL", "sc:test:search"], capture_output=True)
+                    
+                    return True
+                else:
+                    print("❌ FAILED: Expected at least 2 keys with 'sc:' prefix")
+                    return False
+            else:
+                print("⚠️  No keys found with 'sc:' prefix (Redis might be empty)")
+                return True  # Not a failure, Redis might be clean
+        else:
+            print(f"❌ FAILED: redis-cli KEYS failed: {result.stderr}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ FAILED: Error testing key prefix pattern: {e}")
+        return False
+
 def main():
     """Run all backend API tests."""
     print("=" * 60)

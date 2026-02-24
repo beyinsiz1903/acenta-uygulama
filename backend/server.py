@@ -517,6 +517,12 @@ async def lifespan(app: FastAPI):
 
     yield
 
+    # Shutdown Redis pool
+    try:
+        from app.services.redis_cache import shutdown_pool
+        shutdown_pool()
+    except Exception:
+        pass
     ops_scheduler.shutdown(wait=False)
     report_scheduler.shutdown(wait=False)
     stop_scheduler()

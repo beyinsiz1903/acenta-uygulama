@@ -29,44 +29,51 @@ const AVAILABLE_ROLES = [
 ];
 
 function UserForm({ open, onOpenChange, onSaved }) {
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [password, setPassword] = useState("pass123");
-  const [selectedRoles, setSelectedRoles] = useState(["sales"]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [serverError, setServerError] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(createUserSchema),
+    defaultValues: { email: "", name: "", password: "pass123", roles: ["sales"] },
+  });
+
+  const selectedRoles = watch("roles") || [];
 
   useEffect(() => {
     if (open) {
-      setEmail("");
-      setName("");
-      setPassword("pass123");
-      setSelectedRoles(["sales"]);
-      setError("");
+      reset({ email: "", name: "", password: "pass123", roles: ["sales"] });
+      setServerError("");
     }
-  }, [open]);
+  }, [open, reset]);
 
-  async function save() {
-    setLoading(true);
-    setError("");
-
-    const roles = selectedRoles.filter(Boolean);
-
+  async function onSubmit(data) {
+    setServerError("");
     try {
       await api.post("/settings/users", {
-        email,
-        name,
-        password,
-        roles,
+        email: data.email,
+        name: data.name,
+        password: data.password,
+        roles: data.roles,
         agency_id: null,
       });
       onSaved?.();
       onOpenChange(false);
     } catch (e) {
-      setError(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
+      setServerError(apiErrorMessage(e));
     }
+  }
+
+  function toggleRole(roleId, checked) {
+    const current = new Set(selectedRoles);
+    if (checked) current.add(roleId);
+    else current.delete(roleId);
+    setValue("roles", Array.from(current), { shouldValidate: true });
   }
 
   return (
@@ -76,18 +83,43 @@ function UserForm({ open, onOpenChange, onSaved }) {
           <DialogTitle>Yeni Kullanıcı</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div className="space-y-2">
             <Label>Email</Label>
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} data-testid="user-email" />
+            <Input
+              type="email"
+              autoComplete="email"
+              aria-invalid={!!errors.email}
+              data-testid="user-email"
+              {...register("email")}
+            />
+            {errors.email && (
+              <p className="text-xs text-rose-600" role="alert">{errors.email.message}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>Ad</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} data-testid="user-name" />
+            <Input
+              aria-invalid={!!errors.name}
+              data-testid="user-name"
+              {...register("name")}
+            />
+            {errors.name && (
+              <p className="text-xs text-rose-600" role="alert">{errors.name.message}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>Şifre</Label>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} data-testid="user-password" />
+            <Input
+              type="password"
+              autoComplete="new-password"
+              aria-invalid={!!errors.password}
+              data-testid="user-password"
+              {...register("password")}
+            />
+            {errors.password && (
+              <p className="text-xs text-rose-600" role="alert">{errors.password.message}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>Roller</Label>
@@ -101,14 +133,7 @@ function UserForm({ open, onOpenChange, onSaved }) {
                   >
                     <Checkbox
                       checked={checked}
-                      onCheckedChange={(val) => {
-                        setSelectedRoles((prev) => {
-                          const set = new Set(prev);
-                          if (val) set.add(role.id);
-                          else set.delete(role.id);
-                          return Array.from(set);
-                        });
-                      }}
+                      onCheckedChange={(val) => toggleRole(role.id, val)}
                     />
                     <span>{role.label}</span>
                     <span className="ml-auto font-mono text-2xs text-muted-foreground">{role.id}</span>
@@ -116,19 +141,21 @@ function UserForm({ open, onOpenChange, onSaved }) {
                 );
               })}
             </div>
+            {errors.roles && (
+              <p className="text-xs text-rose-600" role="alert">{errors.roles.message}</p>
+            )}
             <div className="text-xs text-muted-foreground">
               En az bir rol seçilmeli. Sadece deneysel kullanıcılar için admin/sales/ops/accounting/b2b_agent.
             </div>
           </div>
 
-          {error ? (
+          {serverError ? (
             <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700" data-testid="user-error">
-              {error}
+              {serverError}
             </div>
           ) : null}
-        </div>
 
-        <DialogFooter>
+          <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Vazgeç
           </Button>

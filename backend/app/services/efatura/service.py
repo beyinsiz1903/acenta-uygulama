@@ -22,8 +22,8 @@ def _compute_idempotency_key(
 ) -> str:
     """Deterministic idempotency key."""
     lines_str = "|".join(
-        f"{l.get('description','')},{l.get('quantity',0)},{l.get('unit_price',0)},{l.get('tax_rate',0)}"
-        for l in (lines or [])
+        f"{line.get('description','')},{line.get('quantity',0)},{line.get('unit_price',0)},{line.get('tax_rate',0)}"
+        for line in (lines or [])
     )
     data = f"{tenant_id}|{source_type}|{source_id}|{grand_total}|{lines_str}"
     return hashlib.sha256(data.encode()).hexdigest()
@@ -94,10 +94,10 @@ async def create_invoice(
     db = await get_db()
     now = now_utc()
 
-    subtotal = sum(float(l.get("line_total", 0)) for l in lines)
+    subtotal = sum(float(line.get("line_total", 0)) for line in lines)
     tax_total = sum(
-        float(l.get("line_total", 0)) * float(l.get("tax_rate", 0)) / 100
-        for l in lines
+        float(line.get("line_total", 0)) * float(line.get("tax_rate", 0)) / 100
+        for line in lines
     )
     grand_total = subtotal + tax_total
 

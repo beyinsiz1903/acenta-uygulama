@@ -41,7 +41,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         # Simplify validation errors for cleaner client-side handling
         simplified_errors = []
         for err in exc.errors():
-            loc = " -> ".join(str(l) for l in err.get("loc", []))
+            loc = " -> ".join(str(item) for item in err.get("loc", []))
             simplified_errors.append({
                 "field": loc,
                 "message": err.get("msg", "Invalid value"),

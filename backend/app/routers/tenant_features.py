@@ -73,9 +73,9 @@ async def get_tenant_quota_status(request: Request) -> dict:
     }
     items.append(item)
 
-  return {
+  return await cache_and_return(ck, {
     "tenant_id": tenant_id,
     "plan": plan,
     "period": summary.get("billing_period"),
     "quotas": items,
-  }
+  }, ttl=60)

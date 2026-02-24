@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from pymongo import DESCENDING
 
 from app.db import get_db
+from app.services.endpoint_cache import try_cache_get, cache_and_return
 
 router = APIRouter(prefix="/api/public", tags=["public-search"])
 from bson import ObjectId

@@ -348,7 +348,7 @@ async def popular_products(
                     "total_revenue": 0,
                 })
 
-    return results
+    return await cache_and_return(ck, results, ttl=300)
 
 
 @router.get("/recent-customers")

@@ -58,7 +58,7 @@ class CampaignOut(BaseModel):
     updated_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 @router.get("", response_model=List[CampaignOut], dependencies=[AdminDep])

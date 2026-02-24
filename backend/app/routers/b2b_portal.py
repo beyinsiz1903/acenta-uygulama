@@ -58,20 +58,17 @@ async def b2b_me(
 
 @router.get("/account/summary")
 async def b2b_account_summary(user: CurrentB2BUser = Depends(current_b2b_user), db=Depends(get_db)):
-    """Return read-only account summary for B2B agency user.
-
-    MVP behaviour:
-    - If a dedicated ledger / account collection exists, use it.
-    - Otherwise, derive a simple summary from bookings for this agency.
-    - Always returns 200 with zero/empty defaults when no data.
-    """
+    """Return read-only account summary for B2B agency user."""
     org_id = user.organization_id
     agency_id = user.agency_id
     if not org_id or not agency_id:
-        # Should not happen for valid B2B users, but keep contract explicit
         from app.errors import AppError
-
         raise AppError(403, "forbidden", "Only agency users can view B2B account summary")
+
+    # Redis L1 cache (2 min — financial summary)
+    hit, ck = await try_cache_get("b2b_acct", org_id, {"aid": agency_id})
+    if hit:
+        return hit
 
     # Defaults
     total_debit = 0.0

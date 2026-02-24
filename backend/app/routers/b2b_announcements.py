@@ -66,4 +66,4 @@ async def list_b2b_announcements(user: CurrentB2BUser = Depends(current_b2b_user
             }
         )
 
-    return {"items": items}
+    return await cache_and_return(ck, {"items": items}, ttl=300)

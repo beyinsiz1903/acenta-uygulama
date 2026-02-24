@@ -92,6 +92,16 @@ async def readiness():
     except Exception:
         checks["error_rate"] = "unknown"
 
+    # 5. Redis cache layer (non-critical — degraded mode if unavailable)
+    try:
+        from app.services.redis_cache import redis_health
+        redis_info = await redis_health()
+        checks["redis"] = redis_info.get("status", "unknown")
+        if redis_info.get("used_memory_human"):
+            checks["redis_memory"] = redis_info["used_memory_human"]
+    except Exception:
+        checks["redis"] = "unavailable"
+
     if critical_fail:
         return JSONResponse(
             status_code=503,

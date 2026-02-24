@@ -220,6 +220,13 @@ async def public_search_catalog(
     items.sort(key=lambda x: x["price"]["amount_cents"])
 
   response = {"items": items, "page": page, "page_size": page_size, "total": total}
+
+  # Cache result in Redis (2 min TTL for public search)
+  if not partner and not q:
+    cache_params = {"org": org, "page": page, "ps": page_size, "sort": sort, "df": date_from, "dt": date_to, "type": product_type}
+    _, ck = await try_cache_get("pub_search", org, cache_params)
+    await cache_and_return(ck, response, ttl=120)
+
   resp = JSONResponse(status_code=200, content=response)
   resp.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
   return resp

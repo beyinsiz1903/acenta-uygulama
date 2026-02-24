@@ -75,3 +75,9 @@
 - Test /api/health/ready endpoint
 - Test /api/auth/login with valid and invalid credentials  
 - Test CORS headers are properly set
+
+### Redis Cache Layer Implementation
+- Redis running on localhost:6379 via supervisor
+- Health endpoint shows redis: healthy
+- Cache architecture: L1 Redis → L2 MongoDB → DB Query
+- Integrated with: search, hotel detail, agency hotel links

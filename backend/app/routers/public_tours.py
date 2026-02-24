@@ -96,6 +96,8 @@ async def public_get_tour(
         "currency": (doc.get("currency") or "EUR").upper(),
         "status": doc.get("status") or "active",
     }
+    # Cache tour detail (5 min)
+    await cache_and_return(ck, payload, ttl=300)
     return JSONResponse(status_code=200, content=payload)
 
 

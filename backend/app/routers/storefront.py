@@ -15,6 +15,7 @@ from app.db import get_db
 from app.services.suppliers.mock_supplier_service import search_mock_offers
 from app.utils import now_utc
 from app.services.pricing_service import calculate_price
+from app.services.endpoint_cache import try_cache_get, cache_and_return
 
 router = APIRouter(prefix="/storefront", tags=["storefront"])
 

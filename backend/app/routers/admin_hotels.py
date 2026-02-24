@@ -66,8 +66,8 @@ async def create_hotel(payload: HotelCreateIn, user=Depends(get_current_user), d
     if not saved:
         raise HTTPException(status_code=500, detail="HOTEL_CREATE_FAILED")
 
-    # Invalidate hotel list cache
-    await cache_invalidate_pattern(f"hotel_list:{org_id}")
+    # Invalidate hotel list cache (both layers)
+    await invalidate_hotels(org_id)
 
     return serialize_doc(saved)
 

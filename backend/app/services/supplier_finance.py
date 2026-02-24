@@ -36,9 +36,9 @@ class SupplierFinanceService:
     ) -> str:
         """
         Get supplier finance account or create if not exists.
-        
+
         Unique constraint: (org, type="supplier", owner_id, currency)
-        
+
         Returns:
             account_id (str representation of ObjectId)
         """
@@ -173,7 +173,7 @@ class SupplierFinanceService:
     ) -> float:
         """
         Get supplier payable balance.
-        
+
         Balance rule: credit - debit (higher credit = more payable)
         """
         account = await self.db.finance_accounts.find_one({
@@ -201,7 +201,7 @@ class SupplierFinanceService:
     ) -> list:
         """
         Get all supplier balances (for payable summary dashboard)
-        
+
         Returns list of {supplier_id, supplier_name, balance}
         """
         # Get all supplier accounts for currency
@@ -249,11 +249,11 @@ class SupplierFinanceService:
 async def ensure_platform_ap_clearing_account(db, org_id: str, currency: str) -> str:
     """
     Ensure platform AP clearing account exists (Phase 2A.2)
-    
+
     This is separate from Phase 1 platform AR account:
     - AR (Phase 1): PLATFORM_AR_EUR (receivables from agencies)
     - AP (Phase 2A): PLATFORM_AP_CLEARING_EUR (payables to suppliers)
-    
+
     Returns:
         account_id (str)
     """

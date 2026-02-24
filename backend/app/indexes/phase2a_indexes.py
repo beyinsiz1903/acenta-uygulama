@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 async def ensure_phase2a_indexes(db):
     """
     Ensure indexes for Phase 2A collections (supplier_accruals)
-    
+
     Defensive: if an index with the same name but different options already
     exists, we swallow IndexOptionsConflict and keep existing definition.
     """

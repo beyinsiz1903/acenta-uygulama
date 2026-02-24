@@ -155,7 +155,7 @@ async def seed_demo_bookings(
     """
     Generate demo booking data for testing dashboard metrics.
     Only accessible by super_admin.
-    
+
     Distribution:
     - 45% pending
     - 45% confirmed

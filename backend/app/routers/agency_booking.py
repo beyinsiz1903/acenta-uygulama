@@ -186,7 +186,7 @@ class BookingSubmitIn(BaseModel):
 async def submit_booking(draft_id: str, payload: BookingSubmitIn, request: Request, user=Depends(get_current_user)):
     """
     FAZ-2: Submit draft to hotel (creates pending booking)
-    
+
     - Converts draft → pending status
     - Sets SLA deadline (60 minutes)
     - Idempotent (same draft → same pending booking)

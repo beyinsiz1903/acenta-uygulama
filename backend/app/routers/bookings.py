@@ -535,7 +535,7 @@ async def get_booking_endpoint(
 @router.post("/{booking_id}/track/whatsapp-click", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
 async def track_whatsapp_click(booking_id: str, user=Depends(get_current_user)):
     """Track when user clicks WhatsApp share button on booking confirmed page.
-    
+
     Idempotent: same booking_id + actor can only create one event (prevents spam)
     Used for pilot KPI: whatsappShareRate
     """

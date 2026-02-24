@@ -14,7 +14,7 @@ class PasswordPolicyError(Exception):
 def validate_password(password: str) -> Optional[List[str]]:
     """Validate password against enterprise policy.
     Returns list of violations, or None if valid.
-    
+
     Policy:
     - Minimum 10 characters
     - At least 1 uppercase letter

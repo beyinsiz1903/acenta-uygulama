@@ -34,7 +34,7 @@ class BookingFinanceService:
     ) -> Dict[str, Any]:
         """
         Check agency credit limit before booking creation.
-        
+
         Returns:
             {
                 "allowed": bool,
@@ -44,7 +44,7 @@ class BookingFinanceService:
                     "over_limit_after_post": bool,  # post-check flag for race conditions
                 }
             }
-        
+
         Raises:
             AppError: If credit limit exceeded or other validation fails
         """
@@ -529,7 +529,7 @@ class BookingFinanceService:
         occurred_at: Optional[datetime] = None,
     ) -> str:
         """Create EUR-denominated posting for PAYMENT_RECEIVED.
-        
+
         This is a stub implementation for F2.2 Stripe integration.
         For testing purposes, we'll return a dummy posting ID.
         """
@@ -550,7 +550,7 @@ class BookingFinanceService:
         occurred_at: Optional[datetime] = None,
     ) -> str:
         """Create EUR-denominated posting for REFUND_APPROVED.
-        
+
         This is a stub implementation for F2.2 Stripe integration.
         For testing purposes, we'll return a dummy posting ID.
         """

@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/ai-assistant", tags=["AI Assistant"])
 
-SYSTEM_MESSAGE = """Sen, Booking Suite (Acenta Master) platformu için özel olarak tasarlanmış bir AI asistansın. 
+SYSTEM_MESSAGE = """Sen, Booking Suite (Acenta Master) platformu için özel olarak tasarlanmış bir AI asistansın.
 Adın "Booking AI". Türkçe konuşuyorsun.
 
 Görevlerin:
@@ -167,7 +167,7 @@ async def get_daily_briefing(user: dict[str, Any] = Depends(get_current_user)):
 İşte güncel verilerim:
 {context}
 
-Bu verilere dayanarak kısa ve öz bir günlük brifing hazırla. Önemli noktaları vurgula, 
+Bu verilere dayanarak kısa ve öz bir günlük brifing hazırla. Önemli noktaları vurgula,
 bekleyen işleri hatırlat ve varsa önerilerde bulun."""
 
         api_key = _get_llm_key()

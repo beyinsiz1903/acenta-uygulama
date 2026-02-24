@@ -18,12 +18,12 @@ async def compute_rate_for_stay(
 ) -> list[dict[str, Any]]:
     """
     FAZ-2.2.2: Compute rates with period-based pricing
-    
+
     Priority:
     1. Rate period override (date + days_of_week + min_stay match)
     2. Rate plan default_price (optional, not implemented yet)
     3. Room type base_price (fallback)
-    
+
     Returns list of applicable rate plans with calculated prices
     """
     db = await get_db()

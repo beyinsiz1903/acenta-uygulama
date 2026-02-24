@@ -313,7 +313,7 @@ async def list_accounts(
 ):
     """
     List finance accounts
-    
+
     Auth: admin|ops|super_admin
     Filters: type, owner_id
     Sorting: created_at desc
@@ -337,7 +337,7 @@ async def create_account(
 ):
     """
     Create a new finance account
-    
+
     Auth: admin|ops|super_admin
     Rules:
     - code must be unique per org (409 account_code_exists)
@@ -356,7 +356,7 @@ async def list_credit_profiles(
 ):
     """
     List credit profiles
-    
+
     Auth: admin|ops|super_admin
     Filters: agency_id
     Sorting: updated_at desc
@@ -381,7 +381,7 @@ async def upsert_credit_profile(
 ):
     """
     Upsert credit profile (create if not exists, update if exists)
-    
+
     Auth: admin|ops|super_admin
     Rules:
     - soft_limit must be >= limit (422 validation_error)
@@ -1375,7 +1375,7 @@ async def test_posting(
 ):
     """
     TEST ENDPOINT: Create a ledger posting (Phase 1.3 testing only)
-    
+
     DO NOT USE IN PRODUCTION
     """
     # Determine lines based on event
@@ -1462,7 +1462,7 @@ async def get_supplier_accounts(
 ):
     """
     Get all finance accounts for supplier (by currency)
-    
+
     Auth: admin|ops|super_admin
     """
     org_id = current_user["organization_id"]
@@ -1892,7 +1892,7 @@ async def get_supplier_balances(
 ):
     """
     Get supplier payable balance
-    
+
     Auth: admin|ops|super_admin
     Balance rule: credit - debit (payables)
     """
@@ -1917,7 +1917,7 @@ async def ensure_supplier_account(
 ):
     """
     Ensure supplier account exists (create if not)
-    
+
     Auth: admin|ops|super_admin
     Used by ops for manual account creation or verification
     """
@@ -1948,7 +1948,7 @@ async def get_supplier_payable_summary(
 ):
     """
     Get supplier payable summary (dashboard view)
-    
+
     Auth: admin|ops|super_admin
     Shows all suppliers with outstanding payables
     """
@@ -2087,7 +2087,7 @@ async def get_account_statement(
 ):
     """
     Get account statement (movement history)
-    
+
     Auth: admin|ops|super_admin
     Query: from, to (ISO datetime), limit
     Sorting: posted_at asc (statement logic)
@@ -2194,7 +2194,7 @@ async def get_exposure_dashboard(
 ):
     """
     Get exposure dashboard for all agencies
-    
+
     Auth: admin|ops|super_admin
     Shows: agency exposure vs credit limit
     Status: ok | near_limit | over_limit
@@ -2352,7 +2352,7 @@ async def create_manual_payment(
 ):
     """
     Create manual payment entry
-    
+
     Auth: admin|ops|super_admin
     Behavior:
     1. Create payment document

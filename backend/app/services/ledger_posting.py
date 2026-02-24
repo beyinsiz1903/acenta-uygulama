@@ -312,7 +312,7 @@ class LedgerPostingService:
     ):
         """
         Update account balance cache atomically.
-        
+
         Balance rules (Phase 1):
         - Agency account: balance = total_debit - total_credit (exposure)
         - Platform account: balance = total_credit - total_debit (receivables)
@@ -372,12 +372,12 @@ class LedgerPostingService:
     ) -> dict:
         """
         Recalculate balance from ledger entries (safety net / debug tool).
-        
+
         This is a full scan and should only be used for:
         - Recovery from balance corruption
         - Ops debugging
         - Balance verification
-        
+
         NOT for normal operations (balance cache is updated on each posting).
         """
         db = await get_db()
@@ -448,7 +448,7 @@ class LedgerPostingService:
 class PostingMatrixConfig:
     """
     Configuration for booking/payment/refund → ledger posting mapping.
-    
+
     This is the "source of truth" for Phase 1 financial events.
     """
 
@@ -584,7 +584,7 @@ class PostingMatrixConfig:
         SUPPLIER_ACCRUED event (Phase 2A.2):
         - Supplier payable increases (credit supplier)
         - Platform AP clearing increases (debit platform AP)
-        
+
         Note: This is separate from Phase 1 platform AR account.
         """
         return [

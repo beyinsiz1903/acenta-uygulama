@@ -26,7 +26,7 @@ async def compute_availability(
 ) -> dict[str, Any]:
     """
     FAZ-2.2.1: Compute real availability from rooms + bookings + blocks
-    
+
     Returns:
     {
         "room_type": {

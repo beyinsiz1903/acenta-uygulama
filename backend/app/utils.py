@@ -280,18 +280,18 @@ def parse_date_range(
 ) -> Tuple[datetime, datetime, int]:
     """
     Parse date range from query params with backward compatibility.
-    
+
     Priority:
     1. If start or end is provided, use date range (end is inclusive)
     2. Otherwise, use days parameter
-    
+
     Args:
         start: Start date (YYYY-MM-DD, inclusive)
         end: End date (YYYY-MM-DD, inclusive)
         days: Number of days back from now
         default_days: Default if nothing provided
         max_days: Maximum allowed days
-        
+
     Returns:
         (cutoff_date, end_date, actual_days)
     """
@@ -342,7 +342,7 @@ def parse_date_range(
 def format_date_range(start: datetime, end: datetime) -> dict:
     """
     Format date range for API response.
-    
+
     Returns:
         {
             "start": "YYYY-MM-DD",

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 async def ensure_finance_indexes(db):
     """Ensure indexes for finance collections.
-    
+
     Defensive: if an index with the same name but different options already
     exists (legacy), we swallow IndexOptionsConflict and keep existing
     definition. This avoids blocking startup while still enforcing

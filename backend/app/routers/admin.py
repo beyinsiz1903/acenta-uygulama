@@ -363,7 +363,7 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
     """
     Pilot KPI summary for last N days.
     Returns behavioral metrics to measure pilot success.
-    
+
     KPIs:
     - totalRequests: booking count (all statuses)
     - avgRequestsPerAgency: avg bookings per active agency
@@ -371,7 +371,7 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
     - hotelPanelActionRate: % of bookings with hotel action (confirmed/cancelled from hotel)
     - avgApprovalMinutes: avg time from draft_created_at to hotel action
     - agenciesViewedSettlements: % agencies who viewed settlements page
-    - hotelsViewedSettlements: % hotels who viewed settlements page  
+    - hotelsViewedSettlements: % hotels who viewed settlements page
     - flowCompletionRate: % of drafts that reached confirmed status
     """
     from datetime import timedelta

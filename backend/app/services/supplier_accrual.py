@@ -73,13 +73,13 @@ class SupplierAccrualService:
     ) -> dict:
         """
         Creates supplier_accruals (unique per booking) and posts SUPPLIER_ACCRUED exactly-once.
-        
+
         Args:
             organization_id: Organization ID
             booking_id: Booking ID (must be VOUCHERED)
             triggered_by: Email or "system"
             trigger: Meta info (voucher_generate, manual, etc.)
-            
+
         Returns:
             {
                 "accrual_id": str,
@@ -90,7 +90,7 @@ class SupplierAccrualService:
                 "currency": str,
                 "net_amount": float,
             }
-            
+
         Raises:
             AppError: 404 not_found, 409 invalid_booking_state, 409 supplier_id_missing, 409 invalid_commission
         """

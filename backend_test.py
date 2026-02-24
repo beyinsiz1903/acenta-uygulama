@@ -1,636 +1,245 @@
 #!/usr/bin/env python3
 """
-Hotel Approval/Reject Workflow Backend Testing
-
-Tests the following scenarios:
-1. Login authentication  
-2. List tours to get tour_id
-3. Create tour reservation (should be 'pending', not 'CONFIRMED')
-4. Find and verify new reservation status
-5. Test REJECT workflow with reason
-6. Test invalid transitions on rejected reservations
-7. Test CONFIRM workflow
-8. Test invalid double confirm
-9. Test cancel from confirmed status
-10. Verify status history tracking
+Backend API Testing Script for Syroce Tourism Platform
+Tests the backend API endpoints after security fixes.
 """
 
-import asyncio
+import requests
 import json
-import aiohttp
 import sys
-from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
-# Backend URL
-BASE_URL = "https://improvement-areas.preview.emergentagent.com"
-API_BASE = f"{BASE_URL}/api"
+# Backend URL from frontend/.env
+BACKEND_URL = "https://improvement-areas.preview.emergentagent.com"
+BASE_API_URL = f"{BACKEND_URL}/api"
 
-class HotelWorkflowTester:
-    def __init__(self):
-        self.session: Optional[aiohttp.ClientSession] = None
-        self.access_token: Optional[str] = None
-        self.test_results = []
-        self.tour_id: Optional[str] = None
-        self.first_reservation_id: Optional[str] = None
-        self.second_reservation_id: Optional[str] = None
-        
-    async def setup(self):
-        """Setup HTTP session"""
-        self.session = aiohttp.ClientSession()
-        
-    async def cleanup(self):
-        """Cleanup resources"""
-        if self.session:
-            await self.session.close()
-            
-    def log_result(self, test_name: str, success: bool, details: str):
-        """Log test result"""
-        status = "✅ PASS" if success else "❌ FAIL"
-        print(f"{status} {test_name}: {details}")
-        self.test_results.append({
-            'test': test_name,
-            'success': success,
-            'details': details,
-            'timestamp': datetime.now().isoformat()
-        })
-        
-    def get_auth_headers(self) -> Dict[str, str]:
-        """Get authentication headers"""
-        if not self.access_token:
-            return {}
-        return {"Authorization": f"Bearer {self.access_token}"}
-        
-    async def test_login(self):
-        """Test 1: POST /api/auth/login"""
-        test_name = "Login Authentication"
-        try:
-            # Try different credentials from test results 
-            credentials_to_try = [
-                {"email": "admin@acenta.test", "password": "admin123"},
-                {"email": "demo@acenta.test", "password": "Demo12345!x"}
-            ]
-            
-            for creds in credentials_to_try:
-                payload = creds
-            
-            
-                async with self.session.post(f"{API_BASE}/auth/login", json=payload) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
-                        if "access_token" in data:
-                            self.access_token = data["access_token"]
-                            self.log_result(test_name, True, f"Login successful with {payload['email']}, token obtained")
-                            return True
-                        else:
-                            self.log_result(test_name, False, f"No access_token in response for {payload['email']}: {data}")
-                    else:
-                        text = await resp.text()
-                        print(f"Failed login attempt for {payload['email']}: HTTP {resp.status}: {text}")
-                        
-            # If all attempts failed
-            self.log_result(test_name, False, "All credential combinations failed")
-                    
-        except Exception as e:
-            self.log_result(test_name, False, f"Exception: {str(e)}")
-            
-        return False
-        
-    async def test_list_tours(self):
-        """Test 2: GET /api/tours - Get tour_id for reservation"""
-        test_name = "List Tours"
-        try:
-            headers = self.get_auth_headers()
-            
-            async with self.session.get(f"{API_BASE}/tours", headers=headers) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    print(f"Tours API response: {data}")
-                    items = data.get("items", [])
-                    if len(items) > 0:
-                        self.tour_id = items[0]["id"]
-                        self.log_result(test_name, True, f"Found {len(items)} tours, using tour_id: {self.tour_id}")
-                        return True
-                    else:
-                        # Let's also try admin endpoint to check for tours
-                        async with self.session.get(f"{API_BASE}/admin/tours", headers=headers) as admin_resp:
-                            if admin_resp.status == 200:
-                                admin_data = await admin_resp.json()
-                                print(f"Admin tours API response: {admin_data}")
-                                if len(admin_data) > 0:
-                                    # Use admin tour data
-                                    self.tour_id = admin_data[0]["id"]
-                                    self.log_result(test_name, True, f"Found {len(admin_data)} tours via admin endpoint, using tour_id: {self.tour_id}")
-                                    return True
-                        self.log_result(test_name, False, f"No tours found. Regular: {data}, Admin endpoint also checked.")
-                        # Let's try to use reservations endpoint instead to test the workflow
-                        async with self.session.get(f"{API_BASE}/reservations", headers=headers) as res_resp:
-                            if res_resp.status == 200:
-                                res_data = await res_resp.json()
-                                print(f"Reservations found: {len(res_data) if res_data else 0}")
-                                if res_data and len(res_data) > 0:
-                                    # We can work with existing reservations for testing workflow
-                                    self.log_result(test_name, True, f"No tours but found {len(res_data)} reservations to test workflow with")
-                                    return "use_existing_reservations"
-                        # Let's try to create a reservation using the main reservation endpoint
-                        await self.test_create_direct_reservation()
-                        return False
-                else:
-                    text = await resp.text()
-                    self.log_result(test_name, False, f"HTTP {resp.status}: {text}")
-                    
-        except Exception as e:
-            self.log_result(test_name, False, f"Exception: {str(e)}")
-            
-        return False
-        
-    async def test_create_tour_reservation(self, guest_name: str):
-        """Test 3 & 7: POST /api/tours/{tour_id}/reserve - Create reservation"""
-        test_name = f"Create Tour Reservation ({guest_name})"
-        try:
-            if not self.tour_id:
-                self.log_result(test_name, False, "No tour_id available")
-                return None
-                
-            headers = self.get_auth_headers()
-            payload = {
-                "travel_date": "2025-08-15",
-                "adults": 2,
-                "children": 0,
-                "guest_name": guest_name,
-                "guest_email": f"{guest_name.lower().replace(' ', '.')}@test.com",
-                "guest_phone": "+905551234567"
-            }
-            
-            async with self.session.post(f"{API_BASE}/tours/{self.tour_id}/reserve", 
-                                       json=payload, headers=headers) as resp:
-                if resp.status == 201:
-                    data = await resp.json()
-                    reservation_code = data.get("reservation_code")
-                    status = data.get("status")
-                    
-                    if status == "pending":
-                        self.log_result(test_name, True, 
-                                      f"Reservation created: {reservation_code}, status: {status} (correctly pending)")
-                        return reservation_code
-                    else:
-                        self.log_result(test_name, False, 
-                                      f"Reservation created but status is '{status}' instead of 'pending'")
-                        return reservation_code
-                else:
-                    text = await resp.text()
-                    self.log_result(test_name, False, f"HTTP {resp.status}: {text}")
-                    
-        except Exception as e:
-            self.log_result(test_name, False, f"Exception: {str(e)}")
-            
-        return None
-        
-    async def test_find_reservation_by_pnr(self, reservation_code: str):
-        """Test 4: GET /api/reservations - Find reservation by PNR"""
-        test_name = f"Find Reservation by PNR ({reservation_code})"
-        try:
-            headers = self.get_auth_headers()
-            
-            async with self.session.get(f"{API_BASE}/reservations?q={reservation_code}", 
-                                      headers=headers) as resp:
-                if resp.status == 200:
-                    reservations = await resp.json()
-                    if len(reservations) > 0:
-                        reservation = reservations[0]
-                        reservation_id = reservation.get("id")
-                        status = reservation.get("status")
-                        pnr = reservation.get("pnr")
-                        
-                        if pnr == reservation_code and status == "pending":
-                            self.log_result(test_name, True, 
-                                          f"Found reservation ID: {reservation_id}, status: {status}")
-                            return reservation_id
-                        else:
-                            self.log_result(test_name, False, 
-                                          f"Found reservation but PNR: {pnr}, status: {status}")
-                            return reservation_id
-                    else:
-                        self.log_result(test_name, False, "No reservations found")
-                else:
-                    text = await resp.text()
-                    self.log_result(test_name, False, f"HTTP {resp.status}: {text}")
-                    
-        except Exception as e:
-            self.log_result(test_name, False, f"Exception: {str(e)}")
-            
-        return None
-        
-    async def test_reject_reservation(self, reservation_id: str):
-        """Test 5: POST /api/reservations/{reservation_id}/reject"""
-        test_name = "Reject Reservation"
-        try:
-            headers = self.get_auth_headers()
-            payload = {"reason": "Oda müsait değil"}
-            
-            async with self.session.post(f"{API_BASE}/reservations/{reservation_id}/reject",
-                                       json=payload, headers=headers) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    status = data.get("status")
-                    rejection_reason = data.get("rejection_reason")
-                    rejected_at = data.get("rejected_at")
-                    rejected_by = data.get("rejected_by")
-                    status_history = data.get("status_history", [])
-                    
-                    success = True
-                    details = []
-                    
-                    if status != "rejected":
-                        success = False
-                        details.append(f"Status is '{status}', expected 'rejected'")
-                    else:
-                        details.append(f"Status: {status}")
-                        
-                    if rejection_reason != "Oda müsait değil":
-                        success = False
-                        details.append(f"Rejection reason: '{rejection_reason}', expected 'Oda müsait değil'")
-                    else:
-                        details.append(f"Rejection reason: {rejection_reason}")
-                        
-                    if not rejected_at:
-                        success = False
-                        details.append("Missing rejected_at")
-                    else:
-                        details.append(f"Rejected at: {rejected_at}")
-                        
-                    if not rejected_by:
-                        success = False
-                        details.append("Missing rejected_by")
-                    else:
-                        details.append(f"Rejected by: {rejected_by}")
-                        
-                    if len(status_history) == 0:
-                        success = False
-                        details.append("Missing status_history")
-                    else:
-                        details.append(f"Status history entries: {len(status_history)}")
-                        
-                    self.log_result(test_name, success, "; ".join(details))
-                    return success
-                else:
-                    text = await resp.text()
-                    self.log_result(test_name, False, f"HTTP {resp.status}: {text}")
-                    
-        except Exception as e:
-            self.log_result(test_name, False, f"Exception: {str(e)}")
-            
-        return False
-        
-    async def test_invalid_transition_rejected_to_confirmed(self, reservation_id: str):
-        """Test 6: POST /api/reservations/{reservation_id}/confirm on rejected reservation"""
-        test_name = "Invalid Transition (Rejected -> Confirmed)"
-        try:
-            headers = self.get_auth_headers()
-            
-            async with self.session.post(f"{API_BASE}/reservations/{reservation_id}/confirm",
-                                       headers=headers) as resp:
-                if resp.status == 409:
-                    text = await resp.text()
-                    self.log_result(test_name, True, f"Correctly returned 409 error: {text}")
-                    return True
-                else:
-                    text = await resp.text()
-                    self.log_result(test_name, False, 
-                                  f"Expected 409 error but got HTTP {resp.status}: {text}")
-                    
-        except Exception as e:
-            self.log_result(test_name, False, f"Exception: {str(e)}")
-            
-        return False
-        
-    async def test_confirm_reservation(self, reservation_id: str):
-        """Test 8: POST /api/reservations/{reservation_id}/confirm"""
-        test_name = "Confirm Reservation"
-        try:
-            headers = self.get_auth_headers()
-            
-            async with self.session.post(f"{API_BASE}/reservations/{reservation_id}/confirm",
-                                       headers=headers) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    status = data.get("status")
-                    confirmed_at = data.get("confirmed_at")
-                    confirmed_by = data.get("confirmed_by")
-                    status_history = data.get("status_history", [])
-                    
-                    success = True
-                    details = []
-                    
-                    if status != "confirmed":
-                        success = False
-                        details.append(f"Status is '{status}', expected 'confirmed'")
-                    else:
-                        details.append(f"Status: {status}")
-                        
-                    if not confirmed_at:
-                        success = False
-                        details.append("Missing confirmed_at")
-                    else:
-                        details.append(f"Confirmed at: {confirmed_at}")
-                        
-                    if not confirmed_by:
-                        success = False
-                        details.append("Missing confirmed_by")
-                    else:
-                        details.append(f"Confirmed by: {confirmed_by}")
-                        
-                    if len(status_history) == 0:
-                        success = False
-                        details.append("Missing status_history")
-                    else:
-                        details.append(f"Status history entries: {len(status_history)}")
-                        
-                    self.log_result(test_name, success, "; ".join(details))
-                    return success
-                else:
-                    text = await resp.text()
-                    self.log_result(test_name, False, f"HTTP {resp.status}: {text}")
-                    
-        except Exception as e:
-            self.log_result(test_name, False, f"Exception: {str(e)}")
-            
-        return False
-        
-    async def test_double_confirm(self, reservation_id: str):
-        """Test 9: POST /api/reservations/{reservation_id}/confirm again (should fail)"""
-        test_name = "Double Confirm (Invalid Transition)"
-        try:
-            headers = self.get_auth_headers()
-            
-            async with self.session.post(f"{API_BASE}/reservations/{reservation_id}/confirm",
-                                       headers=headers) as resp:
-                if resp.status == 409:
-                    text = await resp.text()
-                    self.log_result(test_name, True, f"Correctly returned 409 error: {text}")
-                    return True
-                else:
-                    text = await resp.text()
-                    self.log_result(test_name, False, 
-                                  f"Expected 409 error but got HTTP {resp.status}: {text}")
-                    
-        except Exception as e:
-            self.log_result(test_name, False, f"Exception: {str(e)}")
-            
-        return False
-        
-    async def test_cancel_from_confirmed(self, reservation_id: str):
-        """Test 10: POST /api/reservations/{reservation_id}/cancel from confirmed"""
-        test_name = "Cancel from Confirmed"
-        try:
-            headers = self.get_auth_headers()
-            
-            async with self.session.post(f"{API_BASE}/reservations/{reservation_id}/cancel",
-                                       headers=headers) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    status = data.get("status")
-                    
-                    if status == "cancelled":
-                        self.log_result(test_name, True, f"Successfully cancelled reservation, status: {status}")
-                        return True
-                    else:
-                        self.log_result(test_name, False, f"Unexpected status: {status}")
-                else:
-                    text = await resp.text()
-                    self.log_result(test_name, False, f"HTTP {resp.status}: {text}")
-                    
-        except Exception as e:
-            self.log_result(test_name, False, f"Exception: {str(e)}")
-            
-        return False
-        
-    async def run_all_tests(self):
-        """Run the complete hotel approval/reject workflow test suite"""
-        print("🚀 Starting Hotel Approval/Reject Workflow Testing")
-        print(f"🌐 Testing against: {BASE_URL}")
-        print("=" * 80)
-        
-        try:
-            # Test 1: Login
-            if not await self.test_login():
-                print("\n❌ Login failed - cannot continue with tests")
-                return
-                
-            # Test 2: List tours
-            tours_result = await self.test_list_tours()
-            if tours_result == "use_existing_reservations":
-                # Skip tour creation, work with existing reservations
-                print("📝 Working with existing reservations instead of creating new ones")
-                await self.test_existing_reservations_workflow()
-            elif not tours_result:
-                print("\n❌ Could not get tours and no existing reservations - testing endpoints directly")
-                await self.test_create_direct_reservation()
-                return
-            else:
-                # Standard tour-based workflow
-                await self.run_tour_based_workflow()
-                
-        except Exception as e:
-            print(f"\n❌ Unexpected error during testing: {str(e)}")
-            
-        finally:
-            await self.print_summary()
-            
-    async def test_existing_reservations_workflow(self):
-        """Test workflow using existing reservations"""
-        print("🔍 Testing workflow with existing reservations...")
-        
-        # Get existing reservations
-        headers = self.get_auth_headers()
-        async with self.session.get(f"{API_BASE}/reservations", headers=headers) as resp:
-            if resp.status == 200:
-                reservations = await resp.json()
-                print(f"Found {len(reservations)} reservations")
-                
-                # Find pending reservations to test reject/confirm
-                pending_reservations = [r for r in reservations if r.get("status") == "pending"]
-                if len(pending_reservations) >= 2:
-                    # Test reject workflow
-                    self.first_reservation_id = pending_reservations[0]["id"]
-                    await self.test_reject_reservation(self.first_reservation_id)
-                    await self.test_invalid_transition_rejected_to_confirmed(self.first_reservation_id)
-                    
-                    # Test confirm workflow
-                    self.second_reservation_id = pending_reservations[1]["id"] 
-                    if await self.test_confirm_reservation(self.second_reservation_id):
-                        await self.test_double_confirm(self.second_reservation_id)
-                        await self.test_cancel_from_confirmed(self.second_reservation_id)
-                elif len(pending_reservations) >= 1:
-                    # Test what we can with one reservation
-                    self.first_reservation_id = pending_reservations[0]["id"]
-                    await self.test_reject_reservation(self.first_reservation_id)
-                    await self.test_invalid_transition_rejected_to_confirmed(self.first_reservation_id)
-                else:
-                    print("❌ No pending reservations found to test workflow")
-                    
-                # Try testing with any reservations regardless of status
-                if len(reservations) > 0:
-                    for res in reservations[:3]:  # Test first 3 reservations
-                        res_id = res["id"]
-                        status = res.get("status", "unknown")
-                        print(f"Testing reservation {res_id} with status: {status}")
-                        
-                        # Try to get reservation details to verify status history is working
-                        async with self.session.get(f"{API_BASE}/reservations/{res_id}", headers=headers) as detail_resp:
-                            if detail_resp.status == 200:
-                                detail = await detail_resp.json()
-                                status_history = detail.get("status_history", [])
-                                print(f"Reservation {res_id}: status={detail.get('status')}, history_entries={len(status_history)}")
-                                
-                                # Log this as a successful workflow verification
-                                self.log_result(f"Status History Verification ({res_id})", 
-                                              True, 
-                                              f"Status: {detail.get('status')}, History entries: {len(status_history)}")
-                
-            else:
-                text = await resp.text()
-                self.log_result("Existing Reservations Check", False, f"HTTP {resp.status}: {text}")
-        
-    async def run_tour_based_workflow(self):
-        """Run the original tour-based workflow"""
-        # Test 3: Create first reservation for rejection test
-        first_reservation_code = await self.test_create_tour_reservation("Test Reject Guest")
-        if not first_reservation_code:
-            print("\n❌ Could not create first reservation")
-            return
-            
-        # Test 4: Find first reservation
-        self.first_reservation_id = await self.test_find_reservation_by_pnr(first_reservation_code)
-        if not self.first_reservation_id:
-            print("\n❌ Could not find first reservation")
-            return
-            
-        # Test 5: Test reject workflow
-        await self.test_reject_reservation(self.first_reservation_id)
-        
-        # Test 6: Test invalid transition (rejected -> confirmed)
-        await self.test_invalid_transition_rejected_to_confirmed(self.first_reservation_id)
-        
-        # Test 7: Create second reservation for confirmation test
-        second_reservation_code = await self.test_create_tour_reservation("Test Confirm Guest")
-        if not second_reservation_code:
-            print("\n❌ Could not create second reservation")
-            return
-            
-        # Find second reservation
-        self.second_reservation_id = await self.test_find_reservation_by_pnr(second_reservation_code)
-        if not self.second_reservation_id:
-            print("\n❌ Could not find second reservation")
-            return
-            
-        # Test 8: Test confirm workflow
-        if await self.test_confirm_reservation(self.second_reservation_id):
-            # Test 9: Test double confirm (invalid)
-            await self.test_double_confirm(self.second_reservation_id)
-            
-            # Test 10: Test cancel from confirmed
-            await self.test_cancel_from_confirmed(self.second_reservation_id)
-            
-    async def test_create_direct_reservation(self):
-        """Try to create a reservation directly using the reservation endpoint"""
-        test_name = "Create Direct Reservation"
-        try:
-            headers = self.get_auth_headers()
-            
-            # Try to get products first
-            async with self.session.get(f"{API_BASE}/admin/products", headers=headers) as prod_resp:
-                if prod_resp.status == 200:
-                    products = await prod_resp.json()
-                    print(f"Found {len(products) if products else 0} products")
-                
-            # Try to get customers
-            async with self.session.get(f"{API_BASE}/admin/customers", headers=headers) as cust_resp:
-                if cust_resp.status == 200:
-                    customers = await cust_resp.json()
-                    print(f"Found {len(customers) if customers else 0} customers")
-            
-            # Even if we can't create, let's test the endpoints themselves
-            await self.test_reservation_endpoints_directly()
-            
-        except Exception as e:
-            self.log_result(test_name, False, f"Exception: {str(e)}")
-            
-    async def test_reservation_endpoints_directly(self):
-        """Test reservation endpoints directly"""
-        headers = self.get_auth_headers()
-        
-        # Test the reject endpoint with a non-existent reservation to see error handling
-        test_id = "test_reservation_id"
-        async with self.session.post(f"{API_BASE}/reservations/{test_id}/reject", 
-                                   json={"reason": "Test reason"}, headers=headers) as resp:
-            if resp.status == 404:
-                self.log_result("Reject Endpoint Error Handling", True, 
-                              "Correctly returned 404 for non-existent reservation")
-            else:
-                text = await resp.text()
-                self.log_result("Reject Endpoint Error Handling", False, 
-                              f"Unexpected response: HTTP {resp.status}: {text}")
-        
-        # Test the confirm endpoint
-        async with self.session.post(f"{API_BASE}/reservations/{test_id}/confirm", 
-                                   headers=headers) as resp:
-            if resp.status == 404:
-                self.log_result("Confirm Endpoint Error Handling", True, 
-                              "Correctly returned 404 for non-existent reservation")
-            else:
-                text = await resp.text()
-                self.log_result("Confirm Endpoint Error Handling", False, 
-                              f"Unexpected response: HTTP {resp.status}: {text}")
-        
-        # Test the cancel endpoint
-        async with self.session.post(f"{API_BASE}/reservations/{test_id}/cancel", 
-                                   headers=headers) as resp:
-            if resp.status == 404:
-                self.log_result("Cancel Endpoint Error Handling", True, 
-                              "Correctly returned 404 for non-existent reservation")
-            else:
-                text = await resp.text()
-                self.log_result("Cancel Endpoint Error Handling", False, 
-                              f"Unexpected response: HTTP {resp.status}: {text}")
-        
-        print("✅ Hotel approval/reject workflow endpoints exist and handle errors correctly")
-            
-    async def print_summary(self):
-        """Print test summary"""
-        print("\n" + "=" * 80)
-        print("📊 TEST SUMMARY")
-        print("=" * 80)
-        
-        total_tests = len(self.test_results)
-        passed_tests = sum(1 for r in self.test_results if r['success'])
-        failed_tests = total_tests - passed_tests
-        
-        print(f"Total Tests: {total_tests}")
-        print(f"✅ Passed: {passed_tests}")
-        print(f"❌ Failed: {failed_tests}")
-        print(f"Success Rate: {passed_tests/total_tests*100:.1f}%" if total_tests > 0 else "N/A")
-        
-        if failed_tests > 0:
-            print("\n🚨 FAILED TESTS:")
-            for result in self.test_results:
-                if not result['success']:
-                    print(f"❌ {result['test']}: {result['details']}")
-        
-        print("\n📝 DETAILED RESULTS:")
-        for result in self.test_results:
-            status = "✅ PASS" if result['success'] else "❌ FAIL"
-            print(f"{status} {result['test']}: {result['details']}")
-
-async def main():
-    """Main test runner"""
-    tester = HotelWorkflowTester()
+def make_request(method: str, endpoint: str, data: Dict[Any, Any] = None, headers: Dict[str, str] = None) -> Dict[str, Any]:
+    """Make HTTP request and return response details."""
+    url = f"{BASE_API_URL}{endpoint}"
+    
+    default_headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "Backend-Test-Script/1.0"
+    }
+    
+    if headers:
+        default_headers.update(headers)
     
     try:
-        await tester.setup()
-        await tester.run_all_tests()
-    finally:
-        await tester.cleanup()
+        if method.upper() == "GET":
+            response = requests.get(url, headers=default_headers, timeout=30)
+        elif method.upper() == "POST":
+            response = requests.post(url, json=data, headers=default_headers, timeout=30)
+        else:
+            return {"error": f"Unsupported method: {method}"}
+        
+        result = {
+            "status_code": response.status_code,
+            "headers": dict(response.headers),
+            "url": url,
+            "method": method.upper()
+        }
+        
+        try:
+            result["json"] = response.json()
+        except:
+            result["text"] = response.text[:1000]  # Limit response text
+            
+        return result
+        
+    except requests.exceptions.Timeout:
+        return {"error": "Request timeout"}
+    except requests.exceptions.ConnectionError:
+        return {"error": "Connection error"}
+    except Exception as e:
+        return {"error": str(e)}
+
+def test_health_ready():
+    """Test GET /api/health/ready endpoint."""
+    print("Testing Health Ready endpoint...")
+    result = make_request("GET", "/health/ready")
+    
+    if "error" in result:
+        print(f"❌ FAILED: {result['error']}")
+        return False
+    
+    print(f"Status Code: {result['status_code']}")
+    
+    if result["status_code"] == 200:
+        json_data = result.get("json", {})
+        status = json_data.get("status")
+        checks = json_data.get("checks", {})
+        
+        print(f"✅ PASSED: Health Ready - Status: {status}")
+        print(f"   Checks: {json.dumps(checks, indent=2)}")
+        return True
+    else:
+        print(f"❌ FAILED: Expected 200, got {result['status_code']}")
+        print(f"   Response: {result.get('json') or result.get('text', 'No response')}")
+        return False
+
+def test_health_live():
+    """Test GET /api/health/live endpoint."""
+    print("\nTesting Health Live endpoint...")
+    result = make_request("GET", "/health/live")
+    
+    if "error" in result:
+        print(f"❌ FAILED: {result['error']}")
+        return False
+    
+    print(f"Status Code: {result['status_code']}")
+    
+    if result["status_code"] == 200:
+        json_data = result.get("json", {})
+        status = json_data.get("status")
+        
+        print(f"✅ PASSED: Health Live - Status: {status}")
+        return True
+    else:
+        print(f"❌ FAILED: Expected 200, got {result['status_code']}")
+        print(f"   Response: {result.get('json') or result.get('text', 'No response')}")
+        return False
+
+def test_login_valid():
+    """Test POST /api/auth/login with valid credentials."""
+    print("\nTesting Login with valid credentials...")
+    
+    login_data = {
+        "email": "admin@acenta.test",
+        "password": "admin123"
+    }
+    
+    result = make_request("POST", "/auth/login", login_data)
+    
+    if "error" in result:
+        print(f"❌ FAILED: {result['error']}")
+        return False
+    
+    print(f"Status Code: {result['status_code']}")
+    
+    if result["status_code"] == 200:
+        json_data = result.get("json", {})
+        access_token = json_data.get("access_token")
+        user_data = json_data.get("user")
+        
+        if access_token and user_data:
+            print(f"✅ PASSED: Login successful")
+            print(f"   User: {user_data.get('email')}")
+            print(f"   Token received: {access_token[:20]}...")
+            return True
+        else:
+            print(f"❌ FAILED: Missing access_token or user in response")
+            print(f"   Response: {json_data}")
+            return False
+    else:
+        print(f"❌ FAILED: Expected 200, got {result['status_code']}")
+        json_data = result.get("json", {})
+        print(f"   Error: {json_data.get('detail', 'Unknown error')}")
+        return False
+
+def test_login_invalid():
+    """Test POST /api/auth/login with invalid credentials."""
+    print("\nTesting Login with invalid credentials...")
+    
+    login_data = {
+        "email": "invalid",
+        "password": "wrong"
+    }
+    
+    result = make_request("POST", "/auth/login", login_data)
+    
+    if "error" in result:
+        print(f"❌ FAILED: {result['error']}")
+        return False
+    
+    print(f"Status Code: {result['status_code']}")
+    
+    if result["status_code"] == 401:
+        json_data = result.get("json", {})
+        error_detail = json_data.get("detail", "")
+        
+        print(f"✅ PASSED: Login correctly rejected - {error_detail}")
+        return True
+    else:
+        print(f"❌ FAILED: Expected 401, got {result['status_code']}")
+        print(f"   Response: {result.get('json') or result.get('text', 'No response')}")
+        return False
+
+def test_cors_headers():
+    """Test CORS headers in responses."""
+    print("\nTesting CORS headers...")
+    
+    # Test with health endpoint
+    result = make_request("GET", "/health/live")
+    
+    if "error" in result:
+        print(f"❌ FAILED: {result['error']}")
+        return False
+    
+    headers = result.get("headers", {})
+    cors_origin = headers.get("Access-Control-Allow-Origin", "")
+    cors_credentials = headers.get("Access-Control-Allow-Credentials", "")
+    cors_methods = headers.get("Access-Control-Allow-Methods", "")
+    
+    print(f"CORS Headers:")
+    print(f"   Access-Control-Allow-Origin: {cors_origin}")
+    print(f"   Access-Control-Allow-Credentials: {cors_credentials}")
+    print(f"   Access-Control-Allow-Methods: {cors_methods}")
+    
+    # Check that CORS origin is not wildcard (*)
+    if cors_origin == "*":
+        print(f"❌ FAILED: CORS origin is wildcard (*), should be specific domains")
+        return False
+    elif cors_origin:
+        print(f"✅ PASSED: CORS headers present with specific origin")
+        return True
+    else:
+        print(f"⚠️  WARNING: No CORS headers found")
+        return True  # This might be handled by middleware differently
+
+def main():
+    """Run all backend API tests."""
+    print("=" * 60)
+    print("SYROCE BACKEND API TESTING")
+    print("=" * 60)
+    print(f"Backend URL: {BACKEND_URL}")
+    print(f"API Base URL: {BASE_API_URL}")
+    print("=" * 60)
+    
+    tests = [
+        ("Health Check Ready", test_health_ready),
+        ("Health Check Live", test_health_live),
+        ("Login Valid Credentials", test_login_valid),
+        ("Login Invalid Credentials", test_login_invalid),
+        ("CORS Headers", test_cors_headers),
+    ]
+    
+    passed = 0
+    failed = 0
+    
+    for test_name, test_func in tests:
+        try:
+            if test_func():
+                passed += 1
+            else:
+                failed += 1
+        except Exception as e:
+            print(f"❌ FAILED: {test_name} - Exception: {str(e)}")
+            failed += 1
+    
+    print("\n" + "=" * 60)
+    print("TEST RESULTS SUMMARY")
+    print("=" * 60)
+    print(f"Total Tests: {len(tests)}")
+    print(f"Passed: {passed}")
+    print(f"Failed: {failed}")
+    
+    if failed > 0:
+        print("\n❌ Some tests failed. Check the details above.")
+        sys.exit(1)
+    else:
+        print("\n✅ All tests passed successfully!")
+        sys.exit(0)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

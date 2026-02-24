@@ -142,3 +142,25 @@
   - TTL and expiration working correctly
 - **No Critical Issues Found**: All Redis functionality working as expected
 - **Recommendation**: Redis cache layer implementation is production-ready
+
+#### Testing Agent Report (Expanded Redis Cache Integration - Latest):
+- **Task Completed**: Comprehensive expanded Redis cache integration testing for public endpoints ✅
+- **Test Coverage**: All 4 requested test areas passed:
+  1. **Health Check**: GET /api/health/ready → Returns "redis": "healthy" and status "ready" ✅
+  2. **Public Endpoints (cached)**: All 4 endpoints working correctly ✅
+     - GET /api/public/tours/search?org=test_org&page=1&page_size=5 → 200 OK
+     - GET /api/public/cms/pages?org=test_org → 200 OK
+     - GET /api/public/campaigns?org=test_org → 200 OK
+     - GET /api/public/search?org=test_org&page=1&page_size=5 → 200 OK
+  3. **Redis Key Verification**: Cache keys properly created with sc:* pattern ✅
+     - redis-cli KEYS 'sc:*' shows 4 cached keys after API calls
+     - redis-cli DBSIZE shows > 0 (found 3-4 keys)
+  4. **Redis Stats**: Statistics working correctly ✅
+     - redis-cli INFO stats → keyspace_hits: 4, keyspace_misses: 12 (25% hit rate)
+     - redis-cli INFO memory → used_memory: 1.12M, peak: 1.13M
+- **Cache Performance**: Cache hit rate of 25% demonstrates active caching operations
+- **Cache Key Pattern**: Proper sc: prefix pattern confirmed (sc:pub_tours, sc:cms_nav, sc:pub_camps_list)
+- **Memory Usage**: Redis using 1.12M memory, healthy and within limits
+- **All Public Endpoints**: Working correctly and creating proper cache entries
+- **No Critical Issues**: All Redis cache integration functionality working as expected
+- **Recommendation**: Expanded Redis cache integration is fully functional and production-ready

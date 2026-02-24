@@ -37,7 +37,7 @@ def test_health_check():
             print(f"Response: {json.dumps(data, indent=2)}")
             
             # Check if Redis is healthy
-            if 'redis' in data and data['redis'] == 'healthy':
+            if 'checks' in data and 'redis' in data['checks'] and data['checks']['redis'] == 'healthy':
                 print("✅ PASS: Redis is healthy")
                 return True
             else:

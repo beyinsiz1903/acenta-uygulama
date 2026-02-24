@@ -12,7 +12,7 @@ from app.schemas_crm import DealCreate, DealOut, DealPatch
 from app.services.crm_deals import create_deal, get_deal, link_deal_booking, list_deals, patch_deal
 from app.services.audit import write_audit_log
 from app.services.endpoint_cache import try_cache_get, cache_and_return
-from app.services.redis_cache import redis_invalidate_pattern
+from app.services.cache_invalidation import invalidate_crm_deals
 
 logger = logging.getLogger(__name__)
 

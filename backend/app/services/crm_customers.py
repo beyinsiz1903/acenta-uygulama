@@ -530,8 +530,7 @@ async def perform_customer_merge(
         await db.customers.update_many(
             {
                 "organization_id": organization_id,
-                "id": {"$in": list(dup_set_eff)},
-                "id": {"$ne": primary_id},
+                "id": {"$in": [d for d in dup_set_eff if d != primary_id]},
             },
             {"$set": soft_fields},
         )

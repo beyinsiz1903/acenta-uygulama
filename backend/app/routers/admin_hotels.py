@@ -22,10 +22,14 @@ AdminDep = Depends(require_roles(["super_admin"]))
 async def list_hotels(active: Optional[bool] = None, user=Depends(get_current_user), db=Depends(get_db)) -> List[Dict[str, Any]]:
     org_id = user["organization_id"]
 
-    # Cache: hotel list (5 min TTL)
+    # Cache: L1 Redis → L2 MongoDB (hotel list, 5 min TTL)
     ck = f"hotel_list:{org_id}:{active}"
+    redis_hit = await redis_get(ck)
+    if redis_hit:
+        return redis_hit
     cached = await cache_get(ck)
     if cached:
+        await redis_set(ck, cached, ttl_seconds=60)
         return cached
 
     flt: Dict[str, Any] = {"organization_id": org_id}
@@ -35,6 +39,7 @@ async def list_hotels(active: Optional[bool] = None, user=Depends(get_current_us
     docs = await db.hotels.find(flt).sort("created_at", -1).to_list(500)
     result = [serialize_doc(d) for d in docs]
 
+    await redis_set(ck, result, ttl_seconds=60)
     await cache_set(ck, result, category="hotel_detail")
     return result
 

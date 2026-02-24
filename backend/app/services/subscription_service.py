@@ -46,7 +46,7 @@ class SubscriptionService:
             try:
                 period_start = _ensure_aware(datetime.fromisoformat(period_start_raw))
             except Exception:
-                period_start = None
+                _period_start = None
         else:
             _period_start = _ensure_aware(period_start_raw)
 

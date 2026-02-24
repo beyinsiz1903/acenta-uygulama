@@ -291,7 +291,7 @@ async def get_customer_detail(
 
     # When bookings.customer_id is present, load recent bookings for this customer.
     # Sort by created_at desc; if created_at is missing, fall back to updated_at.
-    booking_sort_field = "created_at"
+    _booking_sort_field = "created_at"
     sample_booking = await db.bookings.find_one(
         {"organization_id": organization_id, "customer_id": customer_id},
         {"created_at": 1, "updated_at": 1},

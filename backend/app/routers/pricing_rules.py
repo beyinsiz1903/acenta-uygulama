@@ -12,6 +12,8 @@ from pydantic import BaseModel, Field
 from app.auth import get_current_user
 from app.db import get_db
 from app.utils import serialize_doc, now_utc
+from app.services.endpoint_cache import try_cache_get, cache_and_return
+from app.services.redis_cache import redis_invalidate_pattern
 
 router = APIRouter(prefix="/pricing/rules", tags=["pricing_rules"])
 

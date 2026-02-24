@@ -40,14 +40,26 @@ async def create_product(payload: ProductIn, user=Depends(get_current_user)):
 
 @router.get("", dependencies=[Depends(get_current_user)])
 async def list_products(type: str | None = None, q: str | None = None, user=Depends(get_current_user)):
+    org_id = user["organization_id"]
+
+    # Redis L1 cache (skip text search)
+    if not q:
+        hit, ck = await try_cache_get("products", org_id, {"type": type})
+        if hit:
+            return hit
+
     db = await get_db()
-    query: dict[str, object] = {"organization_id": user["organization_id"]}
+    query: dict[str, object] = {"organization_id": org_id}
     if type:
         query["type"] = type
     if q:
         query["title"] = {"$regex": q, "$options": "i"}
     docs = await db.products.find(query).sort("created_at", -1).to_list(200)
-    return [serialize_doc(d) for d in docs]
+    result = [serialize_doc(d) for d in docs]
+
+    if not q:
+        await cache_and_return(ck, result, ttl=120)
+    return result
 
 
 @router.get("/{product_id}", dependencies=[Depends(get_current_user)])

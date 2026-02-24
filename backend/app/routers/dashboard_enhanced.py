@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query
 
 from app.auth import get_current_user
 from app.db import get_db
+from app.services.endpoint_cache import try_cache_get, cache_and_return
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
@@ -15,8 +16,14 @@ router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 @router.get("/kpi-stats")
 async def kpi_stats(user=Depends(get_current_user)):
     """Return Agentis-style KPI cards: Satışlar, Rezervasyon ratio, Dönüşüm Oranı, Online."""
-    db = await get_db()
     org_id = user["organization_id"]
+
+    # Redis L1 cache (30 sec TTL — dashboard refreshes frequently)
+    hit, ck = await try_cache_get("dash_kpi", org_id)
+    if hit:
+        return hit
+
+    db = await get_db()
 
     # Total sales
     sales_pipeline = [

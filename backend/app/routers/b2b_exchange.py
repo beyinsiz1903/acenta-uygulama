@@ -174,10 +174,16 @@ async def list_my_listings(  # type: ignore[no-untyped-def]
     tenant_ctx: B2BTenantContext = Depends(get_b2b_tenant_context),
     _: None = Depends(require_b2b_feature("b2b")),
 ):
+    # Redis L1 cache (1 min)
+    hit, ck = await try_cache_get("b2b_my_list", tenant_ctx.tenant_id)
+    if hit:
+        return hit
+
     db = await get_db()
     cursor = db.b2b_listings.find({"provider_tenant_id": tenant_ctx.tenant_id}).sort("created_at", -1)
     docs = await cursor.to_list(length=500)
-    return [B2BListingOut(**_serialize(d)) for d in docs]
+    result = [B2BListingOut(**_serialize(d)).model_dump() for d in docs]
+    return await cache_and_return(ck, result, ttl=60)
 
 
 @router.patch("/listings/{listing_id}", response_model=B2BListingOut)

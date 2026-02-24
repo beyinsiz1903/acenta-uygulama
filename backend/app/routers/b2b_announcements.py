@@ -18,17 +18,15 @@ def _now_utc() -> datetime:
 
 @router.get("/announcements")
 async def list_b2b_announcements(user: CurrentB2BUser = Depends(current_b2b_user), db=Depends(get_db)) -> Dict[str, Any]:
-    """Liste: B2B portal için aktif duyurular.
-
-    Kurallar:
-    - organization_id = kullanıcının org_id
-    - is_active = True
-    - valid_from <= now < valid_until (varsa)
-    - audience == "all" veya audience=="agency" ve agency_id eşleşiyor
-    """
+    """Liste: B2B portal için aktif duyurular."""
 
     org_id = user.organization_id
     agency_id = user.agency_id
+
+    # Redis L1 cache (5 min — announcements change rarely)
+    hit, ck = await try_cache_get("b2b_ann", org_id, {"aid": agency_id})
+    if hit:
+        return hit
 
     now = _now_utc().isoformat()
 

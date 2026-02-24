@@ -95,6 +95,7 @@ class RedisTestSuite:
                     details,
                     {
                         "response_data": data,
+                        "checks_data": checks,
                         "redis_present": has_redis_field,
                         "redis_healthy": redis_healthy,
                         "mode_present": has_mode_field,

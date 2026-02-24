@@ -53,6 +53,14 @@ async def http_list_customers(
     current_user: dict = Depends(require_roles(["agency_agent", "super_admin"])),
 ):
     org_id = current_user.get("organization_id")
+
+    # Redis L1 cache (1 min — CRM list, skip text search)
+    if not search and not tag:
+        cache_p = {"type": type, "page": page, "ps": page_size}
+        hit, ck = await try_cache_get("crm_cust", org_id, cache_p)
+        if hit:
+            return hit
+
     items, total = await list_customers(
         db,
         org_id,
@@ -62,7 +70,11 @@ async def http_list_customers(
         page=page,
         page_size=page_size,
     )
-    return {"items": items, "total": total, "page": page, "page_size": page_size}
+    result = {"items": items, "total": total, "page": page, "page_size": page_size}
+
+    if not search and not tag:
+        await cache_and_return(ck, result, ttl=60)
+    return result
 
 
 @router.post("", response_model=CustomerOut)

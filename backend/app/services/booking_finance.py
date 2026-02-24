@@ -21,10 +21,10 @@ class BookingFinanceService:
     - Auto-posting on booking confirmation
     - Refund posting on cancellation
     """
-    
+
     def __init__(self, db):
         self.db = db
-    
+
     async def check_credit_and_get_flags(
         self,
         organization_id: str,
@@ -48,24 +48,24 @@ class BookingFinanceService:
         Raises:
             AppError: If credit limit exceeded or other validation fails
         """
-        
+
         # Get agency finance account
         agency_account = await self.db.finance_accounts.find_one({
             "organization_id": organization_id,
             "type": "agency",
             "owner_id": agency_id,
         })
-        
+
         if not agency_account:
             raise AppError(
                 status_code=404,
                 code="finance_account_not_found",
                 message=f"Finance account not found for agency {agency_id}",
             )
-        
+
         account_id = agency_account["_id"]
         account_currency = agency_account["currency"]
-        
+
         # Currency mismatch check
         if account_currency != currency:
             raise AppError(
@@ -73,35 +73,35 @@ class BookingFinanceService:
                 code="currency_mismatch",
                 message=f"Account currency {account_currency} != booking currency {currency}",
             )
-        
+
         # Get credit profile
         credit_profile = await self.db.credit_profiles.find_one({
             "organization_id": organization_id,
             "agency_id": agency_id,
         })
-        
+
         if not credit_profile:
             raise AppError(
                 status_code=404,
                 code="credit_profile_not_found",
                 message=f"Credit profile not found for agency {agency_id}",
             )
-        
+
         limit = credit_profile["limit"]
         soft_limit = credit_profile.get("soft_limit")
-        
+
         # Get current exposure (balance)
         balance = await self.db.account_balances.find_one({
             "organization_id": organization_id,
             "account_id": account_id,
             "currency": currency,
         })
-        
+
         exposure = balance["balance"] if balance else 0.0
-        
+
         # Calculate projected exposure
         projected = exposure + sell_amount
-        
+
         # Hard limit check (> limit blocks booking)
         if projected > limit:
             raise AppError(
@@ -117,12 +117,12 @@ class BookingFinanceService:
                     "agency_id": agency_id,
                 },
             )
-        
+
         # Soft limit check (>= soft_limit is warning)
         near_limit = False
         if soft_limit and projected >= soft_limit:
             near_limit = True
-        
+
         return {
             "allowed": True,
             "error": None,
@@ -138,7 +138,7 @@ class BookingFinanceService:
                 "soft_limit": soft_limit,
             }
         }
-    
+
     async def post_booking_confirmed(
         self,
         organization_id: str,
@@ -309,7 +309,7 @@ class BookingFinanceService:
 
         return posting["_id"]
 
-    
+
 
     async def post_booking_cancelled(
         self,
@@ -518,7 +518,7 @@ class BookingFinanceService:
         )
 
         return posting["_id"]
-    
+
     async def post_payment_received(
         self,
         organization_id: str,
@@ -535,11 +535,11 @@ class BookingFinanceService:
         """
         if occurred_at is None:
             occurred_at = now_utc()
-            
+
         # For testing purposes, return a dummy posting ID
         # In a real implementation, this would create ledger entries
         return f"posting_{booking_id}_{payment_amount}"
-    
+
     async def post_refund_approved_for_booking(
         self,
         organization_id: str,
@@ -556,7 +556,7 @@ class BookingFinanceService:
         """
         if occurred_at is None:
             occurred_at = now_utc()
-            
+
         # For testing purposes, return a dummy posting ID
         # In a real implementation, this would create ledger entries
         return f"refund_posting_{booking_id}_{refund_amount}"

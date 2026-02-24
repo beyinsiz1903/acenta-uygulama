@@ -413,4 +413,4 @@ async def update_thread_status(
         "message_count": updated.get("message_count", 0),
     }
 
- 
+

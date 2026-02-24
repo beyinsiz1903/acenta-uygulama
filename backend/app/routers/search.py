@@ -61,7 +61,7 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
     cached = await db.search_cache.find_one({"_id": key})
     if cached and cached.get("response"):
         return cached["response"]
-    
+
     # Validate hotel is linked to agency
     link = await db.agency_hotel_links.find_one({
         "organization_id": user["organization_id"],
@@ -69,20 +69,20 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
         "hotel_id": payload.hotel_id,
         "active": True,
     })
-    
+
     if not link:
         raise HTTPException(status_code=403, detail="NOT_LINKED_TO_HOTEL")
-    
+
     # Get hotel info
     hotel = await db.hotels.find_one({
         "organization_id": user["organization_id"],
         "_id": payload.hotel_id,
         "active": True,
     })
-    
+
     if not hotel:
         raise HTTPException(status_code=404, detail="HOTEL_NOT_FOUND")
-    
+
     # Validate dates
     from datetime import datetime as dt
     try:
@@ -90,18 +90,18 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
         check_out_date = dt.fromisoformat(payload.check_out)
     except ValueError:
         raise HTTPException(status_code=422, detail="INVALID_DATE_FORMAT")
-    
+
     if check_out_date <= check_in_date:
         raise HTTPException(status_code=422, detail="INVALID_DATE_RANGE")
-    
+
     nights = (check_out_date - check_in_date).days
     if nights < 1:
         raise HTTPException(status_code=422, detail="MINIMUM_1_NIGHT")
-    
+
     # Validate occupancy
     if payload.occupancy.adults < 1:
         raise HTTPException(status_code=422, detail="MINIMUM_1_ADULT")
-    
+
     # FAZ-8: PMS Connect Layer quote() (mock adapter for now)
     from app.services.connect_layer import quote
 
@@ -159,5 +159,5 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
         upsert=True,
     )
 
-    
+
     return response

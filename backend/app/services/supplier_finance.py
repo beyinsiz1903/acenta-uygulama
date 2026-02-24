@@ -24,10 +24,10 @@ class SupplierFinanceService:
     - Currency-scoped accounts
     - Balance tracking (credit - debit for payables)
     """
-    
+
     def __init__(self, db):
         self.db = db
-    
+
     async def get_or_create_supplier_account(
         self,
         organization_id: str,
@@ -49,23 +49,23 @@ class SupplierFinanceService:
             "owner_id": supplier_id,
             "currency": currency,
         })
-        
+
         if account:
             return str(account["_id"])
-        
+
         # Get supplier details
         supplier = await self.db.suppliers.find_one({
             "_id": supplier_id,
             "organization_id": organization_id,
         })
-        
+
         if not supplier:
             raise AppError(
                 status_code=404,
                 code="supplier_not_found",
                 message=f"Supplier {supplier_id} not found",
             )
-        
+
         # Create account with ObjectId and unique code derived from it
         from pymongo.errors import DuplicateKeyError
 
@@ -144,7 +144,7 @@ class SupplierFinanceService:
             code="supplier_account_create_failed",
             message=f"Failed to create supplier account for {supplier_id} {currency}",
         )
-    
+
     async def get_supplier_accounts(
         self,
         organization_id: str,
@@ -156,15 +156,15 @@ class SupplierFinanceService:
             "type": "supplier",
             "owner_id": supplier_id,
         }).sort("currency", 1)
-        
+
         docs = await cursor.to_list(length=100)
-        
+
         # Convert ObjectId to string for JSON serialization
         for doc in docs:
             doc["account_id"] = str(doc["_id"])
-        
+
         return docs
-    
+
     async def get_supplier_balance(
         self,
         organization_id: str,
@@ -182,18 +182,18 @@ class SupplierFinanceService:
             "owner_id": supplier_id,
             "currency": currency,
         })
-        
+
         if not account:
             return 0.0
-        
+
         balance = await self.db.account_balances.find_one({
             "organization_id": organization_id,
             "account_id": str(account["_id"]),
             "currency": currency,
         })
-        
+
         return balance["balance"] if balance else 0.0
-    
+
     async def get_all_supplier_balances(
         self,
         organization_id: str,
@@ -210,39 +210,39 @@ class SupplierFinanceService:
             "type": "supplier",
             "currency": currency,
         })
-        
+
         accounts = await accounts_cursor.to_list(length=1000)
-        
+
         results = []
         for account in accounts:
             supplier_id = account["owner_id"]
             account_id = str(account["_id"])
-            
+
             # Get balance
             balance = await self.db.account_balances.find_one({
                 "organization_id": organization_id,
                 "account_id": account_id,
                 "currency": currency,
             })
-            
+
             balance_amount = balance["balance"] if balance else 0.0
-            
+
             # Only include if balance > 0 (outstanding payables)
             if balance_amount > 0:
                 # Get supplier name
                 supplier = await self.db.suppliers.find_one({"_id": supplier_id})
                 supplier_name = supplier.get("name", "Unknown") if supplier else "Unknown"
-                
+
                 results.append({
                     "supplier_id": supplier_id,
                     "supplier_name": supplier_name,
                     "currency": currency,
                     "balance": balance_amount,
                 })
-        
+
         # Sort by balance desc (highest payables first)
         results.sort(key=lambda x: x["balance"], reverse=True)
-        
+
         return results
 
 
@@ -258,7 +258,7 @@ async def ensure_platform_ap_clearing_account(db, org_id: str, currency: str) ->
         account_id (str)
     """
     code = f"PLATFORM_AP_CLEARING_{currency}"
-    
+
     # Check if exists
     doc = await db.finance_accounts.find_one({
         "organization_id": org_id,
@@ -266,14 +266,14 @@ async def ensure_platform_ap_clearing_account(db, org_id: str, currency: str) ->
         "code": code,
         "currency": currency,
     })
-    
+
     if doc:
         return str(doc["_id"])
-    
+
     # Create platform AP clearing account
     from bson import ObjectId
     now = now_utc()
-    
+
     account_id = ObjectId()
     account_doc = {
         "_id": account_id,
@@ -287,10 +287,10 @@ async def ensure_platform_ap_clearing_account(db, org_id: str, currency: str) ->
         "created_at": now,
         "updated_at": now,
     }
-    
+
     await db.finance_accounts.insert_one(account_doc)
     logger.info(f"Created platform AP clearing account: {account_id} ({currency})")
-    
+
     # Initialize balance cache (upsert)
     balance_id = ObjectId()
     await db.account_balances.insert_one({
@@ -302,5 +302,5 @@ async def ensure_platform_ap_clearing_account(db, org_id: str, currency: str) ->
         "as_of": now,
         "updated_at": now,
     })
-    
+
     return str(account_id)

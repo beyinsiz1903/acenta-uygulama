@@ -61,11 +61,11 @@ def calculate_age_hours(created_at: datetime) -> float:
     """Calculate age in hours from created_at to now"""
     if not created_at:
         return 0.0
-    
+
     # Ensure created_at is timezone-aware
     if created_at.tzinfo is None:
         created_at = created_at.replace(tzinfo=timezone.utc)
-    
+
     delta = now_utc() - created_at
     return delta.total_seconds() / 3600.0
 
@@ -85,22 +85,22 @@ async def get_action_queues(
     - slow_pending: pending bookings older than slow_hours
     - noted_pending: pending bookings with notes
     """
-    
+
     org_id = user.get("organization_id")
     cutoff_date = now_utc() - timedelta(days=days)
     slow_cutoff = now_utc() - timedelta(hours=slow_hours)
-    
+
     # Ensure slow_cutoff is timezone-aware
     if slow_cutoff.tzinfo is None:
         slow_cutoff = slow_cutoff.replace(tzinfo=timezone.utc)
-    
+
     # Get all pending bookings in period
     pending_bookings = await db.bookings.find({
         "organization_id": org_id,
         "status": "pending",
         "created_at": {"$gte": cutoff_date}
     }).sort("created_at", 1).to_list(length=limit * 2)
-    
+
     # Get hotel names
     hotel_ids = list(set(b.get("hotel_id") for b in pending_bookings if b.get("hotel_id")))
     hotels = await db.hotels.find({
@@ -108,26 +108,26 @@ async def get_action_queues(
         "_id": {"$in": hotel_ids}
     }).to_list(length=None)
     hotel_name_map = {h.get("_id"): h.get("name", "Unknown Hotel") for h in hotels}
-    
+
     # Process queues
     slow_pending = []
     noted_pending = []
-    
+
     for booking in pending_bookings:
         booking_id = booking.get("_id")
         hotel_id = booking.get("hotel_id")
         created_at = booking.get("created_at")
-        
+
         if not booking_id or not created_at:
             continue
-        
+
         # Ensure created_at is timezone-aware
         if hasattr(created_at, 'tzinfo') and created_at.tzinfo is None:
             created_at = created_at.replace(tzinfo=timezone.utc)
-        
+
         age_hours = calculate_age_hours(created_at)
         has_note = has_note_fields(booking)
-        
+
         queue_item = QueueBooking(
             booking_id=str(booking_id),
             hotel_id=str(hotel_id) if hotel_id else "",
@@ -137,19 +137,19 @@ async def get_action_queues(
             status="pending",
             has_note=has_note,
         )
-        
+
         # Slow pending (older than slow_hours)
         if created_at < slow_cutoff:
             slow_pending.append(queue_item)
-        
+
         # Noted pending
         if has_note:
             noted_pending.append(queue_item)
-    
+
     # Limit results
     slow_pending = slow_pending[:limit]
     noted_pending = noted_pending[:limit]
-    
+
     return QueuesResponse(
         period_days=days,
         slow_hours=slow_hours,
@@ -170,10 +170,10 @@ async def get_conversion_funnel(
     - Breakdown by status
     - Conversion percentage (confirmed / total)
     """
-    
+
     org_id = user.get("organization_id")
     cutoff_date = now_utc() - timedelta(days=days)
-    
+
     # Aggregate by status
     pipeline = [
         {"$match": {
@@ -185,9 +185,9 @@ async def get_conversion_funnel(
             "count": {"$sum": 1}
         }}
     ]
-    
+
     results = await db.bookings.aggregate(pipeline).to_list(length=None)
-    
+
     # Parse results
     counts = {"pending": 0, "confirmed": 0, "cancelled": 0}
     for r in results:
@@ -195,12 +195,12 @@ async def get_conversion_funnel(
         count = int(r.get("count") or 0)
         if status in counts:
             counts[status] = count
-    
+
     total = sum(counts.values())
     conversion_pct = 0.0
     if total > 0:
         conversion_pct = round((counts["confirmed"] / total) * 100.0, 1)
-    
+
     return FunnelResponse(
         period_days=days,
         total=total,

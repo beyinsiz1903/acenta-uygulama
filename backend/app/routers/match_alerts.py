@@ -330,7 +330,7 @@ async def _send_alert_email(
         text_body=text_body,
         event_type="match.alert",
     )
-    
+
     return outbox_id
 
 
@@ -413,7 +413,7 @@ class WebhookTestResponse(BaseModel):
 async def test_webhook(payload: WebhookTestRequest, db=Depends(get_db), user=Depends(get_current_user)):
     """Test webhook endpoint with a sample payload"""
     org_id = user.get("organization_id")
-    
+
     # Create a test payload
     test_payload = {
         "event": "match.alert.test",
@@ -422,7 +422,7 @@ async def test_webhook(payload: WebhookTestRequest, db=Depends(get_db), user=Dep
         "test": True,
         "message": "This is a test webhook from Syroce Match Alerts"
     }
-    
+
     # Send test webhook
     ok_wh, http_status, snippet, err = await send_match_alert_webhook(
         organization_id=org_id,
@@ -431,7 +431,7 @@ async def test_webhook(payload: WebhookTestRequest, db=Depends(get_db), user=Dep
         timeout_ms=4000,  # Default timeout
         payload=test_payload,
     )
-    
+
     return WebhookTestResponse(
         ok=ok_wh,
         http_status=http_status,

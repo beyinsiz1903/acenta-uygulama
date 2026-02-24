@@ -31,7 +31,7 @@ class SupplierAccrualService:
     - State transition enforcement
     - Hard validation (supplier_id, commission)
     """
-    
+
     def __init__(self, db):
         self.db = db
         self.ledger = LedgerPostingService()
@@ -63,7 +63,7 @@ class SupplierAccrualService:
         return booking
 
 
-    
+
     async def post_accrual_for_booking(
         self,
         organization_id: str,
@@ -94,10 +94,10 @@ class SupplierAccrualService:
         Raises:
             AppError: 404 not_found, 409 invalid_booking_state, 409 supplier_id_missing, 409 invalid_commission
         """
-        
+
         # Step 0: Booking lookup + scope
         booking = await self._load_booking(organization_id, booking_id)
-        
+
         # Step 1: Trigger guard (booking must be VOUCHERED)
         if booking.get("status") != "VOUCHERED":
             raise AppError(
@@ -106,12 +106,12 @@ class SupplierAccrualService:
                 message="Accrual requires booking VOUCHERED",
                 details={"booking_id": booking_id, "current_status": booking.get("status")},
             )
-        
+
         # Step 2: supplier_id guard (HARD FAIL if missing)
         supplier_id = booking.get("supplier_id")
         if not supplier_id and booking.get("items"):
             supplier_id = booking["items"][0].get("supplier_id")
-        
+
         if not supplier_id:
             raise AppError(
                 status_code=409,
@@ -119,13 +119,13 @@ class SupplierAccrualService:
                 message="Booking missing supplier_id for accrual",
                 details={"booking_id": booking_id},
             )
-        
+
         # Step 3: Amounts snapshot
         currency = booking.get("currency", "EUR")
         gross_sell = booking.get("amounts", {}).get("sell", 0.0)
         commission = booking.get("commission", {}).get("amount", 0.0)
         net_payable = gross_sell - commission
-        
+
         # Validation: net must be >= 0
         if net_payable < 0:
             raise AppError(
@@ -138,20 +138,20 @@ class SupplierAccrualService:
                     "net_payable": net_payable,
                 },
             )
-        
+
         # Step 4: Ensure accounts exist
         supplier_account_id = await self.supp_fin.get_or_create_supplier_account(
             organization_id, supplier_id, currency
         )
-        
+
         platform_ap_account_id = await ensure_platform_ap_clearing_account(
             self.db, organization_id, currency
         )
-        
+
         # Step 5: Create accrual doc (unique per booking)
         now = now_utc()
         accrual_id = ObjectId()
-        
+
         accrual_doc = {
             "_id": accrual_id,
             "organization_id": organization_id,
@@ -176,7 +176,7 @@ class SupplierAccrualService:
                 "triggered_by": triggered_by,
             },
         }
-        
+
         try:
             await self.db.supplier_accruals.insert_one(accrual_doc)
             logger.info(f"Created supplier accrual: {accrual_id} for booking {booking_id}")
@@ -195,14 +195,14 @@ class SupplierAccrualService:
                     raise
             else:
                 raise
-        
+
         # Step 6: Ledger posting (exactly-once)
         lines = PostingMatrixConfig.get_supplier_accrued_lines(
             supplier_account_id=supplier_account_id,
             platform_ap_clearing_account_id=platform_ap_account_id,
             net_amount=net_payable,
         )
-        
+
         posting = await self.ledger.post_event(
             organization_id=organization_id,
             source_type="booking",
@@ -218,9 +218,9 @@ class SupplierAccrualService:
                 "trigger": trigger,
             },
         )
-        
+
         posting_id = posting["_id"]
-        
+
         # Step 7: Persist posting_id in accrual
         await self.db.supplier_accruals.update_one(
             {"_id": accrual_id},
@@ -231,7 +231,7 @@ class SupplierAccrualService:
                 }
             },
         )
-        
+
         # Step 7b: Update booking with supplier_finance fields
         await self.db.bookings.update_one(
             {"_id": booking_id},
@@ -247,9 +247,9 @@ class SupplierAccrualService:
                 }
             },
         )
-        
+
         logger.info(f"Completed accrual posting: {posting_id} for booking {booking_id}")
-        
+
         return {
             "accrual_id": str(accrual_id),
             "posting_id": posting_id,

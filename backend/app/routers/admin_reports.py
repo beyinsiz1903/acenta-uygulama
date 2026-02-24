@@ -205,7 +205,7 @@ async def download_match_risk_executive_pdf(response: Response, db=Depends(get_d
   filename = f"match-risk-executive-summary_{today_str}.pdf"
 
   return Response(
-    content=pdf_bytes, 
+    content=pdf_bytes,
     media_type="application/pdf",
     headers={
       "Content-Type": "application/pdf",

@@ -625,7 +625,7 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
                 }
             },
         )
-        
+
         # Re-raise with correlation_id in details
         details = exc.details or {}
         details.setdefault("correlation_id", correlation_id)

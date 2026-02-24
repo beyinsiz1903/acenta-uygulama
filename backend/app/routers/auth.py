@@ -89,28 +89,28 @@ async def login(payload: LoginWith2FARequest):
 
     user_out = serialize_doc(user)
     user_out["roles"] = roles_list
-    
+
     # Resolve tenant_id from organization
     tenant_id = user.get("tenant_id")
     if not tenant_id:
         tenant = await db.tenants.find_one({"organization_id": org_id})
         if tenant:
             tenant_id = str(tenant["_id"])
-    
+
     # FAZ-1: Load organization with merged features
     from app.auth import load_org_doc, resolve_org_features
     org_doc = await load_org_doc(org_id)
     if org_doc:
         org_doc["features"] = resolve_org_features(org_doc)
         org_doc["plan"] = org_doc.get("plan") or org_doc.get("subscription_tier") or "core_small_hotel"
-    
+
     # Update last_login_at
     try:
         from datetime import datetime, timezone
         await db.users.update_one({"_id": user["_id"]}, {"$set": {"last_login_at": datetime.now(timezone.utc)}})
     except Exception:
         pass
-    
+
     resp = LoginResponse(
         access_token=token,
         user=AuthUser(

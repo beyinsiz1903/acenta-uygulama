@@ -132,7 +132,7 @@ async def cancel_booking(booking_id: str, payload: BookingCancelIn, request: Req
 
     # FAZ-9.3: enqueue booking.cancelled email for hotel + agency
     updated = await db.bookings.find_one({"_id": booking_id})
-    
+
     try:
         org_id = user["organization_id"]
 
@@ -540,15 +540,15 @@ async def track_whatsapp_click(booking_id: str, user=Depends(get_current_user)):
     Used for pilot KPI: whatsappShareRate
     """
     db = await get_db()
-    
+
     booking = await db.bookings.find_one({"organization_id": user["organization_id"], "_id": booking_id})
     if not booking:
         raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
-    
+
     # Ownership check
     if str(booking.get("agency_id")) != str(user.get("agency_id")):
         raise HTTPException(status_code=403, detail="FORBIDDEN")
-    
+
     # Check if event already exists for this booking + actor (idempotency)
     existing_event = await db.booking_events.find_one({
         "organization_id": user["organization_id"],
@@ -556,11 +556,11 @@ async def track_whatsapp_click(booking_id: str, user=Depends(get_current_user)):
         "booking_id": booking_id,
         "payload.actor_email": user.get("email")
     })
-    
+
     if existing_event:
         # Already tracked, return success (idempotent)
         return {"ok": True, "already_tracked": True}
-    
+
     # Write new event
     await write_booking_event(
         db,
@@ -571,6 +571,6 @@ async def track_whatsapp_click(booking_id: str, user=Depends(get_current_user)):
         agency_id=str(booking.get("agency_id")),
         payload={"actor_email": user.get("email")}
     )
-    
+
     return {"ok": True, "already_tracked": False}
 

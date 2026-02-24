@@ -295,7 +295,7 @@ def parse_date_range(
     Returns:
         (cutoff_date, end_date, actual_days)
     """
-    
+
     # Priority 1: Date range
     if start or end:
         try:
@@ -308,7 +308,7 @@ def parse_date_range(
                 end_dt_temp = datetime.strptime(end, "%Y-%m-%d") if end else now_utc()
                 start_dt = end_dt_temp - timedelta(days=default_days)
                 start_dt = start_dt.replace(tzinfo=timezone.utc)
-            
+
             # Parse end date (inclusive, so add 1 day for exclusive upper bound)
             if end:
                 end_dt = datetime.strptime(end, "%Y-%m-%d")
@@ -318,24 +318,24 @@ def parse_date_range(
             else:
                 # If only start is given, default to now
                 end_dt = now_utc()
-            
+
             # Calculate actual days
             delta = end_dt - start_dt
             actual_days = max(1, delta.days)
-            
+
             return start_dt, end_dt, actual_days
-            
+
         except ValueError:
             # Invalid date format, fall back to days
             pass
-    
+
     # Priority 2: Days parameter (backward compatible)
     days_val = days or default_days
     days_val = min(max(days_val, 1), max_days)
-    
+
     end_dt = now_utc()
     start_dt = end_dt - timedelta(days=days_val)
-    
+
     return start_dt, end_dt, days_val
 
 
@@ -352,10 +352,10 @@ def format_date_range(start: datetime, end: datetime) -> dict:
     """
     # Adjust end back by 1 day since we made it exclusive
     end_inclusive = end - timedelta(days=1)
-    
+
     delta = end - start
     days = max(1, delta.days)
-    
+
     return {
         "start": start.strftime("%Y-%m-%d"),
         "end": end_inclusive.strftime("%Y-%m-%d"),

@@ -63,10 +63,10 @@ async def _list_accounts(
         query["type"] = type_filter
     if owner_id:
         query["owner_id"] = owner_id
-    
+
     cursor = db.finance_accounts.find(query).sort("created_at", -1).limit(limit)
     docs = await cursor.to_list(length=limit)
-    
+
     items = []
     for doc in docs:
         items.append(
@@ -83,14 +83,14 @@ async def _list_accounts(
                 updated_at=doc["updated_at"],
             )
         )
-    
+
     return items
 
 
 async def _create_account(db, org_id: str, payload: FinanceAccountCreate):
     """Create a new finance account"""
     import uuid
-    
+
     # Check for duplicate code
     existing = await db.finance_accounts.find_one(
         {"organization_id": org_id, "code": payload.code}
@@ -101,10 +101,10 @@ async def _create_account(db, org_id: str, payload: FinanceAccountCreate):
             code="account_code_exists",
             message=f"Account with code '{payload.code}' already exists",
         )
-    
+
     account_id = f"acct_{uuid.uuid4()}"
     now = now_utc()
-    
+
     doc = {
         "_id": account_id,
         "organization_id": org_id,
@@ -117,9 +117,9 @@ async def _create_account(db, org_id: str, payload: FinanceAccountCreate):
         "created_at": now,
         "updated_at": now,
     }
-    
+
     await db.finance_accounts.insert_one(doc)
-    
+
     # Auto-create initial balance cache
     balance_doc = {
         "_id": f"bal_{account_id}_{payload.currency.lower()}",
@@ -131,7 +131,7 @@ async def _create_account(db, org_id: str, payload: FinanceAccountCreate):
         "updated_at": now,
     }
     await db.account_balances.insert_one(balance_doc)
-    
+
     return FinanceAccount(
         account_id=account_id,
         organization_id=org_id,
@@ -156,10 +156,10 @@ async def _list_credit_profiles(
     query = {"organization_id": org_id}
     if agency_id:
         query["agency_id"] = agency_id
-    
+
     cursor = db.credit_profiles.find(query).sort("updated_at", -1).limit(limit)
     docs = await cursor.to_list(length=limit)
-    
+
     items = []
     for doc in docs:
         items.append(
@@ -176,7 +176,7 @@ async def _list_credit_profiles(
                 updated_at=doc["updated_at"],
             )
         )
-    
+
     return items
 
 
@@ -187,7 +187,7 @@ async def _upsert_credit_profile(
     payload: CreditProfileUpdate,
 ):
     """Upsert credit profile (create if not exists, update if exists)"""
-    
+
     # Validation: soft_limit <= limit (soft limit is warning threshold, must be below hard limit)
     if payload.soft_limit is not None and payload.soft_limit > payload.limit:
         raise AppError(
@@ -195,14 +195,14 @@ async def _upsert_credit_profile(
             code="validation_error",
             message="soft_limit must be <= limit (soft limit is warning threshold)",
         )
-    
+
     now = now_utc()
-    
+
     # Check if profile exists
     existing = await db.credit_profiles.find_one(
         {"organization_id": org_id, "agency_id": agency_id}
     )
-    
+
     if existing:
         # Update existing
         update_doc = {
@@ -212,12 +212,12 @@ async def _upsert_credit_profile(
             "status": payload.status,
             "updated_at": now,
         }
-        
+
         await db.credit_profiles.update_one(
             {"_id": existing["_id"]},
             {"$set": update_doc},
         )
-        
+
         return CreditProfile(
             profile_id=str(existing["_id"]),
             organization_id=org_id,
@@ -233,7 +233,7 @@ async def _upsert_credit_profile(
     else:
         # Create new
         profile_id = f"cred_{agency_id}"
-        
+
         doc = {
             "_id": profile_id,
             "organization_id": org_id,
@@ -246,9 +246,9 @@ async def _upsert_credit_profile(
             "created_at": now,
             "updated_at": now,
         }
-        
+
         await db.credit_profiles.insert_one(doc)
-        
+
         return CreditProfile(
             profile_id=profile_id,
             organization_id=org_id,
@@ -325,7 +325,7 @@ async def list_accounts(
         owner_id=owner_id,
         limit=limit,
     )
-    
+
     return FinanceAccountListResponse(items=items)
 
 
@@ -367,7 +367,7 @@ async def list_credit_profiles(
         agency_id=agency_id,
         limit=limit,
     )
-    
+
     return CreditProfileListResponse(items=items)
 
 
@@ -480,18 +480,18 @@ async def create_refund_case(
     """Create a new refund case"""
     org_id = current_user["organization_id"]
     from app.services.refund_cases import RefundCaseService
-    
+
     booking_id = payload.get("booking_id")
     if not booking_id:
         raise AppError(422, "validation_error", "booking_id is required")
-    
+
     # Get booking to extract agency_id
     booking = await db.bookings.find_one({"_id": ObjectId(booking_id), "organization_id": org_id})
     if not booking:
         raise AppError(404, "booking_not_found", "Booking not found")
-    
+
     agency_id = booking.get("agency_id", "default_agency")
-    
+
     svc = RefundCaseService(db)
     result = await svc.create_refund_request(
         organization_id=org_id,
@@ -502,7 +502,7 @@ async def create_refund_case(
         reason=payload.get("reason", "Customer request"),
         created_by=current_user.get("email", "admin"),
     )
-    
+
     # Trigger ops playbook for initial task creation
     try:
         engine = OpsPlaybookEngine(db)
@@ -517,7 +517,7 @@ async def create_refund_case(
         # Best effort - don't fail refund creation if playbook fails
         import logging
         logging.getLogger(__name__).exception("ops_playbook_refund_created_failed")
-    
+
     return result
 
 
@@ -1403,7 +1403,7 @@ async def test_posting(
             code="invalid_event",
             message=f"Unsupported event: {payload.event}",
         )
-    
+
     posting = await LedgerPostingService.post_event(
         organization_id=current_user["organization_id"],
         source_type=payload.source_type,
@@ -1412,7 +1412,7 @@ async def test_posting(
         currency="EUR",
         lines=lines,
     )
-    
+
     return {
         "ok": True,
         "posting_id": posting["_id"],
@@ -1440,7 +1440,7 @@ async def test_recalc(
         account_id=payload.account_id,
         currency="EUR",
     )
-    
+
     return {
         "ok": True,
         **result,
@@ -1466,10 +1466,10 @@ async def get_supplier_accounts(
     Auth: admin|ops|super_admin
     """
     org_id = current_user["organization_id"]
-    
+
     svc = SupplierFinanceService(db)
     accounts = await svc.get_supplier_accounts(org_id, supplier_id)
-    
+
     return {
         "supplier_id": supplier_id,
         "accounts": [
@@ -1897,10 +1897,10 @@ async def get_supplier_balances(
     Balance rule: credit - debit (payables)
     """
     org_id = current_user["organization_id"]
-    
+
     svc = SupplierFinanceService(db)
     balance = await svc.get_supplier_balance(org_id, supplier_id, currency)
-    
+
     return {
         "supplier_id": supplier_id,
         "currency": currency,
@@ -1922,14 +1922,14 @@ async def ensure_supplier_account(
     Used by ops for manual account creation or verification
     """
     org_id = current_user["organization_id"]
-    
+
     svc = SupplierFinanceService(db)
     account_id = await svc.get_or_create_supplier_account(
         org_id, supplier_id, currency
     )
-    
+
     account = await db.finance_accounts.find_one({"_id": ObjectId(account_id)})
-    
+
     return {
         "account_id": account_id,
         "supplier_id": supplier_id,
@@ -1953,10 +1953,10 @@ async def get_supplier_payable_summary(
     Shows all suppliers with outstanding payables
     """
     org_id = current_user["organization_id"]
-    
+
     svc = SupplierFinanceService(db)
     balances = await svc.get_all_supplier_balances(org_id, currency)
-    
+
     return {
         "currency": currency,
         "total_payable": sum(b["balance"] for b in balances),
@@ -2093,7 +2093,7 @@ async def get_account_statement(
     Sorting: posted_at asc (statement logic)
     """
     org_id = current_user["organization_id"]
-    
+
     # Verify account exists and belongs to org
     account = await db.finance_accounts.find_one({
         "_id": account_id,
@@ -2105,9 +2105,9 @@ async def get_account_statement(
             code="account_not_found",
             message=f"Account {account_id} not found",
         )
-    
+
     currency = account["currency"]
-    
+
     # Calculate opening balance (if from_date specified)
     opening_balance = 0.0
     if from_date:
@@ -2118,40 +2118,40 @@ async def get_account_statement(
             "currency": currency,
             "posted_at": {"$lt": from_date},
         }).to_list(length=10000)
-        
+
         # Apply balance rules
         account_type = account.get("type")
         total_debit = sum(e["amount"] for e in entries_before if e["direction"] == "debit")
         total_credit = sum(e["amount"] for e in entries_before if e["direction"] == "credit")
-        
+
         if account_type == "agency":
             opening_balance = total_debit - total_credit
         elif account_type == "platform":
             opening_balance = total_credit - total_debit
         else:
             opening_balance = total_debit - total_credit
-    
+
     # Get entries for statement period
     query = {
         "organization_id": org_id,
         "account_id": account_id,
         "currency": currency,
     }
-    
+
     if from_date:
         query["posted_at"] = {"$gte": from_date}
     if to_date:
         if "posted_at" not in query:
             query["posted_at"] = {}
         query["posted_at"]["$lte"] = to_date
-    
+
     cursor = db.ledger_entries.find(query).sort("posted_at", 1).limit(limit)
     entries = await cursor.to_list(length=limit)
-    
+
     # Build statement items
     items = []
     running_balance = opening_balance
-    
+
     for entry in entries:
         # Apply delta based on direction and account type
         account_type = account.get("type")
@@ -2161,9 +2161,9 @@ async def get_account_statement(
             delta = entry["amount"] if entry["direction"] == "credit" else -entry["amount"]
         else:
             delta = entry["amount"] if entry["direction"] == "debit" else -entry["amount"]
-        
+
         running_balance += delta
-        
+
         items.append(
             StatementItem(
                 posted_at=entry["posted_at"],
@@ -2174,9 +2174,9 @@ async def get_account_statement(
                 memo=entry.get("memo", ""),
             )
         )
-    
+
     closing_balance = running_balance
-    
+
     return AccountStatement(
         account_id=account_id,
         currency=currency,
@@ -2200,17 +2200,17 @@ async def get_exposure_dashboard(
     Status: ok | near_limit | over_limit
     """
     org_id = current_user["organization_id"]
-    
+
     # Get all agencies with their financial data
     agencies = await db.agencies.find({"organization_id": org_id}).to_list(limit)
-    
+
     items = []
     for ag in agencies:
         agency_id = str(ag["_id"])
         agency_name = ag.get("name", "Bilinmeyen Acente")
         credit_limit = float(ag.get("credit_limit", 100000))
         credit_used = float(ag.get("credit_used", 0))
-        
+
         # Calculate exposure from booking financial entries
         pipeline = [
             {"$match": {"organization_id": org_id, "agency_id": agency_id, "settlement_status": {"$ne": "settled"}}},
@@ -2218,7 +2218,7 @@ async def get_exposure_dashboard(
         ]
         agg_result = await db.booking_financial_entries.aggregate(pipeline).to_list(1)
         exposure = float(agg_result[0]["total"]) if agg_result else credit_used
-        
+
         # Determine status
         if credit_limit <= 0:
             status = "ok"
@@ -2228,7 +2228,7 @@ async def get_exposure_dashboard(
             status = "near_limit"
         else:
             status = "ok"
-        
+
         items.append(ExposureItem(
             agency_id=agency_id,
             agency_name=agency_name,
@@ -2242,7 +2242,7 @@ async def get_exposure_dashboard(
             payment_terms="net30",
             status=status,
         ))
-    
+
     return ExposureResponse(items=items)
 
 
@@ -2360,7 +2360,7 @@ async def create_manual_payment(
     3. Update balances automatically via posting service
     """
     org_id = current_user["organization_id"]
-    
+
     # Validate amount
     if payload.amount <= 0:
         raise AppError(
@@ -2368,7 +2368,7 @@ async def create_manual_payment(
             code="validation_error",
             message="Amount must be > 0",
         )
-    
+
     # Verify account exists
     account = await db.finance_accounts.find_one({
         "_id": payload.account_id,
@@ -2380,7 +2380,7 @@ async def create_manual_payment(
             code="account_not_found",
             message=f"Account {payload.account_id} not found",
         )
-    
+
     # Currency mismatch check
     if account["currency"] != payload.currency:
         raise AppError(
@@ -2388,13 +2388,13 @@ async def create_manual_payment(
             code="currency_mismatch",
             message=f"Account currency {account['currency']} != payment currency {payload.currency}",
         )
-    
+
     # Create payment document
     import uuid
     payment_id = f"pay_{uuid.uuid4()}"
     now = now_utc()
     received_at = payload.received_at or now
-    
+
     payment_doc = {
         "_id": payment_id,
         "organization_id": org_id,
@@ -2407,9 +2407,9 @@ async def create_manual_payment(
         "created_at": now,
         "created_by_email": current_user["email"],
     }
-    
+
     await db.payments.insert_one(payment_doc)
-    
+
     # Create ledger posting
     # Payment: agency pays platform (credit agency, debit platform)
     # Get platform account
@@ -2417,16 +2417,16 @@ async def create_manual_payment(
         "organization_id": org_id,
         "type": "platform",
     })
-    
+
     if platform_account:
         from app.services.ledger_posting import LedgerPostingService, PostingMatrixConfig
-        
+
         lines = PostingMatrixConfig.get_payment_received_lines(
             agency_account_id=payload.account_id,
             platform_account_id=platform_account["_id"],
             payment_amount=payload.amount,
         )
-        
+
         await LedgerPostingService.post_event(
             organization_id=org_id,
             source_type="payment",
@@ -2437,7 +2437,7 @@ async def create_manual_payment(
             occurred_at=received_at,
             created_by=current_user["email"],
         )
-    
+
     return Payment(
         payment_id=payment_id,
         organization_id=org_id,

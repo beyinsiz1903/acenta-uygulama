@@ -111,7 +111,7 @@ FEATURES_BY_PLAN: dict[str, dict[str, bool]] = {
         "core_channel_basic": True,
         "core_reports_basic": True,
         "core_users_roles": True,
-        
+
         # HIDDEN (Enterprise-only)
         "hidden_invoices_accounting": False,
         "hidden_rms": False,
@@ -120,7 +120,7 @@ FEATURES_BY_PLAN: dict[str, dict[str, bool]] = {
         "hidden_monitoring_admin": False,
         "hidden_multiproperty": False,
         "hidden_graphql": False,
-        
+
         # FUTURE (Closed)
         "future_crm": False,
         "future_maintenance": False,
@@ -150,7 +150,7 @@ def resolve_org_features(org_doc: dict[str, Any]) -> dict[str, bool]:
     plan = (org_doc or {}).get("plan") or (org_doc or {}).get("subscription_tier") or "core_small_hotel"
     base = FEATURES_BY_PLAN.get(plan, FEATURES_BY_PLAN["core_small_hotel"])
     overrides = (org_doc or {}).get("features") or {}
-    
+
     merged = dict(base)
     merged.update({k: bool(v) for k, v in overrides.items()})
     return merged
@@ -160,14 +160,14 @@ async def load_org_doc(organization_id: str) -> Optional[dict[str, Any]]:
     """Load organization document by ID (handles both string UUID and ObjectId)"""
     if not organization_id:
         return None
-    
+
     db = await get_db()
-    
+
     # Try as string ID first
     doc = await db.organizations.find_one({"_id": organization_id})
     if doc:
         return serialize_doc(doc)
-    
+
     # Try as ObjectId (MongoDB)
     try:
         from bson import ObjectId
@@ -177,7 +177,7 @@ async def load_org_doc(organization_id: str) -> Optional[dict[str, Any]]:
             return serialize_doc(doc)
     except Exception:
         pass
-    
+
     return None
 
 
@@ -187,7 +187,7 @@ def is_super_admin(user: dict[str, Any]) -> bool:
     role = user.get("role")
     if role == "super_admin":
         return True
-    
+
     # Roles list (your system uses this)
     roles = user.get("roles") or []
     return "super_admin" in roles
@@ -203,19 +203,19 @@ def require_feature(feature_key: str, not_found: bool = True):
     async def _guard(user: dict[str, Any] = Depends(get_current_user)) -> dict[str, Any]:
         if is_super_admin(user):
             return user
-        
+
         org_doc = await load_org_doc(user.get("organization_id"))
         if not org_doc:
             raise HTTPException(status_code=404, detail="Organization not found")
-        
+
         features = resolve_org_features(org_doc)
         if not bool(features.get(feature_key)):
             status_code = 404 if not_found else 403
             detail = "Not found" if not_found else "Forbidden"
             raise HTTPException(status_code=status_code, detail=detail)
-        
+
         return user
-    
+
     return _guard
 
 
@@ -228,9 +228,9 @@ def require_super_admin_only(not_found: bool = True):
     async def _guard(user: dict[str, Any] = Depends(get_current_user)) -> dict[str, Any]:
         if is_super_admin(user):
             return user
-        
+
         status_code = 404 if not_found else 403
         detail = "Not found" if not_found else "Forbidden"
         raise HTTPException(status_code=status_code, detail=detail)
-    
+
     return _guard

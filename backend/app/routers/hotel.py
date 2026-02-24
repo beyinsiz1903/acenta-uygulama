@@ -778,7 +778,7 @@ async def update_allocation(allocation_id: str, payload: AllocationIn, request: 
     _validate_range(payload.start_date, payload.end_date)
 
     now = now_utc()
-    
+
     update_doc = {
         "room_type": payload.room_type,
         "start_date": payload.start_date,

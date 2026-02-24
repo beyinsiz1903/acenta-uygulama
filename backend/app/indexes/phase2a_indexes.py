@@ -45,7 +45,7 @@ async def ensure_phase2a_indexes(db):
     # ========================================================================
     # supplier_accruals (Phase 2A.2)
     # ========================================================================
-    
+
     # Booking başına 1 accrual (unique constraint)
     await _safe_create(
         db.supplier_accruals,
@@ -53,7 +53,7 @@ async def ensure_phase2a_indexes(db):
         unique=True,
         name="uniq_accrual_per_booking",
     )
-    
+
     # Supplier list / dashboard filters
     await _safe_create(
         db.supplier_accruals,
@@ -109,7 +109,7 @@ async def ensure_phase2a_indexes(db):
         [("organization_id", ASCENDING), ("refunds_applied.refund_case_id", ASCENDING)],
         name="booking_financials_by_refund_case",
     )
-    
+
     # Settlement join/lookup
     await _safe_create(
         db.supplier_accruals,
@@ -149,7 +149,7 @@ async def ensure_phase2a_indexes(db):
         unique=True,
         name="uniq_fx_snapshot_booking_pair",
     )
-    
+
     # Ops debug (recent accruals)
     await _safe_create(
         db.supplier_accruals,
@@ -192,7 +192,7 @@ async def ensure_phase2a_indexes(db):
         partialFilterExpression={"status": {"$in": ["draft", "approved"]}},
         name="uniq_open_run_per_supplier_currency",
     )
-    
+
 
     # booking_amendments: per-booking+request idempotency
     await _safe_create(

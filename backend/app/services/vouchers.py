@@ -159,7 +159,7 @@ async def generate_for_booking(db, organization_id: str, booking_id: str, create
         {"_id": booking_oid, "organization_id": organization_id},
         {"$set": {"status": "VOUCHERED", "updated_at": now}},
     )
-    
+
     # ========================================================================
     # PHASE 2A.2: Post supplier accrual exactly-once
     # Trigger: CONFIRMED → VOUCHERED state transition
@@ -168,7 +168,7 @@ async def generate_for_booking(db, organization_id: str, booking_id: str, create
         # Only trigger on state transition, not on voucher regeneration
         try:
             from app.services.supplier_accrual import SupplierAccrualService
-            
+
             accrual_svc = SupplierAccrualService(db)
             accrual_result = await accrual_svc.post_accrual_for_booking(
                 organization_id=organization_id,
@@ -176,7 +176,7 @@ async def generate_for_booking(db, organization_id: str, booking_id: str, create
                 triggered_by=created_by_email,
                 trigger="voucher_generate",
             )
-            
+
             import logging
             logger = logging.getLogger(__name__)
             logger.info(
@@ -190,7 +190,7 @@ async def generate_for_booking(db, organization_id: str, booking_id: str, create
             logger = logging.getLogger(__name__)
             logger.error(f"Failed to post supplier accrual for booking {booking_id}: {e}")
             # Don't raise - voucher should still be generated
-    
+
     # Emit voucher-related events
     actor = {"role": "ops", "email": created_by_email}
     await emit_event(

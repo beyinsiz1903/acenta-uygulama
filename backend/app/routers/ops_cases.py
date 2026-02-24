@@ -19,7 +19,7 @@ OpsUserDep = Depends(require_roles(["admin", "ops", "super_admin"]))
 
 
 class OpsCaseListResponse(BaseModel):
-  
+
     class Config:
         arbitrary_types_allowed = True
 

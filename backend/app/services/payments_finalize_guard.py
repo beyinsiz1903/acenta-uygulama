@@ -150,7 +150,7 @@ async def apply_stripe_event_with_guard(
         return await _finalise("ignored_not_final", f"unsupported_event_type:{event_type}", booking)
 
     # 5) CAS update on booking.payment_status to protect against out-of-order events
-    
+
     # Accept transitions only from pending/None -> final state
     allowed_previous = {None, "", "pending"}
 

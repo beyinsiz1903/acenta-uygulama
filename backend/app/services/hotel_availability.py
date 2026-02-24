@@ -37,11 +37,11 @@ async def compute_availability(
     }
     """
     db = await get_db()
-    
+
     # Parse dates (checkout exclusive)
     search_check_in = parse_date(check_in)
     search_check_out = parse_date(check_out)
-    
+
     # Optional admin override: force full sales open (bypass stop-sell & allocations)
     hotel = await db.hotels.find_one({
         "_id": hotel_id,
@@ -57,7 +57,7 @@ async def compute_availability(
             if expires_at.tzinfo is None:
                 from datetime import timezone
                 expires_at = expires_at.replace(tzinfo=timezone.utc)
-            
+
             if expires_at < now:
                 # TTL dolmuş; override'ı kapalı say ve kendini iyileştir
                 force_sales_open = False
@@ -84,23 +84,23 @@ async def compute_availability(
         "organization_id": organization_id,
         "active": True,
     }).to_list(1000)
-    
+
     if not rooms:
         return {}
-    
+
     # Group by room_type
     rooms_by_type: dict[str, list] = {}
     room_by_id: dict[str, dict] = {}
-    
+
     for room in rooms:
         room_id = str(room["_id"])
         room_type = room.get("room_type", "standard")
-        
+
         room_by_id[room_id] = room
         if room_type not in rooms_by_type:
             rooms_by_type[room_type] = []
         rooms_by_type[room_type].append(room)
-    
+
     # 2) Fetch overlapping bookings
     # Overlap: booking.check_in < search_check_out AND booking.check_out > search_check_in
     bookings = await db.bookings.find({
@@ -108,7 +108,7 @@ async def compute_availability(
         "organization_id": organization_id,
         "status": {"$in": ACTIVE_BOOKING_STATUSES},
     }).to_list(5000)
-    
+
     # Filter overlapping bookings
     overlapping_bookings = []
     for booking in bookings:
@@ -121,11 +121,11 @@ async def compute_availability(
 
         booking_check_in = parse_date(booking_check_in_str)
         booking_check_out = parse_date(booking_check_out_str)
-        
+
         # Overlap check
         if booking_check_in < search_check_out and booking_check_out > search_check_in:
             overlapping_bookings.append(booking)
-    
+
     # 3) Fetch overlapping blocks
     blocks = await db.room_blocks.find({
         "tenant_id": hotel_id,
@@ -133,12 +133,12 @@ async def compute_availability(
         "status": {"$in": ACTIVE_BLOCK_STATUSES},
         "type": {"$in": BLOCK_TYPES},
     }).to_list(1000)
-    
+
     overlapping_blocks = []
     for block in blocks:
         block_start = parse_date(block.get("start_date", ""))
         block_end = block.get("end_date")
-        
+
         if block_end:
             block_end_date = parse_date(block_end)
             # Overlap check
@@ -148,34 +148,34 @@ async def compute_availability(
             # Open-ended block
             if block_start < search_check_out:
                 overlapping_blocks.append(block)
-    
+
     # 4) Map bookings + blocks to room_type
     occupied_by_type: dict[str, set] = {}
     blocked_by_type: dict[str, set] = {}
-    
+
     for booking in overlapping_bookings:
         room_id = str(booking.get("room_id", ""))
         if room_id and room_id in room_by_id:
             room = room_by_id[room_id]
             room_type = room.get("room_type", "standard")
-            
+
             if room_type not in occupied_by_type:
                 occupied_by_type[room_type] = set()
             occupied_by_type[room_type].add(room_id)
-    
+
     for block in overlapping_blocks:
         room_id = str(block.get("room_id", ""))
         if room_id and room_id in room_by_id:
             room = room_by_id[room_id]
             room_type = room.get("room_type", "standard")
-            
+
             if room_type not in blocked_by_type:
                 blocked_by_type[room_type] = set()
             blocked_by_type[room_type].add(room_id)
-    
+
     # 5) Calculate availability per room_type
     availability: dict[str, Any] = {}
-    
+
     # FAZ-2.3: Fetch stop-sell rules & channel allocations
     # Admin override: if force_sales_open is True, we bypass these rules.
     if not force_sales_open:
@@ -184,7 +184,7 @@ async def compute_availability(
             "organization_id": organization_id,
             "is_active": True,
         }).to_list(100)
-        
+
         channel_allocations = await db.channel_allocations.find({
             "tenant_id": hotel_id,
             "organization_id": organization_id,
@@ -194,25 +194,25 @@ async def compute_availability(
     else:
         stop_sell_rules = []
         channel_allocations = []
-    
+
     for room_type, room_list in rooms_by_type.items():
         total_count = len(room_list)
-        
+
         # Union of occupied + blocked (no double count)
         unavailable = occupied_by_type.get(room_type, set()) | blocked_by_type.get(room_type, set())
-        
+
         base_available = max(0, total_count - len(unavailable))
-        
+
         # Calculate average base_price
         prices = [r.get("base_price", 0) for r in room_list if r.get("base_price")]
         avg_price = round(sum(prices) / len(prices), 2) if prices else 0.0
-        
+
         # FAZ-2.3: Check stop-sell
         stop_sell_active = False
         for rule in stop_sell_rules:
             if rule.get("room_type") != room_type:
                 continue
-            
+
             # Check date overlap
             rule_start = parse_date(rule.get("start_date", ""))
             rule_end_str = rule.get("end_date")
@@ -223,13 +223,13 @@ async def compute_availability(
             if rule_start < search_check_out and (rule_end_excl is None or rule_end_excl > search_check_in):
                 stop_sell_active = True
                 break
-        
+
         # FAZ-2.3: Check channel allocation
         allocation_limit = None
         for alloc in channel_allocations:
             if alloc.get("room_type") != room_type:
                 continue
-            
+
             # Check date overlap
             alloc_start = parse_date(alloc.get("start_date", ""))
             alloc_end_str = alloc.get("end_date")
@@ -240,7 +240,7 @@ async def compute_availability(
             if alloc_start < search_check_out and (alloc_end_excl is None or alloc_end_excl > search_check_in):
                 allocation_limit = alloc.get("allotment", 0)
                 break
-        
+
         # Final availability calculation
         if stop_sell_active:
             final_available = 0
@@ -258,7 +258,7 @@ async def compute_availability(
             final_available = max(0, min(base_available, allocation_limit - sold_on_channel))
         else:
             final_available = base_available
-        
+
         availability[room_type] = {
             "total_rooms": total_count,
             "available_rooms": final_available,
@@ -269,5 +269,5 @@ async def compute_availability(
             "blocked_room_ids": list(blocked_by_type.get(room_type, set())),
             "avg_base_price": avg_price,
         }
-    
+
     return availability

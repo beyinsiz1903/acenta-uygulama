@@ -222,7 +222,7 @@ class B2BBookingService:
                     await self.bookings.delete_one({"_id": res.inserted_id})
                     raise
                 raise
-        
+
         # ===================================================================
         # PHASE 1.5: Auto-posting for BOOKING_CONFIRMED
         # ===================================================================
@@ -235,7 +235,7 @@ class B2BBookingService:
                 currency=currency,
                 occurred_at=now,
             )
-            
+
             # Update booking with posting_id
             await self.bookings.update_one(
                 {"_id": res.inserted_id},

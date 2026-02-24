@@ -79,7 +79,7 @@ async def list_threads(
     for d in docs:
         last_message_at = d.get("last_message_at") or d.get("updated_at")
         last_message_at_str = str(last_message_at) if last_message_at else ""
-        
+
         summaries.append(
             InboxThreadSummary(
                 id=str(d.get("_id")),
@@ -152,7 +152,7 @@ async def create_thread(body: CreateThreadBody, user=Depends(get_current_user), 
         booking_oid = ObjectId(body.booking_id)
     except Exception:
         raise AppError(404, "BOOKING_NOT_FOUND", "Booking not found", {"booking_id": body.booking_id})
-    
+
     booking = await db.bookings.find_one({"_id": booking_oid, "organization_id": org_id})
     if not booking:
         raise AppError(404, "BOOKING_NOT_FOUND", "Booking not found", {"booking_id": body.booking_id})

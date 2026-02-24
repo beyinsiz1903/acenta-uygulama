@@ -32,7 +32,7 @@ class LedgerPostingService:
     - Immutable entries
     - Balance cache updates
     """
-    
+
     @staticmethod
     def _compute_checksum(source_type: str, source_id: str, event: str, lines: list[LedgerLine]) -> str:
         """Compute SHA256 checksum for posting integrity"""
@@ -47,7 +47,7 @@ class LedgerPostingService:
         }
         payload = json.dumps(data, sort_keys=True)
         return hashlib.sha256(payload.encode()).hexdigest()
-    
+
     @staticmethod
     def _validate_lines(lines: list[LedgerLine], currency: str):
         """Validate posting lines"""
@@ -58,7 +58,7 @@ class LedgerPostingService:
                 code="ledger_posting_invalid",
                 message="Posting must have at least 2 lines (double-entry)",
             )
-        
+
         # All amounts must be positive
         for line in lines:
             if line.amount <= 0:
@@ -67,18 +67,18 @@ class LedgerPostingService:
                     code="ledger_posting_invalid",
                     message=f"Amount must be > 0, got {line.amount}",
                 )
-        
+
         # Debit total must equal credit total
         debit_total = sum(line.amount for line in lines if line.direction == "debit")
         credit_total = sum(line.amount for line in lines if line.direction == "credit")
-        
+
         if abs(debit_total - credit_total) > 0.01:  # floating point tolerance
             raise AppError(
                 status_code=409,
                 code="ledger_unbalanced",
                 message=f"Debit total ({debit_total}) must equal credit total ({credit_total})",
             )
-    
+
     @staticmethod
     async def post_event(
         organization_id: str,
@@ -300,7 +300,7 @@ class LedgerPostingService:
             )
 
         return posting_doc
-    
+
     @staticmethod
     async def _update_balance(
         db,
@@ -332,9 +332,9 @@ class LedgerPostingService:
         if not account:
             # Account not found, skip balance update (defensive)
             return
-        
+
         account_type = account.get("type")
-        
+
         # Apply balance rules
         if account_type == "agency":
             # Agency: balance = debit - credit (exposure increases with debit)
@@ -348,7 +348,7 @@ class LedgerPostingService:
         else:
             # Other: default to agency rule (debit - credit)
             delta = amount if direction == "debit" else -amount
-        
+
         # Atomic update with upsert
         now = now_utc()
         await db.account_balances.update_one(
@@ -363,7 +363,7 @@ class LedgerPostingService:
             },
             upsert=True,
         )
-    
+
     @staticmethod
     async def recalculate_balance(
         organization_id: str,
@@ -381,7 +381,7 @@ class LedgerPostingService:
         NOT for normal operations (balance cache is updated on each posting).
         """
         db = await get_db()
-        
+
         # Get account type to apply correct balance rule
         account = await db.finance_accounts.find_one({"_id": account_id})
         if not account:
@@ -390,20 +390,20 @@ class LedgerPostingService:
                 code="account_not_found",
                 message=f"Account {account_id} not found",
             )
-        
+
         account_type = account.get("type")
-        
+
         # Aggregate all entries for this account
         entries = await db.ledger_entries.find({
             "organization_id": organization_id,
             "account_id": account_id,
             "currency": currency,
         }).to_list(length=10000)
-        
+
         # Calculate totals
         total_debit = sum(e["amount"] for e in entries if e["direction"] == "debit")
         total_credit = sum(e["amount"] for e in entries if e["direction"] == "credit")
-        
+
         # Apply balance rules
         if account_type == "agency":
             balance = total_debit - total_credit
@@ -411,7 +411,7 @@ class LedgerPostingService:
             balance = total_credit - total_debit
         else:
             balance = total_debit - total_credit
-        
+
         # Update balance cache
         now = now_utc()
         await db.account_balances.update_one(
@@ -429,7 +429,7 @@ class LedgerPostingService:
             },
             upsert=True,
         )
-        
+
         return {
             "account_id": account_id,
             "currency": currency,
@@ -451,7 +451,7 @@ class PostingMatrixConfig:
     
     This is the "source of truth" for Phase 1 financial events.
     """
-    
+
     @staticmethod
     def get_booking_confirmed_lines(
         agency_account_id: str,
@@ -558,7 +558,7 @@ class PostingMatrixConfig:
 
 
 
-    
+
     @staticmethod
     def get_payment_received_lines(
         agency_account_id: str,
@@ -573,7 +573,7 @@ class PostingMatrixConfig:
             LedgerLine(account_id=agency_account_id, direction="credit", amount=payment_amount),
             LedgerLine(account_id=platform_account_id, direction="debit", amount=payment_amount),
         ]
-    
+
     @staticmethod
     def get_supplier_accrued_lines(
         supplier_account_id: str,

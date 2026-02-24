@@ -224,7 +224,7 @@ async def metrics_overview(
     user=Depends(get_current_user),
 ):
     org_id = user.get("organization_id")
-    
+
     # Parse date range (backward compatible)
     cutoff_date, end_date, actual_days = parse_date_range(start, end, days, default_days=7)
     period = format_date_range(cutoff_date, end_date)
@@ -252,7 +252,7 @@ async def metrics_trends(
     user=Depends(get_current_user),
 ):
     org_id = user.get("organization_id")
-    
+
     # Parse date range (backward compatible)
     cutoff_date, end_date, actual_days = parse_date_range(start, end, days, default_days=30)
     period = format_date_range(cutoff_date, end_date)

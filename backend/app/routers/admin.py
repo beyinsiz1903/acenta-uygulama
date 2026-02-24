@@ -375,17 +375,17 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
     - flowCompletionRate: % of drafts that reached confirmed status
     """
     from datetime import timedelta
-    
+
     db = await get_db()
     org_id = user["organization_id"]
     cutoff = now_utc() - timedelta(days=days)
-    
+
     # 1) Total bookings (drafts + confirmed + cancelled) in period
     total_bookings = await db.bookings.count_documents({
         "organization_id": org_id,
         "created_at": {"$gte": cutoff}
     })
-    
+
     # 2) Unique active agencies (those who created bookings)
     active_agencies_cursor = db.bookings.aggregate([
         {"$match": {"organization_id": org_id, "created_at": {"$gte": cutoff}}},
@@ -395,7 +395,7 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
     active_agencies_result = await active_agencies_cursor.to_list(1)
     active_agencies_count = active_agencies_result[0]["total"] if active_agencies_result else 1
     avg_requests_per_agency = round(total_bookings / active_agencies_count, 2) if active_agencies_count > 0 else 0
-    
+
     # 3) WhatsApp share rate: FIXED - use totalRequests as denominator (not just confirmed)
     # Rationale: if hotel doesn't approve, whatsapp action should still count
     confirmed_bookings = await db.bookings.count_documents({
@@ -403,13 +403,13 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
         "status": "confirmed",
         "created_at": {"$gte": cutoff}
     })
-    
+
     cancelled_bookings = await db.bookings.count_documents({
         "organization_id": org_id,
         "status": "cancelled",
         "created_at": {"$gte": cutoff}
     })
-    
+
     # Count unique whatsapp clicks (by booking_id to avoid spam)
     whatsapp_clicks_cursor = db.booking_events.aggregate([
         {
@@ -424,18 +424,18 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
     ])
     whatsapp_clicks_result = await whatsapp_clicks_cursor.to_list(1)
     whatsapp_clicked_count = whatsapp_clicks_result[0]["total"] if whatsapp_clicks_result else 0
-    
+
     # Primary metric: whatsapp clicks / total requests (pilot behavior tracking)
     whatsapp_share_rate = round(whatsapp_clicked_count / total_bookings, 2) if total_bookings > 0 else 0
-    
+
     # Secondary metric: whatsapp clicks / confirmed bookings (engagement after success)
     whatsapp_share_rate_confirmed = round(whatsapp_clicked_count / confirmed_bookings, 2) if confirmed_bookings > 0 else 0
-    
+
     # 4) Hotel panel action rate: FIXED - include cancelled as action
     # Rationale: cancelled can be hotel rejection (until we have proper rejected status)
     hotel_action_count = confirmed_bookings + cancelled_bookings
     hotel_panel_action_rate = round(hotel_action_count / total_bookings, 2) if total_bookings > 0 else 0
-    
+
     # 5) Average approval time: draft_created_at to confirmed_at
     # For simplicity, use created_at to updated_at for confirmed bookings
     approval_times_cursor = db.bookings.aggregate([
@@ -465,7 +465,7 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
     ])
     approval_times_result = await approval_times_cursor.to_list(1)
     avg_approval_minutes = round(approval_times_result[0]["avg_minutes"], 1) if approval_times_result else 0
-    
+
     # 6) Settlements page views: track via audit logs (if available)
     # For pilot, simplified: check if any settlement API calls exist in audit
     agencies_viewed_settlements_cursor = db.audit_logs.aggregate([
@@ -482,7 +482,7 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
     agencies_viewed_result = await agencies_viewed_settlements_cursor.to_list(1)
     agencies_viewed_count = agencies_viewed_result[0]["total"] if agencies_viewed_result else 0
     agencies_viewed_settlements = round(agencies_viewed_count / active_agencies_count, 2) if active_agencies_count > 0 else 0
-    
+
     hotels_viewed_settlements_cursor = db.audit_logs.aggregate([
         {
             "$match": {
@@ -496,7 +496,7 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
     ])
     hotels_viewed_result = await hotels_viewed_settlements_cursor.to_list(1)
     hotels_viewed_count = hotels_viewed_result[0]["total"] if hotels_viewed_result else 0
-    
+
     # Get unique hotels count
     active_hotels_cursor = db.bookings.aggregate([
         {"$match": {"organization_id": org_id, "created_at": {"$gte": cutoff}}},
@@ -506,14 +506,14 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
     active_hotels_result = await active_hotels_cursor.to_list(1)
     active_hotels_count = active_hotels_result[0]["total"] if active_hotels_result else 1
     hotels_viewed_settlements = round(hotels_viewed_count / active_hotels_count, 2) if active_hotels_count > 0 else 0
-    
+
     # 7) Flow completion rate: confirmed / total
     flow_completion_rate = round(confirmed_bookings / total_bookings, 2) if total_bookings > 0 else 0
-    
+
     # ====================================================================================
     # FAZ-2.1: BREAKDOWN AGGREGATIONS
     # ====================================================================================
-    
+
     # 1) BY DAY: Daily total/confirmed/cancelled/whatsapp
     by_day_pipeline = [
         {"$match": {"organization_id": org_id, "created_at": {"$gte": cutoff}}},
@@ -528,7 +528,7 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
         {"$sort": {"_id": 1}}
     ]
     by_day_result = await db.bookings.aggregate(by_day_pipeline).to_list(100)
-    
+
     # Get whatsapp clicks by day
     whatsapp_by_day_pipeline = [
         {"$match": {"organization_id": org_id, "event_type": "booking.whatsapp_clicked", "created_at": {"$gte": cutoff}}},
@@ -541,7 +541,7 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
     ]
     whatsapp_by_day_result = await db.booking_events.aggregate(whatsapp_by_day_pipeline).to_list(100)
     whatsapp_by_day_map = {r["_id"]: r["whatsapp"] for r in whatsapp_by_day_result}
-    
+
     breakdown_by_day = [
         {
             "date": row["_id"],
@@ -552,7 +552,7 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
         }
         for row in by_day_result
     ]
-    
+
     # 2) BY HOTEL: Hotel-based performance
     by_hotel_pipeline = [
         {"$match": {"organization_id": org_id, "created_at": {"$gte": cutoff}}},
@@ -611,7 +611,7 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
         }
     ]
     by_hotel_result = await db.bookings.aggregate(by_hotel_pipeline).to_list(100)
-    
+
     breakdown_by_hotel = [
         {
             "hotel_id": str(row["hotel_id"]),
@@ -625,7 +625,7 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
         }
         for row in by_hotel_result
     ]
-    
+
     # 3) BY AGENCY: Agency-based conversion
     by_agency_pipeline = [
         {"$match": {"organization_id": org_id, "created_at": {"$gte": cutoff}}},
@@ -651,12 +651,12 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
         }
     ]
     by_agency_result = await db.bookings.aggregate(by_agency_pipeline).to_list(100)
-    
+
     # Get agency names
     agency_ids = [str(r["agency_id"]) for r in by_agency_result]
     agencies_docs = await db.agencies.find({"_id": {"$in": agency_ids}}).to_list(100)
     agency_name_map = {str(a["_id"]): a.get("name", "Unknown") for a in agencies_docs}
-    
+
     # Get whatsapp clicks by agency
     whatsapp_by_agency_pipeline = [
         {"$match": {"organization_id": org_id, "event_type": "booking.whatsapp_clicked", "created_at": {"$gte": cutoff}}},
@@ -664,7 +664,7 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
     ]
     whatsapp_by_agency_result = await db.booking_events.aggregate(whatsapp_by_agency_pipeline).to_list(100)
     whatsapp_by_agency_map = {str(r["_id"]): r["whatsapp_clicks"] for r in whatsapp_by_agency_result}
-    
+
     breakdown_by_agency = [
         {
             "agency_id": str(row["agency_id"]),
@@ -679,7 +679,7 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
         }
         for row in by_agency_result
     ]
-    
+
     return {
         "range": {
             "from": cutoff.isoformat(),

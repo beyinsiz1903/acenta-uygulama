@@ -128,7 +128,7 @@ async def request_link(body: MyBookingRequestLinkBody, request: Request):
 
     # Rate limit: per-IP + per (email,booking_code) key
     try:
-      
+
         await _rate_limit_public_request(db, ip=client_ip, key=code)
         await _rate_limit_public_request(db, ip=client_ip, key=f"{email_lower}|{code}")
     except HTTPException:

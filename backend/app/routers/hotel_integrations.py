@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/hotel/integrations", tags=["hotel-integrations"]
 
 
 class IntegrationConfig(BaseModel):
-  
+
     mode: Optional[str] = Field(default="pull", pattern="^(pull|push)$")
     channels: list[str] = Field(default_factory=list)
 

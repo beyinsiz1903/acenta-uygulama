@@ -144,7 +144,7 @@ async def toggle_active(announcement_id: str, user=Depends(get_current_user), db
 
     org_id = user["organization_id"]
     oid = _to_oid(announcement_id)
-    
+
     existing = await db.b2b_announcements.find_one(
         {"_id": oid, "organization_id": org_id}
     )

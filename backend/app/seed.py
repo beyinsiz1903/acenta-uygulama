@@ -116,11 +116,11 @@ async def ensure_seed_data() -> None:
     # FAZ-7: booking events outbox indexes
     await db.booking_events.create_index([("organization_id", 1), ("delivered", 1), ("created_at", 1)])
     await db.booking_events.create_index([("organization_id", 1), ("entity_id", 1), ("event_type", 1)])
-    
+
     # FAZ-2.0.1: WhatsApp tracking idempotency index
     await db.booking_events.create_index([
-        ("booking_id", 1), 
-        ("event_type", 1), 
+        ("booking_id", 1),
+        ("event_type", 1),
         ("payload.actor_email", 1)
     ])
 
@@ -153,7 +153,7 @@ async def ensure_seed_data() -> None:
     await db.booking_drafts.create_index([("expires_at", 1)], expireAfterSeconds=0)
     await db.booking_drafts.create_index([("organization_id", 1), ("created_at", -1)])
     await db.booking_drafts.create_index([("submitted_booking_id", 1)])  # Idempotency
-    
+
     # FAZ-2: bookings indexes for pending workflow
     await db.bookings.create_index([("organization_id", 1), ("status", 1), ("submitted_at", -1)])
     await db.bookings.create_index([("agency_id", 1), ("status", 1), ("submitted_at", -1)])
@@ -812,7 +812,7 @@ async def ensure_seed_data() -> None:
 
         await db.rate_plans.insert_many(plans_to_create)
         await db.rate_periods.insert_many(periods_to_create)
-        
+
         logger.info(f"Created {len(plans_to_create)} rate plans and {len(periods_to_create)} rate periods")
 
 
@@ -1106,16 +1106,16 @@ async def ensure_seed_data() -> None:
     if agencies:
         for agency in agencies:
             agency_id = str(agency["_id"])
-            
+
             # Check if account already exists
             existing_account = await db.finance_accounts.find_one(
                 {"organization_id": org_id, "type": "agency", "owner_id": agency_id}
             )
-            
+
             if not existing_account:
                 # Use agency_id suffix to ensure uniqueness
                 agency_code = f"AGY_{agency_id[:8].upper()}"
-                
+
                 account_doc = {
                     "_id": f"acct_agency_{agency_id}",
                     "organization_id": org_id,
@@ -1128,10 +1128,10 @@ async def ensure_seed_data() -> None:
                     "created_at": now_utc(),
                     "updated_at": now_utc(),
                 }
-                
+
                 try:
                     await db.finance_accounts.insert_one(account_doc)
-                    
+
                     # Create credit profile for agency
                     credit_doc = {
                         "_id": f"cred_{agency_id}",
@@ -1146,7 +1146,7 @@ async def ensure_seed_data() -> None:
                         "updated_at": now_utc(),
                     }
                     await db.credit_profiles.insert_one(credit_doc)
-                    
+
                     # Initialize balance cache
                     balance_doc = {
                         "_id": f"bal_{agency_id}_eur",
@@ -1158,7 +1158,7 @@ async def ensure_seed_data() -> None:
                         "updated_at": now_utc(),
                     }
                     await db.account_balances.insert_one(balance_doc)
-                    
+
                     logger.info(f"✅ Created finance account + credit profile for agency: {agency['name']}")
                 except Exception as e:
                     logger.warning(f"⚠️ Could not create finance account for {agency['name']}: {e}")

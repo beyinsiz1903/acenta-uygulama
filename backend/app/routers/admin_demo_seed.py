@@ -50,27 +50,27 @@ def generate_demo_booking(
     status: str,
 ) -> dict:
     """Generate a single demo booking document"""
-    
+
     booking_id = str(uuid.uuid4())
     hotel_id = random.choice(hotel_ids) if hotel_ids else "demo-hotel-1"
     hotel_name = hotel_names.get(hotel_id, "Demo Hotel")
-    
+
     # Guest info
     guest_first = random.choice(["Ahmet", "Mehmet", "Ayşe", "Fatma", "Ali", "Zeynep"])
     guest_last = random.choice(["Yılmaz", "Kaya", "Demir", "Çelik", "Şahin", "Aydın"])
-    
+
     # Check-in/out dates (future dates, 3-60 days from now)
     days_ahead = random.randint(3, 60)
     checkin = now_utc() + timedelta(days=days_ahead)
     checkout = checkin + timedelta(days=random.randint(1, 7))
-    
+
     # Room details
     room_types = ["Standard", "Deluxe", "Suite", "Family Room"]
     room_type = random.choice(room_types)
-    
+
     adults = random.randint(1, 4)
     children = random.randint(0, 2)
-    
+
     # Pricing
     room_rate = random.randint(500, 3000)
     nights = (checkout - checkin).days
@@ -78,7 +78,7 @@ def generate_demo_booking(
     commission_pct = random.choice([10, 12, 15, 18, 20])
     commission = (total * commission_pct) / 100
     net = total - commission
-    
+
     # Note (30-40% should have notes)
     has_note = random.random() < 0.35
     note_text = random.choice([
@@ -89,7 +89,7 @@ def generate_demo_booking(
         "Sessiz oda isteniyor",
         "Havuz manzaralı",
     ]) if has_note else None
-    
+
     # Base booking document
     booking = {
         "_id": booking_id,
@@ -101,20 +101,20 @@ def generate_demo_booking(
         "created_by": "demo@seed.test",
         "updated_at": created_at,
         "updated_by": "demo@seed.test",
-        
+
         # Guest
         "guest_first_name": guest_first,
         "guest_last_name": guest_last,
         "guest_email": f"{guest_first.lower()}.{guest_last.lower()}@example.com",
         "guest_phone": f"+90 5{random.randint(300000000, 599999999)}",
-        
+
         # Stay
         "checkin": checkin,
         "checkout": checkout,
         "room_type": room_type,
         "adults": adults,
         "children": children,
-        
+
         # Pricing
         "room_rate": room_rate,
         "total": total,
@@ -122,25 +122,25 @@ def generate_demo_booking(
         "commission": commission,
         "net": net,
         "currency": "TRY",
-        
+
         # Notes (for metrics)
         "note_to_hotel": note_text if has_note else "",
         "hotel_note": "",
         "guest_note": "",
         "special_requests": "",
-        
+
         # Metadata
         "source": "demo_seed",
         "demo_seed_tag": "v1",
         "code": f"DEMO-{random.randint(10000, 99999)}",
     }
-    
+
     # Confirmed bookings need confirmed_at
     if status == "confirmed":
         # Approval time between 10 minutes and 24 hours
         approval_seconds = random.randint(600, 86400)
         booking["confirmed_at"] = created_at + timedelta(seconds=approval_seconds)
-    
+
     return booking
 
 
@@ -161,11 +161,11 @@ async def seed_demo_bookings(
     - 45% confirmed
     - 10% cancelled
     """
-    
+
     org_id = user.get("organization_id")
     count = min(max(payload.count, 1), 100)  # Cap at 100
     days_back = min(max(payload.days_back, 1), 365)
-    
+
     # Wipe existing seed data if requested
     wiped = 0
     if payload.wipe_existing_seed:
@@ -174,42 +174,42 @@ async def seed_demo_bookings(
             "source": "demo_seed",
         })
         wiped = result.deleted_count
-    
+
     # Get available hotels
     hotels = await db.hotels.find({"organization_id": org_id}).to_list(length=None)
     hotel_ids = [h.get("_id") for h in hotels if h.get("_id")]
     hotel_names = {h.get("_id"): h.get("name", "Demo Hotel") for h in hotels}
-    
+
     # Fallback if no hotels exist
     if not hotel_ids:
         hotel_ids = ["demo-hotel-1", "demo-hotel-2"]
         hotel_names = {"demo-hotel-1": "Demo Hotel 1", "demo-hotel-2": "Demo Hotel 2"}
-    
+
     # Generate bookings
     cutoff = now_utc() - timedelta(days=days_back)
     bookings_to_insert = []
-    
+
     # Status distribution
     pending_count = int(count * 0.45)
     confirmed_count = int(count * 0.45)
     cancelled_count = count - pending_count - confirmed_count
-    
+
     statuses = (
         ["pending"] * pending_count +
         ["confirmed"] * confirmed_count +
         ["cancelled"] * cancelled_count
     )
     random.shuffle(statuses)
-    
+
     for status in statuses:
         created_at = random_date_in_range(cutoff, now_utc())
         booking = generate_demo_booking(org_id, hotel_ids, hotel_names, created_at, status)
         bookings_to_insert.append(booking)
-    
+
     # Insert all bookings
     if bookings_to_insert:
         await db.bookings.insert_many(bookings_to_insert)
-    
+
     return SeedBookingsResponse(
         ok=True,
         seed_tag="v1",

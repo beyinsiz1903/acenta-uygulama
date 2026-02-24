@@ -70,7 +70,7 @@ async def list_hotels_availability(
     # Get sheet connection info for each hotel
     # Priority: agency-specific connection > hotel-level default connection
     tenant_id = user.get("tenant_id") or org_id
-    
+
     # First get agency-specific connections
     agency_conns = await db.hotel_portfolio_sources.find({
         "tenant_id": tenant_id,
@@ -78,7 +78,7 @@ async def list_hotels_availability(
         "agency_id": agency_id,
     }).to_list(2000)
     agency_conn_map = {c["hotel_id"]: c for c in agency_conns}
-    
+
     # Then get default (no agency_id) connections for hotels without agency-specific ones
     default_conns = await db.hotel_portfolio_sources.find({
         "tenant_id": tenant_id,
@@ -86,7 +86,7 @@ async def list_hotels_availability(
         "agency_id": {"$exists": False},
     }).to_list(2000)
     default_conn_map = {c["hotel_id"]: c for c in default_conns}
-    
+
     # Merge: agency-specific takes priority
     conn_map = {}
     for hid in hotel_ids:

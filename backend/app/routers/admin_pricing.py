@@ -392,16 +392,16 @@ async def list_simple_rules(
 ):
     """List simple markup_percent pricing rules (P1.2 MVP)."""
     org_id = user["organization_id"]
-    
+
     # Find rules with action.type = "markup_percent" and validity field
     cur = db.pricing_rules.find({
         "organization_id": org_id,
         "action.type": "markup_percent",
         "validity": {"$exists": True}
     }).sort("priority", -1)
-    
+
     docs = await cur.to_list(500)
-    
+
     out: list[SimplePricingRuleResponse] = []
     for d in docs:
         out.append(

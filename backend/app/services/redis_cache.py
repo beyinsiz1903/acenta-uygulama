@@ -381,10 +381,11 @@ async def redis_stats() -> dict[str, Any]:
 
 def shutdown_pool() -> None:
     """Close the Redis pool on app shutdown."""
-    global _pool
+    global _pool, _sentinel_obj
     if _pool is not None:
         try:
             _pool.disconnect()
         except Exception:
             pass
         _pool = None
+    _sentinel_obj = None

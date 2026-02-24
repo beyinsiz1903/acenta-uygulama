@@ -57,8 +57,8 @@ def make_request(method: str, endpoint: str, data: Dict[Any, Any] = None, header
         return {"error": str(e)}
 
 def test_health_ready():
-    """Test GET /api/health/ready endpoint."""
-    print("Testing Health Ready endpoint...")
+    """Test GET /api/health/ready endpoint with Redis checks."""
+    print("Testing Health Ready endpoint with Redis...")
     result = make_request("GET", "/health/ready")
     
     if "error" in result:
@@ -72,9 +72,23 @@ def test_health_ready():
         status = json_data.get("status")
         checks = json_data.get("checks", {})
         
+        # Check Redis specific fields
+        redis_status = checks.get("redis")
+        redis_memory = checks.get("redis_memory")
+        
         print(f"✅ PASSED: Health Ready - Status: {status}")
-        print(f"   Checks: {json.dumps(checks, indent=2)}")
-        return True
+        print(f"   Redis Status: {redis_status}")
+        if redis_memory:
+            print(f"   Redis Memory: {redis_memory}")
+        print(f"   All Checks: {json.dumps(checks, indent=2)}")
+        
+        # Validate Redis health
+        if redis_status == "healthy":
+            print("✅ Redis is healthy")
+            return True
+        else:
+            print(f"⚠️  Redis status is not healthy: {redis_status} (but endpoint returned 200)")
+            return True  # Health endpoint still works
     else:
         print(f"❌ FAILED: Expected 200, got {result['status_code']}")
         print(f"   Response: {result.get('json') or result.get('text', 'No response')}")

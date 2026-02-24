@@ -158,7 +158,8 @@ async def search_available_hotels(
         },
     }
 
-    # Cache results
+    # Cache results: L1 Redis (2 min) + L2 MongoDB (5 min)
+    await redis_set(cache_key, response, ttl_seconds=120)
     await cache_set(cache_key, response, category="search_results")
 
     return response

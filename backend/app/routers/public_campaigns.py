@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 
 from app.db import get_db
+from app.services.endpoint_cache import try_cache_get, cache_and_return
 
 
 router = APIRouter(prefix="/api/public/campaigns", tags=["public_campaigns"])
@@ -14,10 +15,14 @@ router = APIRouter(prefix="/api/public/campaigns", tags=["public_campaigns"])
 
 @router.get("/{slug}")
 async def get_campaign(slug: str, org: str = Query(..., min_length=1), db=Depends(get_db)) -> JSONResponse:
-    """Public campaign detail for landing pages.
+    """Public campaign detail for landing pages."""
 
-    Returns a minimal payload safe for public exposure.
-    """
+    # Redis L1 cache (5 min)
+    hit, ck = await try_cache_get("pub_camp", org, {"slug": slug})
+    if hit:
+        resp = JSONResponse(status_code=200, content=hit)
+        resp.headers["X-Cache"] = "HIT"
+        return resp
 
     now = datetime.utcnow()
 

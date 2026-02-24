@@ -182,7 +182,7 @@ async def b2b_account_summary(user: CurrentB2BUser = Depends(current_b2b_user), 
         net = -exposure_eur
         data_source = "ledger_based"
 
-    return {
+    result = {
         "total_debit": round(total_debit, 2),
         "total_credit": round(total_credit, 2),
         "net": round(net, 2),
@@ -196,4 +196,5 @@ async def b2b_account_summary(user: CurrentB2BUser = Depends(current_b2b_user), 
         "status": status,
         "aging": aging,
     }
+    return await cache_and_return(ck, result, ttl=120)
 

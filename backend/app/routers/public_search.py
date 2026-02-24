@@ -71,6 +71,16 @@ async def public_search_catalog(
 
   client_ip = request.client.host if request.client else None
 
+  # L1 Redis cache check (skip for partner-specific or text-search queries)
+  if not partner and not q:
+    cache_params = {"org": org, "page": page, "ps": page_size, "sort": sort, "df": date_from, "dt": date_to, "type": product_type}
+    hit, ck = await try_cache_get("pub_search", org, cache_params)
+    if hit:
+      resp = JSONResponse(status_code=200, content=hit)
+      resp.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
+      resp.headers["X-Cache"] = "HIT"
+      return resp
+
   # Basic Mongo-based throttle per IP + org + minute bucket
   if client_ip:
     now = datetime.utcnow().replace(second=0, microsecond=0)

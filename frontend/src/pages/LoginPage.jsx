@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import { api, apiErrorMessage, setToken, setUser } from "../lib/api";
 import { redirectByRole } from "../utils/redirectByRole";
+import { loginSchema } from "../lib/validations";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -11,20 +14,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [serverError, setServerError] = useState("");
 
-  async function onSubmit(e) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  async function onSubmit(data) {
+    setServerError("");
     try {
-      const resp = await api.post("/auth/login", { email, password });
+      const resp = await api.post("/auth/login", {
+        email: data.email,
+        password: data.password,
+      });
       setToken(resp.data.access_token);
       setUser(resp.data.user);
-      
+
       // Store tenant_id for API calls (X-Tenant-Id header)
       try {
         const tid = resp.data.tenant_id || resp.data.user?.tenant_id;
@@ -32,28 +42,21 @@ export default function LoginPage() {
           localStorage.setItem("acenta_tenant_id", tid);
         }
       } catch {}
-      
+
       // Role-based redirect with optional return-to from sessionStorage
       let redirectPath = redirectByRole(resp.data.user);
       try {
         const saved = window.sessionStorage.getItem("acenta_post_login_redirect");
-
-        // Minimal guard: only allow internal app routes
         if (saved && typeof saved === "string" && saved.startsWith("/app")) {
           redirectPath = saved;
         }
-
         window.sessionStorage.removeItem("acenta_post_login_redirect");
         window.sessionStorage.removeItem("acenta_session_expired");
-      } catch {
-        // ignore storage errors
-      }
+      } catch {}
 
       navigate(redirectPath, { replace: true });
     } catch (err) {
-      setError(apiErrorMessage(err));
-    } finally {
-      setLoading(false);
+      setServerError(apiErrorMessage(err));
     }
   }
 
@@ -63,11 +66,10 @@ export default function LoginPage() {
   let showExpired = reason === "session_expired";
   try {
     if (!showExpired && typeof window !== "undefined") {
-      showExpired = window.sessionStorage.getItem("acenta_session_expired") === "1";
+      showExpired =
+        window.sessionStorage.getItem("acenta_session_expired") === "1";
     }
-  } catch {
-    // ignore storage errors
-  }
+  } catch {}
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -76,7 +78,9 @@ export default function LoginPage() {
           <div className="mx-auto h-12 w-12 rounded-2xl bg-primary text-primary-foreground grid place-items-center font-bold">
             A
           </div>
-          <h1 className="mt-3 text-2xl font-semibold text-foreground">Acenta Master</h1>
+          <h1 className="mt-3 text-2xl font-semibold text-foreground">
+            Acenta Master
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Acenta operasyonlarınızı tek yerden yönetin.
           </p>
@@ -84,7 +88,8 @@ export default function LoginPage() {
 
         {showExpired && (
           <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            Oturumunuz sona erdi. Tekrar giriş yaptıktan sonra kaldığınız sayfaya döneceksiniz.
+            Oturumunuz sona erdi. Tekrar giriş yaptıktan sonra kaldığınız
+            sayfaya döneceksiniz.
           </div>
         )}
 
@@ -93,48 +98,67 @@ export default function LoginPage() {
             <CardTitle>Giriş Yap</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={onSubmit} className="space-y-4" data-testid="login-form">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-4"
+              data-testid="login-form"
+              noValidate
+            >
               <div className="space-y-2">
                 <Label htmlFor="email">E-posta</Label>
                 <Input
                   id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  type="email"
+                  autoComplete="email"
                   placeholder="ornek@acenta.com"
+                  aria-invalid={!!errors.email}
+                  aria-describedby={errors.email ? "email-error" : undefined}
                   data-testid="login-email"
+                  {...register("email")}
                 />
+                {errors.email && (
+                  <p id="email-error" className="text-xs text-rose-600" role="alert">
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="password">Şifre</Label>
                 <Input
                   id="password"
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  aria-invalid={!!errors.password}
+                  aria-describedby={errors.password ? "password-error" : undefined}
                   data-testid="login-password"
+                  {...register("password")}
                 />
+                {errors.password && (
+                  <p id="password-error" className="text-xs text-rose-600" role="alert">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
 
-              {error ? (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700" data-testid="login-error">
-                  {error}
+              {serverError ? (
+                <div
+                  className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700"
+                  data-testid="login-error"
+                  role="alert"
+                >
+                  {serverError}
                 </div>
               ) : null}
 
               <Button
                 type="submit"
                 className="w-full"
-                disabled={loading}
+                disabled={isSubmitting}
                 data-testid="login-submit"
               >
-                {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
+                {isSubmitting ? "Giriş yapılıyor..." : "Giriş Yap"}
               </Button>
-
-              {process.env.NODE_ENV === "development" && (
-                <div className="text-xs text-muted-foreground">
-                  Geliştirme ortamı
-                </div>
-              )}
             </form>
           </CardContent>
         </Card>

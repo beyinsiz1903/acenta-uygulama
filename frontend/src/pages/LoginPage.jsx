@@ -130,9 +130,11 @@ export default function LoginPage() {
                 {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
               </Button>
 
-              <div className="text-xs text-muted-foreground">
-                Demo: <span className="font-medium">admin@acenta.test</span> / <span className="font-medium">admin123</span>
-              </div>
+              {process.env.NODE_ENV === "development" && (
+                <div className="text-xs text-muted-foreground">
+                  Geliştirme ortamı
+                </div>
+              )}
             </form>
           </CardContent>
         </Card>

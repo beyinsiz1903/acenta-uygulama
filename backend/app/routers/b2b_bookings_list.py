@@ -166,7 +166,13 @@ async def list_b2b_bookings_agency(
             )
         )
 
-    return BookingListResponse(items=items)
+    result = BookingListResponse(items=items)
+
+    # Cache result (30 sec)
+    if not q:
+        await cache_and_return(ck, result.model_dump(), ttl=30)
+
+    return result
 
 
 async def _get_scoped_booking(db, booking_id: str, org_id: str, agency_id: str) -> Dict[str, Any]:

@@ -85,6 +85,7 @@ async def update_product(product_id: str, payload: ProductIn, user=Depends(get_c
         {"$set": {**payload.model_dump(), "updated_at": now_utc(), "updated_by": user.get("email")}},
     )
     doc = await db.products.find_one({"_id": existing["_id"]})
+    await invalidate_products(user["organization_id"])
     return serialize_doc(doc)
 
 
@@ -95,4 +96,5 @@ async def delete_product(product_id: str, user=Depends(get_current_user)):
     await db.products.delete_one({"organization_id": user["organization_id"], "_id": product_oid})
     await db.rate_plans.delete_many({"organization_id": user["organization_id"], "product_id": product_oid})
     await db.inventory.delete_many({"organization_id": user["organization_id"], "product_id": product_oid})
+    await invalidate_products(user["organization_id"])
     return {"ok": True}

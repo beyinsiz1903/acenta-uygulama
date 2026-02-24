@@ -434,17 +434,22 @@ def test_redis_key_prefix_pattern():
         return False
 
 def main():
-    """Run all backend API tests."""
+    """Run all backend API tests including Redis cache layer tests."""
     print("=" * 60)
-    print("SYROCE BACKEND API TESTING")
+    print("SYROCE BACKEND API TESTING (Including Redis Cache Layer)")
     print("=" * 60)
     print(f"Backend URL: {BACKEND_URL}")
     print(f"API Base URL: {BASE_API_URL}")
     print("=" * 60)
     
     tests = [
-        ("Health Check Ready", test_health_ready),
+        ("Health Check Ready (with Redis)", test_health_ready),
         ("Health Check Live", test_health_live),
+        ("Redis CLI Ping", test_redis_cli_ping),
+        ("Redis CLI Info Memory", test_redis_cli_info_memory),
+        ("Redis CLI DB Size", test_redis_cli_dbsize),
+        ("Redis Cache Operations", test_redis_cache_operations),
+        ("Redis Key Prefix Pattern", test_redis_key_prefix_pattern),
         ("Login Valid Credentials", test_login_valid),
         ("Login Invalid Credentials", test_login_invalid),
         ("CORS Headers", test_cors_headers),

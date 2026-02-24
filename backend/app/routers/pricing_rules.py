@@ -257,6 +257,7 @@ async def update_pricing_rule(
 
     await db.pricing_rules.update_one({"_id": existing["_id"]}, {"$set": update_fields})
     doc = await _get_org_scoped_rule(db, org_id, rule_id)
+    await invalidate_pricing_rules(org_id)
     return serialize_doc(doc)
 
 
@@ -269,4 +270,5 @@ async def delete_pricing_rule(rule_id: str, user=Depends(get_current_user)) -> D
 
     existing = await _get_org_scoped_rule(db, org_id, rule_id)
     await db.pricing_rules.delete_one({"_id": existing["_id"]})
+    await invalidate_pricing_rules(org_id)
     return {"ok": True}

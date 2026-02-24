@@ -8,7 +8,7 @@ from app.db import get_db
 from app.schemas import ProductIn
 from app.utils import now_utc, serialize_doc, to_object_id
 from app.services.endpoint_cache import try_cache_get, cache_and_return
-from app.services.redis_cache import redis_invalidate_pattern
+from app.services.cache_invalidation import invalidate_products
 
 router = APIRouter(prefix="/products", tags=["products"])
 

@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 from bson import ObjectId
 from fastapi import APIRouter, Depends, Query
 
-from app.auth import get_current_user, require_roles
+from app.auth import require_roles
 from app.db import get_db
 from app.errors import AppError
 from app.schemas_b2b_bookings import BookingListItem, BookingListResponse

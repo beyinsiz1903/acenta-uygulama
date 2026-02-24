@@ -13,8 +13,6 @@ CONTRACTS ENFORCED:
 from __future__ import annotations
 
 from bson import ObjectId
-from typing import Optional
-from datetime import datetime
 
 from app.errors import AppError
 from app.utils import now_utc

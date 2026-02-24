@@ -10,7 +10,6 @@ from starlette.responses import JSONResponse
 
 from app.auth import decode_token, is_super_admin
 from app.db import get_db
-from app.errors import AppError
 from app.request_context import RequestContext, set_request_context
 from app.repositories.membership_repository import MembershipRepository
 from app.repositories.roles_permissions_repository import RolesPermissionsRepository
@@ -22,7 +21,6 @@ def _error_response(status_code: int, code: str, message: str, details: Optional
         content={"error": {"code": code, "message": message, "details": details}},
     )
 
-from app.services.subscription_service import SubscriptionService
 
 
 class TenantResolutionMiddleware(BaseHTTPMiddleware):

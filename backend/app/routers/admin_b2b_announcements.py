@@ -8,7 +8,6 @@ from fastapi import APIRouter, Depends
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
-from app.services.cache_invalidation import invalidate_b2b_announcements
 
 router = APIRouter(prefix="/api/admin/b2b/announcements", tags=["admin_b2b_announcements"])
 

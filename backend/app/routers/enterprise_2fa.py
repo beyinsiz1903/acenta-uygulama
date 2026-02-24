@@ -4,7 +4,6 @@ Opt-in TOTP with recovery codes.
 """
 from __future__ import annotations
 
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel

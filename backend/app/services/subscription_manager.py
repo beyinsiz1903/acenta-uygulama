@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from app.billing import BillingProvider, get_billing_provider
-from app.constants.plan_matrix import DEFAULT_PLAN, PLAN_MATRIX, VALID_PLANS
+from app.constants.plan_matrix import PLAN_MATRIX, VALID_PLANS
 from app.errors import AppError
 from app.repositories.billing_repository import billing_repo
 from app.services.audit_log_service import append_audit_log

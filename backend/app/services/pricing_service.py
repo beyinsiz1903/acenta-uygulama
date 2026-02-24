@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Optional
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from app.errors import AppError
 from app.services.currency_guard import ensure_try
 
 

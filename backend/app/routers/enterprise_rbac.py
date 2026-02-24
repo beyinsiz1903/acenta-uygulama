@@ -6,10 +6,10 @@ Additive - falls back to existing RBAC if role_permissions not found.
 from __future__ import annotations
 
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db

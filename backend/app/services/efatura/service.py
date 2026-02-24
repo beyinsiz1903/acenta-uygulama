@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import hashlib
 import uuid
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from app.db import get_db

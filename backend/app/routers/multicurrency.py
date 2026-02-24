@@ -1,10 +1,9 @@
 """Multi-currency Reconciliation Router."""
 from __future__ import annotations
 
-from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 
 from app.auth import get_current_user, require_roles
 from app.constants.currencies import get_supported_currencies

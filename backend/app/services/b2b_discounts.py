@@ -3,8 +3,6 @@ from __future__ import annotations
 from datetime import date
 from typing import Any, Dict, Optional
 
-from app.errors import AppError
-from app.utils import now_utc
 
 
 async def resolve_discount_group(

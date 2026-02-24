@@ -7,13 +7,11 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any
 
 from app.db import get_db
 from app.utils import now_utc
 from app.constants.currencies import (
-    SupportedCurrency,
     DEFAULT_EXCHANGE_RATES,
     convert_amount,
     CURRENCY_SYMBOLS,

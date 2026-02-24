@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from datetime import date
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from pydantic import BaseModel
 
 from app.schemas_offers_legacy import OfferSearchRequest, OfferSearchResponse, SupplierWarningOut
 from app.services.supplier_warnings import SupplierWarning, sort_warnings, map_exception_to_warning
@@ -19,11 +18,8 @@ from app.config import API_PREFIX
 from app.context.org_context import get_current_org
 from app.db import get_db
 from app.errors import AppError
-from app.services.offers.normalizers.mock_normalizer import normalize_mock_search_result
-from app.services.offers.normalizers.paximum_normalizer import normalize_paximum_search_result
 from app.services.offers.search_session_service import (
     create_search_session,
-    find_offer_in_session,
     get_search_session,
 )
 from app.services.pricing_graph.graph import price_offer_with_graph, PricingGraphResult
@@ -121,7 +117,6 @@ async def search_offers(
     succeeded_suppliers: set[str] = set()
 
     # Helper to compute B2B overlay using simple pricing rules
-    from app.services.pricing_rules import PricingRulesService
 
     # Mock supplier
     if "mock" in supplier_codes:

@@ -4,7 +4,7 @@ Ops/Admin endpoints for account and credit profile management
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, File, UploadFile, Form
+from fastapi import APIRouter, Depends, Query, Request, File, UploadFile, Form
 from fastapi.responses import StreamingResponse
 from typing import Literal, Optional, Any
 from datetime import datetime
@@ -14,7 +14,7 @@ import os
 import hashlib
 
 from app.db import get_db
-from app.auth import require_roles, get_current_user
+from app.auth import require_roles
 from app.errors import AppError
 from app.utils import now_utc
 from app.services.audit import write_audit_log, audit_snapshot
@@ -1354,7 +1354,7 @@ async def mark_settlement_paid(
 # TEST/DEBUG endpoints (Phase 1 only)
 # ============================================================================
 
-from app.services.ledger_posting import LedgerPostingService, LedgerLine, PostingMatrixConfig
+from app.services.ledger_posting import LedgerPostingService, PostingMatrixConfig
 from pydantic import BaseModel as PydanticBaseModel
 
 

@@ -8,7 +8,7 @@ POST /api/tours/:id/reserve - Create a reservation
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Query

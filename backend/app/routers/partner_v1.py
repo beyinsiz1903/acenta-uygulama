@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field
 
 from app.db import get_db
 from app.routers.public_checkout import PublicCheckoutGuest, PublicCheckoutPayment
-from app.routers.public_search import public_search_catalog
 from app.services.partner_auth import require_partner_key
 
 
@@ -43,7 +42,6 @@ async def partner_products_search(
     # Delegate to a simplified tenant-scoped search over products.
     org_id = partner["organization_id"]
 
-    from typing import Dict
 
     # Minimal filter: active hotel products for this org, optionally by name
     filt: Dict[str, Any] = {"organization_id": org_id, "status": "active"}

@@ -4,7 +4,7 @@ Permissions: notifications.sms.send, notifications.sms.view
 """
 from __future__ import annotations
 
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field

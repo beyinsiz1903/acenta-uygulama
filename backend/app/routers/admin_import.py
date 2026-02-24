@@ -13,12 +13,11 @@ GET  /api/admin/import/sheet/connections     — List sheet connections
 from __future__ import annotations
 
 import io
-import json
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, UploadFile
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, BackgroundTasks, Depends, File, UploadFile
+from pydantic import BaseModel
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db

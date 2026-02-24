@@ -3,7 +3,7 @@ from __future__ import annotations
 """Public self-service /my-booking API endpoints (FAZ 3)."""
 
 from datetime import timedelta
-from typing import Any, List, Literal, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, EmailStr, Field

@@ -6,13 +6,12 @@ from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 
 from app.auth import get_current_user, require_roles
-from app.constants.plan_matrix import ALL_PLAN_FEATURE_KEYS, PLAN_MATRIX, VALID_PLANS
+from app.constants.plan_matrix import PLAN_MATRIX, VALID_PLANS
 from app.constants.features import ALL_FEATURE_KEYS
 from app.db import get_db
 from app.errors import AppError
 from app.services.audit_log_service import append_audit_log
 from app.services.feature_service import feature_service
-from app.services.cache_invalidation import invalidate_tenant_features
 
 router = APIRouter(prefix="/api/admin/tenants", tags=["admin_tenant_features"])
 

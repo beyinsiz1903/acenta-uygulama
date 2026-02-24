@@ -4,12 +4,11 @@ import uuid
 import random
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 
-from app.auth import get_current_user, require_roles
+from app.auth import require_roles
 from app.db import get_db
 from app.services.audit import write_audit_log
 

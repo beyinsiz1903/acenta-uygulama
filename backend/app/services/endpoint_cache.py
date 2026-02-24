@@ -12,9 +12,7 @@ Supports tenant-scoped caching and automatic invalidation.
 """
 from __future__ import annotations
 
-import functools
 import hashlib
-import json
 import logging
 from typing import Any, Optional
 

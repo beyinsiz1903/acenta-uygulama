@@ -1,17 +1,15 @@
 from __future__ import annotations
 
-import hashlib
-import secrets
 import uuid
 from datetime import timedelta
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, EmailStr
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
-from app.utils import now_utc, serialize_doc, build_booking_public_view
+from app.utils import now_utc, build_booking_public_view
 
 # DEPLOYMENT FIX: WeasyPrint lazy import (prevents crash if libpangoft2 missing)
 # from weasyprint import HTML  ❌ REMOVED - will be imported lazily when needed

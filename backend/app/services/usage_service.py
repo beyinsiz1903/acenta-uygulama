@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from app.constants.plan_matrix import DEFAULT_PLAN, PLAN_MATRIX
 from app.repositories.usage_ledger_repository import usage_ledger_repo

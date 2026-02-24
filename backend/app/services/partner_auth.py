@@ -4,7 +4,7 @@ from typing import Any, Dict, List
 
 from fastapi import Header, HTTPException, Request
 
-from app.auth import load_org_doc, resolve_org_features
+from app.auth import load_org_doc
 from app.services.api_keys import resolve_api_key
 from app.services.rate_limit import enforce_rate_limit
 

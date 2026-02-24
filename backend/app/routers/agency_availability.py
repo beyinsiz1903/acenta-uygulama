@@ -12,15 +12,13 @@ Endpoints:
 """
 from __future__ import annotations
 
-import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, Query
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
-from app.utils import serialize_doc
 
 router = APIRouter(prefix="/api/agency/availability", tags=["agency_availability"])
 

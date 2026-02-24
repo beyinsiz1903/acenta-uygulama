@@ -9,7 +9,6 @@ from fastapi.responses import JSONResponse
 
 from app.repositories.billing_repository import billing_repo
 from app.services.audit_log_service import append_audit_log
-from app.services.feature_service import feature_service
 
 logger = logging.getLogger(__name__)
 

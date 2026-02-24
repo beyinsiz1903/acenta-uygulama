@@ -6,8 +6,7 @@ to avoid real-time calculation overhead.
 from __future__ import annotations
 
 import logging
-import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timedelta
 from typing import Any, Optional
 
 from app.db import get_db

@@ -4,7 +4,6 @@ import asyncio
 import os
 from typing import Any, Dict, Optional
 
-from bson import ObjectId
 
 from app.db import get_db
 from app.utils import now_utc

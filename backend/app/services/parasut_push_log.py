@@ -22,7 +22,6 @@ Schema (MVP):
 - created_at, updated_at: datetime
 """
 
-from datetime import datetime, timezone
 from typing import Any, Literal, Optional
 
 from app.utils import now_utc

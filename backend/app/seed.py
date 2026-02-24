@@ -913,7 +913,6 @@ async def ensure_seed_data() -> None:
         }
     )
     if not hotel_catalog:
-        from datetime import datetime as _dt
         now = now_utc()
         hotel_doc = {
             "organization_id": org_id,

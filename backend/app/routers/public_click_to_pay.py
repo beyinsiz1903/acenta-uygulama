@@ -13,7 +13,6 @@ from fastapi import APIRouter, Depends
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
-from app.config import ENABLE_PARTNER_API
 from app.db import get_db
 from app.errors import AppError
 from app.services.click_to_pay import resolve_payment_link

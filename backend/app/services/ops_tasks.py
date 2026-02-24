@@ -105,7 +105,6 @@ class OpsTaskService:
         if assignee_email:
             q["assignee_email"] = assignee_email
         if overdue is True:
-            from datetime import datetime
             now = now_utc()
             q["status"] = {"$in": ["open", "in_progress"]}
             q["due_at"] = {"$lt": now}

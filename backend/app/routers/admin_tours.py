@@ -3,15 +3,13 @@ from __future__ import annotations
 import os
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from fastapi import APIRouter, Depends, File, Form, UploadFile
+from fastapi import APIRouter, Depends, File, UploadFile
 from fastapi.responses import JSONResponse
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
-from app.utils import serialize_doc
-from app.services.cache_invalidation import invalidate_tours
 
 router = APIRouter(prefix="/api/admin/tours", tags=["admin_tours"])
 

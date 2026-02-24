@@ -23,9 +23,7 @@ from app.db import get_db
 from app.errors import AppError
 from app.services import stripe_adapter
 from app.services.booking_payments import BookingPaymentsService
-from app.services.booking_finance import BookingFinanceService
 from app.services.click_to_pay import create_payment_link
-from app.utils import now_utc
 
 
 router = APIRouter(prefix="/api/ops/payments/click-to-pay", tags=["ops_click_to_pay"])

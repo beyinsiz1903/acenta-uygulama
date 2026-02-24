@@ -11,9 +11,7 @@ Creates lifecycle events for existing bookings to initialise the event log.
 Idempotent: checks for existing events before inserting new ones.
 """
 
-from typing import Any
 
-from bson import ObjectId
 
 from app.db import get_db
 from app.services.booking_lifecycle import BookingLifecycleService

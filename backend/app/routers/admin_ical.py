@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel
 
 from app.auth import require_roles
 from app.db import get_db

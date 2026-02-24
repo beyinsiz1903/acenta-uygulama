@@ -375,8 +375,6 @@ async def perform_customer_merge(
     - dry_run=True: only counts, no writes
     - dry_run=False: perform rewires + soft-merge
     """
-    from pymongo import UpdateMany
-    from pymongo.errors import DuplicateKeyError
 
     primary_id = (primary_id or "").strip()
     if not primary_id:

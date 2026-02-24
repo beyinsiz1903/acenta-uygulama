@@ -24,7 +24,6 @@ from app.services.suppliers.contracts import SupplierContext, ConfirmStatus, Sup
 from app.services.suppliers.redaction import redact_sensitive_fields
 from bson import Decimal128, ObjectId
 from decimal import Decimal
-from pydantic import BaseModel, EmailStr
 from typing import Any, Dict, Optional
 
 router = APIRouter(prefix="/api/b2b", tags=["b2b-bookings"])

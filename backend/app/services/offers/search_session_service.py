@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Optional
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from typing import Any
 
 
 SEARCH_SESSION_TTL_MINUTES = 30

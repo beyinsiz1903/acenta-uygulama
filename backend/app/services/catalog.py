@@ -10,7 +10,6 @@ from pymongo import DESCENDING
 from app.errors import AppError
 from app.services.audit import write_audit_log
 from app.utils import now_utc
-from app.db import get_db
 
 
 def _oid(x: str) -> ObjectId:

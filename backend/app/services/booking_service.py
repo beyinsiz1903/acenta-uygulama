@@ -122,7 +122,6 @@ async def create_booking_from_paximum_offer(
     """
     from fastapi import HTTPException
 
-    from app.errors import AppError
 
     # Enforce TRY-only for Paximum bookings in this phase
     ensure_try(payload.get("currency"))

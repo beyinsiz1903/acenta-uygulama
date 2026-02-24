@@ -4,7 +4,7 @@ from dataclasses import asdict, dataclass
 from datetime import timedelta
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
 from app.auth import get_current_user, require_roles

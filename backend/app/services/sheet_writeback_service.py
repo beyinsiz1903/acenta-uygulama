@@ -23,8 +23,6 @@ from typing import Any, Dict, List, Optional
 from app.services.sheets_provider import (
     append_rows,
     is_configured,
-    read_sheet,
-    update_cells,
 )
 
 logger = logging.getLogger(__name__)

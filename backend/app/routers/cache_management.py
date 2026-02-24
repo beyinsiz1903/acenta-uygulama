@@ -17,7 +17,6 @@ from app.services.redis_cache import (
     redis_health,
     redis_delete,
     redis_invalidate_pattern,
-    multilayer_invalidate,
 )
 
 router = APIRouter(prefix="/api/admin/cache", tags=["cache"])

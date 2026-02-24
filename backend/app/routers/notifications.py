@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, Request
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, Query
 
 from app.auth import get_current_user
 from app.db import get_db

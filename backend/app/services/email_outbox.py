@@ -6,7 +6,6 @@ from typing import Any, Iterable
 from datetime import timedelta
 
 from app.services.email import EmailSendError, send_email_ses
-from app.services.events import write_booking_event
 from app.utils import now_utc
 from app.routers.voucher import _get_or_create_voucher_for_booking  # reuse FAZ-9.2 helper
 
@@ -180,7 +179,6 @@ async def dispatch_pending_emails(db, *, limit: int = 10) -> int:
             # Audit log for each job
             try:
                 from app.services.audit import write_audit_log  # local import to avoid cycles
-                from app.db import get_db
             except Exception:  # during offline scripts
                 write_audit_log = None
 

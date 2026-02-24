@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import List, Dict, Any
+from typing import List, Any
 from decimal import Decimal, ROUND_HALF_UP
 
 from bson import ObjectId

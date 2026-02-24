@@ -5,7 +5,7 @@ Handles template rendering, sending, logging.
 from __future__ import annotations
 
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from app.db import get_db
 from app.utils import now_utc, serialize_doc

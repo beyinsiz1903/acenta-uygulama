@@ -47,7 +47,6 @@ async def readiness():
 
     # 2. APScheduler running
     try:
-        from apscheduler.schedulers.asyncio import AsyncIOScheduler
         # The scheduler is started in lifespan; we just verify the module is importable
         # and the scheduler was created. A simple check is sufficient.
         checks["scheduler"] = "available"

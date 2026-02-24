@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any, Tuple
+from typing import Any
 import hashlib
 import hmac
 import json
 
 import httpx
 
-from app.utils import now_utc
 
 
 async def send_match_alert_webhook(

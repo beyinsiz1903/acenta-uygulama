@@ -127,7 +127,6 @@ async def run_preflight() -> dict[str, Any]:
 
     # ── 4. SCHEDULER / CRON ─────────────────────────────
     try:
-        from apscheduler.schedulers.asyncio import AsyncIOScheduler
         checks.append(CheckResult("APScheduler Modülü", "scheduler", "pass", "Import başarılı"))
     except Exception:
         checks.append(CheckResult("APScheduler Modülü", "scheduler", "fail", "APScheduler import hatası"))

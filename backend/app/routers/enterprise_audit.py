@@ -14,7 +14,7 @@ from fastapi.responses import StreamingResponse
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
-from app.services.audit_hash_chain import verify_chain_integrity, write_chained_audit_log
+from app.services.audit_hash_chain import verify_chain_integrity
 from app.utils import serialize_doc
 
 router = APIRouter(prefix="/api/admin/audit", tags=["enterprise_audit"])

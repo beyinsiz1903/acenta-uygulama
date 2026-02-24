@@ -6,7 +6,7 @@ from datetime import datetime
 from bson import ObjectId
 from fastapi import APIRouter, Depends, Query, Path, Request
 
-from app.auth import require_roles, get_current_user
+from app.auth import require_roles
 from app.db import get_db
 from app.errors import AppError
 from app.schemas.catalog import (

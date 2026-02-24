@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.auth import require_feature, require_roles
 from app.db import get_db
-from app.utils import serialize_doc
 
 
 router = APIRouter(prefix="/api/admin/jobs", tags=["admin_jobs"])

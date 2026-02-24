@@ -374,7 +374,7 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
     - hotelsViewedSettlements: % hotels who viewed settlements page  
     - flowCompletionRate: % of drafts that reached confirmed status
     """
-    from datetime import datetime, timedelta
+    from datetime import timedelta
     
     db = await get_db()
     org_id = user["organization_id"]

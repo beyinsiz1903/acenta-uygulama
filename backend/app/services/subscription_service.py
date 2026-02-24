@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Optional
-from typing import Any, Dict, Optional as _Opt
+from typing import Any, Dict
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 

@@ -4,7 +4,7 @@ Permissions: finance.invoice.create, finance.invoice.view, finance.invoice.send,
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field

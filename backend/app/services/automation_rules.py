@@ -3,7 +3,6 @@ from __future__ import annotations
 import uuid
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict
 
 from app.db import get_db
 
@@ -153,7 +152,7 @@ async def run_deal_overdue_rule(tenant_id: str, org_id: str) -> int:
                 notification_type="system",
                 title="Teklif Takibi Gerekli",
                 message=f"Deal '{deal.get('title', '')}' teklifinde aksiyons tarihi geçmiş.",
-                link=f"/app/crm/pipeline",
+                link="/app/crm/pipeline",
             )
         except Exception as e:
             logger.warning("Notification failed for deal overdue rule: %s", e)

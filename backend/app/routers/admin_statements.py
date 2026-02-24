@@ -7,7 +7,7 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import PlainTextResponse
 
-from app.auth import get_current_user, require_feature, require_roles
+from app.auth import require_feature, require_roles
 from app.db import get_db
 from app.services.audit import write_audit_log
 from app.utils import now_utc

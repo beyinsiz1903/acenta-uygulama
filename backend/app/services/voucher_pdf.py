@@ -8,8 +8,7 @@ This builds on top of the existing vouchers service (HTML-based) and adds:
 - Hooks for email outbox integration
 """
 
-from typing import Any, Dict, Literal, Optional, Tuple
-from datetime import datetime
+from typing import Any, Dict, Literal, Tuple
 
 from bson import ObjectId
 

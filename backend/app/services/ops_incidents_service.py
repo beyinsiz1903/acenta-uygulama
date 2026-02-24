@@ -6,9 +6,7 @@ from uuid import uuid4
 from app.schemas_ops_incidents import (
     OpsIncidentDetailOut,
     OpsIncidentSeverity,
-    OpsIncidentStatus,
     OpsIncidentType,
-    OpsIncidentSourceRef,
 )
 from app.utils import now_utc
 

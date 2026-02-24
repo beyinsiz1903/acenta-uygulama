@@ -7,7 +7,7 @@ for booking context. Functional currency is assumed to be EUR.
 """
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Optional
 
 from pymongo.errors import DuplicateKeyError

@@ -4,12 +4,11 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 from app.db import get_db
 from app.errors import AppError
-from app.repositories.membership_repository import MembershipRepository
 from app.repositories.partner_relationship_repository import PartnerRelationshipRepository
 from app.security.deps_b2b import CurrentB2BUser, current_b2b_user
 from app.security.feature_flags import require_b2b_feature

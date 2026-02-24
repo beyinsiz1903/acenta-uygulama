@@ -8,7 +8,7 @@ This helper is intentionally small, idempotent and best-effort:
 - Leaves audit-friendly traces via booking_events / inbox / email_outbox
 """
 
-from typing import Any, Optional
+from typing import Optional
 
 from bson import ObjectId
 

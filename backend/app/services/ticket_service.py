@@ -4,7 +4,6 @@ Generates tickets with unique codes, QR data, and handles check-in.
 """
 from __future__ import annotations
 
-import hashlib
 import uuid
 from typing import Any, Dict, List, Optional
 

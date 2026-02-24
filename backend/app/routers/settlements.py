@@ -289,7 +289,6 @@ async def get_settlement_statement(  # type: ignore[no-untyped-def]
             details={"month": month},
         )
 
-    from calendar import monthrange
     from datetime import timezone as _tz
 
     month_start = datetime(year, mon, 1, 0, 0, 0, tzinfo=_tz.utc)

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from app.auth import get_current_user, require_roles
@@ -10,7 +10,7 @@ from app.errors import AppError
 from app.constants.plan_matrix import VALID_PLANS
 from app.repositories.billing_repository import billing_repo
 from app.services.subscription_manager import subscription_manager
-from app.services.usage_service import get_usage_summary, check_quota
+from app.services.usage_service import get_usage_summary
 
 router = APIRouter(prefix="/api/admin/billing", tags=["admin_billing"])
 

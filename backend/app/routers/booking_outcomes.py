@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
-from app.services.booking_outcomes import OPERATIONAL_REASONS, resolve_outcome_for_booking, upsert_booking_outcome, apply_pms_status_evidence
+from app.services.booking_outcomes import resolve_outcome_for_booking, upsert_booking_outcome, apply_pms_status_evidence
 from app.services.audit import write_audit_log
 from app.utils import now_utc
 

@@ -11,7 +11,6 @@ Endpoints:
 """
 from __future__ import annotations
 
-import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
@@ -19,7 +18,6 @@ from fastapi import APIRouter, Depends, Query
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
-from app.utils import serialize_doc
 
 router = APIRouter(prefix="/api/agency/writeback", tags=["agency_writeback"])
 

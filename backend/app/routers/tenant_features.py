@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import List
 
 from fastapi import APIRouter, Request
 
@@ -50,7 +49,6 @@ async def get_tenant_quota_status(request: Request) -> dict:
     return hit
 
   from app.services.usage_service import get_usage_summary
-  from app.constants.plan_matrix import PLAN_MATRIX
 
   summary = await get_usage_summary(tenant_id)
   plan = summary.get("plan", "starter")

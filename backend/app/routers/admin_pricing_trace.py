@@ -11,7 +11,6 @@ from app.errors import AppError
 from app.schemas_pricing_graph import PricingGraphTraceResponse, PricingGraphStepOut
 from app.services.audit import write_audit_log
 from app.services.offers.search_session_service import get_search_session
-from app.utils import now_utc
 
 
 router = APIRouter(prefix="/api/admin/pricing/graph", tags=["admin_pricing_graph"])

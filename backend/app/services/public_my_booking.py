@@ -15,7 +15,6 @@ Phase-1 behavioral contract:
   have a `token` field are upgraded on first successful resolve.
 """
 
-from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, Tuple
 

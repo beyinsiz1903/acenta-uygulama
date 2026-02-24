@@ -6,7 +6,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 
-from app.auth import get_current_user, require_roles
+from app.auth import require_roles
 from app.db import get_db
 
 logger = logging.getLogger(__name__)

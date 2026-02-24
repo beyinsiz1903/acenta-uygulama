@@ -207,7 +207,6 @@ class OpsPlaybookEngine:
         actor_id: Optional[str],
     ) -> None:
         # Mark all remaining tasks as done when refund case is closed
-        from datetime import datetime
 
         now = now_utc()
         q = {

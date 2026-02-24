@@ -17,12 +17,10 @@ from app.db import get_db
 from app.errors import AppError, PublicCheckoutErrorCode
 from app.services import stripe_adapter
 from app.services.rate_limit import enforce_rate_limit
-from app.services.b2b_discounts import resolve_discount_group, apply_discount
 
 
 from app.services.public_checkout import (
     create_public_quote,
-    get_or_create_public_checkout_record,
     get_valid_quote,
 )
 from app.services.payments_provider.mock_tr_pos import MockTrPosProvider

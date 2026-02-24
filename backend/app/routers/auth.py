@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from app.auth import create_access_token, get_current_user, verify_password, hash_password
 from app.db import get_db
-from app.schemas import AuthUser, LoginRequest, LoginResponse
+from app.schemas import AuthUser, LoginResponse
 from app.utils import serialize_doc, now_utc
 from app.services.password_policy import validate_password
 

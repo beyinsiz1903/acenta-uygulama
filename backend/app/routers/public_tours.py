@@ -256,7 +256,6 @@ async def public_tour_checkout(payload: TourCheckoutRequest, db=Depends(get_db))
                 content={"code": "QUOTE_EXPIRED", "message": "Teklif süresi doldu"},
             )
 
-    from bson import ObjectId
 
     tour_oid = quote.get("tour_id")
     tour = None

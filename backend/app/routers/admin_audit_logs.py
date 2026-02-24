@@ -4,7 +4,6 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
-from fastapi.responses import JSONResponse
 
 from app.auth import require_roles
 from app.services.audit_log_service import list_audit_logs

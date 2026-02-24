@@ -600,8 +600,8 @@ class SettlementRunService:
         - Otherwise: create-or-get SETTLEMENT_PAID posting, then update
           settlement + accruals to settled.
         """
-        from app.services.supplier_finance import SupplierFinanceService, ensure_platform_ap_clearing_account
-        from app.services.ledger_posting import LedgerPostingService, PostingMatrixConfig, LedgerLine
+        from app.services.supplier_finance import SupplierFinanceService
+        from app.services.ledger_posting import LedgerPostingService, PostingMatrixConfig
 
         run = await self._load_run(organization_id, settlement_id)
 

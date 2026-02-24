@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from app.db import get_db
 from app.errors import AppError

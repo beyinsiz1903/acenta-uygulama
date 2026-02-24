@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import uuid
-from typing import Optional
 
 from app.services.payments_provider.base import PaymentInitContext, PaymentInitResult, PaymentProvider
 

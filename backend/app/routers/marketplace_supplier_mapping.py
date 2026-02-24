@@ -8,7 +8,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from app.auth import get_current_user
 from app.db import get_db
 from app.services.supplier_mapping_service import resolve_listing_supplier, apply_supplier_mapping
-from app.utils import serialize_doc
 
 router = APIRouter(prefix="/marketplace", tags=["marketplace-supplier-mapping"])
 

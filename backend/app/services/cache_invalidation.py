@@ -10,9 +10,8 @@ Usage:
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
-from app.services.redis_cache import redis_invalidate_pattern, redis_delete
+from app.services.redis_cache import redis_invalidate_pattern
 from app.services.mongo_cache_service import cache_invalidate_pattern as mongo_invalidate
 
 logger = logging.getLogger("cache_invalidation")

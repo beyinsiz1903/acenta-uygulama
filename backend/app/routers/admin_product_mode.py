@@ -11,14 +11,12 @@ GET   /api/admin/tenants/{tenant_id}/product-mode
 """
 from __future__ import annotations
 
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Path, Query
 from pydantic import BaseModel, Field
 
 from app.auth import require_roles
 from app.constants.product_modes import (
-    DEFAULT_MODE,
     MODES,
     get_mode_config,
     get_mode_diff,

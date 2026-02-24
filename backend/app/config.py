@@ -9,7 +9,6 @@ All flags default to **True** so that:
 - Only risky modules can be disabled via env override in specific environments.
 """
 
-from typing import Callable
 import os
 from pathlib import Path
 

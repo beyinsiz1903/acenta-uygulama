@@ -10,7 +10,6 @@ import uuid
 from datetime import datetime
 from typing import Any, Optional
 
-from app.db import get_db
 from app.utils import now_utc
 
 

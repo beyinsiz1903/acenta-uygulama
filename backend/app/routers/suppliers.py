@@ -9,7 +9,6 @@ from app.auth import get_current_user
 from app.context_org import get_current_org
 from app.services.suppliers.mock_supplier_service import search_mock_offers
 
-from fastapi import HTTPException
 
 from app.errors import AppError
 from app.services.supplier_search_service import search_paximum_offers

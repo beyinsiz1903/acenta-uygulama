@@ -22,7 +22,6 @@ from app.services.inbox_v2 import (
     update_thread_status,
     _clamp_pagination,
 )
-from app.errors import AppError
 
 
 router = APIRouter(prefix="/api/inbox", tags=["inbox_v2"])

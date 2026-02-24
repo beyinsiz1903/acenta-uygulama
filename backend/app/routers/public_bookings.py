@@ -6,7 +6,6 @@ Provides a PII-minimal booking snapshot by booking_code + org, suitable for
 showing a confirmation summary on the public funnel.
 """
 
-from datetime import datetime
 from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, Query

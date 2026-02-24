@@ -6,7 +6,6 @@ for consistent reporting and analytics.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
 
 
 class CancelReasonCode(str, Enum):

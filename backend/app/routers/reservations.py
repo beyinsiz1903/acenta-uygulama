@@ -2,10 +2,8 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
-from typing import Optional
 
-from bson import ObjectId
-from fastapi import APIRouter, Body, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 
 from app.auth import get_current_user

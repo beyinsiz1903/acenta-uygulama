@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from app.db import get_db
-from app.errors import AppError
 
 logger = logging.getLogger(__name__)
 

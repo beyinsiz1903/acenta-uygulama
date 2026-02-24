@@ -6,7 +6,7 @@ PATCH /api/admin/system/incidents/{id}/resolve - Resolve incident
 """
 from __future__ import annotations
 
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel

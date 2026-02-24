@@ -2,12 +2,10 @@ from __future__ import annotations
 
 """Coupon evaluation and application service (FAZ 5)."""
 
-from datetime import datetime
 from typing import Any, Dict, Optional, Tuple
 
 from bson import ObjectId
 
-from app.errors import AppError
 from app.utils import now_utc
 
 

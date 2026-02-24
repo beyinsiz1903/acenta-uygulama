@@ -9,7 +9,6 @@ from app.db import get_db
 from app.errors import AppError
 from app.repositories.membership_repository import MembershipRepository
 from app.services.subscription_service import SubscriptionService
-from app.utils import serialize_doc
 
 router = APIRouter(prefix="/api/saas/tenants", tags=["saas_tenants"])
 

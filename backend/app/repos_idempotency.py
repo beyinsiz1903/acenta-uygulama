@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Any, Dict, Optional, Tuple
 
 from pymongo.errors import DuplicateKeyError

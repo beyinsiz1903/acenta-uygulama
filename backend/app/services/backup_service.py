@@ -6,11 +6,10 @@ from __future__ import annotations
 
 import asyncio
 import os
-import shutil
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from app.db import get_db
 from app.utils import now_utc

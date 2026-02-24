@@ -11,9 +11,9 @@ import json
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
-from app.services.google_sheets_client import fetch_sheet_data, is_configured
+from app.services.google_sheets_client import fetch_sheet_data
 from app.services.import_service import validate_hotels, get_existing_hotel_names
 
 logger = logging.getLogger(__name__)

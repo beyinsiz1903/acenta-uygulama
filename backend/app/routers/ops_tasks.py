@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query, Request
-from bson import ObjectId
 
 from app.auth import require_roles
 from app.db import get_db

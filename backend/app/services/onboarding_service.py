@@ -8,8 +8,7 @@ from typing import Any, Dict, Optional
 from app.auth import hash_password
 from app.db import get_db
 from app.errors import AppError
-from app.constants.plan_matrix import PLAN_MATRIX, DEFAULT_PLAN, VALID_PLANS
-from app.services.audit import write_audit_log
+from app.constants.plan_matrix import DEFAULT_PLAN, VALID_PLANS
 
 logger = logging.getLogger(__name__)
 

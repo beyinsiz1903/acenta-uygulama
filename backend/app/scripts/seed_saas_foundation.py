@@ -16,7 +16,6 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
-from motor.motor_asyncio import AsyncIOMotorClient
 
 from app.auth import hash_password
 from app.db import get_db

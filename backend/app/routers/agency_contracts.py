@@ -6,10 +6,10 @@ Manages:
 """
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db

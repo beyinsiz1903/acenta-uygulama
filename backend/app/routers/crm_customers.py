@@ -87,6 +87,8 @@ async def http_create_customer(
     user_id = current_user.get("id")
 
     customer = await create_customer(db, org_id, user_id, body.model_dump())
+    # Invalidate CRM customer cache
+    await redis_invalidate_pattern("crm_cust", org_id)
 
     # Fire-and-forget CRM event (customer created)
     from app.services.crm_events import log_crm_event

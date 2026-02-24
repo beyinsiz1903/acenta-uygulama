@@ -57,7 +57,7 @@ async def kpi_stats(user=Depends(get_current_user)):
             {"organization_id": org_id, "created_at": {"$gte": thirty_min_ago}}
         )
 
-    return {
+    result = {
         "total_sales": total_sales,
         "total_reservations": total_res,
         "completed_reservations": completed_res,
@@ -65,6 +65,7 @@ async def kpi_stats(user=Depends(get_current_user)):
         "online_count": online_count,
         "currency": "TRY",
     }
+    return await cache_and_return(ck, result, ttl=30)
 
 
 @router.get("/reservation-widgets")

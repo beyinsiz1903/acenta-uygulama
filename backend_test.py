@@ -23,7 +23,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 # Backend URL
-BASE_URL = "https://hotel-reject-system.preview.emergentagent.com"
+BASE_URL = "https://improvement-areas.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 class HotelWorkflowTester:

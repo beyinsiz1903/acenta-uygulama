@@ -8,7 +8,7 @@ import json
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://hotel-reject-system.preview.emergentagent.com"
+BASE_URL = "https://improvement-areas.preview.emergentagent.com"
 VALID_CREDENTIALS = {
     "email": "admin@acenta.test",
     "password": "admin123"

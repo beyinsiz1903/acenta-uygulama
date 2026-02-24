@@ -24,7 +24,7 @@ import os
 from typing import Dict, Any
 
 # Configuration
-BASE_URL = "https://hotel-reject-system.preview.emergentagent.com"
+BASE_URL = "https://improvement-areas.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

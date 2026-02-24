@@ -17,6 +17,7 @@ from app.constants.features import FEATURE_B2B
 from app.security.b2b_context import B2BTenantContext, get_b2b_tenant_context
 from app.services.b2b_event_service import append_b2b_event
 from app.services.usage_service import track_usage
+from app.services.endpoint_cache import try_cache_get, cache_and_return
 
 
 router = APIRouter(prefix="/api/b2b", tags=["b2b-exchange"])

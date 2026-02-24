@@ -163,8 +163,8 @@ async def http_patch_customer(
 
     return updated
 
-
-@router.post("/merge", response_model=CustomerMergeResultOut)
+    await invalidate_crm_customers(org_id)
+    return updated
 async def http_merge_customers(
     body: CustomerMergeRequest,
     db=Depends(get_db),

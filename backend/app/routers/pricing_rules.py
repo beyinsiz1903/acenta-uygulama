@@ -137,7 +137,7 @@ async def create_pricing_rule(
 
     res = await db.pricing_rules.insert_one(doc)
     created = await db.pricing_rules.find_one({"_id": res.inserted_id})
-    # serialize_doc will drop the internal _id and convert Decimal128 to string
+    await invalidate_pricing_rules(org_id)
     return serialize_doc(created)
 
 

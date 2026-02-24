@@ -61,7 +61,7 @@ class CouponOut(BaseModel):
     updated_at: Optional[datetime] = None  # Make optional for backward compatibility
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 def _oid_or_404(id_str: str) -> ObjectId:

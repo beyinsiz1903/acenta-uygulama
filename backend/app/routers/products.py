@@ -35,6 +35,8 @@ async def create_product(payload: ProductIn, user=Depends(get_current_user)):
     )
     res = await db.products.insert_one(doc)
     saved = await db.products.find_one({"_id": res.inserted_id})
+    # Invalidate product cache
+    await redis_invalidate_pattern("products", user["organization_id"])
     return serialize_doc(saved)
 
 

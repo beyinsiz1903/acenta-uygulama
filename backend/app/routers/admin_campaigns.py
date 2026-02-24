@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.utils import serialize_doc
+from app.services.cache_invalidation import invalidate_campaigns
 
 
 router = APIRouter(prefix="/api/admin/campaigns", tags=["admin_campaigns"])

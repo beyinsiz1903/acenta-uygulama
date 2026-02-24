@@ -77,11 +77,59 @@ def _init_standalone_pool(redis_mod):
         socket_timeout=1,
         retry_on_timeout=True,
     )
-        logger.info("Redis pool created: %s", url.split("@")[-1] if "@" in url else url)
-        return _pool
-    except Exception as e:
-        logger.warning("Redis pool init failed: %s", e)
-        return None
+    logger.info("Redis standalone pool created: %s", url.split("@")[-1] if "@" in url else url)
+    return _pool
+
+
+def _init_sentinel_pool(redis_mod):
+    """Create a Sentinel-backed connection pool for HA Redis."""
+    global _pool, _sentinel_obj
+
+    sentinel_urls_raw = os.environ.get("REDIS_SENTINEL_URLS", "")
+    if not sentinel_urls_raw:
+        logger.warning("REDIS_MODE=sentinel but REDIS_SENTINEL_URLS not set, falling back to standalone")
+        return _init_standalone_pool(redis_mod)
+
+    master_name = os.environ.get("REDIS_SENTINEL_MASTER", "mymaster")
+    sentinel_password = os.environ.get("REDIS_SENTINEL_PASSWORD", None)
+    db = int(os.environ.get("REDIS_SENTINEL_DB", "0"))
+
+    # Parse sentinel URLs: "host1:26379,host2:26379"
+    sentinels = []
+    for entry in sentinel_urls_raw.split(","):
+        entry = entry.strip()
+        if ":" in entry:
+            host, port = entry.rsplit(":", 1)
+            sentinels.append((host, int(port)))
+        elif entry:
+            sentinels.append((entry, 26379))
+
+    if not sentinels:
+        logger.warning("No valid sentinel URLs parsed, falling back to standalone")
+        return _init_standalone_pool(redis_mod)
+
+    from redis.sentinel import Sentinel
+
+    _sentinel_obj = Sentinel(
+        sentinels,
+        socket_timeout=2,
+        socket_connect_timeout=2,
+        sentinel_kwargs={"password": sentinel_password} if sentinel_password else {},
+    )
+
+    # Get connection pool from sentinel master
+    master = _sentinel_obj.master_for(
+        master_name,
+        socket_timeout=1,
+        decode_responses=True,
+        db=db,
+    )
+    _pool = master.connection_pool
+    logger.info(
+        "Redis Sentinel pool created: master=%s, sentinels=%d, db=%d",
+        master_name, len(sentinels), db,
+    )
+    return _pool
 
 
 def _client():

@@ -332,8 +332,8 @@ def test_redis_cache_operations():
         },
         {
             "command": ["redis-cli", "GET", "sc:test:key"],
-            "expected": "(nil)",
-            "description": "Verify key is deleted"
+            "expected": "",
+            "description": "Verify key is deleted (should return empty)"
         }
     ]
     

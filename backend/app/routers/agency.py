@@ -60,10 +60,14 @@ async def my_hotels(user=Depends(get_current_user)):
     if not agency_id:
         raise HTTPException(status_code=400, detail="Bu kullanıcı bir acenteye bağlı değil")
 
-    # Cache: agency hotel links (30 min TTL)
+    # Cache: L1 Redis → L2 MongoDB (agency hotel links, 30 min)
     cache_key = f"agency_hotels:{user['organization_id']}:{agency_id}"
+    redis_hit = await redis_get(cache_key)
+    if redis_hit:
+        return redis_hit
     cached = await cache_get(cache_key)
     if cached:
+        await redis_set(cache_key, cached, ttl_seconds=300)
         return cached
 
     links = await db.agency_hotel_links.find(

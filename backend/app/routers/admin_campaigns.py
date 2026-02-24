@@ -169,4 +169,5 @@ async def update_campaign(
     if not doc:
         raise HTTPException(status_code=404, detail="CAMPAIGN_NOT_FOUND")
 
+    await invalidate_campaigns(org_id)
     return CampaignOut(**serialize_doc(doc))

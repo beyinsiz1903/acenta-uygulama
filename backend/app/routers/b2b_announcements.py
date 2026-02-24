@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends
 
 from app.db import get_db
 from app.security.deps_b2b import CurrentB2BUser, current_b2b_user
+from app.services.endpoint_cache import try_cache_get, cache_and_return
 
 router = APIRouter(prefix="/api/b2b", tags=["b2b-announcements"])
 

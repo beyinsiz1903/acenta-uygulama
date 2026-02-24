@@ -41,6 +41,12 @@ async def http_list_deals(
 ):
     org_id = current_user.get("organization_id")
 
+    # Redis L1 cache (1 min TTL)
+    cache_p = {"status": status, "stage": stage, "owner": owner, "cid": customer_id, "page": page, "ps": page_size}
+    hit, ck = await try_cache_get("crm_deals", org_id, cache_p)
+    if hit:
+        return hit
+
     items, total = await list_deals(
         db,
         org_id,
@@ -51,7 +57,8 @@ async def http_list_deals(
         page=page,
         page_size=page_size,
     )
-    return {"items": items, "total": total, "page": page, "page_size": page_size}
+    result = {"items": items, "total": total, "page": page, "page_size": page_size}
+    return await cache_and_return(ck, result, ttl=60)
 
 
 @router.post("", response_model=DealOut)

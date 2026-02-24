@@ -296,13 +296,15 @@ class RedisTestSuite:
             
             if response.status_code == 200:
                 data = response.json()
+                checks = data.get('checks', {})
                 
                 # Look for mode field or redis_mode field
-                mode_field = data.get('mode') or data.get('redis_mode')
+                mode_field = data.get('mode') or data.get('redis_mode') or checks.get('mode') or checks.get('redis_mode')
                 has_mode = mode_field is not None
                 
                 # Also check for any sentinel-related fields
-                sentinel_fields = {k: v for k, v in data.items() if 'sentinel' in k.lower() or 'mode' in k.lower()}
+                all_fields = {**data, **checks}
+                sentinel_fields = {k: v for k, v in all_fields.items() if 'sentinel' in k.lower() or 'mode' in k.lower()}
                 
                 details = f"Mode field present: {has_mode}"
                 if has_mode:

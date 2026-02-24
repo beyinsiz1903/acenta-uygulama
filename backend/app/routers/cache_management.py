@@ -1,4 +1,4 @@
-"""Cache Management Router."""
+"""Cache Management Router — Redis L1 + MongoDB L2."""
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
@@ -7,9 +7,15 @@ from pydantic import BaseModel
 from app.auth import require_roles
 from app.services.mongo_cache_service import (
     cache_delete,
-    cache_get,
     cache_invalidate_pattern,
     cache_stats,
+)
+from app.services.redis_cache import (
+    redis_stats,
+    redis_health,
+    redis_delete,
+    redis_invalidate_pattern,
+    multilayer_invalidate,
 )
 
 router = APIRouter(prefix="/api/admin/cache", tags=["cache"])
@@ -24,8 +30,31 @@ class InvalidateRequest(BaseModel):
     dependencies=[Depends(require_roles(["super_admin"]))],
 )
 async def get_cache_stats():
-    """Get cache statistics."""
-    return await cache_stats()
+    """Get cache statistics for both Redis L1 and MongoDB L2."""
+    mongo = await cache_stats()
+    redis = await redis_stats()
+    return {
+        "redis_l1": redis,
+        "mongo_l2": mongo,
+    }
+
+
+@router.get(
+    "/redis/health",
+    dependencies=[Depends(require_roles(["super_admin"]))],
+)
+async def get_redis_health():
+    """Get Redis health and memory info."""
+    return await redis_health()
+
+
+@router.get(
+    "/redis/stats",
+    dependencies=[Depends(require_roles(["super_admin"]))],
+)
+async def get_redis_stats():
+    """Get detailed Redis statistics."""
+    return await redis_stats()
 
 
 @router.post(
@@ -33,9 +62,14 @@ async def get_cache_stats():
     dependencies=[Depends(require_roles(["super_admin"]))],
 )
 async def invalidate_cache(payload: InvalidateRequest):
-    """Invalidate cache entries by pattern."""
-    count = await cache_invalidate_pattern(payload.pattern)
-    return {"invalidated": count}
+    """Invalidate cache entries by pattern (both Redis + MongoDB)."""
+    redis_count = await redis_invalidate_pattern(payload.pattern)
+    mongo_count = await cache_invalidate_pattern(payload.pattern)
+    return {
+        "invalidated_redis": redis_count,
+        "invalidated_mongo": mongo_count,
+        "total_invalidated": redis_count + mongo_count,
+    }
 
 
 @router.delete(
@@ -43,6 +77,7 @@ async def invalidate_cache(payload: InvalidateRequest):
     dependencies=[Depends(require_roles(["super_admin"]))],
 )
 async def delete_cache_entry(key: str):
-    """Delete a specific cache entry."""
+    """Delete a specific cache entry from both layers."""
+    await redis_delete(key)
     await cache_delete(key)
-    return {"status": "deleted"}
+    return {"status": "deleted", "layers": ["redis", "mongo"]}

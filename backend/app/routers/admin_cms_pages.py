@@ -76,4 +76,5 @@ async def create_cms_page(payload: Dict[str, Any], user=Depends(get_current_user
 
     res = await db.cms_pages.insert_one(doc)
     doc["_id"] = res.inserted_id
+    await invalidate_cms_pages(user["organization_id"])
     return serialize_doc(doc)

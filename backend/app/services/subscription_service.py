@@ -44,7 +44,7 @@ class SubscriptionService:
         # Normalize to timezone-aware datetimes (handles Mongo naive datetimes and ISO strings)
         if isinstance(period_start_raw, str):
             try:
-                period_start = _ensure_aware(datetime.fromisoformat(period_start_raw))
+                _period_start = _ensure_aware(datetime.fromisoformat(period_start_raw))
             except Exception:
                 _period_start = None
         else:

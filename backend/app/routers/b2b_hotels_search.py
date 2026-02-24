@@ -66,6 +66,12 @@ async def search_b2b_hotels(
     if not agency_id:
         raise AppError(403, "forbidden", "User is not bound to an agency", {})
 
+    # Redis L1 cache (2 min — hotel search results)
+    cache_p = {"city": city, "ci": str(check_in), "co": str(check_out), "a": adults, "c": children, "cur": currency, "l": limit, "aid": agency_id}
+    hit, ck = await try_cache_get("b2b_htl_srch", org_id, cache_p)
+    if hit:
+        return hit
+
     # Normalize city for case-insensitive match
     q_city = (city or "").strip()
     if not q_city:

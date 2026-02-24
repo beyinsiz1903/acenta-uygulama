@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 
 from app.db import get_db
+from app.services.endpoint_cache import try_cache_get, cache_and_return
 
 router = APIRouter(prefix="/api/public/tours", tags=["public-tours"])
 
@@ -19,6 +20,15 @@ async def public_search_tours(
     page_size: int = Query(20, ge=1, le=50),
     db=Depends(get_db),
 ) -> JSONResponse:
+    # Redis L1 cache (skip text search)
+    cache_params = {"org": org, "dest": destination, "page": page, "ps": page_size}
+    if not q:
+        hit, ck = await try_cache_get("pub_tours", org, cache_params)
+        if hit:
+            resp = JSONResponse(status_code=200, content=hit)
+            resp.headers["X-Cache"] = "HIT"
+            return resp
+
     filt: Dict[str, Any] = {"organization_id": org}
     if q:
         filt["name"] = {"$regex": q.strip(), "$options": "i"}

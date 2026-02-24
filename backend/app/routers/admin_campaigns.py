@@ -113,6 +113,7 @@ async def create_campaign(
 
     res = await db.campaigns.insert_one(doc)
     doc["_id"] = res.inserted_id
+    await invalidate_campaigns(user["organization_id"])
     return CampaignOut(**serialize_doc(doc))
 
 

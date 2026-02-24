@@ -7,6 +7,8 @@ from app.auth import get_current_user
 from app.db import get_db
 from app.schemas import ProductIn
 from app.utils import now_utc, serialize_doc, to_object_id
+from app.services.endpoint_cache import try_cache_get, cache_and_return
+from app.services.redis_cache import redis_invalidate_pattern
 
 router = APIRouter(prefix="/products", tags=["products"])
 

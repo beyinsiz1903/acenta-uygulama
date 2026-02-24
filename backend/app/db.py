@@ -16,7 +16,15 @@ def _mongo_url() -> str:
 
 
 def _db_name() -> str:
-    return os.environ.get("DB_NAME", "test_database")
+    name = os.environ.get("DB_NAME", "")
+    if not name:
+        import logging
+        logging.getLogger("db").warning(
+            "DB_NAME not set — falling back to 'app_database'. "
+            "Set DB_NAME env var explicitly for production."
+        )
+        return "app_database"
+    return name
 
 
 async def connect_mongo() -> None:

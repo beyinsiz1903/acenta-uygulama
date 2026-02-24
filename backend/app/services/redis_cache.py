@@ -316,13 +316,28 @@ async def redis_health() -> dict[str, Any]:
         if not pong:
             return {"status": "unhealthy", "reason": "ping_failed"}
         info = r.info(section="memory")
-        return {
+        result = {
             "status": "healthy",
+            "mode": _get_redis_mode(),
             "used_memory_human": info.get("used_memory_human", "?"),
             "used_memory_peak_human": info.get("used_memory_peak_human", "?"),
             "maxmemory_human": info.get("maxmemory_human", "0"),
             "connected_clients": r.info(section="clients").get("connected_clients", 0),
         }
+        # Add Sentinel info if applicable
+        if _sentinel_obj is not None:
+            try:
+                master_name = os.environ.get("REDIS_SENTINEL_MASTER", "mymaster")
+                master_addr = _sentinel_obj.discover_master(master_name)
+                slaves = _sentinel_obj.discover_slaves(master_name)
+                result["sentinel"] = {
+                    "master": f"{master_addr[0]}:{master_addr[1]}",
+                    "slaves": len(slaves),
+                    "master_name": master_name,
+                }
+            except Exception:
+                result["sentinel"] = {"error": "discovery_failed"}
+        return result
     except Exception as e:
         return {"status": "error", "reason": str(e)}
 

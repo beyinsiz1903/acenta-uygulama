@@ -150,8 +150,15 @@ async def list_pricing_rules(
     active_only: bool = Query(False),
     user=Depends(get_current_user),
 ) -> List[Dict[str, Any]]:
-    db = await get_db()
     org_id = user["organization_id"]
+
+    # Redis L1 cache (2 min TTL)
+    cache_p = {"tid": tenant_id, "sup": supplier, "rt": rule_type, "active": active_only}
+    hit, ck = await try_cache_get("pricing_rules", org_id, cache_p)
+    if hit:
+        return hit
+
+    db = await get_db()
 
     _enforce_tenant_scope(request, None, tenant_id)
 
@@ -175,7 +182,8 @@ async def list_pricing_rules(
         ("created_at", 1),
     ])
     docs = await cursor.to_list(length=1000)
-    return [serialize_doc(d) for d in docs]
+    result = [serialize_doc(d) for d in docs]
+    return await cache_and_return(ck, result, ttl=120)
 
 
 async def _get_org_scoped_rule(db, org_id: str, rule_id: str) -> Dict[str, Any]:

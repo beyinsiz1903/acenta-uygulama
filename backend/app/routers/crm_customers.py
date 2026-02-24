@@ -213,4 +213,5 @@ async def http_merge_customers(
             raise HTTPException(status_code=409, detail="customer_merge_conflict")
         raise HTTPException(status_code=400, detail="merge_failed")
 
+    await invalidate_crm_customers(org_id)
     return result

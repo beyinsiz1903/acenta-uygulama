@@ -1,15 +1,27 @@
 import React, { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import { api, apiErrorMessage, setToken, setUser } from "../lib/api";
+import { loginSchema } from "../lib/validations";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 
 export default function B2BLoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState("agency1@acenta.test");
-  const [password, setPassword] = useState("agency123");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [serverError, setServerError] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
   const params = new URLSearchParams(location.search);
   const reason = params.get("reason");
@@ -23,12 +35,13 @@ export default function B2BLoginPage() {
     return null;
   }, [hasSessionExpired]);
 
-  async function onSubmit(e) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+  async function onSubmit(data) {
+    setServerError("");
     try {
-      const resp = await api.post("/auth/login", { email, password });
+      const resp = await api.post("/auth/login", {
+        email: data.email,
+        password: data.password,
+      });
       setToken(resp.data.access_token);
       setUser(resp.data.user);
 
@@ -45,9 +58,7 @@ export default function B2BLoginPage() {
 
       navigate(next, { replace: true });
     } catch (err) {
-      setError(apiErrorMessage(err));
-    } finally {
-      setLoading(false);
+      setServerError(apiErrorMessage(err));
     }
   }
 
@@ -55,10 +66,12 @@ export default function B2BLoginPage() {
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <div className="mx-auto h-12 w-12 rounded-2xl bg-primary text-primary-foreground grid place-items-center font-bold">
+          <div className="mx-auto h-12 w-12 rounded-2xl bg-primary text-primary-foreground grid place-items-center font-bold text-xs">
             B2B
           </div>
-          <h1 className="mt-3 text-2xl font-semibold text-foreground">B2B Portal Giriş</h1>
+          <h1 className="mt-3 text-2xl font-semibold text-foreground">
+            B2B Portal Giriş
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Bayi rezervasyonlarını ve carini bu ekrandan yönet.
           </p>
@@ -72,49 +85,58 @@ export default function B2BLoginPage() {
 
         <div className="rounded-2xl shadow-sm border bg-card">
           <div className="p-6">
-            <form onSubmit={onSubmit} className="space-y-4">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-4"
+              noValidate
+            >
               <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  className="w-full border rounded-md px-3 py-2 text-sm"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                <Label htmlFor="b2b-email">Email</Label>
+                <Input
+                  id="b2b-email"
+                  type="email"
+                  autoComplete="email"
                   placeholder="ornek@acenta.com"
+                  aria-invalid={!!errors.email}
+                  aria-describedby={errors.email ? "b2b-email-error" : undefined}
+                  {...register("email")}
                 />
+                {errors.email && (
+                  <p id="b2b-email-error" className="text-xs text-rose-600" role="alert">
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium">
-                  Şifre
-                </label>
-                <input
-                  id="password"
+                <Label htmlFor="b2b-password">Şifre</Label>
+                <Input
+                  id="b2b-password"
                   type="password"
-                  className="w-full border rounded-md px-3 py-2 text-sm"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  aria-invalid={!!errors.password}
+                  aria-describedby={errors.password ? "b2b-password-error" : undefined}
+                  {...register("password")}
                 />
+                {errors.password && (
+                  <p id="b2b-password-error" className="text-xs text-rose-600" role="alert">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
 
-              {error ? (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-                  {error}
+              {serverError ? (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">
+                  {serverError}
                 </div>
               ) : null}
 
-              <button
+              <Button
                 type="submit"
-                className="w-full inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm px-3 py-2 disabled:opacity-60"
-                disabled={loading}
+                className="w-full"
+                disabled={isSubmitting}
               >
-                {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
-              </button>
-
-              <div className="text-xs text-muted-foreground mt-1">
-                Demo: <span className="font-medium">agency1@demo.test</span> / <span className="font-medium">agency123</span>
-              </div>
+                {isSubmitting ? "Giriş yapılıyor..." : "Giriş Yap"}
+              </Button>
             </form>
           </div>
         </div>

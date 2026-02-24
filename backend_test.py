@@ -64,19 +64,20 @@ class RedisTestSuite:
             
             if response.status_code == 200:
                 data = response.json()
+                checks = data.get('checks', {})
                 
                 # Check if redis field exists and is healthy
-                redis_status = data.get('redis', 'missing')
-                has_redis_field = 'redis' in data
+                redis_status = checks.get('redis', 'missing')
+                has_redis_field = 'redis' in checks
                 redis_healthy = redis_status == 'healthy'
                 
                 # Check if mode field exists (for Redis Sentinel)
-                has_mode_field = 'mode' in data
-                mode_value = data.get('mode', 'not_present')
+                has_mode_field = 'mode' in data or 'mode' in checks
+                mode_value = data.get('mode') or checks.get('mode', 'not_present')
                 
                 # Check redis_memory field
-                has_redis_memory = 'redis_memory' in data
-                redis_memory = data.get('redis_memory', 'not_present')
+                has_redis_memory = 'redis_memory' in checks
+                redis_memory = checks.get('redis_memory', 'not_present')
                 
                 details = f"Status: {response.status_code}, Redis: {redis_status}"
                 if has_mode_field:

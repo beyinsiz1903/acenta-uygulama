@@ -128,7 +128,7 @@ async def login(payload: LoginWith2FARequest):
     resp_dict = resp.model_dump() if hasattr(resp, 'model_dump') else resp.dict()
     resp_dict["tenant_id"] = tenant_id
     resp_dict["refresh_token"] = rt_doc["_id"]
-    resp_dict["expires_in"] = 900  # 15 minutes for access token
+    resp_dict["expires_in"] = 28800  # 8 hours for access token
     return resp_dict
 
 

@@ -240,14 +240,14 @@ async def refresh_access_token(payload: RefreshTokenRequest):
         subject=new_rt["user_email"],
         organization_id=new_rt["organization_id"],
         roles=new_rt["roles"],
-        minutes=15,  # Short-lived access token
+        minutes=480,  # 8 hours access token
     )
 
     return {
         "access_token": new_access_token,
         "refresh_token": new_rt["_id"],
         "token_type": "bearer",
-        "expires_in": 900,  # 15 minutes
+        "expires_in": 28800,  # 8 hours
     }
 
 

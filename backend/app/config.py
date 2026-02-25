@@ -21,7 +21,7 @@ try:
         Path("/app/backend/.env"),
     ]:
         if _try_path.exists():
-            load_dotenv(_try_path, override=True)
+            load_dotenv(_try_path, override=False)
             break
 except (ImportError, Exception):
     pass

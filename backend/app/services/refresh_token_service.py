@@ -18,7 +18,7 @@ from app.db import get_db
 logger = logging.getLogger("refresh_token")
 
 COLLECTION = "refresh_tokens"
-REFRESH_TOKEN_TTL_DAYS = 7
+REFRESH_TOKEN_TTL_DAYS = 90
 ACCESS_TOKEN_TTL_MINUTES = 15
 
 

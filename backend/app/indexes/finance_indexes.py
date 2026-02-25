@@ -29,12 +29,14 @@ async def ensure_finance_indexes(db):
                 "indexoptionsconflict" in msg
                 or "indexkeyspecsconflict" in msg
                 or "already exists" in msg
+                or "unauthorized" in msg
+                or "not authorized" in msg
             ):
                 logger.warning(
-                    "[finance_indexes] Keeping legacy index for %s (name=%s): %s",
+                    "[finance_indexes] Skipping index for %s (name=%s): %s",
                     collection.name,
                     kwargs.get("name"),
-                    msg,
+                    msg[:120],
                 )
                 return
             raise

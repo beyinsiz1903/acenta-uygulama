@@ -19,7 +19,7 @@ logger = logging.getLogger("refresh_token")
 
 COLLECTION = "refresh_tokens"
 REFRESH_TOKEN_TTL_DAYS = 90
-ACCESS_TOKEN_TTL_MINUTES = 15
+ACCESS_TOKEN_TTL_MINUTES = 480
 
 
 async def create_refresh_token(

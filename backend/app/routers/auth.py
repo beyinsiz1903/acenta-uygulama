@@ -76,7 +76,7 @@ async def login(payload: LoginWith2FARequest):
         subject=user["email"],
         organization_id=org_id,
         roles=roles_list,
-        minutes=15,  # Short-lived access token (refresh token pattern)
+        minutes=480,  # 8 hours access token
     )
 
     # Create refresh token

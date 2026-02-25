@@ -217,24 +217,28 @@ async def lifespan(app: FastAPI):
     db = await get_db()
 
     # Ensure indexes at startup for critical collections
-    await finance_indexes.ensure_finance_indexes(db)
-    await inbox_indexes.ensure_inbox_indexes(db)
-    await pricing_indexes.ensure_pricing_indexes(db)
-    await voucher_indexes.ensure_voucher_indexes(db)
-    await public_indexes.ensure_public_indexes(db)
-    await crm_indexes.ensure_crm_indexes(db)
-    await funnel_indexes.ensure_funnel_indexes(db)
-    await ensure_jobs_indexes(db)
-    await ensure_integration_hub_indexes(db)
-    await ensure_api_keys_indexes(db)
-    await ensure_rate_limit_indexes(db)
-    await ensure_tenant_indexes(db)
-    await ensure_storefront_indexes(db)
-    await ensure_pricing_indexes(db)
-    await ensure_marketplace_indexes(db)
-    from app.indexes.marketplace_indexes import ensure_offers_indexes
-    await ensure_offers_indexes(db)
-    # Supplier adapters are lazily initialized in AdapterRegistry._ensure_defaults_loaded()
+    # Wrapped in try/except to not crash on Atlas/production where user may lack createIndex permission
+    try:
+        await finance_indexes.ensure_finance_indexes(db)
+        await inbox_indexes.ensure_inbox_indexes(db)
+        await pricing_indexes.ensure_pricing_indexes(db)
+        await voucher_indexes.ensure_voucher_indexes(db)
+        await public_indexes.ensure_public_indexes(db)
+        await crm_indexes.ensure_crm_indexes(db)
+        await funnel_indexes.ensure_funnel_indexes(db)
+        await ensure_jobs_indexes(db)
+        await ensure_integration_hub_indexes(db)
+        await ensure_api_keys_indexes(db)
+        await ensure_rate_limit_indexes(db)
+        await ensure_tenant_indexes(db)
+        await ensure_storefront_indexes(db)
+        await ensure_pricing_indexes(db)
+        await ensure_marketplace_indexes(db)
+        from app.indexes.marketplace_indexes import ensure_offers_indexes
+        await ensure_offers_indexes(db)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning("Index creation failed (non-fatal, may lack permissions): %s", str(e)[:200])
 
     # JWT Token Blacklist indexes
     from app.services.token_blacklist import ensure_blacklist_indexes

@@ -17,7 +17,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://improvement-areas.preview.emergentagent.com/api"
+BACKEND_URL = "https://redis-cache-upgrade.preview.emergentagent.com/api"
 TEST_USER_EMAIL = "admin@acenta.test"
 TEST_USER_PASSWORD = "admin123"
 

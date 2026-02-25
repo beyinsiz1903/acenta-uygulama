@@ -6,7 +6,7 @@ import os
 from datetime import datetime, timedelta
 
 # Get backend URL from environment
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://improvement-areas.preview.emergentagent.com')
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://redis-cache-upgrade.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 def test_admin_b2b_funnel_comprehensive():

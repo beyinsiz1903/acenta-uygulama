@@ -12,7 +12,7 @@ import time
 from typing import Dict, Any, List
 
 # Backend URL from frontend/.env (production configured external URL)
-BACKEND_URL = "https://improvement-areas.preview.emergentagent.com"
+BACKEND_URL = "https://redis-cache-upgrade.preview.emergentagent.com"
 BASE_API_URL = f"{BACKEND_URL}/api"
 
 class Colors:

@@ -9,7 +9,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://improvement-areas.preview.emergentagent.com"
+BASE_URL = "https://redis-cache-upgrade.preview.emergentagent.com"
 LOGIN_CREDENTIALS = {
     "email": "admin@acenta.test",
     "password": "admin123"

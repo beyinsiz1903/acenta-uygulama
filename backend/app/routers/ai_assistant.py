@@ -6,7 +6,7 @@ import logging
 from typing import Any, Optional
 
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(override=False)
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field

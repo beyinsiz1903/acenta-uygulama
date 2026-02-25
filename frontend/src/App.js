@@ -266,6 +266,8 @@ function App() {
         <Route path="/s/:tenantKey/search" element={<StorefrontSearchPage />} />
         <Route path="/s/:tenantKey/offers/:offerId" element={<StorefrontOfferPage />} />
         <Route path="/s/:tenantKey/checkout" element={<StorefrontCheckoutPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsOfServicePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/b2b/login" element={<B2BLoginPage />} />
         <Route path="/test/booking" element={<AgencyBookingTestPage />} />

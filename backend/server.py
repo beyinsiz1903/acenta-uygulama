@@ -241,32 +241,36 @@ async def lifespan(app: FastAPI):
         logging.getLogger(__name__).warning("Index creation failed (non-fatal, may lack permissions): %s", str(e)[:200])
 
     # JWT Token Blacklist indexes
-    from app.services.token_blacklist import ensure_blacklist_indexes
-    await ensure_blacklist_indexes()
+    try:
+        from app.services.token_blacklist import ensure_blacklist_indexes
+        await ensure_blacklist_indexes()
 
-    # Refresh Token indexes
-    from app.services.refresh_token_service import ensure_refresh_token_indexes
-    await ensure_refresh_token_indexes()
+        # Refresh Token indexes
+        from app.services.refresh_token_service import ensure_refresh_token_indexes
+        await ensure_refresh_token_indexes()
 
-    # GDPR indexes
-    from app.services.gdpr_service import ensure_gdpr_indexes
-    await ensure_gdpr_indexes()
+        # GDPR indexes
+        from app.services.gdpr_service import ensure_gdpr_indexes
+        await ensure_gdpr_indexes()
 
-    # Agency Contracts indexes
-    from app.services.agency_contracts_service import ensure_agency_contract_indexes
-    await ensure_agency_contract_indexes()
+        # Agency Contracts indexes
+        from app.services.agency_contracts_service import ensure_agency_contract_indexes
+        await ensure_agency_contract_indexes()
 
-    # Cache indexes
-    from app.services.mongo_cache_service import ensure_cache_indexes
-    await ensure_cache_indexes()
+        # Cache indexes
+        from app.services.mongo_cache_service import ensure_cache_indexes
+        await ensure_cache_indexes()
 
-    # Inventory Snapshot indexes
-    from app.services.inventory_snapshot_service import ensure_inventory_snapshot_indexes
-    await ensure_inventory_snapshot_indexes()
+        # Inventory Snapshot indexes
+        from app.services.inventory_snapshot_service import ensure_inventory_snapshot_indexes
+        await ensure_inventory_snapshot_indexes()
 
-    # Distributed Lock indexes
-    from app.services.distributed_lock_service import ensure_lock_indexes
-    await ensure_lock_indexes()
+        # Distributed Lock indexes
+        from app.services.distributed_lock_service import ensure_lock_indexes
+        await ensure_lock_indexes()
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning("Service index creation failed (non-fatal): %s", str(e)[:200])
 
     # GTM + CRM indexes
     try:

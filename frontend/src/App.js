@@ -209,6 +209,8 @@ const HotelSettlementsPage = lazy(() => import("./pages/HotelSettlementsPage"));
 const HotelIntegrationsPage = lazy(() => import("./pages/HotelIntegrationsPage"));
 const HotelHelpPage = lazy(() => import("./pages/HotelHelpPage"));
 const ErrorContextPage = lazy(() => import("./pages/ErrorContextPage"));
+const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
+const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
 
 function App() {
   // Load theme on app mount

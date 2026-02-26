@@ -189,6 +189,7 @@ const AgencyBookingPendingPage = lazy(() => import("./pages/AgencyBookingPending
 const AgencyBookingsListPage = lazy(() => import("./pages/AgencyBookingsListPage"));
 const AgencySettlementsPage = lazy(() => import("./pages/AgencySettlementsPage"));
 const AgencyHelpPage = lazy(() => import("./pages/AgencyHelpPage"));
+const AgencySheetConnectionsPage = lazy(() => import("./pages/AgencySheetConnectionsPage"));
 const B2BPortalPage = lazy(() => import("./pages/B2BPortalPage"));
 const OpsGuestCasesPage = lazy(() => import("./pages/OpsGuestCasesPage"));
 const OpsBookingDetailPage = lazy(() => import("./pages/ops/OpsBookingDetailPage"));

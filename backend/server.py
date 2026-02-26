@@ -596,17 +596,12 @@ import sys as _sys
 _cors_logger = _logging.getLogger("cors")
 
 if CORS_ORIGINS == ["*"]:
-    _cors_logger.warning("CORS: Allowing localhost origins only (development mode). Set CORS_ORIGINS env for production.")
-    print("[CORS] Mode: dev-localhost-only", file=_sys.stderr)
+    _cors_logger.warning("CORS: Allowing all origins (development/preview mode). Set CORS_ORIGINS env for production.")
+    print("[CORS] Mode: allow-all", file=_sys.stderr)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "http://localhost:3000",
-            "http://localhost:8001",
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:8001",
-        ],
-        allow_credentials=True,
+        allow_origins=["*"],
+        allow_credentials=False,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
         allow_headers=["*"],
         expose_headers=["X-Request-ID", "X-RateLimit-Policy"],

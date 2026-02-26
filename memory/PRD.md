@@ -1,73 +1,60 @@
-# PRD — SaaS Platform (Multi-Tenant ERP)
+# PRD - Acenta Master Travel Management Platform
 
-## Platform Status: Production-Grade Hybrid Revenue SaaS
+## Original Problem Statement
+Full-stack travel management (acenta) application with B2B agency management, hotel portfolio sync via Google Sheets, reservations, CRM, finance, and operations modules.
 
-### Implemented Stack
+## Core Architecture
+- **Frontend:** React (CRA + Tailwind + shadcn/ui)
+- **Backend:** FastAPI (Python)
+- **Database:** MongoDB
+- **Auth:** JWT-based with role-based access control
 
-**Feature Engine (PROMPT A–E)**
-- Feature guards (require_b2b_feature, require_tenant_feature)
-- FeatureContext + dynamic menu filtering
-- Admin tenant features UI (plan dropdown + add-on grid)
+## User Roles
+- `super_admin` / `admin` - Full platform access
+- `agency_admin` / `agency_agent` - B2B agency portal
+- `hotel_admin` / `hotel_staff` - Hotel portal
 
-**Observability (PROMPT F)**
-- Audit logs (all admin + billing actions)
-- B2B event logging (listing, match_request, status changes)
-- Activity timeline in MatchRequestDetailDrawer
-- Admin audit log page with filters
+## What's Been Implemented
 
-**Plan Inheritance (PROMPT G)**
-- tenant_capabilities: plan + add_ons = effective_features
-- Soft-deprecate: legacy tenant_features fallback
-- Plan matrix: starter (5), pro (8), enterprise (10 modules)
+### App Store Preparation (Completed)
+- Screenshots for iPhone, iPad, Apple Watch
+- Store metadata (Turkish) for App Store & Google Play
+- Privacy Policy and Terms of Service pages
+- App icon and feature graphic
 
-**Billing & Subscription (PROMPT H)**
-- BillingProvider ABC (Stripe real + Iyzico stub)
-- SubscriptionManager: subscribe, cancel, downgrade-preview
-- Stripe webhook engine (idempotent)
-- Plan catalog (DB seeded, super_admin API)
-- Subscription visibility UI (status badges, grace period, renewal countdown)
+### Session Persistence (Completed)
+- Access token: 8 hours
+- Refresh token: 90 days
 
-**Usage & Monetization**
-- Usage ledger (idempotent, source_event_id unique)
-- Quota logic (soft enforcement, audit on exceeded)
-- In-app quota notification banners (>=80% warning, >=100% critical)
-- Stripe metered push (shadow mode, ₺0/unit)
-- Stripe product provisioning (4 guardrails: mode gate, idempotency, dry_run, audit)
+### CORS Fix (Completed - Pending Production Deploy)
+- Backend CORS configured for `agency.syroce.com`
 
-**Revenue Analytics**
-- MRR (gross + at_risk), plan distribution
-- Quota bucket distribution (0-20%, 20-50%, 50-80%, 80-100%, 100%+)
-- Enterprise candidate heuristic
-- MRR trend chart (3-month lookback)
-- Billing ops widget (push status, finalize history, cron status)
+### Google Sheets Integration
+- **Admin Panel:** Portfolio sync dashboard, hotel-level connections, agency-level connections
+- **Agency Portal (NEW - Feb 2026):** Self-service sheet connection management
+  - Agency auto-detected from logged-in user (no dropdown needed)
+  - Simple form: Hotel + Sheet ID + tabs
+  - Route: `/app/agency/sheets`
+  - Backend: `/api/agency/sheets/*` endpoints
 
-**Operations**
-- Period finalize job (lock, reconciliation, partial failure safe)
-- APScheduler cron (monthly, Europe/Istanbul)
-- Slack billing alerts (best-effort, severity-based emoji)
+### Bug Fixes (Feb 2026)
+- Fixed agency dropdown empty in admin sheet connections form (fallback to all active agencies when no hotel-specific links exist)
 
-### Test Coverage
-- 63+ backend integration tests
-
-### Strategic Documents
-- `docs/billing/overage-migration.md` — Decision framework, pricing strategy, 3-phase rollout
-- `docs/escrow/escrow-domain-design.md` — Domain model, state machine, financial flow, risk matrix
-- `docs/escrow/legal-compliance-checklist.md` — Turkey regulation, Stripe Connect analysis, 10 critical questions, GO/NO-GO matrix
-
-## Roadmap
-
-### Blocked (External Dependency)
-- Escrow Phase 1 — awaiting legal counsel opinion on BDDK scope
-
-### Next (After Shadow Cycle)
-- Active overage pricing (data-driven decision)
-- Usage email notifications
-
-### Future
-- Escrow implementation (post legal clearance)
-- Self-Service B2B Onboarding
-- B2C Storefront/CMS/SEO Layer
+## Key Files
+- `backend/app/routers/agency_sheets.py` - Agency self-service sheet endpoints
+- `backend/app/routers/admin_sheets.py` - Admin portfolio sync endpoints
+- `backend/app/services/sheets_provider.py` - Google Sheets API client
+- `frontend/src/pages/AgencySheetConnectionsPage.jsx` - Agency sheet management UI
+- `frontend/src/pages/admin/AdminPortfolioSyncPage.jsx` - Admin portfolio sync dashboard
 
 ## Credentials
-- Admin: admin@acenta.test / admin123
-- Agency: agency1@acenta.test / agency123
+| Portal | Email | Password | Role |
+|--------|-------|----------|------|
+| Admin | admin@acenta.test | admin123 | Super Admin |
+| Agency | agent@acenta.test | agent123 | Agency Admin |
+
+## Backlog
+- P1: Database seeding improvements
+- P2: Production DB permissions (createIndex)
+- P2: Cache warm-up expansion
+- P2: Apple Watch UI

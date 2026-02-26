@@ -134,6 +134,7 @@ const ADMIN_GROUPED_NAV = [
     items: [
       { to: "/app/partners", label: "Ortaklık Yönetimi", icon: Network, modeKey: "partner_yonetimi", minMode: "pro" },
       { to: "/app/agency/availability", label: "Müsaitlik Takibi", icon: CalendarDays, modeKey: "musaitlik_takibi", minMode: "pro" },
+      { to: "/app/agency/sheets", label: "Sheet Baglantilari", icon: FileSpreadsheet, modeKey: "sheet_baglantilari", minMode: "pro" },
       { to: "/app/b2b", label: "B2B Acenteler", icon: Building2, feature: "b2b", modeKey: "b2b_acenteler", minMode: "pro" },
       { to: "/app/admin/b2b/marketplace", label: "Pazar Yeri", icon: Globe, modeKey: "marketplace", minMode: "pro" },
       { to: "/app/admin/b2b/funnel", label: "Satış Hunisi", icon: TrendingUp, modeKey: "b2b_funnel", minMode: "pro" },

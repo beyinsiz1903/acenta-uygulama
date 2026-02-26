@@ -759,7 +759,12 @@ function AgencyConnectionsSection() {
                       <td className="px-3 py-2.5 font-medium text-foreground dark:text-white text-xs">{c.hotel_name}</td>
                       <td className="px-3 py-2.5 text-xs text-purple-600 font-medium">{c.agency_name || c.agency_id}</td>
                       <td className="px-3 py-2.5 text-xs text-muted-foreground truncate max-w-[150px]">{c.sheet_title || c.sheet_id}</td>
-                      <td className="px-3 py-2.5 text-center"><StatusBadge status={c.last_sync_status || c.status || "active"} /></td>
+                      <td className="px-3 py-2.5 text-center">
+                        <StatusBadge status={c.last_sync_status || c.status || "active"} />
+                        {c.last_error && (
+                          <p className="text-xs text-red-500 mt-1 max-w-[200px] truncate" title={c.last_error}>{c.last_error}</p>
+                        )}
+                      </td>
                       <td className="px-3 py-2.5 text-center text-xs text-muted-foreground/60">{formatDate(c.last_sync_at)}</td>
                     </tr>
                   ))}

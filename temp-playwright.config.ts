@@ -10,7 +10,7 @@ export default defineConfig({
   reporter: 'list',
   
   use: {
-    baseURL: 'https://redis-cache-upgrade.preview.emergentagent.com',
+    baseURL: 'https://journey-preview-3.preview.emergentagent.com',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },

@@ -14,7 +14,7 @@ from bson import ObjectId
 import os
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://redis-cache-upgrade.preview.emergentagent.com"
+BASE_URL = "https://journey-preview-3.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

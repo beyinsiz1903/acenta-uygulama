@@ -18,7 +18,7 @@ import httpx
 
 
 # Test configuration
-BASE_URL = "https://redis-cache-upgrade.preview.emergentagent.com"
+BASE_URL = "https://journey-preview-3.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

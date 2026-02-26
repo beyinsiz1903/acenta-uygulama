@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const BASE = "https://redis-cache-upgrade.preview.emergentagent.com";
+const BASE = "https://journey-preview-3.preview.emergentagent.com";
 const UID = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 test("customer-timeline: aggregated feed with filters", async ({ request }) => {

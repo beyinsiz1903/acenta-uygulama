@@ -12,7 +12,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Configuration
-BACKEND_URL = "https://redis-cache-upgrade.preview.emergentagent.com/api"
+BACKEND_URL = "https://journey-preview-3.preview.emergentagent.com/api"
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 

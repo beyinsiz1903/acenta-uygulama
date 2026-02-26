@@ -23,7 +23,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Backend URL from frontend/.env
-BASE_URL = "https://redis-cache-upgrade.preview.emergentagent.com"
+BASE_URL = "https://journey-preview-3.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 class CRMCustomersTest:

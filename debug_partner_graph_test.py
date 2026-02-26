@@ -6,7 +6,7 @@ Debug test for Partner Graph endpoints
 import requests
 import json
 
-BASE_URL = "https://redis-cache-upgrade.preview.emergentagent.com"
+BASE_URL = "https://journey-preview-3.preview.emergentagent.com"
 
 def test_partner_graph_debug():
     # Login

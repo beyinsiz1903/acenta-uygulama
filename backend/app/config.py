@@ -58,6 +58,9 @@ if _cors_raw and _cors_raw.strip() != "*":
 elif _env in ("production", "prod", "staging"):
     CORS_ORIGINS = [
         "https://agency.syroce.com",
+        "https://www.agency.syroce.com",
+        "https://syroce.com",
+        "https://www.syroce.com",
     ]
 else:
     CORS_ORIGINS = ["*"]  # Development/preview fallback

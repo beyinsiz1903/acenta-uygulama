@@ -824,10 +824,14 @@ async def list_agencies_for_hotel(
     user=Depends(get_current_user),
     db=Depends(get_db),
 ):
-    """List agencies linked to a hotel (for connection wizard dropdown)."""
+    """List agencies for hotel sheet connection wizard dropdown.
+
+    First tries agency_hotel_links; if none, falls back to all active agencies.
+    """
     org_id = user["organization_id"]
     tenant_id = user.get("tenant_id") or org_id
 
+    # Try hotel-specific links first
     links = await db.agency_hotel_links.find({
         "organization_id": org_id,
         "hotel_id": hotel_id,
@@ -835,12 +839,20 @@ async def list_agencies_for_hotel(
     }).to_list(500)
 
     agency_ids = [lnk["agency_id"] for lnk in links]
-    if not agency_ids:
-        return []
 
-    agencies = await db.agencies.find(
-        {"_id": {"$in": agency_ids}},
-    ).to_list(500)
+    if agency_ids:
+        agencies = await db.agencies.find(
+            {"_id": {"$in": agency_ids}},
+        ).to_list(500)
+    else:
+        # Fallback: return all active agencies in the organization
+        agencies = await db.agencies.find(
+            {"organization_id": org_id, "active": {"$ne": False}},
+        ).to_list(500)
+        agency_ids = [a["_id"] for a in agencies]
+
+    if not agencies:
+        return []
 
     # Check which already have connections
     existing_conns = await db.hotel_portfolio_sources.find({

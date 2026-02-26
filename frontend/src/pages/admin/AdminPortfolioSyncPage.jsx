@@ -246,6 +246,9 @@ function ConnectionsTable({ connections, onSync, onToggle, onDelete, onViewRuns,
                 </td>
                 <td className="px-4 py-3 text-center">
                   <StatusBadge status={c.last_sync_status || c.status || "active"} />
+                  {c.last_error && (
+                    <p className="text-xs text-red-500 mt-1 max-w-[250px] truncate" title={c.last_error}>{c.last_error}</p>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-center text-xs text-muted-foreground dark:text-muted-foreground/60">
                   {formatDate(c.last_sync_at)}

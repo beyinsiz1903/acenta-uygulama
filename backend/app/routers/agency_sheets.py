@@ -12,7 +12,6 @@ Endpoints:
 from __future__ import annotations
 
 import uuid
-from typing import Any, Dict
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel

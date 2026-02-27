@@ -74,6 +74,7 @@ const StorefrontCheckoutPage = lazy(() => import("./pages/storefront/StorefrontC
 const AdminAgenciesPage = lazy(() => import("./pages/AdminAgenciesPage"));
 const AdminAgencyUsersPage = lazy(() => import("./pages/AdminAgencyUsersPage"));
 const AdminAgencyModulesPage = lazy(() => import("./pages/AdminAgencyModulesPage"));
+const AdminAllUsersPage = lazy(() => import("./pages/AdminAllUsersPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const AdminHotelsPage = lazy(() => import("./pages/AdminHotelsPage"));
 const AdminToursPage = lazy(() => import("./pages/AdminToursPage"));
@@ -302,6 +303,7 @@ function App() {
             <Route path="agencies" element={<AdminAgenciesPage />} />
             <Route path="agencies/:agencyId/users" element={<AdminAgencyUsersPage />} />
             <Route path="agency-modules" element={<AdminAgencyModulesPage />} />
+            <Route path="all-users" element={<AdminAllUsersPage />} />
             <Route path="b2b/dashboard" element={<AdminB2BDashboardPage />} />
             <Route path="b2b/marketplace" element={<AdminB2BMarketplacePage />} />
             <Route path="hotels" element={<AdminHotelsPage />} />

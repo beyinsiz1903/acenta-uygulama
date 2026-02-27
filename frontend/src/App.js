@@ -73,6 +73,7 @@ const StorefrontCheckoutPage = lazy(() => import("./pages/storefront/StorefrontC
 
 const AdminAgenciesPage = lazy(() => import("./pages/AdminAgenciesPage"));
 const AdminAgencyUsersPage = lazy(() => import("./pages/AdminAgencyUsersPage"));
+const AdminAgencyModulesPage = lazy(() => import("./pages/AdminAgencyModulesPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const AdminHotelsPage = lazy(() => import("./pages/AdminHotelsPage"));
 const AdminToursPage = lazy(() => import("./pages/AdminToursPage"));

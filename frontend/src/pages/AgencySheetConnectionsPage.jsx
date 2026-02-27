@@ -290,56 +290,73 @@ export default function AgencySheetConnectionsPage() {
           {connections.map((conn) => (
             <div
               key={conn._id}
-              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between"
+              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
               data-testid={`connection-${conn._id}`}
             >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Hotel className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <div className="font-medium text-sm">{conn.hotel_name || conn.hotel_id}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-3">
-                    <span className="flex items-center gap-1">
-                      <FileSpreadsheet className="w-3 h-3" />
-                      {conn.sheet_tab || "Sheet1"}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <ExternalLink className="w-3 h-3" />
-                      <a
-                        href={`https://docs.google.com/spreadsheets/d/${conn.sheet_id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:underline"
-                      >
-                        Sheet Ac
-                      </a>
-                    </span>
-                    <span>Olusturulma: {formatDate(conn.created_at)}</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Hotel className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-sm">{conn.hotel_name || conn.hotel_id}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-3 flex-wrap">
+                      <span className="flex items-center gap-1">
+                        <FileSpreadsheet className="w-3 h-3" />
+                        {conn.sheet_tab || "Sheet1"}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <ExternalLink className="w-3 h-3" />
+                        <a
+                          href={`https://docs.google.com/spreadsheets/d/${conn.sheet_id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:underline"
+                        >
+                          Sheet Ac
+                        </a>
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        Son Sync: {formatDate(conn.last_sync_at)}
+                      </span>
+                    </div>
                   </div>
                 </div>
+                <div className="flex items-center gap-2">
+                  <SyncStatusBadge
+                    status={conn.last_sync_status || conn.status || "active"}
+                    error={conn.last_error}
+                  />
+                  <button
+                    onClick={() => handleSync(conn._id)}
+                    disabled={syncing === conn._id}
+                    className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:opacity-50"
+                    title="Simdi Senkronize Et"
+                    data-testid={`sync-${conn._id}`}
+                  >
+                    {syncing === conn._id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Zap className="w-4 h-4" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(conn._id, conn.hotel_name)}
+                    className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    title="Baglantiyi Sil"
+                    data-testid={`delete-${conn._id}`}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span
-                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                    conn.status === "active"
-                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                      : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
-                  }`}
-                  data-testid={`status-${conn._id}`}
-                >
-                  {conn.status === "active" ? <CheckCircle2 className="w-3 h-3" /> : null}
-                  {conn.status === "active" ? "Aktif" : conn.status || "—"}
-                </span>
-                <button
-                  onClick={() => handleDelete(conn._id, conn.hotel_name)}
-                  className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                  title="Baglantiyi Sil"
-                  data-testid={`delete-${conn._id}`}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+              {/* Show error details if sync failed */}
+              {conn.last_error && (conn.last_sync_status === "error" || conn.last_sync_status === "failed") && (
+                <div className="mt-2 ml-14 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg" data-testid={`error-detail-${conn._id}`}>
+                  <span className="font-medium">Hata detayi:</span> {conn.last_error}
+                </div>
+              )}
             </div>
           ))}
         </div>

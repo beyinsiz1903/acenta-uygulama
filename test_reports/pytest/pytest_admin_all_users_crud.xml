@@ -1,1 +1,273 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="16" tests="16" time="121.360" timestamp="2026-02-27T14:08:46.577979+00:00" hostname="agent-env-e9502c6a-ebb9-4a59-9b35-5aad3278b5b0"><testcase classname="tests.test_admin_all_users_crud.TestGetAllUsers" name="test_get_all_users_returns_200" time="121.281"><skipped type="pytest.skip" message="Rate limited on agency login">/app/backend/tests/test_admin_all_users_crud.py:78: Rate limited on agency login</skipped></testcase><testcase classname="tests.test_admin_all_users_crud.TestGetAllUsers" name="test_get_all_users_has_required_fields" time="0.000"><skipped type="pytest.skip" message="Rate limited on agency login">/app/backend/tests/test_admin_all_users_crud.py:90: Rate limited on agency login</skipped></testcase><testcase classname="tests.test_admin_all_users_crud.TestGetAllUsers" name="test_get_all_users_requires_auth" time="0.000"><skipped type="pytest.skip" message="Rate limited on agency login">/app/backend/tests/test_admin_all_users_crud.py:109: Rate limited on agency login</skipped></testcase><testcase classname="tests.test_admin_all_users_crud.TestGetAllUsers" name="test_get_all_users_requires_admin_role" time="0.000"><skipped type="pytest.skip" message="Rate limited on agency login">/app/backend/tests/test_admin_all_users_crud.py:115: Rate limited on agency login</skipped></testcase><testcase classname="tests.test_admin_all_users_crud.TestCreateUser" name="test_create_user_success" time="0.000"><skipped type="pytest.skip" message="Rate limited on agency login">/app/backend/tests/test_admin_all_users_crud.py:129: Rate limited on agency login</skipped></testcase><testcase classname="tests.test_admin_all_users_crud.TestCreateUser" name="test_create_user_duplicate_email_returns_409" time="0.000"><skipped type="pytest.skip" message="Rate limited on agency login">/app/backend/tests/test_admin_all_users_crud.py:165: Rate limited on agency login</skipped></testcase><testcase classname="tests.test_admin_all_users_crud.TestCreateUser" name="test_create_user_with_admin_role" time="0.000"><skipped type="pytest.skip" message="Rate limited on agency login">/app/backend/tests/test_admin_all_users_crud.py:203: Rate limited on agency login</skipped></testcase><testcase classname="tests.test_admin_all_users_crud.TestCreateUser" name="test_create_user_invalid_agency_returns_404" time="0.000"><skipped type="pytest.skip" message="Rate limited on agency login">/app/backend/tests/test_admin_all_users_crud.py:232: Rate limited on agency login</skipped></testcase><testcase classname="tests.test_admin_all_users_crud.TestUpdateUser" name="test_update_user_name" time="0.000"><skipped type="pytest.skip" message="Rate limited on agency login">/app/backend/tests/test_admin_all_users_crud.py:255: Rate limited on agency login</skipped></testcase><testcase classname="tests.test_admin_all_users_crud.TestUpdateUser" name="test_update_user_role" time="0.000"><skipped type="pytest.skip" message="Rate limited on agency login">/app/backend/tests/test_admin_all_users_crud.py:302: Rate limited on agency login</skipped></testcase><testcase classname="tests.test_admin_all_users_crud.TestUpdateUser" name="test_update_user_status" time="0.000"><skipped type="pytest.skip" message="Rate limited on agency login">/app/backend/tests/test_admin_all_users_crud.py:339: Rate limited on agency login</skipped></testcase><testcase classname="tests.test_admin_all_users_crud.TestUpdateUser" name="test_update_user_agency_id" time="0.000"><skipped type="pytest.skip" message="Rate limited on agency login">/app/backend/tests/test_admin_all_users_crud.py:386: Rate limited on agency login</skipped></testcase><testcase classname="tests.test_admin_all_users_crud.TestUpdateUser" name="test_update_user_email_duplicate_returns_409" time="0.000"><skipped type="pytest.skip" message="Rate limited on agency login">/app/backend/tests/test_admin_all_users_crud.py:424: Rate limited on agency login</skipped></testcase><testcase classname="tests.test_admin_all_users_crud.TestUpdateUser" name="test_update_nonexistent_user_returns_404" time="0.000"><skipped type="pytest.skip" message="Rate limited on agency login">/app/backend/tests/test_admin_all_users_crud.py:459: Rate limited on agency login</skipped></testcase><testcase classname="tests.test_admin_all_users_crud.TestDeleteUser" name="test_delete_user_success" time="0.000"><skipped type="pytest.skip" message="Rate limited on agency login">/app/backend/tests/test_admin_all_users_crud.py:475: Rate limited on agency login</skipped></testcase><testcase classname="tests.test_admin_all_users_crud.TestDeleteUser" name="test_delete_nonexistent_user_returns_404" time="0.001"><skipped type="pytest.skip" message="Rate limited on agency login">/app/backend/tests/test_admin_all_users_crud.py:515: Rate limited on agency login</skipped></testcase></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="16" failures="0" skipped="0" tests="16" time="10.133" timestamp="2026-02-27T14:12:30.159794+00:00" hostname="agent-env-e9502c6a-ebb9-4a59-9b35-5aad3278b5b0"><testcase classname="tests.test_admin_all_users_crud.TestGetAllUsers" name="test_get_all_users_returns_200" time="1.046"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;user_not_found&quot;,&quot;message&quot;:&quot;User not found for token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:417: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"user_not_found","message":"User not found for token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_admin_all_users_crud.TestGetAllUsers" name="test_get_all_users_has_required_fields" time="0.254"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;user_not_found&quot;,&quot;message&quot;:&quot;User not found for token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:417: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"user_not_found","message":"User not found for token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_admin_all_users_crud.TestGetAllUsers" name="test_get_all_users_requires_auth" time="0.256"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;user_not_found&quot;,&quot;message&quot;:&quot;User not found for token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:417: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"user_not_found","message":"User not found for token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_admin_all_users_crud.TestGetAllUsers" name="test_get_all_users_requires_admin_role" time="0.251"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;user_not_found&quot;,&quot;message&quot;:&quot;User not found for token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:417: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"user_not_found","message":"User not found for token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_admin_all_users_crud.TestCreateUser" name="test_create_user_success" time="0.251"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;user_not_found&quot;,&quot;message&quot;:&quot;User not found for token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:417: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"user_not_found","message":"User not found for token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_admin_all_users_crud.TestCreateUser" name="test_create_user_duplicate_email_returns_409" time="0.254"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;user_not_found&quot;,&quot;message&quot;:&quot;User not found for token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:417: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"user_not_found","message":"User not found for token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_admin_all_users_crud.TestCreateUser" name="test_create_user_with_admin_role" time="0.256"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;user_not_found&quot;,&quot;message&quot;:&quot;User not found for token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:417: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"user_not_found","message":"User not found for token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_admin_all_users_crud.TestCreateUser" name="test_create_user_invalid_agency_returns_404" time="0.255"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;user_not_found&quot;,&quot;message&quot;:&quot;User not found for token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:417: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"user_not_found","message":"User not found for token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_admin_all_users_crud.TestUpdateUser" name="test_update_user_name" time="0.256"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;user_not_found&quot;,&quot;message&quot;:&quot;User not found for token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:417: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"user_not_found","message":"User not found for token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_admin_all_users_crud.TestUpdateUser" name="test_update_user_role" time="0.263"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;user_not_found&quot;,&quot;message&quot;:&quot;User not found for token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:417: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"user_not_found","message":"User not found for token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_admin_all_users_crud.TestUpdateUser" name="test_update_user_status" time="0.253"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;user_not_found&quot;,&quot;message&quot;:&quot;User not found for token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:417: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"user_not_found","message":"User not found for token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_admin_all_users_crud.TestUpdateUser" name="test_update_user_agency_id" time="0.259"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;user_not_found&quot;,&quot;message&quot;:&quot;User not found for token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:417: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"user_not_found","message":"User not found for token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_admin_all_users_crud.TestUpdateUser" name="test_update_user_email_duplicate_returns_409" time="0.252"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;user_not_found&quot;,&quot;message&quot;:&quot;User not found for token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:417: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"user_not_found","message":"User not found for token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_admin_all_users_crud.TestUpdateUser" name="test_update_nonexistent_user_returns_404" time="0.245"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;user_not_found&quot;,&quot;message&quot;:&quot;User not found for token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:417: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"user_not_found","message":"User not found for token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_admin_all_users_crud.TestDeleteUser" name="test_delete_user_success" time="0.260"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;user_not_found&quot;,&quot;message&quot;:&quot;User not found for token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:417: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"user_not_found","message":"User not found for token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_admin_all_users_crud.TestDeleteUser" name="test_delete_nonexistent_user_returns_404" time="3.849"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;user_not_found&quot;,&quot;message&quot;:&quot;User not found for token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:417: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"user_not_found","message":"User not found for token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase></testsuite></testsuites>

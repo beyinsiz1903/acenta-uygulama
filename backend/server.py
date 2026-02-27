@@ -238,6 +238,7 @@ async def lifespan(app: FastAPI):
         await ensure_marketplace_indexes(db)
         from app.indexes.marketplace_indexes import ensure_offers_indexes
         await ensure_offers_indexes(db)
+        await ensure_seed_indexes(db)
     except Exception as e:
         import logging
         logging.getLogger(__name__).warning("Index creation failed (non-fatal, may lack permissions): %s", str(e)[:200])

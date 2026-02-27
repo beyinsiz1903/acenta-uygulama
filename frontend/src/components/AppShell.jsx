@@ -163,6 +163,7 @@ const ADMIN_GROUPED_NAV = [
     group: "YÖNETİM",
     items: [
       { to: "/app/admin/agencies", label: "Acentalar", icon: Building2, modeKey: "acentalar", minMode: "pro" },
+      { to: "/app/admin/agency-modules", label: "Acente Modulleri", icon: CheckSquare, modeKey: "acente_modulleri", minMode: "pro" },
       { to: "/app/admin/hotels", label: "Oteller", icon: Hotel, modeKey: "oteller", minMode: "lite" },
       { to: "/app/admin/tours", label: "Turlar", icon: Globe, modeKey: "turlar", minMode: "lite" },
       { to: "/app/admin/pricing", label: "Fiyatlandırma", icon: Tag, modeKey: "fiyatlandirma", minMode: "pro" },

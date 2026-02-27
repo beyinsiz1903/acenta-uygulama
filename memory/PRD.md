@@ -14,6 +14,11 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - `agency_admin` / `agency_agent` - B2B agency portal
 - `hotel_admin` / `hotel_staff` - Hotel portal
 
+### Deployment Fixes (Feb 27, 2026)
+- **Fix:** Removed unused `serialize_doc` import from `agency_profile.py` (Ruff lint CI failure)
+- **Fix:** Simplified `_db_name()` in `db.py` — removed dual-source DB name logic (DB_NAME env + MONGO_URL path extraction) that caused `INVALID_DATABASE_NAME` error during MongoDB Atlas migration (name was duplicated with comma)
+- **Fix:** Removed comments from `backend/.env` to prevent deployment parser issues
+
 ## What's Been Implemented
 
 ### Google Sheets Integration (Feb 2026)

@@ -228,10 +228,7 @@ async def ensure_seed_indexes(db) -> None:
     await _safe_create(db.request_logs, [("status_code", 1), ("timestamp", 1)])
 
     # Performance indexes (B2)
-    try:
-        from app.indexes.perf_indexes import ensure_perf_indexes
-        await ensure_perf_indexes(db)
-    except Exception:
-        pass
+    from app.indexes.perf_indexes import ensure_perf_indexes
+    await ensure_perf_indexes(db)
 
-    logger.info("All seed indexes ensured (defensive mode)")
+    logger.info("All seed indexes ensured")

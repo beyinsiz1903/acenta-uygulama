@@ -486,3 +486,245 @@ async def list_all_agency_users(
         ))
 
     return result
+
+
+# ── Create User (Super Admin) ────────────────────────────
+class CreateUserIn(BaseModel):
+    email: str
+    name: str
+    password: str = Field(..., min_length=6)
+    agency_id: str
+    role: str = Field(..., pattern="^(agency_admin|agency_agent)$")
+
+
+@all_users_router.post("/all-users", dependencies=[AdminDep], response_model=AllUsersUserOut)
+async def create_user(
+    payload: CreateUserIn,
+    request: Request,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+) -> AllUsersUserOut:
+    """Super admin creates a new agency user."""
+    org_id = user["organization_id"]
+
+    agency = await _load_agency_by_id(db, org_id, payload.agency_id)
+    if not agency:
+        raise AppError(404, "agency_not_found", "Acenta bulunamadi")
+
+    email = payload.email.strip().lower()
+    existing = await db.users.find_one({"organization_id": org_id, "email": email})
+    if existing:
+        raise AppError(409, "email_exists", "Bu e-posta adresi zaten kullaniliyor")
+
+    doc = {
+        "organization_id": org_id,
+        "email": email,
+        "name": payload.name.strip(),
+        "password_hash": hash_password(payload.password),
+        "roles": _apply_agency_role([], payload.role),
+        "agency_id": agency["_id"],
+        "is_active": True,
+        "created_at": now_utc(),
+        "updated_at": now_utc(),
+    }
+    ins = await db.users.insert_one(doc)
+    user_doc = await db.users.find_one({"_id": ins.inserted_id})
+
+    aid = str(user_doc["agency_id"]) if user_doc.get("agency_id") else None
+    agency_name = agency.get("name", "")
+
+    try:
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={
+                "actor_type": "user",
+                "actor_id": user.get("id") or user.get("email"),
+                "email": user.get("email"),
+                "roles": user.get("roles") or [],
+            },
+            request=request,
+            action="user_created",
+            target_type="agency_user",
+            target_id=str(user_doc["_id"]),
+            before=None,
+            after=audit_snapshot("agency_user", user_doc),
+            meta={"email": email, "agency_id": aid, "agency_name": agency_name},
+        )
+    except Exception:
+        pass
+
+    return AllUsersUserOut(
+        id=str(user_doc["_id"]),
+        email=user_doc.get("email", ""),
+        name=user_doc.get("name"),
+        roles=list(user_doc.get("roles") or []),
+        status="active",
+        agency_id=aid,
+        agency_name=agency_name,
+        created_at=user_doc["created_at"].isoformat() if user_doc.get("created_at") else None,
+        updated_at=user_doc["updated_at"].isoformat() if user_doc.get("updated_at") else None,
+        last_login_at=None,
+    )
+
+
+# ── Update User (Super Admin) ────────────────────────────
+class UpdateUserIn(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    role: Optional[str] = Field(default=None, pattern="^(agency_admin|agency_agent)$")
+    status: Optional[str] = Field(default=None, pattern="^(active|disabled)$")
+    agency_id: Optional[str] = None
+
+
+@all_users_router.put("/all-users/{user_id}", dependencies=[AdminDep], response_model=AllUsersUserOut)
+async def update_user(
+    user_id: str,
+    payload: UpdateUserIn,
+    request: Request,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+) -> AllUsersUserOut:
+    """Super admin updates an agency user."""
+    org_id = user["organization_id"]
+
+    user_doc = await _load_user_by_id(db, org_id, user_id)
+    if not user_doc:
+        raise AppError(404, "user_not_found", "Kullanici bulunamadi")
+
+    before_snapshot = audit_snapshot("agency_user", user_doc)
+    updates: Dict[str, Any] = {}
+
+    if payload.name is not None and payload.name.strip():
+        updates["name"] = payload.name.strip()
+
+    if payload.email is not None and payload.email.strip():
+        new_email = payload.email.strip().lower()
+        if new_email != user_doc.get("email"):
+            dup = await db.users.find_one({"organization_id": org_id, "email": new_email, "_id": {"$ne": user_doc["_id"]}})
+            if dup:
+                raise AppError(409, "email_exists", "Bu e-posta adresi zaten kullaniliyor")
+            updates["email"] = new_email
+
+    if payload.role is not None:
+        new_roles = _apply_agency_role(user_doc.get("roles") or [], payload.role)
+        updates["roles"] = new_roles
+
+    if payload.status is not None:
+        updates["is_active"] = payload.status == "active"
+
+    if payload.agency_id is not None:
+        new_agency = await _load_agency_by_id(db, org_id, payload.agency_id)
+        if not new_agency:
+            raise AppError(404, "agency_not_found", "Acenta bulunamadi")
+        updates["agency_id"] = new_agency["_id"]
+
+    if not updates:
+        # Return current state
+        pass
+    else:
+        updates["updated_at"] = now_utc()
+        await db.users.update_one(
+            {"_id": user_doc["_id"], "organization_id": org_id},
+            {"$set": updates},
+        )
+
+    updated = await _load_user_by_id(db, org_id, user_id)
+
+    # Agency name lookup
+    agency_docs = await db.agencies.find(
+        {"organization_id": org_id},
+        {"_id": 1, "name": 1},
+    ).to_list(1000)
+    agency_map = {str(a["_id"]): a.get("name", "") for a in agency_docs}
+    aid = str(updated["agency_id"]) if updated.get("agency_id") else None
+
+    try:
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={
+                "actor_type": "user",
+                "actor_id": user.get("id") or user.get("email"),
+                "email": user.get("email"),
+                "roles": user.get("roles") or [],
+            },
+            request=request,
+            action="user_updated",
+            target_type="agency_user",
+            target_id=str(updated["_id"]),
+            before=before_snapshot,
+            after=audit_snapshot("agency_user", updated),
+            meta={"email": updated.get("email"), "agency_id": aid},
+        )
+    except Exception:
+        pass
+
+    return AllUsersUserOut(
+        id=str(updated["_id"]),
+        email=updated.get("email", ""),
+        name=updated.get("name"),
+        roles=list(updated.get("roles") or []),
+        status="active" if updated.get("is_active", True) else "disabled",
+        agency_id=aid,
+        agency_name=agency_map.get(aid, "") if aid else None,
+        created_at=updated["created_at"].isoformat() if updated.get("created_at") else None,
+        updated_at=updated["updated_at"].isoformat() if updated.get("updated_at") else None,
+        last_login_at=updated["last_login_at"].isoformat() if updated.get("last_login_at") else None,
+    )
+
+
+# ── Delete User (Super Admin) ────────────────────────────
+class DeleteUserOut(BaseModel):
+    ok: bool
+    deleted_id: str
+
+
+@all_users_router.delete("/all-users/{user_id}", dependencies=[AdminDep], response_model=DeleteUserOut)
+async def delete_user(
+    user_id: str,
+    request: Request,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+) -> DeleteUserOut:
+    """Super admin hard-deletes an agency user."""
+    org_id = user["organization_id"]
+
+    user_doc = await _load_user_by_id(db, org_id, user_id)
+    if not user_doc:
+        raise AppError(404, "user_not_found", "Kullanici bulunamadi")
+
+    # Prevent self-deletion
+    actor_id = user.get("id") or str(user.get("_id", ""))
+    if str(user_doc["_id"]) == actor_id:
+        raise AppError(400, "cannot_delete_self", "Kendi hesabinizi silemezsiniz")
+
+    before_snapshot = audit_snapshot("agency_user", user_doc)
+
+    await db.users.delete_one({"_id": user_doc["_id"], "organization_id": org_id})
+
+    try:
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={
+                "actor_type": "user",
+                "actor_id": user.get("id") or user.get("email"),
+                "email": user.get("email"),
+                "roles": user.get("roles") or [],
+            },
+            request=request,
+            action="user_deleted",
+            target_type="agency_user",
+            target_id=str(user_doc["_id"]),
+            before=before_snapshot,
+            after=None,
+            meta={
+                "email": user_doc.get("email"),
+                "agency_id": str(user_doc.get("agency_id")) if user_doc.get("agency_id") else None,
+            },
+        )
+    except Exception:
+        pass
+
+    return DeleteUserOut(ok=True, deleted_id=str(user_doc["_id"]))

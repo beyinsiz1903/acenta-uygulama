@@ -203,6 +203,46 @@ async def connect_sheet(
     return result
 
 
+# ── Sync Now ──────────────────────────────────────────────
+
+@router.post("/sync/{connection_id}", dependencies=[AgencyDep])
+async def sync_connection(
+    connection_id: str,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Trigger manual sync for one of this agency's connections."""
+    agency_id = _get_agency_id(user)
+    tenant_id = user.get("tenant_id") or user["organization_id"]
+
+    conn = await db.hotel_portfolio_sources.find_one({
+        "_id": connection_id,
+        "tenant_id": tenant_id,
+        "agency_id": agency_id,
+    })
+    if not conn:
+        raise AppError(404, "not_found", "Baglanti bulunamadi.")
+
+    if not is_configured():
+        return {
+            "status": "not_configured",
+            "configured": False,
+            "message": "Google Sheets yapilandirilmamis. Admin panelinden Service Account JSON'u girebilirsiniz.",
+        }
+
+    result = await run_hotel_sheet_sync(db, conn, trigger="manual")
+    return {
+        "status": result.get("status", "unknown"),
+        "run_id": result.get("_id"),
+        "rows_read": result.get("rows_read", 0),
+        "rows_changed": result.get("rows_changed", 0),
+        "upserted": result.get("upserted", 0),
+        "errors_count": result.get("errors_count", 0),
+        "duration_ms": result.get("duration_ms", 0),
+        "configured": True,
+    }
+
+
 # ── Delete Connection ─────────────────────────────────────
 
 @router.delete("/connections/{connection_id}", dependencies=[AgencyDep])

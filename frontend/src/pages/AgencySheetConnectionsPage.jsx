@@ -114,6 +114,27 @@ export default function AgencySheetConnectionsPage() {
     }
   };
 
+  const handleSync = async (connId) => {
+    setSyncing(connId);
+    setError(null);
+    try {
+      const res = await api.post(`/agency/sheets/sync/${connId}`);
+      if (res.data?.status === "not_configured") {
+        setError("Google Sheets yapilandirilmamis. Lutfen admin ile iletisime gecin.");
+      } else if (res.data?.status === "success" || res.data?.status === "no_change") {
+        setSuccess(`Sync tamamlandi (${res.data.upserted || 0} satir guncellendi)`);
+        setTimeout(() => setSuccess(null), 4000);
+      } else if (res.data?.status === "failed") {
+        setError("Sync basarisiz oldu. Detaylar icin duruma tiklayin.");
+      }
+      await loadData();
+    } catch (e) {
+      setError(e.response?.data?.error?.message || "Sync hatasi");
+    } finally {
+      setSyncing(null);
+    }
+  };
+
   const availableHotels = hotels.filter((h) => !h.connected);
 
   if (loading) {

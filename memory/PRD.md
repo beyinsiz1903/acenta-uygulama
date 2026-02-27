@@ -17,46 +17,35 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 ## What's Been Implemented
 
 ### App Store Preparation (Completed)
-- Screenshots for iPhone, iPad, Apple Watch
-- Store metadata (Turkish) for App Store & Google Play
+- Screenshots, store metadata, privacy policy, app icon
 
 ### Session Persistence (Completed)
-- Access token: 8 hours, Refresh token: 90 days
+- Access token: 8h, Refresh token: 90d
 
 ### CORS Fix (Completed)
 - Backend CORS configured for `agency.syroce.com`
 
 ### Google Sheets Integration (Feb 2026)
-- Admin Panel: Portfolio sync dashboard, hotel-level + agency-level connections
-- Agency Portal: Self-service sheet connection management
-  - Route: `/app/agency/sheets`, Backend: `/api/agency/sheets/*`
-  - Manual sync, sync status badge, error details
+- Admin + Agency portal sheet connections
+- Manual sync, sync status badges, error details
 
-### Root Directory Cleanup (Feb 27, 2026)
-- Removed ~220+ stale test/debug files
-
-### Seed Refactoring (Feb 27, 2026)
-- Extracted indexes from seed.py → `app/indexes/seed_indexes.py`
-- seed.py: data-only, modular (782 lines)
-- Orphan org cleaned up (slug=default assigned to active org)
-
-### Production DB Permissions (Feb 27, 2026)
-- `seed_indexes.py`: `_safe_create` defensive pattern (OperationFailure handling)
-- Moved ~120 lines of inline index creation from server.py → seed_indexes.py
-- server.py reduced from 899 → 779 lines
-- All index files now handle production MongoDB without createIndex permission
-
-### Cache Warmup Expansion (Feb 27, 2026)
-- Expanded from 3 to 7 data types:
-  - Existing: tenant features, CMS nav, campaigns
-  - NEW: agencies list, hotels list, FX rates, pricing rules
-- All with appropriate TTLs (300s-600s)
+### Infrastructure Improvements (Feb 27, 2026)
+- **Root cleanup:** ~220+ stale files removed
+- **Seed refactoring:** indexes → seed_indexes.py, data → seed.py
+- **Orphan org cleanup:** slug=default on active org
+- **Production DB permissions:** _safe_create defensive pattern
+- **Cache warmup expansion:** +agencies, hotels, FX rates, pricing rules
+- **Seed on startup:** ensure_seed_data() called in server.py lifespan
+  - Creates 3 demo hotels (Istanbul, Antalya, Izmir)
+  - Creates 2+ agencies with hotel links
+  - Creates rooms, rate plans, inventory, users, finance accounts
+  - Fully idempotent — safe to run repeatedly
 
 ## Key Files
 - `backend/app/indexes/seed_indexes.py` - All indexes (defensive _safe_create)
-- `backend/app/seed.py` - Data-only seeding
+- `backend/app/seed.py` - Data-only seeding (called on startup)
 - `backend/app/services/cache_warmup.py` - Expanded cache warmup
-- `backend/server.py` - Streamlined startup
+- `backend/server.py` - Streamlined startup with seed + indexes
 
 ## Credentials
 | Portal | Email | Password | Role |
@@ -65,6 +54,5 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 | Agency | agent@acenta.test | agent123 | Agency Admin |
 
 ## Backlog
-- P1: Call ensure_seed_data() on startup + create hotels/links for existing org
 - P1: Google Sheets sync testing (requires actual Service Account JSON)
 - P2: Apple Watch UI

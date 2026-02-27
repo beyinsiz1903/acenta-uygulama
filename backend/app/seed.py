@@ -97,36 +97,42 @@ async def ensure_seed_data() -> None:
         })
 
     # ══════════════════════════════════════════════════════════
-    # 4. Agencies
+    # 4. Agencies (ensure at least 2 for demo)
     # ══════════════════════════════════════════════════════════
     agencies = await db.agencies.find({"organization_id": org_id}).to_list(10)
-    if len(agencies) == 0:
+    if len(agencies) < 2:
         now = now_utc()
-        a1 = {
-            "_id": str(uuid.uuid4()),
-            "organization_id": org_id,
-            "name": "Demo Acente A",
-            "is_active": True,
-            "active": True,
-            "settings": {"selling_currency": "TRY"},
-            "created_at": now,
-            "updated_at": now,
-            "created_by": DEFAULT_ADMIN_EMAIL,
-            "updated_by": DEFAULT_ADMIN_EMAIL,
-        }
-        a2 = {
-            "_id": str(uuid.uuid4()),
-            "organization_id": org_id,
-            "name": "Demo Acente B",
-            "is_active": True,
-            "active": True,
-            "created_at": now,
-            "updated_at": now,
-            "created_by": DEFAULT_ADMIN_EMAIL,
-            "updated_by": DEFAULT_ADMIN_EMAIL,
-        }
-        await db.agencies.insert_many([a1, a2])
-        agencies = [a1, a2]
+        if not any(a.get("name") == "Demo Acente A" for a in agencies):
+            a1 = {
+                "_id": str(uuid.uuid4()),
+                "organization_id": org_id,
+                "name": "Demo Acente A",
+                "is_active": True,
+                "active": True,
+                "settings": {"selling_currency": "TRY"},
+                "created_at": now,
+                "updated_at": now,
+                "created_by": DEFAULT_ADMIN_EMAIL,
+                "updated_by": DEFAULT_ADMIN_EMAIL,
+            }
+            await db.agencies.insert_one(a1)
+            agencies.append(a1)
+        if not any(a.get("name") == "Demo Acente B" for a in agencies):
+            a2 = {
+                "_id": str(uuid.uuid4()),
+                "organization_id": org_id,
+                "name": "Demo Acente B",
+                "is_active": True,
+                "active": True,
+                "created_at": now,
+                "updated_at": now,
+                "created_by": DEFAULT_ADMIN_EMAIL,
+                "updated_by": DEFAULT_ADMIN_EMAIL,
+            }
+            await db.agencies.insert_one(a2)
+            agencies.append(a2)
+        # Re-fetch to get consistent order
+        agencies = await db.agencies.find({"organization_id": org_id}).to_list(10)
 
     # ══════════════════════════════════════════════════════════
     # 5. Hotels

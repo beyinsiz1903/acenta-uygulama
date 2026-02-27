@@ -10,6 +10,7 @@ import {
   ClipboardList, Tag, Megaphone, Network, DollarSign,
   Scale, Activity, Eye, Zap, BookOpen, Search,
   Palette, Download, Calendar, Upload, RefreshCw, FileSpreadsheet,
+  CheckSquare,
 } from "lucide-react";
 
 import { Button } from "./ui/button";

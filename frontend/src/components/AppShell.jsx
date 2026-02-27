@@ -265,6 +265,7 @@ function AppShellInner() {
   const [collapsed, setCollapsed] = useState(() => loadCollapsed());
   const [notifOpen, setNotifOpen] = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [agencyAllowedModules, setAgencyAllowedModules] = useState(null); // null = not loaded, [] = no restrictions
 
   // Enterprise White-Label branding
   const [branding, setBranding] = useState(null);

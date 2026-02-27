@@ -19,7 +19,6 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 ### App Store Preparation (Completed)
 - Screenshots for iPhone, iPad, Apple Watch
 - Store metadata (Turkish) for App Store & Google Play
-- Privacy Policy and Terms of Service pages
 
 ### Session Persistence (Completed)
 - Access token: 8 hours, Refresh token: 90 days
@@ -31,26 +30,33 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - Admin Panel: Portfolio sync dashboard, hotel-level + agency-level connections
 - Agency Portal: Self-service sheet connection management
   - Route: `/app/agency/sheets`, Backend: `/api/agency/sheets/*`
-  - Manual sync trigger: `POST /api/agency/sheets/sync/{connection_id}`
-  - Sync status display with SyncStatusBadge + error details
+  - Manual sync, sync status badge, error details
 
 ### Root Directory Cleanup (Feb 27, 2026)
-- Removed ~220+ stale test/debug files from root directory
+- Removed ~220+ stale test/debug files
 
 ### Seed Refactoring (Feb 27, 2026)
-- **Extracted ~80 index definitions** from `seed.py` into `app/indexes/seed_indexes.py`
-- **`seed_indexes.py`** (241 lines): All collection indexes, called at startup via server.py lifespan
-- **`seed.py`** (782 lines): Only data seeding, modular with numbered sections
-- Original `seed.py` was 1167 lines mixing indexes + data in one function
+- Extracted indexes from seed.py → `app/indexes/seed_indexes.py`
+- seed.py: data-only, modular (782 lines)
+- Orphan org cleaned up (slug=default assigned to active org)
+
+### Production DB Permissions (Feb 27, 2026)
+- `seed_indexes.py`: `_safe_create` defensive pattern (OperationFailure handling)
+- Moved ~120 lines of inline index creation from server.py → seed_indexes.py
+- server.py reduced from 899 → 779 lines
+- All index files now handle production MongoDB without createIndex permission
+
+### Cache Warmup Expansion (Feb 27, 2026)
+- Expanded from 3 to 7 data types:
+  - Existing: tenant features, CMS nav, campaigns
+  - NEW: agencies list, hotels list, FX rates, pricing rules
+- All with appropriate TTLs (300s-600s)
 
 ## Key Files
-- `backend/app/indexes/seed_indexes.py` - **NEW** Extracted seed indexes
-- `backend/app/seed.py` - Refactored data-only seeding
-- `backend/server.py` - Calls seed_indexes at startup
-- `backend/app/routers/agency_sheets.py` - Agency sheet endpoints
-- `backend/app/routers/admin_sheets.py` - Admin sheet endpoints
-- `frontend/src/pages/AgencySheetConnectionsPage.jsx` - Agency sheet UI
-- `frontend/src/pages/admin/AdminPortfolioSyncPage.jsx` - Admin sync dashboard
+- `backend/app/indexes/seed_indexes.py` - All indexes (defensive _safe_create)
+- `backend/app/seed.py` - Data-only seeding
+- `backend/app/services/cache_warmup.py` - Expanded cache warmup
+- `backend/server.py` - Streamlined startup
 
 ## Credentials
 | Portal | Email | Password | Role |
@@ -61,7 +67,4 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 ## Backlog
 - P1: Call ensure_seed_data() on startup + create hotels/links for existing org
 - P1: Google Sheets sync testing (requires actual Service Account JSON)
-- P2: Production DB permissions (createIndex)
-- P2: Cache warm-up expansion
 - P2: Apple Watch UI
-- P3: Orphan org cleanup ("Varsayilan Acenta" with slug=default)

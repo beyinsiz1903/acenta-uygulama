@@ -16,36 +16,33 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 
 ## What's Been Implemented
 
-### App Store Preparation (Completed)
-- Screenshots, store metadata, privacy policy, app icon
-
-### Session Persistence (Completed)
-- Access token: 8h, Refresh token: 90d
-
-### CORS Fix (Completed)
-- Backend CORS configured for `agency.syroce.com`
-
 ### Google Sheets Integration (Feb 2026)
 - Admin + Agency portal sheet connections
 - Manual sync, sync status badges, error details
 
-### Infrastructure Improvements (Feb 27, 2026)
-- **Root cleanup:** ~220+ stale files removed
-- **Seed refactoring:** indexes → seed_indexes.py, data → seed.py
-- **Orphan org cleanup:** slug=default on active org
-- **Production DB permissions:** _safe_create defensive pattern
-- **Cache warmup expansion:** +agencies, hotels, FX rates, pricing rules
-- **Seed on startup:** ensure_seed_data() called in server.py lifespan
-  - Creates 3 demo hotels (Istanbul, Antalya, Izmir)
-  - Creates 2+ agencies with hotel links
-  - Creates rooms, rate plans, inventory, users, finance accounts
-  - Fully idempotent — safe to run repeatedly
+### Infrastructure (Feb 27, 2026)
+- Root cleanup, seed refactoring, orphan org cleanup
+- Production DB permissions (_safe_create)
+- Cache warmup expansion (+agencies, hotels, FX, pricing rules)
+- Seed on startup with idempotent data creation
+
+### Per-Agency Module Management (Feb 27, 2026)
+- **Backend:** GET/PUT `/api/admin/agencies/{id}/modules` — store allowed_modules per agency
+- **Backend:** GET `/api/agency/profile` — agency users fetch their allowed modules
+- **Admin UI:** `/app/admin/agency-modules` — checkbox grid to configure tabs per agency
+- **Sidebar:** "Acente Modulleri" menu item under YONETIM
+
+### Branding Restriction (Feb 27, 2026)
+- **Backend:** `can_edit_name` flag in whitelabel-settings response (true only for super_admin)
+- **Backend:** company_name update silently ignored for non-super_admin
+- **Frontend:** company_name input readonly with message for non-super_admin users
 
 ## Key Files
-- `backend/app/indexes/seed_indexes.py` - All indexes (defensive _safe_create)
-- `backend/app/seed.py` - Data-only seeding (called on startup)
-- `backend/app/services/cache_warmup.py` - Expanded cache warmup
-- `backend/server.py` - Streamlined startup with seed + indexes
+- `backend/app/routers/admin_agencies.py` - Agency CRUD + module management
+- `backend/app/routers/agency_profile.py` - Agency profile endpoint
+- `backend/app/routers/enterprise_whitelabel.py` - Branding with role restriction
+- `frontend/src/pages/AdminAgencyModulesPage.jsx` - Module config UI
+- `frontend/src/pages/AdminBrandingPage.jsx` - Branding with canEditName
 
 ## Credentials
 | Portal | Email | Password | Role |
@@ -54,5 +51,5 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 | Agency | agent@acenta.test | agent123 | Agency Admin |
 
 ## Backlog
-- P1: Google Sheets sync testing (requires actual Service Account JSON)
+- P1: Google Sheets sync testing (requires Service Account JSON)
 - P2: Apple Watch UI

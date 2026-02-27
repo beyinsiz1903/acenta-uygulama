@@ -275,20 +275,7 @@ async def lifespan(app: FastAPI):
         import logging
         logging.getLogger(__name__).warning("Service index creation failed (non-fatal): %s", str(e)[:200])
 
-    # GTM + CRM indexes
-    try:
-        await db.demo_seed_runs.create_index("tenant_id", unique=True)
-        await db.rule_runs.create_index([("tenant_id", 1), ("rule_key", 1), ("date", 1)], unique=True)
-        await db.crm_deals.create_index([("organization_id", 1), ("stage", 1)])
-        await db.crm_deals.create_index([("organization_id", 1), ("owner_user_id", 1)])
-        await db.crm_tasks.create_index([("organization_id", 1), ("owner_user_id", 1), ("status", 1)])
-        await db.crm_tasks.create_index([("organization_id", 1), ("due_date", 1)])
-        await db.crm_notes.create_index([("organization_id", 1), ("entity_type", 1), ("entity_id", 1)])
-        await db.activation_checklist.create_index("tenant_id", unique=True)
-        await db.upgrade_requests.create_index([("tenant_id", 1), ("status", 1)])
-    except Exception as e:
-        import logging
-        logging.getLogger(__name__).warning("GTM/CRM index creation warning: %s", e)
+    # GTM + CRM indexes — moved to seed_indexes.py
 
     # Start billing cron scheduler
     from app.billing.scheduler import start_scheduler, stop_scheduler

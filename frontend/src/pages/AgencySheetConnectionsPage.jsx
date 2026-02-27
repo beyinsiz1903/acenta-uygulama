@@ -17,6 +17,30 @@ function formatDate(d) {
   } catch { return "—"; }
 }
 
+function SyncStatusBadge({ status, error }) {
+  const map = {
+    success: { bg: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400", icon: CheckCircle2, label: "Basarili" },
+    no_change: { bg: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400", icon: CheckCircle2, label: "Degisiklik Yok" },
+    error: { bg: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400", icon: XCircle, label: "Hata" },
+    failed: { bg: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400", icon: XCircle, label: "Basarisiz" },
+    not_configured: { bg: "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400", icon: WifiOff, label: "Yapilandirilmamis" },
+    running: { bg: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400", icon: Loader2, label: "Calisiyor" },
+    active: { bg: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400", icon: CheckCircle2, label: "Aktif" },
+  };
+  const s = map[status] || map.active;
+  const Icon = s.icon;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${s.bg} cursor-default`}
+      title={error || ""}
+      data-testid={`sync-status-badge-${status}`}
+    >
+      <Icon className={`w-3 h-3 ${status === "running" ? "animate-spin" : ""}`} />
+      {s.label}
+    </span>
+  );
+}
+
 export default function AgencySheetConnectionsPage() {
   const [connections, setConnections] = useState([]);
   const [hotels, setHotels] = useState([]);

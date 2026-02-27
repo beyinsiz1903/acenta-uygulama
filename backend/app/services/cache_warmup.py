@@ -114,6 +114,80 @@ async def run_cache_warmup() -> dict[str, Any]:
                 logger.debug("Warm-up campaigns error for org %s: %s", org_id, e)
                 stats["errors"] += 1
 
+            # 2d. Active agencies list (admin dropdowns, B2B portal)
+            try:
+                cursor = db.agencies.find(
+                    {"organization_id": org_id, "$or": [{"active": True}, {"is_active": True}]},
+                    {"_id": 1, "name": 1, "contact_email": 1},
+                ).sort("name", 1).limit(200)
+                docs = await cursor.to_list(length=200)
+                items = [
+                    {"id": str(d.get("_id")), "name": d.get("name", ""), "contact_email": d.get("contact_email", "")}
+                    for d in docs
+                ]
+                await redis_set(f"agencies_active:{org_id}", {"items": items}, ttl_seconds=300)
+                stats["agencies"] = stats.get("agencies", 0) + 1
+            except Exception as e:
+                logger.debug("Warm-up agencies error for org %s: %s", org_id, e)
+                stats["errors"] += 1
+
+            # 2e. Hotels list (used across admin, agency portals)
+            try:
+                cursor = db.hotels.find(
+                    {"organization_id": org_id, "active": {"$ne": False}},
+                    {"_id": 1, "name": 1, "city": 1, "country": 1},
+                ).sort("name", 1).limit(500)
+                docs = await cursor.to_list(length=500)
+                items = [
+                    {"id": str(d.get("_id")), "name": d.get("name", ""), "city": d.get("city", ""), "country": d.get("country", "")}
+                    for d in docs
+                ]
+                await redis_set(f"hotels_active:{org_id}", {"items": items}, ttl_seconds=300)
+                stats["hotels"] = stats.get("hotels", 0) + 1
+            except Exception as e:
+                logger.debug("Warm-up hotels error for org %s: %s", org_id, e)
+                stats["errors"] += 1
+
+            # 2f. FX rates (critical for pricing)
+            try:
+                cursor = db.fx_rates.find(
+                    {"organization_id": org_id},
+                    {"_id": 0, "base": 1, "quote": 1, "rate": 1, "as_of": 1},
+                ).limit(50)
+                docs = await cursor.to_list(length=50)
+                items = [
+                    {"base": d.get("base"), "quote": d.get("quote"), "rate": d.get("rate"), "as_of": str(d.get("as_of", ""))}
+                    for d in docs
+                ]
+                await redis_set(f"fx_rates:{org_id}", {"items": items}, ttl_seconds=600)
+                stats["fx_rates"] = stats.get("fx_rates", 0) + 1
+            except Exception as e:
+                logger.debug("Warm-up FX rates error for org %s: %s", org_id, e)
+                stats["errors"] += 1
+
+            # 2g. Active pricing rules (frequently accessed)
+            try:
+                cursor = db.pricing_rules.find(
+                    {"organization_id": org_id, "status": "active"},
+                    {"_id": 1, "priority": 1, "scope": 1, "action": 1, "validity": 1},
+                ).sort("priority", -1).limit(100)
+                docs = await cursor.to_list(length=100)
+                items = [
+                    {
+                        "id": str(d.get("_id")),
+                        "priority": d.get("priority"),
+                        "scope": d.get("scope", {}),
+                        "action": d.get("action", {}),
+                        "validity": d.get("validity", {}),
+                    }
+                    for d in docs
+                ]
+                await redis_set(f"pricing_rules_active:{org_id}", {"items": items}, ttl_seconds=300)
+                stats["pricing_rules"] = stats.get("pricing_rules", 0) + 1
+            except Exception as e:
+                logger.debug("Warm-up pricing rules error for org %s: %s", org_id, e)
+                stats["errors"] += 1
+
         logger.info(
             "Cache warm-up complete: %d tenants, %d features, %d cms_nav, %d campaigns, %d errors",
             stats["tenants"], stats["features"], stats["cms_nav"],

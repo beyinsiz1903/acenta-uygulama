@@ -3,7 +3,8 @@ import { api } from "../lib/api";
 import {
   FileSpreadsheet, Plus, Trash2, Loader2,
   CheckCircle2, AlertCircle, Hotel, Link2,
-  ExternalLink, RefreshCw,
+  ExternalLink, RefreshCw, XCircle, Clock,
+  WifiOff, Zap,
 } from "lucide-react";
 
 function formatDate(d) {

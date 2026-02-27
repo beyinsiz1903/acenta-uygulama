@@ -163,16 +163,20 @@ export default function AdminBrandingPage() {
         {/* Company Name */}
         <div className="rounded-lg border p-4">
           <label className="text-sm font-medium flex items-center gap-2 mb-2">
-            <Building2 className="h-4 w-4" /> Şirket Adı
+            <Building2 className="h-4 w-4" /> Sirket Adi
           </label>
           <input
             type="text"
             data-testid="company-name-input"
             value={settings.company_name}
-            onChange={(e) => setSettings({ ...settings, company_name: e.target.value })}
-            className="w-full rounded-md border px-3 py-2 text-sm bg-background"
-            placeholder="Şirket adınız"
+            onChange={(e) => canEditName && setSettings({ ...settings, company_name: e.target.value })}
+            readOnly={!canEditName}
+            className={`w-full rounded-md border px-3 py-2 text-sm bg-background ${!canEditName ? "opacity-60 cursor-not-allowed bg-muted" : ""}`}
+            placeholder="Sirket adiniz"
           />
+          {!canEditName && (
+            <p className="text-xs text-muted-foreground mt-1">Sirket adi yalnizca platform yoneticisi tarafindan degistirilebilir.</p>
+          )}
         </div>
 
         {/* Logo URL */}

@@ -131,14 +131,6 @@ async def ensure_seed_indexes(db) -> None:
 
     # ── Match alert policies & deliveries ─────────────────────
     await _safe_create(db.match_alert_policies, [("organization_id", 1)], unique=True)
-    try:
-        indexes = await db.match_alert_deliveries.index_information()
-        for name, info in indexes.items():
-            keys = info.get("key") or []
-            if keys == [("organization_id", 1), ("match_id", 1), ("fingerprint", 1)]:
-                await db.match_alert_deliveries.drop_index(name)
-    except Exception:
-        pass
     await _safe_create(db.match_alert_deliveries, [("organization_id", 1), ("match_id", 1), ("fingerprint", 1), ("channel", 1)], unique=True)
     await _safe_create(db.match_alert_deliveries, [("organization_id", 1), ("sent_at", -1)])
 

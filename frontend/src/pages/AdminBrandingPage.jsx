@@ -92,6 +92,7 @@ export default function AdminBrandingPage() {
         favicon_url: data.favicon_url || "",
         support_email: data.support_email || "",
       });
+      setCanEditName(data.can_edit_name !== false);
     } catch (e) {
       console.error("Failed to load branding settings:", e);
     } finally {

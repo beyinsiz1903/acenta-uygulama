@@ -188,6 +188,65 @@ async def run_cache_warmup() -> dict[str, Any]:
                 logger.debug("Warm-up pricing rules error for org %s: %s", org_id, e)
                 stats["errors"] += 1
 
+            # 2h. Product counts by type (dashboard widgets)
+            try:
+                pipeline = [
+                    {"$match": {"organization_id": org_id}},
+                    {"$group": {"_id": "$type", "count": {"$sum": 1}}},
+                ]
+                agg = await db.products.aggregate(pipeline).to_list(length=20)
+                product_counts = {r["_id"]: r["count"] for r in agg if r.get("_id")}
+                total = sum(product_counts.values())
+                await redis_set(f"product_counts:{org_id}", {"total": total, "by_type": product_counts}, ttl_seconds=300)
+                stats["product_counts"] = stats.get("product_counts", 0) + 1
+            except Exception as e:
+                logger.debug("Warm-up product counts error for org %s: %s", org_id, e)
+                stats["errors"] += 1
+
+            # 2i. Reservation summary (dashboard stats)
+            try:
+                pipeline = [
+                    {"$match": {"organization_id": org_id}},
+                    {"$group": {"_id": "$status", "count": {"$sum": 1}}},
+                ]
+                agg = await db.reservations.aggregate(pipeline).to_list(length=20)
+                res_summary = {r["_id"]: r["count"] for r in agg if r.get("_id")}
+                total = sum(res_summary.values())
+                await redis_set(f"reservation_summary:{org_id}", {"total": total, "by_status": res_summary}, ttl_seconds=300)
+                stats["reservation_summary"] = stats.get("reservation_summary", 0) + 1
+            except Exception as e:
+                logger.debug("Warm-up reservation summary error for org %s: %s", org_id, e)
+                stats["errors"] += 1
+
+            # 2j. Agency module settings (for dynamic sidebar)
+            try:
+                cursor = db.agencies.find(
+                    {"organization_id": org_id},
+                    {"_id": 1, "name": 1, "allowed_modules": 1},
+                ).limit(200)
+                docs = await cursor.to_list(length=200)
+                items = [
+                    {"id": str(d.get("_id")), "name": d.get("name", ""), "allowed_modules": d.get("allowed_modules", [])}
+                    for d in docs
+                ]
+                await redis_set(f"agency_modules:{org_id}", {"items": items}, ttl_seconds=300)
+                stats["agency_modules"] = stats.get("agency_modules", 0) + 1
+            except Exception as e:
+                logger.debug("Warm-up agency modules error for org %s: %s", org_id, e)
+                stats["errors"] += 1
+
+            # 2k. Onboarding state (first-load redirect)
+            try:
+                onboarding = await db.activation_checklist.find_one({"tenant_id": tenant_id})
+                if onboarding:
+                    await redis_set(f"onboarding:{tenant_id}", {
+                        "completed": bool(onboarding.get("completed_at") or onboarding.get("completed")),
+                    }, ttl_seconds=600)
+                stats["onboarding"] = stats.get("onboarding", 0) + 1
+            except Exception as e:
+                logger.debug("Warm-up onboarding error for tenant %s: %s", tenant_id, e)
+                stats["errors"] += 1
+
         logger.info(
             "Cache warm-up complete: %d tenants, %d features, %d cms_nav, %d campaigns, "
             "%d agencies, %d hotels, %d fx_rates, %d pricing_rules, %d errors",

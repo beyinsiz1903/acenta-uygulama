@@ -196,6 +196,7 @@ from app.email_worker import email_dispatch_loop
 from app.indexes import finance_indexes, inbox_indexes, pricing_indexes, public_indexes, voucher_indexes
 from app.indexes import crm_indexes
 from app.indexes import funnel_indexes
+from app.indexes.seed_indexes import ensure_seed_indexes
 from app.indexes.jobs_indexes import ensure_jobs_indexes
 from app.indexes.integration_hub_indexes import ensure_integration_hub_indexes
 from app.indexes.api_keys_indexes import ensure_api_keys_indexes

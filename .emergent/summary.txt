@@ -13061,7 +13061,7 @@ F401 [*] `json` imported but unused
 7 | import json
   |        ^^^^
 8 |
-9 | BASE_URL = "https://journey-preview-3.preview.emergentagent.com"
+9 | BASE_URL = "https://agency-admin-portal-1.preview.emergentagent.com"
   |
 help: Remove unused import: `json`
 
@@ -16288,10 +16288,10 @@ E722 Do not use bare `except`
   --> faz2_f2t2_public_checkout_test.py:30:9
    |
 28 |                 else:
-29 |                     self.base_url = "https://journey-preview-3.preview.emergentagent.com"
+29 |                     self.base_url = "https://agency-admin-portal-1.preview.emergentagent.com"
 30 |         except:
    |         ^^^^^^
-31 |             self.base_url = "https://journey-preview-3.preview.emergentagent.com"
+31 |             self.base_url = "https://agency-admin-portal-1.preview.emergentagent.com"
    |
 
 F841 Local variable `amount_cents` is assigned to but never used
@@ -22350,7 +22350,7 @@ help: Remove extraneous `f` prefix
 F541 [*] f-string without any placeholders
    --> parasut_push_backend_test.py:334:11
     |
-332 |     backend_url = "https://journey-preview-3.preview.emergentagent.com"
+332 |     backend_url = "https://agency-admin-portal-1.preview.emergentagent.com"
 333 |     
 334 |     print(f"🚀 Paraşüt Push V1 Backend API Smoke Test")
     |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -22550,7 +22550,7 @@ help: Remove extraneous `f` prefix
 F541 [*] f-string without any placeholders
    --> parasut_push_comprehensive_test.py:409:11
     |
-407 |     backend_url = "https://journey-preview-3.preview.emergentagent.com"
+407 |     backend_url = "https://agency-admin-portal-1.preview.emergentagent.com"
 408 |     
 409 |     print(f"🚀 Paraşüt Push V1 Backend API Kapsamlı Regression Test")
     |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -22797,7 +22797,7 @@ help: Remove extraneous `f` prefix
 F541 [*] f-string without any placeholders
    --> parasut_push_final_test.py:471:11
     |
-469 |     backend_url = "https://journey-preview-3.preview.emergentagent.com"
+469 |     backend_url = "https://agency-admin-portal-1.preview.emergentagent.com"
 470 |     
 471 |     print(f"🚀 Paraşüt Push V1 Backend API Final Regression Test")
     |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -22962,7 +22962,7 @@ help: Remove extraneous `f` prefix
 F541 [*] f-string without any placeholders
    --> parasut_push_regression_test.py:410:11
     |
-408 |     backend_url = "https://journey-preview-3.preview.emergentagent.com"
+408 |     backend_url = "https://agency-admin-portal-1.preview.emergentagent.com"
 409 |     
 410 |     print(f"🚀 Paraşüt Push V1 Backend API Regression Test")
     |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -24048,7 +24048,7 @@ F401 [*] `typing.Dict` imported but unused
 15 | from typing import Dict, Any, Optional
    |                    ^^^^
 16 |
-17 | BASE_URL = "https://journey-preview-3.preview.emergentagent.com"
+17 | BASE_URL = "https://agency-admin-portal-1.preview.emergentagent.com"
    |
 help: Remove unused import
 
@@ -24060,7 +24060,7 @@ F401 [*] `typing.Any` imported but unused
 15 | from typing import Dict, Any, Optional
    |                          ^^^
 16 |
-17 | BASE_URL = "https://journey-preview-3.preview.emergentagent.com"
+17 | BASE_URL = "https://agency-admin-portal-1.preview.emergentagent.com"
    |
 help: Remove unused import
 
@@ -24072,7 +24072,7 @@ F401 [*] `typing.Optional` imported but unused
 15 | from typing import Dict, Any, Optional
    |                               ^^^^^^^^
 16 |
-17 | BASE_URL = "https://journey-preview-3.preview.emergentagent.com"
+17 | BASE_URL = "https://agency-admin-portal-1.preview.emergentagent.com"
    |
 help: Remove unused import
 

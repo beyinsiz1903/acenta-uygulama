@@ -48,7 +48,7 @@
   "seed_data_creation": "None needed - used existing Demo Acenta (f5f7a2a3-5de1-4d65-b700-ec4f9807d83a)",
   "retest_needed": false,
   "should_main_agent_self_test": false,
-  "context_for_next_testing_agent": "Three new features tested: 1) Per-agency module management via GET/PUT /api/admin/agencies/{id}/modules - allows admin to configure which modules/tabs each agency can see via checkbox UI. 2) Branding restriction - whitelabel-settings endpoint returns can_edit_name based on super_admin role; non-super_admin users see company_name as readonly in UI. 3) Agency profile endpoint GET /api/agency/profile - returns agency info with allowed_modules for logged-in agency users. Test agency 'Demo Acenta' has agency_id=f5f7a2a3-5de1-4d65-b700-ec4f9807d83a with allowed_modules=['dashboard','rezervasyonlar','sheet_baglantilari','musaitlik_takibi'].",
+  "context_for_next_testing_agent": "Three new features tested: 1) Per-agency module management via GET/PUT /api/admin/agencies/{id}/modules - allows admin to configure which modules/tabs each agency can see via checkbox UI. 2) Branding restriction - whitelabel-settings endpoint returns can_edit_name based on super_admin role; non-super_admin users see company_name as readonly in UI. 3) Agency profile endpoint GET /api/agency/profile - returns agency info with allowed_modules for logged-in agency users. Test agency 'Demo Acenta' has agency_id=agency-admin-portal-1 with allowed_modules=['dashboard','rezervasyonlar','sheet_baglantilari','musaitlik_takibi'].",
   "api_verification": {
     "GET /api/admin/agencies/{id}/modules": "✅ 200 - Returns agency_id, agency_name, allowed_modules array",
     "PUT /api/admin/agencies/{id}/modules": "✅ 200 - Updates allowed_modules, returns updated data",

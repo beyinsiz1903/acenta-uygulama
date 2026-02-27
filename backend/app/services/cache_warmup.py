@@ -189,9 +189,11 @@ async def run_cache_warmup() -> dict[str, Any]:
                 stats["errors"] += 1
 
         logger.info(
-            "Cache warm-up complete: %d tenants, %d features, %d cms_nav, %d campaigns, %d errors",
+            "Cache warm-up complete: %d tenants, %d features, %d cms_nav, %d campaigns, "
+            "%d agencies, %d hotels, %d fx_rates, %d pricing_rules, %d errors",
             stats["tenants"], stats["features"], stats["cms_nav"],
-            stats["campaigns"], stats["errors"],
+            stats["campaigns"], stats.get("agencies", 0), stats.get("hotels", 0),
+            stats.get("fx_rates", 0), stats.get("pricing_rules", 0), stats["errors"],
         )
         stats["status"] = "completed"
 

@@ -452,9 +452,13 @@ function AppShellInner() {
       }
       // Server-side hidden items check
       if (it.modeKey && hiddenNavItems.includes(it.modeKey)) return false;
+      // Agency module restriction: if user is agency and allowed_modules is set, only show matching items
+      if (isAgencyUser && agencyAllowedModules && agencyAllowedModules.length > 0) {
+        if (it.modeKey && !agencyAllowedModules.includes(it.modeKey)) return false;
+      }
       return true;
     });
-  }, [featuresLoading, hasFeature, currentModeLevel, hiddenNavItems]);
+  }, [featuresLoading, hasFeature, currentModeLevel, hiddenNavItems, isAgencyUser, agencyAllowedModules]);
 
   /* ── Mode Route Guard: redirect if current path is hidden by mode ── */
   useEffect(() => {

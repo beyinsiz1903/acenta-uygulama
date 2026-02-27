@@ -1,8 +1,6 @@
 """Consolidated seed indexes — extracted from seed.py + server.py inline blocks.
 
-All collection indexes gathered here with defensive _safe_create pattern
-for production MongoDB where the user may lack createIndex permission.
-
+All collection indexes gathered here for application startup.
 Called once at application startup via server.py lifespan.
 """
 from __future__ import annotations
@@ -15,20 +13,18 @@ logger = logging.getLogger("acenta-master.indexes")
 
 
 async def _safe_create(collection, *args, **kwargs):
-    """Create index, swallowing permission/conflict errors."""
+    """Create index, gracefully handling known conflicts and permission errors."""
     try:
         await collection.create_index(*args, **kwargs)
     except OperationFailure as e:
+        code = e.code
         msg = str(e).lower()
-        if any(k in msg for k in (
-            "indexoptionsconflict", "indexkeyspecsconflict",
-            "already exists", "unauthorized", "not authorized",
-        )):
-            logger.debug("Skipping index for %s: %s", collection.name, msg[:120])
+        # 85/86 = IndexOptionsConflict/IndexKeySpecsConflict, 13 = Unauthorized
+        if code in (85, 86, 13) or any(k in msg for k in ("already exists", "unauthorized", "not authorized")):
+            logger.debug("Index skip (%s): %s", collection.name, msg[:120])
             return
+        logger.warning("Unexpected index error (%s): %s", collection.name, e)
         raise
-    except Exception as e:
-        logger.debug("Index creation skipped for %s: %s", collection.name, str(e)[:120])
 
 
 async def ensure_seed_indexes(db) -> None:

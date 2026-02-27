@@ -49,6 +49,7 @@ export default function AgencySheetConnectionsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [syncing, setSyncing] = useState(null);
 
   // Form state
   const [selectedHotel, setSelectedHotel] = useState("");

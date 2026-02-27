@@ -72,6 +72,7 @@ export default function AdminBrandingPage() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
+  const [canEditName, setCanEditName] = useState(false);
 
   const loadSettings = useCallback(async () => {
     try {

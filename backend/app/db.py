@@ -16,35 +16,8 @@ def _mongo_url() -> str:
 
 
 def _db_name() -> str:
-    """Resolve database name.
-
-    Priority:
-      1. DB_NAME env var (explicit)
-      2. Database name from MONGO_URL path (e.g. mongodb+srv://.../<dbname>?...)
-      3. Fallback to 'app_database'
-    """
-    name = os.environ.get("DB_NAME", "")
-    if name:
-        return name
-
-    # Try to extract DB name from MONGO_URL
-    mongo_url = os.environ.get("MONGO_URL", "")
-    if mongo_url:
-        try:
-            from urllib.parse import urlparse
-            parsed = urlparse(mongo_url)
-            path_db = (parsed.path or "").lstrip("/").split("?")[0]
-            if path_db:
-                return path_db
-        except Exception:
-            pass
-
-    import logging
-    logging.getLogger("db").warning(
-        "DB_NAME not set and could not extract from MONGO_URL — "
-        "falling back to 'app_database'."
-    )
-    return "app_database"
+    """Resolve database name from DB_NAME env var only."""
+    return os.environ.get("DB_NAME", "test_database")
 
 
 async def connect_mongo() -> None:

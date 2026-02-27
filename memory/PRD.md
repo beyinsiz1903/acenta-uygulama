@@ -37,12 +37,32 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - **Backend:** company_name update silently ignored for non-super_admin
 - **Frontend:** company_name input readonly with message for non-super_admin users
 
+### Super Admin Unified User Management (Feb 27, 2026)
+- **Backend:** GET `/api/admin/all-users` — lists all agency users across all agencies with agency_name
+- **Frontend:** `/app/admin/all-users` — unified user management page with:
+  - Search by email, name, or agency
+  - Filter by agency and status (active/disabled)
+  - Summary cards (total, active, disabled, agency count)
+  - Inline role change (agency_admin/agency_agent)
+  - Status toggle (activate/deactivate)
+  - Click agency name to navigate to per-agency detail
+- **Sidebar:** "Kullanici Yonetimi" link added under YONETIM group
+
+### Dynamic Agency Navigation (Feb 27, 2026)
+- **Frontend:** AppShell.jsx now fetches `/api/agency/profile` for agency users
+- Sidebar items filtered by `allowed_modules` — only matching `modeKey` items shown
+- Empty `allowed_modules` means no restriction (all modules visible)
+- Admin users always see full navigation regardless of agency settings
+
 ## Key Files
+- `backend/app/routers/admin_agency_users.py` - Per-agency user CRUD + all_users_router
 - `backend/app/routers/admin_agencies.py` - Agency CRUD + module management
 - `backend/app/routers/agency_profile.py` - Agency profile endpoint
 - `backend/app/routers/enterprise_whitelabel.py` - Branding with role restriction
+- `frontend/src/pages/AdminAllUsersPage.jsx` - Unified user management UI
 - `frontend/src/pages/AdminAgencyModulesPage.jsx` - Module config UI
 - `frontend/src/pages/AdminBrandingPage.jsx` - Branding with canEditName
+- `frontend/src/components/AppShell.jsx` - Sidebar with dynamic agency module filtering
 
 ## Credentials
 | Portal | Email | Password | Role |
@@ -51,5 +71,7 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 | Agency | agent@acenta.test | agent123 | Agency Admin |
 
 ## Backlog
-- P1: Google Sheets sync testing (requires Service Account JSON)
+- P2: Production DB permissions (createIndex for production MongoDB user)
+- P2: Cache warm-up expansion
 - P2: Apple Watch UI
+- P2: Google Sheets sync testing (requires Service Account JSON)

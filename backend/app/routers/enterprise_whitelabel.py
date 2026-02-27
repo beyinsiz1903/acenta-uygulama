@@ -34,6 +34,7 @@ async def get_whitelabel_settings(user=Depends(get_current_user)):
     """Get white-label settings for current org."""
     db = await get_db()
     org_id = user["organization_id"]
+    is_super = "super_admin" in (user.get("roles") or [])
 
     doc = await db.whitelabel_settings.find_one({"organization_id": org_id})
     if not doc:
@@ -43,8 +44,11 @@ async def get_whitelabel_settings(user=Depends(get_current_user)):
             "company_name": None,
             "favicon_url": None,
             "support_email": None,
+            "can_edit_name": is_super,
         }
-    return serialize_doc(doc)
+    result = serialize_doc(doc)
+    result["can_edit_name"] = is_super
+    return result
 
 
 @router.put("", dependencies=[AdminDep])

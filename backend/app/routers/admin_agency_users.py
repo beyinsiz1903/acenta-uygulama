@@ -416,3 +416,73 @@ async def reset_agency_user_password(
         pass
 
     return ResetPasswordResponse(reset_link=reset_link)
+
+
+
+# ══════════════════════════════════════════════════════════
+# Cross-Agency User Listing (Super Admin)
+# ══════════════════════════════════════════════════════════
+
+class AllUsersRouter:
+    """Separate router for /api/admin/all-users to avoid prefix conflict."""
+    pass
+
+
+all_users_router = APIRouter(prefix="/api/admin", tags=["admin_all_users"])
+
+
+class AllUsersUserOut(BaseModel):
+    id: str
+    email: str
+    name: Optional[str] = None
+    roles: List[str] = Field(default_factory=list)
+    status: str
+    agency_id: Optional[str] = None
+    agency_name: Optional[str] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    last_login_at: Optional[str] = None
+
+
+@all_users_router.get("/all-users", dependencies=[AdminDep], response_model=List[AllUsersUserOut])
+async def list_all_agency_users(
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+) -> List[AllUsersUserOut]:
+    """List ALL agency users across all agencies for the super admin."""
+    org_id = user["organization_id"]
+
+    # Get all agencies for name lookup
+    agency_docs = await db.agencies.find(
+        {"organization_id": org_id},
+        {"_id": 1, "name": 1},
+    ).to_list(1000)
+    agency_map = {str(a["_id"]): a.get("name", "") for a in agency_docs}
+
+    # Get all users that have an agency role
+    cursor = db.users.find(
+        {
+            "organization_id": org_id,
+            "roles": {"$in": list(AGENCY_ROLES)},
+        },
+        {"password_hash": 0},
+    ).sort("created_at", -1)
+    docs = await cursor.to_list(length=2000)
+
+    result = []
+    for d in docs:
+        aid = str(d["agency_id"]) if d.get("agency_id") else None
+        result.append(AllUsersUserOut(
+            id=str(d["_id"]),
+            email=d.get("email", ""),
+            name=d.get("name"),
+            roles=list(d.get("roles") or []),
+            status="active" if d.get("is_active", True) else "disabled",
+            agency_id=aid,
+            agency_name=agency_map.get(aid, "") if aid else None,
+            created_at=d["created_at"].isoformat() if d.get("created_at") else None,
+            updated_at=d["updated_at"].isoformat() if d.get("updated_at") else None,
+            last_login_at=d["last_login_at"].isoformat() if d.get("last_login_at") else None,
+        ))
+
+    return result

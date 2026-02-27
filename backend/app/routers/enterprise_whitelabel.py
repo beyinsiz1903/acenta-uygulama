@@ -52,10 +52,11 @@ async def update_whitelabel_settings(
     payload: WhiteLabelSettingsIn,
     user=Depends(get_current_user),
 ):
-    """Update white-label settings."""
+    """Update white-label settings. company_name only editable by super_admin."""
     db = await get_db()
     org_id = user["organization_id"]
     now = now_utc()
+    is_super = "super_admin" in (user.get("roles") or [])
 
     update = {
         "organization_id": org_id,
@@ -66,7 +67,7 @@ async def update_whitelabel_settings(
         update["logo_url"] = payload.logo_url
     if payload.primary_color is not None:
         update["primary_color"] = payload.primary_color
-    if payload.company_name is not None:
+    if payload.company_name is not None and is_super:
         update["company_name"] = payload.company_name
         update["brand_name"] = payload.company_name  # Backward compat
     if payload.favicon_url is not None:

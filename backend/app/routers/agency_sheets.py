@@ -25,7 +25,7 @@ from app.services.sheets_provider import (
     is_configured,
     read_sheet,
 )
-from app.services.hotel_portfolio_sync_service import auto_detect_mapping
+from app.services.hotel_portfolio_sync_service import auto_detect_mapping, run_hotel_sheet_sync
 from app.utils import now_utc, serialize_doc
 
 router = APIRouter(prefix="/api/agency/sheets", tags=["agency_sheets"])

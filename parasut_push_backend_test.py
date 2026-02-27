@@ -329,7 +329,7 @@ class ParasutPushTester:
 async def main():
     """Main test runner"""
     # Get backend URL from environment
-    backend_url = "https://journey-preview-3.preview.emergentagent.com"
+    backend_url = "https://travel-sync-hub.preview.emergentagent.com"
     
     print(f"🚀 Paraşüt Push V1 Backend API Smoke Test")
     print(f"Backend URL: {backend_url}")

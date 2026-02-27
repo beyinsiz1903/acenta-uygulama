@@ -63,7 +63,7 @@
 
 2. **CORS Headers** - Cloudflare/Proxy Override Issue
    - Backend correctly configured for whitelisted domains (logs show: "[CORS] Mode: whitelist (2 domains)")
-   - CORS_ORIGINS properly set to: `https://agency.syroce.com,https://journey-preview-3.preview.emergentagent.com`
+   - CORS_ORIGINS properly set to: `https://agency.syroce.com,https://travel-sync-hub.preview.emergentagent.com`
    - However, response headers still show `Access-Control-Allow-Origin: *`
    - ISSUE: Cloudflare or upstream proxy is overriding backend CORS headers
 
@@ -199,7 +199,7 @@
      - Server: `redis-cli INFO server` → Redis v7.0.15, uptime: 4885 seconds
 - **Redis Sentinel**: No mode field present (standard Redis configuration)
 - **Cache Performance**: Excellent 50% hit rate demonstrating active caching
-- **Backend URL**: Production URL (https://journey-preview-3.preview.emergentagent.com/api)
+- **Backend URL**: Production URL (https://travel-sync-hub.preview.emergentagent.com/api)
 - **Redis Service**: Fully operational on localhost:6379, memory usage 1.09M
 - **All Test Categories**: Every requested test passed successfully
 - **Final Status**: Complete Redis cache system is production-ready and performing optimally

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Users, AlertCircle, Loader2, Search,
   ChevronDown, UserPlus, ShieldCheck, ShieldOff,
+  Pencil, Trash2,
 } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
 import {
@@ -11,8 +12,241 @@ import {
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "../components/ui/dialog";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
+} from "../components/ui/alert-dialog";
 import { toast } from "sonner";
 
+/* ── Helper ─────────────────────────────────────────────── */
+const agencyRole = (roles) => {
+  if (roles?.includes("agency_admin")) return "agency_admin";
+  if (roles?.includes("agency_agent")) return "agency_agent";
+  return "agency_agent";
+};
+
+/* ── Create User Dialog ─────────────────────────────────── */
+function CreateUserDialog({ open, onOpenChange, agencies, onCreated }) {
+  const [form, setForm] = useState({ name: "", email: "", password: "", agency_id: "", role: "agency_agent" });
+  const [saving, setSaving] = useState(false);
+
+  const reset = () => setForm({ name: "", email: "", password: "", agency_id: "", role: "agency_agent" });
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.email || !form.password || !form.agency_id) {
+      toast.error("Tum zorunlu alanlari doldurun");
+      return;
+    }
+    setSaving(true);
+    try {
+      await api.post("/admin/all-users", form);
+      toast.success("Kullanici olusturuldu");
+      reset();
+      onOpenChange(false);
+      onCreated();
+    } catch (err) {
+      toast.error(apiErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
+      <DialogContent className="sm:max-w-md" data-testid="create-user-dialog">
+        <DialogHeader>
+          <DialogTitle>Yeni Kullanici Ekle</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="cu-name">Ad Soyad</Label>
+            <Input id="cu-name" data-testid="create-user-name" value={form.name}
+              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Ornek: Ahmet Yilmaz" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="cu-email">E-posta *</Label>
+            <Input id="cu-email" type="email" data-testid="create-user-email" required value={form.email}
+              onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} placeholder="ornek@acenta.com" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="cu-pass">Sifre *</Label>
+            <Input id="cu-pass" type="password" data-testid="create-user-password" required minLength={6}
+              value={form.password} onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))} placeholder="En az 6 karakter" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="cu-agency">Acenta *</Label>
+            <select id="cu-agency" data-testid="create-user-agency" required
+              className="w-full h-9 rounded-md border bg-background px-3 text-sm"
+              value={form.agency_id} onChange={(e) => setForm((p) => ({ ...p, agency_id: e.target.value }))}>
+              <option value="">Acenta secin...</option>
+              {agencies.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="cu-role">Rol</Label>
+            <select id="cu-role" data-testid="create-user-role"
+              className="w-full h-9 rounded-md border bg-background px-3 text-sm"
+              value={form.role} onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))}>
+              <option value="agency_admin">Yonetici</option>
+              <option value="agency_agent">Satis/Operasyon</option>
+            </select>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Iptal</Button>
+            <Button type="submit" data-testid="create-user-submit" disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <UserPlus className="h-4 w-4 mr-1" />}
+              Olustur
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ── Edit User Dialog ───────────────────────────────────── */
+function EditUserDialog({ open, onOpenChange, userToEdit, agencies, onUpdated }) {
+  const [form, setForm] = useState({ name: "", email: "", role: "agency_agent", status: "active", agency_id: "" });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (userToEdit) {
+      setForm({
+        name: userToEdit.name || "",
+        email: userToEdit.email || "",
+        role: agencyRole(userToEdit.roles),
+        status: userToEdit.status || "active",
+        agency_id: userToEdit.agency_id || "",
+      });
+    }
+  }, [userToEdit]);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!userToEdit) return;
+    setSaving(true);
+    try {
+      await api.put(`/admin/all-users/${userToEdit.id}`, form);
+      toast.success("Kullanici guncellendi");
+      onOpenChange(false);
+      onUpdated();
+    } catch (err) {
+      toast.error(apiErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md" data-testid="edit-user-dialog">
+        <DialogHeader>
+          <DialogTitle>Kullaniciyi Duzenle</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="eu-name">Ad Soyad</Label>
+            <Input id="eu-name" data-testid="edit-user-name" value={form.name}
+              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="eu-email">E-posta</Label>
+            <Input id="eu-email" type="email" data-testid="edit-user-email" value={form.email}
+              onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="eu-agency">Acenta</Label>
+            <select id="eu-agency" data-testid="edit-user-agency"
+              className="w-full h-9 rounded-md border bg-background px-3 text-sm"
+              value={form.agency_id} onChange={(e) => setForm((p) => ({ ...p, agency_id: e.target.value }))}>
+              <option value="">Acenta secin...</option>
+              {agencies.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="eu-role">Rol</Label>
+              <select id="eu-role" data-testid="edit-user-role"
+                className="w-full h-9 rounded-md border bg-background px-3 text-sm"
+                value={form.role} onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))}>
+                <option value="agency_admin">Yonetici</option>
+                <option value="agency_agent">Satis/Operasyon</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="eu-status">Durum</Label>
+              <select id="eu-status" data-testid="edit-user-status"
+                className="w-full h-9 rounded-md border bg-background px-3 text-sm"
+                value={form.status} onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}>
+                <option value="active">Aktif</option>
+                <option value="disabled">Pasif</option>
+              </select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Iptal</Button>
+            <Button type="submit" data-testid="edit-user-submit" disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Pencil className="h-4 w-4 mr-1" />}
+              Kaydet
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ── Delete Confirmation Dialog ─────────────────────────── */
+function DeleteUserDialog({ open, onOpenChange, userToDelete, onDeleted }) {
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (!userToDelete) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/admin/all-users/${userToDelete.id}`);
+      toast.success(`${userToDelete.email} silindi`);
+      onOpenChange(false);
+      onDeleted();
+    } catch (err) {
+      toast.error(apiErrorMessage(err));
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent data-testid="delete-user-dialog">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Kullaniciyi Sil</AlertDialogTitle>
+          <AlertDialogDescription>
+            <strong>{userToDelete?.email}</strong> kullanicisini kalici olarak silmek istediginize emin misiniz? Bu islem geri alinamaz.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={deleting}>Iptal</AlertDialogCancel>
+          <AlertDialogAction
+            data-testid="delete-user-confirm"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Trash2 className="h-4 w-4 mr-1" />}
+            Sil
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+/* ── Main Page ──────────────────────────────────────────── */
 export default function AdminAllUsersPage() {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
@@ -22,6 +256,12 @@ export default function AdminAllUsersPage() {
   const [search, setSearch] = useState("");
   const [agencyFilter, setAgencyFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  // Dialog states
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -85,12 +325,6 @@ export default function AdminAllUsersPage() {
     }
   }
 
-  const agencyRole = (roles) => {
-    if (roles?.includes("agency_admin")) return "agency_admin";
-    if (roles?.includes("agency_agent")) return "agency_agent";
-    return "agency_agent";
-  };
-
   if (loading) {
     return (
       <div className="space-y-6" data-testid="all-users-page">
@@ -136,6 +370,9 @@ export default function AdminAllUsersPage() {
             Tum acentalardaki kullanicilari goruntuleyip yonetin ({users.length} kullanici, {agencies.length} acenta)
           </p>
         </div>
+        <Button data-testid="add-user-btn" onClick={() => setCreateOpen(true)} className="gap-1.5">
+          <UserPlus className="h-4 w-4" /> Yeni Kullanici
+        </Button>
       </div>
 
       {/* Filters */}
@@ -269,19 +506,39 @@ export default function AdminAllUsersPage() {
                     {u.created_at ? new Date(u.created_at).toLocaleDateString("tr-TR") : "-"}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      data-testid={`toggle-status-${u.id}`}
-                      onClick={() => handleStatusToggle(u)}
-                      className="text-xs gap-1.5"
-                    >
-                      {u.status === "active" ? (
-                        <><ShieldOff className="h-3.5 w-3.5" /> Pasiflestir</>
-                      ) : (
-                        <><ShieldCheck className="h-3.5 w-3.5" /> Aktiflestir</>
-                      )}
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        data-testid={`toggle-status-${u.id}`}
+                        onClick={() => handleStatusToggle(u)}
+                        className="text-xs gap-1"
+                      >
+                        {u.status === "active" ? (
+                          <><ShieldOff className="h-3.5 w-3.5" /> Pasif</>
+                        ) : (
+                          <><ShieldCheck className="h-3.5 w-3.5" /> Aktif</>
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        data-testid={`edit-user-${u.id}`}
+                        onClick={() => { setSelectedUser(u); setEditOpen(true); }}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                        data-testid={`delete-user-${u.id}`}
+                        onClick={() => { setSelectedUser(u); setDeleteOpen(true); }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -289,6 +546,11 @@ export default function AdminAllUsersPage() {
           </Table>
         </div>
       )}
+
+      {/* Dialogs */}
+      <CreateUserDialog open={createOpen} onOpenChange={setCreateOpen} agencies={agencies} onCreated={loadData} />
+      <EditUserDialog open={editOpen} onOpenChange={setEditOpen} userToEdit={selectedUser} agencies={agencies} onUpdated={loadData} />
+      <DeleteUserDialog open={deleteOpen} onOpenChange={setDeleteOpen} userToDelete={selectedUser} onDeleted={loadData} />
     </div>
   );
 }

@@ -320,6 +320,25 @@ function AppShellInner() {
   const brandLogo = branding?.logo_url;
   const brandInitial = brandName.charAt(0).toUpperCase();
 
+  // ── Agency module restrictions (dynamic nav) ──────────────
+  const isAgencyUser = (user?.roles || []).some((r) => ["agency_admin", "agency_agent"].includes(r))
+    && !(user?.roles || []).some((r) => ["super_admin", "admin"].includes(r));
+
+  useEffect(() => {
+    if (!isAgencyUser) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get("/agency/profile");
+        if (!cancelled) {
+          const modules = res.data?.allowed_modules || [];
+          setAgencyAllowedModules(modules);
+        }
+      } catch { if (!cancelled) setAgencyAllowedModules([]); }
+    })();
+    return () => { cancelled = true; };
+  }, [isAgencyUser]);
+
   // ── P0: Onboarding auto-redirect ──────────────────────────
   useEffect(() => {
     if (onboardingChecked) return;

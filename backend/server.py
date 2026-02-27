@@ -277,6 +277,14 @@ async def lifespan(app: FastAPI):
 
     # GTM + CRM indexes — moved to seed_indexes.py
 
+    # ---- Seed demo data (idempotent) ----
+    try:
+        from app.seed import ensure_seed_data
+        await ensure_seed_data()
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning("Seed data failed (non-fatal): %s", str(e)[:200])
+
     # Start billing cron scheduler
     from app.billing.scheduler import start_scheduler, stop_scheduler
     start_scheduler()

@@ -20,41 +20,37 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - Screenshots for iPhone, iPad, Apple Watch
 - Store metadata (Turkish) for App Store & Google Play
 - Privacy Policy and Terms of Service pages
-- App icon and feature graphic
 
 ### Session Persistence (Completed)
-- Access token: 8 hours
-- Refresh token: 90 days
+- Access token: 8 hours, Refresh token: 90 days
 
-### CORS Fix (Completed - Pending Production Deploy)
+### CORS Fix (Completed)
 - Backend CORS configured for `agency.syroce.com`
 
 ### Google Sheets Integration (Feb 2026)
-- **Admin Panel:** Portfolio sync dashboard, hotel-level connections, agency-level connections
-- **Agency Portal:** Self-service sheet connection management
-  - Agency auto-detected from logged-in user (no dropdown needed)
-  - Route: `/app/agency/sheets`
-  - Backend: `/api/agency/sheets/*` endpoints
+- Admin Panel: Portfolio sync dashboard, hotel-level + agency-level connections
+- Agency Portal: Self-service sheet connection management
+  - Route: `/app/agency/sheets`, Backend: `/api/agency/sheets/*`
   - Manual sync trigger: `POST /api/agency/sheets/sync/{connection_id}`
-  - Sync status display with SyncStatusBadge component
-  - Error detail display when sync fails
-
-### Bug Fixes (Feb 2026)
-- Fixed agency dropdown empty in admin sheet connections form
-- Fixed CI/CD ruff linting failure in agency_sheets.py
+  - Sync status display with SyncStatusBadge + error details
 
 ### Root Directory Cleanup (Feb 27, 2026)
 - Removed ~220+ stale test/debug files from root directory
-- Removed: `*_test.py`, `debug_*.py`, `test_*.py`, `*_results.json`, `*.sh`, `*.ts`, `*.csv`, `*.html`, `*.png`, empty placeholder files
-- Root directory reduced from 230+ items to 20 clean items
+
+### Seed Refactoring (Feb 27, 2026)
+- **Extracted ~80 index definitions** from `seed.py` into `app/indexes/seed_indexes.py`
+- **`seed_indexes.py`** (241 lines): All collection indexes, called at startup via server.py lifespan
+- **`seed.py`** (782 lines): Only data seeding, modular with numbered sections
+- Original `seed.py` was 1167 lines mixing indexes + data in one function
 
 ## Key Files
-- `backend/app/routers/agency_sheets.py` - Agency self-service sheet endpoints (incl. sync)
-- `backend/app/routers/admin_sheets.py` - Admin portfolio sync endpoints
-- `backend/app/services/sheets_provider.py` - Google Sheets API client
-- `backend/app/services/hotel_portfolio_sync_service.py` - Sync engine
-- `frontend/src/pages/AgencySheetConnectionsPage.jsx` - Agency sheet management UI
-- `frontend/src/pages/admin/AdminPortfolioSyncPage.jsx` - Admin portfolio sync dashboard
+- `backend/app/indexes/seed_indexes.py` - **NEW** Extracted seed indexes
+- `backend/app/seed.py` - Refactored data-only seeding
+- `backend/server.py` - Calls seed_indexes at startup
+- `backend/app/routers/agency_sheets.py` - Agency sheet endpoints
+- `backend/app/routers/admin_sheets.py` - Admin sheet endpoints
+- `frontend/src/pages/AgencySheetConnectionsPage.jsx` - Agency sheet UI
+- `frontend/src/pages/admin/AdminPortfolioSyncPage.jsx` - Admin sync dashboard
 
 ## Credentials
 | Portal | Email | Password | Role |
@@ -63,8 +59,9 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 | Agency | agent@acenta.test | agent123 | Agency Admin |
 
 ## Backlog
-- P1: Google Sheets sync error investigation (requires actual Google Sheets config)
-- P1: Database seeding improvements
+- P1: Call ensure_seed_data() on startup + create hotels/links for existing org
+- P1: Google Sheets sync testing (requires actual Service Account JSON)
 - P2: Production DB permissions (createIndex)
 - P2: Cache warm-up expansion
 - P2: Apple Watch UI
+- P3: Orphan org cleanup ("Varsayilan Acenta" with slug=default)

@@ -181,6 +181,7 @@ from app.routers.admin_sheets import router as admin_sheets_router
 from app.routers.agency_availability import router as agency_availability_router
 from app.routers.agency_writeback import router as agency_writeback_router
 from app.routers.agency_sheets import router as agency_sheets_router
+from app.routers.agency_profile import router as agency_profile_router
 
 # Production Go-Live Pack (A)
 from app.routers.admin_system_preflight import router as admin_system_preflight_router

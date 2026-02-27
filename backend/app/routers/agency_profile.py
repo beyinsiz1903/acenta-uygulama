@@ -9,7 +9,6 @@ from fastapi import APIRouter, Depends
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
-from app.utils import serialize_doc
 
 router = APIRouter(prefix="/api/agency", tags=["agency_profile"])
 

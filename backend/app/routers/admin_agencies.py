@@ -278,3 +278,59 @@ async def soft_delete_agency(
 
     updated = await _load_agency_by_id(db, org_id, str(existing["_id"]))
     return serialize_doc(updated)
+
+
+
+# ══════════════════════════════════════════════════════════
+# Per-Agency Module (Tab) Management
+# ══════════════════════════════════════════════════════════
+
+class AgencyModulesUpdate(BaseModel):
+    allowed_modules: List[str] = Field(..., description="List of allowed modeKey values")
+
+
+@router.get("/{agency_id}/modules", dependencies=[AdminDep])
+async def get_agency_modules(
+    agency_id: str,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    """Get allowed modules for a specific agency."""
+    org_id = user["organization_id"]
+    existing = await _load_agency_by_id(db, org_id, agency_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="AGENCY_NOT_FOUND")
+    return {
+        "agency_id": str(existing["_id"]),
+        "agency_name": existing.get("name", ""),
+        "allowed_modules": existing.get("allowed_modules", []),
+    }
+
+
+@router.put("/{agency_id}/modules", dependencies=[AdminDep])
+async def update_agency_modules(
+    agency_id: str,
+    payload: AgencyModulesUpdate,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    """Update allowed modules for a specific agency."""
+    org_id = user["organization_id"]
+    existing = await _load_agency_by_id(db, org_id, agency_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="AGENCY_NOT_FOUND")
+
+    await db.agencies.update_one(
+        {"_id": existing["_id"], "organization_id": org_id},
+        {"$set": {
+            "allowed_modules": payload.allowed_modules,
+            "updated_at": now_utc(),
+            "updated_by": user.get("email"),
+        }},
+    )
+
+    return {
+        "agency_id": str(existing["_id"]),
+        "agency_name": existing.get("name", ""),
+        "allowed_modules": payload.allowed_modules,
+    }

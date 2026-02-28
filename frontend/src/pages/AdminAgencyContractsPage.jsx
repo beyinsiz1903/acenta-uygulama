@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState, useMemo } from "react";
+import { safeName } from "../utils/formatters";
 import {
   Building2, Hotel, DollarSign, Image, Plus, Trash2, Edit, Search,
   FileText, Percent, Tag, Calendar, Save, X, CheckCircle2, AlertTriangle,
@@ -128,7 +129,7 @@ function PricingContractForm({ open, onOpenChange, agencies, hotels, existingDat
               </SelectTrigger>
               <SelectContent>
                 {agencies.map((a) => (
-                  <SelectItem key={a.id || a._id} value={a.id || a._id}>{a.name}</SelectItem>
+                  <SelectItem key={a.id || a._id} value={a.id || a._id}>{safeName(a.name)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -141,7 +142,7 @@ function PricingContractForm({ open, onOpenChange, agencies, hotels, existingDat
               </SelectTrigger>
               <SelectContent>
                 {hotels.map((h) => (
-                  <SelectItem key={h.id || h._id} value={h.id || h._id}>{h.name}</SelectItem>
+                  <SelectItem key={h.id || h._id} value={h.id || h._id}>{safeName(h.name)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -298,7 +299,7 @@ function ContentOverrideForm({ open, onOpenChange, agencies, hotels, existingDat
               </SelectTrigger>
               <SelectContent>
                 {agencies.map((a) => (
-                  <SelectItem key={a.id || a._id} value={a.id || a._id}>{a.name}</SelectItem>
+                  <SelectItem key={a.id || a._id} value={a.id || a._id}>{safeName(a.name)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -311,7 +312,7 @@ function ContentOverrideForm({ open, onOpenChange, agencies, hotels, existingDat
               </SelectTrigger>
               <SelectContent>
                 {hotels.map((h) => (
-                  <SelectItem key={h.id || h._id} value={h.id || h._id}>{h.name}</SelectItem>
+                  <SelectItem key={h.id || h._id} value={h.id || h._id}>{safeName(h.name)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -548,7 +549,7 @@ export default function AdminAgencyContractsPage() {
                 <SelectContent>
                   <SelectItem value="all">Tüm Acentalar</SelectItem>
                   {agencies.map((a) => (
-                    <SelectItem key={a.id || a._id} value={a.id || a._id}>{a.name}</SelectItem>
+                    <SelectItem key={a.id || a._id} value={a.id || a._id}>{safeName(a.name)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -561,7 +562,7 @@ export default function AdminAgencyContractsPage() {
                 <SelectContent>
                   <SelectItem value="all">Tüm Oteller</SelectItem>
                   {hotels.map((h) => (
-                    <SelectItem key={h.id || h._id} value={h.id || h._id}>{h.name}</SelectItem>
+                    <SelectItem key={h.id || h._id} value={h.id || h._id}>{safeName(h.name)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

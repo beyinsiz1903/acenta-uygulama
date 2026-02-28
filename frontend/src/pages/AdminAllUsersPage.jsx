@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { safeName } from "../utils/formatters";
 import {
   Users, AlertCircle, Loader2, Search,
   ChevronDown, UserPlus, ShieldCheck, ShieldOff,
@@ -84,7 +85,7 @@ function CreateUserDialog({ open, onOpenChange, agencies, onCreated }) {
               className="w-full h-9 rounded-md border bg-background px-3 text-sm"
               value={form.agency_id} onChange={(e) => setForm((p) => ({ ...p, agency_id: e.target.value }))}>
               <option value="">Acenta secin...</option>
-              {agencies.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+              {agencies.map((a) => <option key={a.id} value={a.id}>{safeName(a.name)}</option>)}
             </select>
           </div>
           <div className="space-y-2">
@@ -165,7 +166,7 @@ function EditUserDialog({ open, onOpenChange, userToEdit, agencies, onUpdated })
               className="w-full h-9 rounded-md border bg-background px-3 text-sm"
               value={form.agency_id} onChange={(e) => setForm((p) => ({ ...p, agency_id: e.target.value }))}>
               <option value="">Acenta secin...</option>
-              {agencies.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+              {agencies.map((a) => <option key={a.id} value={a.id}>{safeName(a.name)}</option>)}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-3">

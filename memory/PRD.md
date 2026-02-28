@@ -89,3 +89,10 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 ## Backlog
 - P2: Apple Watch UI
 - P2: Google Sheets sync testing (requires Service Account JSON)
+
+### Bug Fix: React Error #31 - {tr, en} Object Rendering (Feb 28, 2026)
+- **Root cause:** MongoDB stores some entity names (hotels, agencies) as multilingual objects `{tr: "...", en: "..."}` instead of plain strings. When rendered directly as React children, this crashes with "Minified React error #31".
+- **Structural fix:** Moved `<Dialog>` out of `<TableRow>` map in `AdminAgenciesPage.jsx` (was incorrectly nested between `<TableCell>` elements).
+- **New utility:** Added `safeName(value, lang)` to `formatters.js` — extracts the correct string from either plain strings or `{tr, en}` objects.
+- **Applied to:** AdminAgenciesPage, AdminAllUsersPage, AdminAgencyContractsPage, AdminAgencyModulesPage, AdminAgencyUsersPage, AdminHotelsPage.
+- **Status:** FIXED & TESTED (verified with actual `{tr, en}` data insertion).

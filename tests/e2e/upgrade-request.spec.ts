@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const BASE = "https://admin-user-mgmt-11.preview.emergentagent.com";
+const BASE = "https://admin-crud-deploy.preview.emergentagent.com";
 const UID = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 test("upgrade-request: create, duplicate block, list", async ({ request }) => {

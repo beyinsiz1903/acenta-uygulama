@@ -318,7 +318,7 @@ function PopularProductsCarousel({ products, loading }) {
               <div className="relative h-[130px] overflow-hidden">
                 <img
                   src={product.image_url || defaultImage}
-                  alt={product.product_name}
+                  alt={safeName(product.product_name)}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => { e.target.src = defaultImage; }}
                 />

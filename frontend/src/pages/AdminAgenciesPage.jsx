@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Building2, AlertCircle, Loader2, Plus, X } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
-import { formatDateTime, getActiveStatus } from "../utils/formatters";
+import { formatDateTime, getActiveStatus, safeName } from "../utils/formatters";
 import {
   Table,
   TableBody,

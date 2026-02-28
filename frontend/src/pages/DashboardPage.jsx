@@ -119,7 +119,7 @@ function ReservationWidget({ title, icon: Icon, iconColor, items, count, loading
             >
               <div className="flex-1 min-w-0 mr-3">
                 <p className="text-sm text-foreground truncate font-medium">
-                  {item.product_name || item.guest_name || "—"}
+                  {safeName(item.product_name) || item.guest_name || "—"}
                 </p>
                 {item.check_in && item.check_in !== "None" && (
                   <p className="text-2xs text-muted-foreground/60 mt-0.5">{item.check_in}</p>

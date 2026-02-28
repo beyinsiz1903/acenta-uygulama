@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { api, getUser } from "../lib/api";
+import { safeName } from "../utils/formatters";
 import { Skeleton } from "../components/ui/skeleton";
 import DashboardFilterBar from "../components/DashboardFilterBar";
 import ActivationChecklist from "../components/ActivationChecklist";

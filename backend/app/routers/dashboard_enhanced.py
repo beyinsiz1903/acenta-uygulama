@@ -120,7 +120,7 @@ async def reservation_widgets(
             abandoned.append({
                 "id": doc.get("id") or str(doc.get("_id", "")),
                 "guest_name": doc.get("guest_name") or doc.get("customer_name") or "Anonim",
-                "product_name": doc.get("product_name") or doc.get("hotel_name") or "",
+                "product_name": _str_name(doc.get("product_name") or doc.get("hotel_name")),
                 "total_price": float(doc.get("total_price") or 0),
                 "currency": doc.get("currency") or "TRY",
                 "created_at": str(doc.get("created_at") or ""),
@@ -138,7 +138,7 @@ async def reservation_widgets(
                 abandoned.append({
                     "id": doc.get("id") or str(doc.get("_id", "")),
                     "guest_name": doc.get("guest_name") or doc.get("customer_name") or "Anonim",
-                    "product_name": doc.get("product_name") or doc.get("hotel_name") or "",
+                    "product_name": _str_name(doc.get("product_name") or doc.get("hotel_name")),
                     "total_price": float(doc.get("total_price") or 0),
                     "currency": doc.get("currency") or "TRY",
                     "created_at": str(doc.get("created_at") or ""),

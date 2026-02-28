@@ -349,7 +349,7 @@ async def popular_products(
 
                 results.append({
                     "product_id": tour.get("id") or str(tour.get("_id", "")),
-                    "product_name": tour.get("name") or tour.get("title") or "Tur",
+                    "product_name": _str_name(tour.get("name") or tour.get("title"), "Tur"),
                     "image_url": image_url,
                     "reservation_count": 0,
                     "view_count": 0,

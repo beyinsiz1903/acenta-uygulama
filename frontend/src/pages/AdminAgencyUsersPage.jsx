@@ -197,7 +197,7 @@ export default function AdminAgencyUsersPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Acenta Kullanıcıları</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {agency ? `${agency.name} (${agency.id})` : "Seçili acenta"}
+            {agency ? `${safeName(agency.name)} (${agency.id})` : "Seçili acenta"}
           </p>
         </div>
         <div className="flex gap-2">

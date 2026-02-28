@@ -80,7 +80,7 @@ function AgencyModuleCard({ agency, onSaved }) {
       await api.put(`/admin/agencies/${agency._id || agency.id}/modules`, {
         allowed_modules: modules,
       });
-      toast.success(`${agency.name} modulleri guncellendi`);
+      toast.success(`${safeName(agency.name)} modulleri guncellendi`);
       if (onSaved) onSaved();
     } catch (e) {
       toast.error(e.response?.data?.detail || "Kaydetme hatasi");
@@ -100,7 +100,7 @@ function AgencyModuleCard({ agency, onSaved }) {
             <Building2 className="w-4 h-4 text-primary" />
           </div>
           <div className="text-left">
-            <div className="font-medium text-sm">{agency.name}</div>
+            <div className="font-medium text-sm">{safeName(agency.name)}</div>
             <div className="text-xs text-muted-foreground">
               {modules.length > 0 ? `${modules.length} modul aktif` : "Modul ayarlanmamis (tumu acik)"}
             </div>

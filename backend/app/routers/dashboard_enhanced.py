@@ -90,7 +90,7 @@ async def reservation_widgets(
             "id": doc.get("id") or str(doc.get("_id", "")),
             "pnr": doc.get("pnr") or doc.get("reservation_code") or "",
             "guest_name": doc.get("guest_name") or doc.get("customer_name") or "",
-            "product_name": doc.get("product_name") or doc.get("hotel_name") or doc.get("tour_name") or "",
+            "product_name": _str_name(doc.get("product_name") or doc.get("hotel_name") or doc.get("tour_name")),
             "status": doc.get("status", ""),
             "total_price": float(doc.get("total_price") or 0),
             "currency": doc.get("currency") or "TRY",

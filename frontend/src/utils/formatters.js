@@ -1,4 +1,20 @@
 /**
+ * Safely extract a display string from a value that may be a plain string
+ * or a multilingual object like {tr: "...", en: "..."}.
+ * @param {string|object} value - The value to display
+ * @param {string} [lang="tr"] - Preferred language code
+ * @returns {string}
+ */
+export function safeName(value, lang = "tr") {
+  if (!value) return "-";
+  if (typeof value === "string") return value;
+  if (typeof value === "object") {
+    return value[lang] || value.tr || value.en || JSON.stringify(value);
+  }
+  return String(value);
+}
+
+/**
  * Format ISO datetime string to Turkish locale
  * @param {string} isoString - ISO datetime string
  * @returns {string} Formatted datetime (18.12.2025 11:39)

@@ -229,6 +229,7 @@ export default function AdminAgenciesPage() {
               {agencies.map((agency) => (
                 <TableRow
                   key={agency.id}
+                  data-testid={`agency-row-${agency.id}`}
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() => {
                     setEditingAgency(agency);
@@ -240,7 +241,7 @@ export default function AdminAgenciesPage() {
                     setEditOpen(true);
                   }}
                 >
-                  <TableCell className="font-medium">{agency.name}</TableCell>
+                  <TableCell className="font-medium">{safeName(agency.name)}</TableCell>
                   <TableCell>
                     {getActiveStatus(agency) ? (
                       <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
@@ -250,7 +251,20 @@ export default function AdminAgenciesPage() {
                       <Badge variant="secondary">Pasif</Badge>
                     )}
                   </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {formatDateTime(agency.created_at)}
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {agency.created_by || "-"}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
+      {/* Edit Dialog - moved outside table */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
           <DialogHeader>
@@ -263,7 +277,7 @@ export default function AdminAgenciesPage() {
           {editingAgency && (
             <div className="space-y-4 text-sm">
               <div className="space-y-1">
-                <div className="font-medium">{editingAgency.name}</div>
+                <div className="font-medium">{safeName(editingAgency.name)}</div>
                 <div className="text-xs text-muted-foreground font-mono">{editingAgency.id}</div>
               </div>
 
@@ -301,20 +315,18 @@ export default function AdminAgenciesPage() {
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
-                {editingAgency && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setEditOpen(false);
-                      window.location.href = `/app/admin/agencies/${editingAgency.id}/users`;
-                    }}
-                    disabled={editLoading}
-                  >
-                    Kullanıcılar
-                  </Button>
-                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setEditOpen(false);
+                    window.location.href = `/app/admin/agencies/${editingAgency.id}/users`;
+                  }}
+                  disabled={editLoading}
+                >
+                  Kullanıcılar
+                </Button>
                 <Button
                   type="button"
                   variant="outline"
@@ -336,7 +348,6 @@ export default function AdminAgenciesPage() {
                       const payload = {};
                       const trimmed = (editForm.parent_agency_id || "").trim();
                       if (trimmed || editingAgency.parent_agency_id) {
-                        // Eğer input boş ama önce parent varsa, bunu temizlemek için explicit null gönderiyoruz
                         payload.parent_agency_id = trimmed || null;
                       }
                       if (editForm.status && editForm.status !== editingAgency.status) {
@@ -364,19 +375,6 @@ export default function AdminAgenciesPage() {
           )}
         </DialogContent>
       </Dialog>
-
-                  <TableCell className="text-sm text-muted-foreground">
-                    {formatDateTime(agency.created_at)}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {agency.created_by || "-"}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
     </div>
   );
 }

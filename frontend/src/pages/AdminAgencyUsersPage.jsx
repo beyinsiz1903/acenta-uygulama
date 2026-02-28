@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Users, AlertCircle, Loader2, Copy, ExternalLink } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
+import { safeName } from "../utils/formatters";
 import {
   Table,
   TableBody,

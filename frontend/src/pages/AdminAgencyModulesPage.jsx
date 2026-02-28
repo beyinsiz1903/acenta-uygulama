@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { api } from "../lib/api";
+import { safeName } from "../utils/formatters";
 import {
   Building2, CheckSquare, Square, Loader2, Save,
   RefreshCw, ChevronDown, ChevronRight,

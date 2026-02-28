@@ -12,6 +12,15 @@ from app.services.endpoint_cache import try_cache_get, cache_and_return
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
 
+def _str_name(val, default=""):
+    """Extract a plain string from a value that may be {tr: ..., en: ...} or a string."""
+    if isinstance(val, str):
+        return val
+    if isinstance(val, dict):
+        return val.get("tr") or val.get("en") or default
+    return default or ""
+
+
 @router.get("/kpi-stats")
 async def kpi_stats(user=Depends(get_current_user)):
     """Return Agentis-style KPI cards: Satışlar, Rezervasyon ratio, Dönüşüm Oranı, Online."""

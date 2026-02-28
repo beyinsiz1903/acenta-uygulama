@@ -325,7 +325,7 @@ function PopularProductsCarousel({ products, loading }) {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 <div className="absolute bottom-2 left-2 right-2">
                   <p className="text-white text-sm font-semibold truncate drop-shadow-lg">
-                    {product.product_name}
+                    {safeName(product.product_name)}
                   </p>
                   <div className="flex items-center gap-3 mt-1">
                     <span className="flex items-center gap-1 text-white/90 text-2xs">

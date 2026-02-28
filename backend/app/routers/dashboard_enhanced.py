@@ -328,7 +328,7 @@ async def popular_products(
 
             results.append({
                 "product_id": prod.get("id") or str(prod.get("_id", "")),
-                "product_name": prod.get("name") or prod.get("title") or "Ürün",
+                "product_name": _str_name(prod.get("name") or prod.get("title"), "Ürün"),
                 "image_url": image_url,
                 "reservation_count": 0,
                 "view_count": 0,

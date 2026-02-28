@@ -283,7 +283,7 @@ async def popular_products(
 
     results = []
     for p in popular:
-        product_name = p.get("product_name") or p.get("hotel_name") or p.get("tour_name") or "Ürün"
+        product_name = _str_name(p.get("product_name") or p.get("hotel_name") or p.get("tour_name"), "Ürün")
         product_id = p.get("_id") or ""
 
         # Get product image

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Hotel, AlertCircle, Loader2, Plus, X } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
-import { formatDateTime, getActiveStatus } from "../utils/formatters";
+import { formatDateTime, getActiveStatus, safeName } from "../utils/formatters";
 import {
   Table,
   TableBody,
@@ -293,7 +293,7 @@ export default function AdminHotelsPage() {
             <TableBody>
               {hotels.map((hotel) => (
                 <TableRow key={hotel.id}>
-                  <TableCell className="font-medium">{hotel.name}</TableCell>
+                  <TableCell className="font-medium">{safeName(hotel.name)}</TableCell>
                   <TableCell className="text-muted-foreground">{hotel.city || "-"}</TableCell>
                   <TableCell className="text-muted-foreground">{hotel.country || "-"}</TableCell>
                   <TableCell>

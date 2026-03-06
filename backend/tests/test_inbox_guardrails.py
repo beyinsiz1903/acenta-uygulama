@@ -16,7 +16,7 @@ import httpx
 
 
 # Test configuration
-BASE_URL = "https://travel-saas-refactor.preview.emergentagent.com"
+BASE_URL = "https://saas-audit-refactor.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

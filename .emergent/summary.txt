@@ -1,0 +1,173 @@
+<analysis>**original_problem_statement:**
+The user requested a full-stack, enterprise-grade audit and refactoring of their existing multi-tenant SaaS platform for travel agencies. The goal is to transform the project into a production-ready, secure, and scalable application.
+
+The agent is executing a pre-approved, multi-sprint engineering plan to systematically refactor the application.
+
+**PRODUCT REQUIREMENTS:**
+The high-level requirements are to refactor the platform based on the audit, focusing on a series of approved Pull Requests (PRs) covering:
+1.  **EPIC-01: Auth & Session Security:** Harden JWT, session management, and token storage.
+2.  **EPIC-02: Tenant Isolation Refactor:** Enforce strict tenant isolation at the data access layer.
+3.  **EPIC-03: Entitlement / Billing Unification:** Standardize the subscription and feature gating model.
+4.  **EPIC-04: API Standardization & Versioning:** Introduce versioned APIs ().
+5.  **EPIC-05: Backend Modular Refactor:** Restructure the backend into a modular monolith.
+6.  **EPIC-06: Frontend Architecture Refactor:** Improve the frontend structure and state management.
+7.  **EPIC-07: Mobile BFF / Mobile Contract Refactor:** Fix the broken mobile architecture.
+8.  **EPIC-08: Observability & Audit:** Implement enterprise-grade observability.
+9.  **EPIC-09: CI/CD & Deployment Hardening:** Create a reliable CI/CD pipeline and deployment strategy.
+10. **EPIC-10: Testing & Quality Gates:** Establish a comprehensive testing strategy.
+
+**User's preferred language**: Turkish
+
+**what currently exists?**
+The agent is systematically executing a pre-approved, multi-PR engineering plan.
+-   **PR-1 to PR-4 (Completed):** Foundational security and web authentication compatibility layers have been implemented.
+-   **PR-5A (Completed):** The Mobile BFF Backend was implemented, and the previously failing integration tests in  have been fixed and are now passing.
+-   **PR-6 (In Progress):** The agent has begun the Bootstrap Split / Runtime Separation task. The new file structure under  has been created, and  has been prepared to become a thin wrapper.
+
+**Last working item**:
+-   **Last item agent was working:** The agent was in the middle of implementing **PR-6: Bootstrap Split / Runtime Separation**. The file and directory structure for the refactor has been created as per the user-approved plan. The agent created the skeleton files (, , , and supporting modules) and is now ready to migrate the logic from  into these new, dedicated modules.
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** manual testing by . After the refactor is complete, the agent must perform smoke tests on critical endpoints (, , ) to ensure no regressions have been introduced. Following that, the  should be run for a full regression pass.
+-   **User Testing Done:** N
+
+**All Pending/In progress Issue list**:
+-   **Issue 1:** (P2) Minor API errors observed during smoke testing.
+
+  **Issues Detail:**
+  -   **Issue 1:**
+     -   **Description:** The user noted that several non-critical admin panel endpoints are returning errors (, , ). This is likely due to the recent tenancy and session hardening.
+     -   **Attempted fixes:** None. The user explicitly de-prioritized these and instructed the agent to address them in a separate, future cleanup PR.
+     -   **Next debug checklist:** This should be handled in a dedicated cleanup PR after major architectural work (like PR-6) is complete. The fix will involve investigating why the request context for these specific endpoints is failing tenant validation.
+     -   **Why fix this issue and what will be achieved with the fix?** To restore full functionality to the admin dashboard. This is not a core-flow blocker.
+     -   **Status:** NOT STARTED
+     -   **Is recurring issue?** N
+     -   **Should Test frontend/backend/both after fix?** backend
+     -   **Blocked on other issue:** None.
+
+**In progress Task List**:
+-   **Task 1:** (P0) Complete PR-6: Bootstrap Split / Runtime Separation
+
+  **Task Detail:**
+  -   **Task 1:**
+     -   **Where to resume:** The skeleton files under  and the  wrapper are in place. The agent must now proceed with migrating the application logic from  into the newly created files:
+         1.  Move middleware registration logic to .
+         2.  Move router inclusion logic () to .
+         3.  Move startup logic (DB connections, index creation) to  and .
+         4.  Move background task loops (e.g., ) to .
+         5.  Move all scheduler logic () to .
+         6.  Verify that  is reduced to a thin wrapper that imports and instantiates the app from .
+     -   **What will be achieved with this?** A clear separation of the API, background worker, and scheduler processes. This improves scalability, maintainability, and resource management, moving the platform closer to a production-grade architecture.
+     -   **Status:** IN PROGRESS
+     -   **Should Test frontend/backend/both after fix?** backend
+     -   **Blocked on something:** None.
+
+**Upcoming and Future Tasks**
+The roadmap is defined by the user-approved PR sequence.
+-   **Upcoming Tasks:**
+    -   **P0: Mobile Cutover Runbook:** Create a short, 1-page operational runbook for the eventual mobile app cutover to the new BFF. This is to be done after PR-6 is complete.
+    -   **P1: PR-5B — Mobile Secure Session + Mobile Client Changes:** Once the mobile repository is available, implement the client-side changes: migrate from  to , implement session bootstrap logic using the new BFF, and fix the auth contract.
+    -   **P1: PR-7 — Web Active Sessions Screen:** Create a UI for users to view and manage their active sessions.
+
+-   **Future Tasks:**
+    -   **EPIC-03: PR-8 — Entitlement / Billing Unification:** Unify feature/plan logic.
+    -   **EPIC-04: PR-9 — /api/v1 Standardization:** Continue API standardization.
+    -   **EPIC-08: PR-10 — Observability Stack:** Implement a unified observability stack.
+    -   And all other tasks from the 4-sprint plan.
+
+**Completed work in this session**
+-   **PR-5A: Mobile BFF Backend (Tests Fixed):**
+    -   Fixed the failing integration tests in  by correctly mocking the  dependency using FastAPI's . This completed the backend portion of PR-5.
+-   **PR-6: Bootstrap Split / Runtime Separation (Scaffolding):**
+    -   Created the new directory .
+    -   Created the skeleton files for the new runtime architecture: , , , , , and .
+    -   Prepared  to be converted into a thin compatibility wrapper.
+
+**Earlier issues found/mentioned but not fixed**
+-   **Issue 1:** Admin panel endpoints , , and  are failing. The user has explicitly deferred fixing these to a future cleanup PR.
+
+**Known issue recurrence from previous fork**
+-   **Issue recurrence in previous fork:**  linting failure.
+-   **Recurrence count:** 2
+-   **Status:** RESOLVED (Hardened in PR-1).
+
+**Code Architecture**
+The target architecture is a **Modular Monolith** with separated runtimes.
+
+
+**Key Technical Concepts**
+-   **SaaS Architecture:** Modular Monolith, Multi-Tenancy.
+-   **API Design:** Backend-for-Frontend (BFF) pattern.
+-   **Security:**  cookies, DB-backed Session Management, Tenant Isolation.
+-   **Testing:** Dependency injection override for testing protected endpoints in FastAPI.
+-   **Application Architecture:** Application Factory Pattern, Process Separation (API vs. Worker vs. Scheduler).
+
+**key DB schema**
+-   No changes to the database schema were made.
+
+**changes in tech stack**
+-   None. The work involves a major architectural refactor of the existing stack.
+
+**All files of reference**
+-   ****: **New Directory**. Contains the logic for the separated runtime processes.
+    -   : **New File**. Factory for creating the FastAPI application instance.
+    -   : **New File**. Entrypoint for running background worker tasks.
+    -   : **New File**. Entrypoint for running scheduled (cron) jobs.
+    -   : **New File**. Centralizes FastAPI middleware configuration.
+    -   : **New File**. Centralizes FastAPI router registration.
+    -   : **New File**. Contains shared startup/initialization logic.
+-   ****: **Updated**. In the process of being refactored into a thin wrapper that launches the app from .
+-   ****: **Updated**. Tests were fixed to correctly mock dependencies and are now passing.
+
+**Areas that need refactoring**:
+-   The primary task at hand is the completion of the  refactoring into the  module (PR-6).
+
+**key api endpoints**
+-   No new endpoints were created. PR-6 is a refactor of how existing endpoints are served.
+
+**Critical Info for New Agent**
+-   Your highest priority (P0) is to **complete PR-6**. You must resume the work by moving the logic from the monolithic  into the newly created files in .
+-   Follow the user-approved plan for PR-6 precisely. This is a pure refactor; **do not change any business logic** related to auth, tenancy, or the BFF.
+-   The user has provided a clear, prioritized roadmap: **1. PR-6 -> 2. Mobile Cutover Runbook -> 3. PR-5B -> 4. PR-7**. Do not deviate from this sequence.
+-   The minor errors in the admin panel are a low priority (P2) and should be ignored for now.
+-   All communication with the user must be in **Turkish**.
+
+**documents and test reports created in this job**
+-   
+
+**Last 10 User Messages and any pending HUMAN messages**
+- **User:** Approved the implementation plan for PR-6.
+- **Agent:** Proposed a detailed file structure and code skeleton for PR-6.
+- **User:** Selected options B+C: First share the PR-6 file structure / code skeleton and let remain as a thin wrapper / compat entry point.
+- **Agent:** Proposed plan options for PR-6.
+- **User:** Confirmed the priority order: 1. PR-6, 2. Mobile Cutover Runbook, 3. PR-5B, 4. PR-7. Also de-prioritized the admin smoke test errors, stating they are not P0.
+- **Agent:** Asked for clarification on creating a Mobile cutover runbook and confirmed the admin smoke test errors.
+- **User:** Agreed with creating an integration checklist for PR-5B but stated that moving on to PR-6 is the priority.
+- **Agent:** Presented a plan after fixing tests for PR-5A, including creating a checklist for PR-5B and then starting PR-6.
+- **User:** Confirmed that the Active Sessions screen should be removed from the immediate plan and handled later as PR-7.
+- **Agent:** Asked for confirmation of the plan to fix PR-5A tests and then proceed to the next items.
+
+**Project Health Check:**
+-   **Broken:** None.
+-   **Under Refactoring:** The backend runtime is in a transient state as  is being broken apart for PR-6. It is not broken but the refactor is incomplete.
+-   **Mocked:** The  dependency is correctly mocked in  for testing purposes.
+
+**3rd Party Integrations**
+-   Stripe (Payments)
+-   Google Sheets API
+
+**Testing status**
+-   **Testing agent used after significant changes:** NO
+-   **Troubleshoot agent used after agent stuck in loop:** NO
+-   **Test files created:**
+    -    (Now fixed and passing)
+-   **Known regressions:** None.
+
+**Credentials to test flow:**
+| Portal | Email | Password | Role |
+| :--- | :--- | :--- | :--- |
+| **Admin Portal** () |  |  | Super Admin |
+| **B2B Portal** () |  |  | Agency Admin |
+
+**What agent forgot to execute**
+The user initially requested a PR-5B entegrasyon checklist to be created before PR-6. However, the subsequent conversation with the user led to an agreement to prioritize and start PR-6 immediately. The user later clarified the new priority order is PR-6 followed by a Mobile Cutover Runbook. Therefore, the agent correctly followed the evolved plan and did not forget a task.</analysis>

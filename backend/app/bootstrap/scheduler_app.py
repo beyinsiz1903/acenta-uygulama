@@ -1,14 +1,71 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import os
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+from app.bootstrap.runtime_health import RuntimeHeartbeat, heartbeat_loop, install_signal_handlers
 from app.bootstrap.runtime_init import load_backend_env
 
 logger = logging.getLogger("scheduler_runtime")
+
+SCHEDULER_ENTRYPOINT = "python -m app.bootstrap.scheduler_app"
+SCHEDULER_RESPONSIBILITIES = [
+    "Billing finalize cron scheduler",
+    "Report schedule polling",
+    "Operational integrity and uptime checks",
+    "Google Sheets sync / write-back schedulers when enabled",
+]
+
+
+def _is_enabled(name: str, default: bool = True) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def get_scheduler_runtime_components() -> list[dict[str, object]]:
+    return [
+        {
+            "name": "billing-finalize-scheduler",
+            "env_flag": "SCHEDULER_ENABLED",
+            "enabled": _is_enabled("SCHEDULER_ENABLED", default=True),
+            "responsibility": "Monthly billing finalize cron",
+        },
+        {
+            "name": "report-check-scheduler",
+            "env_flag": None,
+            "enabled": True,
+            "responsibility": "Execute due report schedules every 15 minutes",
+        },
+        {
+            "name": "ops-check-scheduler",
+            "env_flag": None,
+            "enabled": True,
+            "responsibility": "Run uptime, audit-chain, ledger, and backup cleanup checks",
+        },
+        {
+            "name": "sheets-sync-scheduler",
+            "env_flag": "GOOGLE_SHEETS_SYNC_ENABLED",
+            "enabled": _is_enabled("GOOGLE_SHEETS_SYNC_ENABLED", default=True),
+            "responsibility": "Run sheet sync, portfolio sync, and write-back processing",
+        },
+    ]
+
+
+def _scheduler_snapshot(active_scheduler_ids: list[str] | None = None) -> dict[str, object]:
+    components = get_scheduler_runtime_components()
+    enabled_components = [component["name"] for component in components if component["enabled"]]
+    return {
+        "components": components,
+        "enabled_components": enabled_components,
+        "active_scheduler_ids": active_scheduler_ids or [],
+        "active_count": len(active_scheduler_ids or []),
+    }
 
 
 async def _build_report_scheduler() -> AsyncIOScheduler:
@@ -69,7 +126,7 @@ async def _build_ops_scheduler() -> AsyncIOScheduler:
 
 
 async def _build_sheets_scheduler() -> AsyncIOScheduler | None:
-    if os.environ.get("GOOGLE_SHEETS_SYNC_ENABLED", "true").lower() != "true":
+    if not _is_enabled("GOOGLE_SHEETS_SYNC_ENABLED", default=True):
         return None
 
     from app.db import get_db
@@ -132,17 +189,35 @@ async def main() -> None:
     load_backend_env()
 
     from app.billing.scheduler import start_scheduler, stop_scheduler
-    from app.bootstrap.runtime_init import init_observability, load_sheets_config_from_db, shutdown_runtime_resources
+    from app.bootstrap.runtime_init import (
+        ensure_jwt_secret,
+        init_observability,
+        load_sheets_config_from_db,
+        shutdown_runtime_resources,
+    )
     from app.db import close_mongo, connect_mongo, get_db
 
+    ensure_jwt_secret()
     init_observability()
+
+    stop_event = asyncio.Event()
+    install_signal_handlers(stop_event, "scheduler")
+    heartbeat = RuntimeHeartbeat(
+        "scheduler",
+        entrypoint=SCHEDULER_ENTRYPOINT,
+        responsibilities=SCHEDULER_RESPONSIBILITIES,
+    )
+    heartbeat.mark_starting(details=_scheduler_snapshot())
+
     await connect_mongo()
 
     schedulers: list[AsyncIOScheduler] = []
+    heartbeat_task: asyncio.Task | None = None
     try:
         db = await get_db()
         await load_sheets_config_from_db(db)
 
+        billing_scheduler_enabled = _is_enabled("SCHEDULER_ENABLED", default=True)
         start_scheduler()
 
         report_scheduler = await _build_report_scheduler()
@@ -158,13 +233,35 @@ async def main() -> None:
             sheets_scheduler.start()
             schedulers.append(sheets_scheduler)
 
-        logger.info("Scheduler runtime started with %d schedulers", len(schedulers) + 1)
-        await asyncio.Event().wait()
+        active_scheduler_ids: list[str] = []
+        if billing_scheduler_enabled:
+            active_scheduler_ids.append("billing-finalize")
+        active_scheduler_ids.extend(
+            [scheduler_id for scheduler_id, enabled in (("reports", True), ("ops", True), ("sheets", sheets_scheduler is not None)) if enabled]
+        )
+        heartbeat.mark_ready(details=_scheduler_snapshot(active_scheduler_ids))
+        heartbeat_task = asyncio.create_task(
+            heartbeat_loop(
+                heartbeat,
+                stop_event,
+                snapshot=lambda: _scheduler_snapshot(active_scheduler_ids),
+            ),
+            name="scheduler-heartbeat",
+        )
+
+        logger.info("Scheduler runtime started with %d schedulers", len(active_scheduler_ids))
+        await stop_event.wait()
     finally:
+        stop_event.set()
+        if heartbeat_task is not None:
+            heartbeat_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await heartbeat_task
         for scheduler in reversed(schedulers):
             if scheduler.running:
                 scheduler.shutdown(wait=False)
         stop_scheduler()
+        heartbeat.mark_stopped(details=_scheduler_snapshot())
         shutdown_runtime_resources()
         await close_mongo()
 

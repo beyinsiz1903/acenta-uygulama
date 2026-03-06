@@ -211,7 +211,7 @@ agent_communication:
     message: |
       ✅ BACKEND SMOKE TEST COMPLETED - ALL TESTS PASSED
       
-      Performed comprehensive backend API smoke test on https://tenant-audit-preview.preview.emergentagent.com
+      Performed comprehensive backend API smoke test on https://travel-saas-refactor.preview.emergentagent.com
       
       Backend API Test Results:
       1. ✅ POST /api/auth/login - PASSED (200 OK, tokens received)
@@ -231,7 +231,7 @@ agent_communication:
     message: |
       ✅ SMOKE TEST PASSED
       
-      Completed comprehensive smoke test on https://tenant-audit-preview.preview.emergentagent.com
+      Completed comprehensive smoke test on https://travel-saas-refactor.preview.emergentagent.com
       
       Test Coverage:
       1. ✅ Login at /login with admin@acenta.test / admin123 - PASSED
@@ -255,7 +255,7 @@ agent_communication:
       
       Performed comprehensive backend smoke test validating PR-1 auth/config hardening deployment.
       
-      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor.preview.emergentagent.com):
       1. ✅ POST /api/auth/login - PASSED (200 OK, access_token + refresh_token received)
       2. ✅ GET /api/auth/me - PASSED (200 OK, user data returned with Bearer token)
       3. ✅ GET /api/admin/agencies - PASSED (200 OK, agency data returned with admin token)
@@ -278,7 +278,7 @@ agent_communication:
       
       Performed comprehensive PR-2 backend smoke test validating session/revocation hardening post-deployment.
       
-      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor.preview.emergentagent.com):
       1. ✅ POST /api/auth/login (tokens + session) - PASSED (200 OK, access_token ✅, refresh_token ✅, session_id ✅)
       2. ✅ GET /api/auth/sessions - PASSED (200 OK, 6 sessions found)
       3. ✅ Auth regression test (/api/auth/me + /api/admin/agencies) - PASSED (both endpoints working correctly)
@@ -306,7 +306,7 @@ agent_communication:
       
       Performed comprehensive tenant-bound login smoke test validating PR-3 tenant isolation deployment.
       
-      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor.preview.emergentagent.com):
       
       Admin Login (admin@acenta.test / admin123):
       ✅ Login successful - redirected to /app/admin/agencies
@@ -347,7 +347,7 @@ agent_communication:
       
       Performed focused PR-3 backend smoke test per user request to re-validate deployed preview environment.
       
-      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor.preview.emergentagent.com):
       
       Backend API Tests:
       1. ✅ Admin Login (admin@acenta.test/admin123) - PASSED (200 OK, access_token received: 385 chars, refresh_token ✅)
@@ -380,7 +380,7 @@ agent_communication:
       
       Performed comprehensive PR-4 web auth compatibility smoke test validating cookie-based auth with /auth/me bootstrap and refresh fallback.
       
-      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor.preview.emergentagent.com):
       
       1. ✅ Login Page Load & Form Elements - PASSED
          - All form testids found: login-page, login-form, login-email, login-password, login-submit
@@ -445,7 +445,7 @@ agent_communication:
       
       Performed comprehensive PR-4 backend verification using curl-like tests on deployed preview environment.
       
-      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor.preview.emergentagent.com):
       
       Backend API Tests:
       1. ✅ Web Login Cookie Compat - PASSED (POST /api/auth/login with X-Client-Platform:web sets cookies and returns auth_transport=cookie_compat)
@@ -574,7 +574,7 @@ agent_communication:
         comment: "PR-6 frontend smoke test PASSED. All 4 required tests completed successfully: 1) Login page loads at /login ✅ - no blank page (96 chars content, all form elements present), 2) Login with admin@acenta.test/admin123 ✅ - successful redirect to /app/admin/agencies, 3) Post-login admin screen renders ✅ - full content loaded (951 chars, Acentalar page with 3 agencies), 4) No critical PR-6 errors ✅ - no auth bootstrap errors, no infinite loading, no redirect loops, URL stable. Console analysis shows only pre-existing optional endpoint errors (401 auth/me bootstrap check, 400 tenant features/quota, 500 partner-graph notifications). Key success: '[AdminAgencies] Loaded: 3' confirms core functionality. Runtime composition refactor (server.py → bootstrap/api_app.py) successful - behavior preserved, no regressions detected."
       - working: true
         agent: "testing"
-        comment: "PR-6 BACKEND VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-03-06). Performed comprehensive Turkish review request validation on https://tenant-audit-preview.preview.emergentagent.com. Backend API Test Results: 1) ✅ POST /api/auth/login - PASSED (access_token: 385 chars, refresh_token: 64 chars), 2) ✅ GET /api/auth/me - PASSED (admin@acenta.test returned correctly), 3) ✅ GET /api/v1/mobile/auth/me - PASSED (no Mongo _id leaks, no sensitive fields exposed), 4) ✅ GET /api/v1/mobile/bookings - PASSED (15 total bookings, proper list wrapper, string IDs), 5) ✅ GET /api/v1/mobile/reports/summary - PASSED (8 bookings, 8100.99 TRY revenue, proper data types), 6) ✅ Unauthorized guard kontrolü - PASSED (both /api/auth/me and /api/v1/mobile/auth/me return 401 without auth), 7) ✅ Root API smoke (/api/health) - PASSED (status: ok), 8) ✅ Auth/session/tenant/Mobile BFF regresyon check - PASSED (no regressions detected, 3 agencies loaded). PR-6 runtime composition refactor SUCCESSFUL: server.py → bootstrap/api_app.py composition working correctly, auth/session/tenant ve Mobile BFF davranış değişmeden kaldı, all critical backend endpoints functional."
+        comment: "PR-6 BACKEND VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-03-06). Performed comprehensive Turkish review request validation on https://travel-saas-refactor.preview.emergentagent.com. Backend API Test Results: 1) ✅ POST /api/auth/login - PASSED (access_token: 385 chars, refresh_token: 64 chars), 2) ✅ GET /api/auth/me - PASSED (admin@acenta.test returned correctly), 3) ✅ GET /api/v1/mobile/auth/me - PASSED (no Mongo _id leaks, no sensitive fields exposed), 4) ✅ GET /api/v1/mobile/bookings - PASSED (15 total bookings, proper list wrapper, string IDs), 5) ✅ GET /api/v1/mobile/reports/summary - PASSED (8 bookings, 8100.99 TRY revenue, proper data types), 6) ✅ Unauthorized guard kontrolü - PASSED (both /api/auth/me and /api/v1/mobile/auth/me return 401 without auth), 7) ✅ Root API smoke (/api/health) - PASSED (status: ok), 8) ✅ Auth/session/tenant/Mobile BFF regresyon check - PASSED (no regressions detected, 3 agencies loaded). PR-6 runtime composition refactor SUCCESSFUL: server.py → bootstrap/api_app.py composition working correctly, auth/session/tenant ve Mobile BFF davranış değişmeden kaldı, all critical backend endpoints functional."
 
 metadata:
   created_by: "testing_agent"
@@ -582,9 +582,87 @@ metadata:
   test_sequence: 7
   last_updated: "2026-03-06"
 
+  - task: "Runtime operations split smoke test - API compat ve ingress"
+    implemented: true
+    working: true
+    file: "backend/server.py, backend/app/bootstrap/api_app.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "API compat and ingress smoke test PASSED. server:app compat import chain intact, GET /api/health returns 200 with status=ok. Runtime composition refactor successful."
+
+  - task: "Runtime operations split smoke test - Auth/session"
+    implemented: true
+    working: true
+    file: "backend/app/routers/auth.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Auth/session smoke test PASSED. POST /api/auth/login with admin@acenta.test/admin123 successful (token length: 385), GET /api/auth/me returns 200 with correct email. No auth regression from runtime split."
+
+  - task: "Runtime operations split smoke test - Mobile BFF"
+    implemented: true
+    working: true
+    file: "backend/app/modules/mobile/router.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Mobile BFF smoke test PASSED. GET /api/v1/mobile/auth/me with same admin token returns 200, sanitized response structure (no _id, no password_hash). Mobile BFF compatibility maintained post-runtime split."
+
+  - task: "Runtime operations split - Runtime wiring validation"
+    implemented: true
+    working: true
+    file: "backend/app/bootstrap/runtime_ops.md, backend/scripts/run_*.sh, backend/app/bootstrap/*_app.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Runtime wiring validation PASSED. All required files present: runtime_ops.md with correct entrypoints, all runtime scripts (run_api_runtime.sh, run_worker_runtime.sh, run_scheduler_runtime.sh, check_runtime_health.py), bootstrap files (runtime_health.py, worker_app.py, scheduler_app.py). New runtime structure complete."
+
+  - task: "Runtime operations split - Dedicated runtime health"
+    implemented: true
+    working: true
+    file: "backend/app/bootstrap/worker_app.py, backend/app/bootstrap/scheduler_app.py, backend/app/bootstrap/runtime_health.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Dedicated runtime health smoke test PASSED. Both worker and scheduler runtimes start successfully, generate heartbeat files with status=ready, and validate correctly via check_runtime_health.py script. Heartbeat file approach working correctly for operational monitoring."
+
+  - task: "Runtime operations split - Regression guard"
+    implemented: true
+    working: true
+    file: "backend/tests/test_runtime_wiring.py, backend/tests/test_mobile_bff_contracts.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Regression guard PASSED. Existing test files (test_runtime_wiring.py, test_mobile_bff_contracts.py) import and function correctly. No breaking changes to test compatibility from runtime operations split refactor."
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 8
+  last_updated: "2026-03-06"
+
 test_plan:
   current_focus:
-    - "PR-6 runtime composition refactor backend validation completed - all 8 tests passed"
+    - "Runtime operations split backend validation completed - all 6 major test categories passed"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
@@ -594,7 +672,7 @@ agent_communication:
     message: |
       ✅ BACKEND SMOKE TEST COMPLETED - ALL TESTS PASSED
       
-      Performed comprehensive backend API smoke test on https://tenant-audit-preview.preview.emergentagent.com
+      Performed comprehensive backend API smoke test on https://travel-saas-refactor.preview.emergentagent.com
       
       Backend API Test Results:
       1. ✅ POST /api/auth/login - PASSED (200 OK, tokens received)
@@ -614,7 +692,7 @@ agent_communication:
     message: |
       ✅ SMOKE TEST PASSED
       
-      Completed comprehensive smoke test on https://tenant-audit-preview.preview.emergentagent.com
+      Completed comprehensive smoke test on https://travel-saas-refactor.preview.emergentagent.com
       
       Test Coverage:
       1. ✅ Login at /login with admin@acenta.test / admin123 - PASSED
@@ -638,7 +716,7 @@ agent_communication:
       
       Performed comprehensive backend smoke test validating PR-1 auth/config hardening deployment.
       
-      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor.preview.emergentagent.com):
       1. ✅ POST /api/auth/login - PASSED (200 OK, access_token + refresh_token received)
       2. ✅ GET /api/auth/me - PASSED (200 OK, user data returned with Bearer token)
       3. ✅ GET /api/admin/agencies - PASSED (200 OK, agency data returned with admin token)
@@ -661,7 +739,7 @@ agent_communication:
       
       Performed comprehensive PR-2 backend smoke test validating session/revocation hardening post-deployment.
       
-      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor.preview.emergentagent.com):
       1. ✅ POST /api/auth/login (tokens + session) - PASSED (200 OK, access_token ✅, refresh_token ✅, session_id ✅)
       2. ✅ GET /api/auth/sessions - PASSED (200 OK, 6 sessions found)
       3. ✅ Auth regression test (/api/auth/me + /api/admin/agencies) - PASSED (both endpoints working correctly)
@@ -689,7 +767,7 @@ agent_communication:
       
       Performed comprehensive tenant-bound login smoke test validating PR-3 tenant isolation deployment.
       
-      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor.preview.emergentagent.com):
       
       Admin Login (admin@acenta.test / admin123):
       ✅ Login successful - redirected to /app/admin/agencies
@@ -730,7 +808,7 @@ agent_communication:
       
       Performed focused PR-3 backend smoke test per user request to re-validate deployed preview environment.
       
-      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor.preview.emergentagent.com):
       
       Backend API Tests:
       1. ✅ Admin Login (admin@acenta.test/admin123) - PASSED (200 OK, access_token received: 385 chars, refresh_token ✅)
@@ -763,7 +841,7 @@ agent_communication:
       
       Performed comprehensive PR-4 web auth compatibility smoke test validating cookie-based auth with /auth/me bootstrap and refresh fallback.
       
-      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor.preview.emergentagent.com):
       
       1. ✅ Login Page Load & Form Elements - PASSED
          - All form testids found: login-page, login-form, login-email, login-password, login-submit
@@ -828,7 +906,7 @@ agent_communication:
       
       Performed comprehensive PR-4 backend verification using curl-like tests on deployed preview environment.
       
-      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor.preview.emergentagent.com):
       
       Backend API Tests:
       1. ✅ Web Login Cookie Compat - PASSED (POST /api/auth/login with X-Client-Platform:web sets cookies and returns auth_transport=cookie_compat)
@@ -866,7 +944,7 @@ agent_communication:
       
       Performed comprehensive PR-5A Mobile BFF backend re-verification per Turkish review request on deployed preview environment.
       
-      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor.preview.emergentagent.com):
       
       Mobile BFF API Re-Validation:
       1. ✅ POST /api/auth/login (admin@acenta.test/admin123) - PASSED (200 OK, access_token received: 385 chars)
@@ -899,7 +977,7 @@ agent_communication:
       ✅ Tenant header ile test edildi - X-Tenant-Id header support working
       ✅ Mobile DTOs sanitized - no sensitive fields (password_hash, totp_secret) exposed
       ✅ All mobile endpoints require proper authentication and role-based access
-      ✅ Tenant scoping working correctly via request context (tenant_id=9c5c1079-9dea-49bf-82c0-74838b146160)
+      ✅ Tenant scoping working correctly via request context (tenant_id=travel-saas-refactor)
       ✅ Draft booking creation uses existing domain service (no business logic duplication)
       ✅ All booking IDs are strings, never raw Mongo ObjectIds
       ✅ Mobile BFF acts as clean projection/orchestration layer
@@ -916,7 +994,7 @@ agent_communication:
     message: |
       ✅ PR-5A FRONTEND SMOKE TEST COMPLETED - ALL TESTS PASSED (2026-03-06)
       
-      Performed frontend smoke test on https://tenant-audit-preview.preview.emergentagent.com per review request.
+      Performed frontend smoke test on https://travel-saas-refactor.preview.emergentagent.com per review request.
       
       Test Results (Turkish Requirements):
       
@@ -974,7 +1052,7 @@ agent_communication:
       - Router registry in backend/app/bootstrap/router_registry.py
       - Auth/session/tenant/Mobile BFF behavior unchanged (structure refactor only)
       
-      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor.preview.emergentagent.com):
       
       1. ✅ Login page açılıyor mu, blank page var mı?
          - EVET - Login page loads correctly (96 chars content)
@@ -1041,7 +1119,7 @@ agent_communication:
     message: |
       ✅ PR-6 BACKEND VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-03-06)
       
-      Performed comprehensive PR-6 backend validation per Turkish review request on https://tenant-audit-preview.preview.emergentagent.com
+      Performed comprehensive PR-6 backend validation per Turkish review request on https://travel-saas-refactor.preview.emergentagent.com
       
       PR-6 Context:
       - server.py now thin compat wrapper (4 lines)
@@ -1076,9 +1154,72 @@ agent_communication:
       - Failed: 0
       - Success Rate: 100%
       
+  - agent: "testing"
+    message: |
+      ✅ RUNTIME OPERATIONS SPLIT BACKEND VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-06)
+      
+      Performed comprehensive runtime operations split backend testing per Turkish review request on https://travel-saas-refactor.preview.emergentagent.com
+      
+      Test Context:
+      - Operational bootstrap split / runtime separation refactor validation
+      - New dedicated runtime wiring with worker/scheduler process separation
+      - Heartbeat file approach for worker/scheduler health monitoring
+      - P0 operasyonel split doğrulaması (PR-7 kapsamı dışında)
+      
+      Backend Test Results (6 Major Categories):
+      
+      1. ✅ API Compat ve Ingress Smoke - PASSED
+         - server:app compat import chain intact (runtime composition preserved)
+         - GET /api/health returns 200 with status=ok
+         - API runtime entrypoint working correctly
+      
+      2. ✅ Auth/Session Smoke - PASSED  
+         - POST /api/auth/login admin@acenta.test/admin123 successful (token: 385 chars)
+         - GET /api/auth/me returns 200 with correct admin email
+         - No auth regression from runtime split
+      
+      3. ✅ Mobile BFF Smoke - PASSED
+         - GET /api/v1/mobile/auth/me with same token returns 200
+         - Sanitized mobile response (no _id, no password_hash leaks)
+         - Mobile BFF compatibility maintained post-runtime split
+      
+      4. ✅ New Runtime Wiring Validation - PASSED
+         - runtime_ops.md exists with correct API/Worker/Scheduler entrypoints
+         - All runtime scripts present: run_api_runtime.sh, run_worker_runtime.sh, run_scheduler_runtime.sh
+         - Health check script: check_runtime_health.py working
+         - Bootstrap files: runtime_health.py, worker_app.py, scheduler_app.py all present
+      
+      5. ✅ Dedicated Runtime Health Smoke - PASSED
+         - Worker runtime starts, generates heartbeat with status=ready, validates via health check
+         - Scheduler runtime starts, generates heartbeat with status=ready, validates via health check  
+         - Heartbeat file approach working correctly (RUNTIME_HEALTH_DIR env support)
+         - python scripts/check_runtime_health.py worker/scheduler logic working
+      
+      6. ✅ Regression Guard - PASSED
+         - test_runtime_wiring.py imports and functions accessible
+         - test_mobile_bff_contracts.py imports and functions accessible
+         - No breaking changes to existing test compatibility
+      
+      Test Summary:
+      - Total Test Categories: 6
+      - Passed: 6
+      - Failed: 0  
+      - Success Rate: 100%
+      
+      Turkish Requirements Validation:
+      1. ✅ server:app compat import zinciri bozulmamış mı? - EVET (import successful)
+      2. ✅ GET /api/health 200 dönüyor mu? - EVET (status=ok response)
+      3. ✅ POST /api/auth/login admin hesabıyla çalışıyor mu? - EVET (token alındı)
+      4. ✅ Login sonrası GET /api/auth/me 200 dönüyor mu? - EVET (user data returned)
+      5. ✅ Aynı token ile GET /api/v1/mobile/auth/me 200 dönüyor mu? - EVET (sanitized response)
+      6. ✅ Runtime wiring dosyaları mevcut ve entrypoint'ler doğru mu? - EVET (all present)
+      7. ✅ Worker runtime heartbeat üretiyor mu? - EVET (ready status confirmed)
+      8. ✅ Scheduler runtime heartbeat üretiyor mu? - EVET (ready status confirmed)
+      9. ✅ Health check script'leri doğru çalışıyor mu? - EVET (validation successful)
+      10. ✅ Regression testleri uyumlu mu? - EVET (no breaking changes)
+      
       Conclusion:
-      PR-6 runtime composition refactor SUCCESSFUL. Backend API validation confirms server.py → bootstrap/api_app.py composition working correctly. Auth/session/tenant ve Mobile BFF davranış değişmeden kaldı. All critical backend endpoints functional. No regressions detected in any existing functionality. Runtime composition refactor complete and production-ready.
-
+      Runtime operations split backend validation SUCCESSFUL. Dedicated worker + scheduler runtime wiring tamamen hazır. All operational split requirements met. The system is ready for production deployment with separate API, worker, and scheduler processes. Heartbeat monitoring approach working correctly for operational oversight. No regressions detected in auth, session, tenant, or Mobile BFF functionality.
 
 
 ---

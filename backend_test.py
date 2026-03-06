@@ -1,161 +1,157 @@
 #!/usr/bin/env python3
 """
-Backend test script for auth JWT and org context CI fix validation
-Based on Turkish review request requirements.
+Backend smoke test for CI exit gate validation.
+Tests the specific points mentioned in the Turkish review request.
 """
 
-import asyncio
-import httpx
-import json
-from typing import Dict, Any
+import os
+import requests
+import sys
 
-# Configuration
+# Use the same backend URL as the frontend
 BASE_URL = "https://travel-saas-refactor.preview.emergentagent.com"
-ADMIN_CREDENTIALS = {"email": "admin@acenta.test", "password": "admin123"}
 
-class BackendTester:
-    def __init__(self):
-        self.base_url = BASE_URL
-        self.admin_token = None
-        self.results = []
+# Test credentials
+ADMIN_CREDS = {"email": "admin@acenta.test", "password": "admin123"}
+AGENT_CREDS = {"email": "agent@acenta.test", "password": "agent123"}
 
-    def log_result(self, test_name: str, success: bool, details: str = ""):
-        status = "✅ PASSED" if success else "❌ FAILED"
-        self.results.append(f"{status} {test_name}: {details}")
-        print(f"{status} {test_name}: {details}")
-
-    async def test_health_endpoint(self):
-        """Test GET /api/health"""
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(f"{self.base_url}/api/health")
-                success = response.status_code == 200
-                details = f"Status: {response.status_code}"
-                if success:
-                    data = response.json()
-                    details += f", Response: {data}"
-                self.log_result("GET /api/health", success, details)
-                return success
-        except Exception as e:
-            self.log_result("GET /api/health", False, f"Exception: {str(e)}")
-            return False
-
-    async def test_login_endpoint(self):
-        """Test POST /api/auth/login with admin@acenta.test"""
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    f"{self.base_url}/api/auth/login",
-                    json=ADMIN_CREDENTIALS
-                )
-                success = response.status_code == 200
-                details = f"Status: {response.status_code}"
-                
-                if success:
-                    data = response.json()
-                    self.admin_token = data.get("access_token")
-                    token_length = len(self.admin_token) if self.admin_token else 0
-                    details += f", Token length: {token_length}"
-                else:
-                    details += f", Error: {response.text}"
-                
-                self.log_result("POST /api/auth/login", success, details)
-                return success
-        except Exception as e:
-            self.log_result("POST /api/auth/login", False, f"Exception: {str(e)}")
-            return False
-
-    async def test_auth_me_endpoint(self):
-        """Test GET /api/auth/me with admin token"""
-        if not self.admin_token:
-            self.log_result("GET /api/auth/me", False, "No admin token available")
-            return False
-
-        try:
-            async with httpx.AsyncClient() as client:
-                headers = {"Authorization": f"Bearer {self.admin_token}"}
-                response = await client.get(f"{self.base_url}/api/auth/me", headers=headers)
-                success = response.status_code == 200
-                details = f"Status: {response.status_code}"
-                
-                if success:
-                    data = response.json()
-                    email = data.get("email", "No email")
-                    details += f", Email: {email}"
-                else:
-                    details += f", Error: {response.text}"
-                
-                self.log_result("GET /api/auth/me", success, details)
-                return success
-        except Exception as e:
-            self.log_result("GET /api/auth/me", False, f"Exception: {str(e)}")
-            return False
-
-    async def test_mobile_auth_me_endpoint(self):
-        """Test GET /api/v1/mobile/auth/me with admin token"""
-        if not self.admin_token:
-            self.log_result("GET /api/v1/mobile/auth/me", False, "No admin token available")
-            return False
-
-        try:
-            async with httpx.AsyncClient() as client:
-                headers = {"Authorization": f"Bearer {self.admin_token}"}
-                response = await client.get(f"{self.base_url}/api/v1/mobile/auth/me", headers=headers)
-                success = response.status_code == 200
-                details = f"Status: {response.status_code}"
-                
-                if success:
-                    data = response.json()
-                    email = data.get("email", "No email")
-                    # Check for no sensitive fields
-                    sensitive_fields = ["password_hash", "totp_secret", "_id"]
-                    has_sensitive = any(field in data for field in sensitive_fields)
-                    details += f", Email: {email}, Sensitive fields: {'FOUND' if has_sensitive else 'NONE'}"
-                else:
-                    details += f", Error: {response.text}"
-                
-                self.log_result("GET /api/v1/mobile/auth/me", success, details)
-                return success
-        except Exception as e:
-            self.log_result("GET /api/v1/mobile/auth/me", False, f"Exception: {str(e)}")
-            return False
-
-    async def run_all_tests(self):
-        """Run all backend tests"""
-        print("🔥 BACKEND AUTH JWT AND ORG CONTEXT CI FIX VALIDATION")
-        print("=" * 60)
-        
-        test_methods = [
-            self.test_health_endpoint,
-            self.test_login_endpoint,
-            self.test_auth_me_endpoint,
-            self.test_mobile_auth_me_endpoint,
-        ]
-        
-        passed_count = 0
-        total_count = len(test_methods)
-        
-        for test_method in test_methods:
-            success = await test_method()
-            if success:
-                passed_count += 1
-        
-        print("\n" + "=" * 60)
-        print(f"SUMMARY: {passed_count}/{total_count} tests passed")
-        
-        if passed_count == total_count:
-            print("🎉 ALL TESTS PASSED - CI fix validation successful!")
+def test_health_endpoint():
+    """Test /api/health endpoint."""
+    print("1. Testing /api/health...")
+    try:
+        response = requests.get(f"{BASE_URL}/api/health")
+        if response.status_code == 200:
+            data = response.json()
+            print(f"   ✅ PASS: /api/health returned {response.status_code} with status: {data.get('status')}")
+            return True
         else:
-            print("⚠️  SOME TESTS FAILED - CI fix needs attention")
+            print(f"   ❌ FAIL: /api/health returned {response.status_code}: {response.text}")
+            return False
+    except Exception as e:
+        print(f"   ❌ FAIL: /api/health error: {e}")
+        return False
+
+def test_auth_me_endpoint():
+    """Test /api/auth/me endpoint with admin token."""
+    print("\n2. Testing /api/auth/me...")
+    try:
+        # First login to get token
+        login_response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
+        if login_response.status_code != 200:
+            print(f"   ❌ FAIL: Admin login failed: {login_response.status_code}: {login_response.text}")
+            return False
         
-        return passed_count == total_count
+        login_data = login_response.json()
+        token = login_data.get("access_token")
+        if not token:
+            print(f"   ❌ FAIL: No access_token in login response: {login_data}")
+            return False
+        
+        # Now test /auth/me
+        me_response = requests.get(
+            f"{BASE_URL}/api/auth/me",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+        if me_response.status_code == 200:
+            me_data = me_response.json()
+            print(f"   ✅ PASS: /api/auth/me returned {me_response.status_code} with email: {me_data.get('email')}")
+            return True
+        else:
+            print(f"   ❌ FAIL: /api/auth/me returned {me_response.status_code}: {me_response.text}")
+            return False
+            
+    except Exception as e:
+        print(f"   ❌ FAIL: /api/auth/me error: {e}")
+        return False
 
+def test_mobile_auth_me_endpoint():
+    """Test /api/v1/mobile/auth/me endpoint."""
+    print("\n3. Testing /api/v1/mobile/auth/me...")
+    try:
+        # First login to get token
+        login_response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
+        if login_response.status_code != 200:
+            print(f"   ❌ FAIL: Admin login failed: {login_response.status_code}: {login_response.text}")
+            return False
+        
+        login_data = login_response.json()
+        token = login_data.get("access_token")
+        if not token:
+            print(f"   ❌ FAIL: No access_token in login response: {login_data}")
+            return False
+        
+        # Now test mobile /auth/me
+        mobile_me_response = requests.get(
+            f"{BASE_URL}/api/v1/mobile/auth/me",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+        if mobile_me_response.status_code == 200:
+            mobile_data = mobile_me_response.json()
+            print(f"   ✅ PASS: /api/v1/mobile/auth/me returned {mobile_me_response.status_code} with email: {mobile_data.get('email')}")
+            return True
+        else:
+            print(f"   ❌ FAIL: /api/v1/mobile/auth/me returned {mobile_me_response.status_code}: {mobile_me_response.text}")
+            return False
+            
+    except Exception as e:
+        print(f"   ❌ FAIL: /api/v1/mobile/auth/me error: {e}")
+        return False
 
-async def main():
-    tester = BackendTester()
-    success = await tester.run_all_tests()
-    return success
+def test_auth_tenant_regression():
+    """Test that auth and tenant flows still work correctly."""
+    print("\n4. Testing auth/tenant regression...")
+    try:
+        # Test admin login
+        admin_response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
+        if admin_response.status_code != 200:
+            print(f"   ❌ FAIL: Admin login regression: {admin_response.status_code}: {admin_response.text}")
+            return False
+        
+        # Test agency login  
+        agent_response = requests.post(f"{BASE_URL}/api/auth/login", json=AGENT_CREDS)
+        if agent_response.status_code != 200:
+            print(f"   ❌ FAIL: Agency login regression: {agent_response.status_code}: {agent_response.text}")
+            return False
+            
+        print(f"   ✅ PASS: Both admin and agency login working correctly")
+        return True
+        
+    except Exception as e:
+        print(f"   ❌ FAIL: Auth/tenant regression test error: {e}")
+        return False
+
+def main():
+    """Run all smoke tests."""
+    print("=== CI Exit Gate Backend Smoke Test ===")
+    print(f"Base URL: {BASE_URL}")
+    
+    tests = [
+        test_health_endpoint,
+        test_auth_me_endpoint,
+        test_mobile_auth_me_endpoint,
+        test_auth_tenant_regression,
+    ]
+    
+    passed = 0
+    total = len(tests)
+    
+    for test_func in tests:
+        try:
+            if test_func():
+                passed += 1
+        except Exception as e:
+            print(f"   ❌ FAIL: {test_func.__name__} crashed: {e}")
+    
+    print(f"\n=== Test Results ===")
+    print(f"Passed: {passed}/{total}")
+    print(f"Success rate: {(passed/total)*100:.0f}%")
+    
+    if passed == total:
+        print("✅ All smoke tests PASSED")
+        return 0
+    else:
+        print("❌ Some smoke tests FAILED")
+        return 1
 
 if __name__ == "__main__":
-    result = asyncio.run(main())
-    exit(0 if result else 1)
+    sys.exit(main())

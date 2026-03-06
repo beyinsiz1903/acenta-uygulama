@@ -19,14 +19,39 @@ import os
 import pytest
 import requests
 
-# Skip conftest autouse fixtures by marking as external HTTP tests
-pytestmark = pytest.mark.usefixtures()
-
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://travel-saas-refactor.preview.emergentagent.com").rstrip("/")
 
 # Test credentials
 ADMIN_CREDS = {"email": "admin@acenta.test", "password": "admin123"}
 AGENT_CREDS = {"email": "agent@acenta.test", "password": "agent123"}
+
+
+@pytest.fixture(scope="module")
+def preview_admin_auth():
+    """Login once per module and reuse the same preview auth context."""
+    response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
+    assert response.status_code == 200, f"Admin login failed: {response.text}"
+    data = response.json()
+    token = data.get("access_token")
+    assert token, f"No access_token in response: {data}"
+
+    me_response = requests.get(
+        f"{BASE_URL}/api/auth/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    me_data = me_response.json() if me_response.status_code == 200 else {}
+
+    return {
+        "token": token,
+        "login_response": data,
+        "tenant_id": me_data.get("tenant_id"),
+    }
+
+
+@pytest.fixture(scope="module")
+def admin_headers(preview_admin_auth):
+    """Return headers with preview admin token."""
+    return {"Authorization": f"Bearer {preview_admin_auth['token']}"}
 
 
 class TestMobileBFFAuthRequirement:
@@ -59,21 +84,6 @@ class TestMobileBFFAuthRequirement:
 
 class TestMobileBFFAuthenticatedEndpoints:
     """Test mobile endpoints with authentication."""
-
-    @pytest.fixture(scope="class")
-    def admin_token(self):
-        """Login as admin and return access token."""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
-        assert response.status_code == 200, f"Admin login failed: {response.text}"
-        data = response.json()
-        token = data.get("access_token")
-        assert token, f"No access_token in response: {data}"
-        return token
-
-    @pytest.fixture(scope="class")
-    def admin_headers(self, admin_token):
-        """Return headers with admin token."""
-        return {"Authorization": f"Bearer {admin_token}"}
 
     def test_mobile_auth_me_returns_sanitized_dto(self, admin_headers):
         """GET /api/v1/mobile/auth/me should return mobile DTO without sensitive fields."""
@@ -188,29 +198,14 @@ class TestMobileBFFAuthenticatedEndpoints:
 class TestMobileBFFBookingCreation:
     """Test mobile booking creation endpoint."""
 
-    @pytest.fixture(scope="class")
-    def admin_auth(self):
-        """Login as admin and return token + tenant_id."""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
-        assert response.status_code == 200, f"Admin login failed: {response.text}"
-        data = response.json()
-        token = data.get("access_token")
-
-        # Get tenant_id from /auth/me
-        me_response = requests.get(f"{BASE_URL}/api/auth/me", headers={"Authorization": f"Bearer {token}"})
-        me_data = me_response.json() if me_response.status_code == 200 else {}
-        tenant_id = me_data.get("tenant_id")
-
-        return {"token": token, "tenant_id": tenant_id}
-
-    def test_mobile_booking_create_returns_mobile_dto(self, admin_auth):
+    def test_mobile_booking_create_returns_mobile_dto(self, preview_admin_auth):
         """POST /api/v1/mobile/bookings should create booking and return mobile DTO."""
         headers = {
-            "Authorization": f"Bearer {admin_auth['token']}",
+            "Authorization": f"Bearer {preview_admin_auth['token']}",
         }
         # Add tenant header if available
-        if admin_auth.get("tenant_id"):
-            headers["X-Tenant-Id"] = admin_auth["tenant_id"]
+        if preview_admin_auth.get("tenant_id"):
+            headers["X-Tenant-Id"] = preview_admin_auth["tenant_id"]
 
         payload = {
             "amount": 1999.99,
@@ -246,15 +241,14 @@ class TestMobileBFFBookingCreation:
         assert "_id" not in data, f"MongoDB _id leaked in response: {data}"
 
         print(f"PASS: POST /api/v1/mobile/bookings created booking with id={data['id']}")
-        return data["id"]
 
-    def test_mobile_booking_detail_by_id(self, admin_auth):
+    def test_mobile_booking_detail_by_id(self, preview_admin_auth):
         """GET /api/v1/mobile/bookings/{id} should return booking detail."""
         headers = {
-            "Authorization": f"Bearer {admin_auth['token']}",
+            "Authorization": f"Bearer {preview_admin_auth['token']}",
         }
-        if admin_auth.get("tenant_id"):
-            headers["X-Tenant-Id"] = admin_auth["tenant_id"]
+        if preview_admin_auth.get("tenant_id"):
+            headers["X-Tenant-Id"] = preview_admin_auth["tenant_id"]
 
         # First create a booking
         payload = {
@@ -295,22 +289,19 @@ class TestMobileBFFBookingCreation:
 class TestLegacyAuthNonRegression:
     """Test that legacy auth endpoints still work after adding mobile router."""
 
-    def test_legacy_login_still_works(self):
+    def test_legacy_login_still_works(self, preview_admin_auth):
         """POST /api/auth/login should still work."""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
-        assert response.status_code == 200, f"Legacy login failed: {response.text}"
-        data = response.json()
+        data = preview_admin_auth["login_response"]
         assert "access_token" in data, f"Missing access_token: {data}"
         print("PASS: Legacy /api/auth/login still works")
 
-    def test_legacy_auth_me_still_works(self):
+    def test_legacy_auth_me_still_works(self, preview_admin_auth):
         """GET /api/auth/me should still work."""
-        # Login first
-        login_response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
-        token = login_response.json().get("access_token")
-
         # Call legacy /auth/me
-        response = requests.get(f"{BASE_URL}/api/auth/me", headers={"Authorization": f"Bearer {token}"})
+        response = requests.get(
+            f"{BASE_URL}/api/auth/me",
+            headers={"Authorization": f"Bearer {preview_admin_auth['token']}"},
+        )
         assert response.status_code == 200, f"Legacy /auth/me failed: {response.text}"
         data = response.json()
         assert "email" in data, f"Missing email in legacy /auth/me: {data}"

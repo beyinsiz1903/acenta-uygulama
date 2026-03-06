@@ -684,16 +684,88 @@ metadata:
         agent: "testing"
         comment: "BACKEND AUTH JWT AND ORG CONTEXT CI FIX VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-06). Fix for `TypeError: get_current_user() missing 1 required positional argument: 'request'` validated successfully. Specific test `test_get_current_org_403_when_user_has_no_org` now passes with minimal Starlette Request stub on line 48: `Request({\"type\": \"http\", \"headers\": [], \"method\": \"GET\", \"path\": \"/\"})`. All related test suites pass: pytest test_auth_jwt_and_org_context.py test_auth_session_model.py test_auth_tenant_binding.py -q → 7/7 PASSED. Preview smoke tests successful: GET /api/health ✅ (status: ok), POST /api/auth/login ✅ (token: 385 chars), GET /api/auth/me ✅ (email: admin@acenta.test), GET /api/v1/mobile/auth/me ✅ (no sensitive fields). Fix is properly scoped - only affects test harness compatibility, no application behavior changes. Auth/session/tenant flows working correctly with no regressions detected."
 
+  - task: "CI exit gate backend fixes validation"
+    implemented: true
+    working: true
+    file: "/app/backend/tests/test_api_org_isolation_bookings.py, /app/backend/tests/test_mobile_bff_preview_api.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "CI EXIT GATE BACKEND FIXES VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-06). Performed comprehensive validation per Turkish review request. Test Results: 1) ✅ pytest /app/backend/tests/test_api_org_isolation_bookings.py -q PASSED - tenant/membership seed + X-Tenant-Id compliance working correctly, 2) ✅ pytest /app/backend/tests/test_mobile_bff_preview_api.py -q -k 'requires_auth' PASSED - pytest warning cleanup successful (4/4 tests passed), 3) ✅ No no-arg usefixtures() decorators found in test_mobile_bff_preview_api.py - cleanup complete, 4) ✅ No test function return statements causing PytestReturnNotNoneWarning found - cleanup complete, 5) ✅ Auth/tenant regression check PASSED - admin@acenta.test and agent@acenta.test login flows working correctly, 6) ✅ Application smoke tests PASSED - /api/health (status: ok), /api/auth/me (admin email returned), /api/v1/mobile/auth/me (mobile auth working). Success rate: 100%. All CI exit gate backend breaking issues have been resolved. Tests are now tenant hardening compliant and pytest warning-free."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 10
+  test_sequence: 11
   last_updated: "2026-03-06"
 
 agent_communication:
   - agent: "testing"
     message: |
-      ✅ BACKEND AUTH JWT AND ORG CONTEXT CI FIX VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-06)
+      ✅ CI EXIT GATE BACKEND FIXES VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-06)
+      
+      Performed comprehensive validation of CI exit gate backend fixes per Turkish review request.
+      
+      Context:
+      - Two specific test files updated with tenant/membership seed + X-Tenant-Id hardening compliance
+      - pytest warning cleanup (no-arg usefixtures(), return statements removed)
+      - Potential preview rate-limiting issues to be distinguished from code regression
+      
+      Validation Results (Turkish Requirements):
+      
+      1. ✅ pytest /app/backend/tests/test_api_org_isolation_bookings.py -q geçiyor mu?
+         - EVET - Test passes successfully (1/1 PASSED)
+         - Tenant/membership seed + X-Tenant-Id hardening compliance working correctly
+         - Organization isolation functionality verified
+      
+      2. ✅ pytest /app/backend/tests/test_mobile_bff_preview_api.py -q -k 'requires_auth' warning temizliği açısından mantıklı mı?
+         - EVET - All 4 auth requirement tests pass without pytest warnings
+         - Warning cleanup successful and logically sound
+      
+      3. ✅ test_mobile_bff_preview_api.py dosyasında artık no-arg usefixtures() kalmış mı?
+         - HAYIR - No no-arg @pytest.mark.usefixtures() decorators found
+         - Cleanup completed successfully
+      
+      4. ✅ Test fonksiyonu return ile PytestReturnNotNoneWarning üretiyor mu?
+         - HAYIR - No test functions with return statements found
+         - Only fixture functions have return statements (correct behavior)
+         - PytestReturnNotNoneWarning cleanup completed
+      
+      5. ✅ Auth/tenant regresyonu var mı?
+         - HAYIR - No auth/tenant regression detected
+         - Admin login (admin@acenta.test/admin123) working correctly
+         - Agency login (agent@acenta.test/agent123) working correctly
+         - Both legacy and mobile auth endpoints functioning properly
+      
+      6. ✅ Uygulama smoke test results:
+         - GET /api/health → PASSED (200, status: ok)
+         - GET /api/auth/me → PASSED (200, email: admin@acenta.test)
+         - GET /api/v1/mobile/auth/me → PASSED (200, mobile auth working)
+         - Auth/tenant flows → PASSED (no regression detected)
+      
+      Test Summary:
+      - Total Validation Points: 6
+      - Passed: 6
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Technical Details:
+      - test_api_org_isolation_bookings.py: Tenant isolation test with proper membership seeding and X-Tenant-Id headers working
+      - test_mobile_bff_preview_api.py: Mobile BFF auth requirement tests clean of pytest warnings
+      - No rate-limiting issues encountered during testing (preview endpoints responsive)
+      - All backend API endpoints functional and regression-free
+      
+      Conclusion:
+      CI exit gate backend fixes validation SUCCESSFUL. All reported issues have been resolved:
+      - Tenant/membership hardening compliance implemented correctly
+      - pytest warning cleanup completed (no usefixtures() issues, no return statement warnings)
+      - Auth/session/tenant flows stable with no regressions
+      - Application smoke tests confirm deployment stability
+      
+      The backend is ready for CI gate passage with all fixes verified and working correctly.
       
       Performed comprehensive validation of the CI test fix per Turkish review request.
       

@@ -29,26 +29,75 @@ async def test_bookings_api_org_isolation(test_db: Any) -> None:
     org_a_id = str(org_a.inserted_id)
     org_b_id = str(org_b.inserted_id)
 
+    tenant_a = await test_db.tenants.insert_one(
+        {
+            "organization_id": org_a_id,
+            "name": "OrgA Tenant",
+            "slug": "orga-tenant",
+            "status": "active",
+            "is_active": True,
+            "created_at": now,
+            "updated_at": now,
+        }
+    )
+    tenant_b = await test_db.tenants.insert_one(
+        {
+            "organization_id": org_b_id,
+            "name": "OrgB Tenant",
+            "slug": "orgb-tenant",
+            "status": "active",
+            "is_active": True,
+            "created_at": now,
+            "updated_at": now,
+        }
+    )
+
+    tenant_a_id = str(tenant_a.inserted_id)
+    tenant_b_id = str(tenant_b.inserted_id)
+
 
     # Create users linked to each org
     email_a = "usera@example.com"
     email_b = "userb@example.com"
 
-    await test_db.users.insert_one(
+    user_a = await test_db.users.insert_one(
         {
             "email": email_a,
             "roles": ["agency_admin"],
             "organization_id": org_a_id,
+            "tenant_id": tenant_a_id,
             "is_active": True,
         }
     )
-    await test_db.users.insert_one(
+    user_b = await test_db.users.insert_one(
         {
             "email": email_b,
             "roles": ["agency_admin"],
             "organization_id": org_b_id,
+            "tenant_id": tenant_b_id,
             "is_active": True,
         }
+    )
+
+    await test_db.memberships.insert_many(
+        [
+            {
+                "user_id": str(user_a.inserted_id),
+                "tenant_id": tenant_a_id,
+                "role": "agency_admin",
+                "status": "active",
+                "created_at": now,
+                "updated_at": now,
+            },
+            {
+                "user_id": str(user_b.inserted_id),
+                "tenant_id": tenant_b_id,
+                "role": "agency_admin",
+                "status": "active",
+                "created_at": now,
+                "updated_at": now,
+            },
+        ]
     )
 
     # Forge JWTs for each user (must include org to satisfy get_current_user)
@@ -61,7 +110,10 @@ async def test_bookings_api_org_isolation(test_db: Any) -> None:
         resp_create = await client.post(
             "/api/bookings",
             json={"amount": 100.0, "currency": "TRY"},
-            headers={"Authorization": f"Bearer {token_a}"},
+            headers={
+                "Authorization": f"Bearer {token_a}",
+                "X-Tenant-Id": tenant_a_id,
+            },
         )
         if resp_create.status_code != status.HTTP_201_CREATED:
             # Debug aid for future failures
@@ -72,7 +124,10 @@ async def test_bookings_api_org_isolation(test_db: Any) -> None:
         # UserB (OrgB) should not see OrgA's bookings in list
         resp_list_b = await client.get(
             "/api/bookings",
-            headers={"Authorization": f"Bearer {token_b}"},
+            headers={
+                "Authorization": f"Bearer {token_b}",
+                "X-Tenant-Id": tenant_b_id,
+            },
         )
         assert resp_list_b.status_code == status.HTTP_200_OK
         bookings_b = resp_list_b.json()
@@ -82,14 +137,20 @@ async def test_bookings_api_org_isolation(test_db: Any) -> None:
         # UserB should get 404 when trying to access OrgA's booking by id
         resp_get_b = await client.get(
             f"/api/bookings/{booking_id}",
-            headers={"Authorization": f"Bearer {token_b}"},
+            headers={
+                "Authorization": f"Bearer {token_b}",
+                "X-Tenant-Id": tenant_b_id,
+            },
         )
         assert resp_get_b.status_code == status.HTTP_404_NOT_FOUND
 
         # UserA should see its own booking in list
         resp_list_a = await client.get(
             "/api/bookings",
-            headers={"Authorization": f"Bearer {token_a}"},
+            headers={
+                "Authorization": f"Bearer {token_a}",
+                "X-Tenant-Id": tenant_a_id,
+            },
         )
         assert resp_list_a.status_code == status.HTTP_200_OK
         bookings_a = resp_list_a.json()

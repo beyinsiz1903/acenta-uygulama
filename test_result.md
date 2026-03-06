@@ -732,7 +732,7 @@ metadata:
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 14
+  test_sequence: 15
   last_updated: "2026-03-06"
 
   - task: "Preview Auth Helper validation - common auth/token cache"
@@ -770,6 +770,18 @@ metadata:
       - working: true
         agent: "testing" 
         comment: "Production auth regression check PASSED. Auth session model tests (2/2) passing, production login/auth flows unchanged by preview helper addition. Preview helper properly isolated to test runtime only, no impact on production auth behavior. Local ASGI fallback feature working correctly for rate-limited scenarios."
+
+  - task: "PR-8 backend API sanity validation"
+    implemented: true
+    working: true
+    file: "backend/app/routers/auth.py, backend/app/routers/b2b_portal.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PR-8 backend API sanity validation COMPLETED - ALL TESTS PASSED (100% success rate). Comprehensive validation of cookie-based authentication flow with X-Client-Platform:web header. All 5 required validation points confirmed: 1) ✅ POST /api/auth/login with X-Client-Platform:web sets cookie-based session and returns auth_transport=cookie_compat, 2) ✅ GET /api/auth/me works using cookies only (no Authorization header required), 3) ✅ POST /api/auth/logout invalidates the session (auth/me returns 401 after logout), 4) ✅ B2B agent login (agent@acenta.test/agent123) works and GET /api/b2b/me succeeds with cookies (user_id returned, roles: agency_admin), 5) ✅ No Authorization bearer header required for normal web auth flow (both /auth/me and /admin/agencies work without bearer token). Cookie-based authentication fully operational, session management working correctly, logout properly clears sessions. Backend APIs ready for production use with cookie auth compatibility layer."
 
 agent_communication:
   - agent: "testing"
@@ -1028,6 +1040,37 @@ agent_communication:
       - No auth regressions detected
       
       Web auth cleanup is production-ready with cookie-only authentication working correctly.
+
+  - agent: "testing"
+    message: |
+      ✅ PR-8 BACKEND API SANITY VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-06)
+      
+      Performed comprehensive PR-8 backend API sanity validation per review request on https://token-migration.preview.emergentagent.com
+      
+      Test Coverage (X-Client-Platform:web cookie auth flow):
+      1. ✅ POST /api/auth/login with X-Client-Platform:web - PASSED (auth_transport=cookie_compat, cookies set correctly)
+      2. ✅ GET /api/auth/me cookies only - PASSED (works without Authorization header, returns admin@acenta.test)
+      3. ✅ POST /api/auth/logout invalidation - PASSED (logout clears session, auth/me returns 401)
+      4. ✅ B2B agent login & GET /api/b2b/me - PASSED (agent@acenta.test/agent123, user_id returned, roles: agency_admin)
+      5. ✅ No Authorization bearer header required - PASSED (both /auth/me and /admin/agencies work cookie-only)
+      
+      Test Summary:
+      - Total Tests: 5
+      - Passed: 5
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Key Validation Points:
+      ✅ Cookie-based authentication working correctly with X-Client-Platform:web header
+      ✅ Session management and invalidation functional
+      ✅ B2B authentication flow operational
+      ✅ No bearer token dependency for web auth flow
+      ✅ Admin credentials (admin@acenta.test/admin123) working
+      ✅ Agent credentials (agent@acenta.test/agent123) working
+      ✅ All API endpoints accessible without Authorization headers (cookie-only mode)
+      
+      Backend Status:
+      All PR-8 backend requirements validated successfully. Cookie auth compatibility layer fully operational and production-ready. No known unrelated admin cleanup endpoints affected core authentication flows.
 
       Preview auth helper validation SUCCESSFUL. All Turkish requirements met:
       - Common auth/token cache functionality working correctly

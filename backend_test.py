@@ -1,380 +1,435 @@
 #!/usr/bin/env python3
 """
-Preview Auth Helper Backend Testing Suite
-
-This test suite validates the new preview auth helper implementation for PR-X:
-- Common auth/token cache functionality
-- Token reuse and TTL management  
-- Invalidation and re-login flows
-- Tenant-aware login support
-- Rate-limit friendly behavior
-- Preview test migration validation
+PR-8 Backend API Validation Test
+Validates cookie-based authentication flow with X-Client-Platform:web header
 """
 
-import json
-import os
-import time
 import requests
-from pathlib import Path
-
-# Import the preview auth helper
+import json
 import sys
-sys.path.insert(0, '/app/backend/tests')
-from preview_auth_helper import (
-    get_preview_auth_context,
-    invalidate_preview_auth_context, 
-    PreviewAuthSession,
-    resolve_preview_base_url,
-    build_preview_auth_headers,
-    PreviewAuthError,
-    CACHE_FILE
-)
+import os
+from typing import Dict, Optional
 
-def test_preview_base_url_resolution():
-    """Test that preview base URL is resolved correctly from frontend/.env"""
-    print("🧪 Testing preview base URL resolution...")
-    
-    # Test with explicit URL
-    explicit_url = resolve_preview_base_url("https://test.example.com/")
-    assert explicit_url == "https://test.example.com", f"Expected stripped URL, got: {explicit_url}"
-    
-    # Test with empty/None URL (should read from frontend/.env)  
-    resolved_url = resolve_preview_base_url("")
-    print(f"   ✅ Resolved base URL from frontend/.env: {resolved_url}")
-    assert resolved_url.startswith("https://"), f"Expected HTTPS URL, got: {resolved_url}"
-    
-    # Verify it's the expected preview URL
-    assert "preview.emergentagent.com" in resolved_url, f"Expected preview URL, got: {resolved_url}"
-    
-    return resolved_url
+# Get backend URL from frontend env
+BACKEND_URL = "https://token-migration.preview.emergentagent.com"
+API_BASE = f"{BACKEND_URL}/api"
 
-def test_cache_file_structure():
-    """Test that cache file exists and has expected structure"""
-    print("🧪 Testing cache file structure...")
-    
-    if not CACHE_FILE.exists():
-        print(f"   ⚠️ Cache file not found at {CACHE_FILE}")
-        return
+class PR8BackendValidator:
+    def __init__(self):
+        self.session = requests.Session()
+        self.results = []
+        self.auth_cookies = {}
         
-    cache_data = json.loads(CACHE_FILE.read_text())
-    print(f"   ✅ Cache file contains {len(cache_data)} entries")
-    
-    # Check for admin and agent entries
-    admin_found = False
-    agent_found = False
-    
-    for key, entry in cache_data.items():
-        print(f"   📝 Cache key: {key}")
+    def log_result(self, test_name: str, success: bool, details: str, response=None):
+        """Log test result with details"""
+        status = "✅ PASS" if success else "❌ FAIL"
+        self.results.append({
+            "test": test_name,
+            "success": success,
+            "status": status,
+            "details": details,
+            "status_code": response.status_code if response else None,
+            "response_size": len(response.text) if response else None
+        })
+        print(f"{status} - {test_name}: {details}")
+        if response and not success:
+            print(f"   Response: {response.status_code} - {response.text[:200]}...")
+
+    def test_1_web_login_cookie_compat(self):
+        """Test 1: POST /api/auth/login with X-Client-Platform:web sets cookie-based session"""
+        print(f"\n🧪 Test 1: Web Login Cookie Compatibility")
         
-        # Validate entry structure
-        required_fields = ["access_token", "auth_source", "base_url", "cached_until", "email", "login_response"]
-        for field in required_fields:
-            assert field in entry, f"Missing required field '{field}' in cache entry"
+        try:
+            # Clear any existing cookies
+            self.session.cookies.clear()
             
-        if "admin@acenta.test" in key:
-            admin_found = True
-            print(f"      ✅ Admin entry found - auth_source: {entry['auth_source']}")
-            assert entry["tenant_id"], "Admin should have tenant_id"
+            payload = {
+                "email": "admin@acenta.test",
+                "password": "admin123"
+            }
+            headers = {
+                "Content-Type": "application/json",
+                "X-Client-Platform": "web"  # Key header for cookie mode
+            }
             
-        if "agent@acenta.test" in key:  
-            agent_found = True
-            print(f"      ✅ Agent entry found - auth_source: {entry['auth_source']}")
-            assert entry["tenant_id"], "Agent should have tenant_id"
+            response = self.session.post(
+                f"{API_BASE}/auth/login",
+                json=payload,
+                headers=headers,
+                allow_redirects=False
+            )
             
-    print(f"   ✅ Admin entry found: {admin_found}, Agent entry found: {agent_found}")
-    return cache_data
-
-def test_auth_context_retrieval_and_reuse():
-    """Test auth context retrieval and token reuse functionality"""
-    print("🧪 Testing auth context retrieval and token reuse...")
-    
-    base_url = resolve_preview_base_url("")
-    
-    # Get admin auth context (should reuse cached token)
-    print("   📤 Getting admin auth context...")
-    start_time = time.time()
-    admin_auth = get_preview_auth_context(
-        base_url,
-        email="admin@acenta.test", 
-        password="admin123"
-    )
-    elapsed = time.time() - start_time
-    
-    print(f"   ✅ Admin auth retrieved in {elapsed:.2f}s - source: {admin_auth.auth_source}")
-    print(f"      Token length: {len(admin_auth.access_token)} chars")
-    print(f"      Tenant ID: {admin_auth.tenant_id}")
-    print(f"      Cached until: {time.ctime(admin_auth.cached_until)}")
-    
-    # Verify token works with /api/auth/me
-    headers = build_preview_auth_headers(admin_auth, include_tenant=True)
-    me_response = requests.get(f"{base_url}/api/auth/me", headers=headers, timeout=10)
-    assert me_response.status_code == 200, f"Admin /auth/me failed: {me_response.text}"
-    me_data = me_response.json()
-    print(f"   ✅ Admin token validated - email: {me_data['email']}")
-    
-    # Get agent auth context (should reuse cached token)
-    print("   📤 Getting agent auth context...")
-    start_time = time.time()
-    agent_auth = get_preview_auth_context(
-        base_url,
-        email="agent@acenta.test",
-        password="agent123"
-    )
-    elapsed = time.time() - start_time
-    
-    print(f"   ✅ Agent auth retrieved in {elapsed:.2f}s - source: {agent_auth.auth_source}")
-    print(f"      Token length: {len(agent_auth.access_token)} chars") 
-    print(f"      Tenant ID: {agent_auth.tenant_id}")
-    
-    # Verify agent token works
-    agent_headers = build_preview_auth_headers(agent_auth, include_tenant=True)
-    agent_me = requests.get(f"{base_url}/api/auth/me", headers=agent_headers, timeout=10)
-    assert agent_me.status_code == 200, f"Agent /auth/me failed: {agent_me.text}"
-    agent_data = agent_me.json()
-    print(f"   ✅ Agent token validated - email: {agent_data['email']}")
-    
-    # Test tenant-aware functionality 
-    print(f"   📝 Admin tenant: {me_data.get('tenant_id')}")
-    print(f"   📝 Agent tenant: {agent_data.get('tenant_id')}")
-    
-    return admin_auth, agent_auth
-
-def test_token_invalidation_and_refresh():
-    """Test token invalidation and re-login functionality"""
-    print("🧪 Testing token invalidation and refresh flow...")
-    
-    base_url = resolve_preview_base_url("")
-    
-    # Get initial auth context
-    admin_auth = get_preview_auth_context(base_url, email="admin@acenta.test", password="admin123")
-    original_token = admin_auth.access_token
-    print(f"   📝 Original token: {original_token[:50]}...")
-    
-    # Invalidate the cached context
-    print("   🗑️ Invalidating admin auth context...")
-    invalidate_preview_auth_context(base_url, "admin@acenta.test", tenant_id=admin_auth.tenant_id)
-    
-    # Get auth context again (should force fresh login)
-    print("   📤 Getting auth context after invalidation...")
-    fresh_auth = get_preview_auth_context(base_url, email="admin@acenta.test", password="admin123")
-    new_token = fresh_auth.access_token
-    print(f"   📝 New token: {new_token[:50]}...")
-    
-    # Tokens might be the same if session is still valid, that's OK
-    print(f"   ✅ Fresh auth retrieved - source: {fresh_auth.auth_source}")
-    
-    # Test forced re-login
-    print("   🔄 Testing forced re-login...")
-    forced_auth = get_preview_auth_context(
-        base_url, 
-        email="admin@acenta.test", 
-        password="admin123", 
-        force_relogin=True
-    )
-    print(f"   ✅ Forced re-login completed - source: {forced_auth.auth_source}")
-    
-    return fresh_auth
-
-def test_preview_auth_session_wrapper():
-    """Test the PreviewAuthSession wrapper class"""
-    print("🧪 Testing PreviewAuthSession wrapper...")
-    
-    base_url = resolve_preview_base_url("")
-    
-    # Create admin session
-    print("   🔧 Creating admin preview session...")
-    admin_session = PreviewAuthSession(
-        base_url,
-        email="admin@acenta.test",
-        password="admin123", 
-        include_tenant_header=True
-    )
-    
-    # Test GET /api/health  
-    print("   📤 Testing session GET /api/health...")
-    health_resp = admin_session.get("/api/health")
-    assert health_resp.status_code == 200, f"Health check failed: {health_resp.text}"
-    health_data = health_resp.json()
-    print(f"   ✅ Health check: {health_data}")
-    
-    # Test authenticated endpoint
-    print("   📤 Testing session GET /api/auth/me...")
-    me_resp = admin_session.get("/api/auth/me")
-    assert me_resp.status_code == 200, f"Auth me failed: {me_resp.text}"
-    me_data = me_resp.json()
-    print(f"   ✅ Auth me: {me_data['email']}")
-    
-    # Test admin endpoint
-    print("   📤 Testing session GET /api/admin/agencies...")
-    agencies_resp = admin_session.get("/api/admin/agencies")
-    assert agencies_resp.status_code == 200, f"Admin agencies failed: {agencies_resp.text}"
-    agencies_data = agencies_resp.json()
-    print(f"   ✅ Admin agencies: {len(agencies_data)} agencies found")
-    
-    # Create agent session and test different endpoint
-    print("   🔧 Creating agent preview session...")  
-    agent_session = PreviewAuthSession(
-        base_url,
-        email="agent@acenta.test",
-        password="agent123",
-        include_tenant_header=True
-    )
-    
-    agent_me = agent_session.get("/api/auth/me")
-    assert agent_me.status_code == 200, f"Agent auth me failed: {agent_me.text}"
-    agent_data = agent_me.json()
-    print(f"   ✅ Agent auth me: {agent_data['email']}")
-    
-    return admin_session, agent_session
-
-def test_mobile_bff_endpoints():
-    """Test mobile BFF endpoints using preview auth helper"""
-    print("🧪 Testing mobile BFF endpoints with preview auth...")
-    
-    base_url = resolve_preview_base_url("")
-    admin_session = PreviewAuthSession(
-        base_url,
-        email="admin@acenta.test", 
-        password="admin123",
-        include_tenant_header=True
-    )
-    
-    # Test mobile auth/me
-    print("   📤 Testing mobile /api/v1/mobile/auth/me...")
-    mobile_me = admin_session.get("/api/v1/mobile/auth/me")
-    assert mobile_me.status_code == 200, f"Mobile auth/me failed: {mobile_me.text}"
-    mobile_data = mobile_me.json()
-    print(f"   ✅ Mobile auth/me: {mobile_data['email']}")
-    assert "_id" not in mobile_data, "No MongoDB _id leak allowed"
-    
-    # Test mobile dashboard
-    print("   📤 Testing mobile /api/v1/mobile/dashboard/summary...")
-    dashboard = admin_session.get("/api/v1/mobile/dashboard/summary") 
-    assert dashboard.status_code == 200, f"Mobile dashboard failed: {dashboard.text}"
-    dashboard_data = dashboard.json()
-    print(f"   ✅ Mobile dashboard: {dashboard_data['bookings_today']} bookings today")
-    
-    # Test mobile bookings list
-    print("   📤 Testing mobile /api/v1/mobile/bookings...")
-    bookings = admin_session.get("/api/v1/mobile/bookings")
-    assert bookings.status_code == 200, f"Mobile bookings failed: {bookings.text}"
-    bookings_data = bookings.json()
-    print(f"   ✅ Mobile bookings: {bookings_data['total']} total bookings")
-    
-    return True
-
-def test_rate_limit_friendly_behavior():
-    """Test that the helper reduces rate limiting issues"""
-    print("🧪 Testing rate-limit friendly behavior...")
-    
-    base_url = resolve_preview_base_url("")
-    
-    # Make multiple rapid calls - should reuse cached tokens
-    print("   🚀 Making 5 rapid auth context requests...")
-    start_time = time.time()
-    
-    for i in range(5):
-        auth = get_preview_auth_context(base_url, email="admin@acenta.test", password="admin123")
-        print(f"      Call {i+1}: {auth.auth_source} (token: {auth.access_token[:20]}...)")
-    
-    elapsed = time.time() - start_time    
-    print(f"   ✅ Completed 5 calls in {elapsed:.2f}s (should be fast due to caching)")
-    
-    # Should be very fast if caching works (no actual login requests)
-    if elapsed < 1.0:
-        print("   ✅ Excellent performance - caching working correctly") 
-    elif elapsed < 3.0:
-        print("   ✅ Good performance - some cache hits")
-    else:
-        print("   ⚠️ Slow performance - cache may not be working optimally")
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check auth_transport
+                auth_transport = data.get("auth_transport")
+                if auth_transport == "cookie_compat":
+                    self.log_result(
+                        "Web Login Cookie Compat",
+                        True,
+                        f"Login successful with auth_transport={auth_transport}, cookies set",
+                        response
+                    )
+                    
+                    # Store cookies for next tests
+                    self.auth_cookies = dict(self.session.cookies)
+                    return True
+                else:
+                    self.log_result(
+                        "Web Login Cookie Compat",
+                        False,
+                        f"Expected auth_transport=cookie_compat, got {auth_transport}",
+                        response
+                    )
+            else:
+                self.log_result(
+                    "Web Login Cookie Compat",
+                    False,
+                    f"Login failed with status {response.status_code}",
+                    response
+                )
+        except Exception as e:
+            self.log_result(
+                "Web Login Cookie Compat",
+                False,
+                f"Exception during login: {str(e)}"
+            )
         
-    return True
-
-def test_error_handling():
-    """Test error handling in preview auth helper"""
-    print("🧪 Testing error handling...")
-    
-    base_url = resolve_preview_base_url("")
-    
-    # Test invalid credentials 
-    print("   🚫 Testing invalid credentials...")
-    try:
-        bad_auth = get_preview_auth_context(
-            base_url,
-            email="invalid@example.com",
-            password="wrongpassword"
-        )
-        print("   ❌ Expected authentication to fail")
-        assert False, "Should have raised PreviewAuthError"
-    except PreviewAuthError as e:
-        print(f"   ✅ Correctly caught auth error: {str(e)[:100]}...")
-    except Exception as e:
-        print(f"   ⚠️ Unexpected error type: {type(e).__name__}: {e}")
-        
-    return True
-
-def run_comprehensive_backend_test():
-    """Run the complete backend test suite for preview auth helper"""
-    print("=" * 80)
-    print("🧪 PREVIEW AUTH HELPER COMPREHENSIVE BACKEND TEST")
-    print("=" * 80)
-    
-    try:
-        # Test 1: Base URL resolution  
-        base_url = test_preview_base_url_resolution()
-        print()
-        
-        # Test 2: Cache file structure
-        cache_data = test_cache_file_structure() 
-        print()
-        
-        # Test 3: Auth context and token reuse
-        admin_auth, agent_auth = test_auth_context_retrieval_and_reuse()
-        print()
-        
-        # Test 4: Token invalidation and refresh
-        fresh_auth = test_token_invalidation_and_refresh()
-        print()
-        
-        # Test 5: PreviewAuthSession wrapper
-        admin_session, agent_session = test_preview_auth_session_wrapper()
-        print()
-        
-        # Test 6: Mobile BFF endpoints
-        test_mobile_bff_endpoints()
-        print()
-        
-        # Test 7: Rate-limit friendly behavior
-        test_rate_limit_friendly_behavior()  
-        print()
-        
-        # Test 8: Error handling
-        test_error_handling()
-        print()
-        
-        print("=" * 80)
-        print("✅ ALL PREVIEW AUTH HELPER TESTS PASSED")
-        print("=" * 80)
-        
-        # Summary 
-        print("\n📋 VALIDATION SUMMARY:")
-        print("✅ 1. Common auth/token cache functionality - WORKING")
-        print("✅ 2. Token reuse and TTL management - WORKING") 
-        print("✅ 3. Invalidation and re-login flows - WORKING")
-        print("✅ 4. Tenant-aware login support - WORKING")
-        print("✅ 5. Rate-limit friendly behavior - WORKING")
-        print("✅ 6. PreviewAuthSession wrapper - WORKING")
-        print("✅ 7. Mobile BFF endpoint integration - WORKING")  
-        print("✅ 8. Error handling - WORKING")
-        
-        return True
-        
-    except Exception as e:
-        print(f"\n❌ TEST FAILED: {type(e).__name__}: {e}")
-        import traceback
-        traceback.print_exc()
         return False
 
+    def test_2_auth_me_cookies_only(self):
+        """Test 2: GET /api/auth/me works using cookies only (no Authorization header)"""
+        print(f"\n🧪 Test 2: Auth Me Cookies Only")
+        
+        try:
+            # Make sure we don't send any Authorization header
+            headers = {
+                "Content-Type": "application/json"
+                # Explicitly no Authorization header
+            }
+            
+            response = self.session.get(
+                f"{API_BASE}/auth/me",
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                email = data.get("email")
+                
+                if email == "admin@acenta.test":
+                    self.log_result(
+                        "Auth Me Cookies Only",
+                        True,
+                        f"Auth/me works with cookies only, returned email: {email}",
+                        response
+                    )
+                    return True
+                else:
+                    self.log_result(
+                        "Auth Me Cookies Only",
+                        False,
+                        f"Unexpected email in response: {email}",
+                        response
+                    )
+            else:
+                self.log_result(
+                    "Auth Me Cookies Only",
+                    False,
+                    f"Auth/me failed with status {response.status_code}",
+                    response
+                )
+        except Exception as e:
+            self.log_result(
+                "Auth Me Cookies Only",
+                False,
+                f"Exception during auth/me: {str(e)}"
+            )
+        
+        return False
+
+    def test_3_logout_invalidates_session(self):
+        """Test 3: POST /api/auth/logout invalidates the session"""
+        print(f"\n🧪 Test 3: Logout Invalidates Session")
+        
+        try:
+            # First, verify we're authenticated
+            pre_logout_response = self.session.get(f"{API_BASE}/auth/me")
+            if pre_logout_response.status_code != 200:
+                self.log_result(
+                    "Logout Invalidates Session",
+                    False,
+                    "Cannot test logout - not authenticated before logout",
+                    pre_logout_response
+                )
+                return False
+            
+            # Perform logout
+            logout_response = self.session.post(f"{API_BASE}/auth/logout")
+            
+            if logout_response.status_code == 200:
+                # Test that auth/me now fails
+                post_logout_response = self.session.get(f"{API_BASE}/auth/me")
+                
+                if post_logout_response.status_code == 401:
+                    self.log_result(
+                        "Logout Invalidates Session",
+                        True,
+                        "Logout successful, auth/me returns 401 as expected",
+                        logout_response
+                    )
+                    return True
+                else:
+                    self.log_result(
+                        "Logout Invalidates Session",
+                        False,
+                        f"After logout, auth/me should return 401, got {post_logout_response.status_code}",
+                        post_logout_response
+                    )
+            else:
+                self.log_result(
+                    "Logout Invalidates Session",
+                    False,
+                    f"Logout failed with status {logout_response.status_code}",
+                    logout_response
+                )
+        except Exception as e:
+            self.log_result(
+                "Logout Invalidates Session",
+                False,
+                f"Exception during logout test: {str(e)}"
+            )
+        
+        return False
+
+    def test_4_b2b_agent_login_and_me(self):
+        """Test 4: B2B agent login works and GET /api/b2b/me succeeds with cookies"""
+        print(f"\n🧪 Test 4: B2B Agent Login and Me")
+        
+        try:
+            # Clear cookies from previous test
+            self.session.cookies.clear()
+            
+            payload = {
+                "email": "agent@acenta.test",
+                "password": "agent123"
+            }
+            headers = {
+                "Content-Type": "application/json",
+                "X-Client-Platform": "web"  # Key header for cookie mode
+            }
+            
+            # B2B Agent Login
+            login_response = self.session.post(
+                f"{API_BASE}/auth/login",
+                json=payload,
+                headers=headers
+            )
+            
+            if login_response.status_code == 200:
+                login_data = login_response.json()
+                auth_transport = login_data.get("auth_transport")
+                
+                if auth_transport == "cookie_compat":
+                    # Test B2B /me endpoint
+                    b2b_me_response = self.session.get(f"{API_BASE}/b2b/me")
+                    
+                    if b2b_me_response.status_code == 200:
+                        b2b_data = b2b_me_response.json()
+                        user_id = b2b_data.get("user_id")
+                        roles = b2b_data.get("roles", [])
+                        
+                        # Check for any agency or B2B related roles
+                        valid_b2b_roles = ["agency_agent", "agency_admin", "agent"]
+                        has_valid_role = any(role in valid_b2b_roles for role in roles)
+                        
+                        if user_id and has_valid_role:
+                            self.log_result(
+                                "B2B Agent Login and Me",
+                                True,
+                                f"B2B agent login successful, /b2b/me returns user_id: {user_id}, roles: {roles}",
+                                b2b_me_response
+                            )
+                            return True
+                        else:
+                            self.log_result(
+                                "B2B Agent Login and Me",
+                                False,
+                                f"B2B /me response missing expected fields or roles. user_id: {user_id}, roles: {roles}",
+                                b2b_me_response
+                            )
+                    else:
+                        self.log_result(
+                            "B2B Agent Login and Me",
+                            False,
+                            f"B2B /me failed with status {b2b_me_response.status_code}",
+                            b2b_me_response
+                        )
+                else:
+                    self.log_result(
+                        "B2B Agent Login and Me",
+                        False,
+                        f"B2B login did not return cookie_compat transport, got: {auth_transport}",
+                        login_response
+                    )
+            else:
+                self.log_result(
+                    "B2B Agent Login and Me",
+                    False,
+                    f"B2B agent login failed with status {login_response.status_code}",
+                    login_response
+                )
+        except Exception as e:
+            self.log_result(
+                "B2B Agent Login and Me",
+                False,
+                f"Exception during B2B agent test: {str(e)}"
+            )
+        
+        return False
+
+    def test_5_no_bearer_header_required(self):
+        """Test 5: No Authorization bearer header is required for normal web auth flow"""
+        print(f"\n🧪 Test 5: No Authorization Bearer Header Required")
+        
+        try:
+            # Clear cookies and login again to test this flow
+            self.session.cookies.clear()
+            
+            payload = {
+                "email": "admin@acenta.test", 
+                "password": "admin123"
+            }
+            headers = {
+                "Content-Type": "application/json",
+                "X-Client-Platform": "web"
+            }
+            
+            # Login
+            login_response = self.session.post(
+                f"{API_BASE}/auth/login",
+                json=payload,
+                headers=headers
+            )
+            
+            if login_response.status_code == 200:
+                login_data = login_response.json()
+                
+                # Verify no access_token is required to be stored (cookie-only mode)
+                # The response might still include access_token for backwards compatibility,
+                # but the key is that we don't need to use it
+                
+                # Test multiple endpoints without Authorization header
+                test_endpoints = [
+                    ("/auth/me", "Auth Me"),
+                    ("/admin/agencies", "Admin Agencies")  # This requires admin role
+                ]
+                
+                all_passed = True
+                endpoint_results = []
+                
+                for endpoint, name in test_endpoints:
+                    # Explicitly don't set Authorization header
+                    no_auth_headers = {"Content-Type": "application/json"}
+                    
+                    test_response = self.session.get(
+                        f"{API_BASE}{endpoint}",
+                        headers=no_auth_headers
+                    )
+                    
+                    if test_response.status_code == 200:
+                        endpoint_results.append(f"{name}: ✅")
+                    else:
+                        endpoint_results.append(f"{name}: ❌ ({test_response.status_code})")
+                        all_passed = False
+                
+                if all_passed:
+                    self.log_result(
+                        "No Authorization Bearer Header Required",
+                        True,
+                        f"All endpoints work without Authorization header. Results: {', '.join(endpoint_results)}",
+                        login_response
+                    )
+                    return True
+                else:
+                    self.log_result(
+                        "No Authorization Bearer Header Required",
+                        False,
+                        f"Some endpoints failed without Authorization header. Results: {', '.join(endpoint_results)}",
+                        login_response
+                    )
+            else:
+                self.log_result(
+                    "No Authorization Bearer Header Required",
+                    False,
+                    f"Initial login failed with status {login_response.status_code}",
+                    login_response
+                )
+        except Exception as e:
+            self.log_result(
+                "No Authorization Bearer Header Required", 
+                False,
+                f"Exception during bearer header test: {str(e)}"
+            )
+        
+        return False
+
+    def run_all_tests(self):
+        """Run all PR-8 backend validation tests"""
+        print("🚀 Starting PR-8 Backend API Validation")
+        print(f"Backend URL: {BACKEND_URL}")
+        print(f"API Base: {API_BASE}")
+        print("=" * 80)
+        
+        # Run tests in sequence
+        test_methods = [
+            self.test_1_web_login_cookie_compat,
+            self.test_2_auth_me_cookies_only,
+            self.test_3_logout_invalidates_session,
+            self.test_4_b2b_agent_login_and_me,
+            self.test_5_no_bearer_header_required
+        ]
+        
+        passed_tests = 0
+        total_tests = len(test_methods)
+        
+        for test_method in test_methods:
+            try:
+                if test_method():
+                    passed_tests += 1
+            except Exception as e:
+                print(f"❌ Test {test_method.__name__} failed with exception: {e}")
+        
+        # Summary
+        print("\n" + "=" * 80)
+        print("📊 PR-8 Backend Validation Summary")
+        print("=" * 80)
+        
+        for result in self.results:
+            print(f"{result['status']} - {result['test']}")
+            print(f"   {result['details']}")
+            if result.get('status_code'):
+                print(f"   HTTP Status: {result['status_code']}, Response Size: {result.get('response_size', 'N/A')} chars")
+        
+        print(f"\n📈 Results: {passed_tests}/{total_tests} tests passed")
+        success_rate = (passed_tests / total_tests) * 100
+        print(f"📈 Success Rate: {success_rate:.1f}%")
+        
+        if passed_tests == total_tests:
+            print("✅ ALL TESTS PASSED - PR-8 backend validation successful")
+            return True
+        else:
+            print(f"❌ {total_tests - passed_tests} test(s) failed")
+            return False
+
+def main():
+    """Main execution function"""
+    validator = PR8BackendValidator()
+    success = validator.run_all_tests()
+    
+    # Exit with appropriate code
+    sys.exit(0 if success else 1)
+
 if __name__ == "__main__":
-    success = run_comprehensive_backend_test()
-    exit(0 if success else 1)
+    main()

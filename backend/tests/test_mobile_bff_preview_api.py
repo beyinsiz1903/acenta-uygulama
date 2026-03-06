@@ -22,7 +22,7 @@ import requests
 # Skip conftest autouse fixtures by marking as external HTTP tests
 pytestmark = pytest.mark.usefixtures()
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://travel-saas-rebuild.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://tenant-audit-preview.preview.emergentagent.com").rstrip("/")
 
 # Test credentials
 ADMIN_CREDS = {"email": "admin@acenta.test", "password": "admin123"}

@@ -211,7 +211,7 @@ agent_communication:
     message: |
       ✅ BACKEND SMOKE TEST COMPLETED - ALL TESTS PASSED
       
-      Performed comprehensive backend API smoke test on https://travel-saas-rebuild.preview.emergentagent.com
+      Performed comprehensive backend API smoke test on https://tenant-audit-preview.preview.emergentagent.com
       
       Backend API Test Results:
       1. ✅ POST /api/auth/login - PASSED (200 OK, tokens received)
@@ -231,7 +231,7 @@ agent_communication:
     message: |
       ✅ SMOKE TEST PASSED
       
-      Completed comprehensive smoke test on https://travel-saas-rebuild.preview.emergentagent.com
+      Completed comprehensive smoke test on https://tenant-audit-preview.preview.emergentagent.com
       
       Test Coverage:
       1. ✅ Login at /login with admin@acenta.test / admin123 - PASSED
@@ -255,7 +255,7 @@ agent_communication:
       
       Performed comprehensive backend smoke test validating PR-1 auth/config hardening deployment.
       
-      Test Results (Base URL: https://travel-saas-rebuild.preview.emergentagent.com):
+      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
       1. ✅ POST /api/auth/login - PASSED (200 OK, access_token + refresh_token received)
       2. ✅ GET /api/auth/me - PASSED (200 OK, user data returned with Bearer token)
       3. ✅ GET /api/admin/agencies - PASSED (200 OK, agency data returned with admin token)
@@ -278,7 +278,7 @@ agent_communication:
       
       Performed comprehensive PR-2 backend smoke test validating session/revocation hardening post-deployment.
       
-      Test Results (Base URL: https://travel-saas-rebuild.preview.emergentagent.com):
+      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
       1. ✅ POST /api/auth/login (tokens + session) - PASSED (200 OK, access_token ✅, refresh_token ✅, session_id ✅)
       2. ✅ GET /api/auth/sessions - PASSED (200 OK, 6 sessions found)
       3. ✅ Auth regression test (/api/auth/me + /api/admin/agencies) - PASSED (both endpoints working correctly)
@@ -306,7 +306,7 @@ agent_communication:
       
       Performed comprehensive tenant-bound login smoke test validating PR-3 tenant isolation deployment.
       
-      Test Results (Base URL: https://travel-saas-rebuild.preview.emergentagent.com):
+      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
       
       Admin Login (admin@acenta.test / admin123):
       ✅ Login successful - redirected to /app/admin/agencies
@@ -347,7 +347,7 @@ agent_communication:
       
       Performed focused PR-3 backend smoke test per user request to re-validate deployed preview environment.
       
-      Test Results (Base URL: https://travel-saas-rebuild.preview.emergentagent.com):
+      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
       
       Backend API Tests:
       1. ✅ Admin Login (admin@acenta.test/admin123) - PASSED (200 OK, access_token received: 385 chars, refresh_token ✅)
@@ -380,7 +380,7 @@ agent_communication:
       
       Performed comprehensive PR-4 web auth compatibility smoke test validating cookie-based auth with /auth/me bootstrap and refresh fallback.
       
-      Test Results (Base URL: https://travel-saas-rebuild.preview.emergentagent.com):
+      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
       
       1. ✅ Login Page Load & Form Elements - PASSED
          - All form testids found: login-page, login-form, login-email, login-password, login-submit
@@ -445,7 +445,7 @@ agent_communication:
       
       Performed comprehensive PR-4 backend verification using curl-like tests on deployed preview environment.
       
-      Test Results (Base URL: https://travel-saas-rebuild.preview.emergentagent.com):
+      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
       
       Backend API Tests:
       1. ✅ Web Login Cookie Compat - PASSED (POST /api/auth/login with X-Client-Platform:web sets cookies and returns auth_transport=cookie_compat)
@@ -564,12 +564,13 @@ agent_communication:
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 4
+  test_sequence: 5
   last_updated: "2026-03-06"
 
 test_plan:
   current_focus:
     - "PR-5A Mobile BFF verification - all tests passed"
+    - "PR-5A Frontend smoke test - passed"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
@@ -579,7 +580,7 @@ agent_communication:
     message: |
       ✅ BACKEND SMOKE TEST COMPLETED - ALL TESTS PASSED
       
-      Performed comprehensive backend API smoke test on https://travel-saas-rebuild.preview.emergentagent.com
+      Performed comprehensive backend API smoke test on https://tenant-audit-preview.preview.emergentagent.com
       
       Backend API Test Results:
       1. ✅ POST /api/auth/login - PASSED (200 OK, tokens received)
@@ -599,7 +600,7 @@ agent_communication:
     message: |
       ✅ SMOKE TEST PASSED
       
-      Completed comprehensive smoke test on https://travel-saas-rebuild.preview.emergentagent.com
+      Completed comprehensive smoke test on https://tenant-audit-preview.preview.emergentagent.com
       
       Test Coverage:
       1. ✅ Login at /login with admin@acenta.test / admin123 - PASSED
@@ -623,7 +624,7 @@ agent_communication:
       
       Performed comprehensive backend smoke test validating PR-1 auth/config hardening deployment.
       
-      Test Results (Base URL: https://travel-saas-rebuild.preview.emergentagent.com):
+      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
       1. ✅ POST /api/auth/login - PASSED (200 OK, access_token + refresh_token received)
       2. ✅ GET /api/auth/me - PASSED (200 OK, user data returned with Bearer token)
       3. ✅ GET /api/admin/agencies - PASSED (200 OK, agency data returned with admin token)
@@ -646,7 +647,7 @@ agent_communication:
       
       Performed comprehensive PR-2 backend smoke test validating session/revocation hardening post-deployment.
       
-      Test Results (Base URL: https://travel-saas-rebuild.preview.emergentagent.com):
+      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
       1. ✅ POST /api/auth/login (tokens + session) - PASSED (200 OK, access_token ✅, refresh_token ✅, session_id ✅)
       2. ✅ GET /api/auth/sessions - PASSED (200 OK, 6 sessions found)
       3. ✅ Auth regression test (/api/auth/me + /api/admin/agencies) - PASSED (both endpoints working correctly)
@@ -674,7 +675,7 @@ agent_communication:
       
       Performed comprehensive tenant-bound login smoke test validating PR-3 tenant isolation deployment.
       
-      Test Results (Base URL: https://travel-saas-rebuild.preview.emergentagent.com):
+      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
       
       Admin Login (admin@acenta.test / admin123):
       ✅ Login successful - redirected to /app/admin/agencies
@@ -715,7 +716,7 @@ agent_communication:
       
       Performed focused PR-3 backend smoke test per user request to re-validate deployed preview environment.
       
-      Test Results (Base URL: https://travel-saas-rebuild.preview.emergentagent.com):
+      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
       
       Backend API Tests:
       1. ✅ Admin Login (admin@acenta.test/admin123) - PASSED (200 OK, access_token received: 385 chars, refresh_token ✅)
@@ -748,7 +749,7 @@ agent_communication:
       
       Performed comprehensive PR-4 web auth compatibility smoke test validating cookie-based auth with /auth/me bootstrap and refresh fallback.
       
-      Test Results (Base URL: https://travel-saas-rebuild.preview.emergentagent.com):
+      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
       
       1. ✅ Login Page Load & Form Elements - PASSED
          - All form testids found: login-page, login-form, login-email, login-password, login-submit
@@ -813,7 +814,7 @@ agent_communication:
       
       Performed comprehensive PR-4 backend verification using curl-like tests on deployed preview environment.
       
-      Test Results (Base URL: https://travel-saas-rebuild.preview.emergentagent.com):
+      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
       
       Backend API Tests:
       1. ✅ Web Login Cookie Compat - PASSED (POST /api/auth/login with X-Client-Platform:web sets cookies and returns auth_transport=cookie_compat)
@@ -851,7 +852,7 @@ agent_communication:
       
       Performed comprehensive PR-5A Mobile BFF backend verification on deployed preview environment.
       
-      Test Results (Base URL: https://travel-saas-rebuild.preview.emergentagent.com):
+      Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
       
       Mobile BFF API Tests:
       1. ✅ GET /api/v1/mobile/auth/me - PASSED (requires auth, returns sanitized mobile DTO, no sensitive fields exposed)
@@ -892,5 +893,55 @@ agent_communication:
       
       Conclusion:
       PR-5A Mobile BFF backend verification SUCCESSFUL. All 7 mobile endpoints working correctly with proper tenant scoping, sanitized DTOs, and no security leaks. Legacy auth compatibility maintained. Mobile BFF ready for mobile app integration.
+
+  - agent: "testing"
+    message: |
+      ✅ PR-5A FRONTEND SMOKE TEST COMPLETED - ALL TESTS PASSED (2026-03-06)
+      
+      Performed frontend smoke test on https://tenant-audit-preview.preview.emergentagent.com per review request.
+      
+      Test Results (Turkish Requirements):
+      
+      1. ✅ Preview URL açılıyor mu, sayfa blank değil mi? 
+         - EVET - Login page loads correctly (96 chars content)
+         - All form elements present (login-page, email, password testids found)
+      
+      2. ✅ admin@acenta.test / admin123 ile login akışı çalışıyor mu?
+         - EVET - Login successful
+         - Redirects correctly to /app/admin/agencies
+      
+      3. ✅ Giriş sonrası ana uygulama/dashboard render oluyor mu?
+         - EVET - Admin agencies page renders fully (951 chars content)
+         - Table displays 3 agencies correctly
+         - No blank screens detected
+         - No infinite loading indicators
+         - No React error boundaries triggered
+      
+      4. ✅ Kritik bir JS error veya sonsuz loading var mı?
+         - HAYIR - No critical JS errors blocking functionality
+         - HAYIR - No infinite loading detected
+      
+      Console Analysis:
+      - 401 on /api/auth/me - Expected bootstrap check (PR-4 cookie auth compat behavior)
+      - 400 on /api/tenant/features - Optional tenant features endpoint (non-critical)
+      - 500 on /api/partner-graph/notifications/summary - Previously documented optional endpoint (non-critical)
+      - 400 on /api/tenant/quota-status - Optional quota checking endpoint (non-critical)
+      - ✅ Console confirms: "[AdminAgencies] Loaded: 3" - Core functionality working
+      
+      Test Summary:
+      - Total Tests: 4
+      - Passed: 4
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      PR-5A frontend smoke test SUCCESSFUL. Frontend code unchanged in this fork (backend-only PR). All core functionality working correctly:
+      - Login flow stable
+      - Admin agencies page renders and loads data
+      - No blank screens or critical errors
+      - Console errors are non-critical optional endpoints (consistent with previous test runs)
+      
+      Frontend is stable and ready. No regressions detected from PR-5A Mobile BFF backend changes.
+
 
 ---

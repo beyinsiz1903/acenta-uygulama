@@ -177,11 +177,17 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - **DTO safety:** mobile schemas are separate from web DTOs, sensitive fields are not exposed, and Mongo `_id` is never returned in mobile responses.
 - **Tenant guardrails:** mobile reads use request context tenant scoping; booking drafts created through mobile BFF now persist `tenant_id` and mobile-friendly optional metadata via `BookingRepository` updates.
 - **Testing:** added `backend/tests/test_mobile_bff_contracts.py`. Testing agent also added preview contract coverage. Internal pytest, external preview API verification, and backend deep testing all passed with no auth regressions.
+- **Re-validation on current fork:** `pytest backend/tests/test_mobile_bff_contracts.py -q` re-run passed (`5 passed`), confirming PR-5A contract stability before PR-6 planning.
 - **Blocked follow-up:** PR-5B remains pending until mobile repo is attached. That phase will cover SecureStore migration, session bootstrap, refresh persistence, and mobile app adoption of these new endpoints.
 
+### PR-5B Prep Added (Mar 6, 2026)
+- Added `backend/app/modules/mobile/pr5b_integration_checklist.md` as a short, implementation-ready handoff for the mobile team.
+- Checklist scope intentionally stays narrow: SecureStore migration, session bootstrap, login/refresh/logout behavior, and adoption of `/api/v1/mobile/*` endpoints without proposing a new mobile architecture.
+- This prep is intended to let PR-6 proceed immediately while keeping PR-5B integration predictable once the mobile repo is attached.
+
 ## Current Priority Backlog
-- **P0:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo)
 - **P0:** PR-6 — Bootstrap Split / Runtime Separation
+- **P0:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
 - **P1:** PR-7 — Web Active Devices / Sessions screen
 - **P1:** Web auth follow-up cleanup after compat window closes (remove remaining localStorage fallback paths page-by-page)
 - **P1:** API versioning rollout (`/api/v1/*`) and compat adapters

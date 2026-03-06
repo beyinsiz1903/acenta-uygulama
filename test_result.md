@@ -717,10 +717,22 @@ metadata:
         agent: "testing"
         comment: "CI EXIT GATE BACKEND FIXES VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-06). Performed comprehensive validation per Turkish review request. Test Results: 1) ✅ pytest /app/backend/tests/test_api_org_isolation_bookings.py -q PASSED - tenant/membership seed + X-Tenant-Id compliance working correctly, 2) ✅ pytest /app/backend/tests/test_mobile_bff_preview_api.py -q -k 'requires_auth' PASSED - pytest warning cleanup successful (4/4 tests passed), 3) ✅ No no-arg usefixtures() decorators found in test_mobile_bff_preview_api.py - cleanup complete, 4) ✅ No test function return statements causing PytestReturnNotNoneWarning found - cleanup complete, 5) ✅ Auth/tenant regression check PASSED - admin@acenta.test and agent@acenta.test login flows working correctly, 6) ✅ Application smoke tests PASSED - /api/health (status: ok), /api/auth/me (admin email returned), /api/v1/mobile/auth/me (mobile auth working). Success rate: 100%. All CI exit gate backend breaking issues have been resolved. Tests are now tenant hardening compliant and pytest warning-free."
 
+  - task: "PR-8 web auth cleanup sanity check"
+    implemented: true
+    working: true
+    file: "frontend/src/lib/authSession.js, frontend/src/lib/cookieAuthCompat.js, frontend/src/hooks/useAuth.js, frontend/src/pages/LoginPage.jsx, frontend/src/b2b/B2BLoginPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PR-8 web auth cleanup sanity check PASSED. All 5 required frontend flows verified successfully: 1) Admin login (/login -> admin@acenta.test/admin123) ✅ - redirects to /app/admin/agencies correctly, 2) Session persistence ✅ - hard refresh maintains session via cookie bootstrap (/auth/me called, stayed on /app route), 3) Logout ✅ - returns to /login and clears localStorage completely, 4) Protected route guard ✅ - /app/admin/agencies redirects to /login when not authenticated, 5) B2B login (/b2b/login -> agent@acenta.test/agent123) ✅ - redirects to /b2b/bookings correctly. CRITICAL VALIDATION: Cookie-based auth working correctly - NO tokens stored in localStorage (auth_transport=cookie_compat), session bootstrap via /auth/me working on page refresh, localStorage only stores user data and tenant_id. No critical console errors detected (20 total errors, all non-auth related). Auth requests tracked: 12 total (login, logout, /auth/me bootstrap calls, refresh). No auth regressions detected. Web auth cleanup successful - cookie-only authentication confirmed working without localStorage token dependencies."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 13
+  test_sequence: 14
   last_updated: "2026-03-06"
 
   - task: "Preview Auth Helper validation - common auth/token cache"
@@ -922,6 +934,101 @@ agent_communication:
       - TTL management: Proper cache expiration handling ✅
       
       Conclusion:
+
+  - agent: "testing"
+    message: |
+      ✅ PR-8 WEB AUTH CLEANUP SANITY CHECK COMPLETED - ALL TESTS PASSED (2026-03-06)
+      
+      Performed comprehensive PR-8 web auth cleanup sanity check on https://token-migration.preview.emergentagent.com per review request.
+      
+      Context:
+      - PR-8 focused on web auth cleanup
+      - Scope: Verify cookie-based auth flows work correctly without localStorage tokens
+      - Testing focus: regression checking only (no new features)
+      
+      Test Results:
+      
+      1. ✅ Admin Login Flow (/login -> /app route)
+         - Navigated to /login page
+         - All form elements present (login-page, login-form, login-email, login-password, login-submit testids)
+         - Credentials: admin@acenta.test / admin123
+         - Successfully redirected to /app/admin/agencies
+         - LocalStorage state after login:
+           * NO tokens stored ✅ (cookie-based auth confirmed)
+           * User data stored: YES
+           * Tenant ID: 9c5c1079-9dea-49bf-82c0-74838b146160
+           * Auth transport: cookie_compat ✅
+         - Page content loaded: 949 characters
+      
+      2. ✅ Session Persistence (Hard Refresh via Cookie Bootstrap)
+         - Performed hard refresh on /app/admin/agencies
+         - Bootstrap /auth/me called: YES ✅
+         - Session maintained: YES ✅
+         - Stayed on same protected route
+         - LocalStorage state preserved
+         - No redirect to login (session persisted)
+      
+      3. ✅ Logout Flow (Returns to /login)
+         - Logout button found via data-testid="logout-btn"
+         - Clicked logout button
+         - Successfully redirected to /login
+         - LocalStorage completely cleared:
+           * User data: REMOVED ✅
+           * Tenant ID: REMOVED ✅
+           * Auth transport: REMOVED ✅
+      
+      4. ✅ Protected Route Access After Logout (Redirect to /login)
+         - Cleared cookies and localStorage
+         - Attempted to access /app/admin/agencies
+         - Successfully redirected to /login
+         - Route protection working correctly
+      
+      5. ✅ B2B Login Flow (/b2b/login -> /b2b/bookings)
+         - Navigated to /b2b/login page
+         - All B2B form elements present (b2b-login-page, b2b-login-form, b2b-login-email, b2b-login-password, b2b-login-submit testids)
+         - Credentials: agent@acenta.test / agent123
+         - Successfully redirected to /b2b/bookings
+         - LocalStorage state after B2B login:
+           * NO tokens stored ✅ (cookie-based auth confirmed)
+           * User data stored: YES
+           * Auth transport: cookie_compat ✅
+      
+      Console & Network Analysis:
+      - Total console errors: 20 (none auth-related or critical)
+      - No critical runtime errors
+      - No auth bootstrap errors
+      - Total network requests: 159
+      - Auth-related requests: 12
+        * POST /api/auth/login (admin + B2B login)
+        * GET /api/auth/me (bootstrap calls)
+        * POST /api/auth/logout
+        * POST /api/auth/refresh (fallback attempts)
+      
+      Cookie-Based Auth Validation (CRITICAL):
+      ✅ NO tokens stored in localStorage for both admin and B2B login
+      ✅ Auth transport correctly set to 'cookie_compat'
+      ✅ Session bootstrap via /auth/me working on page refresh
+      ✅ LocalStorage only stores user data and tenant_id (no tokens)
+      ✅ Cookie authentication confirmed working without localStorage token dependencies
+      
+      Test Summary:
+      - Total Tests: 5
+      - Passed: 5
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      PR-8 web auth cleanup sanity check SUCCESSFUL. All frontend flows working correctly:
+      - Admin login flow works (/login -> /app)
+      - Session persistence via cookie bootstrap works (hard refresh)
+      - Logout returns to /login and clears state
+      - Protected routes redirect when not authenticated
+      - B2B login flow works (/b2b/login -> /b2b/bookings)
+      - Cookie-based authentication confirmed (no localStorage tokens required)
+      - No auth regressions detected
+      
+      Web auth cleanup is production-ready with cookie-only authentication working correctly.
+
       Preview auth helper validation SUCCESSFUL. All Turkish requirements met:
       - Common auth/token cache functionality working correctly
       - Token reuse providing excellent performance gains

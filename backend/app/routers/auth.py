@@ -20,6 +20,8 @@ class LoginWith2FARequest(BaseModel):
     email: str
     password: str
     otp_code: Optional[str] = None  # Required if 2FA enabled
+    tenant_id: Optional[str] = None
+    tenant_slug: Optional[str] = None
 
 
 class SignupRequest(BaseModel):
@@ -33,8 +35,23 @@ class SignupRequest(BaseModel):
 async def login(payload: LoginWith2FARequest, request: Request):
     db = await get_db()
 
-    # Tenant-agnostic login: resolve user by email, then infer organization
-    user = await db.users.find_one({"email": payload.email})
+    from app.errors import AppError
+    from app.services.login_context_service import resolve_login_context
+
+    try:
+        login_ctx = await resolve_login_context(
+            db,
+            email=payload.email.strip().lower(),
+            tenant_id=payload.tenant_id,
+            tenant_slug=payload.tenant_slug,
+        )
+    except AppError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
+    user = login_ctx["user"]
+    tenant_doc = login_ctx["tenant"]
+    membership = login_ctx.get("membership")
+
     if not user or not user.get("is_active"):
         raise HTTPException(status_code=401, detail="Email veya şifre hatalı")
 
@@ -57,13 +74,9 @@ async def login(payload: LoginWith2FARequest, request: Request):
         if not valid:
             raise HTTPException(status_code=401, detail="Invalid 2FA code")
 
-    org_id = user.get("organization_id")
+    org_id = str(user.get("organization_id") or tenant_doc.get("organization_id") or "")
     if not org_id:
-        # Fallback to default organization if user has no explicit org
-        org = await db.organizations.find_one({"slug": "default"})
-        if not org:
-            raise HTTPException(status_code=500, detail="Organizasyon bulunamadı")
-        org_id = str(org["_id"])
+        raise HTTPException(status_code=500, detail="Organizasyon bulunamadı")
 
     # Legacy rol dönüştürmesi: "admin" => "super_admin"
     raw_roles = user.get("roles") or ["admin"]
@@ -72,6 +85,10 @@ async def login(payload: LoginWith2FARequest, request: Request):
         roles_set.discard("admin")
         roles_set.add("super_admin")
     roles_list = list(roles_set) or ["super_admin"]
+    if membership and membership.get("role"):
+        membership_role = str(membership["role"])
+        if membership_role not in roles_list:
+            roles_list.append(membership_role)
 
     from app.services.session_service import create_session
 
@@ -109,11 +126,7 @@ async def login(payload: LoginWith2FARequest, request: Request):
     user_out["roles"] = roles_list
 
     # Resolve tenant_id from organization
-    tenant_id = user.get("tenant_id")
-    if not tenant_id:
-        tenant = await db.tenants.find_one({"organization_id": org_id})
-        if tenant:
-            tenant_id = str(tenant["_id"])
+    tenant_id = str(tenant_doc.get("_id"))
 
     # FAZ-1: Load organization with merged features
     from app.auth import load_org_doc, resolve_org_features

@@ -13,6 +13,7 @@ from app.db import get_db
 from app.request_context import RequestContext, set_request_context
 from app.repositories.membership_repository import MembershipRepository
 from app.repositories.roles_permissions_repository import RolesPermissionsRepository
+from app.repositories.tenant_repository import TenantRepository
 
 
 def _error_response(status_code: int, code: str, message: str, details: Optional[dict[str, Any]] = None) -> JSONResponse:
@@ -32,6 +33,68 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
     def __init__(self, app) -> None:  # type: ignore[override]
         super().__init__(app)
         self.base_domain = os.environ.get("BASE_DOMAIN", "")
+
+    @staticmethod
+    def _normalize_tenant_id(raw: str) -> str:
+        return raw.strip()
+
+    async def _resolve_effective_tenant(
+        self,
+        *,
+        db: AsyncIOMotorDatabase,
+        user_doc: dict[str, Any],
+        org_id: str,
+        user_id: str,
+        super_admin: bool,
+        tenant_id_header: str,
+    ) -> tuple[str, str, list[str], Optional[dict[str, Any]]]:
+        tenant_repo = TenantRepository(db)
+        mem_repo = MembershipRepository(db)
+
+        requested_tenant = self._normalize_tenant_id(tenant_id_header) if tenant_id_header else ""
+        active_memberships = await mem_repo.list_active_memberships(user_id)
+        allowed_tenant_ids = [str(m.get("tenant_id")) for m in active_memberships if m.get("tenant_id")]
+        membership_map = {str(m.get("tenant_id")): m for m in active_memberships if m.get("tenant_id")}
+
+        if requested_tenant:
+            tenant_doc = await tenant_repo.get_by_id(requested_tenant)
+            if not tenant_doc:
+                raise HTTPException(status_code=404, detail="Tenant bulunamadı")
+
+            tenant_id_str = str(tenant_doc.get("_id"))
+            if super_admin:
+                return tenant_id_str, "header_super_admin_override", allowed_tenant_ids, membership_map.get(tenant_id_str)
+
+            membership = membership_map.get(tenant_id_str)
+            if not membership:
+                raise HTTPException(status_code=403, detail="Bu tenant için aktif üyelik bulunamadı")
+            return tenant_id_str, "header_membership", allowed_tenant_ids, membership
+
+        if super_admin:
+            if user_doc.get("tenant_id"):
+                return str(user_doc["tenant_id"]), "user_doc", allowed_tenant_ids, membership_map.get(str(user_doc["tenant_id"]))
+            tenant_doc = await tenant_repo.get_first_for_org(org_id)
+            if tenant_doc:
+                return str(tenant_doc.get("_id")), "org_fallback", allowed_tenant_ids, membership_map.get(str(tenant_doc.get("_id")))
+            return str(org_id), "org_id_fallback", allowed_tenant_ids, None
+
+        if len(allowed_tenant_ids) == 1:
+            tenant_id_str = allowed_tenant_ids[0]
+            return tenant_id_str, "single_membership", allowed_tenant_ids, membership_map.get(tenant_id_str)
+
+        if user_doc.get("tenant_id") and str(user_doc["tenant_id"]) in allowed_tenant_ids:
+            tenant_id_str = str(user_doc["tenant_id"])
+            return tenant_id_str, "user_doc_membership", allowed_tenant_ids, membership_map.get(tenant_id_str)
+
+        if set(user_doc.get("roles") or []).intersection({"admin"}):
+            org_tenants = await tenant_repo.list_for_org(org_id)
+            if len(org_tenants) == 1:
+                tenant_id_str = str(org_tenants[0].get("_id"))
+                return tenant_id_str, "admin_org_fallback", allowed_tenant_ids, membership_map.get(tenant_id_str)
+            if len(org_tenants) == 0:
+                return str(org_id), "admin_org_id_fallback", allowed_tenant_ids, None
+
+        raise HTTPException(status_code=403, detail="Tenant bağlamı çözülemedi")
 
     async def dispatch(self, request: Request, call_next):  # type: ignore[override]
         # Avoid repeated DB lookups if already set (e.g. in tests)
@@ -90,37 +153,20 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
         super_admin = is_super_admin(user_doc)
 
         # ------------------------------------------------------------------
-        # 2) Tenant resolution (graceful, multi-fallback)
+        # 2) Tenant resolution (membership-bound, controlled super-admin override)
         # ------------------------------------------------------------------
-        tenant_id_str = None
-
-        # a) From X-Tenant-Id header
         tenant_id_header = (request.headers.get("X-Tenant-Id") or "").strip()
-        if tenant_id_header:
-            from bson import ObjectId
-            try:
-                tenant_lookup_id = ObjectId(tenant_id_header)
-            except Exception:
-                tenant_lookup_id = tenant_id_header
-            tenant_doc: Optional[dict[str, Any]] = await db.tenants.find_one({"_id": tenant_lookup_id})
-            if not tenant_doc:
-                tenant_doc = await db.tenants.find_one({"_id": tenant_id_header})
-            if tenant_doc:
-                tenant_id_str = str(tenant_doc["_id"])
-
-        # b) From user's tenant_id field
-        if not tenant_id_str and user_doc.get("tenant_id"):
-            tenant_id_str = str(user_doc["tenant_id"])
-
-        # c) From organization lookup
-        if not tenant_id_str:
-            tenant_doc = await db.tenants.find_one({"organization_id": org_id})
-            if tenant_doc:
-                tenant_id_str = str(tenant_doc["_id"])
-
-        # d) Fallback: use org_id as tenant_id for single-tenant setups
-        if not tenant_id_str:
-            tenant_id_str = str(org_id)
+        try:
+            tenant_id_str, tenant_source, allowed_tenant_ids, membership = await self._resolve_effective_tenant(
+                db=db,
+                user_doc=user_doc,
+                org_id=str(org_id),
+                user_id=user_id,
+                super_admin=super_admin,
+                tenant_id_header=tenant_id_header,
+            )
+        except HTTPException as exc:
+            return _error_response(exc.status_code, "tenant_resolution_failed", str(exc.detail), None)
 
         # ------------------------------------------------------------------
         # 3) Membership & role resolution (graceful)
@@ -129,16 +175,10 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
         if super_admin:
             role = "super_admin"
         else:
-            try:
-                mem_repo = MembershipRepository(db)
-                # Try find_active_membership first, fall back to find_membership
-                try:
-                    membership = await mem_repo.find_active_membership(user_id=user_id, tenant_id=tenant_id_str)
-                except (TypeError, AttributeError):
-                    membership = await mem_repo.find_membership(tenant_id_str, user_id)
-                role = membership.get("role") if membership else None
-            except Exception:
-                pass
+            role = (membership or {}).get("role")
+            if role is None:
+                roles = list(user_doc.get("roles") or [])
+                role = roles[0] if roles else None
 
         # ------------------------------------------------------------------
         # 4) Permissions expansion (graceful)
@@ -164,6 +204,8 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
             user_id=user_id,
             role=role,
             permissions=permissions,
+            tenant_source=tenant_source,
+            allowed_tenant_ids=allowed_tenant_ids,
             subscription_status=None,
             plan=None,
             is_super_admin=super_admin,
@@ -173,6 +215,7 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
         request.state.tenant_resolved = True
         request.state.tenant_id = tenant_id_str
         request.state.tenant_org_id = str(org_id)
+        request.state.allowed_tenant_ids = allowed_tenant_ids
 
         response = await call_next(request)
         return response

@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from app.auth import get_current_user, require_feature, require_roles, hash_password
 from app.db import get_db
 from app.errors import AppError
+from app.repositories.base_repository import with_org_filter, with_tenant_filter
 from app.services.audit import write_audit_log, audit_snapshot
 from app.utils import now_utc
 from app.utils_ids import build_id_filter
@@ -49,14 +50,24 @@ class ResetPasswordResponse(BaseModel):
     reset_link: str
 
 
-async def _load_agency_by_id(db, org_id: str, agency_id: str) -> Optional[Dict[str, Any]]:
-    flt: Dict[str, Any] = {"organization_id": org_id}
+def _request_tenant_id(request: Optional[Request]) -> Optional[str]:
+    if request is None:
+        return None
+    return getattr(request.state, "tenant_id", None)
+
+
+async def _load_agency_by_id(db, org_id: str, agency_id: str, tenant_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    flt: Dict[str, Any] = with_org_filter({}, org_id)
+    if tenant_id:
+        flt = with_tenant_filter(flt, tenant_id, include_legacy_without_tenant=True)
     flt.update(build_id_filter(agency_id, field_name="_id"))
     return await db.agencies.find_one(flt)
 
 
-async def _load_user_by_id(db, org_id: str, user_id: str) -> Optional[Dict[str, Any]]:
-    flt: Dict[str, Any] = {"organization_id": org_id}
+async def _load_user_by_id(db, org_id: str, user_id: str, tenant_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    flt: Dict[str, Any] = with_org_filter({}, org_id)
+    if tenant_id:
+        flt = with_tenant_filter(flt, tenant_id, include_legacy_without_tenant=True)
     flt.update(build_id_filter(user_id, field_name="_id"))
     return await db.users.find_one(flt)
 
@@ -102,17 +113,22 @@ def _extract_agency_role(roles: List[str]) -> Optional[str]:
 @router.get("/{agency_id}/users", dependencies=[AdminDep, FeatureDep], response_model=List[AgencyUserOut])
 async def list_agency_users(
     agency_id: str,
+    request: Request,
     user=Depends(get_current_user),
     db=Depends(get_db),
 ) -> List[AgencyUserOut]:
     org_id = user["organization_id"]
+    tenant_id = _request_tenant_id(request)
 
-    agency = await _load_agency_by_id(db, org_id, agency_id)
+    agency = await _load_agency_by_id(db, org_id, agency_id, tenant_id)
     if not agency:
         raise AppError(404, "agency_not_found", "Acenta bulunamadı")
 
+    user_filter: Dict[str, Any] = with_org_filter({"agency_id": agency["_id"]}, org_id)
+    if tenant_id:
+        user_filter = with_tenant_filter(user_filter, tenant_id, include_legacy_without_tenant=True)
     cursor = db.users.find(
-        {"organization_id": org_id, "agency_id": agency["_id"]},
+        user_filter,
         {"password_hash": 0},
     ).sort("created_at", -1)
     docs = await cursor.to_list(length=500)
@@ -129,8 +145,9 @@ async def invite_or_link_agency_user(
     db=Depends(get_db),
 ) -> AgencyUserOut:
     org_id = user["organization_id"]
+    tenant_id = _request_tenant_id(request)
 
-    agency = await _load_agency_by_id(db, org_id, agency_id)
+    agency = await _load_agency_by_id(db, org_id, agency_id, tenant_id)
     if not agency:
         raise AppError(404, "agency_not_found", "Acenta bulunamadı")
 
@@ -141,6 +158,10 @@ async def invite_or_link_agency_user(
     before_snapshot = None
 
     if existing:
+        existing_tenant_id = str(existing.get("tenant_id")) if existing.get("tenant_id") else None
+        if tenant_id and existing_tenant_id and existing_tenant_id != tenant_id:
+            raise AppError(409, "cross_tenant_user_conflict", "Kullanıcı başka bir tenant kapsamına ait.")
+
         # Already linked to this agency
         if str(existing.get("agency_id")) == str(agency["_id"]):
             raise AppError(409, "already_linked", "Kullanıcı zaten bu acenteye bağlı.")
@@ -154,10 +175,11 @@ async def invite_or_link_agency_user(
         # Link to this agency + update agency role
         new_roles = _apply_agency_role(existing.get("roles") or [], payload.role)
         await db.users.update_one(
-            {"_id": existing["_id"], "organization_id": org_id},
+            with_tenant_filter({"_id": existing["_id"], "organization_id": org_id}, tenant_id, include_legacy_without_tenant=True) if tenant_id else {"_id": existing["_id"], "organization_id": org_id},
             {
                 "$set": {
                     "agency_id": agency["_id"],
+                    "tenant_id": tenant_id,
                     "roles": new_roles,
                     "updated_at": now_utc(),
                 }
@@ -175,6 +197,7 @@ async def invite_or_link_agency_user(
             "password_hash": hash_password(random_password),
             "roles": _apply_agency_role([], payload.role),
             "agency_id": agency["_id"],
+            "tenant_id": tenant_id,
             "created_at": now_utc(),
             "updated_at": now_utc(),
             "is_active": True,
@@ -226,12 +249,13 @@ async def update_agency_user(
     db=Depends(get_db),
 ) -> AgencyUserOut:
     org_id = user["organization_id"]
+    tenant_id = _request_tenant_id(request)
 
-    agency = await _load_agency_by_id(db, org_id, agency_id)
+    agency = await _load_agency_by_id(db, org_id, agency_id, tenant_id)
     if not agency:
         raise AppError(404, "agency_not_found", "Acenta bulunamadı")
 
-    user_doc = await _load_user_by_id(db, org_id, user_id)
+    user_doc = await _load_user_by_id(db, org_id, user_id, tenant_id)
     if not user_doc:
         raise AppError(404, "user_not_found", "Kullanıcı bulunamadı")
 
@@ -262,11 +286,11 @@ async def update_agency_user(
     before_snapshot = audit_snapshot("agency_user", user_doc)
 
     await db.users.update_one(
-        {"_id": user_doc["_id"], "organization_id": org_id},
+        with_tenant_filter({"_id": user_doc["_id"], "organization_id": org_id}, tenant_id, include_legacy_without_tenant=True) if tenant_id else {"_id": user_doc["_id"], "organization_id": org_id},
         {"$set": updates},
     )
 
-    updated = await _load_user_by_id(db, org_id, user_id)
+    updated = await _load_user_by_id(db, org_id, user_id, tenant_id)
     after_snapshot = audit_snapshot("agency_user", updated)
 
     # Audit: role and/or status change
@@ -353,12 +377,13 @@ async def reset_agency_user_password(
     from uuid import uuid4
 
     org_id = user["organization_id"]
+    tenant_id = _request_tenant_id(request)
 
-    agency = await _load_agency_by_id(db, org_id, agency_id)
+    agency = await _load_agency_by_id(db, org_id, agency_id, tenant_id)
     if not agency:
         raise AppError(404, "agency_not_found", "Acenta bulunamadı")
 
-    user_doc = await _load_user_by_id(db, org_id, user_id)
+    user_doc = await _load_user_by_id(db, org_id, user_id, tenant_id)
     if not user_doc:
         raise AppError(404, "user_not_found", "Kullanıcı bulunamadı")
 
@@ -446,25 +471,35 @@ class AllUsersUserOut(BaseModel):
 
 @all_users_router.get("/all-users", dependencies=[AdminDep], response_model=List[AllUsersUserOut])
 async def list_all_agency_users(
+    request: Request,
     user=Depends(get_current_user),
     db=Depends(get_db),
 ) -> List[AllUsersUserOut]:
     """List ALL agency users across all agencies for the super admin."""
     org_id = user["organization_id"]
+    tenant_id = _request_tenant_id(request)
 
     # Get all agencies for name lookup
+    agency_filter: Dict[str, Any] = with_org_filter({}, org_id)
+    if tenant_id:
+        agency_filter = with_tenant_filter(agency_filter, tenant_id, include_legacy_without_tenant=True)
     agency_docs = await db.agencies.find(
-        {"organization_id": org_id},
+        agency_filter,
         {"_id": 1, "name": 1},
     ).to_list(1000)
     agency_map = {str(a["_id"]): a.get("name", "") for a in agency_docs}
 
     # Get all users that have an agency role
-    cursor = db.users.find(
+    user_filter: Dict[str, Any] = with_org_filter(
         {
-            "organization_id": org_id,
             "roles": {"$in": list(AGENCY_ROLES)},
         },
+        org_id,
+    )
+    if tenant_id:
+        user_filter = with_tenant_filter(user_filter, tenant_id, include_legacy_without_tenant=True)
+    cursor = db.users.find(
+        user_filter,
         {"password_hash": 0},
     ).sort("created_at", -1)
     docs = await cursor.to_list(length=2000)
@@ -506,8 +541,9 @@ async def create_user(
 ) -> AllUsersUserOut:
     """Super admin creates a new agency user."""
     org_id = user["organization_id"]
+    tenant_id = _request_tenant_id(request)
 
-    agency = await _load_agency_by_id(db, org_id, payload.agency_id)
+    agency = await _load_agency_by_id(db, org_id, payload.agency_id, tenant_id)
     if not agency:
         raise AppError(404, "agency_not_found", "Acenta bulunamadi")
 
@@ -523,6 +559,7 @@ async def create_user(
         "password_hash": hash_password(payload.password),
         "roles": _apply_agency_role([], payload.role),
         "agency_id": agency["_id"],
+        "tenant_id": tenant_id,
         "is_active": True,
         "created_at": now_utc(),
         "updated_at": now_utc(),
@@ -587,8 +624,9 @@ async def update_user(
 ) -> AllUsersUserOut:
     """Super admin updates an agency user."""
     org_id = user["organization_id"]
+    tenant_id = _request_tenant_id(request)
 
-    user_doc = await _load_user_by_id(db, org_id, user_id)
+    user_doc = await _load_user_by_id(db, org_id, user_id, tenant_id)
     if not user_doc:
         raise AppError(404, "user_not_found", "Kullanici bulunamadi")
 
@@ -614,10 +652,11 @@ async def update_user(
         updates["is_active"] = payload.status == "active"
 
     if payload.agency_id is not None:
-        new_agency = await _load_agency_by_id(db, org_id, payload.agency_id)
+        new_agency = await _load_agency_by_id(db, org_id, payload.agency_id, tenant_id)
         if not new_agency:
             raise AppError(404, "agency_not_found", "Acenta bulunamadi")
         updates["agency_id"] = new_agency["_id"]
+        updates["tenant_id"] = tenant_id
 
     if not updates:
         # Return current state
@@ -625,11 +664,11 @@ async def update_user(
     else:
         updates["updated_at"] = now_utc()
         await db.users.update_one(
-            {"_id": user_doc["_id"], "organization_id": org_id},
+            with_tenant_filter({"_id": user_doc["_id"], "organization_id": org_id}, tenant_id, include_legacy_without_tenant=True) if tenant_id else {"_id": user_doc["_id"], "organization_id": org_id},
             {"$set": updates},
         )
 
-    updated = await _load_user_by_id(db, org_id, user_id)
+    updated = await _load_user_by_id(db, org_id, user_id, tenant_id)
 
     # Agency name lookup
     agency_docs = await db.agencies.find(
@@ -689,8 +728,9 @@ async def delete_user(
 ) -> DeleteUserOut:
     """Super admin hard-deletes an agency user."""
     org_id = user["organization_id"]
+    tenant_id = _request_tenant_id(request)
 
-    user_doc = await _load_user_by_id(db, org_id, user_id)
+    user_doc = await _load_user_by_id(db, org_id, user_id, tenant_id)
     if not user_doc:
         raise AppError(404, "user_not_found", "Kullanici bulunamadi")
 
@@ -701,7 +741,9 @@ async def delete_user(
 
     before_snapshot = audit_snapshot("agency_user", user_doc)
 
-    await db.users.delete_one({"_id": user_doc["_id"], "organization_id": org_id})
+    await db.users.delete_one(
+        with_tenant_filter({"_id": user_doc["_id"], "organization_id": org_id}, tenant_id, include_legacy_without_tenant=True) if tenant_id else {"_id": user_doc["_id"], "organization_id": org_id}
+    )
 
     try:
         await write_audit_log(

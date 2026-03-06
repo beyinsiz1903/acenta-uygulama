@@ -42,6 +42,23 @@ async def ensure_seed_data() -> None:
     else:
         org_id = str(org["_id"])
 
+    default_tenant = await db.tenants.find_one({"organization_id": org_id})
+    if not default_tenant:
+        tenant_doc = {
+            "_id": str(uuid.uuid4()),
+            "organization_id": org_id,
+            "name": "Varsayilan Tenant",
+            "slug": "default-tenant",
+            "status": "active",
+            "is_active": True,
+            "created_at": now_utc(),
+            "updated_at": now_utc(),
+        }
+        await db.tenants.insert_one(tenant_doc)
+        default_tenant_id = tenant_doc["_id"]
+    else:
+        default_tenant_id = str(default_tenant["_id"])
+
     # P1.4: cancel penalty percent
     await db.organizations.update_one(
         {"_id": org_id},
@@ -56,6 +73,7 @@ async def ensure_seed_data() -> None:
     if not admin:
         await db.users.insert_one({
             "organization_id": org_id,
+            "tenant_id": default_tenant_id,
             "email": DEFAULT_ADMIN_EMAIL,
             "name": "Admin",
             "password_hash": hash_password(DEFAULT_ADMIN_PASSWORD),
@@ -187,6 +205,7 @@ async def ensure_seed_data() -> None:
         if not await db.users.find_one({"organization_id": org_id, "email": email}):
             await db.users.insert_one({
                 "organization_id": org_id,
+                "tenant_id": default_tenant_id,
                 "email": email,
                 "name": f"Agency Admin {idx + 1}",
                 "password_hash": hash_password("agency123"),
@@ -203,6 +222,7 @@ async def ensure_seed_data() -> None:
         if not await db.users.find_one({"organization_id": org_id, "email": hotel_admin_email}):
             await db.users.insert_one({
                 "organization_id": org_id,
+                "tenant_id": default_tenant_id,
                 "email": hotel_admin_email,
                 "name": "Hotel Admin",
                 "password_hash": hash_password("admin123"),
@@ -212,6 +232,44 @@ async def ensure_seed_data() -> None:
                 "updated_at": now_utc(),
                 "is_active": True,
             })
+
+    admin_user = await db.users.find_one({"organization_id": org_id, "email": DEFAULT_ADMIN_EMAIL})
+    if admin_user:
+        await db.memberships.update_one(
+            {"user_id": str(admin_user["_id"]), "tenant_id": default_tenant_id},
+            {
+                "$set": {
+                    "user_id": str(admin_user["_id"]),
+                    "tenant_id": default_tenant_id,
+                    "role": "admin",
+                    "status": "active",
+                    "updated_at": now_utc(),
+                },
+                "$setOnInsert": {"created_at": now_utc()},
+            },
+            upsert=True,
+        )
+
+    demo_agency_users = await db.users.find(
+        {"organization_id": org_id, "roles": {"$in": ["agency_admin", "agency_agent"]}},
+        {"_id": 1, "roles": 1},
+    ).to_list(20)
+    for demo_user in demo_agency_users:
+        agency_role = "agency_admin" if "agency_admin" in (demo_user.get("roles") or []) else "agency_agent"
+        await db.memberships.update_one(
+            {"user_id": str(demo_user["_id"]), "tenant_id": default_tenant_id},
+            {
+                "$set": {
+                    "user_id": str(demo_user["_id"]),
+                    "tenant_id": default_tenant_id,
+                    "role": agency_role,
+                    "status": "active",
+                    "updated_at": now_utc(),
+                },
+                "$setOnInsert": {"created_at": now_utc()},
+            },
+            upsert=True,
+        )
 
     # ══════════════════════════════════════════════════════════
     # 7. Agency-hotel links

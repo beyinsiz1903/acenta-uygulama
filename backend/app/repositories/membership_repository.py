@@ -20,6 +20,9 @@ class MembershipRepository:
     })
     return doc
 
+  async def list_active_memberships(self, user_id: str) -> list[Dict[str, Any]]:
+    return await self._col.find({"user_id": user_id, "status": "active"}).to_list(100)
+
   async def upsert_membership(self, payload: Dict[str, Any]) -> str:
     # Simple upsert helper for seeding / admin operations
     key = {

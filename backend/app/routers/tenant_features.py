@@ -4,6 +4,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Request
 
 from app.errors import AppError
+from app.request_context import get_request_context
 from app.services.feature_service import feature_service
 from app.services.endpoint_cache import try_cache_get, cache_and_return
 
@@ -16,6 +17,9 @@ async def get_tenant_features(request: Request) -> dict:
   tenant_id = getattr(request.state, "tenant_id", None)
   if not tenant_id:
     raise AppError(400, "tenant_context_missing", "Tenant context bulunamadı.", None)
+  ctx = get_request_context(required=False)
+  if ctx and ctx.allowed_tenant_ids and not ctx.is_super_admin and tenant_id not in ctx.allowed_tenant_ids:
+    raise AppError(403, "tenant_access_denied", "Bu tenant için erişim yetkiniz yok.", None)
 
   # Redis L1 cache (5 min — features rarely change)
   hit, ck = await try_cache_get("tenant_feat", tenant_id)
@@ -42,6 +46,9 @@ async def get_tenant_quota_status(request: Request) -> dict:
   tenant_id = getattr(request.state, "tenant_id", None)
   if not tenant_id:
     raise AppError(400, "tenant_context_missing", "Tenant context bulunamadı.", None)
+  ctx = get_request_context(required=False)
+  if ctx and ctx.allowed_tenant_ids and not ctx.is_super_admin and tenant_id not in ctx.allowed_tenant_ids:
+    raise AppError(403, "tenant_access_denied", "Bu tenant için erişim yetkiniz yok.", None)
 
   # Redis L1 cache (1 min — quota changes with usage)
   hit, ck = await try_cache_get("tenant_quota", tenant_id)

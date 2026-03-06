@@ -21,6 +21,8 @@ class RequestContext:
   user_id: Optional[str]
   role: Optional[str]
   permissions: List[str]
+  tenant_source: str = "unknown"
+  allowed_tenant_ids: Optional[List[str]] = None
   subscription_status: Optional[str] = None
   plan: Optional[str] = None
   is_super_admin: bool = False

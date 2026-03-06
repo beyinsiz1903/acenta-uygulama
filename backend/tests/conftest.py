@@ -266,6 +266,23 @@ async def seed_default_org_and_users(test_db):
     else:
         default_org_id = str(org["_id"])
 
+    tenant = await test_db.tenants.find_one({"organization_id": default_org_id})
+    if not tenant:
+        tenant_doc = {
+            "_id": "tenant_default",
+            "organization_id": default_org_id,
+            "name": "Default Tenant",
+            "slug": "default-tenant",
+            "status": "active",
+            "is_active": True,
+            "created_at": now,
+            "updated_at": now,
+        }
+        await test_db.tenants.insert_one(tenant_doc)
+        default_tenant_id = tenant_doc["_id"]
+    else:
+        default_tenant_id = str(tenant["_id"])
+
     # 2) Admin user (always in default organization to match /api/auth/login)
     admin_org_id = default_org_id
     admin = await test_db.users.find_one({"organization_id": admin_org_id, "email": DEFAULT_ADMIN_EMAIL})
@@ -273,6 +290,7 @@ async def seed_default_org_and_users(test_db):
         await test_db.users.insert_one(
             {
                 "organization_id": admin_org_id,
+                "tenant_id": default_tenant_id,
                 "email": DEFAULT_ADMIN_EMAIL,
                 "name": "Admin",
                 "password_hash": hash_password(DEFAULT_ADMIN_PASSWORD),
@@ -308,6 +326,7 @@ async def seed_default_org_and_users(test_db):
             {
                 "organization_id": default_org_id,
                 "agency_id": agency_id,
+                "tenant_id": default_tenant_id,
                 "email": "agency1@demo.test",
                 "name": "Demo Agency User",
                 "password_hash": hash_password("agency123"),
@@ -316,6 +335,40 @@ async def seed_default_org_and_users(test_db):
                 "updated_at": now,
                 "is_active": True,
             }
+        )
+
+    admin_user = await test_db.users.find_one({"organization_id": admin_org_id, "email": DEFAULT_ADMIN_EMAIL})
+    if admin_user:
+        await test_db.memberships.update_one(
+            {"user_id": str(admin_user["_id"]), "tenant_id": default_tenant_id},
+            {
+                "$set": {
+                    "user_id": str(admin_user["_id"]),
+                    "tenant_id": default_tenant_id,
+                    "role": "admin",
+                    "status": "active",
+                    "updated_at": now,
+                },
+                "$setOnInsert": {"created_at": now},
+            },
+            upsert=True,
+        )
+
+    agency_user_doc = await test_db.users.find_one({"organization_id": default_org_id, "email": "agency1@demo.test"})
+    if agency_user_doc:
+        await test_db.memberships.update_one(
+            {"user_id": str(agency_user_doc["_id"]), "tenant_id": default_tenant_id},
+            {
+                "$set": {
+                    "user_id": str(agency_user_doc["_id"]),
+                    "tenant_id": default_tenant_id,
+                    "role": "agency_admin",
+                    "status": "active",
+                    "updated_at": now,
+                },
+                "$setOnInsert": {"created_at": now},
+            },
+            upsert=True,
         )
 
     yield

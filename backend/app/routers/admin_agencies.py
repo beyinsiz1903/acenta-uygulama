@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from app.auth import get_current_user, require_feature, require_roles
 from app.db import get_db
+from app.repositories.base_repository import with_org_filter, with_tenant_filter
 from app.services.audit import write_audit_log
 from app.utils import now_utc, serialize_doc
 from app.utils_ids import build_id_filter
@@ -38,8 +39,16 @@ class AgencyUpdate(BaseModel):
     status: Optional[str] = Field(default=None, pattern="^(active|disabled)$")
 
 
-async def _load_agency_by_id(db, org_id: str, agency_id: str) -> Optional[Dict[str, Any]]:
-    flt: Dict[str, Any] = {"organization_id": org_id}
+def _request_tenant_id(request: Optional[Request]) -> Optional[str]:
+    if request is None:
+        return None
+    return getattr(request.state, "tenant_id", None)
+
+
+async def _load_agency_by_id(db, org_id: str, agency_id: str, tenant_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    flt: Dict[str, Any] = with_org_filter({}, org_id)
+    if tenant_id:
+        flt = with_tenant_filter(flt, tenant_id, include_legacy_without_tenant=True)
     flt.update(build_id_filter(agency_id, field_name="_id"))
     return await db.agencies.find_one(flt)
 
@@ -50,6 +59,7 @@ async def _validate_parent_chain(
     org_id: str,
     current_agency_id: Optional[str],
     parent_agency_id: Optional[str],
+    tenant_id: Optional[str] = None,
 ) -> None:
     """Detect self-parent and simple cycles in parent chain.
 
@@ -80,7 +90,9 @@ async def _validate_parent_chain(
 
         seen.add(cursor_id)
 
-        flt: Dict[str, Any] = {"organization_id": org_id}
+        flt: Dict[str, Any] = with_org_filter({}, org_id)
+        if tenant_id:
+            flt = with_tenant_filter(flt, tenant_id, include_legacy_without_tenant=True)
         flt.update(build_id_filter(cursor_id, field_name="_id"))
         doc = await db.agencies.find_one(flt)
         if not doc:
@@ -95,15 +107,20 @@ async def _validate_parent_chain(
 
 
 @router.get("/", dependencies=[AdminDep, FeatureDep])
-async def list_agencies(user=Depends(get_current_user), db=Depends(get_db)) -> List[Dict[str, Any]]:
+async def list_agencies(request: Request, user=Depends(get_current_user), db=Depends(get_db)) -> List[Dict[str, Any]]:
     org_id = user["organization_id"]
-    docs = await db.agencies.find({"organization_id": org_id}).sort("created_at", -1).to_list(500)
+    tenant_id = _request_tenant_id(request)
+    flt: Dict[str, Any] = with_org_filter({}, org_id)
+    if tenant_id:
+        flt = with_tenant_filter(flt, str(tenant_id), include_legacy_without_tenant=True)
+    docs = await db.agencies.find(flt).sort("created_at", -1).to_list(500)
     return [serialize_doc(d) for d in docs]
 
 
 @router.post("/", dependencies=[AdminDep, FeatureDep])
 async def create_agency(payload: AgencyCreate, request: Request, user=Depends(get_current_user), db=Depends(get_db)) -> Dict[str, Any]:
     org_id = user["organization_id"]
+    tenant_id = _request_tenant_id(request)
 
     # Validate parent chain (creation: current_agency_id is None)
     await _validate_parent_chain(
@@ -111,11 +128,13 @@ async def create_agency(payload: AgencyCreate, request: Request, user=Depends(ge
         org_id=org_id,
         current_agency_id=None,
         parent_agency_id=payload.parent_agency_id,
+        tenant_id=tenant_id,
     )
 
     now = now_utc()
     doc: Dict[str, Any] = {
         "organization_id": org_id,
+        "tenant_id": tenant_id,
         "name": payload.name.strip(),
         "discount_percent": payload.discount_percent or 0.0,
         "commission_percent": payload.commission_percent or 0.0,
@@ -166,8 +185,9 @@ async def update_agency(
     db=Depends(get_db),
 ) -> Dict[str, Any]:
     org_id = user["organization_id"]
+    tenant_id = _request_tenant_id(request)
 
-    existing = await _load_agency_by_id(db, org_id, agency_id)
+    existing = await _load_agency_by_id(db, org_id, agency_id, tenant_id)
     if not existing:
         raise HTTPException(status_code=404, detail="AGENCY_NOT_FOUND")
 
@@ -180,6 +200,7 @@ async def update_agency(
         org_id=org_id,
         current_agency_id=str(existing.get("_id")),
         parent_agency_id=new_parent,
+        tenant_id=tenant_id,
     )
 
     update_fields: Dict[str, Any] = {}
@@ -203,11 +224,11 @@ async def update_agency(
     before = {k: existing.get(k) for k in ["name", "discount_percent", "commission_percent", "parent_agency_id", "status"]}
 
     await db.agencies.update_one(
-        {"_id": existing["_id"], "organization_id": org_id},
+        with_tenant_filter({"_id": existing["_id"], "organization_id": org_id}, tenant_id, include_legacy_without_tenant=True) if tenant_id else {"_id": existing["_id"], "organization_id": org_id},
         {"$set": update_fields},
     )
 
-    updated = await _load_agency_by_id(db, org_id, str(existing["_id"]))
+    updated = await _load_agency_by_id(db, org_id, str(existing["_id"]), tenant_id)
 
     # Audit: AGENCY_UPDATED / AGENCY_DISABLED based on status change
     try:
@@ -248,14 +269,15 @@ async def soft_delete_agency(
     """
 
     org_id = user["organization_id"]
-    existing = await _load_agency_by_id(db, org_id, agency_id)
+    tenant_id = _request_tenant_id(request)
+    existing = await _load_agency_by_id(db, org_id, agency_id, tenant_id)
     if not existing:
         raise HTTPException(status_code=404, detail="AGENCY_NOT_FOUND")
 
     before_status = existing.get("status") or "active"
 
     await db.agencies.update_one(
-        {"_id": existing["_id"], "organization_id": org_id},
+        with_tenant_filter({"_id": existing["_id"], "organization_id": org_id}, tenant_id, include_legacy_without_tenant=True) if tenant_id else {"_id": existing["_id"], "organization_id": org_id},
         {"$set": {"status": "disabled", "updated_at": now_utc(), "updated_by": user.get("email")}},
     )
 
@@ -276,7 +298,7 @@ async def soft_delete_agency(
     except Exception:
         pass
 
-    updated = await _load_agency_by_id(db, org_id, str(existing["_id"]))
+    updated = await _load_agency_by_id(db, org_id, str(existing["_id"]), tenant_id)
     return serialize_doc(updated)
 
 
@@ -292,12 +314,14 @@ class AgencyModulesUpdate(BaseModel):
 @router.get("/{agency_id}/modules", dependencies=[AdminDep])
 async def get_agency_modules(
     agency_id: str,
+    request: Request,
     user=Depends(get_current_user),
     db=Depends(get_db),
 ) -> Dict[str, Any]:
     """Get allowed modules for a specific agency."""
     org_id = user["organization_id"]
-    existing = await _load_agency_by_id(db, org_id, agency_id)
+    tenant_id = _request_tenant_id(request)
+    existing = await _load_agency_by_id(db, org_id, agency_id, tenant_id)
     if not existing:
         raise HTTPException(status_code=404, detail="AGENCY_NOT_FOUND")
     return {
@@ -311,17 +335,19 @@ async def get_agency_modules(
 async def update_agency_modules(
     agency_id: str,
     payload: AgencyModulesUpdate,
+    request: Request,
     user=Depends(get_current_user),
     db=Depends(get_db),
 ) -> Dict[str, Any]:
     """Update allowed modules for a specific agency."""
     org_id = user["organization_id"]
-    existing = await _load_agency_by_id(db, org_id, agency_id)
+    tenant_id = _request_tenant_id(request)
+    existing = await _load_agency_by_id(db, org_id, agency_id, tenant_id)
     if not existing:
         raise HTTPException(status_code=404, detail="AGENCY_NOT_FOUND")
 
     await db.agencies.update_one(
-        {"_id": existing["_id"], "organization_id": org_id},
+        with_tenant_filter({"_id": existing["_id"], "organization_id": org_id}, tenant_id, include_legacy_without_tenant=True) if tenant_id else {"_id": existing["_id"], "organization_id": org_id},
         {"$set": {
             "allowed_modules": payload.allowed_modules,
             "updated_at": now_utc(),

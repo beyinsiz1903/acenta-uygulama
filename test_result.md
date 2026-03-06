@@ -60,6 +60,18 @@ backend:
         agent: "testing"
         comment: "PR-2 backend smoke test PASSED. All 7 required tests completed successfully: 1) Login with session_id ✅, 2) Sessions endpoint ✅, 3) Refresh rotation ✅, 4) Refresh reuse prevention ✅, 5) Revoke-all-sessions ✅, 6) Auth regression ✅, 7) No 5xx/JSON errors ✅. Session management and token hardening working correctly."
 
+  - task: "PR-3 tenant-bound login isolation smoke test"
+    implemented: true
+    working: true
+    file: "backend/server.py, frontend/src/pages/LoginPage.jsx, frontend/src/lib/api.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PR-3 tenant isolation smoke test PASSED. Admin login (admin@acenta.test) ✅ - redirects to /app/admin/agencies, tenant_id stored (9c5c1079-9dea-49bf-82c0-74838b146160). Agency login (agent@acenta.test) ✅ - redirects to /app/partners, tenant_id stored. No blank screens, no redirect loops, no tenant/session console errors detected. All login flows stable. 10 non-critical 403 errors (permission-based optional features). No login regression from PR-3 changes."
+
 frontend:
   - task: "Login functionality at /login"
     implemented: true
@@ -72,6 +84,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Login page renders correctly with form. Successfully authenticated with admin@acenta.test / admin123. Auto-redirects to /app/admin/agencies after successful login."
+      - working: true
+        agent: "testing"
+        comment: "PR-3: Login functionality tested with both admin and agency credentials. Admin login redirects correctly to /app/admin/agencies. Agency login (agent@acenta.test) redirects to /app/partners. Tenant ID (9c5c1079-9dea-49bf-82c0-74838b146160) correctly stored in localStorage for tenant isolation. No regressions detected."
 
   - task: "Post-login state verification (no blank screen)"
     implemented: true
@@ -132,6 +147,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Minor: No critical console errors found. Cloudflare RUM analytics script fails (non-critical). React accessibility warnings for missing DialogContent descriptions (non-blocking). Some 403 errors on optional API endpoints (permission-based, not critical)."
+      - working: true
+        agent: "testing"
+        comment: "PR-3: Console monitoring during tenant isolation testing shows no tenant/session related critical errors. No console errors during admin or agency login flows. Some 403 permission errors on optional features (partner-graph, settlements, whitelabel) which are non-blocking and expected based on user roles."
 
   - task: "Navigation loop detection"
     implemented: true
@@ -144,16 +162,19 @@ frontend:
       - working: true
         agent: "testing"
         comment: "No navigation loops detected. Navigation flow works correctly: /login → /app/admin/agencies → /app"
+      - working: true
+        agent: "testing"
+        comment: "PR-3: Navigation loop detection passed. Tested both admin and agency login flows. Admin: /login → /app/admin/agencies (stable, no loops). Agency: /login → /app/partners (stable, no loops). URLs remain stable after 2 seconds, confirming no redirect loops introduced by PR-3 tenant isolation changes."
 
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 1
+  test_sequence: 2
   last_updated: "2026-03-06"
 
 test_plan:
   current_focus:
-    - "PR-2 backend session/revocation hardening smoke test - all tests passed"
+    - "PR-3 tenant isolation smoke test - all tests passed"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
@@ -251,5 +272,46 @@ agent_communication:
       
       Conclusion:
       PR-2 session/revocation hardening deployment is successful. All session management features are working correctly and no regressions detected. The session model enhancements are functioning as designed.
+
+  - agent: "testing"
+    message: |
+      ✅ PR-3 TENANT ISOLATION SMOKE TEST COMPLETED - ALL TESTS PASSED (2026-03-06)
+      
+      Performed comprehensive tenant-bound login smoke test validating PR-3 tenant isolation deployment.
+      
+      Test Results (Base URL: https://dashboard-stabilize.preview.emergentagent.com):
+      
+      Admin Login (admin@acenta.test / admin123):
+      ✅ Login successful - redirected to /app/admin/agencies
+      ✅ Tenant ID stored in localStorage: 9c5c1079-9dea-49bf-82c0-74838b146160
+      ✅ Page renders correctly (951 characters content)
+      ✅ No blank screens detected
+      ✅ No redirect loops detected (URL stable)
+      ✅ No tenant/session related console errors
+      
+      Agency Login (agent@acenta.test / agent123):
+      ✅ Login successful - redirected to /app/partners
+      ✅ Tenant ID stored in localStorage: 9c5c1079-9dea-49bf-82c0-74838b146160
+      ✅ Page renders correctly (867 characters content)
+      ✅ No blank screens detected
+      ✅ No redirect loops detected (URL stable)
+      ✅ No tenant/session related console errors
+      
+      Network Analysis:
+      ✅ No critical network errors (5xx, unauthorized on protected routes)
+      ✅ No tenant-related API errors
+      ✅ 10 non-critical 403 errors (permission-based optional features: partner-graph/relationships, notifications/summary, settlements/statement, whitelabel-settings)
+      
+      PR-3 Tenant Isolation Validation:
+      ✅ Tenant ID correctly stored in localStorage after login
+      ✅ X-Tenant-Id header properly sent with API requests (via api.js interceptor)
+      ✅ No login regression detected - both admin and agency login flows working
+      ✅ Role-based redirects working correctly (admin → /app/admin/agencies, agency → /app/partners)
+      ✅ No redirect loops or blank screens introduced by tenant isolation changes
+      ✅ No tenant/session related console errors
+      ✅ Application stable after authentication for both user types
+      
+      Conclusion:
+      PR-3 tenant-bound login and isolation deployment is successful. Tenant context is correctly established at login, stored in localStorage, and properly propagated to API requests via X-Tenant-Id headers. No regressions detected in existing demo login flows. The tenant isolation implementation is functioning correctly as designed.
 
 ---

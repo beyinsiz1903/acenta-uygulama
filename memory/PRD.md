@@ -95,3 +95,34 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - **Backend fix:** Added `_str_name()` helper in `dashboard_enhanced.py` to flatten multilingual objects to strings. Applied to all `product_name`, `hotel_name`, `tour_name` fields across `popular-products`, `reservation-widgets`, and abandoned data endpoints.
 - **Frontend fix:** Added `safeName()` utility in `formatters.js`. Applied as defense-in-depth across: DashboardPage, AdminAgenciesPage (+ Dialog moved out of TableRow), AdminAllUsersPage, AdminAgencyContractsPage, AdminAgencyModulesPage, AdminAgencyUsersPage, AdminHotelsPage.
 - **Status:** FIXED & TESTED — both `/app` (dashboard) and `/app/admin/agencies` verified with zero console errors.
+
+## Enterprise SaaS Audit Update (Mar 6, 2026)
+
+### Scope Completed
+- Web/bulut SaaS repository audited against enterprise SaaS requirements: backend architecture, frontend architecture, tenancy, security, API design, billing, observability, database/indexing, testing, DevOps, and scalability.
+- Mobile repository cloned and audited after web platform review; cross-platform integration risks identified.
+- Smoke verification completed: web login, admin agencies page, dashboard render, and core backend auth/admin/dashboard endpoints.
+
+### Current Architecture Snapshot
+- **Backend reality:** very large FastAPI modular monolith with `server.py` as central composition root (~800 lines), 186 router files, 168 service files, 25 repositories, and 119 backend tests.
+- **Frontend reality:** CRA + React Router app with a very large route registry in `frontend/src/App.js` (500+ lines), 161 page files, partial TanStack Query adoption, and mostly page-local API calls.
+- **Mobile reality:** Expo Router app with a thin FastAPI proxy backend. Mobile backend hardcodes remote web API base and provides hybrid remote+local demo behavior.
+
+### P0 Production Blockers Identified
+- `backend/app/auth.py` uses fallback JWT secret (`dev_jwt_secret_change_me`) instead of fail-fast secret loading.
+- `backend/app/db.py` and `backend/app/config.py` still allow production-unsafe fallbacks for Mongo/CORS/env-sensitive settings.
+- `backend/server.py` is overloaded with router registration, startup jobs, and operational concerns in one file.
+- Tenant isolation is inconsistent: middleware resolves tenant context, but many routers still query collections directly.
+- Mobile backend (`/tmp/acenta-mobil/backend/server.py`) hardcodes `REMOTE_API = "https://agency.syroce.com"`.
+- Mobile frontend calls endpoints such as `/api/bookings` and `/api/reports/summary`, but mobile backend does not implement them.
+
+### P1 Refactor Priorities
+- Introduce bounded-context module structure: `core`, `auth`, `tenancy`, `billing`, `bookings`, `crm`, `reports`, `integrations`, `ops`.
+- Standardize tenant-aware repositories and remove direct collection access from routers.
+- Replace localStorage/web token handling and AsyncStorage/mobile token handling with hardened session/token strategy.
+- Move plan/features/quotas to a single canonical entitlement model and remove legacy dual-write drift.
+- Split frontend into feature folders with route modules, shared query keys, and standardized form/mutation patterns.
+
+### P2 Strategic Roadmap
+- Build 30/60/90 day execution plan around security hardening, tenancy enforcement, platform observability, billing maturity, and mobile/API convergence.
+- After platform stabilization, evaluate compact/mobile-first companion experiences and Apple Watch backlog separately.

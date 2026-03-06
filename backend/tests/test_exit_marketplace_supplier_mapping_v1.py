@@ -189,7 +189,7 @@ async def test_unsupported_supplier_errors(test_db: Any, async_client: AsyncClie
     )
     org_id = str(org.inserted_id)
 
-    tenant = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "sup-tenant",
             "organization_id": org_id,

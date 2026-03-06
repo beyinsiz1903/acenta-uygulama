@@ -77,8 +77,6 @@ async def test_statement_seller_month_filters_and_totals(async_client: AsyncClie
     now = datetime.now(timezone.utc)
     this_month = now.strftime("%Y-%m")
     last_month_dt = (now.replace(day=1) - timedelta(days=1))
-    last_month = last_month_dt.strftime("%Y-%m")
-
     # Two settlements in current month
     for gross in (100.0, 200.0):
         await db.settlement_ledger.insert_one(

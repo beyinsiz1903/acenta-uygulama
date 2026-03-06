@@ -18,9 +18,6 @@ async def test_b2b_events_written_on_happy_path(
   enable_b2b_features,
 ) -> None:
   """Happy path: listing create, match request, approve, complete should write events."""
-  provider_tid = str(provider_tenant["_id"])
-  seller_tid = str(seller_tenant["_id"])
-
   # Clear events
   await test_db.b2b_events.delete_many({})
 

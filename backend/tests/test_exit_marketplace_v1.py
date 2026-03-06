@@ -176,7 +176,7 @@ async def test_marketplace_org_and_tenant_scoping(test_db: Any, async_client: As
     org2_id = str(org2.inserted_id)
 
     # Tenants
-    t1 = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "t1",
             "organization_id": org1_id,
@@ -189,9 +189,8 @@ async def test_marketplace_org_and_tenant_scoping(test_db: Any, async_client: As
             "updated_at": now,
         }
     )
-    t1_id = str(t1.inserted_id)
 
-    t2 = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "t2",
             "organization_id": org2_id,
@@ -204,7 +203,6 @@ async def test_marketplace_org_and_tenant_scoping(test_db: Any, async_client: As
             "updated_at": now,
         }
     )
-    t2_id = str(t2.inserted_id)
 
     # Users
     email1 = "admin1@example.com"

@@ -258,7 +258,7 @@ class TestInboxGuardrails:
         
         threads = thread_response.json().get("items", [])
         test_thread = next((t for t in threads if t["id"] == self.test_thread_id), None)
-        assert test_thread, f"Test thread not found in threads list"
+        assert test_thread is not None, "Test thread not found in threads list"
         
         # Get messages for this thread to verify count
         messages_response = await self.client.get(f"/api/inbox/threads/{self.test_thread_id}/messages")
@@ -312,7 +312,7 @@ class TestInboxGuardrails:
         
         threads = thread_response.json().get("items", [])
         test_thread = next((t for t in threads if t["id"] == self.test_thread_id), None)
-        assert test_thread, f"Test thread not found"
+        assert test_thread is not None, "Test thread not found"
         assert test_thread["status"] == "done", f"Thread status should be 'done', got: {test_thread['status']}"
         
         # Record current last_message_at
@@ -338,7 +338,7 @@ class TestInboxGuardrails:
         
         threads = thread_response.json().get("items", [])
         updated_thread = next((t for t in threads if t["id"] == self.test_thread_id), None)
-        assert updated_thread, f"Updated thread not found"
+        assert updated_thread is not None, "Updated thread not found"
         
         # Check status is now "open"
         assert updated_thread["status"] == "open", f"Thread should auto-reopen to 'open', got: {updated_thread['status']}"

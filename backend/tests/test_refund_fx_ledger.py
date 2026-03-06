@@ -19,7 +19,6 @@ def approx_equal(a: float, b: float, *, abs_tol: float = TOLERANCE_ABS, rel_tol:
 async def _create_simple_booking(client, token: str) -> str:
     """Use existing P0.2 flow to create a booking and return booking_id."""
     import uuid
-    from app.utils import now_utc
     
     headers = {"Authorization": f"Bearer {token}"}
 

@@ -38,7 +38,7 @@ async def test_b2b_pricing_overlay_applied_on_canonical_offers(test_db: Any, asy
     )
     org_id = str(org.inserted_id)
 
-    tenant = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "tenant-pr18-1",
             "organization_id": org_id,
@@ -123,7 +123,7 @@ async def test_b2b_pricing_default_when_no_rule(test_db: Any, async_client: Asyn
     )
     org_id = str(org.inserted_id)
 
-    tenant = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "tenant-pr18-2",
             "organization_id": org_id,
@@ -197,7 +197,7 @@ async def test_booking_repricing_consistency_with_canonical_offer(test_db: Any, 
     )
     org_id = str(org.inserted_id)
 
-    tenant = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "tenant-pr18-3",
             "organization_id": org_id,

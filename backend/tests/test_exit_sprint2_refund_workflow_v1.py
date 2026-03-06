@@ -70,19 +70,6 @@ async def _find_state_change(
 
 
 
-    return await audit_col.find_one(
-        {
-            "action": action,
-            "organization_id": {"$in": org_variants},
-            "$or": [
-                {"target_type": "booking", "target_id": {"$in": booking_variants}},
-                {"target.type": "booking", "target.id": {"$in": booking_variants}},
-            ],
-        }
-    )
-
-
-
 
 @pytest.mark.exit_sprint2
 @pytest.mark.anyio

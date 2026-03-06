@@ -295,7 +295,7 @@ async def test_supplier_fulfilment_tenant_mismatch(test_db: Any, async_client: A
     )
     buyer_tenant_id = str(buyer_tenant.inserted_id)
 
-    other_tenant = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "other-supflow-3",
             "organization_id": org_id,

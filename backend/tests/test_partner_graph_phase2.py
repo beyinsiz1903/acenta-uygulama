@@ -143,8 +143,6 @@ async def test_commission_resolution_specificity(async_client: AsyncClient) -> N
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "SellerOrg3", "seller3@example.com")
     buyer = await _seed_org_tenant_user(db, "BuyerOrg3", "buyer3@example.com")
-    seller_token = _make_token(seller["email"], seller["org_id"], ["super_admin"])
-
     # Insert rules directly
     await db.commission_rules.insert_many(
         [

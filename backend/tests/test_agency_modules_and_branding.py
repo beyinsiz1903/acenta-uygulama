@@ -192,7 +192,7 @@ class TestWhitelabelBrandingEndpoints:
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
         data = resp.json()
         assert "can_edit_name" in data
-        assert data["can_edit_name"] == True, "super_admin should have can_edit_name=true"
+        assert data["can_edit_name"], "super_admin should have can_edit_name=true"
 
     def test_put_company_name_super_admin(self, admin_token):
         """super_admin CAN update company_name"""

@@ -76,8 +76,6 @@ async def test_inventory_shares_requires_tenant_header(async_client: AsyncClient
 
     headers = {"Authorization": f"Bearer {token}"}
 
-    from app.errors import AppError
-
     try:
         resp = await async_client.post(
             "/api/inventory-shares/grant",

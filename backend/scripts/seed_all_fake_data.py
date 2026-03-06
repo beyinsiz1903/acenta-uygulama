@@ -193,7 +193,7 @@ async def seed_all():
     # 3. AGENCY-HOTEL LINKS
     # ═══════════════════════════════════════════════════════════════════
     existing_links = await db.agency_hotel_links.find({"organization_id": org_id}).to_list(500)
-    existing_link_keys = {(l["agency_id"], l["hotel_id"]) for l in existing_links}
+    existing_link_keys = {(link["agency_id"], link["hotel_id"]) for link in existing_links}
     new_links = []
     for aid in agency_ids:
         # Each agency links to 2-4 random hotels
@@ -365,7 +365,6 @@ async def seed_all():
         reservations = []
         statuses = ["pending", "pending", "approved", "approved", "paid", "paid", "confirmed", "cancelled", "pending", "approved",
                     "paid", "confirmed", "pending", "approved", "paid"]
-        guest_names_used = set()
         for i in range(20):
             first = random.choice(FIRST_NAMES)
             last = random.choice(LAST_NAMES)
@@ -670,7 +669,7 @@ async def seed_all():
                 "booking_id": random.choice(booking_ids) if booking_ids else None,
                 "task_type": random.choice(["custom", "follow_up", "approval", "review"]),
                 "title": ops_task_titles[i % len(ops_task_titles)],
-                "description": f"Bu görev otomatik oluşturulmuştur. Acil takip gerektirir.",
+                "description": "Bu görev otomatik oluşturulmuştur. Acil takip gerektirir.",
                 "status": random.choice(["open", "open", "in_progress", "done", "open"]),
                 "priority": random.choice(["low", "normal", "high", "urgent"]),
                 "due_at": _iso(_future_days(random.randint(-3, 10))),
@@ -1250,7 +1249,7 @@ async def seed_all():
                     "credit_used": random.randint(0, 50000),
                 }}
             )
-    print(f"  ✓ Acente istatistikleri güncellendi")
+    print("  ✓ Acente istatistikleri güncellendi")
 
     # ═══════════════════════════════════════════════════════════════════
     # 36. SETTLEMENT RUNS

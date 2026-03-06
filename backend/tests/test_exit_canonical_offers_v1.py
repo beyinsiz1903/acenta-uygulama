@@ -22,7 +22,7 @@ async def test_canonical_offers_schema_and_no_raw_leakage(test_db: Any, async_cl
     )
     org_id = str(org.inserted_id)
 
-    tenant = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "canon-tenant",
             "organization_id": org_id,
@@ -105,7 +105,7 @@ async def test_canonical_offers_no_supplier_raw_leakage(test_db: Any, async_clie
     )
     org_id = str(org.inserted_id)
 
-    tenant = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "canon-tenant-2",
             "organization_id": org_id,
@@ -173,7 +173,7 @@ async def test_search_session_ttl_and_indexes(test_db: Any, async_client: AsyncC
     )
     org_id = str(org.inserted_id)
 
-    tenant = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "canon-tenant-3",
             "organization_id": org_id,
@@ -268,7 +268,7 @@ async def test_booking_from_canonical_offer_creates_draft_booking(test_db: Any, 
     )
     org_id = str(org.inserted_id)
 
-    tenant = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "canon-tenant-4",
             "organization_id": org_id,

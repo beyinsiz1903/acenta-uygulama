@@ -1,5 +1,16 @@
 import axios from "axios";
 import { getActiveTenantId } from "./tenantContext";
+import {
+  clearToken,
+  getRefreshToken,
+  getToken,
+  getUser,
+  hasStoredSessionCandidate,
+  persistRefreshSession,
+  setRefreshToken,
+  setToken,
+  setUser,
+} from "./authSession";
 
 // Backend base URL: prefer REACT_APP_BACKEND_URL from env, fallback to same-origin /api
 // This prevents broken URLs like "undefined/api" when env is not set in certain environments.
@@ -8,40 +19,7 @@ const backendEnv =
     || process.env.REACT_APP_BACKEND_URL
     || "";
 
-export function getToken() {
-  return localStorage.getItem("acenta_token") || "";
-}
-
-export function setToken(token) {
-  localStorage.setItem("acenta_token", token);
-}
-
-export function clearToken() {
-  localStorage.removeItem("acenta_token");
-  localStorage.removeItem("acenta_user");
-  localStorage.removeItem("acenta_refresh_token");
-}
-
-export function getRefreshToken() {
-  return localStorage.getItem("acenta_refresh_token") || "";
-}
-
-export function setRefreshToken(token) {
-  localStorage.setItem("acenta_refresh_token", token);
-}
-
-export function getUser() {
-  try {
-    const raw = localStorage.getItem("acenta_user");
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function setUser(user) {
-  localStorage.setItem("acenta_user", JSON.stringify(user));
-}
+export { clearToken, getRefreshToken, getToken, getUser, setRefreshToken, setToken, setUser };
 
 // If backendEnv is empty, axios will call relative to current origin.
 // Ayrıca: Eğer REACT_APP_BACKEND_URL localhost'u gösteriyor ama uygulama
@@ -65,6 +43,7 @@ if (backendEnv) {
 
 export const api = axios.create({
   baseURL: resolvedBaseURL,
+  withCredentials: true,
 });
 
 // Simple uuid4 fallback for environments without crypto.randomUUID
@@ -81,6 +60,13 @@ function generateCorrelationId() {
 }
 
 api.interceptors.request.use((config) => {
+  if (!config.headers) {
+    config.headers = {};
+  }
+
+  config.withCredentials = true;
+  config.headers["X-Client-Platform"] = "web";
+
   const url = config.url || "";
   const isAuthRoute =
     url.includes("/auth/login") ||
@@ -93,6 +79,8 @@ api.interceptors.request.use((config) => {
     // 1) Auth header
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else if (config.headers.Authorization) {
+      delete config.headers.Authorization;
     }
 
     // 2) Tenant header: first try runtime-selected tenant from localStorage,
@@ -132,7 +120,6 @@ api.interceptors.request.use((config) => {
 
   // Correlation-Id: her istete client-side bir id ret ve hem header'a hem de config'e yaz
   const cid = generateCorrelationId();
-  if (!config.headers) config.headers = {};
   config.headers["X-Correlation-Id"] = cid;
   // axios < v1 iler iin meta alann kendimiz tar
   config.meta = config.meta || {};
@@ -201,6 +188,9 @@ api.interceptors.response.use(
     const originalRequest = err.config;
 
     if (err?.response?.status === 401 && !originalRequest._retry) {
+      const skipAuthRefresh = Boolean(originalRequest?.skipAuthRefresh);
+      const skipAuthRedirect = Boolean(originalRequest?.skipAuthRedirect);
+
       // Skip refresh for login/auth routes and my-booking
       const url = originalRequest?.url || "";
       if (url.includes("/auth/login") || url.includes("/auth/refresh") || url.includes("/auth/register")) {
@@ -208,12 +198,18 @@ api.interceptors.response.use(
       }
 
       const refreshToken = getRefreshToken();
-      if (refreshToken && typeof window !== "undefined" && !window.location.pathname.startsWith("/my-booking")) {
+      const canAttemptRefresh = hasStoredSessionCandidate() || Boolean(refreshToken);
+      if (!skipAuthRefresh && canAttemptRefresh && typeof window !== "undefined" && !window.location.pathname.startsWith("/my-booking")) {
         if (isRefreshing) {
           // Wait for the refresh to complete
           return new Promise((resolve) => {
             addRefreshSubscriber((newToken) => {
-              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+              originalRequest.headers = originalRequest.headers || {};
+              if (newToken) {
+                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+              } else if (originalRequest.headers.Authorization) {
+                delete originalRequest.headers.Authorization;
+              }
               resolve(api(originalRequest));
             });
           });
@@ -223,24 +219,33 @@ api.interceptors.response.use(
         isRefreshing = true;
 
         try {
+          const refreshPayload = refreshToken ? { refresh_token: refreshToken } : {};
           const refreshResp = await axios.post(
             `${resolvedBaseURL}/auth/refresh`,
-            { refresh_token: refreshToken },
-            { headers: { "Content-Type": "application/json" } }
+            refreshPayload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                "X-Client-Platform": "web",
+              },
+              withCredentials: true,
+              skipAuthRefresh: true,
+              skipAuthRedirect: true,
+            }
           );
 
           const newAccessToken = refreshResp.data.access_token;
-          const newRefreshToken = refreshResp.data.refresh_token;
-
-          setToken(newAccessToken);
-          if (newRefreshToken) {
-            setRefreshToken(newRefreshToken);
-          }
+          persistRefreshSession(refreshResp.data);
 
           isRefreshing = false;
           onRefreshed(newAccessToken);
 
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          originalRequest.headers = originalRequest.headers || {};
+          if (newAccessToken) {
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          } else if (originalRequest.headers.Authorization) {
+            delete originalRequest.headers.Authorization;
+          }
           return api(originalRequest);
         } catch (refreshErr) {
           isRefreshing = false;
@@ -250,6 +255,10 @@ api.interceptors.response.use(
       }
 
       // Normal 401 handling (no refresh token or refresh failed)
+      if (skipAuthRedirect) {
+        return Promise.reject(err);
+      }
+
       try {
         if (typeof window !== "undefined") {
           const { pathname, search, hash, origin } = window.location;

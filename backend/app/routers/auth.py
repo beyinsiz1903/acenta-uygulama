@@ -3,11 +3,23 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
-from app.auth import create_access_token, get_current_user, verify_password, hash_password
+from app.auth import create_access_token, decode_token, get_current_user, get_request_access_token, verify_password, hash_password
+from app.config import (
+    AUTH_ACCESS_COOKIE_MAX_AGE,
+    AUTH_ACCESS_COOKIE_NAME,
+    AUTH_COOKIE_DOMAIN,
+    AUTH_COOKIE_PATH,
+    AUTH_COOKIE_SAMESITE,
+    AUTH_COOKIE_SECURE,
+    AUTH_REFRESH_COOKIE_MAX_AGE,
+    AUTH_REFRESH_COOKIE_NAME,
+    WEB_AUTH_PLATFORM_HEADER,
+    WEB_AUTH_PLATFORM_VALUE,
+)
 from app.db import get_db
 from app.schemas import AuthUser, LoginResponse
 from app.utils import serialize_doc, now_utc
@@ -31,8 +43,55 @@ class SignupRequest(BaseModel):
     organization_name: Optional[str] = None
 
 
+def _cookie_options(max_age: int) -> dict[str, object]:
+    options: dict[str, object] = {
+        "httponly": True,
+        "secure": AUTH_COOKIE_SECURE,
+        "samesite": AUTH_COOKIE_SAMESITE,
+        "path": AUTH_COOKIE_PATH,
+        "max_age": max_age,
+    }
+    if AUTH_COOKIE_DOMAIN:
+        options["domain"] = AUTH_COOKIE_DOMAIN
+    return options
+
+
+def _delete_cookie_options() -> dict[str, object]:
+    options: dict[str, object] = {"path": AUTH_COOKIE_PATH}
+    if AUTH_COOKIE_DOMAIN:
+        options["domain"] = AUTH_COOKIE_DOMAIN
+    return options
+
+
+def _is_web_cookie_request(request: Request) -> bool:
+    return request.headers.get(WEB_AUTH_PLATFORM_HEADER, "").strip().lower() == WEB_AUTH_PLATFORM_VALUE
+
+
+def _auth_transport(request: Request) -> str:
+    return "cookie_compat" if _is_web_cookie_request(request) else "bearer"
+
+
+def _set_auth_cookies(response: Response, *, access_token: str, refresh_token: str) -> None:
+    response.set_cookie(
+        AUTH_ACCESS_COOKIE_NAME,
+        access_token,
+        **_cookie_options(AUTH_ACCESS_COOKIE_MAX_AGE),
+    )
+    response.set_cookie(
+        AUTH_REFRESH_COOKIE_NAME,
+        refresh_token,
+        **_cookie_options(AUTH_REFRESH_COOKIE_MAX_AGE),
+    )
+
+
+def _clear_auth_cookies(response: Response) -> None:
+    delete_options = _delete_cookie_options()
+    response.delete_cookie(AUTH_ACCESS_COOKIE_NAME, **delete_options)
+    response.delete_cookie(AUTH_REFRESH_COOKIE_NAME, **delete_options)
+
+
 @router.post("/login")
-async def login(payload: LoginWith2FARequest, request: Request):
+async def login(payload: LoginWith2FARequest, request: Request, response: Response):
     db = await get_db()
 
     from app.errors import AppError
@@ -155,8 +214,14 @@ async def login(payload: LoginWith2FARequest, request: Request):
         ),
         organization=org_doc
     )
+    auth_transport = _auth_transport(request)
+    if auth_transport == "cookie_compat":
+        _set_auth_cookies(response, access_token=token, refresh_token=rt_doc["refresh_token"])
+    response.headers["X-Auth-Transport"] = auth_transport
+
     # Attach tenant_id to response (extra field beyond schema)
     resp_dict = resp.model_dump() if hasattr(resp, 'model_dump') else resp.dict()
+    resp_dict["auth_transport"] = auth_transport
     resp_dict["tenant_id"] = tenant_id
     resp_dict["refresh_token"] = rt_doc["refresh_token"]
     resp_dict["expires_in"] = 28800  # 8 hours for access token
@@ -200,19 +265,24 @@ async def signup(payload: SignupRequest):
 
 
 @router.post("/logout")
-async def logout(user=Depends(get_current_user), credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))):
+async def logout(
+    request: Request,
+    response: Response,
+    user=Depends(get_current_user),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
+):
     """Logout endpoint - revokes the current JWT token.
 
     Adds the token's JTI to the blacklist so it can no longer be used.
     """
-    if credentials:
-        from app.auth import decode_token
+    request_token = get_request_access_token(request, credentials)
+    if request_token:
         from app.services.refresh_token_service import revoke_session_refresh_tokens
         from app.services.session_service import revoke_session
         from app.services.token_blacklist import blacklist_token
 
         try:
-            payload = decode_token(credentials.credentials)
+            payload = decode_token(request_token)
             jti = payload.get("jti")
             exp = payload.get("exp")
             session_id = payload.get("sid")
@@ -230,11 +300,12 @@ async def logout(user=Depends(get_current_user), credentials: Optional[HTTPAutho
         except Exception:
             pass  # Token already expired or invalid - still allow logout
 
+    _clear_auth_cookies(response)
     return {"message": "Başarıyla çıkış yapıldı", "status": "ok"}
 
 
 @router.post("/revoke-all-sessions")
-async def revoke_all_sessions(user=Depends(get_current_user)):
+async def revoke_all_sessions(response: Response, user=Depends(get_current_user)):
     """Revoke all active sessions for the current user.
 
     Useful for security incidents or password changes.
@@ -250,6 +321,7 @@ async def revoke_all_sessions(user=Depends(get_current_user)):
     from app.services.refresh_token_service import revoke_all_user_refresh_tokens
     rt_count = await revoke_all_user_refresh_tokens(email, reason="user_revoke_all")
 
+    _clear_auth_cookies(response)
     return {
         "message": "Tüm oturumlar iptal edildi",
         "revoked_sessions": session_count,
@@ -259,11 +331,11 @@ async def revoke_all_sessions(user=Depends(get_current_user)):
 
 
 class RefreshTokenRequest(BaseModel):
-    refresh_token: str
+    refresh_token: Optional[str] = None
 
 
 @router.post("/refresh")
-async def refresh_access_token(payload: RefreshTokenRequest):
+async def refresh_access_token(payload: RefreshTokenRequest, request: Request, response: Response):
     """Refresh access token using a refresh token.
 
     Implements token rotation: old refresh token is revoked,
@@ -271,7 +343,11 @@ async def refresh_access_token(payload: RefreshTokenRequest):
     """
     from app.services.refresh_token_service import rotate_refresh_token
 
-    new_rt = await rotate_refresh_token(payload.refresh_token)
+    refresh_token = payload.refresh_token or request.cookies.get(AUTH_REFRESH_COOKIE_NAME)
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Geçersiz veya süresi dolmuş refresh token")
+
+    new_rt = await rotate_refresh_token(refresh_token)
     if not new_rt:
         raise HTTPException(status_code=401, detail="Geçersiz veya süresi dolmuş refresh token")
 
@@ -284,11 +360,17 @@ async def refresh_access_token(payload: RefreshTokenRequest):
         session_id=new_rt.get("session_id"),
     )
 
+    auth_transport = _auth_transport(request)
+    if auth_transport == "cookie_compat":
+        _set_auth_cookies(response, access_token=new_access_token, refresh_token=new_rt["refresh_token"])
+    response.headers["X-Auth-Transport"] = auth_transport
+
     return {
         "access_token": new_access_token,
         "refresh_token": new_rt["refresh_token"],
         "token_type": "bearer",
         "expires_in": 28800,  # 8 hours
+        "auth_transport": auth_transport,
     }
 
 

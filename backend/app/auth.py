@@ -5,10 +5,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 import jwt
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.context import CryptContext
 
+from app.config import AUTH_ACCESS_COOKIE_NAME
 from app.db import get_db
 from app.security.jwt_config import get_jwt_secret
 from app.utils import serialize_doc
@@ -62,11 +63,42 @@ def decode_token(token: str) -> dict[str, Any]:
         raise HTTPException(status_code=401, detail="Geçersiz token")
 
 
-async def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme)) -> dict[str, Any]:
-    if credentials is None:
+def get_request_access_token(
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = None,
+) -> Optional[str]:
+    if credentials is not None and credentials.credentials:
+        return credentials.credentials
+    cookie_token = request.cookies.get(AUTH_ACCESS_COOKIE_NAME)
+    if cookie_token:
+        return cookie_token
+    return None
+
+
+def _sanitize_auth_user(user: dict[str, Any]) -> dict[str, Any]:
+    sanitized = serialize_doc(user)
+    for sensitive_key in (
+        "password_hash",
+        "hashed_password",
+        "totp_secret",
+        "mfa_secret",
+        "recovery_codes",
+        "reset_token",
+        "reset_token_hash",
+    ):
+        sanitized.pop(sensitive_key, None)
+    return sanitized
+
+
+async def get_current_user(
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
+) -> dict[str, Any]:
+    token = get_request_access_token(request, credentials)
+    if not token:
         raise HTTPException(status_code=401, detail="Giriş gerekli")
 
-    payload = decode_token(credentials.credentials)
+    payload = decode_token(token)
 
     # JWT Revocation check: verify token is not blacklisted
     jti = payload.get("jti")
@@ -101,7 +133,7 @@ async def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] =
     if session_id:
         user["current_session_id"] = session_id
 
-    return serialize_doc(user)
+    return _sanitize_auth_user(user)
 
 
 def require_roles(required: list[str]):

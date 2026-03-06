@@ -1,16 +1,14 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import { useCurrentUser } from "../hooks/useAuth";
 
-function getUser() {
+function rememberPostLoginRedirect(location) {
   try {
-    return JSON.parse(localStorage.getItem("acenta_user"));
+    const from = `${location.pathname}${location.search}${location.hash}`;
+    window.sessionStorage.setItem("acenta_post_login_redirect", from);
   } catch {
-    return null;
+    // ignore storage errors
   }
-}
-
-function getToken() {
-  return localStorage.getItem("acenta_token");
 }
 
 /**
@@ -19,11 +17,22 @@ function getToken() {
  */
 export default function RequireAuth({ children, roles }) {
   const location = useLocation();
-  const token = getToken();
-  const user = getUser();
+  const { data: user, isLoading, isFetching } = useCurrentUser();
+
+  if (isLoading || (isFetching && !user)) {
+    return (
+      <div
+        className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground"
+        data-testid="auth-guard-loading"
+      >
+        Oturum doğrulanıyor...
+      </div>
+    );
+  }
 
   // 1️⃣ Not logged in
-  if (!token || !user) {
+  if (!user) {
+    rememberPostLoginRedirect(location);
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 

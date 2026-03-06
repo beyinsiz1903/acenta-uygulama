@@ -56,6 +56,16 @@ def _env_flag(name: str, default: bool = True) -> bool:
     return default
 
 
+def _env_int(name: str, default: int) -> int:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        return int(raw.strip())
+    except (TypeError, ValueError):
+        return default
+
+
 # Application constants
 API_PREFIX = "/api"
 APP_NAME = "Booking Suite API"
@@ -95,3 +105,17 @@ MYBOOKING_REQUIRE_EMAIL: bool = _env_flag("MYBOOKING_REQUIRE_EMAIL", default=Fal
 PAXIMUM_BASE_URL = os.environ.get("PAXIMUM_BASE_URL", "https://api.stage.paximum.com")
 PAXIMUM_API_KEY = os.environ.get("PAXIMUM_API_KEY", "")
 PAXIMUM_TIMEOUT_SECONDS = float(os.environ.get("PAXIMUM_TIMEOUT_SECONDS", "10"))
+
+
+AUTH_ACCESS_COOKIE_NAME = os.environ.get("AUTH_ACCESS_COOKIE_NAME", "acenta_access")
+AUTH_REFRESH_COOKIE_NAME = os.environ.get("AUTH_REFRESH_COOKIE_NAME", "acenta_refresh")
+AUTH_COOKIE_DOMAIN = (os.environ.get("AUTH_COOKIE_DOMAIN") or "").strip() or None
+AUTH_COOKIE_PATH = os.environ.get("AUTH_COOKIE_PATH", "/")
+AUTH_COOKIE_SAMESITE = (os.environ.get("AUTH_COOKIE_SAMESITE") or "lax").strip().lower()
+if AUTH_COOKIE_SAMESITE not in {"lax", "strict", "none"}:
+    AUTH_COOKIE_SAMESITE = "lax"
+AUTH_COOKIE_SECURE = _env_flag("AUTH_COOKIE_SECURE", default=_env in ("production", "prod", "staging"))
+AUTH_ACCESS_COOKIE_MAX_AGE = _env_int("AUTH_ACCESS_COOKIE_MAX_AGE", 60 * 60 * 8)
+AUTH_REFRESH_COOKIE_MAX_AGE = _env_int("AUTH_REFRESH_COOKIE_MAX_AGE", 60 * 60 * 24 * 90)
+WEB_AUTH_PLATFORM_HEADER = "X-Client-Platform"
+WEB_AUTH_PLATFORM_VALUE = "web"

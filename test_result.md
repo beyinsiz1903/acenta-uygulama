@@ -187,7 +187,7 @@ agent_communication:
     message: |
       ✅ BACKEND SMOKE TEST COMPLETED - ALL TESTS PASSED
       
-      Performed comprehensive backend API smoke test on https://dashboard-stabilize.preview.emergentagent.com
+      Performed comprehensive backend API smoke test on https://travel-saas-rebuild.preview.emergentagent.com
       
       Backend API Test Results:
       1. ✅ POST /api/auth/login - PASSED (200 OK, tokens received)
@@ -207,7 +207,7 @@ agent_communication:
     message: |
       ✅ SMOKE TEST PASSED
       
-      Completed comprehensive smoke test on https://dashboard-stabilize.preview.emergentagent.com
+      Completed comprehensive smoke test on https://travel-saas-rebuild.preview.emergentagent.com
       
       Test Coverage:
       1. ✅ Login at /login with admin@acenta.test / admin123 - PASSED
@@ -231,7 +231,7 @@ agent_communication:
       
       Performed comprehensive backend smoke test validating PR-1 auth/config hardening deployment.
       
-      Test Results (Base URL: https://dashboard-stabilize.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-rebuild.preview.emergentagent.com):
       1. ✅ POST /api/auth/login - PASSED (200 OK, access_token + refresh_token received)
       2. ✅ GET /api/auth/me - PASSED (200 OK, user data returned with Bearer token)
       3. ✅ GET /api/admin/agencies - PASSED (200 OK, agency data returned with admin token)
@@ -254,7 +254,7 @@ agent_communication:
       
       Performed comprehensive PR-2 backend smoke test validating session/revocation hardening post-deployment.
       
-      Test Results (Base URL: https://dashboard-stabilize.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-rebuild.preview.emergentagent.com):
       1. ✅ POST /api/auth/login (tokens + session) - PASSED (200 OK, access_token ✅, refresh_token ✅, session_id ✅)
       2. ✅ GET /api/auth/sessions - PASSED (200 OK, 6 sessions found)
       3. ✅ Auth regression test (/api/auth/me + /api/admin/agencies) - PASSED (both endpoints working correctly)
@@ -282,7 +282,7 @@ agent_communication:
       
       Performed comprehensive tenant-bound login smoke test validating PR-3 tenant isolation deployment.
       
-      Test Results (Base URL: https://dashboard-stabilize.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-rebuild.preview.emergentagent.com):
       
       Admin Login (admin@acenta.test / admin123):
       ✅ Login successful - redirected to /app/admin/agencies
@@ -323,7 +323,7 @@ agent_communication:
       
       Performed focused PR-3 backend smoke test per user request to re-validate deployed preview environment.
       
-      Test Results (Base URL: https://dashboard-stabilize.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-rebuild.preview.emergentagent.com):
       
       Backend API Tests:
       1. ✅ Admin Login (admin@acenta.test/admin123) - PASSED (200 OK, access_token received: 385 chars, refresh_token ✅)

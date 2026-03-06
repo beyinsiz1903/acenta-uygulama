@@ -87,6 +87,18 @@ backend:
         agent: "testing"
         comment: "PR-4 web auth compat smoke test PASSED. All 5 required tests completed successfully: 1) Login page loads with working form ✅ - all testids found (login-page, login-form, login-email, login-password, login-submit), 2) Login redirect ✅ - admin@acenta.test successfully redirects to /app/admin/agencies with auth_transport=cookie_compat, 3) Session bootstrap ✅ - page reload calls /auth/me and keeps user logged in (270,389 chars content loaded), 4) Logout redirect ✅ - logout clears localStorage and redirects to /login, 5) Route guard ✅ - accessing /app/admin/agencies after logout redirects to /login. Cookie auth compatibility working correctly with /auth/me bootstrap and refresh fallback. Some non-auth 400/500 console errors present (expected per review request context). No auth regressions detected."
 
+  - task: "PR-4 backend web auth cookie compat verification"
+    implemented: true
+    working: true
+    file: "backend/app/routers/auth.py, backend/app/auth.py, backend/app/config.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PR-4 BACKEND VERIFICATION COMPLETED - ALL TESTS PASSED (2026-03-06). All 6 curl-like backend verification tests completed successfully: 1) Web Login Cookie Compat ✅ - POST /api/auth/login with X-Client-Platform:web correctly sets cookie-based auth and returns auth_transport=cookie_compat, 2) Auth Me Cookies Only ✅ - GET /api/auth/me works using cookies only (no Authorization header), 3) Refresh Cookie Fallback ✅ - POST /api/auth/refresh with empty body works via refresh cookie with token rotation, 4) Logout Clears Cookies ✅ - POST /api/auth/logout clears session/cookies and /api/auth/me becomes 401, 5) Legacy Bearer Flow ✅ - Login without X-Client-Platform:web returns bearer transport and bearer /api/auth/me works, 6) Sensitive Fields Sanitized ✅ - /api/auth/me does not expose password_hash/totp_secret/recovery_codes. Success rate: 100%. Cookie-based web auth compatibility layer working correctly, legacy bearer token flow preserved, all security requirements met."
+
 frontend:
   - task: "Login functionality at /login"
     implemented: true
@@ -426,5 +438,43 @@ agent_communication:
       
       Conclusion:
       PR-4 web auth compatibility deployment is SUCCESSFUL. Cookie-based authentication with /auth/me bootstrap and refresh fallback is functioning correctly. All login, session persistence, logout, and route guard behaviors working as designed. No auth regressions detected. The cookie auth compatibility layer is production-ready.
+
+  - agent: "testing"
+    message: |
+      ✅ PR-4 BACKEND VERIFICATION COMPLETED - ALL TESTS PASSED (2026-03-06)
+      
+      Performed comprehensive PR-4 backend verification using curl-like tests on deployed preview environment.
+      
+      Test Results (Base URL: https://travel-saas-rebuild.preview.emergentagent.com):
+      
+      Backend API Tests:
+      1. ✅ Web Login Cookie Compat - PASSED (POST /api/auth/login with X-Client-Platform:web sets cookies and returns auth_transport=cookie_compat)
+      2. ✅ Auth Me Cookies Only - PASSED (GET /api/auth/me works using cookies only, no Authorization header needed)
+      3. ✅ Refresh Cookie Fallback - PASSED (POST /api/auth/refresh with empty body works via refresh cookie, token rotation working)
+      4. ✅ Logout Clears Cookies - PASSED (POST /api/auth/logout clears session/cookies, /api/auth/me becomes 401)
+      5. ✅ Legacy Bearer Flow - PASSED (Login without X-Client-Platform:web returns bearer transport, bearer /api/auth/me works)
+      6. ✅ Sensitive Fields Sanitized - PASSED (/api/auth/me does not expose password_hash/totp_secret/recovery_codes)
+      
+      Test Summary:
+      - Total Tests: 6
+      - Passed: 6
+      - Failed: 0
+      - Success Rate: 100%
+      
+      PR-4 Web Auth Compat Layer Validation:
+      ✅ Cookie-based web auth compatibility layer working correctly
+      ✅ X-Client-Platform:web header detection working
+      ✅ Dual transport support (cookie_compat vs bearer) functional
+      ✅ Session cookies properly set with httpOnly, secure attributes
+      ✅ Cookie auth bootstrap via GET /auth/me working without bearer token
+      ✅ Refresh token rotation working in cookie mode
+      ✅ Logout properly clears cookies and revokes sessions
+      ✅ Legacy bearer token flow preserved for mobile/API clients
+      ✅ Sensitive field sanitization working (password_hash, totp_secret hidden)
+      ✅ No auth regression detected in existing endpoints
+      ✅ All contract behavior requirements met per review request
+      
+      Conclusion:
+      PR-4 backend web auth cookie compatibility verification SUCCESSFUL. All curl-like verification requirements passed. The compat layer is production-ready with both web cookie and legacy bearer flows working correctly.
 
 ---

@@ -71,6 +71,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "PR-3 tenant isolation smoke test PASSED. Admin login (admin@acenta.test) ✅ - redirects to /app/admin/agencies, tenant_id stored (9c5c1079-9dea-49bf-82c0-74838b146160). Agency login (agent@acenta.test) ✅ - redirects to /app/partners, tenant_id stored. No blank screens, no redirect loops, no tenant/session console errors detected. All login flows stable. 10 non-critical 403 errors (permission-based optional features). No login regression from PR-3 changes."
+      - working: true
+        agent: "testing"
+        comment: "PR-3 POST-DEPLOYMENT BACKEND SMOKE TEST RE-CONFIRMATION COMPLETED (2026-03-06). All 6 required tests PASSED: 1) Admin login (admin@acenta.test/admin123) ✅ - token received (385 chars), 2) Agency login (agent@acenta.test/agent123) ✅ - token received (376 chars), 3) /api/auth/me with admin token ✅ - returns user data correctly, 4) /api/admin/agencies with admin token ✅ - returns 3 agencies, 5) No auth regression ✅ - all endpoints working post tenant isolation, 6) No 5xx/JSON corruption ✅ - all responses valid. Success rate: 100%. PR-3 deployment stable and functioning correctly."
 
 frontend:
   - task: "Login functionality at /login"
@@ -313,5 +316,38 @@ agent_communication:
       
       Conclusion:
       PR-3 tenant-bound login and isolation deployment is successful. Tenant context is correctly established at login, stored in localStorage, and properly propagated to API requests via X-Tenant-Id headers. No regressions detected in existing demo login flows. The tenant isolation implementation is functioning correctly as designed.
+
+  - agent: "testing"
+    message: |
+      ✅ PR-3 POST-DEPLOYMENT BACKEND SMOKE TEST RE-CONFIRMATION COMPLETED (2026-03-06)
+      
+      Performed focused PR-3 backend smoke test per user request to re-validate deployed preview environment.
+      
+      Test Results (Base URL: https://dashboard-stabilize.preview.emergentagent.com):
+      
+      Backend API Tests:
+      1. ✅ Admin Login (admin@acenta.test/admin123) - PASSED (200 OK, access_token received: 385 chars, refresh_token ✅)
+      2. ✅ Agency Login (agent@acenta.test/agent123) - PASSED (200 OK, access_token received: 376 chars, refresh_token ✅) 
+      3. ✅ GET /api/auth/me (admin token) - PASSED (200 OK, email: admin@acenta.test returned)
+      4. ✅ GET /api/admin/agencies (admin token) - PASSED (200 OK, 3 agencies returned)
+      5. ✅ Tenant Auth Regression Test - PASSED (3/3 regression tests passed, no auth breaking)
+      6. ✅ 5xx & JSON Shape Validation - PASSED (No server errors or JSON corruption detected)
+      
+      Test Summary:
+      - Total Tests: 6
+      - Passed: 6 
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Turkish Requirements Validation:
+      1. Admin login başarılı mı? ✅ YES - Working correctly
+      2. Agency login başarılı mı? ✅ YES - Working correctly  
+      3. /api/auth/me admin token ile çalışıyor mu? ✅ YES - Returns user data
+      4. /api/admin/agencies admin token ile çalışıyor mu? ✅ YES - Returns 3 agencies
+      5. Tenant-bound login sonrası auth regresyonu var mı? ❌ NO - No regression detected
+      6. 5xx veya kritik JSON shape bozulması var mı? ❌ NO - All responses valid
+      
+      Conclusion:
+      PR-3 post-deployment smoke test SUCCESSFUL. All requested validation points confirmed working. The deployed preview environment is stable and functioning correctly with no tenant isolation related regressions detected.
 
 ---

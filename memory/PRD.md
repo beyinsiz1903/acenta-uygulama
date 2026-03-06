@@ -220,6 +220,12 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - Found and fixed a frontend-only regression during smoke testing: bulk revoke was initially firing all revoke calls in parallel, which caused partial completion under load. Updated the “other all sessions” action to revoke sequentially for reliable completion while keeping the same backend endpoints.
 - Validation passed via frontend/browser smoke: login → `/app/settings/security`, current-session modal cancel, single remote session revoke, bulk revoke of remaining sessions, final counts (`total=1`, `current=1`, `other=0`), plus backend/API session revoke curl verification.
 
+### PR-8 Implemented — Web Auth Compat Cleanup (Mar 6, 2026)
+- Removed all frontend `localStorage` auth token and refresh token persistence from the web app. Web auth source of truth is now `httpOnly` cookies + `/api/auth/me` bootstrap.
+- Updated `frontend/src/lib/api.js` and `frontend/src/lib/cookieAuthCompat.js` so web requests always use `withCredentials`, never inject bearer tokens from storage, and refresh through cookie-based `/api/auth/refresh` retry logic.
+- Updated login-adjacent flows (`LoginPage`, `B2BLoginPage`, `SignupPage`) and legacy token-touching pages (`AdminPilotDashboardPage`, `AgencyBookingConfirmedPage`, `AiAssistant`) to use cookie session behavior instead of reading/storing tokens.
+- Validation passed via external curl smoke (`/api/auth/login`, `/api/auth/me`, `/api/auth/logout`), browser smoke on `/login`, testing report `/app/test_reports/iteration_15.json`, plus dedicated frontend/backend sanity agents.
+
 ### Backend Ruff Cleanup (Mar 6, 2026)
 - Cleaned backend lint blockers with scope-limited, behavior-preserving fixes only: unused locals/imports, constant f-strings, truthy assert style, dead unreachable test code, and missing trailing newline in `app/services/session_service.py`.
 - `ruff` now passes for `/app/backend`.
@@ -251,7 +257,7 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - **P0:** None active in web repo. Preview dedicated worker + scheduler supervisor wiring is complete and smoke-validated.
 - **P1:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
 - **P1:** Mirror the dedicated runtime wiring into staging/prod infra definitions when those environment configs are available/in scope
-- **P1:** Web auth follow-up cleanup after compat window closes (remove remaining localStorage fallback paths page-by-page)
+- **P1:** Optional web auth follow-up cleanup: remove now-unused compat no-op helpers and, if desired, migrate cached display-only auth metadata away from localStorage
 - **P1:** Cleanup PR for non-blocking preview issues: `/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`
 - **P1:** API versioning rollout (`/api/v1/*`) and compat adapters
 - **P2:** Entitlement/billing unification, observability stack, broader frontend modular refactor

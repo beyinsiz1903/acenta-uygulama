@@ -6,6 +6,7 @@ import jwt
 import pytest
 from fastapi import status
 from httpx import ASGITransport, AsyncClient
+from starlette.requests import Request
 
 from server import app
 from app.auth import _jwt_secret, get_current_user
@@ -44,7 +45,11 @@ async def test_get_current_org_403_when_user_has_no_org(test_db: Any) -> None:
     from fastapi import HTTPException
 
     # get_current_user should succeed (user exists)
-    user = await get_current_user(credentials=type("Cred", (), {"credentials": token})())  # type: ignore
+    request = Request({"type": "http", "headers": [], "method": "GET", "path": "/"})
+    user = await get_current_user(  # type: ignore[misc]
+        request=request,
+        credentials=type("Cred", (), {"credentials": token})(),
+    )
 
     # get_current_org should raise 403 due to missing organization_id
     with pytest.raises(HTTPException) as exc:

@@ -672,75 +672,81 @@ metadata:
         agent: "testing"
         comment: "Backend lint CI fix validation PASSED - All 4 requested validation points confirmed: 1) Ruff check CLEAN ✅ - `ruff check /app/backend --output-format concise` returns 'All checks passed!', 2) Backend tests PASSING ✅ - pytest tests/test_runtime_wiring.py, test_auth_session_model.py, test_auth_tenant_binding.py, test_mobile_bff_contracts.py all pass, 3) Auth/session/tenant/Mobile BFF flows NO REGRESSION ✅ - Comprehensive API smoke test (9/9 endpoints passed): GET /api/health, POST /api/auth/login, GET /api/auth/me, GET /api/v1/mobile/auth/me, unauthorized guards, mobile dashboard/bookings/reports all working correctly, 4) Lint changes SCOPE COMPLIANT ✅ - Reviewed modified files (server.py compat export, db.py, service files, bootstrap files) - changes are safe lint/format fixes only, no behavior modifications detected. Integration tests (B2B exchange, billing admin) also pass. No critical regressions in any core backend functionality."
 
+  - task: "Backend auth JWT and org context CI fix validation"
+    implemented: true
+    working: true
+    file: "/app/backend/tests/test_auth_jwt_and_org_context.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "BACKEND AUTH JWT AND ORG CONTEXT CI FIX VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-06). Fix for `TypeError: get_current_user() missing 1 required positional argument: 'request'` validated successfully. Specific test `test_get_current_org_403_when_user_has_no_org` now passes with minimal Starlette Request stub on line 48: `Request({\"type\": \"http\", \"headers\": [], \"method\": \"GET\", \"path\": \"/\"})`. All related test suites pass: pytest test_auth_jwt_and_org_context.py test_auth_session_model.py test_auth_tenant_binding.py -q → 7/7 PASSED. Preview smoke tests successful: GET /api/health ✅ (status: ok), POST /api/auth/login ✅ (token: 385 chars), GET /api/auth/me ✅ (email: admin@acenta.test), GET /api/v1/mobile/auth/me ✅ (no sensitive fields). Fix is properly scoped - only affects test harness compatibility, no application behavior changes. Auth/session/tenant flows working correctly with no regressions detected."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 9
+  test_sequence: 10
   last_updated: "2026-03-06"
-
-test_plan:
-  current_focus:
-    - "Backend lint CI fix validation completed - all 4 critical tests passed"
-  stuck_tasks: []
-  test_all: true
-  test_priority: "high_first"
 
 agent_communication:
   - agent: "testing"
     message: |
-      ✅ BACKEND LINT CI FIX VALIDATION COMPLETED - ALL 4 TESTS PASSED (2026-03-06)
+      ✅ BACKEND AUTH JWT AND ORG CONTEXT CI FIX VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-06)
       
-      Performed comprehensive backend lint CI fix validation per Turkish review request on https://travel-saas-refactor.preview.emergentagent.com
+      Performed comprehensive validation of the CI test fix per Turkish review request.
       
-      Validation Results Summary:
+      Problem Context:
+      - User reported CI backend test failure: `tests/test_auth_jwt_and_org_context.py::test_get_current_org_403_when_user_has_no_org`
+      - Error: `TypeError: get_current_user() missing 1 required positional argument: 'request'`
+      - Fix applied: Minimal Starlette Request stub for service-level test calls
       
-      1. ✅ Ruff gerçekten temiz mi? - EVET
-         - `ruff check /app/backend --output-format concise` → "All checks passed!" 
-         - No lint errors remaining, all safe fixable errors cleaned up successfully
+      Validation Results:
       
-      2. ✅ İlgili backend testleri geçiyor mu? - EVET  
-         - pytest test_runtime_wiring.py test_auth_session_model.py test_auth_tenant_binding.py → 7/7 PASSED
-         - pytest test_mobile_bff_contracts.py → 5/5 PASSED
-         - Integration tests (B2B exchange flow, billing admin) → PASSED
-         - All test suites stable, no test regressions detected
+      1. ✅ Specific failing test now passes
+         - `pytest tests/test_auth_jwt_and_org_context.py::test_get_current_org_403_when_user_has_no_org -v` → 1/1 PASSED
+         - Fix on line 48: `Request({"type": "http", "headers": [], "method": "GET", "path": "/"})`
+         - Properly creates minimal request stub for service-level get_current_user() calls
       
-      3. ✅ Auth/session/tenant/mobile BFF akışlarında regresyon var mı? - HAYIR
-         - Comprehensive API smoke test: 9/9 endpoints PASSED (100% success rate)
-         - GET /api/health → PASS (status: ok)
-         - POST /api/auth/login (admin@acenta.test) → PASS (token received)
-         - GET /api/auth/me → PASS (email verification correct)  
-         - GET /api/v1/mobile/auth/me → PASS (sanitized DTO, no _id leak, no password_hash)
-         - Unauthorized guards (401 without auth) → PASS for both legacy & mobile endpoints
-         - Mobile BFF endpoints (dashboard/bookings/reports) → PASS (no _id leaks, proper responses)
-         - No critical regressions in auth, session, tenant isolation, or mobile BFF flows
+      2. ✅ All related auth test suites pass without regression
+         - `pytest tests/test_auth_jwt_and_org_context.py tests/test_auth_session_model.py tests/test_auth_tenant_binding.py -q` → 7/7 PASSED
+         - No regressions in auth/session/tenant binding test suites
+         - All test warnings are pre-existing (Pydantic deprecations, not related to fix)
       
-      4. ✅ Yapılan değişiklikler scope dışı davranış değişikliği içeriyor mu? - HAYIR
-         - Reviewed all modified files: server.py (compat export), db.py, services/preflight_service.py, 
-           services/refresh_token_crypto.py, bootstrap/runtime_health.py, bootstrap/scheduler_app.py
-         - Changes are purely lint/format fixes: added `from __future__ import annotations`, 
-           fixed whitespace, updated docstrings, maintained compat exports
-         - No functional logic changes, no behavior modifications detected
-         - Scope compliant: safe lint fixes only, no refactoring or feature changes
+      3. ✅ Preview environment smoke tests successful
+         - GET /api/health → PASSED (200, status: ok)
+         - POST /api/auth/login (admin@acenta.test/admin123) → PASSED (200, token: 385 chars)
+         - GET /api/auth/me → PASSED (200, email: admin@acenta.test)
+         - GET /api/v1/mobile/auth/me → PASSED (200, no sensitive fields exposed)
       
-      Files Validated:
-      - /app/backend/server.py (compat export intact: from app.bootstrap.api_app import app)
-      - /app/backend/app/db.py (MongoDB connection logic unchanged)
-      - /app/backend/app/services/preflight_service.py (production checks logic preserved)
-      - /app/backend/app/services/refresh_token_crypto.py (token generation unchanged)
-      - /app/backend/app/bootstrap/runtime_health.py (heartbeat logic preserved)
-      - /app/backend/app/bootstrap/scheduler_app.py (scheduler configuration unchanged)
-      - All integration test files (B2B, billing) working correctly
+      4. ✅ Fix scope validation - no behavior changes outside test harness
+         - Reviewed change: Only affects line 48 in test_auth_jwt_and_org_context.py
+         - Creates minimal Request stub for direct service-level function calls in tests
+         - No changes to application auth.py, org_context.py, or production code
+         - Fix is test harness compatibility only, not functional changes
+      
+      5. ✅ Auth/session/tenant flows working correctly
+         - No regressions in authentication flows
+         - Session management working correctly
+         - Tenant isolation functioning properly
+         - Mobile BFF auth endpoints working correctly
+      
+      Turkish Requirements Validation:
+      1. ✅ pytest /app/backend/tests/test_auth_jwt_and_org_context.py /app/backend/tests/test_auth_session_model.py /app/backend/tests/test_auth_tenant_binding.py -q mantıksal olarak temiz mi? - EVET (7/7 PASSED)
+      2. ✅ Özellikle test_get_current_org_403_when_user_has_no_org artık geçiyor mu? - EVET (1/1 PASSED) 
+      3. ✅ Auth/session/tenant akışlarında regresyon var mı? - HAYIR (no regressions detected)
+      4. ✅ Preview smoke test results - All 4 endpoints working correctly
+      5. ✅ Değişiklik scope dışı davranış değişikliği içeriyor mu? - HAYIR (test harness only)
       
       Test Summary:
-      - Total Validation Points: 4
-      - Passed: 4
-      - Failed: 0  
+      - Specific Test: 1/1 PASSED
+      - Auth Test Suites: 7/7 PASSED  
+      - Preview Smoke Tests: 4/4 PASSED
       - Success Rate: 100%
       
       Conclusion:
-      Backend lint CI fix validation SUCCESSFUL. All Ruff errors cleaned, backend tests passing, 
-      no auth/session/tenant/mobile regressions detected, and changes are scope-compliant safe 
-      fixes only. The lint cleanup iteration is complete and ready for deployment.
+      CI test fix validation SUCCESSFUL. The TypeError for get_current_user() missing request argument has been resolved with a minimal, properly scoped fix. All auth/session/tenant flows are working correctly with no regressions detected. The fix affects only test harness compatibility and does not modify any application behavior.
 
   - agent: "testing"
     message: |

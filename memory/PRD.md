@@ -197,9 +197,17 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - Added `backend/app/modules/mobile/mobile_cutover_runbook.md` as a short operational handoff covering preconditions, mobile build version, SecureStore migration, endpoint switch, rollout, monitoring, and rollback.
 - Runbook is intentionally one-page and follows PR-5A contract + PR-5B migration scope only; it does not introduce a new mobile architecture.
 
+### Runtime Ops + Dedicated Runtime Wiring Added (Mar 6, 2026)
+- Added `backend/app/bootstrap/runtime_ops.md` as the short operational source of truth for runtime overview, entrypoints, process responsibilities, local commands, preview/staging/prod run approach, health checks, smoke checklist, rollback, and the `server:app` compat note.
+- Added runtime health/ops wiring with `backend/app/bootstrap/runtime_health.py` so dedicated `worker` and `scheduler` runtimes emit heartbeat files and respond gracefully to `SIGTERM` / `SIGINT`.
+- Added executable runtime entry scripts: `backend/scripts/run_api_runtime.sh`, `backend/scripts/run_worker_runtime.sh`, `backend/scripts/run_scheduler_runtime.sh`.
+- Added `backend/scripts/check_runtime_health.py` for non-HTTP worker/scheduler health verification using heartbeat freshness.
+- Strengthened `worker_app.py` and `scheduler_app.py` with explicit runtime component manifests, heartbeat updates, and controlled shutdown behavior.
+- Added `backend/tests/test_runtime_wiring.py`; targeted pytest, ingress/auth/mobile curl smoke, temporary worker/scheduler process smoke, and backend deep testing all passed.
+
 ## Current Priority Backlog
 - **P0:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
-- **P0:** Deploy/runtime wiring for dedicated worker + scheduler processes after PR-6 composition split
+- **P1:** Environment-specific process-manager attachment of the new runtime scripts (`run_api_runtime.sh`, `run_worker_runtime.sh`, `run_scheduler_runtime.sh`) wherever preview/staging/prod infra definitions live
 - **P1:** PR-7 — Web Active Devices / Sessions screen
 - **P1:** Web auth follow-up cleanup after compat window closes (remove remaining localStorage fallback paths page-by-page)
 - **P1:** Cleanup PR for non-blocking preview issues: `/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`

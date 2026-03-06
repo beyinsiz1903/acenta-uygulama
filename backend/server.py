@@ -119,6 +119,7 @@ from app.routers.admin_b2b_funnel import router as admin_b2b_funnel_router
 from app.routers.admin_b2b_announcements import router as admin_b2b_announcements_router
 from app.routers.admin_tours import router as admin_tours_router
 from app.routers.tours_browse import router as tours_browse_router
+from app.modules.mobile.router import router as mobile_router
 from app.routers.admin_cms_pages import router as admin_cms_pages_router
 from app.routers.admin_campaigns import router as admin_campaigns_router
 from app.routers.admin_links import router as admin_links_router
@@ -666,6 +667,7 @@ app.include_router(seo_router)
 app.include_router(public_campaigns_router)
 
 app.include_router(auth_router)
+app.include_router(mobile_router, prefix="/api/v1/mobile", tags=["mobile"])
 
 # Phase 5-8: Onboarding, WebPOS, Notifications, Advanced Reports
 from app.routers.onboarding import router as onboarding_router

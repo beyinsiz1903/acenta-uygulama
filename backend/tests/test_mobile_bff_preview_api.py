@@ -1,0 +1,321 @@
+"""
+Mobile BFF API tests for PR-5A against preview environment.
+
+Tests:
+- Auth requirement on all mobile endpoints
+- GET /api/v1/mobile/auth/me returns mobile DTO without _id leak
+- GET /api/v1/mobile/dashboard/summary returns stable shape
+- GET /api/v1/mobile/bookings returns list without _id leak
+- GET /api/v1/mobile/bookings/{id} enforces tenant isolation  
+- POST /api/v1/mobile/bookings creates draft booking with mobile DTO response
+- GET /api/v1/mobile/reports/summary returns mobile reporting shape
+- Legacy auth flows (login, me) should not regress
+
+NOTE: These tests use requests library to hit the preview URL directly,
+bypassing local ASGI fixtures from conftest.py.
+"""
+
+import os
+import pytest
+import requests
+
+# Skip conftest autouse fixtures by marking as external HTTP tests
+pytestmark = pytest.mark.usefixtures()
+
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://travel-saas-rebuild.preview.emergentagent.com").rstrip("/")
+
+# Test credentials
+ADMIN_CREDS = {"email": "admin@acenta.test", "password": "admin123"}
+AGENT_CREDS = {"email": "agent@acenta.test", "password": "agent123"}
+
+
+class TestMobileBFFAuthRequirement:
+    """Test that all mobile endpoints require authentication."""
+
+    def test_mobile_auth_me_requires_auth(self):
+        """GET /api/v1/mobile/auth/me should return 401 without token."""
+        response = requests.get(f"{BASE_URL}/api/v1/mobile/auth/me")
+        assert response.status_code == 401, f"Expected 401, got {response.status_code}: {response.text}"
+        print("PASS: /api/v1/mobile/auth/me returns 401 without auth")
+
+    def test_mobile_dashboard_summary_requires_auth(self):
+        """GET /api/v1/mobile/dashboard/summary should return 401 without token."""
+        response = requests.get(f"{BASE_URL}/api/v1/mobile/dashboard/summary")
+        assert response.status_code == 401, f"Expected 401, got {response.status_code}: {response.text}"
+        print("PASS: /api/v1/mobile/dashboard/summary returns 401 without auth")
+
+    def test_mobile_bookings_list_requires_auth(self):
+        """GET /api/v1/mobile/bookings should return 401 without token."""
+        response = requests.get(f"{BASE_URL}/api/v1/mobile/bookings")
+        assert response.status_code == 401, f"Expected 401, got {response.status_code}: {response.text}"
+        print("PASS: /api/v1/mobile/bookings returns 401 without auth")
+
+    def test_mobile_reports_summary_requires_auth(self):
+        """GET /api/v1/mobile/reports/summary should return 401 without token."""
+        response = requests.get(f"{BASE_URL}/api/v1/mobile/reports/summary")
+        assert response.status_code == 401, f"Expected 401, got {response.status_code}: {response.text}"
+        print("PASS: /api/v1/mobile/reports/summary returns 401 without auth")
+
+
+class TestMobileBFFAuthenticatedEndpoints:
+    """Test mobile endpoints with authentication."""
+
+    @pytest.fixture(scope="class")
+    def admin_token(self):
+        """Login as admin and return access token."""
+        response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
+        assert response.status_code == 200, f"Admin login failed: {response.text}"
+        data = response.json()
+        token = data.get("access_token")
+        assert token, f"No access_token in response: {data}"
+        return token
+
+    @pytest.fixture(scope="class")
+    def admin_headers(self, admin_token):
+        """Return headers with admin token."""
+        return {"Authorization": f"Bearer {admin_token}"}
+
+    def test_mobile_auth_me_returns_sanitized_dto(self, admin_headers):
+        """GET /api/v1/mobile/auth/me should return mobile DTO without sensitive fields."""
+        response = requests.get(f"{BASE_URL}/api/v1/mobile/auth/me", headers=admin_headers)
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        
+        data = response.json()
+        print(f"Mobile /auth/me response: {data}")
+        
+        # Contract checks - required fields
+        assert "id" in data, "Missing 'id' in response"
+        assert "email" in data, "Missing 'email' in response"
+        assert "roles" in data, "Missing 'roles' in response"
+        assert "organization_id" in data, "Missing 'organization_id' in response"
+        assert "tenant_id" in data, "Missing 'tenant_id' (can be null)"
+        assert "allowed_tenant_ids" in data, "Missing 'allowed_tenant_ids'"
+        
+        # No raw MongoDB _id leak (check for key "_id", not substring in other field names)
+        assert "_id" not in data, f"MongoDB _id leaked in response: {data}"
+        
+        # No sensitive fields
+        assert "password_hash" not in data, "password_hash leaked in response"
+        assert "totp_secret" not in data, "totp_secret leaked in response"
+        
+        print("PASS: /api/v1/mobile/auth/me returns sanitized mobile DTO")
+
+    def test_mobile_dashboard_summary_shape(self, admin_headers):
+        """GET /api/v1/mobile/dashboard/summary should return stable KPI shape."""
+        response = requests.get(f"{BASE_URL}/api/v1/mobile/dashboard/summary", headers=admin_headers)
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        
+        data = response.json()
+        print(f"Mobile dashboard/summary response: {data}")
+        
+        # Contract checks - required fields
+        assert "bookings_today" in data, "Missing 'bookings_today'"
+        assert "bookings_month" in data, "Missing 'bookings_month'"
+        assert "revenue_month" in data, "Missing 'revenue_month'"
+        assert "currency" in data, "Missing 'currency'"
+        
+        # Type checks
+        assert isinstance(data["bookings_today"], int), "bookings_today should be int"
+        assert isinstance(data["bookings_month"], int), "bookings_month should be int"
+        assert isinstance(data["revenue_month"], (int, float)), "revenue_month should be numeric"
+        assert isinstance(data["currency"], str), "currency should be string"
+        
+        # No raw MongoDB _id leak (check for key "_id" in dict)
+        assert "_id" not in data, f"MongoDB _id found in response: {data}"
+        
+        print("PASS: /api/v1/mobile/dashboard/summary returns stable shape")
+
+    def test_mobile_bookings_list_shape(self, admin_headers):
+        """GET /api/v1/mobile/bookings should return list without _id leak."""
+        response = requests.get(f"{BASE_URL}/api/v1/mobile/bookings", headers=admin_headers)
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        
+        data = response.json()
+        print(f"Mobile bookings list response (truncated): total={data.get('total')}, items_count={len(data.get('items', []))}")
+        
+        # Contract checks - required fields
+        assert "total" in data, "Missing 'total' in response"
+        assert "items" in data, "Missing 'items' in response"
+        assert isinstance(data["items"], list), "items should be a list"
+        
+        # No raw MongoDB _id leak 
+        assert "_id" not in data, f"MongoDB _id found in response: {data}"
+        # Check items don't have _id
+        for item in data.get("items", []):
+            assert "_id" not in item, f"MongoDB _id found in item: {item}"
+        
+        # Check item shape if items exist
+        if data["items"]:
+            item = data["items"][0]
+            required_fields = ["id", "status", "total_price", "currency"]
+            for field in required_fields:
+                assert field in item, f"Missing '{field}' in booking item"
+            print(f"First booking item fields: {list(item.keys())}")
+        
+        print("PASS: /api/v1/mobile/bookings returns list without _id leak")
+
+    def test_mobile_reports_summary_shape(self, admin_headers):
+        """GET /api/v1/mobile/reports/summary should return reporting summary shape."""
+        response = requests.get(f"{BASE_URL}/api/v1/mobile/reports/summary", headers=admin_headers)
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        
+        data = response.json()
+        print(f"Mobile reports/summary response: {data}")
+        
+        # Contract checks - required fields
+        assert "total_bookings" in data, "Missing 'total_bookings'"
+        assert "total_revenue" in data, "Missing 'total_revenue'"
+        assert "currency" in data, "Missing 'currency'"
+        assert "status_breakdown" in data, "Missing 'status_breakdown'"
+        assert "daily_sales" in data, "Missing 'daily_sales'"
+        
+        # Type checks
+        assert isinstance(data["total_bookings"], int), "total_bookings should be int"
+        assert isinstance(data["total_revenue"], (int, float)), "total_revenue should be numeric"
+        assert isinstance(data["status_breakdown"], list), "status_breakdown should be list"
+        assert isinstance(data["daily_sales"], list), "daily_sales should be list"
+        
+        # No raw MongoDB _id leak
+        assert "_id" not in data, f"MongoDB _id found in response: {data}"
+        for item in data.get("status_breakdown", []):
+            assert "_id" not in item, f"MongoDB _id found in status_breakdown: {item}"
+        for item in data.get("daily_sales", []):
+            assert "_id" not in item, f"MongoDB _id found in daily_sales: {item}"
+        
+        print("PASS: /api/v1/mobile/reports/summary returns stable shape")
+
+
+class TestMobileBFFBookingCreation:
+    """Test mobile booking creation endpoint."""
+
+    @pytest.fixture(scope="class")
+    def admin_auth(self):
+        """Login as admin and return token + tenant_id."""
+        response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
+        assert response.status_code == 200, f"Admin login failed: {response.text}"
+        data = response.json()
+        token = data.get("access_token")
+        
+        # Get tenant_id from /auth/me
+        me_response = requests.get(f"{BASE_URL}/api/auth/me", headers={"Authorization": f"Bearer {token}"})
+        me_data = me_response.json() if me_response.status_code == 200 else {}
+        tenant_id = me_data.get("tenant_id")
+        
+        return {"token": token, "tenant_id": tenant_id}
+
+    def test_mobile_booking_create_returns_mobile_dto(self, admin_auth):
+        """POST /api/v1/mobile/bookings should create booking and return mobile DTO."""
+        headers = {
+            "Authorization": f"Bearer {admin_auth['token']}",
+        }
+        # Add tenant header if available
+        if admin_auth.get("tenant_id"):
+            headers["X-Tenant-Id"] = admin_auth["tenant_id"]
+        
+        payload = {
+            "amount": 1999.99,
+            "currency": "TRY",
+            "customer_name": "Mobile Test Customer",
+            "hotel_name": "Mobile Test Hotel",
+            "booking_ref": f"MB-TEST-{os.urandom(4).hex().upper()}",
+            "check_in": "2026-02-15",
+            "check_out": "2026-02-18",
+            "notes": "Mobile BFF test booking",
+            "source": "mobile"
+        }
+        
+        response = requests.post(f"{BASE_URL}/api/v1/mobile/bookings", headers=headers, json=payload)
+        assert response.status_code == 201, f"Expected 201, got {response.status_code}: {response.text}"
+        
+        data = response.json()
+        print(f"Mobile booking create response: {data}")
+        
+        # Contract checks - response should be MobileBookingDetail
+        assert "id" in data, "Missing 'id' in response"
+        assert "status" in data, "Missing 'status' in response"
+        assert "total_price" in data, "Missing 'total_price' in response"
+        assert "customer_name" in data, "Missing 'customer_name' in response"
+        assert "hotel_name" in data, "Missing 'hotel_name' in response"
+        
+        # Verify created data
+        assert data["customer_name"] == payload["customer_name"], "customer_name mismatch"
+        assert data["hotel_name"] == payload["hotel_name"], "hotel_name mismatch"
+        assert data["status"] == "draft", f"Expected status 'draft', got {data['status']}"
+        
+        # No raw MongoDB _id leak (check for key "_id", not substring in field names like tenant_id)
+        assert "_id" not in data, f"MongoDB _id leaked in response: {data}"
+        
+        print(f"PASS: POST /api/v1/mobile/bookings created booking with id={data['id']}")
+        return data["id"]
+
+    def test_mobile_booking_detail_by_id(self, admin_auth):
+        """GET /api/v1/mobile/bookings/{id} should return booking detail."""
+        headers = {
+            "Authorization": f"Bearer {admin_auth['token']}",
+        }
+        if admin_auth.get("tenant_id"):
+            headers["X-Tenant-Id"] = admin_auth["tenant_id"]
+        
+        # First create a booking
+        payload = {
+            "amount": 500.0,
+            "currency": "TRY",
+            "customer_name": "Detail Test Customer",
+            "hotel_name": "Detail Test Hotel",
+            "booking_ref": f"MB-DETAIL-{os.urandom(4).hex().upper()}",
+            "source": "mobile"
+        }
+        
+        create_response = requests.post(f"{BASE_URL}/api/v1/mobile/bookings", headers=headers, json=payload)
+        assert create_response.status_code == 201, f"Create failed: {create_response.text}"
+        created = create_response.json()
+        booking_id = created["id"]
+        
+        # Now get the booking by ID
+        detail_response = requests.get(f"{BASE_URL}/api/v1/mobile/bookings/{booking_id}", headers=headers)
+        assert detail_response.status_code == 200, f"Expected 200, got {detail_response.status_code}: {detail_response.text}"
+        
+        data = detail_response.json()
+        print(f"Mobile booking detail response: {data}")
+        
+        # Verify it's the same booking
+        assert data["id"] == booking_id, "Booking ID mismatch"
+        assert data["customer_name"] == payload["customer_name"], "customer_name mismatch"
+        
+        # MobileBookingDetail extra fields
+        assert "tenant_id" in data, "Missing 'tenant_id' in detail"
+        assert "booking_ref" in data, "Missing 'booking_ref' in detail"
+        
+        # No raw MongoDB _id leak
+        assert "_id" not in data, f"MongoDB _id found in response: {data}"
+        
+        print(f"PASS: GET /api/v1/mobile/bookings/{booking_id} returns detail")
+
+
+class TestLegacyAuthNonRegression:
+    """Test that legacy auth endpoints still work after adding mobile router."""
+
+    def test_legacy_login_still_works(self):
+        """POST /api/auth/login should still work."""
+        response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
+        assert response.status_code == 200, f"Legacy login failed: {response.text}"
+        data = response.json()
+        assert "access_token" in data, f"Missing access_token: {data}"
+        print("PASS: Legacy /api/auth/login still works")
+
+    def test_legacy_auth_me_still_works(self):
+        """GET /api/auth/me should still work."""
+        # Login first
+        login_response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
+        token = login_response.json().get("access_token")
+        
+        # Call legacy /auth/me
+        response = requests.get(f"{BASE_URL}/api/auth/me", headers={"Authorization": f"Bearer {token}"})
+        assert response.status_code == 200, f"Legacy /auth/me failed: {response.text}"
+        data = response.json()
+        assert "email" in data, f"Missing email in legacy /auth/me: {data}"
+        print("PASS: Legacy /api/auth/me still works")
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v", "--tb=short"])

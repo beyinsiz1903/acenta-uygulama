@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from app.repositories.base_repository import get_collection, with_org_filter
+from app.repositories.base_repository import get_collection, with_org_filter, with_tenant_filter
 from app.utils import now_utc
 
 
@@ -18,8 +18,13 @@ class BookingRepository:
         now = now_utc()
         doc: Dict[str, Any] = {
             "organization_id": organization_id,
+            "tenant_id": payload.get("tenant_id"),
             "agency_id": payload.get("agency_id"),
             "customer_id": payload.get("customer_id"),
+            "customer_name": payload.get("customer_name"),
+            "guest_name": payload.get("guest_name"),
+            "hotel_id": payload.get("hotel_id"),
+            "hotel_name": payload.get("hotel_name"),
             "supplier_id": payload.get("supplier_id"),
             "offer_ref": payload.get("offer_ref"),
             "pricing": payload.get("pricing"),
@@ -27,21 +32,34 @@ class BookingRepository:
             "amount": float(payload.get("amount", 0.0)),
             "currency": payload.get("currency", "TRY"),
             "booking_ref": payload.get("booking_ref"),
+            "notes": payload.get("notes"),
+            "occupancy": payload.get("occupancy"),
+            "stay": payload.get("stay"),
+            "source": payload.get("source") or "backoffice",
             "created_at": now,
             "updated_at": now,
         }
         res = await self._col.insert_one(doc)
         return str(res.inserted_id)
 
-    async def get_by_id(self, organization_id: str, booking_id: str) -> Optional[Dict[str, Any]]:
+    async def get_by_id(
+        self,
+        organization_id: str,
+        booking_id: str,
+        *,
+        tenant_id: Optional[str] = None,
+        include_legacy_without_tenant: bool = True,
+    ) -> Optional[Dict[str, Any]]:
         from bson import ObjectId
 
         try:
             oid = ObjectId(booking_id)
         except Exception:
             return None
-
-        doc = await self._col.find_one(with_org_filter({"_id": oid}, organization_id))
+        query = with_org_filter({"_id": oid}, organization_id)
+        if tenant_id:
+            query = with_tenant_filter(query, tenant_id, include_legacy_without_tenant=include_legacy_without_tenant)
+        doc = await self._col.find_one(query)
         return doc
 
     async def update_state(
@@ -81,6 +99,8 @@ class BookingRepository:
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
         limit: int = 50,
+        tenant_id: Optional[str] = None,
+        include_legacy_without_tenant: bool = True,
     ) -> List[Dict[str, Any]]:
         flt: Dict[str, Any] = {}
         if state:
@@ -92,8 +112,11 @@ class BookingRepository:
             if end_date:
                 date_range["$lte"] = end_date
             flt["created_at"] = date_range
+        query = with_org_filter(flt, organization_id)
+        if tenant_id:
+            query = with_tenant_filter(query, tenant_id, include_legacy_without_tenant=include_legacy_without_tenant)
 
-        cursor = self._col.find(with_org_filter(flt, organization_id)).sort("created_at", -1).limit(limit)
+        cursor = self._col.find(query).sort("created_at", -1).limit(limit)
         docs = await cursor.to_list(limit)
         return docs
 

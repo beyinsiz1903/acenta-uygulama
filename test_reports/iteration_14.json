@@ -1,0 +1,89 @@
+{
+  "summary": "Complete testing of PR-5A Mobile BFF Backend API layer. All 5 internal pytest tests and 24 external preview API tests passed. Mobile endpoints correctly implement auth requirements, stable DTO shapes, no MongoDB _id leaks, tenant isolation, and proper booking creation flow.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "note": "Frontend/mobile app testing skipped - PR-5A scope is backend-only per user request"
+  },
+  "passed_tests": [
+    "✅ Internal pytest: test_mobile_bff_requires_auth - All mobile endpoints return 401 without token",
+    "✅ Internal pytest: test_mobile_auth_me_returns_sanitized_user - Mobile /auth/me returns sanitized DTO",
+    "✅ Internal pytest: test_mobile_bookings_are_tenant_isolated - Tenant A cannot see Tenant B bookings",
+    "✅ Internal pytest: test_mobile_booking_create_sets_tenant_and_returns_mobile_dto - POST creates draft with tenant scoping",
+    "✅ Internal pytest: test_mobile_dashboard_and_reports_summary_contracts - Dashboard/reports return stable shapes",
+    "✅ Preview API: GET /api/v1/mobile/auth/me requires auth (401)",
+    "✅ Preview API: GET /api/v1/mobile/dashboard/summary requires auth (401)",
+    "✅ Preview API: GET /api/v1/mobile/bookings requires auth (401)",
+    "✅ Preview API: GET /api/v1/mobile/reports/summary requires auth (401)",
+    "✅ Preview API: mobile_auth_me_fields - All required fields present (id, email, roles, organization_id, tenant_id, allowed_tenant_ids)",
+    "✅ Preview API: mobile_auth_me_no_id_leak - No raw MongoDB _id in response",
+    "✅ Preview API: mobile_auth_me_sensitive - No sensitive fields leaked (password_hash, totp_secret)",
+    "✅ Preview API: mobile_dashboard_fields - All required fields present (bookings_today, bookings_month, revenue_month, currency)",
+    "✅ Preview API: mobile_dashboard_types - Booking counts are integers",
+    "✅ Preview API: mobile_dashboard_no_id_leak - No raw MongoDB _id in response",
+    "✅ Preview API: mobile_bookings_list_fields - Has total and items fields",
+    "✅ Preview API: mobile_bookings_list_no_id_leak - No raw MongoDB _id in items",
+    "✅ Preview API: mobile_bookings_item_shape - Item has required fields (id, status, total_price, currency)",
+    "✅ Preview API: mobile_booking_create_fields - All required fields in response",
+    "✅ Preview API: mobile_booking_create_status - Status is 'draft' as expected",
+    "✅ Preview API: mobile_booking_create_no_id_leak - No raw MongoDB _id in response",
+    "✅ Preview API: mobile_booking_detail - GET detail works correctly",
+    "✅ Preview API: mobile_booking_detail_fields - Detail has tenant_id and booking_ref",
+    "✅ Preview API: mobile_booking_detail_no_id_leak - No raw MongoDB _id",
+    "✅ Preview API: mobile_reports_summary_fields - All required fields present (total_bookings, total_revenue, currency, status_breakdown, daily_sales)",
+    "✅ Preview API: mobile_reports_summary_types - status_breakdown and daily_sales are lists",
+    "✅ Preview API: mobile_reports_summary_no_id_leak - No raw MongoDB _id in response",
+    "✅ Preview API: legacy_auth_login - POST /api/auth/login works (non-regression)",
+    "✅ Preview API: legacy_auth_me - GET /api/auth/me works (non-regression)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_mobile_bff_contracts.py",
+    "/app/test_reports/pytest/pytest_mobile_bff.xml",
+    "/app/test_reports/test_mobile_bff_contracts_v2.py"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Mobile router correctly mounted at /api/v1/mobile prefix in server.py (line 670)",
+    "Mobile schemas (MobileAuthMeResponse, MobileBookingSummary, etc.) properly separate from web DTOs",
+    "Mobile service correctly uses _booking_summary() and _booking_detail() to convert MongoDB docs without _id leak",
+    "Tenant isolation properly enforced via _current_tenant_id() and _tenant_filter() in mobile service",
+    "Booking creation correctly delegates to existing create_booking_draft() domain service",
+    "Mobile BFF is a thin projection/orchestration layer as designed - no business logic ownership"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_mobile_bff_preview_api.py",
+    "/app/test_reports/test_mobile_bff_contracts.py",
+    "/app/test_reports/test_mobile_bff_contracts_v2.py"
+  ],
+  "success_rate": {
+    "backend": "100% (5/5 internal + 24/24 external = 29 tests passed)",
+    "frontend": "N/A - backend-only testing per PR-5A scope"
+  },
+  "test_credentials": {
+    "admin": "admin@acenta.test / admin123 (super_admin role)"
+  },
+  "seed_data_creation": "Test bookings created via POST /api/v1/mobile/bookings during testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "PR-5A Mobile BFF Backend fully tested. Key endpoints: /api/v1/mobile/auth/me, /dashboard/summary, /bookings, /bookings/{id}, /reports/summary. All require bearer auth. No MongoDB _id leaks. Mobile DTOs separate from web DTOs. Tenant isolation enforced. Legacy auth endpoints unaffected.",
+  "api_verification": {
+    "GET /api/v1/mobile/auth/me": "✅ 200 - Returns sanitized mobile user DTO without _id leak",
+    "GET /api/v1/mobile/dashboard/summary": "✅ 200 - Returns KPI summary (bookings_today, bookings_month, revenue_month, currency)",
+    "GET /api/v1/mobile/bookings": "✅ 200 - Returns paginated booking list without _id leak",
+    "GET /api/v1/mobile/bookings/{id}": "✅ 200 - Returns booking detail with tenant isolation",
+    "POST /api/v1/mobile/bookings": "✅ 201 - Creates draft booking with tenant scoping",
+    "GET /api/v1/mobile/reports/summary": "✅ 200 - Returns reporting summary (total_bookings, status_breakdown, daily_sales)"
+  },
+  "contract_compliance": {
+    "auth_requirement": "All mobile endpoints return 401 without bearer token",
+    "no_id_leak": "MongoDB _id never exposed in any mobile response",
+    "dto_separation": "Mobile DTOs (MobileAuthMeResponse, MobileBookingSummary, etc.) separate from web DTOs",
+    "tenant_isolation": "Bookings properly scoped by tenant via X-Tenant-Id header",
+    "domain_reuse": "Booking creation delegates to existing booking_service.create_booking_draft()"
+  }
+}

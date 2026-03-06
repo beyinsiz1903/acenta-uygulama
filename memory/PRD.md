@@ -205,6 +205,11 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - Strengthened `worker_app.py` and `scheduler_app.py` with explicit runtime component manifests, heartbeat updates, and controlled shutdown behavior.
 - Added `backend/tests/test_runtime_wiring.py`; targeted pytest, ingress/auth/mobile curl smoke, temporary worker/scheduler process smoke, and backend deep testing all passed.
 
+### Backend Ruff Cleanup (Mar 6, 2026)
+- Cleaned backend lint blockers with scope-limited, behavior-preserving fixes only: unused locals/imports, constant f-strings, truthy assert style, dead unreachable test code, and missing trailing newline in `app/services/session_service.py`.
+- `ruff` now passes for `/app/backend`.
+- Revalidated with targeted pytest (`test_runtime_wiring.py`, `test_auth_session_model.py`, `test_auth_tenant_binding.py`, `test_mobile_bff_contracts.py`) plus preview curl smoke on `/api/health`, `/api/auth/me`, and `/api/v1/mobile/auth/me`.
+
 ## Current Priority Backlog
 - **P0:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
 - **P1:** Environment-specific process-manager attachment of the new runtime scripts (`run_api_runtime.sh`, `run_worker_runtime.sh`, `run_scheduler_runtime.sh`) wherever preview/staging/prod infra definitions live

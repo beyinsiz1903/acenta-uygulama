@@ -176,7 +176,7 @@ const ADMIN_GROUPED_NAV = [
       { to: "/app/admin/tenant-features", label: "Özellik Ayarları", icon: Zap, modeKey: "tenant_ayarlari", minMode: "enterprise" },
       { to: "/app/admin/tenant-health", label: "Sistem Durumu", icon: Activity, modeKey: "tenant_saglik", minMode: "enterprise" },
       { to: "/app/admin/audit-logs", label: "İşlem Geçmişi", icon: Eye, modeKey: "audit_log", minMode: "enterprise" },
-      { to: "/app/settings", label: "Ayarlar", icon: Settings, modeKey: "ayarlar", minMode: "lite" },
+      { to: "/app/settings/security", label: "Ayarlar", icon: Settings, modeKey: "ayarlar", minMode: "lite" },
       { to: "/app/admin/product-mode", label: "Ürün Modu", icon: Zap, modeKey: "urun_modu", minMode: "lite" },
     ],
   },

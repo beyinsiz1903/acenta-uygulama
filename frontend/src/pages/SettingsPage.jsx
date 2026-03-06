@@ -2,8 +2,9 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Settings, UserPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Link } from "react-router-dom";
 
-import { api, apiErrorMessage } from "../lib/api";
+import { api, apiErrorMessage, getUser } from "../lib/api";
 import { createUserSchema } from "../lib/validations";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -18,6 +19,7 @@ import {
   DialogFooter,
 } from "../components/ui/dialog";
 import { Checkbox } from "../components/ui/checkbox";
+import { SettingsSectionNav } from "../components/settings/SettingsSectionNav";
 
 const AVAILABLE_ROLES = [
   { id: "super_admin", label: "Süper Admin" },
@@ -170,11 +172,19 @@ function UserForm({ open, onOpenChange, onSaved }) {
 }
 
 export default function SettingsPage() {
+  const currentUser = getUser();
+  const canManageUsers = (currentUser?.roles || []).some((role) => ["super_admin", "admin"].includes(role));
   const [users, setUsers] = useState([]);
   const [error, setError] = useState("");
   const [openUser, setOpenUser] = useState(false);
 
   const load = useCallback(async () => {
+    if (!canManageUsers) {
+      setUsers([]);
+      setError("");
+      return;
+    }
+
     setError("");
     try {
       const resp = await api.get("/settings/users");
@@ -188,7 +198,7 @@ export default function SettingsPage() {
         setError(msg);
       }
     }
-  }, []);
+  }, [canManageUsers]);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -197,17 +207,53 @@ export default function SettingsPage() {
     return () => clearTimeout(t);
   }, [load]);
 
+  if (!canManageUsers) {
+    return (
+      <div className="space-y-6" data-testid="settings-users-page">
+        <div>
+          <h2 className="text-4xl font-semibold text-foreground">Ayarlar</h2>
+          <p className="mt-2 text-base text-muted-foreground">Güvenlik ve yönetim bölümleri.</p>
+        </div>
+
+        <SettingsSectionNav showUsersSection={false} />
+
+        <Card className="rounded-3xl border-border/60" data-testid="settings-users-unauthorized-state">
+          <CardContent className="space-y-3 p-6">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">Kullanıcı yönetimi yetkisi gerekiyor</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Bu bölüm yalnızca yönetici rolleri için açıktır. Güvenlik ayarlarından aktif oturumlarınızı yönetebilirsiniz.
+              </p>
+            </div>
+            <Button asChild data-testid="settings-users-go-security-button">
+              <Link to="/app/settings/security">Aktif Oturumlara Git</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-4">
+      <div className="space-y-4">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">Ayarlar</h2>
-          <p className="text-sm text-muted-foreground">Kullanıcı ve rol yönetimi.</p>
+          <h2 className="text-4xl font-semibold text-foreground">Ayarlar</h2>
+          <p className="mt-2 text-base text-muted-foreground">Kullanıcı, rol ve güvenlik bölümleri.</p>
         </div>
-        <Button onClick={() => setOpenUser(true)} className="gap-2" data-testid="user-new">
-          <UserPlus className="h-4 w-4" />
-          Kullanıcı
-        </Button>
+
+        <SettingsSectionNav showUsersSection />
+
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="text-xl font-semibold text-foreground">Kullanıcılar</h3>
+            <p className="text-sm text-muted-foreground">Kullanıcı ve rol yönetimi.</p>
+          </div>
+          <Button onClick={() => setOpenUser(true)} className="gap-2" data-testid="user-new">
+            <UserPlus className="h-4 w-4" />
+            Kullanıcı
+          </Button>
+        </div>
       </div>
 
       {error ? (

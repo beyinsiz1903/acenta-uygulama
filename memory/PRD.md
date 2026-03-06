@@ -211,6 +211,15 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - Smoke validation passed for supervisor process status, worker/scheduler heartbeat freshness, `/api/health`, `/api/auth/login`, `/api/auth/me`, `/api/v1/mobile/auth/me`, and web admin login redirect.
 - Deferred admin optional endpoint errors (`/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`) were intentionally left untouched in this scoped runtime task.
 
+### PR-7 Implemented — Web Active Sessions / Active Devices (Mar 6, 2026)
+- Added new web route `/app/settings/security` with `frontend/src/pages/SettingsSecurityPage.jsx` to surface session hardening to users without changing backend auth/session business logic.
+- Added small session-focused UI modules: `frontend/src/components/settings/SettingsSectionNav.jsx`, `SessionCard.jsx`, `SessionRevokeDialog.jsx`, and helper `frontend/src/lib/sessionSecurity.js` for device/user-agent labeling plus timestamp formatting.
+- Screen uses the existing backend contracts only: `GET /api/auth/sessions`, `POST /api/auth/sessions/{session_id}/revoke`, and `GET /api/auth/me` for current session highlighting.
+- UX delivered per scope: active sessions list, device/user-agent/IP/created-at/last-active display, current-session badge, safe confirmation modal, single-session revoke, “other all sessions” revoke, loading/error states, and post-action refresh.
+- Settings IA updated with a lightweight section nav between security and users; sidebar “Ayarlar” now lands on the new security page while existing `/app/settings` user-management page remains available.
+- Found and fixed a frontend-only regression during smoke testing: bulk revoke was initially firing all revoke calls in parallel, which caused partial completion under load. Updated the “other all sessions” action to revoke sequentially for reliable completion while keeping the same backend endpoints.
+- Validation passed via frontend/browser smoke: login → `/app/settings/security`, current-session modal cancel, single remote session revoke, bulk revoke of remaining sessions, final counts (`total=1`, `current=1`, `other=0`), plus backend/API session revoke curl verification.
+
 ### Backend Ruff Cleanup (Mar 6, 2026)
 - Cleaned backend lint blockers with scope-limited, behavior-preserving fixes only: unused locals/imports, constant f-strings, truthy assert style, dead unreachable test code, and missing trailing newline in `app/services/session_service.py`.
 - `ruff` now passes for `/app/backend`.
@@ -241,7 +250,6 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 ## Current Priority Backlog
 - **P0:** None active in web repo. Preview dedicated worker + scheduler supervisor wiring is complete and smoke-validated.
 - **P1:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
-- **P1:** PR-7 — Web Active Devices / Sessions screen
 - **P1:** Mirror the dedicated runtime wiring into staging/prod infra definitions when those environment configs are available/in scope
 - **P1:** Web auth follow-up cleanup after compat window closes (remove remaining localStorage fallback paths page-by-page)
 - **P1:** Cleanup PR for non-blocking preview issues: `/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`

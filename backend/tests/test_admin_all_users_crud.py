@@ -96,10 +96,10 @@ class TestGetAllUsers:
         )
         assert resp.status_code == 200
         users = resp.json()
-        
+
         if not users:
             pytest.skip("No users in system")
-        
+
         user = users[0]
         required_fields = ["id", "email", "name", "roles", "status", "agency_id", "agency_name"]
         for field in required_fields:
@@ -136,7 +136,7 @@ class TestCreateUser:
             "agency_id": DEMO_ACENTA_ID,
             "role": "agency_agent"
         }
-        
+
         resp = requests.post(
             f"{BASE_URL}/api/admin/all-users",
             headers={"Authorization": f"Bearer {admin_token}"},
@@ -144,7 +144,7 @@ class TestCreateUser:
             timeout=10
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        
+
         data = resp.json()
         assert data["email"] == unique_email.lower()
         assert data["name"] == "Test Create User"
@@ -152,7 +152,7 @@ class TestCreateUser:
         assert data["status"] == "active"
         assert data["agency_id"] == DEMO_ACENTA_ID
         assert data["agency_name"] == "Demo Acenta"
-        
+
         # Cleanup - delete the test user
         user_id = data["id"]
         requests.delete(
@@ -173,7 +173,7 @@ class TestCreateUser:
             "agency_id": DEMO_ACENTA_ID,
             "role": "agency_agent"
         }
-        
+
         create_resp = requests.post(
             f"{BASE_URL}/api/admin/all-users",
             headers={"Authorization": f"Bearer {admin_token}"},
@@ -182,7 +182,7 @@ class TestCreateUser:
         )
         assert create_resp.status_code == 200
         user_id = create_resp.json()["id"]
-        
+
         # Try to create another with same email
         dup_resp = requests.post(
             f"{BASE_URL}/api/admin/all-users",
@@ -191,7 +191,7 @@ class TestCreateUser:
             timeout=10
         )
         assert dup_resp.status_code == 409, f"Expected 409 for duplicate email, got {dup_resp.status_code}"
-        
+
         # Cleanup
         requests.delete(
             f"{BASE_URL}/api/admin/all-users/{user_id}",
@@ -210,7 +210,7 @@ class TestCreateUser:
             "agency_id": DEMO_ACENTE_A_ID,
             "role": "agency_admin"
         }
-        
+
         resp = requests.post(
             f"{BASE_URL}/api/admin/all-users",
             headers={"Authorization": f"Bearer {admin_token}"},
@@ -220,7 +220,7 @@ class TestCreateUser:
         assert resp.status_code == 200
         data = resp.json()
         assert "agency_admin" in data["roles"]
-        
+
         # Cleanup
         requests.delete(
             f"{BASE_URL}/api/admin/all-users/{data['id']}",
@@ -238,7 +238,7 @@ class TestCreateUser:
             "agency_id": "00000000-0000-0000-0000-000000000000",
             "role": "agency_agent"
         }
-        
+
         resp = requests.post(
             f"{BASE_URL}/api/admin/all-users",
             headers={"Authorization": f"Bearer {admin_token}"},
@@ -270,7 +270,7 @@ class TestUpdateUser:
         )
         assert create_resp.status_code == 200
         user_id = create_resp.json()["id"]
-        
+
         # Update name
         update_resp = requests.put(
             f"{BASE_URL}/api/admin/all-users/{user_id}",
@@ -280,7 +280,7 @@ class TestUpdateUser:
         )
         assert update_resp.status_code == 200
         assert update_resp.json()["name"] == "Updated Name"
-        
+
         # Verify with GET
         get_resp = requests.get(
             f"{BASE_URL}/api/admin/all-users",
@@ -290,7 +290,7 @@ class TestUpdateUser:
         users = [u for u in get_resp.json() if u["id"] == user_id]
         assert len(users) == 1
         assert users[0]["name"] == "Updated Name"
-        
+
         # Cleanup
         requests.delete(
             f"{BASE_URL}/api/admin/all-users/{user_id}",
@@ -317,7 +317,7 @@ class TestUpdateUser:
         )
         assert create_resp.status_code == 200
         user_id = create_resp.json()["id"]
-        
+
         # Update role to admin
         update_resp = requests.put(
             f"{BASE_URL}/api/admin/all-users/{user_id}",
@@ -327,7 +327,7 @@ class TestUpdateUser:
         )
         assert update_resp.status_code == 200
         assert "agency_admin" in update_resp.json()["roles"]
-        
+
         # Cleanup
         requests.delete(
             f"{BASE_URL}/api/admin/all-users/{user_id}",
@@ -354,7 +354,7 @@ class TestUpdateUser:
         )
         assert create_resp.status_code == 200
         user_id = create_resp.json()["id"]
-        
+
         # Update status to disabled
         update_resp = requests.put(
             f"{BASE_URL}/api/admin/all-users/{user_id}",
@@ -364,7 +364,7 @@ class TestUpdateUser:
         )
         assert update_resp.status_code == 200
         assert update_resp.json()["status"] == "disabled"
-        
+
         # Toggle back to active
         update_resp2 = requests.put(
             f"{BASE_URL}/api/admin/all-users/{user_id}",
@@ -374,7 +374,7 @@ class TestUpdateUser:
         )
         assert update_resp2.status_code == 200
         assert update_resp2.json()["status"] == "active"
-        
+
         # Cleanup
         requests.delete(
             f"{BASE_URL}/api/admin/all-users/{user_id}",
@@ -401,7 +401,7 @@ class TestUpdateUser:
         )
         assert create_resp.status_code == 200
         user_id = create_resp.json()["id"]
-        
+
         # Transfer to different agency
         update_resp = requests.put(
             f"{BASE_URL}/api/admin/all-users/{user_id}",
@@ -412,7 +412,7 @@ class TestUpdateUser:
         assert update_resp.status_code == 200
         assert update_resp.json()["agency_id"] == DEMO_ACENTE_A_ID
         assert update_resp.json()["agency_name"] == "Demo Acente A"
-        
+
         # Cleanup
         requests.delete(
             f"{BASE_URL}/api/admin/all-users/{user_id}",
@@ -426,7 +426,7 @@ class TestUpdateUser:
         # Create two users
         email1 = f"test_e1_{uuid.uuid4().hex[:8]}@example.com"
         email2 = f"test_e2_{uuid.uuid4().hex[:8]}@example.com"
-        
+
         create1 = requests.post(
             f"{BASE_URL}/api/admin/all-users",
             headers={"Authorization": f"Bearer {admin_token}"},
@@ -441,7 +441,7 @@ class TestUpdateUser:
         )
         user1_id = create1.json()["id"]
         user2_id = create2.json()["id"]
-        
+
         # Try to update user2's email to user1's email
         update_resp = requests.put(
             f"{BASE_URL}/api/admin/all-users/{user2_id}",
@@ -450,7 +450,7 @@ class TestUpdateUser:
             timeout=10
         )
         assert update_resp.status_code == 409, f"Expected 409, got {update_resp.status_code}"
-        
+
         # Cleanup
         requests.delete(f"{BASE_URL}/api/admin/all-users/{user1_id}", headers={"Authorization": f"Bearer {admin_token}"}, timeout=10)
         requests.delete(f"{BASE_URL}/api/admin/all-users/{user2_id}", headers={"Authorization": f"Bearer {admin_token}"}, timeout=10)
@@ -490,7 +490,7 @@ class TestDeleteUser:
         )
         assert create_resp.status_code == 200
         user_id = create_resp.json()["id"]
-        
+
         # Delete user
         del_resp = requests.delete(
             f"{BASE_URL}/api/admin/all-users/{user_id}",
@@ -501,7 +501,7 @@ class TestDeleteUser:
         data = del_resp.json()
         assert data["ok"] is True
         assert data["deleted_id"] == user_id
-        
+
         # Verify user no longer in list
         get_resp = requests.get(
             f"{BASE_URL}/api/admin/all-users",

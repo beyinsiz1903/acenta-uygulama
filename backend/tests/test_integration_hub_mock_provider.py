@@ -4,7 +4,6 @@ import pytest
 
 from app.db import get_db
 from app.services.integration_hub import (
-  INTEGRATION_SYNC_RATES,
   enqueue_sync_jobs_for_provider,
   register_integration_job_handlers,
 )

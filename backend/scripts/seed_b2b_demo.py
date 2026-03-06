@@ -3,7 +3,6 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
-from bson import ObjectId
 
 from app.db import get_db
 from app.services.ops_cases import create_case

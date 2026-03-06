@@ -7,7 +7,6 @@ from uuid import uuid4
 
 import jwt
 import pytest
-from bson import ObjectId
 from httpx import AsyncClient
 
 from app.auth import _jwt_secret

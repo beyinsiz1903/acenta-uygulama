@@ -4,7 +4,6 @@ from __future__ import annotations
 import pytest
 from httpx import AsyncClient
 
-from app.db import get_db
 
 
 @pytest.mark.anyio

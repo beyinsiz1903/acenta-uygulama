@@ -5,7 +5,6 @@ Runs all checklist items programmatically and returns structured report.
 """
 from __future__ import annotations
 
-import os
 import shutil
 from datetime import timedelta
 from pathlib import Path

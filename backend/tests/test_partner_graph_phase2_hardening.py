@@ -1,21 +1,17 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict
+from typing import Dict
 from uuid import uuid4
 
 import jwt
 import pytest
 from httpx import AsyncClient
-from starlette.requests import Request
 
 from app.errors import AppError
-from app.middleware.tenant_middleware import TenantResolutionMiddleware
 
 from app.auth import _jwt_secret
 from app.db import get_db
-from app.request_context import _permission_matches  # unused in this module (left for future assertions)
-from server import app
 
 
 def _make_token(email: str, org_id: str, roles: list[str], minutes: int = 60 * 12) -> str:

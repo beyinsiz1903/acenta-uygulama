@@ -660,6 +660,24 @@ metadata:
   test_sequence: 8
   last_updated: "2026-03-06"
 
+  - task: "Backend lint CI fix validation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py, /app/backend/app/db.py, /app/backend/app/services/preflight_service.py, /app/backend/app/services/refresh_token_crypto.py, /app/backend/app/bootstrap/runtime_health.py, /app/backend/app/bootstrap/scheduler_app.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Backend lint CI fix validation PASSED - All 4 requested validation points confirmed: 1) Ruff check CLEAN ✅ - `ruff check /app/backend --output-format concise` returns 'All checks passed!', 2) Backend tests PASSING ✅ - pytest tests/test_runtime_wiring.py, test_auth_session_model.py, test_auth_tenant_binding.py, test_mobile_bff_contracts.py all pass, 3) Auth/session/tenant/Mobile BFF flows NO REGRESSION ✅ - Comprehensive API smoke test (9/9 endpoints passed): GET /api/health, POST /api/auth/login, GET /api/auth/me, GET /api/v1/mobile/auth/me, unauthorized guards, mobile dashboard/bookings/reports all working correctly, 4) Lint changes SCOPE COMPLIANT ✅ - Reviewed modified files (server.py compat export, db.py, service files, bootstrap files) - changes are safe lint/format fixes only, no behavior modifications detected. Integration tests (B2B exchange, billing admin) also pass. No critical regressions in any core backend functionality."
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 9
+  last_updated: "2026-03-06"
+
 test_plan:
   current_focus:
     - "Backend lint CI fix validation completed - all 4 critical tests passed"
@@ -668,6 +686,62 @@ test_plan:
   test_priority: "high_first"
 
 agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ BACKEND LINT CI FIX VALIDATION COMPLETED - ALL 4 TESTS PASSED (2026-03-06)
+      
+      Performed comprehensive backend lint CI fix validation per Turkish review request on https://travel-saas-refactor.preview.emergentagent.com
+      
+      Validation Results Summary:
+      
+      1. ✅ Ruff gerçekten temiz mi? - EVET
+         - `ruff check /app/backend --output-format concise` → "All checks passed!" 
+         - No lint errors remaining, all safe fixable errors cleaned up successfully
+      
+      2. ✅ İlgili backend testleri geçiyor mu? - EVET  
+         - pytest test_runtime_wiring.py test_auth_session_model.py test_auth_tenant_binding.py → 7/7 PASSED
+         - pytest test_mobile_bff_contracts.py → 5/5 PASSED
+         - Integration tests (B2B exchange flow, billing admin) → PASSED
+         - All test suites stable, no test regressions detected
+      
+      3. ✅ Auth/session/tenant/mobile BFF akışlarında regresyon var mı? - HAYIR
+         - Comprehensive API smoke test: 9/9 endpoints PASSED (100% success rate)
+         - GET /api/health → PASS (status: ok)
+         - POST /api/auth/login (admin@acenta.test) → PASS (token received)
+         - GET /api/auth/me → PASS (email verification correct)  
+         - GET /api/v1/mobile/auth/me → PASS (sanitized DTO, no _id leak, no password_hash)
+         - Unauthorized guards (401 without auth) → PASS for both legacy & mobile endpoints
+         - Mobile BFF endpoints (dashboard/bookings/reports) → PASS (no _id leaks, proper responses)
+         - No critical regressions in auth, session, tenant isolation, or mobile BFF flows
+      
+      4. ✅ Yapılan değişiklikler scope dışı davranış değişikliği içeriyor mu? - HAYIR
+         - Reviewed all modified files: server.py (compat export), db.py, services/preflight_service.py, 
+           services/refresh_token_crypto.py, bootstrap/runtime_health.py, bootstrap/scheduler_app.py
+         - Changes are purely lint/format fixes: added `from __future__ import annotations`, 
+           fixed whitespace, updated docstrings, maintained compat exports
+         - No functional logic changes, no behavior modifications detected
+         - Scope compliant: safe lint fixes only, no refactoring or feature changes
+      
+      Files Validated:
+      - /app/backend/server.py (compat export intact: from app.bootstrap.api_app import app)
+      - /app/backend/app/db.py (MongoDB connection logic unchanged)
+      - /app/backend/app/services/preflight_service.py (production checks logic preserved)
+      - /app/backend/app/services/refresh_token_crypto.py (token generation unchanged)
+      - /app/backend/app/bootstrap/runtime_health.py (heartbeat logic preserved)
+      - /app/backend/app/bootstrap/scheduler_app.py (scheduler configuration unchanged)
+      - All integration test files (B2B, billing) working correctly
+      
+      Test Summary:
+      - Total Validation Points: 4
+      - Passed: 4
+      - Failed: 0  
+      - Success Rate: 100%
+      
+      Conclusion:
+      Backend lint CI fix validation SUCCESSFUL. All Ruff errors cleaned, backend tests passing, 
+      no auth/session/tenant/mobile regressions detected, and changes are scope-compliant safe 
+      fixes only. The lint cleanup iteration is complete and ready for deployment.
+
   - agent: "testing"
     message: |
       ✅ BACKEND SMOKE TEST COMPLETED - ALL TESTS PASSED

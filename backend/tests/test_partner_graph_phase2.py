@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict
+from typing import Dict
 from uuid import uuid4
 
 import jwt
@@ -10,7 +10,6 @@ from httpx import AsyncClient
 
 from app.auth import _jwt_secret
 from app.db import get_db
-from server import app
 
 
 async def _seed_org_tenant_user(db, org_name: str, email: str) -> Dict[str, str]:

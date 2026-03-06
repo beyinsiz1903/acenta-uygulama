@@ -5,7 +5,6 @@ from datetime import date, timedelta
 
 from app.db import get_db
 from app.services.pricing_rules import PricingRulesService
-from app.utils import now_utc
 
 
 @pytest.mark.anyio

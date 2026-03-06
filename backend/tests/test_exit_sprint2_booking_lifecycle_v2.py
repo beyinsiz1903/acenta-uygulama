@@ -1,18 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
 import pytest
-from fastapi import HTTPException, status
+from fastapi import status
 from httpx import ASGITransport, AsyncClient
 
 from app.domain.booking_state_machine import validate_transition, BookingStateTransitionError
-from app.repositories.booking_repository import BookingRepository
-from app.services.booking_service import (
-    create_booking_draft,
-    transition_to_booked,
-    transition_to_cancel_requested,
-)
 from app.utils import now_utc
 from app.auth import _jwt_secret
 from server import app

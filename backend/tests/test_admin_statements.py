@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pytest
 
 from app.auth import create_access_token
-from app.db import get_db
 from app.utils import now_utc
 
 

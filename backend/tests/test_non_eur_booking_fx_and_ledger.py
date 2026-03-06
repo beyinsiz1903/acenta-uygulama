@@ -5,7 +5,6 @@ import math
 import pytest
 
 from app.db import get_db
-from app.utils import now_utc
 
 
 TOLERANCE_ABS = 0.02

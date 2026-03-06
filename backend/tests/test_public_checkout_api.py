@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
 import pytest
 
-from app.db import get_db
 from app.utils import now_utc
 
 
@@ -861,7 +860,6 @@ async def test_public_checkout_idempotency_key_conflict_code_and_correlation(asy
     }
 
     # Stub stripe adapter to avoid real Stripe calls
-    from app.services import stripe_adapter
 
     captured = {}
 

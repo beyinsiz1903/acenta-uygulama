@@ -5,7 +5,6 @@ from datetime import date, timedelta
 import pytest
 
 from app.db import get_db
-from app.utils import now_utc
 
 
 @pytest.mark.anyio
@@ -41,13 +40,13 @@ async def test_quote_pricing_uses_rules_for_agency1_vs_other(async_client, admin
     # Setup pricing rules for the test
     # Rule 1: Default hotel rule (10% markup, priority 100)
     # Rule 2: Agency1-specific rule (12% markup, priority 200)
-    
+
     # Clean up ALL existing test rules first
     await db.pricing_rules.delete_many({
         "organization_id": org_id,
         "notes": {"$regex": "test_"}
     })
-    
+
     # Create default hotel rule (10% markup) - highest priority for non-agency-specific
     default_rule = {
         "organization_id": org_id,
@@ -59,7 +58,7 @@ async def test_quote_pricing_uses_rules_for_agency1_vs_other(async_client, admin
         "notes": "test_p12_default_rule"
     }
     await db.pricing_rules.insert_one(default_rule)
-    
+
     # Create agency1-specific rule (12% markup) - higher priority
     agency1_rule = {
         "organization_id": org_id,
@@ -74,14 +73,13 @@ async def test_quote_pricing_uses_rules_for_agency1_vs_other(async_client, admin
 
     # Use ObjectId-based product instead of string-based demo_product_1
     # Find a product with ObjectId format that has inventory
-    from bson import ObjectId
-    
+
     # Look for ObjectId-based products with inventory
     inv = await db.inventory.find_one({
         "organization_id": org_id,
         "product_id": {"$type": "objectId"}  # Only ObjectId products
     })
-    
+
     if not inv:
         # Fallback: create inventory for an existing ObjectId product
         product = await db.products.find_one({
@@ -89,11 +87,11 @@ async def test_quote_pricing_uses_rules_for_agency1_vs_other(async_client, admin
             "_id": {"$type": "objectId"}
         })
         assert product is not None, "No ObjectId product found"
-        
+
         product_id = str(product["_id"])
         check_in = date.today() + timedelta(days=1)
         check_out = check_in + timedelta(days=1)
-        
+
         # Create inventory for this product
         await db.inventory.insert_one({
             "organization_id": org_id,
@@ -103,7 +101,7 @@ async def test_quote_pricing_uses_rules_for_agency1_vs_other(async_client, admin
             "price": 100.0,
             "restrictions": {"closed": False}
         })
-        
+
         # Find or create rate plan
         rate_plan = await db.rate_plans.find_one({"organization_id": org_id, "product_id": product["_id"]})
         if not rate_plan:

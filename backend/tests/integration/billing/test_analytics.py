@@ -6,8 +6,6 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from httpx import AsyncClient
 
-from app.services.feature_service import feature_service
-from app.services.usage_service import track_usage
 
 
 @pytest.mark.anyio

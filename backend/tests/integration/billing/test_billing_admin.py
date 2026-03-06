@@ -12,7 +12,6 @@ Tests:
 """
 from __future__ import annotations
 
-import os
 import pytest
 from httpx import AsyncClient
 
@@ -199,7 +198,7 @@ async def test_webhook_invalid_signature_returns_400(
     monkeypatch,
 ) -> None:
     """POST /api/webhook/stripe-billing with invalid signature returns 400.
-    
+
     Note: STRIPE_WEBHOOK_SECRET must be set for signature verification.
     """
     # Ensure webhook secret is set for signature verification

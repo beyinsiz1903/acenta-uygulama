@@ -1,17 +1,14 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from decimal import Decimal
 from typing import Any
 
-import jwt
 import pytest
 from bson import ObjectId
 from bson.decimal128 import Decimal128
 from fastapi import status
 from httpx import AsyncClient
 
-from app.auth import _jwt_secret
 from app.utils import now_utc
 from app.services.pricing_audit_service import emit_pricing_audit_if_needed
 

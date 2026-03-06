@@ -11,7 +11,6 @@ from server import app
 from app.auth import _jwt_secret, get_current_user
 from app.config import MissingRequiredEnv
 from app.context.org_context import get_current_org
-from app.db import get_db
 from app.security.jwt_config import require_jwt_secret
 
 

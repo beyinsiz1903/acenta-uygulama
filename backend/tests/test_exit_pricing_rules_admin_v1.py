@@ -10,12 +10,11 @@ These tests are intentionally high-level and focus on contract/behavior.
 """
 
 from datetime import timedelta
-from decimal import Decimal
 from typing import Any, Dict, List
 
 import jwt
 import pytest
-from bson import Decimal128, ObjectId
+from bson import Decimal128
 from fastapi import status
 from httpx import AsyncClient
 

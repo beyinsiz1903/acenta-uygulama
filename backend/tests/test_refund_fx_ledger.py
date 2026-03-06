@@ -19,7 +19,7 @@ def approx_equal(a: float, b: float, *, abs_tol: float = TOLERANCE_ABS, rel_tol:
 async def _create_simple_booking(client, token: str) -> str:
     """Use existing P0.2 flow to create a booking and return booking_id."""
     import uuid
-    
+
     headers = {"Authorization": f"Bearer {token}"}
 
     # 1) Search hotels for Istanbul with deterministic dates
@@ -100,16 +100,16 @@ async def test_refund_creates_reversal_and_net_eur_zero(async_client, admin_toke
 
     # 2) Check existing refunds to understand the structure
     headers_admin = {"Authorization": f"Bearer {admin_token}"}
-    
+
     res = await client.get("/api/ops/finance/refunds", headers=headers_admin)
     print(f"DEBUG: GET /api/ops/finance/refunds status: {res.status_code}")
     if res.status_code == 200:
         refunds = res.json()
         print(f"DEBUG: Existing refunds: {refunds}")
-    
+
     # Since there's no POST endpoint for creating refunds, let's check if there are any existing refunds
     # and test the ledger balance logic with the booking we created
-    
+
     # Skip the refund creation and approval for now, and just test the ledger balance
     # Get the booking financials to find the organization_id
     res = await client.get(f"/api/ops/finance/bookings/{booking_id}/financials", headers=headers_admin)
@@ -127,7 +127,7 @@ async def test_refund_creates_reversal_and_net_eur_zero(async_client, admin_toke
     )
     postings = await postings_cur.to_list(length=1000)
     print(f"DEBUG: Found {len(postings)} ledger postings for booking {booking_id}")
-    
+
     if postings:
         # Tum postings EUR olmali
         for p in postings:
@@ -135,7 +135,7 @@ async def test_refund_creates_reversal_and_net_eur_zero(async_client, admin_toke
 
         total_debit = sum(float(p.get("debit", 0.0)) for p in postings)
         total_credit = sum(float(p.get("credit", 0.0)) for p in postings)
-        
+
         print(f"DEBUG: Total debit: {total_debit}, Total credit: {total_credit}")
 
         assert approx_equal(total_debit, total_credit), "Ledger debits and credits must balance in EUR"

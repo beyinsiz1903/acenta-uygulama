@@ -3,7 +3,6 @@ from __future__ import annotations
 import pytest
 
 from app.services.parasut_push_log import ParasutPushLogService
-from app.utils import now_utc
 
 
 @pytest.mark.anyio

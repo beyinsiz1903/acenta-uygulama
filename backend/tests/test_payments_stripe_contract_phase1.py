@@ -6,7 +6,6 @@ from typing import Dict, Any
 import pytest
 
 from app.services.booking_payments import BookingPaymentsOrchestrator
-from app.db import get_db
 
 
 @pytest.mark.anyio

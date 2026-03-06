@@ -8,7 +8,6 @@ from fastapi import HTTPException
 from app.domain.booking_state_machine import BookingStateTransitionError, validate_transition
 from app.repositories.booking_repository import BookingRepository
 from app.services.booking_service import transition_to_booked
-from app.utils import now_utc
 
 
 

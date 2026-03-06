@@ -52,7 +52,6 @@ async def test_supplier_partial_results_returns_200_with_warnings(test_db: Any, 
     tenant_key = "partial-tenant-1"
 
     # Monkeypatch paximum search to always fail with AppError-like behaviour
-    from app.services.supplier_search_service import search_paximum_offers
     from app.errors import AppError
 
     async def _failing_paximum(*args, **kwargs):  # type: ignore[no-untyped-def]
@@ -112,7 +111,6 @@ async def test_supplier_partial_results_audit_written(test_db: Any, async_client
     )
     tenant_key = "partial-tenant-2"
 
-    from app.services.supplier_search_service import search_paximum_offers
     from app.errors import AppError
 
     async def _failing_paximum(*args, **kwargs):  # type: ignore[no-untyped-def]
@@ -173,8 +171,6 @@ async def test_supplier_all_failed_returns_503(test_db: Any, async_client: Async
     )
     tenant_key = "partial-tenant-3"
 
-    from app.services.supplier_search_service import search_paximum_offers
-    from app.services.suppliers.mock_supplier_service import search_mock_offers
     from app.errors import AppError
 
     async def _failing_paximum(*args, **kwargs):  # type: ignore[no-untyped-def]
@@ -231,8 +227,6 @@ async def test_supplier_partial_results_offers_empty_but_successful_supplier(tes
     )
     tenant_key = "partial-tenant-4"
 
-    from app.services.suppliers.mock_supplier_service import search_mock_offers
-    from app.services.supplier_search_service import search_paximum_offers
     from app.errors import AppError
 
     async def _empty_mock(*args, **kwargs):  # type: ignore[no-untyped-def]
@@ -289,8 +283,6 @@ async def test_supplier_warnings_ordering_deterministic(test_db: Any, async_clie
     )
     tenant_key = "partial-tenant-5"
 
-    from app.services.supplier_search_service import search_paximum_offers
-    from app.services.suppliers.mock_supplier_service import search_mock_offers
     from app.errors import AppError
 
     async def _failing_paximum(*args, **kwargs):  # type: ignore[no-untyped-def]

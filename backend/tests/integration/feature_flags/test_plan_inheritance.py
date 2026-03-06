@@ -4,7 +4,6 @@ from __future__ import annotations
 import pytest
 from httpx import AsyncClient
 
-from app.constants.plan_matrix import PLAN_MATRIX
 
 
 @pytest.mark.anyio

@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any, Dict
 
 import pytest
-from fastapi import status
 
 from app.repositories.booking_repository import BookingRepository
 from app.services.booking_service import (
@@ -12,7 +11,6 @@ from app.services.booking_service import (
     transition_to_cancel_requested,
     transition_to_quoted,
 )
-from app.utils import now_utc
 
 
 class _FakeRequest:

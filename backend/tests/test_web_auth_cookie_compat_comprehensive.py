@@ -35,14 +35,14 @@ async def test_web_login_sets_auth_cookies_and_cookie_transport(async_client):
 
     assert response.status_code == 200, response.text
     data = response.json()
-    
+
     # Verify auth_transport is cookie_compat
     assert data.get("auth_transport") == "cookie_compat"
-    
+
     # Verify cookies are set
     assert response.cookies.get(AUTH_ACCESS_COOKIE_NAME), "Access cookie should be set"
     assert response.cookies.get(AUTH_REFRESH_COOKIE_NAME), "Refresh cookie should be set"
-    
+
     # Verify response still contains legacy-compatible fields
     assert "access_token" in data
     assert "refresh_token" in data
@@ -81,9 +81,9 @@ async def test_auth_me_sanitizes_sensitive_fields(async_client):
 
     me_response = await async_client.get("/api/auth/me", headers=WEB_HEADERS)
     assert me_response.status_code == 200, me_response.text
-    
+
     data = me_response.json()
-    
+
     # These sensitive fields should NOT be present
     sensitive_fields = ["password_hash", "hashed_password", "totp_secret", "mfa_secret", "recovery_codes", "reset_token", "reset_token_hash"]
     for field in sensitive_fields:
@@ -111,12 +111,12 @@ async def test_web_refresh_uses_cookie_when_refresh_body_is_empty(async_client):
 
     assert refresh_response.status_code == 200, refresh_response.text
     data = refresh_response.json()
-    
+
     # Should return cookie_compat transport and new tokens
     assert data.get("auth_transport") == "cookie_compat"
     assert "access_token" in data
     assert "refresh_token" in data
-    
+
     # Refresh token should rotate (new value)
     new_refresh_cookie = refresh_response.cookies.get(AUTH_REFRESH_COOKIE_NAME)
     assert new_refresh_cookie, "New refresh cookie should be set"
@@ -178,10 +178,10 @@ async def test_legacy_login_returns_bearer_transport(async_client):
 
     assert response.status_code == 200, response.text
     data = response.json()
-    
+
     # Should return bearer transport
     assert data.get("auth_transport") == "bearer"
-    
+
     # Should still have tokens
     assert "access_token" in data
     assert "refresh_token" in data

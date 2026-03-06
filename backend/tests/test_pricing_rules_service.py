@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
 from app.db import get_db
 from app.services.pricing_rules import PricingRulesService

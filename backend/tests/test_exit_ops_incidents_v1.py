@@ -121,7 +121,6 @@ async def test_ops_incident_created_for_risk_review(test_db: Any, async_client: 
     res = await db.bookings.insert_one(booking_doc)
     booking_id = str(res.inserted_id)
 
-    from app.services.risk.engine import evaluate_booking_risk
 
     async def _fake_evaluate(*args, **kwargs):  # type: ignore[no-untyped-def]
         class Dummy:

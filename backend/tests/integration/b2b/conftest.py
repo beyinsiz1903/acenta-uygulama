@@ -7,7 +7,6 @@ import pytest
 from bson import ObjectId
 from httpx import AsyncClient
 
-from app.db import get_db
 from app.repositories.membership_repository import MembershipRepository
 from app.security.deps_b2b import ALLOWED_B2B_ROLES
 
@@ -158,7 +157,7 @@ async def seller_token(seller_user, org) -> str:
 @pytest.fixture
 async def provider_client(app_with_overrides, provider_token: str, provider_tenant, provider_membership) -> AsyncGenerator[AsyncClient, None]:
   from httpx import ASGITransport
-  
+
   headers = {
     "Authorization": f"Bearer {provider_token}",
     "X-Tenant-Id": str(provider_tenant["_id"]),
@@ -171,7 +170,7 @@ async def provider_client(app_with_overrides, provider_token: str, provider_tena
 @pytest.fixture
 async def seller_client(app_with_overrides, seller_token: str, seller_tenant, seller_membership) -> AsyncGenerator[AsyncClient, None]:
   from httpx import ASGITransport
-  
+
   headers = {
     "Authorization": f"Bearer {seller_token}",
     "X-Tenant-Id": str(seller_tenant["_id"]),
@@ -358,7 +357,7 @@ async def partner_relationship_active(test_db, org, provider_tenant, seller_tena
 
 async def clear_tenant_features(test_db, tenant_id: str) -> None:
   """Helper to clear tenant_features for a given tenant_id.
-  
+
   This removes any existing tenant_features document for the tenant,
   effectively disabling all features for that tenant.
   """
@@ -367,7 +366,7 @@ async def clear_tenant_features(test_db, tenant_id: str) -> None:
 
 async def set_tenant_features_without_b2b(test_db, tenant_id: str) -> None:
   """Helper to set tenant_features without the 'b2b' feature.
-  
+
   This creates a tenant_features document with some other features
   but explicitly excludes 'b2b' to test feature flag enforcement.
   """
@@ -380,15 +379,15 @@ async def set_tenant_features_without_b2b(test_db, tenant_id: str) -> None:
     "updated_at": now,
   }
   await test_db.tenant_features.replace_one(
-    {"tenant_id": tenant_id}, 
-    doc, 
+    {"tenant_id": tenant_id},
+    doc,
     upsert=True
   )
 
 
 async def enable_b2b_feature_for_tenant(test_db, tenant_id: str) -> None:
   """Helper to enable the 'b2b' feature for a tenant.
-  
+
   This creates or updates a tenant_features document to include the 'b2b' feature.
   """
   now = datetime.now(timezone.utc)
@@ -400,8 +399,8 @@ async def enable_b2b_feature_for_tenant(test_db, tenant_id: str) -> None:
     "updated_at": now,
   }
   await test_db.tenant_features.replace_one(
-    {"tenant_id": tenant_id}, 
-    doc, 
+    {"tenant_id": tenant_id},
+    doc,
     upsert=True
   )
 

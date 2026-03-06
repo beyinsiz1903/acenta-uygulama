@@ -4,7 +4,6 @@ from __future__ import annotations
 import pytest
 from httpx import AsyncClient
 
-from tests.integration.b2b.conftest import enable_b2b_feature_for_tenant
 
 
 @pytest.mark.anyio

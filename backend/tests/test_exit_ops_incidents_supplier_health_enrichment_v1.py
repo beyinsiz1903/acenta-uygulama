@@ -440,7 +440,7 @@ async def test_ops_incidents_enrichment_rbac_denied(test_db: Any, async_client: 
             "type": "supplier_partial_failure",
             "severity": "medium",
             "status": "open",
-            "summary": "Supplier incident", 
+            "summary": "Supplier incident",
             "source_ref": {"session_id": "sess6"},
             "meta": {"failed_suppliers": [{"supplier_code": "mock"}]},
             "created_at": now,

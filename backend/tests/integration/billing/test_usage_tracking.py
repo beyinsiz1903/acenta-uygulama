@@ -4,7 +4,7 @@ from __future__ import annotations
 import pytest
 from httpx import AsyncClient
 
-from app.services.usage_service import track_usage, check_quota, get_usage_summary
+from app.services.usage_service import track_usage, check_quota
 from app.services.feature_service import feature_service
 
 

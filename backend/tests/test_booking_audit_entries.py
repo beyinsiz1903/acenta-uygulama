@@ -4,7 +4,6 @@ from typing import Any, Dict
 
 import pytest
 
-from app.repositories.booking_repository import BookingRepository
 from app.services.booking_service import (
     create_booking_draft,
     transition_to_booked,

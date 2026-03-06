@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict
+from datetime import timedelta
+from typing import Any
 
-import jwt
 import pytest
 from fastapi import status
 from httpx import AsyncClient
 
-from app.auth import _jwt_secret
 from app.utils import now_utc
 
 

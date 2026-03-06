@@ -6,7 +6,7 @@ from httpx import AsyncClient
 
 from app.constants.features import FEATURE_REPORTS, FEATURE_CRM
 from app.constants.plan_matrix import PLAN_MATRIX
-from tests.integration.feature_flags.conftest import clear_features, enable_feature
+from tests.integration.feature_flags.conftest import enable_feature
 
 
 @pytest.mark.anyio

@@ -106,7 +106,7 @@ async def test_booking_financials_and_fx_snapshot_consistency(async_client, admi
     res = await client.get(f"/api/ops/finance/bookings/{booking_id}/financials", headers=headers_admin)
     assert res.status_code == 200, f"Booking financials failed: {res.status_code} - {res.text}"
     fin = res.json()
-    
+
     print(f"DEBUG: Booking financials response: {fin}")
 
     sell_total = float(fin.get("sell_total", 0.0))

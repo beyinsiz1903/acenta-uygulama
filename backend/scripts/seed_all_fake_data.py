@@ -12,7 +12,6 @@ import random
 import os
 import sys
 from datetime import datetime, timedelta, timezone
-from bson import ObjectId
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -377,10 +376,10 @@ async def seed_all():
             status = statuses[i % len(statuses)]
             res_id = _uid()
             pnr = f"PNR-{random.randint(100000, 999999)}"
-            
+
             hotel_id = random.choice(hotel_ids) if hotel_ids else None
             agency_id = random.choice(agency_ids) if agency_ids else None
-            
+
             reservations.append({
                 "_id": res_id,
                 "organization_id": org_id,
@@ -1230,7 +1229,7 @@ async def seed_all():
         print(f"  ✓ {len(activities)} CRM aktivitesi eklendi")
 
     # ═══════════════════════════════════════════════════════════════════
-    # 35. B2B AGENCIES SUMMARY DATA  
+    # 35. B2B AGENCIES SUMMARY DATA
     # ═══════════════════════════════════════════════════════════════════
     # Ensure all agencies have proper data for B2B dashboard
     for aid in agency_ids:

@@ -5,7 +5,6 @@ from datetime import datetime
 import pytest
 
 from app.auth import create_access_token
-from app.db import get_db
 
 
 @pytest.mark.anyio

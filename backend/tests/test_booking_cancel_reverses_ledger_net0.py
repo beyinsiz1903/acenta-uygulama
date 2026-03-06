@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
 
 import pytest
 from bson import ObjectId
 
 from app.db import get_db
-from app.utils import now_utc
 
 
 @pytest.mark.anyio
@@ -34,7 +32,7 @@ async def test_booking_cancel_creates_net_zero_ledger_and_full_refund(async_clie
     user_data = user_resp.json()
     agency_id = user_data.get("agency_id")
     org_id = user_data.get("organization_id")
-    
+
     if not agency_id:
         pytest.skip("Agency user does not have agency_id; cannot test booking cancellation.")
 

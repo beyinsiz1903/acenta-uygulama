@@ -11,7 +11,9 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+from tests.preview_auth_helper import get_preview_auth_context, resolve_preview_base_url
+
+BASE_URL = resolve_preview_base_url(os.environ.get('REACT_APP_BACKEND_URL', ''))
 
 # Test credentials
 ADMIN_EMAIL = "admin@acenta.test"
@@ -24,14 +26,12 @@ TEST_AGENCY_ID = "f5f7a2a3-5de1-4d65-b700-ec4f9807d83a"
 @pytest.fixture(scope="module")
 def admin_token():
     """Login as super_admin and get token"""
-    resp = requests.post(f"{BASE_URL}/api/auth/login", json={
-        "email": ADMIN_EMAIL,
-        "password": ADMIN_PASSWORD
-    })
-    if resp.status_code != 200:
-        pytest.skip(f"Admin login failed: {resp.text}")
-    data = resp.json()
-    token = data.get("access_token") or data.get("token")
+    try:
+        auth = get_preview_auth_context(BASE_URL, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+    except Exception as exc:
+        pytest.skip(f"Admin login failed: {exc}")
+    data = auth.login_response
+    token = auth.access_token or data.get("token")
     assert token, "No token returned from login"
     # Verify super_admin role
     roles = data.get("user", {}).get("roles", [])
@@ -42,14 +42,12 @@ def admin_token():
 @pytest.fixture(scope="module")
 def agent_token():
     """Login as agency_admin and get token"""
-    resp = requests.post(f"{BASE_URL}/api/auth/login", json={
-        "email": AGENT_EMAIL,
-        "password": AGENT_PASSWORD
-    })
-    if resp.status_code != 200:
-        pytest.skip(f"Agent login failed: {resp.text}")
-    data = resp.json()
-    token = data.get("access_token") or data.get("token")
+    try:
+        auth = get_preview_auth_context(BASE_URL, email=AGENT_EMAIL, password=AGENT_PASSWORD)
+    except Exception as exc:
+        pytest.skip(f"Agent login failed: {exc}")
+    data = auth.login_response
+    token = auth.access_token or data.get("token")
     assert token, "No token returned from login"
     # Verify agency_admin role
     roles = data.get("user", {}).get("roles", [])

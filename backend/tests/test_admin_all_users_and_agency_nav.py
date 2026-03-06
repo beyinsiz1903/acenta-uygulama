@@ -13,7 +13,9 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
+from tests.preview_auth_helper import get_preview_auth_context, resolve_preview_base_url
+
+BASE_URL = resolve_preview_base_url(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Test credentials
 ADMIN_EMAIL = "admin@acenta.test"
@@ -25,29 +27,21 @@ AGENCY_PASSWORD = "agent123"
 @pytest.fixture(scope="module")
 def admin_token():
     """Get admin auth token"""
-    resp = requests.post(
-        f"{BASE_URL}/api/auth/login",
-        json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
-    )
-    if resp.status_code == 200:
-        return resp.json().get("access_token")
-    elif resp.status_code == 429:
-        pytest.skip("Rate limited on admin login")
-    pytest.skip(f"Admin login failed: {resp.status_code} - {resp.text}")
+    try:
+        auth = get_preview_auth_context(BASE_URL, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+    except Exception as exc:
+        pytest.skip(f"Admin login failed: {exc}")
+    return auth.access_token
 
 
 @pytest.fixture(scope="module")
 def agency_token():
     """Get agency user auth token"""
-    resp = requests.post(
-        f"{BASE_URL}/api/auth/login",
-        json={"email": AGENCY_EMAIL, "password": AGENCY_PASSWORD}
-    )
-    if resp.status_code == 200:
-        return resp.json().get("access_token")
-    elif resp.status_code == 429:
-        pytest.skip("Rate limited on agency login")
-    pytest.skip(f"Agency login failed: {resp.status_code} - {resp.text}")
+    try:
+        auth = get_preview_auth_context(BASE_URL, email=AGENCY_EMAIL, password=AGENCY_PASSWORD)
+    except Exception as exc:
+        pytest.skip(f"Agency login failed: {exc}")
+    return auth.access_token
 
 
 class TestAdminAllUsersEndpoint:

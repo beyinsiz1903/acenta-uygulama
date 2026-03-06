@@ -15,7 +15,9 @@ import os
 import pytest
 import requests
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
+from tests.preview_auth_helper import PreviewAuthSession, resolve_preview_base_url
+
+BASE_URL = resolve_preview_base_url(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Test credentials
 ADMIN_EMAIL = "admin@acenta.test"
@@ -27,47 +29,37 @@ AGENCY_PASSWORD = "agent123"
 @pytest.fixture(scope="module")
 def admin_token():
     """Get admin auth token."""
-    response = requests.post(
-        f"{BASE_URL}/api/auth/login",
-        json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
-    )
-    if response.status_code == 200:
-        return response.json().get("access_token")
-    pytest.skip(f"Admin login failed: {response.status_code} - {response.text}")
+    client = PreviewAuthSession(BASE_URL, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+    return client.auth_context().access_token
 
 
 @pytest.fixture(scope="module")
 def agency_token():
     """Get agency auth token."""
-    response = requests.post(
-        f"{BASE_URL}/api/auth/login",
-        json={"email": AGENCY_EMAIL, "password": AGENCY_PASSWORD},
-    )
-    if response.status_code == 200:
-        return response.json().get("access_token")
-    pytest.skip(f"Agency login failed: {response.status_code} - {response.text}")
+    client = PreviewAuthSession(BASE_URL, email=AGENCY_EMAIL, password=AGENCY_PASSWORD)
+    return client.auth_context().access_token
 
 
 @pytest.fixture
 def admin_client(admin_token):
     """Session with admin auth header."""
-    session = requests.Session()
-    session.headers.update({
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {admin_token}",
-    })
-    return session
+    return PreviewAuthSession(
+        BASE_URL,
+        email=ADMIN_EMAIL,
+        password=ADMIN_PASSWORD,
+        default_headers={"Content-Type": "application/json"},
+    )
 
 
 @pytest.fixture
 def agency_client(agency_token):
     """Session with agency auth header."""
-    session = requests.Session()
-    session.headers.update({
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {agency_token}",
-    })
-    return session
+    return PreviewAuthSession(
+        BASE_URL,
+        email=AGENCY_EMAIL,
+        password=AGENCY_PASSWORD,
+        default_headers={"Content-Type": "application/json"},
+    )
 
 
 @pytest.fixture

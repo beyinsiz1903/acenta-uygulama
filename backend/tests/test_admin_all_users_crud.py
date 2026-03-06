@@ -19,7 +19,9 @@ import os
 import time
 import uuid
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
+from tests.preview_auth_helper import get_preview_auth_context, resolve_preview_base_url
+
+BASE_URL = resolve_preview_base_url(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Test credentials
 ADMIN_EMAIL = "admin@acenta.test"
@@ -35,41 +37,22 @@ DEMO_ACENTE_B_ID = "301121c7-30c1-4048-b0d4-9b51c38915ac"
 
 @pytest.fixture(scope="module")
 def admin_token():
-    """Get admin auth token with retry on rate limit"""
-    max_retries = 3
-    for attempt in range(max_retries):
-        resp = requests.post(
-            f"{BASE_URL}/api/auth/login",
-            json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
-            timeout=10
-        )
-        if resp.status_code == 200:
-            return resp.json().get("access_token")
-        elif resp.status_code == 429:
-            retry_after = resp.json().get("error", {}).get("details", {}).get("retry_after_seconds", 30)
-            if attempt < max_retries - 1:
-                print(f"Rate limited, waiting {min(retry_after, 60)}s...")
-                time.sleep(min(retry_after, 60))
-            else:
-                pytest.skip("Rate limited on admin login - too many login attempts")
-        else:
-            pytest.skip(f"Admin login failed: {resp.status_code} - {resp.text}")
-    return None
+    """Get admin auth token via shared preview auth cache helper."""
+    try:
+        auth = get_preview_auth_context(BASE_URL, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+    except Exception as exc:
+        pytest.skip(f"Admin login failed: {exc}")
+    return auth.access_token
 
 
 @pytest.fixture(scope="module")
 def agency_token():
-    """Get agency user auth token"""
-    resp = requests.post(
-        f"{BASE_URL}/api/auth/login",
-        json={"email": AGENCY_EMAIL, "password": AGENCY_PASSWORD},
-        timeout=10
-    )
-    if resp.status_code == 200:
-        return resp.json().get("access_token")
-    elif resp.status_code == 429:
-        pytest.skip("Rate limited on agency login")
-    pytest.skip(f"Agency login failed: {resp.status_code}")
+    """Get agency user auth token via shared preview auth cache helper."""
+    try:
+        auth = get_preview_auth_context(BASE_URL, email=AGENCY_EMAIL, password=AGENCY_PASSWORD)
+    except Exception as exc:
+        pytest.skip(f"Agency login failed: {exc}")
+    return auth.access_token
 
 
 class TestGetAllUsers:

@@ -37,6 +37,20 @@ from app.utils import now_utc
 MONGO_URL = _mongo_url()
 
 
+def _is_external_preview_http_test() -> bool:
+    current_test = os.environ.get("PYTEST_CURRENT_TEST", "")
+    return any(
+        name in current_test
+        for name in (
+            "test_mobile_bff_preview_api.py",
+            "test_admin_all_users_crud.py",
+            "test_agency_modules_and_branding.py",
+            "test_admin_all_users_and_agency_nav.py",
+            "test_agency_sheets_api.py",
+        )
+    )
+
+
 @pytest.fixture(autouse=True, scope="session")
 def stripe_webhook_secret_env() -> None:
     """Ensure STRIPE_WEBHOOK_SECRET is set in test environment.
@@ -173,6 +187,10 @@ async def ensure_finance_indexes_for_test_db(test_db, anyio_backend):
     transient setup issue and retry a few times to keep gates deterministic.
     """
 
+    if _is_external_preview_http_test():
+        yield
+        return
+
     from app.indexes.finance_indexes import ensure_finance_indexes
     from pymongo.errors import AutoReconnect
     import asyncio
@@ -242,6 +260,10 @@ async def seed_default_org_and_users(test_db):
     (default organization + admin + demo agencies) but runs against the
     per-test database instead of the shared dev DB.
     """
+    if _is_external_preview_http_test():
+        yield
+        return
+
     from app.seed import DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD
     from app.auth import hash_password
     from app.utils import now_utc
@@ -438,6 +460,9 @@ async def async_client(app_with_overrides) -> AsyncGenerator[httpx.AsyncClient, 
 async def admin_token(async_client: httpx.AsyncClient) -> str:
     """Login as admin and return access token."""
 
+    if _is_external_preview_http_test():
+        return "preview-skip-admin-token"
+
     response = await async_client.post(
         "/api/auth/login",
         json={"email": "admin@acenta.test", "password": "admin123"},
@@ -453,6 +478,10 @@ async def minimal_search_seed(test_db, async_client: httpx.AsyncClient, agency_t
 
     Ensures P0.2 /api/b2b/hotels/search returns at least one item for FX tests.
     """
+
+    if _is_external_preview_http_test():
+        yield
+        return
 
     # Only run the HTTP validation for FX / cancel tests to avoid slowing full suite
     import os
@@ -593,6 +622,10 @@ async def minimal_finance_seed(test_db, async_client: httpx.AsyncClient, agency_
     This creates agency and platform finance accounts, a credit profile and
     a zero balance for the agency account in the isolated test_db.
     """
+
+    if _is_external_preview_http_test():
+        yield
+        return
 
     import os
 
@@ -955,6 +988,9 @@ async def agency_token(async_client: httpx.AsyncClient, seed_default_org_and_use
     Depends on seed_default_org_and_users to ensure the default organization
     and demo agency user exist inside the isolated test_db before login.
     """
+
+    if _is_external_preview_http_test():
+        return "preview-skip-agency-token"
 
     response = await async_client.post(
         "/api/auth/login",

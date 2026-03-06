@@ -19,7 +19,11 @@ import os
 import pytest
 import requests
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://travel-saas-refactor.preview.emergentagent.com").rstrip("/")
+from tests.preview_auth_helper import build_preview_auth_headers, get_preview_auth_context, resolve_preview_base_url
+
+BASE_URL = resolve_preview_base_url(
+    os.environ.get("REACT_APP_BACKEND_URL", "https://travel-saas-refactor.preview.emergentagent.com")
+)
 
 # Test credentials
 ADMIN_CREDS = {"email": "admin@acenta.test", "password": "admin123"}
@@ -28,23 +32,22 @@ AGENT_CREDS = {"email": "agent@acenta.test", "password": "agent123"}
 
 @pytest.fixture(scope="module")
 def preview_admin_auth():
-    """Login once per module and reuse the same preview auth context."""
-    response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
-    assert response.status_code == 200, f"Admin login failed: {response.text}"
-    data = response.json()
-    token = data.get("access_token")
-    assert token, f"No access_token in response: {data}"
-
+    """Login once per module and reuse cached preview auth context."""
+    auth = get_preview_auth_context(
+        BASE_URL,
+        email=ADMIN_CREDS["email"],
+        password=ADMIN_CREDS["password"],
+    )
     me_response = requests.get(
         f"{BASE_URL}/api/auth/me",
-        headers={"Authorization": f"Bearer {token}"},
+        headers=build_preview_auth_headers(auth),
     )
     me_data = me_response.json() if me_response.status_code == 200 else {}
-
     return {
-        "token": token,
-        "login_response": data,
-        "tenant_id": me_data.get("tenant_id"),
+        "token": auth.access_token,
+        "login_response": auth.login_response,
+        "tenant_id": me_data.get("tenant_id") or auth.tenant_id,
+        "auth_source": auth.auth_source,
     }
 
 

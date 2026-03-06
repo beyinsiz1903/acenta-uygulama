@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { api, getToken } from "../lib/api";
+import { api, getUser } from "../lib/api";
 import {
   Bot, X, Send, Sparkles, MessageCircle, RefreshCw,
   ChevronDown, Loader2, Zap, Calendar, Users, TrendingUp,
@@ -144,7 +144,7 @@ export default function AiAssistant() {
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  const hasToken = !!getToken();
+  const hasAuthenticatedUser = Boolean(getUser());
 
   // Auto scroll to bottom
   useEffect(() => {
@@ -153,7 +153,7 @@ export default function AiAssistant() {
 
   // Load chat history on session change
   useEffect(() => {
-    if (!open || !hasToken) return;
+    if (!open || !hasAuthenticatedUser) return;
     (async () => {
       try {
         const res = await api.get(`/ai-assistant/chat-history/${sessionId}`);
@@ -164,11 +164,11 @@ export default function AiAssistant() {
         // ignore
       }
     })();
-  }, [sessionId, open, hasToken]);
+  }, [sessionId, open, hasAuthenticatedUser]);
 
   // Load briefing when panel opens
   const loadBriefing = useCallback(async () => {
-    if (!hasToken) return;
+    if (!hasAuthenticatedUser) return;
     setBriefingLoading(true);
     try {
       const res = await api.post("/ai-assistant/briefing");
@@ -179,7 +179,7 @@ export default function AiAssistant() {
     } finally {
       setBriefingLoading(false);
     }
-  }, [hasToken]);
+  }, [hasAuthenticatedUser]);
 
   useEffect(() => {
     if (open && tab === "briefing" && !briefingText) {
@@ -224,7 +224,7 @@ export default function AiAssistant() {
   };
 
   // Don't render if not logged in
-  if (!hasToken) return null;
+  if (!hasAuthenticatedUser) return null;
 
   return (
     <>

@@ -2,18 +2,12 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { ShieldAlert } from "lucide-react";
 import { Button } from "../components/ui/button";
-import { clearToken } from "../lib/api";
+import { clearToken, getUser } from "../lib/api";
 
 export default function UnauthorizedPage() {
   const navigate = useNavigate();
 
-  const user = React.useMemo(() => {
-    try {
-      return JSON.parse(localStorage.getItem("acenta_user"));
-    } catch {
-      return null;
-    }
-  }, []);
+  const user = React.useMemo(() => getUser(), []);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">

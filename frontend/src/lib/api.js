@@ -2,13 +2,8 @@ import axios from "axios";
 import { getActiveTenantId } from "./tenantContext";
 import {
   clearToken,
-  getRefreshToken,
-  getToken,
   getUser,
-  hasStoredSessionCandidate,
   persistRefreshSession,
-  setRefreshToken,
-  setToken,
   setUser,
 } from "./authSession";
 
@@ -19,7 +14,7 @@ const backendEnv =
     || process.env.REACT_APP_BACKEND_URL
     || "";
 
-export { clearToken, getRefreshToken, getToken, getUser, setRefreshToken, setToken, setUser };
+export { clearToken, getUser, setUser };
 
 // If backendEnv is empty, axios will call relative to current origin.
 // Ayrıca: Eğer REACT_APP_BACKEND_URL localhost'u gösteriyor ama uygulama
@@ -74,16 +69,11 @@ api.interceptors.request.use((config) => {
     url.includes("/auth/refresh");
 
   if (!isAuthRoute) {
-    const token = getToken();
-
-    // 1) Auth header
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    } else if (config.headers.Authorization) {
+    if (config.headers.Authorization) {
       delete config.headers.Authorization;
     }
 
-    // 2) Tenant header: first try runtime-selected tenant from localStorage,
+    // 1) Tenant header: first try runtime-selected tenant from localStorage,
     // then fall back to a default tenant id provided via env (build-time).
     let tenantId = getActiveTenantId();
 
@@ -173,8 +163,8 @@ export function parseErrorDetails(err) {
 let isRefreshing = false;
 let refreshSubscribers = [];
 
-function onRefreshed(token) {
-  refreshSubscribers.forEach(cb => cb(token));
+function onRefreshed() {
+  refreshSubscribers.forEach(cb => cb());
   refreshSubscribers = [];
 }
 
@@ -197,17 +187,14 @@ api.interceptors.response.use(
         return Promise.reject(err);
       }
 
-      const refreshToken = getRefreshToken();
-      const canAttemptRefresh = hasStoredSessionCandidate() || Boolean(refreshToken);
-      if (!skipAuthRefresh && canAttemptRefresh && typeof window !== "undefined" && !window.location.pathname.startsWith("/my-booking")) {
+      const canAttemptRefresh = !skipAuthRefresh && typeof window !== "undefined" && !window.location.pathname.startsWith("/my-booking");
+      if (canAttemptRefresh) {
         if (isRefreshing) {
           // Wait for the refresh to complete
           return new Promise((resolve) => {
-            addRefreshSubscriber((newToken) => {
+            addRefreshSubscriber(() => {
               originalRequest.headers = originalRequest.headers || {};
-              if (newToken) {
-                originalRequest.headers.Authorization = `Bearer ${newToken}`;
-              } else if (originalRequest.headers.Authorization) {
+              if (originalRequest.headers.Authorization) {
                 delete originalRequest.headers.Authorization;
               }
               resolve(api(originalRequest));
@@ -219,10 +206,9 @@ api.interceptors.response.use(
         isRefreshing = true;
 
         try {
-          const refreshPayload = refreshToken ? { refresh_token: refreshToken } : {};
           const refreshResp = await axios.post(
             `${resolvedBaseURL}/auth/refresh`,
-            refreshPayload,
+            {},
             {
               headers: {
                 "Content-Type": "application/json",
@@ -234,16 +220,13 @@ api.interceptors.response.use(
             }
           );
 
-          const newAccessToken = refreshResp.data.access_token;
           persistRefreshSession(refreshResp.data);
 
           isRefreshing = false;
-          onRefreshed(newAccessToken);
+          onRefreshed();
 
           originalRequest.headers = originalRequest.headers || {};
-          if (newAccessToken) {
-            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-          } else if (originalRequest.headers.Authorization) {
+          if (originalRequest.headers.Authorization) {
             delete originalRequest.headers.Authorization;
           }
           return api(originalRequest);

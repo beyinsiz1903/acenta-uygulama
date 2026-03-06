@@ -4,8 +4,6 @@ export const AUTH_TRANSPORT = Object.freeze({
 });
 
 const STORAGE_KEYS = Object.freeze({
-  accessToken: "acenta_token",
-  refreshToken: "acenta_refresh_token",
   user: "acenta_user",
   tenantId: "acenta_tenant_id",
   authTransport: "acenta_auth_transport",
@@ -50,19 +48,19 @@ export function isCookieAuthTransport(value) {
 }
 
 export function getToken() {
-  return readStorage(STORAGE_KEYS.accessToken);
+  return "";
 }
 
 export function setToken(token) {
-  writeStorage(STORAGE_KEYS.accessToken, token || "");
+  return token || "";
 }
 
 export function getRefreshToken() {
-  return readStorage(STORAGE_KEYS.refreshToken);
+  return "";
 }
 
 export function setRefreshToken(token) {
-  writeStorage(STORAGE_KEYS.refreshToken, token || "");
+  return token || "";
 }
 
 export function getUser() {
@@ -91,8 +89,7 @@ export function setAuthTransport(transport) {
 }
 
 export function clearLegacyTokens() {
-  removeStorage(STORAGE_KEYS.accessToken);
-  removeStorage(STORAGE_KEYS.refreshToken);
+  return;
 }
 
 export function clearToken() {
@@ -103,7 +100,7 @@ export function clearToken() {
 }
 
 export function hasStoredSessionCandidate() {
-  return Boolean(getToken() || getRefreshToken() || getUser() || isCookieAuthTransport(getAuthTransport()));
+  return Boolean(getUser() || readStorage(STORAGE_KEYS.tenantId) || isCookieAuthTransport(getAuthTransport()));
 }
 
 export function persistBootstrappedUser(user) {
@@ -115,14 +112,14 @@ export function persistBootstrappedUser(user) {
   if (tenantId) {
     writeStorage(STORAGE_KEYS.tenantId, tenantId);
   }
-  if (!readStorage(STORAGE_KEYS.authTransport)) {
-    setAuthTransport(getToken() ? AUTH_TRANSPORT.LEGACY_BEARER : AUTH_TRANSPORT.COOKIE_COMPAT);
-  }
+  setAuthTransport(AUTH_TRANSPORT.COOKIE_COMPAT);
   return user;
 }
 
 export function persistLoginSession(payload) {
-  const transport = normalizeAuthTransport(payload?.auth_transport);
+  const transport = payload?.auth_transport
+    ? normalizeAuthTransport(payload.auth_transport)
+    : AUTH_TRANSPORT.COOKIE_COMPAT;
   setAuthTransport(transport);
   if (payload?.user) {
     setUser(payload.user);
@@ -133,34 +130,16 @@ export function persistLoginSession(payload) {
     writeStorage(STORAGE_KEYS.tenantId, tenantId);
   }
 
-  if (isCookieAuthTransport(transport)) {
-    clearLegacyTokens();
-    return transport;
-  }
-
-  if (payload?.access_token) {
-    setToken(payload.access_token);
-  }
-  if (payload?.refresh_token) {
-    setRefreshToken(payload.refresh_token);
-  }
+  clearLegacyTokens();
   return transport;
 }
 
 export function persistRefreshSession(payload) {
-  const transport = normalizeAuthTransport(payload?.auth_transport || getAuthTransport());
+  const transport = payload?.auth_transport
+    ? normalizeAuthTransport(payload.auth_transport)
+    : AUTH_TRANSPORT.COOKIE_COMPAT;
   setAuthTransport(transport);
 
-  if (isCookieAuthTransport(transport)) {
-    clearLegacyTokens();
-    return transport;
-  }
-
-  if (payload?.access_token) {
-    setToken(payload.access_token);
-  }
-  if (payload?.refresh_token) {
-    setRefreshToken(payload.refresh_token);
-  }
+  clearLegacyTokens();
   return transport;
 }

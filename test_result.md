@@ -220,7 +220,7 @@ agent_communication:
     message: |
       ✅ BACKEND SMOKE TEST COMPLETED - ALL TESTS PASSED
       
-      Performed comprehensive backend API smoke test on https://saas-audit-refactor.preview.emergentagent.com
+      Performed comprehensive backend API smoke test on https://token-migration.preview.emergentagent.com
       
       Backend API Test Results:
       1. ✅ POST /api/auth/login - PASSED (200 OK, tokens received)
@@ -240,7 +240,7 @@ agent_communication:
     message: |
       ✅ SMOKE TEST PASSED
       
-      Completed comprehensive smoke test on https://saas-audit-refactor.preview.emergentagent.com
+      Completed comprehensive smoke test on https://token-migration.preview.emergentagent.com
       
       Test Coverage:
       1. ✅ Login at /login with admin@acenta.test / admin123 - PASSED
@@ -264,7 +264,7 @@ agent_communication:
       
       Performed comprehensive backend smoke test validating PR-1 auth/config hardening deployment.
       
-      Test Results (Base URL: https://saas-audit-refactor.preview.emergentagent.com):
+      Test Results (Base URL: https://token-migration.preview.emergentagent.com):
       1. ✅ POST /api/auth/login - PASSED (200 OK, access_token + refresh_token received)
       2. ✅ GET /api/auth/me - PASSED (200 OK, user data returned with Bearer token)
       3. ✅ GET /api/admin/agencies - PASSED (200 OK, agency data returned with admin token)
@@ -287,7 +287,7 @@ agent_communication:
       
       Performed comprehensive PR-2 backend smoke test validating session/revocation hardening post-deployment.
       
-      Test Results (Base URL: https://saas-audit-refactor.preview.emergentagent.com):
+      Test Results (Base URL: https://token-migration.preview.emergentagent.com):
       1. ✅ POST /api/auth/login (tokens + session) - PASSED (200 OK, access_token ✅, refresh_token ✅, session_id ✅)
       2. ✅ GET /api/auth/sessions - PASSED (200 OK, 6 sessions found)
       3. ✅ Auth regression test (/api/auth/me + /api/admin/agencies) - PASSED (both endpoints working correctly)
@@ -315,7 +315,7 @@ agent_communication:
       
       Performed comprehensive tenant-bound login smoke test validating PR-3 tenant isolation deployment.
       
-      Test Results (Base URL: https://saas-audit-refactor.preview.emergentagent.com):
+      Test Results (Base URL: https://token-migration.preview.emergentagent.com):
       
       Admin Login (admin@acenta.test / admin123):
       ✅ Login successful - redirected to /app/admin/agencies
@@ -356,7 +356,7 @@ agent_communication:
       
       Performed focused PR-3 backend smoke test per user request to re-validate deployed preview environment.
       
-      Test Results (Base URL: https://saas-audit-refactor.preview.emergentagent.com):
+      Test Results (Base URL: https://token-migration.preview.emergentagent.com):
       
       Backend API Tests:
       1. ✅ Admin Login (admin@acenta.test/admin123) - PASSED (200 OK, access_token received: 385 chars, refresh_token ✅)
@@ -389,7 +389,7 @@ agent_communication:
       
       Performed comprehensive PR-4 web auth compatibility smoke test validating cookie-based auth with /auth/me bootstrap and refresh fallback.
       
-      Test Results (Base URL: https://saas-audit-refactor.preview.emergentagent.com):
+      Test Results (Base URL: https://token-migration.preview.emergentagent.com):
       
       1. ✅ Login Page Load & Form Elements - PASSED
          - All form testids found: login-page, login-form, login-email, login-password, login-submit
@@ -454,7 +454,7 @@ agent_communication:
       
       Performed comprehensive PR-4 backend verification using curl-like tests on deployed preview environment.
       
-      Test Results (Base URL: https://saas-audit-refactor.preview.emergentagent.com):
+      Test Results (Base URL: https://token-migration.preview.emergentagent.com):
       
       Backend API Tests:
       1. ✅ Web Login Cookie Compat - PASSED (POST /api/auth/login with X-Client-Platform:web sets cookies and returns auth_transport=cookie_compat)
@@ -583,7 +583,7 @@ agent_communication:
         comment: "PR-6 frontend smoke test PASSED. All 4 required tests completed successfully: 1) Login page loads at /login ✅ - no blank page (96 chars content, all form elements present), 2) Login with admin@acenta.test/admin123 ✅ - successful redirect to /app/admin/agencies, 3) Post-login admin screen renders ✅ - full content loaded (951 chars, Acentalar page with 3 agencies), 4) No critical PR-6 errors ✅ - no auth bootstrap errors, no infinite loading, no redirect loops, URL stable. Console analysis shows only pre-existing optional endpoint errors (401 auth/me bootstrap check, 400 tenant features/quota, 500 partner-graph notifications). Key success: '[AdminAgencies] Loaded: 3' confirms core functionality. Runtime composition refactor (server.py → bootstrap/api_app.py) successful - behavior preserved, no regressions detected."
       - working: true
         agent: "testing"
-        comment: "PR-6 BACKEND VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-03-06). Performed comprehensive Turkish review request validation on https://saas-audit-refactor.preview.emergentagent.com. Backend API Test Results: 1) ✅ POST /api/auth/login - PASSED (access_token: 385 chars, refresh_token: 64 chars), 2) ✅ GET /api/auth/me - PASSED (admin@acenta.test returned correctly), 3) ✅ GET /api/v1/mobile/auth/me - PASSED (no Mongo _id leaks, no sensitive fields exposed), 4) ✅ GET /api/v1/mobile/bookings - PASSED (15 total bookings, proper list wrapper, string IDs), 5) ✅ GET /api/v1/mobile/reports/summary - PASSED (8 bookings, 8100.99 TRY revenue, proper data types), 6) ✅ Unauthorized guard kontrolü - PASSED (both /api/auth/me and /api/v1/mobile/auth/me return 401 without auth), 7) ✅ Root API smoke (/api/health) - PASSED (status: ok), 8) ✅ Auth/session/tenant/Mobile BFF regresyon check - PASSED (no regressions detected, 3 agencies loaded). PR-6 runtime composition refactor SUCCESSFUL: server.py → bootstrap/api_app.py composition working correctly, auth/session/tenant ve Mobile BFF davranış değişmeden kaldı, all critical backend endpoints functional."
+        comment: "PR-6 BACKEND VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-03-06). Performed comprehensive Turkish review request validation on https://token-migration.preview.emergentagent.com. Backend API Test Results: 1) ✅ POST /api/auth/login - PASSED (access_token: 385 chars, refresh_token: 64 chars), 2) ✅ GET /api/auth/me - PASSED (admin@acenta.test returned correctly), 3) ✅ GET /api/v1/mobile/auth/me - PASSED (no Mongo _id leaks, no sensitive fields exposed), 4) ✅ GET /api/v1/mobile/bookings - PASSED (15 total bookings, proper list wrapper, string IDs), 5) ✅ GET /api/v1/mobile/reports/summary - PASSED (8 bookings, 8100.99 TRY revenue, proper data types), 6) ✅ Unauthorized guard kontrolü - PASSED (both /api/auth/me and /api/v1/mobile/auth/me return 401 without auth), 7) ✅ Root API smoke (/api/health) - PASSED (status: ok), 8) ✅ Auth/session/tenant/Mobile BFF regresyon check - PASSED (no regressions detected, 3 agencies loaded). PR-6 runtime composition refactor SUCCESSFUL: server.py → bootstrap/api_app.py composition working correctly, auth/session/tenant ve Mobile BFF davranış değişmeden kaldı, all critical backend endpoints functional."
 
 metadata:
   created_by: "testing_agent"
@@ -768,7 +768,7 @@ agent_communication:
       
       Test Context:
       - Application: Travel agency SaaS platform
-      - Test URL: https://saas-audit-refactor.preview.emergentagent.com/login
+      - Test URL: https://token-migration.preview.emergentagent.com/login
       - Test Account: admin@acenta.test / admin123
       - Scope: Admin portal login only (B2B login not tested as requested)
       
@@ -1054,7 +1054,7 @@ agent_communication:
     message: |
       ✅ BACKEND SMOKE TEST COMPLETED - ALL TESTS PASSED
       
-      Performed comprehensive backend API smoke test on https://saas-audit-refactor.preview.emergentagent.com
+      Performed comprehensive backend API smoke test on https://token-migration.preview.emergentagent.com
       
       Backend API Test Results:
       1. ✅ POST /api/auth/login - PASSED (200 OK, tokens received)
@@ -1074,7 +1074,7 @@ agent_communication:
     message: |
       ✅ SMOKE TEST PASSED
       
-      Completed comprehensive smoke test on https://saas-audit-refactor.preview.emergentagent.com
+      Completed comprehensive smoke test on https://token-migration.preview.emergentagent.com
       
       Test Coverage:
       1. ✅ Login at /login with admin@acenta.test / admin123 - PASSED
@@ -1098,7 +1098,7 @@ agent_communication:
       
       Performed comprehensive backend smoke test validating PR-1 auth/config hardening deployment.
       
-      Test Results (Base URL: https://saas-audit-refactor.preview.emergentagent.com):
+      Test Results (Base URL: https://token-migration.preview.emergentagent.com):
       1. ✅ POST /api/auth/login - PASSED (200 OK, access_token + refresh_token received)
       2. ✅ GET /api/auth/me - PASSED (200 OK, user data returned with Bearer token)
       3. ✅ GET /api/admin/agencies - PASSED (200 OK, agency data returned with admin token)
@@ -1121,7 +1121,7 @@ agent_communication:
       
       Performed comprehensive PR-2 backend smoke test validating session/revocation hardening post-deployment.
       
-      Test Results (Base URL: https://saas-audit-refactor.preview.emergentagent.com):
+      Test Results (Base URL: https://token-migration.preview.emergentagent.com):
       1. ✅ POST /api/auth/login (tokens + session) - PASSED (200 OK, access_token ✅, refresh_token ✅, session_id ✅)
       2. ✅ GET /api/auth/sessions - PASSED (200 OK, 6 sessions found)
       3. ✅ Auth regression test (/api/auth/me + /api/admin/agencies) - PASSED (both endpoints working correctly)
@@ -1149,7 +1149,7 @@ agent_communication:
       
       Performed comprehensive tenant-bound login smoke test validating PR-3 tenant isolation deployment.
       
-      Test Results (Base URL: https://saas-audit-refactor.preview.emergentagent.com):
+      Test Results (Base URL: https://token-migration.preview.emergentagent.com):
       
       Admin Login (admin@acenta.test / admin123):
       ✅ Login successful - redirected to /app/admin/agencies
@@ -1190,7 +1190,7 @@ agent_communication:
       
       Performed focused PR-3 backend smoke test per user request to re-validate deployed preview environment.
       
-      Test Results (Base URL: https://saas-audit-refactor.preview.emergentagent.com):
+      Test Results (Base URL: https://token-migration.preview.emergentagent.com):
       
       Backend API Tests:
       1. ✅ Admin Login (admin@acenta.test/admin123) - PASSED (200 OK, access_token received: 385 chars, refresh_token ✅)
@@ -1223,7 +1223,7 @@ agent_communication:
       
       Performed comprehensive PR-4 web auth compatibility smoke test validating cookie-based auth with /auth/me bootstrap and refresh fallback.
       
-      Test Results (Base URL: https://saas-audit-refactor.preview.emergentagent.com):
+      Test Results (Base URL: https://token-migration.preview.emergentagent.com):
       
       1. ✅ Login Page Load & Form Elements - PASSED
          - All form testids found: login-page, login-form, login-email, login-password, login-submit
@@ -1288,7 +1288,7 @@ agent_communication:
       
       Performed comprehensive PR-4 backend verification using curl-like tests on deployed preview environment.
       
-      Test Results (Base URL: https://saas-audit-refactor.preview.emergentagent.com):
+      Test Results (Base URL: https://token-migration.preview.emergentagent.com):
       
       Backend API Tests:
       1. ✅ Web Login Cookie Compat - PASSED (POST /api/auth/login with X-Client-Platform:web sets cookies and returns auth_transport=cookie_compat)
@@ -1326,7 +1326,7 @@ agent_communication:
       
       Performed comprehensive PR-5A Mobile BFF backend re-verification per Turkish review request on deployed preview environment.
       
-      Test Results (Base URL: https://saas-audit-refactor.preview.emergentagent.com):
+      Test Results (Base URL: https://token-migration.preview.emergentagent.com):
       
       Mobile BFF API Re-Validation:
       1. ✅ POST /api/auth/login (admin@acenta.test/admin123) - PASSED (200 OK, access_token received: 385 chars)
@@ -1376,7 +1376,7 @@ agent_communication:
     message: |
       ✅ PR-5A FRONTEND SMOKE TEST COMPLETED - ALL TESTS PASSED (2026-03-06)
       
-      Performed frontend smoke test on https://saas-audit-refactor.preview.emergentagent.com per review request.
+      Performed frontend smoke test on https://token-migration.preview.emergentagent.com per review request.
       
       Test Results (Turkish Requirements):
       
@@ -1434,7 +1434,7 @@ agent_communication:
       - Router registry in backend/app/bootstrap/router_registry.py
       - Auth/session/tenant/Mobile BFF behavior unchanged (structure refactor only)
       
-      Test Results (Base URL: https://saas-audit-refactor.preview.emergentagent.com):
+      Test Results (Base URL: https://token-migration.preview.emergentagent.com):
       
       1. ✅ Login page açılıyor mu, blank page var mı?
          - EVET - Login page loads correctly (96 chars content)
@@ -1501,7 +1501,7 @@ agent_communication:
     message: |
       ✅ PR-6 BACKEND VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-03-06)
       
-      Performed comprehensive PR-6 backend validation per Turkish review request on https://saas-audit-refactor.preview.emergentagent.com
+      Performed comprehensive PR-6 backend validation per Turkish review request on https://token-migration.preview.emergentagent.com
       
       PR-6 Context:
       - server.py now thin compat wrapper (4 lines)
@@ -1540,7 +1540,7 @@ agent_communication:
     message: |
       ✅ RUNTIME OPERATIONS SPLIT BACKEND VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-06)
       
-      Performed comprehensive runtime operations split backend testing per Turkish review request on https://saas-audit-refactor.preview.emergentagent.com
+      Performed comprehensive runtime operations split backend testing per Turkish review request on https://token-migration.preview.emergentagent.com
       
       Test Context:
       - Operational bootstrap split / runtime separation refactor validation
@@ -1607,7 +1607,7 @@ agent_communication:
     message: |
       ✅ BACKEND LINT CI FIX VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-06)
       
-      Performed comprehensive backend lint CI fix validation per Turkish review request on https://saas-audit-refactor.preview.emergentagent.com
+      Performed comprehensive backend lint CI fix validation per Turkish review request on https://token-migration.preview.emergentagent.com
       
       Turkish Requirements Validation:
       1. ✅ Backend lint gerçekten temiz mi? - EVET (ruff validation passed with no lint errors)
@@ -1646,7 +1646,7 @@ agent_communication:
       
       Test Context:
       - Scope: Regression smoke test after backend runtime wiring changes
-      - URL: https://saas-audit-refactor.preview.emergentagent.com
+      - URL: https://token-migration.preview.emergentagent.com
       - Credentials: admin@acenta.test / admin123
       - Focus: Verify no login flow breaking from new backend process architecture
       
@@ -1726,7 +1726,7 @@ agent_communication:
       Performed concise backend smoke validation after dedicated worker/scheduler runtime wiring changes.
       
       Context:
-      - Base URL: https://saas-audit-refactor.preview.emergentagent.com
+      - Base URL: https://token-migration.preview.emergentagent.com
       - Credentials: admin@acenta.test / admin123
       - Scope: Smoke test only, focused on auth flow integrity
       - Runtime changes: Dedicated worker/scheduler heartbeat checks validated by main agent

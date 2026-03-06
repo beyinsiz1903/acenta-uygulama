@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { api, setToken, setUser } from "../../lib/api";
+import { api } from "../../lib/api";
+import { useLogin } from "../../hooks/useAuth";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
@@ -13,6 +14,7 @@ const PLANS = [
 
 export default function SignupPage() {
   const navigate = useNavigate();
+  const loginMutation = useLogin();
   const [form, setForm] = useState({
     company_name: "",
     admin_name: "",
@@ -31,22 +33,24 @@ export default function SignupPage() {
     setError("");
     setLoading(true);
     try {
-      const resp = await api.post("/onboarding/signup", form);
-      const data = resp.data;
-      setToken(data.access_token);
-      setUser({
-        id: data.user_id,
+      await api.post("/onboarding/signup", form);
+
+      const loginResp = await loginMutation.mutateAsync({
         email: form.email,
-        name: form.admin_name,
-        roles: ["super_admin"],
-        organization_id: data.org_id,
-        tenant_id: data.tenant_id,
+        password: form.password,
       });
-      // Store tenant_id for API calls
-      try { localStorage.setItem("acenta_tenant_id", data.tenant_id); } catch {}
+
+      if (!loginResp?.user) {
+        throw new Error("Oturum başlatılamadı. Lütfen giriş ekranından tekrar deneyin.");
+      }
+
       navigate("/app");
     } catch (err) {
-      const msg = err?.response?.data?.error?.message || err?.response?.data?.detail || "Kayıt başarısız.";
+      const msg =
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Kayıt başarısız.";
       setError(msg);
     } finally {
       setLoading(false);
@@ -132,8 +136,8 @@ export default function SignupPage() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full h-11" disabled={loading} data-testid="signup-submit">
-            {loading ? "Kayıt yapılıyor..." : "Ücretsiz Deneyin"}
+          <Button type="submit" className="w-full h-11" disabled={loading || loginMutation.isPending} data-testid="signup-submit">
+            {loading || loginMutation.isPending ? "Kayıt yapılıyor..." : "Ücretsiz Deneyin"}
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">

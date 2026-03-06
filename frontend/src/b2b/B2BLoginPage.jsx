@@ -3,7 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { api, apiErrorMessage, setToken, setUser } from "../lib/api";
+import { api, apiErrorMessage } from "../lib/api";
+import { useCurrentUser, useLogin } from "../hooks/useAuth";
 import { loginSchema } from "../lib/validations";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -13,6 +14,8 @@ export default function B2BLoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [serverError, setServerError] = useState("");
+  const loginMutation = useLogin();
+  const { data: currentUser, isLoading: isBootstrapping } = useCurrentUser();
 
   const {
     register,
@@ -35,26 +38,41 @@ export default function B2BLoginPage() {
     return null;
   }, [hasSessionExpired]);
 
+  React.useEffect(() => {
+    if (!currentUser) {
+      return;
+    }
+
+    api.get("/b2b/me")
+      .then(() => {
+        navigate(next, { replace: true });
+      })
+      .catch(() => {
+        // aktif oturum var ama B2B yetkisi yoksa login ekranında kal
+      });
+  }, [currentUser, navigate, next]);
+
   async function onSubmit(data) {
     setServerError("");
     try {
-      const resp = await api.post("/auth/login", {
+      const resp = await loginMutation.mutateAsync({
         email: data.email,
         password: data.password,
       });
-      setToken(resp.data.access_token);
-      setUser(resp.data.user);
 
-      // Store tenant_id for API calls
-      try {
-        const tid = resp.data.tenant_id || resp.data.user?.tenant_id;
-        if (tid) {
-          localStorage.setItem("acenta_tenant_id", tid);
-        }
-      } catch {}
+      if (!resp?.user) {
+        setServerError("Giriş yanıtı eksik. Lütfen tekrar deneyin.");
+        return;
+      }
 
       // Verify that this user has B2B access via /api/b2b/me
       await api.get("/b2b/me");
+
+      try {
+        window.sessionStorage.removeItem("acenta_session_expired");
+      } catch {
+        // ignore sessionStorage errors
+      }
 
       navigate(next, { replace: true });
     } catch (err) {
@@ -63,7 +81,7 @@ export default function B2BLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4" data-testid="b2b-login-page">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
           <div className="mx-auto h-12 w-12 rounded-2xl bg-primary text-primary-foreground grid place-items-center font-bold text-xs">
@@ -78,16 +96,23 @@ export default function B2BLoginPage() {
         </div>
 
         {reasonText && (
-          <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900" data-testid="b2b-login-session-expired-banner">
             {reasonText}
           </div>
         )}
+
+        {isBootstrapping && !currentUser ? (
+          <div className="mb-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700" data-testid="b2b-login-bootstrap-status">
+            Aktif oturum kontrol ediliyor...
+          </div>
+        ) : null}
 
         <div className="rounded-2xl shadow-sm border bg-card">
           <div className="p-6">
             <form
               onSubmit={handleSubmit(onSubmit)}
               className="space-y-4"
+              data-testid="b2b-login-form"
               noValidate
             >
               <div className="space-y-2">
@@ -99,6 +124,7 @@ export default function B2BLoginPage() {
                   placeholder="ornek@acenta.com"
                   aria-invalid={!!errors.email}
                   aria-describedby={errors.email ? "b2b-email-error" : undefined}
+                  data-testid="b2b-login-email"
                   {...register("email")}
                 />
                 {errors.email && (
@@ -115,6 +141,7 @@ export default function B2BLoginPage() {
                   autoComplete="current-password"
                   aria-invalid={!!errors.password}
                   aria-describedby={errors.password ? "b2b-password-error" : undefined}
+                  data-testid="b2b-login-password"
                   {...register("password")}
                 />
                 {errors.password && (
@@ -125,7 +152,7 @@ export default function B2BLoginPage() {
               </div>
 
               {serverError ? (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">
+                <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert" data-testid="b2b-login-error">
                   {serverError}
                 </div>
               ) : null}
@@ -133,9 +160,10 @@ export default function B2BLoginPage() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isSubmitting}
+                disabled={isSubmitting || loginMutation.isPending}
+                data-testid="b2b-login-submit"
               >
-                {isSubmitting ? "Giriş yapılıyor..." : "Giriş Yap"}
+                {isSubmitting || loginMutation.isPending ? "Giriş yapılıyor..." : "Giriş Yap"}
               </Button>
             </form>
           </div>

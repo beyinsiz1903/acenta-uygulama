@@ -1,15 +1,8 @@
 import {
   clearToken,
-  getRefreshToken,
-  hasStoredSessionCandidate,
   persistBootstrappedUser,
   persistRefreshSession,
 } from "./authSession";
-
-export function buildCompatRefreshPayload() {
-  const refreshToken = getRefreshToken();
-  return refreshToken ? { refresh_token: refreshToken } : {};
-}
 
 export async function bootstrapAuthSession(client) {
   try {
@@ -24,13 +17,8 @@ export async function bootstrapAuthSession(client) {
     }
   }
 
-  if (!hasStoredSessionCandidate()) {
-    clearToken();
-    return null;
-  }
-
   try {
-    const refreshResponse = await client.post("/auth/refresh", buildCompatRefreshPayload(), {
+    const refreshResponse = await client.post("/auth/refresh", {}, {
       skipAuthRefresh: true,
       skipAuthRedirect: true,
     });

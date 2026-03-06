@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
@@ -8,13 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
-import { getToken } from "../lib/api";
-
-// Backend URL: önce env, yoksa aynı origin (/api)
-const BACKEND_URL =
-  (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.REACT_APP_BACKEND_URL)
-    || process.env.REACT_APP_BACKEND_URL
-    || "";
+import { api } from "../lib/api";
 
 /**
  * Safer date key generator:
@@ -83,15 +76,7 @@ export default function AdminPilotDashboardPage() {
         setLoading(true);
         setError("");
 
-        const token = getToken();
-        if (!token) throw new Error("Token bulunamadı. Lütfen tekrar giriş yapın.");
-
-        const base = BACKEND_URL || "";
-        const url = base ? `${base}/api/admin/pilot/summary?days=7` : "/api/admin/pilot/summary?days=7";
-
-        const resp = await axios.get(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const resp = await api.get("/admin/pilot/summary?days=7");
 
         setData(resp.data);
       } catch (e) {

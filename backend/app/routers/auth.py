@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
@@ -29,7 +30,7 @@ class SignupRequest(BaseModel):
 
 
 @router.post("/login")
-async def login(payload: LoginWith2FARequest):
+async def login(payload: LoginWith2FARequest, request: Request):
     db = await get_db()
 
     # Tenant-agnostic login: resolve user by email, then infer organization
@@ -72,11 +73,25 @@ async def login(payload: LoginWith2FARequest):
         roles_set.add("super_admin")
     roles_list = list(roles_set) or ["super_admin"]
 
+    from app.services.session_service import create_session
+
+    user_agent = request.headers.get("user-agent", "")
+    ip_address = request.client.host if request.client else ""
+    session = await create_session(
+        user_id=user_id,
+        user_email=user["email"],
+        organization_id=org_id,
+        roles=roles_list,
+        user_agent=user_agent,
+        ip_address=ip_address,
+    )
+
     token = create_access_token(
         subject=user["email"],
         organization_id=org_id,
         roles=roles_list,
         minutes=480,  # 8 hours access token
+        session_id=session["_id"],
     )
 
     # Create refresh token
@@ -85,6 +100,9 @@ async def login(payload: LoginWith2FARequest):
         user_email=user["email"],
         organization_id=org_id,
         roles=roles_list,
+        session_id=session["_id"],
+        user_agent=user_agent,
+        ip_address=ip_address,
     )
 
     user_out = serialize_doc(user)
@@ -127,8 +145,9 @@ async def login(payload: LoginWith2FARequest):
     # Attach tenant_id to response (extra field beyond schema)
     resp_dict = resp.model_dump() if hasattr(resp, 'model_dump') else resp.dict()
     resp_dict["tenant_id"] = tenant_id
-    resp_dict["refresh_token"] = rt_doc["_id"]
+    resp_dict["refresh_token"] = rt_doc["refresh_token"]
     resp_dict["expires_in"] = 28800  # 8 hours for access token
+    resp_dict["session_id"] = session["_id"]
     return resp_dict
 
 
@@ -175,13 +194,15 @@ async def logout(user=Depends(get_current_user), credentials: Optional[HTTPAutho
     """
     if credentials:
         from app.auth import decode_token
+        from app.services.refresh_token_service import revoke_session_refresh_tokens
+        from app.services.session_service import revoke_session
         from app.services.token_blacklist import blacklist_token
-        from datetime import datetime, timezone
 
         try:
             payload = decode_token(credentials.credentials)
             jti = payload.get("jti")
             exp = payload.get("exp")
+            session_id = payload.get("sid")
             if jti and exp:
                 expires_at = datetime.fromtimestamp(exp, tz=timezone.utc)
                 await blacklist_token(
@@ -190,6 +211,9 @@ async def logout(user=Depends(get_current_user), credentials: Optional[HTTPAutho
                     expires_at=expires_at,
                     reason="logout",
                 )
+            if session_id:
+                await revoke_session(session_id, reason="logout")
+                await revoke_session_refresh_tokens(session_id, reason="logout")
         except Exception:
             pass  # Token already expired or invalid - still allow logout
 
@@ -202,9 +226,11 @@ async def revoke_all_sessions(user=Depends(get_current_user)):
 
     Useful for security incidents or password changes.
     """
+    from app.services.session_service import revoke_all_sessions
     from app.services.token_blacklist import blacklist_all_user_tokens
 
     email = user.get("email", "")
+    session_count = await revoke_all_sessions(email, reason="user_revoke_all")
     count = await blacklist_all_user_tokens(email, reason="user_revoke_all")
 
     # Also revoke all refresh tokens
@@ -213,6 +239,7 @@ async def revoke_all_sessions(user=Depends(get_current_user)):
 
     return {
         "message": "Tüm oturumlar iptal edildi",
+        "revoked_sessions": session_count,
         "revoked_count": count,
         "refresh_tokens_revoked": rt_count,
     }
@@ -241,11 +268,12 @@ async def refresh_access_token(payload: RefreshTokenRequest):
         organization_id=new_rt["organization_id"],
         roles=new_rt["roles"],
         minutes=480,  # 8 hours access token
+        session_id=new_rt.get("session_id"),
     )
 
     return {
         "access_token": new_access_token,
-        "refresh_token": new_rt["_id"],
+        "refresh_token": new_rt["refresh_token"],
         "token_type": "bearer",
         "expires_in": 28800,  # 8 hours
     }
@@ -261,8 +289,15 @@ async def list_sessions(user=Depends(get_current_user)):
 @router.post("/sessions/{session_id}/revoke")
 async def revoke_session(session_id: str, user=Depends(get_current_user)):
     """Revoke a specific session."""
-    from app.services.refresh_token_service import revoke_refresh_token
-    revoked = await revoke_refresh_token(session_id, reason="user_revoke")
+    from app.services.refresh_token_service import revoke_session_refresh_tokens
+    from app.services.session_service import revoke_session as revoke_session_record
+
+    active_sessions = await list_sessions(user)
+    if not any(session["id"] == session_id for session in active_sessions):
+        raise HTTPException(status_code=404, detail="Session not found or already revoked")
+
+    revoked = await revoke_session_record(session_id, reason="user_revoke")
+    await revoke_session_refresh_tokens(session_id, reason="user_revoke")
     if not revoked:
         raise HTTPException(status_code=404, detail="Session not found or already revoked")
     return {"status": "revoked"}

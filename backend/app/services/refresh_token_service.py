@@ -14,6 +14,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 from app.db import get_db
+from app.services.refresh_token_crypto import generate_refresh_token, hash_refresh_token
+from app.services.session_service import get_active_session, revoke_session, set_session_refresh_family, update_session_last_seen
 
 logger = logging.getLogger("refresh_token")
 
@@ -26,6 +28,7 @@ async def create_refresh_token(
     user_email: str,
     organization_id: str,
     roles: list[str],
+    session_id: str,
     user_agent: str = "",
     ip_address: str = "",
 ) -> dict[str, Any]:
@@ -34,10 +37,13 @@ async def create_refresh_token(
     now = datetime.now(timezone.utc)
     token_id = str(uuid.uuid4())
     family_id = str(uuid.uuid4())
+    raw_token = generate_refresh_token()
 
     doc = {
         "_id": token_id,
+        "token_hash": hash_refresh_token(raw_token),
         "family_id": family_id,
+        "session_id": session_id,
         "user_email": user_email,
         "organization_id": organization_id,
         "roles": roles,
@@ -50,11 +56,12 @@ async def create_refresh_token(
     }
 
     await db[COLLECTION].insert_one(doc)
+    await set_session_refresh_family(session_id, family_id)
     logger.info("Refresh token created: user=%s family=%s", user_email, family_id)
-    return doc
+    return {**doc, "refresh_token": raw_token}
 
 
-async def rotate_refresh_token(old_token_id: str) -> Optional[dict[str, Any]]:
+async def rotate_refresh_token(refresh_token: str) -> Optional[dict[str, Any]]:
     """Rotate a refresh token: revoke old, create new in same family.
 
     Returns new token doc or None if old token is invalid/revoked.
@@ -64,8 +71,12 @@ async def rotate_refresh_token(old_token_id: str) -> Optional[dict[str, Any]]:
     db = await get_db()
     now = datetime.now(timezone.utc)
 
-    old_token = await db[COLLECTION].find_one({"_id": old_token_id})
+    old_token = await db[COLLECTION].find_one({"token_hash": hash_refresh_token(refresh_token)})
     if not old_token:
+        return None
+
+    session_id = old_token.get("session_id")
+    if session_id and not await get_active_session(session_id):
         return None
 
     # Reuse detection: if token was already revoked, revoke entire family
@@ -79,6 +90,8 @@ async def rotate_refresh_token(old_token_id: str) -> Optional[dict[str, Any]]:
             {"family_id": family_id},
             {"$set": {"is_revoked": True, "revoked_at": now, "revoke_reason": "reuse_detected"}},
         )
+        if session_id:
+            await revoke_session(session_id, reason="refresh_reuse_detected")
         return None
 
     # Check expiry
@@ -93,15 +106,18 @@ async def rotate_refresh_token(old_token_id: str) -> Optional[dict[str, Any]]:
 
     # Revoke old token
     await db[COLLECTION].update_one(
-        {"_id": old_token_id},
-        {"$set": {"is_revoked": True, "revoked_at": now, "revoke_reason": "rotated"}},
+        {"_id": old_token["_id"]},
+        {"$set": {"is_revoked": True, "revoked_at": now, "revoke_reason": "rotated", "last_used_at": now}},
     )
 
     # Create new token in same family
     new_token_id = str(uuid.uuid4())
+    raw_token = generate_refresh_token()
     new_doc = {
         "_id": new_token_id,
+        "token_hash": hash_refresh_token(raw_token),
         "family_id": old_token["family_id"],
+        "session_id": session_id,
         "user_email": old_token["user_email"],
         "organization_id": old_token["organization_id"],
         "roles": old_token["roles"],
@@ -114,11 +130,14 @@ async def rotate_refresh_token(old_token_id: str) -> Optional[dict[str, Any]]:
     }
 
     await db[COLLECTION].insert_one(new_doc)
+    if session_id:
+        await set_session_refresh_family(session_id, old_token["family_id"])
+        await update_session_last_seen(session_id)
     logger.info(
         "Refresh token rotated: user=%s old=%s new=%s",
-        old_token["user_email"], old_token_id[:8], new_token_id[:8],
+        old_token["user_email"], str(old_token["_id"])[:8], new_token_id[:8],
     )
-    return new_doc
+    return {**new_doc, "refresh_token": raw_token}
 
 
 async def revoke_refresh_token(token_id: str, reason: str = "logout") -> bool:
@@ -129,6 +148,15 @@ async def revoke_refresh_token(token_id: str, reason: str = "logout") -> bool:
         {"$set": {"is_revoked": True, "revoked_at": datetime.now(timezone.utc), "revoke_reason": reason}},
     )
     return result.modified_count > 0
+
+
+async def revoke_session_refresh_tokens(session_id: str, reason: str = "logout") -> int:
+    db = await get_db()
+    result = await db[COLLECTION].update_many(
+        {"session_id": session_id, "is_revoked": False},
+        {"$set": {"is_revoked": True, "revoked_at": datetime.now(timezone.utc), "revoke_reason": reason}},
+    )
+    return result.modified_count
 
 
 async def revoke_all_user_refresh_tokens(user_email: str, reason: str = "password_change") -> int:
@@ -142,25 +170,9 @@ async def revoke_all_user_refresh_tokens(user_email: str, reason: str = "passwor
 
 
 async def get_active_sessions(user_email: str) -> list[dict[str, Any]]:
-    """List active refresh tokens/sessions for a user."""
-    db = await get_db()
-    now = datetime.now(timezone.utc)
-    docs = await db[COLLECTION].find({
-        "user_email": user_email,
-        "is_revoked": False,
-        "expires_at": {"$gt": now},
-    }).sort("created_at", -1).to_list(50)
+    from app.services.session_service import list_active_sessions
 
-    return [
-        {
-            "id": d["_id"],
-            "user_agent": d.get("user_agent", ""),
-            "ip_address": d.get("ip_address", ""),
-            "created_at": d.get("created_at"),
-            "last_used_at": d.get("last_used_at"),
-        }
-        for d in docs
-    ]
+    return await list_active_sessions(user_email)
 
 
 async def ensure_refresh_token_indexes() -> None:
@@ -170,6 +182,13 @@ async def ensure_refresh_token_indexes() -> None:
         await db[COLLECTION].create_index("expires_at", expireAfterSeconds=0, name="ttl_expires")
         await db[COLLECTION].create_index("user_email", name="idx_user_email")
         await db[COLLECTION].create_index("family_id", name="idx_family_id")
+        await db[COLLECTION].create_index(
+            [("token_hash", 1)],
+            unique=True,
+            name="idx_refresh_token_hash",
+            partialFilterExpression={"token_hash": {"$type": "string"}},
+        )
+        await db[COLLECTION].create_index([("session_id", 1), ("is_revoked", 1)], name="idx_session_refresh_state")
         await db[COLLECTION].create_index(
             [("user_email", 1), ("is_revoked", 1), ("expires_at", 1)],
             name="idx_active_sessions",

@@ -30,7 +30,14 @@ def verify_password(password: str, password_hash: str) -> bool:
     return pwd_context.verify(password, password_hash)
 
 
-def create_access_token(*, subject: str, organization_id: str, roles: list[str], minutes: int = 60 * 12) -> str:
+def create_access_token(
+    *,
+    subject: str,
+    organization_id: str,
+    roles: list[str],
+    minutes: int = 60 * 12,
+    session_id: Optional[str] = None,
+) -> str:
     now = datetime.now(timezone.utc)
     jti = str(uuid.uuid4())  # Unique token ID for revocation support
     payload = {
@@ -41,6 +48,8 @@ def create_access_token(*, subject: str, organization_id: str, roles: list[str],
         "iat": int(now.timestamp()),
         "exp": int((now + timedelta(minutes=minutes)).timestamp()),
     }
+    if session_id:
+        payload["sid"] = session_id
     return jwt.encode(payload, _jwt_secret(), algorithm="HS256")
 
 
@@ -66,6 +75,17 @@ async def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] =
         if await is_token_blacklisted(jti):
             raise HTTPException(status_code=401, detail="Token iptal edilmiş")
 
+    session_id = payload.get("sid")
+    if session_id:
+        from app.services.session_service import get_active_session
+
+        session = await get_active_session(session_id)
+        if not session:
+            raise HTTPException(status_code=401, detail="Oturum geçersiz veya iptal edilmiş")
+
+        if session.get("user_email") != payload.get("sub") or session.get("organization_id") != payload.get("org"):
+            raise HTTPException(status_code=401, detail="Oturum eşleşmiyor")
+
     db = await get_db()
     user = await db.users.find_one({"email": payload.get("sub"), "organization_id": payload.get("org")})
     if not user:
@@ -77,6 +97,9 @@ async def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] =
         roles.discard("admin")
         roles.add("super_admin")
         user["roles"] = list(roles)
+
+    if session_id:
+        user["current_session_id"] = session_id
 
     return serialize_doc(user)
 

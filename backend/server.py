@@ -258,6 +258,9 @@ async def lifespan(app: FastAPI):
         from app.services.refresh_token_service import ensure_refresh_token_indexes
         await ensure_refresh_token_indexes()
 
+        from app.services.session_service import ensure_session_indexes
+        await ensure_session_indexes()
+
         # GDPR indexes
         from app.services.gdpr_service import ensure_gdpr_indexes
         await ensure_gdpr_indexes()

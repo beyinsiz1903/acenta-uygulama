@@ -3,6 +3,10 @@
 Provides token revocation via MongoDB TTL collection.
 Tokens are stored with their `jti` (JWT ID) and expire automatically
 via MongoDB TTL index matching the token's own expiration.
+
+Compatibility note:
+- Session state is now the primary revocation source.
+- This module remains as a compatibility layer for token-level invalidation.
 """
 from __future__ import annotations
 
@@ -69,11 +73,7 @@ async def is_token_blacklisted(jti: str) -> bool:
 
 
 async def blacklist_all_user_tokens(user_email: str, reason: str = "password_change") -> int:
-    """Revoke all tokens for a specific user by inserting a user-level revocation marker.
-
-    This is used when a user changes their password or an admin revokes all sessions.
-    Returns the count of newly blacklisted entries.
-    """
+    """Compatibility helper kept for legacy access tokens without session context."""
     db = await get_db()
     try:
         result = await db[COLLECTION].update_one(

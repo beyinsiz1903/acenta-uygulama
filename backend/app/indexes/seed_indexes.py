@@ -201,6 +201,8 @@ async def ensure_seed_indexes(db) -> None:
     await _safe_create(db.role_permissions, [("role", 1), ("organization_id", 1)], unique=True)
     await _safe_create(db.report_schedules, [("organization_id", 1)])
     await _safe_create(db.report_schedules, [("is_active", 1), ("next_run", 1)])
+    await _safe_create(db.sessions, [("user_email", 1), ("revoked_at", 1), ("created_at", -1)], name="idx_session_active_user")
+    await _safe_create(db.sessions, [("organization_id", 1), ("revoked_at", 1)], name="idx_session_org_state")
 
     # E-Fatura
     await _safe_create(db.efatura_invoices, [("tenant_id", 1), ("invoice_id", 1)], unique=True)

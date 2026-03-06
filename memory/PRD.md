@@ -205,6 +205,12 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - Strengthened `worker_app.py` and `scheduler_app.py` with explicit runtime component manifests, heartbeat updates, and controlled shutdown behavior.
 - Added `backend/tests/test_runtime_wiring.py`; targeted pytest, ingress/auth/mobile curl smoke, temporary worker/scheduler process smoke, and backend deep testing all passed.
 
+### Preview Supervisor Runtime Attachment (Mar 6, 2026)
+- Added preview process-manager wiring at `/etc/supervisor/conf.d/acenta_dedicated_runtimes.conf` so `backend-worker` and `backend-scheduler` now run as dedicated supervisor-managed services alongside the existing API process.
+- Hardened runtime launch scripts (`backend/scripts/run_api_runtime.sh`, `run_worker_runtime.sh`, `run_scheduler_runtime.sh`) to use the project virtualenv binaries by default, preventing supervisor from starting worker/scheduler with the wrong Python interpreter.
+- Smoke validation passed for supervisor process status, worker/scheduler heartbeat freshness, `/api/health`, `/api/auth/login`, `/api/auth/me`, `/api/v1/mobile/auth/me`, and web admin login redirect.
+- Deferred admin optional endpoint errors (`/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`) were intentionally left untouched in this scoped runtime task.
+
 ### Backend Ruff Cleanup (Mar 6, 2026)
 - Cleaned backend lint blockers with scope-limited, behavior-preserving fixes only: unused locals/imports, constant f-strings, truthy assert style, dead unreachable test code, and missing trailing newline in `app/services/session_service.py`.
 - `ruff` now passes for `/app/backend`.
@@ -233,9 +239,10 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - Validation passed for: `test_mobile_bff_preview_api.py`, `test_agency_sheets_api.py`, `test_admin_all_users_crud.py`, `test_agency_modules_and_branding.py`, `test_admin_all_users_and_agency_nav.py`, and `test_api_org_isolation_bookings.py`, plus helper smoke against preview `/api/health` and `/api/auth/me`.
 
 ## Current Priority Backlog
-- **P0:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
-- **P1:** Environment-specific process-manager attachment of the new runtime scripts (`run_api_runtime.sh`, `run_worker_runtime.sh`, `run_scheduler_runtime.sh`) wherever preview/staging/prod infra definitions live
+- **P0:** None active in web repo. Preview dedicated worker + scheduler supervisor wiring is complete and smoke-validated.
+- **P1:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
 - **P1:** PR-7 — Web Active Devices / Sessions screen
+- **P1:** Mirror the dedicated runtime wiring into staging/prod infra definitions when those environment configs are available/in scope
 - **P1:** Web auth follow-up cleanup after compat window closes (remove remaining localStorage fallback paths page-by-page)
 - **P1:** Cleanup PR for non-blocking preview issues: `/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`
 - **P1:** API versioning rollout (`/api/v1/*`) and compat adapters

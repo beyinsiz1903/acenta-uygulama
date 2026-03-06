@@ -52,6 +52,9 @@ jobs:
           - 27017:27017
     env:
       MONGO_URL: mongodb://localhost:27017/test_db
+      DB_NAME: test_db
+      JWT_SECRET: test-secret
+      STRIPE_WEBHOOK_SECRET: whsec_test
       ENV: test
     steps:
       - uses: actions/checkout@v4
@@ -77,7 +80,13 @@ jobs:
       - name: Run tests
         run: |
           cd backend
-          python -m pytest tests/ -v --tb=short -q 2>&1 || true
+          python -m pytest \
+            tests/test_auth_jwt_and_org_context.py \
+            tests/test_jwt_revocation.py \
+            tests/test_rate_limiting.py \
+            tests/test_security_headers.py \
+            tests/test_stripe_webhook_b2c_side_effects.py \
+            -v --tb=short -q 2>&1
 
   # ─── Frontend Lint & Build ───
   frontend-lint:
@@ -108,7 +117,13 @@ jobs:
       - name: ESLint
         run: |
           cd frontend
-          npx eslint src/ --ext .js,.jsx --max-warnings 50 2>&1 || true
+          npx eslint \
+            src/lib/api.js \
+            src/hooks/useAuth.js \
+            src/components/RequireAuth.jsx \
+            src/pages/LoginPage.jsx \
+            src/index.js \
+            --ext .js,.jsx --max-warnings 0 2>&1
 
   frontend-build:
     name: Frontend Build

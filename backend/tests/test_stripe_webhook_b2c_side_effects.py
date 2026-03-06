@@ -8,6 +8,17 @@ from app.utils import now_utc
 
 
 @pytest.mark.anyio
+async def test_stripe_webhook_rejects_when_secret_missing(async_client, monkeypatch):
+    monkeypatch.delenv("STRIPE_WEBHOOK_SECRET", raising=False)
+
+    resp = await async_client.post("/api/webhook/stripe-billing", content=b"{}")
+
+    assert resp.status_code == 503
+    data = resp.json()
+    assert data["error"]["code"] == "webhook_secret_missing"
+
+
+@pytest.mark.anyio
 async def test_stripe_webhook_triggers_b2c_side_effects_for_public_booking(async_client, test_db, monkeypatch):
     """payment_intent.succeeded with public booking metadata triggers B2C side effects.
 

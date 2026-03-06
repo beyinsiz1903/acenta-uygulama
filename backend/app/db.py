@@ -5,19 +5,19 @@ from typing import Optional
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
+from app.config import require_env
+
 
 _mongo_client: Optional[AsyncIOMotorClient] = None
 _db: Optional[AsyncIOMotorDatabase] = None
 
 
 def _mongo_url() -> str:
-    # Deployment-safe: fallback to localhost (will fail gracefully at runtime if Atlas not available)
-    return os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+    return require_env("MONGO_URL")
 
 
 def _db_name() -> str:
-    """Resolve database name from DB_NAME env var only."""
-    return os.environ.get("DB_NAME", "test_database")
+    return require_env("DB_NAME")
 
 
 async def connect_mongo() -> None:

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
@@ -11,6 +10,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.context import CryptContext
 
 from app.db import get_db
+from app.security.jwt_config import get_jwt_secret
 from app.utils import serialize_doc
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -19,8 +19,7 @@ bearer_scheme = HTTPBearer(auto_error=False)
 
 
 def _jwt_secret() -> str:
-    # Keep in backend env in future; default only for dev/testing.
-    return os.environ.get("JWT_SECRET", "dev_jwt_secret_change_me")
+    return get_jwt_secret()
 
 
 def hash_password(password: str) -> str:

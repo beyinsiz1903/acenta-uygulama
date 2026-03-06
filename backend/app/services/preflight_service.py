@@ -11,7 +11,9 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
+from app.config import MissingRequiredEnv
 from app.db import get_db
+from app.security.jwt_config import get_jwt_secret
 from app.utils import now_utc
 
 
@@ -164,12 +166,11 @@ async def run_preflight() -> dict[str, Any]:
 
     # ── 6. SECURITY ─────────────────────────────────────
     # 6a. JWT_SECRET not default
-    jwt_secret = os.environ.get("JWT_SECRET", "dev_jwt_secret_change_me")
-    if jwt_secret == "dev_jwt_secret_change_me":
-        checks.append(CheckResult("JWT Secret (prod değil)", "security", "warn",
-                                  "Varsayılan dev secret kullanılıyor — prod'da değiştirin", critical=False))
-    else:
+    try:
+        get_jwt_secret()
         checks.append(CheckResult("JWT Secret", "security", "pass", "Özel secret ayarlı"))
+    except MissingRequiredEnv:
+        checks.append(CheckResult("JWT Secret", "security", "fail", "JWT_SECRET tanımlı değil"))
 
     # 6b. super_admin count
     try:

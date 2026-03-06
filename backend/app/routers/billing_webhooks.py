@@ -16,7 +16,7 @@ router = APIRouter(tags=["billing_webhooks"])
 
 
 def _get_webhook_secret() -> str:
-  return os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+  return (os.environ.get("STRIPE_WEBHOOK_SECRET") or "").strip()
 
 
 @router.post("/api/webhook/stripe-billing")
@@ -32,12 +32,20 @@ async def stripe_billing_webhook(request: Request) -> JSONResponse:
   sig_header = request.headers.get("stripe-signature", "")
   webhook_secret = _get_webhook_secret()
 
+  if not webhook_secret:
+    logger.error("Stripe webhook rejected: STRIPE_WEBHOOK_SECRET is not configured")
+    return JSONResponse(
+      {
+        "error": {
+          "code": "webhook_secret_missing",
+          "message": "Stripe webhook secret is not configured.",
+        }
+      },
+      status_code=503,
+    )
+
   try:
-    if webhook_secret:
-      event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
-    else:
-      import json
-      event = stripe.Event.construct_from(json.loads(payload), stripe.api_key)
+    event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
   except Exception as e:
     logger.warning("Stripe webhook signature failed: %s", e)
     return JSONResponse({"error": "Invalid signature"}, status_code=400)

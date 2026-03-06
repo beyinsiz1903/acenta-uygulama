@@ -24,12 +24,11 @@ jobs:
           --health-retries=12
 
     env:
-      # Uygulamanın config’ine göre gerekiyorsa uyarlayın:
       MONGODB_URL: mongodb://localhost:27017
-      # Eğer test config başka isim bekliyorsa (MONGO_URL vb.) onu da ekleyin:
       MONGO_URL: mongodb://localhost:27017
-      # JWT secret testlerde gerekiyorsa:
+      DB_NAME: test_db
       JWT_SECRET: test-secret
+      STRIPE_WEBHOOK_SECRET: whsec_test
 
     steps:
       - name: Checkout

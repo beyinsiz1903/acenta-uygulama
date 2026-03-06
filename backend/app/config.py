@@ -27,6 +27,17 @@ except (ImportError, Exception):
     pass
 
 
+class MissingRequiredEnv(RuntimeError):
+    """Raised when a required environment variable is missing or blank."""
+
+
+def require_env(name: str) -> str:
+    value = os.environ.get(name)
+    if value is None or not value.strip():
+        raise MissingRequiredEnv(f"Required environment variable is missing: {name}")
+    return value.strip()
+
+
 def _env_flag(name: str, default: bool = True) -> bool:
     """Read a boolean-like flag from environment.
 

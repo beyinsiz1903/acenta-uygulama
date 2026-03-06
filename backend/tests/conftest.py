@@ -24,6 +24,11 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
+os.environ.setdefault("MONGO_URL", "mongodb://localhost:27017")
+os.environ.setdefault("DB_NAME", "test_database")
+os.environ.setdefault("JWT_SECRET", "test-secret")
+os.environ.setdefault("STRIPE_WEBHOOK_SECRET", "whsec_test")
+
 from server import app
 from app.db import get_db, _mongo_url
 from app.utils import now_utc

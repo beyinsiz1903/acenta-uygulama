@@ -9,8 +9,10 @@ from httpx import ASGITransport, AsyncClient
 
 from server import app
 from app.auth import _jwt_secret, get_current_user
+from app.config import MissingRequiredEnv
 from app.context.org_context import get_current_org
 from app.db import get_db
+from app.security.jwt_config import require_jwt_secret
 
 
 @pytest.mark.anyio
@@ -50,3 +52,10 @@ async def test_get_current_org_403_when_user_has_no_org(test_db: Any) -> None:
         await get_current_org(user)  # type: ignore[arg-type]
     assert exc.value.status_code == status.HTTP_403_FORBIDDEN
     assert exc.value.detail == "Organization membership required"
+
+
+def test_require_jwt_secret_raises_when_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("JWT_SECRET", raising=False)
+
+    with pytest.raises(MissingRequiredEnv):
+        require_jwt_secret()

@@ -196,15 +196,21 @@ frontend:
         agent: "testing"
         comment: "PR-3: Navigation loop detection passed. Tested both admin and agency login flows. Admin: /login → /app/admin/agencies (stable, no loops). Agency: /login → /app/partners (stable, no loops). URLs remain stable after 2 seconds, confirming no redirect loops introduced by PR-3 tenant isolation changes."
 
-metadata:
-  created_by: "testing_agent"
-  version: "1.0"
-  test_sequence: 3
-  last_updated: "2026-03-06"
+  - task: "Runtime wiring smoke validation - dedicated worker/scheduler"
+    implemented: true
+    working: true
+    file: "backend/server.py, backend/app/bootstrap/api_app.py, backend/app/bootstrap/worker_app.py, backend/app/bootstrap/scheduler_app.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Runtime wiring smoke validation PASSED. All 5 required tests completed successfully after dedicated worker/scheduler runtime wiring changes: 1) GET /api/health ✅ (status: ok), 2) POST /api/auth/login ✅ (admin@acenta.test/admin123, access_token: 385 chars, refresh_token: 64 chars, session_id received), 3) GET /api/auth/me ✅ (user email verified: admin@acenta.test, roles: super_admin), 4) GET /api/v1/mobile/auth/me ✅ (mobile auth working, no sensitive fields exposed, no MongoDB ObjectId leaks), 5) Core auth flow regression check ✅ (admin agencies working with 3 agencies, unauthorized access properly rejected with 401). No regression detected in core auth flows after runtime wiring changes. All authentication endpoints operational."
 
 test_plan:
   current_focus:
-    - "PR-5A Mobile BFF verification - all tests passed"
+    - "Runtime wiring smoke validation - dedicated worker/scheduler - PASSED"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
@@ -714,7 +720,7 @@ metadata:
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 12
+  test_sequence: 13
   last_updated: "2026-03-06"
 
   - task: "Preview Auth Helper validation - common auth/token cache"
@@ -1712,3 +1718,64 @@ agent_communication:
         comment: "Backend lint fix validation COMPLETED - ALL TESTS PASSED (2026-03-06). Performed comprehensive validation of backend lint CI fixes per Turkish review request. Test Results: 1) ✅ Backend lint temiz mi? - EVET (ruff validation passed, no lint errors), 2) ✅ İlgili backend testler geçiyor mu? - EVET (test_runtime_wiring.py, test_auth_session_model.py, test_auth_tenant_binding.py, test_mobile_bff_contracts.py all passed), 3) ✅ Auth/session/tenant/mobile BFF akışlarında regresyon var mı? - HAYIR (GET /api/health ✅, POST /api/auth/login ✅, GET /api/auth/me ✅, GET /api/v1/mobile/auth/me ✅), 4) ✅ Davranış değişikliği var mı? - HAYIR (all endpoints returning expected responses, no behavioral changes detected). Validation Summary: 4/4 tests passed, lint fixes successful without introducing regressions. Changes were safe refactoring (unused variables, duplicate imports, f-string fixes, dead code removal) as specified in review scope. All critical backend flows functional and stable."
 
 ---
+
+  - agent: "testing"
+    message: |
+      ✅ RUNTIME WIRING SMOKE VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-06)
+      
+      Performed concise backend smoke validation after dedicated worker/scheduler runtime wiring changes.
+      
+      Context:
+      - Base URL: https://saas-audit-refactor.preview.emergentagent.com
+      - Credentials: admin@acenta.test / admin123
+      - Scope: Smoke test only, focused on auth flow integrity
+      - Runtime changes: Dedicated worker/scheduler heartbeat checks validated by main agent
+      
+      Test Results:
+      
+      1. ✅ GET /api/health - PASSED (200 OK, status: ok)
+         - Health endpoint responding correctly
+         - No service degradation detected
+      
+      2. ✅ POST /api/auth/login - PASSED (200 OK)
+         - Admin credentials accepted: admin@acenta.test/admin123
+         - Access token received: 385 characters
+         - Refresh token received: 64 characters  
+         - Session ID received: 9038f633-b146-4840-8ea4-71c622ea3e47
+         - Login flow fully operational
+      
+      3. ✅ GET /api/auth/me - PASSED (200 OK)
+         - User email verified: admin@acenta.test
+         - User ID: b813058b-0f76-4cd8-a0a4-7ba15536cbb2
+         - Roles: ['super_admin']
+         - Auth token validation working correctly
+      
+      4. ✅ GET /api/v1/mobile/auth/me - PASSED (200 OK)
+         - Mobile auth endpoint working with same token
+         - User data correctly returned: admin@acenta.test
+         - No sensitive fields exposed (password_hash, totp_secret, etc.)
+         - No MongoDB ObjectId leaks detected
+         - Mobile BFF integration intact
+      
+      5. ✅ Core auth flow regression check - PASSED
+         - Admin endpoint /api/admin/agencies working (3 agencies found)
+         - Unauthorized access properly rejected with 401 
+         - Mobile endpoint unauthorized access properly rejected with 401
+         - Auth flow integrity confirmed
+      
+      Technical Validation:
+      ✅ All HTTP status codes correct (200 for success, 401 for unauthorized)
+      ✅ JSON response structures valid and expected
+      ✅ Token authentication working across both legacy and mobile endpoints
+      ✅ Session management operational
+      ✅ Security controls functioning (unauthorized rejection)
+      ✅ No API errors or service degradation
+      
+      Summary:
+      - Total Tests: 5
+      - Passed: 5
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      Runtime wiring smoke validation SUCCESSFUL. Dedicated worker/scheduler runtime wiring changes have not introduced any regressions in core authentication flows. All required endpoints operational, token authentication working correctly, and no blocking issues detected. The system is stable and production-ready after the runtime architecture changes.

@@ -114,6 +114,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "PR-3: Login functionality tested with both admin and agency credentials. Admin login redirects correctly to /app/admin/agencies. Agency login (agent@acenta.test) redirects to /app/partners. Tenant ID (9c5c1079-9dea-49bf-82c0-74838b146160) correctly stored in localStorage for tenant isolation. No regressions detected."
+      - working: true
+        agent: "testing"
+        comment: "Admin login flow re-validated (2026-03-06). All 7 validation points PASSED: 1) /login page loads correctly ✅, 2) All data-testid elements present (login-page, login-form, login-email, login-password, login-submit) ✅, 3) Login with admin@acenta.test/admin123 successful ✅, 4) No error banner after submit ✅, 5) Redirects to /app/admin/agencies correctly ✅, 6) No blank/broken page (949 chars content) ✅, 7) No React runtime errors ✅. Console has 7 non-critical optional endpoint errors (401/400/500) which don't affect core login. Admin login flow working perfectly."
 
   - task: "Post-login state verification (no blank screen)"
     implemented: true
@@ -699,7 +702,7 @@ metadata:
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 11
+  test_sequence: 12
   last_updated: "2026-03-06"
 
   - task: "Preview Auth Helper validation - common auth/token cache"
@@ -739,6 +742,83 @@ metadata:
         comment: "Production auth regression check PASSED. Auth session model tests (2/2) passing, production login/auth flows unchanged by preview helper addition. Preview helper properly isolated to test runtime only, no impact on production auth behavior. Local ASGI fallback feature working correctly for rate-limited scenarios."
 
 agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ ADMIN LOGIN FLOW RE-VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-06)
+      
+      Performed focused admin portal login flow testing per user request.
+      
+      Test Context:
+      - Application: Travel agency SaaS platform
+      - Test URL: https://travel-saas-refactor.preview.emergentagent.com/login
+      - Test Account: admin@acenta.test / admin123
+      - Scope: Admin portal login only (B2B login not tested as requested)
+      
+      Validation Results (Turkish Requirements):
+      
+      1. ✅ /login sayfası düzgün yükleniyor mu?
+         - EVET - Page loads correctly at /login
+         - No blank screens or load errors
+      
+      2. ✅ data-testid elementleri mevcut mu?
+         - EVET - All required testids found:
+           * data-testid="login-page" ✅
+           * data-testid="login-form" ✅
+           * data-testid="login-email" ✅
+           * data-testid="login-password" ✅
+           * data-testid="login-submit" ✅
+      
+      3. ✅ Geçerli admin kimlik bilgileri ile giriş başarılı mı?
+         - EVET - Login with admin@acenta.test/admin123 successful
+         - Form submission works correctly
+      
+      4. ✅ Submit sonrası hata bannerı çıkıyor mu?
+         - HAYIR - No error banner (data-testid="login-error") appeared
+         - Login succeeded without errors
+      
+      5. ✅ Başarılı girişten sonra redirect uygun mu?
+         - EVET - Successfully redirected to /app/admin/agencies
+         - Correct admin route redirect working
+         - User not stuck on login page
+      
+      6. ✅ Konsolda veya UI'de runtime error var mı?
+         - HAYIR - No critical runtime errors
+         - No React error boundaries detected
+         - No visible UI errors
+         - 7 non-critical console errors from optional API endpoints (401/400/500)
+           * These are from optional features, not blocking login
+           * Similar to pre-existing non-critical errors noted in previous tests
+      
+      7. ✅ Redirect sonrası sayfa blank/broken/unauthorized oluyor mu?
+         - HAYIR - Page renders correctly after redirect
+         - Content length: 949 characters (full agencies page)
+         - "Acentalar" page with 3 agencies displayed
+         - No blank screen, no authorization issues
+      
+      Technical Test Summary:
+      - Total Validation Points: 7
+      - Passed: 7
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Console/Network Analysis:
+      - Console errors: 7 (all non-critical, optional endpoint 401/400/500)
+      - Console warnings: 0
+      - Network failures: 2 (Cloudflare RUM analytics, example.com/logo.png - both non-critical)
+      - No auth-breaking console errors
+      - No login flow blocking issues
+      
+      Screenshots Captured:
+      1. Login page loaded (form rendered correctly)
+      2. Login form with credentials filled (before submit)
+      3. After redirect (admin agencies page with full content)
+      4. Final state (no errors, full functionality)
+      
+      Conclusion:
+      Admin portal login flow is working PERFECTLY. All 7 validation points passed successfully. No blocking issues detected. The console errors are from optional endpoints and do not affect core login functionality. Login → Redirect → Page render flow is stable and functioning correctly as designed.
+      
+      Status: ✅ PRODUCTION-READY - Admin login flow validated and working correctly.
+
   - agent: "testing"
     message: |
       ✅ PREVIEW AUTH HELPER VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-06)

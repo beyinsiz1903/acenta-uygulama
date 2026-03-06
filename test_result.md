@@ -572,16 +572,19 @@ agent_communication:
       - working: true
         agent: "testing"
         comment: "PR-6 frontend smoke test PASSED. All 4 required tests completed successfully: 1) Login page loads at /login ✅ - no blank page (96 chars content, all form elements present), 2) Login with admin@acenta.test/admin123 ✅ - successful redirect to /app/admin/agencies, 3) Post-login admin screen renders ✅ - full content loaded (951 chars, Acentalar page with 3 agencies), 4) No critical PR-6 errors ✅ - no auth bootstrap errors, no infinite loading, no redirect loops, URL stable. Console analysis shows only pre-existing optional endpoint errors (401 auth/me bootstrap check, 400 tenant features/quota, 500 partner-graph notifications). Key success: '[AdminAgencies] Loaded: 3' confirms core functionality. Runtime composition refactor (server.py → bootstrap/api_app.py) successful - behavior preserved, no regressions detected."
+      - working: true
+        agent: "testing"
+        comment: "PR-6 BACKEND VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-03-06). Performed comprehensive Turkish review request validation on https://tenant-audit-preview.preview.emergentagent.com. Backend API Test Results: 1) ✅ POST /api/auth/login - PASSED (access_token: 385 chars, refresh_token: 64 chars), 2) ✅ GET /api/auth/me - PASSED (admin@acenta.test returned correctly), 3) ✅ GET /api/v1/mobile/auth/me - PASSED (no Mongo _id leaks, no sensitive fields exposed), 4) ✅ GET /api/v1/mobile/bookings - PASSED (15 total bookings, proper list wrapper, string IDs), 5) ✅ GET /api/v1/mobile/reports/summary - PASSED (8 bookings, 8100.99 TRY revenue, proper data types), 6) ✅ Unauthorized guard kontrolü - PASSED (both /api/auth/me and /api/v1/mobile/auth/me return 401 without auth), 7) ✅ Root API smoke (/api/health) - PASSED (status: ok), 8) ✅ Auth/session/tenant/Mobile BFF regresyon check - PASSED (no regressions detected, 3 agencies loaded). PR-6 runtime composition refactor SUCCESSFUL: server.py → bootstrap/api_app.py composition working correctly, auth/session/tenant ve Mobile BFF davranış değişmeden kaldı, all critical backend endpoints functional."
 
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 6
+  test_sequence: 7
   last_updated: "2026-03-06"
 
 test_plan:
   current_focus:
-    - "PR-6 runtime composition refactor smoke test completed - all tests passed"
+    - "PR-6 runtime composition refactor backend validation completed - all 8 tests passed"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
@@ -1033,6 +1036,49 @@ agent_communication:
       
       Conclusion:
       PR-6 runtime composition refactor deployment is SUCCESSFUL. Code structure reorganized (composition logic separated into bootstrap modules) but behavior completely preserved. No auth/session/tenant/mobile regressions detected. All previous PR features (PR-1 through PR-5A) remain functional. Frontend smoke test confirms stability. Minimal scope test completed as requested - "Kapsam küçük kalsın; smoke yeterli" ✅
+
+  - agent: "testing"
+    message: |
+      ✅ PR-6 BACKEND VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-03-06)
+      
+      Performed comprehensive PR-6 backend validation per Turkish review request on https://tenant-audit-preview.preview.emergentagent.com
+      
+      PR-6 Context:
+      - server.py now thin compat wrapper (4 lines)
+      - API composition moved to backend/app/bootstrap/api_app.py
+      - Router registration in backend/app/bootstrap/router_registry.py
+      - Middleware setup in backend/app/bootstrap/middleware_setup.py
+      - Auth/session/tenant/Mobile BFF behavior unchanged (structure refactor only)
+      
+      Backend API Test Results:
+      1. ✅ POST /api/auth/login - PASSED (admin@acenta.test/admin123, access_token: 385 chars, refresh_token: 64 chars)
+      2. ✅ GET /api/auth/me - PASSED (returns admin@acenta.test with roles: ['super_admin'])
+      3. ✅ GET /api/v1/mobile/auth/me - PASSED (sanitized mobile DTO, no Mongo _id leaks, no sensitive fields)
+      4. ✅ GET /api/v1/mobile/bookings - PASSED (15 total bookings, proper list wrapper, string IDs only)
+      5. ✅ GET /api/v1/mobile/reports/summary - PASSED (8 bookings, 8100.99 TRY revenue, proper data types)
+      6. ✅ Unauthorized guard kontrolü - PASSED (both /api/auth/me and /api/v1/mobile/auth/me return 401 without auth)
+      7. ✅ Root API smoke test (/api/health) - PASSED ({"status": "ok"} returned correctly)
+      8. ✅ Auth/session/tenant/Mobile BFF regresyon check - PASSED (no regressions detected, tenant context working: 3 agencies)
+      
+      Turkish Requirements Validation:
+      1. ✅ POST /api/auth/login admin kimlik bilgileriyle çalışıyor mu? - EVET (200 OK, token alındı)
+      2. ✅ GET /api/auth/me token doğrulaması çalışıyor mu? - EVET (200 OK, kullanıcı verisi döndü)
+      3. ✅ GET /api/v1/mobile/auth/me Mobile BFF çalışıyor mu? - EVET (sanitized response, no leaks)
+      4. ✅ GET /api/v1/mobile/bookings Mobile BFF çalışıyor mu? - EVET (list wrapper, proper format)
+      5. ✅ GET /api/v1/mobile/reports/summary Mobile BFF çalışıyor mu? - EVET (summary data correct)
+      6. ✅ Unauthorized guard kontrolü çalışıyor mu? - EVET (401 döndürüyor auth olmadan)
+      7. ✅ Raw Mongo _id leak var mı? - HAYIR (all IDs converted to strings properly)
+      8. ✅ Auth/session/tenant/Mobile BFF regresyonu var mı? - HAYIR (no regression detected)
+      
+      Test Summary:
+      - Total Tests: 8
+      - Passed: 8
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      PR-6 runtime composition refactor SUCCESSFUL. Backend API validation confirms server.py → bootstrap/api_app.py composition working correctly. Auth/session/tenant ve Mobile BFF davranış değişmeden kaldı. All critical backend endpoints functional. No regressions detected in any existing functionality. Runtime composition refactor complete and production-ready.
+
 
 
 ---

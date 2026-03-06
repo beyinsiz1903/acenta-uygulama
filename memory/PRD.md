@@ -215,6 +215,11 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - Applied safe auto-fixes plus small manual whitespace/import/export corrections across backend app, scripts, and tests; restored `backend/server.py` compat export via `__all__ = ["app"]` so lint cleanliness did not break `server:app` usage.
 - Verified with exact command `ruff check /app/backend --output-format concise` (clean), targeted pytest reruns, and preview auth/mobile smoke.
 
+### Auth Test Harness Compatibility Fix (Mar 6, 2026)
+- Fixed CI failure in `backend/tests/test_auth_jwt_and_org_context.py::test_get_current_org_403_when_user_has_no_org` by passing a minimal Starlette `Request` object into the direct `get_current_user(...)` test call.
+- This was a test-only compatibility update after auth dependency signature evolution; no application behavior or auth business logic was changed.
+- Revalidated with targeted auth pytest (`test_auth_jwt_and_org_context.py`, `test_auth_session_model.py`, `test_auth_tenant_binding.py`) and preview smoke on `/api/health`, `/api/auth/me`, `/api/v1/mobile/auth/me`.
+
 ## Current Priority Backlog
 - **P0:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
 - **P1:** Environment-specific process-manager attachment of the new runtime scripts (`run_api_runtime.sh`, `run_worker_runtime.sh`, `run_scheduler_runtime.sh`) wherever preview/staging/prod infra definitions live

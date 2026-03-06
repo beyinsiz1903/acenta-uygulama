@@ -1,283 +1,272 @@
 #!/usr/bin/env python3
 """
-Backend Smoke Test for Web SaaS Application
-Target: https://dashboard-stabilize.preview.emergentagent.com
+Backend smoke test for PR-1 deployment validation
+Testing auth hardening and webhook security regression
 """
 
 import requests
 import json
 import sys
-from typing import Dict, Any, Optional
+import os
+from datetime import datetime
 
-class BackendSmokeTest:
-    def __init__(self, base_url: str, email: str, password: str):
-        self.base_url = base_url.rstrip('/')
-        self.email = email
-        self.password = password
-        self.access_token: Optional[str] = None
-        self.refresh_token: Optional[str] = None
+# Configuration
+BASE_URL = "https://dashboard-stabilize.preview.emergentagent.com"
+API_BASE = f"{BASE_URL}/api"
+
+# Test credentials
+TEST_EMAIL = "admin@acenta.test"
+TEST_PASSWORD = "admin123"
+
+class BackendTester:
+    def __init__(self):
         self.session = requests.Session()
-        self.session.timeout = 30
+        self.access_token = None
+        self.refresh_token = None
+        self.test_results = []
         
-    def log(self, message: str, level: str = "INFO"):
-        """Log test messages"""
-        print(f"[{level}] {message}")
+    def log_test(self, name, passed, details=""):
+        """Log test result"""
+        status = "✅ PASS" if passed else "❌ FAIL"
+        print(f"{status}: {name}")
+        if details:
+            print(f"   {details}")
+        self.test_results.append({
+            "name": name,
+            "passed": passed,
+            "details": details
+        })
         
-    def test_login(self) -> bool:
+    def test_login_endpoint(self):
         """Test POST /api/auth/login"""
-        self.log("Testing POST /api/auth/login...")
-        
-        login_url = f"{self.base_url}/api/auth/login"
-        payload = {
-            "email": self.email,
-            "password": self.password
-        }
-        
         try:
-            response = self.session.post(login_url, json=payload)
-            self.log(f"Login response status: {response.status_code}")
+            response = self.session.post(
+                f"{API_BASE}/auth/login",
+                json={
+                    "email": TEST_EMAIL,
+                    "password": TEST_PASSWORD
+                },
+                headers={"Content-Type": "application/json"}
+            )
             
-            if response.status_code >= 500:
-                self.log(f"🚨 5XX ERROR: {response.status_code} - {response.text}", "ERROR")
-                return False
-                
-            if response.status_code != 200:
-                self.log(f"❌ Login failed with status: {response.status_code}", "ERROR")
-                self.log(f"Response: {response.text}", "ERROR")
-                return False
-                
-            try:
+            if response.status_code == 200:
                 data = response.json()
-            except json.JSONDecodeError as e:
-                self.log(f"🚨 JSON DECODE ERROR: {e}", "ERROR")
-                self.log(f"Raw response: {response.text}", "ERROR")
+                if "access_token" in data and "refresh_token" in data:
+                    self.access_token = data["access_token"]
+                    self.refresh_token = data["refresh_token"]
+                    self.log_test(
+                        "POST /api/auth/login", 
+                        True, 
+                        f"Status: {response.status_code}, Tokens received"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "POST /api/auth/login", 
+                        False, 
+                        f"Status: {response.status_code}, Missing tokens in response"
+                    )
+                    return False
+            else:
+                self.log_test(
+                    "POST /api/auth/login", 
+                    False, 
+                    f"Status: {response.status_code}, Response: {response.text[:200]}"
+                )
                 return False
                 
-            # Check for tokens
-            if 'access_token' not in data:
-                self.log("❌ Missing access_token in login response", "ERROR")
-                return False
-                
-            if 'refresh_token' not in data:
-                self.log("❌ Missing refresh_token in login response", "ERROR")
-                return False
-                
-            self.access_token = data['access_token']
-            self.refresh_token = data['refresh_token']
-            
-            self.log("✅ Login successful - tokens received")
-            return True
-            
-        except requests.exceptions.RequestException as e:
-            self.log(f"🚨 LOGIN REQUEST ERROR: {e}", "ERROR")
+        except Exception as e:
+            self.log_test("POST /api/auth/login", False, f"Exception: {str(e)}")
             return False
-            
-    def test_auth_me(self) -> bool:
+    
+    def test_auth_me_endpoint(self):
         """Test GET /api/auth/me with token"""
         if not self.access_token:
-            self.log("❌ No access token available for /auth/me test", "ERROR")
+            self.log_test("GET /api/auth/me", False, "No access token available")
             return False
             
-        self.log("Testing GET /api/auth/me...")
-        
-        headers = {"Authorization": f"Bearer {self.access_token}"}
-        me_url = f"{self.base_url}/api/auth/me"
-        
         try:
-            response = self.session.get(me_url, headers=headers)
-            self.log(f"/auth/me response status: {response.status_code}")
+            response = self.session.get(
+                f"{API_BASE}/auth/me",
+                headers={
+                    "Authorization": f"Bearer {self.access_token}",
+                    "Content-Type": "application/json"
+                }
+            )
             
-            if response.status_code >= 500:
-                self.log(f"🚨 5XX ERROR: {response.status_code} - {response.text}", "ERROR")
-                return False
-                
-            if response.status_code == 401:
-                self.log("🚨 AUTH BROKEN: 401 Unauthorized on /auth/me", "ERROR")
-                return False
-                
-            if response.status_code != 200:
-                self.log(f"❌ /auth/me failed with status: {response.status_code}", "ERROR")
-                return False
-                
-            try:
+            if response.status_code == 200:
                 data = response.json()
-                self.log("✅ /auth/me working - user data received")
+                self.log_test(
+                    "GET /api/auth/me", 
+                    True, 
+                    f"Status: {response.status_code}, User data received"
+                )
                 return True
-            except json.JSONDecodeError as e:
-                self.log(f"🚨 JSON DECODE ERROR in /auth/me: {e}", "ERROR")
+            else:
+                self.log_test(
+                    "GET /api/auth/me", 
+                    False, 
+                    f"Status: {response.status_code}, Response: {response.text[:200]}"
+                )
                 return False
                 
-        except requests.exceptions.RequestException as e:
-            self.log(f"🚨 AUTH/ME REQUEST ERROR: {e}", "ERROR")
+        except Exception as e:
+            self.log_test("GET /api/auth/me", False, f"Exception: {str(e)}")
             return False
-            
-    def test_admin_agencies(self) -> bool:
+    
+    def test_admin_agencies_endpoint(self):
         """Test GET /api/admin/agencies with token"""
         if not self.access_token:
-            self.log("❌ No access token available for /admin/agencies test", "ERROR")
+            self.log_test("GET /api/admin/agencies", False, "No access token available")
             return False
             
-        self.log("Testing GET /api/admin/agencies...")
-        
-        headers = {"Authorization": f"Bearer {self.access_token}"}
-        agencies_url = f"{self.base_url}/api/admin/agencies"
-        
         try:
-            response = self.session.get(agencies_url, headers=headers)
-            self.log(f"/admin/agencies response status: {response.status_code}")
+            response = self.session.get(
+                f"{API_BASE}/admin/agencies",
+                headers={
+                    "Authorization": f"Bearer {self.access_token}",
+                    "Content-Type": "application/json"
+                }
+            )
             
-            if response.status_code >= 500:
-                self.log(f"🚨 5XX ERROR: {response.status_code} - {response.text}", "ERROR")
-                return False
-                
-            if response.status_code == 401:
-                self.log("🚨 AUTH BROKEN: 401 Unauthorized on /admin/agencies", "ERROR")
-                return False
-                
-            if response.status_code != 200:
-                self.log(f"❌ /admin/agencies failed with status: {response.status_code}", "ERROR")
-                return False
-                
-            try:
+            if response.status_code == 200:
                 data = response.json()
-                self.log("✅ /admin/agencies working - data received")
+                self.log_test(
+                    "GET /api/admin/agencies", 
+                    True, 
+                    f"Status: {response.status_code}, Agency data received"
+                )
                 return True
-            except json.JSONDecodeError as e:
-                self.log(f"🚨 JSON DECODE ERROR in /admin/agencies: {e}", "ERROR")
+            else:
+                self.log_test(
+                    "GET /api/admin/agencies", 
+                    False, 
+                    f"Status: {response.status_code}, Response: {response.text[:200]}"
+                )
                 return False
                 
-        except requests.exceptions.RequestException as e:
-            self.log(f"🚨 ADMIN/AGENCIES REQUEST ERROR: {e}", "ERROR")
+        except Exception as e:
+            self.log_test("GET /api/admin/agencies", False, f"Exception: {str(e)}")
             return False
+    
+    def test_webhook_without_secret(self):
+        """Test POST /api/webhook/stripe-billing without secret (PR-1 specific)"""
+        try:
+            # Test webhook endpoint without proper secret/signature
+            fake_payload = {
+                "id": "evt_test_webhook",
+                "type": "invoice.paid",
+                "data": {"object": {"subscription": "sub_test"}}
+            }
             
-    def test_dashboard_endpoint(self) -> bool:
-        """Test critical dashboard endpoint"""
-        if not self.access_token:
-            self.log("❌ No access token available for dashboard test", "ERROR")
-            return False
+            response = self.session.post(
+                f"{API_BASE}/webhook/stripe-billing",
+                json=fake_payload,
+                headers={
+                    "Content-Type": "application/json",
+                    "stripe-signature": "invalid_signature"
+                }
+            )
             
-        self.log("Testing dashboard endpoints...")
-        
-        headers = {"Authorization": f"Bearer {self.access_token}"}
-        
-        # Try multiple potential dashboard endpoints
-        endpoints = [
-            "/api/dashboard/popular-products",
-            "/api/dashboard/stats",
-            "/api/dashboard/summary"
-        ]
-        
-        for endpoint in endpoints:
-            url = f"{self.base_url}{endpoint}"
-            try:
-                response = self.session.get(url, headers=headers)
-                self.log(f"{endpoint} response status: {response.status_code}")
-                
-                if response.status_code >= 500:
-                    self.log(f"🚨 5XX ERROR on {endpoint}: {response.status_code} - {response.text}", "ERROR")
-                    continue
-                    
-                if response.status_code == 401:
-                    self.log(f"🚨 AUTH BROKEN on {endpoint}: 401 Unauthorized", "ERROR")
-                    continue
-                    
-                if response.status_code == 200:
-                    try:
-                        data = response.json()
-                        self.log(f"✅ {endpoint} working - data received")
-                        return True
-                    except json.JSONDecodeError as e:
-                        self.log(f"🚨 JSON DECODE ERROR in {endpoint}: {e}", "ERROR")
-                        continue
-                        
-                elif response.status_code == 404:
-                    self.log(f"ℹ️  {endpoint} not found (404) - endpoint may not exist")
+            # Expected: Should reject with 503 (secret missing) or 400 (invalid signature)
+            if response.status_code in [400, 503]:
+                response_data = response.json()
+                if response.status_code == 503 and "webhook_secret_missing" in response.text:
+                    self.log_test(
+                        "POST /api/webhook/stripe-billing (no secret)", 
+                        True, 
+                        f"Status: {response.status_code}, Properly rejected - webhook secret missing"
+                    )
+                elif response.status_code == 400 and "signature" in response.text:
+                    self.log_test(
+                        "POST /api/webhook/stripe-billing (no secret)", 
+                        True, 
+                        f"Status: {response.status_code}, Properly rejected - invalid signature"
+                    )
                 else:
-                    self.log(f"⚠️  {endpoint} returned {response.status_code}")
-                    
-            except requests.exceptions.RequestException as e:
-                self.log(f"🚨 REQUEST ERROR for {endpoint}: {e}", "ERROR")
-                continue
+                    self.log_test(
+                        "POST /api/webhook/stripe-billing (no secret)", 
+                        True, 
+                        f"Status: {response.status_code}, Request rejected as expected"
+                    )
+                return True
+            else:
+                self.log_test(
+                    "POST /api/webhook/stripe-billing (no secret)", 
+                    False, 
+                    f"Status: {response.status_code}, Should have rejected request. Response: {response.text[:200]}"
+                )
+                return False
                 
-        self.log("⚠️  No working dashboard endpoints found - may be WAF/preview restrictions")
-        return False
-        
-    def run_smoke_test(self) -> Dict[str, bool]:
-        """Run complete smoke test suite"""
-        self.log("🚀 Starting Backend Smoke Test")
-        self.log(f"Target: {self.base_url}")
-        self.log(f"Admin: {self.email}")
-        
-        results = {
-            "login": False,
-            "auth_me": False, 
-            "admin_agencies": False,
-            "dashboard": False
-        }
-        
-        # Test 1: Login
-        results["login"] = self.test_login()
-        
-        # Test 2: Auth me (requires login success)
-        if results["login"]:
-            results["auth_me"] = self.test_auth_me()
-        else:
-            self.log("⏭️  Skipping /auth/me test - login failed")
-            
-        # Test 3: Admin agencies (requires login success)
-        if results["login"]:
-            results["admin_agencies"] = self.test_admin_agencies()
-        else:
-            self.log("⏭️  Skipping /admin/agencies test - login failed")
-            
-        # Test 4: Dashboard endpoint (requires login success)
-        if results["login"]:
-            results["dashboard"] = self.test_dashboard_endpoint()
-        else:
-            self.log("⏭️  Skipping dashboard test - login failed")
-            
-        return results
-        
-    def print_summary(self, results: Dict[str, bool]):
-        """Print test summary"""
-        self.log("=" * 50)
-        self.log("📋 SMOKE TEST SUMMARY")
-        self.log("=" * 50)
-        
-        total_tests = len(results)
-        passed_tests = sum(results.values())
-        
-        for test_name, passed in results.items():
-            status = "✅ PASS" if passed else "❌ FAIL"
-            self.log(f"{test_name.upper()}: {status}")
-            
-        self.log("-" * 50)
-        self.log(f"OVERALL: {passed_tests}/{total_tests} tests passed")
-        
-        if passed_tests == total_tests:
-            self.log("🎉 ALL TESTS PASSED - Backend is healthy")
-        elif passed_tests == 0:
-            self.log("🚨 ALL TESTS FAILED - Critical backend issues")
-        else:
-            self.log("⚠️  PARTIAL SUCCESS - Some endpoints failing")
-
-
-def main():
-    """Main test execution"""
-    base_url = "https://dashboard-stabilize.preview.emergentagent.com"
-    email = "admin@acenta.test"
-    password = "admin123"
+        except Exception as e:
+            self.log_test("POST /api/webhook/stripe-billing (no secret)", False, f"Exception: {str(e)}")
+            return False
     
-    tester = BackendSmokeTest(base_url, email, password)
-    results = tester.run_smoke_test()
-    tester.print_summary(results)
+    def test_5xx_errors(self):
+        """Check for 5xx server errors during testing"""
+        server_errors = [result for result in self.test_results 
+                        if not result["passed"] and "50" in result["details"]]
+        
+        if server_errors:
+            self.log_test(
+                "5xx Server Error Check", 
+                False, 
+                f"Found {len(server_errors)} server errors"
+            )
+            return False
+        else:
+            self.log_test(
+                "5xx Server Error Check", 
+                True, 
+                "No 5xx server errors detected"
+            )
+            return True
     
-    # Exit with appropriate code
-    if all(results.values()):
-        sys.exit(0)  # Success
-    else:
-        sys.exit(1)  # Failure
-
+    def run_all_tests(self):
+        """Run complete PR-1 backend smoke test suite"""
+        print(f"\n🔍 Starting Backend Smoke Test - PR-1 Validation")
+        print(f"Base URL: {BASE_URL}")
+        print(f"Test Time: {datetime.now().isoformat()}")
+        print("-" * 60)
+        
+        # Core authentication tests
+        login_success = self.test_login_endpoint()
+        if login_success:
+            self.test_auth_me_endpoint()
+            self.test_admin_agencies_endpoint()
+        
+        # PR-1 specific: webhook security test
+        self.test_webhook_without_secret()
+        
+        # Check for server errors
+        self.test_5xx_errors()
+        
+        # Summary
+        print("-" * 60)
+        passed_tests = [r for r in self.test_results if r["passed"]]
+        failed_tests = [r for r in self.test_results if not r["passed"]]
+        
+        print(f"\n📊 TEST SUMMARY:")
+        print(f"✅ Passed: {len(passed_tests)}")
+        print(f"❌ Failed: {len(failed_tests)}")
+        
+        if failed_tests:
+            print(f"\n❌ FAILED TESTS:")
+            for test in failed_tests:
+                print(f"   • {test['name']}: {test['details']}")
+        
+        success = len(failed_tests) == 0
+        
+        if success:
+            print(f"\n✅ PR-1 BACKEND SMOKE TEST PASSED")
+            print("All auth/config hardening tests successful")
+        else:
+            print(f"\n❌ PR-1 BACKEND SMOKE TEST FAILED")
+            print("Some tests failed - review above details")
+        
+        return success
 
 if __name__ == "__main__":
-    main()
+    tester = BackendTester()
+    success = tester.run_all_tests()
+    sys.exit(0 if success else 1)

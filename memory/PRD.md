@@ -126,3 +126,12 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 ### P2 Strategic Roadmap
 - Build 30/60/90 day execution plan around security hardening, tenancy enforcement, platform observability, billing maturity, and mobile/API convergence.
 - After platform stabilization, evaluate compact/mobile-first companion experiences and Apple Watch backlog separately.
+
+### PR-1 Implemented (Mar 6, 2026)
+- **CI baseline hardened:** removed fake-green `|| true` behavior from backend test and frontend lint jobs in `.github/workflows/ci.yml`. Because the legacy full backend suite is not yet Sprint-1 clean, backend blocking CI was intentionally narrowed to the verified auth/security subset (`test_auth_jwt_and_org_context`, `test_jwt_revocation`, `test_rate_limiting`, `test_security_headers`, `test_stripe_webhook_b2c_side_effects`) instead of silently ignoring failures.
+- **Config hardening:** added fail-fast `require_env()` / `MissingRequiredEnv` in `backend/app/config.py`; removed JWT and Mongo fallbacks in `backend/app/auth.py` and `backend/app/db.py`.
+- **JWT boot safety:** created `backend/app/security/jwt_config.py` and enforced `require_jwt_secret()` during backend startup from `server.py` so missing `JWT_SECRET` now prevents boot.
+- **Webhook hardening:** `backend/app/routers/billing_webhooks.py` now rejects requests when `STRIPE_WEBHOOK_SECRET` is not configured and no longer accepts unsigned fallback payload parsing.
+- **Test harness hardening:** updated `backend/tests/conftest.py` and relevant auth/webhook tests so local/CI test environments explicitly provide required env vars.
+- **Operational note:** full frontend build still surfaces legacy CRA/ESLint warnings from unrelated pages; blocking frontend lint in CI was narrowed to stable auth/core files (`src/lib/api.js`, `src/hooks/useAuth.js`, `src/components/RequireAuth.jsx`, `src/pages/LoginPage.jsx`, `src/index.js`) to avoid fake-green behavior while keeping PR-1 scope controlled.
+- **Smoke result:** backend restart successful; external smoke verified `/api/auth/login`, `/api/auth/me`, `/api/admin/agencies`, and `/api/webhook/stripe-billing` reject behavior (503 without secret). Web login flow and admin agencies page remained stable.

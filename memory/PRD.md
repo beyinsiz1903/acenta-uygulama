@@ -163,9 +163,26 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - **Testing:** added `backend/tests/test_auth_web_cookie_compat.py`; testing agent also added `backend/tests/test_web_auth_cookie_compat_comprehensive.py`. Targeted pytest for auth/session/tenant/cookie suites passed, preview curl verification passed for login/me/refresh/logout cookie flows, and frontend smoke + dedicated frontend/backend testing agents passed.
 - **Scope guard:** this PR is intentionally not a full cookie migration. Legacy bearer path remains available for mobile and short-lived fallback while web source-of-truth shifts toward cookie + bootstrap.
 
+### PR-5A Implemented (Mar 6, 2026)
+- **Scope split accepted:** mobile repo was not available in the workspace, so PR-5 was intentionally split into **PR-5A backend Mobile BFF** and future **PR-5B mobile SecureStore/bootstrap** work.
+- **Mobile BFF module added:** `backend/app/modules/mobile/` created with `router.py`, `service.py`, `schemas.py`, `__init__.py`, and `mobile_contract.md`.
+- **New endpoints:** mounted at `/api/v1/mobile` via `server.py`.
+  - `GET /api/v1/mobile/auth/me`
+  - `GET /api/v1/mobile/dashboard/summary`
+  - `GET /api/v1/mobile/bookings`
+  - `GET /api/v1/mobile/bookings/{id}`
+  - `POST /api/v1/mobile/bookings`
+  - `GET /api/v1/mobile/reports/summary`
+- **Thin orchestration rule preserved:** mobile booking creation delegates to existing `booking_service.create_booking_draft()`; mobile layer owns projection/DTO shaping, not business logic.
+- **DTO safety:** mobile schemas are separate from web DTOs, sensitive fields are not exposed, and Mongo `_id` is never returned in mobile responses.
+- **Tenant guardrails:** mobile reads use request context tenant scoping; booking drafts created through mobile BFF now persist `tenant_id` and mobile-friendly optional metadata via `BookingRepository` updates.
+- **Testing:** added `backend/tests/test_mobile_bff_contracts.py`. Testing agent also added preview contract coverage. Internal pytest, external preview API verification, and backend deep testing all passed with no auth regressions.
+- **Blocked follow-up:** PR-5B remains pending until mobile repo is attached. That phase will cover SecureStore migration, session bootstrap, refresh persistence, and mobile app adoption of these new endpoints.
+
 ## Current Priority Backlog
-- **P0:** PR-5 — Mobile Secure Session + Mobile BFF Phase 1
+- **P0:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo)
 - **P0:** PR-6 — Bootstrap Split / Runtime Separation
+- **P1:** PR-7 — Web Active Devices / Sessions screen
 - **P1:** Web auth follow-up cleanup after compat window closes (remove remaining localStorage fallback paths page-by-page)
 - **P1:** API versioning rollout (`/api/v1/*`) and compat adapters
 - **P2:** Entitlement/billing unification, observability stack, broader frontend modular refactor

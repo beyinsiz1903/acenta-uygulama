@@ -226,6 +226,12 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - Added a shared preview admin auth fixture in `test_mobile_bff_preview_api.py` to reduce repeated login churn during preview-facing test execution.
 - Validation passed via targeted pytest (`test_api_org_isolation_bookings.py`, `test_mobile_bff_preview_api.py -k requires_auth`), smoke on `/api/health`, `/api/auth/me`, `/api/v1/mobile/auth/me`, and backend deep testing.
 
+### Preview Auth Helper Hardening (Mar 6, 2026)
+- Added `backend/tests/preview_auth_helper.py` as a small, isolated preview-external test helper with shared auth cache, short TTL, explicit invalidation, tenant-aware login support, refresh/login fallback, and a local ASGI bootstrap fallback for preview login rate-limit scenarios.
+- Migrated preview-facing external HTTP tests to the helper where relevant: `test_mobile_bff_preview_api.py`, `test_admin_all_users_crud.py`, `test_agency_modules_and_branding.py`, `test_admin_all_users_and_agency_nav.py`, and `test_agency_sheets_api.py`.
+- Added narrow guards in `backend/tests/conftest.py` so local DB seeding/index fixtures do not create avoidable flakiness for preview-only external HTTP tests.
+- Validation passed for: `test_mobile_bff_preview_api.py`, `test_agency_sheets_api.py`, `test_admin_all_users_crud.py`, `test_agency_modules_and_branding.py`, `test_admin_all_users_and_agency_nav.py`, and `test_api_org_isolation_bookings.py`, plus helper smoke against preview `/api/health` and `/api/auth/me`.
+
 ## Current Priority Backlog
 - **P0:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
 - **P1:** Environment-specific process-manager attachment of the new runtime scripts (`run_api_runtime.sh`, `run_worker_runtime.sh`, `run_scheduler_runtime.sh`) wherever preview/staging/prod infra definitions live

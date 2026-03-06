@@ -48,17 +48,17 @@ backend:
         agent: "testing"
         comment: "Dashboard endpoint /api/dashboard/popular-products working correctly. Returns 200 status with JSON data when authenticated."
 
-  - task: "POST /api/webhook/stripe-billing security validation (PR-1)"
+  - task: "PR-2 backend session/revocation hardening smoke test"
     implemented: true
     working: true
-    file: "backend/app/routers/billing_webhooks.py"
+    file: "backend/server.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "testing"
-        comment: "PR-1 webhook security test PASSED. Endpoint correctly rejects requests when STRIPE_WEBHOOK_SECRET is not configured, returning 503 status with webhook_secret_missing error. Auth hardening working as expected."
+        comment: "PR-2 backend smoke test PASSED. All 7 required tests completed successfully: 1) Login with session_id ✅, 2) Sessions endpoint ✅, 3) Refresh rotation ✅, 4) Refresh reuse prevention ✅, 5) Revoke-all-sessions ✅, 6) Auth regression ✅, 7) No 5xx/JSON errors ✅. Session management and token hardening working correctly."
 
 frontend:
   - task: "Login functionality at /login"
@@ -153,7 +153,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "PR-2 session model smoke test completed - all tests passed"
+    - "PR-2 backend session/revocation hardening smoke test - all tests passed"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
@@ -226,39 +226,30 @@ agent_communication:
 
   - agent: "testing"
     message: |
-      ✅ PR-2 SESSION MODEL SMOKE TEST COMPLETED - ALL TESTS PASSED (2026-03-06)
+      ✅ PR-2 BACKEND API SMOKE TEST COMPLETED - ALL TESTS PASSED (2026-03-06)
       
-      Performed comprehensive session stability smoke test validating PR-2 session model changes.
+      Performed comprehensive PR-2 backend smoke test validating session/revocation hardening post-deployment.
       
-      Test Flow (Base URL: https://dashboard-stabilize.preview.emergentagent.com):
-      1. ✅ Navigate to /login - PASSED (login page rendered correctly)
-      2. ✅ Login with admin@acenta.test / admin123 - PASSED (authentication successful)
-      3. ✅ Verify redirect to /app/admin/agencies - PASSED (correct redirect, no loop)
-      4. ✅ Check for blank screen - PASSED (944 characters, "Acentalar" title displayed)
-      5. ✅ Session-related console errors - PASSED (no session/auth errors detected)
-      6. ✅ localStorage session data - PASSED (token and user present)
-      7. ✅ Navigate to /app dashboard - PASSED (2602 characters, auth state persisted)
-      8. ✅ Return to /app/admin/agencies - PASSED (no navigation issues)
-      9. ✅ Redirect loop detection - PASSED (no rapid URL changes detected)
+      Test Results (Base URL: https://dashboard-stabilize.preview.emergentagent.com):
+      1. ✅ POST /api/auth/login (tokens + session) - PASSED (200 OK, access_token ✅, refresh_token ✅, session_id ✅)
+      2. ✅ GET /api/auth/sessions - PASSED (200 OK, 6 sessions found)
+      3. ✅ Auth regression test (/api/auth/me + /api/admin/agencies) - PASSED (both endpoints working correctly)
+      4. ✅ POST /api/auth/refresh (rotation) - PASSED (200 OK, access_token rotated ✅, refresh_token rotated ✅)
+      5. ✅ Refresh token reuse prevention - PASSED (401 status, old refresh token properly rejected)
+      6. ✅ POST /api/auth/revoke-all-sessions - PASSED (200 OK, token invalidated after revoke-all-sessions)
+      7. ✅ 5xx and JSON shape validation - PASSED (no 5xx errors or JSON parsing issues detected)
       
-      Session Stability Validation:
-      ✅ No blank screen detected
-      ✅ No redirect loops detected
-      ✅ No login failures
-      ✅ No session-related console errors
-      ✅ Auth state persists across navigation
-      ✅ All page content renders correctly
-      
-      Statistics:
-      - Total console logs: 7
-      - Total network requests: 126
-      - Critical errors: 0
-      
-      Minor Observations (Non-Critical):
-      - Refresh token not stored in localStorage (may be by design for admin users)
-      - Tenant ID not set in localStorage (doesn't affect functionality)
+      PR-2 Session/Revocation Hardening Validation:
+      ✅ Login correctly returns access_token, refresh_token, and session_id
+      ✅ Sessions endpoint working - can list active sessions
+      ✅ Refresh token rotation working correctly - both tokens rotate
+      ✅ Refresh token reuse prevention working - old tokens rejected with 401
+      ✅ Session revocation working - revoke-all-sessions invalidates tokens
+      ✅ No auth regression detected in core endpoints
+      ✅ No server errors or JSON corruption detected
+      ✅ Rate limiting properly configured (300s retry window)
       
       Conclusion:
-      PR-2 session model deployment is successful. Web login is stable and functioning correctly. No regressions detected in authentication or session management. All smoke test criteria passed.
+      PR-2 session/revocation hardening deployment is successful. All session management features are working correctly and no regressions detected. The session model enhancements are functioning as designed.
 
 ---

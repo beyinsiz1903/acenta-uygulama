@@ -220,6 +220,12 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - This was a test-only compatibility update after auth dependency signature evolution; no application behavior or auth business logic was changed.
 - Revalidated with targeted auth pytest (`test_auth_jwt_and_org_context.py`, `test_auth_session_model.py`, `test_auth_tenant_binding.py`) and preview smoke on `/api/health`, `/api/auth/me`, `/api/v1/mobile/auth/me`.
 
+### CI Exit Gate Test Harness Fixes (Mar 6, 2026)
+- Updated `backend/tests/test_api_org_isolation_bookings.py` to seed tenant + membership records and send `X-Tenant-Id`, aligning the test with the post-PR-3 tenant hardening rules instead of pre-hardening assumptions.
+- Cleaned `backend/tests/test_mobile_bff_preview_api.py` by removing the no-op `pytest.mark.usefixtures()` usage and the non-`None` test return path that produced pytest warnings in CI.
+- Added a shared preview admin auth fixture in `test_mobile_bff_preview_api.py` to reduce repeated login churn during preview-facing test execution.
+- Validation passed via targeted pytest (`test_api_org_isolation_bookings.py`, `test_mobile_bff_preview_api.py -k requires_auth`), smoke on `/api/health`, `/api/auth/me`, `/api/v1/mobile/auth/me`, and backend deep testing.
+
 ## Current Priority Backlog
 - **P0:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
 - **P1:** Environment-specific process-manager attachment of the new runtime scripts (`run_api_runtime.sh`, `run_worker_runtime.sh`, `run_scheduler_runtime.sh`) wherever preview/staging/prod infra definitions live

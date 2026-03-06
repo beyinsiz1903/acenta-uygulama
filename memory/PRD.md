@@ -154,3 +154,18 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - **Testing:** added `backend/tests/test_auth_tenant_binding.py` and `backend/tests/test_tenant_isolation_admin_agencies.py`. Targeted test groups for tenant-bound login, session regressions, tenant features, security headers, rate limiting, and webhook security passed.
 - **Operational note:** some older legacy tests (e.g. portions of `test_b2b_pro_v1.py`) still encode pre-existing assumptions about `admin` aliasing and raw `detail` response shapes. Those were not expanded into this PR’s blocking gate to keep PR-3 scoped to tenancy/login hardening.
 - **Smoke result:** deployed preview verified both `admin@acenta.test` and `agent@acenta.test` login successfully, with stable redirects, tenant id persistence, and no auth/tenant regressions on `/api/auth/me` and `/api/admin/agencies`.
+
+### PR-4 Implemented (Mar 6, 2026)
+- **Web auth compat layer:** `frontend/src/lib/authSession.js` and `frontend/src/lib/cookieAuthCompat.js` added. Web auth state now prefers cookie/bootstrap flow while preserving short-term bearer fallback compatibility.
+- **Backend cookie compat contract:** `backend/app/routers/auth.py`, `backend/app/auth.py`, and `backend/app/config.py` now support `X-Client-Platform: web` cookie transport. `/api/auth/login` and `/api/auth/refresh` set httpOnly access/refresh cookies for web requests, still return legacy-compatible body tokens, and expose `auth_transport` / `X-Auth-Transport` so web vs legacy/mobile handling is explicit.
+- **Session bootstrap direction:** `/api/auth/me` now works with cookie auth (no Authorization header required) and sensitive fields are sanitized before response. `/api/auth/logout` and `/api/auth/revoke-all-sessions` clear auth cookies alongside session revocation.
+- **Frontend auth centralization:** `frontend/src/lib/api.js`, `frontend/src/hooks/useAuth.js`, `frontend/src/components/RequireAuth.jsx`, and `frontend/src/pages/LoginPage.jsx` were updated so login, reload bootstrap, refresh fallback, logout, and route protection all flow through the new compat layer instead of localStorage-first assumptions.
+- **Testing:** added `backend/tests/test_auth_web_cookie_compat.py`; testing agent also added `backend/tests/test_web_auth_cookie_compat_comprehensive.py`. Targeted pytest for auth/session/tenant/cookie suites passed, preview curl verification passed for login/me/refresh/logout cookie flows, and frontend smoke + dedicated frontend/backend testing agents passed.
+- **Scope guard:** this PR is intentionally not a full cookie migration. Legacy bearer path remains available for mobile and short-lived fallback while web source-of-truth shifts toward cookie + bootstrap.
+
+## Current Priority Backlog
+- **P0:** PR-5 — Mobile Secure Session + Mobile BFF Phase 1
+- **P0:** PR-6 — Bootstrap Split / Runtime Separation
+- **P1:** Web auth follow-up cleanup after compat window closes (remove remaining localStorage fallback paths page-by-page)
+- **P1:** API versioning rollout (`/api/v1/*`) and compat adapters
+- **P2:** Entitlement/billing unification, observability stack, broader frontend modular refactor

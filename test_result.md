@@ -569,8 +569,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "PR-5A Mobile BFF verification - all tests passed"
-    - "PR-5A Frontend smoke test - passed"
+    - "PR-5A Mobile BFF re-verification completed - all 8 tests passed"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
@@ -848,51 +847,55 @@ agent_communication:
 
   - agent: "testing"
     message: |
-      ✅ PR-5A MOBILE BFF BACKEND VERIFICATION COMPLETED - ALL TESTS PASSED (2026-03-06)
+      ✅ PR-5A MOBILE BFF BACKEND RE-VERIFICATION COMPLETED - ALL TESTS PASSED (2026-03-06)
       
-      Performed comprehensive PR-5A Mobile BFF backend verification on deployed preview environment.
+      Performed comprehensive PR-5A Mobile BFF backend re-verification per Turkish review request on deployed preview environment.
       
       Test Results (Base URL: https://tenant-audit-preview.preview.emergentagent.com):
       
-      Mobile BFF API Tests:
-      1. ✅ GET /api/v1/mobile/auth/me - PASSED (requires auth, returns sanitized mobile DTO, no sensitive fields exposed)
-      2. ✅ GET /api/v1/mobile/dashboard/summary - PASSED (expected KPI shape: bookings_today=5, bookings_month, revenue_month=6249.99)
-      3. ✅ GET /api/v1/mobile/bookings - PASSED (list wrapper, no Mongo _id leaks, 12 total bookings returned)
-      4. ✅ GET /api/v1/mobile/bookings/{id} - PASSED (detail fields present, respects tenant scoping, no Mongo _id leaks)
-      5. ✅ POST /api/v1/mobile/bookings - PASSED (creates draft via existing domain flow, returns booking ID, source='mobile')
-      6. ✅ GET /api/v1/mobile/reports/summary - PASSED (summary shape: total_bookings=6, total_revenue=6399.99, status_breakdown[], daily_sales[])
-      7. ✅ Legacy Auth Regression - PASSED (/api/auth/login and /api/auth/me working correctly, no regression)
+      Mobile BFF API Re-Validation:
+      1. ✅ POST /api/auth/login (admin@acenta.test/admin123) - PASSED (200 OK, access_token received: 385 chars)
+      2. ✅ GET /api/v1/mobile/auth/me auth requirement and response shape - PASSED (401 without auth ✅, 200 with auth ✅, sanitized DTO, no leaks)
+      3. ✅ GET /api/v1/mobile/dashboard/summary response shape - PASSED (valid KPI: bookings_today=7, bookings_month=7, revenue_month=7250.49, currency=TRY)
+      4. ✅ GET /api/v1/mobile/bookings response shape and auth - PASSED (list wrapper: 14 total bookings, no raw Mongo _id leaks, string IDs ✅)
+      5. ✅ POST /api/v1/mobile/bookings draft create flow - PASSED (created booking ID=69aaf65255380e124c894531, status=draft, source=mobile)
+      6. ✅ GET /api/v1/mobile/bookings/{id} detail flow for created record - PASSED (detail fields present, tenant scoping working, no leaks)
+      7. ✅ GET /api/v1/mobile/reports/summary response shape - PASSED (total_bookings=8, total_revenue=8100.99, status breakdown + daily sales)
+      8. ✅ Legacy auth flow regression check (/api/auth/me) - PASSED (legacy endpoint working: admin@acenta.test returned correctly)
       
       Test Summary:
-      - Total Tests: 7
-      - Passed: 7
+      - Total Tests: 8
+      - Passed: 8
       - Failed: 0
       - Success Rate: 100%
       
-      PR-5A Mobile BFF Validation:
-      ✅ Mobile router correctly mounted at /api/v1/mobile prefix
-      ✅ All endpoints require proper authentication and role-based access
-      ✅ Mobile DTOs are sanitized - no Mongo _id leaks detected
-      ✅ Mobile auth/me returns sanitized user DTO without sensitive fields
-      ✅ Dashboard summary returns expected KPI structure
-      ✅ Bookings list returns proper wrapper with total/items structure
-      ✅ Booking detail respects tenant scoping and returns extended fields
-      ✅ Booking creation delegates to existing booking_service.create_booking_draft
-      ✅ Reports summary returns comprehensive breakdown with status and daily data
-      ✅ Legacy auth endpoints (/api/auth/login, /api/auth/me) not regressed
-      ✅ All mobile responses use string IDs, never expose raw Mongo ObjectIds
-      ✅ Mobile BFF acts as projection/orchestration layer as designed
+      Special Validation Points (Turkish Requirements):
+      1. ✅ POST /api/auth/login admin kimlik bilgileriyle çalışıyor mu? - EVET (200 OK, token alındı)
+      2. ✅ GET /api/v1/mobile/auth/me auth zorunluluğu ve başarılı response shape - EVET (401 auth gereken, 200 doğru shape)
+      3. ✅ GET /api/v1/mobile/dashboard/summary response shape - EVET (KPI verileri doğru format)
+      4. ✅ GET /api/v1/mobile/bookings response shape ve auth - EVET (liste wrapper, auth gerekli)
+      5. ✅ POST /api/v1/mobile/bookings draft create akışı - EVET (draft oluşturuldu, source=mobile)
+      6. ✅ GET /api/v1/mobile/bookings/{id} create edilen kayıt için detail akışı - EVET (detay endpoint çalışıyor)
+      7. ✅ GET /api/v1/mobile/reports/summary response shape - EVET (rapor özeti doğru format)
+      8. ✅ Legacy auth akışlarında regresyon var mı - HAYIR (regresyon yok, /api/auth/me çalışıyor)
       
-      Security & Contract Compliance:
-      ✅ No Mongo _id fields leaked to mobile responses
-      ✅ Mobile DTOs separate from web DTOs
-      ✅ Tenant scoping working correctly via request context
-      ✅ Role-based access control enforced (super_admin, admin, agency_admin, agency_agent)
-      ✅ Booking creation uses existing domain service (no business logic duplication)
-      ✅ All endpoints follow mobile contract specifications
+      Security & Contract Compliance (Re-confirmed):
+      ✅ Mobile response'larda raw Mongo _id leak YOK - only converted string IDs exposed
+      ✅ Tenant header ile test edildi - X-Tenant-Id header support working
+      ✅ Mobile DTOs sanitized - no sensitive fields (password_hash, totp_secret) exposed
+      ✅ All mobile endpoints require proper authentication and role-based access
+      ✅ Tenant scoping working correctly via request context (tenant_id=9c5c1079-9dea-49bf-82c0-74838b146160)
+      ✅ Draft booking creation uses existing domain service (no business logic duplication)
+      ✅ All booking IDs are strings, never raw Mongo ObjectIds
+      ✅ Mobile BFF acts as clean projection/orchestration layer
+      
+      Legacy Compatibility:
+      ✅ No regression in legacy auth endpoints (/api/auth/login, /api/auth/me)
+      ✅ Mobile BFF implementation does not break existing flows
+      ✅ Both tenant header and non-tenant header requests work (backwards compatibility)
       
       Conclusion:
-      PR-5A Mobile BFF backend verification SUCCESSFUL. All 7 mobile endpoints working correctly with proper tenant scoping, sanitized DTOs, and no security leaks. Legacy auth compatibility maintained. Mobile BFF ready for mobile app integration.
+      PR-5A Mobile BFF backend re-verification SUCCESSFUL. All 8 Turkish review requirements confirmed working correctly. Mobile endpoints ready for production use with proper security, tenant scoping, and no data leaks. Legacy auth compatibility maintained. Backend validation complete before finish.
 
   - agent: "testing"
     message: |

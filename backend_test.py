@@ -1,305 +1,717 @@
 #!/usr/bin/env python3
 """
-PR-3 Post-Deployment Backend Smoke Test
-Test PR-3 tenant isolation features on deployed preview environment
-Base URL: https://tenant-audit-preview.preview.emergentagent.com
+Backend API validation test for PR-5A Mobile BFF re-verification
+Turkish context: PR-5A Mobile BFF backend state re-validation per review request
 """
 
-import requests
+import asyncio
 import json
 import sys
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
-# Test Configuration
-BASE_URL = "https://tenant-audit-preview.preview.emergentagent.com"
-ADMIN_EMAIL = "admin@acenta.test"
-ADMIN_PASSWORD = "admin123"
-AGENCY_EMAIL = "agent@acenta.test"
-AGENCY_PASSWORD = "agent123"
+import httpx
 
-class SmokeTestRunner:
+
+class BackendValidator:
     def __init__(self):
-        self.session = requests.Session()
-        self.admin_token = None
-        self.agency_token = None
-        self.test_results = []
-
-    def log_test(self, test_name: str, passed: bool, message: str, details: Any = None):
-        """Log test result"""
+        self.base_url = "https://tenant-audit-preview.preview.emergentagent.com"
+        self.admin_email = "admin@acenta.test"
+        self.admin_password = "admin123"
+        self.session = httpx.AsyncClient(timeout=30.0)
+        self.access_token: Optional[str] = None
+        self.test_results: list[Dict[str, Any]] = []
+        self.created_booking_id: Optional[str] = None
+    
+    def log_test(self, test_name: str, passed: bool, details: str = "", response_data: Any = None):
+        """Log test result with details"""
+        self.test_results.append({
+            "test": test_name,
+            "passed": passed,
+            "details": details,
+            "response_data": response_data
+        })
         status = "✅ PASS" if passed else "❌ FAIL"
         print(f"{status}: {test_name}")
-        print(f"   {message}")
         if details:
             print(f"   Details: {details}")
-        print()
-        
-        self.test_results.append({
-            'test': test_name,
-            'passed': passed,
-            'message': message,
-            'details': details
-        })
-
-    def test_admin_login(self) -> bool:
-        """Test 1: Admin login başarılı mı?"""
+        if response_data and not passed:
+            print(f"   Response: {json.dumps(response_data, indent=2)}")
+    
+    async def test_admin_login(self) -> bool:
+        """Test 1: POST /api/auth/login with admin credentials"""
         try:
-            login_url = f"{BASE_URL}/api/auth/login"
-            payload = {
-                "email": ADMIN_EMAIL,
-                "password": ADMIN_PASSWORD
-            }
+            response = await self.session.post(
+                f"{self.base_url}/api/auth/login",
+                json={
+                    "email": self.admin_email,
+                    "password": self.admin_password
+                },
+                headers={
+                    "Content-Type": "application/json",
+                    "X-Tenant-Id": "9c5c1079-9dea-49bf-82c0-74838b146160"
+                }
+            )
             
-            response = self.session.post(login_url, json=payload)
-            
-            if response.status_code != 200:
-                self.log_test("Admin Login", False, 
-                             f"Login failed with status {response.status_code}", 
-                             response.text[:500])
-                return False
-            
-            data = response.json()
-            
-            # Check for required fields
-            if not data.get('access_token'):
-                self.log_test("Admin Login", False, "No access_token in response", data)
-                return False
-                
-            self.admin_token = data['access_token']
-            self.log_test("Admin Login", True, 
-                         f"Admin login successful, token received (length: {len(self.admin_token)})",
-                         {"has_refresh": bool(data.get('refresh_token'))})
-            return True
-            
-        except Exception as e:
-            self.log_test("Admin Login", False, f"Exception during admin login: {str(e)}")
-            return False
-
-    def test_agency_login(self) -> bool:
-        """Test 2: Agency login başarılı mı?"""
-        try:
-            login_url = f"{BASE_URL}/api/auth/login"
-            payload = {
-                "email": AGENCY_EMAIL,
-                "password": AGENCY_PASSWORD
-            }
-            
-            response = self.session.post(login_url, json=payload)
-            
-            if response.status_code != 200:
-                self.log_test("Agency Login", False, 
-                             f"Login failed with status {response.status_code}", 
-                             response.text[:500])
-                return False
-            
-            data = response.json()
-            
-            # Check for required fields
-            if not data.get('access_token'):
-                self.log_test("Agency Login", False, "No access_token in response", data)
-                return False
-                
-            self.agency_token = data['access_token']
-            self.log_test("Agency Login", True, 
-                         f"Agency login successful, token received (length: {len(self.agency_token)})",
-                         {"has_refresh": bool(data.get('refresh_token'))})
-            return True
-            
-        except Exception as e:
-            self.log_test("Agency Login", False, f"Exception during agency login: {str(e)}")
-            return False
-
-    def test_auth_me_admin_token(self) -> bool:
-        """Test 3: /api/auth/me admin token ile çalışıyor mu?"""
-        if not self.admin_token:
-            self.log_test("Auth/Me Admin Token", False, "No admin token available for testing")
-            return False
-            
-        try:
-            auth_me_url = f"{BASE_URL}/api/auth/me"
-            headers = {"Authorization": f"Bearer {self.admin_token}"}
-            
-            response = self.session.get(auth_me_url, headers=headers)
-            
-            if response.status_code != 200:
-                self.log_test("Auth/Me Admin Token", False, 
-                             f"Auth/me failed with status {response.status_code}", 
-                             response.text[:500])
-                return False
-            
-            data = response.json()
-            
-            # Check for basic user data structure
-            if not data.get('email'):
-                self.log_test("Auth/Me Admin Token", False, "No email in response", data)
-                return False
-                
-            self.log_test("Auth/Me Admin Token", True, 
-                         f"Auth/me working correctly, email: {data.get('email')}")
-            return True
-            
-        except Exception as e:
-            self.log_test("Auth/Me Admin Token", False, f"Exception during auth/me test: {str(e)}")
-            return False
-
-    def test_admin_agencies_endpoint(self) -> bool:
-        """Test 4: /api/admin/agencies admin token ile çalışıyor mu?"""
-        if not self.admin_token:
-            self.log_test("Admin Agencies Endpoint", False, "No admin token available for testing")
-            return False
-            
-        try:
-            agencies_url = f"{BASE_URL}/api/admin/agencies"
-            headers = {"Authorization": f"Bearer {self.admin_token}"}
-            
-            response = self.session.get(agencies_url, headers=headers)
-            
-            if response.status_code != 200:
-                self.log_test("Admin Agencies Endpoint", False, 
-                             f"Admin agencies failed with status {response.status_code}", 
-                             response.text[:500])
-                return False
-            
-            data = response.json()
-            
-            # Check if response is a list (agencies)
-            if not isinstance(data, list):
-                self.log_test("Admin Agencies Endpoint", False, "Response is not a list", type(data))
-                return False
-                
-            self.log_test("Admin Agencies Endpoint", True, 
-                         f"Admin agencies working correctly, {len(data)} agencies returned")
-            return True
-            
-        except Exception as e:
-            self.log_test("Admin Agencies Endpoint", False, f"Exception during admin agencies test: {str(e)}")
-            return False
-
-    def test_tenant_auth_regression(self) -> bool:
-        """Test 5: Tenant-bound login sonrası auth regresyonu var mı?"""
-        # Test both tokens still work after tenant isolation implementation
-        try:
-            regression_tests = []
-            
-            # Test admin token still works
-            if self.admin_token:
-                auth_me_url = f"{BASE_URL}/api/auth/me"
-                headers = {"Authorization": f"Bearer {self.admin_token}"}
-                response = self.session.get(auth_me_url, headers=headers)
-                regression_tests.append(("admin_auth_me", response.status_code == 200))
-                
-                agencies_url = f"{BASE_URL}/api/admin/agencies"
-                response = self.session.get(agencies_url, headers=headers)
-                regression_tests.append(("admin_agencies", response.status_code == 200))
-            
-            # Test agency token still works
-            if self.agency_token:
-                auth_me_url = f"{BASE_URL}/api/auth/me"
-                headers = {"Authorization": f"Bearer {self.agency_token}"}
-                response = self.session.get(auth_me_url, headers=headers)
-                regression_tests.append(("agency_auth_me", response.status_code == 200))
-                
-            # Check if all regression tests passed
-            failed_tests = [test for test, passed in regression_tests if not passed]
-            
-            if failed_tests:
-                self.log_test("Tenant Auth Regression", False, 
-                             f"Auth regression detected in: {', '.join(failed_tests)}")
-                return False
+            if response.status_code == 200:
+                data = response.json()
+                if "access_token" in data:
+                    self.access_token = data["access_token"]
+                    self.log_test(
+                        "POST /api/auth/login admin credentials",
+                        True,
+                        f"Login successful, token length: {len(self.access_token)} chars"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "POST /api/auth/login admin credentials",
+                        False,
+                        "Login response missing access_token",
+                        data
+                    )
+                    return False
             else:
-                self.log_test("Tenant Auth Regression", True, 
-                             f"No auth regression detected, {len(regression_tests)} tests passed")
+                self.log_test(
+                    "POST /api/auth/login admin credentials",
+                    False,
+                    f"Login failed with status {response.status_code}",
+                    response.text
+                )
+                return False
+        
+        except Exception as e:
+            self.log_test(
+                "POST /api/auth/login admin credentials",
+                False,
+                f"Exception during login: {str(e)}"
+            )
+            return False
+    
+    async def test_mobile_auth_me(self) -> bool:
+        """Test 2: GET /api/v1/mobile/auth/me auth requirement and response shape"""
+        # First test without auth (should fail)
+        try:
+            response = await self.session.get(f"{self.base_url}/api/v1/mobile/auth/me")
+            if response.status_code == 401:
+                auth_required = True
+                auth_details = "Correctly requires authentication (401 without token)"
+            else:
+                auth_required = False
+                auth_details = f"Should return 401 without auth, got {response.status_code}"
+        except Exception as e:
+            auth_required = False
+            auth_details = f"Exception testing auth requirement: {str(e)}"
+        
+        # Now test with auth
+        if not self.access_token:
+            self.log_test(
+                "GET /api/v1/mobile/auth/me auth requirement and response",
+                False,
+                "No access token available for testing"
+            )
+            return False
+        
+        try:
+            response = await self.session.get(
+                f"{self.base_url}/api/v1/mobile/auth/me",
+                headers={
+                    "Authorization": f"Bearer {self.access_token}",
+                    "X-Tenant-Id": "9c5c1079-9dea-49bf-82c0-74838b146160"
+                }
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["id", "email", "roles", "organization_id"]
+                has_required = all(field in data for field in required_fields)
+                
+                # Check for Mongo _id leak (raw _id field exposure, not converted string IDs)
+                has_mongo_leak = "_id" in data
+                
+                # Check for sensitive fields that shouldn't be exposed
+                sensitive_fields = ["password_hash", "totp_secret", "recovery_codes"]
+                has_sensitive_leak = any(field in data for field in sensitive_fields)
+                
+                if has_required and not has_mongo_leak and not has_sensitive_leak:
+                    self.log_test(
+                        "GET /api/v1/mobile/auth/me auth requirement and response",
+                        auth_required,
+                        f"{auth_details}. Authenticated response: valid shape, no leaks. Email: {data.get('email')}"
+                    )
+                    return auth_required
+                else:
+                    issues = []
+                    if not has_required:
+                        missing = [f for f in required_fields if f not in data]
+                        issues.append(f"missing fields: {missing}")
+                    if has_mongo_leak:
+                        issues.append("contains Mongo _id leak")
+                    if has_sensitive_leak:
+                        issues.append("contains sensitive field leak")
+                    
+                    self.log_test(
+                        "GET /api/v1/mobile/auth/me auth requirement and response",
+                        False,
+                        f"{auth_details}. Response issues: {', '.join(issues)}",
+                        data
+                    )
+                    return False
+            else:
+                self.log_test(
+                    "GET /api/v1/mobile/auth/me auth requirement and response",
+                    False,
+                    f"{auth_details}. Authenticated request failed: {response.status_code}",
+                    response.text
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test(
+                "GET /api/v1/mobile/auth/me auth requirement and response",
+                False,
+                f"{auth_details}. Exception during authenticated test: {str(e)}"
+            )
+            return False
+    
+    async def test_mobile_dashboard_summary(self) -> bool:
+        """Test 3: GET /api/v1/mobile/dashboard/summary response shape"""
+        if not self.access_token:
+            self.log_test(
+                "GET /api/v1/mobile/dashboard/summary response shape",
+                False,
+                "No access token available"
+            )
+            return False
+        
+        try:
+            response = await self.session.get(
+                f"{self.base_url}/api/v1/mobile/dashboard/summary",
+                headers={
+                    "Authorization": f"Bearer {self.access_token}",
+                    "X-Tenant-Id": "9c5c1079-9dea-49bf-82c0-74838b146160"
+                }
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["bookings_today", "bookings_month", "revenue_month", "currency"]
+                has_required = all(field in data for field in required_fields)
+                
+                # Check data types
+                types_correct = (
+                    isinstance(data.get("bookings_today"), int) and
+                    isinstance(data.get("bookings_month"), int) and
+                    isinstance(data.get("revenue_month"), (int, float)) and
+                    isinstance(data.get("currency"), str)
+                )
+                
+                if has_required and types_correct:
+                    self.log_test(
+                        "GET /api/v1/mobile/dashboard/summary response shape",
+                        True,
+                        f"Valid KPI shape: bookings_today={data['bookings_today']}, "
+                        f"bookings_month={data['bookings_month']}, "
+                        f"revenue_month={data['revenue_month']}, "
+                        f"currency={data['currency']}"
+                    )
+                    return True
+                else:
+                    issues = []
+                    if not has_required:
+                        missing = [f for f in required_fields if f not in data]
+                        issues.append(f"missing fields: {missing}")
+                    if not types_correct:
+                        issues.append("incorrect data types")
+                    
+                    self.log_test(
+                        "GET /api/v1/mobile/dashboard/summary response shape",
+                        False,
+                        f"Response issues: {', '.join(issues)}",
+                        data
+                    )
+                    return False
+            else:
+                self.log_test(
+                    "GET /api/v1/mobile/dashboard/summary response shape",
+                    False,
+                    f"Request failed with status {response.status_code}",
+                    response.text
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test(
+                "GET /api/v1/mobile/dashboard/summary response shape",
+                False,
+                f"Exception: {str(e)}"
+            )
+            return False
+    
+    async def test_mobile_bookings_list(self) -> bool:
+        """Test 4: GET /api/v1/mobile/bookings response shape and auth"""
+        if not self.access_token:
+            self.log_test(
+                "GET /api/v1/mobile/bookings response shape and auth",
+                False,
+                "No access token available"
+            )
+            return False
+        
+        try:
+            response = await self.session.get(
+                f"{self.base_url}/api/v1/mobile/bookings",
+                headers={
+                    "Authorization": f"Bearer {self.access_token}",
+                    "X-Tenant-Id": "9c5c1079-9dea-49bf-82c0-74838b146160"
+                }
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check list wrapper structure
+                has_wrapper = "total" in data and "items" in data
+                if not has_wrapper:
+                    self.log_test(
+                        "GET /api/v1/mobile/bookings response shape and auth",
+                        False,
+                        "Missing list wrapper (total, items)",
+                        data
+                    )
+                    return False
+                
+                # Check for Mongo _id leaks (raw _id field exposure)
+                has_mongo_leak = "_id" in data
+                if has_mongo_leak:
+                    self.log_test(
+                        "GET /api/v1/mobile/bookings response shape and auth",
+                        False,
+                        "Response contains raw _id field exposure",
+                        data
+                    )
+                    return False
+                
+                # Check that booking IDs are strings
+                items = data.get("items", [])
+                invalid_ids = [item for item in items if not isinstance(item.get("id"), str)]
+                if invalid_ids:
+                    self.log_test(
+                        "GET /api/v1/mobile/bookings response shape and auth",
+                        False,
+                        f"Found {len(invalid_ids)} bookings with non-string IDs"
+                    )
+                    return False
+                
+                self.log_test(
+                    "GET /api/v1/mobile/bookings response shape and auth",
+                    True,
+                    f"Valid list wrapper, {data['total']} total bookings, {len(items)} in response, no Mongo _id leaks"
+                )
                 return True
                 
-        except Exception as e:
-            self.log_test("Tenant Auth Regression", False, f"Exception during regression test: {str(e)}")
-            return False
-
-    def test_5xx_and_json_shape(self) -> bool:
-        """Test 6: 5xx veya kritik JSON shape bozulması var mı?"""
-        try:
-            # Test multiple endpoints for 5xx errors and JSON shape
-            test_endpoints = [
-                f"{BASE_URL}/api/auth/me",
-                f"{BASE_URL}/api/admin/agencies"
-            ]
-            
-            errors_found = []
-            json_issues = []
-            
-            for endpoint in test_endpoints:
-                # Test with admin token
-                if self.admin_token:
-                    headers = {"Authorization": f"Bearer {self.admin_token}"}
-                    response = self.session.get(endpoint, headers=headers)
-                    
-                    # Check for 5xx errors
-                    if 500 <= response.status_code < 600:
-                        errors_found.append(f"{endpoint}: {response.status_code}")
-                    
-                    # Check JSON parsing
-                    try:
-                        if response.status_code == 200:
-                            response.json()  # Try to parse JSON
-                    except json.JSONDecodeError:
-                        json_issues.append(f"{endpoint}: JSON parse error")
-            
-            if errors_found or json_issues:
-                issues = errors_found + json_issues
-                self.log_test("5xx and JSON Shape", False, 
-                             f"Issues found: {', '.join(issues)}")
-                return False
             else:
-                self.log_test("5xx and JSON Shape", True, 
-                             "No 5xx errors or JSON shape issues detected")
-                return True
+                self.log_test(
+                    "GET /api/v1/mobile/bookings response shape and auth",
+                    False,
+                    f"Request failed with status {response.status_code}",
+                    response.text
+                )
+                return False
                 
         except Exception as e:
-            self.log_test("5xx and JSON Shape", False, f"Exception during 5xx/JSON test: {str(e)}")
+            self.log_test(
+                "GET /api/v1/mobile/bookings response shape and auth",
+                False,
+                f"Exception: {str(e)}"
+            )
             return False
-
-    def run_smoke_test(self):
-        """Run complete PR-3 smoke test suite"""
-        print("=" * 60)
-        print("PR-3 POST-DEPLOYMENT BACKEND SMOKE TEST")
-        print(f"Base URL: {BASE_URL}")
-        print("=" * 60)
-        print()
+    
+    async def test_mobile_booking_create(self) -> bool:
+        """Test 5: POST /api/v1/mobile/bookings draft create flow"""
+        if not self.access_token:
+            self.log_test(
+                "POST /api/v1/mobile/bookings draft create flow",
+                False,
+                "No access token available"
+            )
+            return False
         
-        # Run all tests
-        test_methods = [
+        try:
+            # Create a draft booking with mobile-realistic data
+            booking_payload = {
+                "amount": 850.50,
+                "currency": "TRY",
+                "customer_name": "Mehmet Yılmaz",
+                "guest_name": "Mehmet Yılmaz",
+                "hotel_name": "Antalya Resort Hotel",
+                "check_in": "2026-04-15",
+                "check_out": "2026-04-20",
+                "notes": "Mobile app test booking",
+                "source": "mobile"
+            }
+            
+            response = await self.session.post(
+                f"{self.base_url}/api/v1/mobile/bookings",
+                json=booking_payload,
+                headers={
+                    "Authorization": f"Bearer {self.access_token}",
+                    "Content-Type": "application/json",
+                    "X-Tenant-Id": "9c5c1079-9dea-49bf-82c0-74838b146160"
+                }
+            )
+            
+            if response.status_code == 201:
+                data = response.json()
+                
+                # Check response has booking ID
+                if not data.get("id"):
+                    self.log_test(
+                        "POST /api/v1/mobile/bookings draft create flow",
+                        False,
+                        "Created booking missing ID",
+                        data
+                    )
+                    return False
+                
+                self.created_booking_id = data["id"]
+                
+                # Check status is draft
+                if data.get("status") != "draft":
+                    self.log_test(
+                        "POST /api/v1/mobile/bookings draft create flow",
+                        False,
+                        f"Expected status=draft, got {data.get('status')}",
+                        data
+                    )
+                    return False
+                
+                # Check source is mobile
+                if data.get("source") != "mobile":
+                    self.log_test(
+                        "POST /api/v1/mobile/bookings draft create flow",
+                        False,
+                        f"Expected source=mobile, got {data.get('source')}",
+                        data
+                    )
+                    return False
+                
+                # Check no Mongo _id leak (raw _id field exposure)
+                if "_id" in data:
+                    self.log_test(
+                        "POST /api/v1/mobile/bookings draft create flow",
+                        False,
+                        "Response contains raw _id field exposure",
+                        data
+                    )
+                    return False
+                
+                self.log_test(
+                    "POST /api/v1/mobile/bookings draft create flow",
+                    True,
+                    f"Created booking ID={data['id']}, status={data['status']}, source={data['source']}"
+                )
+                return True
+                
+            else:
+                self.log_test(
+                    "POST /api/v1/mobile/bookings draft create flow",
+                    False,
+                    f"Create failed with status {response.status_code}",
+                    response.text
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test(
+                "POST /api/v1/mobile/bookings draft create flow",
+                False,
+                f"Exception: {str(e)}"
+            )
+            return False
+    
+    async def test_mobile_booking_detail(self) -> bool:
+        """Test 6: GET /api/v1/mobile/bookings/{id} detail flow for created record"""
+        if not self.access_token:
+            self.log_test(
+                "GET /api/v1/mobile/bookings/{id} detail flow",
+                False,
+                "No access token available"
+            )
+            return False
+        
+        if not self.created_booking_id:
+            self.log_test(
+                "GET /api/v1/mobile/bookings/{id} detail flow",
+                False,
+                "No created booking ID available for testing"
+            )
+            return False
+        
+        try:
+            response = await self.session.get(
+                f"{self.base_url}/api/v1/mobile/bookings/{self.created_booking_id}",
+                headers={
+                    "Authorization": f"Bearer {self.access_token}",
+                    "X-Tenant-Id": "9c5c1079-9dea-49bf-82c0-74838b146160"
+                }
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check has detail fields beyond summary
+                detail_fields = ["tenant_id", "agency_id", "booking_ref", "offer_ref"]
+                has_detail_fields = any(field in data for field in detail_fields)
+                
+                # Check no Mongo _id leak (raw _id field exposure)
+                has_mongo_leak = "_id" in data
+                
+                # Check booking ID matches
+                id_matches = data.get("id") == self.created_booking_id
+                
+                if has_detail_fields and not has_mongo_leak and id_matches:
+                    self.log_test(
+                        "GET /api/v1/mobile/bookings/{id} detail flow",
+                        True,
+                        f"Detail endpoint working: ID matches, has detail fields, no Mongo _id leaks. "
+                        f"Tenant scoping: tenant_id={data.get('tenant_id')}"
+                    )
+                    return True
+                else:
+                    issues = []
+                    if not has_detail_fields:
+                        issues.append("missing detail fields")
+                    if has_mongo_leak:
+                        issues.append("contains Mongo _id leak")
+                    if not id_matches:
+                        issues.append(f"ID mismatch: expected {self.created_booking_id}, got {data.get('id')}")
+                    
+                    self.log_test(
+                        "GET /api/v1/mobile/bookings/{id} detail flow",
+                        False,
+                        f"Detail response issues: {', '.join(issues)}",
+                        data
+                    )
+                    return False
+                    
+            else:
+                self.log_test(
+                    "GET /api/v1/mobile/bookings/{id} detail flow",
+                    False,
+                    f"Detail request failed with status {response.status_code}",
+                    response.text
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test(
+                "GET /api/v1/mobile/bookings/{id} detail flow",
+                False,
+                f"Exception: {str(e)}"
+            )
+            return False
+    
+    async def test_mobile_reports_summary(self) -> bool:
+        """Test 7: GET /api/v1/mobile/reports/summary response shape"""
+        if not self.access_token:
+            self.log_test(
+                "GET /api/v1/mobile/reports/summary response shape",
+                False,
+                "No access token available"
+            )
+            return False
+        
+        try:
+            response = await self.session.get(
+                f"{self.base_url}/api/v1/mobile/reports/summary",
+                headers={
+                    "Authorization": f"Bearer {self.access_token}",
+                    "X-Tenant-Id": "9c5c1079-9dea-49bf-82c0-74838b146160"
+                }
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check required summary fields
+                required_fields = ["total_bookings", "total_revenue", "currency", "status_breakdown", "daily_sales"]
+                has_required = all(field in data for field in required_fields)
+                
+                # Check data types
+                types_correct = (
+                    isinstance(data.get("total_bookings"), int) and
+                    isinstance(data.get("total_revenue"), (int, float)) and
+                    isinstance(data.get("currency"), str) and
+                    isinstance(data.get("status_breakdown"), list) and
+                    isinstance(data.get("daily_sales"), list)
+                )
+                
+                if has_required and types_correct:
+                    self.log_test(
+                        "GET /api/v1/mobile/reports/summary response shape",
+                        True,
+                        f"Valid summary shape: total_bookings={data['total_bookings']}, "
+                        f"total_revenue={data['total_revenue']}, currency={data['currency']}, "
+                        f"status_breakdown={len(data['status_breakdown'])} items, "
+                        f"daily_sales={len(data['daily_sales'])} items"
+                    )
+                    return True
+                else:
+                    issues = []
+                    if not has_required:
+                        missing = [f for f in required_fields if f not in data]
+                        issues.append(f"missing fields: {missing}")
+                    if not types_correct:
+                        issues.append("incorrect data types")
+                    
+                    self.log_test(
+                        "GET /api/v1/mobile/reports/summary response shape",
+                        False,
+                        f"Response issues: {', '.join(issues)}",
+                        data
+                    )
+                    return False
+                    
+            else:
+                self.log_test(
+                    "GET /api/v1/mobile/reports/summary response shape",
+                    False,
+                    f"Request failed with status {response.status_code}",
+                    response.text
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test(
+                "GET /api/v1/mobile/reports/summary response shape",
+                False,
+                f"Exception: {str(e)}"
+            )
+            return False
+    
+    async def test_legacy_auth_regression(self) -> bool:
+        """Test 8: Legacy auth flow regression check (/api/auth/me basic smoke)"""
+        if not self.access_token:
+            self.log_test(
+                "Legacy auth endpoints regression check",
+                False,
+                "No access token available"
+            )
+            return False
+        
+        try:
+            # Test legacy /api/auth/me endpoint
+            response = await self.session.get(
+                f"{self.base_url}/api/auth/me",
+                headers={
+                    "Authorization": f"Bearer {self.access_token}",
+                    "X-Tenant-Id": "9c5c1079-9dea-49bf-82c0-74838b146160"
+                }
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check basic user data is present
+                has_email = "email" in data
+                email_matches = data.get("email") == self.admin_email
+                
+                if has_email and email_matches:
+                    self.log_test(
+                        "Legacy auth endpoints regression check",
+                        True,
+                        f"Legacy /api/auth/me working correctly. Email: {data.get('email')}"
+                    )
+                    return True
+                else:
+                    issues = []
+                    if not has_email:
+                        issues.append("missing email field")
+                    if not email_matches:
+                        issues.append(f"email mismatch: expected {self.admin_email}, got {data.get('email')}")
+                    
+                    self.log_test(
+                        "Legacy auth endpoints regression check",
+                        False,
+                        f"Legacy auth issues: {', '.join(issues)}",
+                        data
+                    )
+                    return False
+                    
+            else:
+                self.log_test(
+                    "Legacy auth endpoints regression check",
+                    False,
+                    f"Legacy /api/auth/me failed with status {response.status_code}",
+                    response.text
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test(
+                "Legacy auth endpoints regression check",
+                False,
+                f"Exception: {str(e)}"
+            )
+            return False
+    
+    async def run_all_tests(self):
+        """Run all backend validation tests in sequence"""
+        print("🚀 Starting PR-5A Mobile BFF Backend Re-Validation")
+        print(f"📡 Preview URL: {self.base_url}")
+        print(f"👤 Admin Account: {self.admin_email}")
+        print("=" * 70)
+        
+        tests = [
             self.test_admin_login,
-            self.test_agency_login,  
-            self.test_auth_me_admin_token,
-            self.test_admin_agencies_endpoint,
-            self.test_tenant_auth_regression,
-            self.test_5xx_and_json_shape
+            self.test_mobile_auth_me,
+            self.test_mobile_dashboard_summary,
+            self.test_mobile_bookings_list,
+            self.test_mobile_booking_create,
+            self.test_mobile_booking_detail,
+            self.test_mobile_reports_summary,
+            self.test_legacy_auth_regression,
         ]
         
-        passed_tests = 0
-        total_tests = len(test_methods)
+        passed_count = 0
+        total_count = len(tests)
         
-        for test_method in test_methods:
-            if test_method():
-                passed_tests += 1
+        for test_func in tests:
+            try:
+                result = await test_func()
+                if result:
+                    passed_count += 1
+            except Exception as e:
+                print(f"❌ FAIL: {test_func.__name__} - Exception: {str(e)}")
         
-        # Print summary
-        print("=" * 60)
-        print("SMOKE TEST SUMMARY")
-        print("=" * 60)
-        print(f"Total Tests: {total_tests}")
-        print(f"Passed: {passed_tests}")
-        print(f"Failed: {total_tests - passed_tests}")
-        print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
-        print()
+        print("=" * 70)
+        print(f"📊 TEST SUMMARY: {passed_count}/{total_count} PASSED")
         
-        if passed_tests == total_tests:
-            print("🎉 ALL TESTS PASSED - PR-3 SMOKE TEST SUCCESSFUL")
-            return True
+        if passed_count == total_count:
+            print("🎉 ALL TESTS PASSED - Mobile BFF backend ready for finish!")
         else:
-            print("❌ SOME TESTS FAILED - REVIEW REQUIRED")
-            return False
+            print("⚠️  SOME TESTS FAILED - See details above")
+            failed_tests = [r for r in self.test_results if not r["passed"]]
+            print(f"   Failed tests: {len(failed_tests)}")
+            for failed in failed_tests:
+                print(f"   - {failed['test']}: {failed['details']}")
+        
+        return passed_count == total_count
+    
+    async def close(self):
+        """Clean up HTTP client"""
+        await self.session.aclose()
+
+
+async def main():
+    """Main test runner"""
+    validator = BackendValidator()
+    try:
+        success = await validator.run_all_tests()
+        sys.exit(0 if success else 1)
+    finally:
+        await validator.close()
+
 
 if __name__ == "__main__":
-    runner = SmokeTestRunner()
-    success = runner.run_smoke_test()
-    sys.exit(0 if success else 1)
+    asyncio.run(main())

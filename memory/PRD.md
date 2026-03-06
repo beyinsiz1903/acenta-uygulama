@@ -185,10 +185,23 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - Checklist scope intentionally stays narrow: SecureStore migration, session bootstrap, login/refresh/logout behavior, and adoption of `/api/v1/mobile/*` endpoints without proposing a new mobile architecture.
 - This prep is intended to let PR-6 proceed immediately while keeping PR-5B integration predictable once the mobile repo is attached.
 
+### PR-6 Implemented (Mar 6, 2026)
+- **Runtime composition refactor:** extracted API composition from `server.py` into `backend/app/bootstrap/api_app.py` while keeping `backend/server.py` as a thin compat wrapper so `server:app` continues to work.
+- **Controlled bootstrap split:** added `backend/app/bootstrap/router_registry.py`, `middleware_setup.py`, and `runtime_init.py` to isolate router registration, middleware chain, and startup/runtime initialization without changing auth/session/tenant or Mobile BFF business behavior.
+- **Dedicated runtime entrypoints:** added `backend/app/bootstrap/worker_app.py` and `scheduler_app.py` for background loops and periodic schedulers. API runtime no longer starts worker/scheduler loops directly.
+- **Behavioral guardrail:** auth, session validation, tenant binding, and `/api/v1/mobile/*` contract were preserved; this PR is composition-only refactor, not an auth or tenancy rewrite.
+- **Validation:** internal smoke passed for `/health` and `/`; preview login + `/api/auth/me` + `/api/v1/mobile/auth/me` + mobile bookings/reports endpoints passed; targeted pytest passed for `test_mobile_bff_contracts.py`, `test_auth_session_model.py`, and `test_auth_tenant_binding.py`.
+- **Operational note:** dedicated worker/scheduler entrypoints were process-start verified, but preview supervisor wiring for these new processes is not part of this PR.
+
+### Mobile Cutover Runbook Added (Mar 6, 2026)
+- Added `backend/app/modules/mobile/mobile_cutover_runbook.md` as a short operational handoff covering preconditions, mobile build version, SecureStore migration, endpoint switch, rollout, monitoring, and rollback.
+- Runbook is intentionally one-page and follows PR-5A contract + PR-5B migration scope only; it does not introduce a new mobile architecture.
+
 ## Current Priority Backlog
-- **P0:** PR-6 — Bootstrap Split / Runtime Separation
 - **P0:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
+- **P0:** Deploy/runtime wiring for dedicated worker + scheduler processes after PR-6 composition split
 - **P1:** PR-7 — Web Active Devices / Sessions screen
 - **P1:** Web auth follow-up cleanup after compat window closes (remove remaining localStorage fallback paths page-by-page)
+- **P1:** Cleanup PR for non-blocking preview issues: `/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`
 - **P1:** API versioning rollout (`/api/v1/*`) and compat adapters
 - **P2:** Entitlement/billing unification, observability stack, broader frontend modular refactor

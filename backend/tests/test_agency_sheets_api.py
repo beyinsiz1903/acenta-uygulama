@@ -15,9 +15,9 @@ import os
 import pytest
 import requests
 
-from tests.preview_auth_helper import PreviewAuthSession, resolve_preview_base_url
+from tests.preview_auth_helper import PreviewAuthSession, get_preview_base_url_or_skip
 
-BASE_URL = resolve_preview_base_url(os.environ.get("REACT_APP_BACKEND_URL", ""))
+BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Test credentials
 ADMIN_EMAIL = "admin@acenta.test"

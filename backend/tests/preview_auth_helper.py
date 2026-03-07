@@ -44,6 +44,15 @@ def resolve_preview_base_url(base_url: str) -> str:
     raise PreviewAuthError("Preview base URL is not configured")
 
 
+def get_preview_base_url_or_skip(base_url: str) -> str:
+    try:
+        return resolve_preview_base_url(base_url)
+    except PreviewAuthError as exc:
+        import pytest
+
+        pytest.skip(str(exc), allow_module_level=True)
+
+
 @dataclass
 class PreviewAuthContext:
     base_url: str

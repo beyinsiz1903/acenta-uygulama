@@ -1,5 +1,16 @@
 # CHANGELOG — Acenta Master Travel SaaS
 
+## 2026-03-07 — CI / Test Collection Compatibility Fix
+- Preview-only backend test modülleri artık preview base URL yoksa collection aşamasında hata vermek yerine güvenli şekilde skip oluyor:
+  - `test_admin_all_users_and_agency_nav.py`
+  - `test_admin_all_users_crud.py`
+  - `test_agency_modules_and_branding.py`
+  - `test_agency_sheets_api.py`
+  - `test_pr_v1_foundation_acceptance.py`
+- `backend/tests/preview_auth_helper.py` içine `get_preview_base_url_or_skip(...)` eklendi
+- `backend/pytest.ini` güncellendi; exit gate marker kayıtları tamamlandı ve unknown-mark kaynaklı warning kirliliği azaltıldı
+- `backend/app/bootstrap/*` ve bazı yeni dosyalardaki newline / Ruff lint sorunları giderildi; `ruff check app/ --select E,F,W --ignore E501,E402` temiz geçti
+
 ## 2026-03-07 — Usage Metering PR-UM1 Foundation
 - `backend/app/constants/usage_metrics.py` eklendi; kanonik metrik sabitleri tanımlandı:
   - `reservation.created`

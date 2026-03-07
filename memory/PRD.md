@@ -38,6 +38,7 @@ Kullanıcı, mevcut çok kiracılı (multi-tenant) seyahat/acenta SaaS platformu
 - Backend yanıtlarında Mongo `_id` / `ObjectId` sızıntısı yapılmaz
 - Tenant erişimi middleware + request context ile korunur
 - Web auth kaynağı cookie compat flow’dur; legacy bearer yalnızca geçiş/uyumluluk içindir
+- Preview-only testler, preview URL yapılandırılmadığında güvenli şekilde skip olmalıdır; collection-time hard failure üretmemelidir
 
 ## Monetizasyon Yönü
 Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet eden paketleme katmanına öncelik veriyor.

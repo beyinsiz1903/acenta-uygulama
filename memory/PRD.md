@@ -669,9 +669,52 @@ Use the repo’s existing standardized shape everywhere in v1:
   - backend testing agent report `/app/test_reports/iteration_17.json`
   - backend deep validation agent: 23/23 checks passed
 
+### Runtime Parity + CI Route Visibility Added (Mar 7, 2026)
+- Added route inventory summary support in `backend/app/bootstrap/route_inventory_summary.py` with deterministic counts and hash fields:
+  - `route_count`
+  - `v1_count`
+  - `legacy_count`
+  - `compat_required_count`
+  - `inventory_hash`
+- Runtime export now writes both of these best-effort artifacts during API boot:
+  - `backend/app/bootstrap/route_inventory.json`
+  - `backend/app/bootstrap/route_inventory_summary.json`
+- Extended `backend/scripts/export_route_inventory.py` so runtime containers and CI can export inventory + summary to custom paths with explicit environment labels.
+- Added parity comparison CLI: `backend/scripts/check_route_inventory_parity.py`
+  - compares preview/staging/prod summary files
+  - reports count/hash parity in `json` or `text`
+  - can fail CI via `--fail-on-mismatch`
+- Added operational parity playbook: `backend/app/bootstrap/route_inventory_parity.md`
+- Updated `backend/app/bootstrap/runtime_ops.md` with route inventory export + parity commands in the deploy smoke checklist.
+- CI workflow (`.github/workflows/ci.yml`) now includes a dedicated `route-inventory` job that:
+  - exports route inventory + summary artifacts
+  - generates parity artifacts
+  - resolves a previous baseline inventory
+  - generates diff artifacts (`json` + `text`)
+  - uploads artifacts for inspection
+  - writes a PR step summary and updates/creates a PR comment on pull requests
+- Artifact set now includes:
+  - `route_inventory.json`
+  - `route_inventory_summary.json`
+  - `route_inventory_diff.json`
+  - `route_inventory_diff.txt`
+  - `route_inventory_parity.json`
+  - `route_inventory_parity.txt`
+  - `route_inventory_pr_summary.md`
+- Important scope note: actual staging/prod environments were **not attached in this workspace**, so this work implements the runtime/CI tooling and parity workflow needed for real environment execution, rather than claiming live staging/prod verification already happened.
+- Added/updated tests:
+  - `backend/tests/test_route_inventory_parity.py`
+  - `backend/tests/test_route_inventory_parity_tooling.py`
+- Validation passed via:
+  - `pytest /app/backend/tests/test_api_v1_foundation.py /app/backend/tests/test_api_v1_low_risk_rollout.py /app/backend/tests/test_route_inventory_parity.py -q`
+  - `pytest /app/backend/tests/test_route_inventory_parity_tooling.py -q`
+  - local export/parity CLI smoke with preview/staging/prod-labeled summaries (`675 total / 17 v1 / 658 legacy`)
+  - YAML parse validation of `.github/workflows/ci.yml`
+  - backend testing agent report `/app/test_reports/iteration_18.json`
+
 ## Current Priority Backlog
-- **P0:** Staging/prod runtime parity for the v1 registry + route inventory workflow (same runtime wiring, export/diff usage, and operational checks outside preview)
-- **P1:** Continue `/api/v1` implementation in controlled order, with **PR-V1-2 (auth/session/settings)** as the next code migration only after parity expectations are locked
+- **P0:** Run the new parity workflow against real staging/prod runtime artifacts once those environments are in scope/available, and confirm counts + hash match preview expectations
+- **P1:** Continue `/api/v1` implementation in controlled order, with **PR-V1-2 (auth/session/settings)** as the next code migration only after real-environment parity expectations are signed off
 - **P1:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
 - **P1:** Cleanup PR for non-blocking preview issues: `/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`
 - **P2:** Entitlement/billing unification, observability stack, broader frontend modular refactor

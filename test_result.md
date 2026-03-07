@@ -2252,10 +2252,22 @@ agent_communication:
         comment: "PR-V1-2C settings namespace rollout validation COMPLETED - ALL 6 TESTS PASSED (100% success rate). Comprehensive validation per review request on https://travel-saas-refactor-1.preview.emergentagent.com. Test Results: A) ✅ Legacy/V1 Settings Parity - PASSED (GET /api/settings/users vs GET /api/v1/settings/users return matching data with 11 users each, legacy endpoints include proper Deprecation: true and Link successor headers pointing to /api/v1/settings/users), B) ✅ Settings Mutation Parity - PASSED (created unique user via POST /api/v1/settings/users with 200 status, confirmed created user appears in legacy GET /api/settings/users list, legacy POST /api/settings/users also works with 200 status for new user creation), C) ✅ Cookie Auth Safety - PASSED (login via /api/v1/auth/login with X-Client-Platform: web header returns auth_transport=cookie_compat, GET /api/v1/settings/users works using cookies only with 200 status, no Authorization header required for web auth flow), D) ✅ Mobile BFF Unaffected - PASSED (GET /api/v1/mobile/auth/me works correctly with bearer token after settings changes, returns 200 status with admin@acenta.test email, mobile BFF integration intact), E) ✅ Inventory/Telemetry Artifacts - PASSED (both GET and POST /api/v1/settings/users routes found and accessible, route count matches expected 2 new v1 routes, telemetry consistent with diff artifacts showing routes_migrated_this_pr=2), F) ✅ Admin Authentication - PASSED (admin@acenta.test/admin123 login successful with 385 char token). All PR-V1-2C scope requirements validated successfully: new v1 settings aliases working (GET/POST /api/v1/settings/users), legacy settings routes preserved with compat headers (GET/POST /api/settings/users), cookie auth compatibility maintained for settings calls with X-Client-Platform: web, mobile BFF unaffected, route inventory artifacts updated correctly with migration velocity telemetry. No APIs are mocked, no regressions detected."
 
 
+  - task: "Entitlement UI flows validation - /pricing and /app/admin/tenant-features"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/public/PricingPage.jsx, frontend/src/pages/admin/AdminTenantFeaturesPage.jsx, frontend/src/components/admin/TenantEntitlementOverview.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "ENTITLEMENT UI FLOWS VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-03-07). Comprehensive validation of new frontend entitlement flows per review request. Test Results: 1) ✅ /pricing page loads with 3 pricing cards (starter, pro, enterprise) - all cards render correctly with proper data-testids, 2) ✅ Each plan card shows limit blocks - Found 6 limit blocks total (2 per plan: Aktif kullanıcı, Aylık rezervasyon) with proper formatting and labels from LIMIT_LABELS, 3) ✅ Each plan card shows usage allowance section - Found 3 usage allowance sections with proper data-testids and USAGE_ALLOWANCE_LABELS mapping (Rezervasyon oluşturma, Dışa aktarma, B2B eşleşme talebi, Rapor üretimi, Entegrasyon çağrısı), 4) ✅ Aylık/Yıllık toggle stability - Toggled between monthly and yearly successfully, page remained stable (URL unchanged, all 3 plan cards still visible), no errors or UI breaks, 5) ✅ Admin login successful - Logged in with admin@acenta.test/admin123, redirected to /app/admin/agencies correctly, 6) ✅ Navigated to /app/admin/tenant-features - Page loaded with correct title 'Tenant Entitlements', tenant list visible, 7) ✅ Tenant selection working - Selected 'Varsayilan Tenant' from list, tenant details loaded correctly, 8) ✅ TenantEntitlementOverview card renders with all required data - Plan label: 'Pro' displayed, Source: 'capabilities' shown, Limits present: 'Aktif kullanıcı: 10' and 'Aylık rezervasyon: Sınırsız' with proper metric cards, Usage allowances section present with 5 items (Rezervasyon oluşturma: Sınırsız, Dışa aktarma: 100/ay, B2B eşleşme talebi: 100/ay, Rapor üretimi: 250/ay, Entegrasyon çağrısı: 5000/ay), Feature count badge: '8 modül', Add-on count badge: '0 add-on', 9) ✅ Plan change and save functionality - Plan selector working with 3 options (Starter, Pro, Enterprise), Changed plan from Pro to Enterprise successfully, Save button enabled and functional, Success toast displayed: 'Özellikler güncellendi.', UI remains stable after save (overview card updated with new plan, save button disabled after save indicating no pending changes), Plan label updated to 'Enterprise' with '10 modül'. All required entitlement UI flows working correctly with no critical issues. Screenshots captured at key points. No regressions detected in new entitlement features."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 23
+  test_sequence: 24
   last_updated: "2026-03-07"
 
 agent_communication:
@@ -2623,6 +2635,99 @@ agent_communication:
       Key Validations Confirmed:
       ✅ New v1 aliases exist and work: GET /api/v1/settings/users, POST /api/v1/settings/users
       ✅ Legacy routes remain working: GET /api/settings/users, POST /api/settings/users
+
+
+  - agent: "testing"
+    message: |
+      ✅ ENTITLEMENT UI FLOWS VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-03-07)
+      
+      Performed comprehensive validation of new frontend entitlement flows per review request on https://travel-saas-refactor-1.preview.emergentagent.com
+      
+      Context:
+      - Review request: Verify new frontend entitlement flows only
+      - Scope: /pricing page and /app/admin/tenant-features functionality
+      - Test credentials: admin@acenta.test / admin123
+      
+      Test Results Summary:
+      
+      ✅ /PRICING PAGE TESTS (Tests 1-3):
+      
+      1. ✅ 3 Pricing Cards Render Correctly
+         - All 3 plans present: Starter, Pro, Enterprise
+         - Plan labels, prices, and descriptions displayed
+         - All data-testids properly implemented
+      
+      2. ✅ Limit Blocks Present on All Cards
+         - Found 6 limit blocks total (2 per plan)
+         - "Aktif kullanıcı" (users.active) displayed with values
+         - "Aylık rezervasyon" (reservations.monthly) displayed with values
+         - LIMIT_LABELS mapping working correctly
+      
+      3. ✅ Usage Allowance Section Present on All Cards
+         - Found 3 usage allowance sections (1 per plan)
+         - Section header: "Usage allowances" displayed
+         - Usage items shown with proper labels and values
+         - USAGE_ALLOWANCE_LABELS mapping working correctly
+      
+      4. ✅ Aylık/Yıllık Toggle Stability
+         - Toggle buttons working correctly
+         - Page remains stable after toggling between monthly and yearly
+         - No errors or React breaks
+      
+      ✅ ADMIN LOGIN TEST (Test 4):
+      
+      5. ✅ Admin Login Successful
+         - Logged in with admin@acenta.test/admin123
+         - Successfully redirected to /app/admin/agencies
+      
+      ✅ TENANT FEATURES PAGE TESTS (Tests 5-8):
+      
+      6. ✅ Tenant Features Page Loaded
+         - Navigated to /app/admin/tenant-features successfully
+         - Page title: "Tenant Entitlements"
+         - Tenant list and feature management panels rendered
+      
+      7. ✅ Tenant Selection Working
+         - Found 1 tenant: "Varsayilan Tenant"
+         - Selected tenant successfully
+         - Tenant details loaded correctly
+      
+      8. ✅ TenantEntitlementOverview Card Renders with All Required Data
+         - Overview card present ✅
+         - Plan label: "Pro" ✅
+         - Source: "Kaynak: capabilities" ✅
+         - Limits: Aktif kullanıcı (10), Aylık rezervasyon (Sınırsız) ✅
+         - Usage allowances: 5 items displayed correctly ✅
+         - Feature count: 8 modül ✅
+         - Add-on count: 0 add-on ✅
+      
+      9. ✅ Plan Change and Save Functionality
+         - Plan selector working with 3 options
+         - Changed plan from Pro to Enterprise ✅
+         - Save button enabled and functional ✅
+         - Success toast displayed: "Özellikler güncellendi." ✅
+         - UI remains stable after save ✅
+         - Overview card updated with new plan ✅
+      
+      Test Summary:
+      - Total Tests: 8
+      - Passed: 8
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      ENTITLEMENT UI FLOWS VALIDATION SUCCESSFUL. All review request requirements met:
+      - /pricing page with 3 cards showing limits and usage allowances ✅
+      - Aylık/Yıllık toggle stable ✅
+      - Admin login working ✅
+      - Tenant features page functional ✅
+      - TenantEntitlementOverview card renders all required data ✅
+      - Plan change and save working with success toast ✅
+      
+      NO REGRESSIONS DETECTED. New entitlement UI flows are fully functional and ready for production.
+      
+      Status: ✅ PRODUCTION-READY - Entitlement UI flows validated successfully.
+
       ✅ Legacy settings routes expose compat headers toward /api/v1/settings/users
       ✅ Cookie auth functional for settings calls using X-Client-Platform: web header
       ✅ Mobile BFF remains unaffected by settings namespace changes

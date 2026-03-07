@@ -253,6 +253,13 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - Added narrow guards in `backend/tests/conftest.py` so local DB seeding/index fixtures do not create avoidable flakiness for preview-only external HTTP tests.
 - Validation passed for: `test_mobile_bff_preview_api.py`, `test_agency_sheets_api.py`, `test_admin_all_users_crud.py`, `test_agency_modules_and_branding.py`, `test_admin_all_users_and_agency_nav.py`, and `test_api_org_isolation_bookings.py`, plus helper smoke against preview `/api/health` and `/api/auth/me`.
 
+### PR-8 Verified — Web Cookie Auth Cleanup (Mar 7, 2026)
+- Verified on preview `https://secure-auth-v1.preview.emergentagent.com` with browser smoke, external curl checks, and dedicated frontend automation.
+- Admin flow passed: `/login` -> protected area redirect, refresh persistence via `/api/auth/me`, logout redirect, and protected-route guard after logout.
+- B2B flow passed: `/b2b/login` -> `/b2b/bookings` redirect, refresh persistence, and authenticated `/api/b2b/me` access.
+- Critical security verification passed: no `access_token`, `refresh_token`, or bearer token data persisted in browser `localStorage`; web auth is operating through cookie session transport (`auth_transport: cookie_compat`).
+- Remaining auth-adjacent note: B2B logout button selector is less automation-friendly, but no functional auth regression was found.
+
 ## Current Priority Backlog
 - **P0:** None active in web repo. Preview dedicated worker + scheduler supervisor wiring is complete and smoke-validated.
 - **P1:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)

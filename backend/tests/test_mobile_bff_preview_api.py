@@ -22,7 +22,7 @@ import requests
 from tests.preview_auth_helper import build_preview_auth_headers, get_preview_auth_context, resolve_preview_base_url
 
 BASE_URL = resolve_preview_base_url(
-    os.environ.get("REACT_APP_BACKEND_URL", "https://token-migration.preview.emergentagent.com")
+    os.environ.get("REACT_APP_BACKEND_URL", "https://secure-auth-v1.preview.emergentagent.com")
 )
 
 # Test credentials

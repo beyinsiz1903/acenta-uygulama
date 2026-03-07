@@ -9,7 +9,7 @@ Validates the 5 specific requirements after dedicated worker/scheduler runtime w
 4. GET /api/v1/mobile/auth/me succeeds with the same authenticated token
 5. Confirm there is no regression in core auth flow after the runtime wiring change
 
-Base URL: https://token-migration.preview.emergentagent.com
+Base URL: https://secure-auth-v1.preview.emergentagent.com
 Credentials: admin@acenta.test / admin123
 """
 
@@ -19,7 +19,7 @@ import sys
 from typing import Dict, Any
 
 # Base URL and credentials from review request
-BASE_URL = "https://token-migration.preview.emergentagent.com"
+BASE_URL = "https://secure-auth-v1.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

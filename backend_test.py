@@ -11,7 +11,7 @@ import os
 from typing import Dict, Optional
 
 # Get backend URL from frontend env
-BACKEND_URL = "https://token-migration.preview.emergentagent.com"
+BACKEND_URL = "https://secure-auth-v1.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class PR8BackendValidator:

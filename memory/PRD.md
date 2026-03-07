@@ -260,11 +260,373 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - Critical security verification passed: no `access_token`, `refresh_token`, or bearer token data persisted in browser `localStorage`; web auth is operating through cookie session transport (`auth_transport: cookie_compat`).
 - Remaining auth-adjacent note: B2B logout button selector is less automation-friendly, but no functional auth regression was found.
 
+## `/api/v1` Standardization Plan (Mar 7, 2026)
+
+### Planning Guardrails
+- This is a **repo-specific migration plan**, not a greenfield API design.
+- Auth/session/tenant behavior must remain unchanged while routes are standardized.
+- Existing `mobile` contract at `/api/v1/mobile/*` is the reference point; do **not** churn that contract while the mobile repo is still detached.
+- Versioning work must be **namespace-only first**. No entitlement logic, billing semantics, or observability payload redesign should be mixed into the same PRs.
+- Before the first implementation PR, `backend/app/bootstrap/router_registry.py` must be cleaned so `auth_router` is not mounted twice. Exact duplicate route registration exists today for `/api/auth/*`.
+
+### 1. Hedef Namespace Yapısı
+
+#### 1.1 Proposed target structure
+- **Shared platform / authenticated core**
+  - `/api/v1/auth/*`
+  - `/api/v1/settings/*`
+  - `/api/v1/tenants/*` (only where tenant objects are the resource)
+  - `/api/v1/system/*`, `/api/v1/health/*`
+- **Web SPA-facing namespaces**
+  - `/api/v1/admin/*`
+  - `/api/v1/agency/*`
+  - `/api/v1/b2b/*`
+  - `/api/v1/crm/*`
+  - `/api/v1/ops/*`
+  - `/api/v1/reports/*`, `/api/v1/dashboard/*`, `/api/v1/notifications/*`
+- **Mobile BFF**
+  - `/api/v1/mobile/*` (already live; keep as-is)
+- **Public / anonymous / storefront**
+  - `/api/v1/public/*`
+  - `/api/v1/storefront/*`
+- **Partner / external API**
+  - `/api/v1/partner/*`
+- **Integrations / callbacks / machine-to-machine**
+  - `/api/v1/webhooks/*`
+  - `/api/v1/integrations/*`
+
+#### 1.2 Normalization rules
+- Keep `/api` as the ingress root; add version after it: `/api/v1/...`.
+- Do **not** move tenant identity into the URL path right now. Keep `X-Tenant-Id` + middleware-driven `RequestContext` as the canonical tenant mechanism.
+- Do **not** split auth into separate web/mobile login URLs yet. Web keeps cookie transport via `X-Client-Platform: web`; mobile keeps bearer-style usage.
+- Keep public and partner APIs separate from web namespaces even if they reuse the same services.
+
+### 2. Mevcut Router Envanteri
+
+#### 2.1 Current repo reality
+- `backend/app/routers/`: **186** router files
+- `backend/app/modules/mobile/router.py`: **1** active `/api/v1/*` router module
+- Current route style is mixed:
+  1. **Prefix already includes `/api/...`**: `auth`, `admin_*`, `agency_*`, `b2b_*`, `public_*`, `partner_v1`, `settings`, `tenant_features`, `reports`, etc.
+  2. **Router has bare prefix and composition adds `API_PREFIX`** in `router_registry.py`: `bookings`, `payments`, `products`, `pricing`, `pricing_rules`, `reservations`, `marketplace`, `suppliers`, `search`, `finance`, `web_booking`, `web_catalog`.
+  3. **No router prefix; full paths are hardcoded on decorators**: `billing_webhooks.py`, `theme.py`, `upgrade_requests.py` (and similar legacy-style files).
+  4. **Already versioned**: `modules/mobile/router.py` mounted at `/api/v1/mobile/*`.
+
+#### 2.2 Current group inventory (high-level)
+- **Admin:** ~55 router files (`admin_*` family)
+- **Agency:** 7 router files (`agency_*`)
+- **B2B:** 12 router files (`b2b_*`)
+- **CRM:** 8 router files (`crm_*`)
+- **Ops:** 7 router files (`ops_*`)
+- **Partner/Public/Web-facing:** public checkout/search/my-booking/storefront/web booking/catalog/partner + onboarding/payment surface
+- **Catalog / booking / pricing / reservations core:** products, bookings, pricing, pricing_rules, reservations, marketplace, suppliers, inventory, payments, reports
+
+#### 2.3 Known route-shape irregularities that matter for v1
+- `auth_router` is included twice in `backend/app/bootstrap/router_registry.py`, so `/api/auth/*` currently has duplicate route registration.
+- `payments.py`, `products.py`, `pricing.py`, `reservations.py`, `marketplace.py`, `search.py`, `finance.py`, `suppliers.py`, `web_booking.py`, `web_catalog.py` rely on registry-time prefix composition instead of fully declaring final paths in the router file.
+- `theme.py`, `billing_webhooks.py`, and `upgrade_requests.py` are harder to standardize because they embed full legacy paths directly on decorators.
+- Error payloads are mostly standardized globally, but some routers still return legacy/raw shapes or raise raw `HTTPException` strings.
+
+### 3. Low-Risk -> High-Risk Migration Sırası
+
+| Order | Risk | Router groups |
+|---|---|---|
+| 0 | Low-Med | Versioning foundation, registry cleanup, deprecation headers, route manifest |
+| 1 | Low | Health/system/read-only public metadata (`health`, `health_dashboard`, `theme`, public CMS/campaign/theme-like surfaces) |
+| 2 | Low-Med | Shared auth-adjacent read surfaces (`settings`, password reset metadata, session reads) |
+| 3 | Medium | Agency/B2B read-first surfaces and dashboard/report reads |
+| 4 | Medium | Admin read-first surfaces (`admin/agencies`, `admin/all-users`, reports/analytics reads) |
+| 5 | Medium-High | Core booking/catalog/pricing write surfaces |
+| 6 | High | Public checkout + partner API + payments/webhooks/integrations |
+| 7 | High | Legacy hardcoded-path routers + compat removal |
+
+#### Why this order fits this repo
+- Low-risk groups are mostly **read-heavy** and have fewer external consumers.
+- The most sensitive groups (`auth`, `public checkout`, `partner`, `payments`, `webhooks`) sit behind already-hardening work and should not be mixed with namespace experimentation early.
+- `mobile` is already on `/api/v1/mobile/*`, so it should be treated as an anchor, not a migration target.
+
+### 4. Compat Period Süresi ve Kaldırma Kriterleri
+
+#### 4.1 Proposed compat period
+- **Minimum:** 45 days **or** 2 production release cycles, whichever is longer.
+- During this window, both legacy and v1 endpoints stay live for migrated router groups.
+
+#### 4.2 Removal criteria for legacy paths
+Legacy `/api/...` aliases can be removed only when **all** are true:
+- Web SPA calls for the migrated group are moved to `/api/v1/...`.
+- Mobile BFF is unaffected or explicitly validated.
+- Partner/public consumers for that group are inventoried and notified (if applicable).
+- Legacy traffic for that group falls below **1% for 14 consecutive days**.
+- Smoke suite + targeted pytest for the group are green in preview/staging.
+- No open Sev-1 / Sev-2 incidents linked to the migrated namespace.
+
+#### 4.3 Compat behavior during the window
+- Legacy routes return the same payloads they return today.
+- v1 routes return the standardized error envelope and normalized response conventions.
+- Add response headers on legacy aliases:
+  - `Deprecation: true`
+  - `Sunset: <RFC date>`
+  - `Link: <.../api/v1/...>; rel="successor-version"`
+
+### 5. Compat Adapter Planı
+
+#### 5.1 Core principle
+- **No business-logic forks.** Versioning should wrap the same services/use-cases, not duplicate domain logic.
+
+#### 5.2 Repo-specific adapter approach
+- Introduce `backend/app/api_versions/v1/` (or equivalent) as the composition layer for new v1 routers.
+- For each migrated group:
+  - keep existing router/service logic untouched initially,
+  - expose a **v1 router** that delegates to the same internal handler/service functions,
+  - keep the **legacy router** registered until compat exit.
+- For prefix-composed routers (`payments`, `products`, `pricing`, `reservations`, `marketplace`, etc.), refactor the router module so handlers can be mounted by composition under both legacy and v1 prefixes.
+- For hardcoded-path routers (`theme`, `upgrade_requests`, `billing_webhooks`), extract internal handler functions first, then remount them under versioned prefixes.
+
+#### 5.3 Legacy alias rules
+- Legacy route remains the frontend-safe default until the consuming client is switched.
+- Alias layer must be **thin**: path remap + deprecation headers only.
+- No payload transformation should happen in legacy aliases unless required to preserve backward compatibility.
+
+### 6. Breaking-Change Riski Olan Endpoint’ler
+
+#### Highest-risk endpoints
+- `/api/auth/*` — because web cookie auth now depends on these exact routes and `X-Client-Platform: web` behavior.
+- `/api/public/quote`, `/api/public/checkout`, `/api/public/my-booking/*` — public funnel + payment + idempotency exposure.
+- `/api/partner/*` — external consumers and partner-key auth surface.
+- `/api/webhook/stripe-billing` — third-party callback endpoint; should stay stable and likely remain unversioned externally until a later webhook strategy PR.
+- `/api/payments`, `/api/reservations`, `/api/bookings`, `/api/pricing*` — central business flows with multiple internal consumers.
+- `/api/tenant/*` and admin tenant feature/quota surfaces — tied to entitlement/billing roadmap.
+
+#### Medium-risk endpoints
+- `/api/admin/*` write actions
+- `/api/agency/*` writeback / sheets / bookings
+- `/api/b2b/*` booking and marketplace flows
+- `/api/crm/*` and `/api/ops/*` mutation endpoints
+
+#### Lower-risk endpoints
+- health/system/read-only metadata
+- read-only reports/dashboard endpoints
+- theme/public theme endpoints
+
+### 7. Web / Mobile / Partner / Public Ayrımı
+
+#### Web
+- Primary consumer: React SPA using `frontend/src/lib/api.js` with base `/api` and cookie auth for web.
+- Web v1 target: `/api/v1/auth`, `/api/v1/admin`, `/api/v1/agency`, `/api/v1/b2b`, `/api/v1/crm`, `/api/v1/ops`, `/api/v1/reports`.
+
+#### Mobile
+- Primary consumer: future mobile app via existing `/api/v1/mobile/*` BFF.
+- Rule: **leave mobile BFF URLs stable** during `/api/v1` rollout. If auth gains `/api/v1/auth/*`, mobile may adopt it later, but `/api/v1/mobile/*` must not change in the same PR.
+
+#### Partner
+- Current partner surface is `partner_v1.py` under `/api/partner/*`.
+- Target: `/api/v1/partner/*`.
+- Partner should have the longest compat window because external consumers are harder to coordinate than web SPA.
+
+#### Public
+- Current public surface spans `/api/public/*`, `/web/*`, `/storefront/*`, and payment-adjacent routes.
+- Target: consolidate anonymous browser/public flows under `/api/v1/public/*` (and keep `/api/v1/storefront/*` only if storefront remains a distinct public surface).
+
+### 8. Error Envelope ve Response Standardı
+
+#### 8.1 Error envelope for v1
+Use the repo’s existing standardized shape everywhere in v1:
+
+```json
+{
+  "error": {
+    "code": "validation_error",
+    "message": "İstek doğrulama hatası",
+    "details": {
+      "path": "/api/v1/...",
+      "correlation_id": "..."
+    }
+  }
+}
+```
+
+#### 8.2 Response standard for v1 success payloads
+- **Single resource:** return the resource directly; do not introduce a global `data` wrapper now.
+- **List endpoints:** prefer `{ "items": [...], "total": n, ... }`.
+- **Mutation endpoints:** return the created/updated resource or `{ "status": "ok" }` for command-style actions.
+- **Delete/command endpoints:** standardize on `{ "status": "ok" }` or `204 No Content`; do not mix both inside the same router family.
+- **Pagination keys:** `items`, `total`, optional `page`, `page_size`, `next_cursor`.
+- **Correlation:** keep `X-Correlation-Id` header and include `correlation_id` in error details.
+
+#### 8.3 Response-model rule for this repo
+- New v1 endpoints should use explicit Pydantic response models where feasible.
+- Do not return raw Mongo documents or `ObjectId` values.
+- For legacy endpoints, behavior can remain as-is during compat.
+
+### 9. Router Bazlı PR Planı
+
+#### PR-V1-0 — Foundation / Registry / Route Manifest
+- Scope:
+  - dedupe `auth_router` registration in `router_registry.py`
+  - add route inventory script / manifest
+  - add deprecation-header helper for legacy aliases
+  - define shared v1 registration pattern and file structure
+- No client-visible path migration yet
+
+#### PR-V1-1 — System / Health / Public Metadata (low risk)
+- Router groups:
+  - `health.py`, `health_dashboard.py`, `theme.py`, `public_cms_pages.py`, `public_campaigns.py`
+- Target examples:
+  - `/api/v1/health/*`
+  - `/api/v1/system/*`
+  - `/api/v1/public/theme`
+  - `/api/v1/public/cms/pages`
+  - `/api/v1/public/campaigns`
+
+#### PR-V1-2 — Auth / Session / Settings (controlled)
+- Router groups:
+  - `auth.py`, `auth_password_reset.py`, `enterprise_2fa.py`, `settings.py`
+- Target examples:
+  - `/api/v1/auth/login`
+  - `/api/v1/auth/me`
+  - `/api/v1/auth/refresh`
+  - `/api/v1/auth/sessions`
+  - `/api/v1/settings/*`
+- Must preserve cookie auth behavior exactly
+
+#### PR-V1-3 — Agency + B2B Read-First Migration
+- Router groups:
+  - `agency_profile.py`, `agency_availability.py`, selected `b2b_*` GET surfaces, `dashboard_enhanced.py`, `reports.py`
+- Focus: read paths first; no booking/payment writes yet
+
+#### PR-V1-4 — Admin Read-First Migration
+- Router groups:
+  - `admin_agencies.py` (GETs), `admin_agency_users.py` (GETs), `admin_tenant_features.py` (GETs), `admin_analytics.py`, `admin_reports.py`, `admin_metrics.py`
+- Keep admin write mutations for later PR unless a router is trivially low-risk
+
+#### PR-V1-5 — Core Business Mutation Surfaces
+- Router groups:
+  - `bookings.py`, `reservations.py`, `payments.py`, `products.py`, `pricing.py`, `pricing_rules.py`, `quotes.py`, `offers.py`, `inventory*.py`, `hotel.py`, `customers.py`
+- This is the biggest internal-web surface and should stay strictly repo-internal until stable
+
+#### PR-V1-6 — Public Funnel + Partner API
+- Router groups:
+  - `public_search.py`, `public_checkout.py`, `public_my_booking.py`, `public_bookings.py`, `partner_v1.py`, `public_partners.py`, `storefront.py`, `web_booking.py`, `web_catalog.py`
+- Keep partner/public compat longer than web
+
+#### PR-V1-7 — Integrations / Webhooks / Legacy Hardcoded Paths
+- Router groups:
+  - `billing_webhooks.py`, `payments_stripe.py`, `admin_integrations.py`, `admin_sheets.py`, `agency_sheets.py`, `agency_writeback.py`, `upgrade_requests.py`, remaining hardcoded-path legacy routers
+- Includes webhook/versioning decision and final alias cleanup prep
+
+### 10. Hangi Router Grupları Asla Aynı PR’a Girmemeli
+- **Do not mix** `auth*` with `public_checkout` / `partner_v1` in the same PR.
+- **Do not mix** `billing_webhooks.py` with `payments.py` / `public_checkout.py` namespace changes.
+- **Do not mix** `/api/v1/mobile/*` changes with `bookings.py` / `reports.py` namespace migration in the same PR.
+- **Do not mix** admin write routers and agency/B2B write routers in one migration PR.
+- **Do not mix** hardcoded-path routers (`theme`, `upgrade_requests`, `billing_webhooks`) with bulk prefix-based alias batches.
+- **Do not mix** tenant feature/quota/entitlement routers with generic versioning-only admin cleanup.
+
+### 11. Her PR İçin Risk Matrisi
+
+| PR | Scope | Risk | Primary failure mode | Mitigation |
+|---|---|---|---|---|
+| PR-V1-0 | registry + manifest | Low-Med | accidental route shadowing | route inventory diff + exact route-count assertions |
+| PR-V1-1 | system/public metadata | Low | path mismatch / stale frontend call | legacy alias + preview smoke |
+| PR-V1-2 | auth/session/settings | High | login/refresh/logout regressions | keep legacy path default, cookie auth curl + browser smoke |
+| PR-V1-3 | agency/b2b reads | Medium | tenant header / role scope drift | tenant-aware preview tests + read-only rollout |
+| PR-V1-4 | admin reads | Medium | dashboard/admin data regressions | GET-only first, targeted admin smoke |
+| PR-V1-5 | core mutations | High | booking/payment/pricing regressions | no payload redesign, contract tests, staged rollout |
+| PR-V1-6 | public + partner | High | external contract break / idempotency issue | longer compat, partner/public dedicated tests |
+| PR-V1-7 | webhooks/integrations | High | callback failures / missed events | keep webhook stable until explicit cutover, replay testing |
+
+### 12. Cookie Auth + Mobile BFF + Tenant Binding Etkileri
+
+#### Cookie auth
+- `/api/v1/auth/*` must preserve:
+  - `X-Client-Platform: web`
+  - httpOnly access/refresh cookie setting and clearing
+  - `/auth/me` bootstrap semantics used by `frontend/src/hooks/useAuth.js`
+- Web SPA should migrate to `/api/v1/auth/*` only after the v1 auth alias is proven in preview.
+
+#### Mobile BFF
+- `/api/v1/mobile/*` is already the versioned contract and should remain untouched during early v1 rollout.
+- Mobile BFF depends on booking/report service behavior and tenant-aware repositories, so do not couple it to core route churn in the same PR.
+
+#### Tenant binding
+- Current tenant model depends on `X-Tenant-Id` + `TenantResolutionMiddleware` + `RequestContext`.
+- v1 migration must not introduce tenant path params or alternate tenant resolution rules yet.
+- Any v1 alias for agency/admin/b2b routes must preserve current request header and membership validation behavior.
+
+### 13. Rollback Stratejisi
+
+#### Rollback principle
+- Rollback should be **route-registration only**, not business-logic rollback.
+
+#### Recommended rollback mechanism
+- Keep legacy routes live during compat.
+- Gate v1 registration behind explicit rollout flags/modes in composition (example: `legacy-only`, `dual`, `v1-default`).
+- If a v1 rollout causes issues:
+  1. switch router registry back to `legacy-only`,
+  2. leave legacy `/api/...` paths untouched,
+  3. investigate v1 alias behavior without reverting auth/session/business logic changes.
+
+#### Repo-specific rollback note
+- Because web auth, session model, tenant binding, and mobile BFF are already stabilized, rollback must not revert those earlier PRs. Only the namespace layer should roll back.
+
+### 14. Test / Smoke Planı
+
+#### 14.1 Existing tests to reuse
+- Auth/session/tenant:
+  - `backend/tests/test_auth_web_cookie_compat.py`
+  - `backend/tests/test_auth_session_model.py`
+  - `backend/tests/test_auth_tenant_binding.py`
+  - `backend/tests/test_auth_jwt_and_org_context.py`
+- Mobile:
+  - `backend/tests/test_mobile_bff_contracts.py`
+  - `backend/tests/test_mobile_bff_preview_api.py`
+- Public:
+  - `backend/tests/test_public_search_api.py`
+  - `backend/tests/test_public_checkout_api.py`
+  - `backend/tests/test_public_my_booking_*.py`
+- Partner:
+  - `backend/tests/test_partner_api_v1.py`
+- Tenant/admin:
+  - `backend/tests/test_tenant_isolation_admin_agencies.py`
+  - `backend/tests/integration/feature_flags/test_tenant_features_endpoint.py`
+
+#### 14.2 Smoke test matrix
+
+| Surface | Legacy path | v1 path | What must be validated |
+|---|---|---|---|
+| Web auth | `/api/auth/login`, `/me`, `/refresh`, `/logout` | `/api/v1/auth/...` | cookie set/refresh/clear, browser refresh persistence |
+| Admin web | `/api/admin/agencies` | `/api/v1/admin/agencies` | same auth, same tenant scope, same status codes |
+| Agency web | `/api/agency/profile` | `/api/v1/agency/profile` | allowed modules, tenant header behavior |
+| B2B web | `/api/b2b/me`, `/api/b2b/bookings` | `/api/v1/b2b/...` | role guard + redirect safety |
+| Mobile BFF | `/api/v1/mobile/...` | same | no regression allowed |
+| Public | `/api/public/quote`, `/checkout` | `/api/v1/public/...` | quote creation, idempotency, payment bootstrap |
+| Partner | `/api/partner/*` | `/api/v1/partner/*` | API key auth, response parity |
+| Billing webhook | `/api/webhook/stripe-billing` | only after explicit decision | signature validation, idempotency, audit side effects |
+
+#### 14.3 Mandatory rollout validation sequence per PR
+1. Route inventory diff
+2. Targeted pytest for the migrated router group
+3. Preview curl parity test: legacy vs v1
+4. Browser smoke for affected web flow (if web-facing)
+5. Staging smoke before production enablement
+
+### 15. En Sonda Önerilen Rollout Sırası
+1. **PR-V1-0** — foundation / registry cleanup / route manifest
+2. **PR-V1-1** — low-risk system + public metadata routes
+3. **PR-V1-2** — auth/session/settings with dual-route compat
+4. **PR-V1-3** — agency + B2B read-first
+5. **PR-V1-4** — admin read-first
+6. **PR-V1-5** — core booking/catalog/pricing mutations
+7. **PR-V1-6** — public funnel + partner API
+8. **PR-V1-7** — integrations/webhooks/hardcoded-path cleanup
+9. After v1 path stabilization: **staging/prod runtime wiring parity**
+10. After mobile repo attachment: **PR-5B mobile secure session adoption**
+11. After those are stable: **entitlement projection / billing unification**
+
 ## Current Priority Backlog
-- **P0:** None active in web repo. Preview dedicated worker + scheduler supervisor wiring is complete and smoke-validated.
-- **P1:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
+- **P0:** Start `/api/v1` implementation with **PR-V1-0 (foundation / registry cleanup / route manifest / compat headers)**
+- **P1:** `/api/v1` implementation continuation in low-risk -> high-risk order defined above
 - **P1:** Mirror the dedicated runtime wiring into staging/prod infra definitions when those environment configs are available/in scope
-- **P1:** Optional web auth follow-up cleanup: remove now-unused compat no-op helpers and, if desired, migrate cached display-only auth metadata away from localStorage
+- **P1:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
 - **P1:** Cleanup PR for non-blocking preview issues: `/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`
-- **P1:** API versioning rollout (`/api/v1/*`) and compat adapters
 - **P2:** Entitlement/billing unification, observability stack, broader frontend modular refactor

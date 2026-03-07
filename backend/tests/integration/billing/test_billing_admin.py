@@ -227,9 +227,16 @@ async def test_webhook_idempotency(
 ) -> None:
     """Webhook events should be idempotent - duplicate events are ignored."""
     import json
+    import stripe
 
-    # Set empty webhook secret to skip signature verification
-    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "")
+    # Use a test secret and stub Stripe signature verification so the test
+    # exercises the hardened idempotency path without relying on real signing.
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_test_secret")
+    monkeypatch.setattr(
+        stripe.Webhook,
+        "construct_event",
+        lambda payload, sig_header, secret: json.loads(payload.decode()),
+    )
 
     event_id = "evt_test_idempotency_123"
     await test_db.billing_webhook_events.delete_many({"provider_event_id": event_id})
@@ -243,7 +250,7 @@ async def test_webhook_idempotency(
     # First request - should process
     resp1 = await async_client.post(
         "/api/webhook/stripe-billing",
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/json", "stripe-signature": "test_signature"},
         content=payload.encode(),
     )
     assert resp1.status_code == 200, resp1.text
@@ -253,7 +260,7 @@ async def test_webhook_idempotency(
     # Second request with same event_id - should be skipped
     resp2 = await async_client.post(
         "/api/webhook/stripe-billing",
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/json", "stripe-signature": "test_signature"},
         content=payload.encode(),
     )
     assert resp2.status_code == 200, resp2.text

@@ -22,6 +22,9 @@ async def test_admin_get_tenant_features(
   body = resp.json()
   assert body["tenant_id"] == "nonexistent_tenant"
   assert body["features"] == []
+  assert body["limits"] == {}
+  assert body["usage_allowances"] == {}
+  assert len(body["plan_catalog"]) == 3
   assert set(body["available_features"]) == set(ALL_FEATURE_KEYS)
 
 
@@ -47,6 +50,14 @@ async def test_admin_patch_tenant_features(
   # Effective features = starter plan defaults + add_ons (b2b, reports)
   assert FEATURE_B2B in body["features"]
   assert FEATURE_REPORTS in body["features"]
+  assert body["plan"] == "starter"
+  assert body["limits"]["users.active"] == 2
+  assert body["usage_allowances"]["reservation.created"] == 100
+
+  projection = await test_db.tenant_entitlements.find_one({"tenant_id": target}, {"_id": 0})
+  assert projection is not None
+  assert projection["plan"] == "starter"
+  assert FEATURE_B2B in projection["features"]
 
   # Verify via GET
   resp2 = await async_client.get(
@@ -58,6 +69,7 @@ async def test_admin_patch_tenant_features(
   assert FEATURE_B2B in data["features"]
   assert FEATURE_REPORTS in data["features"]
   assert data["source"] == "capabilities"
+  assert data["limits"]["users.active"] == 2
 
 
 @pytest.mark.anyio

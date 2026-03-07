@@ -5,7 +5,7 @@ from fastapi import APIRouter, Request
 
 from app.errors import AppError
 from app.request_context import get_request_context
-from app.services.feature_service import feature_service
+from app.services.entitlement_service import entitlement_service
 from app.services.endpoint_cache import try_cache_get, cache_and_return
 
 router = APIRouter(prefix="/api/tenant", tags=["tenant_features"])
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/tenant", tags=["tenant_features"])
 
 @router.get("/features")
 async def get_tenant_features(request: Request) -> dict:
-  """Return the effective features for the current tenant."""
+  """Return the effective entitlements for the current tenant."""
   tenant_id = getattr(request.state, "tenant_id", None)
   if not tenant_id:
     raise AppError(400, "tenant_context_missing", "Tenant context bulunamadı.", None)
@@ -26,18 +26,25 @@ async def get_tenant_features(request: Request) -> dict:
   if hit:
     return hit
 
-  features, source = await feature_service.get_effective_features(tenant_id)
-  plan = await feature_service.get_plan(tenant_id)
-  add_ons = await feature_service.get_add_ons(tenant_id)
+  projection = await entitlement_service.get_tenant_entitlements(tenant_id, refresh=True)
 
   result = {
     "tenant_id": tenant_id,
-    "plan": plan,
-    "add_ons": add_ons,
-    "features": features,
-    "source": source,
+    "plan": projection.get("plan"),
+    "plan_label": projection.get("plan_label"),
+    "add_ons": projection.get("add_ons") or [],
+    "features": projection.get("features") or [],
+    "limits": projection.get("limits") or {},
+    "usage_allowances": projection.get("usage_allowances") or {},
+    "source": projection.get("source"),
   }
   return await cache_and_return(ck, result, ttl=300)
+
+
+@router.get("/entitlements")
+async def get_tenant_entitlements(request: Request) -> dict:
+  """Return the canonical entitlement projection for the current tenant."""
+  return await get_tenant_features(request)
 
 
 @router.get("/quota-status")

@@ -232,7 +232,7 @@ agent_communication:
     message: |
       ✅ BACKEND SMOKE TEST COMPLETED - ALL TESTS PASSED
       
-      Performed comprehensive backend API smoke test on https://api-versioning-hub.preview.emergentagent.com
+      Performed comprehensive backend API smoke test on https://travel-saas-refactor-1.preview.emergentagent.com
       
       Backend API Test Results:
       1. ✅ POST /api/auth/login - PASSED (200 OK, tokens received)
@@ -252,7 +252,7 @@ agent_communication:
     message: |
       ✅ SMOKE TEST PASSED
       
-      Completed comprehensive smoke test on https://api-versioning-hub.preview.emergentagent.com
+      Completed comprehensive smoke test on https://travel-saas-refactor-1.preview.emergentagent.com
       
       Test Coverage:
       1. ✅ Login at /login with admin@acenta.test / admin123 - PASSED
@@ -276,7 +276,7 @@ agent_communication:
       
       Performed comprehensive backend smoke test validating PR-1 auth/config hardening deployment.
       
-      Test Results (Base URL: https://api-versioning-hub.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor-1.preview.emergentagent.com):
       1. ✅ POST /api/auth/login - PASSED (200 OK, access_token + refresh_token received)
       2. ✅ GET /api/auth/me - PASSED (200 OK, user data returned with Bearer token)
       3. ✅ GET /api/admin/agencies - PASSED (200 OK, agency data returned with admin token)
@@ -299,7 +299,7 @@ agent_communication:
       
       Performed comprehensive PR-2 backend smoke test validating session/revocation hardening post-deployment.
       
-      Test Results (Base URL: https://api-versioning-hub.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor-1.preview.emergentagent.com):
       1. ✅ POST /api/auth/login (tokens + session) - PASSED (200 OK, access_token ✅, refresh_token ✅, session_id ✅)
       2. ✅ GET /api/auth/sessions - PASSED (200 OK, 6 sessions found)
       3. ✅ Auth regression test (/api/auth/me + /api/admin/agencies) - PASSED (both endpoints working correctly)
@@ -327,7 +327,7 @@ agent_communication:
       
       Performed comprehensive tenant-bound login smoke test validating PR-3 tenant isolation deployment.
       
-      Test Results (Base URL: https://api-versioning-hub.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor-1.preview.emergentagent.com):
       
       Admin Login (admin@acenta.test / admin123):
       ✅ Login successful - redirected to /app/admin/agencies
@@ -368,7 +368,7 @@ agent_communication:
       
       Performed focused PR-3 backend smoke test per user request to re-validate deployed preview environment.
       
-      Test Results (Base URL: https://api-versioning-hub.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor-1.preview.emergentagent.com):
       
       Backend API Tests:
       1. ✅ Admin Login (admin@acenta.test/admin123) - PASSED (200 OK, access_token received: 385 chars, refresh_token ✅)
@@ -401,7 +401,7 @@ agent_communication:
       
       Performed comprehensive PR-4 web auth compatibility smoke test validating cookie-based auth with /auth/me bootstrap and refresh fallback.
       
-      Test Results (Base URL: https://api-versioning-hub.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor-1.preview.emergentagent.com):
       
       1. ✅ Login Page Load & Form Elements - PASSED
          - All form testids found: login-page, login-form, login-email, login-password, login-submit
@@ -466,7 +466,7 @@ agent_communication:
       
       Performed comprehensive PR-4 backend verification using curl-like tests on deployed preview environment.
       
-      Test Results (Base URL: https://api-versioning-hub.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor-1.preview.emergentagent.com):
       
       Backend API Tests:
       1. ✅ Web Login Cookie Compat - PASSED (POST /api/auth/login with X-Client-Platform:web sets cookies and returns auth_transport=cookie_compat)
@@ -595,7 +595,7 @@ agent_communication:
         comment: "PR-6 frontend smoke test PASSED. All 4 required tests completed successfully: 1) Login page loads at /login ✅ - no blank page (96 chars content, all form elements present), 2) Login with admin@acenta.test/admin123 ✅ - successful redirect to /app/admin/agencies, 3) Post-login admin screen renders ✅ - full content loaded (951 chars, Acentalar page with 3 agencies), 4) No critical PR-6 errors ✅ - no auth bootstrap errors, no infinite loading, no redirect loops, URL stable. Console analysis shows only pre-existing optional endpoint errors (401 auth/me bootstrap check, 400 tenant features/quota, 500 partner-graph notifications). Key success: '[AdminAgencies] Loaded: 3' confirms core functionality. Runtime composition refactor (server.py → bootstrap/api_app.py) successful - behavior preserved, no regressions detected."
       - working: true
         agent: "testing"
-        comment: "PR-6 BACKEND VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-03-06). Performed comprehensive Turkish review request validation on https://api-versioning-hub.preview.emergentagent.com. Backend API Test Results: 1) ✅ POST /api/auth/login - PASSED (access_token: 385 chars, refresh_token: 64 chars), 2) ✅ GET /api/auth/me - PASSED (admin@acenta.test returned correctly), 3) ✅ GET /api/v1/mobile/auth/me - PASSED (no Mongo _id leaks, no sensitive fields exposed), 4) ✅ GET /api/v1/mobile/bookings - PASSED (15 total bookings, proper list wrapper, string IDs), 5) ✅ GET /api/v1/mobile/reports/summary - PASSED (8 bookings, 8100.99 TRY revenue, proper data types), 6) ✅ Unauthorized guard kontrolü - PASSED (both /api/auth/me and /api/v1/mobile/auth/me return 401 without auth), 7) ✅ Root API smoke (/api/health) - PASSED (status: ok), 8) ✅ Auth/session/tenant/Mobile BFF regresyon check - PASSED (no regressions detected, 3 agencies loaded). PR-6 runtime composition refactor SUCCESSFUL: server.py → bootstrap/api_app.py composition working correctly, auth/session/tenant ve Mobile BFF davranış değişmeden kaldı, all critical backend endpoints functional."
+        comment: "PR-6 BACKEND VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-03-06). Performed comprehensive Turkish review request validation on https://travel-saas-refactor-1.preview.emergentagent.com. Backend API Test Results: 1) ✅ POST /api/auth/login - PASSED (access_token: 385 chars, refresh_token: 64 chars), 2) ✅ GET /api/auth/me - PASSED (admin@acenta.test returned correctly), 3) ✅ GET /api/v1/mobile/auth/me - PASSED (no Mongo _id leaks, no sensitive fields exposed), 4) ✅ GET /api/v1/mobile/bookings - PASSED (15 total bookings, proper list wrapper, string IDs), 5) ✅ GET /api/v1/mobile/reports/summary - PASSED (8 bookings, 8100.99 TRY revenue, proper data types), 6) ✅ Unauthorized guard kontrolü - PASSED (both /api/auth/me and /api/v1/mobile/auth/me return 401 without auth), 7) ✅ Root API smoke (/api/health) - PASSED (status: ok), 8) ✅ Auth/session/tenant/Mobile BFF regresyon check - PASSED (no regressions detected, 3 agencies loaded). PR-6 runtime composition refactor SUCCESSFUL: server.py → bootstrap/api_app.py composition working correctly, auth/session/tenant ve Mobile BFF davranış değişmeden kaldı, all critical backend endpoints functional."
 
 metadata:
   created_by: "testing_agent"
@@ -754,7 +754,7 @@ metadata:
     status_history:
       - working: true
         agent: "testing"
-        comment: "PR-V1-0 backend foundation smoke test COMPLETED - ALL TESTS PASSED (2026-03-07). Performed comprehensive backend smoke validation per Turkish review request on https://api-versioning-hub.preview.emergentagent.com. Test Results: 1) ✅ POST /api/auth/login (admin@acenta.test/admin123) - PASSED (200 OK, access_token: 385 chars), 2) ✅ GET /api/auth/me login sonrası çalışıyor mu? - PASSED (200 OK, user email: admin@acenta.test), 3) ✅ GET /api/v1/mobile/auth/me korunmuş mu? - PASSED (401 unauthorized without auth, 200 OK with token), 4) ✅ GET /api/health çalışıyor mu? - PASSED (200 OK, status: ok), 5) ✅ Duplicate auth route semptomu var mı? - PASSED (No auth route conflicts detected, all auth endpoints behave normally), 6) ✅ Route inventory export dosyası mevcut ve foundation alanlarını içeriyor mu? - PASSED (664 routes total, 14 auth routes, 6 mobile routes, all foundation fields present). Success rate: 100% (6/6 tests passed). Backend foundation changes did NOT break runtime behavior. All critical auth endpoints operational, no route conflicts, route inventory properly generated with foundation metadata."
+        comment: "PR-V1-0 backend foundation smoke test COMPLETED - ALL TESTS PASSED (2026-03-07). Performed comprehensive backend smoke validation per Turkish review request on https://travel-saas-refactor-1.preview.emergentagent.com. Test Results: 1) ✅ POST /api/auth/login (admin@acenta.test/admin123) - PASSED (200 OK, access_token: 385 chars), 2) ✅ GET /api/auth/me login sonrası çalışıyor mu? - PASSED (200 OK, user email: admin@acenta.test), 3) ✅ GET /api/v1/mobile/auth/me korunmuş mu? - PASSED (401 unauthorized without auth, 200 OK with token), 4) ✅ GET /api/health çalışıyor mu? - PASSED (200 OK, status: ok), 5) ✅ Duplicate auth route semptomu var mı? - PASSED (No auth route conflicts detected, all auth endpoints behave normally), 6) ✅ Route inventory export dosyası mevcut ve foundation alanlarını içeriyor mu? - PASSED (664 routes total, 14 auth routes, 6 mobile routes, all foundation fields present). Success rate: 100% (6/6 tests passed). Backend foundation changes did NOT break runtime behavior. All critical auth endpoints operational, no route conflicts, route inventory properly generated with foundation metadata."
 
 metadata:
   created_by: "testing_agent"
@@ -819,7 +819,7 @@ agent_communication:
       
       Test Context:
       - Application: Travel agency SaaS platform
-      - Test URL: https://api-versioning-hub.preview.emergentagent.com/login
+      - Test URL: https://travel-saas-refactor-1.preview.emergentagent.com/login
       - Test Account: admin@acenta.test / admin123
       - Scope: Admin portal login only (B2B login not tested as requested)
       
@@ -979,7 +979,7 @@ agent_communication:
       Performed comprehensive PR-V1-0 backend foundation smoke validation per Turkish review request.
       
       Context:
-      - Preview URL: https://api-versioning-hub.preview.emergentagent.com
+      - Preview URL: https://travel-saas-refactor-1.preview.emergentagent.com
       - Test Credentials: admin@acenta.test / admin123
       - Scope: Foundation değişiklikleri runtime davranışını bozmadı mı kontrolü
       
@@ -1036,7 +1036,7 @@ agent_communication:
     message: |
       ✅ PR-8 WEB AUTH CLEANUP SANITY CHECK COMPLETED - ALL TESTS PASSED (2026-03-06)
       
-      Performed comprehensive PR-8 web auth cleanup sanity check on https://api-versioning-hub.preview.emergentagent.com per review request.
+      Performed comprehensive PR-8 web auth cleanup sanity check on https://travel-saas-refactor-1.preview.emergentagent.com per review request.
       
       Context:
       - PR-8 focused on web auth cleanup
@@ -1130,7 +1130,7 @@ agent_communication:
     message: |
       ✅ PR-8 BACKEND API SANITY VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-06)
       
-      Performed comprehensive PR-8 backend API sanity validation per review request on https://api-versioning-hub.preview.emergentagent.com
+      Performed comprehensive PR-8 backend API sanity validation per review request on https://travel-saas-refactor-1.preview.emergentagent.com
       
       Test Coverage (X-Client-Platform:web cookie auth flow):
       1. ✅ POST /api/auth/login with X-Client-Platform:web - PASSED (auth_transport=cookie_compat, cookies set correctly)
@@ -1176,7 +1176,7 @@ agent_communication:
       
       Test Context:
       - Application: Travel agency SaaS platform (Acenta Master)
-      - Test URL: https://api-versioning-hub.preview.emergentagent.com
+      - Test URL: https://travel-saas-refactor-1.preview.emergentagent.com
       - PR-8 Scope: Remove localStorage token usage, implement cookie-based auth
       - Testing Focus: End-to-end validation of cookie/httpOnly session flow
       
@@ -1417,7 +1417,7 @@ agent_communication:
     message: |
       ✅ BACKEND SMOKE TEST COMPLETED - ALL TESTS PASSED
       
-      Performed comprehensive backend API smoke test on https://api-versioning-hub.preview.emergentagent.com
+      Performed comprehensive backend API smoke test on https://travel-saas-refactor-1.preview.emergentagent.com
       
       Backend API Test Results:
       1. ✅ POST /api/auth/login - PASSED (200 OK, tokens received)
@@ -1437,7 +1437,7 @@ agent_communication:
     message: |
       ✅ SMOKE TEST PASSED
       
-      Completed comprehensive smoke test on https://api-versioning-hub.preview.emergentagent.com
+      Completed comprehensive smoke test on https://travel-saas-refactor-1.preview.emergentagent.com
       
       Test Coverage:
       1. ✅ Login at /login with admin@acenta.test / admin123 - PASSED
@@ -1461,7 +1461,7 @@ agent_communication:
       
       Performed comprehensive backend smoke test validating PR-1 auth/config hardening deployment.
       
-      Test Results (Base URL: https://api-versioning-hub.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor-1.preview.emergentagent.com):
       1. ✅ POST /api/auth/login - PASSED (200 OK, access_token + refresh_token received)
       2. ✅ GET /api/auth/me - PASSED (200 OK, user data returned with Bearer token)
       3. ✅ GET /api/admin/agencies - PASSED (200 OK, agency data returned with admin token)
@@ -1484,7 +1484,7 @@ agent_communication:
       
       Performed comprehensive PR-2 backend smoke test validating session/revocation hardening post-deployment.
       
-      Test Results (Base URL: https://api-versioning-hub.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor-1.preview.emergentagent.com):
       1. ✅ POST /api/auth/login (tokens + session) - PASSED (200 OK, access_token ✅, refresh_token ✅, session_id ✅)
       2. ✅ GET /api/auth/sessions - PASSED (200 OK, 6 sessions found)
       3. ✅ Auth regression test (/api/auth/me + /api/admin/agencies) - PASSED (both endpoints working correctly)
@@ -1512,7 +1512,7 @@ agent_communication:
       
       Performed comprehensive tenant-bound login smoke test validating PR-3 tenant isolation deployment.
       
-      Test Results (Base URL: https://api-versioning-hub.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor-1.preview.emergentagent.com):
       
       Admin Login (admin@acenta.test / admin123):
       ✅ Login successful - redirected to /app/admin/agencies
@@ -1553,7 +1553,7 @@ agent_communication:
       
       Performed focused PR-3 backend smoke test per user request to re-validate deployed preview environment.
       
-      Test Results (Base URL: https://api-versioning-hub.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor-1.preview.emergentagent.com):
       
       Backend API Tests:
       1. ✅ Admin Login (admin@acenta.test/admin123) - PASSED (200 OK, access_token received: 385 chars, refresh_token ✅)
@@ -1586,7 +1586,7 @@ agent_communication:
       
       Performed comprehensive PR-4 web auth compatibility smoke test validating cookie-based auth with /auth/me bootstrap and refresh fallback.
       
-      Test Results (Base URL: https://api-versioning-hub.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor-1.preview.emergentagent.com):
       
       1. ✅ Login Page Load & Form Elements - PASSED
          - All form testids found: login-page, login-form, login-email, login-password, login-submit
@@ -1651,7 +1651,7 @@ agent_communication:
       
       Performed comprehensive PR-4 backend verification using curl-like tests on deployed preview environment.
       
-      Test Results (Base URL: https://api-versioning-hub.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor-1.preview.emergentagent.com):
       
       Backend API Tests:
       1. ✅ Web Login Cookie Compat - PASSED (POST /api/auth/login with X-Client-Platform:web sets cookies and returns auth_transport=cookie_compat)
@@ -1689,7 +1689,7 @@ agent_communication:
       
       Performed comprehensive PR-5A Mobile BFF backend re-verification per Turkish review request on deployed preview environment.
       
-      Test Results (Base URL: https://api-versioning-hub.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor-1.preview.emergentagent.com):
       
       Mobile BFF API Re-Validation:
       1. ✅ POST /api/auth/login (admin@acenta.test/admin123) - PASSED (200 OK, access_token received: 385 chars)
@@ -1739,7 +1739,7 @@ agent_communication:
     message: |
       ✅ PR-5A FRONTEND SMOKE TEST COMPLETED - ALL TESTS PASSED (2026-03-06)
       
-      Performed frontend smoke test on https://api-versioning-hub.preview.emergentagent.com per review request.
+      Performed frontend smoke test on https://travel-saas-refactor-1.preview.emergentagent.com per review request.
       
       Test Results (Turkish Requirements):
       
@@ -1797,7 +1797,7 @@ agent_communication:
       - Router registry in backend/app/bootstrap/router_registry.py
       - Auth/session/tenant/Mobile BFF behavior unchanged (structure refactor only)
       
-      Test Results (Base URL: https://api-versioning-hub.preview.emergentagent.com):
+      Test Results (Base URL: https://travel-saas-refactor-1.preview.emergentagent.com):
       
       1. ✅ Login page açılıyor mu, blank page var mı?
          - EVET - Login page loads correctly (96 chars content)
@@ -1864,7 +1864,7 @@ agent_communication:
     message: |
       ✅ PR-6 BACKEND VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-03-06)
       
-      Performed comprehensive PR-6 backend validation per Turkish review request on https://api-versioning-hub.preview.emergentagent.com
+      Performed comprehensive PR-6 backend validation per Turkish review request on https://travel-saas-refactor-1.preview.emergentagent.com
       
       PR-6 Context:
       - server.py now thin compat wrapper (4 lines)
@@ -1903,7 +1903,7 @@ agent_communication:
     message: |
       ✅ RUNTIME OPERATIONS SPLIT BACKEND VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-06)
       
-      Performed comprehensive runtime operations split backend testing per Turkish review request on https://api-versioning-hub.preview.emergentagent.com
+      Performed comprehensive runtime operations split backend testing per Turkish review request on https://travel-saas-refactor-1.preview.emergentagent.com
       
       Test Context:
       - Operational bootstrap split / runtime separation refactor validation
@@ -1970,7 +1970,7 @@ agent_communication:
     message: |
       ✅ BACKEND LINT CI FIX VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-06)
       
-      Performed comprehensive backend lint CI fix validation per Turkish review request on https://api-versioning-hub.preview.emergentagent.com
+      Performed comprehensive backend lint CI fix validation per Turkish review request on https://travel-saas-refactor-1.preview.emergentagent.com
       
       Turkish Requirements Validation:
       1. ✅ Backend lint gerçekten temiz mi? - EVET (ruff validation passed with no lint errors)
@@ -2009,7 +2009,7 @@ agent_communication:
       
       Test Context:
       - Scope: Regression smoke test after backend runtime wiring changes
-      - URL: https://api-versioning-hub.preview.emergentagent.com
+      - URL: https://travel-saas-refactor-1.preview.emergentagent.com
       - Credentials: admin@acenta.test / admin123
       - Focus: Verify no login flow breaking from new backend process architecture
       
@@ -2089,7 +2089,7 @@ agent_communication:
       Performed concise backend smoke validation after dedicated worker/scheduler runtime wiring changes.
       
       Context:
-      - Base URL: https://api-versioning-hub.preview.emergentagent.com
+      - Base URL: https://travel-saas-refactor-1.preview.emergentagent.com
       - Credentials: admin@acenta.test / admin123
       - Scope: Smoke test only, focused on auth flow integrity
       - Runtime changes: Dedicated worker/scheduler heartbeat checks validated by main agent
@@ -2138,7 +2138,7 @@ agent_communication:
       Performed minimal smoke test to verify backend foundation changes did not break frontend auth flow.
       
       Test Context:
-      - Preview URL: https://api-versioning-hub.preview.emergentagent.com
+      - Preview URL: https://travel-saas-refactor-1.preview.emergentagent.com
       - Test Account: admin@acenta.test / admin123
       - Scope: Minimal smoke test only (no UI design review required)
       
@@ -2211,7 +2211,7 @@ agent_communication:
     status_history:
       - working: true
         agent: "testing"
-        comment: "PR-V1-1 backend validation COMPLETED - ALL 23 TESTS PASSED (100% success rate). Comprehensive validation per review request on https://api-versioning-hub.preview.emergentagent.com. Test Results: 1) ✅ Admin Authentication successful (token: 385 chars), 2) ✅ Legacy Routes Unchanged (7/7 routes working): /api/health ✅, /api/system/ping ✅, /api/public/theme ✅, /api/public/cms/pages?org=org_demo ✅, /api/public/campaigns?org=org_demo ✅, /api/system/health-dashboard ✅, /api/admin/theme ✅, 3) ✅ Legacy + V1 Parity Tests (7/7 parity confirmed): /api/health <-> /api/v1/health ✅, /api/system/ping <-> /api/v1/system/ping ✅, /api/system/health-dashboard <-> /api/v1/system/health-dashboard ✅, /api/public/theme <-> /api/v1/public/theme ✅, /api/admin/theme <-> /api/v1/admin/theme ✅, /api/public/cms/pages <-> /api/v1/public/cms/pages ✅, /api/public/campaigns <-> /api/v1/public/campaigns ✅, 4) ✅ Route Inventory Validation: File exists at /app/backend/app/bootstrap/route_inventory.json ✅, Contains 675 total routes with 17 V1 routes and 658 legacy routes ✅, All required fields present (compat_required, current_namespace, legacy_or_v1, method, owner, path, risk_level, source, target_namespace) ✅, All 7 expected V1 aliases found in inventory ✅, 5) ✅ Diff CLI Functionality: Both text and JSON formats working ✅, Added 17 new V1 routes correctly detected ✅, Previous/current comparison working correctly ✅. PR-V1-1 low-risk /api/v1 rollout validated successfully. Legacy paths work unchanged, V1 aliases provide identical behavior, route inventory complete with V1 aliases, and diff CLI operational. No regressions detected in scoped rollout."
+        comment: "PR-V1-1 backend validation COMPLETED - ALL 23 TESTS PASSED (100% success rate). Comprehensive validation per review request on https://travel-saas-refactor-1.preview.emergentagent.com. Test Results: 1) ✅ Admin Authentication successful (token: 385 chars), 2) ✅ Legacy Routes Unchanged (7/7 routes working): /api/health ✅, /api/system/ping ✅, /api/public/theme ✅, /api/public/cms/pages?org=org_demo ✅, /api/public/campaigns?org=org_demo ✅, /api/system/health-dashboard ✅, /api/admin/theme ✅, 3) ✅ Legacy + V1 Parity Tests (7/7 parity confirmed): /api/health <-> /api/v1/health ✅, /api/system/ping <-> /api/v1/system/ping ✅, /api/system/health-dashboard <-> /api/v1/system/health-dashboard ✅, /api/public/theme <-> /api/v1/public/theme ✅, /api/admin/theme <-> /api/v1/admin/theme ✅, /api/public/cms/pages <-> /api/v1/public/cms/pages ✅, /api/public/campaigns <-> /api/v1/public/campaigns ✅, 4) ✅ Route Inventory Validation: File exists at /app/backend/app/bootstrap/route_inventory.json ✅, Contains 675 total routes with 17 V1 routes and 658 legacy routes ✅, All required fields present (compat_required, current_namespace, legacy_or_v1, method, owner, path, risk_level, source, target_namespace) ✅, All 7 expected V1 aliases found in inventory ✅, 5) ✅ Diff CLI Functionality: Both text and JSON formats working ✅, Added 17 new V1 routes correctly detected ✅, Previous/current comparison working correctly ✅. PR-V1-1 low-risk /api/v1 rollout validated successfully. Legacy paths work unchanged, V1 aliases provide identical behavior, route inventory complete with V1 aliases, and diff CLI operational. No regressions detected in scoped rollout."
 
   - task: "PR-V1-2A auth bootstrap rollout validation"
     implemented: true
@@ -2223,7 +2223,7 @@ agent_communication:
     status_history:
       - working: true
         agent: "testing"
-        comment: "PR-V1-2A auth bootstrap rollout validation COMPLETED - ALL 15 TESTS PASSED (100% success rate). Comprehensive validation per review request on https://api-versioning-hub.preview.emergentagent.com. Test Results: 1) ✅ Legacy auth routes with compat headers - PASSED (POST /api/auth/login ✅, GET /api/auth/me ✅, POST /api/auth/refresh ✅) - all return proper Deprecation: true and Link successor headers to v1 equivalents, 2) ✅ New v1 auth alias routes working - PASSED (POST /api/v1/auth/login ✅, GET /api/v1/auth/me ✅, POST /api/v1/auth/refresh ✅) - all functional and returning expected responses, 3) ✅ Cookie-compatible web flow and bearer flow - PASSED (X-Client-Platform: web header correctly triggers cookie_compat mode ✅, bearer mode works without header ✅, both flows authenticate correctly), 4) ✅ Mobile BFF safety - PASSED (GET /api/v1/mobile/auth/me works with bearer token from v1/auth/login ✅), 5) ✅ Route inventory expectations - PASSED (678 total routes ✅, 20 v1 routes ✅, 658 legacy routes ✅, auth namespace contains 17 routes including new aliases ✅), 6) ✅ Parity between legacy and v1 - PASSED (legacy and v1 auth endpoints return equivalent data with same auth transport modes). All PR-V1-2A scope requirements validated successfully: auth alias-first behavior working, compat headers present, route inventory updated correctly with +3 auth aliases, no regressions in existing flows."
+        comment: "PR-V1-2A auth bootstrap rollout validation COMPLETED - ALL 15 TESTS PASSED (100% success rate). Comprehensive validation per review request on https://travel-saas-refactor-1.preview.emergentagent.com. Test Results: 1) ✅ Legacy auth routes with compat headers - PASSED (POST /api/auth/login ✅, GET /api/auth/me ✅, POST /api/auth/refresh ✅) - all return proper Deprecation: true and Link successor headers to v1 equivalents, 2) ✅ New v1 auth alias routes working - PASSED (POST /api/v1/auth/login ✅, GET /api/v1/auth/me ✅, POST /api/v1/auth/refresh ✅) - all functional and returning expected responses, 3) ✅ Cookie-compatible web flow and bearer flow - PASSED (X-Client-Platform: web header correctly triggers cookie_compat mode ✅, bearer mode works without header ✅, both flows authenticate correctly), 4) ✅ Mobile BFF safety - PASSED (GET /api/v1/mobile/auth/me works with bearer token from v1/auth/login ✅), 5) ✅ Route inventory expectations - PASSED (678 total routes ✅, 20 v1 routes ✅, 658 legacy routes ✅, auth namespace contains 17 routes including new aliases ✅), 6) ✅ Parity between legacy and v1 - PASSED (legacy and v1 auth endpoints return equivalent data with same auth transport modes). All PR-V1-2A scope requirements validated successfully: auth alias-first behavior working, compat headers present, route inventory updated correctly with +3 auth aliases, no regressions in existing flows."
       - working: true
         agent: "testing"
         comment: "PR-V1-2A FRONTEND SMOKE TEST COMPLETED - ALL 5 TESTS PASSED (2026-03-07). Short frontend smoke test performed to confirm PR-V1-2A backend auth alias work did NOT break existing web login/bootstrap behavior. Test Results: 1) ✅ /login page loads correctly - all form elements present (login-page, login-form, login-email, login-password, login-submit testids found), 2) ✅ Login with admin@acenta.test/admin123 successful - redirects to /app/admin/agencies correctly, 3) ✅ Protected area renders (949 chars content, no blank screen, no React errors), 4) ✅ Bootstrap/refresh check passed - session persists after page reload, /auth/me called correctly for session verification, 5) ✅ Logout and route guard working - logout redirects to /login, accessing protected area without auth redirects to /login. CRITICAL VALIDATION: Frontend uses legacy /api/auth/* endpoints (login, me, logout, refresh) as expected, NO /api/v1/auth/* endpoints called by web app. No regressions detected in existing web auth flow. PR-V1-2A backend changes confirmed safe for frontend."
@@ -2238,7 +2238,7 @@ agent_communication:
     status_history:
       - working: true
         agent: "testing"
-        comment: "PR-V1-2B session auth endpoints rollout validation COMPLETED - ALL 5 TESTS PASSED (100% success rate). Comprehensive validation per review request on https://api-versioning-hub.preview.emergentagent.com. Test Results: A) ✅ Legacy/V1 Parity - PASSED (GET /api/auth/sessions vs GET /api/v1/auth/sessions return matching session sets, legacy endpoints include proper Deprecation: true and Link successor headers), B) ✅ Single-Session Revoke Behavior - PASSED (created multiple sessions, revoked specific session via POST /api/v1/auth/sessions/{id}/revoke, confirmed revoked token no longer accesses /api/auth/me, keeper session still functional, revoked session removed from listings, legacy POST /api/auth/sessions/{id}/revoke also works with compat headers), C) ✅ Bulk Revoke Behavior - PASSED (POST /api/v1/auth/revoke-all-sessions invalidates current session family, /api/auth/me returns 401 after bulk revoke, legacy POST /api/auth/revoke-all-sessions works with compat headers), D) ✅ Cookie Auth Safety - PASSED (login via /api/v1/auth/login with X-Client-Platform: web returns auth_transport=cookie_compat, GET /api/v1/auth/sessions works with cookies only, POST /api/v1/auth/revoke-all-sessions clears cookie access correctly), E) ✅ Inventory/Telemetry Artifacts - PASSED (route_inventory.json contains all 3 new v1 session aliases, route_inventory_diff.json reports exactly 3 added v1 routes, route_inventory_summary.json shows v1_count=23 and domain_v1_progress.auth.migrated_v1_route_count=6). All PR-V1-2B scope requirements validated successfully: alias-first rollout for session auth endpoints working, legacy behavior preserved, cookie auth compatibility maintained, route inventory telemetry updated correctly. No APIs are mocked, no regressions detected."
+        comment: "PR-V1-2B session auth endpoints rollout validation COMPLETED - ALL 5 TESTS PASSED (100% success rate). Comprehensive validation per review request on https://travel-saas-refactor-1.preview.emergentagent.com. Test Results: A) ✅ Legacy/V1 Parity - PASSED (GET /api/auth/sessions vs GET /api/v1/auth/sessions return matching session sets, legacy endpoints include proper Deprecation: true and Link successor headers), B) ✅ Single-Session Revoke Behavior - PASSED (created multiple sessions, revoked specific session via POST /api/v1/auth/sessions/{id}/revoke, confirmed revoked token no longer accesses /api/auth/me, keeper session still functional, revoked session removed from listings, legacy POST /api/auth/sessions/{id}/revoke also works with compat headers), C) ✅ Bulk Revoke Behavior - PASSED (POST /api/v1/auth/revoke-all-sessions invalidates current session family, /api/auth/me returns 401 after bulk revoke, legacy POST /api/auth/revoke-all-sessions works with compat headers), D) ✅ Cookie Auth Safety - PASSED (login via /api/v1/auth/login with X-Client-Platform: web returns auth_transport=cookie_compat, GET /api/v1/auth/sessions works with cookies only, POST /api/v1/auth/revoke-all-sessions clears cookie access correctly), E) ✅ Inventory/Telemetry Artifacts - PASSED (route_inventory.json contains all 3 new v1 session aliases, route_inventory_diff.json reports exactly 3 added v1 routes, route_inventory_summary.json shows v1_count=23 and domain_v1_progress.auth.migrated_v1_route_count=6). All PR-V1-2B scope requirements validated successfully: alias-first rollout for session auth endpoints working, legacy behavior preserved, cookie auth compatibility maintained, route inventory telemetry updated correctly. No APIs are mocked, no regressions detected."
   - task: "PR-V1-2C settings namespace rollout validation"
     implemented: true
     working: true
@@ -2249,7 +2249,7 @@ agent_communication:
     status_history:
       - working: true
         agent: "testing"
-        comment: "PR-V1-2C settings namespace rollout validation COMPLETED - ALL 6 TESTS PASSED (100% success rate). Comprehensive validation per review request on https://api-versioning-hub.preview.emergentagent.com. Test Results: A) ✅ Legacy/V1 Settings Parity - PASSED (GET /api/settings/users vs GET /api/v1/settings/users return matching data with 11 users each, legacy endpoints include proper Deprecation: true and Link successor headers pointing to /api/v1/settings/users), B) ✅ Settings Mutation Parity - PASSED (created unique user via POST /api/v1/settings/users with 200 status, confirmed created user appears in legacy GET /api/settings/users list, legacy POST /api/settings/users also works with 200 status for new user creation), C) ✅ Cookie Auth Safety - PASSED (login via /api/v1/auth/login with X-Client-Platform: web header returns auth_transport=cookie_compat, GET /api/v1/settings/users works using cookies only with 200 status, no Authorization header required for web auth flow), D) ✅ Mobile BFF Unaffected - PASSED (GET /api/v1/mobile/auth/me works correctly with bearer token after settings changes, returns 200 status with admin@acenta.test email, mobile BFF integration intact), E) ✅ Inventory/Telemetry Artifacts - PASSED (both GET and POST /api/v1/settings/users routes found and accessible, route count matches expected 2 new v1 routes, telemetry consistent with diff artifacts showing routes_migrated_this_pr=2), F) ✅ Admin Authentication - PASSED (admin@acenta.test/admin123 login successful with 385 char token). All PR-V1-2C scope requirements validated successfully: new v1 settings aliases working (GET/POST /api/v1/settings/users), legacy settings routes preserved with compat headers (GET/POST /api/settings/users), cookie auth compatibility maintained for settings calls with X-Client-Platform: web, mobile BFF unaffected, route inventory artifacts updated correctly with migration velocity telemetry. No APIs are mocked, no regressions detected."
+        comment: "PR-V1-2C settings namespace rollout validation COMPLETED - ALL 6 TESTS PASSED (100% success rate). Comprehensive validation per review request on https://travel-saas-refactor-1.preview.emergentagent.com. Test Results: A) ✅ Legacy/V1 Settings Parity - PASSED (GET /api/settings/users vs GET /api/v1/settings/users return matching data with 11 users each, legacy endpoints include proper Deprecation: true and Link successor headers pointing to /api/v1/settings/users), B) ✅ Settings Mutation Parity - PASSED (created unique user via POST /api/v1/settings/users with 200 status, confirmed created user appears in legacy GET /api/settings/users list, legacy POST /api/settings/users also works with 200 status for new user creation), C) ✅ Cookie Auth Safety - PASSED (login via /api/v1/auth/login with X-Client-Platform: web header returns auth_transport=cookie_compat, GET /api/v1/settings/users works using cookies only with 200 status, no Authorization header required for web auth flow), D) ✅ Mobile BFF Unaffected - PASSED (GET /api/v1/mobile/auth/me works correctly with bearer token after settings changes, returns 200 status with admin@acenta.test email, mobile BFF integration intact), E) ✅ Inventory/Telemetry Artifacts - PASSED (both GET and POST /api/v1/settings/users routes found and accessible, route count matches expected 2 new v1 routes, telemetry consistent with diff artifacts showing routes_migrated_this_pr=2), F) ✅ Admin Authentication - PASSED (admin@acenta.test/admin123 login successful with 385 char token). All PR-V1-2C scope requirements validated successfully: new v1 settings aliases working (GET/POST /api/v1/settings/users), legacy settings routes preserved with compat headers (GET/POST /api/settings/users), cookie auth compatibility maintained for settings calls with X-Client-Platform: web, mobile BFF unaffected, route inventory artifacts updated correctly with migration velocity telemetry. No APIs are mocked, no regressions detected."
 
 
 metadata:
@@ -2263,7 +2263,7 @@ agent_communication:
     message: |
       ✅ PR-V1-1 LOW-RISK /API/V1 ROLLOUT BACKEND VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-07)
       
-      Performed comprehensive PR-V1-1 backend validation per review request on https://api-versioning-hub.preview.emergentagent.com
+      Performed comprehensive PR-V1-1 backend validation per review request on https://travel-saas-refactor-1.preview.emergentagent.com
       
       Context:
       - PR-V1-1: Low-risk /api/v1 rollout on preview environment
@@ -2340,7 +2340,7 @@ agent_communication:
     message: |
       ✅ PR-V1-2A AUTH BOOTSTRAP ROLLOUT VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-07)
       
-      Performed comprehensive PR-V1-2A auth bootstrap rollout validation per review request on https://api-versioning-hub.preview.emergentagent.com
+      Performed comprehensive PR-V1-2A auth bootstrap rollout validation per review request on https://travel-saas-refactor-1.preview.emergentagent.com
       
       Context:
       - PR-V1-2A: Auth bootstrap rollout on preview environment
@@ -2414,7 +2414,7 @@ agent_communication:
       - PR-V1-2A: Added /api/v1/auth/login, /api/v1/auth/me, /api/v1/auth/refresh aliases
       - Legacy /api/auth/* remains primary path for web app
       - NO frontend files were changed in this PR
-      - Test URL: https://api-versioning-hub.preview.emergentagent.com
+      - Test URL: https://travel-saas-refactor-1.preview.emergentagent.com
       - Test Credentials: admin@acenta.test / admin123
       
       Test Results Summary:
@@ -2500,12 +2500,12 @@ agent_communication:
     message: |
       ✅ PR-V1-2B SESSION AUTH ENDPOINTS ROLLOUT VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-07)
       
-      Performed comprehensive PR-V1-2B session auth endpoints rollout validation per review request on https://api-versioning-hub.preview.emergentagent.com
+      Performed comprehensive PR-V1-2B session auth endpoints rollout validation per review request on https://travel-saas-refactor-1.preview.emergentagent.com
       
       Context:
       - PR-V1-2B: Backend-only regression + rollout verification for travel SaaS API versioning work
       - Scope: Alias-first rollout for session auth endpoints while preserving legacy behavior and cookie auth
-      - External preview base URL: https://api-versioning-hub.preview.emergentagent.com
+      - External preview base URL: https://travel-saas-refactor-1.preview.emergentagent.com
       - Credentials: Admin (admin@acenta.test/admin123), B2B (agent@acenta.test/agent123)
       
       Test Results Summary:
@@ -2569,12 +2569,12 @@ agent_communication:
     message: |
       ✅ PR-V1-2C SETTINGS NAMESPACE ROLLOUT VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-07)
       
-      Performed comprehensive PR-V1-2C settings namespace rollout validation per review request on https://api-versioning-hub.preview.emergentagent.com
+      Performed comprehensive PR-V1-2C settings namespace rollout validation per review request on https://travel-saas-refactor-1.preview.emergentagent.com
       
       Context:
       - PR-V1-2C: Backend-only regression + rollout verification for settings namespace rollout
       - Scope: Alias-first strategy with legacy compatibility for settings endpoints
-      - External preview base URL: https://api-versioning-hub.preview.emergentagent.com
+      - External preview base URL: https://travel-saas-refactor-1.preview.emergentagent.com
       - Credentials: Admin (admin@acenta.test/admin123)
       
       Test Results Summary:

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { FEATURE_CATALOG } from "../../config/featureCatalog";
 import { api, apiErrorMessage } from "../../lib/api";
 import { fetchTenantList } from "../../lib/tenantFeaturesAdmin";
+import { TenantEntitlementOverview } from "../../components/admin/TenantEntitlementOverview";
 
 const STATUS_MAP = {
   active: { label: "Active", color: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20" },
@@ -203,7 +204,13 @@ function UsagePanel({ tenantId }) {
   if (loading) return null;
   if (!usage || !usage.metrics || Object.keys(usage.metrics).length === 0) return null;
 
-  const METRIC_LABELS = { "b2b.match_request": "B2B Talep" };
+  const METRIC_LABELS = {
+    "b2b.match_request": "B2B Talep",
+    "reservation.created": "Rezervasyon",
+    "report.generated": "Rapor",
+    "export.generated": "Export",
+    "integration.call": "Entegrasyon",
+  };
 
   return (
     <div className="rounded-lg border bg-card p-3 space-y-2" data-testid="usage-panel">
@@ -315,6 +322,8 @@ export default function AdminTenantFeaturesPage() {
   const [initialAddOns, setInitialAddOns] = useState([]);
   const [planMatrix, setPlanMatrix] = useState({});
   const [availablePlans, setAvailablePlans] = useState([]);
+  const [planCatalog, setPlanCatalog] = useState([]);
+  const [entitlementSource, setEntitlementSource] = useState("capabilities");
 
   const [loadingFeatures, setLoadingFeatures] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -344,11 +353,14 @@ export default function AdminTenantFeaturesPage() {
       setInitialAddOns([...ao]);
       setPlanMatrix(data.plan_matrix || {});
       setAvailablePlans(data.plans || ["starter", "pro", "enterprise"]);
+      setPlanCatalog(data.plan_catalog || []);
+      setEntitlementSource(data.source || "capabilities");
     } catch {
       setCurrentPlan("starter");
       setAddOns([]);
       setInitialPlan("starter");
       setInitialAddOns([]);
+      setPlanCatalog([]);
       toast.error("Feature bilgisi yüklenemedi.");
     } finally {
       setLoadingFeatures(false);
@@ -361,6 +373,11 @@ export default function AdminTenantFeaturesPage() {
     const all = new Set([...(planMatrix[currentPlan] || []), ...addOns]);
     return [...all].sort();
   }, [planMatrix, currentPlan, addOns]);
+
+  const currentPlanDefinition = useMemo(
+    () => planCatalog.find((item) => item.key === currentPlan || item.name === currentPlan) || null,
+    [planCatalog, currentPlan]
+  );
 
   const isDirty = useMemo(() => {
     if (currentPlan !== initialPlan) return true;
@@ -394,6 +411,7 @@ export default function AdminTenantFeaturesPage() {
       setAddOns([...(data.add_ons || [])]);
       setInitialPlan(data.plan || currentPlan);
       setInitialAddOns([...(data.add_ons || [])]);
+      setEntitlementSource(data.source || entitlementSource);
       toast.success("Özellikler güncellendi.");
     } catch (err) {
       toast.error(apiErrorMessage(err));
@@ -405,8 +423,8 @@ export default function AdminTenantFeaturesPage() {
   return (
     <div className="space-y-6" data-testid="admin-tenant-features-page">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground tracking-tight" data-testid="page-title">Tenant Özellikleri</h1>
-        <p className="text-sm text-muted-foreground mt-1">Plan ve add-on modülleri ile tenant yeteneklerini yönetin.</p>
+        <h1 className="text-2xl font-semibold text-foreground tracking-tight" data-testid="page-title">Tenant Entitlements</h1>
+        <p className="text-sm text-muted-foreground mt-1">Plan, add-on ve limit projeksiyonları ile tenant paketlerini yönetin.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -465,6 +483,14 @@ export default function AdminTenantFeaturesPage() {
               <div className="px-4 pt-3 space-y-3">
                 <SubscriptionPanel tenantId={selectedTenant.id} />
                 <UsagePanel tenantId={selectedTenant.id} />
+                <TenantEntitlementOverview
+                  planLabel={currentPlanDefinition?.label || currentPlan}
+                  source={entitlementSource}
+                  limits={currentPlanDefinition?.limits || {}}
+                  usageAllowances={currentPlanDefinition?.usage_allowances || currentPlanDefinition?.quotas || {}}
+                  activeFeatureCount={effectiveFeatures.length}
+                  addOnCount={addOns.length}
+                />
               </div>
 
               {loadingFeatures ? (
@@ -483,7 +509,7 @@ export default function AdminTenantFeaturesPage() {
                       <SelectContent>
                         {availablePlans.map((p) => (
                           <SelectItem key={p} value={p}>
-                            {p.charAt(0).toUpperCase() + p.slice(1)} ({(planMatrix[p] || []).length} modül)
+                            {(planCatalog.find((item) => item.key === p || item.name === p)?.label) || (p.charAt(0).toUpperCase() + p.slice(1))} ({(planMatrix[p] || []).length} modül)
                           </SelectItem>
                         ))}
                       </SelectContent>

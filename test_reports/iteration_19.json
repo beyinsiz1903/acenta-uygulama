@@ -1,0 +1,84 @@
+{
+  "summary": "Entitlement Projection Engine V1 testing complete. All acceptance criteria PASSED: (1) GET /api/onboarding/plans returns plan catalog with limits and usage_allowances for starter/pro/enterprise, (2) GET /api/admin/tenants/{tenant_id}/features returns entitlement projection with all canonical fields including plan_catalog, (3) PATCH /api/admin/tenants/{tenant_id}/plan updates and returns correct limits for selected plan, (4) PATCH /api/admin/tenants/{tenant_id}/add-ons preserves effective features and entitlement payload shape, (5) GET /api/tenant/features and /entitlements return canonical projection for current tenant, (6) Pricing page /pricing renders limits and usage allowances from backend plan catalog (not blank), (7) Admin tenant-features page loads, tenant selection works, entitlement overview card renders with limits/usage, save plan change succeeds with toast confirmation.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "Various admin endpoints",
+        "issue": "Console shows some 400/500 errors on page load (possibly unrelated background requests), but tested entitlement endpoints all work correctly"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "✅ GET /api/onboarding/plans returns 200 with plans array",
+    "✅ Plan catalog includes starter, pro, enterprise plans",
+    "✅ Each plan has limits and usage_allowances objects",
+    "✅ Starter plan has users.active=2, reservations.monthly=100",
+    "✅ Pro plan has users.active=10, reservations.monthly=null (unlimited)",
+    "✅ Each plan has features array with feature keys",
+    "✅ GET /api/admin/tenants returns tenant list",
+    "✅ GET /api/admin/tenants/{id}/features returns entitlement projection with plan, plan_label, limits, usage_allowances, plan_catalog",
+    "✅ PATCH /api/admin/tenants/{id}/plan updates plan and returns correct limits for new plan",
+    "✅ PATCH /api/admin/tenants/{id}/add-ons preserves entitlement payload shape with all fields",
+    "✅ GET /api/tenant/features returns canonical projection for current tenant",
+    "✅ GET /api/tenant/entitlements is alias for /features, returns same data",
+    "✅ Invalid plan returns 422 with proper error",
+    "✅ Invalid add-on returns 422 with proper error",
+    "✅ Pricing page loads at /pricing with all 3 plan cards",
+    "✅ Pricing page shows limits section (Aktif kullanıcı: 2/10/Sınırsız)",
+    "✅ Pricing page shows usage allowances section from backend data",
+    "✅ Pricing page billing cycle toggle (Aylık/Yıllık) works",
+    "✅ Admin tenant-features page loads at /app/admin/tenant-features",
+    "✅ Admin page shows tenant list with search",
+    "✅ Admin page tenant selection loads entitlement detail view",
+    "✅ TenantEntitlementOverview card renders plan label, source, limits, usage allowances",
+    "✅ Admin page plan dropdown shows all 3 plans with module counts",
+    "✅ Admin page save plan change succeeds with toast 'Özellikler güncellendi'"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_entitlement_projection_engine.py",
+    "/app/test_reports/pytest/pytest_entitlement_projection.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "entitlement_service.py: _serialize_projection() correctly builds canonical shape with all required fields",
+    "entitlement_service.py: get_plan_catalog() ensures default plans exist via ensure_default_plan_catalog()",
+    "entitlement_service.py: project_tenant_entitlements() correctly merges plan features with add-ons",
+    "admin_tenant_features.py: All PATCH endpoints return consistent entitlement projection shape",
+    "tenant_features.py: /features and /entitlements endpoints share same implementation",
+    "onboarding.py: /plans endpoint correctly returns plan catalog from entitlement_service",
+    "PricingPage.jsx: Correctly fetches from /api/onboarding/plans and renders limits + usage_allowances",
+    "AdminTenantFeaturesPage.jsx: Correctly fetches /api/admin/tenants/{id}/features and uses TenantEntitlementOverview component",
+    "TenantEntitlementOverview.jsx: Correctly renders limits and usage allowances using entitlementLabels helpers",
+    "entitlementLabels.js: formatEntitlementValue() correctly handles null as 'Sınırsız'"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (16/16 pytest tests passed)",
+    "frontend": "100% (All tested flows working)"
+  },
+  "test_credentials": {
+    "admin": "admin@acenta.test / admin123",
+    "agent": "agent@acenta.test / agent123"
+  },
+  "seed_data_creation": "No test data created - used existing 'Varsayilan Tenant'",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Entitlement Projection Engine V1 is complete and tested. Key components: (1) entitlement_service.py handles plan catalog + tenant entitlement projection, (2) plan_matrix.py defines starter/pro/enterprise with features/limits/quotas, (3) admin_tenant_features.py provides CRUD for tenant plan + add-ons, (4) tenant_features.py provides self-service entitlement access, (5) PricingPage.jsx consumes /api/onboarding/plans for public pricing display, (6) AdminTenantFeaturesPage.jsx + TenantEntitlementOverview.jsx provide admin UI for entitlement management.",
+  "entitlement_engine_verification": {
+    "canonical_projection_fields": ["tenant_id", "plan", "plan_label", "add_ons", "features", "limits", "usage_allowances", "source", "plan_source", "billing_status", "billing_provider", "projection_version", "projected_at"],
+    "plan_catalog_fields": ["key", "name", "label", "description", "features", "limits", "usage_allowances", "quotas", "sort_order", "active", "is_public"],
+    "valid_plans": ["starter", "pro", "enterprise"],
+    "starter_limits": {"users.active": 2, "reservations.monthly": 100},
+    "pro_limits": {"users.active": 10, "reservations.monthly": null},
+    "enterprise_limits": {"users.active": null, "reservations.monthly": null},
+    "admin_endpoints_tested": ["/api/admin/tenants", "/api/admin/tenants/{id}/features", "/api/admin/tenants/{id}/plan", "/api/admin/tenants/{id}/add-ons"],
+    "tenant_endpoints_tested": ["/api/tenant/features", "/api/tenant/entitlements"],
+    "public_endpoints_tested": ["/api/onboarding/plans"]
+  }
+}

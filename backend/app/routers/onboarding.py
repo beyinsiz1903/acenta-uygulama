@@ -115,15 +115,9 @@ async def signup(payload: SignupRequest, request: Request):
 # ─── PUBLIC: Pricing info ─────────────────────────────────────────
 @router.get("/plans")
 async def get_plans():
-    from app.constants.plan_matrix import PLAN_MATRIX
-    plans = []
-    for key, val in PLAN_MATRIX.items():
-        plans.append({
-            "key": key,
-            "label": val["label"],
-            "features": val["features"],
-            "quotas": val.get("quotas", {}),
-        })
+    from app.services.entitlement_service import entitlement_service
+
+    plans = await entitlement_service.get_plan_catalog()
     return {"plans": plans}
 
 

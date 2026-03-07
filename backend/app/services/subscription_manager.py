@@ -5,10 +5,11 @@ import os
 from typing import Any, Dict, Optional
 
 from app.billing import BillingProvider, get_billing_provider
-from app.constants.plan_matrix import PLAN_MATRIX, VALID_PLANS
+from app.constants.plan_matrix import VALID_PLANS
 from app.errors import AppError
 from app.repositories.billing_repository import billing_repo
 from app.services.audit_log_service import append_audit_log
+from app.services.entitlement_service import entitlement_service
 from app.services.feature_service import feature_service
 
 logger = logging.getLogger(__name__)
@@ -147,9 +148,12 @@ class SubscriptionManager:
     if target_plan not in VALID_PLANS:
       raise AppError(422, "invalid_plan", "Geçersiz plan.", {"valid": VALID_PLANS})
 
-    current_features = await feature_service.get_features(tenant_id)
-    target_plan_features = set(PLAN_MATRIX.get(target_plan, {}).get("features", []))
-    add_ons = await feature_service.get_add_ons(tenant_id)
+    current_entitlements = await entitlement_service.get_tenant_entitlements(tenant_id, refresh=True)
+    current_features = list(current_entitlements.get("features") or [])
+    current_limits = dict(current_entitlements.get("limits") or {})
+    target_plan_doc = await entitlement_service.get_plan_definition(target_plan)
+    target_plan_features = set((target_plan_doc or {}).get("features") or [])
+    add_ons = list(current_entitlements.get("add_ons") or [])
     target_effective = target_plan_features | set(add_ons)
 
     lost = sorted(set(current_features) - target_effective)
@@ -162,6 +166,8 @@ class SubscriptionManager:
       "kept_features": kept,
       "current_feature_count": len(current_features),
       "target_feature_count": len(target_effective),
+      "current_limits": current_limits,
+      "target_limits": dict((target_plan_doc or {}).get("limits") or {}),
     }
 
   async def get_subscription_status(self, tenant_id: str) -> Optional[Dict[str, Any]]:

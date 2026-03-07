@@ -158,6 +158,13 @@ async def ensure_seed_indexes(db) -> None:
     await _safe_create(db.crm_notes, [("organization_id", 1), ("entity_type", 1), ("entity_id", 1)])
     await _safe_create(db.activation_checklist, "tenant_id", unique=True)
     await _safe_create(db.upgrade_requests, [("tenant_id", 1), ("status", 1)])
+    await _safe_create(db.tenant_entitlements, "tenant_id", unique=True)
+    await _safe_create(
+        db.plans,
+        [("catalog", 1), ("name", 1)],
+        unique=True,
+        partialFilterExpression={"catalog": "tenant_entitlement"},
+    )
 
     # ══════════════════════════════════════════════════════════
     # IMPORT / SHEETS (from server.py)

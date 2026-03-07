@@ -9,6 +9,7 @@ from app.auth import hash_password
 from app.db import get_db
 from app.errors import AppError
 from app.constants.plan_matrix import DEFAULT_PLAN, VALID_PLANS
+from app.services.entitlement_service import entitlement_service
 
 logger = logging.getLogger(__name__)
 
@@ -152,6 +153,7 @@ class OnboardingService:
             {"$set": cap_set, "$setOnInsert": {"created_at": now}},
             upsert=True,
         )
+        await entitlement_service.refresh_tenant_entitlements(tenant_id)
 
         # 3) Onboarding state
         onboarding_doc = {

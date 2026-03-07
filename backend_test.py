@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 
 # Configuration
-BASE_URL = "https://api-versioning-hub.preview.emergentagent.com"
+BASE_URL = "https://travel-saas-refactor-1.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 B2B_EMAIL = "agent@acenta.test"  

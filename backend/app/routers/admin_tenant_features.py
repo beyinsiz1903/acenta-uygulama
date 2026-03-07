@@ -11,6 +11,7 @@ from app.constants.features import ALL_FEATURE_KEYS
 from app.db import get_db
 from app.errors import AppError
 from app.services.audit_log_service import append_audit_log
+from app.services.entitlement_service import entitlement_service
 from app.services.feature_service import feature_service
 
 router = APIRouter(prefix="/api/admin/tenants", tags=["admin_tenant_features"])
@@ -64,19 +65,22 @@ async def admin_list_tenants(
 @router.get("/{tenant_id}/features", dependencies=[AdminDep])
 async def admin_get_tenant_features(tenant_id: str) -> dict:
   """Admin: get effective features for a specific tenant."""
-  features, source = await feature_service.get_effective_features(tenant_id)
-  plan = await feature_service.get_plan(tenant_id)
-  add_ons = await feature_service.get_add_ons(tenant_id)
+  projection = await entitlement_service.get_tenant_entitlements(tenant_id, refresh=True)
+  plan_catalog = await entitlement_service.get_plan_catalog()
 
   return {
     "tenant_id": tenant_id,
-    "plan": plan,
-    "add_ons": add_ons,
-    "features": features,
-    "source": source,
+    "plan": projection.get("plan"),
+    "plan_label": projection.get("plan_label"),
+    "add_ons": projection.get("add_ons") or [],
+    "features": projection.get("features") or [],
+    "limits": projection.get("limits") or {},
+    "usage_allowances": projection.get("usage_allowances") or {},
+    "source": projection.get("source"),
     "available_features": ALL_FEATURE_KEYS,
     "plans": VALID_PLANS,
     "plan_matrix": {k: v["features"] for k, v in PLAN_MATRIX.items()},
+    "plan_catalog": plan_catalog,
   }
 
 
@@ -109,11 +113,16 @@ async def admin_patch_tenant_features(
     metadata={"user_agent": request.headers.get("user-agent", ""), "plan": body.plan},
   )
 
-  features, source = await feature_service.get_effective_features(tenant_id)
+  projection = await entitlement_service.get_tenant_entitlements(tenant_id)
   return {
     "tenant_id": tenant_id,
-    "features": features,
-    "source": source,
+    "plan": projection.get("plan"),
+    "plan_label": projection.get("plan_label"),
+    "add_ons": projection.get("add_ons") or [],
+    "features": projection.get("features") or [],
+    "limits": projection.get("limits") or {},
+    "usage_allowances": projection.get("usage_allowances") or {},
+    "source": projection.get("source"),
     "available_features": ALL_FEATURE_KEYS,
   }
 
@@ -143,16 +152,17 @@ async def admin_patch_tenant_plan(
     metadata={"user_agent": request.headers.get("user-agent", "")},
   )
 
-  features, source = await feature_service.get_effective_features(tenant_id)
-  plan = await feature_service.get_plan(tenant_id)
-  add_ons = await feature_service.get_add_ons(tenant_id)
+  projection = await entitlement_service.get_tenant_entitlements(tenant_id)
 
   return {
     "tenant_id": tenant_id,
-    "plan": plan,
-    "add_ons": add_ons,
-    "features": features,
-    "source": source,
+    "plan": projection.get("plan"),
+    "plan_label": projection.get("plan_label"),
+    "add_ons": projection.get("add_ons") or [],
+    "features": projection.get("features") or [],
+    "limits": projection.get("limits") or {},
+    "usage_allowances": projection.get("usage_allowances") or {},
+    "source": projection.get("source"),
     "plan_matrix": {k: v["features"] for k, v in PLAN_MATRIX.items()},
   }
 
@@ -183,14 +193,15 @@ async def admin_patch_tenant_add_ons(
     metadata={"user_agent": request.headers.get("user-agent", "")},
   )
 
-  features, source = await feature_service.get_effective_features(tenant_id)
-  plan = await feature_service.get_plan(tenant_id)
-  add_ons = await feature_service.get_add_ons(tenant_id)
+  projection = await entitlement_service.get_tenant_entitlements(tenant_id)
 
   return {
     "tenant_id": tenant_id,
-    "plan": plan,
-    "add_ons": add_ons,
-    "features": features,
-    "source": source,
+    "plan": projection.get("plan"),
+    "plan_label": projection.get("plan_label"),
+    "add_ons": projection.get("add_ons") or [],
+    "features": projection.get("features") or [],
+    "limits": projection.get("limits") or {},
+    "usage_allowances": projection.get("usage_allowances") or {},
+    "source": projection.get("source"),
   }

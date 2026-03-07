@@ -4,10 +4,10 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-from app.constants.plan_matrix import DEFAULT_PLAN, PLAN_MATRIX
+from app.constants.plan_matrix import DEFAULT_PLAN
 from app.repositories.usage_ledger_repository import usage_ledger_repo
 from app.services.audit_log_service import append_audit_log
-from app.services.feature_service import feature_service
+from app.services.entitlement_service import entitlement_service
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ async def track_usage(
 ) -> None:
   """Best-effort usage tracking. Never raises."""
   try:
-    plan = await feature_service.get_plan(tenant_id)
+    plan = await entitlement_service.get_plan(tenant_id)
     if plan == "starter":
       return  # Starter has no metered features
 
@@ -44,8 +44,9 @@ async def track_usage(
 
 async def check_quota(tenant_id: str, metric: str) -> Dict[str, Any]:
   """Check if tenant is within quota for a metric."""
-  plan = await feature_service.get_plan(tenant_id) or DEFAULT_PLAN
-  quotas = PLAN_MATRIX.get(plan, {}).get("quotas", {})
+  entitlements = await entitlement_service.get_tenant_entitlements(tenant_id)
+  plan = entitlements.get("plan") or DEFAULT_PLAN
+  quotas = entitlements.get("usage_allowances") or {}
   quota = quotas.get(metric)
 
   period = _current_billing_period()
@@ -74,8 +75,9 @@ async def check_quota(tenant_id: str, metric: str) -> Dict[str, Any]:
 
 async def get_usage_summary(tenant_id: str) -> Dict[str, Any]:
   """Get full usage summary for a tenant (current period)."""
-  plan = await feature_service.get_plan(tenant_id) or DEFAULT_PLAN
-  quotas = PLAN_MATRIX.get(plan, {}).get("quotas", {})
+  entitlements = await entitlement_service.get_tenant_entitlements(tenant_id)
+  plan = entitlements.get("plan") or DEFAULT_PLAN
+  quotas = entitlements.get("usage_allowances") or {}
   period = _current_billing_period()
   totals = await usage_ledger_repo.get_period_totals(tenant_id, period)
 
@@ -94,7 +96,9 @@ async def get_usage_summary(tenant_id: str) -> Dict[str, Any]:
   return {
     "tenant_id": tenant_id,
     "plan": plan,
+    "plan_label": entitlements.get("plan_label"),
     "billing_period": period,
+    "limits": entitlements.get("limits") or {},
     "metrics": metrics,
   }
 

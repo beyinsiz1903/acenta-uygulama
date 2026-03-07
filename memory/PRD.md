@@ -746,13 +746,40 @@ Use the repo’s existing standardized shape everywhere in v1:
   - `/api/v1/auth/revoke-all-sessions`
   - settings namespace work
 
+### PR-V1-2B Implemented — Auth Session Management Alias-First Rollout (Mar 7, 2026)
+- Extended the scoped auth rollout in `backend/app/bootstrap/v1_aliases.py` for session management while preserving all legacy routes:
+  - `GET /api/v1/auth/sessions`
+  - `POST /api/v1/auth/sessions/{id}/revoke`
+  - `POST /api/v1/auth/revoke-all-sessions`
+- Legacy session endpoints remain active and backward compatible:
+  - `GET /api/auth/sessions`
+  - `POST /api/auth/sessions/{id}/revoke`
+  - `POST /api/auth/revoke-all-sessions`
+- Added legacy compatibility headers in `backend/app/routers/auth.py` for session listing and revoke-all flows, and route-template aware successor resolution for dynamic revoke paths.
+- Cookie auth behavior stayed intact for web requests using `X-Client-Platform: web`; bearer/session revoke semantics were preserved for current session and bulk revoke behavior.
+- Expanded route inventory telemetry in `backend/app/bootstrap/route_inventory_summary.py` with `domain_v1_progress` so auth/admin/public/system/mobile/tenant/finance/misc domains now expose target count, migrated v1 count, remaining count, and migration percent.
+- Updated route inventory artifacts after rollout:
+  - `route_count = 681`
+  - `v1_count = 23`
+  - `legacy_count = 658`
+  - `legacy_routes_remaining = 658`
+  - `domain_v1_progress.auth = 42.86%` (`6 / 14` target auth routes migrated)
+  - `route_inventory_diff.json` reports exactly **3** new v1 auth session aliases
+- Added/updated tests:
+  - `backend/tests/test_auth_session_model.py`
+  - `backend/tests/test_route_inventory_parity.py`
+  - `backend/tests/test_route_inventory_parity_tooling.py`
+  - `backend/tests/test_pr_v1_2a_auth_bootstrap_http.py`
+  - `backend/tests/test_pr_v1_2b_session_rollout_http.py`
+- Validation passed via:
+  - `pytest /app/backend/tests/test_auth_session_model.py /app/backend/tests/test_route_inventory_parity.py /app/backend/tests/test_route_inventory_parity_tooling.py -q`
+  - `pytest /app/backend/tests/test_pr_v1_2b_session_rollout_http.py -q`
+  - preview curl smoke for legacy/v1 session parity, single-session revoke, revoke-all, and cookie-auth session flows
+  - backend deep validation: all requested PR-V1-2B checks passed
+
 ## Current Priority Backlog
 - **P0:** If/when separate real environments exist, run the parity workflow against staging/prod artifacts; for the current single-environment setup this remains N/A but tooling is ready
-- **P1:** **PR-V1-2B** — auth session management aliases:
-  - `/api/v1/auth/sessions`
-  - `/api/v1/auth/sessions/{id}/revoke`
-  - `/api/v1/auth/revoke-all-sessions`
-- **P1:** **PR-V1-2C** — settings namespace rollout only if still needed after auth/session slices settle
+- **P0:** **PR-V1-2C** — settings namespace rollout only if still needed after auth/session slices settle
 - **P1:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
 - **P1:** Cleanup PR for non-blocking preview issues: `/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`
 - **P2:** Entitlement/billing unification, observability stack, broader frontend modular refactor

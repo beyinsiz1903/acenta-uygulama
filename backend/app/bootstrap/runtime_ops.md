@@ -80,6 +80,8 @@ cd /app/backend && python -m app.bootstrap.scheduler_app
 5. Scheduler heartbeat fresh mi: `python scripts/check_runtime_health.py scheduler`
 6. Worker log'larında email/job/integration loop başlangıcı görüldü mü?
 7. Scheduler log'larında billing/report/ops schedulers start oldu mu?
+8. Route inventory export: `python scripts/export_route_inventory.py --environment <preview|staging|prod>`
+9. Route summary parity: `python scripts/check_route_inventory_parity.py preview=... staging=... prod=... --fail-on-mismatch`
 
 ## 8. Rollback notları
 - API rollback gerekirse `server:app` compat entrypoint geçici emniyet supabı olarak kullanılabilir.
@@ -94,3 +96,8 @@ cd /app/backend && python -m app.bootstrap.scheduler_app
 ## 9. P0 notu
 - **PR-7'ye geçmeden önce dedicated worker + scheduler runtime wiring tamamen kapatılmalı.**
 - Aktif cihazlar / oturumlar ekranı değerli ama operasyonel split canlıya hazır hale gelmeden öne alınmamalı.
+
+## 10. Route inventory parity
+- Preview / staging / prod parity süreci için kısa operasyonel kaynak: `app/bootstrap/route_inventory_parity.md`
+- API runtime boot sırasında best-effort olarak hem `route_inventory.json` hem `route_inventory_summary.json` üretir.
+- CI artifact'leri üzerinden `diff` ve ortamlar arası `parity` kontrolü çalıştırılmalıdır; sadece preview sonucu yeterli kabul edilmemelidir.

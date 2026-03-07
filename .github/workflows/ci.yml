@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 env:
   NODE_VERSION: '20'
   PYTHON_VERSION: '3.11'
@@ -87,6 +91,192 @@ jobs:
             tests/test_security_headers.py \
             tests/test_stripe_webhook_b2c_side_effects.py \
             -v --tb=short -q 2>&1
+
+  route-inventory:
+    name: Route Inventory Artifacts
+    runs-on: ubuntu-latest
+    needs: backend-test
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+    env:
+      MONGO_URL: mongodb://localhost:27017/test_db
+      DB_NAME: test_db
+      JWT_SECRET: test-secret
+      STRIPE_WEBHOOK_SECRET: whsec_test
+      ENV: test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Export runtime route inventory artifacts
+        run: |
+          cd backend
+          python scripts/export_route_inventory.py \
+            --destination /tmp/route_inventory.json \
+            --summary-out /tmp/route_inventory_summary.json \
+            --environment ci
+
+      - name: Export simulated environment parity summaries
+        run: |
+          cd backend
+          for env_name in preview staging prod; do
+            python scripts/export_route_inventory.py \
+              --destination "/tmp/route_inventory.${env_name}.json" \
+              --summary-out "/tmp/route_inventory_summary.${env_name}.json" \
+              --environment "${env_name}"
+          done
+          python scripts/check_route_inventory_parity.py \
+            preview=/tmp/route_inventory_summary.preview.json \
+            staging=/tmp/route_inventory_summary.staging.json \
+            prod=/tmp/route_inventory_summary.prod.json \
+            --format json \
+            --fail-on-mismatch > /tmp/route_inventory_parity.json
+          python scripts/check_route_inventory_parity.py \
+            preview=/tmp/route_inventory_summary.preview.json \
+            staging=/tmp/route_inventory_summary.staging.json \
+            prod=/tmp/route_inventory_summary.prod.json \
+            --format text \
+            --fail-on-mismatch > /tmp/route_inventory_parity.txt
+
+      - name: Resolve previous route inventory baseline
+        id: previous_inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          previous_path=/tmp/route_inventory_previous.json
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+            if ! git show "origin/${{ github.base_ref }}:backend/app/bootstrap/route_inventory.json" > "$previous_path" 2>/dev/null; then
+              cp /tmp/route_inventory.json "$previous_path"
+            fi
+          elif git rev-parse HEAD^ >/dev/null 2>&1; then
+            if ! git show "HEAD^:backend/app/bootstrap/route_inventory.json" > "$previous_path" 2>/dev/null; then
+              cp /tmp/route_inventory.json "$previous_path"
+            fi
+          else
+            cp /tmp/route_inventory.json "$previous_path"
+          fi
+          echo "path=$previous_path" >> "$GITHUB_OUTPUT"
+
+      - name: Generate route inventory diff artifacts
+        run: |
+          cd backend
+          python scripts/diff_route_inventory.py \
+            "${{ steps.previous_inventory.outputs.path }}" \
+            /tmp/route_inventory.json \
+            --format json > /tmp/route_inventory_diff.json
+          python scripts/diff_route_inventory.py \
+            "${{ steps.previous_inventory.outputs.path }}" \
+            /tmp/route_inventory.json \
+            --format text > /tmp/route_inventory_diff.txt
+
+      - name: Build route inventory PR summary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          summary = json.loads(Path('/tmp/route_inventory_summary.json').read_text())
+          diff = json.loads(Path('/tmp/route_inventory_diff.json').read_text())
+
+          lines = [
+              '## API Route Inventory',
+              '',
+              f"- Total routes: {summary['route_count']}",
+              f"- V1 routes: {summary['v1_count']}",
+              f"- Legacy routes: {summary['legacy_count']}",
+              f"- Compat required routes: {summary['compat_required_count']}",
+              '',
+              '### Added in this PR',
+          ]
+
+          added_paths = diff.get('added_paths', [])
+          if not added_paths:
+              lines.append('- (none)')
+          else:
+              for item in added_paths:
+                  lines.append(f"- {item['path']} [{item['method']}] ({item['legacy_or_v1']})")
+
+          lines.extend(['', '### Removed in this PR'])
+          removed_paths = diff.get('removed_paths', [])
+          if not removed_paths:
+              lines.append('- (none)')
+          else:
+              for item in removed_paths:
+                  lines.append(f"- {item['path']} [{item['method']}] ({item['legacy_or_v1']})")
+
+          output_path = Path('/tmp/route_inventory_pr_summary.md')
+          output_path.write_text('<!-- route-inventory-summary -->\n' + '\n'.join(lines) + '\n')
+          PY
+          cat /tmp/route_inventory_pr_summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload route inventory artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: route-inventory
+          path: |
+            /tmp/route_inventory.json
+            /tmp/route_inventory_summary.json
+            /tmp/route_inventory_diff.json
+            /tmp/route_inventory_diff.txt
+            /tmp/route_inventory_parity.json
+            /tmp/route_inventory_parity.txt
+            /tmp/route_inventory_pr_summary.md
+          retention-days: 7
+
+      - name: Comment route inventory summary on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('/tmp/route_inventory_pr_summary.md', 'utf8');
+            const marker = '<!-- route-inventory-summary -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
 
   # ─── Frontend Lint & Build ───
   frontend-lint:
@@ -195,7 +385,7 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-build, security-scan]
+    needs: [backend-test, route-inventory, frontend-build, security-scan]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4

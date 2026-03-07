@@ -1,0 +1,11 @@
+{
+  "compat_required_count": 658,
+  "environment": "unknown",
+  "generated_at": "2026-03-07T07:25:31.602138+00:00",
+  "inventory_hash": "fc2a75c9f2896f780d563c2edd4fd949fa6d459694fc1af2cbfe8571a939f530",
+  "inventory_path": "/app/backend/app/bootstrap/route_inventory.json",
+  "legacy_count": 658,
+  "route_count": 675,
+  "runtime_name": "api",
+  "v1_count": 17
+}

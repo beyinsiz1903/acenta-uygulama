@@ -9,6 +9,10 @@ from fastapi import FastAPI
 from fastapi.routing import APIRoute
 
 from app.bootstrap.v1_manifest import classify_route
+from app.bootstrap.route_inventory_summary import (
+    DEFAULT_ROUTE_INVENTORY_SUMMARY_PATH,
+    write_route_inventory_summary_json,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -55,9 +59,47 @@ def write_route_inventory_json(app: FastAPI, destination: str | Path) -> Path:
     return target_path
 
 
-def export_route_inventory_snapshot(app: FastAPI, destination: str | Path = DEFAULT_ROUTE_INVENTORY_PATH) -> Path | None:
+def export_route_inventory_artifacts(
+    app: FastAPI,
+    *,
+    inventory_destination: str | Path = DEFAULT_ROUTE_INVENTORY_PATH,
+    summary_destination: str | Path = DEFAULT_ROUTE_INVENTORY_SUMMARY_PATH,
+    environment: str | None = None,
+    runtime_name: str = "api",
+) -> dict[str, Path] | None:
     try:
-        return write_route_inventory_json(app, destination)
+        inventory_path = Path(inventory_destination)
+        inventory_path.parent.mkdir(parents=True, exist_ok=True)
+        payload = build_route_inventory(app)
+        inventory_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+        summary_path = write_route_inventory_summary_json(
+            payload,
+            summary_destination,
+            environment=environment,
+            inventory_path=inventory_path,
+            runtime_name=runtime_name,
+        )
+        return {"inventory": inventory_path, "summary": summary_path}
     except Exception as exc:  # pragma: no cover - best-effort runtime export only
         logger.warning("route inventory export skipped: %s", exc)
         return None
+
+
+def export_route_inventory_snapshot(
+    app: FastAPI,
+    destination: str | Path = DEFAULT_ROUTE_INVENTORY_PATH,
+    *,
+    summary_destination: str | Path = DEFAULT_ROUTE_INVENTORY_SUMMARY_PATH,
+    environment: str | None = None,
+    runtime_name: str = "api",
+) -> Path | None:
+    artifacts = export_route_inventory_artifacts(
+        app,
+        inventory_destination=destination,
+        summary_destination=summary_destination,
+        environment=environment,
+        runtime_name=runtime_name,
+    )
+    if artifacts is None:
+        return None
+    return artifacts["inventory"]

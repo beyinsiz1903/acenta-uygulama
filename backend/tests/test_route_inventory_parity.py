@@ -15,7 +15,10 @@ def test_route_inventory_summary_counts_are_consistent() -> None:
     assert summary["route_count"] == len(inventory)
     assert summary["v1_count"] == sum(1 for entry in inventory if entry["legacy_or_v1"] == "v1")
     assert summary["legacy_count"] == sum(1 for entry in inventory if entry["legacy_or_v1"] == "legacy")
+    assert summary["legacy_routes_remaining"] == summary["legacy_count"]
     assert summary["route_count"] == summary["v1_count"] + summary["legacy_count"]
+    assert sum(summary["namespaces"].values()) == summary["route_count"]
+    assert set(summary["namespaces"].keys()) == {"auth", "admin", "public", "system", "mobile", "tenant", "finance", "misc"}
     assert len(summary["inventory_hash"]) == 64
 
 

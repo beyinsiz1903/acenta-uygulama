@@ -2,7 +2,7 @@
 Route Inventory Parity Tooling Tests
 
 Tests for:
-- route_inventory_summary.json generation (route_count, v1_count, legacy_count, inventory_hash)
+- route_inventory_summary.json generation (route_count, v1_count, legacy_count, legacy_routes_remaining, inventory_hash, namespace breakdown)
 - export_route_inventory.py CLI (custom path support for inventory + summary)
 - check_route_inventory_parity.py CLI (mismatch detection, --fail-on-mismatch)
 - Deterministic route inventory generation
@@ -50,16 +50,43 @@ class TestRouteInventorySummaryGeneration:
         assert "v1_count" in summary
         assert "legacy_count" in summary
         assert "inventory_hash" in summary
+        assert "legacy_routes_remaining" in summary
+        assert "namespaces" in summary
         
         # Type checks
         assert isinstance(summary["route_count"], int)
         assert isinstance(summary["v1_count"], int)
         assert isinstance(summary["legacy_count"], int)
+        assert isinstance(summary["legacy_routes_remaining"], int)
         assert isinstance(summary["inventory_hash"], str)
+        assert isinstance(summary["namespaces"], dict)
         assert len(summary["inventory_hash"]) == 64  # SHA-256 hex
         
         # Count consistency
         assert summary["route_count"] == summary["v1_count"] + summary["legacy_count"]
+        assert summary["legacy_routes_remaining"] == summary["legacy_count"]
+        assert sum(summary["namespaces"].values()) == summary["route_count"]
+
+    def test_summary_includes_namespace_breakdown(self, tmp_path: Path) -> None:
+        """Summary should include deterministic namespace buckets for migration tracking"""
+        summary_path = tmp_path / "summary.json"
+
+        result = subprocess.run(
+            [
+                sys.executable, str(SCRIPTS_DIR / "export_route_inventory.py"),
+                "--destination", str(tmp_path / "inventory.json"),
+                "--summary-out", str(summary_path),
+                "--environment", "test",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(ROOT_DIR),
+        )
+        assert result.returncode == 0
+
+        summary = json.loads(summary_path.read_text())
+        assert list(summary["namespaces"].keys()) == ["auth", "admin", "public", "system", "mobile", "tenant", "finance", "misc"]
+        assert sum(summary["namespaces"].values()) == summary["route_count"]
 
     def test_summary_includes_compat_required_count(self, tmp_path: Path) -> None:
         """Summary should include compat_required_count for migration tracking"""

@@ -13,8 +13,10 @@
 - `route_count`
 - `v1_count`
 - `legacy_count`
+- `legacy_routes_remaining`
 - `compat_required_count`
 - `inventory_hash`
+- `namespaces`
 - `environment`
 
 ## Runtime container içinde export

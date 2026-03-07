@@ -206,10 +206,19 @@ jobs:
               f"- Total routes: {summary['route_count']}",
               f"- V1 routes: {summary['v1_count']}",
               f"- Legacy routes: {summary['legacy_count']}",
+              f"- Legacy routes remaining: {summary['legacy_routes_remaining']}",
               f"- Compat required routes: {summary['compat_required_count']}",
               '',
-              '### Added in this PR',
+              '### Namespace breakdown',
           ]
+
+          for namespace, count in summary.get('namespaces', {}).items():
+              lines.append(f"- {namespace}: {count}")
+
+          lines.extend([
+              '',
+              '### Added in this PR',
+          ])
 
           added_paths = diff.get('added_paths', [])
           if not added_paths:

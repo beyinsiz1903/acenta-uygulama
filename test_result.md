@@ -2200,3 +2200,99 @@ agent_communication:
       
       Conclusion:
       Runtime wiring smoke validation SUCCESSFUL. Dedicated worker/scheduler runtime wiring changes have not introduced any regressions in core authentication flows. All required endpoints operational, token authentication working correctly, and no blocking issues detected. The system is stable and production-ready after the runtime architecture changes.
+
+  - task: "PR-V1-1 low-risk /api/v1 rollout backend validation"
+    implemented: true
+    working: true
+    file: "backend/app/bootstrap/v1_aliases.py, backend/app/bootstrap/v1_registry.py, backend/app/bootstrap/route_inventory.py, backend/scripts/diff_route_inventory.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PR-V1-1 backend validation COMPLETED - ALL 23 TESTS PASSED (100% success rate). Comprehensive validation per review request on https://saas-modernize-2.preview.emergentagent.com. Test Results: 1) ✅ Admin Authentication successful (token: 385 chars), 2) ✅ Legacy Routes Unchanged (7/7 routes working): /api/health ✅, /api/system/ping ✅, /api/public/theme ✅, /api/public/cms/pages?org=org_demo ✅, /api/public/campaigns?org=org_demo ✅, /api/system/health-dashboard ✅, /api/admin/theme ✅, 3) ✅ Legacy + V1 Parity Tests (7/7 parity confirmed): /api/health <-> /api/v1/health ✅, /api/system/ping <-> /api/v1/system/ping ✅, /api/system/health-dashboard <-> /api/v1/system/health-dashboard ✅, /api/public/theme <-> /api/v1/public/theme ✅, /api/admin/theme <-> /api/v1/admin/theme ✅, /api/public/cms/pages <-> /api/v1/public/cms/pages ✅, /api/public/campaigns <-> /api/v1/public/campaigns ✅, 4) ✅ Route Inventory Validation: File exists at /app/backend/app/bootstrap/route_inventory.json ✅, Contains 675 total routes with 17 V1 routes and 658 legacy routes ✅, All required fields present (compat_required, current_namespace, legacy_or_v1, method, owner, path, risk_level, source, target_namespace) ✅, All 7 expected V1 aliases found in inventory ✅, 5) ✅ Diff CLI Functionality: Both text and JSON formats working ✅, Added 17 new V1 routes correctly detected ✅, Previous/current comparison working correctly ✅. PR-V1-1 low-risk /api/v1 rollout validated successfully. Legacy paths work unchanged, V1 aliases provide identical behavior, route inventory complete with V1 aliases, and diff CLI operational. No regressions detected in scoped rollout."
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 19
+  last_updated: "2026-03-07"
+
+agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ PR-V1-1 LOW-RISK /API/V1 ROLLOUT BACKEND VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-07)
+      
+      Performed comprehensive PR-V1-1 backend validation per review request on https://saas-modernize-2.preview.emergentagent.com
+      
+      Context:
+      - PR-V1-1: Low-risk /api/v1 rollout on preview environment
+      - Scope: Legacy + v1 parity validation, route inventory validation, diff CLI validation
+      - Admin credentials: admin@acenta.test / admin123
+      - Excluded from scope: auth/session changes, tenant behavior changes, mobile BFF changes, partner rollout
+      
+      Test Results Summary:
+      
+      1. ✅ Admin Authentication - PASSED
+         - Successfully authenticated with admin@acenta.test/admin123
+         - Access token received: 385 characters
+         - All subsequent API calls properly authenticated
+      
+      2. ✅ Legacy Routes Unchanged (7/7) - PASSED
+         - /api/health → 200 OK ✅
+         - /api/system/ping → 200 OK ✅
+         - /api/public/theme → 200 OK ✅
+         - /api/public/cms/pages?org=org_demo → 200 OK ✅
+         - /api/public/campaigns?org=org_demo → 200 OK ✅
+         - /api/system/health-dashboard → 200 OK (with admin auth) ✅
+         - /api/admin/theme → 200 OK (with admin auth) ✅
+      
+      3. ✅ Legacy + V1 Parity Tests (7/7) - PASSED
+         - /api/health <-> /api/v1/health: Identical responses ✅
+         - /api/system/ping <-> /api/v1/system/ping: Identical responses ✅
+         - /api/system/health-dashboard <-> /api/v1/system/health-dashboard: Identical responses ✅
+         - /api/public/theme <-> /api/v1/public/theme: Identical responses ✅
+         - /api/admin/theme <-> /api/v1/admin/theme: Identical responses ✅
+         - /api/public/cms/pages?org=org_demo <-> /api/v1/public/cms/pages?org=org_demo: Identical responses ✅
+         - /api/public/campaigns?org=org_demo <-> /api/v1/public/campaigns?org=org_demo: Identical responses ✅
+      
+      4. ✅ Route Inventory Snapshot Validation - PASSED
+         - Route inventory file exists: /app/backend/app/bootstrap/route_inventory.json ✅
+         - Total routes: 675 (17 V1 routes + 658 legacy routes) ✅
+         - All required foundation fields present: compat_required, current_namespace, legacy_or_v1, method, owner, path, risk_level, source, target_namespace ✅
+         - All 7 expected V1 aliases found in inventory: /api/v1/health, /api/v1/system/ping, /api/v1/system/health-dashboard, /api/v1/public/theme, /api/v1/admin/theme, /api/v1/public/cms/pages, /api/v1/public/campaigns ✅
+      
+      5. ✅ Diff CLI Functionality - PASSED
+         - Text format: python /app/backend/scripts/diff_route_inventory.py <prev> <current> --format text ✅
+         - JSON format: python /app/backend/scripts/diff_route_inventory.py <prev> <current> --format json ✅
+         - Correctly detected 17 added routes (all new V1 aliases) ✅
+         - Previous snapshot synthesis by filtering V1 routes working correctly ✅
+         - Output contains expected metrics: added_route_count, new_v1_route_count, etc. ✅
+      
+      Implementation Files Validated:
+      ✅ /app/backend/app/bootstrap/v1_aliases.py - register_low_risk_v1_aliases() working correctly
+      ✅ /app/backend/app/bootstrap/v1_registry.py - V1 router registration operational
+      ✅ /app/backend/app/bootstrap/v1_manifest.py - Route classification and target path derivation working
+      ✅ /app/backend/app/bootstrap/route_inventory.py - Route inventory export functional
+      ✅ /app/backend/app/bootstrap/route_inventory_diff.py - Diff calculation working
+      ✅ /app/backend/scripts/diff_route_inventory.py - CLI tool operational with both text and JSON output
+      
+      Test Summary:
+      - Total Tests: 23
+      - Passed: 23
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Validation Scope Compliance:
+      ✅ Tested only low-risk routes as specified in review request
+      ✅ Confirmed legacy paths work unchanged
+      ✅ Confirmed V1 aliases provide identical behavior to legacy counterparts
+      ✅ Validated route inventory snapshot exists and contains new V1 aliases
+      ✅ Validated diff CLI works with both text and JSON formats
+      ✅ No testing of excluded scopes (auth/session, tenant behavior, mobile BFF, partner rollout)
+      
+      Conclusion:
+      PR-V1-1 low-risk /api/v1 rollout backend validation SUCCESSFUL. All specified routes show perfect parity between legacy and V1 implementations. Route inventory properly captures the new V1 aliases and diff CLI is operational for deployment tracking. No regressions detected in the scoped rollout. The implementation is ready for production deployment.
+      
+      Status: ✅ PRODUCTION-READY - PR-V1-1 validated successfully with 100% test pass rate.

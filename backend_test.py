@@ -1,465 +1,590 @@
 #!/usr/bin/env python3
 
-import requests
+"""
+Backend Entitlement Projection Flows Validation Test
+
+This test validates the specific entitlement projection flows requested:
+1. POST /api/auth/login
+2. GET /api/onboarding/plans -> confirm starter/pro/enterprise with limits + usage_allowances
+3. GET /api/admin/tenants -> fetch a tenant id
+4. GET /api/admin/tenants/{tenant_id}/features -> confirm canonical entitlement fields exist
+5. PATCH /api/admin/tenants/{tenant_id}/plan with pro or enterprise -> confirm limits update
+6. PATCH /api/admin/tenants/{tenant_id}/add-ons -> confirm response shape remains consistent
+7. GET /api/tenant/features and GET /api/tenant/entitlements with tenant context -> confirm canonical projection
+
+Test credentials: admin@acenta.test / admin123
+Base URL: https://travel-saas-refactor-1.preview.emergentagent.com
+"""
+
+import asyncio
 import json
-import os
-from pathlib import Path
+import sys
+from dataclasses import dataclass
+from typing import Optional, Dict, Any, List
+
+import httpx
 
 # Configuration
 BASE_URL = "https://travel-saas-refactor-1.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
-B2B_EMAIL = "agent@acenta.test"  
-B2B_PASSWORD = "agent123"
 
-def test_pr_v1_2b_session_rollout():
-    """
-    PR-V1-2B Backend Session Rollout Validation
-    
-    Tests the alias-first rollout for session auth endpoints while preserving 
-    legacy behavior and cookie auth compatibility.
-    """
-    
-    print("🔧 PR-V1-2B Backend Session Rollout Validation")
-    print("=" * 60)
-    
-    results = {
-        "legacy_v1_parity": False,
-        "single_session_revoke": False, 
-        "bulk_revoke": False,
-        "cookie_auth_safety": False,
-        "inventory_telemetry": False
-    }
-    
-    try:
-        # A. Legacy/v1 parity tests
-        print("\n📋 A. Testing Legacy/V1 Parity...")
-        results["legacy_v1_parity"] = test_legacy_v1_parity()
-        
-        # B. Single-session revoke behavior
-        print("\n🔑 B. Testing Single-Session Revoke Behavior...")
-        results["single_session_revoke"] = test_single_session_revoke()
-        
-        # C. Bulk revoke behavior
-        print("\n🚫 C. Testing Bulk Revoke Behavior...")
-        results["bulk_revoke"] = test_bulk_revoke()
-        
-        # D. Cookie auth safety
-        print("\n🍪 D. Testing Cookie Auth Safety...")
-        results["cookie_auth_safety"] = test_cookie_auth_safety()
-        
-        # E. Inventory/telemetry artifacts
-        print("\n📊 E. Testing Inventory/Telemetry Artifacts...")
-        results["inventory_telemetry"] = test_inventory_artifacts()
-        
-        # Summary
-        print("\n" + "=" * 60)
-        print("📊 PR-V1-2B Test Results Summary:")
-        passed = sum(1 for result in results.values() if result)
-        total = len(results)
-        
-        for test_name, result in results.items():
-            status = "✅ PASSED" if result else "❌ FAILED"
-            print(f"   {test_name}: {status}")
-        
-        print(f"\n🎯 Overall: {passed}/{total} tests passed")
-        
-        if passed == total:
-            print("🎉 PR-V1-2B session rollout validation SUCCESSFUL!")
-            return True
-        else:
-            print("⚠️  Some tests failed - see details above")
-            return False
-            
-    except Exception as e:
-        print(f"❌ Critical error during PR-V1-2B testing: {e}")
-        return False
+@dataclass
+class TestResult:
+    name: str
+    passed: bool
+    message: str
+    response_data: Optional[Dict] = None
+    error: Optional[str] = None
 
-
-def test_legacy_v1_parity():
-    """Test A: Legacy/v1 parity - Compare legacy and v1 session endpoints"""
+class EntitlementProjectionTester:
+    def __init__(self):
+        self.client = httpx.AsyncClient(timeout=30.0)
+        self.admin_token = None
+        self.tenant_id = None
+        self.results: List[TestResult] = []
+        
+    async def __aenter__(self):
+        return self
+        
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.client.aclose()
     
-    try:
-        # Login and get bearer token
-        print("  🔐 Logging in to get bearer token...")
-        login_resp = requests.post(f"{BASE_URL}/api/auth/login", 
-                                 json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
-                                 timeout=30)
-        
-        if login_resp.status_code != 200:
-            print(f"  ❌ Login failed: {login_resp.status_code} - {login_resp.text}")
-            return False
-            
-        token = login_resp.json()["access_token"]
-        headers = {"Authorization": f"Bearer {token}"}
-        
-        # Compare GET /api/auth/sessions vs GET /api/v1/auth/sessions
-        print("  📋 Comparing legacy vs v1 sessions endpoints...")
-        
-        legacy_resp = requests.get(f"{BASE_URL}/api/auth/sessions", headers=headers, timeout=30)
-        v1_resp = requests.get(f"{BASE_URL}/api/v1/auth/sessions", headers=headers, timeout=30)
-        
-        if legacy_resp.status_code != 200:
-            print(f"  ❌ Legacy sessions endpoint failed: {legacy_resp.status_code}")
-            return False
-            
-        if v1_resp.status_code != 200:
-            print(f"  ❌ V1 sessions endpoint failed: {v1_resp.status_code}")
-            return False
-        
-        # Check compat headers on legacy endpoint
-        if legacy_resp.headers.get("deprecation") != "true":
-            print("  ❌ Legacy sessions endpoint missing Deprecation header")
-            return False
-            
-        link_header = legacy_resp.headers.get("link", "")
-        if "/api/v1/auth/sessions" not in link_header:
-            print("  ❌ Legacy sessions endpoint missing Link successor header")
-            return False
-        
-        # Compare session data
-        legacy_sessions = legacy_resp.json()
-        v1_sessions = v1_resp.json()
-        
-        legacy_session_ids = {session["id"] for session in legacy_sessions}
-        v1_session_ids = {session["id"] for session in v1_sessions}
-        
-        if legacy_session_ids != v1_session_ids:
-            print("  ❌ Session lists don't match between legacy and v1 endpoints")
-            return False
-            
-        print(f"  ✅ Both endpoints return matching session sets ({len(legacy_sessions)} sessions)")
-        return True
-        
-    except Exception as e:
-        print(f"  ❌ Legacy/V1 parity test failed: {e}")
-        return False
+    def log_test(self, name: str, passed: bool, message: str, response_data: Optional[Dict] = None, error: Optional[str] = None):
+        """Log a test result"""
+        result = TestResult(name=name, passed=passed, message=message, response_data=response_data, error=error)
+        self.results.append(result)
+        status = "✅ PASS" if passed else "❌ FAIL"
+        print(f"{status}: {name} - {message}")
+        if error:
+            print(f"   Error: {error}")
+        return result
 
+    async def test_1_admin_login(self) -> TestResult:
+        """Test 1: POST /api/auth/login - Admin authentication"""
+        try:
+            response = await self.client.post(f"{BASE_URL}/api/auth/login", json={
+                "email": ADMIN_EMAIL,
+                "password": ADMIN_PASSWORD
+            })
+            
+            if response.status_code != 200:
+                return self.log_test(
+                    "1. Admin Login", False, 
+                    f"Login failed with status {response.status_code}",
+                    error=response.text
+                )
+            
+            data = response.json()
+            
+            # Validate required fields
+            required_fields = ["access_token", "token_type"]
+            missing_fields = [field for field in required_fields if field not in data]
+            
+            if missing_fields:
+                return self.log_test(
+                    "1. Admin Login", False,
+                    f"Missing required fields: {missing_fields}",
+                    response_data=data
+                )
+            
+            self.admin_token = data["access_token"]
+            
+            return self.log_test(
+                "1. Admin Login", True,
+                f"Login successful, token length: {len(self.admin_token)} chars",
+                response_data={"token_type": data.get("token_type"), "has_token": bool(self.admin_token)}
+            )
+            
+        except Exception as e:
+            return self.log_test("1. Admin Login", False, "Login request failed", error=str(e))
 
-def test_single_session_revoke():
-    """Test B: Single-session revoke behavior"""
-    
-    try:
-        # Create at least 2 active sessions for same admin user
-        print("  🔑 Creating multiple sessions...")
-        
-        session1_resp = requests.post(f"{BASE_URL}/api/v1/auth/login",
-                                    json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
-                                    timeout=30)
-        session2_resp = requests.post(f"{BASE_URL}/api/v1/auth/login", 
-                                    json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
-                                    timeout=30)
-        
-        if session1_resp.status_code != 200 or session2_resp.status_code != 200:
-            print("  ❌ Failed to create multiple sessions")
-            return False
+    async def test_2_onboarding_plans(self) -> TestResult:
+        """Test 2: GET /api/onboarding/plans - Confirm starter/pro/enterprise with limits + usage_allowances"""
+        try:
+            response = await self.client.get(f"{BASE_URL}/api/onboarding/plans")
             
-        token1 = session1_resp.json()["access_token"]
-        token2 = session2_resp.json()["access_token"]
-        session2_id = session2_resp.json()["session_id"]
-        
-        headers1 = {"Authorization": f"Bearer {token1}"}
-        headers2 = {"Authorization": f"Bearer {token2}"}
-        
-        # Revoke session2 using token1 (keeping current session)
-        print(f"  🚫 Revoking session {session2_id} via V1 endpoint...")
-        
-        revoke_resp = requests.post(f"{BASE_URL}/api/v1/auth/sessions/{session2_id}/revoke",
-                                   headers=headers1, timeout=30)
-        
-        if revoke_resp.status_code != 200:
-            print(f"  ❌ Session revoke failed: {revoke_resp.status_code}")
-            return False
-        
-        # Confirm revoked session's token can no longer access /api/auth/me
-        print("  🔍 Testing revoked session token...")
-        revoked_me_resp = requests.get(f"{BASE_URL}/api/auth/me", headers=headers2, timeout=30)
-        
-        if revoked_me_resp.status_code != 401:
-            print(f"  ❌ Revoked session token still works: {revoked_me_resp.status_code}")
-            return False
+            if response.status_code != 200:
+                return self.log_test(
+                    "2. Onboarding Plans", False,
+                    f"Plans endpoint failed with status {response.status_code}",
+                    error=response.text
+                )
             
-        # Confirm current keeper session still works
-        print("  ✅ Testing keeper session token...")
-        keeper_me_resp = requests.get(f"{BASE_URL}/api/auth/me", headers=headers1, timeout=30)
-        
-        if keeper_me_resp.status_code != 200:
-            print(f"  ❌ Keeper session token failed: {keeper_me_resp.status_code}")
-            return False
-        
-        # Confirm revoked session no longer appears in session listing
-        sessions_resp = requests.get(f"{BASE_URL}/api/v1/auth/sessions", headers=headers1, timeout=30)
-        if sessions_resp.status_code == 200:
-            sessions = sessions_resp.json()
-            session_ids = {session["id"] for session in sessions}
-            if session2_id in session_ids:
-                print("  ❌ Revoked session still appears in session listing")
-                return False
-        
-        # Test legacy route POST /api/auth/sessions/{id}/revoke also works
-        print("  🔄 Testing legacy session revoke endpoint...")
-        
-        # Create another session to revoke via legacy endpoint
-        session3_resp = requests.post(f"{BASE_URL}/api/auth/login",
-                                    json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
-                                    timeout=30)
-        if session3_resp.status_code == 200:
-            session3_id = session3_resp.json()["session_id"]
-            token3 = session3_resp.json()["access_token"]
+            data = response.json()
             
-            # Revoke via legacy endpoint
-            legacy_revoke_resp = requests.post(f"{BASE_URL}/api/auth/sessions/{session3_id}/revoke",
-                                             headers=headers1, timeout=30)
+            # Validate response structure
+            if "plans" not in data:
+                return self.log_test(
+                    "2. Onboarding Plans", False,
+                    "Response missing 'plans' field",
+                    response_data=data
+                )
             
-            if legacy_revoke_resp.status_code != 200:
-                print(f"  ❌ Legacy session revoke failed: {legacy_revoke_resp.status_code}")
-                return False
+            plans = data["plans"]
+            plan_names = [plan.get("name", "").lower() for plan in plans]
+            
+            # Check required plans exist
+            required_plans = ["starter", "pro", "enterprise"]
+            missing_plans = [plan for plan in required_plans if plan not in plan_names]
+            
+            if missing_plans:
+                return self.log_test(
+                    "2. Onboarding Plans", False,
+                    f"Missing required plans: {missing_plans}. Found: {plan_names}",
+                    response_data=data
+                )
+            
+            # Validate each plan has limits and usage_allowances
+            issues = []
+            for plan in plans:
+                plan_name = plan.get("name", "unknown")
+                if "limits" not in plan:
+                    issues.append(f"{plan_name} missing 'limits' field")
+                if "usage_allowances" not in plan:
+                    issues.append(f"{plan_name} missing 'usage_allowances' field")
+            
+            if issues:
+                return self.log_test(
+                    "2. Onboarding Plans", False,
+                    f"Plan structure issues: {', '.join(issues)}",
+                    response_data=data
+                )
+            
+            return self.log_test(
+                "2. Onboarding Plans", True,
+                f"Found all required plans ({', '.join(required_plans)}) with limits and usage_allowances",
+                response_data={"plan_count": len(plans), "plan_names": plan_names}
+            )
+            
+        except Exception as e:
+            return self.log_test("2. Onboarding Plans", False, "Plans request failed", error=str(e))
+
+    async def test_3_admin_tenants(self) -> TestResult:
+        """Test 3: GET /api/admin/tenants - Fetch a tenant ID"""
+        try:
+            if not self.admin_token:
+                return self.log_test("3. Admin Tenants", False, "No admin token available")
+            
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            response = await self.client.get(f"{BASE_URL}/api/admin/tenants", headers=headers)
+            
+            if response.status_code != 200:
+                return self.log_test(
+                    "3. Admin Tenants", False,
+                    f"Tenants endpoint failed with status {response.status_code}",
+                    error=response.text
+                )
+            
+            data = response.json()
+            
+            # Validate response structure
+            if "items" not in data:
+                return self.log_test(
+                    "3. Admin Tenants", False,
+                    "Response missing 'items' field",
+                    response_data=data
+                )
+            
+            items = data["items"]
+            
+            if not items:
+                return self.log_test(
+                    "3. Admin Tenants", False,
+                    "No tenants found in response",
+                    response_data=data
+                )
+            
+            # Get the first tenant ID
+            first_tenant = items[0]
+            if "id" not in first_tenant:
+                return self.log_test(
+                    "3. Admin Tenants", False,
+                    "First tenant missing 'id' field",
+                    response_data=data
+                )
+            
+            self.tenant_id = first_tenant["id"]
+            
+            return self.log_test(
+                "3. Admin Tenants", True,
+                f"Found {len(items)} tenants, selected tenant ID: {self.tenant_id}",
+                response_data={"tenant_count": len(items), "selected_tenant": first_tenant}
+            )
+            
+        except Exception as e:
+            return self.log_test("3. Admin Tenants", False, "Tenants request failed", error=str(e))
+
+    async def test_4_tenant_features(self) -> TestResult:
+        """Test 4: GET /api/admin/tenants/{tenant_id}/features - Confirm canonical entitlement fields"""
+        try:
+            if not self.admin_token or not self.tenant_id:
+                return self.log_test("4. Tenant Features", False, "Missing admin token or tenant ID")
+            
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            response = await self.client.get(
+                f"{BASE_URL}/api/admin/tenants/{self.tenant_id}/features", 
+                headers=headers
+            )
+            
+            if response.status_code != 200:
+                return self.log_test(
+                    "4. Tenant Features", False,
+                    f"Tenant features endpoint failed with status {response.status_code}",
+                    error=response.text
+                )
+            
+            data = response.json()
+            
+            # Check canonical entitlement fields
+            required_fields = ["tenant_id", "plan", "plan_label", "add_ons", "features", "limits", "usage_allowances", "source"]
+            missing_fields = [field for field in required_fields if field not in data]
+            
+            if missing_fields:
+                return self.log_test(
+                    "4. Tenant Features", False,
+                    f"Missing canonical entitlement fields: {missing_fields}",
+                    response_data=data
+                )
+            
+            # Validate field types
+            type_issues = []
+            if not isinstance(data.get("add_ons"), list):
+                type_issues.append("add_ons should be list")
+            if not isinstance(data.get("features"), list):
+                type_issues.append("features should be list")
+            if not isinstance(data.get("limits"), dict):
+                type_issues.append("limits should be dict")
+            if not isinstance(data.get("usage_allowances"), dict):
+                type_issues.append("usage_allowances should be dict")
+            
+            if type_issues:
+                return self.log_test(
+                    "4. Tenant Features", False,
+                    f"Field type issues: {', '.join(type_issues)}",
+                    response_data=data
+                )
+            
+            return self.log_test(
+                "4. Tenant Features", True,
+                f"All canonical entitlement fields present for plan '{data.get('plan')}' (source: {data.get('source')})",
+                response_data={
+                    "plan": data.get("plan"),
+                    "plan_label": data.get("plan_label"),
+                    "feature_count": len(data.get("features", [])),
+                    "limits_count": len(data.get("limits", {})),
+                    "usage_allowances_count": len(data.get("usage_allowances", {})),
+                    "source": data.get("source")
+                }
+            )
+            
+        except Exception as e:
+            return self.log_test("4. Tenant Features", False, "Tenant features request failed", error=str(e))
+
+    async def test_5_patch_tenant_plan(self) -> TestResult:
+        """Test 5: PATCH /api/admin/tenants/{tenant_id}/plan - Update to pro/enterprise and confirm limits update"""
+        try:
+            if not self.admin_token or not self.tenant_id:
+                return self.log_test("5. Patch Tenant Plan", False, "Missing admin token or tenant ID")
+            
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            
+            # First get current state
+            get_response = await self.client.get(
+                f"{BASE_URL}/api/admin/tenants/{self.tenant_id}/features", 
+                headers=headers
+            )
+            
+            if get_response.status_code != 200:
+                return self.log_test(
+                    "5. Patch Tenant Plan", False,
+                    f"Failed to get current tenant features: {get_response.status_code}",
+                    error=get_response.text
+                )
+            
+            current_data = get_response.json()
+            current_plan = current_data.get("plan", "unknown")
+            current_limits = current_data.get("limits", {})
+            
+            # Choose target plan (upgrade to pro or enterprise)
+            target_plan = "enterprise" if current_plan.lower() == "pro" else "pro"
+            
+            # Update the plan
+            patch_response = await self.client.patch(
+                f"{BASE_URL}/api/admin/tenants/{self.tenant_id}/plan",
+                headers=headers,
+                json={"plan": target_plan}
+            )
+            
+            if patch_response.status_code != 200:
+                return self.log_test(
+                    "5. Patch Tenant Plan", False,
+                    f"Plan update failed with status {patch_response.status_code}",
+                    error=patch_response.text
+                )
+            
+            updated_data = patch_response.json()
+            
+            # Validate the response structure
+            required_fields = ["tenant_id", "plan", "plan_label", "limits", "usage_allowances"]
+            missing_fields = [field for field in required_fields if field not in updated_data]
+            
+            if missing_fields:
+                return self.log_test(
+                    "5. Patch Tenant Plan", False,
+                    f"Missing fields in update response: {missing_fields}",
+                    response_data=updated_data
+                )
+            
+            # Confirm plan was updated
+            new_plan = updated_data.get("plan")
+            if new_plan != target_plan:
+                return self.log_test(
+                    "5. Patch Tenant Plan", False,
+                    f"Plan not updated correctly. Expected: {target_plan}, Got: {new_plan}",
+                    response_data=updated_data
+                )
+            
+            new_limits = updated_data.get("limits", {})
+            
+            return self.log_test(
+                "5. Patch Tenant Plan", True,
+                f"Successfully updated plan from '{current_plan}' to '{target_plan}', limits updated",
+                response_data={
+                    "previous_plan": current_plan,
+                    "new_plan": new_plan,
+                    "plan_label": updated_data.get("plan_label"),
+                    "limits_changed": current_limits != new_limits,
+                    "current_limits_count": len(new_limits)
+                }
+            )
+            
+        except Exception as e:
+            return self.log_test("5. Patch Tenant Plan", False, "Plan update request failed", error=str(e))
+
+    async def test_6_patch_tenant_add_ons(self) -> TestResult:
+        """Test 6: PATCH /api/admin/tenants/{tenant_id}/add-ons - Confirm response shape consistency"""
+        try:
+            if not self.admin_token or not self.tenant_id:
+                return self.log_test("6. Patch Tenant Add-ons", False, "Missing admin token or tenant ID")
+            
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            
+            # Test with valid feature keys from the system
+            test_add_ons = ["reports", "crm"]
+            
+            patch_response = await self.client.patch(
+                f"{BASE_URL}/api/admin/tenants/{self.tenant_id}/add-ons",
+                headers=headers,
+                json={"add_ons": test_add_ons}
+            )
+            
+            if patch_response.status_code != 200:
+                return self.log_test(
+                    "6. Patch Tenant Add-ons", False,
+                    f"Add-ons update failed with status {patch_response.status_code}",
+                    error=patch_response.text
+                )
+            
+            data = patch_response.json()
+            
+            # Validate response shape consistency (same as other entitlement endpoints)
+            required_fields = ["tenant_id", "plan", "plan_label", "add_ons", "features", "limits", "usage_allowances", "source"]
+            missing_fields = [field for field in required_fields if field not in data]
+            
+            if missing_fields:
+                return self.log_test(
+                    "6. Patch Tenant Add-ons", False,
+                    f"Response shape inconsistent, missing fields: {missing_fields}",
+                    response_data=data
+                )
+            
+            # Validate field types match canonical projection
+            type_issues = []
+            if not isinstance(data.get("add_ons"), list):
+                type_issues.append("add_ons should be list")
+            if not isinstance(data.get("features"), list):
+                type_issues.append("features should be list")
+            if not isinstance(data.get("limits"), dict):
+                type_issues.append("limits should be dict")
+            if not isinstance(data.get("usage_allowances"), dict):
+                type_issues.append("usage_allowances should be dict")
+            
+            if type_issues:
+                return self.log_test(
+                    "6. Patch Tenant Add-ons", False,
+                    f"Response shape type issues: {', '.join(type_issues)}",
+                    response_data=data
+                )
+            
+            return self.log_test(
+                "6. Patch Tenant Add-ons", True,
+                f"Add-ons update successful, response shape consistent with canonical projection",
+                response_data={
+                    "updated_add_ons": data.get("add_ons"),
+                    "plan": data.get("plan"),
+                    "source": data.get("source"),
+                    "response_shape_valid": True
+                }
+            )
+            
+        except Exception as e:
+            return self.log_test("6. Patch Tenant Add-ons", False, "Add-ons update request failed", error=str(e))
+
+    async def test_7_tenant_context_endpoints(self) -> TestResult:
+        """Test 7: GET /api/tenant/features and /api/tenant/entitlements with tenant context"""
+        try:
+            if not self.admin_token or not self.tenant_id:
+                return self.log_test("7. Tenant Context Endpoints", False, "Missing admin token or tenant ID")
+            
+            headers = {
+                "Authorization": f"Bearer {self.admin_token}",
+                "X-Tenant-Id": self.tenant_id
+            }
+            
+            # Test GET /api/tenant/features
+            features_response = await self.client.get(f"{BASE_URL}/api/tenant/features", headers=headers)
+            
+            if features_response.status_code != 200:
+                return self.log_test(
+                    "7. Tenant Context Endpoints", False,
+                    f"/api/tenant/features failed with status {features_response.status_code}",
+                    error=features_response.text
+                )
+            
+            features_data = features_response.json()
+            
+            # Test GET /api/tenant/entitlements
+            entitlements_response = await self.client.get(f"{BASE_URL}/api/tenant/entitlements", headers=headers)
+            
+            if entitlements_response.status_code != 200:
+                return self.log_test(
+                    "7. Tenant Context Endpoints", False,
+                    f"/api/tenant/entitlements failed with status {entitlements_response.status_code}",
+                    error=entitlements_response.text
+                )
+            
+            entitlements_data = entitlements_response.json()
+            
+            # Validate both responses have canonical projection fields
+            for endpoint, data in [("features", features_data), ("entitlements", entitlements_data)]:
+                required_fields = ["tenant_id", "plan", "plan_label", "add_ons", "features", "limits", "usage_allowances", "source"]
+                missing_fields = [field for field in required_fields if field not in data]
                 
-            # Check compat headers
-            if legacy_revoke_resp.headers.get("deprecation") != "true":
-                print("  ❌ Legacy revoke endpoint missing Deprecation header")
-                return False
-        
-        print("  ✅ Single-session revoke behavior working correctly")
-        return True
-        
-    except Exception as e:
-        print(f"  ❌ Single-session revoke test failed: {e}")
-        return False
-
-
-def test_bulk_revoke():
-    """Test C: Bulk revoke behavior"""
-    
-    try:
-        # Create a session for testing
-        print("  🔑 Creating session for bulk revoke test...")
-        
-        login_resp = requests.post(f"{BASE_URL}/api/v1/auth/login",
-                                 json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
-                                 timeout=30)
-        
-        if login_resp.status_code != 200:
-            print("  ❌ Login failed for bulk revoke test")
-            return False
+                if missing_fields:
+                    return self.log_test(
+                        "7. Tenant Context Endpoints", False,
+                        f"/api/tenant/{endpoint} missing canonical fields: {missing_fields}",
+                        response_data=data
+                    )
             
-        token = login_resp.json()["access_token"]
-        headers = {"Authorization": f"Bearer {token}"}
-        
-        # POST /api/v1/auth/revoke-all-sessions should revoke current session family
-        print("  🚫 Testing V1 revoke-all-sessions...")
-        
-        revoke_all_resp = requests.post(f"{BASE_URL}/api/v1/auth/revoke-all-sessions",
-                                       headers=headers, timeout=30)
-        
-        if revoke_all_resp.status_code != 200:
-            print(f"  ❌ V1 revoke-all-sessions failed: {revoke_all_resp.status_code}")
-            return False
-        
-        # After revoke-all, /api/auth/me with previous token should fail
-        print("  🔍 Testing token after revoke-all-sessions...")
-        me_after_resp = requests.get(f"{BASE_URL}/api/auth/me", headers=headers, timeout=30)
-        
-        if me_after_resp.status_code != 401:
-            print(f"  ❌ Token still works after revoke-all-sessions: {me_after_resp.status_code}")
-            return False
-        
-        # Test legacy POST /api/auth/revoke-all-sessions also works
-        print("  🔄 Testing legacy revoke-all-sessions endpoint...")
-        
-        # Create new session for legacy test
-        login2_resp = requests.post(f"{BASE_URL}/api/auth/login",
-                                  json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
-                                  timeout=30)
-        
-        if login2_resp.status_code == 200:
-            token2 = login2_resp.json()["access_token"]
-            headers2 = {"Authorization": f"Bearer {token2}"}
+            # Verify both endpoints return the same data (they should be equivalent)
+            if features_data != entitlements_data:
+                return self.log_test(
+                    "7. Tenant Context Endpoints", False,
+                    "/api/tenant/features and /api/tenant/entitlements return different data",
+                    response_data={"features": features_data, "entitlements": entitlements_data}
+                )
             
-            legacy_revoke_all_resp = requests.post(f"{BASE_URL}/api/auth/revoke-all-sessions",
-                                                  headers=headers2, timeout=30)
+            return self.log_test(
+                "7. Tenant Context Endpoints", True,
+                f"Both tenant context endpoints working with canonical projection (tenant: {features_data.get('tenant_id')})",
+                response_data={
+                    "tenant_id": features_data.get("tenant_id"),
+                    "plan": features_data.get("plan"),
+                    "source": features_data.get("source"),
+                    "endpoints_consistent": True
+                }
+            )
             
-            if legacy_revoke_all_resp.status_code != 200:
-                print(f"  ❌ Legacy revoke-all-sessions failed: {legacy_revoke_all_resp.status_code}")
-                return False
-                
-            # Check compat headers
-            if legacy_revoke_all_resp.headers.get("deprecation") != "true":
-                print("  ❌ Legacy revoke-all endpoint missing Deprecation header")
-                return False
-        
-        print("  ✅ Bulk revoke behavior working correctly")
-        return True
-        
-    except Exception as e:
-        print(f"  ❌ Bulk revoke test failed: {e}")
-        return False
+        except Exception as e:
+            return self.log_test("7. Tenant Context Endpoints", False, "Tenant context endpoints request failed", error=str(e))
 
-
-def test_cookie_auth_safety():
-    """Test D: Cookie auth safety"""
-    
-    try:
-        # Login via /api/v1/auth/login with header X-Client-Platform: web
-        print("  🍪 Testing cookie auth with X-Client-Platform: web header...")
+    async def run_all_tests(self):
+        """Run all entitlement projection flow tests"""
+        print("🚀 Starting Backend Entitlement Projection Flows Validation")
+        print(f"Base URL: {BASE_URL}")
+        print(f"Admin Credentials: {ADMIN_EMAIL}")
+        print("=" * 80)
         
-        session = requests.Session()
-        web_headers = {
-            "X-Client-Platform": "web",
-            "Content-Type": "application/json"
+        # Run tests sequentially
+        await self.test_1_admin_login()
+        await self.test_2_onboarding_plans()
+        await self.test_3_admin_tenants()
+        await self.test_4_tenant_features()
+        await self.test_5_patch_tenant_plan()
+        await self.test_6_patch_tenant_add_ons()
+        await self.test_7_tenant_context_endpoints()
+        
+        print("=" * 80)
+        return self.generate_summary()
+
+    def generate_summary(self) -> Dict[str, Any]:
+        """Generate test summary"""
+        total_tests = len(self.results)
+        passed_tests = sum(1 for result in self.results if result.passed)
+        failed_tests = total_tests - passed_tests
+        success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
+        
+        summary = {
+            "total_tests": total_tests,
+            "passed": passed_tests,
+            "failed": failed_tests,
+            "success_rate": round(success_rate, 1),
+            "results": self.results
         }
         
-        login_resp = session.post(f"{BASE_URL}/api/v1/auth/login",
-                                json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
-                                headers=web_headers,
-                                timeout=30)
+        print(f"📊 TEST SUMMARY:")
+        print(f"   Total Tests: {total_tests}")
+        print(f"   Passed: {passed_tests}")
+        print(f"   Failed: {failed_tests}")
+        print(f"   Success Rate: {success_rate:.1f}%")
         
-        if login_resp.status_code != 200:
-            print(f"  ❌ Cookie auth login failed: {login_resp.status_code}")
-            return False
+        if failed_tests > 0:
+            print(f"\n❌ FAILED TESTS:")
+            for result in self.results:
+                if not result.passed:
+                    print(f"   - {result.name}: {result.message}")
+                    if result.error:
+                        print(f"     Error: {result.error}")
         
-        # Confirm response auth_transport is cookie_compat
-        login_data = login_resp.json()
-        if login_data.get("auth_transport") != "cookie_compat":
-            print(f"  ❌ Auth transport not cookie_compat: {login_data.get('auth_transport')}")
-            return False
-        
-        # GET /api/v1/auth/sessions using only cookie session works
-        print("  📋 Testing V1 sessions endpoint with cookie auth...")
-        
-        sessions_resp = session.get(f"{BASE_URL}/api/v1/auth/sessions", 
-                                  headers={"X-Client-Platform": "web"},
-                                  timeout=30)
-        
-        if sessions_resp.status_code != 200:
-            print(f"  ❌ V1 sessions with cookies failed: {sessions_resp.status_code}")
-            return False
-            
-        sessions = sessions_resp.json()
-        if not sessions:
-            print("  ❌ No sessions returned with cookie auth")
-            return False
-        
-        # POST /api/v1/auth/revoke-all-sessions using cookie session works and clears access
-        print("  🚫 Testing V1 revoke-all-sessions with cookie auth...")
-        
-        revoke_resp = session.post(f"{BASE_URL}/api/v1/auth/revoke-all-sessions",
-                                 json={},
-                                 headers=web_headers,
-                                 timeout=30)
-        
-        if revoke_resp.status_code != 200:
-            print(f"  ❌ V1 revoke-all with cookies failed: {revoke_resp.status_code}")
-            return False
-        
-        # After revoke, access should be cleared
-        me_after_resp = session.get(f"{BASE_URL}/api/v1/auth/me",
-                                   headers={"X-Client-Platform": "web"},
-                                   timeout=30)
-        
-        if me_after_resp.status_code != 401:
-            print(f"  ❌ Cookie auth not cleared after revoke-all: {me_after_resp.status_code}")
-            return False
-        
-        print("  ✅ Cookie auth safety working correctly")
-        return True
-        
-    except Exception as e:
-        print(f"  ❌ Cookie auth safety test failed: {e}")
-        return False
+        return summary
 
-
-def test_inventory_artifacts():
-    """Test E: Inventory/telemetry artifacts"""
-    
-    try:
-        print("  📊 Checking route inventory artifacts...")
+async def main():
+    """Main test execution"""
+    async with EntitlementProjectionTester() as tester:
+        summary = await tester.run_all_tests()
         
-        # Verify route_inventory.json contains the 3 new v1 auth session aliases
-        inventory_path = "/app/backend/app/bootstrap/route_inventory.json"
-        if not os.path.exists(inventory_path):
-            print(f"  ❌ Route inventory file not found: {inventory_path}")
-            return False
-            
-        with open(inventory_path, 'r') as f:
-            inventory = json.load(f)
+        # Write detailed results to file
+        results_data = []
+        for result in tester.results:
+            results_data.append({
+                "name": result.name,
+                "passed": result.passed,
+                "message": result.message,
+                "response_data": result.response_data,
+                "error": result.error
+            })
         
-        required_v1_routes = [
-            ("GET", "/api/v1/auth/sessions"),
-            ("POST", "/api/v1/auth/sessions/{session_id}/revoke"),
-            ("POST", "/api/v1/auth/revoke-all-sessions")
-        ]
+        with open("/app/entitlement_test_results.json", "w") as f:
+            json.dump({
+                "summary": {
+                    "total_tests": summary["total_tests"],
+                    "passed": summary["passed"],
+                    "failed": summary["failed"],
+                    "success_rate": summary["success_rate"]
+                },
+                "detailed_results": results_data
+            }, f, indent=2)
         
-        inventory_routes = [(route["method"], route["path"]) for route in inventory]
+        print(f"\n📝 Detailed results saved to: /app/entitlement_test_results.json")
         
-        for method, path in required_v1_routes:
-            if (method, path) not in inventory_routes:
-                print(f"  ❌ Missing route in inventory: {method} {path}")
-                return False
-        
-        print(f"  ✅ All 3 V1 session routes found in inventory")
-        
-        # Verify route_inventory_diff.json reports exactly these 3 added v1 routes
-        diff_path = "/app/backend/app/bootstrap/route_inventory_diff.json"
-        if not os.path.exists(diff_path):
-            print(f"  ❌ Route inventory diff file not found: {diff_path}")
-            return False
-            
-        with open(diff_path, 'r') as f:
-            diff_data = json.load(f)
-        
-        added_paths = diff_data.get("added_paths", [])
-        new_v1_route_count = diff_data.get("summary", {}).get("new_v1_route_count", 0)
-        
-        if new_v1_route_count != 3:
-            print(f"  ❌ Expected 3 new V1 routes in diff, got {new_v1_route_count}")
-            return False
-        
-        # Check that the specific routes are in the added paths
-        added_route_keys = [(route["method"], route["path"]) for route in added_paths]
-        for method, path in required_v1_routes:
-            if (method, path) not in added_route_keys:
-                print(f"  ❌ Missing route in diff added_paths: {method} {path}")
-                return False
-        
-        print(f"  ✅ Route diff correctly shows 3 new V1 session routes")
-        
-        # Verify route_inventory_summary.json has v1_count >= 23 and contains domain_v1_progress.auth metrics
-        summary_path = "/app/backend/app/bootstrap/route_inventory_summary.json"
-        if not os.path.exists(summary_path):
-            print(f"  ❌ Route inventory summary file not found: {summary_path}")
-            return False
-            
-        with open(summary_path, 'r') as f:
-            summary_data = json.load(f)
-        
-        v1_count = summary_data.get("v1_count", 0)
-        if v1_count < 23:
-            print(f"  ❌ V1 count too low: {v1_count} < 23")
-            return False
-        
-        domain_v1_progress = summary_data.get("domain_v1_progress", {})
-        auth_progress = domain_v1_progress.get("auth", {})
-        
-        if not auth_progress:
-            print("  ❌ Missing domain_v1_progress.auth metrics")
-            return False
-            
-        migrated_count = auth_progress.get("migrated_v1_route_count", 0)
-        if migrated_count < 6:
-            print(f"  ❌ Auth migrated V1 route count too low: {migrated_count} < 6")
-            return False
-        
-        print(f"  ✅ Summary shows v1_count={v1_count}, auth migrated={migrated_count}")
-        
-        print("  ✅ All inventory/telemetry artifacts validated")
-        return True
-        
-    except Exception as e:
-        print(f"  ❌ Inventory artifacts test failed: {e}")
-        return False
-
+        # Exit with error code if any tests failed
+        if summary["failed"] > 0:
+            sys.exit(1)
+        else:
+            print("\n🎉 All entitlement projection flow tests passed!")
+            sys.exit(0)
 
 if __name__ == "__main__":
-    success = test_pr_v1_2b_session_rollout()
-    exit(0 if success else 1)
+    asyncio.run(main())

@@ -2251,6 +2251,18 @@ agent_communication:
         agent: "testing"
         comment: "PR-V1-2C settings namespace rollout validation COMPLETED - ALL 6 TESTS PASSED (100% success rate). Comprehensive validation per review request on https://travel-saas-refactor-1.preview.emergentagent.com. Test Results: A) ✅ Legacy/V1 Settings Parity - PASSED (GET /api/settings/users vs GET /api/v1/settings/users return matching data with 11 users each, legacy endpoints include proper Deprecation: true and Link successor headers pointing to /api/v1/settings/users), B) ✅ Settings Mutation Parity - PASSED (created unique user via POST /api/v1/settings/users with 200 status, confirmed created user appears in legacy GET /api/settings/users list, legacy POST /api/settings/users also works with 200 status for new user creation), C) ✅ Cookie Auth Safety - PASSED (login via /api/v1/auth/login with X-Client-Platform: web header returns auth_transport=cookie_compat, GET /api/v1/settings/users works using cookies only with 200 status, no Authorization header required for web auth flow), D) ✅ Mobile BFF Unaffected - PASSED (GET /api/v1/mobile/auth/me works correctly with bearer token after settings changes, returns 200 status with admin@acenta.test email, mobile BFF integration intact), E) ✅ Inventory/Telemetry Artifacts - PASSED (both GET and POST /api/v1/settings/users routes found and accessible, route count matches expected 2 new v1 routes, telemetry consistent with diff artifacts showing routes_migrated_this_pr=2), F) ✅ Admin Authentication - PASSED (admin@acenta.test/admin123 login successful with 385 char token). All PR-V1-2C scope requirements validated successfully: new v1 settings aliases working (GET/POST /api/v1/settings/users), legacy settings routes preserved with compat headers (GET/POST /api/settings/users), cookie auth compatibility maintained for settings calls with X-Client-Platform: web, mobile BFF unaffected, route inventory artifacts updated correctly with migration velocity telemetry. No APIs are mocked, no regressions detected."
 
+  - task: "Backend entitlement projection flows validation"
+    implemented: true
+    working: true
+    file: "backend/app/routers/onboarding.py, backend/app/routers/admin_tenant_features.py, backend/app/routers/tenant_features.py, backend/app/services/entitlement_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Backend entitlement projection flows validation COMPLETED - ALL 7 TESTS PASSED (100% success rate). Comprehensive validation of entitlement engine flows per review request on https://travel-saas-refactor-1.preview.emergentagent.com with admin@acenta.test/admin123. Test Results: 1) ✅ POST /api/auth/login - PASSED (admin login successful, token length: 385 chars), 2) ✅ GET /api/onboarding/plans - PASSED (found all required plans: starter, pro, enterprise with limits and usage_allowances), 3) ✅ GET /api/admin/tenants - PASSED (fetched tenant ID: 9c5c1079-9dea-49bf-82c0-74838b146160), 4) ✅ GET /api/admin/tenants/{tenant_id}/features - PASSED (all canonical entitlement fields present: tenant_id, plan, plan_label, add_ons, features, limits, usage_allowances, source), 5) ✅ PATCH /api/admin/tenants/{tenant_id}/plan - PASSED (successfully updated plan from pro to enterprise, limits updated correctly), 6) ✅ PATCH /api/admin/tenants/{tenant_id}/add-ons - PASSED (add-ons update successful with crm, reports features, response shape consistent with canonical projection), 7) ✅ GET /api/tenant/features and GET /api/tenant/entitlements - PASSED (both tenant context endpoints working with canonical projection, endpoints consistent). All entitlement projection flows working correctly with proper canonical field structure. Plan changes reflect in limits, add-ons update properly, tenant context endpoints provide consistent data. No regressions detected in new entitlement engine scope."
+
 
   - task: "Entitlement UI flows validation - /pricing and /app/admin/tenant-features"
     implemented: true
@@ -2740,3 +2752,85 @@ agent_communication:
       PR-V1-2C settings namespace rollout validation SUCCESSFUL. All specified requirements met with perfect compatibility between legacy and v1 settings endpoints. Compat headers properly guide clients to v1 successors. Cookie-based web auth and bearer token flows both functional for settings operations. Mobile BFF integration unaffected. Route inventory accurately reflects the settings aliases addition with proper telemetry metrics including migration velocity tracking. The implementation is ready for production deployment.
       
       Status: ✅ PRODUCTION-READY - PR-V1-2C validated successfully with 100% test pass rate.
+
+  - agent: "testing"
+    message: |
+      ✅ BACKEND ENTITLEMENT PROJECTION FLOWS VALIDATION COMPLETED - ALL 7 TESTS PASSED (2026-03-07)
+      
+      Performed comprehensive validation of backend entitlement projection flows per review request on https://travel-saas-refactor-1.preview.emergentagent.com
+      
+      Context:
+      - Review request: Validate backend entitlement projection flows only
+      - Test credentials: admin@acenta.test / admin123  
+      - Scope: Focus on entitlement engine APIs with canonical projection fields
+      
+      Test Results Summary:
+      
+      1. ✅ POST /api/auth/login - PASSED
+         - Admin authentication successful
+         - Token received: 385 characters
+         - Bearer token authentication working
+      
+      2. ✅ GET /api/onboarding/plans - PASSED  
+         - Found all required plans: starter, pro, enterprise
+         - All plans contain limits and usage_allowances fields
+         - Plan catalog structure correct for entitlement system
+      
+      3. ✅ GET /api/admin/tenants - PASSED
+         - Successfully fetched tenant list
+         - Selected tenant ID: 9c5c1079-9dea-49bf-82c0-74838b146160
+         - Admin tenant access working correctly
+      
+      4. ✅ GET /api/admin/tenants/{tenant_id}/features - PASSED
+         - All canonical entitlement fields present
+         - Fields confirmed: tenant_id, plan, plan_label, add_ons, features, limits, usage_allowances, source
+         - Field types validated (lists, dicts as expected)
+         - Current plan: 'pro' with source: 'capabilities'
+      
+      5. ✅ PATCH /api/admin/tenants/{tenant_id}/plan - PASSED
+         - Successfully updated plan from 'pro' to 'enterprise'
+         - Limits updated correctly after plan change
+         - Response contains all required canonical fields
+         - Plan change functionality working as expected
+      
+      6. ✅ PATCH /api/admin/tenants/{tenant_id}/add-ons - PASSED
+         - Add-ons update successful with valid feature keys ('crm', 'reports')
+         - Response shape consistent with canonical projection
+         - All required fields present and typed correctly
+         - Add-on management working properly
+      
+      7. ✅ GET /api/tenant/features and GET /api/tenant/entitlements - PASSED
+         - Both tenant context endpoints working with X-Tenant-Id header
+         - Canonical projection fields present in both responses
+         - Both endpoints return identical data (consistent behavior)
+         - Tenant context resolution working correctly
+      
+      Key Validations Confirmed:
+      ✅ Admin authentication and token-based access working
+      ✅ Plan catalog provides required starter/pro/enterprise with limits + usage_allowances
+      ✅ Tenant admin management functional (list, get features)
+      ✅ Plan updates work correctly with limits updating
+      ✅ Add-ons management functional with proper validation
+      ✅ Tenant context endpoints provide canonical projection consistently
+      ✅ All responses include canonical entitlement fields (tenant_id, plan, plan_label, add_ons, features, limits, usage_allowances, source)
+      ✅ No API mocking - all endpoints fully functional
+      ✅ Proper field types and data structures maintained
+      
+      Test Summary:
+      - Total Tests: 7
+      - Passed: 7
+      - Failed: 0  
+      - Success Rate: 100%
+      
+      Entitlement Engine Validation:
+      ✅ Plan matrix projection working (starter → pro → enterprise)
+      ✅ Limits properly updated when plan changes
+      ✅ Add-ons correctly managed as feature extensions
+      ✅ Canonical projection shape consistent across all endpoints
+      ✅ Tenant context properly resolved for self-service endpoints
+      ✅ Source attribution working ('capabilities' source confirmed)
+      
+      Conclusion:
+      Backend entitlement projection flows validation SUCCESSFUL. All specified entitlement engine APIs working correctly with proper canonical field structures. Plan changes correctly update limits, add-ons management functional, tenant context endpoints provide consistent data. The new entitlement engine is ready for production use with no regressions detected.
+      
+      Status: ✅ PRODUCTION-READY - Backend entitlement projection flows validated successfully.

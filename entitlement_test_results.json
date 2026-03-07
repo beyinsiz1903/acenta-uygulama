@@ -1,0 +1,104 @@
+{
+  "summary": {
+    "total_tests": 7,
+    "passed": 7,
+    "failed": 0,
+    "success_rate": 100.0
+  },
+  "detailed_results": [
+    {
+      "name": "1. Admin Login",
+      "passed": true,
+      "message": "Login successful, token length: 385 chars",
+      "response_data": {
+        "token_type": "bearer",
+        "has_token": true
+      },
+      "error": null
+    },
+    {
+      "name": "2. Onboarding Plans",
+      "passed": true,
+      "message": "Found all required plans (starter, pro, enterprise) with limits and usage_allowances",
+      "response_data": {
+        "plan_count": 3,
+        "plan_names": [
+          "starter",
+          "pro",
+          "enterprise"
+        ]
+      },
+      "error": null
+    },
+    {
+      "name": "3. Admin Tenants",
+      "passed": true,
+      "message": "Found 1 tenants, selected tenant ID: 9c5c1079-9dea-49bf-82c0-74838b146160",
+      "response_data": {
+        "tenant_count": 1,
+        "selected_tenant": {
+          "id": "9c5c1079-9dea-49bf-82c0-74838b146160",
+          "name": "Varsayilan Tenant",
+          "slug": "default-tenant",
+          "status": "active",
+          "organization_id": "913ccb33-2717-448a-bceb-39e39f3ba48e"
+        }
+      },
+      "error": null
+    },
+    {
+      "name": "4. Tenant Features",
+      "passed": true,
+      "message": "All canonical entitlement fields present for plan 'pro' (source: capabilities)",
+      "response_data": {
+        "plan": "pro",
+        "plan_label": "Pro",
+        "feature_count": 8,
+        "limits_count": 2,
+        "usage_allowances_count": 5,
+        "source": "capabilities"
+      },
+      "error": null
+    },
+    {
+      "name": "5. Patch Tenant Plan",
+      "passed": true,
+      "message": "Successfully updated plan from 'pro' to 'enterprise', limits updated",
+      "response_data": {
+        "previous_plan": "pro",
+        "new_plan": "enterprise",
+        "plan_label": "Enterprise",
+        "limits_changed": true,
+        "current_limits_count": 2
+      },
+      "error": null
+    },
+    {
+      "name": "6. Patch Tenant Add-ons",
+      "passed": true,
+      "message": "Add-ons update successful, response shape consistent with canonical projection",
+      "response_data": {
+        "updated_add_ons": [
+          "crm",
+          "reports"
+        ],
+        "plan": "enterprise",
+        "source": "capabilities",
+        "response_shape_valid": true
+      },
+      "error": null
+    },
+    {
+      "name": "7. Tenant Context Endpoints",
+      "passed": true,
+      "message": "Both tenant context endpoints working with canonical projection (tenant: 9c5c1079-9dea-49bf-82c0-74838b146160)",
+      "response_data": {
+        "tenant_id": "9c5c1079-9dea-49bf-82c0-74838b146160",
+        "plan": "enterprise",
+        "source": "capabilities",
+        "endpoints_consistent": true
+      },
+      "error": null
+    }
+  ]
+}

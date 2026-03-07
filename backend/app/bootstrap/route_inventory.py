@@ -70,6 +70,9 @@ def export_route_inventory_artifacts(
     try:
         inventory_path = Path(inventory_destination)
         inventory_path.parent.mkdir(parents=True, exist_ok=True)
+        previous_inventory: list[dict[str, Any]] | None = None
+        if inventory_path.exists():
+            previous_inventory = json.loads(inventory_path.read_text())
         payload = build_route_inventory(app)
         inventory_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
         summary_path = write_route_inventory_summary_json(
@@ -77,6 +80,7 @@ def export_route_inventory_artifacts(
             summary_destination,
             environment=environment,
             inventory_path=inventory_path,
+            previous_inventory=previous_inventory,
             runtime_name=runtime_name,
         )
         return {"inventory": inventory_path, "summary": summary_path}

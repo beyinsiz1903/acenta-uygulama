@@ -11,6 +11,7 @@ from app.routers.health import router as health_router
 from app.routers.health_dashboard import router as health_dashboard_router
 from app.routers.public_campaigns import router as public_campaigns_router
 from app.routers.public_cms_pages import router as public_cms_pages_router
+from app.routers.settings import router as settings_router
 from app.routers.theme import router as theme_router
 
 
@@ -51,6 +52,10 @@ AUTH_PR_V1_2B_ROLLOUTS: tuple[V1AliasRollout, ...] = (
             "/api/auth/revoke-all-sessions",
         ),
     ),
+)
+
+SETTINGS_PR_V1_2C_ROLLOUTS: tuple[V1AliasRollout, ...] = (
+    V1AliasRollout("settings_pr_v1_2c", settings_router),
 )
 
 
@@ -101,7 +106,7 @@ def register_low_risk_v1_aliases(app: FastAPI) -> None:
         for method in _iter_route_methods(route)
     }
 
-    for rollout in LOW_RISK_V1_ROLLOUTS + AUTH_PR_V1_2A_ROLLOUTS + AUTH_PR_V1_2B_ROLLOUTS:
+    for rollout in LOW_RISK_V1_ROLLOUTS + AUTH_PR_V1_2A_ROLLOUTS + AUTH_PR_V1_2B_ROLLOUTS + SETTINGS_PR_V1_2C_ROLLOUTS:
         alias_router = APIRouter()
 
         for route in rollout.router.routes:

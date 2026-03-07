@@ -53,6 +53,7 @@ class TestRouteInventorySummaryGeneration:
         assert "legacy_routes_remaining" in summary
         assert "namespaces" in summary
         assert "domain_v1_progress" in summary
+        assert "migration_velocity" in summary
         
         # Type checks
         assert isinstance(summary["route_count"], int)
@@ -62,6 +63,7 @@ class TestRouteInventorySummaryGeneration:
         assert isinstance(summary["inventory_hash"], str)
         assert isinstance(summary["namespaces"], dict)
         assert isinstance(summary["domain_v1_progress"], dict)
+        assert isinstance(summary["migration_velocity"], dict)
         assert len(summary["inventory_hash"]) == 64  # SHA-256 hex
         
         # Count consistency
@@ -119,6 +121,50 @@ class TestRouteInventorySummaryGeneration:
             }
             assert metrics["target_route_count"] >= metrics["migrated_v1_route_count"]
             assert 0.0 <= metrics["v1_migration_percent"] <= 100.0
+
+    def test_summary_includes_migration_velocity(self, tmp_path: Path) -> None:
+        """Summary should include migration velocity telemetry for roadmap tracking"""
+        inventory_path = tmp_path / "inventory.json"
+        summary_path = tmp_path / "summary.json"
+
+        inventory_path.write_text(
+            json.dumps(
+                [
+                    {
+                        "compat_required": True,
+                        "current_namespace": "/api/settings",
+                        "legacy_or_v1": "legacy",
+                        "method": "GET",
+                        "owner": "settings",
+                        "path": "/api/settings/users",
+                        "risk_level": "medium",
+                        "source": "app.routers.settings",
+                        "target_namespace": "/api/v1/settings",
+                    }
+                ],
+                indent=2,
+            )
+        )
+
+        result = subprocess.run(
+            [
+                sys.executable, str(SCRIPTS_DIR / "export_route_inventory.py"),
+                "--destination", str(inventory_path),
+                "--summary-out", str(summary_path),
+                "--environment", "test",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(ROOT_DIR),
+        )
+        assert result.returncode == 0, result.stderr
+
+        summary = json.loads(summary_path.read_text())
+        velocity = summary["migration_velocity"]
+        assert set(velocity.keys()) == {"routes_migrated_this_pr", "routes_remaining", "estimated_prs_remaining"}
+        assert velocity["routes_migrated_this_pr"] >= 1
+        assert velocity["routes_remaining"] == summary["compat_required_count"]
+        assert velocity["estimated_prs_remaining"] >= 1
 
     def test_summary_includes_compat_required_count(self, tmp_path: Path) -> None:
         """Summary should include compat_required_count for migration tracking"""

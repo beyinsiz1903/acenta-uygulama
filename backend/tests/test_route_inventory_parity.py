@@ -3,6 +3,7 @@ from __future__ import annotations
 from app.bootstrap.route_inventory import build_route_inventory
 from app.bootstrap.route_inventory_summary import (
     build_domain_v1_progress,
+    build_migration_velocity,
     build_route_inventory_parity_report,
     summarize_route_inventory,
 )
@@ -21,6 +22,7 @@ def test_route_inventory_summary_counts_are_consistent() -> None:
     assert sum(summary["namespaces"].values()) == summary["route_count"]
     assert set(summary["namespaces"].keys()) == {"auth", "admin", "public", "system", "mobile", "tenant", "finance", "misc"}
     assert set(summary["domain_v1_progress"].keys()) == {"auth", "admin", "public", "system", "mobile", "tenant", "finance", "misc"}
+    assert set(summary["migration_velocity"].keys()) == {"routes_migrated_this_pr", "routes_remaining", "estimated_prs_remaining"}
     assert len(summary["inventory_hash"]) == 64
 
 
@@ -34,6 +36,25 @@ def test_domain_v1_progress_is_consistent() -> None:
         assert 0.0 <= metrics["v1_migration_percent"] <= 100.0
 
     assert progress["auth"]["migrated_v1_route_count"] >= 6
+
+
+def test_migration_velocity_uses_previous_inventory_diff() -> None:
+    inventory = build_route_inventory(app)
+    previous_inventory = [
+        entry
+        for entry in inventory
+        if entry["path"] not in {"/api/v1/settings/users"}
+    ]
+
+    velocity = build_migration_velocity(
+        inventory,
+        previous_inventory=previous_inventory,
+        routes_remaining=sum(1 for entry in inventory if entry["compat_required"]),
+    )
+
+    assert velocity["routes_migrated_this_pr"] >= 1
+    assert velocity["routes_remaining"] == sum(1 for entry in inventory if entry["compat_required"])
+    assert velocity["estimated_prs_remaining"] >= 1
 
 
 def test_route_inventory_parity_report_detects_match_and_mismatch() -> None:

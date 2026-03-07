@@ -7283,6 +7283,28 @@
   },
   {
     "compat_required": false,
+    "current_namespace": "/api/v1/settings",
+    "legacy_or_v1": "v1",
+    "method": "GET",
+    "owner": "settings",
+    "path": "/api/v1/settings/users",
+    "risk_level": "medium",
+    "source": "app.routers.settings",
+    "target_namespace": "/api/v1/settings"
+  },
+  {
+    "compat_required": false,
+    "current_namespace": "/api/v1/settings",
+    "legacy_or_v1": "v1",
+    "method": "POST",
+    "owner": "settings",
+    "path": "/api/v1/settings/users",
+    "risk_level": "medium",
+    "source": "app.routers.settings",
+    "target_namespace": "/api/v1/settings"
+  },
+  {
+    "compat_required": false,
     "current_namespace": "/api/v1/system",
     "legacy_or_v1": "v1",
     "method": "GET",

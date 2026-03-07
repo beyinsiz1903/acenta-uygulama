@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
+from app.bootstrap.compat_headers import apply_compat_headers
+from app.bootstrap.v1_manifest import derive_target_path
 from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.schemas import UserCreateIn
@@ -18,17 +20,25 @@ def _oid_or_400(id_str: str) -> ObjectId:
         raise HTTPException(status_code=400, detail="Geçersiz id")
 
 
+def _apply_settings_compat_headers(request: Request, response: Response) -> None:
+    route_path = getattr(request.scope.get("route"), "path", request.url.path)
+    successor_path = derive_target_path(route_path, "app.routers.settings")
+    if successor_path != route_path and successor_path.startswith("/api/v1/"):
+        apply_compat_headers(response, successor_path)
+
+
 # super_admin ana rol; legacy "admin" hesab da geici olarak yetkili olsun diye eklenir
 @router.get("/users", dependencies=[Depends(require_roles(["super_admin", "admin"]))])
-async def list_users(user=Depends(get_current_user)):
+async def list_users(request: Request, response: Response, user=Depends(get_current_user)):
     db = await get_db()
     docs = await db.users.find({"organization_id": user["organization_id"]}, {"password_hash": 0}).sort("created_at", -1).to_list(200)
+    _apply_settings_compat_headers(request, response)
     return [serialize_doc(d) for d in docs]
 
 
 # Ayn guard create i1fn de ge1ferli
 @router.post("/users", dependencies=[Depends(require_roles(["super_admin", "admin"]))])
-async def create_user(payload: UserCreateIn, user=Depends(get_current_user)):
+async def create_user(payload: UserCreateIn, request: Request, response: Response, user=Depends(get_current_user)):
     db = await get_db()
 
     from app.auth import hash_password
@@ -69,4 +79,5 @@ async def create_user(payload: UserCreateIn, user=Depends(get_current_user)):
         raise HTTPException(status_code=400, detail="Bu email zaten kayıtlı")
 
     saved = await db.users.find_one({"_id": ins.inserted_id}, {"password_hash": 0})
+    _apply_settings_compat_headers(request, response)
     return serialize_doc(saved)

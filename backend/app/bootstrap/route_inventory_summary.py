@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 from collections import OrderedDict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
+from app.bootstrap.route_inventory_diff import build_route_inventory_diff
 from app.bootstrap.v1_manifest import derive_target_path
 
 DEFAULT_ROUTE_INVENTORY_SUMMARY_PATH = Path("/app/backend/app/bootstrap/route_inventory_summary.json")
@@ -134,11 +136,33 @@ def build_domain_v1_progress(inventory: list[dict[str, Any]]) -> dict[str, dict[
     )
 
 
+def build_migration_velocity(
+    inventory: list[dict[str, Any]],
+    *,
+    previous_inventory: list[dict[str, Any]] | None = None,
+    routes_remaining: int,
+) -> dict[str, int]:
+    routes_migrated_this_pr = 0
+    if previous_inventory is not None:
+        diff_report = build_route_inventory_diff(previous_inventory, inventory)
+        routes_migrated_this_pr = int(diff_report["summary"]["new_v1_route_count"])
+
+    estimated_prs_remaining = 0 if routes_remaining <= 0 else math.ceil(routes_remaining / 60)
+    return OrderedDict(
+        (
+            ("routes_migrated_this_pr", routes_migrated_this_pr),
+            ("routes_remaining", routes_remaining),
+            ("estimated_prs_remaining", estimated_prs_remaining),
+        )
+    )
+
+
 def summarize_route_inventory(
     inventory: list[dict[str, Any]],
     *,
     environment: str | None = None,
     inventory_path: str | Path | None = None,
+    previous_inventory: list[dict[str, Any]] | None = None,
     runtime_name: str = "api",
 ) -> dict[str, Any]:
     route_count = len(inventory)
@@ -147,6 +171,11 @@ def summarize_route_inventory(
     compat_required_count = sum(1 for entry in inventory if entry["compat_required"])
     namespace_breakdown = build_namespace_breakdown(inventory)
     domain_v1_progress = build_domain_v1_progress(inventory)
+    migration_velocity = build_migration_velocity(
+        inventory,
+        previous_inventory=previous_inventory,
+        routes_remaining=compat_required_count,
+    )
 
     return {
         "environment": environment or os.environ.get("APP_ENV_NAME") or os.environ.get("ENV") or "unknown",
@@ -156,6 +185,7 @@ def summarize_route_inventory(
         "inventory_path": str(inventory_path) if inventory_path else None,
         "legacy_routes_remaining": legacy_count,
         "legacy_count": legacy_count,
+        "migration_velocity": migration_velocity,
         "namespaces": namespace_breakdown,
         "route_count": route_count,
         "runtime_name": runtime_name,
@@ -170,6 +200,7 @@ def write_route_inventory_summary_json(
     *,
     environment: str | None = None,
     inventory_path: str | Path | None = None,
+    previous_inventory: list[dict[str, Any]] | None = None,
     runtime_name: str = "api",
 ) -> Path:
     target_path = Path(destination)
@@ -178,6 +209,7 @@ def write_route_inventory_summary_json(
         inventory,
         environment=environment,
         inventory_path=inventory_path,
+        previous_inventory=previous_inventory,
         runtime_name=runtime_name,
     )
     target_path.write_text(json.dumps(payload, indent=2) + "\n")

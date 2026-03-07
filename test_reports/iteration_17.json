@@ -1,0 +1,105 @@
+{
+  "summary": "PR-V1-1 Low Risk Rollout testing complete. All acceptance criteria PASSED: (1) Legacy and v1 aliases coexist for health, system, theme, cms/pages, campaigns endpoints, (2) Route inventory contains 11 new v1 routes (675 total routes from 664), (3) Diff tool correctly reports 11 additions/0 removals, (4) No breaking changes to existing legacy routes.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "✅ pytest test_api_v1_low_risk_rollout.py: 2/2 passed - v1 aliases registered, inventory diff reports correct counts",
+    "✅ pytest test_api_v1_foundation.py: 3/3 passed - auth routes not duplicated, inventory has required fields",
+    "✅ GET /api/health: 200 OK (legacy)",
+    "✅ GET /api/v1/health: 200 OK (v1 alias)",
+    "✅ GET /api/system/ping: 200 OK (legacy)",
+    "✅ GET /api/v1/system/ping: 200 OK (v1 alias)",
+    "✅ GET /api/system/health-dashboard: 200 OK with admin auth (legacy)",
+    "✅ GET /api/v1/system/health-dashboard: 200 OK with admin auth (v1 alias)",
+    "✅ GET /api/public/theme: 200 OK (legacy)",
+    "✅ GET /api/v1/public/theme: 200 OK (v1 alias)",
+    "✅ GET /api/admin/theme: 200 OK with admin auth (legacy)",
+    "✅ GET /api/v1/admin/theme: 200 OK with admin auth (v1 alias)",
+    "✅ GET /api/public/cms/pages: 200 OK (legacy)",
+    "✅ GET /api/v1/public/cms/pages: 200 OK (v1 alias)",
+    "✅ GET /api/public/campaigns: 200 OK (legacy)",
+    "✅ GET /api/v1/public/campaigns: 200 OK (v1 alias)",
+    "✅ route_inventory.json exists with 675 routes (11 new v1 routes)",
+    "✅ Route inventory is deterministically sorted",
+    "✅ Route diff tool reports: added=11, removed=0, new_v1=11",
+    "✅ Legacy and v1 endpoints return equivalent responses (parity tests)",
+    "✅ diff_route_inventory.py CLI works with both text and json output formats"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_api_v1_low_risk_rollout.py",
+    "/app/backend/tests/test_api_v1_foundation.py",
+    "/app/backend/tests/test_pr_v1_1_low_risk_rollout_http.py",
+    "/app/test_reports/pytest/pytest_v1_internal.xml",
+    "/app/test_reports/pytest/pytest_pr_v1_1_http.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "v1_aliases.py: LOW_RISK_V1_ROLLOUTS correctly defines 5 router rollouts (health, health_dashboard, theme, public_cms_pages, public_campaigns)",
+    "v1_aliases.py: register_low_risk_v1_aliases() properly clones routes with _v1 suffix and avoids duplicates",
+    "v1_registry.py: Correctly mounts mobile router and then registers low-risk v1 aliases",
+    "v1_manifest.py: derive_target_path() correctly computes /api/v1/* paths from legacy routes",
+    "route_inventory.py: build_route_inventory() produces sorted, deterministic output with all required fields",
+    "route_inventory_diff.py: build_route_inventory_diff() correctly identifies added/removed routes and new v1 counts",
+    "scripts/diff_route_inventory.py: CLI properly outputs text and JSON formats"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_pr_v1_1_low_risk_rollout_http.py"
+  ],
+  "success_rate": {
+    "backend": "100% (5/5 internal pytest + 19/19 HTTP endpoint tests passed)"
+  },
+  "test_credentials": {
+    "admin": "admin@acenta.test / admin123"
+  },
+  "seed_data_creation": "No test data created",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "PR-V1-1 Low Risk Rollout testing complete. Key validations: (1) health, system/ping, system/health-dashboard, public/theme, admin/theme, public/cms/pages, public/campaigns all have working v1 aliases, (2) route_inventory.json updated with 11 new v1 routes (675 total), (3) diff tool works correctly for detecting added v1 routes, (4) no breaking changes to legacy paths.",
+  "pr_scope_compliance": {
+    "health_v1_alias": true,
+    "system_ping_v1_alias": true,
+    "system_health_dashboard_v1_alias": true,
+    "public_theme_v1_alias": true,
+    "admin_theme_v1_alias": true,
+    "public_cms_pages_v1_alias": true,
+    "public_campaigns_v1_alias": true,
+    "route_inventory_updated": true,
+    "diff_tool_working": true,
+    "no_breaking_changes": true
+  },
+  "verification_summary": {
+    "acceptance_criteria_1_dual_paths": "PASSED - All low-risk routes accessible under both legacy and v1 namespaces",
+    "acceptance_criteria_2_route_inventory": "PASSED - route_inventory.json contains 675 routes with all 11 new v1 aliases",
+    "acceptance_criteria_3_diff_tool": "PASSED - diff tool reports 11 added v1 routes, 0 removed",
+    "acceptance_criteria_4_no_removals": "PASSED - No legacy routes removed in this rollout",
+    "acceptance_criteria_5_deterministic_inventory": "PASSED - Inventory is sorted and deterministic"
+  },
+  "diff_tool_sample_output": {
+    "previous_route_count": 664,
+    "current_route_count": 675,
+    "added_route_count": 11,
+    "removed_route_count": 0,
+    "current_v1_route_count": 17,
+    "new_v1_route_count": 11,
+    "added_v1_routes": [
+      "GET /api/v1/admin/theme",
+      "PUT /api/v1/admin/theme",
+      "GET /api/v1/health",
+      "GET /api/v1/public/campaigns",
+      "GET /api/v1/public/campaigns/{slug}",
+      "GET /api/v1/public/cms/pages",
+      "GET /api/v1/public/cms/pages/{slug}",
+      "GET /api/v1/public/theme",
+      "GET /api/v1/system/health-dashboard",
+      "GET /api/v1/system/ping",
+      "GET /api/v1/system/prometheus"
+    ]
+  }
+}

@@ -1,113 +1,106 @@
 <analysis>**original_problem_statement:**
 The user requested a full-stack, enterprise-grade audit and refactoring of their existing multi-tenant SaaS platform for travel agencies. The goal is to transform the project into a production-ready, secure, and scalable application.
 
-The current development follows a pre-approved, multi-sprint engineering plan. The user has also provided a detailed 12-step architectural roadmap for scaling the platform to 10,000 tenants, which now dictates future priorities.
+The development is guided by a user-provided, 12-step architectural roadmap aimed at scaling the platform.
 
 **PRODUCT REQUIREMENTS:**
-The high-level requirements are to refactor the platform based on the audit, focusing on a series of approved Pull Requests (PRs). The user has also outlined a long-term architectural vision:
+The high-level requirements are to refactor the platform based on the audit, focusing on a series of approved Pull Requests (PRs).
 
 **Architectural Roadmap (Prioritized):**
-1.  **PR-8: Web Auth Cleanup (In Progress):** Remove all  token usage.
-2.  **PR-5B: Mobile Secure Session:** Implement secure session handling in the mobile app.
-3.  **/api/v1 Standardization:** Introduce versioned API endpoints.
+1.  **PR-8: Web Auth Cleanup (COMPLETED):** Remove all  token usage.
+2.  **PR-V1:  Standardization (In Progress):** Introduce versioned API endpoints. This has been broken down into smaller PRs, starting with a foundational setup (PR-V1-0).
+3.  **PR-5B: Mobile Secure Session:** Implement secure session handling in the mobile app.
 4.  **Entitlement Projection Engine:** Unify billing events with tenant features.
-5.  **Usage Metering:** Implement tracking for billable metrics (API calls, exports, etc.).
-6.  **Observability Stack:** Integrate OpenTelemetry, Prometheus, Grafana, Sentry, Loki.
-7.  **Background Queue:** Add Redis + a task queue (Dramatiq/Arq/Celery).
-8.  **Search Index:** Implement Meilisearch or OpenSearch for core data models.
+5.  **Usage Metering:** Implement tracking for billable metrics.
+6.  **Observability Stack:** Integrate OpenTelemetry, Prometheus, etc.
+7.  **Background Queue:** Add Redis + a task queue.
+8.  **Search Index:** Implement Meilisearch or OpenSearch.
 9.  **Feature Flags:** Build a system for controlled rollouts.
 10. **Audit + Security Event Stream:** Create a dedicated stream for critical events.
 11. **Backup / Restore / DR:** Implement a robust data recovery strategy.
-12. **Partner / Public API Hardening:** Add rate limits, webhooks, and idempotency for external APIs.
+12. **Partner / Public API Hardening:** Add rate limits, webhooks, etc.
 
 **User's preferred language**: Turkish
 
 **what currently exists?**
-The agent has completed the implementation phase of **PR-8: Web Auth Compat Cleanup**. This involved a significant refactoring of the frontend authentication mechanism. All instances of  and  have been removed from the codebase. The application now exclusively relies on a secure,  cookie for session management. The frontend's authentication state is bootstrapped by querying the  endpoint. Key files such as , , , , and  have been updated accordingly, and the now-redundant  has been deleted.
+The agent has successfully completed and verified **PR-8: Web Auth Cleanup**. The frontend now exclusively uses a secure,  cookie for session management, and all  token handling has been removed. Testing via the frontend testing agent confirmed the authentication flow is working correctly.
+
+Following the completion of PR-8, the agent, based on user direction, created a detailed plan for the next major task: ** Standardization**. Work has begun on the foundational step, **PR-V1-0**, which involves restructuring the backend routers to support API versioning. The initial directory and file structure for this refactor has been created.
 
 **Last working item**:
--   **Last item agent was working:** Finalizing the frontend authentication refactor by updating the login pages ( and ) to remove the handling of JWT tokens in the client-side code after a successful login. This was the final coding step for PR-8.
+-   **Last item agent was working:** The agent was in the middle of implementing **PR-V1-0: API Versioning Foundation**. It had created the new directory structure  and the core files (, , ). The next step was to migrate all existing API routers from  into the new  file to separate them from future v1 endpoints.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** Frontend testing agent. It is crucial to verify the entire authentication flow end-to-end to ensure the refactor was successful and introduced no regressions.
+-   **Which testing method agent to use?** backend testing agent. After the refactoring is complete, all legacy endpoints must be tested to ensure they function identically to how they did before the file structure change.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1:** (P0) Verify the completion of PR-8.
+-   **Issue 1:** (P0) Complete the implementation of PR-V1-0.
 -   **Issue 2:** (P2) Minor API errors in the admin panel.
 
 **Issues Detail:**
 -   **Issue 1:**
-    -   **Description:** The code implementation for PR-8 (removing  token usage) is complete, but it has not been tested. A full end-to-end test is required to confirm that login, logout, authenticated navigation, and page refreshes work correctly with the new cookie-based session mechanism.
-    -   **Attempted fixes:** All necessary code changes have been applied across the frontend.
+    -   **Description:** The foundational work for API versioning (PR-V1-0) has started but is incomplete. The task involves restructuring the FastAPI routers to create a clear separation between legacy and new  endpoints. This also includes creating a script to export a  file for visibility.
+    -   **Attempted fixes:** The agent created the necessary directories and empty files (, , ) and started modifying .
     -   **Next debug checklist:**
-        1.  Use the frontend testing agent to run a full authentication flow test.
-        2.  Test Case 1: Admin Login (). Verify successful redirection and that authenticated routes are accessible.
-        3.  Test Case 2: Page Refresh. Verify the user remains logged in by checking the result of the  call.
-        4.  Test Case 3: B2B Login (). Repeat the verification.
-        5.  Test Case 4: Logout. Verify the user is redirected to the login page and the session cookie is cleared.
-        6.  Check browser developer tools to confirm no token is being stored in .
-    -   **Why fix this issue and what will be achieved with the fix?** This will complete PR-8, significantly improving application security by mitigating the risk of XSS attacks stealing authentication tokens.
+        1.  Move all existing router includes from  to .
+        2.  Update  to import and include both the  and the new .
+        3.  Refactor  to import and mount the single top-level  from .
+        4.  Implement the logic to generate the  file as part of the application bootstrap process, as specified by the user. The file should be saved to .
+        5.  Clean up the duplicate  as part of the refactor.
+        6.  Run backend tests to ensure all legacy routes are still accessible and functional.
+    -   **Why fix this issue and what will be achieved with the fix?** This will establish the foundational structure for scalable and organized API development, allowing for a controlled migration to versioned endpoints without breaking existing clients.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** frontend
+    -   **Should Test frontend/backend/both after fix?** backend
     -   **Blocked on other issue:** None.
 
 -   **Issue 2:**
     -   **Description:** Several admin panel endpoints are returning errors (, , ). This is a known issue from a previous session.
     -   **Attempted fixes:** None. The user explicitly de-prioritized this to a future cleanup PR.
-    -   **Next debug checklist:** Will be addressed in a future, dedicated cleanup PR.
-    -   **Why fix this issue and what will be achieved with the fix?** To restore full functionality to the admin dashboard. This is not a core-flow blocker.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** backend
     -   **Blocked on other issue:** None.
 
 **In progress Task List**:
-There are no other tasks in progress besides completing PR-8.
+-   **Task 1:** Complete the router refactoring for PR-V1-0.
+    -   **Where to resume:** Continue moving router registrations from  into  and wiring up the new .
+    -   **What will be achieved with this?** A clean, version-aware API routing structure.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** backend
+    -   **Blocked on something:** None.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **P1: PR-5B — Mobile Secure Session + Mobile Client Changes:** Implement client-side changes in the mobile app, including migrating from  to  and adopting the new BFF session logic. This is blocked until the mobile repository is provided.
-    -   **P2: /api/v1 Standardization:** Begin the process of migrating existing API endpoints to a versioned  structure as per the user's roadmap.
+    -   **P0: PR-V1-1 — Low-Risk Router Rollout:** Once PR-V1-0 is complete, begin migrating the first group of low-risk routers to the  namespace.
+    -   **P1: Staging/Prod Runtime Wiring:** Address any runtime configuration differences needed for the new API structure.
+    -   **P2: PR-5B — Mobile Secure Session + Mobile Client Changes:** Implement client-side changes in the mobile app. This is blocked until the mobile repository is provided by the user.
 
 -   **Future Tasks:**
     -   Entitlement Projection Engine (P3)
     -   Usage Metering (P4)
     -   Observability Stack (P5)
-    -   Background Queue (P6)
-    -   Search Index (P7)
-    -   Feature Flags (P8)
-    -   Audit + Security Event Stream (P9)
-    -   Admin Cleanup PR: Fix the failing admin panel endpoints.
-    -   User-Agent Parsing: Enhance the Active Sessions screen.
+    -   And all other items from the 12-step architectural roadmap.
 
 **Completed work in this session**
--   **PR-8 — Web Auth Compat Cleanup (Code Implementation DONE):**
-    -   Refactored  to remove Authorization header logic.
-    -   Deleted .
-    -   Refactored  to derive auth state from  via React Query and updated the  function to call the  endpoint.
-    -   Updated  to rely on the new  hook state.
-    -   Updated  and  to remove client-side token handling.
-    -   Cleaned up imports in  and .
-    -   Updated  with the new architectural roadmap from the user.
+-   **PR-8 — Web Auth Compat Cleanup (VERIFIED & DONE):** The agent completed the code refactoring to remove  token usage and successfully verified the entire authentication flow (admin login, B2B login, refresh, logout) using the frontend testing agent.
+-   ** Standardization Plan (DONE):** Created a detailed, user-approved plan for migrating the API to a versioned structure. This plan is documented in .
 
 **Earlier issues found/mentioned but not fixed**
 -   **Issue 1:** Admin panel endpoints , , and  are failing. The user has explicitly deferred fixing these to a future cleanup PR.
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork:**  linting failure.
--   **Recurrence count:** 3.
--   **Status:** RESOLVED. No linting issues occurred in this session.
+-   None in this session.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
 -   **SaaS Architecture:** Modular Monolith, Multi-Tenancy.
--   **Security:**  Cookie-based Session Management (Primary).
--   **Application Architecture:** Process Separation (API vs. Worker vs. Scheduler) via .
--   **Frontend:** React Query for async state management and server cache.
+-   **Security:**  Cookie-based Session Management.
+-   **API Design:** API Versioning Strategy (in progress).
+-   **Frontend:** React Query for async state management.
 
 **key DB schema**
 -   No changes to the database schema were made in this session.
@@ -116,54 +109,51 @@ There are no other tasks in progress besides completing PR-8.
 -   None.
 
 **All files of reference**
--   ****: (Updated) Axios instance configuration modified to remove Authorization header logic, now relies on .
--   ****: (Updated) Completely refactored to remove  dependency and use React Query's cache for user state from .  function now calls the backend.
--   ****: (Updated) Simplified to use the boolean  state from the  hook.
--   ****: (Updated) Removed logic to save token to  on login.
--   ****: (Updated) Removed logic to save token to  on login.
--   ****: (Updated) Removed unused imports.
--   ****: (Updated) Removed unused imports.
--   ****: (Deleted) This file, which contained  logic, is now obsolete and has been removed.
--   ****: (Updated) Documented the new 12-step architectural roadmap provided by the user.
+-   **/app/memory/PRD.md**: (Updated) Added the detailed plan for  standardization.
+-   ****: (Updated) Modified to begin the process of including the new versioned router structure.
+-   ****: (Created) Top-level router to aggregate v1 and legacy API versions.
+-   ****: (Created) Router for all new  endpoints.
+-   ****: (Created) Router where all existing, non-versioned endpoints will be migrated.
 
 **Areas that need refactoring**:
--   The next major area for refactoring is the mobile application's session management, as defined in **PR-5B**.
+-   The entire backend API routing system is currently undergoing a planned refactor as part of PR-V1-0.
 
 **key api endpoints**
--    (GET): Now the single source of truth for bootstrapping the frontend's authentication state.
--    (POST): Used to terminate the user's session on the backend and clear the session cookie.
--    (POST): Initiates the session and sets the  cookie.
+-   No new endpoints were created. The current work is focused on restructuring the paths for existing endpoints.
 
 **Critical Info for New Agent**
--   Your immediate and only priority (**P0**) is to **test and verify PR-8**. The coding is complete, but you must run a full end-to-end authentication test (login, authenticated navigation, refresh, logout for both admin and B2B portals) to confirm its success. Use the frontend testing agent for this.
--   The user has provided a very detailed 12-step architectural roadmap that now governs all future development priorities. You must refer to this roadmap after completing PR-8.
--   The next task after PR-8 is **PR-5B: Mobile Secure Session**.
--   You must communicate with the user in **Turkish**.
--   The user has re-prioritized the work. Do not start on the mobile task (PR-5B) until PR-8 is fully tested and verified.
+-   Your immediate and only priority (**P0**) is to **complete PR-V1-0**.
+-   This involves three main parts:
+    1.  Finish refactoring the router files: Move all existing routers from  into .
+    2.  Implement the  export script.
+    3.  Thoroughly test that all legacy routes continue to function without any breaking changes.
+-   The user has explicitly approved this scope. Do not add any router migrations to  in this step.
+-   All communication with the user must be in **Turkish**.
+-   After PR-V1-0 is complete and verified, the next task is **PR-V1-1: Low-risk router rollout**.
 
 **documents and test reports created in this job**
--   
+-    (Updated)
+-    (From PR-8 verification)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Provided a detailed, 12-step architectural roadmap for scaling the SaaS platform to 10k tenants and re-prioritized the immediate tasks.
-    -   **Instruction:** First, understand the new architectural direction.
-    -   **Next Task (P0):** Proceed with **PR-8 (Web auth cleanup)**, removing all  token usage.
-    -   **Future Task (P1):** Then work on **PR-5B (mobile secure session)**.
-    -   **Completion Status:** The agent has acted on this by completing the coding for PR-8. The next step is verification.
+-   **User (Msg 65):** Approved the agent's plan to proceed with PR-V1-0, confirming the path for the JSON export and adding conditions that the export should be deterministic and not break the runtime boot. (Status: Agent started implementation).
+-   **User (Msg 62):** Instructed the agent to start **PR-V1-0** and to include the  export feature within this foundational PR. The user provided a clear scope for what should and should not be included and defined the minimum fields for the JSON export. (Status: Agent created a plan and got approval).
+-   **User (Msg 31):** Confirmed the  standardization plan, requesting it be added to  with specific details about compatibility, rollback, and testing strategy. (Status: Completed).
+-   **User (Msg 28):** Confirmed that  standardization is the correct next priority. Provided a detailed 11-point list of requirements for the planning document. (Status: Agent created the requested plan).
 
 **Project Health Check:**
--   **Broken:** Admin panel endpoints (, etc.) are still returning errors.
--   **Under Refactoring:** The core frontend authentication system. The code is changed but unverified.
+-   **Broken:** Admin panel endpoints (, etc.) are still returning errors (deferred task).
+-   **Under Refactoring:** The core backend API routing structure is in the middle of a significant, user-directed refactor (PR-V1-0).
 
 **3rd Party Integrations**
 -   Stripe (Payments)
 -   Google Sheets API
 
 **Testing status**
--   **Testing agent used after significant changes:** NO
+-   **Testing agent used after significant changes:** YES (for PR-8 frontend auth refactor).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** None.
--   **Known regressions:** None yet identified, but high potential for auth-related regressions until PR-8 is tested.
+-   **Known regressions:** None.
 
 **Credentials to test flow:**
 | Portal | Email | Password | Role |
@@ -172,4 +162,4 @@ There are no other tasks in progress besides completing PR-8.
 | **B2B Portal** () |  |  | Agency Admin |
 
 **What agent forgot to execute**
-The agent completed all the coding steps requested by the user for PR-8 but did not perform a final, comprehensive test to verify the changes. The next agent must prioritize this verification step.</analysis>
+The agent correctly started the work on PR-V1-0 but did not complete the full file refactoring or the implementation of the  export within the session. The next agent must pick up this work from where it was left off.</analysis>

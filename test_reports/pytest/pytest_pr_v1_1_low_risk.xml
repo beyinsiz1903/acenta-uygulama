@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="23" time="35.595" timestamp="2026-03-07T07:09:56.593687+00:00" hostname="agent-env-e22997d4-b7ea-4f8d-a838-e9a80e016303"><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestHealthEndpoints" name="test_legacy_health_endpoint" time="1.395" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestHealthEndpoints" name="test_v1_health_endpoint" time="1.164" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestSystemEndpoints" name="test_legacy_system_ping" time="1.161" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestSystemEndpoints" name="test_v1_system_ping" time="1.158" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestSystemEndpoints" name="test_legacy_health_dashboard_requires_auth" time="1.161" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestSystemEndpoints" name="test_legacy_health_dashboard_with_auth" time="5.693" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestSystemEndpoints" name="test_v1_health_dashboard_with_auth" time="1.176" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestThemeEndpoints" name="test_legacy_public_theme" time="1.173" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestThemeEndpoints" name="test_v1_public_theme" time="1.155" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestThemeEndpoints" name="test_legacy_admin_theme_requires_auth" time="1.144" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestThemeEndpoints" name="test_legacy_admin_theme_with_auth" time="1.174" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestThemeEndpoints" name="test_v1_admin_theme_with_auth" time="1.153" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestCMSPagesEndpoints" name="test_legacy_public_cms_pages" time="1.178" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestCMSPagesEndpoints" name="test_v1_public_cms_pages" time="1.169" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestCampaignsEndpoints" name="test_legacy_public_campaigns" time="1.168" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestCampaignsEndpoints" name="test_v1_public_campaigns" time="1.159" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestRouteDiffTool" name="test_route_inventory_exists" time="1.110" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestRouteDiffTool" name="test_route_inventory_contains_v1_aliases" time="4.788"><error message="failed on setup with &quot;pymongo.errors.AutoReconnect: localhost:27017: connection closed&quot;">/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:932: in command
+    return command(
+/root/.venv/lib/python3.11/site-packages/pymongo/network.py:181: in command
+    reply = receive_message(conn, request_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/network.py:247: in receive_message
+    length, _, response_to, op_code = _UNPACK_HEADER(_receive_data_on_socket(conn, 16, deadline))
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/network.py:336: in _receive_data_on_socket
+    raise OSError("connection closed")
+E   OSError: connection closed
+
+The above exception was the direct cause of the following exception:
+/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:534: in minimal_search_seed
+    await test_db.products.insert_one(prod_doc)
+/usr/local/lib/python3.11/concurrent/futures/thread.py:58: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:671: in insert_one
+    self._insert_one(
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:611: in _insert_one
+    self.__database.client._retryable_write(acknowledged, _insert_command, session)
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:1568: in _retryable_write
+    return self._retry_with_session(retryable, func, s, None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:1413: in _retry_with_session
+    return self._retry_internal(retryable, func, session, bulk)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/_csot.py:108: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:1460: in _retry_internal
+    return func(session, conn, retryable)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:599: in _insert_command
+    result = conn.command(
+/root/.venv/lib/python3.11/site-packages/pymongo/helpers.py:315: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:960: in command
+    self._raise_connection_failure(error)
+/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:1134: in _raise_connection_failure
+    _raise_connection_failure(self.address, error)
+/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:406: in _raise_connection_failure
+    raise AutoReconnect(msg) from error
+E   pymongo.errors.AutoReconnect: localhost:27017: connection closed</error></testcase><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestRouteDiffTool" name="test_route_inventory_is_sorted" time="1.103" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestRouteDiffTool" name="test_route_diff_tool_works" time="1.118" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestLegacyV1Parity" name="test_health_parity" time="1.300" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestLegacyV1Parity" name="test_system_ping_parity" time="1.215" /><testcase classname="tests.test_pr_v1_1_low_risk_rollout_http.TestLegacyV1Parity" name="test_public_theme_parity" time="1.212" /></testsuite></testsuites>

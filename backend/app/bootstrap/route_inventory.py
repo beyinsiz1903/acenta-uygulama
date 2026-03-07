@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -8,6 +9,10 @@ from fastapi import FastAPI
 from fastapi.routing import APIRoute
 
 from app.bootstrap.v1_manifest import classify_route
+
+
+logger = logging.getLogger(__name__)
+DEFAULT_ROUTE_INVENTORY_PATH = Path("/app/backend/app/bootstrap/route_inventory.json")
 
 
 def build_route_inventory(app: FastAPI) -> list[dict[str, Any]]:
@@ -48,3 +53,11 @@ def write_route_inventory_json(app: FastAPI, destination: str | Path) -> Path:
     payload = build_route_inventory(app)
     target_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     return target_path
+
+
+def export_route_inventory_snapshot(app: FastAPI, destination: str | Path = DEFAULT_ROUTE_INVENTORY_PATH) -> Path | None:
+    try:
+        return write_route_inventory_json(app, destination)
+    except Exception as exc:  # pragma: no cover - best-effort runtime export only
+        logger.warning("route inventory export skipped: %s", exc)
+        return None

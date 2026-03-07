@@ -34,8 +34,8 @@ V1_NAMESPACE_RULES: tuple[NamespaceRule, ...] = (
     NamespaceRule(("/api/partner",), ("app.routers.partner_",), "/api/v1/partner", "partner", "high"),
     NamespaceRule(("/api/webhook",), ("app.routers.billing_webhooks",), "/api/v1/webhooks", "integrations", "high"),
     NamespaceRule(("/api/settings",), ("app.routers.settings",), "/api/v1/settings", "settings", "medium"),
-    NamespaceRule(("/api/health",), ("app.routers.health", "app.routers.enterprise_health"), "/api/v1/health", "system", "low"),
     NamespaceRule(("/api/system",), ("app.routers.health_dashboard", "app.routers.system_product_mode"), "/api/v1/system", "system", "low"),
+    NamespaceRule(("/api/health",), ("app.routers.health", "app.routers.enterprise_health"), "/api/v1/health", "system", "low"),
 )
 
 
@@ -90,6 +90,8 @@ def derive_current_namespace(path: str) -> str:
     if parts[0] == "api":
         if len(parts) == 1:
             return "/api"
+        if len(parts) >= 3 and parts[1] == "v1":
+            return f"/api/v1/{parts[2]}"
         return f"/api/{parts[1]}"
     if len(parts) == 1:
         return f"/{parts[0]}"
@@ -148,3 +150,26 @@ def classify_route(path: str, source_module: str) -> RouteNamespaceMeta:
         owner=owner,
         risk_level=risk_level,
     )
+
+
+def derive_target_path(path: str, source_module: str) -> str:
+    route_meta = classify_route(path, source_module)
+    current_namespace = route_meta.current_namespace
+    target_namespace = route_meta.target_namespace
+
+    if current_namespace == target_namespace:
+        return path
+
+    if current_namespace == "/":
+        suffix = path if path != "/" else ""
+    elif path == current_namespace:
+        suffix = ""
+    elif path.startswith(f"{current_namespace}/"):
+        suffix = path[len(current_namespace) :]
+    else:
+        return path
+
+    if not suffix:
+        return target_namespace
+
+    return f"{target_namespace}{suffix}"

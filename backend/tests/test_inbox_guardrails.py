@@ -16,7 +16,7 @@ import httpx
 
 
 # Test configuration
-BASE_URL = "https://secure-auth-v1.preview.emergentagent.com"
+BASE_URL = "https://saas-modernize-2.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

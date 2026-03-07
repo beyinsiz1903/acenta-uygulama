@@ -18,7 +18,7 @@ import os
 from typing import Dict, Optional
 
 # Get backend URL from frontend/.env
-BACKEND_URL = "https://secure-auth-v1.preview.emergentagent.com"
+BACKEND_URL = "https://saas-modernize-2.preview.emergentagent.com"
 
 class BackendSmokeTest:
     def __init__(self):

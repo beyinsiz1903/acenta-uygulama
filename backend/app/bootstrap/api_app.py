@@ -12,6 +12,7 @@ def create_app() -> FastAPI:
     ensure_jwt_secret()
 
     from app.bootstrap.middleware_setup import configure_middlewares
+    from app.bootstrap.route_inventory import export_route_inventory_snapshot
     from app.bootstrap.router_registry import register_routers
     from app.bootstrap.runtime_init import (
         ensure_api_runtime_indexes,
@@ -52,6 +53,8 @@ def create_app() -> FastAPI:
     @app.get("/health")
     async def health_check() -> dict[str, str]:
         return {"status": "ok"}
+
+    export_route_inventory_snapshot(app)
 
     return app
 

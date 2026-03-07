@@ -6861,7 +6861,7 @@
     "path": "/api/system/health-dashboard",
     "risk_level": "low",
     "source": "app.routers.health_dashboard",
-    "target_namespace": "/api/v1/health"
+    "target_namespace": "/api/v1/system"
   },
   {
     "compat_required": true,
@@ -6883,7 +6883,7 @@
     "path": "/api/system/ping",
     "risk_level": "low",
     "source": "app.routers.health_dashboard",
-    "target_namespace": "/api/v1/health"
+    "target_namespace": "/api/v1/system"
   },
   {
     "compat_required": true,
@@ -6905,7 +6905,7 @@
     "path": "/api/system/prometheus",
     "risk_level": "low",
     "source": "app.routers.health_dashboard",
-    "target_namespace": "/api/v1/health"
+    "target_namespace": "/api/v1/system"
   },
   {
     "compat_required": true,
@@ -7063,6 +7063,39 @@
   },
   {
     "compat_required": false,
+    "current_namespace": "/api/v1/admin",
+    "legacy_or_v1": "v1",
+    "method": "GET",
+    "owner": "v1",
+    "path": "/api/v1/admin/theme",
+    "risk_level": "medium",
+    "source": "app.routers.theme",
+    "target_namespace": "/api/v1/admin"
+  },
+  {
+    "compat_required": false,
+    "current_namespace": "/api/v1/admin",
+    "legacy_or_v1": "v1",
+    "method": "PUT",
+    "owner": "v1",
+    "path": "/api/v1/admin/theme",
+    "risk_level": "medium",
+    "source": "app.routers.theme",
+    "target_namespace": "/api/v1/admin"
+  },
+  {
+    "compat_required": false,
+    "current_namespace": "/api/v1/health",
+    "legacy_or_v1": "v1",
+    "method": "GET",
+    "owner": "system",
+    "path": "/api/v1/health",
+    "risk_level": "low",
+    "source": "app.routers.health",
+    "target_namespace": "/api/v1/health"
+  },
+  {
+    "compat_required": false,
     "current_namespace": "/api/v1/mobile",
     "legacy_or_v1": "v1",
     "method": "GET",
@@ -7126,6 +7159,94 @@
     "risk_level": "medium",
     "source": "app.modules.mobile.router",
     "target_namespace": "/api/v1/mobile"
+  },
+  {
+    "compat_required": false,
+    "current_namespace": "/api/v1/public",
+    "legacy_or_v1": "v1",
+    "method": "GET",
+    "owner": "public",
+    "path": "/api/v1/public/campaigns",
+    "risk_level": "high",
+    "source": "app.routers.public_campaigns",
+    "target_namespace": "/api/v1/public"
+  },
+  {
+    "compat_required": false,
+    "current_namespace": "/api/v1/public",
+    "legacy_or_v1": "v1",
+    "method": "GET",
+    "owner": "public",
+    "path": "/api/v1/public/campaigns/{slug}",
+    "risk_level": "high",
+    "source": "app.routers.public_campaigns",
+    "target_namespace": "/api/v1/public"
+  },
+  {
+    "compat_required": false,
+    "current_namespace": "/api/v1/public",
+    "legacy_or_v1": "v1",
+    "method": "GET",
+    "owner": "public",
+    "path": "/api/v1/public/cms/pages",
+    "risk_level": "high",
+    "source": "app.routers.public_cms_pages",
+    "target_namespace": "/api/v1/public"
+  },
+  {
+    "compat_required": false,
+    "current_namespace": "/api/v1/public",
+    "legacy_or_v1": "v1",
+    "method": "GET",
+    "owner": "public",
+    "path": "/api/v1/public/cms/pages/{slug}",
+    "risk_level": "high",
+    "source": "app.routers.public_cms_pages",
+    "target_namespace": "/api/v1/public"
+  },
+  {
+    "compat_required": false,
+    "current_namespace": "/api/v1/public",
+    "legacy_or_v1": "v1",
+    "method": "GET",
+    "owner": "v1",
+    "path": "/api/v1/public/theme",
+    "risk_level": "high",
+    "source": "app.routers.theme",
+    "target_namespace": "/api/v1/public"
+  },
+  {
+    "compat_required": false,
+    "current_namespace": "/api/v1/system",
+    "legacy_or_v1": "v1",
+    "method": "GET",
+    "owner": "system",
+    "path": "/api/v1/system/health-dashboard",
+    "risk_level": "low",
+    "source": "app.routers.health_dashboard",
+    "target_namespace": "/api/v1/system"
+  },
+  {
+    "compat_required": false,
+    "current_namespace": "/api/v1/system",
+    "legacy_or_v1": "v1",
+    "method": "GET",
+    "owner": "system",
+    "path": "/api/v1/system/ping",
+    "risk_level": "low",
+    "source": "app.routers.health_dashboard",
+    "target_namespace": "/api/v1/system"
+  },
+  {
+    "compat_required": false,
+    "current_namespace": "/api/v1/system",
+    "legacy_or_v1": "v1",
+    "method": "GET",
+    "owner": "system",
+    "path": "/api/v1/system/prometheus",
+    "risk_level": "low",
+    "source": "app.routers.health_dashboard",
+    "target_namespace": "/api/v1/system"
   },
   {
     "compat_required": true,

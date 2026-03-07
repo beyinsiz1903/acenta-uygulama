@@ -25,7 +25,7 @@ import httpx
 
 class PR6BackendValidator:
     def __init__(self):
-        self.base_url = "https://secure-auth-v1.preview.emergentagent.com"
+        self.base_url = "https://saas-modernize-2.preview.emergentagent.com"
         self.admin_email = "admin@acenta.test"
         self.admin_password = "admin123"
         self.session = httpx.AsyncClient(timeout=30.0)

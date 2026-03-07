@@ -777,9 +777,44 @@ Use the repo’s existing standardized shape everywhere in v1:
   - preview curl smoke for legacy/v1 session parity, single-session revoke, revoke-all, and cookie-auth session flows
   - backend deep validation: all requested PR-V1-2B checks passed
 
+### PR-V1-2C Implemented — Settings Namespace Alias-First Rollout (Mar 7, 2026)
+- Rolled the existing settings router into `/api/v1/settings/*` using the same alias-first strategy while keeping legacy routes active:
+  - `GET /api/v1/settings/users`
+  - `POST /api/v1/settings/users`
+- Legacy settings endpoints remain active and backward compatible:
+  - `GET /api/settings/users`
+  - `POST /api/settings/users`
+- Added compat headers to legacy settings endpoints in `backend/app/routers/settings.py` so the compat period is explicit without changing behavior:
+  - `Deprecation: true`
+  - `Link: </api/v1/settings/users>; rel="successor-version"`
+- Confirmed cookie auth was not affected: web requests with `X-Client-Platform: web` still resolve `cookie_compat`; Mobile BFF remained unaffected.
+- Expanded route inventory telemetry with `migration_velocity` in `backend/app/bootstrap/route_inventory_summary.py`:
+  - `routes_migrated_this_pr`
+  - `routes_remaining`
+  - `estimated_prs_remaining`
+- Updated route inventory artifacts after rollout:
+  - `route_count = 683`
+  - `v1_count = 25`
+  - `legacy_count = 658`
+  - `legacy_routes_remaining = 658`
+  - `migration_velocity.routes_migrated_this_pr = 2`
+  - `migration_velocity.estimated_prs_remaining = 11`
+  - `domain_v1_progress.system = 31.58%` (`6 / 19` target system/settings routes migrated)
+  - `route_inventory_diff.json` reports exactly **2** new v1 settings aliases
+- Added/updated tests:
+  - `backend/tests/test_route_inventory_parity.py`
+  - `backend/tests/test_route_inventory_parity_tooling.py`
+  - `backend/tests/test_pr_v1_2c_settings_rollout_http.py`
+- Validation passed via:
+  - `pytest /app/backend/tests/test_route_inventory_parity.py /app/backend/tests/test_route_inventory_parity_tooling.py /app/backend/tests/test_pr_v1_2c_settings_rollout_http.py -q`
+  - preview smoke for legacy/v1 settings parity, v1 create-user behavior, cookie-auth settings listing, and mobile BFF safety
+  - backend deep validation: all requested PR-V1-2C checks passed
+
 ## Current Priority Backlog
 - **P0:** If/when separate real environments exist, run the parity workflow against staging/prod artifacts; for the current single-environment setup this remains N/A but tooling is ready
-- **P0:** **PR-V1-2C** — settings namespace rollout only if still needed after auth/session slices settle
-- **P1:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
+- **P0:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
+- **P1:** Entitlement projection engine + usage metering hattı
+- **P1:** Observability stack
 - **P1:** Cleanup PR for non-blocking preview issues: `/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`
-- **P2:** Entitlement/billing unification, observability stack, broader frontend modular refactor
+- **P2:** Optional internal ops PR — `domain_v1_progress` / migration kartını admin dashboard üzerinde görünür yapmak
+- **P2:** Broader frontend modular refactor

@@ -17,7 +17,9 @@ import time
 from collections import Counter
 from pathlib import Path
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
+from tests.preview_auth_helper import resolve_preview_base_url
+
+BASE_URL = resolve_preview_base_url(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Test credentials
 TEST_EMAIL = "admin@acenta.test"
@@ -163,7 +165,7 @@ class TestRouteInventory:
         # Run export twice
         script_path = "/app/backend/scripts/export_route_inventory.py"
         
-        result1 = subprocess.run(
+        subprocess.run(
             [sys.executable, script_path],
             cwd="/app/backend",
             capture_output=True,
@@ -172,7 +174,7 @@ class TestRouteInventory:
         with open("/app/backend/app/bootstrap/route_inventory.json", "rb") as f:
             hash1 = hashlib.md5(f.read()).hexdigest()
         
-        result2 = subprocess.run(
+        subprocess.run(
             [sys.executable, script_path],
             cwd="/app/backend",
             capture_output=True,

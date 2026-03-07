@@ -623,9 +623,29 @@ Use the repo’s existing standardized shape everywhere in v1:
 10. After mobile repo attachment: **PR-5B mobile secure session adoption**
 11. After those are stable: **entitlement projection / billing unification**
 
+### PR-V1-0 Implemented — Foundation / Registry / Route Inventory (Mar 7, 2026)
+- Added foundation files under `backend/app/bootstrap/`:
+  - `v1_manifest.py` for deterministic route classification metadata (`current_namespace`, `target_namespace`, `owner`, `risk_level`)
+  - `compat_headers.py` for shared deprecation/sunset/successor-version header generation
+  - `v1_registry.py` as the initial `/api/v1` composition entrypoint
+  - `route_inventory.py` for sorted route inventory building and JSON export
+- Added helper script `backend/scripts/export_route_inventory.py` that writes deterministic route inventory output to `/app/backend/app/bootstrap/route_inventory.json` without coupling export generation to runtime boot.
+- Cleaned `backend/app/bootstrap/router_registry.py` so `auth_router` is no longer registered twice. The v1 registry is now mounted through `register_v1_routers(app)` and currently preserves the existing `/api/v1/mobile/*` surface only.
+- Generated committed artifact `/app/backend/app/bootstrap/route_inventory.json` with stable ordering and required foundation fields: `path`, `method`, `source`, `current_namespace`, `target_namespace`, `legacy_or_v1`, `compat_required`, `risk_level`, `owner`.
+- Added focused tests:
+  - `backend/tests/test_api_v1_foundation.py`
+  - `backend/tests/test_pr_v1_foundation_acceptance.py`
+- Validation passed via:
+  - `pytest /app/backend/tests/test_api_v1_foundation.py -q`
+  - `pytest /app/backend/tests/test_auth_web_cookie_compat.py -q`
+  - `pytest /app/backend/tests/test_pr_v1_foundation_acceptance.py -q`
+  - deterministic export script run
+  - backend testing agent report `/app/test_reports/iteration_16.json`
+  - frontend smoke + frontend automation verifying login still works after registry cleanup
+
 ## Current Priority Backlog
-- **P0:** Start `/api/v1` implementation with **PR-V1-0 (foundation / registry cleanup / route manifest / compat headers)**
-- **P1:** `/api/v1` implementation continuation in low-risk -> high-risk order defined above
+- **P0:** Start **PR-V1-1** — low-risk `/api/v1` rollout for system/public metadata router groups
+- **P1:** Continue `/api/v1` implementation in the low-risk -> high-risk order defined above
 - **P1:** Mirror the dedicated runtime wiring into staging/prod infra definitions when those environment configs are available/in scope
 - **P1:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
 - **P1:** Cleanup PR for non-blocking preview issues: `/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`

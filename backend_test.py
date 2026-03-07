@@ -1,447 +1,465 @@
 #!/usr/bin/env python3
-"""
-Backend Test for PR-V1-2A Auth Bootstrap Rollout
 
-This test validates:
-1. Legacy auth routes with compat headers
-2. New v1 auth alias routes  
-3. Cookie-compatible web flow and bearer flow
-4. Mobile BFF safety
-5. Route inventory expectations
-"""
+import requests
 import json
-import asyncio
-import aiohttp
-import sys
-from typing import Dict, Any, Optional
+import os
+from pathlib import Path
 
 # Configuration
-BASE_URL = "https://saas-modernize-2.preview.emergentagent.com"
+BASE_URL = "https://api-versioning-hub.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
-WEB_HEADER = {"X-Client-Platform": "web"}
+B2B_EMAIL = "agent@acenta.test"  
+B2B_PASSWORD = "agent123"
 
-class TestResult:
-    def __init__(self):
-        self.passed = 0
-        self.failed = 0
-        self.tests = []
-        
-    def add_test(self, name: str, success: bool, message: str):
-        self.tests.append({
-            "name": name,
-            "success": success,
-            "message": message
-        })
-        if success:
-            self.passed += 1
-        else:
-            self.failed += 1
-            
-    def print_summary(self):
-        print(f"\n{'='*60}")
-        print(f"PR-V1-2A AUTH BOOTSTRAP ROLLOUT TEST SUMMARY")
-        print(f"{'='*60}")
-        print(f"✅ PASSED: {self.passed}")
-        print(f"❌ FAILED: {self.failed}")
-        print(f"📊 SUCCESS RATE: {self.passed / (self.passed + self.failed) * 100:.1f}%")
-        print(f"{'='*60}")
-        
-        for test in self.tests:
-            status = "✅" if test["success"] else "❌"
-            print(f"{status} {test['name']}")
-            if not test["success"] or True:  # Show details for all tests
-                print(f"   {test['message']}")
-        print(f"{'='*60}")
-
-result = TestResult()
-
-async def make_request(
-    session: aiohttp.ClientSession,
-    method: str,
-    url: str,
-    headers: Optional[Dict] = None,
-    json_data: Optional[Dict] = None,
-    cookies: Optional[Dict] = None
-) -> Dict[str, Any]:
-    """Make HTTP request and return response details."""
+def test_pr_v1_2b_session_rollout():
+    """
+    PR-V1-2B Backend Session Rollout Validation
+    
+    Tests the alias-first rollout for session auth endpoints while preserving 
+    legacy behavior and cookie auth compatibility.
+    """
+    
+    print("🔧 PR-V1-2B Backend Session Rollout Validation")
+    print("=" * 60)
+    
+    results = {
+        "legacy_v1_parity": False,
+        "single_session_revoke": False, 
+        "bulk_revoke": False,
+        "cookie_auth_safety": False,
+        "inventory_telemetry": False
+    }
+    
     try:
-        kwargs = {}
-        if headers:
-            kwargs['headers'] = headers
-        if json_data:
-            kwargs['json'] = json_data
-        if cookies:
-            kwargs['cookies'] = cookies
+        # A. Legacy/v1 parity tests
+        print("\n📋 A. Testing Legacy/V1 Parity...")
+        results["legacy_v1_parity"] = test_legacy_v1_parity()
+        
+        # B. Single-session revoke behavior
+        print("\n🔑 B. Testing Single-Session Revoke Behavior...")
+        results["single_session_revoke"] = test_single_session_revoke()
+        
+        # C. Bulk revoke behavior
+        print("\n🚫 C. Testing Bulk Revoke Behavior...")
+        results["bulk_revoke"] = test_bulk_revoke()
+        
+        # D. Cookie auth safety
+        print("\n🍪 D. Testing Cookie Auth Safety...")
+        results["cookie_auth_safety"] = test_cookie_auth_safety()
+        
+        # E. Inventory/telemetry artifacts
+        print("\n📊 E. Testing Inventory/Telemetry Artifacts...")
+        results["inventory_telemetry"] = test_inventory_artifacts()
+        
+        # Summary
+        print("\n" + "=" * 60)
+        print("📊 PR-V1-2B Test Results Summary:")
+        passed = sum(1 for result in results.values() if result)
+        total = len(results)
+        
+        for test_name, result in results.items():
+            status = "✅ PASSED" if result else "❌ FAILED"
+            print(f"   {test_name}: {status}")
+        
+        print(f"\n🎯 Overall: {passed}/{total} tests passed")
+        
+        if passed == total:
+            print("🎉 PR-V1-2B session rollout validation SUCCESSFUL!")
+            return True
+        else:
+            print("⚠️  Some tests failed - see details above")
+            return False
             
-        async with session.request(method, f"{BASE_URL}{url}", **kwargs) as response:
-            try:
-                response_json = await response.json()
-            except:
-                response_json = {}
-                
-            return {
-                "status_code": response.status,
-                "headers": {k.lower(): v for k, v in response.headers.items()},  # Normalize headers to lowercase
-                "json": response_json,
-                "cookies": {name: morsel.value for name, morsel in response.cookies.items()},
-                "text": await response.text() if response.status != 200 else ""
-            }
     except Exception as e:
-        return {
-            "status_code": 0,
-            "headers": {},
-            "json": {},
-            "cookies": {},
-            "text": str(e),
-            "error": str(e)
+        print(f"❌ Critical error during PR-V1-2B testing: {e}")
+        return False
+
+
+def test_legacy_v1_parity():
+    """Test A: Legacy/v1 parity - Compare legacy and v1 session endpoints"""
+    
+    try:
+        # Login and get bearer token
+        print("  🔐 Logging in to get bearer token...")
+        login_resp = requests.post(f"{BASE_URL}/api/auth/login", 
+                                 json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
+                                 timeout=30)
+        
+        if login_resp.status_code != 200:
+            print(f"  ❌ Login failed: {login_resp.status_code} - {login_resp.text}")
+            return False
+            
+        token = login_resp.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        # Compare GET /api/auth/sessions vs GET /api/v1/auth/sessions
+        print("  📋 Comparing legacy vs v1 sessions endpoints...")
+        
+        legacy_resp = requests.get(f"{BASE_URL}/api/auth/sessions", headers=headers, timeout=30)
+        v1_resp = requests.get(f"{BASE_URL}/api/v1/auth/sessions", headers=headers, timeout=30)
+        
+        if legacy_resp.status_code != 200:
+            print(f"  ❌ Legacy sessions endpoint failed: {legacy_resp.status_code}")
+            return False
+            
+        if v1_resp.status_code != 200:
+            print(f"  ❌ V1 sessions endpoint failed: {v1_resp.status_code}")
+            return False
+        
+        # Check compat headers on legacy endpoint
+        if legacy_resp.headers.get("deprecation") != "true":
+            print("  ❌ Legacy sessions endpoint missing Deprecation header")
+            return False
+            
+        link_header = legacy_resp.headers.get("link", "")
+        if "/api/v1/auth/sessions" not in link_header:
+            print("  ❌ Legacy sessions endpoint missing Link successor header")
+            return False
+        
+        # Compare session data
+        legacy_sessions = legacy_resp.json()
+        v1_sessions = v1_resp.json()
+        
+        legacy_session_ids = {session["id"] for session in legacy_sessions}
+        v1_session_ids = {session["id"] for session in v1_sessions}
+        
+        if legacy_session_ids != v1_session_ids:
+            print("  ❌ Session lists don't match between legacy and v1 endpoints")
+            return False
+            
+        print(f"  ✅ Both endpoints return matching session sets ({len(legacy_sessions)} sessions)")
+        return True
+        
+    except Exception as e:
+        print(f"  ❌ Legacy/V1 parity test failed: {e}")
+        return False
+
+
+def test_single_session_revoke():
+    """Test B: Single-session revoke behavior"""
+    
+    try:
+        # Create at least 2 active sessions for same admin user
+        print("  🔑 Creating multiple sessions...")
+        
+        session1_resp = requests.post(f"{BASE_URL}/api/v1/auth/login",
+                                    json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
+                                    timeout=30)
+        session2_resp = requests.post(f"{BASE_URL}/api/v1/auth/login", 
+                                    json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
+                                    timeout=30)
+        
+        if session1_resp.status_code != 200 or session2_resp.status_code != 200:
+            print("  ❌ Failed to create multiple sessions")
+            return False
+            
+        token1 = session1_resp.json()["access_token"]
+        token2 = session2_resp.json()["access_token"]
+        session2_id = session2_resp.json()["session_id"]
+        
+        headers1 = {"Authorization": f"Bearer {token1}"}
+        headers2 = {"Authorization": f"Bearer {token2}"}
+        
+        # Revoke session2 using token1 (keeping current session)
+        print(f"  🚫 Revoking session {session2_id} via V1 endpoint...")
+        
+        revoke_resp = requests.post(f"{BASE_URL}/api/v1/auth/sessions/{session2_id}/revoke",
+                                   headers=headers1, timeout=30)
+        
+        if revoke_resp.status_code != 200:
+            print(f"  ❌ Session revoke failed: {revoke_resp.status_code}")
+            return False
+        
+        # Confirm revoked session's token can no longer access /api/auth/me
+        print("  🔍 Testing revoked session token...")
+        revoked_me_resp = requests.get(f"{BASE_URL}/api/auth/me", headers=headers2, timeout=30)
+        
+        if revoked_me_resp.status_code != 401:
+            print(f"  ❌ Revoked session token still works: {revoked_me_resp.status_code}")
+            return False
+            
+        # Confirm current keeper session still works
+        print("  ✅ Testing keeper session token...")
+        keeper_me_resp = requests.get(f"{BASE_URL}/api/auth/me", headers=headers1, timeout=30)
+        
+        if keeper_me_resp.status_code != 200:
+            print(f"  ❌ Keeper session token failed: {keeper_me_resp.status_code}")
+            return False
+        
+        # Confirm revoked session no longer appears in session listing
+        sessions_resp = requests.get(f"{BASE_URL}/api/v1/auth/sessions", headers=headers1, timeout=30)
+        if sessions_resp.status_code == 200:
+            sessions = sessions_resp.json()
+            session_ids = {session["id"] for session in sessions}
+            if session2_id in session_ids:
+                print("  ❌ Revoked session still appears in session listing")
+                return False
+        
+        # Test legacy route POST /api/auth/sessions/{id}/revoke also works
+        print("  🔄 Testing legacy session revoke endpoint...")
+        
+        # Create another session to revoke via legacy endpoint
+        session3_resp = requests.post(f"{BASE_URL}/api/auth/login",
+                                    json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
+                                    timeout=30)
+        if session3_resp.status_code == 200:
+            session3_id = session3_resp.json()["session_id"]
+            token3 = session3_resp.json()["access_token"]
+            
+            # Revoke via legacy endpoint
+            legacy_revoke_resp = requests.post(f"{BASE_URL}/api/auth/sessions/{session3_id}/revoke",
+                                             headers=headers1, timeout=30)
+            
+            if legacy_revoke_resp.status_code != 200:
+                print(f"  ❌ Legacy session revoke failed: {legacy_revoke_resp.status_code}")
+                return False
+                
+            # Check compat headers
+            if legacy_revoke_resp.headers.get("deprecation") != "true":
+                print("  ❌ Legacy revoke endpoint missing Deprecation header")
+                return False
+        
+        print("  ✅ Single-session revoke behavior working correctly")
+        return True
+        
+    except Exception as e:
+        print(f"  ❌ Single-session revoke test failed: {e}")
+        return False
+
+
+def test_bulk_revoke():
+    """Test C: Bulk revoke behavior"""
+    
+    try:
+        # Create a session for testing
+        print("  🔑 Creating session for bulk revoke test...")
+        
+        login_resp = requests.post(f"{BASE_URL}/api/v1/auth/login",
+                                 json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
+                                 timeout=30)
+        
+        if login_resp.status_code != 200:
+            print("  ❌ Login failed for bulk revoke test")
+            return False
+            
+        token = login_resp.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        # POST /api/v1/auth/revoke-all-sessions should revoke current session family
+        print("  🚫 Testing V1 revoke-all-sessions...")
+        
+        revoke_all_resp = requests.post(f"{BASE_URL}/api/v1/auth/revoke-all-sessions",
+                                       headers=headers, timeout=30)
+        
+        if revoke_all_resp.status_code != 200:
+            print(f"  ❌ V1 revoke-all-sessions failed: {revoke_all_resp.status_code}")
+            return False
+        
+        # After revoke-all, /api/auth/me with previous token should fail
+        print("  🔍 Testing token after revoke-all-sessions...")
+        me_after_resp = requests.get(f"{BASE_URL}/api/auth/me", headers=headers, timeout=30)
+        
+        if me_after_resp.status_code != 401:
+            print(f"  ❌ Token still works after revoke-all-sessions: {me_after_resp.status_code}")
+            return False
+        
+        # Test legacy POST /api/auth/revoke-all-sessions also works
+        print("  🔄 Testing legacy revoke-all-sessions endpoint...")
+        
+        # Create new session for legacy test
+        login2_resp = requests.post(f"{BASE_URL}/api/auth/login",
+                                  json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
+                                  timeout=30)
+        
+        if login2_resp.status_code == 200:
+            token2 = login2_resp.json()["access_token"]
+            headers2 = {"Authorization": f"Bearer {token2}"}
+            
+            legacy_revoke_all_resp = requests.post(f"{BASE_URL}/api/auth/revoke-all-sessions",
+                                                  headers=headers2, timeout=30)
+            
+            if legacy_revoke_all_resp.status_code != 200:
+                print(f"  ❌ Legacy revoke-all-sessions failed: {legacy_revoke_all_resp.status_code}")
+                return False
+                
+            # Check compat headers
+            if legacy_revoke_all_resp.headers.get("deprecation") != "true":
+                print("  ❌ Legacy revoke-all endpoint missing Deprecation header")
+                return False
+        
+        print("  ✅ Bulk revoke behavior working correctly")
+        return True
+        
+    except Exception as e:
+        print(f"  ❌ Bulk revoke test failed: {e}")
+        return False
+
+
+def test_cookie_auth_safety():
+    """Test D: Cookie auth safety"""
+    
+    try:
+        # Login via /api/v1/auth/login with header X-Client-Platform: web
+        print("  🍪 Testing cookie auth with X-Client-Platform: web header...")
+        
+        session = requests.Session()
+        web_headers = {
+            "X-Client-Platform": "web",
+            "Content-Type": "application/json"
         }
-
-async def test_legacy_auth_routes_with_compat_headers():
-    """Test legacy auth routes return proper deprecation headers."""
-    connector = aiohttp.TCPConnector()
-    jar = aiohttp.CookieJar()
-    async with aiohttp.ClientSession(connector=connector, cookie_jar=jar) as session:
-        # Test POST /api/auth/login
-        async with session.post(f"{BASE_URL}/api/auth/login", 
-                               json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
-                               headers=WEB_HEADER) as resp:
-            login_success = resp.status == 200
-            headers = {k.lower(): v for k, v in resp.headers.items()}
-            has_deprecation = headers.get("deprecation") == "true"
-            link_header = headers.get("link", "")
-            has_link = "</api/v1/auth/login>; rel=\"successor-version\"" in link_header
+        
+        login_resp = session.post(f"{BASE_URL}/api/v1/auth/login",
+                                json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
+                                headers=web_headers,
+                                timeout=30)
+        
+        if login_resp.status_code != 200:
+            print(f"  ❌ Cookie auth login failed: {login_resp.status_code}")
+            return False
+        
+        # Confirm response auth_transport is cookie_compat
+        login_data = login_resp.json()
+        if login_data.get("auth_transport") != "cookie_compat":
+            print(f"  ❌ Auth transport not cookie_compat: {login_data.get('auth_transport')}")
+            return False
+        
+        # GET /api/v1/auth/sessions using only cookie session works
+        print("  📋 Testing V1 sessions endpoint with cookie auth...")
+        
+        sessions_resp = session.get(f"{BASE_URL}/api/v1/auth/sessions", 
+                                  headers={"X-Client-Platform": "web"},
+                                  timeout=30)
+        
+        if sessions_resp.status_code != 200:
+            print(f"  ❌ V1 sessions with cookies failed: {sessions_resp.status_code}")
+            return False
             
-            result.add_test(
-                "Legacy POST /api/auth/login with compat headers",
-                login_success and has_deprecation and has_link,
-                f"Status: {resp.status}, Deprecation: {has_deprecation}, Link header: {has_link}"
-            )
-            
-            if not login_success:
-                return None
-                
-            data = await resp.json()
-            access_token = data.get("access_token")
+        sessions = sessions_resp.json()
+        if not sessions:
+            print("  ❌ No sessions returned with cookie auth")
+            return False
         
-        # Test GET /api/auth/me - cookies should be automatic  
-        async with session.get(f"{BASE_URL}/api/auth/me", headers=WEB_HEADER) as resp:
-            me_success = resp.status == 200
-            headers = {k.lower(): v for k, v in resp.headers.items()}
-            has_deprecation = headers.get("deprecation") == "true" 
-            link_header = headers.get("link", "")
-            has_link = "</api/v1/auth/me>; rel=\"successor-version\"" in link_header
-            
-            result.add_test(
-                "Legacy GET /api/auth/me with compat headers",
-                me_success and has_deprecation and has_link,
-                f"Status: {resp.status}, Deprecation: {has_deprecation}, Link header: {has_link}"
-            )
+        # POST /api/v1/auth/revoke-all-sessions using cookie session works and clears access
+        print("  🚫 Testing V1 revoke-all-sessions with cookie auth...")
         
-        # Test POST /api/auth/refresh - cookies should be automatic
-        async with session.post(f"{BASE_URL}/api/auth/refresh", 
-                               json={}, headers=WEB_HEADER) as resp:
-            refresh_success = resp.status == 200
-            headers = {k.lower(): v for k, v in resp.headers.items()}
-            has_deprecation = headers.get("deprecation") == "true"
-            link_header = headers.get("link", "")
-            has_link = "</api/v1/auth/refresh>; rel=\"successor-version\"" in link_header
-            
-            result.add_test(
-                "Legacy POST /api/auth/refresh with compat headers", 
-                refresh_success and has_deprecation and has_link,
-                f"Status: {resp.status}, Deprecation: {has_deprecation}, Link header: {has_link}"
-            )
+        revoke_resp = session.post(f"{BASE_URL}/api/v1/auth/revoke-all-sessions",
+                                 json={},
+                                 headers=web_headers,
+                                 timeout=30)
         
-        return access_token
-
-async def test_v1_auth_alias_routes():
-    """Test new v1 auth alias routes work correctly."""
-    connector = aiohttp.TCPConnector()
-    jar = aiohttp.CookieJar()
-    async with aiohttp.ClientSession(connector=connector, cookie_jar=jar) as session:
-        # Test POST /api/v1/auth/login
-        async with session.post(f"{BASE_URL}/api/v1/auth/login", 
-                               json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
-                               headers=WEB_HEADER) as resp:
-            login_success = resp.status == 200
-            data = await resp.json() if login_success else {}
-            auth_transport = data.get("auth_transport")
-            
-            result.add_test(
-                "New POST /api/v1/auth/login works",
-                login_success and auth_transport == "cookie_compat",
-                f"Status: {resp.status}, Auth transport: {auth_transport}"
-            )
-            
-            if not login_success:
-                return None
-                
-            access_token = data.get("access_token")
+        if revoke_resp.status_code != 200:
+            print(f"  ❌ V1 revoke-all with cookies failed: {revoke_resp.status_code}")
+            return False
         
-        # Test GET /api/v1/auth/me
-        async with session.get(f"{BASE_URL}/api/v1/auth/me", headers=WEB_HEADER) as resp:
-            me_success = resp.status == 200
-            data = await resp.json() if me_success else {}
-            email = data.get("email")
-            
-            result.add_test(
-                "New GET /api/v1/auth/me works",
-                me_success and email == ADMIN_EMAIL,
-                f"Status: {resp.status}, Email: {email}"
-            )
+        # After revoke, access should be cleared
+        me_after_resp = session.get(f"{BASE_URL}/api/v1/auth/me",
+                                   headers={"X-Client-Platform": "web"},
+                                   timeout=30)
         
-        # Test POST /api/v1/auth/refresh
-        async with session.post(f"{BASE_URL}/api/v1/auth/refresh", 
-                               json={}, headers=WEB_HEADER) as resp:
-            refresh_success = resp.status == 200
-            data = await resp.json() if refresh_success else {}
-            new_token = data.get("access_token")
-            
-            result.add_test(
-                "New POST /api/v1/auth/refresh works", 
-                refresh_success and new_token is not None,
-                f"Status: {resp.status}, New token received: {new_token is not None}"
-            )
+        if me_after_resp.status_code != 401:
+            print(f"  ❌ Cookie auth not cleared after revoke-all: {me_after_resp.status_code}")
+            return False
         
-        return access_token
-
-async def test_cookie_and_bearer_flows():
-    """Test both cookie-compatible web flow and bearer flow."""
-    async with aiohttp.ClientSession() as session:
-        # Test cookie-compatible web flow
-        response = await make_request(
-            session,
-            "POST",
-            "/api/v1/auth/login",
-            headers=WEB_HEADER,
-            json_data={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
-        )
-        
-        cookie_login_success = response["status_code"] == 200
-        auth_transport = response["json"].get("auth_transport")
-        has_cookies = len(response["cookies"]) > 0
-        
-        result.add_test(
-            "Cookie-compatible web flow",
-            cookie_login_success and auth_transport == "cookie_compat" and has_cookies,
-            f"Status: {response['status_code']}, Transport: {auth_transport}, Cookies: {has_cookies}"
-        )
-        
-        # Test bearer flow (without X-Client-Platform header)
-        response = await make_request(
-            session,
-            "POST", 
-            "/api/v1/auth/login",
-            json_data={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
-        )
-        
-        bearer_login_success = response["status_code"] == 200
-        auth_transport = response["json"].get("auth_transport")
-        access_token = response["json"].get("access_token")
-        
-        result.add_test(
-            "Bearer flow works",
-            bearer_login_success and auth_transport == "bearer" and access_token,
-            f"Status: {response['status_code']}, Transport: {auth_transport}, Token: {bool(access_token)}"
-        )
-        
-        if bearer_login_success and access_token:
-            # Test bearer token works with /api/v1/auth/me
-            response = await make_request(
-                session,
-                "GET",
-                "/api/v1/auth/me",
-                headers={"Authorization": f"Bearer {access_token}"}
-            )
-            
-            bearer_me_success = response["status_code"] == 200
-            email = response["json"].get("email")
-            
-            result.add_test(
-                "Bearer token auth works with v1/auth/me",
-                bearer_me_success and email == ADMIN_EMAIL,
-                f"Status: {response['status_code']}, Email: {email}"
-            )
-
-async def test_mobile_bff_safety():
-    """Test Mobile BFF safety: GET /api/v1/mobile/auth/me with bearer token."""
-    async with aiohttp.ClientSession() as session:
-        # Get bearer token
-        response = await make_request(
-            session,
-            "POST",
-            "/api/v1/auth/login", 
-            json_data={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
-        )
-        
-        if response["status_code"] != 200:
-            result.add_test(
-                "Mobile BFF safety test - login failed",
-                False,
-                f"Failed to get bearer token: {response['status_code']}"
-            )
-            return
-            
-        access_token = response["json"].get("access_token")
-        
-        # Test mobile auth/me endpoint
-        response = await make_request(
-            session,
-            "GET",
-            "/api/v1/mobile/auth/me",
-            headers={"Authorization": f"Bearer {access_token}"}
-        )
-        
-        mobile_success = response["status_code"] == 200
-        email = response["json"].get("email")
-        
-        result.add_test(
-            "Mobile BFF GET /api/v1/mobile/auth/me works with bearer token",
-            mobile_success and email == ADMIN_EMAIL,
-            f"Status: {response['status_code']}, Email: {email}"
-        )
-
-async def test_route_inventory_expectations():
-    """Test route inventory expectations: 678 total routes, 20 v1 routes, 658 legacy routes."""
-    try:
-        # Read route inventory summary
-        with open("/app/backend/app/bootstrap/route_inventory_summary.json", "r") as f:
-            summary = json.load(f)
-            
-        total_routes = summary.get("route_count", 0)
-        v1_routes = summary.get("v1_count", 0) 
-        legacy_routes = summary.get("legacy_count", 0)
-        auth_routes = summary.get("namespaces", {}).get("auth", 0)
-        
-        # Expected: 678 total, 20 v1, 658 legacy, auth aliases +3
-        expected_total = 678
-        expected_v1 = 20
-        expected_legacy = 658
-        
-        total_match = total_routes == expected_total
-        v1_match = v1_routes == expected_v1  
-        legacy_match = legacy_routes == expected_legacy
-        auth_increase = auth_routes >= 17  # Should have increased from previous count
-        
-        result.add_test(
-            f"Route inventory total routes ({expected_total})",
-            total_match,
-            f"Expected: {expected_total}, Actual: {total_routes}"
-        )
-        
-        result.add_test(
-            f"Route inventory v1 routes ({expected_v1})", 
-            v1_match,
-            f"Expected: {expected_v1}, Actual: {v1_routes}"
-        )
-        
-        result.add_test(
-            f"Route inventory legacy routes ({expected_legacy})",
-            legacy_match, 
-            f"Expected: {expected_legacy}, Actual: {legacy_routes}"
-        )
-        
-        result.add_test(
-            "Route inventory auth namespace has aliases",
-            auth_increase,
-            f"Auth routes count: {auth_routes} (should be >= 17 with new aliases)"
-        )
+        print("  ✅ Cookie auth safety working correctly")
+        return True
         
     except Exception as e:
-        result.add_test(
-            "Route inventory file accessible",
-            False,
-            f"Error reading route inventory: {str(e)}"
-        )
+        print(f"  ❌ Cookie auth safety test failed: {e}")
+        return False
 
-async def test_parity_between_legacy_and_v1():
-    """Test that legacy and v1 routes return identical responses (except headers)."""
-    async with aiohttp.ClientSession() as session:
-        # Get tokens for both flows
-        legacy_response = await make_request(
-            session,
-            "POST",
-            "/api/auth/login",
-            headers=WEB_HEADER,
-            json_data={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
-        )
-        
-        v1_response = await make_request(
-            session,
-            "POST", 
-            "/api/v1/auth/login",
-            headers=WEB_HEADER,
-            json_data={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
-        )
-        
-        if legacy_response["status_code"] == 200 and v1_response["status_code"] == 200:
-            # Compare key fields (ignoring headers and timestamps)
-            legacy_user = legacy_response["json"].get("user", {})
-            v1_user = v1_response["json"].get("user", {})
-            
-            email_match = legacy_user.get("email") == v1_user.get("email")
-            roles_match = legacy_user.get("roles") == v1_user.get("roles")
-            transport_match = (legacy_response["json"].get("auth_transport") == 
-                             v1_response["json"].get("auth_transport"))
-            
-            result.add_test(
-                "Legacy and V1 auth/login return equivalent data",
-                email_match and roles_match and transport_match,
-                f"Email match: {email_match}, Roles match: {roles_match}, Transport match: {transport_match}"
-            )
-        else:
-            result.add_test(
-                "Legacy and V1 auth/login parity test",
-                False,
-                f"Login failed - Legacy: {legacy_response['status_code']}, V1: {v1_response['status_code']}"
-            )
 
-async def main():
-    """Run all PR-V1-2A auth bootstrap rollout tests."""
-    print("🚀 Starting PR-V1-2A Auth Bootstrap Rollout Tests")
-    print(f"🎯 Base URL: {BASE_URL}")
-    print(f"👤 Admin Email: {ADMIN_EMAIL}")
-    print("="*60)
+def test_inventory_artifacts():
+    """Test E: Inventory/telemetry artifacts"""
     
     try:
-        # Test 1: Legacy auth routes with compat headers
-        print("1️⃣  Testing legacy auth routes with compat headers...")
-        await test_legacy_auth_routes_with_compat_headers()
+        print("  📊 Checking route inventory artifacts...")
         
-        # Test 2: New v1 auth alias routes
-        print("2️⃣  Testing new v1 auth alias routes...")
-        await test_v1_auth_alias_routes()
+        # Verify route_inventory.json contains the 3 new v1 auth session aliases
+        inventory_path = "/app/backend/app/bootstrap/route_inventory.json"
+        if not os.path.exists(inventory_path):
+            print(f"  ❌ Route inventory file not found: {inventory_path}")
+            return False
+            
+        with open(inventory_path, 'r') as f:
+            inventory = json.load(f)
         
-        # Test 3: Cookie and bearer flows
-        print("3️⃣  Testing cookie-compatible web flow and bearer flow...")
-        await test_cookie_and_bearer_flows()
+        required_v1_routes = [
+            ("GET", "/api/v1/auth/sessions"),
+            ("POST", "/api/v1/auth/sessions/{session_id}/revoke"),
+            ("POST", "/api/v1/auth/revoke-all-sessions")
+        ]
         
-        # Test 4: Mobile BFF safety
-        print("4️⃣  Testing Mobile BFF safety...")
-        await test_mobile_bff_safety()
+        inventory_routes = [(route["method"], route["path"]) for route in inventory]
         
-        # Test 5: Route inventory expectations
-        print("5️⃣  Testing route inventory expectations...")
-        await test_route_inventory_expectations()
+        for method, path in required_v1_routes:
+            if (method, path) not in inventory_routes:
+                print(f"  ❌ Missing route in inventory: {method} {path}")
+                return False
         
-        # Test 6: Parity between legacy and v1
-        print("6️⃣  Testing parity between legacy and v1 routes...")
-        await test_parity_between_legacy_and_v1()
+        print(f"  ✅ All 3 V1 session routes found in inventory")
+        
+        # Verify route_inventory_diff.json reports exactly these 3 added v1 routes
+        diff_path = "/app/backend/app/bootstrap/route_inventory_diff.json"
+        if not os.path.exists(diff_path):
+            print(f"  ❌ Route inventory diff file not found: {diff_path}")
+            return False
+            
+        with open(diff_path, 'r') as f:
+            diff_data = json.load(f)
+        
+        added_paths = diff_data.get("added_paths", [])
+        new_v1_route_count = diff_data.get("summary", {}).get("new_v1_route_count", 0)
+        
+        if new_v1_route_count != 3:
+            print(f"  ❌ Expected 3 new V1 routes in diff, got {new_v1_route_count}")
+            return False
+        
+        # Check that the specific routes are in the added paths
+        added_route_keys = [(route["method"], route["path"]) for route in added_paths]
+        for method, path in required_v1_routes:
+            if (method, path) not in added_route_keys:
+                print(f"  ❌ Missing route in diff added_paths: {method} {path}")
+                return False
+        
+        print(f"  ✅ Route diff correctly shows 3 new V1 session routes")
+        
+        # Verify route_inventory_summary.json has v1_count >= 23 and contains domain_v1_progress.auth metrics
+        summary_path = "/app/backend/app/bootstrap/route_inventory_summary.json"
+        if not os.path.exists(summary_path):
+            print(f"  ❌ Route inventory summary file not found: {summary_path}")
+            return False
+            
+        with open(summary_path, 'r') as f:
+            summary_data = json.load(f)
+        
+        v1_count = summary_data.get("v1_count", 0)
+        if v1_count < 23:
+            print(f"  ❌ V1 count too low: {v1_count} < 23")
+            return False
+        
+        domain_v1_progress = summary_data.get("domain_v1_progress", {})
+        auth_progress = domain_v1_progress.get("auth", {})
+        
+        if not auth_progress:
+            print("  ❌ Missing domain_v1_progress.auth metrics")
+            return False
+            
+        migrated_count = auth_progress.get("migrated_v1_route_count", 0)
+        if migrated_count < 6:
+            print(f"  ❌ Auth migrated V1 route count too low: {migrated_count} < 6")
+            return False
+        
+        print(f"  ✅ Summary shows v1_count={v1_count}, auth migrated={migrated_count}")
+        
+        print("  ✅ All inventory/telemetry artifacts validated")
+        return True
         
     except Exception as e:
-        result.add_test(
-            "Test execution",
-            False,
-            f"Test execution error: {str(e)}"
-        )
-    
-    # Print results
-    result.print_summary()
-    
-    # Exit with appropriate code
-    return 0 if result.failed == 0 else 1
+        print(f"  ❌ Inventory artifacts test failed: {e}")
+        return False
+
 
 if __name__ == "__main__":
-    exit_code = asyncio.run(main())
-    sys.exit(exit_code)
+    success = test_pr_v1_2b_session_rollout()
+    exit(0 if success else 1)

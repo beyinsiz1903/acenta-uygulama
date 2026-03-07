@@ -32,6 +32,9 @@ AUTH_V1_SUCCESSOR_PATHS = {
     "/api/auth/login": "/api/v1/auth/login",
     "/api/auth/me": "/api/v1/auth/me",
     "/api/auth/refresh": "/api/v1/auth/refresh",
+    "/api/auth/sessions": "/api/v1/auth/sessions",
+    "/api/auth/sessions/{session_id}/revoke": "/api/v1/auth/sessions/{session_id}/revoke",
+    "/api/auth/revoke-all-sessions": "/api/v1/auth/revoke-all-sessions",
 }
 
 
@@ -98,7 +101,8 @@ def _clear_auth_cookies(response: Response) -> None:
 
 
 def _apply_auth_compat_headers(request: Request, response: Response) -> None:
-    successor_path = AUTH_V1_SUCCESSOR_PATHS.get(request.url.path)
+    route_path = getattr(request.scope.get("route"), "path", request.url.path)
+    successor_path = AUTH_V1_SUCCESSOR_PATHS.get(route_path) or AUTH_V1_SUCCESSOR_PATHS.get(request.url.path)
     if successor_path:
         apply_compat_headers(response, successor_path)
 
@@ -319,7 +323,7 @@ async def logout(
 
 
 @router.post("/revoke-all-sessions")
-async def revoke_all_sessions(response: Response, user=Depends(get_current_user)):
+async def revoke_all_sessions(request: Request, response: Response, user=Depends(get_current_user)):
     """Revoke all active sessions for the current user.
 
     Useful for security incidents or password changes.
@@ -336,6 +340,7 @@ async def revoke_all_sessions(response: Response, user=Depends(get_current_user)
     rt_count = await revoke_all_user_refresh_tokens(email, reason="user_revoke_all")
 
     _clear_auth_cookies(response)
+    _apply_auth_compat_headers(request, response)
     return {
         "message": "Tüm oturumlar iptal edildi",
         "revoked_sessions": session_count,
@@ -390,19 +395,21 @@ async def refresh_access_token(payload: RefreshTokenRequest, request: Request, r
 
 
 @router.get("/sessions")
-async def list_sessions(user=Depends(get_current_user)):
+async def list_sessions(request: Request, response: Response, user=Depends(get_current_user)):
     """List active sessions for the current user."""
     from app.services.refresh_token_service import get_active_sessions
+
+    _apply_auth_compat_headers(request, response)
     return await get_active_sessions(user["email"])
 
 
 @router.post("/sessions/{session_id}/revoke")
-async def revoke_session(session_id: str, user=Depends(get_current_user)):
+async def revoke_session(session_id: str, request: Request, response: Response, user=Depends(get_current_user)):
     """Revoke a specific session."""
     from app.services.refresh_token_service import revoke_session_refresh_tokens
     from app.services.session_service import revoke_session as revoke_session_record
 
-    active_sessions = await list_sessions(user)
+    active_sessions = await list_sessions(request, response, user)
     if not any(session["id"] == session_id for session in active_sessions):
         raise HTTPException(status_code=404, detail="Session not found or already revoked")
 
@@ -410,6 +417,7 @@ async def revoke_session(session_id: str, user=Depends(get_current_user)):
     await revoke_session_refresh_tokens(session_id, reason="user_revoke")
     if not revoked:
         raise HTTPException(status_code=404, detail="Session not found or already revoked")
+    _apply_auth_compat_headers(request, response)
     return {"status": "revoked"}
 
 

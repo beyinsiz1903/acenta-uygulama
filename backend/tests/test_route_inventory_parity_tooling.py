@@ -52,6 +52,7 @@ class TestRouteInventorySummaryGeneration:
         assert "inventory_hash" in summary
         assert "legacy_routes_remaining" in summary
         assert "namespaces" in summary
+        assert "domain_v1_progress" in summary
         
         # Type checks
         assert isinstance(summary["route_count"], int)
@@ -60,6 +61,7 @@ class TestRouteInventorySummaryGeneration:
         assert isinstance(summary["legacy_routes_remaining"], int)
         assert isinstance(summary["inventory_hash"], str)
         assert isinstance(summary["namespaces"], dict)
+        assert isinstance(summary["domain_v1_progress"], dict)
         assert len(summary["inventory_hash"]) == 64  # SHA-256 hex
         
         # Count consistency
@@ -87,6 +89,36 @@ class TestRouteInventorySummaryGeneration:
         summary = json.loads(summary_path.read_text())
         assert list(summary["namespaces"].keys()) == ["auth", "admin", "public", "system", "mobile", "tenant", "finance", "misc"]
         assert sum(summary["namespaces"].values()) == summary["route_count"]
+
+    def test_summary_includes_domain_v1_progress(self, tmp_path: Path) -> None:
+        """Summary should include per-domain v1 migration progress telemetry"""
+        summary_path = tmp_path / "summary.json"
+
+        result = subprocess.run(
+            [
+                sys.executable, str(SCRIPTS_DIR / "export_route_inventory.py"),
+                "--destination", str(tmp_path / "inventory.json"),
+                "--summary-out", str(summary_path),
+                "--environment", "test",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(ROOT_DIR),
+        )
+        assert result.returncode == 0
+
+        summary = json.loads(summary_path.read_text())
+        progress = summary["domain_v1_progress"]
+        assert list(progress.keys()) == ["auth", "admin", "public", "system", "mobile", "tenant", "finance", "misc"]
+        for metrics in progress.values():
+            assert set(metrics.keys()) == {
+                "target_route_count",
+                "migrated_v1_route_count",
+                "remaining_route_count",
+                "v1_migration_percent",
+            }
+            assert metrics["target_route_count"] >= metrics["migrated_v1_route_count"]
+            assert 0.0 <= metrics["v1_migration_percent"] <= 100.0
 
     def test_summary_includes_compat_required_count(self, tmp_path: Path) -> None:
         """Summary should include compat_required_count for migration tracking"""

@@ -1,0 +1,30 @@
+{
+  "added_paths": [
+    {
+      "legacy_or_v1": "v1",
+      "method": "POST",
+      "path": "/api/v1/auth/revoke-all-sessions"
+    },
+    {
+      "legacy_or_v1": "v1",
+      "method": "GET",
+      "path": "/api/v1/auth/sessions"
+    },
+    {
+      "legacy_or_v1": "v1",
+      "method": "POST",
+      "path": "/api/v1/auth/sessions/{session_id}/revoke"
+    }
+  ],
+  "removed_paths": [],
+  "summary": {
+    "added_route_count": 3,
+    "compat_required_route_count": 658,
+    "current_route_count": 681,
+    "current_v1_route_count": 23,
+    "legacy_only_route_count": 641,
+    "new_v1_route_count": 3,
+    "previous_route_count": 678,
+    "removed_route_count": 0
+  }
+}

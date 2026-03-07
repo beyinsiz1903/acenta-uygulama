@@ -254,7 +254,7 @@ Full-stack travel management (acenta) application with B2B agency management, ho
 - Validation passed for: `test_mobile_bff_preview_api.py`, `test_agency_sheets_api.py`, `test_admin_all_users_crud.py`, `test_agency_modules_and_branding.py`, `test_admin_all_users_and_agency_nav.py`, and `test_api_org_isolation_bookings.py`, plus helper smoke against preview `/api/health` and `/api/auth/me`.
 
 ### PR-8 Verified — Web Cookie Auth Cleanup (Mar 7, 2026)
-- Verified on preview `https://saas-modernize-2.preview.emergentagent.com` with browser smoke, external curl checks, and dedicated frontend automation.
+- Verified on preview `https://api-versioning-hub.preview.emergentagent.com` with browser smoke, external curl checks, and dedicated frontend automation.
 - Admin flow passed: `/login` -> protected area redirect, refresh persistence via `/api/auth/me`, logout redirect, and protected-route guard after logout.
 - B2B flow passed: `/b2b/login` -> `/b2b/bookings` redirect, refresh persistence, and authenticated `/api/b2b/me` access.
 - Critical security verification passed: no `access_token`, `refresh_token`, or bearer token data persisted in browser `localStorage`; web auth is operating through cookie session transport (`auth_transport: cookie_compat`).

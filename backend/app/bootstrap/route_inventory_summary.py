@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
+from app.bootstrap.v1_manifest import derive_target_path
+
 DEFAULT_ROUTE_INVENTORY_SUMMARY_PATH = Path("/app/backend/app/bootstrap/route_inventory_summary.json")
 
 
@@ -76,6 +78,62 @@ def build_namespace_breakdown(inventory: list[dict[str, Any]]) -> dict[str, int]
     return OrderedDict((bucket, counts[bucket]) for bucket in ordered_buckets)
 
 
+def _route_key(entry: Mapping[str, Any]) -> tuple[str, str]:
+    return str(entry.get("method", "")), str(entry.get("path", ""))
+
+
+def _expected_v1_alias(entry: Mapping[str, Any]) -> tuple[str, str] | None:
+    if entry.get("legacy_or_v1") != "legacy":
+        return None
+
+    path = str(entry.get("path", ""))
+    source = str(entry.get("source", "unknown"))
+    target_path = derive_target_path(path, source)
+    if target_path == path or not target_path.startswith("/api/v1/"):
+        return None
+    return str(entry.get("method", "")), target_path
+
+
+def build_domain_v1_progress(inventory: list[dict[str, Any]]) -> dict[str, dict[str, int | float]]:
+    ordered_buckets = ("auth", "admin", "public", "system", "mobile", "tenant", "finance", "misc")
+    inventory_map = {_route_key(entry): entry for entry in inventory}
+    target_routes = {bucket: set() for bucket in ordered_buckets}
+    migrated_routes = {bucket: set() for bucket in ordered_buckets}
+
+    for entry in inventory:
+        bucket = _namespace_bucket(entry)
+        route_key = _route_key(entry)
+
+        if entry.get("legacy_or_v1") == "v1":
+            target_routes[bucket].add(route_key)
+            migrated_routes[bucket].add(route_key)
+            continue
+
+        expected_alias = _expected_v1_alias(entry)
+        if expected_alias is None:
+            target_routes[bucket].add(route_key)
+            continue
+
+        target_routes[bucket].add(expected_alias)
+        if expected_alias in inventory_map:
+            migrated_routes[bucket].add(expected_alias)
+
+    return OrderedDict(
+        (
+            bucket,
+            {
+                "target_route_count": len(target_routes[bucket]),
+                "migrated_v1_route_count": len(migrated_routes[bucket]),
+                "remaining_route_count": max(len(target_routes[bucket]) - len(migrated_routes[bucket]), 0),
+                "v1_migration_percent": 100.0
+                if not target_routes[bucket]
+                else round((len(migrated_routes[bucket]) / len(target_routes[bucket])) * 100, 2),
+            },
+        )
+        for bucket in ordered_buckets
+    )
+
+
 def summarize_route_inventory(
     inventory: list[dict[str, Any]],
     *,
@@ -88,9 +146,11 @@ def summarize_route_inventory(
     legacy_count = route_count - v1_count
     compat_required_count = sum(1 for entry in inventory if entry["compat_required"])
     namespace_breakdown = build_namespace_breakdown(inventory)
+    domain_v1_progress = build_domain_v1_progress(inventory)
 
     return {
         "environment": environment or os.environ.get("APP_ENV_NAME") or os.environ.get("ENV") or "unknown",
+        "domain_v1_progress": domain_v1_progress,
         "generated_at": _utc_now_iso(),
         "inventory_hash": _inventory_hash(inventory),
         "inventory_path": str(inventory_path) if inventory_path else None,

@@ -2,7 +2,7 @@
 """
 PR-5A Mobile BFF Backend Verification Test
 Test mobile endpoints on deployed preview environment
-Base URL: https://saas-modernize-2.preview.emergentagent.com
+Base URL: https://api-versioning-hub.preview.emergentagent.com
 """
 
 import requests
@@ -11,7 +11,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Test Configuration
-BASE_URL = "https://saas-modernize-2.preview.emergentagent.com"
+BASE_URL = "https://api-versioning-hub.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 AGENCY_EMAIL = "agent@acenta.test"

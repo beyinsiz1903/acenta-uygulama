@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from app.bootstrap.route_inventory import build_route_inventory
 from app.bootstrap.route_inventory_summary import (
+    build_domain_v1_progress,
     build_route_inventory_parity_report,
     summarize_route_inventory,
 )
@@ -19,7 +20,20 @@ def test_route_inventory_summary_counts_are_consistent() -> None:
     assert summary["route_count"] == summary["v1_count"] + summary["legacy_count"]
     assert sum(summary["namespaces"].values()) == summary["route_count"]
     assert set(summary["namespaces"].keys()) == {"auth", "admin", "public", "system", "mobile", "tenant", "finance", "misc"}
+    assert set(summary["domain_v1_progress"].keys()) == {"auth", "admin", "public", "system", "mobile", "tenant", "finance", "misc"}
     assert len(summary["inventory_hash"]) == 64
+
+
+def test_domain_v1_progress_is_consistent() -> None:
+    inventory = build_route_inventory(app)
+    progress = build_domain_v1_progress(inventory)
+
+    for bucket, metrics in progress.items():
+        assert metrics["target_route_count"] >= metrics["migrated_v1_route_count"]
+        assert metrics["remaining_route_count"] == metrics["target_route_count"] - metrics["migrated_v1_route_count"]
+        assert 0.0 <= metrics["v1_migration_percent"] <= 100.0
+
+    assert progress["auth"]["migrated_v1_route_count"] >= 6
 
 
 def test_route_inventory_parity_report_detects_match_and_mismatch() -> None:

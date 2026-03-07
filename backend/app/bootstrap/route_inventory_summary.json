@@ -1,12 +1,62 @@
 {
   "environment": "unknown",
-  "generated_at": "2026-03-07T08:12:31.692334+00:00",
-  "inventory_hash": "b7339730ae6830e15424532f1b223c905d232c6d619c77b6723dff29fc05b27a",
+  "domain_v1_progress": {
+    "auth": {
+      "target_route_count": 14,
+      "migrated_v1_route_count": 6,
+      "remaining_route_count": 8,
+      "v1_migration_percent": 42.86
+    },
+    "admin": {
+      "target_route_count": 275,
+      "migrated_v1_route_count": 2,
+      "remaining_route_count": 273,
+      "v1_migration_percent": 0.73
+    },
+    "public": {
+      "target_route_count": 31,
+      "migrated_v1_route_count": 5,
+      "remaining_route_count": 26,
+      "v1_migration_percent": 16.13
+    },
+    "system": {
+      "target_route_count": 19,
+      "migrated_v1_route_count": 4,
+      "remaining_route_count": 15,
+      "v1_migration_percent": 21.05
+    },
+    "mobile": {
+      "target_route_count": 6,
+      "migrated_v1_route_count": 6,
+      "remaining_route_count": 0,
+      "v1_migration_percent": 100.0
+    },
+    "tenant": {
+      "target_route_count": 54,
+      "migrated_v1_route_count": 0,
+      "remaining_route_count": 54,
+      "v1_migration_percent": 0.0
+    },
+    "finance": {
+      "target_route_count": 17,
+      "migrated_v1_route_count": 0,
+      "remaining_route_count": 17,
+      "v1_migration_percent": 0.0
+    },
+    "misc": {
+      "target_route_count": 247,
+      "migrated_v1_route_count": 0,
+      "remaining_route_count": 247,
+      "v1_migration_percent": 0.0
+    }
+  },
+  "generated_at": "2026-03-07T08:52:26.480079+00:00",
+  "inventory_hash": "8ab53db1f794d106c3f09f2c79d74ffa06c30d8c612f4c7918e6239664f961b3",
   "inventory_path": "/app/backend/app/bootstrap/route_inventory.json",
   "legacy_routes_remaining": 658,
   "legacy_count": 658,
   "namespaces": {
-    "auth": 17,
+    "auth": 20,
     "admin": 278,
     "public": 36,
     "system": 23,
@@ -15,8 +65,8 @@
     "finance": 17,
     "misc": 247
   },
-  "route_count": 678,
+  "route_count": 681,
   "runtime_name": "api",
-  "v1_count": 20,
+  "v1_count": 23,
   "compat_required_count": 658
 }

@@ -13,15 +13,32 @@ Tests auth bootstrap endpoints against preview URL:
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 import pytest
 import requests
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
+
+
+def _resolve_base_url() -> str:
+    env_url = os.environ.get("REACT_APP_BACKEND_URL", "").strip()
+    if env_url:
+        return env_url.rstrip("/")
+
+    frontend_env = Path("/app/frontend/.env")
+    if frontend_env.exists():
+        for line in frontend_env.read_text().splitlines():
+            if line.startswith("REACT_APP_BACKEND_URL="):
+                return line.split("=", 1)[1].strip().rstrip("/")
+
+    return ""
+
+
+BASE_URL = _resolve_base_url()
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 
-WEB_AUTH_PLATFORM_HEADER = "X-Web-Auth-Platform"
+WEB_AUTH_PLATFORM_HEADER = "X-Client-Platform"
 WEB_AUTH_PLATFORM_VALUE = "web"
 
 

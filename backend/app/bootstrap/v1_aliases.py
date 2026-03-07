@@ -41,6 +41,18 @@ AUTH_PR_V1_2A_ROLLOUTS: tuple[V1AliasRollout, ...] = (
     ),
 )
 
+AUTH_PR_V1_2B_ROLLOUTS: tuple[V1AliasRollout, ...] = (
+    V1AliasRollout(
+        "auth_pr_v1_2b",
+        auth_router,
+        include_paths=(
+            "/api/auth/sessions",
+            "/api/auth/sessions/{session_id}/revoke",
+            "/api/auth/revoke-all-sessions",
+        ),
+    ),
+)
+
 
 def _iter_route_methods(route: APIRoute) -> list[str]:
     return sorted(method for method in (route.methods or set()) if method not in {"HEAD", "OPTIONS"})
@@ -89,7 +101,7 @@ def register_low_risk_v1_aliases(app: FastAPI) -> None:
         for method in _iter_route_methods(route)
     }
 
-    for rollout in LOW_RISK_V1_ROLLOUTS + AUTH_PR_V1_2A_ROLLOUTS:
+    for rollout in LOW_RISK_V1_ROLLOUTS + AUTH_PR_V1_2A_ROLLOUTS + AUTH_PR_V1_2B_ROLLOUTS:
         alias_router = APIRouter()
 
         for route in rollout.router.routes:

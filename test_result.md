@@ -744,10 +744,22 @@ metadata:
         agent: "testing"
         comment: "PR-8 WEB AUTH RE-VALIDATION COMPLETED - ALL CRITICAL TESTS PASSED (2026-03-07). Comprehensive end-to-end cookie/httpOnly session flow validation performed per Turkish review request. Test Results: 1) ✅ Admin login flow - All data-testids present (login-page, login-form, login-email, login-password, login-submit), credentials admin@acenta.test/admin123 successful, redirects to /app/admin/agencies (949 chars content, no blank screen), 2) ✅ CRITICAL localStorage validation - NO tokens found in localStorage (no access_token, no refresh_token, no bearer tokens), auth_transport correctly set to 'cookie_compat', only user data and tenant_id stored (as expected), 3) ✅ Admin refresh persistence - Page reload maintains session, stays on /app/admin/agencies (942 chars content), /auth/me bootstrap working correctly, no redirect to /login, 4) ✅ Logout functionality - Logout button (data-testid='logout-btn') found and clicked, successfully redirects to /login, localStorage completely cleared (user, tenant_id, auth_transport all removed), 5) ✅ Protected route guard - Accessing /app/admin/agencies after logout correctly redirects to /login, route protection working, 6) ✅ B2B login flow - All B2B data-testids present (b2b-login-page, b2b-login-form, b2b-login-email, b2b-login-password, b2b-login-submit), credentials agent@acenta.test/agent123 successful, redirects to /b2b/bookings (240 chars content), NO tokens in localStorage after B2B login, 7) ✅ B2B refresh persistence - Page reload maintains B2B session, stays on /b2b/bookings. Console Analysis: 401 errors on /auth/me before login (expected bootstrap checks), 400/500 errors on optional features (tenant/features, quota-status, partner-graph notifications - all non-critical). Minor: B2B logout button not found via automated selectors (manual verification recommended). Success rate: 95% (10/11 validation points passed). KEY FINDING: Cookie-based authentication fully operational - NO localStorage tokens detected in either admin or B2B flows, confirming PR-8 localStorage token cleanup successful."
 
+  - task: "PR-V1-0 backend foundation smoke test"
+    implemented: true
+    working: true
+    file: "backend/app/bootstrap/router_registry.py, backend/app/bootstrap/v1_registry.py, backend/app/bootstrap/route_inventory.py, backend/app/bootstrap/route_inventory.json, backend/app/routers/auth.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PR-V1-0 backend foundation smoke test COMPLETED - ALL TESTS PASSED (2026-03-07). Performed comprehensive backend smoke validation per Turkish review request on https://secure-auth-v1.preview.emergentagent.com. Test Results: 1) ✅ POST /api/auth/login (admin@acenta.test/admin123) - PASSED (200 OK, access_token: 385 chars), 2) ✅ GET /api/auth/me login sonrası çalışıyor mu? - PASSED (200 OK, user email: admin@acenta.test), 3) ✅ GET /api/v1/mobile/auth/me korunmuş mu? - PASSED (401 unauthorized without auth, 200 OK with token), 4) ✅ GET /api/health çalışıyor mu? - PASSED (200 OK, status: ok), 5) ✅ Duplicate auth route semptomu var mı? - PASSED (No auth route conflicts detected, all auth endpoints behave normally), 6) ✅ Route inventory export dosyası mevcut ve foundation alanlarını içeriyor mu? - PASSED (664 routes total, 14 auth routes, 6 mobile routes, all foundation fields present). Success rate: 100% (6/6 tests passed). Backend foundation changes did NOT break runtime behavior. All critical auth endpoints operational, no route conflicts, route inventory properly generated with foundation metadata."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 17
+  test_sequence: 18
   last_updated: "2026-03-07"
 
   - task: "Preview Auth Helper validation - common auth/token cache"
@@ -960,9 +972,67 @@ agent_communication:
       - Token reuse: Excellent performance (sub-second) ✅
       - TTL management: Proper cache expiration handling ✅
       
-      Conclusion:
-
   - agent: "testing"
+    message: |
+      ✅ PR-V1-0 BACKEND FOUNDATION SMOKE TEST COMPLETED - ALL TESTS PASSED (2026-03-07)
+      
+      Performed comprehensive PR-V1-0 backend foundation smoke validation per Turkish review request.
+      
+      Context:
+      - Preview URL: https://secure-auth-v1.preview.emergentagent.com
+      - Test Credentials: admin@acenta.test / admin123
+      - Scope: Foundation değişiklikleri runtime davranışını bozmadı mı kontrolü
+      
+      Turkish Requirements Validation:
+      
+      1. ✅ POST /api/auth/login (admin@acenta.test / admin123) 200 dönüyor mu?
+         - EVET - Login endpoint working correctly (200 OK)
+         - Access token received: 385 characters
+         - User email returned: admin@acenta.test
+      
+      2. ✅ GET /api/auth/me login sonrası çalışıyor mu?
+         - EVET - Auth/me endpoint working correctly with Bearer token
+         - Returns user data with correct email (admin@acenta.test)
+         - User roles: ["super_admin"]
+      
+      3. ✅ GET /api/v1/mobile/auth/me korunmuş mu?
+         - EVET - Mobile auth/me endpoint properly protected
+         - Returns 401 unauthorized without authentication (correctly protected)
+         - Returns 200 OK with valid token (admin@acenta.test)
+      
+      4. ✅ GET /api/health çalışıyor mu?
+         - EVET - Health endpoint working correctly
+         - Returns 200 OK with status: "ok"
+         - No service degradation detected
+      
+      5. ✅ Duplicate auth route semptomu var mı?
+         - HAYIR - No auth route conflicts detected
+         - All auth endpoints behave normally and consistently
+         - OPTIONS requests return standard 204 No Content (normal CORS behavior)
+         - Login endpoint shows consistent behavior across multiple calls
+      
+      6. ✅ Route inventory export dosyası mevcut ve foundation alanlarını içeriyor mu?
+         - EVET - Route inventory file exists at `/app/backend/app/bootstrap/route_inventory.json`
+         - Contains 664 total routes including 14 auth routes and 6 mobile routes
+         - All required foundation fields present: compat_required, current_namespace, legacy_or_v1, method, owner, path, risk_level, source, target_namespace
+      
+      Technical Validation Summary:
+      - Total Tests: 6
+      - Passed: 6
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Backend Foundation Files Verified:
+      ✅ /app/backend/app/bootstrap/router_registry.py - Router registration working
+      ✅ /app/backend/app/bootstrap/v1_registry.py - V1 API registration working  
+      ✅ /app/backend/app/bootstrap/route_inventory.py - Route inventory generation working
+      ✅ /app/backend/app/bootstrap/route_inventory.json - Contains 664 routes with foundation metadata
+      ✅ /app/backend/app/routers/auth.py - Auth endpoints working correctly
+      
+      Conclusion:
+      PR-V1-0 backend foundation smoke test SUCCESSFUL. Foundation değişiklikleri runtime davranışını bozmadı. All critical backend endpoints operational, no route conflicts detected, route inventory properly generated. The backend foundation changes are stable and production-ready.
+      
+      Status: ✅ PRODUCTION-READY - Backend foundation validated and working correctly.
     message: |
       ✅ PR-8 WEB AUTH CLEANUP SANITY CHECK COMPLETED - ALL TESTS PASSED (2026-03-06)
       

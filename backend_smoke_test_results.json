@@ -1,0 +1,75 @@
+{
+  "summary": {
+    "success": true,
+    "total_tests": 6,
+    "passed_tests": 6,
+    "backend_url": "https://secure-auth-v1.preview.emergentagent.com",
+    "test_timestamp": "2026-03-07"
+  },
+  "results": {
+    "health_endpoint": {
+      "passed": true,
+      "details": "Health endpoint returns 200 OK with status: ok",
+      "response_data": {
+        "status": "ok"
+      }
+    },
+    "login_endpoint": {
+      "passed": true,
+      "details": "Login successful. Access token length: 385 chars",
+      "response_data": {
+        "access_token_length": 385,
+        "user_email": "admin@acenta.test"
+      }
+    },
+    "auth_me_endpoint": {
+      "passed": true,
+      "details": "Auth/me endpoint working correctly. User email: admin@acenta.test",
+      "response_data": {
+        "email": "admin@acenta.test",
+        "roles": [
+          "super_admin"
+        ]
+      }
+    },
+    "mobile_auth_protected": {
+      "passed": true,
+      "details": "Mobile auth/me properly protected (returns 401 without auth). Mobile auth/me works with token. User: admin@acenta.test",
+      "response_data": {
+        "protected": true,
+        "auth_works": true
+      }
+    },
+    "auth_route_conflicts": {
+      "passed": true,
+      "details": "No auth route conflicts detected. All auth endpoints behave normally.",
+      "response_data": {
+        "endpoints_checked": [
+          "/api/auth/login",
+          "/api/auth/me",
+          "/api/auth/sessions"
+        ]
+      }
+    },
+    "route_inventory_file": {
+      "passed": true,
+      "details": "Route inventory file exists with 664 routes, including 14 auth routes and 6 mobile routes. Foundation fields present.",
+      "response_data": {
+        "total_routes": 664,
+        "auth_routes": 14,
+        "mobile_routes": 6,
+        "foundation_fields": [
+          "compat_required",
+          "current_namespace",
+          "legacy_or_v1",
+          "method",
+          "owner",
+          "path",
+          "risk_level",
+          "source",
+          "target_namespace"
+        ]
+      }
+    }
+  }
+}

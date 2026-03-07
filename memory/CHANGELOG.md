@@ -1,5 +1,31 @@
 # CHANGELOG — Acenta Master Travel SaaS
 
+## 2026-03-07 — Usage Metering PR-UM1 Foundation
+- `backend/app/constants/usage_metrics.py` eklendi; kanonik metrik sabitleri tanımlandı:
+  - `reservation.created`
+  - `report.generated`
+  - `export.generated`
+  - `integration.call`
+- Geriye dönük uyumluluk için legacy metric desteği korundu: `b2b.match_request`
+- `backend/app/repositories/usage_daily_repository.py` eklendi; günlük aggregate read-model oluşturuldu
+- `backend/app/repositories/usage_ledger_repository.py` genişletildi:
+  - `organization_id`
+  - `metadata`
+  - ek indeksler
+  - kanonik `insert_event(...)` akışı
+- `backend/app/services/usage_service.py` foundation seviyesinde refactor edildi:
+  - `track_usage_event(...)`
+  - metric validation
+  - ledger + daily birlikte yazım
+  - `get_usage_summary(...)` artık `totals_source` döndürüyor (`usage_daily` / `usage_ledger`)
+- `backend/app/indexes/seed_indexes.py` içine usage ledger + usage daily indexleri eklendi
+- Testler eklendi / güncellendi:
+  - `backend/tests/integration/billing/test_usage_metering_foundation.py`
+  - `backend/tests/integration/billing/test_usage_tracking.py`
+- Kapsam dışı bırakıldı:
+  - hiçbir business flow instrumentation yapılmadı
+  - hiçbir UI değişikliği yapılmadı
+
 ## 2026-03-07 — Entitlement Projection Engine V1
 - Kanonik entitlement katmanı eklendi:
   - `backend/app/services/entitlement_service.py`

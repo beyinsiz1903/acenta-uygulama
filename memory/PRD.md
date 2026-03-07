@@ -51,6 +51,11 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 - Tenant bazında kanonik projection snapshot (`tenant_entitlements`)
 - Admin ekranı ve public pricing sayfası aynı entitlement kaynağından beslenir
 
+### Usage Metering Foundation
+- Kanonik usage metric sabitleri tanımlandı
+- Event ledger + günlük aggregate birlikte kullanılacak temel yapı kuruldu
+- Henüz business flow instrumentation yapılmadı; bu katman PR-UM2 ile veri toplamaya başlayacak
+
 ## Test Kimlik Bilgileri
 | Portal | Email | Password | Rol |
 |---|---|---|---|

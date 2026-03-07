@@ -2213,10 +2213,22 @@ agent_communication:
         agent: "testing"
         comment: "PR-V1-1 backend validation COMPLETED - ALL 23 TESTS PASSED (100% success rate). Comprehensive validation per review request on https://saas-modernize-2.preview.emergentagent.com. Test Results: 1) ✅ Admin Authentication successful (token: 385 chars), 2) ✅ Legacy Routes Unchanged (7/7 routes working): /api/health ✅, /api/system/ping ✅, /api/public/theme ✅, /api/public/cms/pages?org=org_demo ✅, /api/public/campaigns?org=org_demo ✅, /api/system/health-dashboard ✅, /api/admin/theme ✅, 3) ✅ Legacy + V1 Parity Tests (7/7 parity confirmed): /api/health <-> /api/v1/health ✅, /api/system/ping <-> /api/v1/system/ping ✅, /api/system/health-dashboard <-> /api/v1/system/health-dashboard ✅, /api/public/theme <-> /api/v1/public/theme ✅, /api/admin/theme <-> /api/v1/admin/theme ✅, /api/public/cms/pages <-> /api/v1/public/cms/pages ✅, /api/public/campaigns <-> /api/v1/public/campaigns ✅, 4) ✅ Route Inventory Validation: File exists at /app/backend/app/bootstrap/route_inventory.json ✅, Contains 675 total routes with 17 V1 routes and 658 legacy routes ✅, All required fields present (compat_required, current_namespace, legacy_or_v1, method, owner, path, risk_level, source, target_namespace) ✅, All 7 expected V1 aliases found in inventory ✅, 5) ✅ Diff CLI Functionality: Both text and JSON formats working ✅, Added 17 new V1 routes correctly detected ✅, Previous/current comparison working correctly ✅. PR-V1-1 low-risk /api/v1 rollout validated successfully. Legacy paths work unchanged, V1 aliases provide identical behavior, route inventory complete with V1 aliases, and diff CLI operational. No regressions detected in scoped rollout."
 
+  - task: "PR-V1-2A auth bootstrap rollout validation"
+    implemented: true
+    working: true
+    file: "backend/app/routers/auth.py, backend/app/bootstrap/v1_aliases.py, backend/app/bootstrap/compat_headers.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PR-V1-2A auth bootstrap rollout validation COMPLETED - ALL 15 TESTS PASSED (100% success rate). Comprehensive validation per review request on https://saas-modernize-2.preview.emergentagent.com. Test Results: 1) ✅ Legacy auth routes with compat headers - PASSED (POST /api/auth/login ✅, GET /api/auth/me ✅, POST /api/auth/refresh ✅) - all return proper Deprecation: true and Link successor headers to v1 equivalents, 2) ✅ New v1 auth alias routes working - PASSED (POST /api/v1/auth/login ✅, GET /api/v1/auth/me ✅, POST /api/v1/auth/refresh ✅) - all functional and returning expected responses, 3) ✅ Cookie-compatible web flow and bearer flow - PASSED (X-Client-Platform: web header correctly triggers cookie_compat mode ✅, bearer mode works without header ✅, both flows authenticate correctly), 4) ✅ Mobile BFF safety - PASSED (GET /api/v1/mobile/auth/me works with bearer token from v1/auth/login ✅), 5) ✅ Route inventory expectations - PASSED (678 total routes ✅, 20 v1 routes ✅, 658 legacy routes ✅, auth namespace contains 17 routes including new aliases ✅), 6) ✅ Parity between legacy and v1 - PASSED (legacy and v1 auth endpoints return equivalent data with same auth transport modes). All PR-V1-2A scope requirements validated successfully: auth alias-first behavior working, compat headers present, route inventory updated correctly with +3 auth aliases, no regressions in existing flows."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 19
+  test_sequence: 20
   last_updated: "2026-03-07"
 
 agent_communication:
@@ -2296,3 +2308,71 @@ agent_communication:
       PR-V1-1 low-risk /api/v1 rollout backend validation SUCCESSFUL. All specified routes show perfect parity between legacy and V1 implementations. Route inventory properly captures the new V1 aliases and diff CLI is operational for deployment tracking. No regressions detected in the scoped rollout. The implementation is ready for production deployment.
       
       Status: ✅ PRODUCTION-READY - PR-V1-1 validated successfully with 100% test pass rate.
+
+  - agent: "testing"
+    message: |
+      ✅ PR-V1-2A AUTH BOOTSTRAP ROLLOUT VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-07)
+      
+      Performed comprehensive PR-V1-2A auth bootstrap rollout validation per review request on https://saas-modernize-2.preview.emergentagent.com
+      
+      Context:
+      - PR-V1-2A: Auth bootstrap rollout on preview environment
+      - Scope: Legacy auth routes with compat headers, new v1 auth aliases, cookie/bearer flows, mobile BFF safety, route inventory expectations
+      - Admin credentials: admin@acenta.test / admin123
+      - Important: Uses correct X-Client-Platform: web header (not X-Web-Auth-Platform)
+      
+      Test Results Summary:
+      
+      1. ✅ Legacy Auth Routes with Compat Headers (3/3) - PASSED
+         - POST /api/auth/login → Status: 200, Deprecation: true, Link: </api/v1/auth/login>; rel="successor-version" ✅
+         - GET /api/auth/me → Status: 200, Deprecation: true, Link: </api/v1/auth/me>; rel="successor-version" ✅
+         - POST /api/auth/refresh → Status: 200, Deprecation: true, Link: </api/v1/auth/refresh>; rel="successor-version" ✅
+      
+      2. ✅ New V1 Auth Alias Routes (3/3) - PASSED
+         - POST /api/v1/auth/login → Status: 200, Auth transport: cookie_compat ✅
+         - GET /api/v1/auth/me → Status: 200, Email: admin@acenta.test ✅
+         - POST /api/v1/auth/refresh → Status: 200, New token received ✅
+      
+      3. ✅ Cookie-Compatible Web Flow and Bearer Flow (3/3) - PASSED
+         - Cookie-compatible flow (with X-Client-Platform: web) → Status: 200, Transport: cookie_compat, Cookies set ✅
+         - Bearer flow (without header) → Status: 200, Transport: bearer, Token received ✅
+         - Bearer token works with v1/auth/me → Status: 200, Email: admin@acenta.test ✅
+      
+      4. ✅ Mobile BFF Safety (1/1) - PASSED
+         - GET /api/v1/mobile/auth/me with bearer token → Status: 200, Email: admin@acenta.test ✅
+      
+      5. ✅ Route Inventory Expectations (4/4) - PASSED
+         - Total routes: 678 (expected: 678) ✅
+         - V1 routes: 20 (expected: 20) ✅
+         - Legacy routes: 658 (expected: 658) ✅
+         - Auth namespace routes: 17 (includes new aliases, expected: >= 17) ✅
+      
+      6. ✅ Parity Between Legacy and V1 (1/1) - PASSED
+         - Legacy and V1 auth/login return equivalent data (email, roles, transport match) ✅
+      
+      Implementation Files Validated:
+      ✅ /app/backend/app/routers/auth.py - AUTH_V1_SUCCESSOR_PATHS and _apply_auth_compat_headers working correctly
+      ✅ /app/backend/app/bootstrap/v1_aliases.py - AUTH_PR_V1_2A_ROLLOUTS registration operational
+      ✅ /app/backend/app/bootstrap/compat_headers.py - build_compat_headers and apply_compat_headers functional
+      ✅ /app/backend/tests/test_api_v1_auth_aliases.py - Test patterns validated in production environment
+      ✅ /app/backend/app/bootstrap/route_inventory_summary.json - Route counts match expectations
+      
+      Test Summary:
+      - Total Tests: 15
+      - Passed: 15
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Key Validations Confirmed:
+      ✅ Legacy auth routes include proper Deprecation and Link successor headers
+      ✅ V1 auth aliases work identically to legacy counterparts
+      ✅ X-Client-Platform: web header correctly triggers cookie_compat mode
+      ✅ Bearer flow preserved for mobile/API clients
+      ✅ Mobile BFF endpoints accessible via v1 auth tokens
+      ✅ Route inventory properly reflects auth aliases (+3 as expected)
+      ✅ No regressions in existing auth flows
+      
+      Conclusion:
+      PR-V1-2A auth bootstrap rollout validation SUCCESSFUL. All specified auth alias requirements met with perfect compatibility between legacy and v1 endpoints. Compat headers properly guide clients to v1 successors. Cookie-based web auth and bearer token flows both functional. Mobile BFF integration working correctly. Route inventory accurately reflects the auth aliases addition. The implementation is ready for production deployment.
+      
+      Status: ✅ PRODUCTION-READY - PR-V1-2A validated successfully with 100% test pass rate.

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from fastapi import APIRouter, FastAPI
 from fastapi.routing import APIRoute
 
 from app.bootstrap.v1_manifest import derive_target_path
+from app.routers.auth import router as auth_router
 from app.routers.health import router as health_router
 from app.routers.health_dashboard import router as health_dashboard_router
 from app.routers.public_campaigns import router as public_campaigns_router
@@ -17,6 +18,7 @@ from app.routers.theme import router as theme_router
 class V1AliasRollout:
     name: str
     router: APIRouter
+    include_paths: tuple[str, ...] = field(default_factory=tuple)
 
 
 LOW_RISK_V1_ROLLOUTS: tuple[V1AliasRollout, ...] = (
@@ -27,9 +29,27 @@ LOW_RISK_V1_ROLLOUTS: tuple[V1AliasRollout, ...] = (
     V1AliasRollout("public_campaigns", public_campaigns_router),
 )
 
+AUTH_PR_V1_2A_ROLLOUTS: tuple[V1AliasRollout, ...] = (
+    V1AliasRollout(
+        "auth_pr_v1_2a",
+        auth_router,
+        include_paths=(
+            "/api/auth/login",
+            "/api/auth/me",
+            "/api/auth/refresh",
+        ),
+    ),
+)
+
 
 def _iter_route_methods(route: APIRoute) -> list[str]:
     return sorted(method for method in (route.methods or set()) if method not in {"HEAD", "OPTIONS"})
+
+
+def _route_is_selected(rollout: V1AliasRollout, route: APIRoute) -> bool:
+    if rollout.include_paths and route.path not in rollout.include_paths:
+        return False
+    return True
 
 
 def _copy_route(alias_router: APIRouter, route: APIRoute, target_path: str) -> None:
@@ -69,11 +89,13 @@ def register_low_risk_v1_aliases(app: FastAPI) -> None:
         for method in _iter_route_methods(route)
     }
 
-    for rollout in LOW_RISK_V1_ROLLOUTS:
+    for rollout in LOW_RISK_V1_ROLLOUTS + AUTH_PR_V1_2A_ROLLOUTS:
         alias_router = APIRouter()
 
         for route in rollout.router.routes:
             if not isinstance(route, APIRoute):
+                continue
+            if not _route_is_selected(rollout, route):
                 continue
 
             source_module = getattr(route.endpoint, "__module__", "unknown")

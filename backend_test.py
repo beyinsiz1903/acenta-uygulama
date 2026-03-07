@@ -1,399 +1,447 @@
 #!/usr/bin/env python3
 """
-PR-V1-1 Backend Validation Test Suite
+Backend Test for PR-V1-2A Auth Bootstrap Rollout
 
-This test suite validates the low-risk /api/v1 rollout for PR-V1-1 as requested.
-Tests both legacy + v1 parity for specific routes and route inventory functionality.
-
-Scope:
-1. Legacy + v1 parity for low-risk routes
-2. Confirm legacy paths still work unchanged  
-3. Confirm route inventory snapshot exists
-4. Confirm diff CLI works
-
-Admin credentials: admin@acenta.test / admin123
+This test validates:
+1. Legacy auth routes with compat headers
+2. New v1 auth alias routes  
+3. Cookie-compatible web flow and bearer flow
+4. Mobile BFF safety
+5. Route inventory expectations
 """
-
 import json
-import subprocess
-import tempfile
-from pathlib import Path
-import requests
+import asyncio
+import aiohttp
 import sys
-import os
+from typing import Dict, Any, Optional
 
-# Get base URL from environment
-BACKEND_URL = "https://saas-modernize-2.preview.emergentagent.com"
-ADMIN_CREDENTIALS = {
-    "email": "admin@acenta.test", 
-    "password": "admin123"
-}
+# Configuration
+BASE_URL = "https://saas-modernize-2.preview.emergentagent.com"
+ADMIN_EMAIL = "admin@acenta.test"
+ADMIN_PASSWORD = "admin123"
+WEB_HEADER = {"X-Client-Platform": "web"}
 
-class PRV1ValidationTests:
+class TestResult:
     def __init__(self):
-        self.base_url = BACKEND_URL
-        self.admin_token = None
-        self.test_results = []
-
-    def log_result(self, test_name, passed, details=""):
-        """Log test result"""
-        status = "✅ PASS" if passed else "❌ FAIL"
-        print(f"{status}: {test_name}")
-        if details:
-            print(f"  Details: {details}")
-        self.test_results.append({
-            "test": test_name,
-            "passed": passed,
-            "details": details
+        self.passed = 0
+        self.failed = 0
+        self.tests = []
+        
+    def add_test(self, name: str, success: bool, message: str):
+        self.tests.append({
+            "name": name,
+            "success": success,
+            "message": message
         })
-
-    def get_admin_token(self):
-        """Get admin authentication token"""
-        try:
-            response = requests.post(
-                f"{self.base_url}/api/auth/login",
-                json=ADMIN_CREDENTIALS,
-                timeout=30
-            )
-            if response.status_code == 200:
-                data = response.json()
-                self.admin_token = data.get("access_token")
-                self.log_result("Admin Authentication", True, f"Token length: {len(self.admin_token) if self.admin_token else 0}")
-                return True
-            else:
-                self.log_result("Admin Authentication", False, f"Status: {response.status_code}")
-                return False
-        except Exception as e:
-            self.log_result("Admin Authentication", False, str(e))
-            return False
-
-    def test_route_parity(self, legacy_path, v1_path, method="GET", needs_auth=False):
-        """Test parity between legacy and v1 routes"""
-        headers = {}
-        if needs_auth and self.admin_token:
-            headers["Authorization"] = f"Bearer {self.admin_token}"
-
-        try:
-            # Test legacy route
-            if method == "GET":
-                legacy_response = requests.get(f"{self.base_url}{legacy_path}", headers=headers, timeout=30)
-            else:
-                self.log_result(f"Route Parity {legacy_path} <-> {v1_path}", False, "Only GET method supported in this test")
-                return False
-
-            # Test v1 route  
-            if method == "GET":
-                v1_response = requests.get(f"{self.base_url}{v1_path}", headers=headers, timeout=30)
-            else:
-                v1_response = None
-
-            # Check if both return same status
-            if legacy_response.status_code == v1_response.status_code:
-                # For successful responses, compare basic structure
-                if legacy_response.status_code == 200:
-                    try:
-                        legacy_json = legacy_response.json()
-                        v1_json = v1_response.json()
-                        # Basic structure comparison - they should have similar keys
-                        legacy_keys = set(legacy_json.keys()) if isinstance(legacy_json, dict) else set()
-                        v1_keys = set(v1_json.keys()) if isinstance(v1_json, dict) else set()
-                        
-                        if legacy_keys == v1_keys or (isinstance(legacy_json, list) and isinstance(v1_json, list)):
-                            self.log_result(f"Route Parity {legacy_path} <-> {v1_path}", True, 
-                                          f"Both return {legacy_response.status_code}, similar structure")
-                            return True
-                        else:
-                            self.log_result(f"Route Parity {legacy_path} <-> {v1_path}", False, 
-                                          f"Different response structure: {legacy_keys} vs {v1_keys}")
-                            return False
-                    except:
-                        # If not JSON, compare content length
-                        if len(legacy_response.content) > 0 and len(v1_response.content) > 0:
-                            self.log_result(f"Route Parity {legacy_path} <-> {v1_path}", True,
-                                          f"Both return {legacy_response.status_code}, non-empty responses")
-                            return True
-                        else:
-                            self.log_result(f"Route Parity {legacy_path} <-> {v1_path}", False,
-                                          "Empty responses or parse error")
-                            return False
-                else:
-                    # Both failed with same status, that's still parity
-                    self.log_result(f"Route Parity {legacy_path} <-> {v1_path}", True,
-                                  f"Both return {legacy_response.status_code}")
-                    return True
-            else:
-                self.log_result(f"Route Parity {legacy_path} <-> {v1_path}", False,
-                              f"Different status codes: {legacy_response.status_code} vs {v1_response.status_code}")
-                return False
-
-        except Exception as e:
-            self.log_result(f"Route Parity {legacy_path} <-> {v1_path}", False, str(e))
-            return False
-
-    def test_legacy_routes_unchanged(self):
-        """Test that legacy routes still work as expected"""
-        test_routes = [
-            ("/api/health", False),
-            ("/api/system/ping", False), 
-            ("/api/public/theme", False),
-            (f"/api/public/cms/pages?org=org_demo", False),
-            (f"/api/public/campaigns?org=org_demo", False),
-            ("/api/system/health-dashboard", True),
-            ("/api/admin/theme", True),
-        ]
-        
-        passed_count = 0
-        total_count = len(test_routes)
-        
-        for route, needs_auth in test_routes:
-            try:
-                headers = {}
-                if needs_auth and self.admin_token:
-                    headers["Authorization"] = f"Bearer {self.admin_token}"
-                
-                response = requests.get(f"{self.base_url}{route}", headers=headers, timeout=30)
-                
-                if response.status_code in [200, 401, 403]:  # Expected statuses
-                    self.log_result(f"Legacy Route {route}", True, f"Status: {response.status_code}")
-                    passed_count += 1
-                else:
-                    self.log_result(f"Legacy Route {route}", False, f"Unexpected status: {response.status_code}")
-                    
-            except Exception as e:
-                self.log_result(f"Legacy Route {route}", False, str(e))
-        
-        return passed_count == total_count
-
-    def test_low_risk_v1_parity(self):
-        """Test low-risk v1 route aliases work correctly"""
-        if not self.admin_token:
-            self.log_result("V1 Route Parity Tests", False, "No admin token available")
-            return False
-
-        # Routes from review request  
-        parity_tests = [
-            ("/api/health", "/api/v1/health", False),
-            ("/api/system/ping", "/api/v1/system/ping", False),
-            ("/api/system/health-dashboard", "/api/v1/system/health-dashboard", True),
-            ("/api/public/theme", "/api/v1/public/theme", False),
-            ("/api/admin/theme", "/api/v1/admin/theme", True),
-            ("/api/public/cms/pages?org=org_demo", "/api/v1/public/cms/pages?org=org_demo", False),
-            ("/api/public/campaigns?org=org_demo", "/api/v1/public/campaigns?org=org_demo", False),
-        ]
-        
-        passed_count = 0
-        for legacy_path, v1_path, needs_auth in parity_tests:
-            if self.test_route_parity(legacy_path, v1_path, "GET", needs_auth):
-                passed_count += 1
-                
-        total_count = len(parity_tests)
-        self.log_result("Overall V1 Parity Tests", passed_count == total_count, 
-                       f"{passed_count}/{total_count} parity tests passed")
-        return passed_count == total_count
-
-    def test_route_inventory_exists(self):
-        """Test that route inventory snapshot exists and contains v1 aliases"""
-        try:
-            inventory_path = Path("/app/backend/app/bootstrap/route_inventory.json")
-            
-            if not inventory_path.exists():
-                self.log_result("Route Inventory File Exists", False, "File not found")
-                return False
-                
-            self.log_result("Route Inventory File Exists", True, str(inventory_path))
-            
-            # Load and validate content
-            with open(inventory_path) as f:
-                inventory = json.load(f)
-            
-            if not isinstance(inventory, list) or len(inventory) == 0:
-                self.log_result("Route Inventory Content Valid", False, "Invalid or empty inventory")
-                return False
-                
-            # Count v1 routes
-            v1_routes = [route for route in inventory if route.get("legacy_or_v1") == "v1"]
-            legacy_routes = [route for route in inventory if route.get("legacy_or_v1") == "legacy"]
-            
-            self.log_result("Route Inventory Content Valid", True, 
-                          f"Total routes: {len(inventory)}, V1 routes: {len(v1_routes)}, Legacy routes: {len(legacy_routes)}")
-            
-            # Check for required fields
-            required_fields = ["compat_required", "current_namespace", "legacy_or_v1", "method", 
-                             "owner", "path", "risk_level", "source", "target_namespace"]
-            
-            sample_route = inventory[0]
-            missing_fields = [field for field in required_fields if field not in sample_route]
-            
-            if missing_fields:
-                self.log_result("Route Inventory Fields Complete", False, f"Missing fields: {missing_fields}")
-                return False
-            else:
-                self.log_result("Route Inventory Fields Complete", True, "All required fields present")
-                
-            # Check if v1 aliases exist for low-risk routes
-            v1_paths = {route["path"] for route in v1_routes}
-            expected_v1_paths = ["/api/v1/health", "/api/v1/system/ping", "/api/v1/system/health-dashboard",
-                               "/api/v1/public/theme", "/api/v1/admin/theme", "/api/v1/public/cms/pages",
-                               "/api/v1/public/campaigns"]
-            
-            found_paths = [path for path in expected_v1_paths if path in v1_paths]
-            
-            self.log_result("V1 Aliases in Inventory", len(found_paths) > 0, 
-                          f"Found {len(found_paths)} expected v1 aliases: {found_paths}")
-            
-            return True
-            
-        except Exception as e:
-            self.log_result("Route Inventory Validation", False, str(e))
-            return False
-
-    def test_diff_cli_functionality(self):
-        """Test route inventory diff CLI tool"""
-        try:
-            # Create a synthetic previous inventory by filtering out v1 entries
-            current_inventory_path = Path("/app/backend/app/bootstrap/route_inventory.json")
-            
-            if not current_inventory_path.exists():
-                self.log_result("Diff CLI Test", False, "Current inventory file not found")
-                return False
-                
-            with open(current_inventory_path) as f:
-                current_inventory = json.load(f)
-            
-            # Create previous inventory without v1 routes
-            previous_inventory = [route for route in current_inventory if not route["path"].startswith("/api/v1/")]
-            
-            # Write to temp file
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
-                json.dump(previous_inventory, temp_file, indent=2)
-                temp_path = temp_file.name
-            
-            try:
-                # Test diff CLI with text format
-                result = subprocess.run([
-                    "python", "/app/backend/scripts/diff_route_inventory.py",
-                    temp_path, str(current_inventory_path),
-                    "--format", "text"
-                ], capture_output=True, text=True, cwd="/app/backend", timeout=30)
-                
-                if result.returncode == 0:
-                    output = result.stdout
-                    
-                    # Check if output contains expected information
-                    if "added_route_count:" in output and "new_v1_route_count:" in output:
-                        self.log_result("Diff CLI Text Format", True, "Output contains expected metrics")
-                        
-                        # Extract some numbers for validation
-                        lines = output.split('\n')
-                        added_count = None
-                        v1_count = None
-                        
-                        for line in lines:
-                            if "added_route_count:" in line:
-                                added_count = line.split(':')[1].strip()
-                            elif "new_v1_route_count:" in line:
-                                v1_count = line.split(':')[1].strip()
-                        
-                        self.log_result("Diff CLI Metrics", True, 
-                                      f"Added routes: {added_count}, New V1 routes: {v1_count}")
-                    else:
-                        self.log_result("Diff CLI Text Format", False, "Missing expected metrics in output")
-                        return False
-                else:
-                    self.log_result("Diff CLI Text Format", False, f"Exit code: {result.returncode}, Error: {result.stderr}")
-                    return False
-                
-                # Test JSON format
-                result_json = subprocess.run([
-                    "python", "/app/backend/scripts/diff_route_inventory.py", 
-                    temp_path, str(current_inventory_path),
-                    "--format", "json"
-                ], capture_output=True, text=True, cwd="/app/backend", timeout=30)
-                
-                if result_json.returncode == 0:
-                    try:
-                        diff_data = json.loads(result_json.stdout)
-                        if "summary" in diff_data and "added_paths" in diff_data:
-                            self.log_result("Diff CLI JSON Format", True, "Valid JSON output with expected structure")
-                            return True
-                        else:
-                            self.log_result("Diff CLI JSON Format", False, "JSON missing expected structure")
-                            return False
-                    except json.JSONDecodeError as e:
-                        self.log_result("Diff CLI JSON Format", False, f"Invalid JSON: {e}")
-                        return False
-                else:
-                    self.log_result("Diff CLI JSON Format", False, f"Exit code: {result_json.returncode}")
-                    return False
-                    
-            finally:
-                # Cleanup temp file
-                os.unlink(temp_path)
-                
-        except Exception as e:
-            self.log_result("Diff CLI Test", False, str(e))
-            return False
-
-    def run_all_tests(self):
-        """Run all PR-V1-1 validation tests"""
-        print("=== PR-V1-1 Backend Validation Test Suite ===")
-        print(f"Testing against: {self.base_url}")
-        print()
-        
-        # Step 1: Get admin authentication
-        if not self.get_admin_token():
-            print("❌ CRITICAL: Cannot proceed without admin authentication")
-            return False
-        
-        print()
-        
-        # Step 2: Test legacy routes still work unchanged
-        print("--- Testing Legacy Routes Unchanged ---")
-        legacy_passed = self.test_legacy_routes_unchanged()
-        print()
-        
-        # Step 3: Test legacy + v1 parity for low-risk routes
-        print("--- Testing Legacy + V1 Parity ---")
-        parity_passed = self.test_low_risk_v1_parity()
-        print()
-        
-        # Step 4: Test route inventory snapshot exists
-        print("--- Testing Route Inventory Snapshot ---")
-        inventory_passed = self.test_route_inventory_exists()
-        print()
-        
-        # Step 5: Test diff CLI functionality
-        print("--- Testing Diff CLI Functionality ---")
-        diff_passed = self.test_diff_cli_functionality()
-        print()
-        
-        # Summary
-        total_tests = len(self.test_results)
-        passed_tests = len([t for t in self.test_results if t["passed"]])
-        
-        print("=== PR-V1-1 TEST SUMMARY ===")
-        print(f"Total Tests: {total_tests}")
-        print(f"Passed: {passed_tests}")
-        print(f"Failed: {total_tests - passed_tests}")
-        print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
-        print()
-        
-        if passed_tests == total_tests:
-            print("✅ ALL TESTS PASSED - PR-V1-1 low-risk /api/v1 rollout validated successfully")
-            return True
+        if success:
+            self.passed += 1
         else:
-            print("❌ SOME TESTS FAILED - Review failures above")
+            self.failed += 1
             
-            # Show failed tests
-            failed_tests = [t for t in self.test_results if not t["passed"]]
-            if failed_tests:
-                print("\nFailed Tests:")
-                for test in failed_tests:
-                    print(f"  - {test['test']}: {test['details']}")
-                    
-            return False
+    def print_summary(self):
+        print(f"\n{'='*60}")
+        print(f"PR-V1-2A AUTH BOOTSTRAP ROLLOUT TEST SUMMARY")
+        print(f"{'='*60}")
+        print(f"✅ PASSED: {self.passed}")
+        print(f"❌ FAILED: {self.failed}")
+        print(f"📊 SUCCESS RATE: {self.passed / (self.passed + self.failed) * 100:.1f}%")
+        print(f"{'='*60}")
+        
+        for test in self.tests:
+            status = "✅" if test["success"] else "❌"
+            print(f"{status} {test['name']}")
+            if not test["success"] or True:  # Show details for all tests
+                print(f"   {test['message']}")
+        print(f"{'='*60}")
+
+result = TestResult()
+
+async def make_request(
+    session: aiohttp.ClientSession,
+    method: str,
+    url: str,
+    headers: Optional[Dict] = None,
+    json_data: Optional[Dict] = None,
+    cookies: Optional[Dict] = None
+) -> Dict[str, Any]:
+    """Make HTTP request and return response details."""
+    try:
+        kwargs = {}
+        if headers:
+            kwargs['headers'] = headers
+        if json_data:
+            kwargs['json'] = json_data
+        if cookies:
+            kwargs['cookies'] = cookies
+            
+        async with session.request(method, f"{BASE_URL}{url}", **kwargs) as response:
+            try:
+                response_json = await response.json()
+            except:
+                response_json = {}
+                
+            return {
+                "status_code": response.status,
+                "headers": {k.lower(): v for k, v in response.headers.items()},  # Normalize headers to lowercase
+                "json": response_json,
+                "cookies": {name: morsel.value for name, morsel in response.cookies.items()},
+                "text": await response.text() if response.status != 200 else ""
+            }
+    except Exception as e:
+        return {
+            "status_code": 0,
+            "headers": {},
+            "json": {},
+            "cookies": {},
+            "text": str(e),
+            "error": str(e)
+        }
+
+async def test_legacy_auth_routes_with_compat_headers():
+    """Test legacy auth routes return proper deprecation headers."""
+    connector = aiohttp.TCPConnector()
+    jar = aiohttp.CookieJar()
+    async with aiohttp.ClientSession(connector=connector, cookie_jar=jar) as session:
+        # Test POST /api/auth/login
+        async with session.post(f"{BASE_URL}/api/auth/login", 
+                               json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
+                               headers=WEB_HEADER) as resp:
+            login_success = resp.status == 200
+            headers = {k.lower(): v for k, v in resp.headers.items()}
+            has_deprecation = headers.get("deprecation") == "true"
+            link_header = headers.get("link", "")
+            has_link = "</api/v1/auth/login>; rel=\"successor-version\"" in link_header
+            
+            result.add_test(
+                "Legacy POST /api/auth/login with compat headers",
+                login_success and has_deprecation and has_link,
+                f"Status: {resp.status}, Deprecation: {has_deprecation}, Link header: {has_link}"
+            )
+            
+            if not login_success:
+                return None
+                
+            data = await resp.json()
+            access_token = data.get("access_token")
+        
+        # Test GET /api/auth/me - cookies should be automatic  
+        async with session.get(f"{BASE_URL}/api/auth/me", headers=WEB_HEADER) as resp:
+            me_success = resp.status == 200
+            headers = {k.lower(): v for k, v in resp.headers.items()}
+            has_deprecation = headers.get("deprecation") == "true" 
+            link_header = headers.get("link", "")
+            has_link = "</api/v1/auth/me>; rel=\"successor-version\"" in link_header
+            
+            result.add_test(
+                "Legacy GET /api/auth/me with compat headers",
+                me_success and has_deprecation and has_link,
+                f"Status: {resp.status}, Deprecation: {has_deprecation}, Link header: {has_link}"
+            )
+        
+        # Test POST /api/auth/refresh - cookies should be automatic
+        async with session.post(f"{BASE_URL}/api/auth/refresh", 
+                               json={}, headers=WEB_HEADER) as resp:
+            refresh_success = resp.status == 200
+            headers = {k.lower(): v for k, v in resp.headers.items()}
+            has_deprecation = headers.get("deprecation") == "true"
+            link_header = headers.get("link", "")
+            has_link = "</api/v1/auth/refresh>; rel=\"successor-version\"" in link_header
+            
+            result.add_test(
+                "Legacy POST /api/auth/refresh with compat headers", 
+                refresh_success and has_deprecation and has_link,
+                f"Status: {resp.status}, Deprecation: {has_deprecation}, Link header: {has_link}"
+            )
+        
+        return access_token
+
+async def test_v1_auth_alias_routes():
+    """Test new v1 auth alias routes work correctly."""
+    connector = aiohttp.TCPConnector()
+    jar = aiohttp.CookieJar()
+    async with aiohttp.ClientSession(connector=connector, cookie_jar=jar) as session:
+        # Test POST /api/v1/auth/login
+        async with session.post(f"{BASE_URL}/api/v1/auth/login", 
+                               json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
+                               headers=WEB_HEADER) as resp:
+            login_success = resp.status == 200
+            data = await resp.json() if login_success else {}
+            auth_transport = data.get("auth_transport")
+            
+            result.add_test(
+                "New POST /api/v1/auth/login works",
+                login_success and auth_transport == "cookie_compat",
+                f"Status: {resp.status}, Auth transport: {auth_transport}"
+            )
+            
+            if not login_success:
+                return None
+                
+            access_token = data.get("access_token")
+        
+        # Test GET /api/v1/auth/me
+        async with session.get(f"{BASE_URL}/api/v1/auth/me", headers=WEB_HEADER) as resp:
+            me_success = resp.status == 200
+            data = await resp.json() if me_success else {}
+            email = data.get("email")
+            
+            result.add_test(
+                "New GET /api/v1/auth/me works",
+                me_success and email == ADMIN_EMAIL,
+                f"Status: {resp.status}, Email: {email}"
+            )
+        
+        # Test POST /api/v1/auth/refresh
+        async with session.post(f"{BASE_URL}/api/v1/auth/refresh", 
+                               json={}, headers=WEB_HEADER) as resp:
+            refresh_success = resp.status == 200
+            data = await resp.json() if refresh_success else {}
+            new_token = data.get("access_token")
+            
+            result.add_test(
+                "New POST /api/v1/auth/refresh works", 
+                refresh_success and new_token is not None,
+                f"Status: {resp.status}, New token received: {new_token is not None}"
+            )
+        
+        return access_token
+
+async def test_cookie_and_bearer_flows():
+    """Test both cookie-compatible web flow and bearer flow."""
+    async with aiohttp.ClientSession() as session:
+        # Test cookie-compatible web flow
+        response = await make_request(
+            session,
+            "POST",
+            "/api/v1/auth/login",
+            headers=WEB_HEADER,
+            json_data={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
+        )
+        
+        cookie_login_success = response["status_code"] == 200
+        auth_transport = response["json"].get("auth_transport")
+        has_cookies = len(response["cookies"]) > 0
+        
+        result.add_test(
+            "Cookie-compatible web flow",
+            cookie_login_success and auth_transport == "cookie_compat" and has_cookies,
+            f"Status: {response['status_code']}, Transport: {auth_transport}, Cookies: {has_cookies}"
+        )
+        
+        # Test bearer flow (without X-Client-Platform header)
+        response = await make_request(
+            session,
+            "POST", 
+            "/api/v1/auth/login",
+            json_data={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
+        )
+        
+        bearer_login_success = response["status_code"] == 200
+        auth_transport = response["json"].get("auth_transport")
+        access_token = response["json"].get("access_token")
+        
+        result.add_test(
+            "Bearer flow works",
+            bearer_login_success and auth_transport == "bearer" and access_token,
+            f"Status: {response['status_code']}, Transport: {auth_transport}, Token: {bool(access_token)}"
+        )
+        
+        if bearer_login_success and access_token:
+            # Test bearer token works with /api/v1/auth/me
+            response = await make_request(
+                session,
+                "GET",
+                "/api/v1/auth/me",
+                headers={"Authorization": f"Bearer {access_token}"}
+            )
+            
+            bearer_me_success = response["status_code"] == 200
+            email = response["json"].get("email")
+            
+            result.add_test(
+                "Bearer token auth works with v1/auth/me",
+                bearer_me_success and email == ADMIN_EMAIL,
+                f"Status: {response['status_code']}, Email: {email}"
+            )
+
+async def test_mobile_bff_safety():
+    """Test Mobile BFF safety: GET /api/v1/mobile/auth/me with bearer token."""
+    async with aiohttp.ClientSession() as session:
+        # Get bearer token
+        response = await make_request(
+            session,
+            "POST",
+            "/api/v1/auth/login", 
+            json_data={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
+        )
+        
+        if response["status_code"] != 200:
+            result.add_test(
+                "Mobile BFF safety test - login failed",
+                False,
+                f"Failed to get bearer token: {response['status_code']}"
+            )
+            return
+            
+        access_token = response["json"].get("access_token")
+        
+        # Test mobile auth/me endpoint
+        response = await make_request(
+            session,
+            "GET",
+            "/api/v1/mobile/auth/me",
+            headers={"Authorization": f"Bearer {access_token}"}
+        )
+        
+        mobile_success = response["status_code"] == 200
+        email = response["json"].get("email")
+        
+        result.add_test(
+            "Mobile BFF GET /api/v1/mobile/auth/me works with bearer token",
+            mobile_success and email == ADMIN_EMAIL,
+            f"Status: {response['status_code']}, Email: {email}"
+        )
+
+async def test_route_inventory_expectations():
+    """Test route inventory expectations: 678 total routes, 20 v1 routes, 658 legacy routes."""
+    try:
+        # Read route inventory summary
+        with open("/app/backend/app/bootstrap/route_inventory_summary.json", "r") as f:
+            summary = json.load(f)
+            
+        total_routes = summary.get("route_count", 0)
+        v1_routes = summary.get("v1_count", 0) 
+        legacy_routes = summary.get("legacy_count", 0)
+        auth_routes = summary.get("namespaces", {}).get("auth", 0)
+        
+        # Expected: 678 total, 20 v1, 658 legacy, auth aliases +3
+        expected_total = 678
+        expected_v1 = 20
+        expected_legacy = 658
+        
+        total_match = total_routes == expected_total
+        v1_match = v1_routes == expected_v1  
+        legacy_match = legacy_routes == expected_legacy
+        auth_increase = auth_routes >= 17  # Should have increased from previous count
+        
+        result.add_test(
+            f"Route inventory total routes ({expected_total})",
+            total_match,
+            f"Expected: {expected_total}, Actual: {total_routes}"
+        )
+        
+        result.add_test(
+            f"Route inventory v1 routes ({expected_v1})", 
+            v1_match,
+            f"Expected: {expected_v1}, Actual: {v1_routes}"
+        )
+        
+        result.add_test(
+            f"Route inventory legacy routes ({expected_legacy})",
+            legacy_match, 
+            f"Expected: {expected_legacy}, Actual: {legacy_routes}"
+        )
+        
+        result.add_test(
+            "Route inventory auth namespace has aliases",
+            auth_increase,
+            f"Auth routes count: {auth_routes} (should be >= 17 with new aliases)"
+        )
+        
+    except Exception as e:
+        result.add_test(
+            "Route inventory file accessible",
+            False,
+            f"Error reading route inventory: {str(e)}"
+        )
+
+async def test_parity_between_legacy_and_v1():
+    """Test that legacy and v1 routes return identical responses (except headers)."""
+    async with aiohttp.ClientSession() as session:
+        # Get tokens for both flows
+        legacy_response = await make_request(
+            session,
+            "POST",
+            "/api/auth/login",
+            headers=WEB_HEADER,
+            json_data={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
+        )
+        
+        v1_response = await make_request(
+            session,
+            "POST", 
+            "/api/v1/auth/login",
+            headers=WEB_HEADER,
+            json_data={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
+        )
+        
+        if legacy_response["status_code"] == 200 and v1_response["status_code"] == 200:
+            # Compare key fields (ignoring headers and timestamps)
+            legacy_user = legacy_response["json"].get("user", {})
+            v1_user = v1_response["json"].get("user", {})
+            
+            email_match = legacy_user.get("email") == v1_user.get("email")
+            roles_match = legacy_user.get("roles") == v1_user.get("roles")
+            transport_match = (legacy_response["json"].get("auth_transport") == 
+                             v1_response["json"].get("auth_transport"))
+            
+            result.add_test(
+                "Legacy and V1 auth/login return equivalent data",
+                email_match and roles_match and transport_match,
+                f"Email match: {email_match}, Roles match: {roles_match}, Transport match: {transport_match}"
+            )
+        else:
+            result.add_test(
+                "Legacy and V1 auth/login parity test",
+                False,
+                f"Login failed - Legacy: {legacy_response['status_code']}, V1: {v1_response['status_code']}"
+            )
+
+async def main():
+    """Run all PR-V1-2A auth bootstrap rollout tests."""
+    print("🚀 Starting PR-V1-2A Auth Bootstrap Rollout Tests")
+    print(f"🎯 Base URL: {BASE_URL}")
+    print(f"👤 Admin Email: {ADMIN_EMAIL}")
+    print("="*60)
+    
+    try:
+        # Test 1: Legacy auth routes with compat headers
+        print("1️⃣  Testing legacy auth routes with compat headers...")
+        await test_legacy_auth_routes_with_compat_headers()
+        
+        # Test 2: New v1 auth alias routes
+        print("2️⃣  Testing new v1 auth alias routes...")
+        await test_v1_auth_alias_routes()
+        
+        # Test 3: Cookie and bearer flows
+        print("3️⃣  Testing cookie-compatible web flow and bearer flow...")
+        await test_cookie_and_bearer_flows()
+        
+        # Test 4: Mobile BFF safety
+        print("4️⃣  Testing Mobile BFF safety...")
+        await test_mobile_bff_safety()
+        
+        # Test 5: Route inventory expectations
+        print("5️⃣  Testing route inventory expectations...")
+        await test_route_inventory_expectations()
+        
+        # Test 6: Parity between legacy and v1
+        print("6️⃣  Testing parity between legacy and v1 routes...")
+        await test_parity_between_legacy_and_v1()
+        
+    except Exception as e:
+        result.add_test(
+            "Test execution",
+            False,
+            f"Test execution error: {str(e)}"
+        )
+    
+    # Print results
+    result.print_summary()
+    
+    # Exit with appropriate code
+    return 0 if result.failed == 0 else 1
 
 if __name__ == "__main__":
-    tester = PRV1ValidationTests()
-    success = tester.run_all_tests()
-    sys.exit(0 if success else 1)
+    exit_code = asyncio.run(main())
+    sys.exit(exit_code)

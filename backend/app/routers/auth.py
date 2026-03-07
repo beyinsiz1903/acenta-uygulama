@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
+from app.bootstrap.compat_headers import apply_compat_headers
 from app.auth import create_access_token, decode_token, get_current_user, get_request_access_token, verify_password, hash_password
 from app.config import (
     AUTH_ACCESS_COOKIE_MAX_AGE,
@@ -26,6 +27,12 @@ from app.utils import serialize_doc, now_utc
 from app.services.password_policy import validate_password
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+AUTH_V1_SUCCESSOR_PATHS = {
+    "/api/auth/login": "/api/v1/auth/login",
+    "/api/auth/me": "/api/v1/auth/me",
+    "/api/auth/refresh": "/api/v1/auth/refresh",
+}
 
 
 class LoginWith2FARequest(BaseModel):
@@ -88,6 +95,12 @@ def _clear_auth_cookies(response: Response) -> None:
     delete_options = _delete_cookie_options()
     response.delete_cookie(AUTH_ACCESS_COOKIE_NAME, **delete_options)
     response.delete_cookie(AUTH_REFRESH_COOKIE_NAME, **delete_options)
+
+
+def _apply_auth_compat_headers(request: Request, response: Response) -> None:
+    successor_path = AUTH_V1_SUCCESSOR_PATHS.get(request.url.path)
+    if successor_path:
+        apply_compat_headers(response, successor_path)
 
 
 @router.post("/login")
@@ -218,6 +231,7 @@ async def login(payload: LoginWith2FARequest, request: Request, response: Respon
     if auth_transport == "cookie_compat":
         _set_auth_cookies(response, access_token=token, refresh_token=rt_doc["refresh_token"])
     response.headers["X-Auth-Transport"] = auth_transport
+    _apply_auth_compat_headers(request, response)
 
     # Attach tenant_id to response (extra field beyond schema)
     resp_dict = resp.model_dump() if hasattr(resp, 'model_dump') else resp.dict()
@@ -364,6 +378,7 @@ async def refresh_access_token(payload: RefreshTokenRequest, request: Request, r
     if auth_transport == "cookie_compat":
         _set_auth_cookies(response, access_token=new_access_token, refresh_token=new_rt["refresh_token"])
     response.headers["X-Auth-Transport"] = auth_transport
+    _apply_auth_compat_headers(request, response)
 
     return {
         "access_token": new_access_token,
@@ -399,6 +414,7 @@ async def revoke_session(session_id: str, user=Depends(get_current_user)):
 
 
 @router.get("/me")
-async def me(user=Depends(get_current_user)):
+async def me(request: Request, response: Response, user=Depends(get_current_user)):
     # Helpful for frontend refresh
+    _apply_auth_compat_headers(request, response)
     return user

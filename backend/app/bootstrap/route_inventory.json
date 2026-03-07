@@ -7085,6 +7085,39 @@
   },
   {
     "compat_required": false,
+    "current_namespace": "/api/v1/auth",
+    "legacy_or_v1": "v1",
+    "method": "POST",
+    "owner": "auth",
+    "path": "/api/v1/auth/login",
+    "risk_level": "high",
+    "source": "app.routers.auth",
+    "target_namespace": "/api/v1/auth"
+  },
+  {
+    "compat_required": false,
+    "current_namespace": "/api/v1/auth",
+    "legacy_or_v1": "v1",
+    "method": "GET",
+    "owner": "auth",
+    "path": "/api/v1/auth/me",
+    "risk_level": "high",
+    "source": "app.routers.auth",
+    "target_namespace": "/api/v1/auth"
+  },
+  {
+    "compat_required": false,
+    "current_namespace": "/api/v1/auth",
+    "legacy_or_v1": "v1",
+    "method": "POST",
+    "owner": "auth",
+    "path": "/api/v1/auth/refresh",
+    "risk_level": "high",
+    "source": "app.routers.auth",
+    "target_namespace": "/api/v1/auth"
+  },
+  {
+    "compat_required": false,
     "current_namespace": "/api/v1/health",
     "legacy_or_v1": "v1",
     "method": "GET",

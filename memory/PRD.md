@@ -629,7 +629,7 @@ Use the repo’s existing standardized shape everywhere in v1:
   - `compat_headers.py` for shared deprecation/sunset/successor-version header generation
   - `v1_registry.py` as the initial `/api/v1` composition entrypoint
   - `route_inventory.py` for sorted route inventory building and JSON export
-- Added helper script `backend/scripts/export_route_inventory.py` that writes deterministic route inventory output to `/app/backend/app/bootstrap/route_inventory.json` without coupling export generation to runtime boot.
+- Added helper script `backend/scripts/export_route_inventory.py` that writes deterministic route inventory output to `/app/backend/app/bootstrap/route_inventory.json`.
 - Cleaned `backend/app/bootstrap/router_registry.py` so `auth_router` is no longer registered twice. The v1 registry is now mounted through `register_v1_routers(app)` and currently preserves the existing `/api/v1/mobile/*` surface only.
 - Generated committed artifact `/app/backend/app/bootstrap/route_inventory.json` with stable ordering and required foundation fields: `path`, `method`, `source`, `current_namespace`, `target_namespace`, `legacy_or_v1`, `compat_required`, `risk_level`, `owner`.
 - Added focused tests:
@@ -643,10 +643,35 @@ Use the repo’s existing standardized shape everywhere in v1:
   - backend testing agent report `/app/test_reports/iteration_16.json`
   - frontend smoke + frontend automation verifying login still works after registry cleanup
 
+### PR-V1-1 Implemented — Low-Risk System / Public Metadata Rollout (Mar 7, 2026)
+- Added low-risk v1 alias registration in `backend/app/bootstrap/v1_aliases.py` and wired it via `backend/app/bootstrap/v1_registry.py`.
+- New dual-route coverage now exists for these scoped router groups while preserving legacy paths:
+  - `GET /api/health` + `GET /api/v1/health`
+  - `GET /api/system/ping` + `GET /api/v1/system/ping`
+  - `GET /api/system/health-dashboard` + `GET /api/v1/system/health-dashboard`
+  - `GET /api/system/prometheus` + `GET /api/v1/system/prometheus`
+  - `GET /api/public/theme` + `GET /api/v1/public/theme`
+  - `GET|PUT /api/admin/theme` + `GET|PUT /api/v1/admin/theme`
+  - `GET /api/public/cms/pages[/{slug}]` + `GET /api/v1/public/cms/pages[/{slug}]`
+  - `GET /api/public/campaigns[/{slug}]` + `GET /api/v1/public/campaigns[/{slug}]`
+- Extended `v1_manifest.py` with `derive_target_path()` plus `/api/v1/*` namespace awareness so route inventory classifies both legacy and v1 aliases correctly.
+- Added best-effort runtime snapshot export in `backend/app/bootstrap/api_app.py`, so the current `route_inventory.json` is refreshed during app boot without making runtime availability depend on export success.
+- Added route inventory diff support:
+  - `backend/app/bootstrap/route_inventory_diff.py`
+  - `backend/scripts/diff_route_inventory.py` (`text` and `json` output)
+- Current inventory snapshot now reports **675** total routes with **17** v1 routes, including **11** newly added PR-V1-1 aliases.
+- Added/updated tests:
+  - `backend/tests/test_api_v1_low_risk_rollout.py`
+  - `backend/tests/test_pr_v1_1_low_risk_rollout_http.py`
+- Validation passed via:
+  - `pytest /app/backend/tests/test_api_v1_foundation.py /app/backend/tests/test_api_v1_low_risk_rollout.py -q`
+  - preview HTTP smoke on legacy + v1 parity for health/system/theme/public CMS/public campaigns/admin theme
+  - backend testing agent report `/app/test_reports/iteration_17.json`
+  - backend deep validation agent: 23/23 checks passed
+
 ## Current Priority Backlog
-- **P0:** Start **PR-V1-1** — low-risk `/api/v1` rollout for system/public metadata router groups
-- **P1:** Continue `/api/v1` implementation in the low-risk -> high-risk order defined above
-- **P1:** Mirror the dedicated runtime wiring into staging/prod infra definitions when those environment configs are available/in scope
+- **P0:** Staging/prod runtime parity for the v1 registry + route inventory workflow (same runtime wiring, export/diff usage, and operational checks outside preview)
+- **P1:** Continue `/api/v1` implementation in controlled order, with **PR-V1-2 (auth/session/settings)** as the next code migration only after parity expectations are locked
 - **P1:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
 - **P1:** Cleanup PR for non-blocking preview issues: `/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`
 - **P2:** Entitlement/billing unification, observability stack, broader frontend modular refactor

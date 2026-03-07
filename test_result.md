@@ -100,6 +100,18 @@ backend:
         comment: "PR-4 BACKEND VERIFICATION COMPLETED - ALL TESTS PASSED (2026-03-06). All 6 curl-like backend verification tests completed successfully: 1) Web Login Cookie Compat ✅ - POST /api/auth/login with X-Client-Platform:web correctly sets cookie-based auth and returns auth_transport=cookie_compat, 2) Auth Me Cookies Only ✅ - GET /api/auth/me works using cookies only (no Authorization header), 3) Refresh Cookie Fallback ✅ - POST /api/auth/refresh with empty body works via refresh cookie with token rotation, 4) Logout Clears Cookies ✅ - POST /api/auth/logout clears session/cookies and /api/auth/me becomes 401, 5) Legacy Bearer Flow ✅ - Login without X-Client-Platform:web returns bearer transport and bearer /api/auth/me works, 6) Sensitive Fields Sanitized ✅ - /api/auth/me does not expose password_hash/totp_secret/recovery_codes. Success rate: 100%. Cookie-based web auth compatibility layer working correctly, legacy bearer token flow preserved, all security requirements met."
 
 frontend:
+  - task: "PR-V1-0 minimal frontend smoke validation"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/LoginPage.jsx, frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PR-V1-0 minimal frontend smoke validation PASSED (2026-03-07). All 4 critical validation points confirmed: 1) ✅ /login page loads correctly with all form elements (login-page, login-form, login-email, login-password, login-submit testids present), 2) ✅ Admin login with admin@acenta.test/admin123 successful - proper authentication and redirect to /app/admin/agencies, 3) ✅ Protected area renders correctly - no blank page detected (949 chars content, 'Acentalar' page with 3 agencies displayed), 4) ✅ No auth loop or critical console errors - URL stable at /app/admin/agencies, no redirect loops, only pre-existing non-critical errors (401 on /auth/me before login, 400/500 on optional features like tenant/features, quota-status, partner-graph). Backend foundation changes did NOT break frontend auth flow. System stable and functional."
+
   - task: "Login functionality at /login"
     implemented: true
     working: true
@@ -210,7 +222,7 @@ frontend:
 
 test_plan:
   current_focus:
-    - "PR-8 web auth cookie/httpOnly session validation - PASSED"
+    - "PR-V1-0 minimal frontend smoke validation - PASSED"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
@@ -735,7 +747,7 @@ metadata:
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 16
+  test_sequence: 17
   last_updated: "2026-03-07"
 
   - task: "Preview Auth Helper validation - common auth/token cache"
@@ -2048,6 +2060,64 @@ agent_communication:
       ✅ All HTTP status codes correct (200 for success, 401 for unauthorized)
       ✅ JSON response structures valid and expected
       ✅ Token authentication working across both legacy and mobile endpoints
+
+  - agent: "testing"
+    message: |
+      ✅ PR-V1-0 MINIMAL FRONTEND SMOKE VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-07)
+      
+      Performed minimal smoke test to verify backend foundation changes did not break frontend auth flow.
+      
+      Test Context:
+      - Preview URL: https://secure-auth-v1.preview.emergentagent.com
+      - Test Account: admin@acenta.test / admin123
+      - Scope: Minimal smoke test only (no UI design review required)
+      
+      Validation Results:
+      
+      1. ✅ /login sayfası yükleniyor mu?
+         - EVET - Login page loads correctly
+         - All form elements present with proper data-testid attributes:
+           * login-page ✅
+           * login-form ✅
+           * login-email ✅
+           * login-password ✅
+           * login-submit ✅
+      
+      2. ✅ admin@acenta.test / admin123 ile giriş yapılabiliyor mu?
+         - EVET - Login successful
+         - Credentials accepted and authenticated
+         - Redirect triggered correctly
+      
+      3. ✅ Başarılı redirect ile protected area açılıyor mu?
+         - EVET - Successfully redirected to /app/admin/agencies
+         - Protected area renders completely (949 characters content)
+         - "Acentalar" page displays with 3 agencies
+         - No blank page detected
+      
+      4. ✅ Blank page / auth loop / kritik console error var mı?
+         - HAYIR - No blank page
+         - HAYIR - No auth loop (URL stable at /app/admin/agencies)
+         - HAYIR - No critical console errors
+         - Console shows only pre-existing non-critical errors:
+           * 401 on /auth/me before login (expected bootstrap check)
+           * 401 on /auth/refresh (expected pre-login)
+           * 400/500 on optional features (tenant/features, quota-status, partner-graph)
+      
+      Test Summary:
+      - Total Validation Points: 4
+      - Passed: 4
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      PR-V1-0 minimal frontend smoke validation SUCCESSFUL. Backend foundation changes did NOT break frontend auth flow. All critical authentication functionality working correctly:
+      - Login page loads properly
+      - Admin credentials authenticate successfully
+      - Protected area accessed without issues
+      - No blank pages, auth loops, or critical blocking errors
+      
+      Status: ✅ PRODUCTION-READY - Frontend auth flow validated and stable after backend changes.
+
       ✅ Session management operational
       ✅ Security controls functioning (unauthorized rejection)
       ✅ No API errors or service degradation

@@ -12,25 +12,25 @@
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/activation",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "activation",
     "path": "/api/activation/checklist",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.activation_checklist",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/activation"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/activation",
     "legacy_or_v1": "legacy",
     "method": "PUT",
-    "owner": "system",
+    "owner": "activation",
     "path": "/api/activation/checklist/{item_key}/complete",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.activation_checklist",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/activation"
   },
   {
     "compat_required": true,
@@ -3213,201 +3213,201 @@
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/ai-assistant",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "ai-assistant",
     "path": "/api/ai-assistant/briefing",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.ai_assistant",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/ai-assistant"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/ai-assistant",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "ai-assistant",
     "path": "/api/ai-assistant/chat",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.ai_assistant",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/ai-assistant"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/ai-assistant",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "ai-assistant",
     "path": "/api/ai-assistant/chat-history/{session_id}",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.ai_assistant",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/ai-assistant"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/ai-assistant",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "ai-assistant",
     "path": "/api/ai-assistant/sessions",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.ai_assistant",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/ai-assistant"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/api",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "api",
     "path": "/api/api/b2b/bookings/{booking_id}/voucher",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.vouchers",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/api"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/api",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "api",
     "path": "/api/api/b2b/bookings/{booking_id}/voucher.pdf",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.vouchers",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/api"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/api",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "api",
     "path": "/api/api/b2b/bookings/{booking_id}/voucher/latest",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.vouchers",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/api"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/api",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "api",
     "path": "/api/api/ops/bookings/{booking_id}/voucher",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.vouchers",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/api"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/api",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "api",
     "path": "/api/api/ops/bookings/{booking_id}/voucher/generate",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.vouchers",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/api"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/api",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "api",
     "path": "/api/api/ops/bookings/{booking_id}/voucher/issue",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.vouchers",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/api"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/api",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "api",
     "path": "/api/api/ops/bookings/{booking_id}/voucher/resend",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.vouchers",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/api"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/api",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "api",
     "path": "/api/api/ops/bookings/{booking_id}/vouchers",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.vouchers",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/api"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/approvals",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "approvals",
     "path": "/api/approvals",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.enterprise_approvals",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/approvals"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/approvals",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "approvals",
     "path": "/api/approvals",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.enterprise_approvals",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/approvals"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/approvals",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "approvals",
     "path": "/api/approvals/{approval_id}/approve",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.enterprise_approvals",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/approvals"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/approvals",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "approvals",
     "path": "/api/approvals/{approval_id}/reject",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.enterprise_approvals",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/approvals"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/audit",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "audit",
     "path": "/api/audit/logs",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.audit",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/audit"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/audit",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "audit",
     "path": "/api/audit/logs/{log_id}",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.audit",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/audit"
   },
   {
     "compat_required": true,
@@ -4148,25 +4148,25 @@
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/commission-rules",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "commission-rules",
     "path": "/api/commission-rules",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.commission_rules",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/commission-rules"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/commission-rules",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "commission-rules",
     "path": "/api/commission-rules/effective",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.commission_rules",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/commission-rules"
   },
   {
     "compat_required": true,
@@ -4500,124 +4500,124 @@
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/dev",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "dev",
     "path": "/api/dev/dummy-bookings/create",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.dev_saas",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/dev"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/dev",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "dev",
     "path": "/api/dev/users/create",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.dev_saas",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/dev"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/efatura",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "efatura",
     "path": "/api/efatura/invoices",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.efatura",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/efatura"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/efatura",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "efatura",
     "path": "/api/efatura/invoices",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.efatura",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/efatura"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/efatura",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "efatura",
     "path": "/api/efatura/invoices/{invoice_id}",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.efatura",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/efatura"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/efatura",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "efatura",
     "path": "/api/efatura/invoices/{invoice_id}/cancel",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.efatura",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/efatura"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/efatura",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "efatura",
     "path": "/api/efatura/invoices/{invoice_id}/events",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.efatura",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/efatura"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/efatura",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "efatura",
     "path": "/api/efatura/invoices/{invoice_id}/send",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.efatura",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/efatura"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/efatura",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "efatura",
     "path": "/api/efatura/profile",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.efatura",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/efatura"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/efatura",
     "legacy_or_v1": "legacy",
     "method": "PUT",
-    "owner": "system",
+    "owner": "efatura",
     "path": "/api/efatura/profile",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.efatura",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/efatura"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/exports",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "exports",
     "path": "/api/exports/download/{token}",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.exports",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/exports"
   },
   {
     "compat_required": true,
@@ -4841,80 +4841,80 @@
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/inbox",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "inbox",
     "path": "/api/inbox/threads",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.inbox_v2",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/inbox"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/inbox",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "inbox",
     "path": "/api/inbox/threads",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.inbox_v2",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/inbox"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/inbox",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "inbox",
     "path": "/api/inbox/threads/{thread_id}/messages",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.inbox_v2",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/inbox"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/inbox",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "inbox",
     "path": "/api/inbox/threads/{thread_id}/messages",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.inbox_v2",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/inbox"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/inbox",
     "legacy_or_v1": "legacy",
     "method": "PATCH",
-    "owner": "system",
+    "owner": "inbox",
     "path": "/api/inbox/threads/{thread_id}/status",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.inbox_v2",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/inbox"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/inventory-shares",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "inventory-shares",
     "path": "/api/inventory-shares",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.inventory_shares",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/inventory-shares"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/inventory-shares",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "inventory-shares",
     "path": "/api/inventory-shares/grant",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.inventory_shares",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/inventory-shares"
   },
   {
     "compat_required": true,
@@ -5094,14 +5094,14 @@
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/metrics",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "metrics",
     "path": "/api/metrics",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.metrics",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/metrics"
   },
   {
     "compat_required": true,
@@ -5160,25 +5160,25 @@
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/offers",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "offers",
     "path": "/api/offers/search",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.offers",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/offers"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/offers",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "offers",
     "path": "/api/offers/search-sessions/{session_id}",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.offers",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/offers"
   },
   {
     "compat_required": true,
@@ -6546,14 +6546,14 @@
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/reference",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "reference",
     "path": "/api/reference/cancel-reasons",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.cancel_reasons",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/reference"
   },
   {
     "compat_required": true,
@@ -6711,25 +6711,25 @@
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/robots.txt",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "robots.txt",
     "path": "/api/robots.txt",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.seo",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/robots.txt"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/saas",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "saas",
     "path": "/api/saas/tenants/resolve",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.saas_tenants",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/saas"
   },
   {
     "compat_required": true,
@@ -6755,102 +6755,102 @@
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/settlements",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "settlements",
     "path": "/api/settlements",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.settlements",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/settlements"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/settlements",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "settlements",
     "path": "/api/settlements/statement",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.settlements",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/settlements"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/sitemap.xml",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "sitemap.xml",
     "path": "/api/sitemap.xml",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.seo",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/sitemap.xml"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/sms",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "sms",
     "path": "/api/sms/logs",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.sms_notifications",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/sms"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/sms",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "sms",
     "path": "/api/sms/send",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.sms_notifications",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/sms"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/sms",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "sms",
     "path": "/api/sms/send-bulk",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.sms_notifications",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/sms"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/sms",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "sms",
     "path": "/api/sms/templates",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.sms_notifications",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/sms"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/suppliers",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "suppliers",
     "path": "/api/suppliers/mock/search",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.suppliers",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/suppliers"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/suppliers",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "suppliers",
     "path": "/api/suppliers/paximum/search",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.suppliers",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/suppliers"
   },
   {
     "compat_required": true,
@@ -6997,69 +6997,69 @@
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/tours",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "tours",
     "path": "/api/tours",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.tours_browse",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/tours"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/tours",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "tours",
     "path": "/api/tours/{tour_id}",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.tours_browse",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/tours"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/tours",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "tours",
     "path": "/api/tours/{tour_id}/reservations",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.tours_browse",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/tours"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/tours",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "tours",
     "path": "/api/tours/{tour_id}/reserve",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.tours_browse",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/tours"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/upgrade-requests",
     "legacy_or_v1": "legacy",
     "method": "GET",
-    "owner": "system",
+    "owner": "upgrade-requests",
     "path": "/api/upgrade-requests",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.upgrade_requests",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/upgrade-requests"
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/upgrade-requests",
     "legacy_or_v1": "legacy",
     "method": "POST",
-    "owner": "system",
+    "owner": "upgrade-requests",
     "path": "/api/upgrade-requests",
-    "risk_level": "low",
+    "risk_level": "medium",
     "source": "app.routers.upgrade_requests",
-    "target_namespace": "/api/v1"
+    "target_namespace": "/api/v1/upgrade-requests"
   },
   {
     "compat_required": false,
@@ -7129,7 +7129,7 @@
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/web",
     "legacy_or_v1": "legacy",
     "method": "POST",
     "owner": "public",
@@ -7140,7 +7140,7 @@
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/web",
     "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "public",
@@ -7151,7 +7151,7 @@
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/web",
     "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "public",
@@ -7162,7 +7162,7 @@
   },
   {
     "compat_required": true,
-    "current_namespace": "/api",
+    "current_namespace": "/api/web",
     "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "public",

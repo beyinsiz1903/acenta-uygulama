@@ -77,7 +77,6 @@ def derive_current_namespace(path: str) -> str:
         "/api/webpos",
         "/api/onboarding",
         "/api/gdpr",
-        "/api",
         "/storefront",
         "/web",
     )
@@ -88,6 +87,10 @@ def derive_current_namespace(path: str) -> str:
     parts = [segment for segment in path.split("/") if segment]
     if not parts:
         return "/"
+    if parts[0] == "api":
+        if len(parts) == 1:
+            return "/api"
+        return f"/api/{parts[1]}"
     if len(parts) == 1:
         return f"/{parts[0]}"
     return f"/{parts[0]}/{parts[1]}"

@@ -4,6 +4,7 @@ from __future__ import annotations
 import pytest
 from httpx import AsyncClient
 
+from app.repositories.usage_daily_repository import usage_daily_repo
 from app.services.usage_service import track_usage, check_quota
 from app.services.feature_service import feature_service
 
@@ -42,6 +43,7 @@ async def test_usage_idempotency(test_db) -> None:
   # Ensure unique index
   from app.repositories.usage_ledger_repository import usage_ledger_repo
   await usage_ledger_repo.ensure_indexes()
+  await usage_daily_repo.ensure_indexes()
 
   await track_usage(tid, "b2b.match_request", 1, "b2b", "mreq_dup_001")
   await track_usage(tid, "b2b.match_request", 1, "b2b", "mreq_dup_001")  # duplicate
@@ -50,6 +52,9 @@ async def test_usage_idempotency(test_db) -> None:
     {"tenant_id": tid, "source_event_id": "mreq_dup_001"}
   )
   assert count == 1, f"Expected 1 entry, got {count}"
+  daily = await test_db.usage_daily.find_one({"tenant_id": tid, "metric": "b2b.match_request"}, {"_id": 0})
+  assert daily is not None
+  assert daily["count"] == 1
 
 
 @pytest.mark.anyio

@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import logging
+import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
+from app.constants.usage_metrics import VALID_USAGE_METRICS
 from app.constants.plan_matrix import DEFAULT_PLAN
+from app.errors import AppError
+from app.repositories.usage_daily_repository import usage_daily_repo
 from app.repositories.usage_ledger_repository import usage_ledger_repo
 from app.services.audit_log_service import append_audit_log
 from app.services.entitlement_service import entitlement_service
@@ -16,6 +20,107 @@ def _current_billing_period() -> str:
   return datetime.now(timezone.utc).strftime("%Y-%m")
 
 
+async def _resolve_organization_id_for_tenant(tenant_id: str) -> Optional[str]:
+  from app.db import get_db
+
+  db = await get_db()
+  tenant = await db.tenants.find_one({"_id": tenant_id}, {"_id": 1, "organization_id": 1})
+  if tenant and tenant.get("organization_id") is not None:
+    return str(tenant.get("organization_id"))
+  tenant = await db.tenants.find_one({"slug": tenant_id}, {"_id": 1, "organization_id": 1})
+  if tenant and tenant.get("organization_id") is not None:
+    return str(tenant.get("organization_id"))
+  return None
+
+
+async def _resolve_usage_organization_id(tenant_id: str, billing_period: Optional[str] = None) -> Optional[str]:
+  organization_id = await _resolve_organization_id_for_tenant(tenant_id)
+  if organization_id:
+    return organization_id
+
+  from app.db import get_db
+
+  db = await get_db()
+  period = billing_period or _current_billing_period()
+  daily_doc = await db.usage_daily.find_one(
+    {"tenant_id": tenant_id, "organization_id": {"$exists": True, "$ne": None}},
+    {"_id": 0, "organization_id": 1},
+    sort=[("date", -1)],
+  )
+  if daily_doc and daily_doc.get("organization_id") is not None:
+    return str(daily_doc.get("organization_id"))
+
+  ledger_doc = await db.usage_ledger.find_one(
+    {
+      "tenant_id": tenant_id,
+      "billing_period": period,
+      "organization_id": {"$exists": True, "$ne": None},
+    },
+    {"_id": 0, "organization_id": 1},
+    sort=[("timestamp", -1)],
+  )
+  if ledger_doc and ledger_doc.get("organization_id") is not None:
+    return str(ledger_doc.get("organization_id"))
+  return None
+
+
+def _validate_usage_metric(metric: str) -> None:
+  if metric not in VALID_USAGE_METRICS:
+    raise AppError(422, "invalid_usage_metric", "Geçersiz usage metriği.", {"metric": metric})
+
+
+async def track_usage_event(
+  tenant_id: str,
+  organization_id: Optional[str],
+  metric: str,
+  quantity: int = 1,
+  source: Optional[str] = None,
+  source_event_id: Optional[str] = None,
+  metadata: Optional[Dict[str, Any]] = None,
+) -> bool:
+  """Canonical metering write path.
+
+  Returns True if inserted, False if duplicate.
+  """
+  _validate_usage_metric(metric)
+  if quantity <= 0:
+    raise AppError(422, "invalid_usage_quantity", "Usage quantity sıfırdan büyük olmalı.", {"quantity": quantity})
+
+  event_at = datetime.now(timezone.utc)
+  billing_period = event_at.strftime("%Y-%m")
+  event_source = source or "system"
+  dedupe_key = source_event_id or f"adhoc:{metric}:{uuid.uuid4()}"
+
+  inserted_id = await usage_ledger_repo.insert_event(
+    tenant_id=tenant_id,
+    organization_id=organization_id,
+    metric=metric,
+    quantity=quantity,
+    source=event_source,
+    source_event_id=dedupe_key,
+    billing_period=billing_period,
+    timestamp=event_at,
+    metadata=metadata,
+  )
+  if inserted_id is None:
+    logger.debug("Usage duplicate skipped: %s/%s/%s", tenant_id, metric, dedupe_key)
+    return False
+
+  try:
+    await usage_daily_repo.increment(
+      tenant_id=tenant_id,
+      organization_id=organization_id,
+      metric=metric,
+      quantity=quantity,
+      event_at=event_at,
+    )
+  except Exception:
+    await usage_ledger_repo.delete_event(inserted_id)
+    raise
+
+  return True
+
+
 async def track_usage(
   tenant_id: str,
   metric: str,
@@ -23,14 +128,16 @@ async def track_usage(
   source: str,
   source_event_id: str,
 ) -> None:
-  """Best-effort usage tracking. Never raises."""
+  """Backward-compatible best-effort tracking helper."""
   try:
     plan = await entitlement_service.get_plan(tenant_id)
     if plan == "starter":
       return  # Starter has no metered features
 
-    inserted = await usage_ledger_repo.append(
+    organization_id = await _resolve_usage_organization_id(tenant_id)
+    inserted = await track_usage_event(
       tenant_id=tenant_id,
+      organization_id=organization_id,
       metric=metric,
       quantity=quantity,
       source=source,
@@ -45,12 +152,14 @@ async def track_usage(
 async def check_quota(tenant_id: str, metric: str) -> Dict[str, Any]:
   """Check if tenant is within quota for a metric."""
   entitlements = await entitlement_service.get_tenant_entitlements(tenant_id)
-  plan = entitlements.get("plan") or DEFAULT_PLAN
   quotas = entitlements.get("usage_allowances") or {}
   quota = quotas.get(metric)
 
   period = _current_billing_period()
-  totals = await usage_ledger_repo.get_period_totals(tenant_id, period)
+  organization_id = await _resolve_usage_organization_id(tenant_id, period)
+  totals = await usage_daily_repo.get_period_totals(tenant_id, period, organization_id=organization_id)
+  if not totals:
+    totals = await usage_ledger_repo.get_period_totals(tenant_id, period, organization_id=organization_id)
   used = totals.get(metric, 0)
 
   if quota is None:
@@ -73,33 +182,42 @@ async def check_quota(tenant_id: str, metric: str) -> Dict[str, Any]:
   return {"metric": metric, "quota": quota, "used": used, "remaining": remaining, "exceeded": exceeded}
 
 
-async def get_usage_summary(tenant_id: str) -> Dict[str, Any]:
+async def get_usage_summary(tenant_id: str, billing_period: Optional[str] = None) -> Dict[str, Any]:
   """Get full usage summary for a tenant (current period)."""
   entitlements = await entitlement_service.get_tenant_entitlements(tenant_id)
   plan = entitlements.get("plan") or DEFAULT_PLAN
   quotas = entitlements.get("usage_allowances") or {}
-  period = _current_billing_period()
-  totals = await usage_ledger_repo.get_period_totals(tenant_id, period)
+  period = billing_period or _current_billing_period()
+  organization_id = await _resolve_usage_organization_id(tenant_id, period)
+  totals = await usage_daily_repo.get_period_totals(tenant_id, period, organization_id=organization_id)
+  totals_source = "usage_daily"
+  if not totals:
+    totals = await usage_ledger_repo.get_period_totals(tenant_id, period, organization_id=organization_id)
+    totals_source = "usage_ledger"
 
   metrics = {}
   all_metric_keys = set(list(quotas.keys()) + list(totals.keys()))
   for m in sorted(all_metric_keys):
     quota = quotas.get(m)
     used = totals.get(m, 0)
+    ratio = round((used / quota), 4) if quota not in (None, 0) else 0
     metrics[m] = {
       "quota": quota,
       "used": used,
       "remaining": max(0, quota - used) if quota is not None else None,
       "exceeded": used >= quota if quota is not None else False,
+      "ratio": ratio,
     }
 
   return {
     "tenant_id": tenant_id,
+    "organization_id": organization_id,
     "plan": plan,
     "plan_label": entitlements.get("plan_label"),
     "billing_period": period,
     "limits": entitlements.get("limits") or {},
     "metrics": metrics,
+    "totals_source": totals_source,
   }
 
 

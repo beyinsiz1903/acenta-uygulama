@@ -30,18 +30,22 @@ class UsageLedgerRepository:
     db = await get_db()
     return db.usage_ledger
 
-  async def append(
+  async def insert_event(
     self,
+    *,
     tenant_id: str,
+    organization_id: Optional[str],
     metric: str,
     quantity: int,
     source: str,
     source_event_id: str,
     billing_period: Optional[str] = None,
-  ) -> bool:
-    """Append usage entry. Returns True if inserted, False if duplicate."""
+    timestamp: Optional[datetime] = None,
+    metadata: Optional[Dict[str, Any]] = None,
+  ) -> Optional[str]:
+    """Insert a usage event. Returns event id, or None if duplicate."""
     col = await self._col()
-    now = datetime.now(timezone.utc)
+    now = timestamp or datetime.now(timezone.utc)
     if not billing_period:
       billing_period = now.strftime("%Y-%m")
 
@@ -59,23 +63,62 @@ class UsageLedgerRepository:
       "source": source,
       "source_event_id": source_event_id,
     }
+    if organization_id:
+      doc["organization_id"] = organization_id
+    if metadata:
+      doc["metadata"] = metadata
 
     from pymongo.errors import DuplicateKeyError
     try:
-      await col.insert_one(doc)
-      return True
+      res = await col.insert_one(doc)
+      return str(res.inserted_id)
     except DuplicateKeyError:
-      return False
+      return None
+
+  async def append(
+    self,
+    tenant_id: str,
+    metric: str,
+    quantity: int,
+    source: str,
+    source_event_id: str,
+    billing_period: Optional[str] = None,
+  ) -> bool:
+    """Backward-compatible append helper. Returns True if inserted, False if duplicate."""
+    inserted_id = await self.insert_event(
+      tenant_id=tenant_id,
+      organization_id=None,
+      metric=metric,
+      quantity=quantity,
+      source=source,
+      source_event_id=source_event_id,
+      billing_period=billing_period,
+    )
+    return inserted_id is not None
+
+  async def delete_event(self, event_id: str) -> None:
+    col = await self._col()
+    from bson import ObjectId
+
+    try:
+      oid = ObjectId(event_id)
+    except Exception:
+      return
+    await col.delete_one({"_id": oid})
 
   async def get_period_totals(
     self,
     tenant_id: str,
     billing_period: str,
+    organization_id: Optional[str] = None,
   ) -> Dict[str, int]:
     """Aggregate usage totals by metric for a billing period."""
     col = await self._col()
+    match: Dict[str, Any] = {"tenant_id": tenant_id, "billing_period": billing_period}
+    if organization_id:
+      match["organization_id"] = organization_id
     pipeline = [
-      {"$match": {"tenant_id": tenant_id, "billing_period": billing_period}},
+      {"$match": match},
       {"$group": {"_id": "$metric", "total": {"$sum": "$quantity"}}},
     ]
     cursor = col.aggregate(pipeline)
@@ -117,6 +160,10 @@ class UsageLedgerRepository:
     await col.create_index(
       [("tenant_id", 1), ("billing_period", 1), ("metric", 1), ("timestamp", -1)],
       name="usage_period_lookup",
+    )
+    await col.create_index(
+      [("tenant_id", 1), ("metric", 1), ("timestamp", -1)],
+      name="usage_metric_time_lookup",
     )
 
 

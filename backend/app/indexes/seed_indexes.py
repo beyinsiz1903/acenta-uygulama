@@ -145,6 +145,11 @@ async def ensure_seed_indexes(db) -> None:
     await _safe_create(db.export_policies, [("organization_id", 1), ("key", 1)], unique=True)
     await _safe_create(db.export_runs, [("organization_id", 1), ("policy_key", 1), ("generated_at", -1)])
     await _safe_create(db.export_runs, [("organization_id", 1), ("download.token", 1)], unique=True, sparse=True)
+    await _safe_create(db.usage_ledger, [("tenant_id", 1), ("metric", 1), ("source_event_id", 1)], unique=True)
+    await _safe_create(db.usage_ledger, [("tenant_id", 1), ("metric", 1), ("timestamp", -1)])
+    await _safe_create(db.usage_ledger, [("tenant_id", 1), ("billing_period", 1), ("metric", 1), ("timestamp", -1)])
+    await _safe_create(db.usage_daily, [("tenant_id", 1), ("metric", 1), ("date", 1)], unique=True)
+    await _safe_create(db.usage_daily, [("tenant_id", 1), ("date", -1)])
 
     # ══════════════════════════════════════════════════════════
     # GTM + CRM (from server.py)

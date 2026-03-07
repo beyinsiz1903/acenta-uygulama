@@ -1,0 +1,51 @@
+{
+  "pr": "PR-UM1",
+  "test_type": "Usage Metering Foundation Backend Regression",
+  "summary": {
+    "total_tests": 3,
+    "passed": 3,
+    "failed": 0,
+    "success_rate": 100.0
+  },
+  "detailed_results": [
+    {
+      "name": "1. POST /api/auth/login",
+      "passed": true,
+      "message": "Login successful, token length: 385 chars",
+      "response_data": {
+        "has_token": true,
+        "email_returned": "admin@acenta.test"
+      },
+      "error": null
+    },
+    {
+      "name": "2. GET /api/admin/tenants",
+      "passed": true,
+      "message": "Found 1 tenants, selected tenant ID: 9c5c1079-9dea-49bf-82c0-74838b146160",
+      "response_data": {
+        "tenant_count": 1,
+        "selected_tenant_id": "9c5c1079-9dea-49bf-82c0-74838b146160"
+      },
+      "error": null
+    },
+    {
+      "name": "3. GET /api/admin/billing/tenants/{tenant_id}/usage",
+      "passed": true,
+      "message": "Usage endpoint returns 200 with stable payload shape (period: 2026-03, source: usage_ledger, 5 metrics)",
+      "response_data": {
+        "billing_period": "2026-03",
+        "metrics_count": 5,
+        "totals_source": "usage_ledger",
+        "metrics_keys": [
+          "b2b.match_request",
+          "export.generated",
+          "integration.call",
+          "report.generated",
+          "reservation.created"
+        ],
+        "payload_shape_valid": true
+      },
+      "error": null
+    }
+  ]
+}

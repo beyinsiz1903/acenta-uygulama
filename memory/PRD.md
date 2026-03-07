@@ -712,9 +712,47 @@ Use the repo’s existing standardized shape everywhere in v1:
   - YAML parse validation of `.github/workflows/ci.yml`
   - backend testing agent report `/app/test_reports/iteration_18.json`
 
+### PR-V1-2A Implemented — Auth Bootstrap Alias-First Rollout (Mar 7, 2026)
+- PR-V1-2 was intentionally split into smaller rollout slices. **PR-V1-2A** covers only the auth bootstrap surface:
+  - `POST /api/v1/auth/login`
+  - `GET /api/v1/auth/me`
+  - `POST /api/v1/auth/refresh`
+- Legacy auth routes remain unchanged and still primary for the current web client:
+  - `POST /api/auth/login`
+  - `GET /api/auth/me`
+  - `POST /api/auth/refresh`
+- Added scoped auth alias rollout in `backend/app/bootstrap/v1_aliases.py` without taking sessions/revoke/settings into this PR.
+- Added legacy compatibility headers for migrated auth bootstrap endpoints in `backend/app/routers/auth.py`:
+  - `Deprecation: true`
+  - `Link: </api/v1/auth/...>; rel="successor-version"`
+- Cookie auth behavior, web bootstrap, bearer fallback, session model, and mobile BFF contract were preserved.
+- `route_inventory` state after PR-V1-2A:
+  - `route_count = 678`
+  - `v1_count = 20`
+  - `legacy_count = 658`
+  - `legacy_routes_remaining = 658`
+  - `namespaces.auth = 17`
+- Added/updated tests:
+  - `backend/tests/test_api_v1_auth_aliases.py`
+  - `backend/tests/test_pr_v1_2a_auth_bootstrap_http.py`
+- Validation passed via:
+  - `pytest /app/backend/tests/test_api_v1_foundation.py /app/backend/tests/test_api_v1_auth_aliases.py /app/backend/tests/test_auth_web_cookie_compat.py -q`
+  - preview smoke for legacy compat headers + v1 login/me/refresh cookie flow + v1 bearer flow
+  - backend deep validation: 15/15 passed
+  - frontend smoke validation: existing `/login` flow, bootstrap, protected-route redirect, and logout all passed with no regression
+- Scope guard confirmed: **not included yet**
+  - `/api/v1/auth/sessions`
+  - `/api/v1/auth/sessions/{id}/revoke`
+  - `/api/v1/auth/revoke-all-sessions`
+  - settings namespace work
+
 ## Current Priority Backlog
-- **P0:** Run the new parity workflow against real staging/prod runtime artifacts once those environments are in scope/available, and confirm counts + hash match preview expectations
-- **P1:** Continue `/api/v1` implementation in controlled order, with **PR-V1-2 (auth/session/settings)** as the next code migration only after real-environment parity expectations are signed off
+- **P0:** If/when separate real environments exist, run the parity workflow against staging/prod artifacts; for the current single-environment setup this remains N/A but tooling is ready
+- **P1:** **PR-V1-2B** — auth session management aliases:
+  - `/api/v1/auth/sessions`
+  - `/api/v1/auth/sessions/{id}/revoke`
+  - `/api/v1/auth/revoke-all-sessions`
+- **P1:** **PR-V1-2C** — settings namespace rollout only if still needed after auth/session slices settle
 - **P1:** PR-5B — Mobile Secure Session + Session Bootstrap (requires mobile repo; checklist ready at `backend/app/modules/mobile/pr5b_integration_checklist.md`)
 - **P1:** Cleanup PR for non-blocking preview issues: `/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`
 - **P2:** Entitlement/billing unification, observability stack, broader frontend modular refactor

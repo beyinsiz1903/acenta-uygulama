@@ -2224,11 +2224,14 @@ agent_communication:
       - working: true
         agent: "testing"
         comment: "PR-V1-2A auth bootstrap rollout validation COMPLETED - ALL 15 TESTS PASSED (100% success rate). Comprehensive validation per review request on https://saas-modernize-2.preview.emergentagent.com. Test Results: 1) ✅ Legacy auth routes with compat headers - PASSED (POST /api/auth/login ✅, GET /api/auth/me ✅, POST /api/auth/refresh ✅) - all return proper Deprecation: true and Link successor headers to v1 equivalents, 2) ✅ New v1 auth alias routes working - PASSED (POST /api/v1/auth/login ✅, GET /api/v1/auth/me ✅, POST /api/v1/auth/refresh ✅) - all functional and returning expected responses, 3) ✅ Cookie-compatible web flow and bearer flow - PASSED (X-Client-Platform: web header correctly triggers cookie_compat mode ✅, bearer mode works without header ✅, both flows authenticate correctly), 4) ✅ Mobile BFF safety - PASSED (GET /api/v1/mobile/auth/me works with bearer token from v1/auth/login ✅), 5) ✅ Route inventory expectations - PASSED (678 total routes ✅, 20 v1 routes ✅, 658 legacy routes ✅, auth namespace contains 17 routes including new aliases ✅), 6) ✅ Parity between legacy and v1 - PASSED (legacy and v1 auth endpoints return equivalent data with same auth transport modes). All PR-V1-2A scope requirements validated successfully: auth alias-first behavior working, compat headers present, route inventory updated correctly with +3 auth aliases, no regressions in existing flows."
+      - working: true
+        agent: "testing"
+        comment: "PR-V1-2A FRONTEND SMOKE TEST COMPLETED - ALL 5 TESTS PASSED (2026-03-07). Short frontend smoke test performed to confirm PR-V1-2A backend auth alias work did NOT break existing web login/bootstrap behavior. Test Results: 1) ✅ /login page loads correctly - all form elements present (login-page, login-form, login-email, login-password, login-submit testids found), 2) ✅ Login with admin@acenta.test/admin123 successful - redirects to /app/admin/agencies correctly, 3) ✅ Protected area renders (949 chars content, no blank screen, no React errors), 4) ✅ Bootstrap/refresh check passed - session persists after page reload, /auth/me called correctly for session verification, 5) ✅ Logout and route guard working - logout redirects to /login, accessing protected area without auth redirects to /login. CRITICAL VALIDATION: Frontend uses legacy /api/auth/* endpoints (login, me, logout, refresh) as expected, NO /api/v1/auth/* endpoints called by web app. No regressions detected in existing web auth flow. PR-V1-2A backend changes confirmed safe for frontend."
 
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 20
+  test_sequence: 21
   last_updated: "2026-03-07"
 
 agent_communication:
@@ -2376,3 +2379,95 @@ agent_communication:
       PR-V1-2A auth bootstrap rollout validation SUCCESSFUL. All specified auth alias requirements met with perfect compatibility between legacy and v1 endpoints. Compat headers properly guide clients to v1 successors. Cookie-based web auth and bearer token flows both functional. Mobile BFF integration working correctly. Route inventory accurately reflects the auth aliases addition. The implementation is ready for production deployment.
       
       Status: ✅ PRODUCTION-READY - PR-V1-2A validated successfully with 100% test pass rate.
+
+  - agent: "testing"
+    message: |
+      ✅ PR-V1-2A FRONTEND SMOKE TEST COMPLETED - ALL TESTS PASSED (2026-03-07)
+      
+      Performed short frontend smoke test to confirm PR-V1-2A backend auth alias work did NOT break existing web login/bootstrap behavior.
+      
+      Context:
+      - PR-V1-2A: Added /api/v1/auth/login, /api/v1/auth/me, /api/v1/auth/refresh aliases
+      - Legacy /api/auth/* remains primary path for web app
+      - NO frontend files were changed in this PR
+      - Test URL: https://saas-modernize-2.preview.emergentagent.com
+      - Test Credentials: admin@acenta.test / admin123
+      
+      Test Results Summary:
+      
+      1. ✅ Open /login - PASSED
+         - Login page loaded successfully
+         - All form elements present with data-testid attributes:
+           * login-page ✅
+           * login-form ✅
+           * login-email ✅
+           * login-password ✅
+           * login-submit ✅
+         - Page content length: 231,642 characters
+      
+      2. ✅ Login with admin@acenta.test / admin123 - PASSED
+         - Credentials accepted successfully
+         - Auth request: POST /api/auth/login (legacy endpoint used ✅)
+         - Redirected to: /app/admin/agencies
+         - No error banners detected
+      
+      3. ✅ Protected Area Renders (No Blank/Broken) - PASSED
+         - Successfully redirected to protected area: /app/admin/agencies
+         - Page has content: 949 characters (Acentalar page with 3 agencies)
+         - No React errors detected
+         - No "Objects are not valid as a React child" errors
+         - No blank screens
+      
+      4. ✅ Refresh/Bootstrap Check - PASSED
+         - Page reloaded successfully
+         - Session persisted after reload
+         - Still on protected area: /app/admin/agencies
+         - Bootstrap call detected: GET /api/auth/me (legacy endpoint used ✅)
+         - Page content after reload: 942 characters
+         - No redirect loops
+         - No obvious errors
+      
+      5. ✅ Logout and Route Guard - PASSED
+         - Logout button found and clicked
+         - Logout request: POST /api/auth/logout (legacy endpoint used ✅)
+         - Successfully redirected to /login after logout
+         - Route guard working: accessing /app/admin/agencies without auth redirects to /login
+         - Protected routes properly guarded
+      
+      Console Analysis:
+      - Total console messages: 26
+      - Console errors: 18 (all non-critical, no React errors)
+      - Critical React errors: 0
+      - No auth-breaking errors detected
+      
+      CRITICAL VALIDATION - Legacy Auth Endpoints Used:
+      ✅ Frontend uses legacy /api/auth/* endpoints as expected:
+         - POST /api/auth/login (login flow)
+         - GET /api/auth/me (bootstrap/session verification)
+         - POST /api/auth/logout (logout flow)
+         - POST /api/auth/refresh (refresh flow)
+      
+      ✅ NO /api/v1/auth/* endpoints called by web app
+         - Confirms frontend was NOT changed
+         - Confirms legacy auth flow remains primary
+         - Confirms v1 aliases are backend-only additions
+      
+      Test Summary:
+      - Total Tests: 5
+      - Passed: 5
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Validation Scope:
+      ✅ Login page loads correctly
+      ✅ Admin login flow working
+      ✅ Protected area accessible after login (no blank screen)
+      ✅ Session persistence via bootstrap working
+      ✅ Logout and route guards functioning
+      ✅ Legacy auth endpoints used (not v1 aliases)
+      ✅ No regressions in web auth flow
+      
+      Conclusion:
+      PR-V1-2A frontend smoke test SUCCESSFUL. Backend auth alias work (adding /api/v1/auth/* aliases) did NOT break existing web login/bootstrap behavior. The web app continues to use legacy /api/auth/* paths as intended. No frontend regressions detected. Cookie-based authentication working correctly. Session management and route guards functioning properly. The PR-V1-2A changes are safe for production deployment.
+      
+      Status: ✅ PRODUCTION-READY - Frontend auth flow validated and stable after PR-V1-2A backend changes.

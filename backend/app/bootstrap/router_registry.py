@@ -5,9 +5,9 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
+from app.bootstrap.v1_registry import register_v1_routers
 from app.config import API_PREFIX
 from app.exception_handlers import register_exception_handlers
-from app.modules.mobile.router import router as mobile_router
 from app.routers.action_policies import router as action_policies_router
 from app.routers.activation_checklist import router as activation_checklist_router
 from app.routers.admin import router as admin_router
@@ -311,8 +311,7 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(reservations_router, prefix=API_PREFIX)
     app.include_router(seo_router)
     app.include_router(public_campaigns_router)
-    app.include_router(auth_router)
-    app.include_router(mobile_router, prefix="/api/v1/mobile", tags=["mobile"])
+    register_v1_routers(app)
     app.include_router(onboarding_router)
     app.include_router(webpos_router)
     app.include_router(notifications_router)

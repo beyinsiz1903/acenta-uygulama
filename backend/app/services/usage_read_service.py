@@ -115,7 +115,8 @@ async def get_usage_overview(
     for metric in PRIMARY_USAGE_METRICS
     if metric in metrics
   ]
-  overall_usage_ratio = max(primary_ratios) if primary_ratios else 0
+  reservation_ratio = float(metrics.get(UsageMetric.RESERVATION_CREATED, {}).get("ratio") or 0)
+  overall_usage_ratio = reservation_ratio if reservation_ratio > 0 else (max(primary_ratios) if primary_ratios else 0)
 
   today = datetime.now(timezone.utc).date()
   start_date = today - timedelta(days=max(1, trend_days) - 1)

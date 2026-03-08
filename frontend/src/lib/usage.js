@@ -43,18 +43,30 @@ export const WARNING_LEVEL_META = {
   normal: {
     badgeClassName: "bg-muted text-muted-foreground border-border",
     messageClassName: "text-muted-foreground",
+    cardClassName: "border-border bg-card/80",
+    progressTrackClassName: "bg-slate-200/80",
+    progressBarClassName: "bg-slate-400",
   },
   warning: {
     badgeClassName: "bg-amber-500/10 text-amber-700 border-amber-500/20",
     messageClassName: "text-amber-700",
+    cardClassName: "border-amber-500/30 bg-amber-500/5",
+    progressTrackClassName: "bg-amber-500/15",
+    progressBarClassName: "bg-amber-500",
   },
   critical: {
     badgeClassName: "bg-orange-500/10 text-orange-700 border-orange-500/20",
     messageClassName: "text-orange-700",
+    cardClassName: "border-orange-500/30 bg-orange-500/5",
+    progressTrackClassName: "bg-orange-500/15",
+    progressBarClassName: "bg-orange-500",
   },
   limit_reached: {
     badgeClassName: "bg-destructive/10 text-destructive border-destructive/20",
     messageClassName: "text-destructive",
+    cardClassName: "border-destructive/30 bg-destructive/5",
+    progressTrackClassName: "bg-destructive/15",
+    progressBarClassName: "bg-destructive",
   },
 };
 
@@ -84,13 +96,16 @@ export function getUsageMetricEntries(summary, metricKeys = PRIMARY_USAGE_METRIC
       warningMessage: raw.warning_message || null,
       upgradeRecommended: Boolean(raw.upgrade_recommended),
       ctaHref: raw.cta_href || "/pricing",
-      ctaLabel: raw.cta_label || "Planları Gör",
+      ctaLabel: raw.cta_label || "Planları Görüntüle",
       color: meta.color,
       trackClassName: meta.trackClassName,
       barClassName: meta.barClassName,
       badgeClassName: meta.badgeClassName,
       warningBadgeClassName: warningMeta.badgeClassName,
       warningMessageClassName: warningMeta.messageClassName,
+      containerClassName: warningMeta.cardClassName,
+      progressTrackClassName: warningMeta.progressTrackClassName,
+      progressBarClassName: warningMeta.progressBarClassName,
     };
   });
 }

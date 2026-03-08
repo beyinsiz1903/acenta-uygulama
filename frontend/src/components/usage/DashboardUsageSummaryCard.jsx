@@ -31,11 +31,11 @@ export const DashboardUsageSummaryCard = () => {
   const lastActiveDay = [...trendData].reverse().find((item) => item.reservationCreated || item.reportGenerated || item.exportGenerated)?.date;
 
   if (loading && !summary) {
-    return <section className="rounded-3xl border bg-card/85 p-5 text-sm text-muted-foreground" data-testid="dashboard-usage-summary-loading">Usage snapshot yükleniyor...</section>;
+    return <section className="rounded-3xl border bg-card/85 p-5 text-sm text-muted-foreground" data-testid="dashboard-usage-summary-loading">Kullanım özeti yükleniyor...</section>;
   }
 
   if (!summary) {
-    return <section className="rounded-3xl border border-dashed bg-muted/10 p-5 text-sm text-muted-foreground" data-testid="dashboard-usage-summary-empty">Usage snapshot şu anda alınamıyor.</section>;
+    return <section className="rounded-3xl border border-dashed bg-muted/10 p-5 text-sm text-muted-foreground" data-testid="dashboard-usage-summary-empty">Kullanım özeti şu anda alınamıyor.</section>;
   }
 
   return (
@@ -44,10 +44,13 @@ export const DashboardUsageSummaryCard = () => {
         <div>
           <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <Activity className="h-4 w-4 text-primary" />
-            <span data-testid="dashboard-usage-summary-title">Usage snapshot</span>
+            <span data-testid="dashboard-usage-summary-title">Kullanım özeti</span>
           </div>
           <p className="mt-1 text-sm text-muted-foreground" data-testid="dashboard-usage-summary-subtitle">
             Plan: {summary?.plan_label || "—"} · Dönem: {summary?.period || "—"}
+          </p>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground" data-testid="dashboard-usage-summary-description">
+            Limit yaklaşımı, kritik kullanım ve plan önerilerini tek kartta görün.
           </p>
           {lastActiveDay && <p className="mt-1 text-xs text-muted-foreground" data-testid="dashboard-usage-summary-last-active">Son hareket: {lastActiveDay}</p>}
         </div>
@@ -58,7 +61,7 @@ export const DashboardUsageSummaryCard = () => {
             Yenile
           </Button>
           <Button asChild size="sm" data-testid="dashboard-usage-open-page-button">
-            <Link to="/app/usage">Detaylı görünüm</Link>
+            <Link to="/app/usage">Kullanım detayları</Link>
           </Button>
         </div>
       </div>

@@ -43,11 +43,11 @@ export default function UsagePage() {
         <div>
           <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             <Activity className="h-4 w-4 text-primary" />
-            <span>Usage</span>
+            <span>Kullanım</span>
           </div>
-          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-foreground" data-testid="usage-page-heading">Kullanım görünürlüğü</h1>
+          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-foreground" data-testid="usage-page-heading">Kullanım takibi</h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground" data-testid="usage-page-description">
-            Reservations, reports ve exports kullanımınızı izleyin; son 30 gün trendini tek ekranda görün.
+            Rezervasyon, rapor ve export kullanımınızı izleyin; limit yaklaşımı ve plan önerilerini tek ekranda görün.
           </p>
           <p className="mt-2 text-xs text-muted-foreground" data-testid="usage-page-meta">
             Plan: {summary?.plan_label || "—"} · Dönem: {summary?.period || "—"}
@@ -62,7 +62,7 @@ export default function UsagePage() {
 
       <UsageMetricTiles entries={entries} testIdPrefix="usage-page" showCta />
       <UsageTrialRecommendation trialConversion={trialConversion} testId="usage-page-trial-recommendation" />
-      <UsageTrendChart data={trendData} testId="usage-page-trend-chart" title="Last 30 days" />
+      <UsageTrendChart data={trendData} testId="usage-page-trend-chart" title="Son 30 gün" />
     </div>
   );
 }

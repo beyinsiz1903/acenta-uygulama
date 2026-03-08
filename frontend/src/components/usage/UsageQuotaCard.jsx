@@ -15,7 +15,7 @@ export const UsageQuotaCard = ({ entry, compact = false, showCta = false, testId
   if (!entry) return null;
 
   return (
-    <div className="rounded-2xl border bg-card/80 p-4 shadow-sm" data-testid={`${testIdPrefix}-${entry.testId}-card`}>
+    <div className={`rounded-2xl border p-4 shadow-sm transition-colors ${entry.containerClassName || "border-border bg-card/80"}`} data-testid={`${testIdPrefix}-${entry.testId}-card`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground" data-testid={`${testIdPrefix}-${entry.testId}-label`}>{entry.label}</p>
@@ -35,9 +35,9 @@ export const UsageQuotaCard = ({ entry, compact = false, showCta = false, testId
 
       {entry.limit !== null ? (
         <div className="mt-4 space-y-2">
-          <div className={`h-2.5 overflow-hidden rounded-full ${entry.trackClassName}`} data-testid={`${testIdPrefix}-${entry.testId}-progress-track`}>
+          <div className={`h-2.5 overflow-hidden rounded-full ${entry.progressTrackClassName || entry.trackClassName}`} data-testid={`${testIdPrefix}-${entry.testId}-progress-track`}>
             <div
-              className={`h-full rounded-full transition-[width] duration-500 ${entry.exceeded ? "bg-destructive" : entry.barClassName}`}
+              className={`h-full rounded-full transition-[width] duration-500 ${entry.exceeded ? "bg-destructive" : entry.progressBarClassName || entry.barClassName}`}
               style={{ width: `${Math.min(entry.percent, 100)}%` }}
               data-testid={`${testIdPrefix}-${entry.testId}-progress-bar`}
             />

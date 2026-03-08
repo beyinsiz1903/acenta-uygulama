@@ -16,7 +16,7 @@ function UsageTooltip({ active, payload, label }) {
   );
 }
 
-export const UsageTrendChart = ({ data = [], testId = "usage-trend-chart", title = "Last 30 days" }) => {
+export const UsageTrendChart = ({ data = [], testId = "usage-trend-chart", title = "Son 30 gün" }) => {
   const hasData = data.some((item) => item.reservationCreated || item.reportGenerated || item.exportGenerated);
 
   return (
@@ -24,7 +24,7 @@ export const UsageTrendChart = ({ data = [], testId = "usage-trend-chart", title
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-foreground" data-testid={`${testId}-title`}>{title}</h2>
-          <p className="text-sm text-muted-foreground" data-testid={`${testId}-subtitle`}>Reservations, reports ve exports trendini son 30 gün için izleyin.</p>
+          <p className="text-sm text-muted-foreground" data-testid={`${testId}-subtitle`}>Rezervasyon, rapor ve export trendini son 30 gün için izleyin.</p>
         </div>
       </div>
 
@@ -41,9 +41,9 @@ export const UsageTrendChart = ({ data = [], testId = "usage-trend-chart", title
               <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
               <Tooltip content={<UsageTooltip />} />
               <Legend />
-              <Line type="monotone" dataKey="reservationCreated" name="Reservations" stroke="#0f766e" strokeWidth={3} dot={false} />
-              <Line type="monotone" dataKey="reportGenerated" name="Reports" stroke="#2563eb" strokeWidth={3} dot={false} />
-              <Line type="monotone" dataKey="exportGenerated" name="Exports" stroke="#ea580c" strokeWidth={3} dot={false} />
+              <Line type="monotone" dataKey="reservationCreated" name="Rezervasyon" stroke="#0f766e" strokeWidth={3} dot={false} />
+              <Line type="monotone" dataKey="reportGenerated" name="Rapor" stroke="#2563eb" strokeWidth={3} dot={false} />
+              <Line type="monotone" dataKey="exportGenerated" name="Export" stroke="#ea580c" strokeWidth={3} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>

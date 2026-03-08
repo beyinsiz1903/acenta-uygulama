@@ -13,6 +13,14 @@ METRIC_UNITS = {
   UsageMetric.B2B_MATCH_REQUEST: "B2B talebi",
 }
 
+METRIC_LIMIT_SUBJECTS = {
+  UsageMetric.RESERVATION_CREATED: "Rezervasyon",
+  UsageMetric.REPORT_GENERATED: "Rapor",
+  UsageMetric.EXPORT_GENERATED: "Export",
+  UsageMetric.INTEGRATION_CALL: "Entegrasyon çağrısı",
+  UsageMetric.B2B_MATCH_REQUEST: "B2B talebi",
+}
+
 
 def calculate_warning_level(used: int, limit: Optional[int]) -> str:
   if limit in (None, 0):
@@ -41,15 +49,16 @@ def generate_warning_message(metric: str, used: int, limit: Optional[int], warni
     return None
 
   unit = METRIC_UNITS.get(metric, "kullanım")
+  subject = METRIC_LIMIT_SUBJECTS.get(metric, "Kullanım")
   remaining = max(0, limit - used)
 
   if warning_level == "limit_reached":
-    return f"{unit.capitalize()} limitiniz doldu. Planınızı yükselterek devam edebilirsiniz."
+    return f"{subject} limitiniz doldu. Planınızı yükselterek devam edebilirsiniz."
   if warning_level == "critical":
-    return f"Limitinize sadece {remaining} {unit} kaldı. Planınızı yükseltmeyi düşünebilirsiniz."
+    return f"Limitinize sadece {remaining} {unit} kaldı"
   if warning_level == "warning":
-    return f"Limitinize {remaining} {unit} kaldı. Limitinize yaklaşıyorsunuz."
-  return f"Limitinize {remaining} {unit} kaldı."
+    return "Limitinize yaklaşıyorsunuz"
+  return None
 
 
 def should_recommend_upgrade(warning_level: str, *, is_trial: bool = False) -> bool:
@@ -69,7 +78,7 @@ def build_metric_warning_payload(
     "warning_message": generate_warning_message(metric, used, limit, warning_level),
     "upgrade_recommended": should_recommend_upgrade(warning_level, is_trial=is_trial),
     "cta_href": "/pricing" if should_recommend_upgrade(warning_level, is_trial=is_trial) else None,
-    "cta_label": "Planları Gör" if should_recommend_upgrade(warning_level, is_trial=is_trial) else None,
+    "cta_label": "Planları Görüntüle" if should_recommend_upgrade(warning_level, is_trial=is_trial) else None,
   }
 
 
@@ -86,13 +95,13 @@ def build_trial_conversion_payload(*, usage_ratio: float, is_trial: bool) -> Dic
     }
 
   recommended_plan = recommend_plan(usage_ratio)
-  percent = round(usage_ratio * 100)
   return {
     "is_trial": True,
     "show": True,
     "usage_ratio": round(usage_ratio, 4),
     "recommended_plan": recommended_plan,
-    "message": f"Trial kullanımınızın %{percent}'ini kullandınız. Bu kullanım için önerilen plan: {recommended_plan}",
+    "recommended_plan_label": f"{recommended_plan} Plan",
+    "message": "Trial kullanımınız devam ediyor.",
     "cta_href": "/pricing",
-    "cta_label": "Planları Gör",
+    "cta_label": "Planları Görüntüle",
   }

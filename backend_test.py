@@ -22,7 +22,7 @@ from typing import Dict, Any
 
 # Use environment variable for backend URL
 import os
-backend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://usage-metering.preview.emergentagent.com')
+backend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://escape-excel.preview.emergentagent.com')
 base_url = f"{backend_url}/api"
 
 def log_test(test_name: str, passed: bool, details: str = ""):

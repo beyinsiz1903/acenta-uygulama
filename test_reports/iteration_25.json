@@ -1,0 +1,70 @@
+{
+  "summary": "Frontend-only testing of public /pricing and /demo pages for customer acquisition funnel. All tests passed - 100% success rate.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "/pricing: Page loads correctly with data-testid='pricing-page'",
+    "/pricing: Hero title 'Acenteniz için doğru planı seçin' displays correctly",
+    "/pricing: Primary CTA '14 Gün Ücretsiz Dene' present and routes to /signup?plan=trial&selectedPlan=pro",
+    "/pricing: Secondary CTA 'Demo sayfasını gör' routes to /demo",
+    "/pricing: All 3 plan cards visible (Starter, Pro, Enterprise)",
+    "/pricing: Starter plan shows ₺990/ay",
+    "/pricing: Pro plan shows ₺2.490/ay with 'Önerilen' badge",
+    "/pricing: Enterprise plan shows ₺6.990/ay",
+    "/pricing: Each plan has 4 feature bullets",
+    "/pricing: Social proof block displays 'Turizm acenteleri Syroce ile operasyon süreçlerini %40 daha hızlı yönetiyor.'",
+    "/pricing: All plan CTAs route to /signup with correct selectedPlan param",
+    "/demo: Page loads correctly with data-testid='demo-page'",
+    "/demo: Hero title 'Acentelerde Excel dönemi bitiyor' displays correctly",
+    "/demo: Subtitle 'Syroce ile rezervasyon, müşteri ve operasyon süreçlerini tek panelden yönetin. 14 gün ücretsiz deneyin.' present",
+    "/demo: Primary CTA 'Demo Hesap Oluştur' routes to /signup?plan=trial",
+    "/demo: Secondary CTA 'Fiyatları Gör' routes to /pricing",
+    "/demo: Problem section visible with 3 cards (Excel ile rezervasyon takibi, WhatsApp üzerinden müşteri yönetimi, Dağınık operasyon süreçleri)",
+    "/demo: Solution section title 'Syroce ile tüm operasyon tek panelde' present",
+    "/demo: Solution section has 4 cards (Rezervasyon yönetimi, Müşteri yönetimi, Tur ve otel takibi, Raporlama)",
+    "/demo: Final CTA section '14 Gün Ücretsiz Dene' with working buttons",
+    "Navigation: /pricing → /demo via secondary CTA works",
+    "Navigation: /demo → /pricing via secondary CTA works",
+    "Navigation: /pricing → /signup via primary CTA works",
+    "Navigation: /demo → /signup via primary CTA works",
+    "Navigation: Plan CTA buttons route to /signup with correct selectedPlan query param"
+  ],
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Both pages have excellent data-testid coverage for all interactive elements",
+    "Code is clean with well-structured React components",
+    "Static fallback plans provide good UX when API fails",
+    "All required Turkish copy matches specification exactly"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend-only test)",
+    "frontend": "100%"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Public /pricing and /demo pages fully implemented and working. All copy matches Turkish requirements. CTA buttons route correctly to /signup with appropriate query params. Both pages are responsive for desktop view.",
+  "testing_scope": {
+    "pages_tested": ["/pricing", "/demo"],
+    "features_validated": [
+      "Hero sections with correct titles and subtitles",
+      "Primary and secondary CTA buttons with correct routing",
+      "Plan cards with pricing (Starter ₺990, Pro ₺2.490, Enterprise ₺6.990)",
+      "Feature bullets for each plan",
+      "Social proof block",
+      "Problem section (3 items)",
+      "Solution section (4 items)",
+      "Final CTA sections",
+      "Cross-page navigation"
+    ]
+  }
+}

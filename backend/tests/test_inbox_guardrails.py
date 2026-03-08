@@ -16,7 +16,7 @@ import httpx
 
 
 # Test configuration
-BASE_URL = "https://usage-metering.preview.emergentagent.com"
+BASE_URL = "https://escape-excel.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

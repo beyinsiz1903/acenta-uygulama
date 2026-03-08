@@ -6942,6 +6942,17 @@
   },
   {
     "compat_required": true,
+    "current_namespace": "/api/tenant",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "tenant",
+    "path": "/api/tenant/usage-summary",
+    "risk_level": "medium",
+    "source": "app.routers.tenant_features",
+    "target_namespace": "/api/v1/tenant"
+  },
+  {
+    "compat_required": true,
     "current_namespace": "/api/tickets",
     "legacy_or_v1": "legacy",
     "method": "GET",

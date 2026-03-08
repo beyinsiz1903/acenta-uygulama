@@ -18,6 +18,7 @@ import { Skeleton } from "../components/ui/skeleton";
 import DashboardFilterBar from "../components/DashboardFilterBar";
 import ActivationChecklist from "../components/ActivationChecklist";
 import DemoSeedButton from "../components/DemoSeedButton";
+import { DashboardUsageSummaryCard } from "../components/usage/DashboardUsageSummaryCard";
 import {
   resolveFilters, saveToLocalStorage, saveDensity, filtersToQuery,
   getPresetDays, getPresetDateRange, DEFAULT_FILTERS, exportDashboardCSV,
@@ -911,6 +912,7 @@ export default function DashboardPage() {
 
       {/* ---------- ACTIVATION CHECKLIST ---------- */}
       <ActivationChecklist />
+      <DashboardUsageSummaryCard />
 
       {/* ========== ROW 0: AGENTIS-STYLE BIG KPI CARDS (4 cards) ========== */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3" data-testid="big-kpi-cards">

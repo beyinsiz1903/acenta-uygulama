@@ -95,6 +95,7 @@ const sidebarIconMap = {
   "Match Alert Politikaları": Bell,
   "Aksiyon Politikaları": ShieldCheck,
   "Export Çalıştırma": FileText,
+  "Kullanım": Activity,
   "Genel Bakış": LayoutGrid,
   "Gelen Talepler": Inbox,
   "Stop Sell": AlertTriangle,
@@ -144,6 +145,7 @@ const ADMIN_GROUPED_NAV = [
   {
     group: "FİNANS",
     items: [
+      { to: "/app/usage", label: "Kullanım", icon: Activity, modeKey: "usage_visibility", minMode: "lite" },
       { to: "/app/finance/webpos", label: "Sanal Kasa", icon: DollarSign, feature: "webpos", modeKey: "webpos", minMode: "pro" },
       { to: "/app/admin/finance/settlements", label: "Mutabakat", icon: Scale, modeKey: "mutabakat", minMode: "pro" },
       { to: "/app/admin/finance/refunds", label: "İadeler", icon: DollarSign, modeKey: "iadeler", minMode: "lite" },

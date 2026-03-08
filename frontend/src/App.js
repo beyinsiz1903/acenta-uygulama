@@ -168,6 +168,7 @@ const AdminAuditLogPage = lazy(() => import("./pages/admin/AdminAuditLogPage"));
 const AdminAnalyticsPage = lazy(() => import("./pages/admin/AdminAnalyticsPage"));
 const AdminTenantHealthPage = lazy(() => import("./pages/admin/AdminTenantHealthPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const UsagePage = lazy(() => import("./pages/UsagePage"));
 const ProductsPage = lazy(() => import("./pages/ProductsPage"));
 const InventoryPage = lazy(() => import("./pages/InventoryPage"));
 const ReservationsPage = lazy(() => import("./pages/ReservationsPage"));
@@ -402,6 +403,7 @@ function App() {
           }
         >
           <Route index element={<DashboardPage />} />
+          <Route path="usage" element={<UsagePage />} />
           <Route path="onboarding" element={<OnboardingWizardPage />} />
           <Route path="b2b/marketplace" element={<B2BMarketplaceCatalogPage />} />
           <Route path="products" element={<ProductsPage />} />

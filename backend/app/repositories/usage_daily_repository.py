@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import calendar
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
 from app.db import get_db
@@ -17,6 +17,15 @@ def _month_bounds(billing_period: str) -> tuple[str, str]:
   month = int(month_str)
   last_day = calendar.monthrange(year, month)[1]
   return f"{year:04d}-{month:02d}-01", f"{year:04d}-{month:02d}-{last_day:02d}"
+
+
+def _date_range_keys(start_date: date, end_date: date) -> list[str]:
+  keys: list[str] = []
+  current = start_date
+  while current <= end_date:
+    keys.append(current.isoformat())
+    current += timedelta(days=1)
+  return keys
 
 
 class UsageDailyRepository:
@@ -77,6 +86,61 @@ class UsageDailyRepository:
     ]
     rows = await col.aggregate(pipeline).to_list(length=100)
     return {str(row["_id"]): int(row["total"]) for row in rows}
+
+  async def get_daily_counts(
+    self,
+    tenant_id: str,
+    *,
+    start_date: date,
+    end_date: date,
+    metrics: Optional[list[str]] = None,
+    organization_id: Optional[str] = None,
+  ) -> Dict[str, Dict[str, int]]:
+    col = await self._col()
+    match: Dict[str, Any] = {
+      "tenant_id": tenant_id,
+      "date": {"$gte": start_date.isoformat(), "$lte": end_date.isoformat()},
+    }
+    if metrics:
+      match["metric"] = {"$in": metrics}
+    if organization_id:
+      match["organization_id"] = organization_id
+
+    docs = await col.find(match, {"_id": 0, "metric": 1, "date": 1, "count": 1}).to_list(length=5000)
+    result: Dict[str, Dict[str, int]] = {}
+    for doc in docs:
+      metric = str(doc.get("metric") or "")
+      doc_date = str(doc.get("date") or "")
+      if not metric or not doc_date:
+        continue
+      result.setdefault(metric, {})[doc_date] = int(doc.get("count") or 0)
+    return result
+
+  async def get_zero_filled_daily_counts(
+    self,
+    tenant_id: str,
+    *,
+    start_date: date,
+    end_date: date,
+    metrics: list[str],
+    organization_id: Optional[str] = None,
+  ) -> Dict[str, list[Dict[str, int | str]]]:
+    existing = await self.get_daily_counts(
+      tenant_id,
+      start_date=start_date,
+      end_date=end_date,
+      metrics=metrics,
+      organization_id=organization_id,
+    )
+    date_keys = _date_range_keys(start_date, end_date)
+    result: Dict[str, list[Dict[str, int | str]]] = {}
+    for metric in metrics:
+      metric_map = existing.get(metric, {})
+      result[metric] = [
+        {"date": date_key, "count": int(metric_map.get(date_key, 0))}
+        for date_key in date_keys
+      ]
+    return result
 
   async def ensure_indexes(self) -> None:
     col = await self._col()

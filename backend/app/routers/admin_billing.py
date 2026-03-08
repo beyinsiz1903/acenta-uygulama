@@ -10,7 +10,7 @@ from app.errors import AppError
 from app.constants.plan_matrix import VALID_PLANS
 from app.repositories.billing_repository import billing_repo
 from app.services.subscription_manager import subscription_manager
-from app.services.usage_service import get_usage_summary
+from app.services.usage_read_service import get_usage_overview
 
 router = APIRouter(prefix="/api/admin/billing", tags=["admin_billing"])
 
@@ -114,9 +114,12 @@ async def admin_seed_plan_catalog() -> dict:
 
 
 @router.get("/tenants/{tenant_id}/usage", dependencies=[AdminDep])
-async def admin_get_tenant_usage(tenant_id: str) -> dict:
-  """Admin: get usage summary for a tenant (current billing period)."""
-  return await get_usage_summary(tenant_id)
+async def admin_get_tenant_usage(
+  tenant_id: str,
+  days: int = Query(30, ge=7, le=90),
+) -> dict:
+  """Admin: get usage summary + trend for a tenant."""
+  return await get_usage_overview(tenant_id, trend_days=days)
 
 
 @router.post("/usage-push", dependencies=[Depends(require_roles(["super_admin"]))])

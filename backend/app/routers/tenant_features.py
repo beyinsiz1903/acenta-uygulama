@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Query, Request
 
 from app.errors import AppError
 from app.request_context import get_request_context
 from app.services.entitlement_service import entitlement_service
 from app.services.endpoint_cache import try_cache_get, cache_and_return
+from app.services.usage_read_service import PRIMARY_USAGE_METRICS, get_usage_overview
 
 router = APIRouter(prefix="/api/tenant", tags=["tenant_features"])
 
@@ -47,6 +48,31 @@ async def get_tenant_entitlements(request: Request) -> dict:
   return await get_tenant_features(request)
 
 
+@router.get("/usage-summary")
+async def get_tenant_usage_summary(
+  request: Request,
+  days: int = Query(30, ge=7, le=90),
+) -> dict:
+  """Return self-service tenant usage summary + 30 day trend."""
+  tenant_id = getattr(request.state, "tenant_id", None)
+  if not tenant_id:
+    raise AppError(400, "tenant_context_missing", "Tenant context bulunamadı.", None)
+  ctx = get_request_context(required=False)
+  if ctx and ctx.allowed_tenant_ids and not ctx.is_super_admin and tenant_id not in ctx.allowed_tenant_ids:
+    raise AppError(403, "tenant_access_denied", "Bu tenant için erişim yetkiniz yok.", None)
+
+  hit, ck = await try_cache_get("tenant_usage_summary", f"{tenant_id}:{days}")
+  if hit:
+    return hit
+
+  result = await get_usage_overview(
+    tenant_id,
+    trend_days=days,
+    metric_filter=PRIMARY_USAGE_METRICS,
+  )
+  return await cache_and_return(ck, result, ttl=60)
+
+
 @router.get("/quota-status")
 async def get_tenant_quota_status(request: Request) -> dict:
   """Return quota status for the current tenant (self-service)."""
@@ -62,9 +88,7 @@ async def get_tenant_quota_status(request: Request) -> dict:
   if hit:
     return hit
 
-  from app.services.usage_service import get_usage_summary
-
-  summary = await get_usage_summary(tenant_id)
+  summary = await get_usage_overview(tenant_id)
   plan = summary.get("plan", "starter")
   metrics = summary.get("metrics", {})
 

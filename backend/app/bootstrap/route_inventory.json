@@ -3985,6 +3985,28 @@
     "compat_required": true,
     "current_namespace": "/api/billing",
     "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "billing",
+    "path": "/api/billing/cancel-subscription",
+    "risk_level": "high",
+    "source": "app.routers.billing_lifecycle",
+    "target_namespace": "/api/v1/billing"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/billing",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "billing",
+    "path": "/api/billing/change-plan",
+    "risk_level": "high",
+    "source": "app.routers.billing_lifecycle",
+    "target_namespace": "/api/v1/billing"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/billing",
+    "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "billing",
     "path": "/api/billing/checkout-status/{session_id}",
@@ -4001,6 +4023,28 @@
     "path": "/api/billing/create-checkout",
     "risk_level": "high",
     "source": "app.routers.billing_checkout",
+    "target_namespace": "/api/v1/billing"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/billing",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "billing",
+    "path": "/api/billing/customer-portal",
+    "risk_level": "high",
+    "source": "app.routers.billing_lifecycle",
+    "target_namespace": "/api/v1/billing"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/billing",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "billing",
+    "path": "/api/billing/subscription",
+    "risk_level": "high",
+    "source": "app.routers.billing_lifecycle",
     "target_namespace": "/api/v1/billing"
   },
   {

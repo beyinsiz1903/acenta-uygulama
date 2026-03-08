@@ -346,7 +346,10 @@ function AppShellInner() {
   // ── P0: Onboarding auto-redirect ──────────────────────────
   useEffect(() => {
     if (onboardingChecked) return;
-    if (location.pathname === "/app/onboarding") { setOnboardingChecked(true); return; }
+    if (location.pathname === "/app/onboarding" || location.pathname.startsWith("/app/settings")) {
+      setOnboardingChecked(true);
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {

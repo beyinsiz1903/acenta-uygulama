@@ -1,10 +1,17 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { ShieldCheck, Users } from "lucide-react";
+import { CreditCard, ShieldCheck, Users } from "lucide-react";
 
 import { cn } from "../../lib/utils";
 
 const SETTINGS_LINKS = [
+  {
+    to: "/app/settings/billing",
+    label: "Faturalama",
+    description: "Plan, yenileme, ödeme yöntemi ve abonelik yönetimi.",
+    icon: CreditCard,
+    testId: "settings-section-link-billing",
+  },
   {
     to: "/app/settings/security",
     label: "Aktif Oturumlar",
@@ -25,7 +32,7 @@ export const SettingsSectionNav = ({ showUsersSection = true }) => {
   const items = showUsersSection ? SETTINGS_LINKS : SETTINGS_LINKS.filter((item) => item.to !== "/app/settings");
 
   return (
-    <div className="grid gap-3 md:grid-cols-2" data-testid="settings-section-nav">
+    <div className="grid gap-3 md:grid-cols-3" data-testid="settings-section-nav">
       {items.map((item) => {
         const Icon = item.icon;
         return (

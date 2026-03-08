@@ -179,6 +179,7 @@ const B2BPage = lazy(() => import("./pages/B2BPage"));
 const B2BBookingPage = lazy(() => import("./pages/B2BBookingPage"));
 const ReportsPage = lazy(() => import("./pages/ReportsPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const SettingsBillingPage = lazy(() => import("./pages/SettingsBillingPage"));
 const SettingsSecurityPage = lazy(() => import("./pages/SettingsSecurityPage"));
 const AgencyHotelsPage = lazy(() => import("./pages/AgencyHotelsPage"));
 const AgencyAvailabilityPage = lazy(() => import("./pages/AgencyAvailabilityPage"));
@@ -419,6 +420,7 @@ function App() {
           <Route path="b2b-book" element={<B2BBookingPage />} />
           <Route path="reports" element={<AdvancedReportsPage />} />
           <Route path="finance/webpos" element={<WebPOSPage />} />
+          <Route path="settings/billing" element={<SettingsBillingPage />} />
           <Route path="settings/security" element={<SettingsSecurityPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="inbox" element={<InboxPage />} />

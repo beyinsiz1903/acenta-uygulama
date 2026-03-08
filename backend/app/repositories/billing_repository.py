@@ -53,6 +53,15 @@ class BillingRepository:
     cancel_at_period_end: bool = False,
     mode: str = "test",
     grace_period_until: Optional[str] = None,
+    interval: Optional[str] = None,
+    provider_price_id: Optional[str] = None,
+    provider_customer_id: Optional[str] = None,
+    current_period_start: Optional[str] = None,
+    schedule_id: Optional[str] = None,
+    scheduled_plan: Optional[str] = None,
+    scheduled_interval: Optional[str] = None,
+    change_effective_at: Optional[str] = None,
+    clear_scheduled_change: bool = False,
   ) -> Dict[str, Any]:
     db = await self._db()
     now = datetime.now(timezone.utc)
@@ -68,9 +77,38 @@ class BillingRepository:
       "grace_period_until": grace_period_until,
       "updated_at": now,
     }
+    if interval is not None:
+      doc["interval"] = interval
+    if provider_price_id is not None:
+      doc["provider_price_id"] = provider_price_id
+    if provider_customer_id is not None:
+      doc["provider_customer_id"] = provider_customer_id
+    if current_period_start is not None:
+      doc["current_period_start"] = current_period_start
+    if schedule_id is not None:
+      doc["schedule_id"] = schedule_id
+    if scheduled_plan is not None:
+      doc["scheduled_plan"] = scheduled_plan
+    if scheduled_interval is not None:
+      doc["scheduled_interval"] = scheduled_interval
+    if change_effective_at is not None:
+      doc["change_effective_at"] = change_effective_at
+
+    update_doc: Dict[str, Any] = {
+      "$set": doc,
+      "$setOnInsert": {"created_at": now},
+    }
+    if clear_scheduled_change:
+      update_doc["$unset"] = {
+        "scheduled_plan": "",
+        "scheduled_interval": "",
+        "change_effective_at": "",
+        "schedule_id": "",
+      }
+
     await db.billing_subscriptions.update_one(
       {"tenant_id": tenant_id},
-      {"$set": doc, "$setOnInsert": {"created_at": now}},
+      update_doc,
       upsert=True,
     )
     return await self.get_subscription(tenant_id)
@@ -95,6 +133,13 @@ class BillingRepository:
     db = await self._db()
     return await db.billing_plan_catalog.find_one(
       {"plan": plan, "interval": interval, "currency": currency, "active": True},
+      {"_id": 0},
+    )
+
+  async def get_plan_price_by_provider_price_id(self, provider_price_id: str) -> Optional[Dict[str, Any]]:
+    db = await self._db()
+    return await db.billing_plan_catalog.find_one(
+      {"provider_price_id": provider_price_id, "active": True},
       {"_id": 0},
     )
 

@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 
 from app.repositories.billing_repository import billing_repo
 from app.services.audit_log_service import append_audit_log
+from app.services.stripe_checkout_service import stripe_checkout_service
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +98,12 @@ async def _handle_invoice_paid(event: Any) -> None:
     logger.warning("invoice.paid: no tenant for subscription %s", sub_id)
     return
 
-  await billing_repo.update_subscription_status(tenant_id, "active", cancel_at_period_end=False)
+  synced = await stripe_checkout_service.sync_provider_subscription_record(tenant_id, sub_id)
+  await billing_repo.update_subscription_status(
+    tenant_id,
+    synced.get("status") or "active",
+    cancel_at_period_end=synced.get("cancel_at_period_end"),
+  )
 
   await append_audit_log(
     scope="billing",
@@ -120,10 +126,9 @@ async def _handle_subscription_updated(event: Any) -> None:
   if not tenant_id:
     return
 
-  new_status = obj.get("status", "active")
-  cancel_at_end = obj.get("cancel_at_period_end", False)
-
-  await billing_repo.update_subscription_status(tenant_id, new_status, cancel_at_period_end=cancel_at_end)
+  synced = await stripe_checkout_service.sync_provider_subscription_record(tenant_id, sub_id)
+  new_status = synced.get("status") or obj.get("status", "active")
+  cancel_at_end = synced.get("cancel_at_period_end", obj.get("cancel_at_period_end", False))
 
   await append_audit_log(
     scope="billing",
@@ -146,7 +151,7 @@ async def _handle_subscription_deleted(event: Any) -> None:
   if not tenant_id:
     return
 
-  await billing_repo.update_subscription_status(tenant_id, "canceled")
+  await billing_repo.update_subscription_status(tenant_id, "canceled", cancel_at_period_end=False)
 
   await append_audit_log(
     scope="billing",
@@ -172,6 +177,11 @@ async def _handle_payment_failed(event: Any) -> None:
   # Set grace period instead of immediate freeze
   from datetime import datetime, timedelta, timezone
   grace_until = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
+
+  try:
+    await stripe_checkout_service.sync_provider_subscription_record(tenant_id, sub_id)
+  except Exception:
+    logger.warning("invoice.payment_failed sync skipped", extra={"tenant_id": tenant_id, "subscription_id": sub_id})
 
   from app.db import get_db
   db = await get_db()

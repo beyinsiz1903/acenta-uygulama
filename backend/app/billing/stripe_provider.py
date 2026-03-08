@@ -23,6 +23,12 @@ def _get_stripe_key() -> str:
   return key
 
 
+def _configure_stripe_proxy(key: str) -> None:
+  stripe.api_key = key
+  if "sk_test_emergent" in key:
+    stripe.api_base = "https://integrations.emergentagent.com/stripe"
+
+
 def _masked_key(key: str) -> str:
   if len(key) <= 12:
     return "***"
@@ -34,7 +40,7 @@ class StripeBillingProvider(BillingProvider):
 
   def __init__(self):
     self._key = _get_stripe_key()
-    stripe.api_key = self._key
+    _configure_stripe_proxy(self._key)
     logger.info("Stripe provider initialized (key=%s)", _masked_key(self._key))
 
   @property

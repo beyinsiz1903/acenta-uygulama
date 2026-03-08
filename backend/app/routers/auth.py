@@ -425,4 +425,18 @@ async def revoke_session(session_id: str, request: Request, response: Response, 
 async def me(request: Request, response: Response, user=Depends(get_current_user)):
     # Helpful for frontend refresh
     _apply_auth_compat_headers(request, response)
-    return user
+    tenant_id = user.get("tenant_id")
+    if not tenant_id and user.get("organization_id"):
+        db = await get_db()
+        tenant = await db.tenants.find_one(
+            {"organization_id": user.get("organization_id")},
+            {"_id": 1},
+            sort=[("created_at", 1)],
+        )
+        if tenant and tenant.get("_id") is not None:
+            tenant_id = str(tenant.get("_id"))
+
+    return {
+        **user,
+        "tenant_id": tenant_id,
+    }

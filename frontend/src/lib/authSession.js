@@ -108,7 +108,7 @@ export function persistBootstrappedUser(user) {
     return null;
   }
   setUser(user);
-  const tenantId = user.tenant_id || user.organization_id;
+  const tenantId = user.tenant_id || readStorage(STORAGE_KEYS.tenantId) || user.organization_id;
   if (tenantId) {
     writeStorage(STORAGE_KEYS.tenantId, tenantId);
   }

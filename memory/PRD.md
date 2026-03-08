@@ -241,6 +241,23 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `/app/test_reports/iteration_30.json` → managed lifecycle backend doğrulaması ve manual follow-up adımları kaydedildi
   - managed subscription self-test + browser smoke + portal round-trip tamamlandı
 
+## Son Uygulama Notu — 2026-03-08 (Billing P0 finalize + resiliency fixes)
+- `/app/settings/billing` P0 doğrulaması tamamlandı
+  - managed abonelik için `Aboneliği İptal Et -> dönem sonunda iptal` akışı doğrulandı
+  - yeni `POST /api/billing/reactivate-subscription` endpoint’i ve UI butonu eklendi
+  - reactivate sonrası pending banner / buton state’i otomatik temizleniyor
+  - sayfa focus/visibility dönüşünde billing verisi yeniden yükleniyor
+- Stripe dayanıklılık düzeltmeleri yapıldı
+  - stale `sub_*` / `cus_*` kayıtları artık billing overview veya portal çağrısında 500 üretmiyor
+  - geçersiz eski provider subscription referansları legacy guardrail state’ine düşürülüyor
+  - geçersiz eski provider customer referansları portal açılışında otomatik onarılıyor
+  - stale `price_*` katalog kayıtları checkout oluşturulurken otomatik yenileniyor
+- Doğrulama ve testler:
+  - gerçek Stripe test checkout ile `agent@acenta.test` hesabı Trial -> paid Starter managed subscription state’ine geçirildi
+  - curl self-test: subscription, cancel, customer-portal, reactivate akışları geçti
+  - browser self-test: billing ekranı, cancel dialog, pending state, reactivate, Stripe portal redirect geçti
+  - testing agent raporu: `/app/test_reports/iteration_31.json` → backend %100 / frontend %100 billing lifecycle geçti
+
 ## Öncelikli Sonraki Adımlar
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını daha da derinleştirip ödeme problemi state’lerini otomatik operasyon akışlarına bağlama
 - **P1:** Hard quota enforcement

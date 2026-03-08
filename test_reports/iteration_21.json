@@ -1,0 +1,103 @@
+{
+  "summary": "PR-UM4 Usage Metering + Usage Visibility Testing Complete. All backend tests passed (15/15). Frontend tests passed - Dashboard usage card, Usage page, and Admin tenant usage overview all working correctly. Verified: (1) GET /api/tenant/usage-summary returns 3 primary metrics + 30-day trend, (2) GET /api/admin/billing/tenants/{tenant_id}/usage returns raw usage + trend, (3) DashboardUsageSummaryCard shows only reservation.created, report.generated, export.generated, (4) UsagePage renders metric tiles + trend chart, (5) AdminTenantUsageOverview renders after tenant selection with all data + chart, (6) No upgrade CTA present on any UM4 surface (correctly deferred).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "✅ Backend: test_usage_summary_returns_200 - GET /api/tenant/usage-summary returns 200",
+    "✅ Backend: test_usage_summary_has_metrics - Response has metrics dict",
+    "✅ Backend: test_usage_summary_has_trend - Response has trend with daily array",
+    "✅ Backend: test_usage_summary_has_primary_metrics - primary_metrics includes only reservation.created, report.generated, export.generated",
+    "✅ Backend: test_usage_summary_has_plan_info - Plan + billing period present",
+    "✅ Backend: test_usage_summary_metrics_structure - Each metric has used, percent fields",
+    "✅ Backend: test_admin_usage_returns_200 - Admin usage endpoint returns 200",
+    "✅ Backend: test_admin_usage_has_raw_usage_and_trend - Admin view has metrics + trend",
+    "✅ Backend: test_admin_usage_includes_all_metrics - Admin sees all metrics",
+    "✅ Backend: test_admin_usage_has_totals_source - Data source indicator present",
+    "✅ Backend: test_admin_usage_trend_structure - Trend has proper daily structure",
+    "✅ Backend: test_tenant_usage_filters_to_primary_only - Tenant view correctly filtered",
+    "✅ Backend: test_tenant_usage_no_upgrade_cta - No upgrade CTA in tenant usage",
+    "✅ Backend: test_admin_usage_no_upgrade_suggestion - No upgrade suggestion in admin",
+    "✅ Backend: test_usage_summary_resolves_tenant - Tenant context resolved correctly",
+    "✅ Frontend: DashboardUsageSummaryCard renders with 3 primary metrics",
+    "✅ Frontend: Dashboard shows Reservations: 0, Reports: 11, Exports: 21",
+    "✅ Frontend: integration.call NOT shown in dashboard summary (correct per UM4)",
+    "✅ Frontend: UsagePage loads with heading 'Kullanım görünürlüğü'",
+    "✅ Frontend: UsagePage shows 3 metric tiles with progress bars",
+    "✅ Frontend: UsagePage trend chart renders with Last 30 days",
+    "✅ Frontend: No upgrade CTA on usage page (correct per UM4)",
+    "✅ Frontend: AdminTenantFeaturesPage loads with tenant list",
+    "✅ Frontend: AdminTenantUsageOverview renders after tenant selection",
+    "✅ Frontend: Admin usage shows Plan: Enterprise, Dönem: 2026-03, Kaynak: usage_daily",
+    "✅ Frontend: Admin usage shows all 3 metrics + trend chart",
+    "✅ Frontend: No upgrade CTA in admin view (correct per UM4)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_usage_metering_pr_um4.py",
+    "/app/test_reports/pytest/pytest_usage_metering_um4.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "usage_read_service.py: PRIMARY_USAGE_METRICS correctly defined as [reservation.created, report.generated, export.generated] - integration.call excluded from tenant dashboard",
+    "tenant_features.py: _resolve_tenant_id() properly falls back to organization_id -> tenant lookup, fixing tenant_context_missing blocker",
+    "admin_billing.py: /api/admin/billing/tenants/{tenant_id}/usage correctly returns raw usage + trend without upgrade suggestion",
+    "DashboardUsageSummaryCard.jsx: Uses getUsageMetricEntries(summary) which filters to PRIMARY_USAGE_METRICS",
+    "UsagePage.jsx: Properly renders UsageMetricTiles + UsageTrendChart components",
+    "AdminTenantUsageOverview.jsx: Calls /admin/billing/tenants/{tenant_id}/usage and renders full usage overview with trend chart",
+    "App.js: Route /app/usage correctly mapped to UsagePage component",
+    "AppShell.jsx: Kullanım menu item at /app/usage under FİNANS section"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_usage_metering_pr_um4.py"
+  ],
+  "success_rate": {
+    "backend": "100% (15/15 tests passed)",
+    "frontend": "100% (All UI components verified)"
+  },
+  "test_credentials": {
+    "admin": "admin@acenta.test / admin123"
+  },
+  "seed_data_creation": "No new seed data - using existing tenant with usage data (Reports: 11, Exports: 21)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "PR-UM4 usage visibility is fully working. Dashboard shows mini usage summary card with 3 primary metrics. /app/usage page shows detailed metric tiles with progress bars + 30-day trend chart. Admin tenant features page shows AdminTenantUsageOverview after tenant selection. All endpoints return proper data. No upgrade CTA present (deferred per spec). Tenant context resolution fallback is working correctly.",
+  "um4_verification_summary": {
+    "tenant_usage_summary_endpoint": {
+      "endpoint": "GET /api/tenant/usage-summary?days=30",
+      "status": "WORKING",
+      "returns": ["metrics object with 3 primary metrics", "trend.daily array with 30 days", "primary_metrics list", "plan + period info"]
+    },
+    "admin_billing_usage_endpoint": {
+      "endpoint": "GET /api/admin/billing/tenants/{tenant_id}/usage?days=30",
+      "status": "WORKING",
+      "returns": ["full metrics object", "trend with daily array", "totals_source indicator", "no upgrade_suggestion"]
+    },
+    "dashboard_usage_card": {
+      "component": "DashboardUsageSummaryCard",
+      "location": "Dashboard (/app)",
+      "status": "WORKING",
+      "shows": ["Reservations", "Reports", "Exports"],
+      "excludes": ["integration.call"]
+    },
+    "usage_page": {
+      "component": "UsagePage",
+      "location": "/app/usage",
+      "status": "WORKING",
+      "features": ["3 metric tiles with progress bars", "30-day trend chart", "Plan/Period display"]
+    },
+    "admin_tenant_usage_overview": {
+      "component": "AdminTenantUsageOverview",
+      "location": "/app/admin/tenant-features (after tenant selection)",
+      "status": "WORKING",
+      "features": ["Usage metrics tiles", "30-day trend chart", "Data source indicator", "Refresh button"]
+    },
+    "tenant_context_resolution": "FIXED - Falls back to organization_id -> tenant lookup",
+    "upgrade_cta": "CORRECTLY DEFERRED - Not present on any UM4 surface"
+  }
+}

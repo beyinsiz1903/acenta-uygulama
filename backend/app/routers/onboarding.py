@@ -43,7 +43,7 @@ class SignupRequest(BaseModel):
     admin_name: str = Field(..., min_length=2, max_length=100)
     email: str = Field(..., min_length=5, max_length=200)
     password: str = Field(..., min_length=6, max_length=128)
-    plan: str = Field(default="starter")
+    plan: str = Field(default="trial")
     billing_cycle: str = Field(default="monthly")
 
 

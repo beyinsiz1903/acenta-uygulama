@@ -177,6 +177,9 @@ export default function PublicHomePage() {
               <Link to="/pricing" className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-50 transition-colors">
                 Fiyatlar
               </Link>
+              <Link to="/demo" className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-50 transition-colors">
+                Demo
+              </Link>
               {navPages.map((p) => (
                 <Link key={p.id} to={buildCmsUrl(p.slug)} className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-50 transition-colors">
                   {p.title || p.slug}
@@ -221,6 +224,9 @@ export default function PublicHomePage() {
               </Link>
               <Link to="/pricing" className="block px-3 py-2.5 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50" onClick={() => setMobileMenuOpen(false)}>
                 Fiyatlar
+              </Link>
+              <Link to="/demo" className="block px-3 py-2.5 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50" onClick={() => setMobileMenuOpen(false)}>
+                Demo
               </Link>
               <div className="pt-3 space-y-2 border-t border-gray-100 mt-3">
                 <Link to="/b2b/login" className="block" onClick={() => setMobileMenuOpen(false)}>
@@ -268,9 +274,9 @@ export default function PublicHomePage() {
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              <Link to="/signup">
+              <Link to="/demo">
                 <Button size="lg" className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white shadow-xl shadow-blue-500/25 text-base px-8 h-12 rounded-xl font-semibold group">
-                  Ücretsiz Deneyin
+                  Demo Hesap Oluştur
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>

@@ -2347,7 +2347,7 @@ agent_communication:
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 32
+  test_sequence: 33
   last_updated: "2026-03-08"
 
   - task: "PR-UM5 backend validation"
@@ -2362,7 +2362,128 @@ metadata:
         agent: "testing"
         comment: "PR-UM5 BACKEND VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-03-08). Comprehensive backend validation per Turkish review request on https://usage-metering.preview.emergentagent.com with agent@acenta.test/agent123. Test Results: 1) ✅ Cookie-compat login successful - auth_transport=cookie_compat returned, cookies set properly, 2) ✅ /api/auth/me returns tenant_id - tenant_id: 9c5c1079-9dea-49bf-82c0-74838b146160, email: agent@acenta.test, 3) ✅ /api/tenant/usage-summary?days=30 structure validation - all required fields present (plan_label, is_trial, period, metrics), 4) ✅ Trial plan configuration - plan_label='Trial', is_trial=true, billing_status='trialing', 5) ✅ Usage thresholds validation - reservation.created: 70/100→warning, report.generated: 17/20→critical, export.generated: 10/10→limit_reached, all warning levels and messages correct, 6) ✅ CTA fields validation - report.generated and export.generated have upgrade_recommended=true, cta_label='Planları Görüntüle', cta_href='/pricing', 7) ✅ Trial conversion validation - trial_conversion.show=true, recommended_plan_label='Pro Plan', message and CTA present, 8) ✅ Soft quota logic (70/85/100) - reservation: 70%→warning, report: 85%→critical, export: 100%→limit_reached, all threshold logic working correctly. Success rate: 100%. ALL review request expectations met perfectly: tenant set to Trial status, usage limits configured correctly with warning/critical/limit_reached states, CTA surfaces functional, soft quota thresholds consistent with 70/85/100 logic. No APIs are mocked, all functionality validated against live preview environment."
 
+  - task: "Pricing + /demo public pages validation"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/public/PricingPage.jsx, frontend/src/pages/public/DemoPage.jsx, frontend/src/pages/public/SignupPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PRICING + /DEMO PUBLIC PAGES VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-03-08). Comprehensive validation per Turkish review request on https://usage-metering.preview.emergentagent.com. Test Results: 1) ✅ /pricing page loads - pricing-page element found and renders correctly ✅, 2) ✅ Pricing cards with correct prices - Starter: ₺990 ✅, Pro: ₺2.490 ✅, Enterprise: ₺6.990 ✅, all 3 plan cards visible and properly formatted, 3) ✅ CTA text on pricing cards - All 3 plan cards (Starter, Pro, Enterprise) have CTA text '14 Gün Ücretsiz Dene' ✅, 4) ✅ Pricing hero secondary CTA navigation - Secondary CTA 'Canlı demoyu gör' found and navigates correctly to /demo page ✅, 5) ✅ /demo page validation - demo-page element found ✅, Hero title 'Acentelerde Excel dönemi bitiyor' confirmed ✅, Primary CTA 'Demo Hesap Oluştur' confirmed ✅, Hot sales-focused copy present throughout page ✅, 6) ✅ Demo CTA navigation - Demo CTA successfully navigates to /signup page (URL: /signup?plan=trial) ✅, 7) ✅ Signup page trial texts and plan cards - signup-page element found ✅, Trial badge 'Trial ile başlıyorsunuz' visible ✅, Title '14 gün ücretsiz deneyin, sonra karar verin' confirmed ✅, 4 trial points visible including '14 gün boyunca aktif trial' ✅, Plan picker with Starter/Pro/Enterprise cards working ✅, All 3 plan cards selectable with visual feedback (border-[#f3722c] and bg-[#fff4ec] on selection) ✅, Selected plan summary displays correctly in sidebar ✅, 8) ✅ data-testid selectors stability - All 17 critical selectors validated and working: pricing-page, pricing-plan-starter/pro/enterprise, pricing-plan-cta-starter/pro/enterprise, pricing-hero-secondary-cta, demo-page, demo-hero-title, demo-hero-primary-cta, signup-page, signup-title, signup-sidebar-badge, signup-selected-plan-starter/pro/enterprise ✅. All business logic confirmed: Pricing shows only Starter/Pro/Enterprise (no Trial card) ✅, CTA text '14 Gün Ücretsiz Dene' on all pricing cards ✅, Demo page shows sales-focused copy with clear value prop ✅, Signup flow starts as Trial with trial metinleri görünüyor ✅, Navigation flow /pricing → /demo → /signup working perfectly ✅. Success rate: 100% (8/8 validation points). No APIs are mocked, all functionality tested against live preview environment. Public pages are production-ready."
+
 agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ PRICING + /DEMO PUBLIC PAGES VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-08)
+      
+      Performed comprehensive validation of new public pages (/pricing, /demo, /signup trial onboarding) per Turkish review request.
+      
+      Context:
+      - Preview URL: https://usage-metering.preview.emergentagent.com
+      - Scope: Pricing + /demo satış yüzeyi doğrulaması
+      - Focus: Public pages (no login required)
+      
+      ✅ ALL 8 VALIDATION REQUIREMENTS PASSED:
+      
+      1. ✅ /pricing yükleniyor ve pricing-page görünüyor
+         - pricing-page element found ✅
+         - Page loads correctly with full content ✅
+         - Hero section with trial badge visible ✅
+      
+      2. ✅ Starter / Pro / Enterprise fiyat kartları ve fiyatlar
+         - Starter card: ₺990 / ay ✅
+         - Pro card: ₺2.490 / ay (EN POPÜLER badge) ✅
+         - Enterprise card: ₺6.990 / ay ✅
+         - All 3 cards render with proper styling ✅
+         - Limit blocks visible on each card ✅
+      
+      3. ✅ Pricing kartlarındaki CTA '14 Gün Ücretsiz Dene'
+         - Starter CTA: "14 Gün Ücretsiz Dene" ✅
+         - Pro CTA: "14 Gün Ücretsiz Dene" ✅
+         - Enterprise CTA: "14 Gün Ücretsiz Dene" ✅
+         - All CTAs link to /signup?plan=trial&selectedPlan={key} ✅
+      
+      4. ✅ Pricing hero secondary CTA ile /demo sayfasına gidiliyor
+         - Secondary CTA "Canlı demoyu gör" found ✅
+         - Navigation to /demo successful ✅
+      
+      5. ✅ /demo sayfasında başlık ve CTA
+         - demo-page element found ✅
+         - Title: "Acentelerde Excel dönemi bitiyor" ✅
+         - Primary CTA: "Demo Hesap Oluştur" ✅
+         - Hot, sales-focused copy throughout: Problem → Solution → Funnel ✅
+         - Hero image and benefits section visible ✅
+      
+      6. ✅ Demo CTA ile /signup sayfasına gidiliyor
+         - Demo CTA navigation successful ✅
+         - Redirected to: /signup?plan=trial ✅
+      
+      7. ✅ Signup sayfasında trial metinleri ve seçili plan kartları
+         - signup-page element found ✅
+         - Sidebar badge: "Trial ile başlıyorsunuz" ✅
+         - Title: "14 gün ücretsiz deneyin, sonra karar verin" ✅
+         - Trial points visible (4 items):
+           * "14 gün boyunca aktif trial" ✅
+           * "100 rezervasyon limiti" ✅
+           * "2 kullanıcı ile ekip testi" ✅
+           * "Trial sonunda planınızı seçebilirsiniz" ✅
+         - Plan picker section present with label: "Trial sonrası ilginizi çeken plan" ✅
+         - All 3 plan cards selectable:
+           * Starter: ₺990 / ay - "Küçük acenteler için" ✅
+           * Pro: ₺2.490 / ay - "Büyüyen acenteler için" ✅
+           * Enterprise: ₺6.990 / ay - "Büyük operasyonlar için" ✅
+         - Plan cards clickable with visual selection feedback ✅
+         - Selected plan summary displays in sidebar ✅
+         - Note: "Hesap yine Trial olarak açılır" visible ✅
+      
+      8. ✅ data-testid selector'ları stabil
+         - Pricing page selectors (8/8 found):
+           * pricing-page ✅
+           * pricing-plan-starter / pro / enterprise ✅
+           * pricing-plan-cta-starter / pro / enterprise ✅
+           * pricing-hero-secondary-cta ✅
+         - Demo page selectors (3/3 found):
+           * demo-page ✅
+           * demo-hero-title ✅
+           * demo-hero-primary-cta ✅
+         - Signup page selectors (6/6 found):
+           * signup-page ✅
+           * signup-title ✅
+           * signup-sidebar-badge ✅
+           * signup-selected-plan-starter / pro / enterprise ✅
+      
+      Business Logic Validation:
+      ✅ Pricing page shows only Starter / Pro / Enterprise (no Trial card on pricing page)
+      ✅ CTA text "14 Gün Ücretsiz Dene" consistent across all pricing cards
+      ✅ Demo page shows hot, sales-focused copy with clear value proposition
+      ✅ Main demo CTA "Demo Hesap Oluştur" is prominent and clear
+      ✅ Signup flow starts as Trial (not paid plans)
+      ✅ Trial metinleri görünüyor throughout signup page
+      ✅ Plan selection is for "post-trial preference" only
+      ✅ Navigation flow works: /pricing → /demo → /signup
+      
+      Screenshots Captured:
+      ✅ 01_pricing_page.png - Full pricing page with hero and cards
+      ✅ 02_pricing_cards.png - Pricing cards close-up
+      ✅ 03_demo_page.png - Demo page with hero and sales copy
+      ✅ 04_signup_page_initial.png - Signup page initial state
+      ✅ 05_signup_page_plan_selected.png - Signup with plan selection
+      
+      Test Summary:
+      - Total Validation Points: 8
+      - Passed: 8
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      Pricing + /demo public pages validation SUCCESSFUL. All Turkish review request requirements met perfectly. New public pages (/pricing, /demo, /signup) are production-ready with correct business logic, pricing display, CTA texts, navigation flow, and trial onboarding. All critical data-testid selectors are stable for automated testing. No APIs are mocked - all functionality validated against live preview environment.
+      
+      Status: ✅ PASS - Public pages fully operational and ready for production
+
+
   - agent: "testing"
     message: |
       ✅ PR-UM5 BACKEND VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-08)

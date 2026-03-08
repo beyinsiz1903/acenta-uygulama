@@ -38,9 +38,12 @@ def _default_plan_document(plan_name: str) -> Dict[str, Any]:
     "features": sorted(set(config.get("features") or [])),
     "limits": dict(config.get("limits") or {}),
     "usage_allowances": dict(config.get("quotas") or {}),
+    "pricing": dict(config.get("pricing") or {}),
+    "audience": config.get("audience"),
+    "is_popular": bool(config.get("is_popular", False)),
     "sort_order": VALID_PLANS.index(plan_name),
     "active": True,
-    "is_public": True,
+    "is_public": bool(config.get("is_public", True)),
   }
 
 
@@ -73,8 +76,8 @@ class EntitlementService:
         continue
 
       merged = {
-        **default_doc,
         **{k: v for k, v in current.items() if k not in {"catalog", "created_at", "updated_at"}},
+        **default_doc,
       }
       await repo.upsert_entitlement_plan(merged)
 
@@ -89,6 +92,9 @@ class EntitlementService:
       "limits": _serialize_mapping(doc.get("limits") or {}),
       "usage_allowances": _serialize_mapping(usage_allowances),
       "quotas": _serialize_mapping(usage_allowances),
+      "pricing": dict(doc.get("pricing") or {}),
+      "audience": doc.get("audience"),
+      "is_popular": bool(doc.get("is_popular", False)),
       "sort_order": int(doc.get("sort_order", 0)),
       "active": bool(doc.get("active", True)),
       "is_public": bool(doc.get("is_public", True)),

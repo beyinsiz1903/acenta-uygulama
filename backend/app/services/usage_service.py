@@ -345,10 +345,6 @@ async def track_usage(
 ) -> None:
   """Backward-compatible best-effort tracking helper."""
   try:
-    plan = await entitlement_service.get_plan(tenant_id)
-    if plan == "starter":
-      return  # Starter has no metered features
-
     organization_id = await _resolve_usage_organization_id(tenant_id)
     inserted = await track_usage_event(
       tenant_id=tenant_id,

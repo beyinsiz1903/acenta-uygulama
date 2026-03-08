@@ -8,12 +8,13 @@ from typing import Any, Dict, Optional
 from app.auth import hash_password
 from app.db import get_db
 from app.errors import AppError
-from app.constants.plan_matrix import DEFAULT_PLAN, VALID_PLANS
+from app.constants.plan_matrix import VALID_PLANS
 from app.services.entitlement_service import entitlement_service
 
 logger = logging.getLogger(__name__)
 
 TRIAL_DAYS = 14
+TRIAL_PLAN = "trial"
 
 
 class OnboardingService:
@@ -112,7 +113,7 @@ class OnboardingService:
         org_id: str,
         tenant_id: str,
         user_id: str,
-        plan: str = DEFAULT_PLAN,
+        plan: str = TRIAL_PLAN,
         billing_cycle: str = "monthly",
     ) -> Dict[str, Any]:
         """Seed trial subscription, capabilities, onboarding_state."""
@@ -120,7 +121,7 @@ class OnboardingService:
         now = datetime.now(timezone.utc)
         trial_end = now + timedelta(days=TRIAL_DAYS)
 
-        plan_key = plan if plan in VALID_PLANS else DEFAULT_PLAN
+        plan_key = plan if plan in VALID_PLANS else TRIAL_PLAN
 
         # 1) Trial subscription (no Stripe dependency)
         sub_id = str(uuid.uuid4())
@@ -187,7 +188,7 @@ class OnboardingService:
         admin_name: str,
         email: str,
         password: str,
-        plan: str = DEFAULT_PLAN,
+        plan: str = TRIAL_PLAN,
         billing_cycle: str = "monthly",
     ) -> Dict[str, Any]:
         step_a = await self.signup_step_a(

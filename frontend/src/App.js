@@ -63,6 +63,7 @@ const PublicCampaignPage = lazy(() => import("./pages/public/PublicCampaignPage"
 const PublicPartnerApplyPage = lazy(() => import("./pages/public/PublicPartnerApplyPage"));
 const SignupPage = lazy(() => import("./pages/public/SignupPage"));
 const PricingPage = lazy(() => import("./pages/public/PricingPage"));
+const DemoPage = lazy(() => import("./pages/public/DemoPage"));
 const WebPOSPage = lazy(() => import("./pages/WebPOSPage"));
 const AdvancedReportsPage = lazy(() => import("./pages/AdvancedReportsPage"));
 const OnboardingWizardPage = lazy(() => import("./pages/OnboardingWizardPage"));
@@ -291,6 +292,7 @@ function App() {
         <Route path="/partners/apply" element={<PublicPartnerApplyPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/demo" element={<DemoPage />} />
 
         {/* Admin Routes */}
         <Route

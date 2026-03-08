@@ -10,6 +10,7 @@ from app.db import get_db
 from app.errors import AppError
 from app.constants.plan_matrix import VALID_PLANS
 from app.services.entitlement_service import entitlement_service
+from app.services.trial_seed_service import seed_trial_signup_workspace
 
 logger = logging.getLogger(__name__)
 
@@ -204,6 +205,20 @@ class OnboardingService:
             plan=plan,
             billing_cycle=billing_cycle,
         )
+        if step_b.get("plan") == TRIAL_PLAN:
+            try:
+                db = await get_db()
+                await seed_trial_signup_workspace(
+                    db,
+                    organization_id=step_a["org_id"],
+                    tenant_id=step_a["tenant_id"],
+                    user_id=step_a["user_id"],
+                    company_name=company_name,
+                    admin_name=admin_name,
+                    admin_email=email,
+                )
+            except Exception as exc:
+                logger.warning("trial signup demo seed failed for tenant %s: %s", step_a["tenant_id"], exc)
         return {**step_a, **step_b}
 
     # ─── Onboarding state CRUD ────────────────────────────────────
@@ -256,29 +271,50 @@ class OnboardingService:
     async def check_trial_status(self, org_id: str) -> Dict[str, Any]:
         db = await get_db()
         sub = await db.subscriptions.find_one(
-            {"org_id": org_id, "status": "trialing"},
+            {"org_id": org_id},
             sort=[("period_end", -1)],
         )
         if not sub:
-            return {"status": "no_trial", "expired": True}
+            return {"status": "no_trial", "expired": False, "plan": None}
 
         now = datetime.now(timezone.utc)
+        plan = sub.get("plan")
+        status = sub.get("status") or "unknown"
         trial_end = sub.get("trial_end") or sub.get("period_end")
+
+        if plan != TRIAL_PLAN and status != "trialing":
+            return {
+                "status": status,
+                "expired": False,
+                "plan": plan,
+                "trial_end": None,
+                "days_remaining": None,
+            }
+
         # Ensure timezone-aware comparison
         if trial_end and trial_end.tzinfo is None:
             trial_end = trial_end.replace(tzinfo=timezone.utc)
+        if status == "expired":
+            return {
+                "status": "expired",
+                "expired": True,
+                "plan": plan,
+                "trial_end": trial_end.isoformat() if trial_end else None,
+                "days_remaining": 0,
+            }
         if trial_end and now > trial_end:
             # Auto-expire
             await db.subscriptions.update_one(
                 {"_id": sub["_id"]},
                 {"$set": {"status": "expired", "updated_at": now}},
             )
-            return {"status": "expired", "expired": True, "trial_end": trial_end.isoformat()}
+            return {"status": "expired", "expired": True, "plan": plan, "trial_end": trial_end.isoformat()}
 
         days_remaining = (trial_end - now).days if trial_end else 0
         return {
             "status": "trialing",
             "expired": False,
+            "plan": plan,
             "trial_end": trial_end.isoformat() if trial_end else None,
             "days_remaining": days_remaining,
         }

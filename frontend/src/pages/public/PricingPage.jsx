@@ -75,6 +75,19 @@ const TRUST_POINTS = [
   "İlk kullanım için teknik kurulum zorunlu değil",
 ];
 
+const PRICING_PROBLEMS = [
+  "Excel ile rezervasyon takibi",
+  "WhatsApp ile müşteri yönetimi",
+  "Dağınık operasyon süreçleri",
+];
+
+const PRICING_SOLUTIONS = [
+  "Rezervasyon yönetimi",
+  "Müşteri yönetimi",
+  "Raporlama",
+  "Entegrasyonlar",
+];
+
 function formatMonthlyPrice(pricing = {}) {
   if (typeof pricing?.monthly === "number") {
     return `₺${pricing.monthly.toLocaleString("tr-TR")}`;
@@ -286,16 +299,50 @@ export default function PricingPage() {
           </div>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]" data-testid="pricing-social-proof-section">
+        <section className="grid gap-6 lg:grid-cols-2" data-testid="pricing-problem-solution-section">
+          <article className="rounded-[2rem] border border-[#f1e3d8] bg-[#fffaf6] p-8 shadow-[0_25px_80px_rgba(38,70,83,0.06)]" data-testid="pricing-problem-card">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#d16024]" data-testid="pricing-problem-eyebrow">
+              Problem bölümü
+            </p>
+            <h2 className="mt-3 text-4xl font-extrabold tracking-[-0.03em] text-slate-900" style={{ fontFamily: "Manrope, Inter, sans-serif" }} data-testid="pricing-problem-title">
+              Acentelerde en büyük sorun operasyon karmaşası
+            </h2>
+            <div className="mt-6 grid gap-3" data-testid="pricing-problem-list">
+              {PRICING_PROBLEMS.map((item, index) => (
+                <div key={item} className="rounded-2xl border border-white bg-white px-4 py-4" data-testid={`pricing-problem-item-${index + 1}`}>
+                  <p className="text-sm font-semibold leading-6 text-slate-900" data-testid={`pricing-problem-item-text-${index + 1}`}>{item}</p>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="rounded-[2rem] border border-[#dbe8e6] bg-white/95 p-8 shadow-[0_25px_80px_rgba(38,70,83,0.08)]" data-testid="pricing-solution-card">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#2a9d8f]" data-testid="pricing-solution-eyebrow">
+              Çözüm bölümü
+            </p>
+            <h2 className="mt-3 text-4xl font-extrabold tracking-[-0.03em] text-slate-900" style={{ fontFamily: "Manrope, Inter, sans-serif" }} data-testid="pricing-solution-title">
+              Syroce ile tüm operasyon tek panelde
+            </h2>
+            <div className="mt-6 grid gap-3" data-testid="pricing-solution-list">
+              {PRICING_SOLUTIONS.map((item, index) => (
+                <div key={item} className="rounded-2xl bg-[#f7fbfb] px-4 py-4" data-testid={`pricing-solution-item-${index + 1}`}>
+                  <p className="text-sm font-semibold leading-6 text-slate-900" data-testid={`pricing-solution-item-text-${index + 1}`}>{item}</p>
+                </div>
+              ))}
+            </div>
+          </article>
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]" data-testid="pricing-roi-section">
           <article className="rounded-[2rem] bg-[#264653] px-8 py-10 text-white shadow-[0_25px_80px_rgba(38,70,83,0.12)] lg:px-10" data-testid="pricing-social-proof-card">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#e9c46a]" data-testid="pricing-social-proof-eyebrow">
-              Sosyal kanıt
+              ROI bölümü
             </p>
             <h2 className="mt-3 text-4xl font-extrabold tracking-[-0.03em]" style={{ fontFamily: "Manrope, Inter, sans-serif" }} data-testid="pricing-social-proof-title">
-              Turizm acenteleri Syroce ile operasyon süreçlerini %40 daha hızlı yönetiyor.
+              Syroce kullanan acenteler operasyon süresini %40 azaltıyor
             </h2>
             <p className="mt-4 max-w-2xl text-base leading-7 text-white/80" data-testid="pricing-social-proof-text">
-              Excel, WhatsApp ve dağınık takip araçları yerine tek panel kullanan ekipler daha hızlı cevap verir, daha az iş kaybı yaşar ve daha net rapor alır.
+              Turizm acenteleri Syroce ile operasyon süreçlerini %40 daha hızlı yönetiyor. Bu da daha az dağınıklık, daha hızlı ekip koordinasyonu ve daha net satış takibi anlamına gelir.
             </p>
           </article>
 
@@ -311,32 +358,6 @@ export default function PricingPage() {
               ))}
             </div>
           </article>
-        </section>
-
-        <section className="rounded-[2rem] border border-[#e4eceb] bg-white/90 p-8 shadow-[0_25px_80px_rgba(38,70,83,0.08)] lg:p-10" data-testid="pricing-conversion-section">
-          <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#d16024]" data-testid="pricing-conversion-eyebrow">
-                Dönüşüm akışı
-              </p>
-              <h2 className="mt-3 text-4xl font-extrabold tracking-[-0.03em] text-slate-900" style={{ fontFamily: "Manrope, Inter, sans-serif" }} data-testid="pricing-conversion-title">
-                Instagram'dan gelen kullanıcıyı trial'a, trial'dan ücretli plana taşıyın
-              </h2>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3" data-testid="pricing-conversion-cards">
-              {[
-                "Demo hesabını aç",
-                "14 gün ücretsiz kullan",
-                "Doğru plan ile devam et",
-              ].map((item, index) => (
-                <div key={item} className="rounded-2xl border border-slate-200 bg-[#fbfcfc] px-4 py-4" data-testid={`pricing-conversion-card-${index + 1}`}>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#2a9d8f]" data-testid={`pricing-conversion-card-step-${index + 1}`}>Adım {index + 1}</p>
-                  <p className="mt-3 text-sm font-semibold leading-6 text-slate-900" data-testid={`pricing-conversion-card-text-${index + 1}`}>{item}</p>
-                </div>
-              ))}
-            </div>
-          </div>
         </section>
 
         <section className="rounded-[2rem] bg-[#264653] px-8 py-10 text-white lg:px-12" data-testid="pricing-final-cta-section">

@@ -28,6 +28,7 @@ import { getActiveTenantKey, getActiveTenantId, setActiveTenantId, subscribeTena
 import NotificationDrawer from "./NotificationDrawer";
 import NotificationBell from "./NotificationBell";
 import TrialBanner from "./TrialBanner";
+import TrialExpiredGate from "./TrialExpiredGate";
 import { LanguageSwitcher, useI18n } from "../contexts/I18nContext";
 import AiAssistant from "./AiAssistant";
 
@@ -268,6 +269,7 @@ function AppShellInner() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [agencyAllowedModules, setAgencyAllowedModules] = useState(null); // null = not loaded, [] = no restrictions
+  const [trialStatus, setTrialStatus] = useState(null);
 
   // Enterprise White-Label branding
   const [branding, setBranding] = useState(null);
@@ -361,6 +363,19 @@ function AppShellInner() {
     return () => { cancelled = true; };
   }, [location.pathname, onboardingChecked, navigate]);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get("/onboarding/trial");
+        if (!cancelled) setTrialStatus(res.data || null);
+      } catch {
+        if (!cancelled) setTrialStatus(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user?.organization_id]);
+
   // Tenant setup
   useEffect(() => {
     try { void getActiveTenantKey(); } catch { /* */ }
@@ -436,6 +451,7 @@ function AppShellInner() {
   }, [resSummary, sales]);
 
   const isAdmin = (user?.roles || []).some((r) => ["super_admin", "admin"].includes(r));
+  const trialExpired = Boolean(trialStatus?.expired || trialStatus?.status === "expired");
   const { hasFeature, loading: featuresLoading, quotaAlerts } = useFeatures();
   const { mode: productMode, isAtLeast: isModeAtLeast, hiddenNavItems, labelOverrides, loading: modeLoading } = useProductMode();
 
@@ -744,8 +760,8 @@ function AppShellInner() {
 
         {/* --- Main Content --- */}
         <main className="flex-1 min-h-[calc(100vh-53px)] overflow-auto">
-          <TrialBanner />
-          {!isAdmin && quotaAlerts && quotaAlerts.length > 0 && (
+          {!trialExpired ? <TrialBanner /> : null}
+          {!trialExpired && !isAdmin && quotaAlerts && quotaAlerts.length > 0 && (
             <div className="mx-4 mt-3 space-y-2" data-testid="quota-alert-banners">
               {quotaAlerts.map((q) => (
                 <div
@@ -783,6 +799,8 @@ function AppShellInner() {
           © {new Date().getFullYear()} — v1
         </div>
       </footer>
+
+      {trialExpired ? <TrialExpiredGate /> : null}
 
       {/* AI Assistant floating panel */}
       <AiAssistant />

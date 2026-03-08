@@ -2350,7 +2350,113 @@ metadata:
   test_sequence: 32
   last_updated: "2026-03-08"
 
+  - task: "PR-UM5 backend validation"
+    implemented: true
+    working: true
+    file: "backend/app/routers/tenant_usage.py, backend/app/services/usage_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PR-UM5 BACKEND VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-03-08). Comprehensive backend validation per Turkish review request on https://usage-metering.preview.emergentagent.com with agent@acenta.test/agent123. Test Results: 1) ✅ Cookie-compat login successful - auth_transport=cookie_compat returned, cookies set properly, 2) ✅ /api/auth/me returns tenant_id - tenant_id: 9c5c1079-9dea-49bf-82c0-74838b146160, email: agent@acenta.test, 3) ✅ /api/tenant/usage-summary?days=30 structure validation - all required fields present (plan_label, is_trial, period, metrics), 4) ✅ Trial plan configuration - plan_label='Trial', is_trial=true, billing_status='trialing', 5) ✅ Usage thresholds validation - reservation.created: 70/100→warning, report.generated: 17/20→critical, export.generated: 10/10→limit_reached, all warning levels and messages correct, 6) ✅ CTA fields validation - report.generated and export.generated have upgrade_recommended=true, cta_label='Planları Görüntüle', cta_href='/pricing', 7) ✅ Trial conversion validation - trial_conversion.show=true, recommended_plan_label='Pro Plan', message and CTA present, 8) ✅ Soft quota logic (70/85/100) - reservation: 70%→warning, report: 85%→critical, export: 100%→limit_reached, all threshold logic working correctly. Success rate: 100%. ALL review request expectations met perfectly: tenant set to Trial status, usage limits configured correctly with warning/critical/limit_reached states, CTA surfaces functional, soft quota thresholds consistent with 70/85/100 logic. No APIs are mocked, all functionality validated against live preview environment."
+
 agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ PR-UM5 BACKEND VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-08)
+      
+      Performed comprehensive PR-UM5 backend validation per Turkish review request on https://usage-metering.preview.emergentagent.com
+      
+      Context:
+      - Review: PR-UM5 backend doğrulaması yap
+      - Test account: agent@acenta.test / agent123 
+      - Tenant: demo trial durumuna ayarlı
+      - Base URL: https://usage-metering.preview.emergentagent.com
+      
+      ✅ ALL 8 VALIDATION REQUIREMENTS PASSED:
+      
+      1. ✅ Cookie-compat login başarılı
+         - POST /api/auth/login with X-Client-Platform: web
+         - auth_transport: "cookie_compat" ✅
+         - Cookies properly set ✅
+         - Login successful with agent@acenta.test/agent123 ✅
+      
+      2. ✅ GET /api/auth/me tenant_id içeriyor
+         - Status: 200 OK ✅
+         - tenant_id: "9c5c1079-9dea-49bf-82c0-74838b146160" ✅
+         - email: "agent@acenta.test" ✅
+         - Cookie authentication working ✅
+      
+      3. ✅ GET /api/tenant/usage-summary?days=30 beklenen alanları dönüyor
+         - Status: 200 OK ✅
+         - plan_label: "Trial" ✅
+         - is_trial: true ✅
+         - billing_status: "trialing" ✅
+         - All required metrics present ✅
+      
+      4. ✅ Warning/critical/limit_reached alanları doğru dolu:
+         
+         reservation.created = 70/100:
+         ✅ warning_level: "warning"
+         ✅ warning_message: "Limitinize yaklaşıyorsunuz"
+         ✅ percent: 70.0%
+         ✅ remaining: 30
+         
+         report.generated = 17/20:
+         ✅ warning_level: "critical" 
+         ✅ warning_message: "Limitinize sadece 3 rapor kaldı"
+         ✅ percent: 85.0%
+         ✅ upgrade_recommended: true
+         ✅ cta_label: "Planları Görüntüle"
+         
+         export.generated = 10/10:
+         ✅ warning_level: "limit_reached"
+         ✅ warning_message: "Export limitiniz doldu. Planınızı yükselterek devam edebilirsiniz."
+         ✅ percent: 100.0%
+         ✅ exceeded: true
+         ✅ upgrade_recommended: true
+         ✅ cta_label: "Planları Görüntüle"
+      
+      5. ✅ CTA alanları doğru dolu
+         - report.generated: upgrade_recommended=true, cta_href="/pricing" ✅
+         - export.generated: upgrade_recommended=true, cta_href="/pricing" ✅
+         - cta_label: "Planları Görüntüle" ✅
+      
+      6. ✅ Trial conversion recommendation
+         - trial_conversion.show: true ✅
+         - recommended_plan_label: "Pro Plan" ✅
+         - message: "Trial kullanımınız devam ediyor." ✅
+         - cta_href: "/pricing" ✅
+      
+      7. ✅ Soft quota eşikleri 70/85/100 mantığıyla tutarlı
+         - 70/100 = 70% → "warning" (≥70% threshold) ✅
+         - 17/20 = 85% → "critical" (≥85% threshold) ✅  
+         - 10/10 = 100% → "limit_reached" (≥100% threshold) ✅
+      
+      Backend API Response Summary:
+      ✅ All JSON structure fields present and correct
+      ✅ Usage metrics calculated accurately
+      ✅ Warning levels applied correctly based on thresholds
+      ✅ CTA surfaces functional with proper labels and hrefs
+      ✅ Trial conversion logic working correctly
+      ✅ Soft quota thresholds consistent (70%→warning, 85%→critical, 100%→limit_reached)
+      ✅ Trend data available for 30-day period
+      ✅ Totals source: "usage_daily" 
+      ✅ Generated timestamp present
+      
+      Test Summary:
+      - Total Tests: 8
+      - Passed: 8
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      PR-UM5 backend validation SUCCESSFUL. All Turkish review request requirements met perfectly. Backend correctly configured with trial tenant status, proper usage limits, accurate warning level calculations, functional CTA surfaces, and consistent soft quota threshold logic. No APIs are mocked - all functionality validated against live preview environment.
+      
+      Status: ✅ PASS - Backend fully operational and compliant with review requirements
+  
   - agent: "testing"
     message: |
       ✅ PR-UM5 SOFT QUOTA WARNING UI FINAL VALIDATION COMPLETED - ALL REQUIREMENTS PASSED (2026-03-08)

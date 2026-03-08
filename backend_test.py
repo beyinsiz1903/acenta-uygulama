@@ -1,688 +1,501 @@
 #!/usr/bin/env python3
-"""Backend testing for PR-UM3 usage metering validation
+"""
+PR-UM5 Backend Validation Test
+Turkish Review Request: PR-UM5 backend doğrulaması yap.
 
-Tests specific usage metering flows:
-1. GET /api/admin/reports/match-risk/executive-summary.pdf increments report.generated only when PDF is produced  
-2. Repeating same request with X-Correlation-Id must NOT double count
-3. GET /api/reports/sales-summary.csv, POST /api/admin/tenant/export, GET /api/admin/audit/export increment export.generated
-4. GET /api/reports/sales-summary and /api/reports/reservations-summary must NOT increment usage
-5. Code path coverage for integration.call on Google Sheets provider/client functions
+Test Requirements:
+1. Cookie-compat login with agent@acenta.test / agent123
+2. /api/auth/me returns tenant_id
+3. /api/tenant/usage-summary?days=30 returns expected structure:
+   - plan_label = Trial, is_trial = true
+   - reservation.created = 70/100 → warning
+   - report.generated = 17/20 → critical
+   - export.generated = 10/10 → limit_reached
+   - trial_conversion.recommended_plan_label = "Pro Plan"
+4. Validate soft quota thresholds (70/85/100 logic)
+5. Validate CTA fields are present
 """
 
-import os
-import sys
 import requests
 import json
-import uuid
-import time
-from typing import Dict, Any, List, Optional, Tuple
+import sys
+from typing import Dict, Any, Optional
 
-# Configuration  
-BACKEND_URL = "https://usage-metering.preview.emergentagent.com/api"
-ADMIN_EMAIL = "admin@acenta.test"
-ADMIN_PASSWORD = "admin123"
+# Configuration
+BASE_URL = "https://usage-metering.preview.emergentagent.com"
+TEST_EMAIL = "agent@acenta.test"
+TEST_PASSWORD = "agent123"
 
-class PRM3UsageMeteringTester:
+class PR_UM5_BackendValidator:
     def __init__(self):
-        self.backend_url = BACKEND_URL
-        self.admin_token = None
-        self.admin_user_data = None
-        self.tenant_id = None
-        self.organization_id = None
-        
-    def authenticate_admin(self) -> bool:
-        """Authenticate with admin credentials and store token"""
-        print(f"\n{'='*60}")
-        print("AUTHENTICATING ADMIN USER")
-        print(f"{'='*60}")
-        
-        login_url = f"{self.backend_url}/auth/login"
-        login_data = {
-            "email": ADMIN_EMAIL,
-            "password": ADMIN_PASSWORD
-        }
+        self.base_url = BASE_URL
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'PR-UM5-Backend-Test/1.0',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        })
+        self.tenant_id: Optional[str] = None
+        self.test_results = []
+
+    def log_test(self, test_name: str, passed: bool, details: str):
+        """Log test results"""
+        status = "✅ PASS" if passed else "❌ FAIL"
+        self.test_results.append({
+            'test': test_name,
+            'passed': passed,
+            'details': details
+        })
+        print(f"{status}: {test_name}")
+        if not passed:
+            print(f"   Details: {details}")
+
+    def test_1_cookie_compat_login(self) -> bool:
+        """Test 1: Cookie-compat login with agent@acenta.test"""
+        print("\n=== Test 1: Cookie-Compat Login ===")
         
         try:
-            response = requests.post(login_url, json=login_data, timeout=30)
+            # Perform login with X-Client-Platform: web for cookie mode
+            login_data = {
+                "email": TEST_EMAIL,
+                "password": TEST_PASSWORD
+            }
+            
+            headers = {
+                'X-Client-Platform': 'web',  # This triggers cookie mode
+                'Content-Type': 'application/json'
+            }
+            
+            response = self.session.post(
+                f"{self.base_url}/api/auth/login",
+                json=login_data,
+                headers=headers
+            )
             
             if response.status_code != 200:
-                print(f"✗ Admin login failed with status {response.status_code}")
-                print(f"Response: {response.text}")
-                return False
-            
-            data = response.json()
-            self.admin_token = data.get("access_token")
-            self.admin_user_data = data.get("user", {})
-            self.tenant_id = data.get("tenant_id")
-            self.organization_id = self.admin_user_data.get("organization_id")
-            
-            if not self.admin_token:
-                print("✗ No access token in login response")
+                self.log_test("Cookie-compat login", False, 
+                            f"Login failed with status {response.status_code}: {response.text}")
                 return False
                 
-            print(f"✓ Admin authenticated successfully")
-            print(f"✓ Token length: {len(self.admin_token)}")
-            print(f"✓ User email: {self.admin_user_data.get('email')}")
-            print(f"✓ Organization ID: {self.organization_id}")
-            print(f"✓ Tenant ID: {self.tenant_id}")
+            login_resp = response.json()
+            
+            # Validate login response
+            if 'auth_transport' not in login_resp:
+                self.log_test("Cookie-compat login", False, 
+                            "Missing auth_transport in login response")
+                return False
+                
+            if login_resp['auth_transport'] != 'cookie_compat':
+                self.log_test("Cookie-compat login", False, 
+                            f"Expected auth_transport=cookie_compat, got {login_resp['auth_transport']}")
+                return False
+                
+            # Check if cookies are set
+            if 'Set-Cookie' not in response.headers and not response.cookies:
+                self.log_test("Cookie-compat login", False, 
+                            "No cookies set in cookie_compat mode")
+                return False
+                
+            self.log_test("Cookie-compat login", True, 
+                        f"Login successful with auth_transport={login_resp['auth_transport']}")
+            return True
+            
+        except Exception as e:
+            self.log_test("Cookie-compat login", False, f"Exception: {str(e)}")
+            return False
+
+    def test_2_auth_me_tenant_id(self) -> bool:
+        """Test 2: /api/auth/me returns tenant_id"""
+        print("\n=== Test 2: Auth Me Tenant ID ===")
+        
+        try:
+            response = self.session.get(f"{self.base_url}/api/auth/me")
+            
+            if response.status_code != 200:
+                self.log_test("/api/auth/me tenant_id", False, 
+                            f"Auth/me failed with status {response.status_code}: {response.text}")
+                return False
+                
+            auth_data = response.json()
+            
+            # Validate tenant_id is present
+            if 'tenant_id' not in auth_data:
+                self.log_test("/api/auth/me tenant_id", False, 
+                            "tenant_id missing from /api/auth/me response")
+                return False
+                
+            if not auth_data['tenant_id']:
+                self.log_test("/api/auth/me tenant_id", False, 
+                            "tenant_id is null or empty")
+                return False
+                
+            self.tenant_id = auth_data['tenant_id']
+            
+            # Validate user email matches
+            if auth_data.get('email') != TEST_EMAIL:
+                self.log_test("/api/auth/me tenant_id", False, 
+                            f"Email mismatch: expected {TEST_EMAIL}, got {auth_data.get('email')}")
+                return False
+                
+            self.log_test("/api/auth/me tenant_id", True, 
+                        f"tenant_id returned: {self.tenant_id}, email: {auth_data.get('email')}")
+            return True
+            
+        except Exception as e:
+            self.log_test("/api/auth/me tenant_id", False, f"Exception: {str(e)}")
+            return False
+
+    def test_3_usage_summary_structure(self) -> bool:
+        """Test 3: /api/tenant/usage-summary structure validation"""
+        print("\n=== Test 3: Usage Summary Structure ===")
+        
+        try:
+            response = self.session.get(f"{self.base_url}/api/tenant/usage-summary?days=30")
+            
+            if response.status_code != 200:
+                self.log_test("Usage summary structure", False, 
+                            f"Usage summary failed with status {response.status_code}: {response.text}")
+                return False
+                
+            usage_data = response.json()
+            
+            # Validate basic structure
+            required_fields = ['plan_label', 'is_trial', 'period', 'metrics']
+            missing_fields = [field for field in required_fields if field not in usage_data]
+            
+            if missing_fields:
+                self.log_test("Usage summary structure", False, 
+                            f"Missing required fields: {missing_fields}")
+                return False
+                
+            # Validate metrics structure
+            metrics = usage_data.get('metrics', {})
+            required_metrics = ['reservation.created', 'report.generated', 'export.generated']
+            missing_metrics = [metric for metric in required_metrics if metric not in metrics]
+            
+            if missing_metrics:
+                self.log_test("Usage summary structure", False, 
+                            f"Missing required metrics: {missing_metrics}")
+                return False
+                
+            self.log_test("Usage summary structure", True, 
+                        f"All required fields present. Plan: {usage_data.get('plan_label')}, Trial: {usage_data.get('is_trial')}")
             
             return True
             
         except Exception as e:
-            print(f"✗ Authentication error: {e}")
+            self.log_test("Usage summary structure", False, f"Exception: {str(e)}")
             return False
-    
-    def get_auth_headers(self, correlation_id: Optional[str] = None) -> Dict[str, str]:
-        """Get authorization headers with optional correlation ID"""
-        headers = {"Authorization": f"Bearer {self.admin_token}"}
-        if correlation_id:
-            headers["X-Correlation-Id"] = correlation_id
-        return headers
-    
-    def get_initial_usage_metrics(self) -> Optional[Dict[str, Any]]:
-        """Get initial usage metrics baseline"""
-        print(f"\n{'='*60}")
-        print("GETTING INITIAL USAGE METRICS BASELINE")
-        print(f"{'='*60}")
-        
-        if not self.tenant_id:
-            print("✗ Tenant ID not available")
-            return None
-            
-        url = f"{self.backend_url}/admin/billing/tenants/{self.tenant_id}/usage"
-        headers = self.get_auth_headers()
+
+    def test_4_trial_plan_validation(self) -> bool:
+        """Test 4: Trial plan configuration validation"""
+        print("\n=== Test 4: Trial Plan Validation ===")
         
         try:
-            response = requests.get(url, headers=headers, timeout=30)
+            response = self.session.get(f"{self.base_url}/api/tenant/usage-summary?days=30")
             
             if response.status_code != 200:
-                print(f"✗ Failed to get usage metrics: {response.status_code}")
-                print(f"Response: {response.text}")
-                return None
+                self.log_test("Trial plan validation", False, 
+                            f"Usage summary failed with status {response.status_code}")
+                return False
+                
+            usage_data = response.json()
             
-            data = response.json()
-            metrics = data.get("metrics", {})
+            # Check plan_label = Trial
+            expected_plan_label = "Trial"
+            actual_plan_label = usage_data.get('plan_label')
             
-            report_generated = metrics.get("report.generated", {}).get("used", 0)
-            export_generated = metrics.get("export.generated", {}).get("used", 0) 
-            integration_call = metrics.get("integration.call", {}).get("used", 0)
-            
-            print(f"✓ Initial usage metrics:")
-            print(f"  - report.generated: {report_generated}")
-            print(f"  - export.generated: {export_generated}")
-            print(f"  - integration.call: {integration_call}")
-            
-            return {
-                "report.generated": report_generated,
-                "export.generated": export_generated,
-                "integration.call": integration_call
-            }
+            if actual_plan_label != expected_plan_label:
+                self.log_test("Trial plan validation", False, 
+                            f"Expected plan_label='{expected_plan_label}', got '{actual_plan_label}'")
+                return False
+                
+            # Check is_trial = true
+            is_trial = usage_data.get('is_trial')
+            if is_trial is not True:
+                self.log_test("Trial plan validation", False, 
+                            f"Expected is_trial=true, got {is_trial}")
+                return False
+                
+            self.log_test("Trial plan validation", True, 
+                        f"Trial configuration correct: plan_label='{actual_plan_label}', is_trial={is_trial}")
+            return True
             
         except Exception as e:
-            print(f"✗ Error getting usage metrics: {e}")
-            return None
-    
-    def get_current_usage_metrics(self) -> Optional[Dict[str, Any]]:
-        """Get current usage metrics for comparison"""
-        if not self.tenant_id:
-            return None
-            
-        url = f"{self.backend_url}/admin/billing/tenants/{self.tenant_id}/usage"
-        headers = self.get_auth_headers()
+            self.log_test("Trial plan validation", False, f"Exception: {str(e)}")
+            return False
+
+    def test_5_usage_thresholds_validation(self) -> bool:
+        """Test 5: Usage thresholds and warning levels validation"""
+        print("\n=== Test 5: Usage Thresholds Validation ===")
         
         try:
-            response = requests.get(url, headers=headers, timeout=30)
+            response = self.session.get(f"{self.base_url}/api/tenant/usage-summary?days=30")
+            
             if response.status_code != 200:
-                return None
+                self.log_test("Usage thresholds validation", False, 
+                            f"Usage summary failed with status {response.status_code}")
+                return False
+                
+            usage_data = response.json()
+            metrics = usage_data.get('metrics', {})
             
-            data = response.json()
-            metrics = data.get("metrics", {})
-            
-            return {
-                "report.generated": metrics.get("report.generated", {}).get("used", 0),
-                "export.generated": metrics.get("export.generated", {}).get("used", 0),
-                "integration.call": metrics.get("integration.call", {}).get("used", 0)
+            # Expected thresholds per review request
+            expected_thresholds = {
+                'reservation.created': {'used': 70, 'limit': 100, 'warning_level': 'warning', 
+                                     'message': 'Limitinize yaklaşıyorsunuz'},
+                'report.generated': {'used': 17, 'limit': 20, 'warning_level': 'critical'},
+                'export.generated': {'used': 10, 'limit': 10, 'warning_level': 'limit_reached',
+                                   'message': 'Export limitiniz doldu. Planınızı yükselterek devam edebilirsiniz.'}
             }
             
-        except Exception as e:
-            return None
-    
-    def test_pdf_report_generation_usage(self, initial_metrics: Dict[str, Any]) -> bool:
-        """Test 1: PDF report generation increments report.generated only when PDF is produced"""
-        print(f"\n{'='*60}")
-        print("TEST 1: PDF REPORT GENERATION USAGE TRACKING")
-        print(f"{'='*60}")
-        
-        correlation_id = str(uuid.uuid4())
-        url = f"{self.backend_url}/admin/reports/match-risk/executive-summary.pdf"
-        headers = self.get_auth_headers(correlation_id)
-        
-        try:
-            print(f"Making request to: {url}")
-            print(f"Correlation ID: {correlation_id}")
+            all_passed = True
+            details = []
             
-            response = requests.get(url, headers=headers, timeout=30)
-            
-            print(f"Response status: {response.status_code}")
-            print(f"Content-Type: {response.headers.get('Content-Type', 'N/A')}")
-            print(f"Content-Length: {len(response.content)} bytes")
-            
-            # Check if we actually got a PDF
-            is_pdf = (
-                response.headers.get("Content-Type") == "application/pdf" and
-                response.content and
-                response.content.startswith(b"%PDF")
-            )
-            
-            print(f"Is valid PDF: {is_pdf}")
-            
-            # Wait for usage metering to process
-            time.sleep(2)
-            
-            # Check usage metrics
-            current_metrics = self.get_current_usage_metrics()
-            if not current_metrics:
-                print("✗ Could not get current usage metrics")
-                return False
-            
-            initial_reports = initial_metrics.get("report.generated", 0)
-            current_reports = current_metrics.get("report.generated", 0)
-            increment = current_reports - initial_reports
-            
-            print(f"Initial report.generated: {initial_reports}")
-            print(f"Current report.generated: {current_reports}")
-            print(f"Increment: {increment}")
-            
-            if is_pdf and increment == 1:
-                print("✓ PDF generated successfully and report.generated incremented by 1")
-                return True
-            elif not is_pdf and increment == 0:
-                print("✓ No PDF generated and report.generated not incremented")
-                return True
-            elif is_pdf and increment != 1:
-                print(f"✗ PDF generated but report.generated incremented by {increment} (expected 1)")
-                return False
-            elif not is_pdf and increment != 0:
-                print(f"✗ No PDF generated but report.generated incremented by {increment} (expected 0)")
-                return False
-            else:
-                print(f"✗ Unexpected state: PDF={is_pdf}, increment={increment}")
-                return False
-                
-        except Exception as e:
-            print(f"✗ Error testing PDF report generation: {e}")
-            return False
-    
-    def test_correlation_id_deduplication(self) -> bool:
-        """Test 2: Repeating same request with X-Correlation-Id must NOT double count"""
-        print(f"\n{'='*60}")
-        print("TEST 2: CORRELATION ID DEDUPLICATION") 
-        print(f"{'='*60}")
-        
-        # Get baseline
-        initial_metrics = self.get_current_usage_metrics()
-        if not initial_metrics:
-            print("✗ Could not get initial metrics")
-            return False
-        
-        correlation_id = str(uuid.uuid4())
-        url = f"{self.backend_url}/admin/reports/match-risk/executive-summary.pdf"
-        headers = self.get_auth_headers(correlation_id)
-        
-        try:
-            print(f"Making first request with correlation ID: {correlation_id}")
-            
-            # First request
-            response1 = requests.get(url, headers=headers, timeout=30)
-            print(f"First response status: {response1.status_code}")
-            
-            time.sleep(2)
-            
-            # Check metrics after first request
-            metrics_after_first = self.get_current_usage_metrics()
-            if not metrics_after_first:
-                print("✗ Could not get metrics after first request")
-                return False
-            
-            first_increment = metrics_after_first.get("report.generated", 0) - initial_metrics.get("report.generated", 0)
-            print(f"Increment after first request: {first_increment}")
-            
-            # Second request with same correlation ID
-            print(f"Making second request with same correlation ID: {correlation_id}")
-            response2 = requests.get(url, headers=headers, timeout=30)
-            print(f"Second response status: {response2.status_code}")
-            
-            time.sleep(2)
-            
-            # Check metrics after second request
-            metrics_after_second = self.get_current_usage_metrics()
-            if not metrics_after_second:
-                print("✗ Could not get metrics after second request")
-                return False
-            
-            total_increment = metrics_after_second.get("report.generated", 0) - initial_metrics.get("report.generated", 0)
-            second_increment = metrics_after_second.get("report.generated", 0) - metrics_after_first.get("report.generated", 0)
-            
-            print(f"Increment after second request: {second_increment}")
-            print(f"Total increment: {total_increment}")
-            
-            if second_increment == 0 and first_increment > 0:
-                print("✓ Correlation ID deduplication working - no double counting")
-                return True
-            else:
-                print(f"✗ Deduplication failed - second request incremented by {second_increment}")
-                return False
-                
-        except Exception as e:
-            print(f"✗ Error testing correlation ID deduplication: {e}")
-            return False
-    
-    def test_export_endpoints_usage(self) -> bool:
-        """Test 3: Export endpoints increment export.generated when output is produced"""
-        print(f"\n{'='*60}")
-        print("TEST 3: EXPORT ENDPOINTS USAGE TRACKING")
-        print(f"{'='*60}")
-        
-        # Get baseline
-        initial_metrics = self.get_current_usage_metrics()
-        if not initial_metrics:
-            print("✗ Could not get initial metrics")
-            return False
-        
-        initial_exports = initial_metrics.get("export.generated", 0)
-        print(f"Initial export.generated: {initial_exports}")
-        
-        test_results = {}
-        
-        # Test 3a: GET /api/reports/sales-summary.csv
-        print(f"\n📋 Testing: GET /api/reports/sales-summary.csv")
-        try:
-            url = f"{self.backend_url}/reports/sales-summary.csv"
-            headers = self.get_auth_headers()
-            
-            response = requests.get(url, headers=headers, timeout=30)
-            print(f"Response status: {response.status_code}")
-            print(f"Content-Type: {response.headers.get('Content-Type', 'N/A')}")
-            print(f"Content-Length: {len(response.content)} bytes")
-            
-            is_csv = "text/csv" in response.headers.get("Content-Type", "")
-            has_content = len(response.content) > 0
-            
-            time.sleep(2)
-            
-            current_metrics = self.get_current_usage_metrics()
-            if current_metrics:
-                increment = current_metrics.get("export.generated", 0) - initial_exports
-                print(f"Export increment: {increment}")
-                
-                if is_csv and has_content and increment >= 1:
-                    print("✓ CSV export generated and export.generated incremented")
-                    test_results["sales_csv"] = True
-                    initial_exports = current_metrics.get("export.generated", 0)  # Update baseline
-                else:
-                    print(f"✗ Unexpected result for CSV export: CSV={is_csv}, content={has_content}, increment={increment}")
-                    test_results["sales_csv"] = False
-            else:
-                test_results["sales_csv"] = False
-            
-        except Exception as e:
-            print(f"✗ Error testing CSV export: {e}")
-            test_results["sales_csv"] = False
-        
-        # Test 3b: POST /api/admin/tenant/export
-        print(f"\n📋 Testing: POST /api/admin/tenant/export")
-        try:
-            url = f"{self.backend_url}/admin/tenant/export"
-            headers = self.get_auth_headers()
-            
-            response = requests.post(url, headers=headers, timeout=30)
-            print(f"Response status: {response.status_code}")
-            print(f"Content-Type: {response.headers.get('Content-Type', 'N/A')}")
-            print(f"Content-Length: {len(response.content)} bytes")
-            
-            is_zip = response.headers.get("Content-Type") == "application/zip"
-            has_content = len(response.content) > 0
-            
-            time.sleep(2)
-            
-            current_metrics = self.get_current_usage_metrics()
-            if current_metrics:
-                increment = current_metrics.get("export.generated", 0) - initial_exports
-                print(f"Export increment: {increment}")
-                
-                if is_zip and has_content and increment >= 1:
-                    print("✓ ZIP export generated and export.generated incremented")
-                    test_results["tenant_export"] = True
-                    initial_exports = current_metrics.get("export.generated", 0)  # Update baseline
-                else:
-                    print(f"✗ Unexpected result for ZIP export: ZIP={is_zip}, content={has_content}, increment={increment}")
-                    test_results["tenant_export"] = False
-            else:
-                test_results["tenant_export"] = False
-            
-        except Exception as e:
-            print(f"✗ Error testing ZIP export: {e}")
-            test_results["tenant_export"] = False
-        
-        # Test 3c: GET /api/admin/audit/export  
-        print(f"\n📋 Testing: GET /api/admin/audit/export")
-        try:
-            url = f"{self.backend_url}/admin/audit/export"
-            headers = self.get_auth_headers()
-            
-            response = requests.get(url, headers=headers, timeout=30)
-            print(f"Response status: {response.status_code}")
-            print(f"Content-Type: {response.headers.get('Content-Type', 'N/A')}")
-            
-            is_csv = "text/csv" in response.headers.get("Content-Type", "")
-            
-            time.sleep(2)
-            
-            current_metrics = self.get_current_usage_metrics()
-            if current_metrics:
-                increment = current_metrics.get("export.generated", 0) - initial_exports
-                print(f"Export increment: {increment}")
-                
-                # For audit export, we expect it to work even if no data
-                if response.status_code == 200 and is_csv and increment >= 1:
-                    print("✓ Audit CSV export generated and export.generated incremented")
-                    test_results["audit_export"] = True
-                else:
-                    print(f"✗ Unexpected result for audit export: status={response.status_code}, CSV={is_csv}, increment={increment}")
-                    test_results["audit_export"] = False
-            else:
-                test_results["audit_export"] = False
-            
-        except Exception as e:
-            print(f"✗ Error testing audit export: {e}")
-            test_results["audit_export"] = False
-        
-        # Summary
-        passed = sum(test_results.values())
-        total = len(test_results)
-        print(f"\n📊 Export endpoints test results: {passed}/{total} passed")
-        
-        return passed == total
-    
-    def test_non_export_endpoints_no_usage(self) -> bool:
-        """Test 4: Non-export endpoints must NOT increment report/export usage"""
-        print(f"\n{'='*60}")
-        print("TEST 4: NON-EXPORT ENDPOINTS MUST NOT INCREMENT USAGE")
-        print(f"{'='*60}")
-        
-        # Get baseline
-        initial_metrics = self.get_current_usage_metrics()
-        if not initial_metrics:
-            print("✗ Could not get initial metrics")
-            return False
-        
-        initial_reports = initial_metrics.get("report.generated", 0)
-        initial_exports = initial_metrics.get("export.generated", 0)
-        
-        print(f"Initial report.generated: {initial_reports}")
-        print(f"Initial export.generated: {initial_exports}")
-        
-        test_results = {}
-        
-        # Test 4a: GET /api/reports/sales-summary (JSON, not CSV)
-        print(f"\n📋 Testing: GET /api/reports/sales-summary (JSON)")
-        try:
-            url = f"{self.backend_url}/reports/sales-summary"
-            headers = self.get_auth_headers()
-            
-            response = requests.get(url, headers=headers, timeout=30)
-            print(f"Response status: {response.status_code}")
-            print(f"Content-Type: {response.headers.get('Content-Type', 'N/A')}")
-            
-            is_json = "application/json" in response.headers.get("Content-Type", "")
-            
-            time.sleep(2)
-            
-            current_metrics = self.get_current_usage_metrics()
-            if current_metrics:
-                report_increment = current_metrics.get("report.generated", 0) - initial_reports
-                export_increment = current_metrics.get("export.generated", 0) - initial_exports
-                
-                print(f"Report increment: {report_increment}")
-                print(f"Export increment: {export_increment}")
-                
-                if response.status_code == 200 and is_json and report_increment == 0 and export_increment == 0:
-                    print("✓ JSON sales summary did not increment usage (correct)")
-                    test_results["sales_json"] = True
-                else:
-                    print(f"✗ Unexpected usage increment for JSON endpoint: report={report_increment}, export={export_increment}")
-                    test_results["sales_json"] = False
-            else:
-                test_results["sales_json"] = False
-            
-        except Exception as e:
-            print(f"✗ Error testing JSON sales summary: {e}")
-            test_results["sales_json"] = False
-        
-        # Test 4b: GET /api/reports/reservations-summary (JSON)
-        print(f"\n📋 Testing: GET /api/reports/reservations-summary (JSON)")
-        try:
-            url = f"{self.backend_url}/reports/reservations-summary"
-            headers = self.get_auth_headers()
-            
-            response = requests.get(url, headers=headers, timeout=30)
-            print(f"Response status: {response.status_code}")
-            print(f"Content-Type: {response.headers.get('Content-Type', 'N/A')}")
-            
-            is_json = "application/json" in response.headers.get("Content-Type", "")
-            
-            time.sleep(2)
-            
-            # Get updated baseline (in case previous test incremented)
-            current_metrics = self.get_current_usage_metrics()
-            if current_metrics:
-                # For this test, we only care that THIS call doesn't increment
-                # So we get metrics before and after this specific call
-                before_reports = current_metrics.get("report.generated", 0)
-                before_exports = current_metrics.get("export.generated", 0)
-                
-                time.sleep(1)  # Small delay
-                
-                # Get metrics again
-                final_metrics = self.get_current_usage_metrics()
-                if final_metrics:
-                    report_increment = final_metrics.get("report.generated", 0) - before_reports
-                    export_increment = final_metrics.get("export.generated", 0) - before_exports
+            for metric_name, expected in expected_thresholds.items():
+                if metric_name not in metrics:
+                    all_passed = False
+                    details.append(f"Missing metric: {metric_name}")
+                    continue
                     
-                    print(f"Report increment: {report_increment}")
-                    print(f"Export increment: {export_increment}")
-                    
-                    if response.status_code == 200 and is_json and report_increment == 0 and export_increment == 0:
-                        print("✓ JSON reservations summary did not increment usage (correct)")
-                        test_results["reservations_json"] = True
-                    else:
-                        print(f"✗ Unexpected usage increment for JSON endpoint: report={report_increment}, export={export_increment}")
-                        test_results["reservations_json"] = False
-                else:
-                    test_results["reservations_json"] = False
+                metric = metrics[metric_name]
+                
+                # Check used value
+                if metric.get('used') != expected['used']:
+                    all_passed = False
+                    details.append(f"{metric_name}: expected used={expected['used']}, got {metric.get('used')}")
+                
+                # Check limit value
+                if metric.get('limit') != expected['limit']:
+                    all_passed = False
+                    details.append(f"{metric_name}: expected limit={expected['limit']}, got {metric.get('limit')}")
+                
+                # Check warning level
+                if metric.get('warning_level') != expected['warning_level']:
+                    all_passed = False
+                    details.append(f"{metric_name}: expected warning_level={expected['warning_level']}, got {metric.get('warning_level')}")
+                
+                # Check message if specified
+                if 'message' in expected and metric.get('warning_message') != expected['message']:
+                    all_passed = False
+                    details.append(f"{metric_name}: expected message='{expected['message']}', got '{metric.get('warning_message')}'")
+            
+            if all_passed:
+                self.log_test("Usage thresholds validation", True, 
+                            "All metrics match expected thresholds and warning levels")
             else:
-                test_results["reservations_json"] = False
+                self.log_test("Usage thresholds validation", False, 
+                            "; ".join(details))
+                
+            return all_passed
             
         except Exception as e:
-            print(f"✗ Error testing JSON reservations summary: {e}")
-            test_results["reservations_json"] = False
+            self.log_test("Usage thresholds validation", False, f"Exception: {str(e)}")
+            return False
+
+    def test_6_cta_fields_validation(self) -> bool:
+        """Test 6: CTA fields validation"""
+        print("\n=== Test 6: CTA Fields Validation ===")
         
-        # Summary
-        passed = sum(test_results.values())
-        total = len(test_results)
-        print(f"\n📊 Non-export endpoints test results: {passed}/{total} passed")
-        
-        return passed == total
-    
-    def test_google_sheets_integration_call_coverage(self) -> bool:
-        """Test 5: Google Sheets integration.call usage tracking code coverage"""
-        print(f"\n{'='*60}")
-        print("TEST 5: GOOGLE SHEETS INTEGRATION CALL CODE COVERAGE")
-        print(f"{'='*60}")
-        
-        # NOTE: Google Sheets is not configured in this environment
-        # We're testing that the code paths exist and would be wired correctly
-        # when Google Sheets is actually configured
-        
-        print("📋 Checking Google Sheets integration code paths...")
-        
-        # We'll examine if the integration call tracking is properly wired
-        # by looking at the code structure that we've already analyzed
-        
-        code_coverage_results = {
-            "sheets_provider_metering": True,  # We saw _schedule_integration_call_metering in sheets_provider.py
-            "google_sheets_client_metering": True,  # We saw _schedule_integration_call_metering in google_sheets_client.py  
-            "hotel_portfolio_sync_metering": True,  # We saw metering_context usage in hotel_portfolio_sync_service.py
-            "sheet_sync_service_metering": True,  # We saw metering_context usage in sheet_sync_service.py
-            "sheet_writeback_service_metering": True  # We saw metering_context usage in sheet_writeback_service.py
-        }
-        
-        # Test that integration call tracking would work if Google Sheets was configured
-        # by checking current integration.call usage (should be 0 if not configured)
-        initial_metrics = self.get_current_usage_metrics()
-        if initial_metrics:
-            integration_calls = initial_metrics.get("integration.call", 0)
-            print(f"Current integration.call usage: {integration_calls}")
+        try:
+            response = self.session.get(f"{self.base_url}/api/tenant/usage-summary?days=30")
             
-            # Since Google Sheets is not configured, we expect 0 calls
-            if integration_calls == 0:
-                print("✓ No integration calls recorded (expected - Google Sheets not configured)")
-                code_coverage_results["integration_call_baseline"] = True
-            else:
-                print(f"ℹ️ Found {integration_calls} integration calls (may be from other integrations)")
-                code_coverage_results["integration_call_baseline"] = True
+            if response.status_code != 200:
+                self.log_test("CTA fields validation", False, 
+                            f"Usage summary failed with status {response.status_code}")
+                return False
+                
+            usage_data = response.json()
+            metrics = usage_data.get('metrics', {})
+            
+            # Check for CTA on report.generated (critical state)
+            report_metric = metrics.get('report.generated', {})
+            if not report_metric.get('upgrade_recommended'):
+                self.log_test("CTA fields validation", False, 
+                            "report.generated should have upgrade_recommended=true")
+                return False
+                
+            # Check for CTA on export.generated (limit_reached state)  
+            export_metric = metrics.get('export.generated', {})
+            if not export_metric.get('upgrade_recommended'):
+                self.log_test("CTA fields validation", False, 
+                            "export.generated should have upgrade_recommended=true")
+                return False
+                
+            # Check CTA label
+            expected_cta = "Planları Görüntüle"
+            if report_metric.get('cta_label') != expected_cta:
+                self.log_test("CTA fields validation", False, 
+                            f"Expected cta_label='{expected_cta}', got '{report_metric.get('cta_label')}'")
+                return False
+                
+            self.log_test("CTA fields validation", True, 
+                        f"CTA fields present: report and export have upgrade_recommended=true, cta_label='{expected_cta}'")
+            return True
+            
+        except Exception as e:
+            self.log_test("CTA fields validation", False, f"Exception: {str(e)}")
+            return False
+
+    def test_7_trial_conversion_validation(self) -> bool:
+        """Test 7: Trial conversion recommendation validation"""
+        print("\n=== Test 7: Trial Conversion Validation ===")
+        
+        try:
+            response = self.session.get(f"{self.base_url}/api/tenant/usage-summary?days=30")
+            
+            if response.status_code != 200:
+                self.log_test("Trial conversion validation", False, 
+                            f"Usage summary failed with status {response.status_code}")
+                return False
+                
+            usage_data = response.json()
+            
+            # Check trial_conversion field exists
+            trial_conversion = usage_data.get('trial_conversion')
+            if not trial_conversion:
+                self.log_test("Trial conversion validation", False, 
+                            "trial_conversion field missing or empty")
+                return False
+                
+            # Check show field
+            if not trial_conversion.get('show'):
+                self.log_test("Trial conversion validation", False, 
+                            "trial_conversion.show should be true")
+                return False
+                
+            # Check recommended_plan_label
+            expected_plan_label = "Pro Plan"
+            actual_plan_label = trial_conversion.get('recommended_plan_label')
+            
+            if actual_plan_label != expected_plan_label:
+                self.log_test("Trial conversion validation", False, 
+                            f"Expected recommended_plan_label='{expected_plan_label}', got '{actual_plan_label}'")
+                return False
+                
+            self.log_test("Trial conversion validation", True, 
+                        f"Trial conversion correct: show=true, recommended_plan_label='{actual_plan_label}'")
+            return True
+            
+        except Exception as e:
+            self.log_test("Trial conversion validation", False, f"Exception: {str(e)}")
+            return False
+
+    def test_8_soft_quota_logic_validation(self) -> bool:
+        """Test 8: Soft quota threshold logic (70/85/100) validation"""
+        print("\n=== Test 8: Soft Quota Logic Validation ===")
+        
+        try:
+            response = self.session.get(f"{self.base_url}/api/tenant/usage-summary?days=30")
+            
+            if response.status_code != 200:
+                self.log_test("Soft quota logic validation", False, 
+                            f"Usage summary failed with status {response.status_code}")
+                return False
+                
+            usage_data = response.json()
+            metrics = usage_data.get('metrics', {})
+            
+            # Validate threshold logic
+            threshold_validations = []
+            
+            # reservation.created: 70/100 = 70% -> warning (>= 70%)
+            reservation = metrics.get('reservation.created', {})
+            reservation_pct = (reservation.get('used', 0) / reservation.get('limit', 1)) * 100 if reservation.get('limit') else 0
+            if reservation_pct >= 70 and reservation_pct < 85:
+                if reservation.get('warning_level') == 'warning':
+                    threshold_validations.append("reservation.created: 70% threshold -> warning ✅")
+                else:
+                    threshold_validations.append(f"reservation.created: 70% should be warning, got {reservation.get('warning_level')} ❌")
+            
+            # report.generated: 17/20 = 85% -> critical (>= 85%)  
+            report = metrics.get('report.generated', {})
+            report_pct = (report.get('used', 0) / report.get('limit', 1)) * 100 if report.get('limit') else 0
+            if report_pct >= 85 and report_pct < 100:
+                if report.get('warning_level') == 'critical':
+                    threshold_validations.append("report.generated: 85% threshold -> critical ✅")
+                else:
+                    threshold_validations.append(f"report.generated: 85% should be critical, got {report.get('warning_level')} ❌")
+            
+            # export.generated: 10/10 = 100% -> limit_reached (>= 100%)
+            export = metrics.get('export.generated', {})
+            export_pct = (export.get('used', 0) / export.get('limit', 1)) * 100 if export.get('limit') else 0
+            if export_pct >= 100:
+                if export.get('warning_level') == 'limit_reached':
+                    threshold_validations.append("export.generated: 100% threshold -> limit_reached ✅")
+                else:
+                    threshold_validations.append(f"export.generated: 100% should be limit_reached, got {export.get('warning_level')} ❌")
+            
+            all_passed = all("✅" in validation for validation in threshold_validations)
+            
+            self.log_test("Soft quota logic validation", all_passed, 
+                        "; ".join(threshold_validations))
+            return all_passed
+            
+        except Exception as e:
+            self.log_test("Soft quota logic validation", False, f"Exception: {str(e)}")
+            return False
+
+    def run_all_tests(self):
+        """Run all validation tests"""
+        print("🚀 Starting PR-UM5 Backend Validation")
+        print(f"Base URL: {self.base_url}")
+        print(f"Test Account: {TEST_EMAIL}")
+        
+        # Run tests in sequence
+        tests = [
+            self.test_1_cookie_compat_login,
+            self.test_2_auth_me_tenant_id,
+            self.test_3_usage_summary_structure,
+            self.test_4_trial_plan_validation,
+            self.test_5_usage_thresholds_validation,
+            self.test_6_cta_fields_validation,
+            self.test_7_trial_conversion_validation,
+            self.test_8_soft_quota_logic_validation
+        ]
+        
+        passed_tests = 0
+        total_tests = len(tests)
+        
+        for test_func in tests:
+            if test_func():
+                passed_tests += 1
+                
+        # Final summary
+        print("\n" + "="*50)
+        print("📊 PR-UM5 Backend Validation Summary")
+        print("="*50)
+        
+        for result in self.test_results:
+            status = "✅ PASS" if result['passed'] else "❌ FAIL"
+            print(f"{status}: {result['test']}")
+            if not result['passed']:
+                print(f"   → {result['details']}")
+        
+        print(f"\nTotal: {passed_tests}/{total_tests} tests passed")
+        success_rate = (passed_tests / total_tests) * 100
+        print(f"Success Rate: {success_rate:.1f}%")
+        
+        if passed_tests == total_tests:
+            print("\n🎉 All tests PASSED! PR-UM5 backend validation successful.")
+            return True
         else:
-            print("✗ Could not get integration call metrics")
-            code_coverage_results["integration_call_baseline"] = False
-        
-        # Report on code path analysis
-        print(f"\n📋 Code path analysis results:")
-        for path, covered in code_coverage_results.items():
-            status = "✓" if covered else "✗"
-            print(f"  {status} {path}")
-        
-        # Summary
-        passed = sum(code_coverage_results.values())
-        total = len(code_coverage_results)
-        print(f"\n📊 Integration call coverage: {passed}/{total} paths validated")
-        
-        print(f"\n⚠️ NOTE: Google Sheets is NOT configured in this environment.")
-        print(f"   Runtime execution of Google Sheets integration paths is blocked.")
-        print(f"   However, code analysis confirms integration.call metering is properly")
-        print(f"   wired in all Google Sheets provider/client functions.")
-        
-        return passed == total
-    
-    def run_all_tests(self) -> Dict[str, bool]:
-        """Run all PR-UM3 usage metering tests"""
-        print(f"\n{'='*80}")
-        print("PR-UM3 USAGE METERING VALIDATION TESTS")
-        print(f"{'='*80}")
-        
-        test_results = {}
-        
-        # Setup: Authenticate admin
-        if not self.authenticate_admin():
-            return {"authentication": False}
-        
-        # Get initial usage metrics baseline
-        initial_metrics = self.get_initial_usage_metrics()
-        if not initial_metrics:
-            return {"authentication": True, "initial_metrics": False}
-        
-        test_results["authentication"] = True
-        test_results["initial_metrics"] = True
-        
-        # Test 1: PDF report generation usage tracking
-        print(f"\n🔹 TEST 1: PDF Report Generation Usage Tracking")
-        test_results["pdf_report_usage"] = self.test_pdf_report_generation_usage(initial_metrics)
-        
-        # Test 2: Correlation ID deduplication
-        print(f"\n🔹 TEST 2: Correlation ID Deduplication")
-        test_results["correlation_id_dedup"] = self.test_correlation_id_deduplication()
-        
-        # Test 3: Export endpoints usage tracking
-        print(f"\n🔹 TEST 3: Export Endpoints Usage Tracking")
-        test_results["export_endpoints_usage"] = self.test_export_endpoints_usage()
-        
-        # Test 4: Non-export endpoints must not increment usage
-        print(f"\n🔹 TEST 4: Non-Export Endpoints Must Not Increment Usage")
-        test_results["non_export_no_usage"] = self.test_non_export_endpoints_no_usage()
-        
-        # Test 5: Google Sheets integration call code coverage
-        print(f"\n🔹 TEST 5: Google Sheets Integration Call Code Coverage")
-        test_results["google_sheets_coverage"] = self.test_google_sheets_integration_call_coverage()
-        
-        return test_results
+            print(f"\n⚠️ {total_tests - passed_tests} test(s) FAILED. See details above.")
+            return False
 
 def main():
-    """Main test execution"""
-    tester = PRM3UsageMeteringTester()
-    results = tester.run_all_tests()
+    """Main execution function"""
+    validator = PR_UM5_BackendValidator()
     
-    # Print summary
-    print(f"\n{'='*80}")
-    print("PR-UM3 USAGE METERING TEST RESULTS")
-    print(f"{'='*80}")
-    
-    if "authentication" not in results or not results["authentication"]:
-        print("❌ AUTHENTICATION FAILED - Cannot proceed with tests")
-        return False
-    
-    total_tests = len([k for k in results.keys() if k not in ["authentication", "initial_metrics"]])
-    passed_tests = len([k for k, v in results.items() if k not in ["authentication", "initial_metrics"] and v])
-    
-    for test_name, result in results.items():
-        if test_name in ["authentication", "initial_metrics"]:
-            continue  # Skip setup tests in summary
-            
-        status = "✅ PASS" if result else "❌ FAIL"
-        print(f"{status} - {test_name}")
-    
-    print(f"\nTest Results: {passed_tests}/{total_tests} tests passed")
-    
-    # Detailed findings
-    print(f"\n{'='*80}")
-    print("DETAILED FINDINGS")
-    print(f"{'='*80}")
-    
-    if results.get("pdf_report_usage"):
-        print("✅ PDF report generation correctly increments report.generated when PDF is produced")
-    else:
-        print("❌ PDF report generation usage tracking failed")
-    
-    if results.get("correlation_id_dedup"):
-        print("✅ Correlation ID deduplication working - no double counting")
-    else:
-        print("❌ Correlation ID deduplication failed - potential double counting")
-    
-    if results.get("export_endpoints_usage"):
-        print("✅ Export endpoints correctly increment export.generated when output is produced")
-    else:
-        print("❌ Export endpoints usage tracking failed")
-    
-    if results.get("non_export_no_usage"):
-        print("✅ Non-export endpoints correctly do NOT increment usage")
-    else:
-        print("❌ Non-export endpoints incorrectly increment usage")
-    
-    if results.get("google_sheets_coverage"):
-        print("✅ Google Sheets integration.call code paths properly wired")
-        print("   NOTE: Runtime execution blocked (Google Sheets not configured)")
-    else:
-        print("❌ Google Sheets integration.call code coverage issues found")
-    
-    # Overall result
-    success = passed_tests == total_tests
-    if success:
-        print(f"\n🎉 ALL TESTS PASSED - PR-UM3 usage metering working correctly!")
-        print("   No bugs, regressions, or risks detected in usage metering flows.")
-    else:
-        print(f"\n⚠️ SOME TESTS FAILED - PR-UM3 usage metering issues detected")
-        print("   Please review failed tests and fix issues before deployment.")
-    
-    return success
+    try:
+        success = validator.run_all_tests()
+        sys.exit(0 if success else 1)
+    except KeyboardInterrupt:
+        print("\n❌ Test execution interrupted by user")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\n💥 Unexpected error: {str(e)}")
+        sys.exit(1)
 
 if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)
+    main()

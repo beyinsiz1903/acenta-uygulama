@@ -2,7 +2,7 @@
 """
 PR-4 Web Auth Cookie Compat Backend Verification Test
 Test PR-4 web auth compatibility layer on deployed preview environment
-Base URL: https://quota-track.preview.emergentagent.com
+Base URL: https://meter-demo.preview.emergentagent.com
 
 Verification Requirements:
 1. POST /api/auth/login with X-Client-Platform:web sets cookie-based auth and returns auth_transport=cookie_compat
@@ -19,7 +19,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Test Configuration
-BASE_URL = "https://quota-track.preview.emergentagent.com"
+BASE_URL = "https://meter-demo.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 WEB_PLATFORM_HEADER = "X-Client-Platform"

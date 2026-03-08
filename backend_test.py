@@ -11,7 +11,7 @@ from typing import Dict, Any, List
 from pymongo import MongoClient
 
 # Configuration
-BACKEND_URL = "https://quota-track.preview.emergentagent.com/api"
+BACKEND_URL = "https://meter-demo.preview.emergentagent.com/api"
 TEST_AGENCY_NAME = "Demo Travel"
 EXPECTED_COUNTS = {
     "tours": 5,

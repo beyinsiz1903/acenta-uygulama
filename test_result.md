@@ -2340,12 +2340,141 @@ agent_communication:
       - working: true
         agent: "testing"
         comment: "PR-UM5 SOFT QUOTA WARNING UI RE-VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-03-08). Comprehensive UI validation per review request on https://usage-metering.preview.emergentagant.com with agent@acenta.test/agent123. Test Results: 1) ✅ Login successful - Credentials accepted, redirected via /app/partners to /app (as expected per review request), 2) ✅ Dashboard at /app - dashboard-usage-summary-card renders correctly with title 'Kullanım özeti', plan label 'Enterprise', all UI elements present, 3) ✅ Dashboard metric cards - All 3 cards visible (reservation.created: 70/Sınırsız, report.generated: 17/Sınırsız, export.generated: 10/Sınırsız), all showing 'Normal' warning level with green/teal badges, 4) ✅ Trial recommendation - NOT visible on dashboard (trial_conversion.show=false in backend), 5) ✅ Usage page navigation - Successfully navigated to /app/usage, page heading 'Kullanım takibi' displayed, 6) ✅ Usage page metric cards - All 3 metric cards render correctly with same data as dashboard, trend chart visible and functioning, 7) ✅ CTA buttons - NO CTA buttons visible (expected since backend returns upgrade_recommended=false for all metrics), 8) ✅ All data-testid selectors - All required selectors working correctly on both dashboard and usage page. BACKEND API ANALYSIS: GET /api/tenant/usage-summary returns: plan='enterprise', plan_label='Enterprise', is_trial=false, billing_status=null, all metrics have limit=null/quota=null causing 'Sınırsız' display, warning_level='normal' for all metrics, trial_conversion.show=false. CRITICAL FINDING: Frontend UI is 100% functional and correctly displaying backend data. However, backend data does NOT match review request expectations (plan should be Trial with limits: reservation.created=70/100→warning, report.generated=17/20→critical, export.generated=10/10→limit_reached, trial recommendation showing 'Pro Plan'). The issue is backend tenant configuration - agent@acenta.test tenant (9c5c1079-9dea-49bf-82c0-74838b146160) needs usage_allowances with proper limits and trial status set in tenant_capabilities collection. Frontend is production-ready. Backend data configuration required to match review expectations."
+      - working: true
+        agent: "testing"
+        comment: "PR-UM5 SOFT QUOTA WARNING UI FINAL VALIDATION COMPLETED - ALL 5 REQUIREMENTS PASSED (2026-03-08). Performed comprehensive final validation per review request on https://usage-metering.preview.emergentagent.com with agent@acenta.test/agent123. CRITICAL SUCCESS: Backend data NOW MATCHES review request expectations perfectly. Test Results: 1) ✅ Login çalışıyor - agent@acenta.test/agent123 successful login, redirects correctly to /app, 2) ✅ Dashboard usage kartı warning durumlarını gösteriyor (/app) - dashboard-usage-summary-card renders with plan_label='Trial', period='2026-03', all 3 metric cards present with correct warning states, 3) ✅ Usage page (/app/usage) tüm gereksinimler karşılanıyor - reservation.created: 70/100 with warning_level='warning' and message='Limitinize yaklaşıyorsunuz' ✅, report.generated: 17/20 with warning_level='critical' and message='Limitinize sadece 3 rapor kaldı' ✅, export.generated: 10/10 with warning_level='limit_reached' and message='Export limitiniz doldu. Planınızı yükselterek devam edebilirsiniz.' ✅, CTA text='Planları Görüntüle' ✅, trial_conversion showing recommended_plan_label='Pro Plan' ✅, 4) ✅ CTA ile /pricing navigasyonu çalışıyor - CTA buttons link to /pricing correctly, navigation tested and working, pricing page loads successfully, 5) ✅ data-testid selector'ları stabil - All 11 required selectors validated and working correctly (usage-page, usage-page-heading, usage-page-reservation-created-card, usage-page-report-generated-card, usage-page-export-generated-card, usage-page-report-generated-message, usage-page-report-generated-cta-button, usage-page-export-generated-message, usage-page-export-generated-cta-button, usage-page-trial-recommendation, usage-page-trend-chart). BACKEND API VALIDATION: plan='trial', plan_label='Trial', is_trial=true, billing_status='trialing', all metrics have proper limits and warning states matching review expectations exactly. No regressions detected, all functionality working as designed. PR-UM5 soft quota warning UI is PRODUCTION-READY."
 
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 31
+  test_sequence: 32
   last_updated: "2026-03-08"
+
+agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ PR-UM5 SOFT QUOTA WARNING UI FINAL VALIDATION COMPLETED - ALL REQUIREMENTS PASSED (2026-03-08)
+      
+      Performed comprehensive final validation per review request on https://usage-metering.preview.emergentagent.com
+      
+      Test Context:
+      - Review: PR-UM5 soft quota warning UI son doğrulaması
+      - Test account: agent@acenta.test / agent123
+      - Tenant ID: 9c5c1079-9dea-49bf-82c0-74838b146160
+      - Expected state: Trial plan with usage limits showing warning/critical/limit_reached states
+      
+      ✅ CRITICAL SUCCESS: Backend data NOW CORRECTLY CONFIGURED and matches review expectations
+      
+      Turkish Requirements Validation:
+      
+      1. ✅ Login çalışıyor mu?
+         - EVET - Login with agent@acenta.test/agent123 successful
+         - Redirects correctly from /login → /app/partners → /app
+         - Authentication working perfectly
+      
+      2. ✅ Dashboard usage kartı warning durumlarını gösteriyor mu? (/app)
+         - EVET - dashboard-usage-summary-card renders correctly
+         - Plan: Trial · Dönem: 2026-03
+         - All 3 metric cards present with correct warning states:
+           * Reservation: 70/100 - Yaklaşıyor (warning - yellow/orange) ✅
+           * Report: 17/20 - Kritik (critical - orange) ✅
+           * Export: 10/10 - Limit doldu (limit_reached - red) ✅
+      
+      3. ✅ Usage sayfasında (/app/usage) tüm beklenen durumlar mevcut mu?
+         - EVET - All required elements present and correct:
+         
+         Reservation Warning State (70/100):
+         ✅ warning_level: "warning"
+         ✅ Message: "Limitinize yaklaşıyorsunuz"
+         ✅ Progress bar: %70 (yellow/orange)
+         ✅ Badge: "Yaklaşıyor"
+         
+         Report Critical State (17/20):
+         ✅ warning_level: "critical"
+         ✅ Message: "Limitinize sadece 3 rapor kaldı"
+         ✅ Progress bar: %85 (orange)
+         ✅ Badge: "Kritik"
+         ✅ CTA button: "Planları Görüntüle" (present and functional)
+         
+         Export Limit Reached State (10/10):
+         ✅ warning_level: "limit_reached"
+         ✅ Message: "Export limitiniz doldu. Planınızı yükselterek devam edebilirsiniz."
+         ✅ Progress bar: %100 (red)
+         ✅ Badge: "Limit doldu"
+         ✅ CTA button: "Planları Görüntüle" (present and functional)
+         
+         Trial Recommendation:
+         ✅ trial_conversion.show: true
+         ✅ recommended_plan_label: "Pro Plan"
+         ✅ Message: "Trial kullanımınız devam ediyor."
+         ✅ CTA button: "Planları Görüntüle"
+      
+      4. ✅ CTA ile /pricing navigasyonu çalışıyor mu?
+         - EVET - CTA buttons navigate to /pricing correctly
+         - Tested with both report and export CTA buttons
+         - Navigation successful, pricing page loads with all 3 plans (Starter, Pro, Enterprise)
+      
+      5. ✅ data-testid selector'ları stabil mi?
+         - EVET - All required selectors validated and working:
+           * usage-page ✅
+           * usage-page-heading ✅
+           * usage-page-reservation-created-card ✅
+           * usage-page-report-generated-card ✅
+           * usage-page-export-generated-card ✅
+           * usage-page-report-generated-message ✅
+           * usage-page-report-generated-cta-button ✅
+           * usage-page-export-generated-message ✅
+           * usage-page-export-generated-cta-button ✅
+           * usage-page-trial-recommendation ✅
+           * usage-page-trend-chart ✅
+         - Total: 46 usage-related data-testid selectors found
+         - All stable and functional
+      
+      Backend API Validation (/api/tenant/usage-summary):
+      
+      ✅ Plan Configuration:
+         - plan: "trial"
+         - plan_label: "Trial"
+         - is_trial: true
+         - billing_status: "trialing"
+         - period: "2026-03"
+      
+      ✅ Metrics Configuration:
+         - reservation.created: {used: 70, limit: 100, warning_level: "warning"}
+         - report.generated: {used: 17, limit: 20, warning_level: "critical", upgrade_recommended: true}
+         - export.generated: {used: 10, limit: 10, warning_level: "limit_reached", upgrade_recommended: true}
+      
+      ✅ Trial Conversion:
+         - show: true
+         - recommended_plan: "Pro"
+         - recommended_plan_label: "Pro Plan"
+         - cta_label: "Planları Görüntüle"
+      
+      Visual Validation (Screenshots Captured):
+      ✅ Dashboard /app showing usage summary card with all warning states
+      ✅ Usage page /app/usage with all metric cards and messages
+      ✅ Pricing page /pricing with Pro Plan highlighted
+      
+      Test Summary:
+      - Total Turkish Requirements: 5
+      - Passed: 5
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Additional Validations:
+      ✅ Console logs clean (no critical errors)
+      ✅ Network requests successful (no 5xx errors)
+      ✅ All UI components render correctly
+      ✅ Color coding matches warning levels (green→yellow→orange→red)
+      ✅ Progress bars reflect correct percentages
+      ✅ All links and buttons functional
+      ✅ Responsive design working
+      ✅ Turkish text correct throughout
+      
+      Conclusion:
+      PR-UM5 soft quota warning UI final validation SUCCESSFUL. All review request requirements met perfectly. Backend data is now correctly configured with trial status and usage limits. Frontend UI displays all warning states correctly (warning, critical, limit_reached). CTA buttons are present where required and navigate correctly to /pricing. Trial recommendation shows "Pro Plan" as expected. All data-testid selectors stable and functional. The implementation is PRODUCTION-READY with no regressions detected.
+      
+      Status: ✅ PASS - All requirements validated successfully
 
 agent_communication:
   - agent: "testing"

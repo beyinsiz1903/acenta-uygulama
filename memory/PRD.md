@@ -92,6 +92,7 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - Starter: ₺990 / ay, ₺9.900 / yıl
   - Pro: ₺2.490 / ay, ₺24.900 / yıl
 - Enterprise checkout dışı bırakıldı; CTA `İletişime Geç` akışında kalır
+- Başarılı ödeme yönlendirme rotası `/payment-success` olarak standartlaştırıldı; `/billing/success` backward-compatible alias olarak korunur
 - Backend endpoint’leri eklendi:
   - `POST /api/billing/create-checkout`
   - `GET /api/billing/checkout-status/{session_id}`
@@ -183,6 +184,13 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - Testing agent raporu: `/app/test_reports/iteration_26.json` → trial expiry + signup seed + pricing blokları geçti
   - Gerçek Stripe test kartı (`4242 4242 4242 4242`) ile checkout tamamlandı; plan aktivasyonu doğrulandı
   - Testing agent raporu: `/app/test_reports/iteration_27.json` → Stripe checkout + billing success + backend activation geçti
+
+## Son Uygulama Notu — 2026-03-08 (Fork doğrulama + route standardizasyonu)
+- Stripe checkout success redirect rotası `/payment-success` olarak hizalandı; eski `/billing/success` route’u korunarak geriye dönük uyumluluk sağlandı
+- Preview üzerinde `/pricing` smoke testi tekrar yapıldı; yıllık toggle ve fiyat kartları çalışıyor
+- Testing agent raporu: `/app/test_reports/iteration_28.json` → `/payment-success`, Enterprise CTA guardrail, webhook ve fulfillment idempotency, paid user plan state doğrulandı
+- Frontend testing agent doğrulaması: `/pricing`, `/payment-success`, `/billing/success` ekranları geçti
+- Backend deep testing doğrulaması: checkout/create-checkout, checkout-status, webhook ve duplicate event koruması geçti
 
 ## Öncelikli Sonraki Adımlar
 - **P1:** Trial signup akışını satış funnel’ı ile daha sıkı bağlama (ilk giriş sonrası onboarding/paket yönlendirme polish)

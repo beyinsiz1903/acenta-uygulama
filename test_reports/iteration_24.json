@@ -1,0 +1,103 @@
+{
+  "summary": "Pricing + Demo + Signup Sales Surfaces Testing Complete. All 23 backend tests passed. All frontend UI and navigation tests passed. Verified: (1) GET /api/onboarding/plans returns catalog with trial is_public=false, (2) Starter/Pro/Enterprise have correct prices ₺990/₺2490/₺6990 and are public, (3) POST /api/onboarding/signup creates trial with 14-day trial_end, (4) Pricing page shows Starter/Pro/Enterprise cards with '14 Gün Ücretsiz Dene' CTAs, (5) Demo page has warm sales copy with 'Demo Hesap Oluştur' and 'Hemen Başla' CTAs, (6) Signup page shows trial messaging + selectable paid-plan preference cards, (7) Navigation flow /pricing → /demo → /signup works correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "✅ Backend: GET /api/onboarding/plans returns 200",
+    "✅ Backend: Plans response contains 4 plans (trial, starter, pro, enterprise)",
+    "✅ Backend: Trial plan has is_public=false (hidden from public pricing)",
+    "✅ Backend: Starter plan has is_public=true",
+    "✅ Backend: Pro plan has is_public=true",
+    "✅ Backend: Enterprise plan has is_public=true",
+    "✅ Backend: Starter pricing ₺990/month TRY",
+    "✅ Backend: Pro pricing ₺2,490/month TRY",
+    "✅ Backend: Enterprise pricing ₺6,990/month TRY",
+    "✅ Backend: Pro plan is marked as 'popular' (is_popular=true)",
+    "✅ Backend: Starter limits - 100 reservations/month, 3 users",
+    "✅ Backend: Pro limits - 500 reservations/month, 10 users",
+    "✅ Backend: Enterprise limits - unlimited (null)",
+    "✅ Backend: Trial limits - 100 reservations, 2 users (revised spec)",
+    "✅ Backend: POST /api/onboarding/signup creates trial plan",
+    "✅ Backend: Signup returns 14-day trial_end",
+    "✅ Backend: Signup returns access_token for auto-login",
+    "✅ Backend: Signup returns org_id, tenant_id, user_id",
+    "✅ Backend: Duplicate email returns 409 Conflict",
+    "✅ Backend: Plan ordering - trial→starter→pro→enterprise",
+    "✅ Frontend: Pricing page loads with data-testid='pricing-page'",
+    "✅ Frontend: Pricing title 'Acentenizi Excel'den kurtarın'",
+    "✅ Frontend: Hero CTA text '14 Gün Ücretsiz Dene'",
+    "✅ Frontend: Trial card mentions 14 days, 100 reservations, 2 users",
+    "✅ Frontend: Starter card shows ₺990/ay",
+    "✅ Frontend: Pro card shows ₺2.490/ay with 'EN POPÜLER' badge",
+    "✅ Frontend: Enterprise card shows ₺6.990/ay",
+    "✅ Frontend: All plan CTAs show '14 Gün Ücretsiz Dene'",
+    "✅ Frontend: Demo page loads with data-testid='demo-page'",
+    "✅ Frontend: Demo hero title 'Acentelerde Excel dönemi bitiyor'",
+    "✅ Frontend: Demo primary CTA 'Demo Hesap Oluştur' → /signup",
+    "✅ Frontend: Demo funnel CTA 'Hemen Başla' → /signup (action-driven)",
+    "✅ Frontend: Demo hero badge mentions 14 GÜN ÜCRETSIZ",
+    "✅ Frontend: Signup page loads with data-testid='signup-page'",
+    "✅ Frontend: Signup title '14 gün ücretsiz deneyin, sonra karar verin'",
+    "✅ Frontend: Signup sidebar shows trial messaging (14 days, 100 reservations, 2 users)",
+    "✅ Frontend: Signup form inputs present (company, name, email, password)",
+    "✅ Frontend: Signup plan picker shows Starter ₺990, Pro ₺2.490, Enterprise ₺6.990",
+    "✅ Frontend: Signup submit button 'Hemen Başla' (action-driven CTA)",
+    "✅ Frontend: Navigation /pricing → /demo works",
+    "✅ Frontend: Navigation /demo → /signup works",
+    "✅ Frontend: Homepage has 'Fiyatlar' and 'Demo' links in nav"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_pricing_demo_signup_onboarding.py",
+    "/app/test_reports/pytest/pytest_pricing_demo_signup.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "plan_matrix.py: Correct pricing - Starter ₺990, Pro ₺2,490, Enterprise ₺6,990",
+    "plan_matrix.py: Trial has is_public=False (hidden from public), paid plans have is_public=True",
+    "plan_matrix.py: Trial limits correctly set to 100 reservations, 2 users (revised spec)",
+    "onboarding_service.py: TRIAL_DAYS=14 correctly configured",
+    "onboarding_service.py: signup() creates trial subscription with 14-day trial_end",
+    "PricingPage.jsx: PAID_PLAN_ORDER filters to only show starter/pro/enterprise (trial hidden)",
+    "PricingPage.jsx: All CTAs correctly use '14 Gün Ücretsiz Dene' text",
+    "DemoPage.jsx: Warm sales copy with 'Demo Hesap Oluştur' and 'Hemen Başla' CTAs",
+    "SignupPage.jsx: Trial messaging present + paid plan preference picker"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_pricing_demo_signup_onboarding.py"
+  ],
+  "success_rate": {
+    "backend": "100% (23/23 tests passed)",
+    "frontend": "100% (All UI and navigation tests passed)"
+  },
+  "test_credentials": {},
+  "seed_data_creation": "Signup tests create unique test users with random emails",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Pricing + Demo + Signup public sales surfaces fully verified. All plans correctly priced and displayed. Trial is hidden from public pricing (is_public=false) but signup still creates trial. CTAs follow warm/sales-oriented tone: '14 Gün Ücretsiz Dene', 'Demo Hesap Oluştur', 'Hemen Başla'. Navigation flow /pricing → /demo → /signup works. No mocked APIs.",
+  "pricing_verification_summary": {
+    "plan_catalog": {
+      "trial": {"price": "₺0 (free)", "is_public": false, "limits": "100 res/2 users"},
+      "starter": {"price": "₺990/month", "is_public": true, "limits": "100 res/3 users"},
+      "pro": {"price": "₺2,490/month", "is_public": true, "limits": "500 res/10 users", "is_popular": true},
+      "enterprise": {"price": "₺6,990/month", "is_public": true, "limits": "unlimited"}
+    },
+    "cta_text_verified": {
+      "pricing_cards": "14 Gün Ücretsiz Dene",
+      "demo_primary": "Demo Hesap Oluştur",
+      "demo_funnel": "Hemen Başla",
+      "signup_submit": "Hemen Başla"
+    },
+    "trial_spec": {
+      "duration": "14 days",
+      "reservations": 100,
+      "users": 2
+    }
+  }
+}

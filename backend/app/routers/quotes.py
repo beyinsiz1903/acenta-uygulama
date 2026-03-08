@@ -98,7 +98,12 @@ async def convert(payload: QuoteConvertIn, user=Depends(get_current_user)):
         "agency_id": None,
     }
 
-    res_doc = await create_reservation(org_id=user["organization_id"], user_email=user.get("email"), payload=reservation_payload)
+    res_doc = await create_reservation(
+        org_id=user["organization_id"],
+        user_email=user.get("email"),
+        payload=reservation_payload,
+        tenant_id=user.get("tenant_id"),
+    )
 
     await db.quotes.update_one(
         {"_id": quote["_id"]},

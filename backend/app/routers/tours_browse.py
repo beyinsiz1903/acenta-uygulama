@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse
 
 from app.auth import get_current_user
 from app.db import get_db
+from app.services.usage_service import track_reservation_created
 
 router = APIRouter(prefix="/api/tours", tags=["tours_browse"])
 
@@ -259,7 +260,16 @@ async def create_reservation(
         "created_at": now,
         "updated_at": now,
     }
-    await db.reservations.insert_one(main_reservation)
+    main_res = await db.reservations.insert_one(main_reservation)
+    main_reservation["_id"] = main_res.inserted_id
+
+    await track_reservation_created(
+        organization_id=org_id,
+        tenant_id=user.get("tenant_id"),
+        reservation=main_reservation,
+        source="tours.reserve",
+        source_event_id=main_reservation.get("idempotency_key") or reservation_code,
+    )
 
     return JSONResponse(
         status_code=201,

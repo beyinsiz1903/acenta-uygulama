@@ -92,7 +92,12 @@ async def b2b_book(payload: dict, user=Depends(get_current_user)):
         "agency_id": agency_id,
     }
 
-    res_doc = await create_reservation(org_id=user["organization_id"], user_email=user.get("email"), payload=reservation_payload)
+    res_doc = await create_reservation(
+        org_id=user["organization_id"],
+        user_email=user.get("email"),
+        payload=reservation_payload,
+        tenant_id=user.get("tenant_id"),
+    )
     return serialize_doc(res_doc)
 
 

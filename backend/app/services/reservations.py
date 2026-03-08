@@ -9,10 +9,11 @@ from app.constants.booking_statuses import can_transition, get_status_label
 from app.db import get_db
 from app.services.inventory import consume_inventory, release_inventory
 from app.services.pricing import calc_price_for_date
+from app.services.usage_service import track_reservation_created
 from app.utils import date_range_yyyy_mm_dd, generate_pnr, generate_voucher_no, now_utc, safe_float, to_object_id
 
 
-async def create_reservation(*, org_id: str, user_email: str, payload: dict[str, Any]) -> dict[str, Any]:
+async def create_reservation(*, org_id: str, user_email: str, payload: dict[str, Any], tenant_id: str | None = None) -> dict[str, Any]:
     db = await get_db()
 
     idempotency_key = payload.get("idempotency_key")
@@ -123,6 +124,14 @@ async def create_reservation(*, org_id: str, user_email: str, payload: dict[str,
     ins = await db.reservations.insert_one(res_doc)
     saved = await db.reservations.find_one({"_id": ins.inserted_id})
     assert saved
+
+    await track_reservation_created(
+        organization_id=org_id,
+        tenant_id=tenant_id,
+        reservation=saved,
+        source=f"reservations.{str(channel).lower()}",
+        source_event_id=payload.get("source_event_id") or idempotency_key,
+    )
 
     # ── Sheet Write-Back Hook (best-effort, fire-and-forget) ──
     try:

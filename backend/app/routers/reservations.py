@@ -41,7 +41,12 @@ async def _find_reservation(db, org_id: str, reservation_id: str):
 
 @router.post("/reserve", dependencies=[Depends(get_current_user)])
 async def reserve(payload: ReservationCreateIn, user=Depends(get_current_user)):
-    doc = await create_reservation(org_id=user["organization_id"], user_email=user.get("email"), payload=payload.model_dump())
+    doc = await create_reservation(
+        org_id=user["organization_id"],
+        user_email=user.get("email"),
+        payload=payload.model_dump(),
+        tenant_id=user.get("tenant_id"),
+    )
     return serialize_doc(doc)
 
 

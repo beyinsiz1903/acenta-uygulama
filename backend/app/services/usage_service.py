@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-from app.constants.usage_metrics import VALID_USAGE_METRICS
+from app.constants.usage_metrics import UsageMetric, VALID_USAGE_METRICS
 from app.constants.plan_matrix import DEFAULT_PLAN
 from app.errors import AppError
 from app.repositories.usage_daily_repository import usage_daily_repo
@@ -64,6 +64,28 @@ async def _resolve_usage_organization_id(tenant_id: str, billing_period: Optiona
   return None
 
 
+async def _resolve_usage_tenant_id(
+  organization_id: Optional[str],
+  tenant_id: Optional[str] = None,
+) -> Optional[str]:
+  if tenant_id:
+    return str(tenant_id)
+  if not organization_id:
+    return None
+
+  from app.db import get_db
+
+  db = await get_db()
+  tenant = await db.tenants.find_one(
+    {"organization_id": str(organization_id)},
+    {"_id": 1},
+    sort=[("created_at", 1)],
+  )
+  if tenant and tenant.get("_id") is not None:
+    return str(tenant.get("_id"))
+  return None
+
+
 def _validate_usage_metric(metric: str) -> None:
   if metric not in VALID_USAGE_METRICS:
     raise AppError(422, "invalid_usage_metric", "Geçersiz usage metriği.", {"metric": metric})
@@ -119,6 +141,64 @@ async def track_usage_event(
     raise
 
   return True
+
+
+async def track_reservation_created(
+  *,
+  organization_id: Optional[str],
+  reservation: Dict[str, Any],
+  tenant_id: Optional[str] = None,
+  source: str = "reservations",
+  source_event_id: Optional[str] = None,
+) -> bool:
+  """Best-effort metering helper for newly created reservations only."""
+
+  resolved_tenant_id = await _resolve_usage_tenant_id(organization_id, tenant_id)
+  if not resolved_tenant_id:
+    logger.warning(
+      "reservation.created usage skipped: tenant could not be resolved for org=%s reservation=%s",
+      organization_id,
+      reservation.get("_id"),
+    )
+    return False
+
+  reservation_id = reservation.get("_id")
+  dedupe_key = str(source_event_id or reservation_id or "")
+  if not dedupe_key:
+    logger.warning(
+      "reservation.created usage skipped: dedupe key missing for tenant=%s org=%s",
+      resolved_tenant_id,
+      organization_id,
+    )
+    return False
+
+  metadata = {
+    "reservation_id": str(reservation_id) if reservation_id is not None else None,
+    "channel": reservation.get("channel"),
+    "status": reservation.get("status"),
+    "product_id": str(reservation.get("product_id")) if reservation.get("product_id") is not None else None,
+    "agency_id": str(reservation.get("agency_id")) if reservation.get("agency_id") is not None else None,
+  }
+  metadata = {k: v for k, v in metadata.items() if v not in (None, "")}
+
+  try:
+    return await track_usage_event(
+      tenant_id=resolved_tenant_id,
+      organization_id=str(organization_id) if organization_id is not None else None,
+      metric=UsageMetric.RESERVATION_CREATED,
+      quantity=1,
+      source=source,
+      source_event_id=dedupe_key,
+      metadata=metadata,
+    )
+  except Exception:
+    logger.warning(
+      "reservation.created usage track failed tenant=%s reservation=%s",
+      resolved_tenant_id,
+      reservation_id,
+      exc_info=True,
+    )
+    return False
 
 
 async def track_usage(

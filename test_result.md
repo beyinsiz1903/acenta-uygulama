@@ -3950,3 +3950,110 @@ metadata:
   version: "1.0"
   test_sequence: 34
   last_updated: "2026-03-08"
+
+  - task: "Public customer acquisition funnel pages (/pricing and /demo) Turkish validation"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/public/PricingPage.jsx, frontend/src/pages/public/DemoPage.jsx, frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PUBLIC CUSTOMER ACQUISITION FUNNEL SMOKE TEST COMPLETED - ALL TESTS PASSED (2026-03-08). Performed comprehensive Turkish validation of /pricing and /demo pages on https://escape-excel.preview.emergentagent.com. Test Results: 1) ✅ /pricing page validation - PASSED (Hero title 'Acenteniz için doğru planı seçin' ✅, Primary CTA '14 Gün Ücretsiz Dene' visible ✅, Secondary CTA 'Demo sayfasını gör' visible ✅, All 3 plan cards present: Starter ₺990, Pro ₺2.490, Enterprise ₺6.990 ✅, Social proof section visible with Turkish text 'Turizm acenteleri Syroce ile operasyon süreçlerini %40 daha hızlı yönetiyor' ✅, Final CTA section with both buttons ✅), 2) ✅ /demo page validation - PASSED (Hero title 'Acentelerde Excel dönemi bitiyor' ✅, Primary CTA 'Demo Hesap Oluştur' visible ✅, Secondary CTA 'Fiyatları Gör' visible ✅, Problem section with title 'Acentelerde en yaygın sorunlar' and 9 problem cards ✅, Solution section with title 'Syroce ile tüm operasyon tek panelde' and 12 solution cards ✅, Final CTA section with both buttons ✅), 3) ✅ CTA routing validation - PASSED (/pricing -> /demo navigation works ✅, /demo -> /pricing navigation works ✅, /pricing -> /signup with query params plan=trial&selectedPlan=pro works ✅, /demo -> /signup with query param plan=trial works ✅). All Turkish content correctly displayed, all CTAs visible and functional, proper routing between pages confirmed. Minor observations: 7 network errors detected (Cloudflare RUM analytics failures - non-critical), no console errors detected, screenshots captured successfully. Success rate: 100% (all validation points passed). Public customer acquisition funnel fully operational and ready for production."
+
+agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ PUBLIC CUSTOMER ACQUISITION FUNNEL VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-08)
+      
+      Performed comprehensive frontend validation of public customer acquisition funnel pages per review request.
+      
+      Context:
+      - Preview URL: https://escape-excel.preview.emergentagent.com
+      - Test Scope: /pricing and /demo pages in Turkish
+      - Validation Focus: Frontend-only verification (no backend testing)
+      - Reference: Main agent already ran screenshot smoke tests and testing_agent iteration_25 passed
+      
+      Test Results Summary:
+      
+      1. ✅ /pricing PAGE VALIDATION - PASSED
+         Turkish Content Validation:
+         - Hero title: "Acenteniz için doğru planı seçin" ✅
+         - Subtitle: "Acentenizi Excel'den kurtarın..." ✅
+         - Badge: "14 Gün Ücretsiz Deneyin" ✅
+         
+         CTA Visibility:
+         - Primary CTA: "14 Gün Ücretsiz Dene" ✅
+         - Secondary CTA: "Demo sayfasını gör" ✅
+         - Final section CTAs: Both present and visible ✅
+         
+         Plan Cards (All 3 Present):
+         - Starter: ₺990/ay - "Küçük acenteler için" ✅
+         - Pro: ₺2.490/ay - "Önerilen plan" badge present ✅
+         - Enterprise: ₺6.990/ay - "Büyük operasyonlar için" ✅
+         
+         Social Proof Block:
+         - Section present with title ✅
+         - Text: "Turizm acenteleri Syroce ile operasyon süreçlerini %40 daha hızlı yönetiyor." ✅
+         - Trust points card with 3 items ✅
+      
+      2. ✅ /demo PAGE VALIDATION - PASSED
+         Turkish Content Validation:
+         - Hero title: "Acentelerde Excel dönemi bitiyor" ✅
+         - Subtitle: "Syroce ile rezervasyon, müşteri ve operasyon süreçlerini tek panelden yönetin..." ✅
+         - Badge: "14 Gün Ücretsiz Deneyin" ✅
+         
+         CTA Visibility:
+         - Primary CTA: "Demo Hesap Oluştur" ✅
+         - Secondary CTA: "Fiyatları Gör" ✅
+         - Final section CTAs: Both present and visible ✅
+         
+         Problem Section:
+         - Title: "Acentelerde en yaygın sorunlar" ✅
+         - Problem cards: 9 cards found (minimum 3 expected) ✅
+         - Cards include: Excel ile rezervasyon takibi, WhatsApp üzerinden müşteri yönetimi, Dağınık operasyon süreçleri ✅
+         
+         Solution Section:
+         - Title: "Syroce ile tüm operasyon tek panelde" ✅
+         - Solution cards: 12 cards found (minimum 4 expected) ✅
+         - Cards include: Rezervasyon yönetimi, Müşteri yönetimi, Tur ve otel takibi, Raporlama ✅
+      
+      3. ✅ CTA ROUTING VALIDATION - PASSED
+         Cross-page Navigation:
+         - /pricing -> /demo: ✅ (via secondary CTA)
+         - /demo -> /pricing: ✅ (via secondary CTA)
+         
+         Signup Flow Routing:
+         - /pricing -> /signup: ✅ (with query params: plan=trial&selectedPlan=pro)
+         - /demo -> /signup: ✅ (with query param: plan=trial)
+         
+         All routing verified working correctly with proper query parameter propagation.
+      
+      Technical Validation:
+      ✅ All data-testid selectors present and functional
+      ✅ Turkish content correctly displayed (no encoding issues)
+      ✅ All CTAs clickable and navigating to correct destinations
+      ✅ Responsive layout rendering correctly (tested at 1920x1080)
+      ✅ No React runtime errors detected
+      ✅ No critical console errors (0 errors, 0 warnings)
+      ✅ Screenshots captured successfully for visual verification
+      
+      Console Analysis:
+      - Console messages: 4 (informational only, no errors/warnings)
+      - Network errors: 7 (Cloudflare RUM analytics failures - non-critical CDN tracking, does not affect page functionality)
+      - API call to /api/onboarding/plans: Detected but handled gracefully (static fallback data present)
+      
+      Test Summary:
+      - Total Tests: 3 major test groups
+      - Validation Points: 20+ individual checks
+      - Passed: 100%
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      Public customer acquisition funnel frontend validation SUCCESSFUL. Both /pricing and /demo pages display correct Turkish content, all CTAs are visible and functional, all 3 plan cards are present on /pricing page, social proof and problem/solution sections are properly rendered, and routing between /pricing, /demo, and /signup works correctly with proper query parameter propagation. No major issues detected. Pages are production-ready.
+      
+      Status: ✅ PRODUCTION-READY - Public customer acquisition funnel validated and working correctly.
+

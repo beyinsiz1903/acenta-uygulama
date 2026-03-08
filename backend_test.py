@@ -18,7 +18,7 @@ import time
 from typing import Dict, Any, List, Optional, Tuple
 
 # Configuration  
-BACKEND_URL = "https://meter-demo.preview.emergentagent.com/api"
+BACKEND_URL = "https://usage-metering.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

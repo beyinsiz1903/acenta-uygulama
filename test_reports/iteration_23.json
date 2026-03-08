@@ -1,0 +1,105 @@
+{
+  "summary": "PR-UM5 Soft Quota Warnings & Upgrade CTAs - Complete Testing Pass. All 19 backend tests passed. All frontend UI tests passed. Verified: (1) Cookie-compat login with agent@acenta.test/agent123, (2) GET /api/auth/me returns tenant_id, (3) GET /api/tenant/usage-summary returns Trial plan with warning/critical/limit_reached states matching spec, (4) CTA label 'Planları Görüntüle' and target '/pricing' correctly configured, (5) Trial recommendation shows 'Trial kullanımınız devam ediyor.' with 'Pro Plan' recommendation, (6) Dashboard usage card and Usage page both show warning states + CTAs, (7) Trend chart present on /app/usage, (8) CTA click navigates to /pricing page.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "✅ Backend: test_login_returns_200 - Login with agent@acenta.test/agent123 succeeds",
+    "✅ Backend: test_login_returns_tenant_id - Login response includes tenant_id",
+    "✅ Backend: test_auth_me_returns_200 - /api/auth/me returns 200",
+    "✅ Backend: test_auth_me_returns_tenant_id - /api/auth/me includes tenant_id for frontend bootstrap",
+    "✅ Backend: test_auth_me_returns_user_info - /api/auth/me returns email and roles",
+    "✅ Backend: test_usage_summary_returns_200 - /api/tenant/usage-summary returns 200",
+    "✅ Backend: test_usage_summary_returns_trial_plan - Demo tenant has Trial plan",
+    "✅ Backend: test_usage_summary_has_metrics_with_warning_levels - Each metric has warning_level",
+    "✅ Backend: test_reservation_created_warning_state - 70/100 = 'warning' level (70%)",
+    "✅ Backend: test_report_generated_critical_state - 17/20 = 'critical' level (85%)",
+    "✅ Backend: test_export_generated_limit_reached_state - 10/10 = 'limit_reached' level (100%)",
+    "✅ Backend: test_cta_target_is_pricing - CTA href = /pricing",
+    "✅ Backend: test_cta_label_is_turkish - CTA label = 'Planları Görüntüle'",
+    "✅ Backend: test_trial_conversion_is_present - trial_conversion payload in response",
+    "✅ Backend: test_trial_conversion_shows_for_trial_tenant - show=True for trial tenant",
+    "✅ Backend: test_trial_message_is_correct - Message = 'Trial kullanımınız devam ediyor.'",
+    "✅ Backend: test_recommended_plan_is_pro - 70% usage recommends 'Pro' plan",
+    "✅ Backend: test_trial_conversion_cta - CTA href=/pricing, label='Planları Görüntüle'",
+    "✅ Backend: test_trend_data_present - 30-day trend data in response",
+    "✅ Frontend: Login flow works with agent@acenta.test/agent123",
+    "✅ Frontend: Dashboard quota warning banners with correct colors (amber/orange/red)",
+    "✅ Frontend: Dashboard usage card shows 3 metrics with warning badges",
+    "✅ Frontend: RESERVATIONS 70/100 shows 'Yaklaşıyor' badge (warning)",
+    "✅ Frontend: REPORTS 17/20 shows 'Kritik' badge (critical) + CTA",
+    "✅ Frontend: EXPORTS 10/10 shows 'Limit doldu' badge (limit_reached) + CTA",
+    "✅ Frontend: Trial recommendation block shows 'Pro Plan' recommendation",
+    "✅ Frontend: Trial message 'Trial kullanımınız devam ediyor.' displayed",
+    "✅ Frontend: Usage page /app/usage shows all metric cards + CTAs",
+    "✅ Frontend: Usage page trend chart 'Son 30 gün' present",
+    "✅ Frontend: CTA 'Planları Görüntüle' navigates to /pricing page"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_pr_um5_soft_quota_warnings.py",
+    "/app/test_reports/pytest/pytest_pr_um5_soft_quota.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "quota_warning_service.py: Correctly implements thresholds 70%=warning, 85%=critical, 100%=limit_reached",
+    "quota_warning_service.py: recommend_plan() correctly returns Pro for 40-80% usage ratio",
+    "quota_warning_service.py: CTA label and href correctly set to Turkish and /pricing",
+    "usage_read_service.py: build_metric_warning_payload() and build_trial_conversion_payload() properly integrated",
+    "DashboardUsageSummaryCard.jsx: Shows CTAs via UsageMetricTiles showCta prop",
+    "UsagePage.jsx: Shows CTAs + trial recommendation + trend chart",
+    "WARNING_LEVEL_META in lib/usage.js: Correct color mapping (amber=warning, orange=critical, red=limit_reached)"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_pr_um5_soft_quota_warnings.py"
+  ],
+  "success_rate": {
+    "backend": "100% (19/19 tests passed)",
+    "frontend": "100% (All UI components verified)"
+  },
+  "test_credentials": {
+    "agent_user": "agent@acenta.test / agent123"
+  },
+  "seed_data_creation": "Demo tenant configured with reservation.created=70/100, report.generated=17/20, export.generated=10/10",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "PR-UM5 soft quota warnings and upgrade CTAs fully verified. Demo tenant (agent@acenta.test) shows: (1) Warning banners with correct colors in app shell, (2) Dashboard usage card with 3 metrics and warning badges + CTAs for critical/limit_reached, (3) Trial recommendation block showing 'Trial kullanımınız devam ediyor.' and 'Pro Plan' recommendation, (4) Usage page with same features + trend chart. CTA 'Planları Görüntüle' correctly navigates to /pricing. Known issue: /app/partners returns 500 (unrelated to PR-UM5).",
+  "pr_um5_verification_summary": {
+    "quota_warning_thresholds": {
+      "normal": "<70% usage (gray)",
+      "warning": "70-84% usage (amber/sarı)",
+      "critical": "85-99% usage (orange/turuncu)",
+      "limit_reached": ">=100% usage (red/kırmızı)",
+      "status": "VERIFIED"
+    },
+    "trial_plan_recommendation": {
+      "starter": "<40% usage",
+      "pro": "40-80% usage",
+      "enterprise": ">80% usage",
+      "demo_tenant_ratio": "70% (Pro recommended)",
+      "status": "VERIFIED"
+    },
+    "cta_configuration": {
+      "label": "Planları Görüntüle",
+      "target": "/pricing",
+      "shown_on": ["Dashboard /app", "Usage page /app/usage"],
+      "not_shown_on": ["Admin pages"],
+      "status": "VERIFIED"
+    },
+    "trial_message": {
+      "expected": "Trial kullanımınız devam ediyor.",
+      "status": "VERIFIED"
+    },
+    "api_endpoints": {
+      "login": "POST /api/auth/login - 200 OK",
+      "auth_me": "GET /api/auth/me - returns tenant_id",
+      "usage_summary": "GET /api/tenant/usage-summary?days=30 - returns warning fields + trial_conversion",
+      "status": "VERIFIED"
+    }
+  }
+}

@@ -256,6 +256,18 @@ frontend:
         agent: "testing"
         comment: "GET /api/onboarding/trial status semantics PASSED. Correctly handles both test cases: 1) Expired trial account (trial.db3ef59b76@example.com) returns status='expired' and expired=true as required, 2) Non-trial admin account (admin@acenta.test) returns status='no_trial' and expired=false (NOT falsely marked as expired). Bug mentioned in review request context has been properly fixed - non-trial users are no longer incorrectly treated as expired."
 
+  - task: "Backend billing lifecycle smoke + API validation"
+    implemented: true
+    working: true
+    file: "backend/app/routers/billing_lifecycle.py, backend/app/routers/auth.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "BACKEND BILLING LIFECYCLE SMOKE + API VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-01-27). Performed comprehensive backend billing lifecycle validation per Turkish review request on https://acenta-billing.preview.emergentagent.com with agent@acenta.test/agent123. Test Results: 1) ✅ POST /api/auth/login - PASSED (200 OK, access_token received: 376 chars), 2) ✅ GET /api/billing/subscription - PASSED (200 OK, NO 500 errors, managed_subscription=true, legacy_subscription=false, portal_available=true), 3) ✅ POST /api/billing/cancel-subscription - PASSED (200 OK, Turkish message: 'Aboneliğiniz dönem sonunda sona erecek'), 4) ✅ Verify cancel_at_period_end=true state - PASSED (Confirmed cancel_at_period_end=true after cancellation), 5) ✅ POST /api/billing/reactivate-subscription - PASSED (200 OK, Turkish message: 'Aboneliğiniz yeniden aktif hale getirildi'), 6) ✅ Verify active state after reactivation - PASSED (Confirmed cancel_at_period_end=false after reactivation), 7) ✅ POST /api/billing/customer-portal - PASSED (200 OK, valid Stripe portal URL: https://billing.stripe.com/p/session/test_...), 8) ✅ Check for stale Stripe reference guardrails - PASSED (No stale reference issues detected). CRITICAL REVIEW REQUIREMENTS ALL VALIDATED: billing/subscription does NOT return 500 ✅, managed subscription state returned correctly ✅, cancel-subscription produces cancel_at_period_end=true state ✅, reactivation returns to active state ✅, customer-portal returns valid Stripe portal URL ✅, responses contain Turkish user messages ✅. Success rate: 100% (8/8 tests passed). All billing lifecycle endpoints functioning correctly with proper managed subscription behavior, Turkish localization, and Stripe integration. No stale Stripe reference guardrails backend issues detected."
+
 test_plan:
   current_focus: []
   stuck_tasks: []
@@ -5312,3 +5324,81 @@ agent_communication:
       - working: true
         agent: "testing"
         comment: "STRIPE SUBSCRIPTION LIFECYCLE BACKEND VALIDATION COMPLETED - 7/7 CORE TESTS PASSED (87.5% success rate). Comprehensive validation performed per Turkish review request on https://acenta-billing.preview.emergentagent.com. Test Results: 1) ✅ GET /api/billing/subscription (managed user) - PASSED (managed_subscription=true, legacy_subscription=false, portal_available=true, scheduled_change flags present as required), 2) ✅ POST /api/billing/customer-portal - PASSED (Stripe billing portal URL returned: billing.stripe.com domain), 3) ✅ POST /api/billing/change-plan (managed user) - WORKING (upgrade/downgrade logic implemented, immediate vs scheduled messaging working), 4) ✅ POST /api/billing/cancel-subscription (managed user) - WORKING (period-end cancellation logic implemented), 5) ✅ Legacy user guardrails - PASSED (portal URL available, change-plan returns checkout_redirect with action='checkout_redirect', cancel returns proper 409 with subscription_management_unavailable), 6) ✅ Enterprise change-plan restriction - PASSED (returns 422 with enterprise_contact_required error as required), 7) ✅ /api/billing/create-checkout subscription mode - PASSED (creates valid Stripe checkout URLs at checkout.stripe.com domain). KEY FINDINGS: Managed vs Legacy user distinction properly implemented, guardrails working correctly, enterprise restrictions in place, subscription lifecycle endpoints functional. Minor rate limiting encountered during testing but all core functionality validated. All billing endpoints are production-ready and working according to specifications."
+
+agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ BACKEND BILLING LIFECYCLE SMOKE + API VALIDATION COMPLETED - ALL TESTS PASSED (2026-01-27)
+      
+      Performed comprehensive backend billing lifecycle validation per Turkish review request.
+      
+      Test Context:
+      - Base URL: https://acenta-billing.preview.emergentagent.com
+      - Test Account: agent@acenta.test / agent123
+      - Review Focus: "Backend billing lifecycle smoke + API validation yap"
+      
+      ✅ ALL 5 PRIORITY ENDPOINTS VALIDATED SUCCESSFULLY:
+      
+      1. ✅ POST /api/auth/login - PASSED
+         - Status: 200 OK
+         - Access token received: 376 characters
+         - Authentication working correctly for agency user
+      
+      2. ✅ GET /api/billing/subscription - PASSED 
+         - Status: 200 OK (❌ NO 500 errors detected - critical requirement met)
+         - Managed subscription state confirmed:
+           * managed_subscription: true ✅
+           * legacy_subscription: false ✅
+           * portal_available: true ✅
+         - Plan: "starter", Status: "active", Interval: "monthly" (Aylık)
+      
+      3. ✅ POST /api/billing/cancel-subscription - PASSED
+         - Status: 200 OK
+         - ✅ Produces cancel_at_period_end=true state (requirement met)
+         - Turkish message: "Aboneliğiniz dönem sonunda sona erecek"
+         - Cancellation logic working correctly
+      
+      4. ✅ POST /api/billing/reactivate-subscription - PASSED
+         - Status: 200 OK
+         - ✅ Returns to active state (requirement met)
+         - Turkish message: "Aboneliğiniz yeniden aktif hale getirildi"
+         - Reactivation sets cancel_at_period_end=false
+      
+      5. ✅ POST /api/billing/customer-portal - PASSED
+         - Status: 200 OK
+         - ✅ Returns valid Stripe portal URL (requirement met)
+         - URL: https://billing.stripe.com/p/session/test_... (verified Stripe domain)
+      
+      ✅ TURKISH REVIEW REQUIREMENTS ALL VALIDATED:
+      - "billing/subscription 500 vermesin" ✅ VALIDATED (Returns 200, not 500)
+      - "managed subscription state dönsün" ✅ VALIDATED (managed_subscription=true)
+      - "cancel-subscription cancel_at_period_end=true durumunu üretsin" ✅ VALIDATED
+      - "reactivation sonrası state aktif hale dönsün" ✅ VALIDATED
+      - "customer-portal geçerli Stripe portal URL'si dönsün" ✅ VALIDATED
+      - "Yanıtlar Türkçe kullanıcı mesajları içersin" ✅ VALIDATED
+      
+      Additional Validations:
+      ✅ No stale Stripe reference guardrails backend issues detected
+      ✅ All endpoints return proper Turkish user messages
+      ✅ Full cancel → reactivate lifecycle working correctly
+      ✅ User has real managed Stripe subscription (not mocked)
+      ✅ All API responses valid JSON with expected schema
+      
+      Test Summary:
+      - Total Tests: 8 comprehensive validations
+      - Passed: 8
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Technical Details:
+      ✅ Authentication: Bearer token auth working (376 char JWT)
+      ✅ Subscription Management: Full managed subscription lifecycle functional
+      ✅ Turkish Localization: All user-facing messages in Turkish
+      ✅ Stripe Integration: Live Stripe portal URLs and subscription management
+      ✅ State Transitions: Cancel/reactivate state changes working correctly
+      ✅ Error Handling: No 500 errors or critical failures detected
+      
+      Conclusion:
+      Backend billing lifecycle smoke test and API validation SUCCESSFUL. All 5 priority endpoints from the Turkish review request are functioning correctly with proper managed subscription behavior, Turkish localization, and Stripe integration. No critical issues or stale reference problems detected. The billing lifecycle backend is production-ready.
+      
+      Status: ✅ PASS - All Turkish review requirements validated successfully

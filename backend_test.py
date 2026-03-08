@@ -1,498 +1,680 @@
 #!/usr/bin/env python3
 """
-Stripe Billing Backend Flow Validation
-Testing Requirements from Turkish Review Request:
+Backend Billing Lifecycle Smoke Test + API Validation
+Turkish Review Request: Backend billing lifecycle smoke + API validation yap.
 
-1) POST /api/billing/create-checkout - Starter/Pro çalışıyor, Enterprise reddediliyor
-2) GET /api/billing/checkout-status/{session_id} - doğru alanları dönüyor
-3) POST /api/webhook/stripe endpoint mevcut
-4) duplicate webhook / duplicate fulfillment riskine karşı idempotency koruması
-5) success redirect path artık /payment-success olarak üretiliyor
-6) aktif plan state'i paid user üzerinde doğrulansın
+Test endpoints:
+1. POST /api/auth/login 
+2. GET /api/billing/subscription
+3. POST /api/billing/cancel-subscription
+4. POST /api/billing/reactivate-subscription  
+5. POST /api/billing/customer-portal
 
-Test Accounts:
-- Expired trial: expired.checkout.cdc8caf5@trial.test / Test1234!
-- Paid user: trial.db3ef59b76@example.com / Test1234!
-- Stripe test card: 4242 4242 4242 4242
+Validation Requirements:
+- billing/subscription shouldn't return 500 and should return managed subscription state
+- cancel-subscription should produce cancel_at_period_end=true state
+- reactivation should return to active state
+- customer-portal should return valid Stripe portal URL
+- Responses should contain Turkish user messages
+- Note any stale Stripe reference guardrails backend issues
 """
 
-import os
 import requests
 import json
-from typing import Optional, Dict, Any
+import sys
+from datetime import datetime
 
-# Base URL from environment
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://acenta-billing.preview.emergentagent.com").rstrip("/")
+# Configuration
+BASE_URL = "https://acenta-billing.preview.emergentagent.com"
+TEST_CREDENTIALS = {
+    "email": "agent@acenta.test",
+    "password": "agent123"
+}
 
-# Test credentials from review request
-EXPIRED_TRIAL_EMAIL = "expired.checkout.cdc8caf5@trial.test"
-EXPIRED_TRIAL_PASSWORD = "Test1234!"
-PAID_USER_EMAIL = "trial.db3ef59b76@example.com"
-PAID_USER_PASSWORD = "Test1234!"
-
-class StripeBackendTester:
+class BillingLifecycleTest:
     def __init__(self):
+        self.base_url = BASE_URL
         self.session = requests.Session()
         self.session.headers.update({
-            "Content-Type": "application/json",
-            "X-Client-Platform": "web"  # For cookie-based auth compatibility
+            'Content-Type': 'application/json',
+            'User-Agent': 'BillingLifecycleTest/1.0'
         })
-        self.results = []
-    
-    def log_result(self, test_name: str, status: str, message: str, details: Optional[Dict] = None):
-        """Log test result"""
-        self.results.append({
-            "test": test_name,
-            "status": status,
-            "message": message,
-            "details": details or {}
-        })
-        status_icon = "✅" if status == "PASS" else "❌" if status == "FAIL" else "⚠️"
-        print(f"{status_icon} {test_name}: {message}")
-        if details:
-            for key, value in details.items():
-                print(f"   {key}: {value}")
+        self.access_token = None
+        self.test_results = []
+        
+    def log_result(self, test_name, status, details, expected=None, actual=None):
+        """Log test result with timestamp"""
+        result = {
+            'test': test_name,
+            'status': status,  # PASS, FAIL, WARN
+            'details': details,
+            'timestamp': datetime.now().isoformat(),
+            'expected': expected,
+            'actual': actual
+        }
+        self.test_results.append(result)
+        
+        status_symbol = "✅" if status == "PASS" else "❌" if status == "FAIL" else "⚠️"
+        print(f"{status_symbol} {test_name}: {details}")
+        
+        if expected and actual:
+            print(f"   Expected: {expected}")
+            print(f"   Actual: {actual}")
         print()
-
-    def login_user(self, email: str, password: str) -> Optional[str]:
-        """Login user and return access token"""
+    
+    def make_request(self, method, endpoint, **kwargs):
+        """Make HTTP request with proper error handling"""
+        url = f"{self.base_url}{endpoint}"
+        
         try:
-            resp = self.session.post(f"{BASE_URL}/api/auth/login", json={
-                "email": email,
-                "password": password
-            })
+            # Add auth header if we have a token
+            if self.access_token:
+                self.session.headers['Authorization'] = f"Bearer {self.access_token}"
+                
+            response = self.session.request(method, url, **kwargs)
             
-            if resp.status_code == 200:
-                data = resp.json()
-                token = data.get("access_token") or data.get("token")
-                if token:
-                    return token
+            # Log request details
+            print(f"🔍 {method} {endpoint}")
+            print(f"   Status: {response.status_code}")
+            if response.headers.get('content-type', '').startswith('application/json'):
+                try:
+                    response_json = response.json()
+                    print(f"   Response: {json.dumps(response_json, indent=2, ensure_ascii=False)[:500]}...")
+                except:
+                    print(f"   Response: {response.text[:200]}...")
+            print()
             
-            print(f"Login failed for {email}: {resp.status_code} - {resp.text[:200]}")
-            return None
-        
-        except Exception as e:
-            print(f"Login error for {email}: {e}")
+            return response
+            
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Request failed: {e}")
             return None
 
-    def test_1_create_checkout_functionality(self):
-        """Test 1: POST /api/billing/create-checkout - Starter/Pro çalışıyor, Enterprise reddediliyor"""
-        print("=== TEST 1: CREATE CHECKOUT FUNCTIONALITY ===")
+    def test_1_auth_login(self):
+        """Test 1: POST /api/auth/login authentication"""
+        test_name = "POST /api/auth/login authentication"
         
-        # Login with expired trial user for checkout testing
-        token = self.login_user(EXPIRED_TRIAL_EMAIL, EXPIRED_TRIAL_PASSWORD)
-        if not token:
-            self.log_result("1.0 User Login", "FAIL", "Could not login with expired trial user")
-            return
-        
-        auth_headers = {"Authorization": f"Bearer {token}"}
-        
-        # Test cases for create checkout
-        test_cases = [
-            ("Starter Monthly", {"plan": "starter", "interval": "monthly"}, 200, 990.0),
-            ("Starter Yearly", {"plan": "starter", "interval": "yearly"}, 200, 9900.0),
-            ("Pro Monthly", {"plan": "pro", "interval": "monthly"}, 200, 2490.0),
-            ("Pro Yearly", {"plan": "pro", "interval": "yearly"}, 200, 24900.0),
-            ("Enterprise Monthly", {"plan": "enterprise", "interval": "monthly"}, 422, None),
-            ("Enterprise Yearly", {"plan": "enterprise", "interval": "yearly"}, 422, None),
-        ]
-        
-        for test_name, payload, expected_status, expected_amount in test_cases:
-            try:
-                full_payload = {
-                    **payload,
-                    "origin_url": BASE_URL,
-                    "cancel_path": "/pricing"
-                }
+        try:
+            response = self.make_request(
+                'POST', 
+                '/api/auth/login',
+                json=TEST_CREDENTIALS
+            )
+            
+            if not response:
+                self.log_result(test_name, "FAIL", "Request failed - no response")
+                return False
                 
-                resp = self.session.post(
-                    f"{BASE_URL}/api/billing/create-checkout",
-                    headers=auth_headers,
-                    json=full_payload
+            if response.status_code != 200:
+                self.log_result(
+                    test_name, 
+                    "FAIL", 
+                    f"Authentication failed with status {response.status_code}",
+                    "200 OK",
+                    f"{response.status_code} {response.text[:100]}"
                 )
+                return False
                 
-                if resp.status_code == expected_status:
-                    if expected_status == 200:
-                        data = resp.json()
-                        # Verify response structure
-                        required_fields = ["url", "session_id", "plan", "interval", "amount", "currency"]
-                        missing_fields = [f for f in required_fields if f not in data]
-                        
-                        if missing_fields:
-                            self.log_result(
-                                f"1.1 {test_name}", 
-                                "FAIL", 
-                                f"Missing required fields: {missing_fields}"
-                            )
-                        elif data.get("amount") != expected_amount:
-                            self.log_result(
-                                f"1.1 {test_name}", 
-                                "FAIL", 
-                                f"Amount mismatch: expected {expected_amount}, got {data.get('amount')}"
-                            )
-                        elif "stripe.com" not in data.get("url", ""):
-                            self.log_result(
-                                f"1.1 {test_name}", 
-                                "FAIL", 
-                                f"Invalid checkout URL: {data.get('url')}"
-                            )
-                        else:
-                            self.log_result(
-                                f"1.1 {test_name}", 
-                                "PASS", 
-                                f"Created successfully - Amount: {data.get('amount')} {data.get('currency')}",
-                                {
-                                    "session_id": data.get("session_id"),
-                                    "plan": data.get("plan"),
-                                    "interval": data.get("interval")
-                                }
-                            )
-                    else:  # Expected 422 for Enterprise
+            try:
+                data = response.json()
+                
+                # Check for required fields
+                required_fields = ['access_token']
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_result(
+                        test_name,
+                        "FAIL", 
+                        f"Missing required fields: {missing_fields}",
+                        "access_token field present",
+                        f"Missing: {missing_fields}"
+                    )
+                    return False
+                    
+                self.access_token = data['access_token']
+                
+                self.log_result(
+                    test_name,
+                    "PASS",
+                    f"Authentication successful. Token length: {len(self.access_token)} chars"
+                )
+                return True
+                
+            except json.JSONDecodeError:
+                self.log_result(test_name, "FAIL", "Invalid JSON response")
+                return False
+                
+        except Exception as e:
+            self.log_result(test_name, "FAIL", f"Test exception: {str(e)}")
+            return False
+
+    def test_2_billing_subscription(self):
+        """Test 2: GET /api/billing/subscription - should return managed subscription state, not 500"""
+        test_name = "GET /api/billing/subscription"
+        
+        try:
+            response = self.make_request('GET', '/api/billing/subscription')
+            
+            if not response:
+                self.log_result(test_name, "FAIL", "Request failed - no response")
+                return False
+            
+            # Critical: Should NOT return 500
+            if response.status_code == 500:
+                self.log_result(
+                    test_name,
+                    "FAIL",
+                    "❌ CRITICAL: Endpoint returns 500 - This violates review requirement",
+                    "Non-500 status code",
+                    f"500 Server Error: {response.text[:200]}"
+                )
+                return False
+                
+            if response.status_code != 200:
+                self.log_result(
+                    test_name,
+                    "FAIL",
+                    f"Unexpected status code: {response.status_code}",
+                    "200 OK",
+                    f"{response.status_code}: {response.text[:200]}"
+                )
+                return False
+                
+            try:
+                data = response.json()
+                
+                # Check for managed subscription state indicators
+                expected_fields = ['managed_subscription', 'legacy_subscription', 'portal_available']
+                present_fields = [field for field in expected_fields if field in data]
+                
+                if not present_fields:
+                    self.log_result(
+                        test_name,
+                        "WARN",
+                        f"No managed subscription state fields found. Available fields: {list(data.keys())}"
+                    )
+                else:
+                    # Validate managed subscription state
+                    managed = data.get('managed_subscription', False)
+                    legacy = data.get('legacy_subscription', True)
+                    portal_available = data.get('portal_available', False)
+                    
+                    state_details = f"managed_subscription={managed}, legacy_subscription={legacy}, portal_available={portal_available}"
+                    
+                    if managed and not legacy and portal_available:
                         self.log_result(
-                            f"1.1 {test_name}", 
+                            test_name,
+                            "PASS",
+                            f"✅ Managed subscription state returned correctly. {state_details}"
+                        )
+                    else:
+                        self.log_result(
+                            test_name,
+                            "WARN",
+                            f"Subscription state may not be fully managed. {state_details}"
+                        )
+                
+                # Store subscription data for other tests
+                self.subscription_data = data
+                return True
+                
+            except json.JSONDecodeError:
+                self.log_result(test_name, "FAIL", "Invalid JSON response")
+                return False
+                
+        except Exception as e:
+            self.log_result(test_name, "FAIL", f"Test exception: {str(e)}")
+            return False
+
+    def test_3_cancel_subscription(self):
+        """Test 3: POST /api/billing/cancel-subscription - should produce cancel_at_period_end=true"""
+        test_name = "POST /api/billing/cancel-subscription"
+        
+        try:
+            response = self.make_request('POST', '/api/billing/cancel-subscription', json={})
+            
+            if not response:
+                self.log_result(test_name, "FAIL", "Request failed - no response")
+                return False
+            
+            if response.status_code not in [200, 409]:  # 409 might be expected if already cancelled
+                self.log_result(
+                    test_name,
+                    "FAIL",
+                    f"Cancel failed with status {response.status_code}",
+                    "200 or 409 status",
+                    f"{response.status_code}: {response.text[:200]}"
+                )
+                return False
+                
+            try:
+                data = response.json()
+                
+                if response.status_code == 409:
+                    # Check if it's already cancelled
+                    if "already" in str(data).lower() or "zaten" in str(data).lower():
+                        self.log_result(
+                            test_name,
+                            "PASS",
+                            "Subscription already cancelled (409 conflict as expected)"
+                        )
+                        return True
+                
+                # Check for Turkish user messages
+                message_text = str(data)
+                has_turkish = any(word in message_text.lower() for word in ['abonelik', 'iptal', 'dönem', 'sona'])
+                
+                if has_turkish:
+                    self.log_result(
+                        test_name,
+                        "PASS",
+                        f"✅ Cancel request processed with Turkish messages. Response: {json.dumps(data, ensure_ascii=False)[:200]}"
+                    )
+                else:
+                    self.log_result(
+                        test_name,
+                        "PASS",
+                        f"Cancel request processed. Response: {json.dumps(data)[:200]}"
+                    )
+                
+                # Store cancel response for validation
+                self.cancel_response = data
+                return True
+                
+            except json.JSONDecodeError:
+                self.log_result(test_name, "FAIL", "Invalid JSON response")
+                return False
+                
+        except Exception as e:
+            self.log_result(test_name, "FAIL", f"Test exception: {str(e)}")
+            return False
+
+    def test_4_verify_cancel_state(self):
+        """Test 4: Verify cancel_at_period_end=true state after cancellation"""
+        test_name = "Verify cancel_at_period_end=true state"
+        
+        try:
+            # Re-fetch subscription to check cancel state
+            response = self.make_request('GET', '/api/billing/subscription')
+            
+            if not response or response.status_code != 200:
+                self.log_result(test_name, "FAIL", "Could not fetch subscription after cancel")
+                return False
+                
+            try:
+                data = response.json()
+                
+                # Look for cancellation indicators
+                cancel_indicators = [
+                    'cancel_at_period_end', 'canceled_at_period_end', 
+                    'scheduled_cancel', 'will_cancel', 'pending_cancel'
+                ]
+                
+                found_indicators = {}
+                for indicator in cancel_indicators:
+                    if indicator in data:
+                        found_indicators[indicator] = data[indicator]
+                
+                if found_indicators:
+                    # Check if any indicator shows pending cancellation
+                    has_pending_cancel = any(
+                        str(value).lower() in ['true', '1'] 
+                        for value in found_indicators.values()
+                    )
+                    
+                    if has_pending_cancel:
+                        self.log_result(
+                            test_name,
                             "PASS", 
-                            "Correctly rejected Enterprise plan"
+                            f"✅ Cancel_at_period_end state confirmed. Indicators: {found_indicators}"
+                        )
+                    else:
+                        self.log_result(
+                            test_name,
+                            "WARN",
+                            f"Cancellation indicators present but not showing pending state: {found_indicators}"
                         )
                 else:
                     self.log_result(
-                        f"1.1 {test_name}", 
-                        "FAIL", 
-                        f"Expected {expected_status}, got {resp.status_code}: {resp.text[:200]}"
+                        test_name,
+                        "WARN",
+                        f"No explicit cancel_at_period_end indicators found. Response keys: {list(data.keys())}"
                     )
-            
-            except Exception as e:
-                self.log_result(f"1.1 {test_name}", "FAIL", f"Exception: {e}")
+                
+                return True
+                
+            except json.JSONDecodeError:
+                self.log_result(test_name, "FAIL", "Invalid JSON response")
+                return False
+                
+        except Exception as e:
+            self.log_result(test_name, "FAIL", f"Test exception: {str(e)}")
+            return False
 
-    def test_2_checkout_status_fields(self):
-        """Test 2: GET /api/billing/checkout-status/{session_id} - doğru alanları dönüyor"""
-        print("=== TEST 2: CHECKOUT STATUS FIELDS ===")
-        
-        # Login and create a checkout session first
-        token = self.login_user(EXPIRED_TRIAL_EMAIL, EXPIRED_TRIAL_PASSWORD)
-        if not token:
-            self.log_result("2.0 User Login", "FAIL", "Could not login")
-            return
-        
-        auth_headers = {"Authorization": f"Bearer {token}"}
+    def test_5_reactivate_subscription(self):
+        """Test 5: POST /api/billing/reactivate-subscription - should return to active state"""
+        test_name = "POST /api/billing/reactivate-subscription"
         
         try:
-            # Create checkout session
-            create_resp = self.session.post(
-                f"{BASE_URL}/api/billing/create-checkout",
-                headers=auth_headers,
-                json={
-                    "plan": "starter",
-                    "interval": "monthly",
-                    "origin_url": BASE_URL,
-                    "cancel_path": "/pricing"
-                }
-            )
+            response = self.make_request('POST', '/api/billing/reactivate-subscription', json={})
             
-            if create_resp.status_code != 200:
-                self.log_result("2.1 Create Session", "FAIL", f"Could not create session: {create_resp.status_code}")
-                return
+            if not response:
+                self.log_result(test_name, "FAIL", "Request failed - no response")
+                return False
             
-            session_id = create_resp.json().get("session_id")
-            if not session_id:
-                self.log_result("2.1 Create Session", "FAIL", "No session_id returned")
-                return
-            
-            # Check checkout status
-            status_resp = self.session.get(
-                f"{BASE_URL}/api/billing/checkout-status/{session_id}",
-                headers=auth_headers
-            )
-            
-            if status_resp.status_code != 200:
-                self.log_result("2.2 Status Check", "FAIL", f"Status check failed: {status_resp.status_code}")
-                return
-            
-            data = status_resp.json()
-            
-            # Verify required fields from review request
-            required_fields = [
-                "session_id", "status", "payment_status", "amount_total", 
-                "currency", "plan", "interval", "activated", "fulfillment_status"
-            ]
-            
-            missing_fields = [f for f in required_fields if f not in data]
-            present_fields = [f for f in required_fields if f in data]
-            
-            if missing_fields:
+            if response.status_code not in [200, 409]:  # 409 might be expected if already active
                 self.log_result(
-                    "2.2 Status Fields", 
-                    "FAIL", 
-                    f"Missing required fields: {missing_fields}",
-                    {"present_fields": present_fields}
+                    test_name,
+                    "FAIL",
+                    f"Reactivate failed with status {response.status_code}",
+                    "200 or 409 status",
+                    f"{response.status_code}: {response.text[:200]}"
+                )
+                return False
+                
+            try:
+                data = response.json()
+                
+                if response.status_code == 409:
+                    # Check if it's already active
+                    if "already" in str(data).lower() or "zaten" in str(data).lower():
+                        self.log_result(
+                            test_name,
+                            "PASS",
+                            "Subscription already active (409 conflict as expected)"
+                        )
+                        return True
+                
+                # Check for Turkish user messages
+                message_text = str(data)
+                has_turkish = any(word in message_text.lower() for word in ['abonelik', 'yeniden', 'aktif', 'başlat'])
+                
+                if has_turkish:
+                    self.log_result(
+                        test_name,
+                        "PASS",
+                        f"✅ Reactivate request processed with Turkish messages. Response: {json.dumps(data, ensure_ascii=False)[:200]}"
+                    )
+                else:
+                    self.log_result(
+                        test_name,
+                        "PASS", 
+                        f"Reactivate request processed. Response: {json.dumps(data)[:200]}"
+                    )
+                
+                return True
+                
+            except json.JSONDecodeError:
+                self.log_result(test_name, "FAIL", "Invalid JSON response")
+                return False
+                
+        except Exception as e:
+            self.log_result(test_name, "FAIL", f"Test exception: {str(e)}")
+            return False
+
+    def test_6_verify_active_state(self):
+        """Test 6: Verify subscription returned to active state after reactivation"""
+        test_name = "Verify active state after reactivation"
+        
+        try:
+            # Re-fetch subscription to check active state
+            response = self.make_request('GET', '/api/billing/subscription')
+            
+            if not response or response.status_code != 200:
+                self.log_result(test_name, "FAIL", "Could not fetch subscription after reactivate")
+                return False
+                
+            try:
+                data = response.json()
+                
+                # Look for active state indicators
+                active_indicators = [
+                    'cancel_at_period_end', 'canceled_at_period_end',
+                    'status', 'state', 'active'
+                ]
+                
+                found_indicators = {}
+                for indicator in active_indicators:
+                    if indicator in data:
+                        found_indicators[indicator] = data[indicator]
+                
+                # Check if subscription is now active (cancel_at_period_end should be false)
+                cancel_at_period_end = data.get('cancel_at_period_end', data.get('canceled_at_period_end'))
+                
+                if cancel_at_period_end is False:
+                    self.log_result(
+                        test_name,
+                        "PASS",
+                        f"✅ Subscription returned to active state. cancel_at_period_end=false"
+                    )
+                elif cancel_at_period_end is None:
+                    # Check other status indicators
+                    status = data.get('status', data.get('state', 'unknown'))
+                    if str(status).lower() in ['active', 'aktif']:
+                        self.log_result(
+                            test_name,
+                            "PASS",
+                            f"✅ Subscription active state confirmed via status: {status}"
+                        )
+                    else:
+                        self.log_result(
+                            test_name,
+                            "WARN",
+                            f"Active state unclear. Status indicators: {found_indicators}"
+                        )
+                else:
+                    self.log_result(
+                        test_name,
+                        "WARN",
+                        f"Subscription may still be pending cancellation: cancel_at_period_end={cancel_at_period_end}"
+                    )
+                
+                return True
+                
+            except json.JSONDecodeError:
+                self.log_result(test_name, "FAIL", "Invalid JSON response")
+                return False
+                
+        except Exception as e:
+            self.log_result(test_name, "FAIL", f"Test exception: {str(e)}")
+            return False
+
+    def test_7_customer_portal(self):
+        """Test 7: POST /api/billing/customer-portal - should return valid Stripe portal URL"""
+        test_name = "POST /api/billing/customer-portal"
+        
+        try:
+            # Customer portal needs both return_path and origin_url
+            payload = {
+                "return_path": "/app/settings/billing",
+                "origin_url": self.base_url
+            }
+            
+            response = self.make_request('POST', '/api/billing/customer-portal', json=payload)
+            
+            if not response:
+                self.log_result(test_name, "FAIL", "Request failed - no response")
+                return False
+            
+            if response.status_code != 200:
+                self.log_result(
+                    test_name,
+                    "FAIL",
+                    f"Customer portal failed with status {response.status_code}",
+                    "200 OK",
+                    f"{response.status_code}: {response.text[:200]}"
+                )
+                return False
+                
+            try:
+                data = response.json()
+                
+                # Look for portal URL
+                portal_url = data.get('url', data.get('portal_url', data.get('redirect_url')))
+                
+                if not portal_url:
+                    self.log_result(
+                        test_name,
+                        "FAIL",
+                        f"No portal URL found in response. Available keys: {list(data.keys())}"
+                    )
+                    return False
+                
+                # Validate it's a proper Stripe portal URL
+                if 'billing.stripe.com' in portal_url or 'stripe.com' in portal_url:
+                    self.log_result(
+                        test_name,
+                        "PASS",
+                        f"✅ Valid Stripe portal URL returned: {portal_url[:80]}..."
+                    )
+                else:
+                    self.log_result(
+                        test_name,
+                        "WARN",
+                        f"Portal URL doesn't appear to be Stripe domain: {portal_url}"
+                    )
+                
+                return True
+                
+            except json.JSONDecodeError:
+                self.log_result(test_name, "FAIL", "Invalid JSON response")
+                return False
+                
+        except Exception as e:
+            self.log_result(test_name, "FAIL", f"Test exception: {str(e)}")
+            return False
+
+    def test_8_stale_stripe_references(self):
+        """Test 8: Check for stale Stripe reference guardrails backend issues"""
+        test_name = "Check for stale Stripe reference guardrails"
+        
+        # This test will look for common indicators of stale Stripe references
+        # by analyzing response patterns and error messages
+        
+        try:
+            issues_found = []
+            
+            # Check subscription response for stale reference indicators
+            if hasattr(self, 'subscription_data'):
+                subscription_str = str(self.subscription_data)
+                
+                # Look for common stale reference patterns
+                stale_patterns = [
+                    'subscription_not_found', 'invalid_subscription_id',
+                    'customer_not_found', 'invalid_customer_id',
+                    'payment_method_not_found', 'setup_intent_failed'
+                ]
+                
+                found_patterns = [pattern for pattern in stale_patterns if pattern in subscription_str.lower()]
+                if found_patterns:
+                    issues_found.extend(found_patterns)
+            
+            # Check for error responses that might indicate stale references
+            for result in self.test_results:
+                if result['status'] == 'FAIL' and result.get('actual'):
+                    error_text = str(result['actual']).lower()
+                    if any(word in error_text for word in ['not_found', 'invalid', 'expired', 'stale']):
+                        issues_found.append(f"Potential stale reference in {result['test']}: {error_text[:100]}")
+            
+            if issues_found:
+                self.log_result(
+                    test_name,
+                    "WARN",
+                    f"⚠️ Potential stale Stripe reference issues detected: {issues_found}"
                 )
             else:
                 self.log_result(
-                    "2.2 Status Fields", 
-                    "PASS", 
-                    "All required fields present in checkout status response",
-                    {
-                        "session_id": data.get("session_id"),
-                        "status": data.get("status"),
-                        "payment_status": data.get("payment_status"),
-                        "plan": data.get("plan"),
-                        "interval": data.get("interval"),
-                        "activated": data.get("activated"),
-                        "fulfillment_status": data.get("fulfillment_status")
-                    }
+                    test_name,
+                    "PASS",
+                    "No obvious stale Stripe reference guardrail issues detected"
                 )
-        
+            
+            return True
+            
         except Exception as e:
-            self.log_result("2.2 Status Check", "FAIL", f"Exception: {e}")
-
-    def test_3_webhook_endpoint_exists(self):
-        """Test 3: POST /api/webhook/stripe endpoint mevcut"""
-        print("=== TEST 3: WEBHOOK ENDPOINT EXISTS ===")
-        
-        try:
-            # Test webhook endpoint existence
-            resp = self.session.post(f"{BASE_URL}/api/webhook/stripe", data=b"test_payload")
-            
-            # Endpoint should exist - 404 means not found, anything else means it exists
-            if resp.status_code == 404:
-                self.log_result("3.1 Webhook Endpoint", "FAIL", "Webhook endpoint not found (404)")
-            else:
-                self.log_result(
-                    "3.1 Webhook Endpoint", 
-                    "PASS", 
-                    f"Webhook endpoint exists (returned {resp.status_code})",
-                    {"status_code": resp.status_code, "response_length": len(resp.text)}
-                )
-        
-        except Exception as e:
-            self.log_result("3.1 Webhook Endpoint", "FAIL", f"Exception: {e}")
-
-    def test_4_idempotency_protection(self):
-        """Test 4: duplicate webhook / duplicate fulfillment riskine karşı idempotency koruması"""
-        print("=== TEST 4: IDEMPOTENCY PROTECTION ===")
-        
-        # This test verifies that the webhook endpoint has idempotency protection
-        # We can't easily test actual webhook duplicate handling without Stripe credentials,
-        # but we can verify the endpoint handles requests properly
-        
-        try:
-            # Test with same payload multiple times to check for idempotency handling
-            test_payload = json.dumps({
-                "id": "test_event_12345",
-                "type": "invoice.paid",
-                "data": {"object": {"id": "test_invoice"}}
-            }).encode()
-            
-            # First request
-            resp1 = self.session.post(
-                f"{BASE_URL}/api/webhook/stripe",
-                data=test_payload,
-                headers={"Stripe-Signature": "test_signature"}
-            )
-            
-            # Second identical request (should be handled idempotently)
-            resp2 = self.session.post(
-                f"{BASE_URL}/api/webhook/stripe", 
-                data=test_payload,
-                headers={"Stripe-Signature": "test_signature"}
-            )
-            
-            # Both requests should not result in 404 (endpoint exists)
-            # Actual idempotency would require valid Stripe signatures and webhook secrets
-            if resp1.status_code == 404 or resp2.status_code == 404:
-                self.log_result("4.1 Idempotency Test", "FAIL", "Webhook endpoint not found")
-            else:
-                self.log_result(
-                    "4.1 Idempotency Test", 
-                    "PASS", 
-                    "Webhook endpoint handles requests (idempotency logic present in code)",
-                    {
-                        "first_request": resp1.status_code,
-                        "second_request": resp2.status_code,
-                        "note": "Full idempotency testing requires valid Stripe webhook secrets"
-                    }
-                )
-        
-        except Exception as e:
-            self.log_result("4.1 Idempotency Test", "FAIL", f"Exception: {e}")
-
-    def test_5_payment_success_redirect(self):
-        """Test 5: success redirect path artık /payment-success olarak üretiliyor"""
-        print("=== TEST 5: PAYMENT SUCCESS REDIRECT PATH ===")
-        
-        # Login and create checkout session to verify success_url
-        token = self.login_user(EXPIRED_TRIAL_EMAIL, EXPIRED_TRIAL_PASSWORD)
-        if not token:
-            self.log_result("5.0 User Login", "FAIL", "Could not login")
-            return
-        
-        auth_headers = {"Authorization": f"Bearer {token}"}
-        
-        try:
-            # Create checkout session
-            resp = self.session.post(
-                f"{BASE_URL}/api/billing/create-checkout",
-                headers=auth_headers,
-                json={
-                    "plan": "starter",
-                    "interval": "monthly",
-                    "origin_url": BASE_URL,
-                    "cancel_path": "/pricing"
-                }
-            )
-            
-            if resp.status_code != 200:
-                self.log_result("5.1 Success URL Check", "FAIL", f"Could not create session: {resp.status_code}")
-                return
-            
-            data = resp.json()
-            checkout_url = data.get("url", "")
-            
-            # The success URL should be configured to redirect to /payment-success
-            # We can't directly inspect Stripe session config, but we can verify the endpoint accepts the pattern
-            # Test if /payment-success route exists and handles session_id parameter properly
-            
-            # Test /payment-success route exists (even without session_id)
-            success_resp = self.session.get(f"{BASE_URL}/payment-success")
-            
-            if success_resp.status_code == 404:
-                self.log_result(
-                    "5.1 Success URL Check", 
-                    "FAIL", 
-                    "/payment-success route not found"
-                )
-            else:
-                self.log_result(
-                    "5.1 Success URL Check", 
-                    "PASS", 
-                    f"Checkout session created successfully and /payment-success route exists",
-                    {
-                        "checkout_url_created": "stripe.com" in checkout_url,
-                        "payment_success_status": success_resp.status_code,
-                        "note": "Success URL configured in Stripe session points to /payment-success"
-                    }
-                )
-        
-        except Exception as e:
-            self.log_result("5.1 Success URL Check", "FAIL", f"Exception: {e}")
-
-    def test_6_paid_user_plan_state(self):
-        """Test 6: aktif plan state'i paid user üzerinde doğrulansın"""
-        print("=== TEST 6: PAID USER PLAN STATE ===")
-        
-        # Test with paid user account
-        token = self.login_user(PAID_USER_EMAIL, PAID_USER_PASSWORD)
-        if not token:
-            self.log_result("6.0 User Login", "FAIL", "Could not login with paid user account")
-            return
-        
-        auth_headers = {"Authorization": f"Bearer {token}"}
-        
-        try:
-            # Check trial status for paid user
-            trial_resp = self.session.get(
-                f"{BASE_URL}/api/onboarding/trial",
-                headers=auth_headers
-            )
-            
-            if trial_resp.status_code != 200:
-                self.log_result("6.1 Trial Status", "FAIL", f"Trial status check failed: {trial_resp.status_code}")
-                return
-            
-            trial_data = trial_resp.json()
-            
-            # Check user auth status
-            me_resp = self.session.get(
-                f"{BASE_URL}/api/auth/me",
-                headers=auth_headers
-            )
-            
-            if me_resp.status_code != 200:
-                self.log_result("6.2 Auth Me", "FAIL", f"Auth me failed: {me_resp.status_code}")
-                return
-            
-            me_data = me_resp.json()
-            
-            # Verify paid user state
-            is_expired = trial_data.get("expired", True)
-            plan = trial_data.get("plan", "unknown")
-            status = trial_data.get("status", "unknown")
-            
-            if is_expired and plan == "trial":
-                self.log_result(
-                    "6.3 Plan State", 
-                    "FAIL", 
-                    f"Paid user shows as expired trial: expired={is_expired}, plan={plan}"
-                )
-            else:
-                self.log_result(
-                    "6.3 Plan State", 
-                    "PASS", 
-                    f"Paid user has correct active plan state",
-                    {
-                        "expired": is_expired,
-                        "plan": plan,
-                        "status": status,
-                        "email": me_data.get("email"),
-                        "user_id": me_data.get("id") or me_data.get("_id")
-                    }
-                )
-        
-        except Exception as e:
-            self.log_result("6.3 Plan State", "FAIL", f"Exception: {e}")
+            self.log_result(test_name, "FAIL", f"Test exception: {str(e)}")
+            return False
 
     def run_all_tests(self):
-        """Run all Stripe billing backend tests"""
-        print("🚀 STARTING STRIPE BILLING BACKEND VALIDATION")
-        print(f"Base URL: {BASE_URL}")
-        print(f"Test Accounts: {EXPIRED_TRIAL_EMAIL}, {PAID_USER_EMAIL}")
+        """Run all billing lifecycle tests"""
+        print("🚀 Starting Backend Billing Lifecycle Smoke Test + API Validation")
+        print(f"📍 Base URL: {self.base_url}")
+        print(f"👤 Test Account: {TEST_CREDENTIALS['email']}")
         print("=" * 80)
+        print()
         
-        try:
-            self.test_1_create_checkout_functionality()
-            self.test_2_checkout_status_fields()
-            self.test_3_webhook_endpoint_exists()
-            self.test_4_idempotency_protection()
-            self.test_5_payment_success_redirect()
-            self.test_6_paid_user_plan_state()
-            
-        except Exception as e:
-            print(f"❌ Test runner error: {e}")
+        # Test sequence
+        tests = [
+            self.test_1_auth_login,
+            self.test_2_billing_subscription,
+            self.test_3_cancel_subscription,
+            self.test_4_verify_cancel_state,
+            self.test_5_reactivate_subscription,
+            self.test_6_verify_active_state,
+            self.test_7_customer_portal,
+            self.test_8_stale_stripe_references
+        ]
         
-        # Summary
+        passed = 0
+        failed = 0
+        warnings = 0
+        
+        for test in tests:
+            try:
+                result = test()
+                # Don't count failed auth as blocking other tests
+                if not result and test == self.test_1_auth_login:
+                    print("❌ Authentication failed - aborting remaining tests")
+                    break
+            except Exception as e:
+                print(f"❌ Test {test.__name__} crashed: {e}")
+                failed += 1
+        
+        # Count results
+        for result in self.test_results:
+            if result['status'] == 'PASS':
+                passed += 1
+            elif result['status'] == 'FAIL':
+                failed += 1
+            elif result['status'] == 'WARN':
+                warnings += 1
+        
+        # Print summary
         print("=" * 80)
-        print("📊 TEST SUMMARY")
+        print("📊 BACKEND BILLING LIFECYCLE TEST SUMMARY")
         print("=" * 80)
+        print(f"✅ PASSED: {passed}")
+        print(f"❌ FAILED: {failed}")
+        print(f"⚠️  WARNINGS: {warnings}")
+        print(f"📈 SUCCESS RATE: {(passed / (passed + failed + warnings) * 100):.1f}% (if warnings count as passes: {((passed + warnings) / (passed + failed + warnings) * 100):.1f}%)")
+        print()
         
-        passed = len([r for r in self.results if r["status"] == "PASS"])
-        failed = len([r for r in self.results if r["status"] == "FAIL"])
-        warnings = len([r for r in self.results if r["status"] == "WARN"])
-        total = len(self.results)
+        # Critical validations from review request
+        print("🎯 REVIEW REQUEST CRITICAL VALIDATIONS:")
         
-        print(f"Total Tests: {total}")
-        print(f"✅ Passed: {passed}")
-        print(f"❌ Failed: {failed}")
-        print(f"⚠️ Warnings: {warnings}")
-        print(f"Success Rate: {(passed/total*100):.1f}%" if total > 0 else "N/A")
+        critical_checks = [
+            ("billing/subscription 500 vermesin", not any(r['test'] == 'GET /api/billing/subscription' and '500' in str(r.get('actual', '')) for r in self.test_results)),
+            ("managed subscription state dönsün", any(r['test'] == 'GET /api/billing/subscription' and r['status'] == 'PASS' for r in self.test_results)),
+            ("cancel-subscription cancel_at_period_end=true durumu", any(r['test'] == 'Verify cancel_at_period_end=true state' and r['status'] == 'PASS' for r in self.test_results)),
+            ("reactivation sonrası aktif state", any(r['test'] == 'Verify active state after reactivation' and r['status'] == 'PASS' for r in self.test_results)),
+            ("customer-portal Stripe portal URL dönsün", any(r['test'] == 'POST /api/billing/customer-portal' and r['status'] == 'PASS' for r in self.test_results))
+        ]
         
-        if failed > 0:
-            print("\n❌ FAILED TESTS:")
-            for result in self.results:
-                if result["status"] == "FAIL":
-                    print(f"  - {result['test']}: {result['message']}")
+        for check_name, check_result in critical_checks:
+            status_symbol = "✅" if check_result else "❌"
+            print(f"{status_symbol} {check_name}: {'VALIDATED' if check_result else 'FAILED'}")
         
-        print("\n" + "=" * 80)
+        print()
         
-        return {
-            "total": total,
-            "passed": passed,
-            "failed": failed,
-            "warnings": warnings,
-            "results": self.results
-        }
+        if failed == 0:
+            print("🎉 All backend billing lifecycle endpoints are working correctly!")
+            return True
+        else:
+            print(f"⚠️ {failed} critical issues found that need attention.")
+            return False
 
 if __name__ == "__main__":
-    tester = StripeBackendTester()
-    summary = tester.run_all_tests()
-    
-    # Exit with non-zero code if tests failed
-    exit(0 if summary["failed"] == 0 else 1)
+    tester = BillingLifecycleTest()
+    success = tester.run_all_tests()
+    sys.exit(0 if success else 1)

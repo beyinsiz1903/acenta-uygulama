@@ -80,10 +80,10 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 - Trial önerisi rezervasyon kullanım oranı odaklı çalışır; %70 demo senaryosunda `Pro Plan` önerilir
 
 ### Pricing & Demo Sales Surface
-- Public `/pricing` sayfası satış odaklı olarak yeniden kurgulandı
-- Public `/demo` sayfası eklendi; funnel başlangıcı olarak Instagram / outbound trafiğini karşılar
-- Public `/signup` akışı Trial-first olacak şekilde güncellendi
-- `/api/onboarding/plans` plan kataloğu gerçek fiyat ve limitlerle hizalandı
+- Public `/pricing` sayfası satış odaklı olarak yeniden kurgulandı; Türkçe satış copy, net plan kartları ve sosyal kanıt bloğu ile finalize edildi
+- Public `/demo` sayfası funnel başlangıcı olarak finalize edildi; `Hero -> Problem -> Çözüm -> CTA` yapısı canlı
+- Public `/signup` akışı Trial-first olacak şekilde güncellendi ve CTA’lar `/pricing` + `/demo` üzerinden buna bağlandı
+- `/api/onboarding/plans` plan kataloğu gerçek fiyat ve limitlerle hizalı; frontend tarafında API fallback kataloğu da eklendi
 
 #### Canlı Fiyat Matrisi
 - **Trial:** 14 gün, 100 rezervasyon, 2 kullanıcı, tüm çekirdek özellikler açık
@@ -138,21 +138,23 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - trial conversion recommendation
 
 ## Son Uygulama Notu — 2026-03-08
-- PR-UM5 tamamlandı ve doğrulandı
-- Demo tenant doğrulama durumu:
-  - `reservation.created` → 70/100 (`warning`)
-  - `report.generated` → 17/20 (`critical`)
-  - `export.generated` → 10/10 (`limit_reached`)
-- Frontend + backend testleri geçti; CTA akışı `/pricing` sayfasına kadar doğrulandı
-- Pricing + Demo turu tamamlandı:
-  - `/pricing` yalnız ücretli planları gösterir; Trial public katalogda gizli tutulur
-  - `/demo` → `/signup` public conversion akışı aktif
-  - Signup artık Trial-first başlar; 14 günlük deneme süresi backend tarafından üretilir
+- PR-UM5 tamamlandı; kullanıcı manuel doğrulaması daha sonra yapılabilir, fakat önce go-to-market yüzeyi tamamlandı
+- Public acquisition funnel finalize edildi:
+  - `/pricing` başlığı `Acenteniz için doğru planı seçin` olarak güncellendi
+  - Planlar: Starter ₺990, Pro ₺2.490, Enterprise ₺6.990; her kart kullanıcı tarafından verilen net bullet listeleri gösteriyor
+  - Kritik sosyal kanıt bloğu eklendi: `Turizm acenteleri Syroce ile operasyon süreçlerini %40 daha hızlı yönetiyor.`
+  - `/demo` sayfası kullanıcı isteğine göre `Hero -> Problem -> Çözüm -> CTA` yapısında finalize edildi
+- Trial conversion akışı aktif:
+  - `/pricing` ve `/demo` CTA’ları `/signup?plan=trial` akışına bağlandı
+  - Plan bazlı CTA’lar `selectedPlan` query param ile signup ekranına yönlendiriyor
+- Doğrulama tamamlandı:
+  - Manuel smoke test: preview üzerinde `/pricing -> /demo` geçişi doğrulandı
+  - Testing agent raporu: `/app/test_reports/iteration_25.json` → frontend %100 geçti
 
 ## Öncelikli Sonraki Adımlar
+- **P1:** Trial signup akışını satış funnel’ı ile daha sıkı bağlama (ilk giriş sonrası onboarding/paket yönlendirme polish)
 - **P1:** Trial bitiş mesajı + upgrade seçim ekranı
 - **P1:** Hard quota enforcement
-- **P1:** Pricing sayfasına sosyal kanıt / müşteri hikâyesi / ROI bölümü eklemek
 - **P2:** Admin demo agency oluşturma butonu
 - **P2:** Admin endpoint cleanup (`/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`)
 

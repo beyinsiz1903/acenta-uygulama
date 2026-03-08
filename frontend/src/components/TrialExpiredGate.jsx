@@ -29,6 +29,9 @@ export default function TrialExpiredGate() {
                 <p className="max-w-xl text-base leading-7 text-slate-600 md:text-lg" data-testid="trial-expired-subtitle">
                   Syroce'u kullanmaya devam etmek için bir plan seçin. Tüm verileriniz korunuyor.
                 </p>
+                <p className="max-w-xl text-sm font-semibold leading-6 text-[#d16024]" data-testid="trial-expired-roi-copy">
+                  Syroce kullanan acenteler operasyon süresini %40 azaltıyor.
+                </p>
               </div>
 
               <div className="grid gap-3" data-testid="trial-expired-benefits">

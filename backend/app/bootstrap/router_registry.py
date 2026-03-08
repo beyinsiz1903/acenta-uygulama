@@ -87,6 +87,7 @@ from app.routers.b2b_network_bookings import router as b2b_network_bookings_rout
 from app.routers.b2b_portal import router as b2b_portal_router
 from app.routers.b2b_quotes import router as b2b_quotes_router
 from app.routers.billing_webhooks import router as billing_webhooks_router
+from app.routers.billing_checkout import router as billing_checkout_router
 from app.routers.booking_outcomes import router as booking_outcomes_router
 from app.routers.bookings import router as bookings_router
 from app.routers.cache_management import router as cache_management_router
@@ -313,6 +314,7 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(public_campaigns_router)
     register_v1_routers(app)
     app.include_router(onboarding_router)
+    app.include_router(billing_checkout_router)
     app.include_router(webpos_router)
     app.include_router(notifications_router)
     app.include_router(advanced_reports_router)

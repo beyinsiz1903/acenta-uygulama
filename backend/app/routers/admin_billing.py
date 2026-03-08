@@ -96,12 +96,12 @@ async def admin_get_plan_catalog() -> dict:
 async def admin_seed_plan_catalog() -> dict:
   """Super-admin: seed plan catalog with default prices. Idempotent."""
   defaults = [
-    {"plan": "starter", "interval": "monthly", "currency": "TRY", "amount": 499.0, "provider_price_id": "price_starter_monthly_try"},
-    {"plan": "pro", "interval": "monthly", "currency": "TRY", "amount": 999.0, "provider_price_id": "price_pro_monthly_try"},
-    {"plan": "enterprise", "interval": "monthly", "currency": "TRY", "amount": 2499.0, "provider_price_id": "price_enterprise_monthly_try"},
-    {"plan": "starter", "interval": "yearly", "currency": "TRY", "amount": 4990.0, "provider_price_id": "price_starter_yearly_try"},
-    {"plan": "pro", "interval": "yearly", "currency": "TRY", "amount": 9990.0, "provider_price_id": "price_pro_yearly_try"},
-    {"plan": "enterprise", "interval": "yearly", "currency": "TRY", "amount": 24990.0, "provider_price_id": "price_enterprise_yearly_try"},
+    {"plan": "starter", "interval": "monthly", "currency": "TRY", "amount": 990.0, "provider_price_id": "price_starter_monthly_try"},
+    {"plan": "pro", "interval": "monthly", "currency": "TRY", "amount": 2490.0, "provider_price_id": "price_pro_monthly_try"},
+    {"plan": "enterprise", "interval": "monthly", "currency": "TRY", "amount": 6990.0, "provider_price_id": "price_enterprise_monthly_try"},
+    {"plan": "starter", "interval": "yearly", "currency": "TRY", "amount": 9900.0, "provider_price_id": "price_starter_yearly_try"},
+    {"plan": "pro", "interval": "yearly", "currency": "TRY", "amount": 24900.0, "provider_price_id": "price_pro_yearly_try"},
+    {"plan": "enterprise", "interval": "yearly", "currency": "TRY", "amount": 69900.0, "provider_price_id": "price_enterprise_yearly_try"},
   ]
 
   seeded = 0
@@ -361,7 +361,7 @@ async def admin_provision_stripe_products(
       for currency in ["TRY"]:
         key = (plan_key, interval, currency)
         existing = catalog_map.get(key)
-        amount = existing["amount"] if existing else (499 if plan_key == "starter" else 999 if plan_key == "pro" else 2499)
+        amount = existing["amount"] if existing else (990 if plan_key == "starter" else 2490 if plan_key == "pro" else 6990)
         if interval == "yearly":
           amount = amount * 10
 

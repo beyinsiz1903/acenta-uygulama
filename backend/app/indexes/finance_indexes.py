@@ -237,7 +237,27 @@ async def ensure_finance_indexes(db):
     )
 
     # ========================================================================
-    # 10) click_to_pay_links
+    # 11) payment_transactions (SaaS checkout transactions)
+    # ========================================================================
+    await _safe_create(
+        db.payment_transactions,
+        [("session_id", ASCENDING)],
+        unique=True,
+        name="uniq_payment_transactions_session_id",
+    )
+    await _safe_create(
+        db.payment_transactions,
+        [("tenant_id", ASCENDING), ("created_at", DESCENDING)],
+        name="payment_transactions_by_tenant_created",
+    )
+    await _safe_create(
+        db.payment_transactions,
+        [("provider", ASCENDING), ("payment_status", ASCENDING), ("updated_at", DESCENDING)],
+        name="payment_transactions_by_status",
+    )
+
+    # ========================================================================
+    # 12) click_to_pay_links
     # ========================================================================
     # Click-to-pay links: token_hash uniqueness + TTL index on expires_at
     await _safe_create(
@@ -254,7 +274,7 @@ async def ensure_finance_indexes(db):
     )
 
     # ========================================================================
-    # 11) parasut_push_log (idempotent Paraşüt pushes)
+    # 13) parasut_push_log (idempotent Paraşüt pushes)
     # ========================================================================
     await _safe_create(
         db.parasut_push_log,

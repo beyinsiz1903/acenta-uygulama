@@ -3983,6 +3983,28 @@
   },
   {
     "compat_required": true,
+    "current_namespace": "/api/billing",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "billing",
+    "path": "/api/billing/checkout-status/{session_id}",
+    "risk_level": "high",
+    "source": "app.routers.billing_checkout",
+    "target_namespace": "/api/v1/billing"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/billing",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "billing",
+    "path": "/api/billing/create-checkout",
+    "risk_level": "high",
+    "source": "app.routers.billing_checkout",
+    "target_namespace": "/api/v1/billing"
+  },
+  {
+    "compat_required": true,
     "current_namespace": "/api/bookings",
     "legacy_or_v1": "legacy",
     "method": "GET",
@@ -7401,6 +7423,17 @@
     "risk_level": "high",
     "source": "app.routers.web_catalog",
     "target_namespace": "/api/v1/public"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/webhook",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "integrations",
+    "path": "/api/webhook/stripe",
+    "risk_level": "high",
+    "source": "app.routers.billing_checkout",
+    "target_namespace": "/api/v1/webhooks"
   },
   {
     "compat_required": true,

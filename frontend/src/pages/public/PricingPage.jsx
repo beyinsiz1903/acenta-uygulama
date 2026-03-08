@@ -1,19 +1,22 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, BadgeCheck, CheckCircle2, Clock3, Sparkles, Users } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "../../components/ui/button";
-import { api } from "../../lib/api";
+import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
+import { api, getUser } from "../../lib/api";
+import { createCheckoutSession } from "../../lib/billing";
+import { getActiveTenantId } from "../../lib/tenantContext";
 import { useSeo } from "../../hooks/useSeo";
 
 const PAID_PLAN_ORDER = ["starter", "pro", "enterprise"];
 
-const STATIC_PLANS = {
+const PLAN_DISPLAY = {
   starter: {
     key: "starter",
     label: "Starter",
     audience: "Küçük acenteler için",
-    pricing: { monthly: 990 },
     description: "Excel ile büyümeye çalışan ekipler için net başlangıç paketi.",
     features: [
       "100 rezervasyon",
@@ -21,12 +24,15 @@ const STATIC_PLANS = {
       "Temel raporlar",
       "Google Sheets entegrasyonu",
     ],
+    pricing: {
+      monthly: { amount: 990, label: "₺990", period: "/ ay" },
+      yearly: { amount: 9900, label: "₺9.900", period: "/ yıl", badge: "2 ay ücretsiz" },
+    },
   },
   pro: {
     key: "pro",
     label: "Pro",
     audience: "Önerilen plan",
-    pricing: { monthly: 2490 },
     description: "Satış ve operasyon akışını tek panelde toplamak isteyen büyüyen acenteler için.",
     features: [
       "500 rezervasyon",
@@ -34,20 +40,27 @@ const STATIC_PLANS = {
       "Tüm raporlar",
       "Export ve entegrasyonlar",
     ],
+    pricing: {
+      monthly: { amount: 2490, label: "₺2.490", period: "/ ay" },
+      yearly: { amount: 24900, label: "₺24.900", period: "/ yıl", badge: "2 ay ücretsiz" },
+    },
     is_popular: true,
   },
   enterprise: {
     key: "enterprise",
     label: "Enterprise",
     audience: "Büyük operasyonlar için",
-    pricing: { monthly: 6990 },
-    description: "Yüksek hacim, API erişimi ve özel entegrasyon gerektiren ekipler için.",
+    description: "Yüksek hacim, özel entegrasyon ve sözleşmeli destek gerektiren ekipler için.",
     features: [
       "Sınırsız rezervasyon",
       "Sınırsız kullanıcı",
       "API erişimi",
       "Özel entegrasyon",
     ],
+    pricing: {
+      monthly: { amount: 6990, label: "₺6.990", period: "/ ay" },
+      yearly: { amount: 69900, label: "Özel teklif", period: "" },
+    },
   },
 };
 
@@ -88,16 +101,12 @@ const PRICING_SOLUTIONS = [
   "Entegrasyonlar",
 ];
 
-function formatMonthlyPrice(pricing = {}) {
-  if (typeof pricing?.monthly === "number") {
-    return `₺${pricing.monthly.toLocaleString("tr-TR")}`;
-  }
-
-  return "İletişime geçin";
-}
-
 export default function PricingPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [plans, setPlans] = useState([]);
+  const [billingCycle, setBillingCycle] = useState("monthly");
+  const [checkoutPlan, setCheckoutPlan] = useState("");
 
   useSeo({
     title: "Acenteniz için doğru planı seçin",
@@ -117,7 +126,7 @@ export default function PricingPage() {
     const fetchedMap = new Map((plans || []).map((plan) => [plan.key || plan.name, plan]));
 
     return PAID_PLAN_ORDER.map((key) => {
-      const fallbackPlan = STATIC_PLANS[key];
+      const fallbackPlan = PLAN_DISPLAY[key];
       const fetchedPlan = fetchedMap.get(key) || {};
 
       return {
@@ -127,12 +136,43 @@ export default function PricingPage() {
         label: fetchedPlan.label || fallbackPlan.label,
         audience: fallbackPlan.audience,
         description: fallbackPlan.description,
-        pricing: fetchedPlan.pricing || fallbackPlan.pricing,
         features: fallbackPlan.features,
+        pricing: fallbackPlan.pricing,
         is_popular: key === "pro",
       };
     });
   }, [plans]);
+
+  const resolvedUser = getUser();
+  const hasCheckoutIdentity = Boolean(resolvedUser?.email && (getActiveTenantId() || resolvedUser?.organization_id));
+
+  async function handlePlanCheckout(planKey) {
+    if (planKey === "enterprise") {
+      navigate("/demo");
+      return;
+    }
+
+    if (!hasCheckoutIdentity) {
+      toast.info("Önce trial hesabınızı oluşturun, sonra ödeme adımına geçin.");
+      navigate(`/signup?plan=trial&selectedPlan=${planKey}`);
+      return;
+    }
+
+    setCheckoutPlan(planKey);
+    try {
+      const result = await createCheckoutSession({
+        plan: planKey,
+        interval: billingCycle,
+        origin_url: window.location.origin,
+        cancel_path: `${location.pathname}${location.search}`,
+      });
+      window.location.href = result.url;
+    } catch (err) {
+      toast.error(err?.message || "Stripe checkout başlatılamadı.");
+    } finally {
+      setCheckoutPlan("");
+    }
+  }
 
   return (
     <div
@@ -230,7 +270,7 @@ export default function PricingPage() {
         </section>
 
         <section className="space-y-8" data-testid="pricing-cards-section">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#d16024]" data-testid="pricing-section-eyebrow">
                 Planlar
@@ -239,63 +279,90 @@ export default function PricingPage() {
                 Küçük ekibiniz de büyük operasyonunuz da aynı panelde büyüsün
               </h2>
             </div>
-            <p className="max-w-xl text-sm leading-6 text-slate-600" data-testid="pricing-section-description">
-              İhtiyacınıza göre başlayın; işiniz büyüdükçe paketiniz de sizinle birlikte büyüsün.
-            </p>
+
+            <div className="space-y-3" data-testid="pricing-billing-cycle-wrap">
+              <p className="text-sm text-slate-600" data-testid="pricing-billing-cycle-description">Starter ve Pro için Stripe test mode checkout aktif. Enterprise için satış görüşmesi yapılır.</p>
+              <Tabs value={billingCycle} onValueChange={setBillingCycle} data-testid="pricing-billing-cycle-tabs">
+                <TabsList className="h-11 rounded-xl bg-[#f4f6f6] p-1" data-testid="pricing-billing-cycle-list">
+                  <TabsTrigger value="monthly" className="rounded-lg px-4" data-testid="pricing-billing-cycle-monthly">Aylık</TabsTrigger>
+                  <TabsTrigger value="yearly" className="rounded-lg px-4" data-testid="pricing-billing-cycle-yearly">Yıllık</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-3" data-testid="pricing-plan-grid">
-            {publicPlans.map((plan) => (
-              <article
-                key={plan.key}
-                className={`relative flex h-full flex-col overflow-hidden rounded-[1.9rem] border p-7 shadow-[0_25px_80px_rgba(38,70,83,0.08)] transition-transform duration-300 hover:-translate-y-1 ${plan.is_popular ? "border-[#f3722c] bg-[#fff8f2]" : "border-white bg-white/95"}`}
-                data-testid={`pricing-plan-${plan.key}`}
-              >
-                {plan.is_popular ? (
-                  <div className="absolute right-5 top-5 rounded-full bg-[#f3722c] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white" data-testid={`pricing-plan-badge-${plan.key}`}>
-                    Önerilen
-                  </div>
-                ) : null}
+            {publicPlans.map((plan) => {
+              const activePricing = plan.pricing?.[billingCycle] || plan.pricing?.monthly;
+              const isEnterprise = plan.key === "enterprise";
+              const isLoading = checkoutPlan === plan.key;
 
-                <div className="space-y-5">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#2a9d8f]" data-testid={`pricing-plan-audience-${plan.key}`}>
-                      {plan.audience}
+              return (
+                <article
+                  key={plan.key}
+                  className={`relative flex h-full flex-col overflow-hidden rounded-[1.9rem] border p-7 shadow-[0_25px_80px_rgba(38,70,83,0.08)] transition-transform duration-300 hover:-translate-y-1 ${plan.is_popular ? "border-[#f3722c] bg-[#fff8f2]" : "border-white bg-white/95"}`}
+                  data-testid={`pricing-plan-${plan.key}`}
+                >
+                  {plan.is_popular ? (
+                    <div className="absolute right-5 top-5 rounded-full bg-[#f3722c] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white" data-testid={`pricing-plan-badge-${plan.key}`}>
+                      Önerilen
+                    </div>
+                  ) : null}
+
+                  <div className="space-y-5">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#2a9d8f]" data-testid={`pricing-plan-audience-${plan.key}`}>
+                        {plan.audience}
+                      </p>
+                      <h3 className="mt-3 text-3xl font-extrabold tracking-[-0.03em] text-slate-900" style={{ fontFamily: "Manrope, Inter, sans-serif" }} data-testid={`pricing-plan-label-${plan.key}`}>
+                        {plan.label}
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-slate-600" data-testid={`pricing-plan-description-${plan.key}`}>
+                        {plan.description}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-end gap-2" data-testid={`pricing-plan-price-wrap-${plan.key}`}>
+                      <span className="text-4xl font-extrabold tracking-[-0.04em] text-slate-900" style={{ fontFamily: "Manrope, Inter, sans-serif" }} data-testid={`pricing-plan-price-${plan.key}`}>
+                        {activePricing?.label}
+                      </span>
+                      <span className="pb-1 text-sm font-medium text-slate-500" data-testid={`pricing-plan-period-${plan.key}`}>
+                        {activePricing?.period}
+                      </span>
+                      {activePricing?.badge ? (
+                        <span className="rounded-full bg-[#fff1e8] px-3 py-1 text-xs font-semibold text-[#d16024]" data-testid={`pricing-plan-savings-${plan.key}`}>
+                          {activePricing.badge}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <ul className="grid gap-3" data-testid={`pricing-plan-feature-list-${plan.key}`}>
+                      {plan.features.map((feature, index) => (
+                        <li key={feature} className="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700" data-testid={`pricing-plan-feature-${plan.key}-${index + 1}`}>
+                          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#f3722c]" />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="mt-6 space-y-3 pt-2">
+                    {isEnterprise ? (
+                      <Button asChild className="h-12 w-full rounded-xl bg-[#264653] text-sm font-semibold text-white hover:bg-[#1f3742]" data-testid={`pricing-plan-cta-${plan.key}`}>
+                        <Link to="/demo">İletişime Geç</Link>
+                      </Button>
+                    ) : (
+                      <Button onClick={() => void handlePlanCheckout(plan.key)} disabled={isLoading} className={`h-12 w-full rounded-xl text-sm font-semibold ${plan.is_popular ? "bg-[#f3722c] text-white hover:bg-[#e05d1b]" : "bg-[#264653] text-white hover:bg-[#1f3742]"}`} data-testid={`pricing-plan-cta-${plan.key}`}>
+                        {isLoading ? "Yönlendiriliyor..." : "Planı Seç"}
+                      </Button>
+                    )}
+                    <p className="text-xs text-slate-500" data-testid={`pricing-plan-note-${plan.key}`}>
+                      {isEnterprise ? "Enterprise planı özel teklif ve sözleşmeli kurulum ile ilerler." : hasCheckoutIdentity ? "Stripe Checkout ile güvenli ödeme akışına yönlendirilirsiniz." : "Ödeme adımından önce trial hesabınız açılır ve hedef planınız kaydedilir."}
                     </p>
-                    <h3 className="mt-3 text-3xl font-extrabold tracking-[-0.03em] text-slate-900" style={{ fontFamily: "Manrope, Inter, sans-serif" }} data-testid={`pricing-plan-label-${plan.key}`}>
-                      {plan.label}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600" data-testid={`pricing-plan-description-${plan.key}`}>
-                      {plan.description}
-                    </p>
                   </div>
-
-                  <div className="flex items-end gap-2" data-testid={`pricing-plan-price-wrap-${plan.key}`}>
-                    <span className="text-4xl font-extrabold tracking-[-0.04em] text-slate-900" style={{ fontFamily: "Manrope, Inter, sans-serif" }} data-testid={`pricing-plan-price-${plan.key}`}>
-                      {formatMonthlyPrice(plan.pricing)}
-                    </span>
-                    <span className="pb-1 text-sm font-medium text-slate-500" data-testid={`pricing-plan-period-${plan.key}`}>
-                      / ay
-                    </span>
-                  </div>
-
-                  <ul className="grid gap-3" data-testid={`pricing-plan-feature-list-${plan.key}`}>
-                    {plan.features.map((feature, index) => (
-                      <li key={feature} className="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700" data-testid={`pricing-plan-feature-${plan.key}-${index + 1}`}>
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#f3722c]" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="mt-6 pt-2">
-                  <Button asChild className={`h-12 w-full rounded-xl text-sm font-semibold ${plan.is_popular ? "bg-[#f3722c] text-white hover:bg-[#e05d1b]" : "bg-[#264653] text-white hover:bg-[#1f3742]"}`} data-testid={`pricing-plan-cta-${plan.key}`}>
-                    <Link to={`/signup?plan=trial&selectedPlan=${plan.key}`}>14 Gün Ücretsiz Dene</Link>
-                  </Button>
-                </div>
-              </article>
-            ))}
+                </article>
+              );
+            })}
           </div>
         </section>
 

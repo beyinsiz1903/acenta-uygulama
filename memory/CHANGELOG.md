@@ -11,6 +11,18 @@
 - `backend/pytest.ini` güncellendi; exit gate marker kayıtları tamamlandı ve unknown-mark kaynaklı warning kirliliği azaltıldı
 - `backend/app/bootstrap/*` ve bazı yeni dosyalardaki newline / Ruff lint sorunları giderildi; `ruff check app/ --select E,F,W --ignore E501,E402` temiz geçti
 
+## 2026-03-07 — Deployment / Mongo Migration Hardening
+- Root cause doğrulandı: preview/sandbox local Mongo örneğinde yüzlerce `agentis_test_*` test veritabanı birikmişti; bu durum Atlas migration/user creation aşamasında `COLLECTION_ROLES_LIMIT_EXCEEDED` limitine yol açıyordu
+- `backend/app/bootstrap/runtime_init.py` içine `cleanup_nonprod_test_databases(...)` eklendi
+  - sadece non-production + local Mongo ortamlarında çalışır
+  - `agentis_test_*` ve `agentis_test_seeded_*` veritabanlarını temizler
+  - production/staging Atlas ortamına dokunmaz
+- `backend/tests/conftest.py` session başlangıç/bitişinde orphan test DB cleanup yapacak şekilde güçlendirildi
+- Doğrulama:
+  - local Mongo test DB sayısı `127 -> 0`
+  - `/api/health` ve `/api/auth/login` çalışmaya devam ediyor
+  - preview-only test dosyaları `--collect-only` ile hatasız
+
 ## 2026-03-07 — Usage Metering PR-UM1 Foundation
 - `backend/app/constants/usage_metrics.py` eklendi; kanonik metrik sabitleri tanımlandı:
   - `reservation.created`

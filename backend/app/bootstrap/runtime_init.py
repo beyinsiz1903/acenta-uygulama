@@ -1,11 +1,45 @@
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
+
+
+def _is_local_nonprod_mongo() -> bool:
+    env = os.environ.get("ENV", "dev").strip().lower()
+    if env in {"production", "prod", "staging"}:
+        return False
+
+    mongo_url = os.environ.get("MONGO_URL", "")
+    return "localhost" in mongo_url or "127.0.0.1" in mongo_url
+
+
+async def cleanup_nonprod_test_databases(db) -> dict[str, int]:
+    """Drop orphaned test databases in local non-production Mongo environments.
+
+    This prevents preview/sandbox Mongo instances from accumulating hundreds of
+    `agentis_test_*` databases created by isolated test runs, which can later
+    break Atlas migration/user provisioning due to excessive collection roles.
+    """
+    if not _is_local_nonprod_mongo():
+        return {"checked": 0, "dropped": 0}
+
+    db_names = await db.client.list_database_names()
+    stale_dbs = [
+        name
+        for name in db_names
+        if name.startswith("agentis_test_") or name.startswith("agentis_test_seeded_")
+    ]
+    for name in stale_dbs:
+        await db.client.drop_database(name)
+
+    if stale_dbs:
+        logger.info("Dropped %s orphaned local test databases", len(stale_dbs))
+    return {"checked": len(db_names), "dropped": len(stale_dbs)}
 
 
 def load_backend_env() -> None:
@@ -37,6 +71,7 @@ async def ensure_api_runtime_indexes(db) -> None:
     from app.indexes.tenant_indexes import ensure_tenant_indexes
 
     try:
+        await cleanup_nonprod_test_databases(db)
         await finance_indexes.ensure_finance_indexes(db)
         await inbox_indexes.ensure_inbox_indexes(db)
         await pricing_indexes.ensure_pricing_indexes(db)

@@ -1,96 +1,62 @@
 <analysis>**original_problem_statement:**
-The user requested a full-stack, enterprise-grade audit and refactoring of their existing multi-tenant SaaS platform for travel agencies. The goal is to transform the project into a production-ready, secure, and scalable application.
+The user initially requested a full-stack, enterprise-grade audit and refactoring of their existing multi-tenant SaaS platform for travel agencies.
 
-The development is guided by a user-provided, architectural roadmap aimed at scaling the platform.
+However, the user has strategically pivoted the roadmap to prioritize monetization. The new primary goal is to implement an Entitlement and Usage Metering system, which is crucial for turning the platform into a sellable SaaS product. The development is now following a new, user-defined, phased plan for this system.
 
 **PRODUCT REQUIREMENTS:**
-The high-level requirements are to refactor the platform based on the audit, focusing on a series of approved Pull Requests (PRs).
-
-**Architectural Roadmap (Prioritized & Updated):**
-1.  **PR-8: Web Auth Cleanup (COMPLETED)**
-2.  **PR-V1:  Standardization (COMPLETED)**
-    -   PR-V1-0: Foundation & Route Inventory (COMPLETED)
-    -   PR-V1-1: Low-Risk Router Rollout (COMPLETED)
-    -   PR-V1-2: Critical Router Rollout (COMPLETED)
-        -   PR-V1-2A: Core Auth (, , ) - (COMPLETED)
-        -   PR-V1-2B: Session Management - (COMPLETED)
-        -   PR-V1-2C: Settings - (COMPLETED)
-3.  **Staging/Prod Runtime Parity (BLOCKED/N/A)**: Tooling is complete, but cannot be executed as user confirmed no separate staging/prod environments exist.
-4.  **PR-5B: Mobile Secure Session (UPCOMING, BLOCKED)**
-5.  **Internal Migration Dashboard (UPCOMING)**
-6.  **Entitlement Projection Engine (FUTURE)**
-7.  **Usage Metering (FUTURE)**
-8.  **Observability Stack (FUTURE)**
-... and other items from the initial roadmap.
+-   **P0: Usage Metering Engine:** Implement a system to track tenant resource consumption.
+    -   PR-UM1: Metric Foundation (Database models, services, constants).
+    -   PR-UM2: Instrument  metric.
+    -   PR-UM3: Instrument , ,  metrics.
+    -   PR-UM4: Display usage data in Admin and Tenant dashboards.
+    -   PR-UM5: Implement soft quota enforcement (warnings and upgrade recommendations).
+-   **P1: Quota Enforcement:** Hard-block resource usage when limits are exceeded.
+-   **P1: Upsell/Plan Usage Card:** A UI component to recommend plan upgrades based on usage.
+-   **P1: Admin Migration Dashboard Card:** A UI card for the admin panel to show API migration progress.
+-   **P2: Observability Stack.**
+-   **P2: Admin Endpoint Cleanup.**
+-   **P2: Mobile PR-5B (Secure Session).**
 
 **User's preferred language**: Turkish
 
 **what currently exists?**
-The agent has successfully completed the entire  series for API versioning. All low-risk routers and critical routers (, , ) have been migrated to the  namespace using an alias-first strategy, where legacy routes are preserved for backward compatibility.
+The application has a robust backend with versioned APIs () and a tenant/entitlement system. Before this session, the agent had completed a major API standardization project.
 
-The API inventory and governance tooling has been significantly enhanced:
-1.   now includes , showing the percentage of v1 migration for each API domain (e.g., , , ).
-2.   now calculates and outputs a  metric in its , showing routes migrated in a given change and estimating the number of PRs remaining.
+In this session, the agent began implementing the **Usage Metering** system. The foundational work (**PR-UM1**) was started, which includes:
+-   A constants file for metric names ().
+-   A repository for daily aggregated usage data ().
+-   Modifications to the existing  and  to support the new two-table model (immutable ledger + daily aggregates).
+-   Updates to  to create necessary MongoDB indexes for the new collections.
+
+This work was interrupted by a critical deployment failure.
 
 **Last working item**:
--   **Last item agent was working:** The agent was implementing and verifying the  feature. This involved:
-    1.  Modifying  to calculate the velocity.
-    2.  Using usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
-           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
-           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]
-           [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]
-           [--super-prefix=<path>] [--config-env=<name>=<envvar>]
-           <command> [<args>]
-
-These are common Git commands used in various situations:
-
-start a working area (see also: git help tutorial)
-   clone     Clone a repository into a new directory
-   init      Create an empty Git repository or reinitialize an existing one
-
-work on the current change (see also: git help everyday)
-   add       Add file contents to the index
-   mv        Move or rename a file, a directory, or a symlink
-   restore   Restore working tree files
-   rm        Remove files from the working tree and from the index
-
-examine the history and state (see also: git help revisions)
-   bisect    Use binary search to find the commit that introduced a bug
-   diff      Show changes between commits, commit and working tree, etc
-   grep      Print lines matching a pattern
-   log       Show commit logs
-   show      Show various types of objects
-   status    Show the working tree status
-
-grow, mark and tweak your common history
-   branch    List, create, or delete branches
-   commit    Record changes to the repository
-   merge     Join two or more development histories together
-   rebase    Reapply commits on top of another base tip
-   reset     Reset current HEAD to the specified state
-   switch    Switch branches
-   tag       Create, list, delete or verify a tag object signed with GPG
-
-collaborate (see also: git help workflows)
-   fetch     Download objects and refs from another repository
-   pull      Fetch from and integrate with another repository or a local branch
-   push      Update remote refs along with associated objects
-
-'git help -a' and 'git help -g' list available subcommands and some
-concept guides. See 'git help <command>' or 'git help <concept>'
-to read about a specific subcommand or concept.
-See 'git help git' for an overview of the system. to check out a previous version of the  file to serve as a baseline for comparison.
-    3.  Running the script with the old and new inventory files to generate a  and confirm the new  metrics were calculated correctly.
--   **Status:** COMPLETED
--   **Agent Testing Done:** Y
--   **Which testing method agent to use?** NA
+-   **Last item agent was working:** Debugging and fixing a critical deployment failure related to MongoDB Atlas.
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** The agent needs to first fix the code, then trigger a deployment. No local testing method applies directly; the fix must be verified by a successful deployment.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1:** (P2) Minor API errors in the admin panel.
+-   Issue 1: Critical Deployment Failure (P0)
+-   Issue 2: Minor API errors in the admin panel (P2)
 
 **Issues Detail:**
 -   **Issue 1:**
+    -   **Description:** The application deployment to the production environment fails. The logs show a MongoDB Atlas error: . This means the application's index seeding process is trying to create more than the 100 allowed collection-level roles in the managed Atlas environment. The agent correctly identified that  creates a new collection for each index, which is the root cause of the problem.
+    -   **Attempted fixes:** The agent started refactoring  to create indexes on existing collections (, ) rather than creating new, empty collections just for indexing purposes. The agent has partially applied these fixes but has not completed the refactoring for all indexes.
+    -   **Next debug checklist:**
+        1.  Review  again.
+        2.  Identify all  calls that are still creating new collections implicitly.
+        3.  Modify these calls to ensure they target the correct, existing collections (, , etc.).
+        4.  Verify that no part of the script attempts to create more than 100 unique collection roles.
+        5.  After applying the fix, the user will need to trigger a new deployment to verify the solution.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a **BLOCKER**. The application cannot be deployed until this is resolved. Fixing it will allow the application to be deployed to the production MongoDB Atlas environment.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Neither. The fix is validated by a successful deployment.
+    -   **Blocked on other issue:** None. This is the primary blocker.
+-   **Issue 2:**
     -   **Description:** Several admin panel endpoints are returning errors (, , ).
     -   **Attempted fixes:** None. The user has explicitly de-prioritized this to a future cleanup PR.
     -   **Status:** NOT STARTED
@@ -99,24 +65,33 @@ See 'git help git' for an overview of the system. to check out a previous versio
     -   **Blocked on other issue:** None.
 
 **In progress Task List**:
--   None.
+-   **Task 1:** PR-UM1 - Metric Foundation (P0)
+    -   **Where to resume:** The work on this task was paused to address the deployment blocker. Once the deployment issue is fixed, the agent must resume and complete the implementation of **PR-UM1**. This involves finishing the refactor of  to include the canonical  and  functions, ensuring they correctly interact with both  and  repositories.
+    -   **What will be achieved with this?** This will complete the foundational data model and service layer for the entire Usage Metering feature, paving the way for instrumenting actual application events.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** backend
+    -   **Blocked on something:** Issue 1: Critical Deployment Failure.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **P0: PR-5B — Mobile Secure Session:** Implement secure session handling for the mobile app. This is the next major roadmap item, but it is currently **BLOCKED** as the agent does not have access to the mobile repository. The agent must clarify with the user how to proceed: either by getting access to the repo or by skipping to the next roadmap item.
-    -   **P1: Internal Migration Dashboard Card:** Create a simple UI card in the admin dashboard to visualize the  data from the summary file. The user explicitly requested this be handled in a separate, small PR.
-
+    -   **P0: PR-UM2 — Reservation Instrumentation:** Instrument the  metric in the relevant backend services.
+    -   **P1: PR-UM3 — Reports / Exports / Integrations Instrumentation:** Instrument the remaining three metrics.
+    -   **P1: PR-UM4 — Usage Read APIs + UI:** Expose the collected usage data on the admin and tenant-facing dashboards.
+    -   **P1: PR-UM5 — Quota-Ready Soft Enforcement:** Implement warnings and upgrade recommendations when quotas are approached.
+    -   **P1: Admin Migration Dashboard Card:** Create a UI card to visualize API v1 migration progress.
 -   **Future Tasks:**
-    -   Entitlement Projection Engine
-    -   Usage Metering
+    -   Trial Summary & Recommended Plan UI
+    -   Quota Enforcement (Hard enforcement)
     -   Observability Stack
-    -   All other remaining items from the architectural roadmap.
+    -   Admin endpoint cleanup
+    -   Mobile PR-5B
 
 **Completed work in this session**
--   **PR-V1-2B — Session Management Rollout (DONE):** Migrated session management endpoints (, , etc.) to  aliases.
--   **PR-V1-2C — Settings Rollout (DONE):** Migrated the  router and its endpoints to  aliases by splitting  into  and .
--   **API Tooling Enhancement #1 (DONE):** Added  percentage to .
--   **API Tooling Enhancement #2 (DONE):** Added  calculation (, ) to the  script.
+-   **Architectural Planning:** Collaborated with the user to define a new, detailed, multi-PR roadmap for implementing a full-fledged Usage Metering system.
+-   **Initial Implementation (PR-UM1):**
+    -   Created  to define canonical metric names.
+    -   Created  for aggregated daily data.
+    -   Started refactoring  and .
 
 **Earlier issues found/mentioned but not fixed**
 -   **Issue 1:** Admin panel endpoints , , and  are failing. This fix has been deferred by the user.
@@ -128,60 +103,49 @@ See 'git help git' for an overview of the system. to check out a previous versio
 
 
 **Key Technical Concepts**
--   **API Versioning:** The alias-first migration for the entire  scope is complete. All critical user-facing and session-related endpoints are now under .
--   **API Governance & Tooling:** The inventory tooling has matured to not only track progress () but also provide domain-specific completion percentages () and project management metrics ().
--   **Git for Tooling:** The agent successfully used  to retrieve a previous version of an artifact () to use as a baseline for the  script.
+-   **Usage Metering Architecture:** A dual-collection model was designed and partially implemented:
+    -   : An immutable, append-only log of all usage events for audit and idempotency.
+    -   : A collection of daily aggregated counts for fast reads and dashboard UIs.
+-   **MongoDB Atlas Deployment Constraint:** Discovered a hard limit of 100 collection-level roles in the target Atlas environment. This requires careful index management to avoid creating a new collection for each index, which was the cause of the deployment failure.
+-   **Idempotency:** The design for  includes a  to ensure usage events are not counted multiple times, which is a critical requirement for accurate billing systems.
 
 **key DB schema**
--   No changes to the database schema were made.
+-   **usage_ledger** (updated): 
+-   **usage_daily** (new): 
+    -   Unique index on 
 
 **changes in tech stack**
 -   None.
 
 **All files of reference**
 -   **Created:**
-    -   : Holds the legacy settings router.
-    -   : Holds the new v1 settings router.
+    -   : Defines standard names for usage metrics.
+    -   : Manages the new  collection.
 -   **Updated:**
-    -   : Modified to add  to the summary output.
-    -   : Modified to calculate and output .
-    -   : Updated to include the new legacy and v1 settings routers.
-    -   : Added session management endpoints.
--   **Deleted:**
-    -    (Replaced by  and )
--   **Important Artifacts:**
-    -   
-    -   
-    -    (Generated by )
-
-**Areas that need refactoring**:
--   None. The recent refactoring of the  router followed the established pattern.
-
-**key api endpoints**
--   **/api/v1/auth/sessions**: New v1 alias for getting active sessions.
--   **/api/v1/auth/sessions/{id}/revoke**: New v1 alias for revoking a specific session.
--   **/api/v1/settings/***: New v1 aliases for all settings endpoints.
+    -   : Refactored to create indexes on existing collections to fix the deployment error. **(Work in progress)**.
+    -   : Being refactored to implement the  logic for the dual-collection model. **(Work in progress)**.
+    -   : Minor updates to align with the new service logic.
 
 **Critical Info for New Agent**
--   **Speak Turkish:** All communication with the user must be in Turkish.
--   **Roadmap Check-in:** The  series of tasks is now complete. The next major item on the user's roadmap is **PR-5B (Mobile Secure Session)**. However, this is **BLOCKED** because the mobile repository has not been provided. Your first action should be to ask the user (in Turkish) if they want to provide the mobile repo now, or if they prefer to skip PR-5B for now and move on to the next item in the roadmap (e.g., the Entitlement Engine) or the smaller dashboard task.
--   **Next Tasks:**
-    1.  **Clarify Block on PR-5B** with the user.
-    2.  Based on user feedback, either start work on **PR-5B**, or start on the **Internal Migration Dashboard Card** (P1), or move to the **Entitlement Engine** (Future).
-    3.  The dashboard card task was explicitly requested by the user to be a small, separate PR.
+-   **Speak Turkish:** You MUST communicate with the user in Turkish.
+-   **Top Priority (P0):** Your first and only priority is to fix the deployment blocker. Resume the refactoring of  to ensure all indexes are created on existing collections, not new ones. Do not proceed with any other task until the user confirms a deployment is successful.
+-   **Resume PR-UM1:** Once the deployment is fixed, you must complete the **Metric Foundation (PR-UM1)** task. This involves finishing the changes in .
+-   **Follow the Roadmap:** After PR-UM1 is complete and verified, proceed sequentially through the agreed-upon Usage Metering roadmap (PR-UM2, PR-UM3, etc.). Do not skip steps.
 
 **documents and test reports created in this job**
--    (Updated)
--    (Updated)
--    (Generated to test the velocity feature)
+-   None.
 
 **Last 10 User Messages and any pending HUMAN messages**
-- **User (Msg 72):** Confirmed PR-V1-2B was completed correctly. Instructed agent to start **PR-V1-2C (settings)**. Liked the idea for an internal migration dashboard but specified it should be a **separate, small PR**. Suggested adding a  metric to the inventory summary tooling. Confirmed the future roadmap: PR-5B, then entitlement engine.
-- **User (Msg 5):** Instructed agent to start **PR-V1-2B (session management)** and, in the same PR, add a **v1 migration progress percentage per domain** to the . This confirmed  was considered complete and set the work for most of the session.
+-   The user provided deployment failure logs.
+-   The user and agent had an extensive, multi-message conversation to pivot the entire project roadmap towards monetization features: Entitlement and Usage Metering.
+-   The user approved the agent's detailed, file-by-file implementation plan for the Usage Metering system (PR-UM1 to PR-UM5).
+-   The user emphasized a disciplined, step-by-step approach: build the foundation first (PR-UM1), then instrument the most critical metric (PR-UM2), and only then add UI and other features.
+-   The user is highly technical and provides strategic SaaS product-building advice, which the next agent should respect and incorporate.
 
 **Project Health Check:**
--   **Broken:** Admin panel endpoints (, etc.) are still returning errors (task deferred by user).
--   **Healthy:** The API versioning migration is complete. The application's core functionality is stable.
+-   **Broken:** The application is currently **not deployable** to the production environment due to the  error in MongoDB Atlas.
+-   **Mocked:** None.
+-   **Healthy:** The core application logic in the development environment is stable.
 
 **3rd Party Integrations**
 -   Stripe (Payments)
@@ -190,8 +154,8 @@ See 'git help git' for an overview of the system. to check out a previous versio
 **Testing status**
 -   **Testing agent used after significant changes:** NO
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** None.
--   **Known regressions:** None.
+-   **Test files created:** None
+-   **Known regressions:** The deployment is broken.
 
 **Credentials to test flow:**
 | Portal | Email | Password | Role |
@@ -200,4 +164,10 @@ See 'git help git' for an overview of the system. to check out a previous versio
 | **B2B Portal** () |  |  | Agency Admin |
 
 **What agent forgot to execute**
--   The agent successfully followed all user instructions and did not forget to execute any requested tasks. The roadmap was respected, and enhancements were implemented as specified.</analysis>
+-   The agent did not forget anything. It was actively working on the highest priority task (PR-UM1) when a critical deployment blocker was reported by the user, and the agent correctly pivoted to address it immediately.
+
+**Debugging checklist for current issue**
+-   **Issue:** Deployment failure due to  in MongoDB Atlas.
+-   **File to check:** 
+-   **What to look for:** Examine every call to . The agent has already fixed some, but there may be more. Any call that does not explicitly reference an existing collection (like  or ) is a potential problem. The goal is to have zero new collections created from this script.
+-   **Verification:** The only way to verify the fix is for the user to trigger another deployment and see if it passes the  step.</analysis>

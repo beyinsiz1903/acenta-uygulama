@@ -39,6 +39,7 @@ Kullanıcı, mevcut çok kiracılı (multi-tenant) seyahat/acenta SaaS platformu
 - Tenant erişimi middleware + request context ile korunur
 - Web auth kaynağı cookie compat flow’dur; legacy bearer yalnızca geçiş/uyumluluk içindir
 - Preview-only testler, preview URL yapılandırılmadığında güvenli şekilde skip olmalıdır; collection-time hard failure üretmemelidir
+- Local preview/test Mongo ortamları, orphan `agentis_test_*` veritabanlarını otomatik temizlemelidir; production Atlas verisine asla dokunulmamalıdır
 
 ## Monetizasyon Yönü
 Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet eden paketleme katmanına öncelik veriyor.

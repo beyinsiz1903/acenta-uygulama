@@ -9,7 +9,7 @@ This test validates the specific backend APIs requested for PR-UM1 Usage Meterin
 3. GET /api/admin/billing/tenants/{tenant_id}/usage - should return 200 and stable payload shape including billing_period, metrics, totals_source
 
 Test credentials: admin@acenta.test / admin123
-Base URL: https://travel-saas-refactor-1.preview.emergentagent.com
+Base URL: https://quota-track.preview.emergentagent.com
 """
 
 import asyncio
@@ -21,7 +21,7 @@ from typing import Optional, Dict, Any, List
 import httpx
 
 # Configuration
-BASE_URL = "https://travel-saas-refactor-1.preview.emergentagent.com"
+BASE_URL = "https://quota-track.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

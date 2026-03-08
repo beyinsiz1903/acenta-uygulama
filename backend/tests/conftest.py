@@ -37,6 +37,13 @@ from app.utils import now_utc
 MONGO_URL = _mongo_url()
 
 
+async def _drop_orphan_test_databases(client: AsyncIOMotorClient) -> None:
+    db_names = await client.list_database_names()
+    for name in db_names:
+        if name.startswith("agentis_test_") or name.startswith("agentis_test_seeded_"):
+            await client.drop_database(name)
+
+
 def _is_external_preview_http_test() -> bool:
     current_test = os.environ.get("PYTEST_CURRENT_TEST", "")
     return any(
@@ -82,8 +89,10 @@ async def motor_client() -> AsyncGenerator[AsyncIOMotorClient, None]:
 
     client = AsyncIOMotorClient(MONGO_URL)
     try:
+        await _drop_orphan_test_databases(client)
         yield client
     finally:
+        await _drop_orphan_test_databases(client)
         client.close()
 
 

@@ -53,3 +53,12 @@ export async function cancelBillingSubscription() {
     throw { message: apiErrorMessage(err), raw: err };
   }
 }
+
+export async function reactivateBillingSubscription() {
+  try {
+    const res = await api.post("/billing/reactivate-subscription");
+    return res.data;
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}

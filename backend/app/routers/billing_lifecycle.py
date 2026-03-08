@@ -96,3 +96,15 @@ async def cancel_billing_subscription(
         actor_user_id=str(user.get("id") or user.get("_id") or user.get("email") or ""),
         actor_email=str(user.get("email") or ""),
     )
+
+
+@router.post("/api/billing/reactivate-subscription")
+async def reactivate_billing_subscription(
+    user=Depends(get_current_user),
+) -> dict:
+    tenant_id = await _resolve_tenant_id(user)
+    return await stripe_checkout_service.reactivate_subscription(
+        tenant_id,
+        actor_user_id=str(user.get("id") or user.get("_id") or user.get("email") or ""),
+        actor_email=str(user.get("email") or ""),
+    )

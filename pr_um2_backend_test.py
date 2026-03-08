@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Base URL from environment
-BASE_URL = "https://saas-payments-2.preview.emergentagent.com"
+BASE_URL = "https://acenta-billing.preview.emergentagent.com"
 
 # Demo credentials from review request
 DEMO_EMAIL = "admin@demo-travel.demo.test"

@@ -16,6 +16,7 @@ import {
   changeBillingPlan,
   createCustomerPortalSession,
   getBillingSubscription,
+  reactivateBillingSubscription,
 } from "../lib/billing";
 import {
   BILLING_PLAN_OPTIONS,
@@ -68,6 +69,25 @@ export default function SettingsBillingPage() {
 
   React.useEffect(() => {
     void loadBilling();
+  }, [loadBilling]);
+
+  React.useEffect(() => {
+    function handleVisibilityRefresh() {
+      if (document.visibilityState === "visible") {
+        void loadBilling();
+      }
+    }
+
+    function handleFocusRefresh() {
+      void loadBilling();
+    }
+
+    window.addEventListener("focus", handleFocusRefresh);
+    document.addEventListener("visibilitychange", handleVisibilityRefresh);
+    return () => {
+      window.removeEventListener("focus", handleFocusRefresh);
+      document.removeEventListener("visibilitychange", handleVisibilityRefresh);
+    };
   }, [loadBilling]);
 
   const currentPlanKey = overview?.plan || "trial";
@@ -123,6 +143,19 @@ export default function SettingsBillingPage() {
       await loadBilling();
     } catch (err) {
       toast.error(err?.message || "Abonelik iptal edilemedi.");
+    } finally {
+      setActionKey("");
+    }
+  }
+
+  async function handleReactivateSubscription() {
+    setActionKey("reactivate");
+    try {
+      const result = await reactivateBillingSubscription();
+      toast.success(result?.message || "Aboneliğiniz yeniden aktif hale getirildi.");
+      await loadBilling();
+    } catch (err) {
+      toast.error(err?.message || "Abonelik yeniden başlatılamadı.");
     } finally {
       setActionKey("");
     }
@@ -222,6 +255,19 @@ export default function SettingsBillingPage() {
               <span>{overview?.cancel_at_period_end ? "İptal planlandı" : "Aboneliği İptal Et"}</span>
               <AlertTriangle className="h-4 w-4" />
             </Button>
+
+            {overview?.cancel_at_period_end ? (
+              <Button
+                onClick={() => void handleReactivateSubscription()}
+                variant="outline"
+                disabled={actionKey === "reactivate"}
+                className="w-full justify-between rounded-2xl"
+                data-testid="billing-reactivate-subscription-button"
+              >
+                <span>{actionKey === "reactivate" ? "İşleniyor..." : "Aboneliği Yeniden Başlat"}</span>
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            ) : null}
 
             <Button
               onClick={() => void loadBilling()}

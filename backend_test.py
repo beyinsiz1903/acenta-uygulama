@@ -22,7 +22,7 @@ import json
 from typing import Optional, Dict, Any
 
 # Base URL from environment
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://saas-payments-2.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://acenta-billing.preview.emergentagent.com").rstrip("/")
 
 # Test credentials from review request
 EXPIRED_TRIAL_EMAIL = "expired.checkout.cdc8caf5@trial.test"

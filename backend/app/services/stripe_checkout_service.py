@@ -123,6 +123,10 @@ def _plan_change_mode(current_plan: str, current_interval: str, target_plan: str
     return "downgrade_later"
 
 
+def _is_missing_stripe_resource_error(exc: Exception) -> bool:
+    return isinstance(exc, stripe.error.InvalidRequestError) and "No such" in str(exc)
+
+
 class StripeCheckoutService:
     def _api_key(self) -> str:
         api_key = (os.environ.get("STRIPE_API_KEY") or "").strip()
@@ -197,7 +201,12 @@ class StripeCheckoutService:
         amount = float(config["amount"])
         existing = await billing_repo.get_plan_price(plan, interval=interval, currency="TRY")
         if existing and _is_real_price_id(existing.get("provider_price_id")):
-            return existing
+            try:
+                await self._stripe_call(stripe.Price.retrieve, existing["provider_price_id"])
+                return existing
+            except Exception as exc:
+                if not _is_missing_stripe_resource_error(exc):
+                    raise
 
         lookup_key = f"syroce_{plan}_{interval}_try"
         listed = await self._stripe_call(stripe.Price.list, lookup_keys=[lookup_key], active=True, limit=1)
@@ -272,6 +281,41 @@ class StripeCheckoutService:
                 "$set": {"updated_at": _now()},
             },
         )
+
+    async def _demote_stale_subscription_reference(self, tenant_id: str) -> dict[str, Any]:
+        db = await get_db()
+        await db.billing_subscriptions.update_one(
+            {"tenant_id": tenant_id},
+            {
+                "$unset": {
+                    "provider_subscription_id": "",
+                    "schedule_id": "",
+                    "scheduled_plan": "",
+                    "scheduled_interval": "",
+                    "change_effective_at": "",
+                },
+                "$set": {"updated_at": _now()},
+            },
+        )
+        return (await billing_repo.get_subscription(tenant_id)) or {}
+
+    async def _clear_stale_customer_reference(self, tenant_id: str) -> dict[str, Any]:
+        db = await get_db()
+        await db.billing_customers.update_one(
+            {"tenant_id": tenant_id},
+            {
+                "$unset": {"provider_customer_id": ""},
+                "$set": {"updated_at": _now()},
+            },
+        )
+        await db.billing_subscriptions.update_one(
+            {"tenant_id": tenant_id},
+            {
+                "$unset": {"provider_customer_id": ""},
+                "$set": {"updated_at": _now()},
+            },
+        )
+        return (await billing_repo.get_customer(tenant_id)) or {}
 
     async def _find_tenant_by_subscription(self, subscription_id: str) -> Optional[str]:
         db = await get_db()
@@ -676,12 +720,17 @@ class StripeCheckoutService:
             raise
 
     async def sync_provider_subscription_record(self, tenant_id: str, provider_subscription_id: str, *, user_email: str = "", organization_id: str = "") -> dict[str, Any]:
-        return await self._sync_subscription_document(
-            tenant_id,
-            provider_subscription_id,
-            user_email=user_email,
-            organization_id=organization_id,
-        )
+        try:
+            return await self._sync_subscription_document(
+                tenant_id,
+                provider_subscription_id,
+                user_email=user_email,
+                organization_id=organization_id,
+            )
+        except Exception as exc:
+            if _is_missing_stripe_resource_error(exc):
+                return await self._demote_stale_subscription_reference(tenant_id)
+            raise
 
     async def sync_checkout_status(self, http_request, session_id: str) -> dict[str, Any]:
         session = await self._retrieve_checkout_session(session_id)
@@ -728,11 +777,17 @@ class StripeCheckoutService:
         await self._repair_customer_reference(tenant_id, user_email=user_email)
         subscription = await billing_repo.get_subscription(tenant_id)
         if subscription and _is_real_subscription_id(subscription.get("provider_subscription_id")):
-            subscription = await self._sync_subscription_document(
-                tenant_id,
-                subscription["provider_subscription_id"],
-                user_email=user_email,
-            )
+            try:
+                subscription = await self._sync_subscription_document(
+                    tenant_id,
+                    subscription["provider_subscription_id"],
+                    user_email=user_email,
+                )
+            except Exception as exc:
+                if _is_missing_stripe_resource_error(exc):
+                    subscription = await self._demote_stale_subscription_reference(tenant_id)
+                else:
+                    raise
 
         customer = await billing_repo.get_customer(tenant_id)
         plan = str((subscription or {}).get("plan") or await feature_service.get_plan(tenant_id) or "trial")
@@ -811,12 +866,36 @@ class StripeCheckoutService:
                 mode=_billing_mode(),
             )
 
-        portal_session = await self._stripe_call(
-            stripe.billing_portal.Session.create,
-            customer=customer_id,
-            return_url=f"{self._validate_origin(origin_url)}{self._normalize_path(return_path, '/app/settings/billing')}",
-            configuration=await self._ensure_portal_configuration(),
-        )
+        try:
+            portal_session = await self._stripe_call(
+                stripe.billing_portal.Session.create,
+                customer=customer_id,
+                return_url=f"{self._validate_origin(origin_url)}{self._normalize_path(return_path, '/app/settings/billing')}",
+                configuration=await self._ensure_portal_configuration(),
+            )
+        except Exception as exc:
+            if not _is_missing_stripe_resource_error(exc):
+                raise
+            await self._clear_stale_customer_reference(tenant_id)
+            created_customer = await self._stripe_call(
+                stripe.Customer.create,
+                email=actor_email or str((customer or {}).get("email") or ""),
+                metadata={"tenant_id": tenant_id, "source": "billing_portal_repair"},
+            )
+            customer_id = created_customer.id
+            await billing_repo.upsert_customer(
+                tenant_id=tenant_id,
+                provider="stripe",
+                provider_customer_id=customer_id,
+                email=actor_email or str((customer or {}).get("email") or ""),
+                mode=_billing_mode(),
+            )
+            portal_session = await self._stripe_call(
+                stripe.billing_portal.Session.create,
+                customer=customer_id,
+                return_url=f"{self._validate_origin(origin_url)}{self._normalize_path(return_path, '/app/settings/billing')}",
+                configuration=await self._ensure_portal_configuration(),
+            )
         await append_audit_log(
             scope="billing",
             tenant_id=tenant_id,
@@ -855,11 +934,22 @@ class StripeCheckoutService:
             }
 
         await self._release_schedule_if_present(str(subscription.get("schedule_id") or "") or None)
-        updated = await self._stripe_call(
-            stripe.Subscription.modify,
-            provider_subscription_id,
-            cancel_at_period_end=True,
-        )
+        try:
+            updated = await self._stripe_call(
+                stripe.Subscription.modify,
+                provider_subscription_id,
+                cancel_at_period_end=True,
+            )
+        except Exception as exc:
+            if _is_missing_stripe_resource_error(exc):
+                await self._demote_stale_subscription_reference(tenant_id)
+                raise AppError(
+                    409,
+                    "subscription_management_unavailable",
+                    "Bu abonelik için iptal yönetimi henüz self-servis olarak açılamıyor.",
+                    {"tenant_id": tenant_id},
+                )
+            raise
         synced = await self._sync_subscription_document(
             tenant_id,
             updated.id,
@@ -881,6 +971,70 @@ class StripeCheckoutService:
             "cancel_at_period_end": True,
             "current_period_end": synced.get("current_period_end"),
             "message": "Aboneliğiniz dönem sonunda sona erecek",
+        }
+
+    async def reactivate_subscription(
+        self,
+        tenant_id: str,
+        *,
+        actor_user_id: str = "",
+        actor_email: str = "",
+    ) -> dict[str, Any]:
+        await self._repair_customer_reference(tenant_id, user_email=actor_email)
+        subscription = await billing_repo.get_subscription(tenant_id)
+        provider_subscription_id = str((subscription or {}).get("provider_subscription_id") or "")
+        if not _is_real_subscription_id(provider_subscription_id):
+            raise AppError(
+                409,
+                "subscription_management_unavailable",
+                "Bu abonelik için yeniden başlatma henüz self-servis olarak açılamıyor.",
+                {"tenant_id": tenant_id},
+            )
+
+        if not subscription or not subscription.get("cancel_at_period_end"):
+            return {
+                "status": (subscription or {}).get("status") or "active",
+                "cancel_at_period_end": False,
+                "current_period_end": (subscription or {}).get("current_period_end"),
+                "message": "Aboneliğiniz zaten aktif durumda.",
+            }
+
+        try:
+            updated = await self._stripe_call(
+                stripe.Subscription.modify,
+                provider_subscription_id,
+                cancel_at_period_end=False,
+            )
+        except Exception as exc:
+            if _is_missing_stripe_resource_error(exc):
+                await self._demote_stale_subscription_reference(tenant_id)
+                raise AppError(
+                    409,
+                    "subscription_management_unavailable",
+                    "Bu abonelik için yeniden başlatma henüz self-servis olarak açılamıyor.",
+                    {"tenant_id": tenant_id},
+                )
+            raise
+        synced = await self._sync_subscription_document(
+            tenant_id,
+            updated.id,
+            customer_id=updated.customer if isinstance(updated.customer, str) else getattr(updated.customer, "id", None),
+            user_email=actor_email,
+        )
+        await append_audit_log(
+            scope="billing",
+            tenant_id=tenant_id,
+            actor_user_id=actor_user_id,
+            actor_email=actor_email,
+            action="billing.subscription_reactivated",
+            before={"cancel_at_period_end": True, "current_period_end": (subscription or {}).get("current_period_end")},
+            after={"cancel_at_period_end": False, "current_period_end": synced.get("current_period_end")},
+        )
+        return {
+            "status": synced.get("status") or "active",
+            "cancel_at_period_end": False,
+            "current_period_end": synced.get("current_period_end"),
+            "message": "Aboneliğiniz yeniden aktif hale getirildi",
         }
 
     async def change_plan(
@@ -930,7 +1084,28 @@ class StripeCheckoutService:
             raise AppError(409, "plan_already_active", "Seçtiğiniz plan zaten aktif.", {"plan": plan, "interval": interval})
 
         target_price = await self._ensure_recurring_price(plan, interval)
-        current_subscription = await self._retrieve_subscription(provider_subscription_id)
+        try:
+            current_subscription = await self._retrieve_subscription(provider_subscription_id)
+        except Exception as exc:
+            if _is_missing_stripe_resource_error(exc):
+                await self._demote_stale_subscription_reference(tenant_id)
+                checkout = await self.create_checkout_session(
+                    tenant_id=tenant_id,
+                    organization_id=organization_id,
+                    user_id=user_id,
+                    user_email=user_email,
+                    plan=plan,
+                    interval=interval,
+                    origin_url=origin_url,
+                    cancel_path=cancel_path,
+                    current_plan=current_plan,
+                )
+                return {
+                    **checkout,
+                    "action": "checkout_redirect",
+                    "message": "Plan değişikliği için Stripe ekranına yönlendiriliyorsunuz.",
+                }
+            raise
         current_item = _subscription_first_item(current_subscription)
         current_quantity = _stripe_value(current_item, "quantity", 1) or 1
         current_price_id = _stripe_value(_stripe_value(current_item, "price"), "id")

@@ -1,0 +1,202 @@
+{
+  "identity": {
+    "name": "E1",
+    "mission": "Create a warm, sales-focused SaaS experience for Turkish tourism agencies that feels organized yet vibrant.",
+    "tone": "Warm, Professional, Efficient, 'Esnaf Dostu' (Merchant Friendly)",
+    "principles": [
+      "Fusion over Imitation: Mix Swiss clarity with Turkish hospitality warmth.",
+      "Emotion First: Relieve the stress of chaos (Excel) with the joy of order (System).",
+      "Content is King: Every pixel sells the 'No More Excel' narrative.",
+      "Contrast: High contrast between the 'Old Way' (Gray/Messy) and 'New Way' (Vibrant/Clean)."
+    ]
+  },
+  "typography": {
+    "headings": {
+      "family": "Manrope",
+      "weights": ["700", "800"],
+      "usage": "Use for all headlines. Tight tracking (-0.02em).",
+      "fallback": "sans-serif"
+    },
+    "body": {
+      "family": "Inter",
+      "weights": ["400", "500"],
+      "usage": "Use for paragraphs, UI elements, and data tables.",
+      "fallback": "sans-serif"
+    }
+  },
+  "colors": {
+    "palette": {
+      "primary": {
+        "main": "#F3722C",
+        "hover": "#E05D1B",
+        "description": "Vibrant Orange for primary CTAs and high-priority actions. Symbolizes energy and warmth."
+      },
+      "secondary": {
+        "main": "#264653",
+        "light": "#2A9D8F",
+        "description": "Deep Teal/Navy for trust, footers, and text hierarchy. Symbolizes stability."
+      },
+      "accent": {
+        "main": "#E9C46A",
+        "soft": "#F4E4BA",
+        "description": "Sunny Yellow for highlights, badges, and 'New' tags."
+      },
+      "neutral": {
+        "background": "#FDFBF7",
+        "surface": "#FFFFFF",
+        "border": "#E5E7EB",
+        "text_main": "#1F2937",
+        "text_muted": "#6B7280"
+      },
+      "semantic": {
+        "success": "#2A9D8F",
+        "error": "#E76F51",
+        "info": "#264653"
+      }
+    },
+    "gradients": {
+      "hero_overlay": "linear-gradient(135deg, rgba(38, 70, 83, 0.9) 0%, rgba(42, 157, 143, 0.8) 100%)",
+      "subtle_warmth": "linear-gradient(to bottom, #FDFBF7, #FFF5F0)"
+    }
+  },
+  "layout_strategies": {
+    "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "spacing": {
+      "section_gap": "py-24",
+      "element_gap": "gap-8",
+      "internal_padding": "p-8"
+    },
+    "grids": {
+      "bento_marketing": "grid grid-cols-1 md:grid-cols-12 gap-8",
+      "features_grid": "grid grid-cols-1 md:grid-cols-3 gap-8"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-[#F3722C] hover:bg-[#E05D1B] text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1",
+      "secondary": "bg-white text-[#264653] border-2 border-[#264653] hover:bg-[#FDFBF7] font-semibold py-3 px-6 rounded-xl transition-colors",
+      "ghost": "text-[#264653] hover:text-[#F3722C] font-medium hover:bg-transparent"
+    },
+    "cards": {
+      "style": "bg-white rounded-2xl border border-gray-100 shadow-xl shadow-gray-200/50 hover:shadow-2xl transition-shadow duration-300",
+      "pricing_highlight": "border-2 border-[#F3722C] relative overflow-hidden transform md:-translate-y-4"
+    },
+    "inputs": {
+      "style": "h-12 rounded-lg border-gray-300 focus:border-[#F3722C] focus:ring-[#F3722C]"
+    }
+  },
+  "pages": {
+    "pricing": {
+      "path": "/pricing",
+      "title": "Acenteniz İçin En Doğru Planı Seçin",
+      "subtitle": "Gizli ücret yok. 14 gün ücretsiz deneyin, memnun kalmazsanız iptal edin.",
+      "sections": [
+        {
+          "type": "hero",
+          "content": "Simple centered heading with toggle for Monthly/Yearly (optional)"
+        },
+        {
+          "type": "pricing_cards",
+          "data": [
+            {
+              "name": "Başlangıç",
+              "price": "₺499",
+              "period": "/ay",
+              "features": ["1 Kullanıcı", "50 Rezervasyon/ay", "Temel Raporlama", "WhatsApp Desteği"],
+              "cta": "14 Gün Ücretsiz Dene",
+              "highlight": false
+            },
+            {
+              "name": "Profesyonel",
+              "price": "₺999",
+              "period": "/ay",
+              "features": ["3 Kullanıcı", "Sınırsız Rezervasyon", "Gelişmiş Finans", "Müşteri Paneli", "Öncelikli Destek"],
+              "cta": "14 Gün Ücretsiz Dene",
+              "highlight": true,
+              "badge": "En Popüler"
+            },
+            {
+              "name": "Kurumsal",
+              "price": "Özel",
+              "period": "",
+              "features": ["Sınırsız Kullanıcı", "Özel Entegrasyonlar", "Dedicated Success Manager", "API Erişimi"],
+              "cta": "Satışla Görüş",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "type": "faq",
+          "title": "Sıkça Sorulan Sorular"
+        }
+      ]
+    },
+    "demo": {
+      "path": "/demo",
+      "sections": [
+        {
+          "type": "hero",
+          "headline": "Acentelerde Excel Dönemi Bitiyor",
+          "subheadline": "Rezervasyon, müşteri ve ödemeleri tek panelden yönetin. Kağıt kalem karmaşasına son verin.",
+          "cta": "Demo Hesap Oluştur",
+          "image_style": "Hero Split",
+          "image_ref": "hero_happy_agent"
+        },
+        {
+          "type": "problem_agitation",
+          "headline": "Hala Excel ve WhatsApp Arasında Kayboluyor Musunuz?",
+          "description": "Notlar kaybolur, Excel dosyaları karışır, müşteriler beklemekten sıkılır. Eski yöntemler size para kaybettiriyor.",
+          "image_ref": "problem_messy_desk"
+        },
+        {
+          "type": "solution_features",
+          "headline": "Tek Panel, Tam Kontrol",
+          "features": [
+            { "title": "Rezervasyon Yönetimi", "desc": "Tüm turlar ve oteller tek ekranda." },
+            { "title": "Müşteri Veritabanı", "desc": "KVKK uyumlu müşteri saklama." },
+            { "title": "Finans & Rapor", "desc": "Kâr/Zarar durumunuzu anlık görün." }
+          ]
+        },
+        {
+          "type": "final_cta",
+          "headline": "İşinizi Büyütmeye Bugün Başlayın",
+          "cta": "Hemen Ücretsiz Dene"
+        }
+      ]
+    }
+  },
+  "images": {
+    "hero_happy_agent": {
+      "url": "https://images.unsplash.com/photo-1720139291006-585bc5d18b3b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjB0cmF2ZWwlMjBhZ2VudCUyMGhhcHB5JTIwd29ya2luZyUyMG9mZmljZXxlbnwwfHx8fDE3NzI5Nzg5NTR8MA&ixlib=rb-4.1.0&q=85",
+      "alt": "Happy travel agent working in a modern office",
+      "category": "Hero Background or Side Image"
+    },
+    "problem_messy_desk": {
+      "url": "https://images.unsplash.com/photo-1566699270403-3f7e3f340664?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHwxfHxmcnVzdHJhdGVkJTIwb2ZmaWNlJTIwd29ya2VyJTIwbWVzc3klMjBkZXNrJTIwcGFwZXJ3b3JrfGVufDB8fHx8MTc3Mjk3ODk1NXww&ixlib=rb-4.1.0&q=85",
+      "alt": "Messy desk with pile of papers",
+      "category": "Problem Section Visual"
+    },
+    "clean_workspace": {
+      "url": "https://images.unsplash.com/photo-1500067803284-4304564c8655?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHwyfHxmcnVzdHJhdGVkJTIwb2ZmaWNlJTIwd29ya2VyJTIwbWVzc3klMjBkZXNrJTIwcGFwZXJ3b3JrfGVufDB8fHx8MTc3Mjk3ODk1NXww&ixlib=rb-4.1.0&q=85",
+      "alt": "Clean minimalist workspace",
+      "category": "Solution Section Visual"
+    }
+  },
+  "instructions_to_main_agent": [
+    "1. PRESERVE EXISTING ROUTING: Do not delete existing routes in App.js. Add /pricing and /demo.",
+    "2. USE SHADCN components for interactive elements (Accordions, Dialogs, Inputs).",
+    "3. DATA-TESTID: Every button, input, and link MUST have a unique data-testid (e.g., 'pricing-starter-btn', 'demo-hero-cta').",
+    "4. RESPONSIVENESS: Mobile first. Stack grids on mobile, expand on desktop.",
+    "5. NO LOREM IPSUM: Use the Turkish copy provided in the 'pages' section above.",
+    "6. WARMTH: Do not make it look like a bank. Use the Orange/Teal palette to feel like a holiday planner.",
+    "7. PRICING LOGIC: Ensure the '14 Gün Ücretsiz Dene' button leads to the signup page (/signup or similar) with a query param if needed (e.g., ?plan=pro)."
+  ],
+  "universal_guidelines": [
+    "Don't make generic centered layouts.",
+    "Create depth through layered design elements.",
+    "Use 2-3x more spacing than feels comfortable.",
+    "Every interaction needs micro-animations.",
+    "Use 'sonner' for toasts.",
+    "Components MUST use named exports."
+  ]
+}

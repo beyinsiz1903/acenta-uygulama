@@ -6,19 +6,22 @@
 - Entitlement Projection Engine V1 tamamlandı ve test edildi
 - Usage Metering için PR-UM1 foundation tamamlandı
 - Usage Metering için PR-UM2 `reservation.created` instrumentation tamamlandı
+- Usage Metering için PR-UM3 tamamlandı:
+  - `report.generated`
+  - `export.generated`
+  - `integration.call` wiring
 
 ## P0 — Sıradaki Kritik İş
 
-### Usage Metering — PR-UM3 / PR-UM4 / PR-UM5
-Hedef: foundation + reservation metriğinden sonra kalan monetization akışlarını tamamlamak.
+### Usage Metering — PR-UM4 / PR-UM5
+Hedef: ölçülen usage verisini görünür ve aksiyon alınabilir hale getirmek.
 
-Öncelikli ölçümler:
-- rapor üretimi
-- export sayısı
-- entegrasyon çağrıları
+Öncelikli teslimler:
+- admin + tenant usage read API görünürlüğü
+- dashboard usage kartları / tabloları
+- soft quota warnings + upgrade recommendation
 
 Teslim beklentisi:
-- `report.generated`, `export.generated`, `integration.call` instrumentation
 - usage görünürlüğü (admin + tenant)
 - soft quota enforcement ve upgrade recommendation
 
@@ -49,7 +52,7 @@ Teslim beklentisi:
 - mevcut durumda bloklu / ertelendi
 
 ### Daha İleri Monetizasyon
-- quota enforcement
+- hard quota enforcement
 - billing alignment
 - overage ve self-service plan geçişleri
 
@@ -57,6 +60,10 @@ Teslim beklentisi:
 - PR-5B için mobil repository erişimi yok
 
 ## Son Tamamlanan İş
+- **Usage Metering PR-UM3**
+  - gerçek report/export output instrumentation
+  - Google Sheets integration.call metering wiring
+  - correlation-id bazlı dedupe doğrulandı
 - **Usage Metering PR-UM1 Foundation**
   - usage metric constants
   - usage_daily aggregate repository

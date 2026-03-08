@@ -59,6 +59,11 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 - `reservation.created` için ilk gerçek business flow instrumentation teslim edildi
 - Guardrail: yalnız yeni create anı sayılır; status update / cancel bu aşamada sayılmaz
 
+### Usage Metering PR-UM3
+- `report.generated` gerçek PDF rapor üretim anında meterlanır
+- `export.generated` yalnız gerçek CSV/ZIP/stream output üretiminde meterlanır; tekrar indirme sayılmaz
+- `integration.call` Google Sheets provider/client katmanında gerçek dış servis çağrısı yapıldığında meterlanacak şekilde hazırlandı
+
 ## Test Kimlik Bilgileri
 | Portal | Email | Password | Rol |
 |---|---|---|---|
@@ -91,6 +96,10 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 ## Aktif Monetizasyon Durumu
 - Entitlement projection katmanı aktif
 - Usage metering için ilk canlı iş metriği aktif: `reservation.created`
+- PR-UM3 kapsamı aktif:
+  - `report.generated` → match-risk executive PDF
+  - `export.generated` → sales summary CSV, tenant ZIP export, audit CSV export
+  - `integration.call` → Google Sheets provider/client çağrı katmanı
 - Kullanım özeti mevcut admin usage endpoint’lerinden okunabiliyor
 
 ## Bu Dosyanın Kapsamı

@@ -1,5 +1,35 @@
 # CHANGELOG — Acenta Master Travel SaaS
 
+## 2026-03-08 — Usage Metering PR-UM3 (`report.generated`, `export.generated`, `integration.call`)
+- `backend/app/services/usage_service.py` genişletildi:
+  - `track_report_generated(...)`
+  - `track_export_generated(...)`
+  - `track_integration_call(...)`
+  - ortak tenant/org resolve + best-effort tracking helper
+- Gerçek report output meterlandı:
+  - `backend/app/services/report_output_service.py` eklendi
+  - `backend/app/routers/admin_reports.py` match-risk executive PDF üretimini bu service’e taşıdı
+- Gerçek export output meterlandı:
+  - `backend/app/routers/reports.py` → `sales-summary.csv`
+  - `backend/app/routers/enterprise_export.py` → tenant ZIP export
+  - `backend/app/routers/enterprise_audit.py` → audit CSV streaming export
+  - `backend/app/routers/exports.py` → persisted admin export run
+- Google Sheets entegrasyon çağrısı instrumentation eklendi:
+  - `backend/app/services/sheets_provider.py`
+  - `backend/app/services/google_sheets_client.py`
+  - `backend/app/services/hotel_portfolio_sync_service.py`
+  - `backend/app/services/sheet_sync_service.py`
+  - `backend/app/services/sheet_writeback_service.py`
+- Guardrail doğrulamaları:
+  - aynı `X-Correlation-Id` ile tekrar isteklerde double count oluşmuyor
+  - JSON read/dashboard endpoint’leri usage artırmıyor
+  - `integration.call` yalnız gerçek Google Sheets API call boundary’sinde tetiklenecek şekilde bağlandı
+- Test / doğrulama:
+  - manual curl smoke geçti
+  - `testing_agent` iteration_20: 17/17 backend test geçti
+  - `deep_testing_backend_v2` regression check geçti
+  - Not: Google Sheets runtime config bu preview ortamında tanımlı değil; bu yüzden `integration.call` path’i kod + wiring seviyesinde doğrulandı, canlı dış çağrı smoke’u yapılamadı
+
 ## 2026-03-08 — Usage Metering PR-UM2 (`reservation.created`)
 - Kanonik reservation create flow instrument edildi:
   - `backend/app/services/reservations.py`

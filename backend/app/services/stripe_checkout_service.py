@@ -84,6 +84,27 @@ def _schedule_id(value: Any) -> Optional[str]:
     return getattr(value, "id", None)
 
 
+def _subscription_first_item(subscription: Any) -> Any:
+    if not subscription:
+        return None
+    items_container = subscription.get("items", {}) if hasattr(subscription, "get") else getattr(subscription, "items", {})
+    if callable(items_container):
+        items_container = {}
+    data = items_container.get("data") if isinstance(items_container, dict) else getattr(items_container, "data", None)
+    return (data or [None])[0]
+
+
+def _stripe_value(obj: Any, key: str, default: Any = None) -> Any:
+    if obj is None:
+        return default
+    if hasattr(obj, "get"):
+        try:
+            return obj.get(key, default)
+        except Exception:
+            pass
+    return getattr(obj, key, default)
+
+
 def _interval_label(interval: str) -> str:
     return "Yıllık" if interval == "yearly" else "Aylık"
 
@@ -275,16 +296,16 @@ class StripeCheckoutService:
             return (await billing_repo.get_subscription(tenant_id)) or {}
 
         sub = await self._retrieve_subscription(subscription_id)
-        item = (sub.items.data or [None])[0]
-        price = getattr(item, "price", None)
-        price_id = getattr(price, "id", None)
+        item = _subscription_first_item(sub)
+        price = _stripe_value(item, "price")
+        price_id = _stripe_value(price, "id")
         price_doc = await billing_repo.get_plan_price_by_provider_price_id(price_id) if price_id else None
         existing = await billing_repo.get_subscription(tenant_id)
         plan = (price_doc or {}).get("plan") or plan_hint or (existing or {}).get("plan") or "starter"
         interval = (price_doc or {}).get("interval") or interval_hint or (existing or {}).get("interval") or "monthly"
         provider_customer_id = customer_id or (sub.customer if isinstance(sub.customer, str) else getattr(sub.customer, "id", None))
-        current_period_end = _iso_from_unix(getattr(sub, "current_period_end", None))
-        current_period_start = _iso_from_unix(getattr(sub, "current_period_start", None))
+        current_period_end = _iso_from_unix(_stripe_value(sub, "current_period_end")) or _iso_from_unix(_stripe_value(item, "current_period_end")) or _iso_from_unix(_stripe_value(sub, "cancel_at"))
+        current_period_start = _iso_from_unix(_stripe_value(sub, "current_period_start")) or _iso_from_unix(_stripe_value(item, "current_period_start")) or _iso_from_unix(_stripe_value(sub, "start_date"))
         schedule_id = _schedule_id(getattr(sub, "schedule", None))
 
         if provider_customer_id and _is_real_customer_id(provider_customer_id):
@@ -910,9 +931,12 @@ class StripeCheckoutService:
 
         target_price = await self._ensure_recurring_price(plan, interval)
         current_subscription = await self._retrieve_subscription(provider_subscription_id)
-        current_item = (current_subscription.items.data or [None])[0]
-        current_quantity = getattr(current_item, "quantity", 1) or 1
-        current_price_id = getattr(getattr(current_item, "price", None), "id", None)
+        current_item = _subscription_first_item(current_subscription)
+        current_quantity = _stripe_value(current_item, "quantity", 1) or 1
+        current_price_id = _stripe_value(_stripe_value(current_item, "price"), "id")
+        current_item_id = _stripe_value(current_item, "id")
+        if not current_item_id or not current_price_id:
+            raise AppError(500, "subscription_item_missing", "Stripe abonelik öğesi bulunamadı.", {"subscription_id": provider_subscription_id})
         customer_id = current_subscription.customer if isinstance(current_subscription.customer, str) else getattr(current_subscription.customer, "id", None)
 
         if change_mode == "upgrade_now":
@@ -920,7 +944,7 @@ class StripeCheckoutService:
             updated = await self._stripe_call(
                 stripe.Subscription.modify,
                 provider_subscription_id,
-                items=[{"id": current_item.id, "price": target_price["provider_price_id"]}],
+                items=[{"id": current_item_id, "price": target_price["provider_price_id"]}],
                 proration_behavior="create_prorations",
                 cancel_at_period_end=False,
                 metadata={"plan": plan, "interval": interval},
@@ -953,48 +977,34 @@ class StripeCheckoutService:
         raw_schedule_id = _schedule_id(getattr(current_subscription, "schedule", None))
         if raw_schedule_id:
             schedule = await self._stripe_call(stripe.SubscriptionSchedule.retrieve, raw_schedule_id)
-            updated_schedule = await self._stripe_call(
-                stripe.SubscriptionSchedule.modify,
-                schedule.id,
-                end_behavior="release",
-                phases=[
-                    {
-                        "items": [{"price": current_price_id, "quantity": current_quantity}],
-                        "start_date": int(getattr(current_subscription, "current_period_start", 0) or 0),
-                        "end_date": int(getattr(current_subscription, "current_period_end", 0) or 0),
-                    },
-                    {
-                        "items": [{"price": target_price["provider_price_id"], "quantity": current_quantity}],
-                        "metadata": {"plan": plan, "interval": interval},
-                    },
-                ],
-                metadata={"plan": plan, "interval": interval},
-            )
         else:
             schedule = await self._stripe_call(
                 stripe.SubscriptionSchedule.create,
                 from_subscription=provider_subscription_id,
             )
-            updated_schedule = await self._stripe_call(
-                stripe.SubscriptionSchedule.modify,
-                schedule.id,
-                end_behavior="release",
-                phases=[
-                    {
-                        "items": [{"price": current_price_id, "quantity": current_quantity}],
-                        "start_date": int(getattr(current_subscription, "current_period_start", 0) or 0),
-                        "end_date": int(getattr(current_subscription, "current_period_end", 0) or 0),
-                    },
-                    {
-                        "items": [{"price": target_price["provider_price_id"], "quantity": current_quantity}],
-                        "metadata": {"plan": plan, "interval": interval},
-                    },
-                ],
-                metadata={"plan": plan, "interval": interval},
-            )
+        schedule_current_phase = ((schedule.get("phases") or [{}])[0]) if hasattr(schedule, "get") else {}
+        current_phase_start = schedule_current_phase.get("start_date") or _stripe_value(current_subscription, "start_date")
+        current_phase_end = schedule_current_phase.get("end_date") or _stripe_value(current_subscription, "current_period_end")
+        updated_schedule = await self._stripe_call(
+            stripe.SubscriptionSchedule.modify,
+            schedule.id,
+            end_behavior="release",
+            phases=[
+                {
+                    "items": [{"price": current_price_id, "quantity": current_quantity}],
+                    "start_date": current_phase_start,
+                    "end_date": current_phase_end,
+                },
+                {
+                    "items": [{"price": target_price["provider_price_id"], "quantity": current_quantity}],
+                    "metadata": {"plan": plan, "interval": interval},
+                },
+            ],
+            metadata={"plan": plan, "interval": interval},
+        )
 
         db = await get_db()
-        effective_at = _iso_from_unix(getattr(current_subscription, "current_period_end", None))
+        effective_at = _iso_from_unix(current_phase_end)
         await db.billing_subscriptions.update_one(
             {"tenant_id": tenant_id},
             {

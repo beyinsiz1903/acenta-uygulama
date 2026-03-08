@@ -79,6 +79,13 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 - Cookie-compat auth bootstrap akışında `/api/auth/me` artık `tenant_id` döner; frontend tenant bağlamını korur
 - Trial önerisi rezervasyon kullanım oranı odaklı çalışır; %70 demo senaryosunda `Pro Plan` önerilir
 
+### Trial Expiry & Demo-Filled Onboarding
+- Trial süresi dolan kullanıcılar için `/app` içinde tam sayfa bloklayıcı conversion ekranı aktif
+- Ekran metni: `Deneme süreniz sona erdi` + `Tüm verileriniz korunuyor`; her plan için `Plan Seç` CTA’sı `/pricing` sayfasına gider
+- Trial durumu kontrolü düzeltildi; artık non-trial kullanıcılar yanlışlıkla expired görünmez
+- Yeni Trial signup hesapları signup tamamlanır tamamlanmaz otomatik demo veri ile beslenir
+- Otomatik demo seed kapsamı: 20 müşteri, 30 rezervasyon, 5 tur, 5 otel, 5 destek ürünü
+
 ### Pricing & Demo Sales Surface
 - Public `/pricing` sayfası satış odaklı olarak yeniden kurgulandı; Türkçe satış copy, net plan kartları ve sosyal kanıt bloğu ile finalize edildi
 - Public `/demo` sayfası funnel başlangıcı olarak finalize edildi; `Hero -> Problem -> Çözüm -> CTA` yapısı canlı
@@ -147,13 +154,18 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 - Trial conversion akışı aktif:
   - `/pricing` ve `/demo` CTA’ları `/signup?plan=trial` akışına bağlandı
   - Plan bazlı CTA’lar `selectedPlan` query param ile signup ekranına yönlendiriyor
+- Yeni conversion / retention iyileştirmeleri tamamlandı:
+  - Trial expiry full-screen gate aktif; expired hesaplar `/app` içinde bloklanıyor ve `/pricing` yönüne itiliyor
+  - `/pricing` sayfasına `Problem`, `Çözüm` ve `ROI` blokları eklendi
+  - Trial signup sonrası demo veri otomatik seed ediliyor; ilk çalışma alanı boş gelmiyor
 - Doğrulama tamamlandı:
   - Manuel smoke test: preview üzerinde `/pricing -> /demo` geçişi doğrulandı
   - Testing agent raporu: `/app/test_reports/iteration_25.json` → frontend %100 geçti
+  - Testing agent raporu: `/app/test_reports/iteration_26.json` → trial expiry + signup seed + pricing blokları geçti
 
 ## Öncelikli Sonraki Adımlar
 - **P1:** Trial signup akışını satış funnel’ı ile daha sıkı bağlama (ilk giriş sonrası onboarding/paket yönlendirme polish)
-- **P1:** Trial bitiş mesajı + upgrade seçim ekranı
+- **P1:** Trial bitiş sonrası ödeme / upgrade seçim akışını Stripe checkout ile bağlama
 - **P1:** Hard quota enforcement
 - **P2:** Admin demo agency oluşturma butonu
 - **P2:** Admin endpoint cleanup (`/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`)

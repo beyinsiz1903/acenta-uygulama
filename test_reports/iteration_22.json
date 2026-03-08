@@ -1,0 +1,121 @@
+{
+  "summary": "PR-UM5 Usage Warning Levels + CTA Integration Testing Complete. All backend tests passed (18/18). All frontend tests passed. Verified: (1) Quota warning thresholds: 70% warning, 85% critical, 100% limit_reached, (2) GET /api/tenant/usage-summary returns warning_level, warning_message, upgrade_recommended, cta_href=/pricing per metric, (3) trial_conversion payload present with recommended_plan based on usage ratio, (4) GET /api/tenant/quota-status exposes warning fields, (5) Dashboard shows warning microcopy + CTA for critical metrics, (6) Trial recommendation block shows Enterprise plan for 85% usage, (7) Usage page shows warning CTA + trial recommendation, (8) Admin tenant usage overview shows NO CTA buttons (verified), (9) CTA href correctly set to /pricing.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "✅ Backend: test_warning_level_normal_under_70 - <70% usage returns 'normal'",
+    "✅ Backend: test_warning_level_warning_at_70 - 70-84% returns 'warning'",
+    "✅ Backend: test_warning_level_critical_at_85 - 85-99% returns 'critical'",
+    "✅ Backend: test_warning_level_limit_reached_at_100 - 100%+ returns 'limit_reached'",
+    "✅ Backend: test_warning_level_with_none_limit - None/0 limit returns 'normal'",
+    "✅ Backend: test_recommend_starter_under_40 - <40% usage recommends Starter",
+    "✅ Backend: test_recommend_pro_40_to_80 - 40-80% recommends Pro",
+    "✅ Backend: test_recommend_enterprise_over_80 - >80% recommends Enterprise",
+    "✅ Backend: test_usage_summary_returns_200 - Endpoint returns 200",
+    "✅ Backend: test_usage_summary_has_warning_fields_per_metric - Each metric has warning_level, warning_message, upgrade_recommended",
+    "✅ Backend: test_usage_summary_cta_fields_when_upgrade_recommended - cta_href=/pricing when upgrade_recommended=true",
+    "✅ Backend: test_usage_summary_has_trial_conversion_payload - trial_conversion payload present",
+    "✅ Backend: test_quota_status_returns_200 - Endpoint returns 200",
+    "✅ Backend: test_quota_status_has_quotas_array - quotas array with warning fields",
+    "✅ Backend: test_quota_status_cta_fields - cta_href and cta_label present",
+    "✅ Backend: test_admin_usage_endpoint_exists - Admin usage endpoint works",
+    "✅ Backend: test_trial_tenant_has_critical_warning - 85/100 export shows 'critical'",
+    "✅ Backend: test_trial_conversion_recommendation - Enterprise recommended for 85% usage",
+    "✅ Frontend: Dashboard trial banner present with 'Planı yükselt' CTA",
+    "✅ Frontend: Dashboard usage card with 3 metrics (Reservations, Reports, Exports)",
+    "✅ Frontend: Exports metric shows 85/100 with 'Kritik' badge",
+    "✅ Frontend: 'Planları Gör' CTA button present on critical metric",
+    "✅ Frontend: Trial conversion block shows Enterprise recommendation",
+    "✅ Frontend: Usage page heading 'Kullanım görünürlüğü'",
+    "✅ Frontend: Usage page metric CTA present",
+    "✅ Frontend: Usage page trial recommendation present",
+    "✅ Frontend: 3 warning level badges on usage page",
+    "✅ Frontend: Trend chart present on usage page",
+    "✅ Frontend: Admin tenant usage overview present",
+    "✅ Frontend: Admin usage shows metrics + trend chart",
+    "✅ Frontend: Admin usage has ZERO CTA buttons (verified)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_usage_warning_pr_um5.py",
+    "/app/test_reports/pytest/pytest_usage_warning_um5.xml",
+    "/app/backend/tests/test_usage_warning_levels.py"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "quota_warning_service.py: Thresholds correctly implement 70% warning, 85% critical, 100% limit_reached",
+    "quota_warning_service.py: recommend_plan() correctly returns Starter (<40%), Pro (40-80%), Enterprise (>80%)",
+    "usage_read_service.py: build_metric_warning_payload() and build_trial_conversion_payload() correctly integrated",
+    "tenant_features.py: /api/tenant/quota-status exposes warning_level, warning_message, upgrade_recommended, cta_href, cta_label",
+    "DashboardUsageSummaryCard.jsx: Shows CTA via UsageQuotaCard showCta prop",
+    "UsagePage.jsx: Shows CTA via UsageMetricTiles showCta prop + UsageTrialRecommendation",
+    "AdminTenantUsageOverview.jsx: Explicitly sets showCta={false} - NO pricing CTA in admin views",
+    "AppShell.jsx: quotaAlerts only shown when user is NOT admin (!isAdmin)",
+    "Frontend lib/usage.js: ctaHref defaults to /pricing"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_usage_warning_pr_um5.py"
+  ],
+  "success_rate": {
+    "backend": "100% (18/18 tests passed)",
+    "frontend": "100% (All UI components verified)"
+  },
+  "test_credentials": {
+    "admin": "admin@acenta.test / admin123",
+    "trial_tenant": "admin@demo-travel.demo.test / Demotrav!9831"
+  },
+  "seed_data_creation": "Preview data prepared: demo trial tenant e4b61b67-66fb-5898-b2ff-1329fd2627ed has export.generated=85/100 in usage_daily",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "PR-UM5 usage warning + CTA features fully working. Trial demo tenant shows: (1) Trial banner with 13 days remaining + 'Planı yükselt' CTA, (2) Dashboard usage card with Exports 85/100 showing 'Kritik' badge + warning message + 'Planları Gör' CTA, (3) Trial conversion block recommending Enterprise plan, (4) Usage page with same warnings + CTA + trial recommendation + trend chart. Admin tenant usage view shows usage data but NO CTA buttons (verified). All quota warning thresholds working: normal (<70%), warning (70-84%), critical (85-99%), limit_reached (100%+). CTA href is /pricing throughout.",
+  "um5_verification_summary": {
+    "quota_warning_thresholds": {
+      "normal": "<70% usage",
+      "warning": "70-84% usage",
+      "critical": "85-99% usage",
+      "limit_reached": ">=100% usage",
+      "status": "VERIFIED"
+    },
+    "trial_plan_recommendation": {
+      "starter": "<40% usage",
+      "pro": "40-80% usage",
+      "enterprise": ">80% usage",
+      "status": "VERIFIED"
+    },
+    "tenant_usage_summary_api": {
+      "endpoint": "GET /api/tenant/usage-summary",
+      "warning_fields": ["warning_level", "warning_message", "upgrade_recommended", "cta_href", "cta_label"],
+      "trial_conversion_fields": ["is_trial", "show", "usage_ratio", "recommended_plan", "message", "cta_href", "cta_label"],
+      "status": "VERIFIED"
+    },
+    "tenant_quota_status_api": {
+      "endpoint": "GET /api/tenant/quota-status",
+      "fields": ["warning_level", "warning_message", "upgrade_recommended", "cta_href", "cta_label"],
+      "status": "VERIFIED"
+    },
+    "dashboard_cta": {
+      "location": "Dashboard (/app)",
+      "shows_cta": true,
+      "shows_trial_recommendation": true,
+      "status": "VERIFIED"
+    },
+    "usage_page_cta": {
+      "location": "/app/usage",
+      "shows_cta": true,
+      "shows_trial_recommendation": true,
+      "status": "VERIFIED"
+    },
+    "admin_no_cta": {
+      "location": "Admin Tenant Features (/app/admin/tenant-features)",
+      "shows_cta": false,
+      "status": "VERIFIED - showCta={false}"
+    },
+    "cta_target": "/pricing"
+  }
+}

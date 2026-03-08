@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { formatMoney, formatMoneyCompact } from "../lib/format";
 import {
   LayoutGrid, CalendarDays, Ticket, Users, Layers, FileText,
@@ -745,22 +745,29 @@ function AppShellInner() {
         {/* --- Main Content --- */}
         <main className="flex-1 min-h-[calc(100vh-53px)] overflow-auto">
           <TrialBanner />
-          {quotaAlerts && quotaAlerts.length > 0 && (
+          {!isAdmin && quotaAlerts && quotaAlerts.length > 0 && (
             <div className="mx-4 mt-3 space-y-2" data-testid="quota-alert-banners">
               {quotaAlerts.map((q) => (
                 <div
                   key={q.metric}
                   className={`rounded-lg border px-4 py-2 text-xs flex items-center justify-between ${
-                    q.exceeded
+                    q.warning_level === "limit_reached"
                       ? "border-destructive/40 bg-destructive/5 text-destructive"
-                      : "border-amber-500/40 bg-amber-500/5 text-amber-700"
+                      : q.warning_level === "critical"
+                        ? "border-orange-500/40 bg-orange-500/5 text-orange-700"
+                        : "border-amber-500/40 bg-amber-500/5 text-amber-700"
                   }`}
+                  data-testid={`quota-alert-${String(q.metric || "metric").replace(/\./g, "-")}`}
                 >
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                    <span>{q.exceeded ? "Quota aşıldı" : "Quota'ya yaklaşıyorsunuz"}: {q.used}/{q.quota} ({Math.round(q.ratio * 100)}%)</span>
+                    <span>{q.warning_message || `${q.used}/${q.quota}`}</span>
                   </div>
-                  {q.recommendation && <span className="text-2xs font-medium shrink-0 ml-3">{q.recommendation}</span>}
+                  {q.upgrade_recommended && (
+                    <Button asChild size="sm" variant="outline" className="ml-3 h-7 text-2xs" data-testid={`quota-alert-${String(q.metric || "metric").replace(/\./g, "-")}-cta`}>
+                      <Link to={q.cta_href || "/pricing"}>{q.cta_label || "Planları Gör"}</Link>
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>

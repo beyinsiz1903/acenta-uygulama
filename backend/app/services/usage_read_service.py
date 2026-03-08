@@ -4,9 +4,14 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
 from app.constants.usage_metrics import UsageMetric
+from app.db import get_db
 from app.repositories.usage_daily_repository import usage_daily_repo
 from app.repositories.usage_ledger_repository import usage_ledger_repo
 from app.services.entitlement_service import entitlement_service
+from app.services.quota_warning_service import (
+  build_metric_warning_payload,
+  build_trial_conversion_payload,
+)
 from app.services.usage_service import _current_billing_period, _resolve_usage_organization_id
 
 PRIMARY_USAGE_METRICS = [
@@ -32,6 +37,7 @@ def _metric_payload(metric: str, quota: Any, used: int) -> Dict[str, Any]:
   percent = round(ratio * 100, 2) if limit not in (None, 0) else 0
   return {
     "label": PRIMARY_USAGE_LABELS.get(metric, metric),
+    "metric": metric,
     "used": used,
     "quota": quota,
     "limit": limit,
@@ -62,9 +68,25 @@ async def get_usage_overview(
 ) -> Dict[str, Any]:
   entitlements = await entitlement_service.get_tenant_entitlements(tenant_id)
   plan = entitlements.get("plan")
-  quotas = entitlements.get("usage_allowances") or {}
   period = billing_period or _current_billing_period()
   organization_id = await _resolve_usage_organization_id(tenant_id, period)
+  billing_status = entitlements.get("billing_status")
+  if not billing_status:
+    db = await get_db()
+    legacy_sub = await db.subscriptions.find_one(
+      {
+        "$or": [
+          {"tenant_id": tenant_id},
+          {"org_id": organization_id} if organization_id else {"tenant_id": tenant_id},
+        ]
+      },
+      {"_id": 0, "status": 1},
+      sort=[("updated_at", -1)],
+    )
+    if legacy_sub:
+      billing_status = legacy_sub.get("status")
+  is_trial = billing_status == "trialing" or str(plan or "").lower() in {"trial", "trialing"}
+  quotas = entitlements.get("usage_allowances") or {}
 
   totals = await usage_daily_repo.get_period_totals(tenant_id, period, organization_id=organization_id)
   totals_source = "usage_daily"
@@ -79,10 +101,21 @@ async def get_usage_overview(
     metric_keys = set(metric_filter)
 
   ordered_metric_keys = _normalize_metric_order(list(metric_keys))
-  metrics = {
-    metric: _metric_payload(metric, quotas.get(metric), int(totals.get(metric, 0) or 0))
-    for metric in ordered_metric_keys
-  }
+  metrics = {}
+  for metric in ordered_metric_keys:
+    used = int(totals.get(metric, 0) or 0)
+    quota = quotas.get(metric)
+    metrics[metric] = {
+      **_metric_payload(metric, quota, used),
+      **build_metric_warning_payload(metric=metric, used=used, limit=quota, is_trial=is_trial),
+    }
+
+  primary_ratios = [
+    float(metrics.get(metric, {}).get("ratio") or 0)
+    for metric in PRIMARY_USAGE_METRICS
+    if metric in metrics
+  ]
+  overall_usage_ratio = max(primary_ratios) if primary_ratios else 0
 
   today = datetime.now(timezone.utc).date()
   start_date = today - timedelta(days=max(1, trend_days) - 1)
@@ -108,10 +141,14 @@ async def get_usage_overview(
     "organization_id": organization_id,
     "plan": plan,
     "plan_label": entitlements.get("plan_label"),
+    "billing_status": billing_status,
+    "is_trial": is_trial,
     "billing_period": period,
     "period": period,
     "metrics": metrics,
     "primary_metrics": PRIMARY_USAGE_METRICS,
+    "overall_usage_ratio": round(overall_usage_ratio, 4),
+    "trial_conversion": build_trial_conversion_payload(usage_ratio=overall_usage_ratio, is_trial=is_trial),
     "trend": {
       "days": max(1, trend_days),
       "start_date": start_date.isoformat(),

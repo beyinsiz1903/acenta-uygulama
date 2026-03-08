@@ -112,16 +112,17 @@ async def get_tenant_quota_status(request: Request, user=Depends(get_current_use
   items = []
   for metric, data in metrics.items():
     ratio = (data["used"] / data["quota"]) if data.get("quota") else 0
-    rec = None
-    if plan == "pro" and ratio >= 0.8:
-      rec = "Pro → Enterprise yükseltme önerilir."
     item = {
       "metric": metric,
       "used": data["used"],
       "quota": data["quota"],
       "ratio": round(ratio, 2),
       "exceeded": data["exceeded"],
-      "recommendation": rec,
+      "warning_level": data.get("warning_level"),
+      "warning_message": data.get("warning_message"),
+      "upgrade_recommended": data.get("upgrade_recommended", False),
+      "cta_href": data.get("cta_href"),
+      "cta_label": data.get("cta_label"),
     }
     items.append(item)
 

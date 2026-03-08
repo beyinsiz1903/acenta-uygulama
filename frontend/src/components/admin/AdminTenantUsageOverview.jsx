@@ -53,7 +53,7 @@ export const AdminTenantUsageOverview = ({ tenantId }) => {
         </Button>
       </div>
 
-      <UsageMetricTiles entries={entries} testIdPrefix="admin-tenant-usage" />
+      <UsageMetricTiles entries={entries} testIdPrefix="admin-tenant-usage" showCta={false} />
       <UsageTrendChart data={trendData} testId="admin-tenant-usage-trend-chart" title="Last 30 days" />
     </div>
   );

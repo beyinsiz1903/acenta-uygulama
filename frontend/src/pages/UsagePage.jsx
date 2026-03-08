@@ -2,9 +2,10 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Activity, RefreshCw } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { api } from "../lib/api";
-import { buildUsageTrendData, getUsageMetricEntries } from "../lib/usage";
+import { buildUsageTrendData, getTrialConversion, getUsageMetricEntries } from "../lib/usage";
 import { UsageMetricTiles } from "../components/usage/UsageMetricTiles";
 import { UsageTrendChart } from "../components/usage/UsageTrendChart";
+import { UsageTrialRecommendation } from "../components/usage/UsageTrialRecommendation";
 
 export default function UsagePage() {
   const [summary, setSummary] = useState(null);
@@ -26,6 +27,7 @@ export default function UsagePage() {
 
   const entries = useMemo(() => getUsageMetricEntries(summary), [summary]);
   const trendData = useMemo(() => buildUsageTrendData(summary), [summary]);
+  const trialConversion = useMemo(() => getTrialConversion(summary), [summary]);
 
   if (loading && !summary) {
     return <div className="rounded-3xl border bg-card/85 p-6 text-sm text-muted-foreground" data-testid="usage-page-loading">Usage verisi yükleniyor...</div>;
@@ -58,7 +60,8 @@ export default function UsagePage() {
         </Button>
       </div>
 
-      <UsageMetricTiles entries={entries} testIdPrefix="usage-page" />
+      <UsageMetricTiles entries={entries} testIdPrefix="usage-page" showCta />
+      <UsageTrialRecommendation trialConversion={trialConversion} testId="usage-page-trial-recommendation" />
       <UsageTrendChart data={trendData} testId="usage-page-trend-chart" title="Last 30 days" />
     </div>
   );

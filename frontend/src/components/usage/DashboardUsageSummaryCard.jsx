@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import { Activity, RefreshCw } from "lucide-react";
 import { Button } from "../ui/button";
 import { api } from "../../lib/api";
-import { buildUsageTrendData, getUsageMetricEntries } from "../../lib/usage";
+import { buildUsageTrendData, getTrialConversion, getUsageMetricEntries } from "../../lib/usage";
 import { UsageMetricTiles } from "./UsageMetricTiles";
+import { UsageTrialRecommendation } from "./UsageTrialRecommendation";
 
 export const DashboardUsageSummaryCard = () => {
   const [summary, setSummary] = useState(null);
@@ -26,6 +27,7 @@ export const DashboardUsageSummaryCard = () => {
 
   const entries = useMemo(() => getUsageMetricEntries(summary), [summary]);
   const trendData = useMemo(() => buildUsageTrendData(summary), [summary]);
+  const trialConversion = useMemo(() => getTrialConversion(summary), [summary]);
   const lastActiveDay = [...trendData].reverse().find((item) => item.reservationCreated || item.reportGenerated || item.exportGenerated)?.date;
 
   if (loading && !summary) {
@@ -62,7 +64,11 @@ export const DashboardUsageSummaryCard = () => {
       </div>
 
       <div className="mt-4">
-        <UsageMetricTiles entries={entries} compact testIdPrefix="dashboard-usage-summary" />
+        <UsageMetricTiles entries={entries} compact showCta testIdPrefix="dashboard-usage-summary" />
+      </div>
+
+      <div className="mt-4">
+        <UsageTrialRecommendation trialConversion={trialConversion} testId="dashboard-usage-trial-recommendation" />
       </div>
     </section>
   );

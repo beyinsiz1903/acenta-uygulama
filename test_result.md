@@ -222,9 +222,9 @@ frontend:
 
 test_plan:
   current_focus:
-    - "PR-V1-0 minimal frontend smoke validation - PASSED"
+    - "PR-UM5 usage metering CTA surfaces smoke test - PASSED"
   stuck_tasks: []
-  test_all: true
+  test_all: false
   test_priority: "high_first"
 
 agent_communication:
@@ -2324,10 +2324,22 @@ agent_communication:
         agent: "testing"
         comment: "PR-UM4 frontend smoke test COMPLETED - ALL 4 TESTS PASSED (100% success rate). Comprehensive validation of usage metering UI after tenant context fallback fix per review request on https://meter-demo.preview.emergentagent.com with admin@acenta.test/admin123. Test Results: 1) ✅ Dashboard mini usage card on /app - dashboard-usage-summary-card renders successfully with all required elements (title: 'Usage snapshot', refresh button (dashboard-usage-refresh-button), open page button (dashboard-usage-open-page-button), three primary metric cards (reservations: 0/Sınırsız, reports: 11/Sınırsız, exports: 21/Sınırsız), integration.call metric correctly NOT shown (primary metrics only)), 2) ✅ Usage page on /app/usage - usage-page renders successfully with heading 'Kullanım görünürlüğü', all three metric cards present (usage-page-reservation-created-card, usage-page-report-generated-card, usage-page-export-generated-card), trend chart (usage-page-trend-chart) renders with data (canvas visible), 3) ✅ Admin tenant usage overview on /app/admin/tenant-features - Selected tenant successfully, admin-tenant-usage-overview renders with all metric cards (reservation, report, export), admin-tenant-usage-trend-chart renders with data, 4) ✅ CRITICAL: No tenant_context_missing errors detected - Zero network errors for /api/tenant/usage-summary endpoint, Zero network errors for /api/admin/billing/tenants/{tenant_id}/usage endpoint, No tenant_context_missing console errors. KEY VALIDATION: Prior blocker (tenant_context_missing on /api/tenant/usage-summary) is RESOLVED in UI behavior - all usage endpoints working correctly with tenant context fallback. Console shows 10 non-critical errors (401/500 on optional endpoints, not usage-related). All usage UI components functional and data-driven. PR-UM4 tenant context fallback fix validated successfully."
 
+  - task: "PR-UM5 usage metering CTA surfaces smoke test"
+    implemented: true
+    working: true
+    file: "frontend/src/components/usage/DashboardUsageSummaryCard.jsx, frontend/src/pages/UsagePage.jsx, frontend/src/components/usage/UsageQuotaCard.jsx, frontend/src/components/usage/UsageTrialRecommendation.jsx, frontend/src/components/admin/AdminTenantUsageOverview.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PR-UM5 usage metering CTA surfaces smoke test COMPLETED - ALL 4 FLOWS PASSED (100% success rate). Comprehensive validation on demo tenant (admin@demo-travel.demo.test, pro trial plan, export.generated at 85/100) per review request. Test Results: 1) ✅ Dashboard usage CTA surface on /app - ALL PASSED: dashboard-usage-summary-card EXISTS ✓, dashboard-usage-summary-export-generated-card EXISTS ✓, dashboard-usage-summary-export-generated-message EXISTS with text 'Limitinize sadece 15 export kaldı. Planınızı yükseltmeyi düşünebilirsiniz.' ✓, dashboard-usage-summary-export-generated-cta-button EXISTS with text 'Planları Gör' ✓, CTA points to /pricing flow ✓. 2) ✅ Trial conversion surface on dashboard - ALL PASSED: dashboard-usage-trial-recommendation EXISTS ✓, dashboard-usage-trial-recommendation-message EXISTS with text 'Trial kullanımınızın %85'ini kullandınız. Bu kullanım için önerilen plan: Enterprise' (visible and not blank) ✓, dashboard-usage-trial-recommendation-cta-button EXISTS with text 'Planları Gör' ✓. 3) ✅ Usage page CTA surface on /app/usage - ALL PASSED: usage-page-export-generated-cta-button EXISTS with text 'Planları Gör' ✓, usage-page-trial-recommendation EXISTS ✓, usage-page-trend-chart EXISTS ✓. 4) ✅ Admin no-CTA guardrail on /app/admin/tenant-features - ALL PASSED: admin-tenant-usage-overview EXISTS ✓, NO pricing CTA buttons found inside admin usage overview cards (guardrail working correctly, showCta={false} enforced) ✓. All required data-testid selectors present and functional. Warning messages display correctly at 85% usage threshold. CTAs navigate to /pricing as expected. Admin pages correctly exclude pricing CTAs. No missing selectors or navigation failures detected. PR-UM5 CTA surface implementation validated successfully."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 29
+  test_sequence: 30
   last_updated: "2026-03-08"
 
 agent_communication:
@@ -3307,3 +3319,69 @@ agent_communication:
       - working: false
         agent: "testing"
         comment: "PR-UM4 USAGE METERING UI SMOKE TEST COMPLETED - PARTIAL FAILURE (3/4 flows working, 1/4 blocked by tenant context issue). Test URL: https://meter-demo.preview.emergentagent.com with admin@acenta.test/admin123. Test Results: 1) ❌ Dashboard mini usage card at /app - NOT WORKING (dashboard-usage-summary-card not rendering, API call to /api/tenant/usage-summary returns 400 with error 'tenant_context_missing' - admin user (super_admin role) does not have tenant_id in context, backend logs show: 'AppError: code=tenant_context_missing status=400 path=/api/tenant/usage-summary message=Tenant context bulunamadı'), 2) ❌ Usage page at /app/usage - NOT WORKING (usage-page not rendering, same tenant context issue blocks /api/tenant/usage-summary endpoint, page cannot load data), 3) ✅ Admin tenant usage overview at /app/admin/tenant-features - WORKING (all required testids found: admin-tenant-usage-overview ✅, admin-tenant-usage-title ✅, admin-tenant-usage-refresh-button ✅, all 3 metric cards present: admin-tenant-usage-reservation-created-card ✅, admin-tenant-usage-report-generated-card ✅, admin-tenant-usage-export-generated-card ✅, admin-tenant-usage-trend-chart ✅, uses /api/admin/billing/tenants/{tenant_id}/usage endpoint which works correctly with explicit tenant_id parameter), 4) ✅ Regression check - PASSED (no blank states or crashes, existing page layout usable, no critical console errors except tenant context warnings). CRITICAL ISSUE: Dashboard usage card and usage page depend on /api/tenant/usage-summary endpoint which requires tenant context (X-Tenant-Id header or tenant_id in user session). Admin users (super_admin role) typically don't have tenant_id set, causing 400 tenant_context_missing errors. Admin tenant usage overview works because it explicitly passes tenant_id as URL parameter to /api/admin/billing/tenants/{tenant_id}/usage. RECOMMENDATION: Either (1) Add tenant context requirement check and show appropriate message when tenant context is missing, OR (2) Modify dashboard/usage page for super_admin users to show aggregated/multi-tenant view or tenant selector, OR (3) Set tenant_id for admin user in test environment. Components correctly implemented with all testids present, issue is backend API tenant context dependency. Success rate: 75% (admin flow working, tenant-user flows blocked by missing tenant context)."
+
+
+agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ PR-UM5 USAGE METERING CTA SURFACES SMOKE TEST COMPLETED - ALL 4 FLOWS PASSED (2026-03-08)
+      
+      Performed comprehensive PR-UM5 smoke test on demo tenant trial conversion and usage CTA surfaces.
+      
+      Context:
+      - Preview URL: https://meter-demo.preview.emergentagent.com
+      - Test Credentials: admin@demo-travel.demo.test / Demotrav!9831
+      - Tenant: Demo Travel (pro trial plan)
+      - Data Seeded: export.generated at 85/100 to exercise warning + CTA surfaces
+      
+      Test Results Summary:
+      
+      1. ✅ Dashboard usage CTA surface on /app - ALL PASSED
+         - dashboard-usage-summary-card EXISTS ✓
+         - dashboard-usage-summary-export-generated-card EXISTS ✓
+         - dashboard-usage-summary-export-generated-message EXISTS ✓
+           * Message: "Limitinize sadece 15 export kaldı. Planınızı yükseltmeyi düşünebilirsiniz."
+         - dashboard-usage-summary-export-generated-cta-button EXISTS ✓
+           * CTA text: "Planları Gör"
+         - CTA points to /pricing flow ✓
+      
+      2. ✅ Trial conversion surface on dashboard - ALL PASSED
+         - dashboard-usage-trial-recommendation EXISTS ✓
+         - dashboard-usage-trial-recommendation-message EXISTS ✓
+           * Message: "Trial kullanımınızın %85'ini kullandınız. Bu kullanım için önerilen plan: Enterprise"
+           * Text is visible and not blank ✓
+         - dashboard-usage-trial-recommendation-cta-button EXISTS ✓
+           * CTA text: "Planları Gör"
+      
+      3. ✅ Usage page CTA surface on /app/usage - ALL PASSED
+         - usage-page-export-generated-cta-button EXISTS ✓
+           * CTA text: "Planları Gör"
+         - usage-page-trial-recommendation EXISTS ✓
+         - usage-page-trend-chart EXISTS ✓
+      
+      4. ✅ Admin no-CTA guardrail on /app/admin/tenant-features - ALL PASSED
+         - admin-tenant-usage-overview EXISTS ✓
+         - NO pricing CTA buttons found inside admin usage overview cards ✓
+           * Guardrail working correctly (showCta={false} enforced)
+           * admin-tenant-usage-export-generated-cta-button does NOT exist ✓
+      
+      Key Validations Confirmed:
+      ✅ All required data-testid selectors present and functional
+      ✅ Warning messages display correctly at 85% usage threshold
+      ✅ CTAs navigate to /pricing as expected
+      ✅ Trial recommendation messages visible and not blank
+      ✅ Admin pages correctly exclude pricing CTAs (guardrail working)
+      ✅ No missing selectors detected
+      ✅ No navigation failures detected
+      ✅ Exports card shows 85/100 with proper warning level indicator
+      
+      Test Summary:
+      - Total Flows: 4
+      - Passed: 4
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      PR-UM5 usage metering CTA surfaces smoke test SUCCESSFUL. All review request validation points confirmed working. Dashboard and usage page properly display warning messages and pricing CTAs when trial usage reaches 85%. Admin pages correctly implement no-CTA guardrail. All selectors found and functional. No regressions detected. Implementation ready for production.
+      
+      Status: ✅ PRODUCTION-READY - PR-UM5 validated successfully with 100% test pass rate.

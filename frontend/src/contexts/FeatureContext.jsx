@@ -32,7 +32,7 @@ export function FeatureProvider({ children }) {
     // Best-effort quota fetch
     try {
       const qRes = await api.get("/tenant/quota-status");
-      const alerts = (qRes.data?.quotas || []).filter((q) => q.ratio >= 0.8);
+      const alerts = (qRes.data?.quotas || []).filter((q) => ["warning", "critical", "limit_reached"].includes(q.warning_level));
       setQuotaAlerts(alerts);
     } catch {
       setQuotaAlerts([]);

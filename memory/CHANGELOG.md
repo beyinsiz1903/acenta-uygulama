@@ -1,5 +1,25 @@
 # CHANGELOG — Acenta Master Travel SaaS
 
+## 2026-03-08 — Demo Seed Data Utility
+- `backend/seed_demo_data.py` eklendi; `python seed_demo_data.py --agency "Demo Travel" [--reset]` ile çalışır
+- `backend/app/services/demo_seed_service.py` eklendi; modüler seed akışı içerir:
+  - `create_demo_agency()`
+  - `create_demo_user()`
+  - `seed_tours()`
+  - `seed_hotels()`
+  - `seed_customers()`
+  - `seed_reservations()`
+  - `seed_availability()`
+- Seed artık yeni demo tenant için gerçekçi satış demosu verisi üretir:
+  - organization + tenant + membership + subscription + tenant capability
+  - 5 tur ve bunlara bağlı supporting product/rate plan/inventory
+  - 5 otel + agency-hotel link + 10 availability snapshot
+  - 20 müşteri + 30 rezervasyon
+- Doğrulama:
+  - CLI smoke test geçti
+  - tekrar çalıştırmada duplicate oluşmadığı doğrulandı
+  - demo kullanıcı ile `/api/auth/login` başarılı
+
 ## 2026-03-07 — CI / Test Collection Compatibility Fix
 - Preview-only backend test modülleri artık preview base URL yoksa collection aşamasında hata vermek yerine güvenli şekilde skip oluyor:
   - `test_admin_all_users_and_agency_nav.py`

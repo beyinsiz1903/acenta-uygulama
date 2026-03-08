@@ -69,9 +69,23 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 - `backend/app/routers/admin_tenant_features.py`
 - `backend/app/routers/tenant_features.py`
 - `backend/app/routers/onboarding.py`
+- `backend/seed_demo_data.py`
+- `backend/app/services/demo_seed_service.py`
 - `frontend/src/pages/admin/AdminTenantFeaturesPage.jsx`
 - `frontend/src/components/admin/TenantEntitlementOverview.jsx`
 - `frontend/src/pages/public/PricingPage.jsx`
+
+## Son Eklenen Backend Yardımcıları
+- Demo tenant / agency satış sunumu için idempotent demo seed utility eklendi
+- Script hedef veri seti üretir:
+  - 1 demo agency
+  - 1 admin kullanıcı
+  - 5 tur
+  - 5 otel
+  - 20 müşteri
+  - 30 rezervasyon
+  - 10 availability kaydı
+- Script yalnız hedef demo tenant kapsamını temizleyen `--reset` desteği sunar
 
 ## Bu Dosyanın Kapsamı
 Bu PRD dosyası yalnızca statik ürün bağlamını taşır.

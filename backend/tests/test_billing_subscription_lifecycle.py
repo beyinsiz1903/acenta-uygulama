@@ -133,7 +133,7 @@ class TestCustomerPortalEndpoint:
     def test_customer_portal_requires_auth(self, session):
         """Endpoint should require authentication"""
         resp = session.post(f"{BASE_URL}/api/billing/customer-portal", json={
-            "origin_url": "https://acenta-billing.preview.emergentagent.com",
+            "origin_url": "https://saas-billing-13.preview.emergentagent.com",
             "return_path": "/app/settings/billing"
         })
         assert resp.status_code in [401, 403], f"Expected 401/403, got {resp.status_code}"
@@ -149,7 +149,7 @@ class TestCustomerPortalEndpoint:
             f"{BASE_URL}/api/billing/customer-portal",
             headers=auth,
             json={
-                "origin_url": "https://acenta-billing.preview.emergentagent.com",
+                "origin_url": "https://saas-billing-13.preview.emergentagent.com",
                 "return_path": "/app/settings/billing"
             }
         )
@@ -173,7 +173,7 @@ class TestCustomerPortalEndpoint:
             f"{BASE_URL}/api/billing/customer-portal",
             headers=auth,
             json={
-                "origin_url": "https://acenta-billing.preview.emergentagent.com",
+                "origin_url": "https://saas-billing-13.preview.emergentagent.com",
                 "return_path": "/app/settings/billing"  # Required path per spec
             }
         )
@@ -193,7 +193,7 @@ class TestChangePlanEndpoint:
         resp = session.post(f"{BASE_URL}/api/billing/change-plan", json={
             "plan": "pro",
             "interval": "monthly",
-            "origin_url": "https://acenta-billing.preview.emergentagent.com"
+            "origin_url": "https://saas-billing-13.preview.emergentagent.com"
         })
         assert resp.status_code in [401, 403], f"Expected 401/403, got {resp.status_code}"
         print("✅ POST /api/billing/change-plan requires authentication")
@@ -222,7 +222,7 @@ class TestChangePlanEndpoint:
             json={
                 "plan": target_plan,
                 "interval": "monthly",
-                "origin_url": "https://acenta-billing.preview.emergentagent.com",
+                "origin_url": "https://saas-billing-13.preview.emergentagent.com",
                 "cancel_path": "/app/settings/billing"
             }
         )
@@ -249,7 +249,7 @@ class TestChangePlanEndpoint:
             json={
                 "plan": "enterprise",
                 "interval": "monthly",
-                "origin_url": "https://acenta-billing.preview.emergentagent.com"
+                "origin_url": "https://saas-billing-13.preview.emergentagent.com"
             }
         )
         
@@ -283,7 +283,7 @@ class TestChangePlanEndpoint:
             json={
                 "plan": current_plan,
                 "interval": current_interval,
-                "origin_url": "https://acenta-billing.preview.emergentagent.com"
+                "origin_url": "https://saas-billing-13.preview.emergentagent.com"
             }
         )
         
@@ -352,7 +352,7 @@ class TestCreateCheckoutSubscriptionMode:
             json={
                 "plan": "starter",
                 "interval": "monthly",
-                "origin_url": "https://acenta-billing.preview.emergentagent.com",
+                "origin_url": "https://saas-billing-13.preview.emergentagent.com",
                 "cancel_path": "/pricing"
             }
         )
@@ -380,7 +380,7 @@ class TestCreateCheckoutSubscriptionMode:
             json={
                 "plan": "pro",
                 "interval": "monthly",
-                "origin_url": "https://acenta-billing.preview.emergentagent.com"
+                "origin_url": "https://saas-billing-13.preview.emergentagent.com"
             }
         )
         

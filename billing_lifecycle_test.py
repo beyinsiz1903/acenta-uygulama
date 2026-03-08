@@ -6,7 +6,7 @@ import sys
 from typing import Dict, Any, Tuple
 
 # Configuration
-BASE_URL = "https://acenta-billing.preview.emergentagent.com"
+BASE_URL = "https://saas-billing-13.preview.emergentagent.com"
 
 # Test users from review request
 MANAGED_USER = {
@@ -137,7 +137,7 @@ class BillingTester:
     def test_customer_portal_endpoint(self, token: str):
         """Test 2: POST /api/billing/customer-portal"""
         portal_data = {
-            "origin_url": "https://acenta-billing.preview.emergentagent.com/app/settings/billing",
+            "origin_url": "https://saas-billing-13.preview.emergentagent.com/app/settings/billing",
             "return_path": "/app/settings/billing"
         }
         
@@ -179,7 +179,7 @@ class BillingTester:
         upgrade_data = {
             "plan": "pro",
             "interval": "monthly", 
-            "origin_url": "https://acenta-billing.preview.emergentagent.com/app/settings/billing",
+            "origin_url": "https://saas-billing-13.preview.emergentagent.com/app/settings/billing",
             "cancel_path": "/app/settings/billing"
         }
         
@@ -217,7 +217,7 @@ class BillingTester:
         downgrade_data = {
             "plan": "starter",
             "interval": "monthly",
-            "origin_url": "https://acenta-billing.preview.emergentagent.com/app/settings/billing",
+            "origin_url": "https://saas-billing-13.preview.emergentagent.com/app/settings/billing",
             "cancel_path": "/app/settings/billing"  
         }
         
@@ -298,7 +298,7 @@ class BillingTester:
         
         # Test portal URL (should work)
         portal_data = {
-            "origin_url": "https://acenta-billing.preview.emergentagent.com/app/settings/billing",
+            "origin_url": "https://saas-billing-13.preview.emergentagent.com/app/settings/billing",
             "return_path": "/app/settings/billing"
         }
         
@@ -336,7 +336,7 @@ class BillingTester:
         change_plan_data = {
             "plan": "pro",
             "interval": "monthly",
-            "origin_url": "https://acenta-billing.preview.emergentagent.com/app/settings/billing",
+            "origin_url": "https://saas-billing-13.preview.emergentagent.com/app/settings/billing",
             "cancel_path": "/app/settings/billing"
         }
         
@@ -407,7 +407,7 @@ class BillingTester:
         enterprise_data = {
             "plan": "enterprise",
             "interval": "monthly",
-            "origin_url": "https://acenta-billing.preview.emergentagent.com/app/settings/billing",
+            "origin_url": "https://saas-billing-13.preview.emergentagent.com/app/settings/billing",
             "cancel_path": "/app/settings/billing"
         }
         
@@ -445,7 +445,7 @@ class BillingTester:
         checkout_data = {
             "plan": "pro",
             "interval": "monthly",
-            "origin_url": "https://acenta-billing.preview.emergentagent.com/app/settings/billing",
+            "origin_url": "https://saas-billing-13.preview.emergentagent.com/app/settings/billing",
             "cancel_path": "/pricing"
         }
         

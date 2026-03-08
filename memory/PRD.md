@@ -258,6 +258,14 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - browser self-test: billing ekranı, cancel dialog, pending state, reactivate, Stripe portal redirect geçti
   - testing agent raporu: `/app/test_reports/iteration_31.json` → backend %100 / frontend %100 billing lifecycle geçti
 
+## Son Uygulama Notu — 2026-03-08 (Backend lint/install stabilizasyonu)
+- `backend/requirements.txt` kurulum dayanıklılığı güncellendi
+  - `emergentintegrations` çözümlemesi için CloudFront extra index satırı eklendi
+  - `typer==0.21.0` → `typer==0.24.0` yükseltildi; `typer-slim==0.24.0` ile resolver çakışması giderildi
+- Doğrulama:
+  - `PIP_CONFIG_FILE=/dev/null python -m pip install --dry-run -r requirements.txt` başarılı
+  - aktif backend sanal ortamında `typer==0.24.0` kurulumu tamamlandı
+
 ## Öncelikli Sonraki Adımlar
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını daha da derinleştirip ödeme problemi state’lerini otomatik operasyon akışlarına bağlama
 - **P1:** Hard quota enforcement

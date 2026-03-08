@@ -16,7 +16,7 @@ import requests
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
-    BASE_URL = "https://acenta-billing.preview.emergentagent.com"
+    BASE_URL = "https://saas-billing-13.preview.emergentagent.com"
 
 # PR-UM5 specific credentials
 AGENT_EMAIL = "agent@acenta.test"

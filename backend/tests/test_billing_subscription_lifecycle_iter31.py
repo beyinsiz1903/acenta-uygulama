@@ -11,7 +11,7 @@ import requests
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
-    BASE_URL = "https://acenta-billing.preview.emergentagent.com"
+    BASE_URL = "https://saas-billing-13.preview.emergentagent.com"
 
 
 class TestBillingSubscriptionManaged:
@@ -204,7 +204,7 @@ class TestBillingSubscriptionManaged:
             f"{BASE_URL}/api/billing/customer-portal",
             headers={"Authorization": f"Bearer {auth_token}"},
             json={
-                "origin_url": "https://acenta-billing.preview.emergentagent.com",
+                "origin_url": "https://saas-billing-13.preview.emergentagent.com",
                 "return_path": "/app/settings/billing"
             },
             timeout=30
@@ -288,7 +288,7 @@ class TestBillingLegacyGuardrails:
             f"{BASE_URL}/api/billing/customer-portal",
             headers={"Authorization": f"Bearer {legacy_auth_token}"},
             json={
-                "origin_url": "https://acenta-billing.preview.emergentagent.com",
+                "origin_url": "https://saas-billing-13.preview.emergentagent.com",
                 "return_path": "/app/settings/billing"
             },
             timeout=30

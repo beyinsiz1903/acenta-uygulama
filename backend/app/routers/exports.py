@@ -8,7 +8,7 @@ import os
 import secrets
 from typing import Any, Optional, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field
 from bson import ObjectId
 from reportlab.lib.pagesizes import A4
@@ -18,7 +18,9 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
+from app.services.usage_service import track_export_generated
 from app.utils import now_utc
+from app.utils import get_or_create_correlation_id
 from app.routers.matches import list_matches
 
 router = APIRouter(prefix="/api/admin/exports", tags=["admin-exports"])
@@ -336,6 +338,7 @@ def _rows_to_csv(rows: list[dict[str, Any]]) -> str:
 
 @router.post("/run", response_model=ExportRunResult, dependencies=[Depends(require_roles(["super_admin"]))])
 async def run_export(
+    request: Request,
     key: str = Query(...),
     dry_run: bool = Query(True),
     db=Depends(get_db),
@@ -441,6 +444,21 @@ async def run_export(
     }
     run_res = await db.export_runs.insert_one(run_doc)
     run_id = str(run_res.inserted_id)
+
+    await track_export_generated(
+        organization_id=org_id,
+        tenant_id=user.get("tenant_id"),
+        export_type=policy.get("type", "match_risk_summary"),
+        output_format=fmt,
+        source="exports.run",
+        source_event_id=run_id,
+        metadata={
+            "policy_key": key,
+            "rows": len(rows),
+            "size_bytes": size_bytes,
+            "correlation_id": get_or_create_correlation_id(request, None),
+        },
+    )
 
     # Email delivery v0: if recipients configured, enqueue email_outbox job
     recipients = [r.strip() for r in (policy.get("recipients") or []) if r and "@" in r]

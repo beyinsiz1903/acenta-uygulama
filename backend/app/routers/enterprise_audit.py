@@ -9,13 +9,15 @@ import io
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.services.audit_hash_chain import verify_chain_integrity
+from app.services.usage_service import track_export_generated
 from app.utils import serialize_doc
+from app.utils import get_or_create_correlation_id
 
 router = APIRouter(prefix="/api/admin/audit", tags=["enterprise_audit"])
 
@@ -56,6 +58,7 @@ async def verify_audit_chain(
 
 @router.get("/export", dependencies=[AdminDep])
 async def export_audit_csv(
+    request: Request,
     tenant_id: Optional[str] = Query(None),
     from_date: Optional[str] = Query(None, alias="from"),
     to_date: Optional[str] = Query(None, alias="to"),
@@ -85,7 +88,22 @@ async def export_audit_csv(
 
     # Also search in legacy audit_logs
     # Streaming generator for memory safety
+    correlation_id = get_or_create_correlation_id(request, None)
+
     async def generate_csv():
+        await track_export_generated(
+            organization_id=org_id,
+            tenant_id=user.get("tenant_id"),
+            export_type="audit_chain",
+            output_format="csv",
+            source="audit.export",
+            source_event_id=f"{correlation_id}:audit-export:{tenant_id or 'all'}:{from_date or 'na'}:{to_date or 'na'}",
+            metadata={
+                "tenant_scope": tenant_id or "all",
+                "from": from_date,
+                "to": to_date,
+            },
+        )
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow([

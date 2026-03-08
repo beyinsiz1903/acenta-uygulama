@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Request, Response
 
 from app.auth import get_current_user
 from app.constants.features import FEATURE_REPORTS
 from app.db import get_db
+from app.services.usage_service import track_export_generated
+from app.utils import get_or_create_correlation_id
 from app.security.feature_flags import require_tenant_feature
 from app.utils import to_csv
 
@@ -52,7 +54,16 @@ async def sales_summary(days: int = 14, user=Depends(get_current_user)):
 
 
 @router.get("/sales-summary.csv", dependencies=[Depends(get_current_user)])
-async def sales_summary_csv(user=Depends(get_current_user)):
+async def sales_summary_csv(request: Request, user=Depends(get_current_user)):
     rows = await sales_summary(user=user)
     csv_str = to_csv(rows, ["day", "revenue", "count"])
+    await track_export_generated(
+        organization_id=user.get("organization_id"),
+        tenant_id=user.get("tenant_id"),
+        export_type="sales_summary",
+        output_format="csv",
+        source="reports.sales_summary",
+        source_event_id=f"{get_or_create_correlation_id(request, None)}:sales-summary-csv",
+        metadata={"row_count": len(rows)},
+    )
     return Response(content=csv_str, media_type="text/csv")

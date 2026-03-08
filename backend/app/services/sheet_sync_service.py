@@ -241,7 +241,20 @@ async def run_sheet_sync(
 
     try:
         # 1. Fetch
-        headers, rows = fetch_sheet_data(sheet_id, worksheet)
+        headers, rows = fetch_sheet_data(
+            sheet_id,
+            worksheet,
+            metering_context={
+                "organization_id": connection.get("organization_id"),
+                "tenant_id": tenant_id,
+                "source": "integrations.google_sheets.legacy_sync",
+                "source_event_id": f"{run_id}:fetch",
+                "metadata": {
+                    "connection_id": conn_id,
+                    "worksheet": worksheet,
+                },
+            },
+        )
         run_doc["rows_fetched"] = len(rows)
 
         # 2. Map

@@ -1,0 +1,85 @@
+{
+  "summary": "PR-UM3 Usage Metering Testing Complete. All 17 tests PASSED. Verified: (1) report.generated increments when PDF export generated, (2) export.generated increments for CSV/ZIP/audit exports, (3) X-Correlation-Id dedupe mechanism works correctly, (4) dashboard/JSON reads do NOT count as report/export, (5) integration.call instrumentation exists on all Google Sheets provider paths.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "✅ test_report_generated_pdf_increments - PDF generation increments report.generated",
+    "✅ test_report_generated_no_duplicate_with_same_correlation_id - Dedupe works for PDF",
+    "✅ test_export_generated_sales_csv_increments - Sales CSV increments export.generated",
+    "✅ test_export_generated_tenant_zip_increments - Tenant ZIP increments export.generated",
+    "✅ test_export_generated_audit_csv_increments - Audit CSV increments export.generated",
+    "✅ test_export_generated_no_duplicate_with_same_correlation_id - Dedupe works for CSV",
+    "✅ test_dashboard_read_does_not_count_as_report - JSON dashboard reads NOT counted",
+    "✅ test_reservations_summary_does_not_count - Reservations summary NOT counted",
+    "✅ test_sheets_provider_has_metering_context - metering_context on read/append/update/metadata",
+    "✅ test_google_sheets_client_has_metering_context - metering_context on fetch_sheet_data/headers",
+    "✅ test_sheets_provider_schedules_integration_call - _schedule_integration_call_metering exists",
+    "✅ test_google_sheets_client_schedules_integration_call - _schedule_integration_call_metering exists",
+    "✅ test_integration_call_metric_defined - integration.call in UsageMetric and VALID_USAGE_METRICS",
+    "✅ test_track_integration_call_function_exists - track_integration_call has correct signature",
+    "✅ test_sync_services_pass_metering_context - hotel_portfolio_sync_service uses metering_context",
+    "✅ test_source_event_id_uniqueness_enforced - unique index on (tenant_id, metric, source_event_id)",
+    "✅ test_insert_event_returns_none_on_duplicate - DuplicateKeyError handled, returns None"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_usage_metering_pr_um3.py",
+    "/app/test_reports/pytest/pytest_usage_metering_um3.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "usage_service.py: track_report_generated(), track_export_generated(), track_integration_call() all properly use _track_usage_with_resolution() which enforces dedupe via source_event_id",
+    "report_output_service.py: generate_match_risk_executive_pdf() correctly calls track_report_generated() with source_event_id format {correlation_id}:match-risk-executive:{snapshot_date}",
+    "reports.py: /api/reports/sales-summary.csv calls track_export_generated(); /api/reports/sales-summary (JSON) does NOT",
+    "enterprise_export.py: /api/admin/tenant/export calls track_export_generated() with source_event_id format {correlation_id}:tenant-export:{org_id}",
+    "enterprise_audit.py: /api/admin/audit/export calls track_export_generated() BEFORE streaming (in generate_csv())",
+    "sheets_provider.py: All functions (read_sheet, append_rows, update_cells, get_sheet_metadata) accept metering_context and call _schedule_integration_call_metering() on real API calls",
+    "google_sheets_client.py: fetch_sheet_data, fetch_sheet_headers accept metering_context and call _schedule_integration_call_metering()",
+    "usage_ledger_repository.py: insert_event() catches DuplicateKeyError and returns None for idempotent metering",
+    "Sync services (hotel_portfolio_sync_service, sheet_sync_service, sheet_writeback_service) all pass metering_context to provider functions"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_usage_metering_pr_um3.py"
+  ],
+  "success_rate": {
+    "backend": "100% (17/17 tests passed)"
+  },
+  "test_credentials": {
+    "admin": "admin@acenta.test / admin123"
+  },
+  "seed_data_creation": "No test data created - tests use unique X-Correlation-Id per run",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "PR-UM3 usage metering is complete. Key points: (1) report.generated tracked when real PDF output produced via report_output_service.py, (2) export.generated tracked for CSV/ZIP outputs in reports.py, enterprise_export.py, enterprise_audit.py, (3) integration.call instrumented on Google Sheets paths but will only count when GOOGLE_SERVICE_ACCOUNT_JSON is configured and real API calls are made, (4) Dedupe via unique index on (tenant_id, metric, source_event_id) in usage_ledger collection, (5) Usage summary available at /api/admin/billing/tenants/{tenant_id}/usage",
+  "usage_metering_verification": {
+    "report_generated_endpoints": [
+      "GET /api/admin/reports/match-risk/executive-summary.pdf"
+    ],
+    "export_generated_endpoints": [
+      "GET /api/reports/sales-summary.csv",
+      "POST /api/admin/tenant/export",
+      "GET /api/admin/audit/export"
+    ],
+    "dashboard_endpoints_not_metered": [
+      "GET /api/reports/sales-summary (JSON)",
+      "GET /api/reports/reservations-summary (JSON)"
+    ],
+    "integration_call_paths_instrumented": [
+      "sheets_provider.read_sheet()",
+      "sheets_provider.append_rows()",
+      "sheets_provider.update_cells()",
+      "sheets_provider.get_sheet_metadata()",
+      "google_sheets_client.fetch_sheet_data()",
+      "google_sheets_client.fetch_sheet_headers()"
+    ],
+    "dedupe_mechanism": "Unique index on (tenant_id, metric, source_event_id) + DuplicateKeyError handling in insert_event()",
+    "usage_summary_endpoint": "GET /api/admin/billing/tenants/{tenant_id}/usage",
+    "google_sheets_note": "integration.call will only be metered when GOOGLE_SERVICE_ACCOUNT_JSON is configured - currently NOT configured in this environment"
+  }
+}

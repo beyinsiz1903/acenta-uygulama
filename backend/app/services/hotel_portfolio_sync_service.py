@@ -362,7 +362,21 @@ async def run_hotel_sheet_sync(
             return run_doc
 
         # 3. Check fingerprint for early exit
-        fp_result = provider_get_fingerprint(sheet_id, tab)
+        fp_result = provider_get_fingerprint(
+            sheet_id,
+            tab,
+            metering_context={
+                "organization_id": connection.get("organization_id"),
+                "tenant_id": tenant_id,
+                "source": "integrations.google_sheets.sync",
+                "source_event_id": f"{run_id}:fingerprint",
+                "metadata": {
+                    "trigger": trigger,
+                    "connection_id": conn_id,
+                    "hotel_id": hotel_id,
+                },
+            },
+        )
         if fp_result.success:
             new_fp = fp_result.data.get("fingerprint", "")
             old_fp = connection.get("last_fingerprint", "")
@@ -378,7 +392,21 @@ async def run_hotel_sheet_sync(
                 return run_doc
 
         # 4. Fetch data
-        sheet_result = read_sheet(sheet_id, tab)
+        sheet_result = read_sheet(
+            sheet_id,
+            tab,
+            metering_context={
+                "organization_id": connection.get("organization_id"),
+                "tenant_id": tenant_id,
+                "source": "integrations.google_sheets.sync",
+                "source_event_id": f"{run_id}:read",
+                "metadata": {
+                    "trigger": trigger,
+                    "connection_id": conn_id,
+                    "hotel_id": hotel_id,
+                },
+            },
+        )
         if not sheet_result.success:
             run_doc["status"] = "failed"
             run_doc["errors"] = [{"message": sheet_result.error or "Sheet okuma hatasi"}]

@@ -12,12 +12,14 @@ import zipfile
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
+from app.services.usage_service import track_export_generated
 from app.utils import serialize_doc
+from app.utils import get_or_create_correlation_id
 
 router = APIRouter(prefix="/api/admin/tenant", tags=["enterprise_export"])
 
@@ -44,6 +46,7 @@ def _json_serial(obj: Any) -> str:
 
 @router.post("/export", dependencies=[AdminDep])
 async def export_tenant_data(
+    request: Request,
     user=Depends(get_current_user),
 ):
     """Export all tenant data as a ZIP file."""
@@ -81,9 +84,23 @@ async def export_tenant_data(
         zf.writestr("_metadata.json", json.dumps(meta, indent=2))
 
     zip_buffer.seek(0)
+    zip_bytes = zip_buffer.getvalue()
+
+    await track_export_generated(
+        organization_id=org_id,
+        tenant_id=user.get("tenant_id"),
+        export_type="tenant_full_export",
+        output_format="zip",
+        source="tenant.export",
+        source_event_id=f"{get_or_create_correlation_id(request, None)}:tenant-export:{org_id}",
+        metadata={
+            "collection_count": len(EXPORT_COLLECTIONS),
+            "size_bytes": len(zip_bytes),
+        },
+    )
 
     return StreamingResponse(
-        zip_buffer,
+        io.BytesIO(zip_bytes),
         media_type="application/zip",
         headers={
             "Content-Disposition": f"attachment; filename=tenant_export_{org_id[:8]}.zip"

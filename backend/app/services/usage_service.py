@@ -16,6 +16,16 @@ from app.services.entitlement_service import entitlement_service
 logger = logging.getLogger(__name__)
 
 
+def _clean_usage_metadata(metadata: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+  if not metadata:
+    return {}
+  return {
+    key: value
+    for key, value in metadata.items()
+    if value is not None and value != ""
+  }
+
+
 def _current_billing_period() -> str:
   return datetime.now(timezone.utc).strftime("%Y-%m")
 
@@ -199,6 +209,131 @@ async def track_reservation_created(
       exc_info=True,
     )
     return False
+
+
+async def _track_usage_with_resolution(
+  *,
+  organization_id: Optional[str],
+  tenant_id: Optional[str],
+  metric: str,
+  source: str,
+  source_event_id: Optional[str],
+  metadata: Optional[Dict[str, Any]] = None,
+) -> bool:
+  resolved_tenant_id = await _resolve_usage_tenant_id(organization_id, tenant_id)
+  if not resolved_tenant_id:
+    logger.warning(
+      "%s usage skipped: tenant could not be resolved for org=%s source_event_id=%s",
+      metric,
+      organization_id,
+      source_event_id,
+    )
+    return False
+
+  dedupe_key = str(source_event_id or "").strip()
+  if not dedupe_key:
+    logger.warning(
+      "%s usage skipped: source_event_id missing tenant=%s org=%s",
+      metric,
+      resolved_tenant_id,
+      organization_id,
+    )
+    return False
+
+  try:
+    return await track_usage_event(
+      tenant_id=resolved_tenant_id,
+      organization_id=str(organization_id) if organization_id is not None else None,
+      metric=metric,
+      quantity=1,
+      source=source,
+      source_event_id=dedupe_key,
+      metadata=_clean_usage_metadata(metadata),
+    )
+  except Exception:
+    logger.warning(
+      "%s usage track failed tenant=%s source_event_id=%s",
+      metric,
+      resolved_tenant_id,
+      dedupe_key,
+      exc_info=True,
+    )
+    return False
+
+
+async def track_report_generated(
+  *,
+  organization_id: Optional[str],
+  report_type: str,
+  output_format: str,
+  source_event_id: Optional[str],
+  tenant_id: Optional[str] = None,
+  source: str = "reports",
+  metadata: Optional[Dict[str, Any]] = None,
+) -> bool:
+  payload = {
+    "report_type": report_type,
+    "output_format": output_format,
+    **(metadata or {}),
+  }
+  return await _track_usage_with_resolution(
+    organization_id=organization_id,
+    tenant_id=tenant_id,
+    metric=UsageMetric.REPORT_GENERATED,
+    source=source,
+    source_event_id=source_event_id,
+    metadata=payload,
+  )
+
+
+async def track_export_generated(
+  *,
+  organization_id: Optional[str],
+  export_type: str,
+  output_format: str,
+  source_event_id: Optional[str],
+  tenant_id: Optional[str] = None,
+  source: str = "exports",
+  metadata: Optional[Dict[str, Any]] = None,
+) -> bool:
+  payload = {
+    "export_type": export_type,
+    "output_format": output_format,
+    **(metadata or {}),
+  }
+  return await _track_usage_with_resolution(
+    organization_id=organization_id,
+    tenant_id=tenant_id,
+    metric=UsageMetric.EXPORT_GENERATED,
+    source=source,
+    source_event_id=source_event_id,
+    metadata=payload,
+  )
+
+
+async def track_integration_call(
+  *,
+  organization_id: Optional[str],
+  integration_key: str,
+  operation: str,
+  source_event_id: Optional[str],
+  tenant_id: Optional[str] = None,
+  source: str = "integrations",
+  metadata: Optional[Dict[str, Any]] = None,
+) -> bool:
+  payload = {
+    "integration_key": integration_key,
+    "operation": operation,
+    **(metadata or {}),
+  }
+  return await _track_usage_with_resolution(
+    organization_id=organization_id,
+    tenant_id=tenant_id,
+    metric=UsageMetric.INTEGRATION_CALL,
+    source=source,
+    source_event_id=source_event_id,
+    metadata=payload,
+  )
 
 
 async def track_usage(

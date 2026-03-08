@@ -75,6 +75,9 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 - Tenant dashboard ve `/app/usage` sayfasında warning mikro copy + upgrade CTA gösterilir
 - Trial tenant’lar için kullanım oranına göre plan önerisi (`Starter` / `Pro` / `Enterprise`) üretilir
 - Admin usage görünümü read-only kalır; CTA göstermez
+- CTA etiketi `Planları Görüntüle` olarak sabitlendi; hedef rota `/pricing`
+- Cookie-compat auth bootstrap akışında `/api/auth/me` artık `tenant_id` döner; frontend tenant bağlamını korur
+- Trial önerisi rezervasyon kullanım oranı odaklı çalışır; %70 demo senaryosunda `Pro Plan` önerilir
 
 ## Test Kimlik Bilgileri
 | Portal | Email | Password | Rol |
@@ -121,6 +124,20 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - soft quota warning seviyeleri
   - dashboard + usage page upgrade CTA
   - trial conversion recommendation
+
+## Son Uygulama Notu — 2026-03-08
+- PR-UM5 tamamlandı ve doğrulandı
+- Demo tenant doğrulama durumu:
+  - `reservation.created` → 70/100 (`warning`)
+  - `report.generated` → 17/20 (`critical`)
+  - `export.generated` → 10/10 (`limit_reached`)
+- Frontend + backend testleri geçti; CTA akışı `/pricing` sayfasına kadar doğrulandı
+
+## Öncelikli Sonraki Adımlar
+- **P1:** Pricing modeli ve plan/fiyat matrisini netleştir (`Trial / Starter / Pro / Enterprise`)
+- **P1:** Hard quota enforcement
+- **P2:** Admin demo agency oluşturma butonu
+- **P2:** Admin endpoint cleanup (`/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`)
 
 ## Bu Dosyanın Kapsamı
 Bu PRD dosyası yalnızca statik ürün bağlamını taşır.

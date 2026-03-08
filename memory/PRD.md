@@ -94,10 +94,27 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 - Enterprise checkout dışı bırakıldı; CTA `İletişime Geç` akışında kalır
 - Başarılı ödeme yönlendirme rotası `/payment-success` olarak standartlaştırıldı; `/billing/success` backward-compatible alias olarak korunur
 - `/payment-success` ekranı artık aktivasyon odaklı onboarding checklist içerir; role göre güvenli dashboard CTA ve yetkili kullanıcılara `İlk Rezervasyonu Oluştur` CTA gösterilir
+- Authenticated app içinde `/app/settings/billing` yönetim yüzeyi eklendi:
+  - mevcut plan
+  - sonraki yenileme tarihi
+  - aylık / yıllık durum
+  - plan değiştir
+  - dönem sonunda iptal
+  - Stripe billing portal ile ödeme yöntemi güncelle
+  - ödeme problemi uyarı alanı
+- Subscription lifecycle kuralları uygulandı:
+  - upgrade hemen aktif olur
+  - downgrade bir sonraki döneme planlanır
+  - cancel yalnız dönem sonunda uygulanır
+  - Stripe portal dönüşü `/app/settings/billing` sayfasına döner
 - Backend endpoint’leri eklendi:
   - `POST /api/billing/create-checkout`
   - `GET /api/billing/checkout-status/{session_id}`
   - `POST /api/webhook/stripe`
+  - `GET /api/billing/subscription`
+  - `POST /api/billing/customer-portal`
+  - `POST /api/billing/change-plan`
+  - `POST /api/billing/cancel-subscription`
 - Yeni `payment_transactions` koleksiyonu checkout oturumlarını ve fulfillment durumunu takip eder
 - Başarılı ödeme sonrası:
   - `subscriptions`, `billing_subscriptions`, `tenant_capabilities` güncellenir
@@ -204,10 +221,30 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 - Güvenli fallback kuralı uygulandı: role resolve edilemezse dashboard CTA `/app` hedefine düşer
 - Frontend doğrulama tamamlandı: success state ve boş session error state birlikte test edildi
 
+## Son Uygulama Notu — 2026-03-08 (Subscription lifecycle + billing management)
+- Checkout akışı subscription-mode Stripe Checkout olarak yükseltildi; yeni başarılı ödemeler gerçek `cus_` ve `sub_` kayıtlarıyla managed subscription state üretir
+- `/app/settings/billing` sayfası teslim edildi:
+  - summary kartları
+  - managed vs legacy subscription guardrail ayrımı
+  - plan değiştirme yüzeyi
+  - cancel pending / scheduled downgrade banner’ları
+  - Stripe billing portal ödeme yöntemi güncelleme akışı
+- Onboarding redirect guardrail güncellendi; `/app/settings/*` rotaları onboarding zorlamasından muaf
+- Managed flow doğrulandı:
+  - expired trial kullanıcı gerçek Stripe test kartı ile başarılı ödeme sonrası managed subscription’a geçti
+  - upgrade immediate mesajı doğrulandı: `Yeni planınız hemen aktif oldu`
+  - downgrade scheduled mesajı doğrulandı: `Plan değişikliğiniz bir sonraki dönem başlayacak`
+  - cancel period-end mesajı doğrulandı: `Aboneliğiniz dönem sonunda sona erecek`
+  - Stripe portal round-trip doğrulandı: portal açıldı ve `Return to ...` ile `/app/settings/billing` sayfasına geri dönüldü
+- Test kayıtları:
+  - `/app/test_reports/iteration_29.json` → billing page + legacy lifecycle guardrails geçti
+  - `/app/test_reports/iteration_30.json` → managed lifecycle backend doğrulaması ve manual follow-up adımları kaydedildi
+  - managed subscription self-test + browser smoke + portal round-trip tamamlandı
+
 ## Öncelikli Sonraki Adımlar
-- **P1:** Trial signup akışını satış funnel’ı ile daha sıkı bağlama (ilk giriş sonrası onboarding/paket yönlendirme polish)
-- **P1:** Stripe checkout akışını gerçek recurring subscription lifecycle / renewal / cancel / downgrade yönetimine yükseltme
+- **P1:** Renewal / invoice paid / payment_failed lifecycle’ını daha da derinleştirip ödeme problemi state’lerini otomatik operasyon akışlarına bağlama
 - **P1:** Hard quota enforcement
+- **P1:** Billing analytics / churn görünürlüğü
 - **P2:** Admin demo agency oluşturma butonu
 - **P2:** Admin endpoint cleanup (`/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`)
 

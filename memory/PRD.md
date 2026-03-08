@@ -266,6 +266,17 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `PIP_CONFIG_FILE=/dev/null python -m pip install --dry-run -r requirements.txt` başarılı
   - aktif backend sanal ortamında `typer==0.24.0` kurulumu tamamlandı
 
+## Son Uygulama Notu — 2026-03-08 (CI lint + exit gate hardening)
+- Backend tarafında trailing newline eksikleri temizlendi; screenshot’taki `W292 / No newline at end of file` sınıfı hatalar giderildi
+- Preview tabanlı testlerde güvenli skip standardı genişletildi
+  - `test_usage_metering_pr_um3.py` ve `test_mobile_bff_preview_api.py` artık preview URL yoksa collection-time crash yerine güvenli skip davranışı kullanıyor
+  - ek olarak bazı legacy/manual test dosyaları da hardcoded preview URL yerine `get_preview_base_url_or_skip(...)` ile hizalandı
+  - `test_inbox_guardrails.py` içinde pytest collection warning üreten yardımcı sınıf `__test__ = False` ile koleksiyondan çıkarıldı
+- Doğrulama:
+  - `python` ile backend/app + backend/tests altında tüm `.py` dosyalarında trailing newline kontrolü geçti
+  - `mcp_lint_python` ile `/app/backend/app` lint geçti
+  - `pytest --collect-only tests/test_usage_metering_pr_um3.py -q` ve `pytest --collect-only tests/test_inbox_guardrails.py -q` hata vermeden tamamlandı
+
 ## Öncelikli Sonraki Adımlar
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını daha da derinleştirip ödeme problemi state’lerini otomatik operasyon akışlarına bağlama
 - **P1:** Hard quota enforcement

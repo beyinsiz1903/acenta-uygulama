@@ -38,6 +38,8 @@ def test_metric_warning_payload_for_critical_usage() -> None:
   assert payload["warning_level"] == "critical"
   assert payload["upgrade_recommended"] is True
   assert payload["cta_href"] == "/pricing"
+
+
   assert "sadece 8 rezervasyon" in str(payload["warning_message"])
 
 

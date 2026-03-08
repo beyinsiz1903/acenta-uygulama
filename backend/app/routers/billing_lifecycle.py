@@ -50,6 +50,8 @@ async def get_billing_subscription(
         tenant_id,
         user_email=str(user.get("email") or ""),
     )
+
+
     return {"tenant_id": tenant_id, **overview}
 
 

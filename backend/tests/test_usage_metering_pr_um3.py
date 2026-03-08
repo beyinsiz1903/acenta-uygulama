@@ -18,9 +18,9 @@ import sys
 # Add backend to path
 sys.path.insert(0, "/app/backend")
 
-from tests.preview_auth_helper import PreviewAuthSession, resolve_preview_base_url
+from tests.preview_auth_helper import PreviewAuthSession, get_preview_base_url_or_skip
 
-BASE_URL = resolve_preview_base_url(os.environ.get("REACT_APP_BACKEND_URL", ""))
+BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Test credentials
 ADMIN_EMAIL = "admin@acenta.test"
@@ -121,7 +121,7 @@ class TestUsageMeteringPRUM3:
         # The source_event_id format is: {correlation_id}:match-risk-executive:{snapshot_date}
         # If same correlation_id + same snapshot_date, it should dedupe
         print(f"✅ Dedupe test: first={count_after_first}, second={count_after_second}")
-        assert count_after_second <= count_after_first + 1, f"Duplicate should not double count"
+        assert count_after_second <= count_after_first + 1, "Duplicate should not double count"
 
     def test_export_generated_sales_csv_increments(self):
         """Test that export.generated increments when sales-summary.csv is generated."""
@@ -137,7 +137,7 @@ class TestUsageMeteringPRUM3:
         )
         
         assert resp.status_code == 200, f"Sales CSV export failed: {resp.status_code} - {resp.text[:500]}"
-        assert "text/csv" in resp.headers.get("Content-Type", ""), f"Expected CSV content type"
+        assert "text/csv" in resp.headers.get("Content-Type", ""), "Expected CSV content type"
         print(f"Sales CSV generated successfully, size: {len(resp.content)} bytes")
         
         new_count = self._get_usage_count("export.generated")
@@ -166,7 +166,7 @@ class TestUsageMeteringPRUM3:
         new_count = self._get_usage_count("export.generated")
         print(f"New export.generated count: {new_count}")
         
-        assert new_count >= initial_count, f"Count should not decrease"
+        assert new_count >= initial_count, "Count should not decrease"
         print(f"✅ export.generated count: {initial_count} -> {new_count}")
 
     def test_export_generated_audit_csv_increments(self):
@@ -189,7 +189,7 @@ class TestUsageMeteringPRUM3:
         new_count = self._get_usage_count("export.generated")
         print(f"New export.generated count: {new_count}")
         
-        assert new_count >= initial_count, f"Count should not decrease"
+        assert new_count >= initial_count, "Count should not decrease"
         print(f"✅ export.generated count: {initial_count} -> {new_count}")
 
     def test_export_generated_no_duplicate_with_same_correlation_id(self):
@@ -218,7 +218,7 @@ class TestUsageMeteringPRUM3:
         
         # Verify dedupe worked - count should not increase by more than expected
         print(f"✅ Export dedupe test: first={count_after_first}, second={count_after_second}")
-        assert count_after_second <= count_after_first + 1, f"Duplicate should not double count"
+        assert count_after_second <= count_after_first + 1, "Duplicate should not double count"
 
     def test_dashboard_read_does_not_count_as_report(self):
         """Test that dashboard/read endpoints do NOT count as report.generated."""
@@ -245,9 +245,9 @@ class TestUsageMeteringPRUM3:
         print(f"New counts - report: {new_report_count}, export: {new_export_count}")
         
         # Dashboard reads should NOT count as report or export
-        assert new_report_count == initial_report_count, f"Dashboard read should not increment report.generated"
-        assert new_export_count == initial_export_count, f"Dashboard read should not increment export.generated"
-        print(f"✅ Dashboard read did NOT increment report/export counters")
+        assert new_report_count == initial_report_count, "Dashboard read should not increment report.generated"
+        assert new_export_count == initial_export_count, "Dashboard read should not increment export.generated"
+        print("✅ Dashboard read did NOT increment report/export counters")
 
     def test_reservations_summary_does_not_count(self):
         """Test that reservations-summary read does NOT count as report.generated."""
@@ -267,9 +267,9 @@ class TestUsageMeteringPRUM3:
         new_report_count = self._get_usage_count("report.generated")
         new_export_count = self._get_usage_count("export.generated")
         
-        assert new_report_count == initial_report_count, f"Read should not increment report.generated"
-        assert new_export_count == initial_export_count, f"Read should not increment export.generated"
-        print(f"✅ Reservations summary read did NOT increment counters")
+        assert new_report_count == initial_report_count, "Read should not increment report.generated"
+        assert new_export_count == initial_export_count, "Read should not increment export.generated"
+        print("✅ Reservations summary read did NOT increment counters")
 
 
 class TestIntegrationCallInstrumentation:

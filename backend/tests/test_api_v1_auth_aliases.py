@@ -70,6 +70,8 @@ async def test_v1_auth_cookie_bootstrap_flow(async_client) -> None:
     assert me_response.json()["email"] == "admin@acenta.test"
 
 
+
+
 @pytest.mark.anyio
 async def test_v1_auth_refresh_rotates_cookie_transport(async_client) -> None:
     login_response = await async_client.post(

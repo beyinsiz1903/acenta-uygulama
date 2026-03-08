@@ -11,18 +11,23 @@ Tests the following guardrails:
 import pytest
 import asyncio
 import time
+import os
 
 import httpx
 
+from tests.preview_auth_helper import get_preview_base_url_or_skip
+
 
 # Test configuration
-BASE_URL = "https://saas-billing-13.preview.emergentagent.com"
+BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 
 
 class TestInboxGuardrails:
     """Test class for inbox guardrails functionality."""
+
+    __test__ = False
 
     def __init__(self):
         self.client = httpx.AsyncClient(base_url=BASE_URL, timeout=30.0)

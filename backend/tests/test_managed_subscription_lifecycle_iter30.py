@@ -20,7 +20,9 @@ import requests
 import time
 import json
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
+from tests.preview_auth_helper import get_preview_base_url_or_skip
+
+BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Test credentials
 EXPIRED_TRIAL_EMAIL = "expired.checkout.cdc8caf5@trial.test"

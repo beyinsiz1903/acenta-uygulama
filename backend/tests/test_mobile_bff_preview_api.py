@@ -19,11 +19,9 @@ import os
 import pytest
 import requests
 
-from tests.preview_auth_helper import build_preview_auth_headers, get_preview_auth_context, resolve_preview_base_url
+from tests.preview_auth_helper import build_preview_auth_headers, get_preview_auth_context, get_preview_base_url_or_skip
 
-BASE_URL = resolve_preview_base_url(
-    os.environ.get("REACT_APP_BACKEND_URL", "https://saas-billing-13.preview.emergentagent.com")
-)
+BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Test credentials
 ADMIN_CREDS = {"email": "admin@acenta.test", "password": "admin123"}

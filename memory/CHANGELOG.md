@@ -1,5 +1,25 @@
 # CHANGELOG — Acenta Master Travel SaaS
 
+## 2026-03-08 — Usage Metering PR-UM2 (`reservation.created`)
+- Kanonik reservation create flow instrument edildi:
+  - `backend/app/services/reservations.py`
+  - `backend/app/routers/reservations.py`
+  - `backend/app/routers/b2b.py`
+  - `backend/app/routers/quotes.py`
+- Direct reservation insert yapan tour path de kapsandı:
+  - `backend/app/routers/tours_browse.py`
+- `backend/app/services/usage_service.py` içine `track_reservation_created(...)` eklendi
+  - önce business event / `source_event_id`
+  - yoksa reservation `_id` fallback
+  - yalnızca yeni create anında meter yazar
+  - confirm / cancel / status update akışlarında yeni usage yazmaz
+- Testler eklendi:
+  - `backend/tests/integration/billing/test_usage_reservation_created.py`
+- Doğrulama:
+  - ilgili backend pytest senaryoları geçti
+  - preview curl ile `/api/b2b/book` sonrası usage +1 doğrulandı
+  - `/api/reservations/{id}/confirm` sonrası usage artmadığı doğrulandı
+
 ## 2026-03-08 — Demo Seed Data Utility
 - `backend/seed_demo_data.py` eklendi; `python seed_demo_data.py --agency "Demo Travel" [--reset]` ile çalışır
 - `backend/app/services/demo_seed_service.py` eklendi; modüler seed akışı içerir:

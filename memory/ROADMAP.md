@@ -5,29 +5,28 @@
 - Web auth/session hardening tamamlandı
 - Entitlement Projection Engine V1 tamamlandı ve test edildi
 - Usage Metering için PR-UM1 foundation tamamlandı
+- Usage Metering için PR-UM2 `reservation.created` instrumentation tamamlandı
 
 ## P0 — Sıradaki Kritik İş
 
-### Usage Metering — PR-UM2 Reservation Instrumentation
-Hedef: foundation hazır olduğu için ilk gerçek gelir metriği olan `reservation.created` akışını instrument etmek.
+### Usage Metering — PR-UM3 / PR-UM4 / PR-UM5
+Hedef: foundation + reservation metriğinden sonra kalan monetization akışlarını tamamlamak.
 
 Öncelikli ölçümler:
-- rezervasyon sayısı
 - rapor üretimi
 - export sayısı
 - entegrasyon çağrıları
 
 Teslim beklentisi:
-- booking create path’lerinde tekil ve idempotent usage kaydı
-- service-level instrumentation
-- mevcut business flow’larda regresyonsuz çalışma
+- `report.generated`, `export.generated`, `integration.call` instrumentation
+- usage görünürlüğü (admin + tenant)
+- soft quota enforcement ve upgrade recommendation
 
 ## P1 — Sonraki İşler
 
-### Usage Metering — PR-UM3 / PR-UM4 / PR-UM5
-- `report.generated`, `export.generated`, `integration.call`
-- usage görünürlüğü (admin + tenant)
-- soft quota enforcement ve upgrade recommendation
+### Admin “Create Demo Agency” Action
+- Demo seed utility artık hazır olduğu için admin panelde tek tıkla tetiklenebilen küçük bir aksiyon PR’ı yapılabilir
+- Teknik olmayan ekip üyelerinin demo tenant açmasını hızlandırır
 
 ### Migration Dashboard Card
 - Admin dashboard içinde `domain_v1_progress` gösteren küçük kart

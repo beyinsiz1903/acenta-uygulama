@@ -56,7 +56,8 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 ### Usage Metering Foundation
 - Kanonik usage metric sabitleri tanımlandı
 - Event ledger + günlük aggregate birlikte kullanılacak temel yapı kuruldu
-- Henüz business flow instrumentation yapılmadı; bu katman PR-UM2 ile veri toplamaya başlayacak
+- `reservation.created` için ilk gerçek business flow instrumentation teslim edildi
+- Guardrail: yalnız yeni create anı sayılır; status update / cancel bu aşamada sayılmaz
 
 ## Test Kimlik Bilgileri
 | Portal | Email | Password | Rol |
@@ -86,6 +87,11 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - 30 rezervasyon
   - 10 availability kaydı
 - Script yalnız hedef demo tenant kapsamını temizleyen `--reset` desteği sunar
+
+## Aktif Monetizasyon Durumu
+- Entitlement projection katmanı aktif
+- Usage metering için ilk canlı iş metriği aktif: `reservation.created`
+- Kullanım özeti mevcut admin usage endpoint’lerinden okunabiliyor
 
 ## Bu Dosyanın Kapsamı
 Bu PRD dosyası yalnızca statik ürün bağlamını taşır.

@@ -277,6 +277,10 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `mcp_lint_python` ile `/app/backend/app` lint geçti
   - `pytest --collect-only tests/test_usage_metering_pr_um3.py -q` ve `pytest --collect-only tests/test_inbox_guardrails.py -q` hata vermeden tamamlandı
 
+## Son Uygulama Notu — 2026-03-08 (Billing lifecycle lint hotfix)
+- `app/routers/billing_lifecycle.py` içindeki kullanılmayan `Request` import’u kaldırıldı
+- Doğrulama: ilgili router dosyası için Python lint temiz geçti
+
 ## Öncelikli Sonraki Adımlar
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını daha da derinleştirip ödeme problemi state’lerini otomatik operasyon akışlarına bağlama
 - **P1:** Hard quota enforcement

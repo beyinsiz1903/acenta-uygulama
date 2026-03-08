@@ -70,6 +70,12 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 - Tenant dashboard’da mini usage kartı ve ayrı `/app/usage` sayfası aktif
 - Admin tenant features ekranında `Usage Overview` kartı ve 30 günlük trend görünürlüğü aktif
 
+### Soft Quota Warning PR-UM5
+- 70% / 85% / 100% eşiklerinde `warning` / `critical` / `limit_reached` seviyeleri üretilir
+- Tenant dashboard ve `/app/usage` sayfasında warning mikro copy + upgrade CTA gösterilir
+- Trial tenant’lar için kullanım oranına göre plan önerisi (`Starter` / `Pro` / `Enterprise`) üretilir
+- Admin usage görünümü read-only kalır; CTA göstermez
+
 ## Test Kimlik Bilgileri
 | Portal | Email | Password | Rol |
 |---|---|---|---|
@@ -111,6 +117,10 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - admin usage raw görünümü + trend
   - dashboard mini usage kartı
   - detay usage sayfası
+- PR-UM5 kapsamı aktif:
+  - soft quota warning seviyeleri
+  - dashboard + usage page upgrade CTA
+  - trial conversion recommendation
 
 ## Bu Dosyanın Kapsamı
 Bu PRD dosyası yalnızca statik ürün bağlamını taşır.

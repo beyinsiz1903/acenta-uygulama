@@ -16,18 +16,29 @@
   - dashboard mini kart
   - detay usage sayfası
   - admin usage overview kartı
+- Soft Quota Warning için PR-UM5 tamamlandı:
+  - warning seviyeleri
+  - dashboard + usage page CTA
+  - trial recommendation
 
 ## P0 — Sıradaki Kritik İş
 
-### Usage Metering — PR-UM5
-Hedef: görünür usage verisini quota warning ve yükseltme davranışına dönüştürmek.
+### Pricing Model
+Hedef: hazır usage/veri akışını gelir modeline çevirmek.
 
 Öncelikli teslimler:
-- soft quota warnings + upgrade recommendation
-- upgrade CTA / recommended plan mantığı
+- Türkiye pazarı için trial / starter / pro / enterprise sınırları
+- rezervasyon hacmine göre en iyi fiyat-kota dengesi
+- MRR odaklı plan kurgusu
 
 Teslim beklentisi:
-- soft quota enforcement ve upgrade recommendation
+- fiyatlandırma tablosu
+- quota → plan eşleşmesi
+- satış / demo anlatısı ile hizalı paketleme
+
+### Demo Sales Flow
+- Demo tenant / pricing / upgrade akışının satış demosu için cilalanması
+- özellikle trial → paid dönüşüm anlatısı
 
 ### Sonraki Stratejik İş — Pricing Model
 - Trial / Starter / Pro / Enterprise kotalarının gelir optimizasyonu için ayrı çalışma
@@ -68,6 +79,10 @@ Teslim beklentisi:
 - PR-5B için mobil repository erişimi yok
 
 ## Son Tamamlanan İş
+- **Soft Quota Warning PR-UM5**
+  - warning_level + warning_message
+  - dashboard + usage page pricing CTA
+  - trial recommendation payload + UI
 - **Usage Visibility PR-UM4**
   - tenant usage summary endpoint
   - admin usage trend görünürlüğü

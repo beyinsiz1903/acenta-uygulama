@@ -1,5 +1,35 @@
 # CHANGELOG — Acenta Master Travel SaaS
 
+## 2026-03-08 — Soft Quota Warning + Upgrade CTA PR-UM5
+- Backend warning katmanı eklendi:
+  - `backend/app/services/quota_warning_service.py`
+  - 70% → `warning`
+  - 85% → `critical`
+  - 100%+ → `limit_reached`
+  - trial recommendation rule:
+    - `<40%` → `Starter`
+    - `40-80%` → `Pro`
+    - `>80%` → `Enterprise`
+- `backend/app/services/usage_read_service.py` genişletildi:
+  - metric bazında `warning_level`, `warning_message`, `upgrade_recommended`
+  - `cta_href=/pricing`, `cta_label=Planları Gör`
+  - summary bazında `trial_conversion` payload
+  - legacy `subscriptions` koleksiyonundan `trialing` durumu fallback ile okunuyor
+- `backend/app/routers/tenant_features.py` quota-status response’u warning alanları ile genişletildi
+- Frontend CTA / conversion yüzeyleri eklendi:
+  - `frontend/src/components/usage/UsageQuotaCard.jsx`
+  - `frontend/src/components/usage/UsageTrialRecommendation.jsx`
+  - dashboard usage kartı warning + CTA gösterir
+  - `/app/usage` usage kartları warning + CTA gösterir
+  - admin usage overview bilinçli olarak CTA göstermez (`showCta={false}`)
+  - app shell quota banner’ları admin olmayan kullanıcılarla sınırlandı
+- Testler:
+  - `backend/tests/test_usage_warning_levels.py` eklendi
+  - `testing_agent` iteration_22: backend 18/18 PASS + frontend PASS
+  - `auto_frontend_testing_agent` ile trial tenant üstünde CTA ve admin no-CTA guardrail doğrulandı
+- Preview doğrulama notu:
+  - trial CTA yüzeyini test etmek için demo trial tenant üzerinde `export.generated=85/100` preview usage verisi hazırlandı
+
 ## 2026-03-08 — Usage Visibility PR-UM4
 - Backend read-model katmanı eklendi:
   - `backend/app/services/usage_read_service.py`

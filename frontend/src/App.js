@@ -295,6 +295,7 @@ function App() {
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/demo" element={<DemoPage />} />
         <Route path="/billing/success" element={<BillingSuccessPage />} />
+        <Route path="/payment-success" element={<BillingSuccessPage />} />
 
         {/* Admin Routes */}
         <Route

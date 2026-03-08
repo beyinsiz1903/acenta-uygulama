@@ -20,7 +20,7 @@ export default function BillingSuccessPage() {
   useSeo({
     title: "Ödeme durumu",
     description: "Stripe ödeme sonucunuz doğrulanıyor. Syroce hesabınızın aktivasyon durumunu buradan görebilirsiniz.",
-    canonicalPath: "/billing/success",
+    canonicalPath: "/payment-success",
     type: "website",
   });
 

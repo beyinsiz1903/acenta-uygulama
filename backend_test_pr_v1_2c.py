@@ -11,7 +11,7 @@ import time
 from typing import Dict, Any
 
 # Configuration
-BASE_URL = "https://escape-excel.preview.emergentagent.com"
+BASE_URL = "https://saas-payments-2.preview.emergentagent.com"
 ADMIN_CREDENTIALS = {"email": "admin@acenta.test", "password": "admin123"}
 AGENT_CREDENTIALS = {"email": "agent@acenta.test", "password": "agent123"}
 

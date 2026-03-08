@@ -119,7 +119,7 @@ class StripeCheckoutService:
         amount = float(config["amount"])
         origin = self._validate_origin(origin_url)
         cancel_url = f"{origin}{self._normalize_cancel_path(cancel_path)}"
-        success_url = f"{origin}/billing/success?session_id={{CHECKOUT_SESSION_ID}}"
+        success_url = f"{origin}/payment-success?session_id={{CHECKOUT_SESSION_ID}}"
 
         catalog_entry = await self._resolve_catalog_entry(plan, interval, amount, config["env_key"])
         metadata = {

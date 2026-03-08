@@ -3932,3 +3932,21 @@ agent_communication:
       PR-UM5 usage metering CTA surfaces smoke test SUCCESSFUL. All review request validation points confirmed working. Dashboard and usage page properly display warning messages and pricing CTAs when trial usage reaches 85%. Admin pages correctly implement no-CTA guardrail. All selectors found and functional. No regressions detected. Implementation ready for production.
       
       Status: ✅ PRODUCTION-READY - PR-UM5 validated successfully with 100% test pass rate.
+
+  - task: "Pricing + trial onboarding backend validation"
+    implemented: true
+    working: true
+    file: "backend/app/routers/onboarding.py, backend/app/services/onboarding_service.py, backend/app/constants/plan_matrix.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PRICING + TRIAL ONBOARDING BACKEND VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-08). Comprehensive validation per Turkish review request on https://usage-metering.preview.emergentagent.com. Test Results: 1) ✅ GET /api/onboarding/plans - PASSED (200 OK, returned 4 plans with correct structure), 2) ✅ Trial plan validation - PASSED (is_public=false as required, not exposed in public catalog), 3) ✅ Starter plan validation - PASSED (pricing monthly=990, users.active=3, reservations.monthly=100), 4) ✅ Pro plan validation - PASSED (pricing monthly=2490, users.active=10, reservations.monthly=500), 5) ✅ Enterprise plan validation - PASSED (pricing monthly=6990, users.active=None/unlimited, reservations.monthly=None/unlimited), 6) ✅ POST /api/onboarding/signup with trial plan - PASSED (200 OK, accepts trial plan signup, returns plan=trial, trial_end set to exactly 14 days from now), 7) ✅ Signup response validation - PASSED (contains all required fields: access_token, user_id, org_id, tenant_id, plan, trial_end). Key Turkish Requirements Validation: Trial plan dönüyor ama public kullanıma kapalı (is_public=false) ✅, Starter pricing monthly 990, users.active 3, reservations.monthly 100 ✅, Pro pricing monthly 2490, users.active 10, reservations.monthly 500 ✅, Enterprise pricing monthly 6990, limits unlimited ✅, Trial plan ile signup kabul ediyor ✅, Response içinde plan: trial dönüyor ✅, trial_end 14 gün sonrası oluyor ✅. Success rate: 100% (18/18 validation points passed). All pricing and trial onboarding backend functionality working correctly. No APIs are mocked, all functionality tested against live preview environment."
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 34
+  last_updated: "2026-03-08"

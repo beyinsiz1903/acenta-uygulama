@@ -86,6 +86,23 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 - Yeni Trial signup hesapları signup tamamlanır tamamlanmaz otomatik demo veri ile beslenir
 - Otomatik demo seed kapsamı: 20 müşteri, 30 rezervasyon, 5 tur, 5 otel, 5 destek ürünü
 
+### Stripe Checkout Monetization Flow
+- Starter ve Pro planları için Stripe test-mode checkout akışı aktif
+- `/pricing` sayfasında aylık / yıllık toggle eklendi:
+  - Starter: ₺990 / ay, ₺9.900 / yıl
+  - Pro: ₺2.490 / ay, ₺24.900 / yıl
+- Enterprise checkout dışı bırakıldı; CTA `İletişime Geç` akışında kalır
+- Backend endpoint’leri eklendi:
+  - `POST /api/billing/create-checkout`
+  - `GET /api/billing/checkout-status/{session_id}`
+  - `POST /api/webhook/stripe`
+- Yeni `payment_transactions` koleksiyonu checkout oturumlarını ve fulfillment durumunu takip eder
+- Başarılı ödeme sonrası:
+  - `subscriptions`, `billing_subscriptions`, `tenant_capabilities` güncellenir
+  - entitlement/projection planı yenilenir
+  - kullanıcı `/billing/success` sayfasından `/app` içine döner
+- Not: mevcut entegrasyon Stripe test-mode checkout üzerinden plan aktivasyonu yapar; tam recurring subscription lifecycle / yenileme yönetimi ayrı bir P1 iyileştirme olarak ele alınacaktır
+
 ### Pricing & Demo Sales Surface
 - Public `/pricing` sayfası satış odaklı olarak yeniden kurgulandı; Türkçe satış copy, net plan kartları ve sosyal kanıt bloğu ile finalize edildi
 - Public `/demo` sayfası funnel başlangıcı olarak finalize edildi; `Hero -> Problem -> Çözüm -> CTA` yapısı canlı
@@ -158,14 +175,18 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - Trial expiry full-screen gate aktif; expired hesaplar `/app` içinde bloklanıyor ve `/pricing` yönüne itiliyor
   - `/pricing` sayfasına `Problem`, `Çözüm` ve `ROI` blokları eklendi
   - Trial signup sonrası demo veri otomatik seed ediliyor; ilk çalışma alanı boş gelmiyor
+  - Stripe checkout tabanlı ödeme akışı Starter/Pro için canlı test edildi
+  - `/billing/success` sayfası eklendi; ödeme sonrası polling + aktivasyon görünürlüğü sağlar
 - Doğrulama tamamlandı:
   - Manuel smoke test: preview üzerinde `/pricing -> /demo` geçişi doğrulandı
   - Testing agent raporu: `/app/test_reports/iteration_25.json` → frontend %100 geçti
   - Testing agent raporu: `/app/test_reports/iteration_26.json` → trial expiry + signup seed + pricing blokları geçti
+  - Gerçek Stripe test kartı (`4242 4242 4242 4242`) ile checkout tamamlandı; plan aktivasyonu doğrulandı
+  - Testing agent raporu: `/app/test_reports/iteration_27.json` → Stripe checkout + billing success + backend activation geçti
 
 ## Öncelikli Sonraki Adımlar
 - **P1:** Trial signup akışını satış funnel’ı ile daha sıkı bağlama (ilk giriş sonrası onboarding/paket yönlendirme polish)
-- **P1:** Trial bitiş sonrası ödeme / upgrade seçim akışını Stripe checkout ile bağlama
+- **P1:** Stripe checkout akışını gerçek recurring subscription lifecycle / renewal / cancel / downgrade yönetimine yükseltme
 - **P1:** Hard quota enforcement
 - **P2:** Admin demo agency oluşturma butonu
 - **P2:** Admin endpoint cleanup (`/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`)

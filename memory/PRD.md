@@ -93,6 +93,7 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - Pro: ₺2.490 / ay, ₺24.900 / yıl
 - Enterprise checkout dışı bırakıldı; CTA `İletişime Geç` akışında kalır
 - Başarılı ödeme yönlendirme rotası `/payment-success` olarak standartlaştırıldı; `/billing/success` backward-compatible alias olarak korunur
+- `/payment-success` ekranı artık aktivasyon odaklı onboarding checklist içerir; role göre güvenli dashboard CTA ve yetkili kullanıcılara `İlk Rezervasyonu Oluştur` CTA gösterilir
 - Backend endpoint’leri eklendi:
   - `POST /api/billing/create-checkout`
   - `GET /api/billing/checkout-status/{session_id}`
@@ -191,6 +192,17 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 - Testing agent raporu: `/app/test_reports/iteration_28.json` → `/payment-success`, Enterprise CTA guardrail, webhook ve fulfillment idempotency, paid user plan state doğrulandı
 - Frontend testing agent doğrulaması: `/pricing`, `/payment-success`, `/billing/success` ekranları geçti
 - Backend deep testing doğrulaması: checkout/create-checkout, checkout-status, webhook ve duplicate event koruması geçti
+
+## Son Uygulama Notu — 2026-03-08 (Payment success aktivasyon UX)
+- `/payment-success` success state satış mesajından aktivasyon akışına çevrildi
+- Yeni içerik:
+  - başlık: `Ödemeniz başarıyla tamamlandı`
+  - alt metin: ilk rezervasyonu oluşturmaya yönlendiren aktivasyon copy
+  - 4 maddelik statik onboarding checklist
+  - birincil CTA: role-aware `Panele Git`
+  - ikincil CTA: yalnız rezervasyon yetkili rollerde `İlk Rezervasyonu Oluştur`
+- Güvenli fallback kuralı uygulandı: role resolve edilemezse dashboard CTA `/app` hedefine düşer
+- Frontend doğrulama tamamlandı: success state ve boş session error state birlikte test edildi
 
 ## Öncelikli Sonraki Adımlar
 - **P1:** Trial signup akışını satış funnel’ı ile daha sıkı bağlama (ilk giriş sonrası onboarding/paket yönlendirme polish)

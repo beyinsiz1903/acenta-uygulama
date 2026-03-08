@@ -1,13 +1,51 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ArrowRight, CheckCircle2, Clock3, ShieldCheck, XCircle } from "lucide-react";
 
 import { Button } from "../../components/ui/button";
 import { getCheckoutStatus } from "../../lib/billing";
 import { useSeo } from "../../hooks/useSeo";
+import { getUser } from "../../lib/api";
+import { redirectByRole } from "../../utils/redirectByRole";
 
 const MAX_ATTEMPTS = 6;
 const POLL_INTERVAL = 2000;
+const RESERVATION_ENABLED_ROLES = ["super_admin", "admin", "sales", "ops", "accounting", "b2b_agent"];
+const AGENCY_BOOKING_ROLES = ["agency_admin", "agency_agent"];
+const ACTIVATION_CHECKLIST = [
+  "Profil bilgilerinizi kontrol edin",
+  "İlk turunuzu veya ürününüzü ekleyin",
+  "İlk müşterinizi ekleyin",
+  "İlk rezervasyonu oluşturun",
+];
+
+function resolveDashboardPath(user) {
+  const candidate = redirectByRole(user);
+  if (!candidate || candidate === "/login" || candidate === "/unauthorized") {
+    return "/app";
+  }
+  return candidate;
+}
+
+function resolveReservationCta(user) {
+  const roles = user?.roles || [];
+
+  if (roles.some((role) => AGENCY_BOOKING_ROLES.includes(role))) {
+    return {
+      href: "/app/agency/booking/new",
+      label: "İlk Rezervasyonu Oluştur",
+    };
+  }
+
+  if (roles.some((role) => RESERVATION_ENABLED_ROLES.includes(role))) {
+    return {
+      href: "/app/reservations",
+      label: "İlk Rezervasyonu Oluştur",
+    };
+  }
+
+  return null;
+}
 
 export default function BillingSuccessPage() {
   const [searchParams] = useSearchParams();
@@ -16,6 +54,9 @@ export default function BillingSuccessPage() {
   const [payload, setPayload] = useState(null);
   const [error, setError] = useState("");
   const timeoutRef = useRef(null);
+  const currentUser = useMemo(() => getUser(), []);
+  const dashboardHref = useMemo(() => resolveDashboardPath(currentUser), [currentUser]);
+  const reservationCta = useMemo(() => resolveReservationCta(currentUser), [currentUser]);
 
   useSeo({
     title: "Ödeme durumu",
@@ -77,7 +118,7 @@ export default function BillingSuccessPage() {
       icon: CheckCircle2,
       iconColor: "text-[#2a9d8f]",
       title: "Ödemeniz başarıyla tamamlandı",
-      text: "Syroce hesabınız artık aktif. Panelinize giderek kullanmaya başlayabilirsiniz.",
+      text: "Syroce hesabınız artık aktif. İlk rezervasyonunuzu oluşturarak hemen kullanmaya başlayabilirsiniz.",
     },
     checking: {
       icon: Clock3,
@@ -155,29 +196,61 @@ export default function BillingSuccessPage() {
           </section>
 
           <section className="rounded-[1.8rem] bg-[#264653] p-6 text-white" data-testid="billing-success-actions-section">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#e9c46a]" data-testid="billing-success-actions-eyebrow">Sonraki adım</p>
-            <div className="mt-5 grid gap-3" data-testid="billing-success-actions-list">
-              {[
-                "Planınız aktif olduğunda quota ve entitlement ayarlarınız güncellenir",
-                "Tüm trial verileriniz korunur",
-                "Panelinize dönerek kullanıma hemen devam edebilirsiniz",
-              ].map((item, index) => (
-                <div key={item} className="rounded-2xl bg-white/10 px-4 py-4 text-sm leading-6 text-white/90" data-testid={`billing-success-action-${index + 1}`}>
-                  {item}
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#e9c46a]" data-testid="billing-success-actions-eyebrow">
+              {phase === "success" ? "Aktivasyon checklist" : "Sonraki adım"}
+            </p>
+
+            {phase === "success" ? (
+              <div className="mt-5 space-y-4" data-testid="billing-success-onboarding-panel">
+                <p className="text-sm leading-6 text-white/75" data-testid="billing-success-onboarding-description">
+                  İlk değeri en hızlı şekilde görmek için bu adımlarla başlayın.
+                </p>
+                <div className="grid gap-3" data-testid="billing-success-checklist">
+                  {ACTIVATION_CHECKLIST.map((item, index) => (
+                    <div
+                      key={item}
+                      className="flex items-center gap-3 rounded-2xl bg-white/10 px-4 py-4 text-sm leading-6 text-white/90"
+                      data-testid={`billing-success-checklist-item-${index + 1}`}
+                    >
+                      <ShieldCheck className="h-4 w-4 shrink-0 text-[#e9c46a]" />
+                      <span>{item}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <div className="mt-5 grid gap-3" data-testid="billing-success-actions-list">
+                {[
+                  "Planınız aktif olduğunda quota ve entitlement ayarlarınız güncellenir",
+                  "Tüm trial verileriniz korunur",
+                  "Panelinize dönerek kullanıma hemen devam edebilirsiniz",
+                ].map((item, index) => (
+                  <div key={item} className="rounded-2xl bg-white/10 px-4 py-4 text-sm leading-6 text-white/90" data-testid={`billing-success-action-${index + 1}`}>
+                    {item}
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="mt-6 flex flex-wrap gap-3" data-testid="billing-success-cta-group">
               <Button asChild className="h-12 rounded-xl bg-[#f3722c] px-6 text-sm font-semibold text-white hover:bg-[#e05d1b]" data-testid="billing-success-go-dashboard-button">
-                <Link to="/app">
+                <Link to={dashboardHref}>
                   Panele Git
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="h-12 rounded-xl border-white/30 bg-transparent px-6 text-sm font-semibold text-white hover:bg-white/10" data-testid="billing-success-back-pricing-button">
-                <Link to="/pricing">Fiyatlara Dön</Link>
-              </Button>
+
+              {phase === "success" && reservationCta ? (
+                <Button asChild variant="outline" className="h-12 rounded-xl border-white/30 bg-transparent px-6 text-sm font-semibold text-white hover:bg-white/10" data-testid="billing-success-create-reservation-button">
+                  <Link to={reservationCta.href}>{reservationCta.label}</Link>
+                </Button>
+              ) : null}
+
+              {phase !== "success" ? (
+                <Button asChild variant="outline" className="h-12 rounded-xl border-white/30 bg-transparent px-6 text-sm font-semibold text-white hover:bg-white/10" data-testid="billing-success-back-pricing-button">
+                  <Link to="/pricing">Fiyatlara Dön</Link>
+                </Button>
+              ) : null}
             </div>
           </section>
         </div>

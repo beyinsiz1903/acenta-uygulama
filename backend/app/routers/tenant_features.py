@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 
+from app.auth import get_current_user
+from app.db import get_db
 from app.errors import AppError
 from app.request_context import get_request_context
 from app.services.entitlement_service import entitlement_service
@@ -12,12 +14,29 @@ from app.services.usage_read_service import PRIMARY_USAGE_METRICS, get_usage_ove
 router = APIRouter(prefix="/api/tenant", tags=["tenant_features"])
 
 
-@router.get("/features")
-async def get_tenant_features(request: Request) -> dict:
-  """Return the effective entitlements for the current tenant."""
+async def _resolve_tenant_id(request: Request, user: dict) -> str:
   tenant_id = getattr(request.state, "tenant_id", None)
-  if not tenant_id:
-    raise AppError(400, "tenant_context_missing", "Tenant context bulunamadı.", None)
+  if tenant_id:
+    return tenant_id
+
+  tenant_id = user.get("tenant_id")
+  if tenant_id:
+    return str(tenant_id)
+
+  org_id = user.get("organization_id")
+  if org_id:
+    db = await get_db()
+    tenant = await db.tenants.find_one({"organization_id": org_id}, {"_id": 1}, sort=[("created_at", 1)])
+    if tenant and tenant.get("_id") is not None:
+      return str(tenant.get("_id"))
+
+  raise AppError(400, "tenant_context_missing", "Tenant context bulunamadı.", None)
+
+
+@router.get("/features")
+async def get_tenant_features(request: Request, user=Depends(get_current_user)) -> dict:
+  """Return the effective entitlements for the current tenant."""
+  tenant_id = await _resolve_tenant_id(request, user)
   ctx = get_request_context(required=False)
   if ctx and ctx.allowed_tenant_ids and not ctx.is_super_admin and tenant_id not in ctx.allowed_tenant_ids:
     raise AppError(403, "tenant_access_denied", "Bu tenant için erişim yetkiniz yok.", None)
@@ -43,20 +62,19 @@ async def get_tenant_features(request: Request) -> dict:
 
 
 @router.get("/entitlements")
-async def get_tenant_entitlements(request: Request) -> dict:
+async def get_tenant_entitlements(request: Request, user=Depends(get_current_user)) -> dict:
   """Return the canonical entitlement projection for the current tenant."""
-  return await get_tenant_features(request)
+  return await get_tenant_features(request, user)
 
 
 @router.get("/usage-summary")
 async def get_tenant_usage_summary(
   request: Request,
   days: int = Query(30, ge=7, le=90),
+  user=Depends(get_current_user),
 ) -> dict:
   """Return self-service tenant usage summary + 30 day trend."""
-  tenant_id = getattr(request.state, "tenant_id", None)
-  if not tenant_id:
-    raise AppError(400, "tenant_context_missing", "Tenant context bulunamadı.", None)
+  tenant_id = await _resolve_tenant_id(request, user)
   ctx = get_request_context(required=False)
   if ctx and ctx.allowed_tenant_ids and not ctx.is_super_admin and tenant_id not in ctx.allowed_tenant_ids:
     raise AppError(403, "tenant_access_denied", "Bu tenant için erişim yetkiniz yok.", None)
@@ -74,11 +92,9 @@ async def get_tenant_usage_summary(
 
 
 @router.get("/quota-status")
-async def get_tenant_quota_status(request: Request) -> dict:
+async def get_tenant_quota_status(request: Request, user=Depends(get_current_user)) -> dict:
   """Return quota status for the current tenant (self-service)."""
-  tenant_id = getattr(request.state, "tenant_id", None)
-  if not tenant_id:
-    raise AppError(400, "tenant_context_missing", "Tenant context bulunamadı.", None)
+  tenant_id = await _resolve_tenant_id(request, user)
   ctx = get_request_context(required=False)
   if ctx and ctx.allowed_tenant_ids and not ctx.is_super_admin and tenant_id not in ctx.allowed_tenant_ids:
     raise AppError(403, "tenant_access_denied", "Bu tenant için erişim yetkiniz yok.", None)

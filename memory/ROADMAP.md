@@ -10,20 +10,28 @@
   - `report.generated`
   - `export.generated`
   - `integration.call` wiring
+- Usage Visibility için PR-UM4 tamamlandı:
+  - tenant usage read API
+  - admin usage trend görünürlüğü
+  - dashboard mini kart
+  - detay usage sayfası
+  - admin usage overview kartı
 
 ## P0 — Sıradaki Kritik İş
 
-### Usage Metering — PR-UM4 / PR-UM5
-Hedef: ölçülen usage verisini görünür ve aksiyon alınabilir hale getirmek.
+### Usage Metering — PR-UM5
+Hedef: görünür usage verisini quota warning ve yükseltme davranışına dönüştürmek.
 
 Öncelikli teslimler:
-- admin + tenant usage read API görünürlüğü
-- dashboard usage kartları / tabloları
 - soft quota warnings + upgrade recommendation
+- upgrade CTA / recommended plan mantığı
 
 Teslim beklentisi:
-- usage görünürlüğü (admin + tenant)
 - soft quota enforcement ve upgrade recommendation
+
+### Sonraki Stratejik İş — Pricing Model
+- Trial / Starter / Pro / Enterprise kotalarının gelir optimizasyonu için ayrı çalışma
+- PR-UM4 sonrası ele alınacak
 
 ## P1 — Sonraki İşler
 
@@ -60,6 +68,11 @@ Teslim beklentisi:
 - PR-5B için mobil repository erişimi yok
 
 ## Son Tamamlanan İş
+- **Usage Visibility PR-UM4**
+  - tenant usage summary endpoint
+  - admin usage trend görünürlüğü
+  - dashboard mini usage kartı + `/app/usage`
+  - admin tenant usage overview
 - **Usage Metering PR-UM3**
   - gerçek report/export output instrumentation
   - Google Sheets integration.call metering wiring

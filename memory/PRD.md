@@ -64,6 +64,12 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 - `export.generated` yalnız gerçek CSV/ZIP/stream output üretiminde meterlanır; tekrar indirme sayılmaz
 - `integration.call` Google Sheets provider/client katmanında gerçek dış servis çağrısı yapıldığında meterlanacak şekilde hazırlandı
 
+### Usage Visibility PR-UM4
+- Tenant için `GET /api/tenant/usage-summary` aktif
+- Admin için `GET /api/admin/billing/tenants/{tenant_id}/usage` trend verisiyle genişletildi
+- Tenant dashboard’da mini usage kartı ve ayrı `/app/usage` sayfası aktif
+- Admin tenant features ekranında `Usage Overview` kartı ve 30 günlük trend görünürlüğü aktif
+
 ## Test Kimlik Bilgileri
 | Portal | Email | Password | Rol |
 |---|---|---|---|
@@ -100,7 +106,11 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `report.generated` → match-risk executive PDF
   - `export.generated` → sales summary CSV, tenant ZIP export, audit CSV export
   - `integration.call` → Google Sheets provider/client çağrı katmanı
-- Kullanım özeti mevcut admin usage endpoint’lerinden okunabiliyor
+- PR-UM4 kapsamı aktif:
+  - tenant usage summary + 30 gün trend
+  - admin usage raw görünümü + trend
+  - dashboard mini usage kartı
+  - detay usage sayfası
 
 ## Bu Dosyanın Kapsamı
 Bu PRD dosyası yalnızca statik ürün bağlamını taşır.

@@ -1,5 +1,36 @@
 # CHANGELOG — Acenta Master Travel SaaS
 
+## 2026-03-08 — Usage Visibility PR-UM4
+- Backend read-model katmanı eklendi:
+  - `backend/app/services/usage_read_service.py`
+  - `backend/app/repositories/usage_daily_repository.py` içine daily trend yardımcıları
+- Tenant endpoint eklendi / güçlendirildi:
+  - `GET /api/tenant/usage-summary?days=30`
+  - `backend/app/routers/tenant_features.py`
+  - tenant context fallback eklendi: request state → user tenant_id → organization_id üzerinden tenant lookup
+- Admin usage endpoint trend ile genişletildi:
+  - `GET /api/admin/billing/tenants/{tenant_id}/usage?days=30`
+  - `backend/app/routers/admin_billing.py`
+- Frontend usage görünürlüğü teslim edildi:
+  - `frontend/src/components/usage/UsageMetricTiles.jsx`
+  - `frontend/src/components/usage/UsageTrendChart.jsx`
+  - `frontend/src/components/usage/DashboardUsageSummaryCard.jsx`
+  - `frontend/src/components/admin/AdminTenantUsageOverview.jsx`
+  - `frontend/src/pages/UsagePage.jsx`
+  - `frontend/src/lib/usage.js`
+  - `frontend/src/pages/DashboardPage.jsx`
+  - `frontend/src/pages/admin/AdminTenantFeaturesPage.jsx`
+  - `frontend/src/components/AppShell.jsx`
+  - `frontend/src/App.js`
+- UX guardrail’leri uygulandı:
+  - dashboard mini kartı yalnız `reservation.created`, `report.generated`, `export.generated` gösteriyor
+  - tenant detay usage sayfası metrik kartları + 30 gün trend içeriyor
+  - upgrade CTA bilinçli olarak eklenmedi; PR-UM5’e bırakıldı
+- Testler:
+  - `backend/tests/test_usage_metering_pr_um4.py` eklendi
+  - `testing_agent` iteration_21: backend 15/15 PASS, frontend PASS
+  - `auto_frontend_testing_agent` ile tenant context blocker tespit edildi ve fix sonrası tüm UI akışları doğrulandı
+
 ## 2026-03-08 — Usage Metering PR-UM3 (`report.generated`, `export.generated`, `integration.call`)
 - `backend/app/services/usage_service.py` genişletildi:
   - `track_report_generated(...)`

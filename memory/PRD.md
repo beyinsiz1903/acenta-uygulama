@@ -79,6 +79,18 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 - Cookie-compat auth bootstrap akışında `/api/auth/me` artık `tenant_id` döner; frontend tenant bağlamını korur
 - Trial önerisi rezervasyon kullanım oranı odaklı çalışır; %70 demo senaryosunda `Pro Plan` önerilir
 
+### Pricing & Demo Sales Surface
+- Public `/pricing` sayfası satış odaklı olarak yeniden kurgulandı
+- Public `/demo` sayfası eklendi; funnel başlangıcı olarak Instagram / outbound trafiğini karşılar
+- Public `/signup` akışı Trial-first olacak şekilde güncellendi
+- `/api/onboarding/plans` plan kataloğu gerçek fiyat ve limitlerle hizalandı
+
+#### Canlı Fiyat Matrisi
+- **Trial:** 14 gün, 100 rezervasyon, 2 kullanıcı, tüm çekirdek özellikler açık
+- **Starter:** ₺990 / ay, 100 rezervasyon, 3 kullanıcı
+- **Pro:** ₺2.490 / ay, 500 rezervasyon, 10 kullanıcı
+- **Enterprise:** ₺6.990 / ay, sınırsız rezervasyon / kullanıcı
+
 ## Test Kimlik Bilgileri
 | Portal | Email | Password | Rol |
 |---|---|---|---|
@@ -132,10 +144,15 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `report.generated` → 17/20 (`critical`)
   - `export.generated` → 10/10 (`limit_reached`)
 - Frontend + backend testleri geçti; CTA akışı `/pricing` sayfasına kadar doğrulandı
+- Pricing + Demo turu tamamlandı:
+  - `/pricing` yalnız ücretli planları gösterir; Trial public katalogda gizli tutulur
+  - `/demo` → `/signup` public conversion akışı aktif
+  - Signup artık Trial-first başlar; 14 günlük deneme süresi backend tarafından üretilir
 
 ## Öncelikli Sonraki Adımlar
-- **P1:** Pricing modeli ve plan/fiyat matrisini netleştir (`Trial / Starter / Pro / Enterprise`)
+- **P1:** Trial bitiş mesajı + upgrade seçim ekranı
 - **P1:** Hard quota enforcement
+- **P1:** Pricing sayfasına sosyal kanıt / müşteri hikâyesi / ROI bölümü eklemek
 - **P2:** Admin demo agency oluşturma butonu
 - **P2:** Admin endpoint cleanup (`/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`)
 

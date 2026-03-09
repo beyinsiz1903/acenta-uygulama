@@ -685,6 +685,27 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 ## Son Uygulama Notu — 2026-03-09 (Auth redirect P0 fork doğrulaması)
 - Fork doğrulaması: `admin@acenta.test` login → `/app/admin/dashboard`, `agent@acenta.test` login → `/app`, `GET /api/auth/me` iki hesapta da doğru role/tenant bilgisini döndürüyor; kritik redirect hatası bu forkta reproduce edilmedi ve kapatıldı.
 
+## Son Uygulama Notu — 2026-03-09 (Uçtan uca kalite turu + copy sadeleştirme)
+- Kullanıcı isteği üzerine uygulama uçtan uca gözden geçirildi; beyaz ekran, kırık buton, teknik copy ve görünür UI hataları temizlendi
+- Public / auth yüzeyi güncellendi:
+  - `/login` başlığı ve tagline daha anlaşılır Türkçe copy ile yenilendi
+  - public landing navbar tagline Türkçeleştirildi
+  - landing alt CTA eyebrow içindeki teknik `Final CTA` etiketi kullanıcı dostu `Hazır mısınız?` metnine çevrildi
+  - `/privacy` ve `/terms` sayfaları yeniden yazıldı; Türkçe karakterler düzeltildi, eski `Acenta Master` referansları kaldırıldı
+- In-app UX / branding hardening:
+  - `AppShell` kırık `example.com/logo.png` placeholder’ını artık yüklemiyor; harfli fallback ile broken image sorunu kalktı
+  - `AdminExecutiveDashboardPage` başlığı `Yönetim Panosu` olarak sadeleştirildi
+  - admin dashboard chart render mantığı ölçümlü hale getirildi; `width(-1)/height(-1)` console warning’i kaldırıldı
+  - `DashboardPage` agency/hotel kullanıcılarında yetkisiz `/ops-cases/counters` ve `/audit/logs` çağrılarını durdurdu; 403 console gürültüsü temizlendi
+- Backend bug fix:
+  - `GET /api/dashboard/popular-products` içindeki Mongo `ObjectId` serialization hatası düzeltildi
+  - ürün/tur kimlikleri artık güvenli string olarak normalize ediliyor; dashboard carousel endpoint’i tekrar 200 dönüyor
+- Doğrulama:
+  - `testing_agent` raporu: `/app/test_reports/iteration_44.json` → uçtan uca smoke PASS
+  - `auto_frontend_testing_agent` → Türkçe copy, legal sayfalar, chart warning temizliği, agency dashboard console cleanup PASS
+  - `deep_testing_backend_v2` → dashboard endpoint seti + `popular-products` fix PASS
+  - manuel smoke: admin ve agency login, `/privacy`, admin dashboard, agency dashboard PASS
+
 ## Öncelikli Sonraki Adımlar
 - **P0:** Canlı email provider credential/config aktivasyonu yapılıp outbox -> gerçek teslimat hattını production benzeri ortamda doğrulama
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını timeline + banner + operasyon akışlarıyla daha da birleştirme

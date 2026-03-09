@@ -7,7 +7,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = "https://quota-manager-stage.preview.emergentagent.com/api"
+BACKEND_URL = "https://booking-system-dev-6.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

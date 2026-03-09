@@ -21,7 +21,7 @@ import requests
 
 class BackendValidator:
     def __init__(self):
-        self.base_url = "https://quota-manager-stage.preview.emergentagent.com"
+        self.base_url = "https://booking-system-dev-6.preview.emergentagent.com"
         self.admin_credentials = {"email": "admin@acenta.test", "password": "admin123"}
         self.agent_credentials = {"email": "agent@acenta.test", "password": "agent123"}
         self.admin_token = None

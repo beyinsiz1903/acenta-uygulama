@@ -118,14 +118,22 @@ async def ensure_service_runtime_indexes() -> None:
 
 async def load_sheets_config_from_db(db) -> None:
     try:
-        from app.services.sheets_provider import set_db_config
+        from app.services.sheets_provider import clear_db_configs, set_db_config
 
-        config_doc = await db.platform_config.find_one({"config_key": "google_service_account"})
-        if config_doc and config_doc.get("config_value"):
-            set_db_config(config_doc["config_value"])
+        clear_db_configs()
+        cursor = db.platform_config.find({"config_key": "google_service_account"})
+        loaded = 0
+        async for config_doc in cursor:
+            config_value = config_doc.get("config_value")
+            tenant_id = config_doc.get("tenant_id")
+            if not config_value or not tenant_id:
+                continue
+            set_db_config(config_value, tenant_id=tenant_id)
+            loaded += 1
+        if loaded:
             logging.getLogger("sheets_provider").info(
-                "Loaded Google Service Account from DB: %s",
-                config_doc.get("client_email", "?"),
+                "Loaded Google Service Account configs from DB for %s tenant(s)",
+                loaded,
             )
     except Exception as exc:
         logging.getLogger("sheets_provider").warning("Failed to load sheets config from DB: %s", exc)

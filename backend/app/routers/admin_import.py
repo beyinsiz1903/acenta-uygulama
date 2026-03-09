@@ -297,12 +297,13 @@ class SheetConnectRequest(BaseModel):
 @router.get("/sheet/config", dependencies=[AdminDep])
 async def get_sheet_config(user=Depends(get_current_user)):
     """Return Google Sheets integration configuration status."""
-    configured = sheets_configured()
-    email = get_service_account_email() if configured else None
+    tenant_id = user.get("tenant_id") or user["organization_id"]
+    configured = sheets_configured(tenant_id)
+    email = get_service_account_email(tenant_id) if configured else None
     return {
         "configured": configured,
         "service_account_email": email,
-        "message": None if configured else "Google Sheets entegrasyonu yapılandırılmamış. GOOGLE_SERVICE_ACCOUNT_JSON env var gerekli.",
+        "message": None if configured else "Google Sheets entegrasyonu yapilandirilmamis. Service Account JSON gerekli.",
     }
 
 
@@ -317,10 +318,10 @@ async def connect_sheet(
     tenant_id = user.get("tenant_id") or org_id
 
     detected_headers = []
-    if sheets_configured():
+    if sheets_configured(tenant_id):
         try:
             detected_headers = fetch_sheet_headers(
-                body.sheet_id, body.worksheet_name, body.header_row
+                body.sheet_id, body.worksheet_name, body.header_row, tenant_id=tenant_id
             )
         except RuntimeError as e:
             raise AppError(400, "sheet_access_error", str(e))
@@ -348,9 +349,9 @@ async def connect_sheet(
     await db.sheet_connections.insert_one(doc)
 
     result = serialize_doc(doc)
-    result["service_account_email"] = get_service_account_email()
+    result["service_account_email"] = get_service_account_email(tenant_id)
     result["detected_headers"] = detected_headers
-    result["configured"] = sheets_configured()
+    result["configured"] = sheets_configured(tenant_id)
     return result
 
 
@@ -360,10 +361,11 @@ async def sync_sheet(
     db=Depends(get_db),
 ):
     """Trigger a manual Google Sheet sync."""
-    if not sheets_configured():
+    tenant_id = user.get("tenant_id") or user["organization_id"]
+    if not sheets_configured(tenant_id):
         return {
             "status": "not_configured",
-            "message": "Google Sheets entegrasyonu yapılandırılmamış. GOOGLE_SERVICE_ACCOUNT_JSON env var gerekli.",
+            "message": "Google Sheets entegrasyonu yapilandirilmamis. Service Account JSON gerekli.",
             "configured": False,
         }
 
@@ -403,8 +405,9 @@ async def get_sheet_connection(
 
     result = serialize_doc(conn)
     result["connected"] = True
-    result["configured"] = sheets_configured()
-    result["service_account_email"] = get_service_account_email()
+    tenant_id = user.get("tenant_id") or user["organization_id"]
+    result["configured"] = sheets_configured(tenant_id)
+    result["service_account_email"] = get_service_account_email(tenant_id)
     return result
 
 
@@ -426,9 +429,10 @@ async def get_sheet_status(
         {"sheet_connection_id": conn["_id"]}
     ).sort("started_at", -1).to_list(5)
 
+    tenant_id = user.get("tenant_id") or user["organization_id"]
     return {
         "connected": True,
-        "configured": sheets_configured(),
+        "configured": sheets_configured(tenant_id),
         "last_sync_at": conn.get("last_sync_at"),
         "last_sync_status": conn.get("last_sync_status"),
         "last_sync_error": conn.get("last_sync_error"),

@@ -20,12 +20,17 @@ from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.errors import AppError
 from app.services.audit_log_service import append_audit_log
+from app.services.google_sheet_schema_service import (
+    get_reservation_writeback_headers,
+    validate_inventory_headers,
+)
 from app.services.sheets_provider import (
+    ensure_tab_with_headers,
     get_service_account_email,
     is_configured,
     read_sheet,
 )
-from app.services.hotel_portfolio_sync_service import auto_detect_mapping, run_hotel_sheet_sync
+from app.services.hotel_portfolio_sync_service import run_hotel_sheet_sync
 from app.utils import now_utc, serialize_doc
 
 router = APIRouter(prefix="/api/agency/sheets", tags=["agency_sheets"])
@@ -40,6 +45,10 @@ def _get_agency_id(user: dict) -> str:
     return agency_id
 
 
+def _tenant_id(user: dict) -> str:
+    return user.get("tenant_id") or user["organization_id"]
+
+
 # ── List My Hotels ────────────────────────────────────────
 
 @router.get("/hotels", dependencies=[AgencyDep])
@@ -50,7 +59,7 @@ async def list_my_hotels(
     """List hotels available to this agency for sheet connections."""
     agency_id = _get_agency_id(user)
     org_id = user["organization_id"]
-    tenant_id = user.get("tenant_id") or org_id
+    tenant_id = _tenant_id(user)
 
     # Get linked hotels
     links = await db.agency_hotel_links.find({
@@ -100,7 +109,7 @@ async def list_my_connections(
 ):
     """List this agency's sheet connections."""
     agency_id = _get_agency_id(user)
-    tenant_id = user.get("tenant_id") or user["organization_id"]
+    tenant_id = _tenant_id(user)
 
     docs = await db.hotel_portfolio_sources.find({
         "tenant_id": tenant_id,
@@ -129,7 +138,7 @@ async def connect_sheet(
     """Connect a Google Sheet to a hotel. Agency auto-detected from user."""
     agency_id = _get_agency_id(user)
     org_id = user["organization_id"]
-    tenant_id = user.get("tenant_id") or org_id
+    tenant_id = _tenant_id(user)
 
     # Validate hotel
     hotel = await db.hotels.find_one({"_id": body.hotel_id, "organization_id": org_id})
@@ -150,14 +159,31 @@ async def connect_sheet(
     agency = await db.agencies.find_one({"_id": agency_id})
     agency_name = agency.get("name", "") if agency else ""
 
-    # Try to detect headers
+    headers = []
     detected_mapping = {}
-    if is_configured():
-        read_result = read_sheet(body.sheet_id, body.sheet_tab, "1:1")
+    header_validation = {}
+    writeback_bootstrap = None
+    validation_status = "pending_configuration"
+    if is_configured(tenant_id):
+        read_result = read_sheet(body.sheet_id, body.sheet_tab, "1:1", tenant_id=tenant_id)
         if read_result.success:
             headers = read_result.data.get("headers", [])
             if headers:
-                detected_mapping = auto_detect_mapping(headers)
+                header_validation = validate_inventory_headers(headers)
+                if header_validation["missing_required_labels"]:
+                    missing = ", ".join(header_validation["missing_required_labels"])
+                    raise AppError(400, "missing_required_headers", f"Eksik zorunlu kolonlar: {missing}")
+                detected_mapping = header_validation["detected_mapping"]
+        ensure_result = ensure_tab_with_headers(
+            body.sheet_id,
+            body.writeback_tab,
+            get_reservation_writeback_headers(),
+            tenant_id=tenant_id,
+        )
+        if not ensure_result.success:
+            raise AppError(400, "writeback_tab_invalid", ensure_result.error or "Write-back sekmesi hazirlanamadi.")
+        writeback_bootstrap = ensure_result.data
+        validation_status = "validated"
 
     doc = {
         "_id": str(uuid.uuid4()),
@@ -172,6 +198,8 @@ async def connect_sheet(
         "sheet_tab": body.sheet_tab,
         "writeback_tab": body.writeback_tab,
         "mapping": detected_mapping,
+        "validation_status": validation_status,
+        "validation_summary": header_validation,
         "sync_enabled": True,
         "sync_interval_minutes": 5,
         "last_sync_at": None,
@@ -198,8 +226,12 @@ async def connect_sheet(
     )
 
     result = serialize_doc(doc)
-    result["configured"] = is_configured()
-    result["service_account_email"] = get_service_account_email()
+    result["configured"] = is_configured(tenant_id)
+    result["service_account_email"] = get_service_account_email(tenant_id)
+    result["detected_headers"] = headers
+    result["detected_mapping"] = detected_mapping
+    result["header_validation"] = header_validation
+    result["writeback_bootstrap"] = writeback_bootstrap
     return result
 
 
@@ -213,7 +245,7 @@ async def sync_connection(
 ):
     """Trigger manual sync for one of this agency's connections."""
     agency_id = _get_agency_id(user)
-    tenant_id = user.get("tenant_id") or user["organization_id"]
+    tenant_id = _tenant_id(user)
 
     conn = await db.hotel_portfolio_sources.find_one({
         "_id": connection_id,
@@ -223,7 +255,7 @@ async def sync_connection(
     if not conn:
         raise AppError(404, "not_found", "Baglanti bulunamadi.")
 
-    if not is_configured():
+    if not is_configured(tenant_id):
         return {
             "status": "not_configured",
             "configured": False,
@@ -253,7 +285,7 @@ async def delete_connection(
 ):
     """Delete one of this agency's sheet connections."""
     agency_id = _get_agency_id(user)
-    tenant_id = user.get("tenant_id") or user["organization_id"]
+    tenant_id = _tenant_id(user)
 
     result = await db.hotel_portfolio_sources.delete_one({
         "_id": connection_id,

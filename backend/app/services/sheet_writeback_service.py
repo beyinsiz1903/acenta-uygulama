@@ -113,7 +113,7 @@ async def process_writeback_job(db, job: Dict[str, Any]) -> Dict[str, Any]:
         )
         return {"status": "skipped_no_connection"}
 
-    if not is_configured():
+    if not is_configured(tenant_id):
         await db.sheet_writeback_queue.update_one(
             {"_id": job_id},
             {"$set": {"status": "skipped_not_configured", "updated_at": _now()}},
@@ -121,7 +121,7 @@ async def process_writeback_job(db, job: Dict[str, Any]) -> Dict[str, Any]:
         return {"status": "skipped_not_configured"}
 
     sheet_id = conn["sheet_id"]
-    writeback_tab = conn.get("writeback_tab", "Reservations")
+    writeback_tab = conn.get("writeback_tab", "Rezervasyonlar")
     metering_context = {
         "organization_id": conn.get("organization_id"),
         "tenant_id": tenant_id,
@@ -136,23 +136,23 @@ async def process_writeback_job(db, job: Dict[str, Any]) -> Dict[str, Any]:
 
     try:
         if event_type == "reservation_created":
-            result = await _write_reservation_row(sheet_id, writeback_tab, payload, metering_context=metering_context)
+            result = await _write_reservation_row(sheet_id, writeback_tab, payload, tenant_id=tenant_id, metering_context=metering_context)
             # Auto-decrement allotment
             await decrement_allotment_for_reservation(db, tenant_id, hotel_id, payload)
         elif event_type == "reservation_cancelled":
-            result = await _write_cancellation_row(sheet_id, writeback_tab, payload, metering_context=metering_context)
+            result = await _write_cancellation_row(sheet_id, writeback_tab, payload, tenant_id=tenant_id, metering_context=metering_context)
             # Restore allotment
             await restore_allotment_for_cancellation(db, tenant_id, hotel_id, payload)
         elif event_type == "booking_confirmed":
-            result = await _write_booking_row(sheet_id, writeback_tab, payload, metering_context=metering_context)
+            result = await _write_booking_row(sheet_id, writeback_tab, payload, tenant_id=tenant_id, metering_context=metering_context)
             # Auto-decrement allotment for booking
             await decrement_allotment_for_reservation(db, tenant_id, hotel_id, payload)
         elif event_type == "booking_cancelled":
-            result = await _write_booking_cancelled_row(sheet_id, writeback_tab, payload, metering_context=metering_context)
+            result = await _write_booking_cancelled_row(sheet_id, writeback_tab, payload, tenant_id=tenant_id, metering_context=metering_context)
             # Restore allotment for cancelled booking
             await restore_allotment_for_cancellation(db, tenant_id, hotel_id, payload)
         elif event_type == "booking_amended":
-            result = await _write_booking_amended_row(sheet_id, writeback_tab, payload, metering_context=metering_context)
+            result = await _write_booking_amended_row(sheet_id, writeback_tab, payload, tenant_id=tenant_id, metering_context=metering_context)
         else:
             result = {"status": "unknown_event_type"}
 
@@ -215,6 +215,7 @@ async def _write_reservation_row(
     sheet_id: str,
     tab: str,
     payload: Dict[str, Any],
+    tenant_id: Optional[str] = None,
     metering_context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Append a reservation row to the sheet."""
@@ -232,7 +233,7 @@ async def _write_reservation_row(
         payload.get("created_at", ""),
         payload.get("agency_name", ""),
     ]
-    result = append_rows(sheet_id, tab, [row], metering_context=metering_context)
+    result = append_rows(sheet_id, tab, [row], tenant_id=tenant_id, metering_context=metering_context)
     return result.to_dict()
 
 
@@ -240,6 +241,7 @@ async def _write_cancellation_row(
     sheet_id: str,
     tab: str,
     payload: Dict[str, Any],
+    tenant_id: Optional[str] = None,
     metering_context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Append a cancellation note row."""
@@ -257,7 +259,7 @@ async def _write_cancellation_row(
         payload.get("cancelled_at", ""),
         payload.get("cancel_reason", ""),
     ]
-    result = append_rows(sheet_id, tab, [row], metering_context=metering_context)
+    result = append_rows(sheet_id, tab, [row], tenant_id=tenant_id, metering_context=metering_context)
     return result.to_dict()
 
 
@@ -265,6 +267,7 @@ async def _write_booking_row(
     sheet_id: str,
     tab: str,
     payload: Dict[str, Any],
+    tenant_id: Optional[str] = None,
     metering_context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Append a booking row to the sheet."""
@@ -282,7 +285,7 @@ async def _write_booking_row(
         payload.get("created_at", ""),
         payload.get("agency_name", ""),
     ]
-    result = append_rows(sheet_id, tab, [row], metering_context=metering_context)
+    result = append_rows(sheet_id, tab, [row], tenant_id=tenant_id, metering_context=metering_context)
     return result.to_dict()
 
 
@@ -290,6 +293,7 @@ async def _write_booking_cancelled_row(
     sheet_id: str,
     tab: str,
     payload: Dict[str, Any],
+    tenant_id: Optional[str] = None,
     metering_context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Append a booking cancellation row."""
@@ -307,7 +311,7 @@ async def _write_booking_cancelled_row(
         payload.get("cancelled_at", ""),
         payload.get("cancel_reason", ""),
     ]
-    result = append_rows(sheet_id, tab, [row], metering_context=metering_context)
+    result = append_rows(sheet_id, tab, [row], tenant_id=tenant_id, metering_context=metering_context)
     return result.to_dict()
 
 
@@ -315,6 +319,7 @@ async def _write_booking_amended_row(
     sheet_id: str,
     tab: str,
     payload: Dict[str, Any],
+    tenant_id: Optional[str] = None,
     metering_context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Append a booking amendment row."""
@@ -332,7 +337,7 @@ async def _write_booking_amended_row(
         payload.get("amended_at", ""),
         payload.get("amendment_note", ""),
     ]
-    result = append_rows(sheet_id, tab, [row], metering_context=metering_context)
+    result = append_rows(sheet_id, tab, [row], tenant_id=tenant_id, metering_context=metering_context)
     return result.to_dict()
 
 

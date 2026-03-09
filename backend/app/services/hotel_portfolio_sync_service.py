@@ -353,7 +353,7 @@ async def run_hotel_sheet_sync(
 
     try:
         # 2. Check if configured
-        if not is_configured():
+        if not is_configured(tenant_id):
             run_doc["status"] = "not_configured"
             run_doc["errors"] = [{"message": "Google Sheets yapilandirilmamis"}]
             run_doc["finished_at"] = _now()
@@ -365,6 +365,7 @@ async def run_hotel_sheet_sync(
         fp_result = provider_get_fingerprint(
             sheet_id,
             tab,
+            tenant_id=tenant_id,
             metering_context={
                 "organization_id": connection.get("organization_id"),
                 "tenant_id": tenant_id,
@@ -395,6 +396,7 @@ async def run_hotel_sheet_sync(
         sheet_result = read_sheet(
             sheet_id,
             tab,
+            tenant_id=tenant_id,
             metering_context={
                 "organization_id": connection.get("organization_id"),
                 "tenant_id": tenant_id,

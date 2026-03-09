@@ -244,6 +244,7 @@ async def run_sheet_sync(
         headers, rows = fetch_sheet_data(
             sheet_id,
             worksheet,
+            tenant_id=tenant_id,
             metering_context={
                 "organization_id": connection.get("organization_id"),
                 "tenant_id": tenant_id,

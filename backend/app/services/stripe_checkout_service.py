@@ -362,14 +362,18 @@ class StripeCheckoutService:
                 if not _is_missing_stripe_resource_error(exc):
                     raise
                 synced = await self._demote_stale_subscription_reference(tenant_id)
+                synced["status"] = "active"
 
         now = _now()
         paid_at_value = paid_at or now.isoformat()
         amount_minor = _coerce_minor_amount(amount_paid)
         db = await get_db()
+        resolved_status = str((synced or {}).get("status") or "active")
+        if resolved_status in {"past_due", "unpaid", "incomplete", "incomplete_expired", "canceled"}:
+            resolved_status = "active"
 
         set_fields: dict[str, Any] = {
-            "status": str((synced or {}).get("status") or "active"),
+            "status": resolved_status,
             "updated_at": now,
             "last_invoice_paid_at": paid_at_value,
         }
@@ -1506,6 +1510,11 @@ class StripeCheckoutService:
         }
 
     async def handle_webhook(self, http_request, payload: bytes, signature: Optional[str]) -> dict[str, Any]:
+        webhook_secret = (os.environ.get("STRIPE_WEBHOOK_SECRET") or "").strip()
+        if not webhook_secret:
+            logger.error("Stripe webhook rejected: STRIPE_WEBHOOK_SECRET is not configured")
+            raise AppError(503, "webhook_secret_missing", "Stripe webhook secret is not configured.")
+
         checkout = self._checkout_client(http_request)
         webhook_response = await checkout.handle_webhook(payload, signature)
         raw_event = None

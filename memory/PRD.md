@@ -723,7 +723,22 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `auto_frontend_testing_agent` → LoginPage regression PASS
   - `deep_testing_backend_v2` → auth + admin endpoint no-regression PASS
 
+## Son Uygulama Notu — 2026-03-09 (Google Sheets P0 hardening)
+- Kullanıcı talebi doğrultusunda Google Sheets entegrasyonu kritik akış olarak denetlendi ve backend tarafında P0 sağlamlaştırma yapıldı.
+- Teslim edilen iyileştirmeler:
+  - tenant-aware Google Sheets config cache; DB’ye kaydedilen service account artık tenant bağlamında okunuyor
+  - yeni `GET /api/admin/sheets/templates` endpoint’i; zorunlu kolonlar, checklist ve `Rezervasyonlar` write-back başlıkları API’den alınabiliyor
+  - admin + agency connect akışları `validation_status`, `validation_summary` ve tutarlı `writeback_tab=Rezervasyonlar` alanlarıyla güçlendirildi
+  - write-back için güvenli tab bootstrap guard eklendi; yapılandırma varsa sekme başlık uyumu kontrol ediliyor / boşsa başlık yazılıyor
+  - legacy `GET /api/admin/import/sheet/config` endpoint’i tenant-aware config yoluna hizalandı
+- Doğrulama:
+  - manual curl smoke: admin config/templates + legacy import config PASS
+  - admin ve agency fake `sheet_id` ile pending-configuration connect + delete cleanup PASS
+  - `pytest /app/backend/tests/test_agency_sheets_api.py -q` → 14/14 PASS
+  - `deep_testing_backend_v2` → backend validation PASS
+
 ## Öncelikli Sonraki Adımlar
+- **P0:** Google Sheets için gerçek Service Account credential/config aktivasyonu yapılıp canlı bir sheet üzerinde kolon + write-back smoke testi doğrulama
 - **P0:** Canlı email provider credential/config aktivasyonu yapılıp outbox -> gerçek teslimat hattını production benzeri ortamda doğrulama
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını timeline + banner + operasyon akışlarıyla daha da birleştirme
 - **P1:** Admin kullanıcı yönetimi ve tenant paneli için ikinci tur UX polish: aktif abonelikli tenant’larda cancel/reactivate ve plan geçiş mikro-copy optimizasyonu; `Tüm Modüller` ekranına favoriler / komut paleti ekleme değerlendirmesi

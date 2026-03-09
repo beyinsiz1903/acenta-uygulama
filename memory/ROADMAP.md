@@ -38,8 +38,22 @@
   - warning seviyeleri
   - dashboard + usage page CTA
   - trial recommendation
+- Google Sheets P0 hardening tamamlandı:
+  - tenant-aware config cache
+  - templates endpoint
+  - connect flow validation_status / writeback_tab standardizasyonu
+  - legacy import config hizası
 
 ## P0 — Sıradaki Kritik İş
+
+### Google Sheets Production Activation
+Hedef: kritik Google Sheets entegrasyonunu gerçek credential + gerçek sheet ile production-benzeri doğrulamadan geçirmek.
+
+Öncelikli teslimler:
+- gerçek Service Account JSON aktivasyonu
+- en az bir gerçek sheet üzerinde kolon doğrulama smoke testi
+- write-back `Rezervasyonlar` sekmesi canlı yetki / paylaşım doğrulaması
+- gerekiyorsa strict preflight UI (eksik kolon / yanlış tab uyarısı) ikinci turu
 
 ### Pricing Model
 Hedef: hazır usage/veri akışını gelir modeline çevirmek.
@@ -107,6 +121,7 @@ Teslim beklentisi:
 
 ## Bloklar
 - PR-5B için mobil repository erişimi yok
+- Google Sheets canlı dış servis smoke’u için henüz gerçek service account credential paylaşılmadı
 
 ## Son Tamamlanan İş
 - **Soft Quota Warning PR-UM5**

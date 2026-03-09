@@ -1,5 +1,19 @@
 # CHANGELOG — Acenta Master Travel SaaS
 
+## 2026-03-09 — Google Sheets P0 hardening
+- Backend hardening teslim edildi:
+  - tenant-aware Google Sheets config cache eklendi; DB üzerinden kaydedilen service account artık tenant bağlamında okunuyor
+  - yeni `GET /api/admin/sheets/templates` endpoint’i eklendi; zorunlu kolonlar + write-back başlık şablonu API’den döner hale geldi
+  - admin ve agency connect akışları `validation_status`, `validation_summary` ve tutarlı `writeback_tab=Rezervasyonlar` alanlarıyla güçlendirildi
+  - write-back tab bootstrap guard eklendi; yapılandırma varsa `Rezervasyonlar` sekmesi güvenli başlık kontrolü/oluşturması yapılıyor
+  - legacy `GET /api/admin/import/sheet/config` tenant-aware config yoluna hizalandı
+- Doğrulama:
+  - Python lint: ilgili backend dosyaları PASS
+  - manual curl smoke: `admin /api/admin/sheets/config`, `/templates`, `/admin/import/sheet/config` PASS
+  - manual connect cleanup: admin ve agency fake `sheet_id` ile pending-configuration connect + delete PASS
+  - `pytest /app/backend/tests/test_agency_sheets_api.py -q` → 14/14 PASS
+  - `deep_testing_backend_v2` → Google Sheets hardening PASS (agency login sırasında rate limit notu dışında functional issue yok)
+
 ## 2026-03-09 — CI lint hotfix (requirements + LoginPage)
 - Backend CI fix:
   - `backend/requirements.txt` içine CloudFront extra index satırı geri eklendi

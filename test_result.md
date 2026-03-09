@@ -316,6 +316,18 @@ frontend:
         agent: "testing"
         comment: "BACKEND NO-REGRESSION SMOKE TEST COMPLETED - ALL 6 TESTS PASSED (2026-03-09). Comprehensive smoke validation performed after frontend landing page redesign on https://booking-system-dev-6.preview.emergentagent.com/api with agent@acenta.test/agent123. Test Context: Frontend-only landing page changes, NO backend code modifications. Test Results: 1) ✅ Public page backend health - PASSED (Status: 200, backend health endpoint responding correctly, no server errors), 2) ✅ GET /api/auth/me unauthenticated safety - PASSED (Status: 401, returns Unauthorized safely without server crash), 3) ✅ POST /api/auth/login basic smoke - PASSED (Status: 200, login successful with access_token received: 376 chars), 4) ✅ /signup route backend compatibility - PASSED (Status: 405, no backend crash for signup route access), 5) ✅ /login route backend compatibility - PASSED (Status: 405, GET on login endpoint handled safely without crash), 6) ✅ Authenticated endpoint regression - PASSED (Status: 200, /api/auth/me with valid token working correctly, user: agent@acenta.test). CRITICAL VALIDATIONS: All Turkish review request requirements validated ✅: Public page service without backend errors ✅, unauthenticated /api/auth/me returns safe response (401, no crash) ✅, login endpoint basic smoke working ✅, landing CTA target routes (/signup, /login) don't cause backend issues ✅, no backend API regression detected from landing changes ✅. Success rate: 100% (6/6 tests passed). No backend regression detected from frontend landing page redesign. All authentication and public route flows stable. Backend APIs working correctly and production-ready."
 
+  - task: "Backend no-regression smoke test - frontend hotfix validation"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "BACKEND NO-REGRESSION SMOKE TEST COMPLETED - ALL 4 TESTS PASSED (2026-03-09). Focused smoke validation performed after frontend hotfix on https://booking-system-dev-6.preview.emergentagent.com per Turkish review request. Test Context: Frontend landing/login hotfix - NO backend code changes. Test Results: 1) ✅ POST /api/auth/login basic smoke (agent@acenta.test/agent123) - PASSED (Status: 200, access_token received: 376 chars), 2) ✅ GET /api/auth/me unauthenticated safety - PASSED (Status: 401, returns Unauthorized safely with valid JSON, no crash), 3) ✅ Public routes /login and /signup backend compatibility - PASSED (Both return 200 OK, no 5xx errors), 4) ✅ Auth regression validation - PASSED (Authenticated /api/auth/me working correctly, user: agent@acenta.test). CRITICAL VALIDATIONS: All review request requirements validated ✅: POST /api/auth/login temel smoke çalışıyor ✅, GET /api/auth/me unauthenticated durumda güvenli response veriyor, crash yok ✅, /login ve /signup public route kullanımında backend kaynaklı 5xx veya auth regression yok ✅. Success rate: 100% (4/4 tests passed). No backend regression detected from frontend hotfix. All authentication endpoints stable and production-ready."
+
   - task: "Frontend smoke test - /pricing page"
     implemented: true
     working: true
@@ -8345,3 +8357,64 @@ agent_communication:
       HOTFIX IS PRODUCTION-READY AND VALIDATED FOR DEPLOYMENT.
       
       Status: ✅ PASS - All hotfix requirements validated successfully
+
+  - agent: "testing"
+    message: |
+      ✅ BACKEND NO-REGRESSION SMOKE TEST COMPLETED - ALL 4 TESTS PASSED (2026-03-09)
+      
+      Performed focused backend smoke validation after frontend hotfix per Turkish review request on https://booking-system-dev-6.preview.emergentagent.com
+      
+      Test Context:
+      - Review Request: Frontend hotfix sonrası backend no-regression smoke doğrulaması
+      - Backend Code: NO changes made in this iteration
+      - Purpose: Validate no backend regression from frontend-only hotfix
+      - Test Account: agent@acenta.test / agent123
+      
+      ✅ ALL 4 SMOKE TEST REQUIREMENTS PASSED:
+      
+      1. ✅ POST /api/auth/login temel smoke çalışıyor mu (agent@acenta.test / agent123)
+         - Status: 200 OK
+         - access_token received: 376 chars
+         - Login basic functionality working correctly
+      
+      2. ✅ GET /api/auth/me unauthenticated durumda güvenli response veriyor mu, crash yok mu
+         - Status: 401 Unauthorized (expected)
+         - Returns valid JSON response safely
+         - No server crash or 5xx errors
+         - Unauthenticated access properly handled
+      
+      3. ✅ /login ve /signup public route kullanımında backend kaynaklı 5xx veya auth regression var mı
+         - /login route: 200 OK (no backend errors)
+         - /signup route: 200 OK (no backend errors)
+         - No 5xx server errors detected
+         - Public route access safe and stable
+      
+      4. ✅ Auth regression validation (bonus check)
+         - Authenticated GET /api/auth/me: 200 OK
+         - User validation working: agent@acenta.test
+         - No auth functionality regression
+      
+      Technical Validation:
+      - All API endpoints responding correctly
+      - No server crashes or 5xx errors
+      - Authentication flow working end-to-end
+      - Public routes stable without backend issues
+      - Token-based auth working correctly
+      
+      KISA PASS/FAIL FORMATI:
+      ✅ POST /api/auth/login: PASS
+      ✅ GET /api/auth/me unauthenticated: PASS  
+      ✅ /login public route: PASS
+      ✅ /signup public route: PASS
+      ✅ Auth regression: PASS
+      
+      Test Summary:
+      - Total Requirements: 4
+      - Passed: 4
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      Backend no-regression smoke test SUCCESSFUL. Frontend hotfix did NOT cause any backend regression issues. All authentication endpoints stable, public routes working correctly, no 5xx errors detected. Backend is production-ready and unaffected by frontend-only changes.
+      
+      Status: ✅ PASS - No backend regression detected from frontend hotfix

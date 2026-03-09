@@ -477,6 +477,15 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `auto_frontend_testing_agent` → admin tenant cleanup akışı PASS
   - `deep_testing_backend_v2` → admin tenant enrichment ve features no-regression PASS
 
+## Son Uygulama Notu — 2026-03-09 (Fork doğrulama takibi)
+- Bu forkta kullanıcı onayı öncesi kota görünürlüğü tekrar doğrulandı; ek kod değişikliği yapılmadı
+  - `agent@acenta.test` hesabıyla preview login akışı geçti
+  - dashboard üzerindeki `Kullanım özeti` kartı ve `/app/usage` sayfası başarıyla açıldı
+- Manuel API doğrulaması tamamlandı
+  - `GET /api/tenant/usage-summary?days=30` → plan `Pro`, dönem `2026-03`, reservation/report/export metrikleri doğru döndü
+  - `GET /api/tenant/quota-status` → quota oranları ve warning alanları beklendiği gibi döndü
+  - `GET /api/reports/sales-summary.csv` çağrısı sonrası `export.generated` sayacı 14 → 15 artarak hard quota metering zincirinin canlı çalıştığı tekrar doğrulandı
+
 ## Öncelikli Sonraki Adımlar
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını derinleştirip ödeme problemi state’lerini timeline + banner + operasyon akışlarıyla birleştirme
 - **P1:** Admin cleanup faz-2: `partner-graph` ve tenant self-service duplicate endpoint’lerini (`/api/tenant/features`, `/api/tenant/quota-status`) konsolide etme

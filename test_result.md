@@ -6831,3 +6831,105 @@ agent_communication:
       
       Status: ✅ PASS - Billing settings frontend regression validation completed successfully
 
+  - task: "Backend billing/auth focused regression test"
+    implemented: true
+    working: true
+    file: "backend/app/routers/auth.py, backend/app/routers/billing_lifecycle.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "BACKEND BILLING/AUTH FOCUSED REGRESSION TEST COMPLETED - ALL 6 TESTS PASSED (2026-03-09). Performed comprehensive focused regression test per review request on https://agency-platform-18.preview.emergentagent.com with agent@acenta.test/agent123. Review Context: Frontend-only whitelabel endpoint fix - backend regression confidence validation. Test Results: 1) ✅ POST /api/auth/login with agency account - PASSED (376 chars token, proper agency_admin role), 2) ✅ GET /api/auth/me with returned bearer token - PASSED (returns agent@acenta.test with agency_admin role), 3) ✅ GET /api/billing/subscription valid payload (pro/yearly/active) - PASSED (confirmed Plan: pro, Status: active, Interval: yearly, Managed: True, Portal Available: True, Can Cancel: True - matches expected account state), 4) ✅ GET /api/billing/history timeline structure validation - PASSED (20 history items with proper structure: id, action, title, description, occurred_at fields validated, shows billing.plan_changed_now events etc.), 5) ✅ Unauthenticated access to billing endpoints rejection - PASSED (both /api/billing/subscription and /api/billing/history correctly return 401 when unauthenticated), 6) ✅ Yearly managed subscription consistency sanity check - PASSED (subscription state remains pro/yearly/active consistently, managed subscription behaviors validated). CRITICAL VALIDATIONS: Account state confirmed as pro/yearly/active per review request context ✅, all billing endpoints returning valid payloads ✅, proper authentication enforcement ✅, billing history timeline structure valid ✅, yearly managed subscription behaviors consistent ✅, no 500/401 regressions detected ✅. Success rate: 100% (6/6 tests passed). Conclusion: Backend auth + billing endpoints working correctly after frontend-only whitelabel endpoint fix. No backend regressions detected. All billing/auth flows stable for yearly managed subscription state. No action required."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 37
+  run_ui: false
+
+test_plan:
+  current_focus: []
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ BACKEND BILLING/AUTH FOCUSED REGRESSION TEST COMPLETED - ALL 6 TESTS PASSED (2026-03-09)
+      
+      Performed comprehensive focused regression test per review request on https://agency-platform-18.preview.emergentagent.com
+      
+      Test Context:
+      - Review Request: Backend regression confidence around auth + billing endpoints
+      - Account: agent@acenta.test / agent123
+      - Expected State: pro / yearly / active (verified manually)
+      - Recent Change: Frontend-only fix to stop agency users from calling admin-only whitelabel endpoint
+      - Goal: Validate no backend regressions after frontend session
+      
+      ✅ ALL 6 FOCUSED REGRESSION REQUIREMENTS VALIDATED:
+      
+      1. ✅ POST /api/auth/login with agency account - PASSED
+         - Login successful with agent@acenta.test/agent123
+         - Token received: 376 characters
+         - Response contains required fields: access_token, refresh_token
+         - User role confirmed as agency_admin (proper agency user)
+      
+      2. ✅ GET /api/auth/me with returned bearer token - PASSED
+         - Bearer token authentication working correctly
+         - Returns correct user data: agent@acenta.test
+         - Role validation: ['agency_admin'] (not admin, proper agency user)
+         - All required fields present: id, email, roles
+      
+      3. ✅ GET /api/billing/subscription valid billing payload - PASSED
+         - Account state confirmed as expected: pro / yearly / active
+         - Valid billing payload structure with all required fields:
+           * Plan: pro (✓ matches expected)
+           * Status: active (✓ matches expected)
+           * Interval: yearly (✓ matches expected)
+           * Managed: True (✓ proper managed subscription)
+           * Portal Available: True
+           * Can Cancel: True
+         - Billing subscription payload complete and consistent
+      
+      4. ✅ GET /api/billing/history timeline structure validation - PASSED
+         - Valid timeline structure with 20 history items
+         - Proper item structure validated: id, action, title, description, occurred_at
+         - Date format validation: ISO format with timezone (2026-03-09T10:57:49.030000+00:00)
+         - Sample events visible: billing.plan_changed_now, billing.subscription_reactivated
+         - Timeline shows recent plan change: Starter (Aylık) → Pro (Yıllık)
+      
+      5. ✅ Unauthenticated access rejection validated - PASSED
+         - GET /api/billing/subscription correctly returns 401 when unauthenticated ✅
+         - GET /api/billing/history correctly returns 401 when unauthenticated ✅
+         - Proper authentication protection in place for billing endpoints
+      
+      6. ✅ Yearly managed subscription consistency sanity check - PASSED
+         - Subscription state remains consistent: pro / yearly / active
+         - Managed subscription behaviors validated
+         - Portal availability confirmed for yearly subscription
+         - No inconsistencies in billing endpoint responses
+         - Multiple calls return identical subscription state
+      
+      Technical Validation Details:
+      - Base URL: https://agency-platform-18.preview.emergentagent.com
+      - All API responses return 200 status codes for authenticated requests
+      - All unauthenticated requests properly rejected with 401
+      - No 5xx server errors detected
+      - JSON payload structures valid and complete
+      - Turkish localization in billing history working correctly
+      - Account shows billing.plan_changed_now from Starter to Pro (yearly)
+      
+      Test Summary:
+      - Total Focused Requirements: 6
+      - Passed: 6
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      Backend auth + billing endpoints working correctly for yearly managed subscription state. The frontend-only whitelabel endpoint fix has NOT caused any backend regressions. All billing and authentication flows are stable and functioning as expected.
+      
+      Status: ✅ PASS - No action required! Backend regression confidence validated successfully.
+

@@ -19,7 +19,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Base URL from frontend .env
-BASE_URL = "https://syroce-preview.preview.emergentagent.com"
+BASE_URL = "https://travel-ops-system-4.preview.emergentagent.com"
 
 def print_test_step(step: str, description: str):
     """Print formatted test step."""

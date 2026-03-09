@@ -682,6 +682,9 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `deep_testing_backend_v2` → yetki doğrulaması PASS
   - `auto_frontend_testing_agent` → görünürlük + modal doğrulaması PASS
 
+## Son Uygulama Notu — 2026-03-09 (Auth redirect P0 fork doğrulaması)
+- Fork doğrulaması: `admin@acenta.test` login → `/app/admin/dashboard`, `agent@acenta.test` login → `/app`, `GET /api/auth/me` iki hesapta da doğru role/tenant bilgisini döndürüyor; kritik redirect hatası bu forkta reproduce edilmedi ve kapatıldı.
+
 ## Öncelikli Sonraki Adımlar
 - **P0:** Canlı email provider credential/config aktivasyonu yapılıp outbox -> gerçek teslimat hattını production benzeri ortamda doğrulama
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını timeline + banner + operasyon akışlarıyla daha da birleştirme

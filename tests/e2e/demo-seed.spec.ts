@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const BASE = "https://syroce-preview.preview.emergentagent.com";
+const BASE = "https://travel-ops-system-4.preview.emergentagent.com";
 const UID = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 async function signup(request: any) {

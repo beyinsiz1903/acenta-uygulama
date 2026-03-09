@@ -1,120 +1,123 @@
 <analysis>**original_problem_statement:**
-The user's primary goal is to build out a Travel Agency Operating System. The initial phase involved simplifying the UI and fixing critical 404 errors. The project has now moved into feature implementation.
+The user's primary goal is to build out a Travel Agency Operating System. The initial phase involved simplifying the UI and fixing critical 404 errors. The project has now moved into feature implementation, with the current focus on handling payment failures via Stripe webhooks.
 
-The current priorities are:
-1.  **P0: Implement Logic for Agency Endpoints:** (Completed in a previous session).
-2.  **P1: Implement Billing History Timeline:** (Completed in a previous session).
-3.  **P2: Test Annual Pricing:** The annual pricing feature requires end-to-end testing. (This was completed in the current session).
-4.  **P2: Handle Payment Failures:** Implement webhooks and UI for failed payments. (This is now in progress).
+The overall priorities are:
+1.  **P0: Implement Logic for Agency Endpoints:** (Completed)
+2.  **P1: Implement Billing History Timeline:** (Completed)
+3.  **P2: Test Annual Pricing:** (Completed)
+4.  **P2: Handle Payment Failures:** (In Progress)
 5.  **P2: Hard Quota Enforcement.**
 6.  **P2: Admin Panel Cleanup.**
 
 **User's preferred language**: Turkish
 
 **what currently exists?**
-The application has a fully implemented and tested subscription upgrade feature. Users can select a monthly or annual plan from the billing page, and the change is reflected in their account. The previous E2E testing blocker, which was a routing issue after login, has been resolved by implementing  in the  component.
+The application has a functional subscription upgrade feature. The backend now includes a complete Stripe webhook endpoint () that processes  and  events. This logic updates the user's  and a new  field in the database. The  model and the  endpoint have been updated to support this, storing a  and setting a status of active upon successful upgrade.
 
-Work has begun on handling payment failures. Following a playbook from the , a new Stripe webhook endpoint has been created at  and registered in the main FastAPI application at . Currently, this endpoint contains only boilerplate code and does not yet have logic to handle specific payment events.
+On the frontend, a banner has been implemented in  that conditionally displays when a user's  is 'past_due'. This banner fetches the status from the  endpoint.
 
 **Last working item**:
-- Last item agent was working: The agent was implementing the Stripe webhook endpoint for handling payment events. It successfully created the new endpoint file () and registered the new router in the main application ().
+- Last item agent was working: The agent finished implementing a frontend banner in  to notify users about payment failures. This involved adding a  hook to fetch the user's subscription status and conditionally rendering a banner at the top of the application.
 - Status: IN PROGRESS
 - Agent Testing Done: N
-- Which testing method agent to use? The agent should use  to send a mock Stripe event payload to the  endpoint to test the logic once it's implemented. This will require setting up the  environment variable first.
+- Which testing method agent to use? The frontend testing agent should be used to verify the new banner. The test should involve mocking the  API response to return a user with  and asserting that the banner with  is visible.
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-There are no outstanding issues. The blocker from the previous session has been resolved.
+There are no outstanding bugs or issues.
 
 **In progress Task List**:
-- Task 1: Complete Stripe Webhook Implementation (Priority: P0)
-  - **Where to resume**: Resume work in . The boilerplate from the integration playbook is in place. The next step is to add business logic within the  block to handle specific Stripe events, such as  and . This logic should update the user's record in the database (e.g., change their ).
-  - **What will be achieved with this?**: The application will be able to automatically manage user subscription status based on real-time events from Stripe, such as downgrading a plan after a payment fails.
+- Task 1: Test the Payment Failure Notification UI (Priority: P0)
+  - **Where to resume**: The implementation in  is complete. The next step is to test it.
+  - **What will be achieved with this?**: Verifying that users are correctly notified when their payment fails, which is a critical part of the payment failure handling feature.
   - **Status**: IN PROGRESS
-  - **Should Test frontend/backend/both after fix?**: Backend
-  - **Blocked on something**: The  environment variable needs to be added to  as per the integration playbook.
+  - **Should Test frontend/backend/both after fix?**: Frontend
+  - **Blocked on something**: Nothing.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-    - **P1:** Add the  to the  file.
-    - **P1:** Implement frontend UI to notify users of payment failures (e.g., a banner or a modal).
+  - **P1:** End-to-end test of the payment failure flow (Webhook -> DB Update -> UI Banner).
 - **Future Tasks:**
-    - **P2:** Hard Quota Enforcement based on subscription plan.
-    - **P2:** Admin Panel Cleanup.
+  - **P2:** Hard Quota Enforcement based on subscription plan.
+  - **P2:** Admin Panel Cleanup.
 
 **Completed work in this session**
-- **Subscription Flow E2E Test (FIXED & VERIFIED):**
-  - Resolved the post-login routing issue in  by replacing  with the React Router  hook.
-  - Successfully re-ran the , confirming that the entire subscription upgrade flow (login -> navigate to billing -> upgrade plan) works as expected.
-- **Stripe Webhook Foundation (STARTED):**
-  - Used  to get a playbook for Stripe webhooks.
-  - Created a new endpoint file .
-  - Registered the webhook router in  to handle requests at .
+- **Stripe Webhook Implementation (DONE):**
+  - Added  to the  file.
+  - Implemented the backend logic in  to handle  and  events, updating the user's plan and status in the database.
+  - Updated the User model in  to include  and .
+  - Updated the billing upgrade endpoint in  to store the  and set  to active.
+  - Installed the  Python package and updated .
+- **Webhook Endpoint Test (DONE):**
+  - Successfully tested the  endpoint with a  command, confirming it can receive and process mock Stripe events.
+- **Frontend Payment Failure Notification (Partially Done):**
+  - Implemented a banner in  that appears when a user's  is .
 
 **Earlier issues found/mentioned but not fixed**
 - None.
 
 **Known issue recurrence from previous fork**
-- None. The issue from the previous fork's handoff summary was resolved in this session.
+- None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- FastAPI routing and dependencies
-- Pydantic models
-- React  and  hooks
-- React Router  for SPA navigation
-- Stripe Webhooks for asynchronous event handling
+- Stripe Webhooks for asynchronous event handling.
+- FastAPI backend logic for processing webhooks and updating a MongoDB database.
+- React  for fetching data on component mount.
+- Conditional rendering in React to display UI elements based on application state.
 
 **key DB schema**
-- **users**: {, , , , , ...}
+- **users**: {, , , , , , }
 
 **changes in tech stack**
 - No changes.
 
 **All files of reference**
-- : (MODIFIED) Fixed post-login redirection logic.
-- : (MODIFIED) Registered the new webhook router.
-- : (NEW) Created to house the Stripe webhook logic.
+- : (MODIFIED) Contains the core logic for handling Stripe payment events.
+- : (MODIFIED) User schema updated with  and .
+- : (MODIFIED) Upgrade logic now saves Stripe customer ID and sets subscription status.
+- : (MODIFIED) Implemented the payment failure notification banner.
+- : (MODIFIED) Added .
+- : (MODIFIED) Added  dependency.
 
 **Areas that need refactoring**:
 - None identified.
 
 **key api endpoints**
--  (NEW)
+- 
 - 
 - 
 
 **Critical Info for New Agent**
 - **You must continue to communicate in Turkish.**
-- The major blocker from the previous session (failing E2E test) is **resolved**. The subscription upgrade feature is fully functional and verified.
-- The current focus is on implementing Stripe webhooks to handle payment failures. The basic endpoint () exists but needs business logic.
-- Before testing the webhook, you must add the  environment variable to . The playbook provided its value; if not, you may need to regenerate or locate it.
-- The next step is to populate  with logic to parse Stripe events and update the user's subscription status in the database.
+- The primary task of implementing the Stripe webhook backend logic is complete and has been tested via .
+- The corresponding frontend UI (a banner in ) has also been implemented, but it **has not been tested**. Your immediate task is to test this frontend component.
+- The complete end-to-end flow (a failed payment in Stripe triggering the webhook that updates the database, which in turn causes the UI banner to appear for the user) has not been verified yet. This should be considered after the UI component is tested in isolation.
 
 **documents and test reports created in this job**
--  (Shows the successful E2E test run)
+- None.
 
 **Last 10 User Messages and any pending HUMAN messages**
-- User:  (Translated: ) - Approval to the agent's initial plan to fix the E2E test.
+-  (Translated: ) - User approval for the agent's plan to implement the webhook and UI.
 
 **Project Health Check:**
 - **Broken:** None.
-- **Mocked:** The subscription logic does not yet integrate with a real payment processor for charging cards, but the webhook part (reacting to payment events) is being built.
+- **Mocked:** The payment failure flow relies on mock events sent via  for testing the webhook. The UI banner test will rely on a mocked API response.
 
 **3rd Party Integrations**
-- **Stripe (Payments):** In-progress implementation of webhooks. Test key is available in the environment.
+- **Stripe (Payments):** Actively used for subscription management and webhooks. Test key is available.
 - Google Sheets API
 - Faker
 - Recharts
 - lucide-react
 
 **Testing status**
-- Testing agent used after significant changes: YES
+- Testing agent used after significant changes: NO (but recommended for the next step).
 - Troubleshoot agent used after agent stuck in loop: NO
 - Test files created: None.
-- Known regressions: None. The regression from the previous session was fixed.
+- Known regressions: None.
 
 **Credentials to test flow:**
 | Portal | Email | Password | Role |
@@ -123,4 +126,4 @@ There are no outstanding issues. The blocker from the previous session has been 
 | **B2B Portal** ( or ) |  |  | Agency Admin (use this for testing) |
 
 **What agent forgot to execute**
-- The agent has not yet added the  to the  file. This was a step mentioned in the Stripe playbook and is required for the webhook to function securely. This should be the immediate next action.</analysis>
+- The agent has correctly implemented all planned steps so far. The only remaining action for the current feature is testing the newly created frontend banner.</analysis>

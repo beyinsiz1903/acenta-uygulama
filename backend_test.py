@@ -20,7 +20,7 @@ from typing import Dict, Any, Optional
 class StripeWebhookTester:
     def __init__(self):
         # Use the preview environment base URL as specified in the review
-        self.base_url = "https://subscription-handler.preview.emergentagent.com"
+        self.base_url = "https://agency-billing-ui.preview.emergentagent.com"
         self.webhook_secret = "whsec_test"  # From backend/.env
         
         # Test credentials from review request

@@ -11,7 +11,7 @@ import json
 import time
 import requests
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://subscription-handler.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://agency-billing-ui.preview.emergentagent.com").rstrip("/")
 
 # Test credentials
 ADMIN_CREDS = {"email": "admin@acenta.test", "password": "admin123"}

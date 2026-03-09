@@ -9673,3 +9673,171 @@ agent_communication:
 
 
 
+
+frontend:
+  - task: "Turkish review - Agency login last two fixes verification"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/DashboardPage.jsx, frontend/src/utils/redirectByRole.js, backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: |
+          TURKISH REVIEW - AGENCY LOGIN LAST TWO FIXES VERIFICATION COMPLETED - ALL 9 TESTS PASSED (2026-03-09)
+          
+          Comprehensive validation performed per Turkish review request "Son iki düzeltmeyi doğrula" on https://syroce-demo.preview.emergentagent.com with agency account agent@acenta.test/agent123.
+          
+          📋 REVIEW REQUEST FOCUS AREAS:
+          1. Agency login sonrası /app dashboard açılıyor mu, blank screen yok mu
+          2. Agency dashboard artık console'da /api/ops-cases/counters ve /api/audit/logs için 403 üretmiyor mu
+          3. Dashboard temel kartları ve sayfa başlığı yükleniyor mu
+          4. Rezervasyonlar ve Raporlar sekmelerine geçişte beyaz ekran yok mu
+          5. Genel kullanıcı akışı stabil mi
+          
+          ✅ ALL 9 VALIDATION TESTS PASSED:
+          
+          1. ✅ Login page loads correctly
+             - Login page element found with all form elements present
+             
+          2. ✅ Agency user login successful (agent@acenta.test/agent123)
+             - Email, password, and submit button all working correctly
+             - Login form submitted successfully
+             
+          3. ✅ CRITICAL: Agency user correctly redirected to /app dashboard
+             - Post-login URL: https://syroce-demo.preview.emergentagent.com/app ✓
+             - NOT redirected to /app/partners or /app/admin ✓
+             - Redirect matches expected behavior for agency_admin role ✓
+             
+          4. ✅ CRITICAL: NO blank screen after login
+             - Page content: 357,794 characters (HTML)
+             - Page text content: 2,957 characters
+             - Substantial content loaded - dashboard fully rendered ✓
+             
+          5. ✅ CRITICAL: Dashboard page title and basic cards load correctly
+             - Dashboard page element found (data-testid="dashboard-page") ✓
+             - Page title "Genel Bakış" found ✓
+             - Big KPI cards section found (data-testid="big-kpi-cards") ✓
+             - Dashboard KPI bar found (data-testid="dashboard-kpi-bar") ✓
+             - All dashboard UI elements rendering correctly ✓
+             
+          6. ✅ CRITICAL: NO 403 errors for /api/ops-cases/counters and /api/audit/logs
+             - Console logs monitored during dashboard load and navigation
+             - Network requests monitored for 403 status codes
+             - ZERO 403 errors detected for /api/ops-cases/counters ✓
+             - ZERO 403 errors detected for /api/audit/logs ✓
+             - This confirms the critical fix mentioned in review request is working ✓
+             
+          7. ✅ Tab switching - Rezervasyonlar (no white screen)
+             - Rezervasyonlar link found and clicked
+             - Navigated to: /app/agency/bookings
+             - Page content loaded correctly (NOT blank) ✓
+             - Tab switch stable, no white screen ✓
+             
+          8. ✅ Tab switching - Raporlar (no white screen)
+             - Raporlar link found and clicked
+             - Navigated to: /app/reports
+             - Page content loaded correctly (NOT blank) ✓
+             - Tab switch stable, no white screen ✓
+             
+          9. ✅ General console error analysis
+             - Total console logs: 5
+             - Console errors: 2 (both NON-CRITICAL)
+             - Error 1: 401 on /api/auth/me (EXPECTED - bootstrap check before login)
+             - Error 2: 401 on /api/auth/refresh (EXPECTED - bootstrap check before login)
+             - Cloudflare RUM analytics error (NON-CRITICAL - external CDN)
+             - NO critical React errors ✓
+             - NO error boundaries triggered ✓
+             - Console clean and stable ✓
+          
+          🎯 CRITICAL VALIDATIONS FROM TURKISH REVIEW REQUEST:
+          
+          ✅ "Agency login sonrası /app dashboard açılıyor mu, blank screen yok mu"
+             - DOĞRULANDI: Agency login redirects to /app dashboard with full content loaded, NO blank screen
+          
+          ✅ "Agency dashboard artık console'da /api/ops-cases/counters ve /api/audit/logs için 403 üretmiyor mu"
+             - DOĞRULANDI: ZERO 403 errors for these endpoints, console temiz (clean)
+          
+          ✅ "Dashboard temel kartları ve sayfa başlığı yükleniyor mu"
+             - DOĞRULANDI: Dashboard title "Genel Bakış", KPI cards, and all basic UI elements load correctly
+          
+          ✅ "Rezervasyonlar ve Raporlar sekmelerine geçişte beyaz ekran yok mu"
+             - DOĞRULANDI: Both tabs switch correctly without white screens
+          
+          ✅ "Genel kullanıcı akışı stabil mi"
+             - DOĞRULANDI: User flow stable, navigation working, no critical errors
+          
+          📸 SCREENSHOTS CAPTURED:
+          - agency_dashboard_after_login.png: Dashboard with "Genel Bakış" title, KPI cards visible
+          - agency_final_state.png: Final state showing Raporlar page with data
+          
+          📊 TEST METRICS:
+          - Tests executed: 9 comprehensive validation checks
+          - Success rate: 100% (9/9 tests passed, 0 failed)
+          - Pages tested: /login, /app (dashboard), /app/agency/bookings, /app/reports
+          - Account validated: agent@acenta.test (agency_admin role)
+          - Console logs analyzed: 5 total (2 expected non-critical errors only)
+          - 403 errors for critical endpoints: 0 (CLEAN) ✓
+          
+          🔒 CONCLUSION:
+          
+          Son iki düzeltme DOĞRULANDI ve BAŞARILI (The last two fixes VERIFIED and SUCCESSFUL):
+          
+          1. ✅ FIX 1 WORKING: Agency login correctly redirects to /app dashboard without blank screen
+          2. ✅ FIX 2 WORKING: Console NO LONGER produces 403 errors for /api/ops-cases/counters and /api/audit/logs
+          
+          All Turkish review request requirements VALIDATED and PRODUCTION-READY. Agency user flow is stable, dashboard loads correctly with all UI elements, tab switching works without issues, and console is clean without the previously problematic 403 errors. The critical fixes mentioned in the review request are working perfectly.
+
+test_plan:
+  current_focus: []
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ TURKISH REVIEW REQUEST VALIDATION COMPLETED - ALL REQUIREMENTS PASSED (2026-03-09)
+      
+      Validated "Son iki düzeltmeyi doğrula" per review request on https://syroce-demo.preview.emergentagent.com
+      
+      Test Account: agent@acenta.test / agent123 (agency_admin)
+      
+      🎯 CRITICAL VALIDATION RESULTS:
+      
+      ✅ ALL 5 REVIEW REQUEST REQUIREMENTS PASSED:
+      
+      1. ✅ Agency login sonrası /app dashboard açılıyor mu, blank screen yok mu
+         Result: PASS - Agency login redirects to /app dashboard, 357KB content loaded, NO blank screen
+      
+      2. ✅ Agency dashboard artık console'da /api/ops-cases/counters ve /api/audit/logs için 403 üretmiyor mu
+         Result: PASS - ZERO 403 errors detected for these endpoints, console temiz (clean)
+         *** THIS WAS THE CRITICAL FIX - NOW WORKING CORRECTLY ***
+      
+      3. ✅ Dashboard temel kartları ve sayfa başlığı yükleniyor mu
+         Result: PASS - "Genel Bakış" title visible, Big KPI cards found, Dashboard KPI bar found
+      
+      4. ✅ Rezervasyonlar ve Raporlar sekmelerine geçişte beyaz ekran yok mu
+         Result: PASS - Rezervasyonlar → /app/agency/bookings (NOT blank), Raporlar → /app/reports (NOT blank)
+      
+      5. ✅ Genel kullanıcı akışı stabil mi
+         Result: PASS - User flow stable, only 2 expected 401 errors (auth bootstrap checks), NO critical errors
+      
+      📊 SUMMARY METRICS:
+      - Tests executed: 9 comprehensive validations
+      - Success rate: 100% (9/9 passed)
+      - Console logs: 5 total (2 expected non-critical errors only)
+      - 403 errors for /api/ops-cases/counters: 0 ✓
+      - 403 errors for /api/audit/logs: 0 ✓
+      
+      🔒 CONCLUSION:
+      Son iki düzeltme BAŞARILI (The last two fixes SUCCESSFUL). Agency login flow working perfectly with clean console.
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 10
+  last_updated: "2026-03-09"
+

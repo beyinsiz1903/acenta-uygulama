@@ -21,6 +21,12 @@ def _str_name(val, default=""):
     return default or ""
 
 
+def _stringify_id(value) -> str:
+    if value is None:
+        return ""
+    return str(value)
+
+
 @router.get("/kpi-stats")
 async def kpi_stats(user=Depends(get_current_user)):
     """Return Agentis-style KPI cards: Satışlar, Rezervasyon ratio, Dönüşüm Oranı, Online."""
@@ -284,14 +290,21 @@ async def popular_products(
     results = []
     for p in popular:
         product_name = _str_name(p.get("product_name") or p.get("hotel_name") or p.get("tour_name"), "Ürün")
-        product_id = p.get("_id") or ""
+        raw_product_id = p.get("_id")
+        product_id = _stringify_id(raw_product_id)
 
         # Get product image
         product_doc = None
-        if product_id:
-            product_doc = await db.products.find_one({"id": product_id})
+        if raw_product_id is not None:
+            product_doc = await db.products.find_one(
+                {"$or": [{"id": raw_product_id}, {"id": product_id}, {"_id": raw_product_id}]},
+                {"_id": 0},
+            )
             if not product_doc:
-                product_doc = await db.tours.find_one({"id": product_id})
+                product_doc = await db.tours.find_one(
+                    {"$or": [{"id": raw_product_id}, {"id": product_id}, {"_id": raw_product_id}]},
+                    {"_id": 0},
+                )
 
         image_url = ""
         if product_doc:
@@ -327,7 +340,7 @@ async def popular_products(
                 image_url = images[0] if isinstance(images[0], str) else images[0].get("url", "")
 
             results.append({
-                "product_id": prod.get("id") or str(prod.get("_id", "")),
+                "product_id": _stringify_id(prod.get("id") or prod.get("_id")),
                 "product_name": _str_name(prod.get("name") or prod.get("title"), "Ürün"),
                 "image_url": image_url,
                 "reservation_count": 0,
@@ -348,7 +361,7 @@ async def popular_products(
                     image_url = images[0] if isinstance(images[0], str) else images[0].get("url", "")
 
                 results.append({
-                    "product_id": tour.get("id") or str(tour.get("_id", "")),
+                    "product_id": _stringify_id(tour.get("id") or tour.get("_id")),
                     "product_name": _str_name(tour.get("name") or tour.get("title"), "Tur"),
                     "image_url": image_url,
                     "reservation_count": 0,

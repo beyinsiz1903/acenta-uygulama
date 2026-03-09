@@ -762,6 +762,8 @@ export default function DashboardPage() {
   const bookingsBase = isHotel ? "/app/hotel/bookings" : isAgency ? "/app/agency/bookings" : "/app/reservations";
   const casesBase = "/app/ops/guest-cases";
   const isComfort = density === 'comfort';
+  const canViewOpsCounters = !isAgency && !isHotel;
+  const canViewActivityLog = !isAgency && !isHotel;
 
   /* ---------- fetch original data ---------- */
   useEffect(() => {
@@ -776,8 +778,8 @@ export default function DashboardPage() {
       const [a, b, c, d] = await Promise.all([
         safe(() => api.get("/reports/reservations-summary")),
         safe(() => api.get(`/reports/sales-summary?days=${chartDays}`)),
-        safe(() => api.get("/ops-cases/counters")),
-        safe(() => api.get("/audit/logs", { params: { range: "7d", limit: 10 } })),
+        canViewOpsCounters ? safe(() => api.get("/ops-cases/counters")) : Promise.resolve(null),
+        canViewActivityLog ? safe(() => api.get("/audit/logs", { params: { range: "7d", limit: 10 } })) : Promise.resolve(null),
       ]);
       if (cancelled) return;
       if (a?.data) setResSummary(a.data);
@@ -788,7 +790,7 @@ export default function DashboardPage() {
     };
     load();
     return () => { cancelled = true; };
-  }, [chartDays]);
+  }, [canViewActivityLog, canViewOpsCounters, chartDays]);
 
   /* ---------- enhanced dashboard data is now managed by React Query hooks ---------- */
 

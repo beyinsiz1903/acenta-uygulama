@@ -341,6 +341,18 @@ frontend:
         agent: "testing"
         comment: "BILLING LIFECYCLE UI VALIDATION COMPLETED - ALL 11 TESTS PASSED (2026-03-08). Comprehensive validation of billing page cancel/reactivate lifecycle per Turkish review request on https://travel-agency-os.preview.emergentagent.com with agent@acenta.test/agent123. Test Results: 1) ✅ Login successful - agent@acenta.test authenticated and redirected to /app/partners, 2) ✅ Navigation to /app/settings/billing successful, 3) ✅ Page title 'Faturalama' verified correctly, 4) ✅ Summary cards present and correct - Current plan: Starter ✅, Renewal date: 08 Nisan 2026 (Turkish format) ✅, Status: Aylık · Aktif ✅, 5) ✅ Date format in user-friendly Turkish (08 Nisan 2026) confirmed, 6) ✅ 'Aboneliği İptal Et' button present and enabled, 7) ✅ Cancel flow working - clicked cancel button, confirmation modal opened with title 'Aboneliği dönem sonunda iptal et' and description 'Aboneliğiniz mevcut dönem sonuna kadar aktif kalır. Sonrasında otomatik olarak sona erer.', clicked confirm button, 8) ✅ Pending cancellation banner appeared with text 'Aboneliğiniz dönem sonunda sona erecek', 9) ✅ 'Aboneliği Yeniden Başlat' button appeared in pending state, 10) ✅ Reactivate flow working - clicked reactivate button, pending banner disappeared ✅, reactivate button disappeared ✅, subscription returned to active state, 11) ✅ 'Ödeme Yöntemini Güncelle' button present, enabled, and configured to redirect to Stripe portal (not clicked to avoid external navigation). Page not blank/crashed - 281,274 characters of content loaded successfully. All critical data-testid selectors working: billing-page ✅, billing-page-title ✅, billing-summary-cards ✅, billing-current-plan-card ✅, billing-renewal-date-card ✅, billing-status-card ✅, billing-cancel-subscription-button ✅, billing-cancel-dialog ✅, billing-cancel-dialog-title ✅, billing-cancel-dialog-description ✅, billing-cancel-dialog-confirm ✅, billing-cancel-pending-banner ✅, billing-reactivate-subscription-button ✅, billing-update-payment-method-button ✅. Console analysis: 14 console errors detected, ALL NON-CRITICAL and not related to billing flow - 401 errors on /api/auth/me and /api/auth/refresh before login (expected bootstrap checks), 500 errors on optional features (/api/partner-graph/relationships, /api/partner-graph/notifications/summary, /api/settlements/statement), 403 errors on admin-only endpoint /api/admin/whitelabel-settings (expected for agency user). Zero billing-specific errors. Network failures: 2 Cloudflare RUM analytics requests (non-critical CDN analytics). KEY VALIDATIONS: Full cancel → pending → reactivate lifecycle working correctly, Turkish date formatting confirmed (08 Nisan 2026), all UI state changes reflect backend state correctly, confirmation modal works properly, pending banner shows/hides correctly, reactivate button appears/disappears correctly. No APIs mocked - all functionality tested against live Stripe-integrated preview environment. Billing lifecycle UI is PRODUCTION-READY."
 
+  - task: "/app/settings/billing - payment issue improvements no-regression validation"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/SettingsBillingPage.jsx, frontend/src/components/settings/BillingPaymentIssueBanner.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "BILLING PAYMENT ISSUE NO-REGRESSION VALIDATION COMPLETED - ALL 10 TESTS PASSED (2026-03-09). Comprehensive no-regression validation of /app/settings/billing page after payment issue improvements with agent@acenta.test/agent123. Test Results: 1) ✅ Login successful - redirected from /login to /app after authentication, 2) ✅ Navigation to /app/settings/billing successful - page loads without crash, 3) ✅ Page title 'Faturalama' correct, 4) ✅ Summary cards visible and correct - displays Current plan (Starter), Renewal date (08 Nisan 2026), Status (Aylık · Aktif) with all 3 cards rendering properly, 5) ✅ Management card visible - Abonelik yönetimi card present with Update payment, Cancel subscription, and Refresh buttons, 6) ✅ Plan change card visible - Planı Değiştir card present with billing cycle tabs (Aylık/Yıllık) and plan grid showing all 3 plans (Starter, Pro, Enterprise), 7) ✅ Billing history timeline visible - Faturalama Geçmişi card present with 140 history items loaded, 8) ✅ Annual toggle functional - successfully switches between Monthly (Aylık) and Yearly (Yıllık) billing cycles, price display updates correctly (Monthly: ₺990/ay for Starter, ₺2.490/ay for Pro → Yearly: ₺9.900/yıl for Starter, ₺24.900/yıl for Pro with '2ay ücretsiz' badge), toggle state changes properly (data-state switches between active/inactive), 9) ✅ No horizontal overflow - page width (1920px) matches scroll width (1920px), no layout overflow issues detected, 10) ✅ Substantial content - page has 317,840 characters of content, no blank state issues. PAYMENT ISSUE BANNER STATUS: ✅ Payment issue banner NOT VISIBLE (data-testid='billing-payment-issue-banner' not found) - this is CORRECT BEHAVIOR for account without payment issues. The banner only renders when paymentIssue.has_issue is true per component logic. CONSOLE VALIDATION: Zero console errors, zero console warnings, no error elements on page. CRITICAL VALIDATIONS: All review request requirements validated ✅: Page doesn't crash after login ✅, Summary cards visible ✅, Management card visible ✅, Plan change card visible ✅, Billing history timeline visible ✅, Annual toggle works ✅, Payment issue banner correctly hidden for account without issues ✅, No page overflow/blank state issues ✅. Page content length substantial (317,840 chars), no React error boundaries, all UI components rendering correctly. Screenshots captured: billing_page_initial.png (monthly state), billing_page_yearly_toggle.png (yearly state with updated prices), billing_page_final.png (final state). Test Summary: 10/10 checks passed, 100% success rate. Conclusion: Billing page payment issue improvements deployment SUCCESSFUL. No regression detected. All existing functionality working correctly. Payment issue banner logic working as designed (hidden when no payment issues). Page is stable, functional, and production-ready."
+
 
   - agent: "testing"
     message: |
@@ -6204,3 +6216,160 @@ agent_communication:
       No regressions detected. All endpoints production-ready. Implementation meets UI integration requirements.
       
       Status: ✅ PASS - Agency endpoint implementation validated successfully
+
+
+  - agent: "testing"
+    message: |
+      ✅ BILLING PAYMENT ISSUE NO-REGRESSION VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-09)
+      
+      Performed comprehensive no-regression validation of /app/settings/billing page after payment issue improvements.
+      
+      Test Context:
+      - Review Request: Test billing page with agent@acenta.test/agent123 after new billing/payment issue improvements
+      - Test URL: https://travel-agency-os.preview.emergentagent.com/app/settings/billing
+      - Test Account: agent@acenta.test / agent123 (agency account)
+      - Reference Files: /app/frontend/src/pages/SettingsBillingPage.jsx, /app/frontend/src/components/settings/BillingPaymentIssueBanner.jsx
+      
+      ✅ ALL 10 VALIDATION REQUIREMENTS PASSED:
+      
+      1. ✅ LOGIN SUCCESSFUL
+         - Credentials: agent@acenta.test / agent123
+         - Redirected to /app after login
+         - No login errors or failures
+      
+      2. ✅ BILLING PAGE LOADS WITHOUT CRASH
+         - Navigation to /app/settings/billing successful
+         - URL: https://travel-agency-os.preview.emergentagent.com/app/settings/billing
+         - No React error boundaries detected
+         - Page content: 317,840 characters loaded
+      
+      3. ✅ PAGE TITLE CORRECT
+         - Page title: "Faturalama"
+         - Subtitle present: "Mevcut planınızı, yenileme tarihinizi ve abonelik yaşam döngünüzü buradan yönetin."
+      
+      4. ✅ SUMMARY CARDS VISIBLE
+         - Summary cards container found with all 3 cards:
+           * Current Plan Card: "Starter" ✅
+           * Renewal Date Card: "08 Nisan 2026" ✅
+           * Status Card: "Aylık · Aktif" ✅
+         - All data-testid attributes working correctly
+      
+      5. ✅ MANAGEMENT CARD VISIBLE
+         - Billing management card found
+         - Card title: "Abonelik yönetimi"
+         - All buttons present:
+           * Update payment method button ✅
+           * Cancel subscription button ✅
+           * Refresh button ✅
+      
+      6. ✅ PLAN CHANGE CARD VISIBLE
+         - Plan change card found
+         - Card title: "Planı Değiştir"
+         - Billing cycle tabs present (Monthly/Yearly) ✅
+         - Plan grid present with all 3 plans:
+           * Starter plan card ✅
+           * Pro plan card (marked "Önerilen") ✅
+           * Enterprise plan card ✅
+      
+      7. ✅ BILLING HISTORY TIMELINE VISIBLE
+         - Billing history card found
+         - Card title: "Faturalama Geçmişi"
+         - History list loaded with 140 items
+         - Timeline rendering correctly
+      
+      8. ✅ ANNUAL TOGGLE FUNCTIONAL
+         - Initial state: Monthly (Aylık) active
+         - Clicked Yearly (Yıllık) tab:
+           * Tab state changed to active ✅
+           * Prices updated correctly:
+             - Starter: ₺990/ay → ₺9.900/yıl (with "2ay ücretsiz" badge)
+             - Pro: ₺2.490/ay → ₺24.900/yıl (with "2ay ücretsiz" badge)
+           * Screenshot captured: billing_page_yearly_toggle.png
+         - Switched back to Monthly:
+           * Tab state changed back to active ✅
+           * Prices reverted to monthly rates
+         - Toggle functionality working perfectly
+      
+      9. ✅ NO HORIZONTAL OVERFLOW
+         - Window width: 1920px
+         - Scroll width: 1920px
+         - No horizontal overflow detected
+         - Page layout correct, no overflow issues
+      
+      10. ✅ SUBSTANTIAL CONTENT (NO BLANK STATE)
+          - Page content: 317,840 characters
+          - No blank page indicators
+          - All UI components rendering correctly
+      
+      PAYMENT ISSUE BANNER STATUS:
+      ✅ Payment issue banner is NOT VISIBLE (correct behavior)
+         - data-testid="billing-payment-issue-banner" not found on page
+         - This is CORRECT BEHAVIOR for account without payment issues
+         - Banner only renders when paymentIssue.has_issue === true (per component logic)
+         - Confirmed no payment issues on agent@acenta.test account
+         - No page overflow or layout issues from banner absence
+      
+      CONSOLE VALIDATION:
+      ✅ Zero console errors
+      ✅ Zero console warnings
+      ✅ No error elements found on page
+      ✅ Clean console output
+      
+      TECHNICAL DETAILS:
+      - All data-testid selectors working correctly:
+        * billing-page ✅
+        * billing-page-title ✅
+        * billing-summary-cards ✅
+        * billing-current-plan-card ✅
+        * billing-renewal-date-card ✅
+        * billing-status-card ✅
+        * billing-management-card ✅
+        * billing-management-title ✅
+        * billing-update-payment-method-button ✅
+        * billing-cancel-subscription-button ✅
+        * billing-refresh-button ✅
+        * billing-plan-change-card ✅
+        * billing-plan-change-title ✅
+        * billing-cycle-tabs ✅
+        * billing-cycle-monthly ✅
+        * billing-cycle-yearly ✅
+        * billing-plan-grid ✅
+        * billing-plan-card-starter ✅
+        * billing-plan-card-pro ✅
+        * billing-plan-card-enterprise ✅
+        * billing-history-card ✅
+        * billing-history-title ✅
+        * billing-history-list ✅
+      
+      - Page dimensions:
+        * Window: 1920x1080 (Desktop viewport)
+        * Scroll width: 1920px (no horizontal overflow)
+        * Scroll height: 4346px (vertical scrolling as expected)
+      
+      - Screenshots captured:
+        * billing_page_initial.png - Initial page state (monthly cycle)
+        * billing_page_yearly_toggle.png - Yearly toggle state with updated prices
+        * billing_page_final.png - Final page state
+      
+      Test Summary:
+      - Total Validation Points: 10
+      - Passed: 10
+      - Failed: 0
+      - Success Rate: 100%
+      
+      CRITICAL VALIDATIONS CONFIRMED:
+      ✅ Page doesn't crash after login
+      ✅ Summary cards visible and displaying correct data
+      ✅ Management card visible with all action buttons
+      ✅ Plan change card visible with billing cycle toggle and plan grid
+      ✅ Billing history timeline visible with history items
+      ✅ Annual toggle functional (switches between monthly/yearly, updates prices correctly)
+      ✅ Payment issue banner correctly hidden for account without payment issues
+      ✅ No page overflow or blank state issues
+      ✅ All UI components rendering correctly
+      ✅ Zero console errors
+      
+      Conclusion:
+      Billing page payment issue improvements deployment SUCCESSFUL. All review request requirements validated. No regression detected in existing functionality. The payment issue banner logic is working as designed (BillingPaymentIssueBanner component correctly returns null when paymentIssue.has_issue is false). All billing page components (summary cards, management card, plan change card, billing history timeline) are rendering correctly and functioning properly. The annual/yearly toggle is working perfectly with proper price updates and state management. Page is stable, has no layout issues, and is production-ready.
+      
+      Status: ✅ PASS - All billing page no-regression validation requirements met successfully

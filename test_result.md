@@ -8231,3 +8231,117 @@ agent_communication:
       PASS/FAIL Result: ✅ PASS - No backend regression detected from frontend landing changes
       
       Status: ✅ PASS - Backend stable after frontend landing page redesign
+
+  - task: "Hotfix validation - hero layout & login visibility (1100px navbar/hero, login form above-fold)"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/PublicHomePage.jsx, frontend/src/pages/LoginPage.jsx, frontend/src/components/landing/LandingDashboardMockup.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "HOTFIX VALIDATION COMPLETED - ALL 7 TESTS PASSED (2026-03-09). Comprehensive validation of hotfix requirements on https://booking-system-dev-6.preview.emergentagent.com per Turkish review request. Test Results: 1) ✅ Hero section layout at ~1100px desktop width validated - navbar visible and properly positioned (logo at x=32.0, y=16.0), navbar links visible, navbar CTA group visible, hero title dimensions correct (width=478.1px, height=360.0px), dashboard mockup visible with 48.0px gap between hero text and dashboard (NO OVERLAP DETECTED), all elements rendering correctly without wrapping issues, 2) ✅ Login page form visibility above-the-fold validated - login page loaded correctly, form panel visible, email input position (top=444.5, bottom=480.5) ✅ ABOVE-THE-FOLD, password input position (top=528.5, bottom=564.5) ✅ ABOVE-THE-FOLD, submit button position (top=580.5, bottom=628.5) ✅ ABOVE-THE-FOLD, all form elements visible without scrolling at 1920x1080 viewport, 3) ✅ Login access from landing page validated - navbar 'Giriş' link visible with text 'Giriş' and href '/login', hero 'Giriş Yap' link visible with text 'Giriş Yap' and href '/login', both login access points working correctly, 4) ✅ CTA routing / -> /login validated - hero demo CTA visible with href '/login', clicking hero demo CTA successfully navigates to /login, navbar 'Giriş' link successfully navigates to /login with form visible, 5) ✅ CTA routing / -> /signup?plan=trial validated - hero trial CTA visible with href '/signup?plan=trial', clicking hero trial CTA successfully navigates to /signup?plan=trial with correct query parameter, 6) ✅ Console errors, blank states, horizontal overflow validated - no visible error elements on home page, page content substantial (342,241 characters), no blank state detected, horizontal overflow tested at 4 widths: 390px (overflow=0px) ✅, 768px (overflow=0px) ✅, 1100px (overflow=0px) ✅, 1920px (overflow=0px) ✅, no horizontal overflow at any tested width, 7) ✅ All navigation paths validated - all CTA links functional with correct routing. Console Analysis: Only non-critical errors detected - Cloudflare RUM analytics failures (non-critical CDN), 401 errors on /api/auth/me and /api/auth/refresh before login (expected bootstrap checks). ZERO critical console errors. CRITICAL VALIDATIONS: All Turkish review request requirements validated ✅: 1) Hero section at 1100px width has no navbar/hero text overlap or wrapping issues ✅ (48px gap confirmed), 2) Login page form completely visible above-the-fold with email, password, and submit button ✅, 3) Login access from landing page exists and works ('Giriş' link in navbar and hero section) ✅, 4) CTA routing / -> /login works correctly ✅, 5) CTA routing / -> /signup?plan=trial works correctly ✅, 6) No console errors (only expected non-critical), no blank states, no horizontal overflow ✅. Screenshots captured: home_1100px_layout.png (1100px width showing navbar and hero section with proper spacing), login_page_form_visibility.png (login form fully visible above-the-fold). Test Summary: 7/7 tests passed, 100% success rate. Conclusion: Hotfix validation SUCCESSFUL. All requirements met. Hero section layout is clean at 1100px width with no overlap/wrapping issues. Login page form is fully visible above-the-fold. All CTA routing functional. No critical console errors. No horizontal overflow at any tested width. HOTFIX IS PRODUCTION-READY."
+
+agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ HOTFIX VALIDATION COMPLETED - ALL REQUIREMENTS PASSED (2026-03-09)
+      
+      Performed comprehensive validation of hotfix iteration requirements on https://booking-system-dev-6.preview.emergentagent.com
+      
+      Test Context:
+      - Review Request: Turkish hotfix iteration validation
+      - Focus Areas: Hero layout at ~1100px, login form visibility, CTA routing
+      - Files Tested: PublicHomePage.jsx, LoginPage.jsx, LandingDashboardMockup.jsx
+      - Test URL: https://booking-system-dev-6.preview.emergentagent.com
+      
+      ✅ ALL 7 HOTFIX REQUIREMENTS VALIDATED:
+      
+      1. ✅ Hero section layout at ~1100px desktop width - NO ISSUES
+         - Navbar visible and properly positioned (logo at x=32.0)
+         - Navbar links visible and not overlapping
+         - Navbar CTA group visible and accessible
+         - Hero title renders correctly (width=478.1px, height=360.0px)
+         - Dashboard mockup visible with 48.0px gap from hero text
+         - ✅ NO OVERLAP OR WRAPPING ISSUES DETECTED
+         - All elements rendering cleanly at 1100px width
+      
+      2. ✅ Login page form visibility - ALL ELEMENTS ABOVE-THE-FOLD
+         - Login page loads correctly with all elements visible
+         - Email input: top=444.5px, bottom=480.5px ✅ ABOVE-THE-FOLD
+         - Password input: top=528.5px, bottom=564.5px ✅ ABOVE-THE-FOLD
+         - Submit button: top=580.5px, bottom=628.5px ✅ ABOVE-THE-FOLD
+         - Form completely visible without scrolling at 1920x1080 viewport
+         - All form elements accessible and functional
+      
+      3. ✅ Login access from landing page - WORKING CORRECTLY
+         - Navbar 'Giriş' link visible with correct text and href='/login'
+         - Hero 'Giriş Yap' link visible with correct text and href='/login'
+         - Both login access points validated and functional
+      
+      4. ✅ CTA routing / -> /login - WORKING CORRECTLY
+         - Hero demo CTA: visible, href='/login', navigation successful ✅
+         - Navbar 'Giriş' link: navigation successful with form visible ✅
+         - All /login routing paths validated
+      
+      5. ✅ CTA routing / -> /signup?plan=trial - WORKING CORRECTLY
+         - Hero trial CTA: visible, href='/signup?plan=trial'
+         - Navigation successful with correct query parameter ✅
+         - Signup flow accessible from landing page
+      
+      6. ✅ Console errors, blank states, horizontal overflow - ALL CLEAN
+         - No visible error elements on home page ✅
+         - Page content substantial: 342,241 characters ✅
+         - No blank state detected ✅
+         - Horizontal overflow tested at 4 widths:
+           * 390px: overflow=0px ✅ (mobile)
+           * 768px: overflow=0px ✅ (tablet)
+           * 1100px: overflow=0px ✅ (desktop target)
+           * 1920px: overflow=0px ✅ (large desktop)
+         - No horizontal overflow at any tested width ✅
+      
+      7. ✅ All navigation paths validated
+         - All CTA links functional with correct routing
+         - No broken links or navigation issues
+         - User flows working end-to-end
+      
+      Console Analysis:
+      ✅ Only non-critical errors detected:
+      - Cloudflare RUM analytics failures (non-critical CDN analytics)
+      - 401 errors on /api/auth/me and /api/auth/refresh (expected pre-login bootstrap)
+      ✅ ZERO critical console errors
+      ✅ ZERO layout-breaking issues
+      
+      Visual Verification (Screenshots):
+      ✅ home_1100px_layout.png - Hero section at 1100px width showing:
+         - Clean navbar layout with logo, links, and CTA buttons
+         - Hero title and subtitle with proper line wrapping
+         - Dashboard mockup with proper spacing (48px gap)
+         - No overlap between text and visual elements
+      ✅ login_page_form_visibility.png - Login page showing:
+         - Complete form visible above-the-fold
+         - Email, password, and submit button all accessible
+         - Clean layout with proper spacing
+      
+      Technical Measurements:
+      - Hero text to dashboard gap: 48.0px (excellent spacing)
+      - Email input top: 444.5px (well above fold at 1080px viewport)
+      - Password input top: 528.5px (well above fold)
+      - Submit button bottom: 628.5px (comfortably above fold)
+      - Page content length: 342,241 characters (substantial, not blank)
+      - Horizontal scroll at all tested widths: 0px (no overflow)
+      
+      Test Summary:
+      - Total Hotfix Requirements: 7
+      - Passed: 7
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      Hotfix validation SUCCESSFUL. All Turkish review request requirements met and validated. The hero section layout is clean and properly spaced at 1100px width with no navbar/hero text overlap or wrapping issues (48px gap confirmed). The login page form is fully visible above-the-fold with all input fields and submit button accessible without scrolling. Login access from landing page exists and works correctly through both navbar and hero section links. All CTA routing functional (/ -> /login, / -> /signup?plan=trial). No critical console errors, no blank states, no horizontal overflow at any tested width (390px, 768px, 1100px, 1920px).
+      
+      HOTFIX IS PRODUCTION-READY AND VALIDATED FOR DEPLOYMENT.
+      
+      Status: ✅ PASS - All hotfix requirements validated successfully

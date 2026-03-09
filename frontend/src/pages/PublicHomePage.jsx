@@ -284,7 +284,7 @@ export default function PublicHomePage() {
             </div>
           </Link>
 
-          <div className="hidden items-center gap-7 lg:flex" data-testid="landing-navbar-links">
+          <div className="hidden items-center gap-5 xl:gap-7 lg:flex" data-testid="landing-navbar-links">
             {NAV_LINKS.map((item, index) => (
               <a key={item.href} href={item.href} className="text-sm font-medium text-slate-600 transition-colors duration-200 hover:text-[#2563EB]" data-testid={`landing-navbar-link-${index + 1}`}>
                 {item.label}
@@ -292,9 +292,12 @@ export default function PublicHomePage() {
             ))}
           </div>
 
-          <div className="hidden items-center gap-3 lg:flex" data-testid="landing-navbar-cta-group">
+          <div className="hidden items-center gap-2 xl:gap-3 lg:flex" data-testid="landing-navbar-cta-group">
+            <Link to="/login" className="text-sm font-semibold text-slate-600 transition-colors duration-200 hover:text-[#2563EB]" data-testid="landing-navbar-login-link">
+              Giriş
+            </Link>
             <Button asChild variant="outline" className="h-11 rounded-full border-slate-200 px-5 text-sm font-semibold text-slate-700 hover:bg-slate-50" data-testid="landing-navbar-demo-cta">
-              <Link to="/login">Demo Hesap Oluştur</Link>
+              <Link to="/login">Demo</Link>
             </Button>
             <Button asChild className="h-11 rounded-full bg-[linear-gradient(135deg,#2563EB,#0EA5E9)] px-5 text-sm font-semibold text-white shadow-[0_16px_34px_rgba(37,99,235,0.28)] hover:brightness-110" data-testid="landing-navbar-trial-cta">
               <Link to="/signup?plan=trial">14 Gün Ücretsiz Dene</Link>
@@ -316,8 +319,11 @@ export default function PublicHomePage() {
               ))}
             </div>
             <div className="mt-4 grid gap-3" data-testid="landing-mobile-menu-ctas">
+              <Button asChild variant="outline" className="h-11 rounded-full border-slate-200 text-sm font-semibold" data-testid="landing-mobile-login-cta">
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Giriş Yap</Link>
+              </Button>
               <Button asChild variant="outline" className="h-11 rounded-full border-slate-200 text-sm font-semibold" data-testid="landing-mobile-demo-cta">
-                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Demo Hesap Oluştur</Link>
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Demo Hesabı</Link>
               </Button>
               <Button asChild className="h-11 rounded-full bg-[linear-gradient(135deg,#2563EB,#0EA5E9)] text-sm font-semibold text-white" data-testid="landing-mobile-trial-cta">
                 <Link to="/signup?plan=trial" onClick={() => setMobileMenuOpen(false)}>14 Gün Ücretsiz Dene</Link>
@@ -328,7 +334,7 @@ export default function PublicHomePage() {
       </nav>
 
       <main className="relative z-10" data-testid="landing-main">
-        <section className="mx-auto grid max-w-7xl gap-12 px-4 pb-16 pt-10 sm:px-6 md:pb-24 md:pt-16 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:px-8 lg:pt-20" data-testid="landing-hero-section">
+        <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-10 sm:px-6 md:pb-24 md:pt-16 lg:grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)] lg:items-center lg:px-8 lg:pt-20 xl:gap-14" data-testid="landing-hero-section">
           <div className="max-w-2xl" data-testid="landing-hero-copy">
             <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#2563EB] shadow-[0_10px_30px_rgba(37,99,235,0.08)]" data-testid="landing-hero-badge">
               <Sparkles className="h-4 w-4" />
@@ -363,18 +369,27 @@ export default function PublicHomePage() {
                 </div>
               ))}
             </div>
+
+            <div className="mt-6 flex flex-wrap items-center gap-2 text-sm text-slate-600" data-testid="landing-hero-login-helper">
+              <span data-testid="landing-hero-login-helper-text">Zaten hesabınız var mı?</span>
+              <Link to="/login" className="font-semibold text-[#2563EB] transition-colors duration-200 hover:text-[#1D4ED8]" data-testid="landing-hero-login-helper-link">
+                Giriş Yap
+              </Link>
+            </div>
           </div>
 
-          <div className="relative" data-testid="landing-hero-visual-wrap">
-            <div className="absolute -left-8 top-10 hidden rounded-[24px] border border-white/70 bg-white/80 px-4 py-3 shadow-[0_22px_50px_rgba(37,99,235,0.15)] backdrop-blur-xl md:block" data-testid="landing-floating-card-1">
+          <div className="relative lg:pl-2 xl:pl-6" data-testid="landing-hero-visual-wrap">
+            <div className="absolute -left-4 top-10 hidden rounded-[24px] border border-white/70 bg-white/80 px-4 py-3 shadow-[0_22px_50px_rgba(37,99,235,0.15)] backdrop-blur-xl xl:block" data-testid="landing-floating-card-1">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400" data-testid="landing-floating-card-1-label">Operasyon</p>
               <p className="mt-1 text-sm font-semibold text-slate-900" data-testid="landing-floating-card-1-value">12 yeni rezervasyon bugün</p>
             </div>
-            <div className="absolute -right-2 bottom-12 hidden rounded-[24px] border border-blue-100 bg-[#0F172A] px-4 py-3 text-white shadow-[0_24px_50px_rgba(15,23,42,0.28)] md:block" data-testid="landing-floating-card-2">
+            <div className="absolute right-0 top-8 hidden rounded-[24px] border border-blue-100 bg-[#0F172A] px-4 py-3 text-white shadow-[0_24px_50px_rgba(15,23,42,0.28)] 2xl:block" data-testid="landing-floating-card-2">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-200/70" data-testid="landing-floating-card-2-label">Finans</p>
               <p className="mt-1 text-sm font-semibold" data-testid="landing-floating-card-2-value">Tahsilat süresi %40 daha hızlı</p>
             </div>
-            <LandingDashboardMockup testIdPrefix="landing-hero-dashboard" />
+            <div className="mx-auto w-full max-w-[760px] lg:max-w-[680px] xl:max-w-[760px]" data-testid="landing-hero-dashboard-wrap">
+              <LandingDashboardMockup testIdPrefix="landing-hero-dashboard" />
+            </div>
           </div>
         </section>
 

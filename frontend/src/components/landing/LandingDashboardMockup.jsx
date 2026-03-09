@@ -41,26 +41,26 @@ const CHART_BARS = [58, 78, 66, 88, 74, 96, 82];
 
 export const LandingDashboardMockup = ({ compact = false, testIdPrefix = "landing-dashboard" }) => {
   const shellClassName = compact
-    ? "rounded-[24px] border border-white/70 bg-white/90 p-4 shadow-[0_24px_80px_rgba(37,99,235,0.12)] backdrop-blur-xl"
-    : "rounded-[32px] border border-white/70 bg-white/85 p-5 shadow-[0_34px_120px_rgba(37,99,235,0.16)] backdrop-blur-2xl";
+    ? "w-full rounded-[24px] border border-white/70 bg-white/90 p-4 shadow-[0_24px_80px_rgba(37,99,235,0.12)] backdrop-blur-xl"
+    : "w-full rounded-[32px] border border-white/70 bg-white/85 p-5 shadow-[0_34px_120px_rgba(37,99,235,0.16)] backdrop-blur-2xl";
 
   return (
     <div className={shellClassName} data-testid={`${testIdPrefix}-shell`}>
-      <div className="flex items-center justify-between rounded-[24px] border border-slate-100 bg-white px-4 py-3 shadow-[0_10px_30px_rgba(15,23,42,0.05)]" data-testid={`${testIdPrefix}-topbar`}>
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3 rounded-[24px] border border-slate-100 bg-white px-4 py-3 shadow-[0_10px_30px_rgba(15,23,42,0.05)] md:flex-nowrap md:items-center" data-testid={`${testIdPrefix}-topbar`}>
+        <div className="flex min-w-0 items-center gap-3">
           <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[linear-gradient(135deg,#2563EB,#0EA5E9)] text-white" data-testid={`${testIdPrefix}-brand-badge`}>
             <LayoutDashboard className="h-5 w-5" />
           </div>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400" data-testid={`${testIdPrefix}-eyebrow`}>
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 sm:tracking-[0.24em]" data-testid={`${testIdPrefix}-eyebrow`}>
               Syroce Dashboard
             </p>
-            <p className="text-sm font-semibold text-slate-900" data-testid={`${testIdPrefix}-title`}>
+            <p className="text-sm font-semibold leading-tight text-slate-900" data-testid={`${testIdPrefix}-title`}>
               Bugünün operasyon özeti
             </p>
           </div>
         </div>
-        <div className="hidden items-center gap-2 md:flex" data-testid={`${testIdPrefix}-status-cluster`}>
+        <div className="flex flex-wrap items-center justify-end gap-2" data-testid={`${testIdPrefix}-status-cluster`}>
           <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700" data-testid={`${testIdPrefix}-status-online`}>
             Sistem aktif
           </div>

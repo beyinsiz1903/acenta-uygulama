@@ -455,6 +455,18 @@ test_plan:
   test_priority: "high_first"
 
 frontend:
+  - task: "LoginPage.jsx ref→state conversion regression test"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/LoginPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "LOGINPAGE.JSX REF→STATE CONVERSION REGRESSION TEST COMPLETED - ALL 4 TESTS PASSED (2026-03-09). Focused regression validation performed per Turkish review request after converting ref-based hasHandledAuthRedirect to state-based implementation (lint fix) on https://syroce-preview-1.preview.emergentagent.com/login. Change Context: ESLint warning for ref usage in LoginPage.jsx line 27 fixed by converting from useRef to useState for hasHandledAuthRedirect variable. Test Results: 1) ✅ /login page loads without crash/blank - page title: Syroce, page content: 272,591 characters (NOT blank), all visual elements present, 2) ✅ Email + password fields and submit button visible - all data-testid elements found and verified: login-page ✅, login-form ✅, login-email ✅ (visible), login-password ✅ (visible), login-submit ✅ (visible), all form elements present and functional, 3) ✅ Login with admin@acenta.test / admin123 redirects to /app/admin/dashboard - credentials accepted successfully, redirect completed correctly (URL changed from /login to /app/admin/dashboard within 2 seconds), admin dashboard rendered with substantial content (312,918 characters), admin-specific content detected ('Yönetim Dashboard' visible with admin sidebar sections: ANA MENÜ, YÖNETIM), screenshot confirms 'Yönetim Panosu' page with all admin navigation (Dashboard, Rezervasyonlar, Müşteriler, Finans, Raporlar, Yönetici Dashboard, Tenant Yönetimi, Acenta Modülleri, Tenant Features, Fiyatlandırma, Analytics, Perf Dashboard, Tüm Modüller), 4) ✅ No new redirect/regression after changes - URL stable at /app/admin/dashboard after 2 seconds, no redirect loops detected, login flow timing correct (slight delay for API response before redirect - expected behavior with state-based approach). Console Analysis: Only 2 expected non-critical errors detected: 401 on /api/auth/me and /api/auth/refresh (bootstrap phase checks before login, normal behavior). No React errors, no error boundaries triggered, no error elements on page. CRITICAL VALIDATIONS: All Turkish review request requirements validated ✅: 1) /login sayfası blank/crash olmadan açılıyor ✅, 2) Email + password alanları ve submit butonu görünür ✅, 3) admin@acenta.test / admin123 ile giriş sonrası /app/admin/dashboard açılıyor ✅, 4) Değişiklik sonrası yeni bir redirect/regression yok ✅. TECHNICAL VALIDATION: Ref-based (useRef) to state-based (useState) conversion for hasHandledAuthRedirect working correctly ✅, useEffect at lines 66-78 handling auth redirect properly with state dependencies ✅, no timing issues with state updates ✅, ESLint lint hatası giderildi (ref usage → state usage) ✅, yerel ESLint artık temiz geçiyor ✅. Screenshots captured: login_page_initial.png (login form with all elements visible), admin_dashboard_after_login.png (Yönetim Panosu after successful admin login). Test Summary: 4/4 critical validation points passed, 100% success rate. Conclusion: LoginPage.jsx ref→state conversion is PRODUCTION-READY. No regression detected from lint fix. Login flow working exactly as expected with proper timing for redirect after API response. State-based approach functions identically to previous ref-based approach with cleaner ESLint compliance."
+
   - task: "Turkish review - Public landing page (/) responsive validation"
     implemented: true
     working: true

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,7 +24,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [serverError, setServerError] = useState("");
-  const hasHandledAuthRedirect = useRef(false);
+  const [hasHandledAuthRedirect, setHasHandledAuthRedirect] = useState(false);
   const loginMutation = useLogin();
   const { data: currentUser, isLoading: isBootstrapping } = useCurrentUser();
 
@@ -56,7 +56,7 @@ export default function LoginPage() {
       }
 
       const redirectPath = consumePostLoginRedirect(redirectByRole(resp.user));
-      hasHandledAuthRedirect.current = true;
+      setHasHandledAuthRedirect(true);
       navigate(redirectPath, { replace: true });
     } catch (err) {
       setServerError(apiErrorMessage(err));
@@ -68,14 +68,14 @@ export default function LoginPage() {
       return;
     }
 
-    if (hasHandledAuthRedirect.current) {
+    if (hasHandledAuthRedirect) {
       return;
     }
 
-    hasHandledAuthRedirect.current = true;
+    setHasHandledAuthRedirect(true);
     const redirectPath = consumePostLoginRedirect(redirectByRole(currentUser));
     navigate(redirectPath, { replace: true });
-  }, [currentUser, navigate]);
+  }, [currentUser, hasHandledAuthRedirect, navigate]);
 
   const params = new URLSearchParams(location.search);
   const reason = params.get("reason");

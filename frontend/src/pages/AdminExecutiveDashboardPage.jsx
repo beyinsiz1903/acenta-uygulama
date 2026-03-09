@@ -25,7 +25,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  LineChart,
+  LineChart as RechartsLineChart,
   Line,
 } from "recharts";
 
@@ -55,6 +55,7 @@ export default function AdminExecutiveDashboardPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [chartsReady, setChartsReady] = useState(false);
 
   const [reportingSummary, setReportingSummary] = useState(null);
   const [topProducts, setTopProducts] = useState([]);
@@ -75,6 +76,11 @@ export default function AdminExecutiveDashboardPage() {
   useEffect(() => {
     void loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setChartsReady(true), 120);
+    return () => window.clearTimeout(timer);
   }, []);
 
   async function loadAll() {
@@ -295,7 +301,7 @@ export default function AdminExecutiveDashboardPage() {
           <CardContent className="space-y-1 text-sm">
             <div className="text-2xl font-bold">{formatMoney(kpi.sellTotal, kpi.currency)}</div>
             <div className="text-xs text-muted-foreground">
-              Net: {formatMoney(kpi.netTotal, kpi.currency)}  b7 Marj: {formatMoney(kpi.markupTotal, kpi.currency)}
+              Net: {formatMoney(kpi.netTotal, kpi.currency)} · Marj: {formatMoney(kpi.markupTotal, kpi.currency)}
             </div>
           </CardContent>
         </Card>
@@ -323,7 +329,7 @@ export default function AdminExecutiveDashboardPage() {
           <CardContent className="space-y-1 text-sm">
             <div className="text-2xl font-bold">{formatMoney(kpi.totalExposure, "EUR")}</div>
             <div className="text-xs text-muted-foreground">
-              Limit: {formatMoney(kpi.totalCreditLimit, "EUR")}  b7 Limit aşımı: {kpi.overLimitCount}  b7 Limite yakın: {kpi.nearLimitCount}
+              Limit: {formatMoney(kpi.totalCreditLimit, "EUR")} · Limit aşımı: {kpi.overLimitCount} · Limite yakın: {kpi.nearLimitCount}
             </div>
           </CardContent>
         </Card>
@@ -345,97 +351,109 @@ export default function AdminExecutiveDashboardPage() {
 
       {/* Grafikler satırı */}
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-        <Card className="h-[280px]">
+        <Card className="h-[280px] min-w-0">
           <CardHeader className="pb-1">
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
-              <LineChart className="h-4 w-4" /> Günlük Rezervasyon Trendleri
+              <TrendingUp className="h-4 w-4" /> Günlük Rezervasyon Trendleri
             </CardTitle>
           </CardHeader>
-          <CardContent className="h-[220px] pt-2">
+          <CardContent className="h-[220px] min-w-0 pt-2">
             {trendData.length === 0 ? (
               <p className="text-xs text-muted-foreground">Seçilen dönemde rezervasyon bulunmuyor.</p>
+            ) : !chartsReady ? (
+              <p className="text-xs text-muted-foreground">Grafik hazırlanıyor...</p>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="confirmed" stroke="#16a34a" strokeWidth={2} dot={false} name="Onaylanan" />
-                  <Line type="monotone" dataKey="cancelled" stroke="#dc2626" strokeWidth={2} dot={false} name="İptal" />
-                </LineChart>
-              </ResponsiveContainer>
+              <div className="h-full min-w-0" data-testid="admin-dashboard-trend-chart">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsLineChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="confirmed" stroke="#16a34a" strokeWidth={2} dot={false} name="Onaylanan" />
+                    <Line type="monotone" dataKey="cancelled" stroke="#dc2626" strokeWidth={2} dot={false} name="İptal" />
+                  </RechartsLineChart>
+                </ResponsiveContainer>
+              </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="h-[280px]">
+        <Card className="h-[280px] min-w-0">
           <CardHeader className="pb-1">
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <PieChart className="h-4 w-4" /> Top Ürünler (Ciroya göre)
             </CardTitle>
           </CardHeader>
-          <CardContent className="h-[220px] pt-2">
+          <CardContent className="h-[220px] min-w-0 pt-2">
             {topProducts.length === 0 ? (
               <p className="text-xs text-muted-foreground">Bu dönemde ürün bazlı satış verisi bulunamadı.</p>
+            ) : !chartsReady ? (
+              <p className="text-xs text-muted-foreground">Grafik hazırlanıyor...</p>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topProducts} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" tick={{ fontSize: 10 }} />
-                  <YAxis
-                    type="category"
-                    dataKey="product_id"
-                    tick={{ fontSize: 10 }}
-                    width={120}
-                  />
-                  <Tooltip formatter={(value) => formatMoney(value, "EUR")} />
-                  <Bar dataKey="sell_total" fill="#0f766e" name="Ciro" />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="h-full min-w-0" data-testid="admin-dashboard-top-products-chart">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={topProducts} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis type="number" tick={{ fontSize: 10 }} />
+                    <YAxis
+                      type="category"
+                      dataKey="product_id"
+                      tick={{ fontSize: 10 }}
+                      width={120}
+                    />
+                    <Tooltip formatter={(value) => formatMoney(value, "EUR")} />
+                    <Bar dataKey="sell_total" fill="#0f766e" name="Ciro" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="h-[280px]">
+        <Card className="h-[280px] min-w-0">
           <CardHeader className="pb-1">
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <BarChart2 className="h-4 w-4" /> Kanal Kırılımı (B2B / B2C)
             </CardTitle>
           </CardHeader>
-          <CardContent className="h-[220px] pt-2">
+          <CardContent className="h-[220px] min-w-0 pt-2">
             {!channelStats ? (
               <p className="text-xs text-muted-foreground">Kanal istatistikleri yükleniyor...</p>
+            ) : !chartsReady ? (
+              <p className="text-xs text-muted-foreground">Grafik hazırlanıyor...</p>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={[
-                    {
-                      channel: "B2B",
-                      count: channelStats.channels?.b2b?.count || 0,
-                      sell_total: channelStats.channels?.b2b?.sell_total || 0,
-                    },
-                    {
-                      channel: "B2C",
-                      count: channelStats.channels?.b2c?.count || 0,
-                      sell_total: channelStats.channels?.b2c?.sell_total || 0,
-                    },
-                  ]}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="channel" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-                  <Tooltip
-                    formatter={(value, key) =>
-                      key === "sell_total" ? formatMoney(value, "EUR") : value
-                    }
-                    labelFormatter={(label) => `Kanal: ${label}`}
-                  />
-                  <Bar dataKey="count" fill="#0f766e" name="Rezervasyon" />
-                  <Bar dataKey="sell_total" fill="#f97316" name="Ciro" />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="h-full min-w-0" data-testid="admin-dashboard-channel-chart">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={[
+                      {
+                        channel: "B2B",
+                        count: channelStats.channels?.b2b?.count || 0,
+                        sell_total: channelStats.channels?.b2b?.sell_total || 0,
+                      },
+                      {
+                        channel: "B2C",
+                        count: channelStats.channels?.b2c?.count || 0,
+                        sell_total: channelStats.channels?.b2c?.sell_total || 0,
+                      },
+                    ]}
+                    margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="channel" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                    <Tooltip
+                      formatter={(value, key) =>
+                        key === "sell_total" ? formatMoney(value, "EUR") : value
+                      }
+                      labelFormatter={(label) => `Kanal: ${label}`}
+                    />
+                    <Bar dataKey="count" fill="#0f766e" name="Rezervasyon" />
+                    <Bar dataKey="sell_total" fill="#f97316" name="Ciro" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             )}
           </CardContent>
         </Card>

@@ -25,7 +25,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://saas-billing-13.preview.emergentagent.com"
+BASE_URL = "https://stripe-mgmt.preview.emergentagent.com"
 TEST_CREDENTIALS = {
     "email": "agent@acenta.test",
     "password": "agent123"

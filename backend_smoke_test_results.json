@@ -3,7 +3,7 @@
     "success": true,
     "total_tests": 6,
     "passed_tests": 6,
-    "backend_url": "https://saas-billing-13.preview.emergentagent.com",
+    "backend_url": "https://stripe-mgmt.preview.emergentagent.com",
     "test_timestamp": "2026-03-07"
   },
   "results": {

@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://saas-billing-13.preview.emergentagent.com"
+BASE_URL = "https://stripe-mgmt.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials

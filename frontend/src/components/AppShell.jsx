@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { formatMoney, formatMoneyCompact } from "../lib/format";
+import { formatMoneyCompact } from "../lib/format";
 import {
   LayoutGrid, CalendarDays, Ticket, Users, Layers, FileText,
   Building2, Settings, BarChart3, LogOut, Menu, Hotel,
@@ -19,7 +19,6 @@ import ThemeToggle from "./ThemeToggle";
 import { cn } from "../lib/utils";
 import { api, getUser } from "../lib/api";
 import { useLogout } from "../hooks/useAuth";
-import { getMenuForUser } from "../config/menuConfig";
 import { FeatureProvider, useFeatures } from "../contexts/FeatureContext";
 import { ProductModeProvider, useProductMode } from "../contexts/ProductModeContext";
 import { Badge as UIBadge } from "./ui/badge";
@@ -109,99 +108,122 @@ const sidebarIconMap = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  GROUPED SIDEBAR SECTIONS for admin                                  */
+/*  Simplified product sidebar                                          */
 /* ------------------------------------------------------------------ */
-const ADMIN_GROUPED_NAV = [
+const SIMPLIFIED_NAV_SECTIONS = [
   {
-    group: "TEMEL",
+    group: "ANA MENÜ",
     items: [
-      { to: "/app", label: "Genel Bakis", icon: LayoutGrid, end: true, modeKey: "dashboard", minMode: "lite" },
-      { to: "/app/tours", label: "Turlarimiz", icon: Globe, modeKey: "turlarimiz", minMode: "lite" },
-      { to: "/app/reservations", label: "Rezervasyonlar", icon: Ticket, modeKey: "rezervasyonlar", minMode: "lite" },
-      { to: "/app/products", label: "Urunler", icon: Layers, modeKey: "urunler", minMode: "lite" },
-      { to: "/app/inventory", label: "Musaitlik", icon: CalendarDays, feature: "inventory", modeKey: "musaitlik", minMode: "lite" },
+      {
+        key: "dashboard",
+        label: "Dashboard",
+        icon: LayoutGrid,
+        pathByScope: { default: "/app" },
+        end: true,
+        modeKey: "dashboard",
+        minMode: "lite",
+      },
+      {
+        key: "reservations",
+        label: "Rezervasyonlar",
+        icon: Ticket,
+        pathByScope: {
+          admin: "/app/reservations",
+          agency: "/app/agency/bookings",
+          hotel: "/app/hotel/bookings",
+        },
+        modeKey: "rezervasyonlar",
+        minMode: "lite",
+      },
+      {
+        key: "customers",
+        label: "Müşteriler",
+        icon: Users,
+        pathByScope: {
+          admin: "/app/crm/customers",
+          agency: "/app/crm/customers",
+        },
+        feature: "crm",
+        modeKey: "musteriler",
+        minMode: "lite",
+      },
+      {
+        key: "finance",
+        label: "Finans",
+        icon: DollarSign,
+        pathByScope: {
+          admin: "/app/admin/finance/settlements",
+          agency: "/app/agency/settlements",
+          hotel: "/app/hotel/settlements",
+        },
+        modeKey: "mutabakat",
+        minMode: "lite",
+      },
+      {
+        key: "reports",
+        label: "Raporlar",
+        icon: BarChart3,
+        pathByScope: {
+          admin: "/app/reports",
+          agency: "/app/reports",
+        },
+        feature: "reports",
+        modeKey: "raporlar",
+        minMode: "lite",
+      },
     ],
   },
   {
-    group: "MÜŞTERİ İLİŞKİLERİ",
+    group: "GELİŞMİŞ",
     items: [
-      { to: "/app/crm/customers", label: "Müşteriler", icon: Users, feature: "crm", modeKey: "musteriler", minMode: "lite" },
-      { to: "/app/crm/pipeline", label: "Satış Süreci", icon: TrendingUp, feature: "crm", modeKey: "pipeline", minMode: "lite" },
-      { to: "/app/crm/tasks", label: "Görevler", icon: ClipboardList, feature: "crm", modeKey: "gorevler", minMode: "lite" },
-      { to: "/app/inbox", label: "Gelen Kutusu", icon: Inbox, modeKey: "inbox", minMode: "lite" },
+      {
+        key: "integrations",
+        label: "Entegrasyonlar",
+        icon: Zap,
+        pathByScope: {
+          admin: "/app/admin/integrations",
+          agency: "/app/agency/sheets",
+          hotel: "/app/hotel/integrations",
+        },
+        minMode: "pro",
+      },
+      {
+        key: "campaigns",
+        label: "Kampanyalar",
+        icon: Megaphone,
+        pathByScope: { admin: "/app/admin/campaigns" },
+        visibleScopes: ["admin"],
+        minMode: "pro",
+      },
     ],
   },
   {
-    group: "B2B AĞ",
-    minGroupMode: "pro",
+    group: "ADMIN / ENTERPRISE",
     items: [
-      { to: "/app/partners", label: "Ortaklık Yönetimi", icon: Network, modeKey: "partner_yonetimi", minMode: "pro" },
-      { to: "/app/agency/availability", label: "Müsaitlik Takibi", icon: CalendarDays, modeKey: "musaitlik_takibi", minMode: "pro" },
-      { to: "/app/agency/sheets", label: "Sheet Baglantilari", icon: FileSpreadsheet, modeKey: "sheet_baglantilari", minMode: "pro" },
-      { to: "/app/b2b", label: "B2B Acenteler", icon: Building2, feature: "b2b", modeKey: "b2b_acenteler", minMode: "pro" },
-      { to: "/app/admin/b2b/marketplace", label: "Pazar Yeri", icon: Globe, modeKey: "marketplace", minMode: "pro" },
-      { to: "/app/admin/b2b/funnel", label: "Satış Hunisi", icon: TrendingUp, modeKey: "b2b_funnel", minMode: "pro" },
-    ],
-  },
-  {
-    group: "FİNANS",
-    items: [
-      { to: "/app/usage", label: "Kullanım", icon: Activity, modeKey: "usage_visibility", minMode: "lite" },
-      { to: "/app/finance/webpos", label: "Sanal Kasa", icon: DollarSign, feature: "webpos", modeKey: "webpos", minMode: "pro" },
-      { to: "/app/admin/finance/settlements", label: "Mutabakat", icon: Scale, modeKey: "mutabakat", minMode: "pro" },
-      { to: "/app/admin/finance/refunds", label: "İadeler", icon: DollarSign, modeKey: "iadeler", minMode: "lite" },
-      { to: "/app/admin/finance/exposure", label: "Açık Bakiye", icon: BarChart3, modeKey: "exposure", minMode: "pro" },
-      { to: "/app/reports", label: "Raporlar", icon: BarChart3, feature: "reports", modeKey: "raporlar", minMode: "lite" },
-    ],
-  },
-  {
-    group: "OPERASYON",
-    minGroupMode: "pro",
-    items: [
-      { to: "/app/ops/guest-cases", label: "Misafir Talepleri", icon: MessageSquare, modeKey: "guest_cases", minMode: "pro" },
-      { to: "/app/ops/tasks", label: "Görev Takibi", icon: ClipboardList, modeKey: "ops_tasks", minMode: "pro" },
-      { to: "/app/ops/incidents", label: "Olaylar", icon: AlertTriangle, modeKey: "ops_incidents", minMode: "pro" },
-    ],
-  },
-  {
-    group: "YÖNETİM",
-    items: [
-      { to: "/app/admin/agencies", label: "Acentalar", icon: Building2, modeKey: "acentalar", minMode: "pro" },
-      { to: "/app/admin/all-users", label: "Kullanici Yonetimi", icon: Users, modeKey: "kullanici_yonetimi", minMode: "pro" },
-      { to: "/app/admin/agency-modules", label: "Acente Modulleri", icon: CheckSquare, modeKey: "acente_modulleri", minMode: "pro" },
-      { to: "/app/admin/hotels", label: "Oteller", icon: Hotel, modeKey: "oteller", minMode: "lite" },
-      { to: "/app/admin/tours", label: "Turlar", icon: Globe, modeKey: "turlar", minMode: "lite" },
-      { to: "/app/admin/pricing", label: "Fiyatlandırma", icon: Tag, modeKey: "fiyatlandirma", minMode: "pro" },
-      { to: "/app/admin/coupons", label: "Kuponlar", icon: Tag, modeKey: "kuponlar", minMode: "pro" },
-      { to: "/app/admin/campaigns", label: "Kampanyalar", icon: Megaphone, modeKey: "kampanyalar", minMode: "pro" },
-      { to: "/app/admin/links", label: "Bağlantılar", icon: LinkIcon, modeKey: "linkler", minMode: "pro" },
-      { to: "/app/admin/cms/pages", label: "Sayfa Yönetimi", icon: BookOpen, modeKey: "cms", minMode: "pro" },
-      { to: "/app/admin/tenant-features", label: "Özellik Ayarları", icon: Zap, modeKey: "tenant_ayarlari", minMode: "enterprise" },
-      { to: "/app/admin/tenant-health", label: "Sistem Durumu", icon: Activity, modeKey: "tenant_saglik", minMode: "enterprise" },
-      { to: "/app/admin/audit-logs", label: "İşlem Geçmişi", icon: Eye, modeKey: "audit_log", minMode: "enterprise" },
-      { to: "/app/settings/security", label: "Ayarlar", icon: Settings, modeKey: "ayarlar", minMode: "lite" },
-      { to: "/app/admin/product-mode", label: "Ürün Modu", icon: Zap, modeKey: "urun_modu", minMode: "lite" },
-    ],
-  },
-  {
-    group: "VERİ AKTARIMI",
-    minGroupMode: "lite",
-    items: [
-      { to: "/app/admin/import", label: "Veri Aktarma", icon: Upload, modeKey: "portfoy_tasi", minMode: "lite" },
-      { to: "/app/admin/portfolio-sync", label: "Otomatik Eşitleme", icon: RefreshCw, modeKey: "portfolio_sync", minMode: "lite" },
-    ],
-  },
-  {
-    group: "KURUMSAL",
-    minGroupMode: "enterprise",
-    items: [
-      { to: "/app/admin/branding", label: "Marka Özelleştirme", icon: Palette, modeKey: "white_label", minMode: "enterprise" },
-      { to: "/app/admin/approval-inbox", label: "Onay İstekleri", icon: ShieldCheck, modeKey: "onay_istekleri", minMode: "enterprise" },
-      { to: "/app/admin/tenant-export", label: "Dışa Aktarma", icon: Download, modeKey: "veri_export", minMode: "enterprise" },
-      { to: "/app/admin/scheduled-reports", label: "Zamanlanmış Raporlar", icon: Calendar, modeKey: "zamanlanmis_raporlar", minMode: "enterprise" },
-      { to: "/app/admin/efatura", label: "E-Fatura", icon: FileText, modeKey: "efatura", minMode: "enterprise" },
-      { to: "/app/admin/sms", label: "SMS Bildirimleri", icon: MessageSquare, modeKey: "sms", minMode: "enterprise" },
-      { to: "/app/admin/tickets", label: "QR Bilet", icon: Ticket, modeKey: "qr_bilet", minMode: "enterprise" },
+      {
+        key: "tenant-management",
+        label: "Tenant yönetimi",
+        icon: Building2,
+        pathByScope: { admin: "/app/admin/agencies" },
+        visibleScopes: ["admin"],
+        minMode: "enterprise",
+      },
+      {
+        key: "audit",
+        label: "Audit",
+        icon: Eye,
+        pathByScope: { admin: "/app/admin/audit-logs" },
+        visibleScopes: ["admin"],
+        minMode: "enterprise",
+      },
+      {
+        key: "advanced-permissions",
+        label: "Advanced permissions",
+        icon: ShieldCheck,
+        pathByScope: { admin: "/app/admin/tenant-features" },
+        visibleScopes: ["admin"],
+        minMode: "enterprise",
+      },
     ],
   },
 ];
@@ -214,6 +236,24 @@ function userHasRole(user, allowed) {
   return allowed.some((r) => roles.includes(r));
 }
 
+function getUserScope(user) {
+  if (userHasRole(user, ["super_admin", "admin", "sales", "ops", "accounting", "b2b_agent"])) {
+    return "admin";
+  }
+  if (userHasRole(user, ["agency_admin", "agency_agent"])) {
+    return "agency";
+  }
+  if (userHasRole(user, ["hotel_admin", "hotel_staff"])) {
+    return "hotel";
+  }
+  return "admin";
+}
+
+function resolveScopedPath(pathByScope, scope) {
+  if (!pathByScope) return null;
+  return pathByScope[scope] || pathByScope.default || null;
+}
+
 /* ================================================================== */
 /*  SIDEBAR ITEM                                                       */
 /* ================================================================== */
@@ -223,6 +263,7 @@ function SidebarItem({ to, label, icon: Icon, collapsed, end, onClick }) {
       to={to}
       end={end}
       onClick={onClick}
+      data-testid={`sidebar-link-${String(to || "item").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase()}`}
       className={({ isActive }) =>
         cn(
           "flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors",
@@ -258,6 +299,7 @@ function AppShellInner() {
   const user = getUser();
   const location = useLocation();
   const navigate = useNavigate();
+  const showPartnerEntry = location.pathname.startsWith("/app/partners");
   const logoutMutation = useLogout();
 
   const [resSummary, setResSummary] = useState([]);
@@ -424,6 +466,10 @@ function AppShellInner() {
 
   // Partner notifications
   useEffect(() => {
+    if (!showPartnerEntry) {
+      setPartnerSummary(null);
+      return undefined;
+    }
     let active = true;
     let intervalId;
     const loadSummary = async () => {
@@ -435,7 +481,7 @@ function AppShellInner() {
     void loadSummary();
     intervalId = window.setInterval(loadSummary, 60_000);
     return () => { active = false; if (intervalId) window.clearInterval(intervalId); };
-  }, [activeTenantKey]);
+  }, [activeTenantKey, showPartnerEntry]);
 
   // Build stamp
   useEffect(() => {
@@ -454,9 +500,10 @@ function AppShellInner() {
   }, [resSummary, sales]);
 
   const isAdmin = (user?.roles || []).some((r) => ["super_admin", "admin"].includes(r));
+  const userScope = useMemo(() => getUserScope(user), [user]);
   const trialExpired = Boolean(trialStatus?.expired || trialStatus?.status === "expired");
   const { hasFeature, loading: featuresLoading, quotaAlerts } = useFeatures();
-  const { mode: productMode, isAtLeast: isModeAtLeast, hiddenNavItems, labelOverrides, loading: modeLoading } = useProductMode();
+  const { mode: productMode, hiddenNavItems, loading: modeLoading } = useProductMode();
 
   /* Mode-aware nav filter helper */
   const MODE_ORDER_MAP = { lite: 0, pro: 1, enterprise: 2 };
@@ -464,6 +511,8 @@ function AppShellInner() {
 
   const filterNavByMode = useCallback((items) => {
     return items.filter((it) => {
+      if (it.visibleScopes && !it.visibleScopes.includes(userScope)) return false;
+      if (!it.to) return false;
       // Feature flag filter
       if (it.feature && !(!featuresLoading && hasFeature(it.feature))) return false;
       // Mode filter: item's minMode must be <= current mode
@@ -479,7 +528,18 @@ function AppShellInner() {
       }
       return true;
     });
-  }, [featuresLoading, hasFeature, currentModeLevel, hiddenNavItems, isAgencyUser, agencyAllowedModules]);
+  }, [featuresLoading, hasFeature, currentModeLevel, hiddenNavItems, isAgencyUser, agencyAllowedModules, userScope]);
+
+  const navSections = useMemo(
+    () => SIMPLIFIED_NAV_SECTIONS.map((section) => ({
+      ...section,
+      items: section.items.map((item) => ({
+        ...item,
+        to: resolveScopedPath(item.pathByScope, userScope),
+      })),
+    })),
+    [userScope],
+  );
 
   /* ── Mode Route Guard: redirect if current path is hidden by mode ── */
   useEffect(() => {
@@ -487,12 +547,14 @@ function AppShellInner() {
     const currentPath = location.pathname;
     // Collect ALL hidden paths (from hidden groups AND hidden individual items)
     const hiddenPaths = [];
-    ADMIN_GROUPED_NAV.forEach((section) => {
+    navSections.forEach((section) => {
       // If entire group is hidden by minGroupMode, all its items are hidden
       if (section.minGroupMode) {
         const groupLevel = MODE_ORDER_MAP[section.minGroupMode] ?? 0;
         if (groupLevel > currentModeLevel) {
-          section.items.forEach((it) => hiddenPaths.push(it.to));
+          section.items.forEach((it) => {
+            if (it.to) hiddenPaths.push(it.to);
+          });
           return;
         }
       }
@@ -501,12 +563,12 @@ function AppShellInner() {
         if (it.minMode) {
           const itemLevel = MODE_ORDER_MAP[it.minMode] ?? 0;
           if (itemLevel > currentModeLevel) {
-            hiddenPaths.push(it.to);
+            if (it.to) hiddenPaths.push(it.to);
             return;
           }
         }
         if (it.modeKey && hiddenNavItems.includes(it.modeKey)) {
-          hiddenPaths.push(it.to);
+          if (it.to) hiddenPaths.push(it.to);
         }
       });
     });
@@ -515,7 +577,7 @@ function AppShellInner() {
     if (isBlocked) {
       navigate("/app", { replace: true });
     }
-  }, [location.pathname, modeLoading, currentModeLevel, hiddenNavItems, navigate]);
+  }, [location.pathname, modeLoading, currentModeLevel, hiddenNavItems, navigate, navSections]);
 
   const toggleCollapse = () => {
     setCollapsed((v) => {
@@ -557,27 +619,29 @@ function AppShellInner() {
 
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
-            {/* Partner inbox */}
-            <NavLink
-              to="/app/partners"
-              className={({ isActive }) =>
-                cn(
-                  "relative inline-flex items-center justify-center rounded-lg border px-2 py-1 text-xs transition hover:bg-accent hover:text-foreground",
-                  isActive ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"
-                )
-              }
-            >
-              <Inbox className="h-3.5 w-3.5 mr-1" />
-              <span className="hidden sm:inline text-xs">{t("topbar.partners")}</span>
-              {partnerSummary?.counts?.invites_received > 0 && (
-                <UIBadge
-                  variant="destructive"
-                  className="ml-1 h-4 min-w-[1.25rem] px-1 text-2xs flex items-center justify-center rounded-full"
-                >
-                  {partnerSummary.counts.invites_received}
-                </UIBadge>
-              )}
-            </NavLink>
+            {showPartnerEntry ? (
+              <NavLink
+                to="/app/partners"
+                className={({ isActive }) =>
+                  cn(
+                    "relative inline-flex items-center justify-center rounded-lg border px-2 py-1 text-xs transition hover:bg-accent hover:text-foreground",
+                    isActive ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"
+                  )
+                }
+                data-testid="topbar-partners-link"
+              >
+                <Inbox className="h-3.5 w-3.5 mr-1" />
+                <span className="hidden sm:inline text-xs">{t("topbar.partners")}</span>
+                {partnerSummary?.counts?.invites_received > 0 && (
+                  <UIBadge
+                    variant="destructive"
+                    className="ml-1 h-4 min-w-[1.25rem] px-1 text-2xs flex items-center justify-center rounded-full"
+                  >
+                    {partnerSummary.counts.invites_received}
+                  </UIBadge>
+                )}
+              </NavLink>
+            ) : null}
 
             {/* Notification bell - in-app notifications */}
             <NotificationBell />
@@ -635,7 +699,7 @@ function AppShellInner() {
             </div>
           </div>
           <div className="overflow-y-auto h-[calc(100vh-120px)] px-3 py-3">
-            {ADMIN_GROUPED_NAV.map((section) => {
+            {navSections.map((section) => {
               // Group-level mode check
               if (section.minGroupMode) {
                 const groupLevel = MODE_ORDER_MAP[section.minGroupMode] ?? 0;
@@ -718,7 +782,7 @@ function AppShellInner() {
 
           {/* Nav sections */}
           <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-3">
-            {ADMIN_GROUPED_NAV.map((section) => {
+            {navSections.map((section) => {
               // Group-level mode check
               if (section.minGroupMode) {
                 const groupLevel = MODE_ORDER_MAP[section.minGroupMode] ?? 0;

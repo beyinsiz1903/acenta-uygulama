@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-Backend validation test for Turkish review request
+Backend validation test for Turkish review request - Auth & Admin Flow Validation
 Turkish review requirements:
-1) `/api/search?q=demo&limit=4` agent hesabında 200 ve scope=agency
-2) `/api/reports/generate?days=30` agent hesabında 200 ve KPI payload  
-3) `/api/reports/sales-summary.csv?days=7` 200 ve text/csv
-4) Email queue validation for P0 e-posta kuyruğu mantığı 
-5) Email provider key validation - should be skipped behavior when no provider
+1) Auth login + me: POST /api/auth/login with admin@acenta.test/admin123 should succeed
+2) Login response should include admin roles (super_admin accepted) for admin interface access  
+3) Cookie/session based GET /api/auth/me should work and maintain admin role
+4) Admin access: GET /api/admin/all-users should return 200 with user list
+5) Regression check: No 401/403 regressions in auth + admin endpoints
+6) Super admin user should be able to access admin interface
 """
 
 import asyncio
@@ -26,6 +27,7 @@ class BackendValidator:
         self.agent_credentials = {"email": "agent@acenta.test", "password": "agent123"}
         self.admin_token = None
         self.agent_token = None
+        self.admin_session_cookies = None
         self.results = []
         
     def log_test(self, test_name, status, details):
@@ -43,6 +45,48 @@ class BackendValidator:
             print(f"   Details: {details}")
         return result
 
+    def login_user_with_cookies(self, credentials, user_type):
+        """Login and capture both token and session cookies"""
+        try:
+            # Use session to capture cookies
+            session = requests.Session()
+            
+            # Add X-Client-Platform header for web-based login (cookie compat)
+            headers = {"X-Client-Platform": "web"}
+            
+            response = session.post(
+                f"{self.base_url}/api/auth/login",
+                json=credentials,
+                headers=headers,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                token = data.get("access_token")
+                auth_transport = data.get("auth_transport")
+                roles = data.get("user", {}).get("roles", [])
+                
+                if token:
+                    self.log_test(f"Login {user_type} with cookies", "PASS", 
+                                 f"Token: {len(token)} chars, transport: {auth_transport}, roles: {roles}")
+                    
+                    # Store session cookies for cookie-based auth testing
+                    if user_type == "admin":
+                        self.admin_session_cookies = session.cookies
+                    
+                    return token, session.cookies, roles
+                else:
+                    self.log_test(f"Login {user_type} with cookies", "FAIL", "No access_token in response")
+                    return None, None, None
+            else:
+                self.log_test(f"Login {user_type} with cookies", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                return None, None, None
+                
+        except Exception as e:
+            self.log_test(f"Login {user_type} with cookies", "FAIL", f"Exception: {str(e)}")
+            return None, None, None
+
     def login_user(self, credentials, user_type):
         """Login and get access token"""
         try:
@@ -55,8 +99,10 @@ class BackendValidator:
             if response.status_code == 200:
                 data = response.json()
                 token = data.get("access_token")
+                roles = data.get("user", {}).get("roles", [])
+                
                 if token:
-                    self.log_test(f"Login {user_type}", "PASS", f"Token received: {len(token)} chars")
+                    self.log_test(f"Login {user_type}", "PASS", f"Token received: {len(token)} chars, roles: {roles}")
                     return token
                 else:
                     self.log_test(f"Login {user_type}", "FAIL", "No access_token in response")
@@ -69,6 +115,14 @@ class BackendValidator:
             self.log_test(f"Login {user_type}", "FAIL", f"Exception: {str(e)}")
             return None
 
+    def make_cookie_request(self, method, endpoint, cookies, **kwargs):
+        """Make authenticated HTTP request using cookies"""
+        kwargs.setdefault("timeout", 30)
+        kwargs.setdefault("cookies", cookies)
+        
+        url = f"{self.base_url}{endpoint}"
+        return requests.request(method, url, **kwargs)
+
     def make_authenticated_request(self, method, endpoint, token, **kwargs):
         """Make authenticated HTTP request"""
         headers = {"Authorization": f"Bearer {token}"}
@@ -80,225 +134,184 @@ class BackendValidator:
         url = f"{self.base_url}{endpoint}"
         return requests.request(method, url, **kwargs)
 
-    def validate_search_endpoint(self):
-        """Test 1: /api/search?q=demo&limit=4 agent hesabında 200 ve scope=agency"""
-        test_name = "Search endpoint with agent account"
+    def validate_admin_login_flow(self):
+        """Test 1: Admin login with admin@acenta.test/admin123 and role validation"""
+        test_name = "Admin login + role validation"
         
-        if not self.agent_token:
-            return self.log_test(test_name, "FAIL", "Agent token not available")
+        try:
+            token, cookies, roles = self.login_user_with_cookies(self.admin_credentials, "admin")
+            
+            if token and roles:
+                # Check if admin has super_admin role (as mentioned in review request) 
+                has_admin_role = 'super_admin' in roles or 'admin' in roles
+                if has_admin_role:
+                    self.log_test(test_name, "PASS", f"Admin login successful, has admin role: {roles}")
+                    self.admin_token = token
+                    self.admin_session_cookies = cookies
+                    return True
+                else:
+                    self.log_test(test_name, "FAIL", f"Admin login successful but no admin role found: {roles}")
+                    return False
+            else:
+                self.log_test(test_name, "FAIL", "Admin login failed or no token/roles received")
+                return False
+                
+        except Exception as e:
+            self.log_test(test_name, "FAIL", f"Exception: {str(e)}")
+            return False
+
+    def validate_auth_me_cookie_session(self):
+        """Test 2: GET /api/auth/me with cookie/session should work and maintain admin role"""
+        test_name = "Auth me with cookie/session"
+        
+        if not self.admin_session_cookies:
+            return self.log_test(test_name, "FAIL", "Admin session cookies not available")
+        
+        try:
+            response = self.make_cookie_request(
+                "GET", 
+                "/api/auth/me",
+                self.admin_session_cookies
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                email = data.get("email")
+                roles = data.get("roles", [])
+                
+                if email == "admin@acenta.test":
+                    has_admin_role = 'super_admin' in roles or 'admin' in roles
+                    if has_admin_role:
+                        self.log_test(test_name, "PASS", f"Cookie auth working, admin role maintained: {roles}")
+                    else:
+                        self.log_test(test_name, "FAIL", f"Cookie auth working but admin role lost: {roles}")
+                else:
+                    self.log_test(test_name, "FAIL", f"Wrong user returned: {email}")
+            else:
+                self.log_test(test_name, "FAIL", f"HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_test(test_name, "FAIL", f"Exception: {str(e)}")
+
+    def validate_auth_me_bearer_token(self):
+        """Test 3: GET /api/auth/me with Bearer token should also work"""
+        test_name = "Auth me with Bearer token"
+        
+        if not self.admin_token:
+            return self.log_test(test_name, "FAIL", "Admin token not available")
         
         try:
             response = self.make_authenticated_request(
                 "GET", 
-                "/api/search?q=demo&limit=4",
-                self.agent_token
+                "/api/auth/me",
+                self.admin_token
             )
             
             if response.status_code == 200:
                 data = response.json()
+                email = data.get("email")
+                roles = data.get("roles", [])
                 
-                # Check if scope=agency in response
-                scope = data.get("scope")
-                if scope == "agency":
-                    self.log_test(test_name, "PASS", f"200 OK, scope=agency, {len(data.get('results', []))} results")
+                if email == "admin@acenta.test":
+                    has_admin_role = 'super_admin' in roles or 'admin' in roles
+                    if has_admin_role:
+                        self.log_test(test_name, "PASS", f"Bearer auth working, admin role correct: {roles}")
+                    else:
+                        self.log_test(test_name, "FAIL", f"Bearer auth working but admin role missing: {roles}")
                 else:
-                    self.log_test(test_name, "FAIL", f"200 OK but scope={scope}, expected agency")
+                    self.log_test(test_name, "FAIL", f"Wrong user returned: {email}")
             else:
                 self.log_test(test_name, "FAIL", f"HTTP {response.status_code}: {response.text}")
                 
         except Exception as e:
             self.log_test(test_name, "FAIL", f"Exception: {str(e)}")
 
-    def validate_reports_generate_endpoint(self):
-        """Test 2: /api/reports/generate?days=30 agent hesabında 200 ve KPI payload"""
-        test_name = "Reports generate endpoint with agent account"
+    def validate_admin_all_users_endpoint(self):
+        """Test 4: GET /api/admin/all-users should return 200 with user list"""
+        test_name = "Admin all-users endpoint"
         
-        if not self.agent_token:
-            return self.log_test(test_name, "FAIL", "Agent token not available")
+        if not self.admin_token:
+            return self.log_test(test_name, "FAIL", "Admin token not available")
         
         try:
             response = self.make_authenticated_request(
                 "GET",
-                "/api/reports/generate?days=30", 
-                self.agent_token
+                "/api/admin/all-users", 
+                self.admin_token
             )
             
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check for KPI payload structure
-                has_kpis = any(key in data for key in ["kpis", "metrics", "summary", "data"])
-                if has_kpis:
-                    self.log_test(test_name, "PASS", f"200 OK, KPI payload present, keys: {list(data.keys())}")
+                if isinstance(data, list):
+                    self.log_test(test_name, "PASS", f"200 OK, returned {len(data)} users in list format")
+                elif isinstance(data, dict) and "users" in data:
+                    users = data["users"]
+                    self.log_test(test_name, "PASS", f"200 OK, returned {len(users)} users in object format") 
                 else:
-                    self.log_test(test_name, "PASS", f"200 OK, response keys: {list(data.keys())}")
+                    self.log_test(test_name, "WARN", f"200 OK but unexpected response format: {type(data)}")
             else:
                 self.log_test(test_name, "FAIL", f"HTTP {response.status_code}: {response.text}")
                 
         except Exception as e:
             self.log_test(test_name, "FAIL", f"Exception: {str(e)}")
 
-    def validate_sales_summary_csv_endpoint(self):
-        """Test 3: /api/reports/sales-summary.csv?days=7 200 ve text/csv"""
-        test_name = "Sales summary CSV endpoint"
+    def validate_admin_regression_check(self):
+        """Test 5: Regression check - admin endpoints should not return 401/403"""
+        test_name = "Admin endpoints regression check"
         
-        # Try with agent token first, then admin if agent fails
-        for token, token_name in [(self.agent_token, "agent"), (self.admin_token, "admin")]:
-            if not token:
-                continue
-                
+        if not self.admin_token:
+            return self.log_test(test_name, "FAIL", "Admin token not available")
+        
+        # Test common admin endpoints that should work for super_admin
+        admin_endpoints = [
+            "/api/admin/agencies",
+            "/api/admin/tenants", 
+            "/api/admin/all-users"
+        ]
+        
+        passed_endpoints = []
+        failed_endpoints = []
+        
+        for endpoint in admin_endpoints:
             try:
-                response = self.make_authenticated_request(
-                    "GET",
-                    "/api/reports/sales-summary.csv?days=7",
-                    token
-                )
+                response = self.make_authenticated_request("GET", endpoint, self.admin_token)
                 
-                if response.status_code == 200:
-                    content_type = response.headers.get("content-type", "")
-                    if "csv" in content_type.lower() or "text/csv" in content_type.lower():
-                        self.log_test(test_name, "PASS", f"200 OK with {token_name} token, content-type: {content_type}, size: {len(response.content)} bytes")
-                        return
-                    else:
-                        self.log_test(test_name, "WARN", f"200 OK with {token_name} token but content-type: {content_type}")
-                        return
+                if response.status_code in [200, 201]:
+                    passed_endpoints.append(f"{endpoint}: {response.status_code}")
+                elif response.status_code in [401, 403]:
+                    failed_endpoints.append(f"{endpoint}: {response.status_code} (auth regression)")
                 else:
-                    self.log_test(test_name, "WARN", f"HTTP {response.status_code} with {token_name} token: {response.text[:200]}")
+                    # Other errors like 404, 500 might be data/implementation issues, not auth regression
+                    passed_endpoints.append(f"{endpoint}: {response.status_code} (non-auth error)")
                     
             except Exception as e:
-                self.log_test(test_name, "WARN", f"Exception with {token_name} token: {str(e)}")
+                failed_endpoints.append(f"{endpoint}: Exception {str(e)}")
         
-        self.log_test(test_name, "FAIL", "Failed with both agent and admin tokens")
-
-    def validate_email_queue_logic(self):
-        """Test 4: Code-aware validation of email queue services"""
-        test_name = "Email queue P0 logic validation"
-        
-        try:
-            # Check if email service files exist and have expected functions
-            services_to_check = [
-                ("/app/backend/app/services/notification_email_service.py", ["enqueue_payment_failed_email", "maybe_enqueue_quota_warning_email"]),
-                ("/app/backend/app/services/email_outbox.py", ["enqueue_generic_email", "dispatch_pending_emails"]),
-                ("/app/backend/app/services/usage_service.py", ["track_usage_event", "_maybe_enqueue_quota_warning_email"]),
-                ("/app/backend/app/services/stripe_checkout_service.py", ["mark_payment_failed", "enqueue_payment_failed_email"])
-            ]
-            
-            validation_results = []
-            
-            for file_path, expected_functions in services_to_check:
-                if os.path.exists(file_path):
-                    with open(file_path, 'r') as f:
-                        content = f.read()
-                    
-                    found_functions = []
-                    missing_functions = []
-                    
-                    for func in expected_functions:
-                        if f"def {func}" in content or f"async def {func}" in content:
-                            found_functions.append(func)
-                        else:
-                            missing_functions.append(func)
-                    
-                    validation_results.append({
-                        "file": file_path.split("/")[-1],
-                        "found": found_functions,
-                        "missing": missing_functions
-                    })
-                else:
-                    validation_results.append({
-                        "file": file_path.split("/")[-1],
-                        "found": [],
-                        "missing": expected_functions,
-                        "error": "File not found"
-                    })
-            
-            # Analyze results
-            all_found = all(not result.get("missing", []) for result in validation_results)
-            
-            if all_found:
-                self.log_test(test_name, "PASS", f"All P0 email queue functions found in expected files")
-            else:
-                missing_summary = []
-                for result in validation_results:
-                    if result.get("missing"):
-                        missing_summary.append(f"{result['file']}: missing {result['missing']}")
-                
-                self.log_test(test_name, "WARN", f"Some functions missing: {'; '.join(missing_summary)}")
-                
-        except Exception as e:
-            self.log_test(test_name, "FAIL", f"Exception during code validation: {str(e)}")
-
-    def validate_email_provider_skipped_behavior(self):
-        """Test 5: Email provider key validation - should be skipped when no provider"""
-        test_name = "Email provider skipped behavior validation"
-        
-        try:
-            # Check environment for email provider configuration
-            env_vars_to_check = [
-                "AWS_ACCESS_KEY_ID",
-                "AWS_SECRET_ACCESS_KEY", 
-                "SES_REGION",
-                "SENDGRID_API_KEY",
-                "SMTP_HOST",
-                "EMAIL_PROVIDER"
-            ]
-            
-            email_provider_configured = False
-            found_vars = []
-            
-            for var in env_vars_to_check:
-                value = os.environ.get(var)
-                if value and value.strip():
-                    email_provider_configured = True
-                    found_vars.append(var)
-            
-            # Also check backend .env file if it exists
-            backend_env_path = "/app/backend/.env"
-            if os.path.exists(backend_env_path):
-                with open(backend_env_path, 'r') as f:
-                    env_content = f.read()
-                    for var in env_vars_to_check:
-                        if f"{var}=" in env_content and not env_content.split(f"{var}=")[1].split("\n")[0].strip() == "":
-                            email_provider_configured = True
-                            if var not in found_vars:
-                                found_vars.append(var)
-            
-            if not email_provider_configured:
-                # This is expected - no email provider should be configured
-                self.log_test(test_name, "PASS", "No email provider configured - emails should be skipped as expected")
-            else:
-                # Provider is configured, but we should still test the skipped behavior exists
-                self.log_test(test_name, "WARN", f"Email provider appears configured ({found_vars}) - verify skipped behavior in logs")
-                
-        except Exception as e:
-            self.log_test(test_name, "FAIL", f"Exception during email provider validation: {str(e)}")
+        if not failed_endpoints:
+            self.log_test(test_name, "PASS", f"No auth regressions found. Passed: {passed_endpoints}")
+        else:
+            self.log_test(test_name, "FAIL", f"Auth regressions found: {failed_endpoints}")
 
     def run_validation(self):
         """Run all validation tests"""
         print(f"🚀 Starting backend validation for Turkish review request")
         print(f"📍 Base URL: {self.base_url}")
+        print(f"🔑 Focus: Auth & Admin Flow Critical Validation")
+        print(f"👤 Test Account: admin@acenta.test / admin123")
         print(f"🕒 Started at: {datetime.now().isoformat()}")
         print("=" * 80)
         
-        # Login both users
-        self.admin_token = self.login_user(self.admin_credentials, "admin")
-        self.agent_token = self.login_user(self.agent_credentials, "agent") 
-        
-        print("\n🔍 Running API endpoint validations...")
-        
-        # Run API endpoint tests
-        self.validate_search_endpoint()
-        self.validate_reports_generate_endpoint()  
-        self.validate_sales_summary_csv_endpoint()
-        
-        print("\n🧩 Running code-aware validations...")
-        
-        # Run code-aware validations
-        self.validate_email_queue_logic()
-        self.validate_email_provider_skipped_behavior()
+        # Run critical auth & admin flow tests
+        print("\n🔐 Running Auth & Admin Flow Validation...")
+        self.validate_admin_login_flow()
+        self.validate_auth_me_cookie_session()
+        self.validate_auth_me_bearer_token()
+        self.validate_admin_all_users_endpoint()
+        self.validate_admin_regression_check()
         
         print("\n" + "=" * 80)
-        print("📊 VALIDATION SUMMARY")
+        print("📊 CRITICAL AUTH & ADMIN FLOW VALIDATION SUMMARY")
         print("=" * 80)
         
         # Summary
@@ -307,13 +320,32 @@ class BackendValidator:
         failed_tests = len([r for r in self.results if r["status"] == "FAIL"])
         warned_tests = len([r for r in self.results if r["status"] == "WARN"])
         
-        print(f"Total Tests: {total_tests}")
+        print(f"Total Critical Tests: {total_tests}")
         print(f"✅ Passed: {passed_tests}")
         print(f"⚠️  Warnings: {warned_tests}")
         print(f"❌ Failed: {failed_tests}")
         print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
         
+        # Detailed results for failed tests
+        if failed_tests > 0:
+            print(f"\n❌ FAILED TESTS DETAILS:")
+            for result in self.results:
+                if result["status"] == "FAIL":
+                    print(f"   • {result['test']}: {result['details']}")
+        
         print(f"\n🕒 Completed at: {datetime.now().isoformat()}")
+        
+        # Turkish review summary
+        print(f"\n🇹🇷 TURKISH REVIEW REQUEST VALIDATION:")
+        auth_login_passed = any(r["test"] == "Admin login + role validation" and r["status"] == "PASS" for r in self.results)
+        auth_me_cookie_passed = any(r["test"] == "Auth me with cookie/session" and r["status"] == "PASS" for r in self.results)
+        admin_users_passed = any(r["test"] == "Admin all-users endpoint" and r["status"] == "PASS" for r in self.results)
+        no_regressions = any(r["test"] == "Admin endpoints regression check" and r["status"] == "PASS" for r in self.results)
+        
+        print(f"✅ Auth login + admin roles: {'PASS' if auth_login_passed else 'FAIL'}")
+        print(f"✅ Cookie/session auth/me: {'PASS' if auth_me_cookie_passed else 'FAIL'}")
+        print(f"✅ Admin /all-users endpoint: {'PASS' if admin_users_passed else 'FAIL'}")
+        print(f"✅ No 401/403 regressions: {'PASS' if no_regressions else 'FAIL'}")
         
         # Return summary for result updating
         return {

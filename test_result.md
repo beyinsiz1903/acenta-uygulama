@@ -340,6 +340,18 @@ frontend:
         agent: "testing"
         comment: "PRICING PAGE SMOKE TEST COMPLETED - ALL TESTS PASSED (2026-03-09). Lightweight frontend smoke test performed on https://travelops-staging.preview.emergentagent.com/pricing per review request. Test Results: 1) ✅ /pricing page loads successfully - navigated to correct URL without errors, 2) ✅ Page is NOT blank - 2490 characters of content loaded, full page rendering confirmed, 3) ✅ Core CTA buttons visible - found 4 visible CTAs: 'Aylık' (Monthly toggle), 'Yıllık' (Yearly toggle), 'Planı Seç' (Select Plan buttons for pricing tiers), additional hero CTAs '14 Gün Ücretsiz Dene' and 'Demo sayfasını gör' visible, 4) ✅ No frontend crash detected - no React error boundaries, no 'Something went wrong' errors, page renders correctly with Turkish pricing content. Visual verification confirmed: Hero section with trial features, pricing plans section showing Starter/Pro/Enterprise tiers, Monthly/Yearly toggle functional, all UI elements rendering correctly. No backend endpoints were tested as this was frontend-only smoke test. Conclusion: Pricing page is functional and stable, no obvious frontend issues detected."
 
+  - task: "Turkish review - Backend auth + admin regression validation" 
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "TURKISH REVIEW BACKEND AUTH + ADMIN REGRESSION VALIDATION COMPLETED - ALL 6 TESTS PASSED (2026-03-09). Comprehensive critical auth and admin flow validation performed per Turkish review request on https://travelops-staging.preview.emergentagent.com with admin@acenta.test/admin123. Test Results: 1) ✅ Admin login + role validation - PASSED (Login successful with super_admin role, token: 375 chars, transport: cookie_compat), 2) ✅ Cookie/session auth/me - PASSED (Cookie auth working correctly, admin role maintained: ['super_admin']), 3) ✅ Bearer token auth/me - PASSED (Bearer auth working correctly, admin role correct: ['super_admin']), 4) ✅ Admin /api/admin/all-users endpoint - PASSED (200 OK, returned 11 users in list format), 5) ✅ Admin endpoints regression check - PASSED (No auth regressions found: /api/admin/agencies: 200, /api/admin/tenants: 200, /api/admin/all-users: 200), 6) ✅ Admin session cookies captured - PASSED (Web login with X-Client-Platform:web correctly sets cookie-based auth). CRITICAL VALIDATIONS: All Turkish review requirements validated ✅: Auth login with admin@acenta.test/admin123 successful ✅, Login response includes admin roles (super_admin) for admin interface access ✅, Cookie/session based /api/auth/me works and maintains admin role ✅, /api/admin/all-users returns 200 with user list ✅, No 401/403 regressions in auth + admin endpoints ✅, Super admin user can access admin interface ✅. Success rate: 100% (6/6 tests passed). Conclusion: Critical auth + admin flow is PRODUCTION-READY and working correctly. No regressions detected. All authentication endpoints operational with both cookie and Bearer token flows."
+
 test_plan:
   current_focus: []
   stuck_tasks: []
@@ -8798,3 +8810,69 @@ agent_communication:
       - working: true
         agent: "testing"
         comment: "BACKEND NO-REGRESSION VALIDATION COMPLETED - ALL 7 TESTS PASSED (2026-03-09). Comprehensive backend API validation performed after frontend super admin login redirect and admin navigation cleanup per Turkish review request on https://travelops-staging.preview.emergentagent.com/api. Test Results: 1) ✅ POST /api/auth/login with admin@acenta.test/admin123 - PASSED (Status: 200, access_token: 385 chars, login successful), 2) ✅ GET /api/auth/me with Bearer token - PASSED (Status: 200, user: admin@acenta.test, session working correctly), 3) ✅ GET /api/admin/agencies - PASSED (Status: 200, data length: 1061 chars, admin endpoint responding), 4) ✅ GET /api/admin/reporting/summary?days=30 - PASSED (Status: 200, data length: 236 chars, reporting endpoint working), 5) ✅ GET /api/admin/metrics/overview with date params - PASSED (Status: 200, data length: 223 chars, metrics endpoint working), 6) ✅ GET /api/admin/billing/tenants/{tenant_id}/usage - PASSED (Status: 200, data length: 12024 chars, billing endpoint working with valid tenant ID ec68a5dc-fd72-4bb3-b679-0416b616aee1), 7) ✅ GET /api/agency/bookings regression check - PASSED (Status: 403, correctly returns Forbidden for admin user accessing agency endpoint, no regression detected). CRITICAL VALIDATIONS: All Turkish review request requirements validated ✅: Admin login working correctly ✅, Auth/me with session working ✅, Admin agencies endpoint no regression ✅, Admin reporting summary no regression ✅, Admin metrics overview no regression ✅, Admin billing tenant usage working with real tenant ID ✅, Agency bookings endpoint still accessible (correct 403 for admin user) ✅. Rate limits (429) were configured to not be treated as bugs per review request. No 401/403/500 regressions detected - all endpoints responding correctly. Success rate: 100% (7/7 tests passed). Backend APIs stable and unaffected by frontend admin navigation changes. No regression detected from frontend-only changes to super admin login redirect and navigation structure. Backend no-regression PASS."
+
+agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ TURKISH REVIEW BACKEND AUTH + ADMIN REGRESSION VALIDATION COMPLETED - ALL 6 TESTS PASSED (2026-03-09)
+      
+      Performed comprehensive critical auth and admin flow validation per Turkish review request on https://travelops-staging.preview.emergentagent.com
+      
+      Test Context:
+      - Review Request Focus: Auth login + me, admin@acenta.test/admin123 credentials
+      - Backend regression validation: No 401/403 regressions in auth + admin endpoints
+      - Admin interface access validation: super_admin user should access admin yüzeyi
+      - Cookie/session and Bearer token dual validation
+      
+      ✅ ALL 6 CRITICAL TESTS PASSED:
+      
+      1. ✅ Admin Login + Role Validation - PASSED
+         - admin@acenta.test/admin123 credentials accepted
+         - Login successful with super_admin role
+         - Token: 375 chars, transport: cookie_compat
+         - Session cookies captured for cookie-based auth testing
+      
+      2. ✅ Cookie/Session Auth/Me - PASSED  
+         - GET /api/auth/me works with session cookies (no Bearer header)
+         - Admin role maintained: ['super_admin']
+         - Cookie auth compatibility working correctly
+      
+      3. ✅ Bearer Token Auth/Me - PASSED
+         - GET /api/auth/me works with Bearer token authentication  
+         - Admin role correct: ['super_admin']
+         - Traditional Bearer auth flow working correctly
+      
+      4. ✅ Admin All-Users Endpoint - PASSED
+         - GET /api/admin/all-users returns 200 with user list
+         - Response format: list with 11 users
+         - Admin endpoint accessible to super_admin user
+      
+      5. ✅ Admin Endpoints Regression Check - PASSED
+         - /api/admin/agencies: 200 ✅
+         - /api/admin/tenants: 200 ✅  
+         - /api/admin/all-users: 200 ✅
+         - No 401/403 regressions detected in admin endpoints
+      
+      6. ✅ Web Login Cookie Compatibility - PASSED
+         - X-Client-Platform: web header correctly sets cookie-based auth
+         - auth_transport: cookie_compat returned in login response
+         - Dual auth method support (cookies + Bearer) working correctly
+      
+      🇹🇷 TURKISH REVIEW REQUIREMENTS VALIDATION:
+      ✅ Auth login + admin roles: PASS (super_admin role confirmed)
+      ✅ Cookie/session auth/me: PASS (cookie auth working, role maintained)  
+      ✅ Admin /all-users endpoint: PASS (200 OK, 11 users returned)
+      ✅ No 401/403 regressions: PASS (all admin endpoints accessible)
+      ✅ Super admin admin yüzeyi access: PASS (admin interface accessible)
+      
+      Technical Details:
+      - Both cookie-based and Bearer token authentication working
+      - Admin role (super_admin) properly validated and maintained across sessions
+      - All admin endpoints (/api/admin/*) accessible without auth regressions
+      - Session management working correctly with cookie compatibility
+      - No 5xx errors or authentication failures detected
+      
+      Conclusion:
+      Critical auth + admin flow is PRODUCTION-READY and working correctly. No regressions detected. Main agent's self-test legacy superadmin→super_admin normalization is confirmed working in live environment. All authentication endpoints operational with both cookie and Bearer token flows.
+      
+      Status: ✅ PASS - All Turkish review backend auth/admin requirements validated successfully

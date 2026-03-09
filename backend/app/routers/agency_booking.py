@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import uuid
-from datetime import timedelta, timezone
-from typing import Optional
+from datetime import date, timedelta, timezone
+from typing import Any, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
+from bson import ObjectId
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
@@ -18,7 +19,194 @@ from app.services.enforcement import ensure_match_not_blocked
 
 router = APIRouter(prefix="/api/agency/bookings", tags=["agency-bookings"])
 
-from typing import Literal
+
+BOOKING_STATUS_MAP = {
+    "booked": "confirmed",
+    "canceled": "cancelled",
+    "guaranteed": "confirmed",
+    "paid": "completed",
+    "quoted": "draft",
+}
+
+
+def _normalize_booking_status(doc: dict[str, Any]) -> str:
+    raw_status = str(doc.get("status") or doc.get("state") or "draft").strip().lower()
+    return BOOKING_STATUS_MAP.get(raw_status, raw_status or "draft")
+
+
+def _date_only(value: Any) -> str | None:
+    if value is None:
+        return None
+    if hasattr(value, "date"):
+        try:
+            return value.date().isoformat()
+        except Exception:
+            pass
+    text = str(value).strip()
+    if not text:
+        return None
+    return text[:10]
+
+
+def _safe_float(value: Any) -> float | None:
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except Exception:
+        return None
+
+
+def _derive_stay(doc: dict[str, Any]) -> dict[str, Any]:
+    stay = dict(doc.get("stay") or {})
+    check_in = stay.get("check_in") or _date_only(doc.get("check_in_date") or doc.get("check_in") or doc.get("start_date"))
+    check_out = stay.get("check_out") or _date_only(doc.get("check_out_date") or doc.get("check_out") or doc.get("end_date"))
+    if check_in and not check_out:
+        check_out = check_in
+
+    nights = stay.get("nights")
+    if nights is None and check_in and check_out:
+        try:
+            nights = max((date.fromisoformat(check_out) - date.fromisoformat(check_in)).days, 0)
+        except Exception:
+            nights = None
+
+    normalized: dict[str, Any] = {}
+    if check_in:
+        normalized["check_in"] = check_in
+    if check_out:
+        normalized["check_out"] = check_out
+    if nights is not None:
+        try:
+            normalized["nights"] = int(nights)
+        except Exception:
+            pass
+    return normalized
+
+
+def _derive_guest(doc: dict[str, Any]) -> dict[str, Any]:
+    guest = dict(doc.get("guest") or {})
+    full_name = guest.get("full_name") or doc.get("guest_name") or doc.get("customer_name") or "Misafir"
+    return {
+        "full_name": full_name,
+        "email": guest.get("email") or doc.get("guest_email") or doc.get("customer_email"),
+        "phone": guest.get("phone") or doc.get("guest_phone") or doc.get("customer_phone"),
+    }
+
+
+def _derive_occupancy(doc: dict[str, Any]) -> dict[str, Any]:
+    occupancy = dict(doc.get("occupancy") or {})
+    adults = occupancy.get("adults")
+    children = occupancy.get("children")
+
+    if adults is None:
+        pax = doc.get("pax")
+        if pax is not None:
+            adults = pax
+
+    normalized: dict[str, Any] = {}
+    if adults is not None:
+        try:
+            normalized["adults"] = int(adults)
+        except Exception:
+            pass
+    if children is not None:
+        try:
+            normalized["children"] = int(children)
+        except Exception:
+            pass
+    elif normalized.get("adults") is not None:
+        normalized["children"] = 0
+
+    return normalized
+
+
+def _derive_rate_snapshot(doc: dict[str, Any], *, nights: int | None) -> tuple[dict[str, Any], str, float]:
+    rate_snapshot = dict(doc.get("rate_snapshot") or {})
+    price = dict(rate_snapshot.get("price") or {})
+
+    currency = (
+        doc.get("currency")
+        or price.get("currency")
+        or (doc.get("amounts") or {}).get("currency")
+        or doc.get("pricing_currency")
+        or doc.get("selling_currency")
+        or "TRY"
+    )
+
+    total = (
+        _safe_float(doc.get("gross_amount"))
+        or _safe_float(price.get("total"))
+        or _safe_float(doc.get("amount"))
+        or _safe_float((doc.get("amounts") or {}).get("sell"))
+        or _safe_float(doc.get("total_price"))
+        or 0.0
+    )
+
+    if nights and nights > 0 and price.get("per_night") is None and total:
+        price["per_night"] = round(total / nights, 2)
+
+    price["currency"] = currency
+    price["total"] = round(float(total), 2)
+    rate_snapshot["price"] = price
+    return rate_snapshot, currency, round(float(total), 2)
+
+
+def _booking_lookup_candidates(value: str) -> list[Any]:
+    candidates: list[Any] = [value]
+    try:
+        candidates.append(ObjectId(value))
+    except Exception:
+        pass
+    return candidates
+
+
+async def _load_hotel_name_map(db, organization_id: str, docs: list[dict[str, Any]]) -> dict[str, str]:
+    hotel_ids = list({str(doc.get("hotel_id")) for doc in docs if doc.get("hotel_id")})
+    if not hotel_ids:
+        return {}
+
+    hotels = await db.hotels.find(
+        {"organization_id": organization_id, "_id": {"$in": hotel_ids}},
+        {"_id": 1, "name": 1},
+    ).to_list(len(hotel_ids))
+    return {str(hotel.get("_id")): hotel.get("name") or "-" for hotel in hotels}
+
+
+def _serialize_agency_booking(doc: dict[str, Any], hotel_name_map: dict[str, str]) -> dict[str, Any]:
+    stay = _derive_stay(doc)
+    guest = _derive_guest(doc)
+    occupancy = _derive_occupancy(doc)
+    rate_snapshot, currency, total_amount = _derive_rate_snapshot(doc, nights=stay.get("nights"))
+    status = _normalize_booking_status(doc)
+
+    enriched = dict(doc)
+    enriched["status"] = status
+    enriched["state"] = status
+    enriched["stay"] = stay
+    enriched["guest"] = guest
+    enriched["guest_name"] = guest.get("full_name")
+    enriched["occupancy"] = occupancy
+    enriched["rate_snapshot"] = rate_snapshot
+    enriched["currency"] = currency
+    enriched["gross_amount"] = total_amount
+    enriched["hotel_name"] = doc.get("hotel_name") or hotel_name_map.get(str(doc.get("hotel_id"))) or "-"
+    enriched["code"] = doc.get("code") or doc.get("booking_ref") or str(doc.get("_id") or "")
+    enriched["booking_ref"] = doc.get("booking_ref") or enriched["code"]
+    enriched["check_in_date"] = stay.get("check_in")
+    enriched["check_out_date"] = stay.get("check_out")
+
+    payload = serialize_doc(enriched)
+    payload.update(build_booking_public_view(enriched))
+    payload["stay"] = stay
+    payload["guest"] = guest
+    payload["occupancy"] = occupancy
+    payload["rate_snapshot"] = rate_snapshot
+    payload["currency"] = currency
+    payload["total_amount"] = total_amount
+    payload["gross_amount"] = total_amount
+    payload["booking_ref"] = enriched["booking_ref"]
+    return payload
 
 
 class GuestInfoIn(BaseModel):
@@ -638,12 +826,15 @@ async def list_agency_bookings(user=Depends(get_current_user)):
     if not agency_id:
         raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")
 
-    bookings = await db.bookings.find({
-        "organization_id": user["organization_id"],
-        "agency_id": agency_id,
-    }).sort("created_at", -1).to_list(500)
+    bookings = await db.bookings.find(
+        {
+            "organization_id": user["organization_id"],
+            "agency_id": agency_id,
+        }
+    ).sort("created_at", -1).to_list(500)
 
-    return [serialize_doc(b) for b in bookings]
+    hotel_name_map = await _load_hotel_name_map(db, user["organization_id"], bookings)
+    return [_serialize_agency_booking(booking, hotel_name_map) for booking in bookings]
 
 
 @router.get("/{booking_id}", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
@@ -654,13 +845,16 @@ async def get_booking(booking_id: str, user=Depends(get_current_user)):
     db = await get_db()
     agency_id = user.get("agency_id")
 
-    booking = await db.bookings.find_one({
-        "organization_id": user["organization_id"],
-        "agency_id": agency_id,
-        "_id": booking_id,
-    })
+    booking = await db.bookings.find_one(
+        {
+            "organization_id": user["organization_id"],
+            "agency_id": agency_id,
+            "_id": {"$in": _booking_lookup_candidates(booking_id)},
+        }
+    )
 
     if not booking:
         raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
 
-    return build_booking_public_view(booking)
+    hotel_name_map = await _load_hotel_name_map(db, user["organization_id"], [booking])
+    return _serialize_agency_booking(booking, hotel_name_map)

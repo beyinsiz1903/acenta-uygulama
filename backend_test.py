@@ -6,7 +6,7 @@ import sys
 from datetime import datetime
 
 # Configuration from environment
-BASE_URL = "https://subscription-mgmt-17.preview.emergentagent.com"
+BASE_URL = "https://taos-preview.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test accounts - note: agent@acenta.test appears to be managed, not legacy

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -34,6 +35,196 @@ def _settlement_query_base(user: dict[str, Any], month: str, status: Optional[st
             raise HTTPException(status_code=422, detail="INVALID_STATUS")
         q["settlement_status"] = status
     return q
+
+
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    try:
+        if value is None or value == "":
+            return default
+        return float(value)
+    except Exception:
+        return default
+
+
+def _booking_month(doc: dict[str, Any]) -> str | None:
+    stay = doc.get("stay") or {}
+    check_in = stay.get("check_in") or doc.get("check_in_date") or doc.get("check_in") or doc.get("start_date")
+    if not check_in:
+        return None
+    return str(check_in)[:7]
+
+
+def _booking_status(doc: dict[str, Any]) -> str:
+    status = str(doc.get("status") or doc.get("state") or "draft").strip().lower()
+    if status == "booked":
+        return "confirmed"
+    if status == "canceled":
+        return "cancelled"
+    if status == "paid":
+        return "completed"
+    return status or "draft"
+
+
+def _sort_created_at(value: Any) -> float:
+    if value is None:
+        return 0.0
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.timestamp()
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return 0.0
+        try:
+            return datetime.fromisoformat(text.replace("Z", "+00:00")).timestamp()
+        except Exception:
+            return 0.0
+    return 0.0
+
+
+def _derive_booking_financial_entry(
+    doc: dict[str, Any],
+    *,
+    month: str,
+    hotel_name_map: dict[str, str],
+    agency_link_map: dict[str, dict[str, Any]],
+) -> dict[str, Any] | None:
+    status = _booking_status(doc)
+    if status in {"draft", "quoted", "pending"}:
+        return None
+
+    hotel_id = str(doc.get("hotel_id") or "")
+    if not hotel_id:
+        return None
+
+    rate_snapshot = doc.get("rate_snapshot") or {}
+    price = rate_snapshot.get("price") or {}
+
+    gross_amount = (
+        _safe_float(doc.get("gross_amount"), default=0.0)
+        or _safe_float(price.get("total"), default=0.0)
+        or _safe_float(doc.get("amount"), default=0.0)
+        or _safe_float((doc.get("amounts") or {}).get("sell"), default=0.0)
+        or _safe_float(doc.get("total_price"), default=0.0)
+    )
+    commission_amount = _safe_float(doc.get("commission_amount"), default=0.0)
+    if commission_amount == 0.0 and gross_amount > 0:
+        link = agency_link_map.get(hotel_id) or {}
+        commission_type = str(link.get("commission_type") or "percent").strip().lower()
+        commission_value = _safe_float(link.get("commission_value"), default=0.0)
+        if commission_type == "percent":
+            commission_amount = round(gross_amount * commission_value / 100.0, 2)
+        elif commission_type in {"fixed", "fixed_per_booking"}:
+            commission_amount = round(commission_value, 2)
+
+    net_amount = _safe_float(doc.get("net_amount"), default=round(gross_amount - commission_amount, 2))
+
+    if status == "cancelled":
+        gross_amount = -abs(gross_amount)
+        commission_amount = -abs(commission_amount)
+        net_amount = -abs(net_amount)
+
+    settlement_status = "settled" if status in {"completed", "paid", "settled", "closed"} else "open"
+    created_at = doc.get("confirmed_at") or doc.get("submitted_at") or doc.get("created_at") or datetime.now(timezone.utc)
+
+    return {
+        "_id": f"derived:{doc.get('_id')}",
+        "booking_id": str(doc.get("_id") or ""),
+        "organization_id": doc.get("organization_id"),
+        "agency_id": str(doc.get("agency_id") or ""),
+        "hotel_id": hotel_id,
+        "hotel_name": doc.get("hotel_name") or hotel_name_map.get(hotel_id) or "-",
+        "type": "reversal" if status == "cancelled" else "booking",
+        "month": month,
+        "currency": doc.get("currency") or price.get("currency") or "TRY",
+        "gross_amount": round(gross_amount, 2),
+        "commission_amount": round(commission_amount, 2),
+        "net_amount": round(net_amount, 2),
+        "source_status": status,
+        "settlement_status": settlement_status,
+        "created_at": created_at,
+        "updated_at": created_at,
+        "derived_from_booking": True,
+    }
+
+
+async def _load_agency_settlement_entries(
+    db,
+    *,
+    user: dict[str, Any],
+    month: str,
+    status: Optional[str],
+    hotel_id: Optional[str],
+) -> list[dict[str, Any]]:
+    q = _settlement_query_base(user, month, status)
+    q["agency_id"] = user["agency_id"]
+    if hotel_id:
+        q["hotel_id"] = hotel_id
+
+    entries = await db.booking_financial_entries.find(q).sort("created_at", -1).to_list(5000)
+    booking_ids_with_entries = {str(entry.get("booking_id")) for entry in entries if entry.get("booking_id")}
+
+    booking_query: dict[str, Any] = {
+        "organization_id": user["organization_id"],
+        "agency_id": user["agency_id"],
+    }
+    if hotel_id:
+        booking_query["hotel_id"] = hotel_id
+
+    bookings = await db.bookings.find(booking_query).sort("created_at", -1).to_list(5000)
+
+    hotel_ids = list(
+        {
+            str(item.get("hotel_id"))
+            for item in [*entries, *bookings]
+            if item.get("hotel_id")
+        }
+    )
+    hotel_map: dict[str, str] = {}
+    if hotel_ids:
+        hotels = await db.hotels.find(
+            {"organization_id": user["organization_id"], "_id": {"$in": hotel_ids}},
+            {"_id": 1, "name": 1},
+        ).to_list(len(hotel_ids))
+        hotel_map = {str(hotel.get("_id")): hotel.get("name") or "-" for hotel in hotels}
+
+    links = await db.agency_hotel_links.find(
+        {"organization_id": user["organization_id"], "agency_id": user["agency_id"], "active": True}
+    ).to_list(2000)
+    agency_link_map = {str(link.get("hotel_id")): link for link in links if link.get("hotel_id")}
+
+    derived_entries: list[dict[str, Any]] = []
+    for booking in bookings:
+        booking_id_value = str(booking.get("_id") or "")
+        if not booking_id_value or booking_id_value in booking_ids_with_entries:
+            continue
+        if _booking_month(booking) != month:
+            continue
+
+        derived_entry = _derive_booking_financial_entry(
+            booking,
+            month=month,
+            hotel_name_map=hotel_map,
+            agency_link_map=agency_link_map,
+        )
+        if not derived_entry:
+            continue
+        if status and derived_entry.get("settlement_status") != status:
+            continue
+        derived_entries.append(derived_entry)
+
+    combined = [*entries, *derived_entries]
+    combined.sort(key=lambda item: _sort_created_at(item.get("created_at")), reverse=True)
+
+    enriched_entries: list[dict[str, Any]] = []
+    for entry in combined:
+        enriched = dict(entry)
+        hid = str(enriched.get("hotel_id") or "")
+        if hid and not enriched.get("hotel_name"):
+            enriched["hotel_name"] = hotel_map.get(hid) or "-"
+        enriched_entries.append(enriched)
+    return enriched_entries
 
 
 @hotel_router.get(
@@ -130,19 +321,13 @@ async def agency_settlements(
         raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")
 
     month = _validate_month(month)
-    q = _settlement_query_base(user, month, status)
-    q["agency_id"] = user["agency_id"]
-    if hotel_id:
-        q["hotel_id"] = hotel_id
-
-    entries = await db.booking_financial_entries.find(q).sort("created_at", -1).to_list(5000)
-
-    # totals by hotel
-    hotel_ids = list({e.get("hotel_id") for e in entries if e.get("hotel_id")})
-    hotel_map: dict[str, str] = {}
-    if hotel_ids:
-        hotels = await db.hotels.find({"organization_id": user["organization_id"], "_id": {"$in": hotel_ids}}).to_list(200)
-        hotel_map = {str(h["_id"]): h.get("name") or "-" for h in hotels}
+    entries = await _load_agency_settlement_entries(
+        db,
+        user=user,
+        month=month,
+        status=status,
+        hotel_id=hotel_id,
+    )
 
     totals: dict[str, dict[str, Any]] = {}
     for e in entries:
@@ -153,7 +338,7 @@ async def agency_settlements(
             hid,
             {
                 "hotel_id": hid,
-                "hotel_name": hotel_map.get(hid, "-"),
+                "hotel_name": e.get("hotel_name") or "-",
                 "currency": e.get("currency") or "TRY",
                 "gross_total": 0.0,
                 "commission_total": 0.0,
@@ -233,7 +418,6 @@ async def list_network_settlements(  # type: ignore[no-untyped-def]
 
 
 # Phase 2.1-B: Monthly settlement statement over settlement_ledger
-from datetime import datetime
 
 from fastapi import Query as _StatementQuery
 

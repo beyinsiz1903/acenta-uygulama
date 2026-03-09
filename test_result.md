@@ -8991,3 +8991,142 @@ agent_communication:
       All review request requirements validated successfully. The recently fixed demo seed and role flows are working correctly. Credential mapping is accurate, demo seed returns proper counts for hotels/tours/reservations, repeat seeding correctly returns already_seeded=true, and all seeded data is accessible via the expected GET endpoints.
       
       Status: ✅ PASS - All Syroce demo seed and role flow requirements validated successfully
+
+
+  - task: "Login redirect control validation - admin & agent roles"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/LoginPage.jsx, frontend/src/utils/redirectByRole.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "LOGIN REDIRECT CONTROL VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-09). Comprehensive validation of login redirect flows per Turkish review request on https://syroce-preview.preview.emergentagent.com with specified test credentials. Test Results: 1) ✅ Admin Login Redirect - admin@acenta.test/admin123 successfully redirects to /app/admin/dashboard (exact URL match), dashboard page loaded with substantial content (1,388 chars), no blank screen or redirect loops, 2) ✅ Agent Login Redirect - agent@acenta.test/agent123 successfully redirects to /app (exact URL match: https://syroce-preview.preview.emergentagent.com/app), agent dashboard page loaded with substantial content (2,830 chars), no blank screen or redirect loops. CRITICAL VALIDATIONS: All Turkish review requirements validated ✅: Admin user (admin@acenta.test) redirects to /app/admin/dashboard ✅, Agent user (agent@acenta.test) redirects to /app ✅, Both redirects work correctly after login ✅, No blank screens or crashes ✅, redirectByRole.js logic working correctly per user roles ✅. Reference files validated: /app/frontend/src/pages/LoginPage.jsx (login form and redirect logic), /app/frontend/src/utils/redirectByRole.js (role-based redirect function). Screenshots captured: test1_admin_login_redirect.png (admin dashboard after login), test2_agent_login_redirect.png (agent dashboard after login). Test Context: testing_agent iteration_43 previously passed these flows, this is additional frontend validation as requested. No mock APIs - all functionality tested against live preview environment. Success rate: 100% (2/2 tests passed). Conclusion: Login redirect control is PRODUCTION-READY and working correctly. Both admin and agent role-based redirects functioning as specified in Turkish review requirements."
+
+  - task: "Demo seed UI control validation - button visibility, modal, options, success state"
+    implemented: true
+    working: true
+    file: "frontend/src/components/DemoSeedButton.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "DEMO SEED UI CONTROL VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-09). Comprehensive validation of demo seed UI flows per Turkish review request on https://syroce-preview.preview.emergentagent.com with agent@acenta.test/agent123 credentials. Test Results: 1) ✅ Demo Seed Button Visibility - button is visible on agent dashboard with data-testid='demo-seed-open-button', button text 'Demo verisi oluştur' displayed correctly, 2) ✅ Modal Opens - clicking button successfully opens modal, modal visible with data-testid='demo-seed-modal', modal title 'Demo verisi oluştur' confirmed, modal description present explaining functionality, 3) ✅ Modal Content Validation - ALL required elements present: Mode options (Hafif/Tam) with data-testid='demo-seed-mode-light' and 'demo-seed-mode-full' ✅, Finance checkbox with data-testid='demo-seed-finance-checkbox' (label: 'Finans verilerini dahil et') ✅, CRM checkbox with data-testid='demo-seed-crm-checkbox' (label: 'CRM fırsat ve görevlerini dahil et') ✅, Force checkbox with data-testid='demo-seed-force-checkbox' (label: 'Mevcut demo verilerini sil ve yeniden üret') ✅, 4) ✅ Seed Trigger with Force - force option successfully checked and seed triggered, submit button clicked with data-testid='demo-seed-submit-button', result state appeared with data-testid='demo-seed-result-state', 5) ✅ Success State with Count Cards - result state visible with success indicator (checkmark icon), result title 'Demo verisi oluşturuldu' confirmed, result subtitle explaining data availability present, count cards container visible with data-testid='demo-seed-result-counts', ALL 11 count cards present and displaying correctly: Oteller (Hotels): 5 ✅, Turlar (Tours): 5 ✅, Ürünler (Products): 5 ✅, Müşteriler (Customers): 10 ✅, Rezervasyonlar (Reservations): 12 ✅, Envanter kayıtları (Inventory): 30 ✅, Ödemeler (Payments): 4 ✅, Cari hareketleri (Ledger entries): 4 ✅, Operasyon talepleri (Operations cases): 3 ✅, CRM fırsatları (CRM deals): 4 ✅, CRM görevleri (CRM tasks): 8 ✅. CRITICAL VALIDATIONS: All Turkish review requirements validated ✅: Demo seed button görünür olduğunu doğrula ✅, Modal açılmalı ✅, Modal içinde mode seçenekleri görünmeli ✅, Finance/CRM checkbox'ları görünmeli ✅, Force seçeneği görünmeli ✅, Force ile seed tetiklenince success state görünmeli ✅, Success state içinde hotels, tours, reservations dahil count kartları görünmeli ✅. Reference file validated: /app/frontend/src/components/DemoSeedButton.jsx (complete demo seed component with modal, form, and result states). Screenshots captured: test3_demo_button_visible.png (button on dashboard), test4_modal_opened.png (modal with title), test5_modal_content.png (mode options and checkboxes), test6_seed_processing.png (result state appearing), test7_success_state_with_counts.png (all 11 count cards displayed). Test Context: testing_agent iteration_43 previously passed these flows, this is additional frontend validation as requested. No mock APIs - all functionality tested against live backend demo seed endpoint. Console analysis: Zero console errors detected. Success rate: 100% (5/5 tests passed). Conclusion: Demo seed UI control is PRODUCTION-READY and working correctly. All modal elements, checkboxes, mode options, and success state count cards functioning as specified in Turkish review requirements."
+
+agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ LOGIN REDIRECT & DEMO SEED UI VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-09)
+      
+      Performed comprehensive validation of two critical flows per Turkish review request:
+      
+      Test Context:
+      - Review Request: Validate login redirects and demo seed UI flows
+      - Test URL: https://syroce-preview.preview.emergentagent.com
+      - Test Credentials: admin@acenta.test/admin123, agent@acenta.test/agent123
+      - Reference Files: LoginPage.jsx, redirectByRole.js, DemoSeedButton.jsx
+      - Context Note: testing_agent iteration_43 previously passed, this is additional frontend validation
+      - No Mock APIs: All tests against live preview environment
+      
+      ✅ FLOW 1: LOGIN REDIRECT CONTROL - ALL TESTS PASSED (2/2)
+      
+      1. ✅ Admin Login Redirect to /app/admin/dashboard
+         - Credentials: admin@acenta.test/admin123
+         - Login successful without errors
+         - Correctly redirected to: /app/admin/dashboard (exact URL match)
+         - Dashboard loaded with substantial content (1,388 chars)
+         - No blank screen, no redirect loops
+         - Screenshot: test1_admin_login_redirect.png
+      
+      2. ✅ Agent Login Redirect to /app
+         - Credentials: agent@acenta.test/agent123
+         - Login successful without errors
+         - Correctly redirected to: /app (exact URL match)
+         - Agent dashboard loaded with substantial content (2,830 chars)
+         - No blank screen, no redirect loops
+         - Screenshot: test2_agent_login_redirect.png
+      
+      ✅ FLOW 2: DEMO SEED UI CONTROL - ALL TESTS PASSED (5/5)
+      
+      1. ✅ Demo Seed Button Visibility on Agent Dashboard
+         - Button visible with correct label: "Demo verisi oluştur"
+         - data-testid='demo-seed-open-button' working correctly
+         - Screenshot: test3_demo_button_visible.png
+      
+      2. ✅ Demo Seed Modal Opens
+         - Modal opens successfully on button click
+         - Modal title: "Demo verisi oluştur"
+         - Modal description explaining functionality present
+         - data-testid='demo-seed-modal' working correctly
+         - Screenshot: test4_modal_opened.png
+      
+      3. ✅ Modal Content Validation - All Elements Present
+         - Mode Options: Hafif (Light) and Tam (Full) buttons present ✅
+         - Finance Checkbox: "Finans verilerini dahil et" present and functional ✅
+         - CRM Checkbox: "CRM fırsat ve görevlerini dahil et" present and functional ✅
+         - Force Checkbox: "Mevcut demo verilerini sil ve yeniden üret" present and functional ✅
+         - All data-testid attributes working correctly
+         - Screenshot: test5_modal_content.png
+      
+      4. ✅ Seed Trigger with Force Option
+         - Force checkbox successfully checked
+         - Submit button clicked without errors
+         - Result state appeared after seed completion (~5 seconds)
+         - data-testid='demo-seed-result-state' working correctly
+         - Screenshot: test6_seed_processing.png
+      
+      5. ✅ Success State with Count Cards - All 11 Cards Present
+         - Success indicator: Green checkmark icon with "Demo verisi oluşturuldu"
+         - Subtitle: "Rezervasyonlar, turlar ve oteller kullanıma hazır..."
+         - Count Cards (all visible and displaying correct data):
+           * Oteller (Hotels): 5 ✅
+           * Turlar (Tours): 5 ✅
+           * Ürünler (Products): 5 ✅
+           * Müşteriler (Customers): 10 ✅
+           * Rezervasyonlar (Reservations): 12 ✅
+           * Envanter kayıtları (Inventory): 30 ✅
+           * Ödemeler (Payments): 4 ✅
+           * Cari hareketleri (Ledger entries): 4 ✅
+           * Operasyon talepleri (Operations cases): 3 ✅
+           * CRM fırsatları (CRM deals): 4 ✅
+           * CRM görevleri (CRM tasks): 8 ✅
+         - All count cards rendering in 2-column grid layout
+         - Action buttons present: "Kapat" and "Rezervasyonları gör"
+         - Screenshot: test7_success_state_with_counts.png
+      
+      TECHNICAL DETAILS:
+      
+      Reference Files Validated:
+      - /app/frontend/src/pages/LoginPage.jsx (login form, credentials handling, redirect logic)
+      - /app/frontend/src/utils/redirectByRole.js (role-based redirect function with super_admin, admin, agency_admin, agency_agent cases)
+      - /app/frontend/src/components/DemoSeedButton.jsx (complete demo seed UI component with modal states)
+      
+      Console Analysis:
+      - Zero console errors detected during all tests
+      - No React error boundaries triggered
+      - No error elements found on page
+      - Clean execution across all flows
+      
+      Screenshots Captured (7 total):
+      1. test1_admin_login_redirect.png - Admin dashboard after login
+      2. test2_agent_login_redirect.png - Agent dashboard after login
+      3. test3_demo_button_visible.png - Demo seed button on dashboard
+      4. test4_modal_opened.png - Modal with title and description
+      5. test5_modal_content.png - Mode options and all checkboxes
+      6. test6_seed_processing.png - Result state appearing
+      7. test7_success_state_with_counts.png - Success state with all 11 count cards
+      
+      Test Summary:
+      - Total Tests: 7 (2 login redirect tests + 5 demo seed UI tests)
+      - Passed: 7
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      Both login redirect control and demo seed UI control flows are PRODUCTION-READY and working correctly per Turkish review requirements. All specified elements are present, functional, and displaying correct data. No regressions detected from iteration_43. Zero console errors across all test flows. System is stable and ready for production use.
+      
+      Status: ✅ PASS - All login redirect and demo seed UI validation requirements met successfully

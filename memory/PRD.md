@@ -540,6 +540,27 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 - Not:
   - **MOCKED / DEGRADED:** canlı dış email teslimatı bu run’da aktif değil; provider credential verilmediği için doğrulanan kapsam `email_outbox` job creation + `skipped` davranışıdır
 
+## Son Uygulama Notu — 2026-03-09 (Syroce landing page dönüşüm yüzeyi)
+- Public `/` ana sayfası yüksek dönüşüm odaklı Syroce landing page olarak yeniden tasarlandı
+  - bölümler: Hero, Trust Bar, Problem, Çözüm, Product Preview, How It Works, ROI, B2B Network, Pricing, Final CTA, Footer
+  - CTA akışı kullanıcı tercihiyle hizalandı: Trial → `/signup?plan=trial`, Demo → `/login`
+  - Starter / Pro / Enterprise fiyat kartları landing içine taşındı; aylık / yıllık toggle eklendi
+- UI yaklaşımı
+  - dashboard / rezervasyon / CRM / finans önizlemeleri gerçek ekran görüntüsü yerine CSS + HTML mockup olarak üretildi
+  - yeni yardımcı bileşenler: `frontend/src/components/landing/LandingDashboardMockup.jsx`, `LandingSectionHeading.jsx`
+  - `frontend/src/index.css` içinde marka renkleri `#2563EB / #0EA5E9 / #F8FAFC` yönüne hizalandı, smooth scroll ve landing texture utility eklendi
+- İstenen tasarım çıktıları ürün içine ve dokümana işlendi
+  - **Wireframe akışı:** Hero → Trust → Problem → Solution → Product Preview → How It Works → ROI → Network → Pricing → Final CTA
+  - **Section UX mantığı:** üst katman problem farkındalığı + güven, orta katman ürün değeri + ekran önizlemesi, alt katman ROI + pricing + conversion kapanışı
+  - **Mobil yaklaşım:** hero tek kolona iner, mockup kartları stack olur, pricing kartları tek sütuna düşer, mobil menü CTA odaklı kalır
+  - **Dashboard mockup önerisi:** KPI satırı + rezervasyon listesi + CRM paneli + finans chart bileşimiyle “tek panel” algısı verilir
+  - **Growth funnel:** Instagram → Landing Page → Trial → Onboarding → Subscription
+- Doğrulama
+  - screenshot smoke: preview `/` hero yüklemesi geçti
+  - testing agent raporu: `/app/test_reports/iteration_41.json` → frontend %100 PASS
+  - `auto_frontend_testing_agent` → landing page validation PASS
+  - `deep_testing_backend_v2` → backend no-regression PASS
+
 ## Öncelikli Sonraki Adımlar
 - **P0:** Canlı email provider credential/config aktivasyonu yapılıp outbox -> gerçek teslimat hattını production benzeri ortamda doğrulama
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını timeline + banner + operasyon akışlarıyla daha da birleştirme

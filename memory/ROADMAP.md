@@ -1,6 +1,11 @@
 # ROADMAP — Acenta Master Travel SaaS
 
 ## Güncel Durum
+- Public acquisition tarafı yeni Syroce landing page ile güçlendirildi:
+  - `/` ana sayfası premium SaaS landing olarak yeniden kurgulandı
+  - Hero → Trust → Problem/Solution → Preview → ROI → Network → Pricing → Final CTA akışı tamamlandı
+  - trial CTA `/signup?plan=trial`, demo CTA `/login` olarak hizalandı
+  - landing içinde aylık/yıllık pricing toggle aktif
 - Admin tenant panel cleanup faz-1 tamamlandı:
   - `GET /api/admin/tenants` plan + billing lifecycle summary ile zenginleştirildi
   - admin tenant ekranına summary cards, lifecycle filtreleri ve risk öncelikli liste eklendi
@@ -62,6 +67,11 @@ Teslim beklentisi:
 ### Payment Failure Lifecycle Deepening
 - `invoice.payment_failed` ve renewal olaylarını billing timeline + banner + operasyon akışına bağla
 - grace period, retry ve başarısız ödeme sonrası kullanıcı yönlendirmelerini güçlendir
+
+### Landing Funnel Optimization
+- Trial signup dönüşümünü artırmak için `/signup` onboarding üst copy ve proof alanı optimize edilebilir
+- Demo CTA için login üzerinde “demo erişim” mikro-copy / yönlendirme katmanı eklenebilir
+- Gerçek müşteri logosu / vaka çalışması geldiğinde trust bar altında sosyal kanıt bandı genişletilebilir
 
 ### Admin “Create Demo Agency” Action
 - Demo seed utility artık hazır olduğu için admin panelde tek tıkla tetiklenebilen küçük bir aksiyon PR’ı yapılabilir

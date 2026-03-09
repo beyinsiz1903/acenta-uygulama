@@ -133,6 +133,7 @@ def get_sheet_templates_payload() -> Dict[str, Any]:
             "Google Service Account JSON tanımlanmalı veya admin panelinden kaydedilmeli.",
             "Ana veri sayfasında en az Tarih, Oda Tipi, Fiyat ve Kontenjan kolonları bulunmalı.",
             "Write-back için ayrı bir Rezervasyonlar sekmesi kullanılmalı.",
+            "Sheet'ten sisteme rezervasyon almak istiyorsanız Rezervasyonlar sekmesinde Kayit Tipi alanını incoming_reservation / external_reservation olarak kullanın.",
             "Sheet, servis hesabı e-posta adresi ile Editor yetkisiyle paylaşılmalı.",
         ],
         "inventory_sync": {
@@ -159,7 +160,7 @@ def get_sheet_templates_payload() -> Dict[str, Any]:
             "tab_name": "Rezervasyonlar",
             "headers": get_reservation_writeback_headers(),
             "sample_row": {
-                "Kayit Tipi": "reservation_created",
+                "Kayit Tipi": "incoming_reservation",
                 "Kayit ID": "RSV-2026-001",
                 "Durum": "pending",
                 "Misafir Ad Soyad": "Ayşe Yılmaz",
@@ -169,9 +170,9 @@ def get_sheet_templates_payload() -> Dict[str, Any]:
                 "Oda Tipi": "Deluxe",
                 "Tutar": "18500",
                 "Para Birimi": "TRY",
-                "Kanal": "b2b",
+                "Kanal": "google_sheets",
                 "Islem Tarihi": "2026-03-09T10:30:00+03:00",
-                "Acenta / Not": "Mavi Tur / Erken rezervasyon",
+                "Acenta / Not": "Mavi Tur / Sheet uzerinden gelen rezervasyon",
             },
         },
         "required_service_account_fields": [

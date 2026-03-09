@@ -86,6 +86,16 @@ export const SheetTemplateCenter = ({ templates, configured, serviceAccountEmail
             </a>
           ))}
         </div>
+
+        <div
+          className="mt-5 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-200"
+          data-testid="sheet-template-incoming-reservation-note"
+        >
+          Rezervasyonları sheet'ten içeri almak için <strong>Rezervasyonlar</strong> sekmesinde
+          <code className="mx-1 rounded bg-white px-1.5 py-0.5 text-xs dark:bg-gray-800">Kayit Tipi = incoming_reservation</code>
+          veya <code className="mx-1 rounded bg-white px-1.5 py-0.5 text-xs dark:bg-gray-800">external_reservation</code>
+          kullanın. Sync sonrası kayıt ilgili otelin rezervasyon akışına düşer.
+        </div>
       </div>
 
       <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">

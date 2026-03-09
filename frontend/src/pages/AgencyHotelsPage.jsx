@@ -1153,10 +1153,29 @@ export default function AgencyHotelsPage() {
                   >
                     {hotel.status_label || "-"}
                   </Badge>
+                    {hotel.sheet_managed_inventory && (
+                      <Badge
+                        variant="outline"
+                        className="border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
+                        data-testid={`agency-hotel-sheet-badge-${hotel.hotel_id}`}
+                      >
+                        Sheets Sync
+                      </Badge>
+                    )}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {hotel.location || "-"}
                 </div>
+                  {hotel.sheet_managed_inventory && (
+                    <div
+                      className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-200"
+                      data-testid={`agency-hotel-sheet-sync-${hotel.hotel_id}`}
+                    >
+                      Sync kontenjanı: <strong>{hotel.allocation_available ?? 0}</strong>
+                      {hotel.sheet_inventory_date ? ` · Tarih: ${hotel.sheet_inventory_date}` : ""}
+                      {hotel.sheet_last_sync_at ? ` · Son sync: ${new Date(hotel.sheet_last_sync_at).toLocaleString("tr-TR")}` : ""}
+                    </div>
+                  )}
               </div>
 
               <div className="flex flex-col gap-2 shrink-0">

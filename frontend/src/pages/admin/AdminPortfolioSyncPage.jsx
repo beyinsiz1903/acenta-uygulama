@@ -274,6 +274,14 @@ function ConnectionsTable({ connections, onSync, onToggle, onDelete, onViewRuns,
                 </td>
                 <td className="px-4 py-3 text-center text-xs text-muted-foreground dark:text-muted-foreground/60">
                   {formatDate(c.last_sync_at)}
+                  {c.last_reservation_import_summary?.processed > 0 && (
+                    <p
+                      className="mt-1 text-[11px] text-blue-600 dark:text-blue-300"
+                      data-testid={`portfolio-sync-reservation-import-summary-${rowKey}`}
+                    >
+                      Rezervasyon import: {c.last_reservation_import_summary.processed}
+                    </p>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-center">
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -563,6 +571,13 @@ function SyncRunsDrawer({ hotelId, hotelName, onClose }) {
                 <div><span className="text-muted-foreground/60">Degisen:</span> <span className="font-medium text-foreground dark:text-muted-foreground/40">{r.rows_changed || 0}</span></div>
                 <div><span className="text-muted-foreground/60">Upsert:</span> <span className="font-medium text-foreground dark:text-muted-foreground/40">{r.upserted || 0}</span></div>
               </div>
+              {(r.reservations_created || r.reservations_updated || r.reservations_cancelled) ? (
+                <div className="grid grid-cols-3 gap-2 text-xs" data-testid={`portfolio-sync-run-reservations-${runKey}`}>
+                  <div><span className="text-muted-foreground/60">Yeni Rez.:</span> <span className="font-medium text-foreground dark:text-muted-foreground/40">{r.reservations_created || 0}</span></div>
+                  <div><span className="text-muted-foreground/60">Güncel:</span> <span className="font-medium text-foreground dark:text-muted-foreground/40">{r.reservations_updated || 0}</span></div>
+                  <div><span className="text-muted-foreground/60">İptal:</span> <span className="font-medium text-foreground dark:text-muted-foreground/40">{r.reservations_cancelled || 0}</span></div>
+                </div>
+              ) : null}
               {r.duration_ms > 0 && <p className="text-xs text-muted-foreground/60">Sure: {r.duration_ms}ms | Trigger: {r.trigger}</p>}
               {r.errors && r.errors.length > 0 && (
                 <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
@@ -992,6 +1007,14 @@ export default function AdminPortfolioSyncPage() {
               <p className="text-xl font-bold text-blue-700 dark:text-blue-300">{writebackStats.skipped || 0}</p>
               <p className="text-xs text-blue-600">Atlanan</p>
             </div>
+          </div>
+          <div
+            className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-200"
+            data-testid="portfolio-sync-reservation-import-note"
+          >
+            Aynı <strong>Rezervasyonlar</strong> sekmesi artık iki yönlü çalışır: sistemde oluşan rezervasyonlar sheet'e yazılır,
+            <code className="mx-1 rounded bg-white px-1.5 py-0.5 dark:bg-gray-900">incoming_reservation</code>
+            kayıtları ise sync sırasında ilgili otelin rezervasyon listesine alınır.
           </div>
         </div>
       )}

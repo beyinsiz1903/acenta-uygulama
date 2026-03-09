@@ -22,6 +22,8 @@ from app.services.sheets_provider import (
     is_configured,
     read_sheet,
 )
+from app.services.sheet_reservation_import_service import import_sheet_reservations
+from app.services.cache_invalidation import invalidate_hotels
 
 logger = logging.getLogger(__name__)
 
@@ -336,12 +338,63 @@ async def run_hotel_sheet_sync(
         "upserted": 0,
         "skipped": 0,
         "errors_count": 0,
+        "reservations_processed": 0,
+        "reservations_created": 0,
+        "reservations_updated": 0,
+        "reservations_cancelled": 0,
         "errors": [],
         "duration_ms": 0,
     }
     await db.sheet_sync_runs.insert_one(run_doc)
 
     start_time = _now()
+
+    async def sync_reservations_tab() -> Dict[str, Any]:
+        writeback_tab = connection.get("writeback_tab")
+        if not writeback_tab:
+            return {
+                "processed": 0,
+                "created": 0,
+                "updated": 0,
+                "cancelled": 0,
+                "skipped": 0,
+                "errors": [],
+                "missing_headers": [],
+            }
+
+        reservation_sheet = read_sheet(
+            sheet_id,
+            writeback_tab,
+            tenant_id=tenant_id,
+            metering_context={
+                "organization_id": connection.get("organization_id"),
+                "tenant_id": tenant_id,
+                "source": "integrations.google_sheets.reservations_import",
+                "source_event_id": f"{run_id}:reservations",
+                "metadata": {
+                    "trigger": trigger,
+                    "connection_id": conn_id,
+                    "hotel_id": hotel_id,
+                },
+            },
+        )
+        if not reservation_sheet.success:
+            return {
+                "processed": 0,
+                "created": 0,
+                "updated": 0,
+                "cancelled": 0,
+                "skipped": 0,
+                "errors": [{"message": reservation_sheet.error or "Rezervasyon sekmesi okunamadi"}],
+                "missing_headers": [],
+            }
+
+        return await import_sheet_reservations(
+            db,
+            connection,
+            headers=reservation_sheet.data.get("headers", []),
+            rows=reservation_sheet.data.get("rows", []),
+        )
 
     # 1. Acquire lock
     if not await acquire_sync_lock(db, tenant_id, hotel_id):
@@ -382,13 +435,29 @@ async def run_hotel_sheet_sync(
             new_fp = fp_result.data.get("fingerprint", "")
             old_fp = connection.get("last_fingerprint", "")
             if new_fp and old_fp and new_fp == old_fp:
-                run_doc["status"] = "no_change"
+                reservation_summary = await sync_reservations_tab()
+                run_doc["reservations_processed"] = reservation_summary.get("processed", 0)
+                run_doc["reservations_created"] = reservation_summary.get("created", 0)
+                run_doc["reservations_updated"] = reservation_summary.get("updated", 0)
+                run_doc["reservations_cancelled"] = reservation_summary.get("cancelled", 0)
+                run_doc["errors"].extend(reservation_summary.get("errors", []))
+                if reservation_summary.get("created") or reservation_summary.get("updated") or reservation_summary.get("cancelled"):
+                    run_doc["status"] = "success"
+                else:
+                    run_doc["status"] = "no_change"
                 run_doc["finished_at"] = _now()
                 run_doc["duration_ms"] = int((_now() - start_time).total_seconds() * 1000)
+                reservation_processed_at = _now()
                 await db.hotel_portfolio_sources.update_one(
                     {"_id": conn_id},
-                    {"$set": {"last_sync_at": _now(), "last_sync_status": "no_change", "updated_at": _now()}},
+                    {"$set": {
+                        "last_sync_at": reservation_processed_at,
+                        "last_sync_status": run_doc["status"],
+                        "last_reservation_import_summary": reservation_summary,
+                        "updated_at": reservation_processed_at,
+                    }},
                 )
+                await invalidate_hotels(connection.get("organization_id"))
                 await db.sheet_sync_runs.update_one({"_id": run_id}, {"$set": run_doc})
                 return run_doc
 
@@ -452,6 +521,14 @@ async def run_hotel_sheet_sync(
         else:
             run_doc["upserted"] = 0
 
+        reservation_summary = await sync_reservations_tab()
+        run_doc["reservations_processed"] = reservation_summary.get("processed", 0)
+        run_doc["reservations_created"] = reservation_summary.get("created", 0)
+        run_doc["reservations_updated"] = reservation_summary.get("updated", 0)
+        run_doc["reservations_cancelled"] = reservation_summary.get("cancelled", 0)
+        run_doc["errors"].extend(reservation_summary.get("errors", []))
+        run_doc["errors_count"] += len(reservation_summary.get("errors", []))
+
         # 8. Update connection
         run_doc["status"] = "success" if run_doc["errors_count"] == 0 else "partial"
         run_doc["finished_at"] = _now()
@@ -461,6 +538,8 @@ async def run_hotel_sheet_sync(
             "last_sync_at": _now(),
             "last_sync_status": run_doc["status"],
             "last_error": None if run_doc["status"] == "success" else str(run_doc.get("errors", [])),
+            "last_inventory_row_count": run_doc["upserted"],
+            "last_reservation_import_summary": reservation_summary,
             "updated_at": _now(),
         }
         if fp_result.success:
@@ -470,6 +549,7 @@ async def run_hotel_sheet_sync(
             {"_id": conn_id},
             {"$set": update_data},
         )
+        await invalidate_hotels(connection.get("organization_id"))
 
     except Exception as e:
         logger.error("Sheet sync failed for hotel %s: %s", hotel_id, e)

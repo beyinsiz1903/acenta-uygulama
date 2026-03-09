@@ -6,6 +6,7 @@ from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.services.mongo_cache_service import cache_get, cache_set
 from app.services.redis_cache import redis_get, redis_set
+from app.utils import now_utc
 
 
 def _normalize_agency_hotel(hotel: dict, link: dict | None, agg: dict | None) -> dict:
@@ -26,6 +27,11 @@ def _normalize_agency_hotel(hotel: dict, link: dict | None, agg: dict | None) ->
     is_active = bool((link or {}).get("active") and hotel.get("active", True))
     stop_sell_active = bool((agg or {}).get("stop_sell_active"))
     allocation_available = agg.get("allocation_limit") if agg else None
+    sheet_managed_inventory = bool((agg or {}).get("sheet_managed_inventory"))
+    sheet_inventory_date = (agg or {}).get("sheet_inventory_date")
+    sheet_last_sync_at = (agg or {}).get("sheet_last_sync_at")
+    sheet_last_sync_status = (agg or {}).get("sheet_last_sync_status")
+    sheet_reservations_imported = (agg or {}).get("sheet_reservations_imported")
 
     status_label = "Satışa Kapalı"
     if is_active and not stop_sell_active:
@@ -46,6 +52,11 @@ def _normalize_agency_hotel(hotel: dict, link: dict | None, agg: dict | None) ->
         "is_active": is_active,
         "stop_sell_active": stop_sell_active,
         "allocation_available": allocation_available,
+        "sheet_managed_inventory": sheet_managed_inventory,
+        "sheet_inventory_date": sheet_inventory_date,
+        "sheet_last_sync_at": sheet_last_sync_at,
+        "sheet_last_sync_status": sheet_last_sync_status,
+        "sheet_reservations_imported": sheet_reservations_imported,
         "status_label": status_label,
     }
 
@@ -118,6 +129,58 @@ async def my_hotels(user=Depends(get_current_user)):
         key = str(hid)
         alloc_by_hotel[key] = alloc_by_hotel.get(key, 0) + float(a.get("allotment", 0) or 0)
 
+    today = now_utc().date().isoformat()
+    snapshot_docs = await db.hotel_inventory_snapshots.find(
+        {
+            "hotel_id": {"$in": hotel_ids},
+            "date": {"$gte": today},
+        },
+        {"hotel_id": 1, "date": 1, "allotment": 1, "stop_sale": 1},
+    ).sort("date", 1).to_list(10000)
+
+    snapshot_by_hotel: dict[str, dict[str, object]] = {}
+    for snap in snapshot_docs:
+        hid = str(snap.get("hotel_id") or "")
+        if not hid:
+            continue
+        current = snapshot_by_hotel.get(hid)
+        snap_date = str(snap.get("date") or "")
+        if not current or snap_date < str(current.get("date") or ""):
+            snapshot_by_hotel[hid] = {
+                "date": snap_date,
+                "allotment": float(snap.get("allotment", 0) or 0),
+                "stop_sale": bool(snap.get("stop_sale")),
+            }
+            continue
+        if snap_date == current.get("date"):
+            current["allotment"] = float(current.get("allotment", 0) or 0) + float(snap.get("allotment", 0) or 0)
+            current["stop_sale"] = bool(current.get("stop_sale")) or bool(snap.get("stop_sale"))
+
+    connection_docs = await db.hotel_portfolio_sources.find(
+        {
+            "organization_id": org_id,
+            "hotel_id": {"$in": hotel_ids},
+            "source_type": "google_sheets",
+        },
+        {
+            "hotel_id": 1,
+            "agency_id": 1,
+            "last_sync_at": 1,
+            "last_sync_status": 1,
+            "last_reservation_import_summary": 1,
+        },
+    ).to_list(1000)
+
+    connection_by_hotel: dict[str, dict] = {}
+    for conn in connection_docs:
+        hid = str(conn.get("hotel_id") or "")
+        if not hid:
+            continue
+        is_agency_specific = str(conn.get("agency_id") or "") == str(agency_id)
+        current = connection_by_hotel.get(hid)
+        if current is None or is_agency_specific:
+            connection_by_hotel[hid] = conn
+
     # Join hotel integrations (channel manager status)
     integ_docs = await db.hotel_integrations.find(
         {
@@ -136,9 +199,16 @@ async def my_hotels(user=Depends(get_current_user)):
     items = []
     for h in hotels:
         hid = h["_id"]
+        snapshot = snapshot_by_hotel.get(str(hid))
+        connection = connection_by_hotel.get(str(hid)) or {}
         agg = {
-            "stop_sell_active": stop_by_hotel.get(hid, False),
-            "allocation_limit": alloc_by_hotel.get(hid),
+            "stop_sell_active": stop_by_hotel.get(hid, False) or bool((snapshot or {}).get("stop_sale")),
+            "allocation_limit": (snapshot or {}).get("allotment") if snapshot else alloc_by_hotel.get(hid),
+            "sheet_managed_inventory": snapshot is not None,
+            "sheet_inventory_date": (snapshot or {}).get("date"),
+            "sheet_last_sync_at": connection.get("last_sync_at"),
+            "sheet_last_sync_status": connection.get("last_sync_status"),
+            "sheet_reservations_imported": (connection.get("last_reservation_import_summary") or {}).get("processed", 0),
         }
         row = _normalize_agency_hotel(h, link_by_hotel.get(hid), agg)
         row["cm_status"] = cm_status_by_hotel.get(hid, "not_configured")

@@ -470,6 +470,7 @@ function AppShellInner() {
             sections={visibleNavSections}
             accountLinks={accountLinks}
             filterItems={filterNavByMode}
+            showStats={!isAdmin}
             onItemClick={() => setMobileNavOpen(false)}
             onLogout={() => {
               setMobileNavOpen(false);
@@ -490,6 +491,7 @@ function AppShellInner() {
           collapsed={collapsed}
           onToggleCollapse={toggleCollapse}
           sidebarStats={sidebarStats}
+          showStats={!isAdmin}
           user={user}
           lang={lang}
         />

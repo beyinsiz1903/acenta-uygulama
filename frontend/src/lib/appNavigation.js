@@ -144,7 +144,7 @@ export const APP_NAV_SECTIONS = [
   },
 ];
 
-export const ADMIN_NAV_SECTIONS = [
+export const ADMIN_MODULE_SECTIONS = [
   {
     group: "ADMIN MERKEZ",
     showInSidebar: true,
@@ -382,7 +382,7 @@ export const ADMIN_NAV_SECTIONS = [
         key: "admin-b2b-agency-products",
         label: "B2B Agency Products",
         icon: Users,
-        pathByScope: { admin: "/app/admin/admin/b2b/agency-products" },
+        pathByScope: { admin: "/app/admin/b2b/agency-products" },
         isCore: true,
       },
       {
@@ -765,6 +765,71 @@ export const ADMIN_NAV_SECTIONS = [
         label: "Onboarding",
         icon: LayoutGrid,
         pathByScope: { admin: "/app/onboarding" },
+        isCore: true,
+      },
+    ],
+  },
+];
+
+export const ADMIN_NAV_SECTIONS = [
+  {
+    group: "YÖNETİM",
+    showInSidebar: true,
+    items: [
+      {
+        key: "admin-dashboard",
+        label: "Yönetici Dashboard",
+        icon: LayoutGrid,
+        pathByScope: { admin: "/app/admin/dashboard" },
+        isCore: true,
+      },
+      {
+        key: "admin-tenants",
+        label: "Tenant Yönetimi",
+        icon: Building2,
+        pathByScope: { admin: "/app/admin/agencies" },
+        isCore: true,
+      },
+      {
+        key: "admin-agency-modules",
+        label: "Acenta Modülleri",
+        icon: ShieldCheck,
+        pathByScope: { admin: "/app/admin/agency-modules" },
+        isCore: true,
+      },
+      {
+        key: "admin-tenant-features",
+        label: "Tenant Features",
+        icon: ShieldCheck,
+        pathByScope: { admin: "/app/admin/tenant-features" },
+        isCore: true,
+      },
+      {
+        key: "admin-pricing",
+        label: "Fiyatlandırma",
+        icon: CreditCard,
+        pathByScope: { admin: "/app/admin/pricing" },
+        isCore: true,
+      },
+      {
+        key: "admin-analytics",
+        label: "Analytics",
+        icon: BarChart3,
+        pathByScope: { admin: "/app/admin/analytics" },
+        isCore: true,
+      },
+      {
+        key: "admin-perf-dashboard",
+        label: "Perf Dashboard",
+        icon: BarChart3,
+        pathByScope: { admin: "/app/admin/perf-dashboard" },
+        isCore: true,
+      },
+      {
+        key: "admin-modules",
+        label: "Tüm Modüller",
+        icon: LayoutGrid,
+        pathByScope: { admin: "/app/admin/modules" },
         isCore: true,
       },
     ],

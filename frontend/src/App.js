@@ -114,6 +114,7 @@ const AdminDemoGuidePage = lazy(() => import("./pages/admin/AdminDemoGuidePage")
 const AdminProductModePage = lazy(() => import("./pages/admin/AdminProductModePage"));
 const AdminImportPage = lazy(() => import("./pages/admin/AdminImportPage"));
 const AdminPortfolioSyncPage = lazy(() => import("./pages/admin/AdminPortfolioSyncPage"));
+const AdminAllModulesPage = lazy(() => import("./pages/admin/AdminAllModulesPage"));
 
 const AdminMatchesPage = lazy(() => import("./pages/AdminMatchesPage"));
 const AdminExportsPage = lazy(() => import("./pages/AdminExportsPage"));
@@ -353,6 +354,7 @@ function App() {
             <Route path="finance/refunds" element={<AdminFinanceRefundsPage />} />
             <Route path="finance/exposure" element={<AdminFinanceExposurePage />} />
             <Route path="finance/b2b-agencies" element={<AdminB2BAgenciesSummaryPage />} />
+            <Route path="b2b/agency-products" element={<AdminB2BAgencyProductsPage />} />
             <Route path="admin/b2b/agency-products" element={<AdminB2BAgencyProductsPage />} />
             <Route path="finance/settlements" element={<AdminSettlementsPage />} />
             <Route path="finance/settlement-runs" element={<AdminSettlementRunsPage />} />
@@ -364,6 +366,7 @@ function App() {
             <Route path="audit-logs" element={<AdminAuditLogPage />} />
             <Route path="analytics" element={<AdminAnalyticsPage />} />
             <Route path="tenant-health" element={<AdminTenantHealthPage />} />
+            <Route path="modules" element={<AdminAllModulesPage />} />
             {/* Enterprise Hardening (E1-E4) */}
             <Route path="branding" element={<AdminBrandingPage />} />
             <Route path="approval-inbox" element={<AdminApprovalInboxPage />} />

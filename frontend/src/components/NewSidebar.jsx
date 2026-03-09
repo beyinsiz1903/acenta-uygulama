@@ -110,6 +110,7 @@ export const NewSidebar = ({
   collapsed = false,
   onToggleCollapse,
   sidebarStats,
+  showStats = true,
   onItemClick,
   onLogout,
   user,
@@ -180,7 +181,7 @@ export const NewSidebar = ({
         </button>
       </div>
 
-      {!collapsed && (
+      {!collapsed && showStats && (
         <div className="grid grid-cols-3 gap-1 border-b border-border/50 px-2 py-2">
           <div className="rounded-lg bg-muted/35 p-2 text-center" data-testid="new-sidebar-stat-total-card">
             <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Toplam</div>

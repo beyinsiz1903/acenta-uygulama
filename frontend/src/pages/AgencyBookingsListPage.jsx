@@ -85,15 +85,15 @@ export default function AgencyBookingsListPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6" data-testid="agency-bookings-page-loading">
         <PageHeader
           title="Rezervasyonlarım"
           subtitle="Acentanızın rezervasyonlarının listesi."
         />
 
-        <div className="rounded-2xl border bg-card shadow-sm p-12 flex flex-col items-center justify-center gap-4">
+        <div className="rounded-2xl border bg-card shadow-sm p-12 flex flex-col items-center justify-center gap-4" data-testid="agency-bookings-loading-state">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Rezervasyonlar yükleniyor...</p>
+          <p className="text-sm text-muted-foreground" data-testid="agency-bookings-loading-copy">Rezervasyonlar yükleniyor...</p>
         </div>
       </div>
     );
@@ -131,7 +131,7 @@ export default function AgencyBookingsListPage() {
   // Error state
   if (error) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6" data-testid="agency-bookings-page-error">
         <PageHeader
           title="Rezervasyonlarım"
           subtitle="Acentanızın rezervasyonlarının listesi."
@@ -149,13 +149,13 @@ export default function AgencyBookingsListPage() {
   // Empty state
   if (bookings.length === 0) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6" data-testid="agency-bookings-page-empty">
         <div className="flex items-center justify-between">
           <PageHeader
             title="Rezervasyonlarım"
             subtitle="Acentanızın rezervasyonlarının listesi."
           />
-          <Button onClick={() => navigate("/app/agency/hotels")} className="gap-2">
+          <Button onClick={() => navigate("/app/agency/hotels")} className="gap-2" data-testid="agency-bookings-empty-new-search-button">
             <Search className="h-4 w-4" />
             Yeni Arama
           </Button>
@@ -166,7 +166,7 @@ export default function AgencyBookingsListPage() {
           description="Hızlı Rezervasyon ekranından arama yapıp rezervasyon oluşturabilirsiniz."
           icon={<Ticket className="h-8 w-8 text-muted-foreground" />}
           action={
-            <Button onClick={() => navigate("/app/agency/hotels")} className="gap-2">
+            <Button onClick={() => navigate("/app/agency/hotels")} className="gap-2" data-testid="agency-bookings-empty-search-hotels-button">
               <Search className="h-4 w-4" />
               Otel Ara
             </Button>
@@ -178,24 +178,25 @@ export default function AgencyBookingsListPage() {
 
   // Data table
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="agency-bookings-page">
       <div className="flex items-center justify-between">
         <PageHeader
           title="Rezervasyonlarım"
           subtitle={`${bookings.length} rezervasyon - Bugün giriş: ${todayArrivals}`}
         />
-        <Button onClick={() => navigate("/app/agency/hotels")} className="gap-2">
+        <Button onClick={() => navigate("/app/agency/hotels")} className="gap-2" data-testid="agency-bookings-new-search-button">
           <Search className="h-4 w-4" />
           Yeni Arama
         </Button>
       </div>
 
-      <div className="rounded-2xl border bg-card shadow-sm p-4">
+      <div className="rounded-2xl border bg-card shadow-sm p-4" data-testid="agency-bookings-filters-card">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="grid gap-1">
             <div className="text-xs text-muted-foreground">Arama</div>
             <input
               className="h-9 rounded-md border bg-background px-3 text-sm"
+              data-testid="agency-bookings-search-input"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Misafir, otel veya Booking ID ara..."
@@ -205,6 +206,7 @@ export default function AgencyBookingsListPage() {
             <div className="text-xs text-muted-foreground">Durum</div>
             <select
               className="h-9 rounded-md border bg-background px-3 text-sm"
+              data-testid="agency-bookings-status-filter"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -218,6 +220,7 @@ export default function AgencyBookingsListPage() {
             <div className="text-xs text-muted-foreground">Giriş Tarihi</div>
             <select
               className="h-9 rounded-md border bg-background px-3 text-sm"
+              data-testid="agency-bookings-arrival-filter"
               value={arrivalFilter}
               onChange={(e) => setArrivalFilter(e.target.value)}
             >
@@ -228,7 +231,7 @@ export default function AgencyBookingsListPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
+      <div className="rounded-2xl border bg-card shadow-sm overflow-hidden" data-testid="agency-bookings-table-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -251,6 +254,7 @@ export default function AgencyBookingsListPage() {
               return (
                 <TableRow 
                   key={booking.id}
+                  data-testid={`agency-bookings-row-${booking.id}`}
                   className={`cursor-pointer hover:bg-accent/50 ${
                     highlightId === booking.id ? "bg-primary/5" : ""
                   }`}

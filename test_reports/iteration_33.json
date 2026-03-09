@@ -1,0 +1,98 @@
+{
+  "summary": "Iteration 33: Comprehensive testing of NewSidebar.jsx integration, agency 404 fix, and route simplification. All features working as expected. Agency login now lands on /app (not /app/partners). Sidebar shows only core menu items (Dashboard, Rezervasyonlar, Müşteriler, Finans, Raporlar). Expansion/Enterprise items hidden from visible navigation. Backend agency endpoints all return 200.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Admin Dashboard (Yönetim Dashboard)",
+        "issues": ["Console warnings about chart width/height being -1 - minor cosmetic issue in recharts library, not affecting functionality"]
+      }
+    ]
+  },
+  "passed_tests": [
+    "Agency login (agent@acenta.test/agent123) - 200 OK",
+    "Agency login redirects to /app (not /app/partners) - PASS",
+    "Admin login (admin@acenta.test/admin123) - 200 OK",
+    "Admin login redirects to /app - PASS",
+    "GET /api/agency/bookings - 200 OK with list of bookings",
+    "GET /api/agency/settlements?month=2026-01 - 200 OK with totals/entries structure",
+    "GET /api/agency/hotels - 200 OK with items array",
+    "Agency sidebar shows Dashboard - PASS",
+    "Agency sidebar shows Rezervasyonlar - PASS",
+    "Agency sidebar shows Müşteriler - PASS",
+    "Agency sidebar shows Finans - PASS",
+    "Agency sidebar shows Raporlar - PASS",
+    "Agency sidebar HIDES Entegrasyonlar - PASS",
+    "Agency sidebar HIDES Kampanyalar - PASS",
+    "Agency sidebar HIDES Tenant yönetimi - PASS",
+    "Agency sidebar account links (Faturalama, Ayarlar) - PASS",
+    "Agency navigation to /app/agency/bookings - PASS (no crash)",
+    "Agency navigation to /app/agency/settlements - PASS (no crash)",
+    "Admin sidebar shows only core menu - PASS",
+    "Admin sidebar HIDES expansion/enterprise items - PASS",
+    "/app/admin index redirects to /app/admin/dashboard - PASS",
+    "Admin dashboard loads without crash - PASS"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_sidebar_navigation_iter33.py",
+    ".screenshots/agency_sidebar_view.png",
+    ".screenshots/agency_bookings_page.png",
+    ".screenshots/agency_settlements_page.png",
+    ".screenshots/admin_sidebar_view.png",
+    ".screenshots/admin_dashboard_page.png"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "SUCCESS: NewSidebar.jsx correctly filters navigation items by scope and mode",
+    "SUCCESS: appNavigation.js correctly defines showInSidebar=false for EXPANSION and ENTERPRISE groups",
+    "SUCCESS: redirectByRole.js correctly returns /app for agency_admin and agency_agent roles",
+    "SUCCESS: App.js route definitions correctly handle /app/agency/bookings and /app/agency/settlements",
+    "SUCCESS: router_registry.py correctly includes agency_settlements_router and agency_booking_router",
+    "SUCCESS: BookingDetailDrawer.jsx TDZ crash fix verified (loadEvents defined before usage)",
+    "NOTE: Minor recharts console warnings on admin dashboard - cosmetic only"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_sidebar_navigation_iter33.py"
+  ],
+  "success_rate": {
+    "backend": "100% (3/3 agency endpoints passing)",
+    "frontend": "100% (all UI flows verified)"
+  },
+  "test_credentials": {
+    "agency_account": "agent@acenta.test / agent123",
+    "admin_account": "admin@acenta.test / admin123"
+  },
+  "seed_data_creation": "No new seed data created",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "NewSidebar.jsx integration complete. Agency and admin sidebars now show only core menu (Dashboard, Rezervasyonlar, Müşteriler, Finans, Raporlar). Expansion/Enterprise items are hidden via showInSidebar=false in appNavigation.js. Agency login redirects to /app (not /app/partners). All agency routes (/app/agency/bookings, /app/agency/settlements) working without crashes. BookingDetailDrawer TDZ fix verified working.",
+  "feature_validation_summary": {
+    "Agency landing page": "PASS - redirects to /app",
+    "Simplified sidebar": "PASS - shows only core menu",
+    "Expansion items hidden": "PASS - Entegrasyonlar not in sidebar",
+    "Enterprise items hidden": "PASS - Tenant yönetimi not in sidebar",
+    "Account links": "PASS - Faturalama and Ayarlar visible",
+    "Agency bookings route": "PASS - /app/agency/bookings loads correctly",
+    "Agency settlements route": "PASS - /app/agency/settlements loads correctly",
+    "Admin dashboard redirect": "PASS - /app/admin -> /app/admin/dashboard",
+    "Backend agency endpoints": "PASS - all 3 endpoints return 200"
+  },
+  "verified_requirements": [
+    "Agency login sonrası varsayılan iniş noktası /app - VERIFIED",
+    "Sidebar sadece core menü göstermeli - VERIFIED",
+    "Expansion/Enterprise öğeleri görünmemeli - VERIFIED",
+    "Account linkleri (Faturalama, Ayarlar) çalışmalı - VERIFIED",
+    "Rezervasyonlar /app/agency/bookings açmalı - VERIFIED",
+    "Finans /app/agency/settlements açmalı - VERIFIED",
+    "GET /api/agency/bookings 200 dönmeli - VERIFIED",
+    "GET /api/agency/settlements 200 dönmeli - VERIFIED",
+    "GET /api/agency/hotels 200 dönmeli - VERIFIED",
+    "Admin sidebar sadeleştirilmiş - VERIFIED",
+    "Admin /app/admin dashboard'a gitmeli - VERIFIED"
+  ]
+}

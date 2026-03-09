@@ -144,33 +144,34 @@ export default function AgencySettlementsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="agency-settlements-page">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Mutabakat</h1>
+          <h1 className="text-2xl font-bold text-foreground" data-testid="agency-settlements-title">Mutabakat</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Seçtiğiniz ay için toplam satış / komisyon / net.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={load} disabled={loading}>
+          <Button variant="outline" onClick={load} disabled={loading} data-testid="agency-settlements-refresh-button">
             <RefreshCw className="h-4 w-4 mr-2" />
             Yenile
           </Button>
-          <Button onClick={downloadCsv} disabled={loading}>
+          <Button onClick={downloadCsv} disabled={loading} data-testid="agency-settlements-download-button">
             <Download className="h-4 w-4 mr-2" />
             CSV
           </Button>
         </div>
       </div>
 
-      <div className="rounded-2xl border bg-card shadow-sm p-4">
+      <div className="rounded-2xl border bg-card shadow-sm p-4" data-testid="agency-settlements-filters-card">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="grid gap-1">
             <div className="text-xs text-muted-foreground">Ay (YYYY-MM)</div>
             <input
               className="h-10 rounded-md border bg-background px-3 text-sm"
+              data-testid="agency-settlements-month-input"
               value={month}
               onChange={(e) => setMonth(e.target.value)}
               placeholder="2026-03"
@@ -180,6 +181,7 @@ export default function AgencySettlementsPage() {
             <div className="text-xs text-muted-foreground">Durum</div>
             <select
               className="h-10 rounded-md border bg-background px-3 text-sm"
+              data-testid="agency-settlements-status-filter"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
@@ -192,6 +194,7 @@ export default function AgencySettlementsPage() {
             <div className="text-xs text-muted-foreground">Hotel ID (opsiyonel)</div>
             <input
               className="h-10 rounded-md border bg-background px-3 text-sm"
+              data-testid="agency-settlements-hotel-filter"
               value={hotelId}
               onChange={(e) => setHotelId(e.target.value)}
               placeholder="hotel uuid"
@@ -200,20 +203,20 @@ export default function AgencySettlementsPage() {
         </div>
 
         <div className="mt-3">
-          <Button onClick={load} disabled={loading}>
+          <Button onClick={load} disabled={loading} data-testid="agency-settlements-filter-button">
             Filtrele
           </Button>
         </div>
 
         {error ? (
-          <div className="mt-3 rounded-xl border border-destructive/50 bg-destructive/5 p-3 flex items-start gap-3">
+          <div className="mt-3 rounded-xl border border-destructive/50 bg-destructive/5 p-3 flex items-start gap-3" data-testid="agency-settlements-error-alert">
             <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
             <div className="text-sm text-foreground">{error}</div>
           </div>
         ) : null}
       </div>
 
-      <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
+      <div className="rounded-2xl border bg-card shadow-sm overflow-hidden" data-testid="agency-settlements-table-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -228,19 +231,19 @@ export default function AgencySettlementsPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground" data-testid="agency-settlements-loading-state">
                   Yükleniyor...
                 </TableCell>
               </TableRow>
             ) : rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground" data-testid="agency-settlements-empty-state">
                   Kayıt yok.
                 </TableCell>
               </TableRow>
             ) : (
               rows.map((r) => (
-                <TableRow key={r.hotel_id} className="hover:bg-accent/40">
+                <TableRow key={r.hotel_id} className="hover:bg-accent/40" data-testid={`agency-settlements-row-${r.hotel_id}`}>
                   <TableCell className="font-medium">
                     <div>{r.hotel_name || "-"}</div>
                     <div className="text-xs text-muted-foreground">{r.hotel_id}</div>

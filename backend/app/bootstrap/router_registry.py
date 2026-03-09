@@ -64,7 +64,9 @@ from app.routers.admin_system_uptime import router as admin_system_uptime_router
 from app.routers.admin_tenant_features import router as admin_tenant_features_router
 from app.routers.admin_tours import router as admin_tours_router
 from app.routers.admin_whitelabel import router as admin_whitelabel_router
+from app.routers.agency import router as agency_hotels_router
 from app.routers.agency_availability import router as agency_availability_router
+from app.routers.agency_booking import router as agency_booking_router
 from app.routers.agency_profile import router as agency_profile_router
 from app.routers.agency_sheets import router as agency_sheets_router
 from app.routers.agency_writeback import router as agency_writeback_router
@@ -166,7 +168,11 @@ from app.routers.risk_snapshots import router as risk_snapshots_router
 from app.routers.saas_tenants import router as saas_tenants_router
 from app.routers.search import router as search_router
 from app.routers.seo import router as seo_router
-from app.routers.settlements import network_settlements_router
+from app.routers.settlements import (
+    agency_router as agency_settlements_router,
+    hotel_router as hotel_settlements_router,
+    network_settlements_router,
+)
 from app.routers.settings import router as settings_router
 from app.routers.sms_notifications import router as sms_notifications_router
 from app.routers.storefront import router as storefront_router
@@ -350,10 +356,14 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(admin_product_mode_router)
     app.include_router(admin_import_router)
     app.include_router(admin_sheets_router)
+    app.include_router(agency_hotels_router)
     app.include_router(agency_availability_router)
+    app.include_router(agency_booking_router)
     app.include_router(agency_writeback_router)
     app.include_router(agency_sheets_router)
     app.include_router(agency_profile_router)
+    app.include_router(agency_settlements_router)
+    app.include_router(hotel_settlements_router)
     app.include_router(admin_system_preflight_router)
     app.include_router(admin_system_runbook_router)
     app.include_router(admin_system_perf_router)

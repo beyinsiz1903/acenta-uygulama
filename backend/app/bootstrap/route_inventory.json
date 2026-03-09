@@ -3096,6 +3096,94 @@
     "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "agency",
+    "path": "/api/agency/bookings",
+    "risk_level": "medium",
+    "source": "app.routers.agency_booking",
+    "target_namespace": "/api/v1/agency"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/agency",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "agency",
+    "path": "/api/agency/bookings/confirm",
+    "risk_level": "medium",
+    "source": "app.routers.agency_booking",
+    "target_namespace": "/api/v1/agency"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/agency",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "agency",
+    "path": "/api/agency/bookings/draft",
+    "risk_level": "medium",
+    "source": "app.routers.agency_booking",
+    "target_namespace": "/api/v1/agency"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/agency",
+    "legacy_or_v1": "legacy",
+    "method": "DELETE",
+    "owner": "agency",
+    "path": "/api/agency/bookings/draft/{draft_id}",
+    "risk_level": "medium",
+    "source": "app.routers.agency_booking",
+    "target_namespace": "/api/v1/agency"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/agency",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "agency",
+    "path": "/api/agency/bookings/draft/{draft_id}",
+    "risk_level": "medium",
+    "source": "app.routers.agency_booking",
+    "target_namespace": "/api/v1/agency"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/agency",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "agency",
+    "path": "/api/agency/bookings/{booking_id}",
+    "risk_level": "medium",
+    "source": "app.routers.agency_booking",
+    "target_namespace": "/api/v1/agency"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/agency",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "agency",
+    "path": "/api/agency/bookings/{draft_id}/submit",
+    "risk_level": "medium",
+    "source": "app.routers.agency_booking",
+    "target_namespace": "/api/v1/agency"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/agency",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "agency",
+    "path": "/api/agency/hotels",
+    "risk_level": "medium",
+    "source": "app.routers.agency",
+    "target_namespace": "/api/v1/agency"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/agency",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "agency",
     "path": "/api/agency/profile",
     "risk_level": "medium",
     "source": "app.routers.agency_profile",
@@ -3110,6 +3198,17 @@
     "path": "/api/agency/search",
     "risk_level": "medium",
     "source": "app.routers.search",
+    "target_namespace": "/api/v1/agency"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/agency",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "agency",
+    "path": "/api/agency/settlements",
+    "risk_level": "medium",
+    "source": "app.routers.settlements",
     "target_namespace": "/api/v1/agency"
   },
   {
@@ -4915,6 +5014,17 @@
     "risk_level": "low",
     "source": "app.routers.enterprise_health",
     "target_namespace": "/api/v1/health"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "hotel",
+    "path": "/api/hotel/settlements",
+    "risk_level": "medium",
+    "source": "app.routers.settlements",
+    "target_namespace": "/api/v1/hotel"
   },
   {
     "compat_required": true,

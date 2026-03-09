@@ -167,6 +167,64 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
     `amend_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
   const PAYMENT_STATE_ENDPOINT = (id) => `/ops/finance/bookings/${id}/payment-state`;
+  const EVENTS_ENDPOINT = (id) => `/b2b/bookings/${id}/events`;
+
+  function normalizeHttpError(err) {
+    const status = err?.response?.status;
+    const msg = apiErrorMessage(err);
+
+    if (status === 401) {
+      return {
+        title: "Giriş gerekiyor",
+        description: "Oturumunuzun süresi dolmuş olabilir. Lütfen yeniden giriş yapın.",
+      };
+    }
+    if (status === 403) {
+      return {
+        title: "Yetkiniz yok",
+        description: "Bu rezervasyonun timeline kaydını görüntüleme yetkiniz bulunmuyor.",
+      };
+    }
+    if (status === 404) {
+      return {
+        title: "Timeline bulunamadı",
+        description: "Bu ortamda timeline endpoint'i kapalı olabilir veya henüz yayında değildir.",
+      };
+    }
+    if (status && status >= 500) {
+      return {
+        title: "Sunucu hatası",
+        description: msg,
+      };
+    }
+    return { title: "Hata", description: msg };
+  }
+
+  const loadEvents = useCallback(async (id) => {
+    if (!id) return;
+
+    const mySeq = ++eventsReqSeq.current;
+
+    setEventsLoading(true);
+    setEventsError("");
+
+    try {
+      const resp = await api.get(EVENTS_ENDPOINT(id));
+      if (eventsReqSeq.current !== mySeq) return;
+
+      const normalized = normalizeEvents(resp.data);
+      setEvents(normalized);
+      setEventsLoaded(true);
+    } catch (err) {
+      if (eventsReqSeq.current !== mySeq) return;
+
+      setEventsError(normalizeHttpError(err));
+      setEventsLoaded(true);
+    } finally {
+      if (eventsReqSeq.current !== mySeq) return;
+      setEventsLoading(false);
+    }
+  }, []);
 
   const loadPaymentState = useCallback(async (id) => {
     if (!id) return;
@@ -249,65 +307,6 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
     setAmendCheckIn(booking.check_in_date || item0.check_in || "");
     setAmendCheckOut(booking.check_out_date || item0.check_out || "");
   };
-
-  const EVENTS_ENDPOINT = (id) => `/b2b/bookings/${id}/events`;
-
-  function normalizeHttpError(err) {
-    const status = err?.response?.status;
-    const msg = apiErrorMessage(err);
-
-    if (status === 401) {
-      return {
-        title: "Giriş gerekiyor",
-        description: "Oturumunuzun süresi dolmuş olabilir. Lütfen yeniden giriş yapın.",
-      };
-    }
-    if (status === 403) {
-      return {
-        title: "Yetkiniz yok",
-        description: "Bu rezervasyonun timeline kaydını görüntüleme yetkiniz bulunmuyor.",
-      };
-    }
-    if (status === 404) {
-      return {
-        title: "Timeline bulunamadı",
-        description: "Bu ortamda timeline endpoint'i kapalı olabilir veya henüz yayında değildir.",
-      };
-    }
-    if (status && status >= 500) {
-      return {
-        title: "Sunucu hatası",
-        description: msg,
-      };
-    }
-    return { title: "Hata", description: msg };
-  }
-
-  const loadEvents = useCallback(async (id) => {
-    if (!id) return;
-
-    const mySeq = ++eventsReqSeq.current;
-
-    setEventsLoading(true);
-    setEventsError("");
-
-    try {
-      const resp = await api.get(EVENTS_ENDPOINT(id));
-      if (eventsReqSeq.current !== mySeq) return;
-
-      const normalized = normalizeEvents(resp.data);
-      setEvents(normalized);
-      setEventsLoaded(true);
-    } catch (err) {
-      if (eventsReqSeq.current !== mySeq) return;
-
-      setEventsError(normalizeHttpError(err));
-      setEventsLoaded(true);
-    } finally {
-      if (eventsReqSeq.current !== mySeq) return;
-      setEventsLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
     setEvents([]);

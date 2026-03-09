@@ -1,17 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { formatMoneyCompact } from "../lib/format";
-import {
-  LayoutGrid, CalendarDays, Ticket, Users, Layers, FileText,
-  Building2, Settings, BarChart3, LogOut, Menu, Hotel,
-  Link as LinkIcon, AlertTriangle, ChevronLeft, ChevronRight,
-  Inbox, Bell, PanelLeftClose, PanelLeft,
-  Briefcase, ShieldCheck, TrendingUp, MessageSquare, Globe,
-  ClipboardList, Tag, Megaphone, Network, DollarSign,
-  Scale, Activity, Eye, Zap, BookOpen, Search,
-  Palette, Download, Calendar, Upload, RefreshCw, FileSpreadsheet,
-  CheckSquare,
-} from "lucide-react";
+import { AlertTriangle, Bell, Inbox, LogOut, Menu } from "lucide-react";
 
 import { Button } from "./ui/button";
 import { Sheet, SheetContent } from "./ui/sheet";
@@ -30,6 +19,14 @@ import TrialBanner from "./TrialBanner";
 import TrialExpiredGate from "./TrialExpiredGate";
 import { LanguageSwitcher, useI18n } from "../contexts/I18nContext";
 import AiAssistant from "./AiAssistant";
+import { NewSidebar } from "./NewSidebar";
+import {
+  ACCOUNT_NAV_ITEMS,
+  APP_NAV_SECTIONS,
+  buildScopedNavItems,
+  buildScopedNavSections,
+  getUserScope,
+} from "../lib/appNavigation";
 
 /* ------------------------------------------------------------------ */
 /*  Sidebar collapse persistence                                       */
@@ -40,250 +37,6 @@ function loadCollapsed() {
 }
 function saveCollapsed(v) {
   try { localStorage.setItem(COLLAPSE_KEY, v ? "true" : "false"); } catch { /* */ }
-}
-
-/* ------------------------------------------------------------------ */
-/*  ICON MAP for sidebar items                                         */
-/* ------------------------------------------------------------------ */
-const sidebarIconMap = {
-  "Dashboard": LayoutGrid,
-  "Ürünler": Layers,
-  "Müsaitlik": CalendarDays,
-  "Rezervasyonlar": Ticket,
-  "Müşteriler": Users,
-  "CRM Müşteriler": Users,
-  "CRM Duplicate Müşteriler": Users,
-  "CRM Pipeline": TrendingUp,
-  "CRM Görevler": ClipboardList,
-  "CRM Olaylar": Activity,
-  "Inbox": Inbox,
-  "B2B / Acenteler": Building2,
-  "B2B Rezervasyon": Ticket,
-  "Raporlar": BarChart3,
-  "Ayarlar": Settings,
-  "Acentalar": Building2,
-  "Oteller": Hotel,
-  "Link Yönetimi": LinkIcon,
-  "Otellerim": Hotel,
-  "Mutabakat": Scale,
-  "Exposure & Aging": BarChart3,
-  "B2B Dashboard": BarChart3,
-  "Turlarimiz": Globe,
-  "Turlar": Globe,
-  "CMS Sayfaları": BookOpen,
-  "Kampanyalar": Megaphone,
-  "İş Ortakları": Network,
-  "B2B Marketplace": Globe,
-  "Katalog": Search,
-  "Otel Kataloğu": Hotel,
-  "Fiyatlandırma": Tag,
-  "Kuponlar": Tag,
-  "Onay Görevleri": ShieldCheck,
-  "Finans / İadeler": DollarSign,
-  "Exposure & Aging (Acenta)": BarChart3,
-  "B2B Acenteler": Building2,
-  "B2B Funnel": TrendingUp,
-  "B2B Duyuruları": Megaphone,
-  "Finans / Mutabakat": Scale,
-  "Ops / B2B": Briefcase,
-  "Tenant Özellikleri": Zap,
-  "Audit Log": Eye,
-  "Revenue Analytics": TrendingUp,
-  "Match Listesi": ShieldCheck,
-  "Match Risk Raporu": AlertTriangle,
-  "Match Risk Trendleri": TrendingUp,
-  "Match Alert Politikaları": Bell,
-  "Aksiyon Politikaları": ShieldCheck,
-  "Export Çalıştırma": FileText,
-  "Kullanım": Activity,
-  "Genel Bakış": LayoutGrid,
-  "Gelen Talepler": Inbox,
-  "Stop Sell": AlertTriangle,
-  "Allocations": CalendarDays,
-  "Entegrasyonlar": Zap,
-  "Yardım": MessageSquare,
-  "Rezervasyonlarım": Ticket,
-  "Ops Tasks": ClipboardList,
-  "Ops Incidents": AlertTriangle,
-};
-
-/* ------------------------------------------------------------------ */
-/*  Simplified product sidebar                                          */
-/* ------------------------------------------------------------------ */
-const SIMPLIFIED_NAV_SECTIONS = [
-  {
-    group: "ANA MENÜ",
-    items: [
-      {
-        key: "dashboard",
-        label: "Dashboard",
-        icon: LayoutGrid,
-        pathByScope: { default: "/app" },
-        isCore: true,
-        end: true,
-        modeKey: "dashboard",
-        minMode: "lite",
-      },
-      {
-        key: "reservations",
-        label: "Rezervasyonlar",
-        icon: Ticket,
-        pathByScope: {
-          admin: "/app/reservations",
-          agency: "/app/agency/bookings",
-          hotel: "/app/hotel/bookings",
-        },
-        isCore: true,
-        modeKey: "rezervasyonlar",
-        minMode: "lite",
-      },
-      {
-        key: "customers",
-        label: "Müşteriler",
-        icon: Users,
-        pathByScope: {
-          admin: "/app/crm/customers",
-          agency: "/app/crm/customers",
-        },
-        isCore: true,
-        feature: "crm",
-        modeKey: "musteriler",
-        minMode: "lite",
-      },
-      {
-        key: "finance",
-        label: "Finans",
-        icon: DollarSign,
-        pathByScope: {
-          admin: "/app/admin/finance/settlements",
-          agency: "/app/agency/settlements",
-          hotel: "/app/hotel/settlements",
-        },
-        isCore: true,
-        modeKey: "mutabakat",
-        minMode: "lite",
-      },
-      {
-        key: "reports",
-        label: "Raporlar",
-        icon: BarChart3,
-        pathByScope: {
-          admin: "/app/reports",
-          agency: "/app/reports",
-        },
-        isCore: true,
-        feature: "reports",
-        modeKey: "raporlar",
-        minMode: "lite",
-      },
-    ],
-  },
-  {
-    group: "GELİŞMİŞ",
-    items: [
-      {
-        key: "integrations",
-        label: "Entegrasyonlar",
-        icon: Zap,
-        pathByScope: {
-          admin: "/app/admin/integrations",
-          agency: "/app/agency/sheets",
-          hotel: "/app/hotel/integrations",
-        },
-        minMode: "pro",
-      },
-      {
-        key: "campaigns",
-        label: "Kampanyalar",
-        icon: Megaphone,
-        pathByScope: { admin: "/app/admin/campaigns" },
-        visibleScopes: ["admin"],
-        minMode: "pro",
-      },
-    ],
-  },
-  {
-    group: "ADMIN / ENTERPRISE",
-    items: [
-      {
-        key: "tenant-management",
-        label: "Tenant yönetimi",
-        icon: Building2,
-        pathByScope: { admin: "/app/admin/agencies" },
-        visibleScopes: ["admin"],
-        minMode: "enterprise",
-      },
-      {
-        key: "audit",
-        label: "Audit",
-        icon: Eye,
-        pathByScope: { admin: "/app/admin/audit-logs" },
-        visibleScopes: ["admin"],
-        minMode: "enterprise",
-      },
-      {
-        key: "advanced-permissions",
-        label: "Advanced permissions",
-        icon: ShieldCheck,
-        pathByScope: { admin: "/app/admin/tenant-features" },
-        visibleScopes: ["admin"],
-        minMode: "enterprise",
-      },
-    ],
-  },
-];
-
-/* ------------------------------------------------------------------ */
-/*  Legacy nav helper                                                   */
-/* ------------------------------------------------------------------ */
-function userHasRole(user, allowed) {
-  const roles = user?.roles || [];
-  return allowed.some((r) => roles.includes(r));
-}
-
-function getUserScope(user) {
-  if (userHasRole(user, ["super_admin", "admin", "sales", "ops", "accounting", "b2b_agent"])) {
-    return "admin";
-  }
-  if (userHasRole(user, ["agency_admin", "agency_agent"])) {
-    return "agency";
-  }
-  if (userHasRole(user, ["hotel_admin", "hotel_staff"])) {
-    return "hotel";
-  }
-  return "admin";
-}
-
-function resolveScopedPath(pathByScope, scope) {
-  if (!pathByScope) return null;
-  return pathByScope[scope] || pathByScope.default || null;
-}
-
-/* ================================================================== */
-/*  SIDEBAR ITEM                                                       */
-/* ================================================================== */
-function SidebarItem({ to, label, icon: Icon, collapsed, end, onClick }) {
-  return (
-    <NavLink
-      to={to}
-      end={end}
-      onClick={onClick}
-      data-testid={`sidebar-link-${String(to || "item").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase()}`}
-      className={({ isActive }) =>
-        cn(
-          "flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors",
-          isActive
-            ? "bg-primary text-primary-foreground shadow-sm"
-            : "text-muted-foreground hover:bg-accent hover:text-foreground",
-          collapsed && "justify-center px-2"
-        )
-      }
-      title={collapsed ? label : undefined}
-    >
-      <Icon className="h-4 w-4 shrink-0" />
-      {!collapsed && <span className="truncate">{label}</span>}
-    </NavLink>
-  );
 }
 
 /* ================================================================== */
@@ -535,16 +288,12 @@ function AppShellInner() {
     });
   }, [featuresLoading, hasFeature, currentModeLevel, hiddenNavItems, isAgencyUser, agencyAllowedModules, userScope]);
 
-  const navSections = useMemo(
-    () => SIMPLIFIED_NAV_SECTIONS.map((section) => ({
-      ...section,
-      items: section.items.map((item) => ({
-        ...item,
-        to: resolveScopedPath(item.pathByScope, userScope),
-      })),
-    })),
-    [userScope],
+  const navSections = useMemo(() => buildScopedNavSections(APP_NAV_SECTIONS, userScope), [userScope]);
+  const visibleNavSections = useMemo(
+    () => navSections.filter((section) => section.showInSidebar !== false),
+    [navSections],
   );
+  const accountLinks = useMemo(() => buildScopedNavItems(ACCOUNT_NAV_ITEMS, userScope), [userScope]);
 
   /* ── Mode Route Guard: redirect if current path is hidden by mode ── */
   useEffect(() => {
@@ -703,132 +452,34 @@ function AppShellInner() {
               </div>
             </div>
           </div>
-          <div className="overflow-y-auto h-[calc(100vh-120px)] px-3 py-3">
-            {navSections.map((section) => {
-              // Group-level mode check
-              if (section.minGroupMode) {
-                const groupLevel = MODE_ORDER_MAP[section.minGroupMode] ?? 0;
-                if (groupLevel > currentModeLevel) return null;
-              }
-              const visibleItems = filterNavByMode(section.items);
-              if (!visibleItems.length) return null;
-              return (
-              <div key={section.group} className="mb-3">
-                <div className="px-2 py-1 text-2xs font-bold text-muted-foreground/70 uppercase tracking-wider">
-                  {section.group}
-                </div>
-                {visibleItems.map((item) => (
-                    <SidebarItem
-                      key={item.to}
-                      to={item.to}
-                      label={item.label}
-                      icon={item.icon}
-                      end={item.end}
-                      onClick={() => setMobileNavOpen(false)}
-                    />
-                  ))}
-              </div>
-              );
-            })}
-          </div>
-          <div className="border-t px-3 py-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full gap-2 text-xs"
-              onClick={() => { setMobileNavOpen(false); logoutMutation.mutate(undefined, { onSettled: () => window.location.href = "/login" }); }}
-              data-testid="mobile-logout"
-            >
-              <LogOut className="h-3.5 w-3.5" /> {t("topbar.logout")}
-            </Button>
-          </div>
+          <NewSidebar
+            variant="mobile"
+            sections={visibleNavSections}
+            accountLinks={accountLinks}
+            filterItems={filterNavByMode}
+            onItemClick={() => setMobileNavOpen(false)}
+            onLogout={() => {
+              setMobileNavOpen(false);
+              logoutMutation.mutate(undefined, { onSettled: () => { window.location.href = "/login"; } });
+            }}
+            user={user}
+            lang={lang}
+          />
         </SheetContent>
       </Sheet>
 
       {/* ========== MAIN LAYOUT ========== */}
       <div className="flex">
-        {/* --- Desktop Sidebar --- */}
-        <aside
-          className={cn(
-            "hidden md:flex flex-col border-r bg-card/60 sticky top-[53px] h-[calc(100vh-53px)] transition-all duration-200 shrink-0",
-            collapsed ? "w-[56px]" : "w-[220px]"
-          )}
-          data-testid="sidebar"
-        >
-          {/* Collapse toggle */}
-          <div className="flex items-center justify-end px-2 py-1.5 border-b border-border/40">
-            <button
-              onClick={toggleCollapse}
-              className="h-7 w-7 rounded-md flex items-center justify-center hover:bg-muted/50 transition-colors text-muted-foreground"
-              data-testid="sidebar-toggle"
-              title={collapsed ? t("topbar.expand") : t("topbar.collapse")}
-            >
-              {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-            </button>
-          </div>
-
-          {/* Mini stats (only when expanded) */}
-          {!collapsed && (
-            <div className="grid grid-cols-3 gap-1 px-2 py-2 border-b border-border/40">
-              <div className="rounded-md bg-muted/30 p-1.5 text-center">
-                <div className="text-2xs text-muted-foreground">Toplam</div>
-                <div className="text-xs font-semibold text-foreground" data-testid="sb-total">{sidebarStats.total}</div>
-              </div>
-              <div className="rounded-md bg-muted/30 p-1.5 text-center">
-                <div className="text-2xs text-muted-foreground">Bekleyen</div>
-                <div className="text-xs font-semibold text-foreground" data-testid="sb-pending">{sidebarStats.pending}</div>
-              </div>
-              <div className="rounded-md bg-muted/30 p-1.5 text-center">
-                <div className="text-2xs text-muted-foreground">Ciro 7G</div>
-                <div className="text-xs font-semibold text-foreground" data-testid="sb-rev7">{formatMoneyCompact(sidebarStats.revenue7d, "TRY")}</div>
-              </div>
-            </div>
-          )}
-
-          {/* Nav sections */}
-          <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-3">
-            {navSections.map((section) => {
-              // Group-level mode check
-              if (section.minGroupMode) {
-                const groupLevel = MODE_ORDER_MAP[section.minGroupMode] ?? 0;
-                if (groupLevel > currentModeLevel) return null;
-              }
-              const visibleItems = filterNavByMode(section.items);
-              if (!visibleItems.length) return null;
-              return (
-                <div key={section.group}>
-                  {!collapsed && (
-                    <div className="px-2 py-0.5 text-2xs font-bold text-muted-foreground/60 uppercase tracking-wider">
-                      {section.group}
-                    </div>
-                  )}
-                  {collapsed && <div className="h-px bg-border/40 mx-1 my-1" />}
-                  <div className="space-y-0.5">
-                    {visibleItems.map((item) => (
-                      <SidebarItem
-                        key={item.to}
-                        to={item.to}
-                        label={item.label}
-                        icon={item.icon}
-                        collapsed={collapsed}
-                        end={item.end}
-                      />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </nav>
-
-          {/* Footer */}
-          {!collapsed && (
-            <div className="border-t border-border/40 px-3 py-2">
-              <div className="text-2xs text-muted-foreground/50">
-                {(user?.roles || ["-"])[0]} · {new Date().toLocaleDateString(lang === "en" ? "en-US" : "tr-TR")}
-              </div>
-            </div>
-          )}
-        </aside>
+        <NewSidebar
+          sections={visibleNavSections}
+          accountLinks={accountLinks}
+          filterItems={filterNavByMode}
+          collapsed={collapsed}
+          onToggleCollapse={toggleCollapse}
+          sidebarStats={sidebarStats}
+          user={user}
+          lang={lang}
+        />
 
         {/* --- Main Content --- */}
         <main className="flex-1 min-h-[calc(100vh-53px)] overflow-auto">

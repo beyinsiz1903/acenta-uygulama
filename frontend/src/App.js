@@ -174,10 +174,8 @@ const UsagePage = lazy(() => import("./pages/UsagePage"));
 const ProductsPage = lazy(() => import("./pages/ProductsPage"));
 const InventoryPage = lazy(() => import("./pages/InventoryPage"));
 const ReservationsPage = lazy(() => import("./pages/ReservationsPage"));
-const CustomersPage = lazy(() => import("./pages/CustomersPage"));
 const B2BPage = lazy(() => import("./pages/B2BPage"));
 const B2BBookingPage = lazy(() => import("./pages/B2BBookingPage"));
-const ReportsPage = lazy(() => import("./pages/ReportsPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const SettingsBillingPage = lazy(() => import("./pages/SettingsBillingPage"));
 const SettingsSecurityPage = lazy(() => import("./pages/SettingsSecurityPage"));
@@ -308,6 +306,7 @@ function App() {
           }
         >
           <Route element={<AdminLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="agencies" element={<AdminAgenciesPage />} />
             <Route path="agencies/:agencyId/users" element={<AdminAgencyUsersPage />} />
             <Route path="agency-modules" element={<AdminAgencyModulesPage />} />
@@ -408,21 +407,26 @@ function App() {
             </RequireAuth>
           }
         >
+          {/* Görünür core yüzey */}
           <Route index element={<DashboardPage />} />
+          <Route path="customers" element={<Navigate to="/app/crm/customers" replace />} />
+          <Route path="reservations" element={<ReservationsPage />} />
+          <Route path="reports" element={<AdvancedReportsPage />} />
           <Route path="usage" element={<UsagePage />} />
           <Route path="onboarding" element={<OnboardingWizardPage />} />
-          <Route path="b2b/marketplace" element={<B2BMarketplaceCatalogPage />} />
-          <Route path="products" element={<ProductsPage />} />
-          <Route path="inventory" element={<InventoryPage />} />
-          <Route path="reservations" element={<ReservationsPage />} />
-          <Route path="customers" element={<CustomersPage />} />
-          <Route path="b2b" element={<B2BPage />} />
-          <Route path="b2b-book" element={<B2BBookingPage />} />
-          <Route path="reports" element={<AdvancedReportsPage />} />
-          <Route path="finance/webpos" element={<WebPOSPage />} />
+
+          {/* Hesap / self-service */}
           <Route path="settings/billing" element={<SettingsBillingPage />} />
           <Route path="settings/security" element={<SettingsSecurityPage />} />
           <Route path="settings" element={<SettingsPage />} />
+
+          {/* Gizli / direct-access operasyon yüzeyleri */}
+          <Route path="b2b/marketplace" element={<B2BMarketplaceCatalogPage />} />
+          <Route path="products" element={<ProductsPage />} />
+          <Route path="inventory" element={<InventoryPage />} />
+          <Route path="b2b" element={<B2BPage />} />
+          <Route path="b2b-book" element={<B2BBookingPage />} />
+          <Route path="finance/webpos" element={<WebPOSPage />} />
           <Route path="inbox" element={<InboxPage />} />
           <Route path="partners" element={<PartnerLayout />}>
             <Route index element={<PartnerOverviewPage />} />
@@ -475,6 +479,7 @@ function App() {
           }
         >
           <Route element={<AgencyLayout />}>
+            <Route index element={<Navigate to="bookings" replace />} />
             <Route path="hotels" element={<AgencyHotelsPage />} />
             <Route path="hotels/:hotelId" element={<AgencyHotelDetailPage />} />
             <Route path="hotels/:hotelId/search" element={<AgencyHotelSearchPage />} />
@@ -507,6 +512,7 @@ function App() {
           }
         >
           <Route element={<HotelLayout />}>
+            <Route index element={<Navigate to="bookings" replace />} />
             <Route path="bookings" element={<HotelBookingsPage />} />
             <Route path="stop-sell" element={<HotelStopSellPage />} />
             <Route path="allocations" element={<HotelAllocationsPage />} />

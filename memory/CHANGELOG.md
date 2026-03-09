@@ -1,5 +1,24 @@
 # CHANGELOG — Acenta Master Travel SaaS
 
+## 2026-03-09 — Google Sheets reservation import + Otellerim kapasite yansıması
+- Backend teslimi:
+  - yeni `backend/app/services/sheet_reservation_import_service.py` eklendi
+  - `run_hotel_sheet_sync(...)` artık `Rezervasyonlar` sekmesindeki `incoming_reservation` / `external_reservation` kayıtlarını booking akışına import ediyor
+  - sync run çıktısına `reservations_processed`, `reservations_created`, `reservations_updated`, `reservations_cancelled` alanları eklendi
+  - `GET /api/agency/hotels` artık sheet senkronundan gelen en yakın kontenjan sinyalini kullanarak `sheet_managed_inventory`, `sheet_inventory_date`, `sheet_last_sync_at`, `sheet_last_sync_status`, `sheet_reservations_imported` alanlarını döndürüyor
+  - sync sonrası hotel/agency cache invalidation bağlandı; `Otellerim` ekranı daha güncel veri görüyor
+- Frontend teslimi:
+  - `SheetTemplateCenter.jsx` içine reservation import kullanım notu eklendi
+  - `AdminPortfolioSyncPage.jsx` içinde iki yönlü `Rezervasyonlar` sekmesi açıklaması ve run/import görünürlüğü eklendi
+  - `AgencyHotelsPage.jsx` artık sheet sync rozetini ve senkron kontenjan bilgisini gösteriyor
+- Doğrulama:
+  - Python lint PASS
+  - self-test: incoming reservation satırından booking yaratımı doğrulandı
+  - self-test: temp snapshot + temp connection ile `/api/agency/hotels` içinde `allocation_available=5`, `sheet_managed_inventory=true` doğrulandı
+  - screenshot smoke: `/app/admin/portfolio-sync` PASS
+  - existing pytest suite PASS: `test_admin_sheets_management.py` 5/5, `test_agency_sheets_api.py` 14/14
+  - testing agent: `/app/test_reports/iteration_46.json` → backend %100 / frontend %100 PASS
+
 ## 2026-03-09 — Google Sheets admin validation UI + endpoint finalize
 - Backend tamamlamaları:
   - `POST /api/admin/sheets/validate-sheet` eklendi; configured=false iken graceful checklist + required fields payload döner

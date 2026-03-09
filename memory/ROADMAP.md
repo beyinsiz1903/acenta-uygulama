@@ -46,6 +46,9 @@
 - Google Sheets admin yönetim UI tamamlandı:
   - `/app/admin/portfolio-sync` içinde şablon merkezi, kurulum checklist ve doğrulama paneli canlı
   - `validate-sheet`, `download-template` ve REST-style `POST /connections` akışı aktif
+- Google Sheets reservation import ve Otellerim yansıması tamamlandı:
+  - `incoming_reservation` / `external_reservation` kayıtları otel booking akışına alınabiliyor
+  - agency `/api/agency/hotels` response'u artık sheet sync alanlarını ve senkron kontenjan sinyalini döndürüyor
 
 ## P0 — Sıradaki Kritik İş
 
@@ -56,6 +59,8 @@ Hedef: kritik Google Sheets entegrasyonunu gerçek credential + gerçek sheet il
 - gerçek Service Account JSON aktivasyonu
 - en az bir gerçek sheet üzerinde kolon doğrulama smoke testi
 - write-back `Rezervasyonlar` sekmesi canlı yetki / paylaşım doğrulaması
+- gerçek sheet üzerinde `incoming_reservation` satırı ile booking import smoke testi
+- canlı sync sonrası `Otellerim` ekranında kontenjan sinyalinin gözle doğrulanması
 - kullanıcıya Service Account kurulum ve sheet paylaşım rehberi
 
 ### Pricing Model
@@ -84,6 +89,10 @@ Teslim beklentisi:
 ### Payment Failure Lifecycle Deepening
 - `invoice.payment_failed` ve renewal olaylarını billing timeline + banner + operasyon akışına bağla
 - grace period, retry ve başarısız ödeme sonrası kullanıcı yönlendirmelerini güçlendir
+
+### Google Sheets Hotel Lifecycle Closing
+- hotel panelinden onay/red/iptal edilen sheet-import rezervasyonlarının write-back kapanışını netleştir
+- gerekirse reservation import için ayrı status mapping ve audit görünürlüğü ekle
 
 ### Landing Funnel Optimization
 - Trial signup dönüşümünü artırmak için `/signup` onboarding üst copy ve proof alanı optimize edilebilir
@@ -127,6 +136,12 @@ Teslim beklentisi:
 - Google Sheets canlı dış servis smoke’u için henüz gerçek service account credential paylaşılmadı
 
 ## Son Tamamlanan İş
+- **Google Sheets reservation import + kapasite sinyali**
+  - `incoming_reservation` / `external_reservation` satırları artık booking kaydı üretebiliyor
+  - `Otellerim` ekranı için sheet tabanlı kontenjan sinyali backend response'una eklendi
+  - admin portfolio sync UI içinde iki yönlü reservation sekmesi dokümantasyonu görünür hale getirildi
+
+## Daha Önce Tamamlanan Önemli İşler
 - **Soft Quota Warning PR-UM5**
   - warning_level + warning_message
   - dashboard + usage page pricing CTA

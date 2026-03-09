@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="15" failures="0" skipped="0" tests="15" time="10.808" timestamp="2026-03-09T15:07:00.815635+00:00" hostname="agent-env-74023469-84af-46e9-a4c0-8b9ec0abbe1b"><testcase classname="tests.test_iteration_39_agency_reports_search.TestAgencyEndpointsNoRegression" name="test_agency_hotels_returns_200" time="0.833"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;invalid_token&quot;,&quot;message&quot;:&quot;Geçersiz token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:513: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"invalid_token","message":"Geçersiz token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_iteration_39_agency_reports_search.TestAgencyEndpointsNoRegression" name="test_agency_bookings_returns_200" time="0.290"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;invalid_token&quot;,&quot;message&quot;:&quot;Geçersiz token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:513: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"invalid_token","message":"Geçersiz token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_iteration_39_agency_reports_search.TestAgencyEndpointsNoRegression" name="test_agency_settlements_returns_200_with_month" time="0.277"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;invalid_token&quot;,&quot;message&quot;:&quot;Geçersiz token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:513: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"invalid_token","message":"Geçersiz token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_iteration_39_agency_reports_search.TestGlobalSearchAPI" name="test_global_search_returns_200" time="0.283"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;invalid_token&quot;,&quot;message&quot;:&quot;Geçersiz token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:513: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"invalid_token","message":"Geçersiz token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_iteration_39_agency_reports_search.TestGlobalSearchAPI" name="test_global_search_requires_minimum_query_length" time="0.297"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;invalid_token&quot;,&quot;message&quot;:&quot;Geçersiz token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:513: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"invalid_token","message":"Geçersiz token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_iteration_39_agency_reports_search.TestGlobalSearchAPI" name="test_global_search_with_admin_scope" time="0.684"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;invalid_token&quot;,&quot;message&quot;:&quot;Geçersiz token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:513: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"invalid_token","message":"Geçersiz token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_iteration_39_agency_reports_search.TestReportsGenerateAPI" name="test_reports_generate_returns_200_with_agency_user" time="0.341"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;invalid_token&quot;,&quot;message&quot;:&quot;Geçersiz token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:513: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"invalid_token","message":"Geçersiz token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_iteration_39_agency_reports_search.TestReportsGenerateAPI" name="test_reports_generate_returns_200_with_admin_user" time="0.335"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;invalid_token&quot;,&quot;message&quot;:&quot;Geçersiz token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:513: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"invalid_token","message":"Geçersiz token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_iteration_39_agency_reports_search.TestReportsGenerateAPI" name="test_reports_generate_post_method_works" time="0.352"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;invalid_token&quot;,&quot;message&quot;:&quot;Geçersiz token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:513: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"invalid_token","message":"Geçersiz token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_iteration_39_agency_reports_search.TestSalesSummaryAPI" name="test_sales_summary_returns_200" time="0.319"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;invalid_token&quot;,&quot;message&quot;:&quot;Geçersiz token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:513: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"invalid_token","message":"Geçersiz token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_iteration_39_agency_reports_search.TestSalesSummaryAPI" name="test_reservations_summary_returns_200" time="0.332"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;invalid_token&quot;,&quot;message&quot;:&quot;Geçersiz token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:513: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"invalid_token","message":"Geçersiz token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_iteration_39_agency_reports_search.TestSalesSummaryAPI" name="test_sales_summary_csv_returns_csv" time="0.281"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;invalid_token&quot;,&quot;message&quot;:&quot;Geçersiz token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:513: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"invalid_token","message":"Geçersiz token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_iteration_39_agency_reports_search.TestAdminTenantFeaturesAPI" name="test_admin_tenants_list_returns_200" time="3.883"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;invalid_token&quot;,&quot;message&quot;:&quot;Geçersiz token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:513: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"invalid_token","message":"Geçersiz token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_iteration_39_agency_reports_search.TestAdminTenantFeaturesAPI" name="test_admin_tenant_features_returns_200" time="0.330"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;invalid_token&quot;,&quot;message&quot;:&quot;Geçersiz token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:513: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"invalid_token","message":"Geçersiz token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase><testcase classname="tests.test_iteration_39_agency_reports_search.TestAdminTenantFeaturesAPI" name="test_admin_tenant_subscription_returns_200_or_404" time="0.300"><error message="failed on setup with &quot;AssertionError: /auth/me failed: {&quot;error&quot;:{&quot;code&quot;:&quot;invalid_token&quot;,&quot;message&quot;:&quot;Geçersiz token.&quot;,&quot;details&quot;:null}}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:513: in minimal_search_seed
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+E   AssertionError: /auth/me failed: {"error":{"code":"invalid_token","message":"Geçersiz token.","details":null}}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code</error></testcase></testsuite></testsuites>

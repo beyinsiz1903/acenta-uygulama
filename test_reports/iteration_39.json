@@ -1,0 +1,79 @@
+{
+  "summary": "Iteration 39: Agency Reports, Global Search, Operations Report Generation, and Admin Tenant Features Testing. All backend APIs passed (8/8 agency endpoints, 6/6 admin endpoints). Frontend UI testing passed for Reports page and Admin Tenant Features page. Key features validated: global search with agency/organization scope, /api/reports/generate with tenant fallback (fixes tenant_context_missing error from previous iteration), subscription cancel dialog, and plan change impact UX.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Agency Login: POST /api/auth/login - 200",
+    "Agency Hotels: GET /api/agency/hotels - 200 (returns list)",
+    "Agency Bookings: GET /api/agency/bookings - 200",
+    "Agency Settlements: GET /api/agency/settlements?month=2026-03 - 200",
+    "Global Search (Agency): GET /api/search?q=demo - 200, scope=agency, 4 results",
+    "Reports Generate (Agency): GET /api/reports/generate?days=30 - 200, KPIs returned (7 bookings, 1250 TRY)",
+    "Sales Summary: GET /api/reports/sales-summary?days=14 - 200",
+    "CSV Export: GET /api/reports/sales-summary.csv - 200, Content-Type=text/csv",
+    "Admin Login: POST /api/auth/login - 200",
+    "Admin Tenants: GET /api/admin/tenants - 200 (28 tenants with summary)",
+    "Admin Tenant Features: GET /api/admin/tenants/{id}/features - 200 (plan, add_ons, plan_matrix)",
+    "Admin Tenant Subscription: GET /api/admin/billing/tenants/{id}/subscription - 200 (status, plan, period_end)",
+    "Admin Global Search: GET /api/search?q=test - 200, scope=organization",
+    "Admin Reports Generate: GET /api/reports/generate?days=30 - 200 (26 bookings, 22600 TRY)",
+    "UI: Reports page loads with data-testid=reports-page",
+    "UI: Global search card functional (data-testid=global-search-card, global-search-input, global-search-submit-button)",
+    "UI: Search results displayed correctly (data-testid=global-search-results)",
+    "UI: Operations report generation works (data-testid=generate-operations-report-button)",
+    "UI: Report KPI cards displayed (data-testid=generated-report-booking-count, generated-report-revenue)",
+    "UI: Admin Tenant Features page loads (data-testid=admin-tenant-features-page)",
+    "UI: Tenant summary cards display (data-testid=tenant-summary-total, tenant-summary-payment-issue, tenant-summary-trial)",
+    "UI: Tenant filter bar functional (data-testid=tenant-filter-active, tenant-filter-payment_issue)",
+    "UI: Tenant selection shows features panel",
+    "UI: Subscription panel shows plan, status, renewal date (data-testid=sub-panel)",
+    "UI: Cancel subscription button visible for active subscriptions (data-testid=cancel-sub-btn)",
+    "UI: Subscription cancel confirm dialog opens correctly (data-testid=subscription-cancel-confirm-dialog)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_iteration_39_agency_reports_search.py"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "SUCCESS: /api/reports/generate tenant fallback implemented in _resolve_report_tenant_id() at reports.py lines 178-191",
+    "SUCCESS: Global search /api/search correctly scopes to agency when user has agency_id, else organization",
+    "SUCCESS: AdminTenantFeaturesPage.jsx implements subscription cancel dialog with data-testid attributes",
+    "SUCCESS: Plan change impact card shows when plan differs from initial (PlanChangeImpactCard component)"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration_39_agency_reports_search.py"
+  ],
+  "success_rate": {
+    "backend": "100% (14/14 API tests passed)",
+    "frontend": "100% (12/12 UI elements verified)"
+  },
+  "test_credentials": {
+    "agency_account": "agent@acenta.test / agent123",
+    "admin_account": "admin@acenta.test / admin123"
+  },
+  "seed_data_creation": "None - used existing test data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 39 validated all requested features: agency reports page, global search, operations report generation with tenant fallback, sales summary CSV export, admin tenant features with subscription cancel dialog. Tenant tenant_context_missing error from previous iteration is now FIXED - _resolve_report_tenant_id() falls back to first tenant in organization if user lacks tenant_id. 28 tenants exist in system with 5 payment issues, 15 trials, 5 active. Billing QA Travel tenant (ec68a5dc-fd72-4bb3-b679-0416b616aee1) has active Pro subscription for testing cancel flows.",
+  "feature_validation_summary": {
+    "agency_reports_page_load": "PASS - Page loads with all expected UI elements",
+    "global_search_api": "PASS - Returns sectioned results (customers, bookings, hotels, tours) with correct scope",
+    "reports_generate_api": "PASS - Tenant fallback fix working, returns KPIs and daily_revenue",
+    "sales_summary_csv": "PASS - Returns CSV content with correct Content-Type",
+    "admin_tenant_list": "PASS - Returns 28 tenants with lifecycle_stage and summary",
+    "admin_tenant_features": "PASS - Returns plan, add_ons, plan_matrix, plan_catalog",
+    "admin_subscription_panel": "PASS - Shows subscription status, plan, renewal date",
+    "subscription_cancel_dialog": "PASS - Opens correctly with confirm/cancel buttons",
+    "plan_change_impact_card": "NOT TESTED - Same plan selected, no change to trigger"
+  },
+  "mocked_apis": {
+    "note": "Mock PMS provider behind /api/agency/search availability flow - not tested in this iteration"
+  }
+}

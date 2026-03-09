@@ -1,0 +1,83 @@
+{
+  "summary": "Iteration 36: Annual Pricing E2E Revalidation Complete. All yearly billing flows tested and working: pricing page yearly toggle, yearly checkout creation, checkout-status yearly interval, billing settings yearly display with savings badges, authenticated yearly plan change. No regressions found.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Public /pricing page loads with Turkish content",
+    "Pricing page yearly toggle updates Starter price to ₺9.900/yıl",
+    "Pricing page yearly toggle updates Pro price to ₺24.900/yıl",
+    "Pricing page yearly toggle shows '2 ay ücretsiz' savings badge for Starter",
+    "Pricing page yearly toggle shows '2 ay ücretsiz' savings badge for Pro",
+    "Unauthenticated yearly CTA click redirects to /signup with selectedPlan=starter",
+    "Signup page displays 'Starter' as target plan after redirect",
+    "POST /api/billing/create-checkout interval=yearly returns correct Starter amount (9900)",
+    "POST /api/billing/create-checkout interval=yearly returns correct Pro amount (24900)",
+    "POST /api/billing/create-checkout generates valid Stripe checkout URL (cs_test_...)",
+    "POST /api/billing/create-checkout rejects invalid interval values (422)",
+    "GET /api/billing/checkout-status/{session_id} returns interval=yearly for yearly sessions",
+    "GET /api/billing/checkout-status/{session_id} returns plan=starter for Starter sessions",
+    "GET /api/billing/subscription returns interval and interval_label fields",
+    "GET /api/billing/subscription returns interval_label='Aylık' for monthly subscriptions",
+    "POST /api/billing/change-plan with interval=yearly returns checkout_redirect action",
+    "POST /api/billing/change-plan yearly returns correct amount and Stripe URL",
+    "Billing settings page /app/settings/billing loads correctly",
+    "Billing settings yearly toggle updates plan cards to yearly prices",
+    "Billing settings yearly view shows '2 ay ücretsiz' badge on Starter",
+    "Billing settings yearly view shows '2 ay ücretsiz' badge on Pro",
+    "Billing settings yearly tab selection is consistent after toggle",
+    "GET /api/billing/history returns items with correct structure",
+    "Unauthenticated requests to billing APIs return 401"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_annual_pricing_e2e_iter36.py",
+    "/app/test_reports/pytest/pytest_annual_pricing_iter36.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "SUCCESS: PricingPage.jsx correctly handles yearly pricing with PLAN_DISPLAY constant having yearly.amount (9900/24900) and yearly.badge ('2 ay ücretsiz')",
+    "SUCCESS: billingCatalog.js mirrors pricing data with yearly amounts and getIntervalText() returns 'Yıllık' for yearly",
+    "SUCCESS: stripe_checkout_service.py PLAN_CHECKOUT_MATRIX has yearly amounts configured correctly",
+    "SUCCESS: BillingSuccessPage.jsx shows interval='yearly' as 'Yıllık' in activation summary",
+    "SUCCESS: SettingsBillingPage.jsx billing cycle tabs (monthly/yearly) work correctly with BillingPlanCard yearly prices",
+    "SUCCESS: billing_checkout.py validates interval pattern '^(monthly|yearly)$' in CreateCheckoutBody",
+    "SUCCESS: billing_lifecycle.py ChangePlanBody validates interval pattern correctly"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_annual_pricing_e2e_iter36.py"
+  ],
+  "success_rate": {
+    "backend": "100% (7 passed, 1 skipped due to test dependency ordering)",
+    "frontend": "100% (all UI flows verified)"
+  },
+  "test_credentials": {
+    "b2b_account": "agent@acenta.test / agent123",
+    "stripe_test_card": "4242 4242 4242 4242, exp 12/34, CVC 123, ZIP 10001"
+  },
+  "seed_data_creation": "No new seed data created. Used existing agent@acenta.test account.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Annual pricing fully validated. Yearly checkout creates Stripe sessions with correct amounts (Starter=9900, Pro=24900 TRY). Checkout-status correctly returns interval=yearly. Billing settings page yearly toggle works. Account agent@acenta.test has Starter monthly subscription. Rate limiting on login is 300s cooldown per email.",
+  "feature_validation_summary": {
+    "pricing_page_yearly_toggle": "PASS - Shows ₺9.900/₺24.900 with '2 ay ücretsiz' badges",
+    "unauthenticated_yearly_cta": "PASS - Redirects to /signup with selectedPlan preserved",
+    "authenticated_yearly_checkout": "PASS - Creates valid Stripe checkout sessions",
+    "checkout_status_yearly_interval": "PASS - Returns interval=yearly correctly",
+    "billing_settings_yearly_display": "PASS - Shows yearly prices with savings badges",
+    "change_plan_yearly": "PASS - Returns checkout_redirect with yearly amount",
+    "billing_history": "PASS - Returns timeline events with correct structure",
+    "api_authentication": "PASS - All billing APIs require auth (401 for unauthenticated)"
+  },
+  "annual_pricing_amounts_verified": {
+    "starter_yearly": "₺9.900 (9900 TRY)",
+    "pro_yearly": "₺24.900 (24900 TRY)",
+    "enterprise_yearly": "Özel teklif (custom quote)",
+    "savings_badge": "2 ay ücretsiz (2 months free)"
+  }
+}

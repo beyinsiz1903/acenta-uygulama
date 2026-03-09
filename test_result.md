@@ -6717,3 +6717,117 @@ frontend:
       Backend is stable and ready to support frontend auth refactor deployment. All auth + billing akışları functioning correctly without regression.
       
       Status: ✅ PASS - Backend no-regression validation completed successfully
+
+  - task: "Billing settings frontend regression - agency user guard validation"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/SettingsBillingPage.jsx, frontend/src/components/AppShell.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "BILLING SETTINGS FRONTEND REGRESSION TEST COMPLETED - ALL 6 TESTS PASSED (2026-03-09). Comprehensive frontend regression validation performed per review request on https://agency-platform-18.preview.emergentagent.com with agent@acenta.test/agent123. Review Context: Frontend guard added in AppShell preventing agency users from requesting admin-only /api/admin/whitelabel-settings endpoint; agency account now shows Pro/yearly/active billing state. TEST RESULTS: 1) ✅ Logged-out redirect - PASSED: Accessing /app/settings/billing while logged out correctly redirects to /login (URL confirmed: /login), 2) ✅ Login and return redirect - PASSED: After login with agency credentials (agent@acenta.test/agent123), app successfully returns to /app/settings/billing (return URL mechanism working correctly), 3) ✅ Page renders key elements - PASSED: All required elements found and visible: billing-page ✅, billing-page-title ('Faturalama') ✅, billing-summary-cards ✅ (Current plan: Pro, Renewal date: 08 Mart 2027, Status: Yıllık·Aktif), billing-management-card ✅, billing-plan-change-card ✅, billing-cycle-tabs (Aylık/Yıllık) ✅, billing-history-card ✅, 4) ✅ Toggle Aylık/Yıllık functionality - PASSED: Initial state Yıllık (active), toggled to both Aylık and Yıllık without crashes or blank states, page content remained substantial (318K chars) after all toggles, price display updated correctly (Starter: ₺9.900/yıl → ₺990/ay, Pro: ₺24.900/yıl → ₺2.490/ay), no UI breakage detected, 5) ✅ CRITICAL: Console/Network regression check - PASSED: Admin whitelabel requests: ZERO ✅ (NO /api/admin/whitelabel-settings calls detected for agency user - frontend guard working correctly), Console errors: 2 non-blocking 401 errors (pre-login bootstrap checks), No blocking frontend errors after login/redirect ✅, Network clean - no unexpected admin endpoint attempts ✅, 6) ✅ Page usability with Pro/yearly/active state - PASSED: Page content: 318,055 characters (substantial), Refresh button: present and enabled ✅, Plan grid: visible and functional ✅, Error elements: 0 ✅, Current subscription correctly displays: Pro plan, Yıllık (yearly) billing, Aktif status, Next renewal: 08 Mart 2027. CRITICAL VALIDATION: The frontend guard in AppShell.jsx (lines 73-86) is working perfectly - canLoadAdminBranding check prevents agency users from calling /api/admin/whitelabel-settings. The guard logic: if (!canLoadAdminBranding) { setBranding(null); return; } successfully blocks the admin API call. Test Summary: 6/6 tests passed (100% success rate). Screenshots captured: billing_initial_state.png (Pro yearly active state with all elements), billing_yearly_toggle.png (toggle interaction), billing_final_state.png (final usable state). Console analysis: 2 minor 401 errors (pre-login auth checks - non-critical). Conclusion: Billing settings page is fully functional for agency user with no regression detected. Frontend guard successfully prevents admin-only endpoint access. Return URL mechanism working correctly after login. Toggle functionality stable. Page usable with current Pro/yearly/active subscription state. All review request requirements validated successfully."
+
+agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ BILLING SETTINGS FRONTEND REGRESSION TEST COMPLETED - ALL TESTS PASSED (2026-03-09)
+      
+      Performed comprehensive frontend regression validation per review request on https://agency-platform-18.preview.emergentagent.com
+      
+      Test Context:
+      - Review Request: Focused frontend regression on billing settings flow for agency user
+      - Test Account: agent@acenta.test / agent123
+      - Context: Frontend guard added in AppShell to prevent agency users from requesting /api/admin/whitelabel-settings
+      - Agency account state: Pro / yearly / active in billing (changed from previous state)
+      
+      ✅ ALL 6 REVIEW REQUEST REQUIREMENTS VALIDATED:
+      
+      1. ✅ Logged-out redirect to /login - PASSED
+         - Accessed /app/settings/billing while logged out
+         - Correctly redirected to /login
+         - URL confirmed: https://agency-platform-18.preview.emergentagent.com/login
+      
+      2. ✅ Login and return to /app/settings/billing - PASSED
+         - Logged in with agent@acenta.test / agent123
+         - App successfully returned to /app/settings/billing after authentication
+         - Return URL mechanism working correctly
+         - No redirect loops or navigation issues
+      
+      3. ✅ Page renders key elements - PASSED
+         All required elements found and visible:
+         - ✅ Page title: "Faturalama"
+         - ✅ Summary cards: Current plan (Pro), Renewal date (08 Mart 2027), Status (Yıllık · Aktif)
+         - ✅ Management card: Ödeme Yöntemini Güncelle, Aboneliği İptal Et, Bilgileri Yenile buttons
+         - ✅ Plan change card: Planı Değiştir section with Aylık/Yıllık tabs
+         - ✅ Billing history timeline: Faturalama Geçmişi card present
+         - ✅ All data-testid attributes working correctly
+      
+      4. ✅ Toggle Aylık/Yıllık functionality - PASSED
+         - Initial state: Yıllık (yearly) active
+         - Successfully toggled between Aylık and Yıllık multiple times
+         - Price display updated correctly:
+           * Yearly: Starter ₺9.900/yıl, Pro ₺24.900/yıl
+           * Monthly: Starter ₺990/ay, Pro ₺2.490/ay
+         - No blank states detected (page content: 318K chars maintained)
+         - No crashes or UI breakage
+         - Tab state attributes (data-state) updated correctly
+      
+      5. ✅ CRITICAL: Console/Network regression check - PASSED
+         Admin whitelabel endpoint access check:
+         - ✅ ZERO /api/admin/whitelabel-settings requests detected for agency user
+         - ✅ Frontend guard in AppShell.jsx (lines 73-86) working correctly
+         - ✅ canLoadAdminBranding check successfully prevents admin API call
+         
+         Console/Network analysis:
+         - Console errors: 2 non-blocking 401 errors (pre-login bootstrap checks)
+         - No blocking frontend errors after login/redirect
+         - No React errors or crashes
+         - Network clean - no unexpected admin endpoint attempts
+      
+      6. ✅ Page usability with Pro/yearly/active state - PASSED
+         - Page content: 318,055 characters (substantial and fully rendered)
+         - Refresh button: present and enabled
+         - Plan grid: visible with all 3 plans (Starter, Pro, Enterprise)
+         - Zero error elements on page
+         - Current subscription displays correctly:
+           * Plan: Pro
+           * Billing cycle: Yıllık (yearly)
+           * Status: Aktif (active)
+           * Next renewal: 08 Mart 2027
+      
+      Technical Validation Details:
+      ✅ Frontend guard working: AppShell.jsx lines 73-86 logic prevents agency users from calling admin-only whitelabel endpoint
+      ✅ Return URL mechanism: Post-login redirect to /app/settings/billing working correctly
+      ✅ All interactive elements functional: buttons enabled, tabs clickable, forms working
+      ✅ Turkish localization: all text in Turkish, date format correct (08 Mart 2027)
+      ✅ No layout overflow or UI breakage
+      ✅ Screenshots captured for visual verification
+      
+      Test Summary:
+      - Total Requirements: 6
+      - Passed: 6
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Screenshots:
+      - billing_initial_state.png: Pro yearly active state with all key elements visible
+      - billing_yearly_toggle.png: Toggle interaction showing yearly pricing
+      - billing_final_state.png: Final state confirming usability
+      
+      Conclusion:
+      Billing settings frontend regression test SUCCESSFUL. All review request requirements validated and working correctly:
+      
+      ✅ Logged-out users redirected to /login correctly
+      ✅ Login returns to /app/settings/billing successfully
+      ✅ All key page elements render correctly
+      ✅ Aylık/Yıllık toggle functional without crashes
+      ✅ CRITICAL: Admin whitelabel endpoint NOT called for agency user (guard working)
+      ✅ Page fully usable with Pro/yearly/active subscription state
+      
+      No regressions detected. Frontend guard implementation validated. The recent AppShell fix is working perfectly - agency users no longer request the admin-only /api/admin/whitelabel-settings endpoint. All billing page functionality stable and production-ready.
+      
+      Status: ✅ PASS - Billing settings frontend regression validation completed successfully
+

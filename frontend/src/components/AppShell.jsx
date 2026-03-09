@@ -70,10 +70,16 @@ function AppShellInner() {
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [agencyAllowedModules, setAgencyAllowedModules] = useState(null); // null = not loaded, [] = no restrictions
   const [trialStatus, setTrialStatus] = useState(null);
+  const canLoadAdminBranding = (user?.roles || []).some((role) => ["super_admin", "admin"].includes(role));
 
   // Enterprise White-Label branding
   const [branding, setBranding] = useState(null);
   const loadBranding = useCallback(async () => {
+    if (!canLoadAdminBranding) {
+      setBranding(null);
+      return;
+    }
+
     try {
       const res = await api.get("/admin/whitelabel-settings");
       if (res.data) {
@@ -105,8 +111,10 @@ function AppShellInner() {
           }
         }
       }
-    } catch { /* No branding or not admin - use defaults */ }
-  }, []);
+    } catch {
+      setBranding(null);
+    }
+  }, [canLoadAdminBranding]);
 
   useEffect(() => { loadBranding(); }, [loadBranding]);
 

@@ -471,6 +471,18 @@ frontend:
       - working: true
         agent: "testing"
         comment: "GOOGLE SHEETS INTEGRATION HARDENING VALIDATION COMPLETED - 8/9 TESTS PASSED (2026-03-09). Comprehensive backend validation performed on https://sheets-integration-4.preview.emergentagent.com/api with admin@acenta.test/admin123 and agent@acenta.test/agent123. Test Results: 1) ✅ Admin Login - PASSED (token: 375 chars), 2) ✅ GET /api/admin/sheets/config - PASSED (200 OK, configured=false as expected, tenant-aware cache working), 3) ✅ GET /api/admin/sheets/templates - PASSED (200 OK, all expected sections present: checklist, inventory_sync, reservation_writeback), 4) ✅ GET /api/admin/import/sheet/config - PASSED (200 OK, legacy endpoint now respects tenant-aware config path), 5) ✅ GET /api/admin/sheets/available-hotels - PASSED (200 OK, returns list with 8 hotels), 6) ✅ Admin connect flow without Google config - PASSED (POST /api/admin/sheets/connect successful in pending configuration mode, writeback_tab='Rezervasyonlar' correctly set, validation_status='pending_configuration' as expected), 7) ✅ Admin connection cleanup - PASSED (DELETE /api/admin/sheets/connections/{hotel_id} successful), 8) ❌ Agency login rate limited (429 status, deployment-level issue, not functional issue), 9) ✅ Backend regression check - PASSED (python -m pytest tests/test_agency_sheets_api.py -q all 14 tests passed). CRITICAL VALIDATIONS: All review request requirements validated ✅: Admin login works ✅, /admin/sheets/config returns configured=false when no service account ✅, /admin/sheets/templates returns expected payload with all sections ✅, Legacy /admin/import/sheet/config respects tenant-aware config ✅, Admin connect flow works in pending configuration mode ✅, Writeback default tab standardized to Rezervasyonlar ✅, No backend regression detected ✅. TECHNICAL FINDINGS: Tenant-aware Google Sheets config cache working correctly ✅, New endpoint /api/admin/sheets/templates functional ✅, Admin/agency connect flows store validation_status and writeback_tab consistently ✅, Writeback default tab standardized to Rezervasyonlar ✅, Legacy endpoint respects tenant-aware config path ✅. Success rate: 88.9% (8/9 tests passed, 1 rate limit). Google Sheets integration hardening changes are PRODUCTION-READY and functioning correctly."
+
+  - task: "Syroce Google Sheets hardening Turkish review regression test"
+    implemented: true
+    working: true
+    file: "backend/app/routers/admin_sheets.py, backend/app/routers/agency_sheets.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "SYROCE GOOGLE SHEETS HARDENING TURKISH REVIEW REGRESSION TEST COMPLETED - ALL 6 VALIDATION POINTS PASSED (2026-03-09). Comprehensive validation performed per Turkish review request on https://sheets-integration-4.preview.emergentagent.com with admin@acenta.test/admin123. Turkish Review Request Context: 'Syroce backend smoke/regression testi yap. Hedef Google Sheets hardening endpointleri.' All 6 validation points PASSED: 1) ✅ GET /api/admin/sheets/config returns 200 and required_service_account_fields - PASSED (Status: 200, configured: false, required_service_account_fields: ['type', 'project_id', 'private_key', 'client_email', 'token_uri']), 2) ✅ GET /api/admin/sheets/templates returns 200 and downloadable_templates - PASSED (Status: 200, downloadable_templates: [{'name': 'inventory-sync', 'label': 'Envanter Sync CSV'}, {'name': 'reservation-writeback', 'label': 'Rezervasyon Write-back CSV'}]), 3) ✅ POST /api/admin/sheets/validate-sheet no-config ortamında 200 graceful payload döner - PASSED (Status: 200, configured: false, message: 'Google Sheets yapilandirilmamis.', graceful behavior confirmed), 4) ✅ GET /api/admin/sheets/download-template/inventory-sync ve reservation-writeback 200 CSV döner - PASSED (Both templates return 200 with text/csv content-type, 301/300 bytes respectively), 5) ✅ POST /api/admin/sheets/connections configured=false iken pending_configuration kayıt oluşturup DELETE /api/admin/sheets/connections/{hotel_id} ile temizlenebilir - PASSED (Connection created with validation_status='pending_configuration', writeback_tab='Rezervasyonlar', successfully deleted), 6) ✅ Mevcut agency/admin sheets endpointlerinde regresyon yok - PASSED (All 5 existing endpoints return 200: /admin/sheets/config, /admin/sheets/templates, /admin/sheets/connections, /admin/sheets/available-hotels, /admin/sheets/status). BACKEND REGRESSION TEST VALIDATION: python -m pytest tests/test_agency_sheets_api.py -q ALL 14 TESTS PASSED with only non-critical deprecation warnings. CRITICAL FINDINGS: Gerçek Google credential yok ✅ - graceful davranış bekleniyor ve doğrulandı ✅, Canlı Sheets API çağrısı beklenmiyor ✅ - sistem configured=false durumunda graceful response veriyor ✅, Tüm hardening endpointleri çalışıyor ✅, No backend regression detected ✅. Test Scripts: /app/backend_sheets_regression_test.py (Turkish review specific) and existing /app/backend_test.py both confirm system stability. Success rate: 100% (6/6 Turkish validation points passed, 14/14 regression tests passed). Conclusion: Google Sheets hardening endpointleri PRODUCTION-READY ve Turkish review gereksinimlerini karşılıyor."
 test_plan:
   current_focus: []
   stuck_tasks: []
@@ -10365,4 +10377,77 @@ agent_communication:
       ✅ CONCLUSION:
       
       NO ACTION REQUIRED FROM MAIN AGENT. All Turkish review requirements validated and working correctly. Portfolio-sync page is stable, functional, and production-ready. The specific React list key warning concern has been successfully addressed and resolved. No regressions detected. System ready for production use.
+
+  - agent: "testing"
+    message: |
+      🇹🇷 SYROCE GOOGLE SHEETS HARDENING TURKISH REVIEW REGRESSION TEST COMPLETED - ALL VALIDATION POINTS PASSED
+      
+      Test Date: 2026-03-09 
+      Test Context: Turkish review request - "Syroce backend smoke/regression testi yap. Hedef Google Sheets hardening endpointleri"
+      Test URL: https://sheets-integration-4.preview.emergentagent.com/api
+      Admin Credentials: admin@acenta.test / admin123
+      
+      📋 TURKISH REVIEW VALIDATION POINTS (6/6 PASSED):
+      
+      1. ✅ GET /api/admin/sheets/config 200 ve required_service_account_fields döner
+         - Status: 200 OK ✓
+         - configured: false ✓ (no service account as expected)  
+         - required_service_account_fields: ['type', 'project_id', 'private_key', 'client_email', 'token_uri'] ✓
+      
+      2. ✅ GET /api/admin/sheets/templates 200 ve downloadable_templates döner
+         - Status: 200 OK ✓
+         - downloadable_templates: ['inventory-sync', 'reservation-writeback'] ✓
+         - Template count: 2 ✓
+      
+      3. ✅ POST /api/admin/sheets/validate-sheet no-config ortamında 200 graceful payload döner
+         - Status: 200 OK ✓
+         - configured: false ✓
+         - message: "Google Sheets yapilandirilmamis." ✓
+         - Graceful behavior confirmed ✓
+      
+      4. ✅ GET /api/admin/sheets/download-template/inventory-sync ve reservation-writeback 200 CSV döner
+         - inventory-sync: 200 OK, text/csv, 301 bytes ✓
+         - reservation-writeback: 200 OK, text/csv, 300 bytes ✓
+         - Both return proper CSV format ✓
+      
+      5. ✅ POST /api/admin/sheets/connections configured=false iken pending_configuration kayıt oluşturup DELETE /api/admin/sheets/connections/{hotel_id} ile temizlenebilir
+         - Connection created successfully ✓
+         - validation_status: 'pending_configuration' ✓
+         - writeback_tab: 'Rezervasyonlar' ✓
+         - DELETE cleanup successful ✓
+      
+      6. ✅ Mevcut agency/admin sheets endpointlerinde regresyon yok
+         - All 5 existing endpoints return 200 OK ✓
+         - Backend regression test: 14/14 tests passed ✓
+         - No functional regression detected ✓
+      
+      🔍 TECHNICAL VALIDATION:
+      
+      • Gerçek Google credential yok ✅ - graceful davranış doğrulandı
+      • Canlı Sheets API çağrısı beklenmiyor ✅ - sistem configured=false ile graceful response veriyor
+      • Tüm hardening endpointleri çalışıyor ✅
+      • Backend regression yok ✅ (python -m pytest tests/test_agency_sheets_api.py -q: 14/14 passed)
+      • Test scripts: /app/backend_sheets_regression_test.py (Turkish specific) + /app/backend_test.py (general)
+      
+      📊 SUCCESS METRICS:
+      
+      • Turkish Validation Points: 6/6 PASSED (100%)
+      • Backend Regression Tests: 14/14 PASSED (100%)  
+      • Critical Failures: 0
+      • API Endpoints Working: All tested endpoints functional
+      • Graceful No-Config Behavior: Confirmed working
+      • CSV Template Downloads: Working correctly
+      
+      ✅ CONCLUSION:
+      
+      ALL TURKISH REVIEW REQUEST REQUIREMENTS VALIDATED AND PASSED. Google Sheets hardening endpointleri PRODUCTION-READY ve tüm gereksinimler karşılanıyor:
+      
+      ✓ Hardening endpointleri çalışıyor (config, templates, validate-sheet, download-template, connections CRUD)
+      ✓ Graceful davranış no-config durumunda doğrulandı (configured=false responses)  
+      ✓ CSV template downloads working (inventory-sync, reservation-writeback)
+      ✓ Pending configuration flow working (connections with validation_status='pending_configuration')
+      ✓ Agency/admin sheets endpointlerinde regresyon yok
+      ✓ Backend regression test suite passing (14/14 tests)
+      
+      NO ACTION REQUIRED FROM MAIN AGENT. System is stable, all Turkish review validation points passed, and Google Sheets hardening functionality is working correctly without real Google credentials as expected.
 

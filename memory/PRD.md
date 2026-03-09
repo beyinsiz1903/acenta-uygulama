@@ -576,6 +576,18 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `auto_frontend_testing_agent` → 7/7 PASS (hero overlap yok, login form above-the-fold, CTA’lar çalışıyor)
   - `deep_testing_backend_v2` → auth ve public route no-regression PASS
 
+## Son Uygulama Notu — 2026-03-09 (Super Admin tam görünürlük düzeltmesi)
+- Super admin / admin giriş sonrası demo ağırlıklı çekirdek ekrana düşme problemi giderildi
+  - `redirectByRole` güncellendi; `super_admin` ve `admin` artık doğrudan `/app/admin/dashboard` ile açılıyor
+  - `AppShell` içinde admin kullanıcılar için genişletilmiş navigation kaynağı bağlandı
+- Sidebar görünürlüğü genişletildi
+  - `ADMIN MERKEZ`, `KATALOG & İÇERİK`, `B2B & BÜYÜME`, `FİNANS & RAPORLAMA`, `OPERASYON & SİSTEM`, `DOĞRUDAN ERİŞİM` blokları eklendi
+  - tenant yönetimi, kullanıcılar, pricing, matches, integrations, products, usage ve benzeri yönetici sayfaları sidebar’da görünür hale getirildi
+- Doğrulama
+  - manuel browser smoke: `admin@acenta.test` ile login sonrası rota `/app/admin/dashboard` doğrulandı
+  - sidebar içinde `Tenant Yönetimi`, `Acenta Modülleri`, `Matches`, `Ürünler`, `Kullanım Özeti` linkleri görünür doğrulandı
+  - `Tenant Yönetimi` link tıklama sonrası `/app/admin/agencies` geçişi doğrulandı
+
 ## Öncelikli Sonraki Adımlar
 - **P0:** Canlı email provider credential/config aktivasyonu yapılıp outbox -> gerçek teslimat hattını production benzeri ortamda doğrulama
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını timeline + banner + operasyon akışlarıyla daha da birleştirme

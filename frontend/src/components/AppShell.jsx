@@ -22,6 +22,7 @@ import AiAssistant from "./AiAssistant";
 import { NewSidebar } from "./NewSidebar";
 import {
   ACCOUNT_NAV_ITEMS,
+  ADMIN_NAV_SECTIONS,
   APP_NAV_SECTIONS,
   buildScopedNavItems,
   buildScopedNavSections,
@@ -296,7 +297,11 @@ function AppShellInner() {
     });
   }, [featuresLoading, hasFeature, currentModeLevel, hiddenNavItems, isAgencyUser, agencyAllowedModules, userScope]);
 
-  const navSections = useMemo(() => buildScopedNavSections(APP_NAV_SECTIONS, userScope), [userScope]);
+  const navSource = useMemo(
+    () => (isAdmin ? [...APP_NAV_SECTIONS, ...ADMIN_NAV_SECTIONS] : APP_NAV_SECTIONS),
+    [isAdmin],
+  );
+  const navSections = useMemo(() => buildScopedNavSections(navSource, userScope), [navSource, userScope]);
   const visibleNavSections = useMemo(
     () => navSections.filter((section) => section.showInSidebar !== false),
     [navSections],

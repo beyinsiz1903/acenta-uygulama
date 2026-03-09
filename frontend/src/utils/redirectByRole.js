@@ -1,26 +1,31 @@
 export function redirectByRole(user) {
   if (!user || !user.roles) return "/login";
 
-  // 1) Ürün yüzeyi sadeleştirme: admin ve agency kullanıcıları aynı çekirdek girişe iner
+  // 1) Super admin her zaman tam yönetici yüzeyine iner
   if (user.roles.includes("super_admin")) {
-    return "/app";
+    return "/app/admin/dashboard";
   }
 
-  // 2) Acenta rolleri
+  // 2) Platform admin doğrudan yönetici yüzeyine iner
+  if (user.roles.includes("admin")) {
+    return "/app/admin/dashboard";
+  }
+
+  // 3) Acenta rolleri
   if (user.roles.includes("agency_admin") || user.roles.includes("agency_agent")) {
     return "/app";
   }
 
-  // 3) Otel rolleri
+  // 4) Otel rolleri
   if (user.roles.includes("hotel_admin") || user.roles.includes("hotel_staff")) {
     return "/app/hotel/bookings";
   }
 
-  // 4) İç ofis rolleri (admin, satış, operasyon, muhasebe, b2b_agent)
-  if (user.roles.some((r) => ["admin", "sales", "ops", "accounting", "b2b_agent"].includes(r))) {
+  // 5) İç ofis rolleri (satış, operasyon, muhasebe, b2b_agent)
+  if (user.roles.some((r) => ["sales", "ops", "accounting", "b2b_agent"].includes(r))) {
     return "/app";
   }
 
-  // 5) Diğer tüm roller gerçekten yetkisiz
+  // 6) Diğer tüm roller gerçekten yetkisiz
   return "/unauthorized";
 }

@@ -561,6 +561,21 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `auto_frontend_testing_agent` → landing page validation PASS
   - `deep_testing_backend_v2` → backend no-regression PASS
 
+## Son Uygulama Notu — 2026-03-09 (Landing hero overlap + login görünürlüğü hotfix)
+- Kullanıcı geri bildirimi üzerine landing ve login yüzeyi hızlıca düzeltildi
+  - Hero mockup üst satırında wrap/çakışma riski azaltıldı; topbar artık wrap-safe ve responsive
+  - Hero sağ mockup genişliği sınırlandı, floating kartlar daha geç breakpoint’lerde görünür hale getirildi
+  - Navbar’da görünür `Giriş` erişimi eklendi; `Demo` etiketi kısaltılarak 1100px civarı wrap problemi giderildi
+  - Hero içine ayrıca `Zaten hesabınız var mı? Giriş Yap` yardımcı linki eklendi
+- `/login` sayfası Syroce markasıyla yeniden kurgulandı
+  - eski `Acenta Master` branding kaldırıldı
+  - giriş formu artık daha görünür, üst katmanda ve dönüşüm odaklı bir düzen içinde sunuluyor
+  - ek olarak trial CTA ve ana sayfaya dönüş aksiyonları eklendi
+- Doğrulama
+  - manuel screenshot smoke: `/` 1100px ve `/login` görünürlüğü doğrulandı
+  - `auto_frontend_testing_agent` → 7/7 PASS (hero overlap yok, login form above-the-fold, CTA’lar çalışıyor)
+  - `deep_testing_backend_v2` → auth ve public route no-regression PASS
+
 ## Öncelikli Sonraki Adımlar
 - **P0:** Canlı email provider credential/config aktivasyonu yapılıp outbox -> gerçek teslimat hattını production benzeri ortamda doğrulama
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını timeline + banner + operasyon akışlarıyla daha da birleştirme

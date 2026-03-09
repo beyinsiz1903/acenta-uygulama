@@ -667,6 +667,21 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `deep_testing_backend_v2` → demo seed + role mapping PASS
   - `auto_frontend_testing_agent` → login redirect + demo seed UI 7/7 PASS
 
+## Son Uygulama Notu — 2026-03-09 (Demo seed yetkisi sadece super admin)
+- Kullanıcı talebi üzerine demo seed yetkisi daraltıldı
+  - backend `POST /api/admin/demo/seed` artık yalnız `super_admin` erişimine açık
+  - frontend `DemoSeedButton` artık sadece `super_admin` kullanıcıda render ediliyor
+  - admin yüzeyinde erişim korunması için buton `AdminExecutiveDashboardPage` header alanına eklendi
+- Beklenen davranış hizası
+  - `agent@acenta.test` (`agency_admin`) → `/app` ve demo seed butonu görünmez
+  - `admin@acenta.test` (`super_admin`) → `/app/admin/dashboard` ve demo seed butonu görünür
+- Doğrulama
+  - self-test: agent token ile `/api/admin/demo/seed` → 403 PASS
+  - self-test: admin token ile `/api/admin/demo/seed` → 200 PASS
+  - screenshot smoke: agency kullanıcıda buton gizli, super admin kullanıcıda buton görünür PASS
+  - `deep_testing_backend_v2` → yetki doğrulaması PASS
+  - `auto_frontend_testing_agent` → görünürlük + modal doğrulaması PASS
+
 ## Öncelikli Sonraki Adımlar
 - **P0:** Canlı email provider credential/config aktivasyonu yapılıp outbox -> gerçek teslimat hattını production benzeri ortamda doğrulama
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını timeline + banner + operasyon akışlarıyla daha da birleştirme

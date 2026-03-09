@@ -489,7 +489,7 @@ class BackendTester:
 
 def main():
     # Base URL from environment
-    base_url = "https://travel-agency-os-3.preview.emergentagent.com"
+    base_url = "https://quota-manager-stage.preview.emergentagent.com"
     
     tester = BackendTester(base_url)
     results = tester.run_all_tests()

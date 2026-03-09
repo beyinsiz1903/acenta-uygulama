@@ -1,7 +1,7 @@
 // tests/e2e/notifications.spec.ts
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "https://travel-agency-os-1.preview.emergentagent.com";
+const BASE_URL = "https://agency-platform-18.preview.emergentagent.com";
 
 async function login(page) {
   await page.goto(`${BASE_URL}/login`);

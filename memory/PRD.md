@@ -388,6 +388,18 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - testing agent raporu: `/app/test_reports/iteration_35.json` → backend %100 / frontend %100 geçti
   - frontend testing subagent + backend deep testing subagent no-regression geçti
 
+## Son Uygulama Notu — 2026-03-09 (Frontend auth redirect refactor)
+- Frontend auth yönlendirme/state mantığı merkezi helper’a taşındı
+  - yeni `frontend/src/lib/authRedirect.js` eklendi
+  - `acenta_post_login_redirect` ve `acenta_session_expired` sessionStorage anahtarları artık tek yerden okunup yazılıyor
+  - `RequireAuth`, `LoginPage`, `B2BLoginPage` ve `lib/api` bu ortak helper ile hizalandı
+- Kritik regresyon düzeltildi
+  - login submit sonrası redirect ile bootstrap effect’in çakışmasından doğan double-redirect bug’ı giderildi
+  - kullanıcı artık session-expired sonrası hedef sayfaya dönünce `/app` içine ikinci kez sıçramıyor
+- Doğrulama:
+  - frontend automation: expired session banner, post-login return-to `/app/settings/billing`, sessionStorage cleanup ve normal login akışı geçti
+  - backend deep validation: `POST /api/auth/login`, `GET /api/auth/me`, `GET /api/billing/subscription`, `GET /api/billing/history` geçti; regression yok
+
 ## Öncelikli Sonraki Adımlar
 - **P1:** Yıllık fiyatlandırma akışını yeniden uçtan uca test edip sadeleştirilmiş ürün yüzeyiyle hizalama
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını derinleştirip ödeme problemi state’lerini timeline + banner + operasyon akışlarıyla birleştirme

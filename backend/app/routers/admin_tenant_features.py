@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 
 from app.auth import get_current_user, require_roles
-from app.constants.plan_matrix import PLAN_MATRIX, VALID_PLANS
+from app.constants.plan_matrix import DEFAULT_PLAN, PLAN_MATRIX, VALID_PLANS
 from app.constants.features import ALL_FEATURE_KEYS
 from app.db import get_db
 from app.errors import AppError
@@ -32,6 +32,23 @@ class PatchAddOnsBody(BaseModel):
   add_ons: List[str]
 
 
+PAYMENT_ISSUE_STATUSES = {"past_due", "unpaid", "incomplete", "incomplete_expired"}
+
+
+def _derive_lifecycle_stage(*, tenant_status: str, plan: str, subscription_status: Optional[str], cancel_at_period_end: bool) -> str:
+  if cancel_at_period_end and subscription_status in {"active", "trialing"}:
+    return "canceling"
+  if subscription_status in PAYMENT_ISSUE_STATUSES:
+    return "payment_issue"
+  if subscription_status == "canceled":
+    return "canceled"
+  if subscription_status == "trialing" or plan == "trial":
+    return "trialing"
+  if tenant_status not in {"active", "trialing"}:
+    return tenant_status or "inactive"
+  return "active"
+
+
 @router.get("", dependencies=[AdminDep])
 async def admin_list_tenants(
   search: Optional[str] = Query(None),
@@ -46,20 +63,127 @@ async def admin_list_tenants(
       {"slug": {"$regex": search, "$options": "i"}},
     ]
 
-  cursor = db.tenants.find(flt, {"_id": 1, "name": 1, "slug": 1, "status": 1, "organization_id": 1}).limit(limit)
+  cursor = db.tenants.find(
+    flt,
+    {"_id": 1, "name": 1, "slug": 1, "status": 1, "organization_id": 1},
+  ).sort("name", 1).limit(limit)
   docs = await cursor.to_list(length=limit)
 
+  tenant_ids = [str(d.get("_id")) for d in docs if d.get("_id") is not None]
+  organization_ids = [str(d.get("organization_id")) for d in docs if d.get("organization_id")]
+
+  entitlement_map: Dict[str, Dict[str, Any]] = {}
+  if tenant_ids:
+    entitlement_docs = await db.tenant_entitlements.find(
+      {"tenant_id": {"$in": tenant_ids}},
+      {"_id": 0, "tenant_id": 1, "plan": 1, "plan_label": 1},
+    ).to_list(length=len(tenant_ids))
+    entitlement_map = {str(doc.get("tenant_id")): doc for doc in entitlement_docs if doc.get("tenant_id")}
+
+  billing_map: Dict[str, Dict[str, Any]] = {}
+  if tenant_ids:
+    billing_docs = await db.billing_subscriptions.find(
+      {"tenant_id": {"$in": tenant_ids}},
+      {
+        "_id": 0,
+        "tenant_id": 1,
+        "status": 1,
+        "cancel_at_period_end": 1,
+        "grace_period_until": 1,
+        "current_period_end": 1,
+      },
+    ).to_list(length=len(tenant_ids))
+    billing_map = {str(doc.get("tenant_id")): doc for doc in billing_docs if doc.get("tenant_id")}
+
+  legacy_by_tenant: Dict[str, Dict[str, Any]] = {}
+  legacy_by_org: Dict[str, Dict[str, Any]] = {}
+  if tenant_ids or organization_ids:
+    legacy_cursor = db.subscriptions.find(
+      {
+        "$or": [
+          {"tenant_id": {"$in": tenant_ids}} if tenant_ids else {"tenant_id": "__none__"},
+          {"org_id": {"$in": organization_ids}} if organization_ids else {"org_id": "__none__"},
+        ]
+      },
+      {"_id": 0, "tenant_id": 1, "org_id": 1, "status": 1},
+    ).sort("updated_at", -1)
+    legacy_docs = await legacy_cursor.to_list(length=max(len(tenant_ids), len(organization_ids), 1) * 3)
+    for doc in legacy_docs:
+      tenant_key = str(doc.get("tenant_id") or "")
+      org_key = str(doc.get("org_id") or "")
+      if tenant_key and tenant_key not in legacy_by_tenant:
+        legacy_by_tenant[tenant_key] = doc
+      if org_key and org_key not in legacy_by_org:
+        legacy_by_org[org_key] = doc
+
   items = []
+  summary = {
+    "total": len(docs),
+    "payment_issue_count": 0,
+    "trial_count": 0,
+    "canceling_count": 0,
+    "active_count": 0,
+    "by_plan": {},
+    "lifecycle": {
+      "payment_issue": 0,
+      "trialing": 0,
+      "canceling": 0,
+      "active": 0,
+      "canceled": 0,
+      "inactive": 0,
+    },
+  }
+
   for d in docs:
+    tenant_id = str(d.get("_id"))
+    organization_id = str(d.get("organization_id") or "")
+    projection = entitlement_map.get(tenant_id) or {}
+    plan = str(projection.get("plan") or DEFAULT_PLAN)
+    plan_label = projection.get("plan_label") or PLAN_MATRIX.get(plan, {}).get("label") or plan.title()
+    billing_state = (
+      billing_map.get(tenant_id)
+      or legacy_by_tenant.get(tenant_id)
+      or legacy_by_org.get(organization_id)
+      or {}
+    )
+    subscription_status = billing_state.get("status")
+    lifecycle_stage = _derive_lifecycle_stage(
+      tenant_status=str(d.get("status") or "active"),
+      plan=plan,
+      subscription_status=subscription_status,
+      cancel_at_period_end=bool(billing_state.get("cancel_at_period_end")),
+    )
+
+    summary["by_plan"][plan] = int(summary["by_plan"].get(plan, 0) or 0) + 1
+    if lifecycle_stage not in summary["lifecycle"]:
+      summary["lifecycle"][lifecycle_stage] = 0
+    summary["lifecycle"][lifecycle_stage] += 1
+    if lifecycle_stage == "payment_issue":
+      summary["payment_issue_count"] += 1
+    if lifecycle_stage == "trialing":
+      summary["trial_count"] += 1
+    if lifecycle_stage == "canceling":
+      summary["canceling_count"] += 1
+    if lifecycle_stage == "active":
+      summary["active_count"] += 1
+
     items.append({
-      "id": str(d["_id"]),
+      "id": tenant_id,
       "name": d.get("name", ""),
       "slug": d.get("slug", ""),
       "status": d.get("status", "active"),
-      "organization_id": d.get("organization_id", ""),
+      "organization_id": organization_id,
+      "plan": plan,
+      "plan_label": plan_label,
+      "subscription_status": subscription_status,
+      "cancel_at_period_end": bool(billing_state.get("cancel_at_period_end")),
+      "grace_period_until": billing_state.get("grace_period_until"),
+      "current_period_end": billing_state.get("current_period_end"),
+      "lifecycle_stage": lifecycle_stage,
+      "has_payment_issue": lifecycle_stage == "payment_issue",
     })
 
-  return {"items": items, "total": len(items)}
+  return {"items": items, "total": len(items), "summary": summary}
 
 
 @router.get("/{tenant_id}/features", dependencies=[AdminDep])

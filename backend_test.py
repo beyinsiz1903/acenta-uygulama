@@ -25,7 +25,7 @@ import requests
 from typing import Dict, Any, Optional
 
 # Configuration
-BASE_URL = "https://agency-billing-ui.preview.emergentagent.com"
+BASE_URL = "https://travel-agency-os-2.preview.emergentagent.com"
 AGENT_EMAIL = "agent@acenta.test"
 AGENT_PASSWORD = "agent123"
 ADMIN_EMAIL = "admin@acenta.test"

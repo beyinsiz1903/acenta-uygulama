@@ -1,6 +1,7 @@
 """Tests for Admin Tenant Feature Management endpoints."""
 from __future__ import annotations
 
+from bson import ObjectId
 import pytest
 from httpx import AsyncClient
 
@@ -24,7 +25,7 @@ async def test_admin_get_tenant_features(
   assert body["features"] == []
   assert body["limits"] == {}
   assert body["usage_allowances"] == {}
-  assert len(body["plan_catalog"]) == 3
+  assert len(body["plan_catalog"]) == 4
   assert set(body["available_features"]) == set(ALL_FEATURE_KEYS)
 
 
@@ -51,7 +52,7 @@ async def test_admin_patch_tenant_features(
   assert FEATURE_B2B in body["features"]
   assert FEATURE_REPORTS in body["features"]
   assert body["plan"] == "starter"
-  assert body["limits"]["users.active"] == 2
+  assert body["limits"]["users.active"] == 3
   assert body["usage_allowances"]["reservation.created"] == 100
 
   projection = await test_db.tenant_entitlements.find_one({"tenant_id": target}, {"_id": 0})
@@ -69,7 +70,7 @@ async def test_admin_patch_tenant_features(
   assert FEATURE_B2B in data["features"]
   assert FEATURE_REPORTS in data["features"]
   assert data["source"] == "capabilities"
-  assert data["limits"]["users.active"] == 2
+  assert data["limits"]["users.active"] == 3
 
 
 @pytest.mark.anyio
@@ -101,3 +102,62 @@ async def test_admin_features_requires_admin_role(
   )
   # Should be 403 (forbidden) since agency user doesn't have admin role
   assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.anyio
+async def test_admin_list_tenants_returns_plan_and_billing_summary(
+  async_client: AsyncClient,
+  admin_headers: dict,
+  test_db,
+) -> None:
+  tenant_id = ObjectId()
+  tenant_id_str = str(tenant_id)
+  tenant_slug = "admin-list-test-tenant"
+
+  await test_db.tenants.insert_one(
+    {
+      "_id": tenant_id,
+      "name": "Admin List Test Tenant",
+      "slug": tenant_slug,
+      "status": "active",
+      "organization_id": "org_admin_list_test",
+    }
+  )
+  await test_db.tenant_entitlements.insert_one(
+    {
+      "tenant_id": tenant_id_str,
+      "plan": "pro",
+      "plan_label": "Pro",
+    }
+  )
+  await test_db.billing_subscriptions.insert_one(
+    {
+      "tenant_id": tenant_id_str,
+      "plan": "pro",
+      "status": "past_due",
+      "cancel_at_period_end": False,
+      "current_period_end": "2026-04-30T00:00:00+00:00",
+      "grace_period_until": "2026-04-10T00:00:00+00:00",
+    }
+  )
+
+  resp = await async_client.get(
+    f"/api/admin/tenants?search={tenant_slug}",
+    headers=admin_headers,
+  )
+
+  assert resp.status_code == 200, resp.text
+  body = resp.json()
+  assert body["total"] == 1
+  assert body["summary"]["payment_issue_count"] == 1
+  assert body["summary"]["by_plan"]["pro"] == 1
+  assert body["summary"]["lifecycle"]["payment_issue"] == 1
+
+  item = body["items"][0]
+  assert item["id"] == tenant_id_str
+  assert item["plan"] == "pro"
+  assert item["plan_label"] == "Pro"
+  assert item["subscription_status"] == "past_due"
+  assert item["has_payment_issue"] is True
+  assert item["lifecycle_stage"] == "payment_issue"
+  assert item["grace_period_until"] == "2026-04-10T00:00:00+00:00"

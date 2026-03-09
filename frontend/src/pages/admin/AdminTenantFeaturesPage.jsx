@@ -21,6 +21,91 @@ const STATUS_MAP = {
   canceled: { label: "Canceled", color: "bg-muted text-muted-foreground border-border" },
 };
 
+const LIST_STAGE_MAP = {
+  active: { label: "Aktif", color: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20" },
+  trialing: { label: "Trial", color: "bg-blue-500/10 text-blue-700 border-blue-500/20" },
+  payment_issue: { label: "Ödeme sorunu", color: "bg-amber-500/10 text-amber-700 border-amber-500/20" },
+  canceling: { label: "İptal sırada", color: "bg-orange-500/10 text-orange-700 border-orange-500/20" },
+  canceled: { label: "İptal", color: "bg-muted text-muted-foreground border-border" },
+  inactive: { label: "Pasif", color: "bg-muted text-muted-foreground border-border" },
+};
+
+const PLAN_BADGE_MAP = {
+  trial: "bg-sky-500/10 text-sky-700 border-sky-500/20",
+  starter: "bg-slate-500/10 text-slate-700 border-slate-500/20",
+  pro: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
+  enterprise: "bg-violet-500/10 text-violet-700 border-violet-500/20",
+};
+
+const FILTER_OPTIONS = [
+  { key: "all", label: "Tümü" },
+  { key: "payment_issue", label: "Ödeme sorunu" },
+  { key: "trialing", label: "Trial" },
+  { key: "canceling", label: "İptal sırada" },
+  { key: "active", label: "Aktif" },
+];
+
+const TENANT_STAGE_PRIORITY = {
+  payment_issue: 0,
+  canceling: 1,
+  trialing: 2,
+  active: 3,
+  canceled: 4,
+  inactive: 5,
+};
+
+function resolveTenantStage(tenant) {
+  if (tenant?.lifecycle_stage) return tenant.lifecycle_stage;
+  if (tenant?.has_payment_issue) return "payment_issue";
+  if (tenant?.cancel_at_period_end && ["active", "trialing"].includes(tenant?.subscription_status)) return "canceling";
+  if (["past_due", "unpaid", "incomplete", "incomplete_expired"].includes(tenant?.subscription_status)) return "payment_issue";
+  if (tenant?.subscription_status === "trialing" || tenant?.plan === "trial") return "trialing";
+  if (tenant?.subscription_status === "canceled") return "canceled";
+  return tenant?.status === "active" ? "active" : (tenant?.status || "inactive");
+}
+
+function getTenantStageMeta(tenant) {
+  return LIST_STAGE_MAP[resolveTenantStage(tenant)] || { label: resolveTenantStage(tenant), color: "bg-muted text-muted-foreground border-border" };
+}
+
+function TenantSummaryCard({ title, value, subtitle, icon: Icon, tone = "default", testId }) {
+  const toneClasses = {
+    default: "border-border/70 bg-card",
+    warning: "border-amber-500/30 bg-amber-500/5",
+    success: "border-emerald-500/30 bg-emerald-500/5",
+    info: "border-sky-500/30 bg-sky-500/5",
+  };
+
+  return (
+    <div className={`rounded-2xl border p-4 shadow-sm ${toneClasses[tone] || toneClasses.default}`} data-testid={testId}>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{title}</p>
+          <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">{value}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>
+        </div>
+        <div className="rounded-2xl border border-white/60 bg-background/70 p-2.5 text-muted-foreground">
+          <Icon className="h-4 w-4" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TenantFilterButton({ option, count, active, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground hover:border-primary/30 hover:text-foreground"}`}
+      data-testid={`tenant-filter-${option.key}`}
+    >
+      <span>{option.label}</span>
+      <span className={`rounded-full px-1.5 py-0.5 text-[11px] ${active ? "bg-white/20 text-primary-foreground" : "bg-muted text-foreground"}`}>{count}</span>
+    </button>
+  );
+}
+
 function getDisplayStatus(sub) {
   if (!sub) return null;
   if (sub.cancel_at_period_end && sub.status === "active") {
@@ -185,6 +270,9 @@ function SubscriptionPanel({ tenantId }) {
 
 function TenantListItem({ tenant, selected, onSelect }) {
   const [copied, setCopied] = useState(false);
+  const stageMeta = getTenantStageMeta(tenant);
+  const planClass = PLAN_BADGE_MAP[tenant.plan] || "bg-muted text-muted-foreground border-border";
+
   const handleCopy = (e) => {
     e.stopPropagation();
     navigator.clipboard.writeText(tenant.id);
@@ -207,6 +295,19 @@ function TenantListItem({ tenant, selected, onSelect }) {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-foreground truncate">{tenant.name || "(isimsiz)"}</p>
           <p className="text-xs text-muted-foreground truncate">{tenant.slug}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <Badge className={`${planClass} text-2xs px-1.5 py-0`} data-testid={`tenant-plan-badge-${tenant.id}`}>
+              {tenant.plan_label || tenant.plan || "Starter"}
+            </Badge>
+            <Badge className={`${stageMeta.color} text-2xs px-1.5 py-0`} data-testid={`tenant-lifecycle-badge-${tenant.id}`}>
+              {stageMeta.label}
+            </Badge>
+            {tenant.grace_period_until ? (
+              <span className="text-[11px] font-medium text-amber-700" data-testid={`tenant-grace-period-${tenant.id}`}>
+                Grace: {formatTRDate(tenant.grace_period_until)}
+              </span>
+            ) : null}
+          </div>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           <Badge variant={tenant.status === "active" ? "default" : "secondary"} className="text-2xs px-1.5 py-0">
@@ -247,8 +348,10 @@ function FeatureCheckboxRow({ feature, checked, isFromPlan, onChange, disabled }
 
 export default function AdminTenantFeaturesPage() {
   const [tenants, setTenants] = useState([]);
+  const [tenantSummary, setTenantSummary] = useState(null);
   const [loadingTenants, setLoadingTenants] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [selectedTenant, setSelectedTenant] = useState(null);
 
   // New: plan + add-ons model
@@ -264,16 +367,74 @@ export default function AdminTenantFeaturesPage() {
   const [loadingFeatures, setLoadingFeatures] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    setLoadingTenants(true);
-    fetchTenantList().then((d) => setTenants(d.items || [])).catch(() => setTenants([])).finally(() => setLoadingTenants(false));
+  const syncTenantSnapshot = useCallback((tenantId, patch) => {
+    setTenants((prev) => prev.map((item) => (item.id === tenantId ? { ...item, ...patch } : item)));
+    setSelectedTenant((prev) => (prev?.id === tenantId ? { ...prev, ...patch } : prev));
   }, []);
 
+  const loadTenantDirectory = useCallback(async () => {
+    setLoadingTenants(true);
+    try {
+      const data = await fetchTenantList();
+      setTenants(data.items || []);
+      setTenantSummary(data.summary || null);
+    } catch {
+      setTenants([]);
+      setTenantSummary(null);
+    } finally {
+      setLoadingTenants(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTenantDirectory();
+  }, [loadTenantDirectory]);
+
+  const computedSummary = useMemo(() => {
+    if (tenantSummary) return tenantSummary;
+    const base = {
+      total: tenants.length,
+      payment_issue_count: 0,
+      trial_count: 0,
+      canceling_count: 0,
+      active_count: 0,
+      by_plan: {},
+      lifecycle: {},
+    };
+    tenants.forEach((tenant) => {
+      const stage = resolveTenantStage(tenant);
+      base.by_plan[tenant.plan || "starter"] = (base.by_plan[tenant.plan || "starter"] || 0) + 1;
+      base.lifecycle[stage] = (base.lifecycle[stage] || 0) + 1;
+      if (stage === "payment_issue") base.payment_issue_count += 1;
+      if (stage === "trialing") base.trial_count += 1;
+      if (stage === "canceling") base.canceling_count += 1;
+      if (stage === "active") base.active_count += 1;
+    });
+    return base;
+  }, [tenantSummary, tenants]);
+
+  const filterCounts = useMemo(() => ({
+    all: tenants.length,
+    payment_issue: computedSummary?.lifecycle?.payment_issue || 0,
+    trialing: computedSummary?.lifecycle?.trialing || 0,
+    canceling: computedSummary?.lifecycle?.canceling || 0,
+    active: computedSummary?.lifecycle?.active || 0,
+  }), [computedSummary, tenants.length]);
+
   const filteredTenants = useMemo(() => {
-    if (!searchQuery.trim()) return tenants;
-    const q = searchQuery.toLowerCase();
-    return tenants.filter((t) => (t.name || "").toLowerCase().includes(q) || (t.slug || "").toLowerCase().includes(q));
-  }, [tenants, searchQuery]);
+    const q = searchQuery.trim().toLowerCase();
+    return [...tenants]
+      .filter((tenant) => {
+        const matchesSearch = !q || (tenant.name || "").toLowerCase().includes(q) || (tenant.slug || "").toLowerCase().includes(q);
+        const matchesFilter = statusFilter === "all" || resolveTenantStage(tenant) === statusFilter;
+        return matchesSearch && matchesFilter;
+      })
+      .sort((a, b) => {
+        const stageDelta = (TENANT_STAGE_PRIORITY[resolveTenantStage(a)] ?? 99) - (TENANT_STAGE_PRIORITY[resolveTenantStage(b)] ?? 99);
+        if (stageDelta !== 0) return stageDelta;
+        return String(a.name || a.slug || "").localeCompare(String(b.name || b.slug || ""), "tr");
+      });
+  }, [searchQuery, statusFilter, tenants]);
 
   const loadFeatures = useCallback(async (tenant) => {
     setSelectedTenant(tenant);
@@ -291,6 +452,10 @@ export default function AdminTenantFeaturesPage() {
       setAvailablePlans(data.plans || ["starter", "pro", "enterprise"]);
       setPlanCatalog(data.plan_catalog || []);
       setEntitlementSource(data.source || "capabilities");
+      syncTenantSnapshot(tenant.id, {
+        plan: data.plan || tenant.plan,
+        plan_label: data.plan_label || tenant.plan_label,
+      });
     } catch {
       setCurrentPlan("starter");
       setAddOns([]);
@@ -301,7 +466,7 @@ export default function AdminTenantFeaturesPage() {
     } finally {
       setLoadingFeatures(false);
     }
-  }, []);
+  }, [syncTenantSnapshot]);
 
   const planFeatures = useMemo(() => new Set(planMatrix[currentPlan] || []), [planMatrix, currentPlan]);
 
@@ -348,6 +513,11 @@ export default function AdminTenantFeaturesPage() {
       setInitialPlan(data.plan || currentPlan);
       setInitialAddOns([...(data.add_ons || [])]);
       setEntitlementSource(data.source || entitlementSource);
+      syncTenantSnapshot(selectedTenant.id, {
+        plan: data.plan || currentPlan,
+        plan_label: data.plan_label || currentPlanDefinition?.label || currentPlan,
+      });
+      await loadTenantDirectory();
       toast.success("Özellikler güncellendi.");
     } catch (err) {
       toast.error(apiErrorMessage(err));
@@ -358,20 +528,78 @@ export default function AdminTenantFeaturesPage() {
 
   return (
     <div className="space-y-6" data-testid="admin-tenant-features-page">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground tracking-tight" data-testid="page-title">Tenant Entitlements</h1>
-        <p className="text-sm text-muted-foreground mt-1">Plan, add-on ve limit projeksiyonları ile tenant paketlerini yönetin.</p>
+      <div className="space-y-2">
+        <h1 className="text-2xl font-semibold text-foreground tracking-tight" data-testid="page-title">Tenant Paket Merkezi</h1>
+        <p className="text-sm text-muted-foreground mt-1">Plan, faturalama riski ve modül dağılımını tek ekranda görün; ödeme sorunu yaşayan tenant’ları hızla aksiyona alın.</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <TenantSummaryCard
+          title="Toplam tenant"
+          value={computedSummary?.total || 0}
+          subtitle={`${computedSummary?.active_count || 0} aktif tenant izleniyor`}
+          icon={Building2}
+          tone="default"
+          testId="tenant-summary-total"
+        />
+        <TenantSummaryCard
+          title="Ödeme sorunu"
+          value={computedSummary?.payment_issue_count || 0}
+          subtitle="Billing aksiyonu bekleyen tenant sayısı"
+          icon={AlertTriangle}
+          tone="warning"
+          testId="tenant-summary-payment-issue"
+        />
+        <TenantSummaryCard
+          title="Trial"
+          value={computedSummary?.trial_count || 0}
+          subtitle="Yakın takip edilmesi gereken deneme tenant’ları"
+          icon={Calendar}
+          tone="info"
+          testId="tenant-summary-trial"
+        />
+        <TenantSummaryCard
+          title="İptal sırada"
+          value={computedSummary?.canceling_count || 0}
+          subtitle="Retention için geri kazanım fırsatı"
+          icon={CreditCard}
+          tone="success"
+          testId="tenant-summary-canceling"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Tenant List */}
-        <div className="lg:col-span-4 border rounded-lg bg-card overflow-hidden">
-          <div className="p-3 border-b bg-muted/30">
+        <div className="lg:col-span-4 overflow-hidden rounded-[1.5rem] border bg-card shadow-sm">
+          <div className="space-y-3 border-b bg-muted/20 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Tenant dizini</p>
+                <p className="text-sm text-muted-foreground">Önce riskli tenant’lar gösterilir.</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={loadTenantDirectory} data-testid="tenant-list-refresh-button">
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Yenile
+              </Button>
+            </div>
+
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Tenant ara..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-9" data-testid="tenant-search-input" />
             </div>
+
+            <div className="flex flex-wrap gap-2" data-testid="tenant-filter-bar">
+              {FILTER_OPTIONS.map((option) => (
+                <TenantFilterButton
+                  key={option.key}
+                  option={option}
+                  count={filterCounts[option.key] || 0}
+                  active={statusFilter === option.key}
+                  onClick={() => setStatusFilter(option.key)}
+                />
+              ))}
+            </div>
           </div>
+
           <div className="max-h-[520px] overflow-y-auto">
             {loadingTenants ? (
               <div className="flex items-center justify-center py-12 text-muted-foreground">
@@ -386,7 +614,9 @@ export default function AdminTenantFeaturesPage() {
               <TenantListItem key={t.id} tenant={t} selected={selectedTenant?.id === t.id} onSelect={loadFeatures} />
             ))}
           </div>
-          <div className="px-3 py-2 border-t bg-muted/20 text-xs text-muted-foreground">{filteredTenants.length} tenant</div>
+          <div className="border-t bg-muted/20 px-3 py-2 text-xs text-muted-foreground" data-testid="tenant-list-count">
+            {filteredTenants.length} sonuç · toplam {tenants.length} tenant
+          </div>
         </div>
 
         {/* Right: Plan + Add-on Management */}

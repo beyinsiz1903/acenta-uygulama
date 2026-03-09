@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Base URL from environment
-BASE_URL = "https://agency-billing-ui.preview.emergentagent.com"
+BASE_URL = "https://travel-agency-os-2.preview.emergentagent.com"
 
 # Demo credentials from review request
 DEMO_EMAIL = "admin@demo-travel.demo.test"

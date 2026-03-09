@@ -394,6 +394,7 @@ function App() {
             <Route path="product-mode" element={<AdminProductModePage />} />
             {/* Data & Migration */}
             <Route path="import" element={<AdminImportPage />} />
+            <Route path="google-sheets" element={<Navigate to="/app/admin/portfolio-sync" replace />} />
             <Route path="portfolio-sync" element={<AdminPortfolioSyncPage />} />
           </Route>
         </Route>

@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { api } from "../../lib/api";
 import { SheetTemplateCenter } from "../../components/admin/sheets/SheetTemplateCenter";
 import { SheetValidationPanel } from "../../components/admin/sheets/SheetValidationPanel";
+import { toast } from "sonner";
 import {
   Sheet, Link2, RefreshCw, CheckCircle2, AlertTriangle, XCircle,
   ChevronRight, ChevronDown, Clock, Zap, ArrowRight, Search,
@@ -94,6 +95,7 @@ function ConfigBanner({ config, onConfigSaved }) {
     if (config.service_account_email) {
       navigator.clipboard.writeText(config.service_account_email);
       setCopied(true);
+      toast.success("Service account e-postasi kopyalandi");
       setTimeout(() => setCopied(false), 2000);
     }
   };
@@ -107,9 +109,12 @@ function ConfigBanner({ config, onConfigSaved }) {
       });
       setShowSetup(false);
       setJsonInput("");
+      toast.success("Google Service Account kaydedildi");
       if (onConfigSaved) onConfigSaved(res.data);
     } catch (e) {
-      setSaveError(e.response?.data?.error?.message || e.message || "Kaydetme hatasi");
+      const message = e.response?.data?.error?.message || e.message || "Kaydetme hatasi";
+      setSaveError(message);
+      toast.error(message);
     } finally {
       setSaving(false);
     }
@@ -120,10 +125,10 @@ function ConfigBanner({ config, onConfigSaved }) {
       <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 flex items-center gap-3">
         <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
         <div className="flex-1">
-          <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200">Google Sheets Yapilandirildi</p>
+          <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200" data-testid="portfolio-sync-configured-title">Google Sheets Yapilandirildi</p>
           <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
             Servis hesabi: <code className="bg-emerald-100 dark:bg-emerald-800 px-1.5 py-0.5 rounded">{config.service_account_email}</code>
-            <button onClick={copyEmail} className="ml-2 text-emerald-700 dark:text-emerald-300 hover:text-emerald-900">
+            <button onClick={copyEmail} className="ml-2 text-emerald-700 dark:text-emerald-300 hover:text-emerald-900" data-testid="portfolio-sync-copy-service-account-email">
               <Copy className="w-3.5 h-3.5 inline" /> {copied ? "Kopyalandi!" : "Kopyala"}
             </button>
           </p>
@@ -140,7 +145,7 @@ function ConfigBanner({ config, onConfigSaved }) {
       <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-start gap-3">
         <WifiOff className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
         <div className="flex-1">
-          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">Google Sheets Yapilandirilmamis</p>
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-200" data-testid="portfolio-sync-not-configured-title">Google Sheets Yapilandirilmamis</p>
           <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
             Google Service Account JSON ayarlanmamis. Asagidaki butona tiklayarak yapilandirabilirsiniz.
             Baglanti kayitlari saklanir, anahtar eklendigi anda otomatik calisir.
@@ -148,6 +153,7 @@ function ConfigBanner({ config, onConfigSaved }) {
           <button
             onClick={() => setShowSetup(!showSetup)}
             className="mt-2 px-3 py-1.5 text-xs bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+            data-testid="portfolio-sync-toggle-service-account-form"
           >
             {showSetup ? "Kapat" : "Service Account Ayarla"}
           </button>
@@ -169,15 +175,17 @@ function ConfigBanner({ config, onConfigSaved }) {
             placeholder='{"type": "service_account", "project_id": "...", "client_email": "...", "private_key": "..."}'
             rows={6}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-xs font-mono bg-gray-50 dark:bg-gray-900 text-foreground dark:text-foreground focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            data-testid="portfolio-sync-service-account-json-input"
           />
           {saveError && (
-            <div className="text-xs text-red-600 bg-red-50 rounded p-2">{saveError}</div>
+            <div className="text-xs text-red-600 bg-red-50 rounded p-2" data-testid="portfolio-sync-service-account-error">{saveError}</div>
           )}
           <div className="flex justify-end">
             <button
               onClick={handleSave}
               disabled={!jsonInput.trim() || saving}
               className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              data-testid="portfolio-sync-save-service-account"
             >
               {saving ? "Kaydediliyor..." : "Kaydet ve Etkinlestir"}
             </button>
@@ -290,6 +298,7 @@ function ConnectionsTable({ connections, onSync, onToggle, onDelete, onViewRuns,
                       checked={c.sync_enabled}
                       onChange={() => onToggle(c)}
                       className="sr-only peer"
+                      data-testid={`portfolio-sync-toggle-${rowKey}`}
                     />
                     <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                   </label>
@@ -339,6 +348,7 @@ function ConnectWizard({ hotels, onConnect, onClose }) {
   const [selectedHotel, setSelectedHotel] = useState(null);
   const [sheetId, setSheetId] = useState("");
   const [sheetTab, setSheetTab] = useState("Sheet1");
+  const [writebackTab, setWritebackTab] = useState("Rezervasyonlar");
   const [syncEnabled, setSyncEnabled] = useState(true);
   const [syncInterval, setSyncInterval] = useState(5);
   const [mapping, setMapping] = useState({});
@@ -354,13 +364,23 @@ function ConnectWizard({ hotels, onConnect, onClose }) {
   );
 
   const handleConnect = async () => {
+    if (!selectedHotel?._id) {
+      setError("Otel secimi zorunlu");
+      return;
+    }
+    if (!sheetId.trim()) {
+      setError("Sheet ID zorunlu");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
       const res = await api.post("/admin/sheets/connect", {
         hotel_id: selectedHotel._id,
-        sheet_id: sheetId,
+        sheet_id: sheetId.trim(),
         sheet_tab: sheetTab,
+        writeback_tab: writebackTab,
         mapping: Object.keys(mapping).length > 0 ? mapping : detectedMapping,
         sync_enabled: syncEnabled,
         sync_interval_minutes: syncInterval,
@@ -376,15 +396,15 @@ function ConnectWizard({ hotels, onConnect, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose} data-testid="portfolio-sync-connect-wizard-overlay">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()} data-testid="portfolio-sync-connect-wizard">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
           <div>
             <h2 className="text-lg font-semibold text-foreground dark:text-white">Yeni Sheet Baglantisi</h2>
             <p className="text-xs text-muted-foreground mt-0.5">Adim {step} / 3</p>
           </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" data-testid="portfolio-sync-close-wizard-button">
             <X className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
@@ -406,7 +426,7 @@ function ConnectWizard({ hotels, onConnect, onClose }) {
 
         <div className="p-5 space-y-4">
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-700 dark:text-red-300 flex items-start gap-2">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-700 dark:text-red-300 flex items-start gap-2" data-testid="portfolio-sync-connect-error">
               <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               {error}
             </div>
@@ -423,16 +443,18 @@ function ConnectWizard({ hotels, onConnect, onClose }) {
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 text-foreground dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  data-testid="portfolio-sync-hotel-search-input"
                 />
               </div>
               <div className="max-h-60 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-100 dark:divide-gray-700">
                 {availableHotels.length === 0 ? (
-                  <div className="p-4 text-sm text-muted-foreground text-center">Baglanabilir otel bulunamadi</div>
+                  <div className="p-4 text-sm text-muted-foreground text-center" data-testid="portfolio-sync-no-hotels">Baglanabilir otel bulunamadi</div>
                 ) : availableHotels.map(h => (
                   <button
                     key={h._id}
                     onClick={() => { setSelectedHotel(h); setStep(2); }}
                     className={`w-full text-left px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors ${selectedHotel?._id === h._id ? "bg-blue-50 dark:bg-blue-900/20" : ""}`}
+                    data-testid={`portfolio-sync-select-hotel-${h._id}`}
                   >
                     <p className="font-medium text-foreground dark:text-white text-sm">{h.name}</p>
                     <p className="text-xs text-muted-foreground/60">{h.city}</p>
@@ -457,6 +479,7 @@ function ConnectWizard({ hotels, onConnect, onClose }) {
                   onChange={e => setSheetId(e.target.value)}
                   placeholder="1BxiMVs0XRA5nFMdKvBdBZjg..."
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 text-foreground dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  data-testid="portfolio-sync-sheet-id-input"
                 />
               </div>
               <div>
@@ -467,11 +490,23 @@ function ConnectWizard({ hotels, onConnect, onClose }) {
                   onChange={e => setSheetTab(e.target.value)}
                   placeholder="Sheet1"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 text-foreground dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  data-testid="portfolio-sync-sheet-tab-input"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground dark:text-muted-foreground/40 mb-1">Rezervasyon Write-back Tab</label>
+                <input
+                  type="text"
+                  value={writebackTab}
+                  onChange={e => setWritebackTab(e.target.value)}
+                  placeholder="Rezervasyonlar"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 text-foreground dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  data-testid="portfolio-sync-writeback-tab-input"
                 />
               </div>
               <div className="flex gap-2 justify-end">
-                <button onClick={() => setStep(1)} className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Geri</button>
-                <button onClick={() => sheetId ? setStep(3) : setError("Sheet ID zorunlu")} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Devam <ChevronRight className="w-4 h-4 inline" /></button>
+                <button onClick={() => setStep(1)} className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" data-testid="portfolio-sync-step-back-button">Geri</button>
+                <button onClick={() => sheetId ? setStep(3) : setError("Sheet ID zorunlu")} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors" data-testid="portfolio-sync-step-continue-button">Devam <ChevronRight className="w-4 h-4 inline" /></button>
               </div>
             </div>
           )}
@@ -483,12 +518,13 @@ function ConnectWizard({ hotels, onConnect, onClose }) {
                 <div className="flex justify-between"><span className="text-muted-foreground">Otel:</span> <span className="font-medium text-foreground dark:text-white">{selectedHotel?.name}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Sheet ID:</span> <span className="font-mono text-xs text-foreground dark:text-muted-foreground/40 truncate max-w-[300px]">{sheetId}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Sayfa:</span> <span className="font-medium text-foreground dark:text-white">{sheetTab}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Write-back:</span> <span className="font-medium text-foreground dark:text-white">{writebackTab}</span></div>
               </div>
 
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium text-foreground dark:text-muted-foreground/40">Otomatik Sync</label>
                 <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" checked={syncEnabled} onChange={e => setSyncEnabled(e.target.checked)} className="sr-only peer" />
+                  <input type="checkbox" checked={syncEnabled} onChange={e => setSyncEnabled(e.target.checked)} className="sr-only peer" data-testid="portfolio-sync-enable-auto-sync" />
                   <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
                 </label>
               </div>
@@ -499,6 +535,7 @@ function ConnectWizard({ hotels, onConnect, onClose }) {
                   value={syncInterval}
                   onChange={e => setSyncInterval(Number(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 text-foreground dark:text-white"
+                  data-testid="portfolio-sync-interval-select"
                 >
                   <option value={1}>1 dk</option>
                   <option value={5}>5 dk</option>
@@ -509,8 +546,8 @@ function ConnectWizard({ hotels, onConnect, onClose }) {
               </div>
 
               <div className="flex gap-2 justify-end pt-2">
-                <button onClick={() => setStep(2)} className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Geri</button>
-                <button onClick={handleConnect} disabled={loading} className="px-5 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 transition-colors">
+                <button onClick={() => setStep(2)} className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" data-testid="portfolio-sync-final-back-button">Geri</button>
+                <button onClick={handleConnect} disabled={loading} className="px-5 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 transition-colors" data-testid="portfolio-sync-confirm-connect-button">
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
                   Bagla
                 </button>
@@ -541,14 +578,14 @@ function SyncRunsDrawer({ hotelId, hotelName, onClose }) {
   }, [hotelId]);
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex justify-end" onClick={onClose}>
-      <div className="bg-white dark:bg-gray-800 w-full max-w-lg h-full shadow-2xl overflow-y-auto" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/50 z-50 flex justify-end" onClick={onClose} data-testid="portfolio-sync-runs-drawer-overlay">
+      <div className="bg-white dark:bg-gray-800 w-full max-w-lg h-full shadow-2xl overflow-y-auto" onClick={e => e.stopPropagation()} data-testid="portfolio-sync-runs-drawer">
         <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-10">
           <div>
             <h2 className="text-lg font-semibold text-foreground dark:text-white">Sync Gecmisi</h2>
             <p className="text-xs text-muted-foreground">{hotelName}</p>
           </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" data-testid="portfolio-sync-close-runs-drawer">
             <X className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
@@ -857,6 +894,7 @@ export default function AdminPortfolioSyncPage() {
       setConnections(connsRes.data || []);
       setWritebackStats(wbRes.data);
       setTemplates(templatesRes.data);
+      setError(null);
     } catch (e) {
       setError(e.response?.data?.error?.message || e.message);
     } finally {
@@ -877,9 +915,21 @@ export default function AdminPortfolioSyncPage() {
   const handleSync = async (conn) => {
     setSyncing(conn.hotel_id);
     try {
-      await api.post(`/admin/sheets/sync/${conn.hotel_id}`);
+      const res = await api.post(`/admin/sheets/sync/${conn.hotel_id}`);
+      if (res.data?.status === "not_configured") {
+        toast.error(res.data?.message || "Google Sheets yapilandirilmamis");
+      } else if (res.data?.status === "no_change") {
+        toast.success(`${conn.hotel_name} icin degisiklik bulunamadi`);
+      } else if (res.data?.status === "success") {
+        toast.success(`${conn.hotel_name} icin sync tamamlandi`);
+      } else {
+        toast.message(`${conn.hotel_name} sync durumu: ${res.data?.status || "bilinmiyor"}`);
+      }
       await loadAll(false);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      toast.error(e.response?.data?.error?.message || e.message || "Sync hatasi");
+    }
     finally { setSyncing(null); }
   };
 
@@ -888,19 +938,28 @@ export default function AdminPortfolioSyncPage() {
       await api.patch(`/admin/sheets/connections/${conn.hotel_id}`, {
         sync_enabled: !conn.sync_enabled,
       });
+      toast.success(`${conn.hotel_name} icin otomatik sync ${conn.sync_enabled ? "kapatildi" : "acildi"}`);
       await loadAll(false);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      toast.error(e.response?.data?.error?.message || e.message || "Durum guncellenemedi");
+    }
   };
 
   const handleDelete = async (conn) => {
     if (!window.confirm(`"${conn.hotel_name}" baglantisini silmek istediginizden emin misiniz?`)) return;
     try {
       await api.delete(`/admin/sheets/connections/${conn.hotel_id}`);
+      toast.success(`${conn.hotel_name} baglantisi silindi`);
       await loadAll(false);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      toast.error(e.response?.data?.error?.message || e.message || "Baglanti silinemedi");
+    }
   };
 
   const handleConnect = async (result) => {
+    toast.success(`${result?.hotel_name || "Otel"} icin sheet baglantisi olusturuldu`);
     setShowWizard(false);
     await loadAll(false);
   };

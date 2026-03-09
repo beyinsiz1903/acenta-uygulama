@@ -1137,11 +1137,11 @@ export default function AgencyHotelsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {filtered.map((hotel) => (
-          <Card key={hotel.hotel_id} className="rounded-2xl border bg-card shadow-sm">
+          <Card key={hotel.hotel_id} className="rounded-2xl border bg-card shadow-sm" data-testid={`agency-hotel-card-${hotel.hotel_id}`}>
             <CardContent className="p-5 flex items-start justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <div className="text-lg font-semibold">{hotel.hotel_name || "-"}</div>
+                  <div className="text-lg font-semibold" data-testid={`agency-hotel-name-${hotel.hotel_id}`}>{hotel.hotel_name || "-"}</div>
                   <Badge
                     className={
                       hotel.status_label === "Satışa Açık"
@@ -1150,6 +1150,7 @@ export default function AgencyHotelsPage() {
                         ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
                         : "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20"
                     }
+                    data-testid={`agency-hotel-status-${hotel.hotel_id}`}
                   >
                     {hotel.status_label || "-"}
                   </Badge>
@@ -1163,7 +1164,7 @@ export default function AgencyHotelsPage() {
                       </Badge>
                     )}
                 </div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-muted-foreground" data-testid={`agency-hotel-location-${hotel.hotel_id}`}>
                   {hotel.location || "-"}
                 </div>
                   {hotel.sheet_managed_inventory && (
@@ -1183,6 +1184,7 @@ export default function AgencyHotelsPage() {
                   className="px-3 py-1.5 text-xs font-medium"
                   onClick={() => navigate(`/app/agency/hotels/${hotel.hotel_id}/search`)}
                   disabled={!isLinkActive(hotel) || hotel.status_label === "Satışa Kapalı"}
+                  data-testid={`agency-hotel-create-booking-${hotel.hotel_id}`}
                 >
                   Rezervasyon Oluştur
                 </Button>
@@ -1191,6 +1193,7 @@ export default function AgencyHotelsPage() {
                   className="px-3 py-1.5 text-xs font-medium"
                   type="button"
                   onClick={() => goHotelBookings(hotel.hotel_id)}
+                  data-testid={`agency-hotel-bookings-${hotel.hotel_id}`}
                 >
                   Rezervasyonlar
                 </Button>
@@ -1199,6 +1202,7 @@ export default function AgencyHotelsPage() {
                   className="px-3 py-1.5 text-xs font-medium"
                   type="button"
                   onClick={() => goHotelDetail(hotel.hotel_id)}
+                  data-testid={`agency-hotel-detail-${hotel.hotel_id}`}
                 >
                   Detay
                 </Button>

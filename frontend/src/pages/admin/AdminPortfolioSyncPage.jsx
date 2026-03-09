@@ -246,8 +246,10 @@ function ConnectionsTable({ connections, onSync, onToggle, onDelete, onViewRuns,
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-            {connections.map((c) => (
-              <tr key={c._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" data-testid={`portfolio-sync-connection-row-${c._id}`}>
+            {connections.map((c, index) => {
+              const rowKey = c._id || c.hotel_id || `connection-${index}`;
+              return (
+              <tr key={rowKey} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" data-testid={`portfolio-sync-connection-row-${rowKey}`}>
                 <td className="px-4 py-3">
                   <p className="font-medium text-foreground dark:text-white">{c.hotel_name || "—"}</p>
                   <p className="text-xs text-muted-foreground/60 truncate max-w-[180px]">{c.hotel_id}</p>
@@ -255,7 +257,7 @@ function ConnectionsTable({ connections, onSync, onToggle, onDelete, onViewRuns,
                 <td className="px-4 py-3">
                   <p className="text-foreground dark:text-muted-foreground/40 text-xs truncate max-w-[200px]" title={c.sheet_id}>{c.sheet_title || c.sheet_id}</p>
                   <p className="text-xs text-muted-foreground/60">{c.sheet_tab}</p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2" data-testid={`portfolio-sync-connection-validation-${c._id}`}>
+                  <div className="mt-2 flex flex-wrap items-center gap-2" data-testid={`portfolio-sync-connection-validation-${rowKey}`}>
                     <ValidationBadge status={c.validation_status || "pending_validation"} />
                     {c.writeback_tab && (
                       <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
@@ -291,7 +293,7 @@ function ConnectionsTable({ connections, onSync, onToggle, onDelete, onViewRuns,
                       disabled={syncing === c.hotel_id}
                       className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 disabled:opacity-40 transition-colors"
                       title="Simdi Sync Et"
-                      data-testid={`portfolio-sync-run-button-${c._id}`}
+                      data-testid={`portfolio-sync-run-button-${rowKey}`}
                     >
                       <RefreshCw className={`w-4 h-4 ${syncing === c.hotel_id ? "animate-spin" : ""}`} />
                     </button>
@@ -299,7 +301,7 @@ function ConnectionsTable({ connections, onSync, onToggle, onDelete, onViewRuns,
                       onClick={() => onViewRuns(c)}
                       className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-muted-foreground dark:text-muted-foreground/60 transition-colors"
                       title="Sync Gecmisi"
-                      data-testid={`portfolio-sync-runs-button-${c._id}`}
+                      data-testid={`portfolio-sync-runs-button-${rowKey}`}
                     >
                       <Eye className="w-4 h-4" />
                     </button>
@@ -307,14 +309,14 @@ function ConnectionsTable({ connections, onSync, onToggle, onDelete, onViewRuns,
                       onClick={() => onDelete(c)}
                       className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 dark:text-red-400 transition-colors"
                       title="Baglantiyi Sil"
-                      data-testid={`portfolio-sync-delete-button-${c._id}`}
+                      data-testid={`portfolio-sync-delete-button-${rowKey}`}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </td>
               </tr>
-            ))}
+            );})}
           </tbody>
         </table>
       </div>
@@ -548,8 +550,10 @@ function SyncRunsDrawer({ hotelId, hotelName, onClose }) {
             <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-blue-600" /></div>
           ) : runs.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground text-sm">Henuz sync calismadi</div>
-          ) : runs.map(r => (
-            <div key={r._id} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-2">
+          ) : runs.map((r, index) => {
+            const runKey = r._id || `${r.started_at || 'run'}-${index}`;
+            return (
+            <div key={runKey} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <StatusBadge status={r.status} />
                 <span className="text-xs text-muted-foreground/60">{formatDate(r.started_at)}</span>
@@ -566,7 +570,7 @@ function SyncRunsDrawer({ hotelId, hotelName, onClose }) {
                 </div>
               )}
             </div>
-          ))}
+          );})}
         </div>
       </div>
     </div>
@@ -777,8 +781,10 @@ function AgencyConnectionsSection() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {agencyConns.map(c => (
-                    <tr key={c._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                  {agencyConns.map((c, index) => {
+                    const agencyRowKey = c._id || `${c.hotel_id || 'hotel'}-${c.agency_id || 'agency'}-${index}`;
+                    return (
+                    <tr key={agencyRowKey} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                       <td className="px-3 py-2.5 font-medium text-foreground dark:text-white text-xs">{c.hotel_name}</td>
                       <td className="px-3 py-2.5 text-xs text-purple-600 font-medium">{c.agency_name || c.agency_id}</td>
                       <td className="px-3 py-2.5 text-xs text-muted-foreground truncate max-w-[150px]">{c.sheet_title || c.sheet_id}</td>
@@ -790,7 +796,7 @@ function AgencyConnectionsSection() {
                       </td>
                       <td className="px-3 py-2.5 text-center text-xs text-muted-foreground/60">{formatDate(c.last_sync_at)}</td>
                     </tr>
-                  ))}
+                  );})}
                 </tbody>
               </table>
             </div>

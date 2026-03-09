@@ -281,7 +281,30 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 - `app/routers/billing_lifecycle.py` içindeki kullanılmayan `Request` import’u kaldırıldı
 - Doğrulama: ilgili router dosyası için Python lint temiz geçti
 
+## Son Uygulama Notu — 2026-03-09 (Ürün yüzeyi sadeleştirme + modül sınıflandırma)
+- Repo, ürün konumlandırması açısından yeniden değerlendirildi: hedef kategori `Travel Agency Operating System`
+- Modül çerçevesi netleştirildi:
+  - **CORE:** rezervasyon / booking, müşteri & CRM, operasyon görünürlüğü, finans / ödeme / mutabakat, temel raporlama
+  - **EXPANSION:** B2B portal, storefront, entegrasyonlar, supplier bağlantıları
+  - **ENTERPRISE:** tenant yönetimi, audit/export, governance, white-label, gelişmiş izinler
+  - **SECONDARY / PRUNE CANDIDATES:** marketplace, partner graph, advanced campaigns, kompleks raporlama alt yüzeyleri, çeşitli admin araçları
+- `frontend/src/components/AppShell.jsx` içindeki ana sidebar sadeleştirildi:
+  - **Ana Menü:** Dashboard, Rezervasyonlar, Müşteriler, Finans, Raporlar
+  - **Gelişmiş:** Entegrasyonlar, Kampanyalar
+  - **Admin / Enterprise:** Tenant yönetimi, Audit, Advanced permissions
+- Partner graph giriş yüzeyi genel shell’den gizlendi; yalnızca kullanıcı `/app/partners` içindeyse görünür bırakıldı
+- Rol bazlı sade menü doğrulandı:
+  - Admin için tüm hedef menü blokları görünür
+  - Agency kullanıcı için sadece çekirdek + gelişmiş bloklar görünür; admin/enterprise öğeleri gizli kalır
+- Test sonucu:
+  - frontend smoke + frontend testing agent geçti
+  - backend smoke agent geçti
+  - Not: `/api/agency/bookings` ve `/api/agency/settlements` 404 dönüyor; bu issue önceden mevcut, menü sadeleştirme değişikliğinden kaynaklanmıyor
+
 ## Öncelikli Sonraki Adımlar
+- **P0:** Agency tarafındaki `/api/agency/bookings` ve `/api/agency/settlements` 404 problemlerini giderip sadeleştirilmiş menü linklerini veriyle beslemek
+- **P0:** Ürün yüzeyinde CORE olmayan modülleri görünür menülerden sistematik olarak ayırmak (marketplace, partner graph, sms/qr, gelişmiş kampanyalar)
+- **P1:** Feature pruning roadmap oluşturup SECONDARY ve DEAD WEIGHT yüzeyleri addon / internal-only / remove olarak ayırmak
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını daha da derinleştirip ödeme problemi state’lerini otomatik operasyon akışlarına bağlama
 - **P1:** Hard quota enforcement
 - **P1:** Billing analytics / churn görünürlüğü

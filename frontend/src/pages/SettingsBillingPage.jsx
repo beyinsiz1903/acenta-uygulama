@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { SettingsSectionNav } from "../components/settings/SettingsSectionNav";
 import { BillingCancelDialog } from "../components/settings/BillingCancelDialog";
+import { BillingHistoryTimeline } from "../components/settings/BillingHistoryTimeline";
 import { BillingPlanCard } from "../components/settings/BillingPlanCard";
 import { BillingSummaryCards } from "../components/settings/BillingSummaryCards";
 import { useSeo } from "../hooks/useSeo";
@@ -46,6 +47,7 @@ export default function SettingsBillingPage() {
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [actionKey, setActionKey] = useState("");
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [historyVersion, setHistoryVersion] = useState(0);
 
   useSeo({
     title: "Faturalama",
@@ -60,6 +62,7 @@ export default function SettingsBillingPage() {
       const data = await getBillingSubscription();
       setOverview(data);
       setBillingCycle(data?.interval || "monthly");
+      setHistoryVersion((currentValue) => currentValue + 1);
     } catch (err) {
       toast.error(err?.message || "Faturalama bilgileri alınamadı.");
     } finally {
@@ -319,6 +322,8 @@ export default function SettingsBillingPage() {
           </CardContent>
         </Card>
       </div>
+
+      <BillingHistoryTimeline refreshKey={historyVersion} />
 
       <BillingCancelDialog
         open={cancelOpen}

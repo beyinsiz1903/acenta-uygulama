@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from app.auth import get_current_user
 from app.db import get_db
 from app.errors import AppError
+from app.services.billing_history_service import billing_history_service
 from app.services.stripe_checkout_service import stripe_checkout_service
 
 router = APIRouter(tags=["billing_lifecycle"])
@@ -53,6 +54,16 @@ async def get_billing_subscription(
 
 
     return {"tenant_id": tenant_id, **overview}
+
+
+@router.get("/api/billing/history")
+async def get_billing_history(
+    limit: int = 20,
+    user=Depends(get_current_user),
+) -> dict:
+    tenant_id = await _resolve_tenant_id(user)
+    safe_limit = max(1, min(limit, 50))
+    return {"items": await billing_history_service.list_events(tenant_id, limit=safe_limit)}
 
 
 @router.post("/api/billing/customer-portal")

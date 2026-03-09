@@ -27,6 +27,15 @@ export async function getBillingSubscription() {
   }
 }
 
+export async function getBillingHistory() {
+  try {
+    const res = await api.get("/billing/history");
+    return res.data;
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}
+
 export async function createCustomerPortalSession(body) {
   try {
     const res = await api.post("/billing/customer-portal", body);

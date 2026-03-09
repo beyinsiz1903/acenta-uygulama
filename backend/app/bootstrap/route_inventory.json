@@ -4139,6 +4139,17 @@
     "compat_required": true,
     "current_namespace": "/api/billing",
     "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "billing",
+    "path": "/api/billing/history",
+    "risk_level": "high",
+    "source": "app.routers.billing_lifecycle",
+    "target_namespace": "/api/v1/billing"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/billing",
+    "legacy_or_v1": "legacy",
     "method": "POST",
     "owner": "billing",
     "path": "/api/billing/reactivate-subscription",

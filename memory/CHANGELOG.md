@@ -1,5 +1,14 @@
 # CHANGELOG — Acenta Master Travel SaaS
 
+## 2026-03-09 — Fork revalidation (kod değişikliği yok)
+- Bu forkta ek ürün kodu yazılmadan kalite turu tekrar koşuldu.
+- Doğrulama:
+  - manuel API self-test: admin + agency `login` / `me` PASS
+  - browser smoke: landing, signup CTA, admin dashboard redirect ve logout PASS
+  - `auto_frontend_testing_agent` → 21/21 PASS
+  - `deep_testing_backend_v2` → auth, public theme, onboarding plans, admin/agency hafif endpoint regresyonları PASS
+- Sonuç: beyaz ekran, kırık CTA veya görünür Türkçe copy problemi bu doğrulama turunda reproduce edilmedi.
+
 ## 2026-03-09 — Admin Tenant Panel Cleanup
 - Backend enrichment:
   - `GET /api/admin/tenants` response’u plan + billing lifecycle alanlarıyla genişletildi

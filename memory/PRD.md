@@ -706,6 +706,12 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `deep_testing_backend_v2` → dashboard endpoint seti + `popular-products` fix PASS
   - manuel smoke: admin ve agency login, `/privacy`, admin dashboard, agency dashboard PASS
 
+## Fork Doğrulama Notu — 2026-03-09 (Ek kod değişikliği gerekmedi)
+- Bu forkta yeni kod yazılmadan tekrar doğrulama yapıldı.
+- Manuel API self-test: admin ve agency için `POST /api/auth/login` + `GET /api/auth/me` 200 PASS.
+- Browser smoke: landing → signup CTA, admin login → `/app/admin/dashboard`, logout PASS.
+- `auto_frontend_testing_agent` → 21/21 PASS, `deep_testing_backend_v2` → auth/public/admin/agency regression PASS.
+
 ## Öncelikli Sonraki Adımlar
 - **P0:** Canlı email provider credential/config aktivasyonu yapılıp outbox -> gerçek teslimat hattını production benzeri ortamda doğrulama
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını timeline + banner + operasyon akışlarıyla daha da birleştirme

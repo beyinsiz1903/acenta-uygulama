@@ -426,6 +426,19 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 - Test account durumu:
   - `agent@acenta.test` bu doğrulama turunda `Pro / yearly / active` state’inde teyit edildi
 
+## Son Uygulama Notu — 2026-03-09 (Stripe webhook secret + invoice.paid state fix)
+- Stripe billing webhook hattı güvenlik ve state transition açısından tekrar sertleştirildi
+  - `backend/.env` içine `STRIPE_WEBHOOK_SECRET=whsec_test` eklendi
+  - ana `StripeCheckoutService.handle_webhook(...)` içinde missing-secret guard eklendi; secret yoksa webhook artık fail-fast davranıyor
+- `invoice.paid` stale subscription fallback bug’ı düzeltildi
+  - daha önce stale / senkronize edilemeyen provider subscription referansında payment issue alanları temizlenmesine rağmen status yanlışlıkla `past_due` kalabiliyordu
+  - artık `invoice.paid` sonrası durum güvenli şekilde `active`’a normalize ediliyor ve payment issue alanları temizleniyor
+- Doğrulama:
+  - imzalı mock webhook self-test: `invoice.payment_failed`, `customer.subscription.deleted`, `invoice.paid` → hepsi preview backend üzerinde geçti
+  - auth smoke: `POST /api/auth/login` + `GET /api/billing/subscription` geçti, `payment_issue` payload’ı doğrulandı
+  - `deep_testing_backend_v2` doğrulaması: Stripe billing webhook akışları PASS
+  - `auto_frontend_testing_agent` smoke: `/app/settings/billing` render ve no-regression PASS
+
 ## Öncelikli Sonraki Adımlar
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını derinleştirip ödeme problemi state’lerini timeline + banner + operasyon akışlarıyla birleştirme
 - **P1:** CORE olmayan route yüzeyleri için ikinci faz pruning uygulaması: `partners`, marketplace, advanced campaign, sms/qr ve benzeri modülleri `internal-only / addon / remove` sınıflarına indirgeme

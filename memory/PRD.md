@@ -439,10 +439,30 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `deep_testing_backend_v2` doğrulaması: Stripe billing webhook akışları PASS
   - `auto_frontend_testing_agent` smoke: `/app/settings/billing` render ve no-regression PASS
 
+## Son Uygulama Notu — 2026-03-09 (Hard quota enforcement)
+- Monetizasyon katmanı soft warning’den hard enforcement seviyesine taşındı
+  - yeni `backend/app/services/quota_enforcement_service.py` eklendi
+  - `reservation.created`, `report.generated`, `export.generated` metrikleri için guard snapshot + `quota_exceeded` AppError zarfı standartlaştırıldı
+  - hata detayları artık `metric`, `limit`, `used`, `remaining`, `period`, `plan`, `cta_href=/pricing`, `cta_label=Planları Görüntüle` alanlarını döndürüyor
+- Enforcement entegrasyonları tamamlandı
+  - rezervasyon oluşturma: `services/reservations.py`
+  - tur rezervasyonu: `routers/tours_browse.py`
+  - PDF rapor üretimi: `services/report_output_service.py`
+  - CSV / ZIP / audit export akışları: `routers/reports.py`, `routers/exports.py`, `routers/enterprise_export.py`, `routers/enterprise_audit.py`
+  - usage event sonrası tenant usage/quota cache invalidation eklendi; kullanım kartları daha hızlı güncelleniyor
+- Frontend UX hardening
+  - `frontend/src/lib/api.js` artık standardize backend error envelope içindeki `error.message` alanını okuyarak kullanıcıya doğru Türkçe mesajı gösterebiliyor
+- Doğrulama:
+  - pytest: `/app/backend/tests/test_hard_quota_enforcement.py` → 3/3 PASS
+  - testing agent raporu: `/app/test_reports/iteration_37.json` → backend unit validation PASS, frontend no-regression PASS, canlı preview smoke rate-limit dışında temiz
+  - self-test: preview üzerinde login + `GET /api/billing/subscription` 200, `/app/usage` smoke PASS
+  - `auto_frontend_testing_agent` → `/app/usage` + `/app/settings/billing` regression PASS
+  - `deep_testing_backend_v2` → auth, usage-summary, billing subscription, CSV export, admin export ve audit export PASS
+
 ## Öncelikli Sonraki Adımlar
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını derinleştirip ödeme problemi state’lerini timeline + banner + operasyon akışlarıyla birleştirme
 - **P1:** CORE olmayan route yüzeyleri için ikinci faz pruning uygulaması: `partners`, marketplace, advanced campaign, sms/qr ve benzeri modülleri `internal-only / addon / remove` sınıflarına indirgeme
-- **P1:** Hard quota enforcement
+- **P1:** `integration.call` ve gerekirse `b2b.match_request` için aynı hard quota guard modelini dış servis çağrısı öncesine genişletme
 - **P1:** Billing analytics / churn görünürlüğü
 - **P2:** Admin demo agency oluşturma butonu
 - **P2:** Admin endpoint cleanup (`/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`)

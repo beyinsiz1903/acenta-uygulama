@@ -119,6 +119,7 @@ const SIMPLIFIED_NAV_SECTIONS = [
         label: "Dashboard",
         icon: LayoutGrid,
         pathByScope: { default: "/app" },
+        isCore: true,
         end: true,
         modeKey: "dashboard",
         minMode: "lite",
@@ -132,6 +133,7 @@ const SIMPLIFIED_NAV_SECTIONS = [
           agency: "/app/agency/bookings",
           hotel: "/app/hotel/bookings",
         },
+        isCore: true,
         modeKey: "rezervasyonlar",
         minMode: "lite",
       },
@@ -143,6 +145,7 @@ const SIMPLIFIED_NAV_SECTIONS = [
           admin: "/app/crm/customers",
           agency: "/app/crm/customers",
         },
+        isCore: true,
         feature: "crm",
         modeKey: "musteriler",
         minMode: "lite",
@@ -156,6 +159,7 @@ const SIMPLIFIED_NAV_SECTIONS = [
           agency: "/app/agency/settlements",
           hotel: "/app/hotel/settlements",
         },
+        isCore: true,
         modeKey: "mutabakat",
         minMode: "lite",
       },
@@ -167,6 +171,7 @@ const SIMPLIFIED_NAV_SECTIONS = [
           admin: "/app/reports",
           agency: "/app/reports",
         },
+        isCore: true,
         feature: "reports",
         modeKey: "raporlar",
         minMode: "lite",
@@ -514,16 +519,16 @@ function AppShellInner() {
       if (it.visibleScopes && !it.visibleScopes.includes(userScope)) return false;
       if (!it.to) return false;
       // Feature flag filter
-      if (it.feature && !(!featuresLoading && hasFeature(it.feature))) return false;
+      if (!it.isCore && it.feature && !(!featuresLoading && hasFeature(it.feature))) return false;
       // Mode filter: item's minMode must be <= current mode
       if (it.minMode) {
         const itemLevel = MODE_ORDER_MAP[it.minMode] ?? 0;
         if (itemLevel > currentModeLevel) return false;
       }
       // Server-side hidden items check
-      if (it.modeKey && hiddenNavItems.includes(it.modeKey)) return false;
+      if (!it.isCore && it.modeKey && hiddenNavItems.includes(it.modeKey)) return false;
       // Agency module restriction: if user is agency and allowed_modules is set, only show matching items
-      if (isAgencyUser && agencyAllowedModules && agencyAllowedModules.length > 0) {
+      if (!it.isCore && isAgencyUser && agencyAllowedModules && agencyAllowedModules.length > 0) {
         if (it.modeKey && !agencyAllowedModules.includes(it.modeKey)) return false;
       }
       return true;
@@ -567,7 +572,7 @@ function AppShellInner() {
             return;
           }
         }
-        if (it.modeKey && hiddenNavItems.includes(it.modeKey)) {
+        if (!it.isCore && it.modeKey && hiddenNavItems.includes(it.modeKey)) {
           if (it.to) hiddenPaths.push(it.to);
         }
       });

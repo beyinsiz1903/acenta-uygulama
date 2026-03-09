@@ -305,8 +305,7 @@ frontend:
         comment: "PRICING PAGE SMOKE TEST COMPLETED - ALL TESTS PASSED (2026-03-09). Lightweight frontend smoke test performed on https://agency-billing-hub-1.preview.emergentagent.com/pricing per review request. Test Results: 1) ✅ /pricing page loads successfully - navigated to correct URL without errors, 2) ✅ Page is NOT blank - 2490 characters of content loaded, full page rendering confirmed, 3) ✅ Core CTA buttons visible - found 4 visible CTAs: 'Aylık' (Monthly toggle), 'Yıllık' (Yearly toggle), 'Planı Seç' (Select Plan buttons for pricing tiers), additional hero CTAs '14 Gün Ücretsiz Dene' and 'Demo sayfasını gör' visible, 4) ✅ No frontend crash detected - no React error boundaries, no 'Something went wrong' errors, page renders correctly with Turkish pricing content. Visual verification confirmed: Hero section with trial features, pricing plans section showing Starter/Pro/Enterprise tiers, Monthly/Yearly toggle functional, all UI elements rendering correctly. No backend endpoints were tested as this was frontend-only smoke test. Conclusion: Pricing page is functional and stable, no obvious frontend issues detected."
 
 test_plan:
-  current_focus:
-    - "Auth redirect & session-expired helper refactor validation"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -6482,15 +6481,18 @@ agent_communication:
 frontend:
   - task: "Auth redirect & session-expired helper refactor validation"
     implemented: true
-    working: false
+    working: true
     file: "frontend/src/lib/authRedirect.js, frontend/src/components/RequireAuth.jsx, frontend/src/pages/LoginPage.jsx, frontend/src/b2b/B2BLoginPage.jsx, frontend/src/lib/api.js"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "testing"
         comment: "AUTH REDIRECT & SESSION-EXPIRED HELPER REFACTOR VALIDATION COMPLETED - CRITICAL BUG FOUND (2026-03-09). Comprehensive validation performed per Turkish review request on https://agency-billing-hub-1.preview.emergentagent.com with agent@acenta.test/agent123. Test Results: 1) ✅ /login page loads correctly - PASSED (all form elements present: login-page, login-form, login-email, login-password, login-submit), 2) ✅ Session-expired banner logic - PASSED (banner with data-testid='login-session-expired-banner' appears correctly when acenta_session_expired=1 flag is set, shows Turkish message: 'Oturumunuz sona erdi. Tekrar giriş yaptıktan sonra kaldığınız sayfaya döneceksiniz.'), 3) ❌ CRITICAL BUG: Post-login redirect to /app/settings/billing - FAILED (after login with acenta_post_login_redirect=/app/settings/billing set, user is redirected to /app instead of /app/settings/billing; URL navigation history shows DOUBLE REDIRECT: first to /app/settings/billing ✅ then immediately to /app ❌), 4) ✅ /app/settings/billing page loads with critical elements - PASSED (billing-page ✅, billing-history-card ✅, billing-refresh-button ✅ all found when manually navigated, page content: 5019 chars), 5) ✅ SessionStorage flags cleared after login - PASSED (both acenta_session_expired and acenta_post_login_redirect are null/cleared after login), 6) ✅ No-regression normal login flow - PASSED (normal login without session-expired flags redirects to default /app route correctly, no expired banner shown). ROOT CAUSE IDENTIFIED: Double-redirect bug in LoginPage.jsx lines 57-63. The useEffect hook runs AFTER form submission and calls consumePostLoginRedirect AGAIN. Sequence: 1) Form submit (line 50) calls consumePostLoginRedirect → returns /app/settings/billing → navigates correctly, 2) Then useEffect (line 61) fires when currentUser updates → calls consumePostLoginRedirect AGAIN → but flags already cleared → returns fallback redirectByRole(user) → /app → causes unwanted second redirect. Fix required: Prevent useEffect from running after form submission OR add guard to skip if already navigated. All helper functions in authRedirect.js working correctly (markSessionExpired, hasSessionExpired, rememberPostLoginRedirect, consumePostLoginRedirect, clearPostLoginRedirect). Console errors: 22 non-critical (401/403 on optional endpoints, Cloudflare RUM analytics failures). Test coverage: 100% (6/6 flows tested). Success rate: 83% (5/6 passed, 1 CRITICAL BUG blocking post-login redirect). Auth redirect refactor is NOT production-ready until double-redirect bug is fixed."
+      - working: true
+        agent: "testing"
+        comment: "DOUBLE REDIRECT BUGFIX VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-09). Re-tested after main agent applied double redirect bugfix to LoginPage.jsx with ref guard. Test URL: https://agency-billing-hub-1.preview.emergentagent.com, Test Account: agent@acenta.test/agent123. BUGFIX APPLIED: Added hasHandledAuthRedirect ref to prevent useEffect from re-running after form submission (Line 20: const hasHandledAuthRedirect = useRef(false); Line 52: Set ref to true after onSubmit navigation; Lines 64-66: Early return in useEffect if ref is already true). ALL 6 VALIDATION REQUIREMENTS PASSED: 1) ✅ /login page loads correctly with all form elements (login-page, login-form, login-email, login-password, login-submit), 2) ✅ Session-expired banner appears when sessionStorage flags are set (acenta_session_expired=1, acenta_post_login_redirect=/app/settings/billing; Banner text: 'Oturumunuz sona erdi. Tekrar giriş yaptıktan sonra kaldığınız sayfaya döneceksiniz.'), 3) ✅ CRITICAL: Login redirects to /app/settings/billing and STAYS THERE - no double redirect (URL after login: /app/settings/billing ✅; Waited 3 seconds: URL remained stable ✅; NO second redirect to /app detected ✅; URL navigation history shows only ONE redirect: ['/app/settings/billing']; PREVIOUS BUG FIXED: Double redirect issue resolved with ref guard), 4) ✅ /app/settings/billing page elements visible (billing-page ✅, billing-history-card ✅, billing-refresh-button ✅; Page content: 9,664 characters; 'Faturalama' title found ✅), 5) ✅ SessionStorage flags cleared after login (acenta_session_expired=null, acenta_post_login_redirect=null; Flags properly cleaned up ✅), 6) ✅ Normal login flow (without session-expired) works correctly (Session-expired banner NOT visible ✅; Login without redirect flags: redirected to /app (default for agent role) ✅; URL stable after 3 seconds ✅; Page loaded with 6,837 characters content ✅). TECHNICAL VALIDATION: Ref guard preventing double consumePostLoginRedirect() calls ✅, Form submission redirect working correctly ✅, useEffect only runs for bootstrap scenarios ✅, useEffect correctly skipped after form submission ✅, Both session-expired redirect AND normal login flows working ✅, No navigation loops or redirect regressions ✅. Test Summary: 6/6 passed (100% success rate). Conclusion: Double redirect bugfix SUCCESSFUL. The hasHandledAuthRedirect ref guard correctly prevents the useEffect from re-running after form submission, eliminating the double redirect issue. Session-expired redirect feature now working correctly - users return to their original page after re-authentication. Normal login flow also unaffected. Auth redirect & session-expired helper refactor is now PRODUCTION READY."
 
 
   - agent: "testing"
@@ -6559,3 +6561,72 @@ frontend:
       - Example: User on /app/settings/billing → session expires → redirected to /login → logs in → ends up on /app instead of /app/settings/billing
       
       Status: 🔴 NOT PRODUCTION READY until double-redirect bug is fixed
+
+  - agent: "testing"
+    message: |
+      ✅ DOUBLE REDIRECT BUGFIX VALIDATED - ALL TESTS PASSED (2026-03-09)
+      
+      Re-tested LoginPage.jsx after main agent applied double redirect bugfix with ref guard.
+      
+      Test URL: https://agency-billing-hub-1.preview.emergentagent.com
+      Test Account: agent@acenta.test / agent123
+      
+      BUGFIX VERIFICATION:
+      ✅ hasHandledAuthRedirect ref added at line 20
+      ✅ Ref set to true after onSubmit navigation (line 52)
+      ✅ useEffect early return guard added (lines 64-66)
+      
+      TEST RESULTS - ALL 6 REQUIREMENTS PASSED:
+      
+      1. ✅ /login page loads correctly
+         - All form elements present (login-page, login-form, login-email, login-password, login-submit)
+      
+      2. ✅ Session-expired banner appears when sessionStorage flags are set
+         - Set acenta_session_expired=1 and acenta_post_login_redirect=/app/settings/billing
+         - Banner visible with correct Turkish message: "Oturumunuz sona erdi..."
+         - SessionStorage before login confirmed: both flags set correctly
+      
+      3. ✅ CRITICAL: Login redirects to /app/settings/billing and STAYS THERE
+         - User redirected to /app/settings/billing after login ✅
+         - Waited 3 seconds: URL remained stable at /app/settings/billing ✅
+         - NO second redirect to /app detected ✅
+         - URL navigation history shows only ONE redirect: ['/app/settings/billing']
+         - REGRESSION FIXED: Double redirect issue completely resolved
+      
+      4. ✅ /app/settings/billing page elements all visible
+         - billing-page element found ✅
+         - billing-history-card element found ✅
+         - billing-refresh-button element found ✅
+         - Page content: 9,664 characters (substantial)
+         - "Faturalama" title present ✅
+      
+      5. ✅ SessionStorage flags cleared after login
+         - After login: acenta_session_expired=null, acenta_post_login_redirect=null
+         - Flags properly cleaned up by consumePostLoginRedirect() ✅
+      
+      6. ✅ Normal login flow (without session-expired) works correctly
+         - Cleared all storage and reloaded /login
+         - Session-expired banner NOT visible (correct) ✅
+         - Login without redirect flags: redirected to /app (default for agent role) ✅
+         - URL stable after 3 seconds: no unwanted redirects ✅
+         - Page loaded with 6,837 characters content ✅
+      
+      TECHNICAL VALIDATION:
+      ✅ Ref guard successfully prevents double consumePostLoginRedirect() calls
+      ✅ Form submission redirect path working correctly
+      ✅ useEffect only runs for bootstrap scenarios (when user already logged in)
+      ✅ useEffect correctly skipped after form submission (ref.current = true)
+      ✅ Both session-expired redirect AND normal login flows working
+      ✅ No navigation loops or redirect regressions
+      ✅ No critical console errors related to auth redirect
+      
+      Test Summary:
+      - Total Tests: 6
+      - Passed: 6
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      Double redirect bugfix SUCCESSFUL and VALIDATED. The hasHandledAuthRedirect ref guard correctly prevents the useEffect from re-running after form submission, completely eliminating the double redirect issue. Session-expired redirect feature now working correctly - users will properly return to their original page after re-authentication. Normal login flow also unaffected by the changes. Auth redirect & session-expired helper refactor is now PRODUCTION READY.
+      
+      Status: ✅ PRODUCTION READY - Critical double-redirect regression fixed and validated

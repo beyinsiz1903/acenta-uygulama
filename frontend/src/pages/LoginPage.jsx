@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,6 +17,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [serverError, setServerError] = useState("");
+  const hasHandledAuthRedirect = useRef(false);
   const loginMutation = useLogin();
   const { data: currentUser, isLoading: isBootstrapping } = useCurrentUser();
 
@@ -48,6 +49,7 @@ export default function LoginPage() {
       }
 
       const redirectPath = consumePostLoginRedirect(redirectByRole(resp.user));
+      hasHandledAuthRedirect.current = true;
       navigate(redirectPath, { replace: true });
     } catch (err) {
       setServerError(apiErrorMessage(err));
@@ -58,6 +60,12 @@ export default function LoginPage() {
     if (!currentUser) {
       return;
     }
+
+    if (hasHandledAuthRedirect.current) {
+      return;
+    }
+
+    hasHandledAuthRedirect.current = true;
     const redirectPath = consumePostLoginRedirect(redirectByRole(currentUser));
     navigate(redirectPath, { replace: true });
   }, [currentUser, navigate]);

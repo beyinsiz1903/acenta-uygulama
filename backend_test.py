@@ -24,7 +24,7 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 # Configuration
-BASE_URL = "https://agency-billing-hub-1.preview.emergentagent.com"
+BASE_URL = "https://travel-agency-os-1.preview.emergentagent.com"
 TEST_CREDENTIALS = {
     "email": "agent@acenta.test", 
     "password": "agent123"

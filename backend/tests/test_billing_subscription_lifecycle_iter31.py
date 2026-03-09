@@ -204,7 +204,7 @@ class TestBillingSubscriptionManaged:
             f"{BASE_URL}/api/billing/customer-portal",
             headers={"Authorization": f"Bearer {auth_token}"},
             json={
-                "origin_url": "https://stripe-mgmt.preview.emergentagent.com",
+                "origin_url": "https://core-nav-update.preview.emergentagent.com",
                 "return_path": "/app/settings/billing"
             },
             timeout=30
@@ -288,7 +288,7 @@ class TestBillingLegacyGuardrails:
             f"{BASE_URL}/api/billing/customer-portal",
             headers={"Authorization": f"Bearer {legacy_auth_token}"},
             json={
-                "origin_url": "https://stripe-mgmt.preview.emergentagent.com",
+                "origin_url": "https://core-nav-update.preview.emergentagent.com",
                 "return_path": "/app/settings/billing"
             },
             timeout=30

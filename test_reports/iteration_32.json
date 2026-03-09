@@ -1,0 +1,87 @@
+{
+  "summary": "Comprehensive testing of billing lifecycle for P0 stabilization. Fixed critical bug: stale Stripe customer reference causing 500 errors on change-plan. All billing endpoints tested for legacy subscription state. UI flows verified working.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Billing page",
+        "issues": ["Warning banner 'Limitinize yaklaşıyorsunuz' shows at top - verify this is expected behavior for usage limits"]
+      }
+    ]
+  },
+  "passed_tests": [
+    "GET /api/billing/subscription - Returns legacy_subscription=true, managed_subscription=false for agent@acenta.test",
+    "GET /api/billing/subscription - Returns valid plan (starter)",
+    "GET /api/billing/subscription - Returns Turkish interval_label (Aylık)",
+    "GET /api/billing/subscription - Returns ISO date format for next_renewal_at (2026-04-08T19:13:16+00:00)",
+    "GET /api/billing/subscription - Returns correct guardrails: can_cancel=false, change_flow=checkout_redirect",
+    "GET /api/billing/subscription - Returns legacy_notice with correct Turkish message",
+    "GET /api/billing/subscription - Returns portal_available=true",
+    "POST /api/billing/cancel-subscription - Returns 409 subscription_management_unavailable for legacy",
+    "POST /api/billing/reactivate-subscription - Returns 409 subscription_management_unavailable for legacy",
+    "POST /api/billing/customer-portal - Returns valid Stripe billing portal URL (billing.stripe.com/...)",
+    "POST /api/billing/change-plan (pro/monthly) - Returns checkout_redirect with valid Stripe checkout URL",
+    "POST /api/billing/change-plan - Handles stale customer reference gracefully (no 500)",
+    "POST /api/billing/change-plan (enterprise) - Returns 422 enterprise_contact_required",
+    "POST /api/billing/create-checkout - Returns valid checkout session with correct pricing (TRY 2490)",
+    "Frontend billing page loads with Turkish title 'Faturalama'",
+    "Frontend shows summary cards: Mevcut Plan (Starter), Sonraki Yenileme (08 Nisan 2026), Faturalama Durumu (Aylık · Aktif)",
+    "Frontend legacy notice displays correct Turkish message",
+    "Frontend cancel button disabled for legacy subscription",
+    "Frontend payment update button enabled (portal available)",
+    "Frontend plan change button redirects to Stripe checkout with correct pricing (TRY 2,490.00/month for Pro)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_billing_lifecycle_iteration32.py",
+    "/app/test_reports/pytest/pytest_billing_lifecycle_iter32.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "BUG FIXED: create_checkout_session now handles 'No such customer' errors by clearing stale reference and retrying with customer_email",
+    "The account agent@acenta.test has legacy_subscription=true because provider_subscription_id is null",
+    "Legacy guardrails working correctly: can_cancel=false, change_flow=checkout_redirect",
+    "Customer portal creates new customer if old one is stale - working correctly",
+    "Turkish date format working: shows '08 Nisan 2026' in UI",
+    "Turkish labels working: 'Aylık', 'Aktif', 'Faturalama', 'Aboneliği İptal Et'",
+    "Rate limiting on login works (429 after multiple attempts) - this is expected security behavior"
+  ],
+  "updated_files": [
+    "/app/backend/app/services/stripe_checkout_service.py",
+    "/app/backend/tests/test_billing_lifecycle_iteration32.py"
+  ],
+  "success_rate": {
+    "backend": "100% (13/13 tests passed)",
+    "frontend": "100% (all UI flows verified)"
+  },
+  "test_credentials": {
+    "legacy_subscription_account": "agent@acenta.test / agent123"
+  },
+  "seed_data_creation": "No new seed data created",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "agent@acenta.test is now in legacy subscription state. The previous iteration showed managed_subscription=true but Stripe subscription/customer were deleted, leaving stale references. FIX APPLIED: stripe_checkout_service.create_checkout_session now handles 'No such customer' errors by clearing stale reference and using customer_email. Account provider_customer_id updated to cus_U7DIaAlepXWMQR (new customer). To test managed subscription flows (cancel/reactivate), need to complete a checkout session to create real Stripe subscription.",
+  "fix_applied": {
+    "file": "/app/backend/app/services/stripe_checkout_service.py",
+    "function": "create_checkout_session",
+    "issue": "Stale customer ID (deleted in Stripe) caused 'No such customer' error (500) when creating checkout session",
+    "fix": "Added try/except block to catch InvalidRequestError with 'No such customer', clear stale reference via _clear_stale_customer_reference(), and retry with customer_email instead",
+    "impact": "Change-plan flow now works for accounts with stale/deleted Stripe customer references"
+  },
+  "feature_validation_summary": {
+    "GET /api/billing/subscription": "PASS - Returns full billing overview with correct legacy state",
+    "POST /api/billing/cancel-subscription": "PASS - Returns 409 for legacy (correct guardrail)",
+    "POST /api/billing/reactivate-subscription": "PASS - Returns 409 for legacy (correct guardrail)", 
+    "POST /api/billing/customer-portal": "PASS - Returns Stripe billing portal URL",
+    "POST /api/billing/change-plan": "PASS - Returns checkout_redirect for legacy accounts",
+    "POST /api/billing/create-checkout": "PASS - Creates Stripe checkout session with correct pricing",
+    "Frontend billing page": "PASS - All elements render correctly with Turkish localization",
+    "Frontend plan change flow": "PASS - Redirects to Stripe checkout",
+    "Turkish date formatting": "PASS - Shows '08 Nisan 2026' format",
+    "Legacy notice": "PASS - Shows correct Turkish message about self-service activation"
+  }
+}

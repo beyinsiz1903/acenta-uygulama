@@ -420,39 +420,36 @@ class StripeCheckoutService:
     async def _repair_customer_reference(self, tenant_id: str, user_email: str = "") -> dict[str, Any]:
         customer = await billing_repo.get_customer(tenant_id)
         subscription = await billing_repo.get_subscription(tenant_id)
-        if _is_real_customer_id((customer or {}).get("provider_customer_id")) and (
-            not subscription or _is_real_subscription_id(subscription.get("provider_subscription_id"))
+        customer_id = str((customer or {}).get("provider_customer_id") or "")
+        subscription_id = str((subscription or {}).get("provider_subscription_id") or "")
+        if _is_real_customer_id(customer_id) and (
+            not subscription or _is_real_subscription_id(subscription_id)
         ):
             return {
-                "customer_id": customer.get("provider_customer_id"),
-                "subscription_id": (subscription or {}).get("provider_subscription_id"),
+                "customer_id": customer_id,
+                "subscription_id": subscription_id,
             }
 
         db = await get_db()
         tx = await db.payment_transactions.find_one(
             {"tenant_id": tenant_id},
-            {"_id": 0, "session_id": 1, "plan": 1, "interval": 1, "organization_id": 1},
+            {
+                "_id": 0,
+                "session_id": 1,
+                "plan": 1,
+                "interval": 1,
+                "organization_id": 1,
+                "provider_customer_id": 1,
+                "provider_subscription_id": 1,
+            },
             sort=[("processed_at", -1), ("updated_at", -1)],
         )
-        session_id = str((tx or {}).get("session_id") or "")
-        if not session_id.startswith("cs_"):
-            return {
-                "customer_id": (customer or {}).get("provider_customer_id"),
-                "subscription_id": (subscription or {}).get("provider_subscription_id"),
-            }
 
-        try:
-            session = await self._retrieve_checkout_session(session_id)
-        except Exception:
-            return {
-                "customer_id": (customer or {}).get("provider_customer_id"),
-                "subscription_id": (subscription or {}).get("provider_subscription_id"),
-            }
+        tx_customer_id = str((tx or {}).get("provider_customer_id") or "")
+        tx_subscription_id = str((tx or {}).get("provider_subscription_id") or "")
 
-        customer_id = session.customer if isinstance(session.customer, str) else getattr(session.customer, "id", None)
-        subscription_id = session.subscription if isinstance(session.subscription, str) else getattr(session.subscription, "id", None)
-
-        if customer_id and _is_real_customer_id(customer_id):
+        if not _is_real_customer_id(customer_id) and _is_real_customer_id(tx_customer_id):
+            customer_id = tx_customer_id
             await billing_repo.upsert_customer(
                 tenant_id=tenant_id,
                 provider="stripe",
@@ -461,11 +458,63 @@ class StripeCheckoutService:
                 mode=_billing_mode(),
             )
 
-        if subscription_id and _is_real_subscription_id(subscription_id):
+        if not _is_real_subscription_id(subscription_id) and _is_real_subscription_id(tx_subscription_id):
+            try:
+                await self._sync_subscription_document(
+                    tenant_id,
+                    tx_subscription_id,
+                    customer_id=customer_id or None,
+                    plan_hint=str((tx or {}).get("plan") or (subscription or {}).get("plan") or "starter"),
+                    interval_hint=str((tx or {}).get("interval") or (subscription or {}).get("interval") or "monthly"),
+                    user_email=user_email,
+                    organization_id=str((tx or {}).get("organization_id") or ""),
+                )
+                subscription_id = tx_subscription_id
+            except Exception as exc:
+                if not _is_missing_stripe_resource_error(exc):
+                    raise
+
+        if _is_real_customer_id(customer_id) and _is_real_subscription_id(subscription_id):
+            return {"customer_id": customer_id, "subscription_id": subscription_id}
+
+        session_id = str((tx or {}).get("session_id") or "")
+        if not session_id.startswith("cs_"):
+            return {
+                "customer_id": customer_id,
+                "subscription_id": subscription_id,
+            }
+
+        try:
+            session = await self._retrieve_checkout_session(session_id)
+        except Exception:
+            return {
+                "customer_id": customer_id,
+                "subscription_id": subscription_id,
+            }
+
+        session_customer_id = session.customer if isinstance(session.customer, str) else getattr(session.customer, "id", None)
+        session_subscription_id = session.subscription if isinstance(session.subscription, str) else getattr(session.subscription, "id", None)
+
+        if _is_real_customer_id(session_customer_id):
+            customer_id = session_customer_id
+
+        if _is_real_subscription_id(session_subscription_id):
+            subscription_id = session_subscription_id
+
+        if _is_real_customer_id(customer_id):
+            await billing_repo.upsert_customer(
+                tenant_id=tenant_id,
+                provider="stripe",
+                provider_customer_id=customer_id,
+                email=user_email or str((customer or {}).get("email") or ""),
+                mode=_billing_mode(),
+            )
+
+        if _is_real_subscription_id(subscription_id):
             await self._sync_subscription_document(
                 tenant_id,
                 subscription_id,
-                customer_id=customer_id,
+                customer_id=customer_id or None,
                 plan_hint=str((tx or {}).get("plan") or (subscription or {}).get("plan") or "starter"),
                 interval_hint=str((tx or {}).get("interval") or (subscription or {}).get("interval") or "monthly"),
                 user_email=user_email,
@@ -520,7 +569,18 @@ class StripeCheckoutService:
         elif user_email:
             create_kwargs["customer_email"] = user_email
 
-        session = await self._stripe_call(stripe.checkout.Session.create, **create_kwargs)
+        try:
+            session = await self._stripe_call(stripe.checkout.Session.create, **create_kwargs)
+        except Exception as exc:
+            if customer_id and _is_missing_stripe_resource_error(exc):
+                # Stale customer reference - clear it and retry with customer_email
+                await self._clear_stale_customer_reference(tenant_id)
+                del create_kwargs["customer"]
+                if user_email:
+                    create_kwargs["customer_email"] = user_email
+                session = await self._stripe_call(stripe.checkout.Session.create, **create_kwargs)
+            else:
+                raise
 
         now = _now()
         db = await get_db()

@@ -7,7 +7,7 @@ import requests
 import json
 from datetime import datetime
 
-BASE_URL = "https://stripe-mgmt.preview.emergentagent.com"
+BASE_URL = "https://core-nav-update.preview.emergentagent.com"
 
 class BackendSmokeTest:
     def __init__(self):

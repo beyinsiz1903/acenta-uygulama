@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { SettingsSectionNav } from "../components/settings/SettingsSectionNav";
 import { BillingCancelDialog } from "../components/settings/BillingCancelDialog";
 import { BillingHistoryTimeline } from "../components/settings/BillingHistoryTimeline";
+import { BillingPaymentIssueBanner } from "../components/settings/BillingPaymentIssueBanner";
 import { BillingPlanCard } from "../components/settings/BillingPlanCard";
 import { BillingSummaryCards } from "../components/settings/BillingSummaryCards";
 import { useSeo } from "../hooks/useSeo";
@@ -187,25 +188,12 @@ export default function SettingsBillingPage() {
         statusLabel={statusLabel}
       />
 
-      {overview?.payment_issue?.has_issue ? (
-        <div className="rounded-3xl border border-amber-300 bg-amber-50 px-5 py-4 text-sm text-amber-900" data-testid="billing-payment-issue-banner">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
-              <div>
-                <p className="font-semibold" data-testid="billing-payment-issue-text">{overview.payment_issue.message}</p>
-              </div>
-            </div>
-            <Button
-              onClick={() => void handlePortalOpen()}
-              disabled={actionKey === "portal" || !overview?.portal_available}
-              data-testid="billing-payment-issue-cta"
-            >
-              {actionKey === "portal" ? "Yönlendiriliyor..." : overview?.payment_issue?.cta_label || "Ödeme Yöntemini Güncelle"}
-            </Button>
-          </div>
-        </div>
-      ) : null}
+      <BillingPaymentIssueBanner
+        paymentIssue={overview?.payment_issue}
+        portalAvailable={overview?.portal_available}
+        actionKey={actionKey}
+        onPortalOpen={handlePortalOpen}
+      />
 
       {overview?.cancel_message ? (
         <div className="rounded-3xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-900" data-testid="billing-cancel-pending-banner">

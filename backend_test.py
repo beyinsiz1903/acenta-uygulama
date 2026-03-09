@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Test configuration
-BASE_URL = "https://agency-dashboard-56.preview.emergentagent.com"
+BASE_URL = "https://travel-agency-os.preview.emergentagent.com"
 AGENCY_CREDENTIALS = {
     "email": "agent@acenta.test", 
     "password": "agent123"

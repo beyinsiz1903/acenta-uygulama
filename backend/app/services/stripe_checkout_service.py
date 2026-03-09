@@ -109,6 +109,27 @@ def _interval_label(interval: str) -> str:
     return "Yıllık" if interval == "yearly" else "Aylık"
 
 
+def _coerce_minor_amount(value: Any) -> Optional[int]:
+    if value in (None, ""):
+        return None
+    try:
+        return int(value)
+    except Exception:
+        try:
+            return int(float(value))
+        except Exception:
+            return None
+
+
+def _format_try_minor(value: Any) -> Optional[str]:
+    amount_minor = _coerce_minor_amount(value)
+    if amount_minor is None:
+        return None
+    amount = amount_minor / 100.0
+    formatted = f"{amount:,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
+    return f"₺{formatted}"
+
+
 def _plan_change_mode(current_plan: str, current_interval: str, target_plan: str, target_interval: str) -> str:
     current_rank = PLAN_ORDER.get(current_plan or "trial", 0)
     target_rank = PLAN_ORDER.get(target_plan, 0)
@@ -324,6 +345,197 @@ class StripeCheckoutService:
             {"_id": 0, "tenant_id": 1},
         )
         return str((doc or {}).get("tenant_id") or "") or None
+
+    async def mark_invoice_paid(
+        self,
+        tenant_id: str,
+        *,
+        subscription_id: str,
+        amount_paid: Any = None,
+        paid_at: Optional[str] = None,
+    ) -> dict[str, Any]:
+        synced: dict[str, Any] = {}
+        if subscription_id:
+            try:
+                synced = await self.sync_provider_subscription_record(tenant_id, subscription_id)
+            except Exception as exc:
+                if not _is_missing_stripe_resource_error(exc):
+                    raise
+                synced = await self._demote_stale_subscription_reference(tenant_id)
+
+        now = _now()
+        paid_at_value = paid_at or now.isoformat()
+        amount_minor = _coerce_minor_amount(amount_paid)
+        db = await get_db()
+
+        set_fields: dict[str, Any] = {
+            "status": str((synced or {}).get("status") or "active"),
+            "updated_at": now,
+            "last_invoice_paid_at": paid_at_value,
+        }
+        if amount_minor is not None:
+            set_fields["last_invoice_paid_amount"] = amount_minor
+
+        await db.billing_subscriptions.update_one(
+            {"tenant_id": tenant_id},
+            {
+                "$set": set_fields,
+                "$unset": {
+                    "grace_period_until": "",
+                    "last_payment_failed_at": "",
+                    "last_payment_failed_amount": "",
+                    "invoice_hosted_url": "",
+                    "invoice_pdf_url": "",
+                },
+            },
+        )
+        org_id = await self._resolve_org_id_for_tenant(tenant_id)
+        if org_id:
+            await db.subscriptions.update_one(
+                {"org_id": org_id},
+                {"$set": {"status": set_fields["status"], "updated_at": now}},
+            )
+
+        await append_audit_log(
+            scope="billing",
+            tenant_id=tenant_id,
+            actor_user_id="system",
+            actor_email="stripe_webhook",
+            action="subscription.invoice_paid",
+            before=None,
+            after={
+                "subscription_id": subscription_id,
+                "amount": amount_minor,
+                "paid_at": paid_at_value,
+            },
+        )
+        return (await billing_repo.get_subscription(tenant_id)) or synced or {}
+
+    async def mark_payment_failed(
+        self,
+        tenant_id: str,
+        *,
+        subscription_id: str,
+        amount_due: Any = None,
+        invoice_hosted_url: Optional[str] = None,
+        invoice_pdf_url: Optional[str] = None,
+        failed_at: Optional[str] = None,
+    ) -> dict[str, Any]:
+        if subscription_id:
+            try:
+                await self.sync_provider_subscription_record(tenant_id, subscription_id)
+            except Exception as exc:
+                if not _is_missing_stripe_resource_error(exc):
+                    raise
+
+        now = _now()
+        failed_at_value = failed_at or now.isoformat()
+        grace_until = (now + timedelta(days=7)).isoformat()
+        amount_minor = _coerce_minor_amount(amount_due)
+        db = await get_db()
+
+        set_fields: dict[str, Any] = {
+            "status": "past_due",
+            "grace_period_until": grace_until,
+            "last_payment_failed_at": failed_at_value,
+            "updated_at": now,
+        }
+        if amount_minor is not None:
+            set_fields["last_payment_failed_amount"] = amount_minor
+        if invoice_hosted_url:
+            set_fields["invoice_hosted_url"] = invoice_hosted_url
+        if invoice_pdf_url:
+            set_fields["invoice_pdf_url"] = invoice_pdf_url
+
+        unset_fields: dict[str, str] = {}
+        if not invoice_hosted_url:
+            unset_fields["invoice_hosted_url"] = ""
+        if not invoice_pdf_url:
+            unset_fields["invoice_pdf_url"] = ""
+
+        update_doc: dict[str, Any] = {"$set": set_fields}
+        if unset_fields:
+            update_doc["$unset"] = unset_fields
+
+        await db.billing_subscriptions.update_one({"tenant_id": tenant_id}, update_doc)
+        org_id = await self._resolve_org_id_for_tenant(tenant_id)
+        if org_id:
+            await db.subscriptions.update_one(
+                {"org_id": org_id},
+                {"$set": {"status": "past_due", "updated_at": now}},
+            )
+
+        await append_audit_log(
+            scope="billing",
+            tenant_id=tenant_id,
+            actor_user_id="system",
+            actor_email="stripe_webhook",
+            action="subscription.payment_failed",
+            before=None,
+            after={
+                "status": "past_due",
+                "grace_period_until": grace_until,
+                "amount": amount_minor,
+                "failed_at": failed_at_value,
+                "invoice_hosted_url": invoice_hosted_url,
+                "invoice_pdf_url": invoice_pdf_url,
+            },
+        )
+        return (await billing_repo.get_subscription(tenant_id)) or {}
+
+    async def mark_subscription_canceled(
+        self,
+        tenant_id: str,
+        *,
+        subscription_id: str,
+        canceled_at: Optional[str] = None,
+    ) -> dict[str, Any]:
+        now = _now()
+        canceled_at_value = canceled_at or now.isoformat()
+        db = await get_db()
+        await db.billing_subscriptions.update_one(
+            {"tenant_id": tenant_id},
+            {
+                "$set": {
+                    "status": "canceled",
+                    "cancel_at_period_end": False,
+                    "updated_at": now,
+                    "canceled_at": canceled_at_value,
+                },
+                "$unset": {
+                    "grace_period_until": "",
+                    "last_payment_failed_at": "",
+                    "last_payment_failed_amount": "",
+                    "invoice_hosted_url": "",
+                    "invoice_pdf_url": "",
+                    "scheduled_plan": "",
+                    "scheduled_interval": "",
+                    "change_effective_at": "",
+                    "schedule_id": "",
+                },
+            },
+        )
+        org_id = await self._resolve_org_id_for_tenant(tenant_id)
+        if org_id:
+            await db.subscriptions.update_one(
+                {"org_id": org_id},
+                {"$set": {"status": "canceled", "updated_at": now}},
+            )
+
+        await append_audit_log(
+            scope="billing",
+            tenant_id=tenant_id,
+            actor_user_id="system",
+            actor_email="stripe_webhook",
+            action="subscription.canceled",
+            before=None,
+            after={
+                "subscription_id": subscription_id,
+                "status": "canceled",
+                "canceled_at": canceled_at_value,
+            },
+        )
+        return (await billing_repo.get_subscription(tenant_id)) or {}
 
     async def _sync_subscription_document(
         self,
@@ -857,6 +1069,12 @@ class StripeCheckoutService:
         managed_subscription = _is_real_subscription_id((subscription or {}).get("provider_subscription_id"))
         portal_available = _is_real_customer_id((customer or {}).get("provider_customer_id")) or bool(user_email and plan != "trial")
         payment_issue = status in {"past_due", "unpaid", "incomplete", "incomplete_expired"}
+        grace_period_until = (subscription or {}).get("grace_period_until")
+        last_payment_failed_at = (subscription or {}).get("last_payment_failed_at")
+        last_payment_failed_amount = (subscription or {}).get("last_payment_failed_amount")
+        invoice_hosted_url = (subscription or {}).get("invoice_hosted_url")
+        invoice_pdf_url = (subscription or {}).get("invoice_pdf_url")
+        payment_issue_amount_label = _format_try_minor(last_payment_failed_amount)
         scheduled_plan = (subscription or {}).get("scheduled_plan")
         scheduled_interval = (subscription or {}).get("scheduled_interval")
         scheduled_effective_at = (subscription or {}).get("change_effective_at")
@@ -881,8 +1099,28 @@ class StripeCheckoutService:
             } if scheduled_plan else None,
             "payment_issue": {
                 "has_issue": payment_issue,
-                "message": "Ödemeniz alınamadı. Hizmetinizin kesintiye uğramaması için ödeme yönteminizi güncelleyin." if payment_issue else None,
+                "severity": (
+                    "critical"
+                    if status in {"unpaid", "incomplete_expired"}
+                    else "warning"
+                    if payment_issue
+                    else None
+                ),
+                "title": "Ödeme yönteminizi güncelleyin" if payment_issue else None,
+                "message": (
+                    f"Son tahsilat denemesi {payment_issue_amount_label} için başarısız oldu. Hizmetinizin kesintiye uğramaması için ödeme yönteminizi güncelleyin."
+                    if payment_issue and payment_issue_amount_label
+                    else "Ödemeniz alınamadı. Hizmetinizin kesintiye uğramaması için ödeme yönteminizi güncelleyin."
+                    if payment_issue
+                    else None
+                ),
                 "cta_label": "Ödeme Yöntemini Güncelle" if payment_issue else None,
+                "grace_period_until": grace_period_until if payment_issue else None,
+                "last_failed_at": last_payment_failed_at if payment_issue else None,
+                "last_failed_amount": last_payment_failed_amount if payment_issue else None,
+                "last_failed_amount_label": payment_issue_amount_label if payment_issue else None,
+                "invoice_hosted_url": invoice_hosted_url if payment_issue else None,
+                "invoice_pdf_url": invoice_pdf_url if payment_issue else None,
             },
             "portal_available": portal_available,
             "managed_subscription": managed_subscription,
@@ -1298,7 +1536,13 @@ class StripeCheckoutService:
             sub_id = str(event_object.get("subscription") or "")
             tenant_id = await self._find_tenant_by_subscription(sub_id) if sub_id else None
             if tenant_id:
-                await self.sync_provider_subscription_record(tenant_id, sub_id)
+                status_transitions = event_object.get("status_transitions") or {}
+                await self.mark_invoice_paid(
+                    tenant_id,
+                    subscription_id=sub_id,
+                    amount_paid=event_object.get("amount_paid"),
+                    paid_at=_iso_from_unix(status_transitions.get("paid_at")) or _now().isoformat(),
+                )
         elif event_type == "customer.subscription.updated":
             sub_id = str(event_object.get("id") or "")
             tenant_id = await self._find_tenant_by_subscription(sub_id) if sub_id else None
@@ -1308,21 +1552,23 @@ class StripeCheckoutService:
             sub_id = str(event_object.get("id") or "")
             tenant_id = await self._find_tenant_by_subscription(sub_id) if sub_id else None
             if tenant_id:
-                await billing_repo.update_subscription_status(tenant_id, "canceled", cancel_at_period_end=False)
-                await self._clear_scheduled_change(tenant_id)
+                await self.mark_subscription_canceled(
+                    tenant_id,
+                    subscription_id=sub_id,
+                    canceled_at=_iso_from_unix(event_object.get("canceled_at")) or _now().isoformat(),
+                )
         elif event_type == "invoice.payment_failed":
             sub_id = str(event_object.get("subscription") or "")
             tenant_id = await self._find_tenant_by_subscription(sub_id) if sub_id else None
             if tenant_id:
-                try:
-                    await self.sync_provider_subscription_record(tenant_id, sub_id)
-                except Exception:
-                    logger.warning("payment_failed subscription sync skipped", extra={"tenant_id": tenant_id, "subscription_id": sub_id})
-                db = await get_db()
-                grace_until = (_now() + timedelta(days=7)).isoformat()
-                await db.billing_subscriptions.update_one(
-                    {"tenant_id": tenant_id},
-                    {"$set": {"status": "past_due", "grace_period_until": grace_until, "updated_at": _now()}},
+                status_transitions = event_object.get("status_transitions") or {}
+                await self.mark_payment_failed(
+                    tenant_id,
+                    subscription_id=sub_id,
+                    amount_due=event_object.get("amount_due") or event_object.get("amount_remaining"),
+                    invoice_hosted_url=str(event_object.get("hosted_invoice_url") or "") or None,
+                    invoice_pdf_url=str(event_object.get("invoice_pdf") or "") or None,
+                    failed_at=_iso_from_unix(status_transitions.get("finalized_at")) or _now().isoformat(),
                 )
 
         return {

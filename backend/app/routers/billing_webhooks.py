@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 
 from app.repositories.billing_repository import billing_repo
 from app.services.audit_log_service import append_audit_log
-from app.services.stripe_checkout_service import stripe_checkout_service
+from app.services.stripe_checkout_service import _iso_from_unix, stripe_checkout_service
 
 logger = logging.getLogger(__name__)
 
@@ -98,21 +98,12 @@ async def _handle_invoice_paid(event: Any) -> None:
     logger.warning("invoice.paid: no tenant for subscription %s", sub_id)
     return
 
-  synced = await stripe_checkout_service.sync_provider_subscription_record(tenant_id, sub_id)
-  await billing_repo.update_subscription_status(
+  status_transitions = obj.get("status_transitions") or {}
+  await stripe_checkout_service.mark_invoice_paid(
     tenant_id,
-    synced.get("status") or "active",
-    cancel_at_period_end=synced.get("cancel_at_period_end"),
-  )
-
-  await append_audit_log(
-    scope="billing",
-    tenant_id=tenant_id,
-    actor_user_id="system",
-    actor_email="stripe_webhook",
-    action="subscription.invoice_paid",
-    before=None,
-    after={"subscription_id": sub_id, "amount": obj.get("amount_paid")},
+    subscription_id=sub_id,
+    amount_paid=obj.get("amount_paid"),
+    paid_at=_iso_from_unix(status_transitions.get("paid_at")),
   )
 
 
@@ -151,16 +142,9 @@ async def _handle_subscription_deleted(event: Any) -> None:
   if not tenant_id:
     return
 
-  await billing_repo.update_subscription_status(tenant_id, "canceled", cancel_at_period_end=False)
-
-  await append_audit_log(
-    scope="billing",
-    tenant_id=tenant_id,
-    actor_user_id="system",
-    actor_email="stripe_webhook",
-    action="subscription.canceled",
-    before=None,
-    after={"subscription_id": sub_id, "status": "canceled"},
+  await stripe_checkout_service.mark_subscription_canceled(
+    tenant_id,
+    subscription_id=sub_id,
   )
 
 
@@ -174,28 +158,12 @@ async def _handle_payment_failed(event: Any) -> None:
   if not tenant_id:
     return
 
-  # Set grace period instead of immediate freeze
-  from datetime import datetime, timedelta, timezone
-  grace_until = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
-
-  try:
-    await stripe_checkout_service.sync_provider_subscription_record(tenant_id, sub_id)
-  except Exception:
-    logger.warning("invoice.payment_failed sync skipped", extra={"tenant_id": tenant_id, "subscription_id": sub_id})
-
-  from app.db import get_db
-  db = await get_db()
-  await db.billing_subscriptions.update_one(
-    {"tenant_id": tenant_id},
-    {"$set": {"status": "past_due", "grace_period_until": grace_until, "updated_at": datetime.now(timezone.utc)}},
-  )
-
-  await append_audit_log(
-    scope="billing",
-    tenant_id=tenant_id,
-    actor_user_id="system",
-    actor_email="stripe_webhook",
-    action="subscription.payment_failed",
-    before=None,
-    after={"status": "past_due", "grace_period_until": grace_until},
+  status_transitions = obj.get("status_transitions") or {}
+  await stripe_checkout_service.mark_payment_failed(
+    tenant_id,
+    subscription_id=sub_id,
+    amount_due=obj.get("amount_due") or obj.get("amount_remaining"),
+    invoice_hosted_url=str(obj.get("hosted_invoice_url") or "") or None,
+    invoice_pdf_url=str(obj.get("invoice_pdf") or "") or None,
+    failed_at=_iso_from_unix(status_transitions.get("finalized_at")),
   )

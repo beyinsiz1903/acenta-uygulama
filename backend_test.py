@@ -1,544 +1,625 @@
 #!/usr/bin/env python3
 """
-Comprehensive backend test for Stripe billing webhook implementation.
+Backend smoke/regression test for hard quota enforcement implementation.
 
-Tests:
-1. POST /api/webhook/stripe endpoint functionality 
-2. Signed mock Stripe events with STRIPE_WEBHOOK_SECRET
-3. Webhook event handling for invoice.payment_failed, customer.subscription.deleted, invoice.paid
-4. GET /api/billing/subscription with payment_issue object validation
+Tests all endpoints mentioned in the review request to ensure they return
+200 or 403 (when quota exceeded) but NOT 500 server errors.
+
+Review Request: Backend smoke/regression testing for hard quota enforcement:
+- New service: backend/app/services/quota_enforcement_service.py
+- Reservation/report/export flows have quota guards added
+- Frontend only had error parsing changes; backend needs live regression testing
+
+Required Tests:
+1. Login with agent@acenta.test / agent123 and auth flow
+2. GET /api/tenant/usage-summary?days=30 returns 200
+3. GET /api/billing/subscription returns 200 
+4. GET /api/reports/sales-summary.csv returns 200 OR 403 (not 500)
+5. Admin endpoints: POST /api/admin/tenant/export and GET /api/admin/audit/export return 200 OR 403 (not 500)
+6. Check for regressions/import errors/serialization issues in hard quota implementation
 """
-
+import os
+import sys
 import json
-import hmac
-import hashlib
-import time
 import requests
 from typing import Dict, Any, Optional
 
+# Configuration
+BASE_URL = "https://agency-billing-ui.preview.emergentagent.com"
+AGENT_EMAIL = "agent@acenta.test"
+AGENT_PASSWORD = "agent123"
+ADMIN_EMAIL = "admin@acenta.test"
+ADMIN_PASSWORD = "admin123"
 
-class StripeWebhookTester:
+class BackendQuotaSmokeTester:
     def __init__(self):
-        # Use the preview environment base URL as specified in the review
-        self.base_url = "https://agency-billing-ui.preview.emergentagent.com"
-        self.webhook_secret = "whsec_test"  # From backend/.env
+        self.base_url = BASE_URL.rstrip("/")
+        self.agent_session = None
+        self.admin_session = None
+        self.test_results = []
         
-        # Test credentials from review request
-        self.test_email = "agent@acenta.test"
-        self.test_password = "agent123"
-        
-        self.access_token = None
-        self.tenant_id = None
-        
-    def login(self) -> bool:
-        """Login with test credentials to get access token."""
-        try:
-            login_url = f"{self.base_url}/api/auth/login"
-            payload = {
-                "email": self.test_email,
-                "password": self.test_password
-            }
-            
-            response = requests.post(login_url, json=payload)
-            
-            if response.status_code == 200:
-                data = response.json()
-                self.access_token = data.get("access_token")
-                # Extract tenant_id from user data if available
-                user_data = data.get("user", {})
-                if "organization_id" in user_data:
-                    # We'll resolve tenant_id later via subscription endpoint
-                    pass
-                print(f"✅ Login successful - Token length: {len(self.access_token) if self.access_token else 0}")
-                return True
-            else:
-                print(f"❌ Login failed - Status: {response.status_code}, Response: {response.text}")
-                return False
-                
-        except Exception as e:
-            print(f"❌ Login error: {e}")
-            return False
-    
-    def get_auth_headers(self) -> Dict[str, str]:
-        """Get authorization headers for API calls."""
-        return {
-            "Authorization": f"Bearer {self.access_token}",
-            "Content-Type": "application/json"
+    def log_result(self, test_name: str, passed: bool, message: str, details: Optional[Dict] = None):
+        """Log test result with details."""
+        result = {
+            "test": test_name,
+            "passed": passed,
+            "message": message,
+            "details": details or {}
         }
-    
-    def create_webhook_signature(self, payload: str, timestamp: int) -> str:
-        """Create HMAC SHA-256 signature for Stripe webhook."""
-        # Use the full secret including 'whsec_' prefix for base64 decoding
-        import base64
-        
-        # Stripe webhook secrets are base64 encoded after removing whsec_ prefix
-        secret_key = self.webhook_secret.replace('whsec_', '')
-        
-        # For test purposes, if it's not base64 encoded, use it as is
-        try:
-            decoded_secret = base64.b64decode(secret_key)
-        except:
-            # If decoding fails, use the secret as bytes directly
-            decoded_secret = secret_key.encode('utf-8')
-        
-        # Create the signed payload string  
-        signed_payload = f"{timestamp}.{payload}"
-        
-        # Create HMAC signature
-        signature = hmac.new(
-            decoded_secret,
-            signed_payload.encode('utf-8'),
-            hashlib.sha256
-        ).hexdigest()
-        
-        return f"t={timestamp},v1={signature}"
-    
-    def test_webhook_without_secret(self) -> bool:
-        """Test webhook endpoint without STRIPE_WEBHOOK_SECRET to verify behavior."""
-        print("\n🔍 Testing webhook endpoint without secret (should return 503)...")
-        
-        webhook_url = f"{self.base_url}/api/webhook/stripe" 
-        
-        # Test with empty payload to check secret validation
-        headers = {
-            "Stripe-Signature": "invalid_signature",
-            "Content-Type": "application/json"
-        }
-        
-        response = requests.post(webhook_url, json={}, headers=headers)
-        
-        if response.status_code == 503:
-            error_data = response.json()
-            if error_data.get("error", {}).get("code") == "webhook_secret_missing":
-                print("✅ Webhook correctly rejects when secret is missing")
-                return True
-        elif response.status_code == 400:
-            print("✅ Webhook correctly validates signature (secret is configured)")
-            return True
-        elif response.status_code == 500:
-            print("ℹ️  Webhook returns 500 - likely signature validation or processing issue")
-            return True
-            
-        print(f"❌ Unexpected response: {response.status_code} - {response.text}")
-        return False
-    
-    def send_webhook_event(self, event_type: str, event_data: Dict[str, Any]) -> Optional[Dict]:
-        """Send a signed webhook event to the Stripe webhook endpoint."""
-        webhook_url = f"{self.base_url}/api/webhook/stripe"
-        
-        # Create event payload
-        event_id = f"evt_test_{int(time.time())}"
-        timestamp = int(time.time())
-        
-        webhook_payload = {
-            "id": event_id,
-            "object": "event",
-            "api_version": "2020-08-27",
-            "created": timestamp,
-            "data": {
-                "object": event_data
-            },
-            "livemode": False,
-            "pending_webhooks": 1,
-            "request": {
-                "id": None,
-                "idempotency_key": None
-            },
-            "type": event_type
-        }
-        
-        payload_str = json.dumps(webhook_payload)
-        signature = self.create_webhook_signature(payload_str, timestamp)
-        
-        headers = {
-            "Stripe-Signature": signature,
-            "Content-Type": "application/json"
-        }
-        
-        try:
-            response = requests.post(webhook_url, data=payload_str, headers=headers)
-            print(f"📤 Sent webhook {event_type} - Status: {response.status_code}")
-            
-            if response.status_code == 200:
-                return response.json()
-            else:
-                print(f"   Response: {response.text}")
-                return None
-                
-        except Exception as e:
-            print(f"❌ Webhook send error: {e}")
-            return None
-    
-    def get_billing_subscription(self) -> Optional[Dict]:
-        """Get current billing subscription to check status and payment issues."""
-        try:
-            url = f"{self.base_url}/api/billing/subscription"
-            headers = self.get_auth_headers()
-            
-            response = requests.get(url, headers=headers)
-            
-            if response.status_code == 200:
-                data = response.json()
-                self.tenant_id = data.get("tenant_id")  # Store tenant_id for webhook events
-                return data
-            else:
-                print(f"❌ Get billing subscription failed - Status: {response.status_code}, Response: {response.text}")
-                return None
-                
-        except Exception as e:
-            print(f"❌ Get billing subscription error: {e}")
-            return None
-    
-    def create_test_subscription_data(self, status: str = "active") -> Dict[str, Any]:
-        """Create test subscription data for webhook events."""
-        return {
-            "id": "sub_test_subscription_123",
-            "object": "subscription",
-            "status": status,
-            "current_period_start": int(time.time()) - 86400,
-            "current_period_end": int(time.time()) + 86400 * 30,
-            "customer": "cus_test_customer_123",
-            "cancel_at_period_end": False
-        }
-    
-    def create_test_invoice_data(self, subscription_id: str, status: str = "open") -> Dict[str, Any]:
-        """Create test invoice data for webhook events."""
-        return {
-            "id": f"in_test_invoice_{int(time.time())}",
-            "object": "invoice",
-            "subscription": subscription_id,
-            "status": status,
-            "amount_due": 2490,
-            "amount_paid": 2490 if status == "paid" else 0,
-            "amount_remaining": 0 if status == "paid" else 2490,
-            "currency": "try",
-            "hosted_invoice_url": f"https://invoice.stripe.com/i/test_{int(time.time())}",
-            "invoice_pdf": f"https://pay.stripe.com/invoice/test_{int(time.time())}/pdf",
-            "status_transitions": {
-                "paid_at": int(time.time()) if status == "paid" else None,
-                "finalized_at": int(time.time())
-            }
-        }
-    
-    def test_payment_failed_webhook(self) -> bool:
-        """Test invoice.payment_failed webhook - should set status to past_due."""
-        print("\n🔍 Testing invoice.payment_failed webhook...")
-        
-        # Get baseline subscription status
-        baseline = self.get_billing_subscription()
-        if not baseline:
-            print("❌ Could not get baseline subscription")
-            return False
-            
-        print(f"   Baseline status: {baseline.get('status', 'unknown')}")
-        
-        # Create and send payment failed event
-        subscription_data = self.create_test_subscription_data("past_due")
-        invoice_data = self.create_test_invoice_data(subscription_data["id"], "open")
-        
-        result = self.send_webhook_event("invoice.payment_failed", invoice_data)
-        if not result:
-            return False
-        
-        # Wait a moment for processing
-        time.sleep(1)
-        
-        # Check subscription status after webhook
-        after = self.get_billing_subscription()
-        if not after:
-            print("❌ Could not get subscription after webhook")
-            return False
-            
-        print(f"   After webhook status: {after.get('status', 'unknown')}")
-        
-        # Check for payment_issue object
-        payment_issue = after.get("payment_issue", {})
-        if not payment_issue:
-            print("❌ payment_issue object not found in response")
-            return False
-            
-        print(f"   Payment issue has_issue: {payment_issue.get('has_issue')}")
-        print(f"   Payment issue severity: {payment_issue.get('severity')}")
-        
-        # Validate expected changes
-        expected_status = "past_due"
-        if after.get("status") == expected_status or payment_issue.get("has_issue"):
-            print("✅ invoice.payment_failed webhook processed correctly")
-            return True
-        else:
-            print("❌ Webhook did not produce expected status change")
-            return False
-    
-    def test_subscription_deleted_webhook(self) -> bool:
-        """Test customer.subscription.deleted webhook - should set status to canceled.""" 
-        print("\n🔍 Testing customer.subscription.deleted webhook...")
-        
-        subscription_data = self.create_test_subscription_data("canceled")
-        subscription_data["canceled_at"] = int(time.time())
-        
-        result = self.send_webhook_event("customer.subscription.deleted", subscription_data)
-        if not result:
-            return False
-            
-        # Wait a moment for processing
-        time.sleep(1)
-        
-        # Check subscription status
-        after = self.get_billing_subscription()
-        if not after:
-            print("❌ Could not get subscription after webhook")
-            return False
-            
-        print(f"   After webhook status: {after.get('status', 'unknown')}")
-        
-        # Note: The actual status change depends on the tenant's current subscription
-        print("✅ customer.subscription.deleted webhook sent and processed")
-        return True
-    
-    def test_invoice_paid_webhook(self) -> bool:
-        """Test invoice.paid webhook - should clear payment issues and set status to active."""
-        print("\n🔍 Testing invoice.paid webhook...")
-        
-        subscription_data = self.create_test_subscription_data("active")
-        invoice_data = self.create_test_invoice_data(subscription_data["id"], "paid")
-        
-        result = self.send_webhook_event("invoice.paid", invoice_data)
-        if not result:
-            return False
-            
-        # Wait a moment for processing  
-        time.sleep(1)
-        
-        # Check subscription status
-        after = self.get_billing_subscription()
-        if not after:
-            print("❌ Could not get subscription after webhook")
-            return False
-            
-        print(f"   After webhook status: {after.get('status', 'unknown')}")
-        
-        # Check that payment issues are cleared
-        payment_issue = after.get("payment_issue", {})
-        print(f"   Payment issue has_issue: {payment_issue.get('has_issue')}")
-        
-        if not payment_issue.get("has_issue", True):
-            print("✅ invoice.paid webhook cleared payment issues")
-        else:
-            print("ℹ️  invoice.paid webhook processed (payment issue state varies by account)")
-            
-        return True
-    
-    def test_billing_subscription_endpoint(self) -> bool:
-        """Test GET /api/billing/subscription returns 200 with payment_issue object."""
-        print("\n🔍 Testing GET /api/billing/subscription endpoint...")
-        
-        subscription = self.get_billing_subscription()
-        if not subscription:
-            return False
-            
-        # Check required fields
-        required_fields = ["tenant_id", "status"]
-        missing_fields = [field for field in required_fields if field not in subscription]
-        
-        if missing_fields:
-            print(f"❌ Missing required fields: {missing_fields}")
-            return False
-            
-        # Check payment_issue object structure
-        payment_issue = subscription.get("payment_issue")
-        if payment_issue is None:
-            print("❌ payment_issue object not found in subscription response")
-            return False
-            
-        print(f"   ✅ Found payment_issue object: {json.dumps(payment_issue, indent=2)}")
-        
-        # Validate payment_issue structure
-        expected_payment_fields = ["has_issue", "severity", "title", "message"]
-        for field in expected_payment_fields:
-            if field in payment_issue:
-                print(f"   ✅ payment_issue.{field}: {payment_issue[field]}")
-            else:
-                print(f"   ℹ️  payment_issue.{field}: not present")
-                
-        print("✅ GET /api/billing/subscription endpoint working with payment_issue object")
-        return True
-                
-    def test_webhook_signature_behavior(self) -> bool:
-        """Test webhook signature validation behavior."""
-        print("\n🔍 Testing webhook signature validation...")
-        
-        webhook_url = f"{self.base_url}/api/webhook/stripe"
-        
-        # Test 1: Invalid signature should return 400 or 500
-        headers1 = {
-            "Stripe-Signature": "t=123456789,v1=invalid_signature",
-            "Content-Type": "application/json"
-        }
-        
-        response1 = requests.post(webhook_url, json={"test": "data"}, headers=headers1)
-        print(f"   Invalid signature returns: {response1.status_code}")
-        
-        # Test 2: Missing signature should return 400 or 500  
-        headers2 = {"Content-Type": "application/json"}
-        response2 = requests.post(webhook_url, json={"test": "data"}, headers=headers2)
-        print(f"   Missing signature returns: {response2.status_code}")
-        
-        # Both should fail (not 200), indicating signature validation is working
-        if response1.status_code != 200 and response2.status_code != 200:
-            print("✅ Webhook signature validation is working")
-            return True
-        else:
-            print("❌ Webhook signature validation may not be working correctly")
-            return False
-    
-    def test_subscription_status_monitoring(self) -> bool:
-        """Test subscription status and payment_issue monitoring capabilities."""
-        print("\n🔍 Testing subscription status monitoring capabilities...")
-        
-        # Get current subscription status
-        subscription = self.get_billing_subscription()
-        if not subscription:
-            return False
-            
-        current_status = subscription.get("status", "unknown")
-        payment_issue = subscription.get("payment_issue", {})
-        
-        print(f"   Current subscription status: {current_status}")
-        print(f"   Payment issue state: has_issue={payment_issue.get('has_issue')}")
-        
-        # Test that we can monitor key fields that webhooks would modify
-        key_fields = [
-            "status", "payment_issue", "grace_period_until", 
-            "last_payment_failed_at", "invoice_hosted_url"
-        ]
-        
-        present_fields = [field for field in key_fields if field in subscription]
-        print(f"   Webhook-related fields present: {len(present_fields)}/{len(key_fields)}")
-        
-        # Check payment_issue structure matches webhook expectations
-        payment_issue_fields = [
-            "has_issue", "severity", "title", "message", "cta_label",
-            "grace_period_until", "last_failed_at", "last_failed_amount",
-            "invoice_hosted_url", "invoice_pdf_url"
-        ]
-        
-        payment_fields_present = [
-            field for field in payment_issue_fields 
-            if field in payment_issue
-        ]
-        
-        print(f"   Payment issue fields present: {len(payment_fields_present)}/{len(payment_issue_fields)}")
-        
-        if len(present_fields) >= 2 and len(payment_fields_present) >= 8:
-            print("✅ Subscription monitoring structure supports webhook updates")
-            return True
-        else:
-            print("ℹ️  Subscription structure partially supports webhook updates")
-            print(f"   Core fields available: status, payment_issue with {len(payment_fields_present)} sub-fields")
-            return True  # Accept partial support as sufficient
-    
-    
-    def test_webhook_implementation_validation(self) -> bool:
-        """Validate that webhook implementation functions are accessible and working."""
-        print("\n🔍 Testing webhook implementation validation...")
-        
-        try:
-            # Test that we can access the subscription data that webhooks would modify
-            subscription = self.get_billing_subscription()
-            if not subscription:
-                return False
-                
-            tenant_id = subscription.get("tenant_id")
-            if not tenant_id:
-                print("❌ Could not get tenant_id for webhook validation")
-                return False
-                
-            print(f"   Tenant ID for webhook testing: {tenant_id}")
-            
-            # Check current subscription state
-            status = subscription.get("status", "unknown")
-            managed_subscription = subscription.get("managed_subscription", False)
-            provider_subscription_id = subscription.get("provider_subscription_id")
-            
-            print(f"   Subscription status: {status}")
-            print(f"   Managed subscription: {managed_subscription}")
-            print(f"   Provider subscription ID: {provider_subscription_id is not None}")
-            
-            # For webhook handling to work, we need:
-            # 1. A tenant with a subscription
-            # 2. The subscription should be managed (not legacy)
-            # 3. The payment_issue structure should be present
-            
-            if tenant_id and managed_subscription:
-                print("✅ Webhook implementation prerequisites are met")
-                return True
-            else:
-                print("ℹ️  Webhook implementation can work but may need managed subscription")
-                return True
-                
-        except Exception as e:
-            print(f"❌ Webhook implementation validation error: {e}")
-            return False
-    def run_all_tests(self) -> Dict[str, bool]:
-        """Run all Stripe webhook tests as specified in the review request."""
-        print("🚀 Starting Stripe Billing Webhook Validation\n")
-        print(f"Base URL: {self.base_url}")
-        print(f"Test Account: {self.test_email}")
-        print(f"Webhook Secret Configured: {bool(self.webhook_secret)}\n")
-        
-        results = {}
-        
-        # Step 1: Login
-        if not self.login():
-            print("❌ Cannot proceed without authentication")
-            return {"login": False}
-        
-        results["login"] = True
-        
-        # Step 2: Test webhook endpoint exists and behavior
-        results["webhook_endpoint_behavior"] = self.test_webhook_without_secret()
-        
-        # Step 3: Test GET /api/billing/subscription endpoint
-        results["billing_subscription_endpoint"] = self.test_billing_subscription_endpoint()
-        
-        # Step 4: Test webhook event handling
-        if results["webhook_endpoint_behavior"]:
-            # Instead of testing full webhook flow which has signature issues,
-            # let's test the subscription changes directly by checking the payment_issue behavior
-            results["webhook_signature_validation"] = self.test_webhook_signature_behavior()
-            results["subscription_status_check"] = self.test_subscription_status_monitoring()
-            results["webhook_implementation"] = self.test_webhook_implementation_validation()
-        else:
-            print("⏭️  Skipping webhook event tests - endpoint not available")
-            results["webhook_signature_validation"] = False
-            results["subscription_status_check"] = False
-            results["webhook_implementation"] = False
-        
-        return results
-    
-    def print_summary(self, results: Dict[str, bool]) -> None:
-        """Print test summary."""
-        print("\n" + "="*60)
-        print("🎯 STRIPE WEBHOOK VALIDATION SUMMARY")
-        print("="*60)
-        
-        total_tests = len(results)
-        passed_tests = sum(1 for result in results.values() if result)
-        
-        for test_name, passed in results.items():
-            status = "✅ PASS" if passed else "❌ FAIL" 
-            print(f"{status} - {test_name}")
-        
-        print(f"\nSuccess Rate: {passed_tests}/{total_tests} ({passed_tests/total_tests*100:.1f}%)")
-        
-        if all(results.values()):
-            print("\n🎉 All Stripe webhook tests PASSED!")
-        else:
-            failed_tests = [name for name, result in results.items() if not result]
-            print(f"\n⚠️  Failed tests: {', '.join(failed_tests)}")
+        self.test_results.append(result)
+        status = "✅ PASS" if passed else "❌ FAIL"
+        print(f"{status}: {test_name}")
+        print(f"   {message}")
+        if details:
+            print(f"   Details: {json.dumps(details, indent=2)[:200]}...")
+        print()
 
+    def create_session(self, email: str, password: str) -> requests.Session:
+        """Create authenticated session for user."""
+        session = requests.Session()
+        session.headers.update({
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        })
+        
+        # Login
+        login_response = session.post(
+            f"{self.base_url}/api/auth/login",
+            json={"email": email, "password": password},
+            timeout=10
+        )
+        
+        if login_response.status_code != 200:
+            raise Exception(f"Login failed for {email}: {login_response.status_code} - {login_response.text}")
+        
+        # Handle token auth if present
+        try:
+            login_data = login_response.json()
+            if "access_token" in login_data:
+                session.headers.update({
+                    "Authorization": f"Bearer {login_data['access_token']}"
+                })
+        except:
+            pass  # Cookie-based auth, session cookies should be set automatically
+        
+        return session
+
+    def test_1_agent_login_auth_flow(self):
+        """Test 1: Login with agent@acenta.test / agent123 and auth flow"""
+        try:
+            # Create agent session
+            self.agent_session = self.create_session(AGENT_EMAIL, AGENT_PASSWORD)
+            
+            # Verify auth flow with /api/auth/me
+            me_response = self.agent_session.get(f"{self.base_url}/api/auth/me", timeout=10)
+            
+            if me_response.status_code == 200:
+                user_data = me_response.json()
+                if user_data.get("email") == AGENT_EMAIL:
+                    self.log_result(
+                        "1. Agent Login & Auth Flow",
+                        True,
+                        f"Successfully authenticated as {AGENT_EMAIL}",
+                        {"email": user_data.get("email"), "tenant_id": user_data.get("tenant_id")}
+                    )
+                else:
+                    self.log_result(
+                        "1. Agent Login & Auth Flow",
+                        False,
+                        f"Email mismatch: expected {AGENT_EMAIL}, got {user_data.get('email')}",
+                        user_data
+                    )
+            else:
+                self.log_result(
+                    "1. Agent Login & Auth Flow",
+                    False,
+                    f"/api/auth/me failed: {me_response.status_code} - {me_response.text[:100]}",
+                    {"status_code": me_response.status_code}
+                )
+        except Exception as e:
+            self.log_result(
+                "1. Agent Login & Auth Flow",
+                False,
+                f"Exception during agent login: {str(e)[:100]}",
+                {"exception": str(e)}
+            )
+
+    def test_2_usage_summary_endpoint(self):
+        """Test 2: GET /api/tenant/usage-summary?days=30 returns 200"""
+        if not self.agent_session:
+            self.log_result("2. Usage Summary Endpoint", False, "No agent session available", {})
+            return
+            
+        try:
+            response = self.agent_session.get(
+                f"{self.base_url}/api/tenant/usage-summary?days=30",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                    self.log_result(
+                        "2. Usage Summary Endpoint",
+                        True,
+                        "GET /api/tenant/usage-summary?days=30 returned 200 OK",
+                        {
+                            "status_code": 200,
+                            "has_metrics": "metrics" in data,
+                            "has_plan": "plan" in data,
+                            "response_keys": list(data.keys())[:10]
+                        }
+                    )
+                except json.JSONDecodeError:
+                    self.log_result(
+                        "2. Usage Summary Endpoint",
+                        False,
+                        "GET /api/tenant/usage-summary returned 200 but invalid JSON",
+                        {"status_code": 200, "content": response.text[:100]}
+                    )
+            else:
+                self.log_result(
+                    "2. Usage Summary Endpoint", 
+                    False,
+                    f"GET /api/tenant/usage-summary failed: {response.status_code}",
+                    {"status_code": response.status_code, "error": response.text[:100]}
+                )
+        except Exception as e:
+            self.log_result(
+                "2. Usage Summary Endpoint",
+                False,
+                f"Exception: {str(e)[:100]}",
+                {"exception": str(e)}
+            )
+
+    def test_3_billing_subscription_endpoint(self):
+        """Test 3: GET /api/billing/subscription returns 200"""
+        if not self.agent_session:
+            self.log_result("3. Billing Subscription Endpoint", False, "No agent session available", {})
+            return
+            
+        try:
+            response = self.agent_session.get(
+                f"{self.base_url}/api/billing/subscription",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                    self.log_result(
+                        "3. Billing Subscription Endpoint",
+                        True,
+                        "GET /api/billing/subscription returned 200 OK",
+                        {
+                            "status_code": 200,
+                            "plan": data.get("plan"),
+                            "status": data.get("status"),
+                            "has_subscription": "subscription_id" in data or "provider_subscription_id" in data
+                        }
+                    )
+                except json.JSONDecodeError:
+                    self.log_result(
+                        "3. Billing Subscription Endpoint",
+                        False,
+                        "GET /api/billing/subscription returned 200 but invalid JSON",
+                        {"status_code": 200, "content": response.text[:100]}
+                    )
+            else:
+                self.log_result(
+                    "3. Billing Subscription Endpoint",
+                    False,
+                    f"GET /api/billing/subscription failed: {response.status_code}",
+                    {"status_code": response.status_code, "error": response.text[:100]}
+                )
+        except Exception as e:
+            self.log_result(
+                "3. Billing Subscription Endpoint",
+                False,
+                f"Exception: {str(e)[:100]}",
+                {"exception": str(e)}
+            )
+
+    def test_4_sales_summary_csv_endpoint(self):
+        """Test 4: GET /api/reports/sales-summary.csv returns 200 OR 403 (quota exceeded) but NOT 500"""
+        if not self.agent_session:
+            self.log_result("4. Sales Summary CSV Endpoint", False, "No agent session available", {})
+            return
+            
+        try:
+            response = self.agent_session.get(
+                f"{self.base_url}/api/reports/sales-summary.csv",
+                timeout=15  # CSV generation may take longer
+            )
+            
+            if response.status_code == 200:
+                # Success - verify it's CSV
+                content_type = response.headers.get("content-type", "")
+                is_csv = "csv" in content_type.lower() or "text/plain" in content_type.lower()
+                self.log_result(
+                    "4. Sales Summary CSV Endpoint",
+                    True,
+                    "GET /api/reports/sales-summary.csv returned 200 OK (CSV generated)",
+                    {
+                        "status_code": 200,
+                        "content_type": content_type,
+                        "is_csv": is_csv,
+                        "content_length": len(response.content)
+                    }
+                )
+            elif response.status_code == 403:
+                # Quota exceeded - verify error structure
+                try:
+                    error_data = response.json()
+                    quota_error = (
+                        "error" in error_data and 
+                        error_data["error"].get("code") == "quota_exceeded"
+                    )
+                    self.log_result(
+                        "4. Sales Summary CSV Endpoint",
+                        True,
+                        "GET /api/reports/sales-summary.csv returned 403 (quota exceeded) - correct behavior",
+                        {
+                            "status_code": 403,
+                            "has_quota_error": quota_error,
+                            "error_code": error_data.get("error", {}).get("code"),
+                            "metric": error_data.get("error", {}).get("details", {}).get("metric")
+                        }
+                    )
+                except:
+                    self.log_result(
+                        "4. Sales Summary CSV Endpoint",
+                        True,
+                        "GET /api/reports/sales-summary.csv returned 403 (likely quota exceeded)",
+                        {"status_code": 403, "response": response.text[:100]}
+                    )
+            elif response.status_code == 500:
+                # Server error - this is BAD
+                self.log_result(
+                    "4. Sales Summary CSV Endpoint",
+                    False,
+                    "GET /api/reports/sales-summary.csv returned 500 - SERVER ERROR (hard quota implementation issue!)",
+                    {"status_code": 500, "error": response.text[:200]}
+                )
+            else:
+                self.log_result(
+                    "4. Sales Summary CSV Endpoint",
+                    False,
+                    f"GET /api/reports/sales-summary.csv returned unexpected status: {response.status_code}",
+                    {"status_code": response.status_code, "error": response.text[:100]}
+                )
+        except Exception as e:
+            self.log_result(
+                "4. Sales Summary CSV Endpoint",
+                False,
+                f"Exception: {str(e)[:100]}",
+                {"exception": str(e)}
+            )
+
+    def test_5_admin_endpoints(self):
+        """Test 5: Admin endpoints POST /api/admin/tenant/export and GET /api/admin/audit/export return 200 OR 403 (not 500)"""
+        try:
+            # Create admin session
+            self.admin_session = self.create_session(ADMIN_EMAIL, ADMIN_PASSWORD)
+            
+            # Verify admin session with /api/auth/me
+            me_response = self.admin_session.get(f"{self.base_url}/api/auth/me", timeout=10)
+            if me_response.status_code != 200:
+                self.log_result(
+                    "5a. Admin Session Setup",
+                    False,
+                    f"Admin auth failed: {me_response.status_code}",
+                    {"status_code": me_response.status_code}
+                )
+                return
+            
+            admin_data = me_response.json()
+            self.log_result(
+                "5a. Admin Session Setup",
+                True,
+                f"Successfully authenticated as admin: {admin_data.get('email')}",
+                {"email": admin_data.get("email"), "roles": admin_data.get("roles", [])}
+            )
+            
+        except Exception as e:
+            self.log_result(
+                "5a. Admin Session Setup",
+                False,
+                f"Exception during admin login: {str(e)[:100]}",
+                {"exception": str(e)}
+            )
+            return
+
+        # Test POST /api/admin/tenant/export
+        try:
+            response = self.admin_session.post(
+                f"{self.base_url}/api/admin/tenant/export",
+                timeout=20  # Export may take longer
+            )
+            
+            if response.status_code == 200:
+                content_type = response.headers.get("content-type", "")
+                is_zip = "zip" in content_type.lower()
+                self.log_result(
+                    "5b. Admin Tenant Export",
+                    True,
+                    "POST /api/admin/tenant/export returned 200 OK",
+                    {
+                        "status_code": 200,
+                        "content_type": content_type,
+                        "is_zip": is_zip,
+                        "content_length": len(response.content)
+                    }
+                )
+            elif response.status_code == 403:
+                try:
+                    error_data = response.json()
+                    quota_error = (
+                        "error" in error_data and 
+                        error_data["error"].get("code") == "quota_exceeded"
+                    )
+                    self.log_result(
+                        "5b. Admin Tenant Export",
+                        True,
+                        "POST /api/admin/tenant/export returned 403 (quota exceeded) - correct behavior",
+                        {
+                            "status_code": 403,
+                            "has_quota_error": quota_error,
+                            "error_code": error_data.get("error", {}).get("code")
+                        }
+                    )
+                except:
+                    self.log_result(
+                        "5b. Admin Tenant Export",
+                        True,
+                        "POST /api/admin/tenant/export returned 403 (likely quota exceeded)",
+                        {"status_code": 403}
+                    )
+            elif response.status_code == 500:
+                self.log_result(
+                    "5b. Admin Tenant Export",
+                    False,
+                    "POST /api/admin/tenant/export returned 500 - SERVER ERROR (hard quota implementation issue!)",
+                    {"status_code": 500, "error": response.text[:200]}
+                )
+            else:
+                self.log_result(
+                    "5b. Admin Tenant Export",
+                    False,
+                    f"POST /api/admin/tenant/export returned unexpected status: {response.status_code}",
+                    {"status_code": response.status_code, "error": response.text[:100]}
+                )
+        except Exception as e:
+            self.log_result(
+                "5b. Admin Tenant Export",
+                False,
+                f"Exception: {str(e)[:100]}",
+                {"exception": str(e)}
+            )
+
+        # Test GET /api/admin/audit/export
+        try:
+            response = self.admin_session.get(
+                f"{self.base_url}/api/admin/audit/export",
+                timeout=20  # Export may take longer
+            )
+            
+            if response.status_code == 200:
+                content_type = response.headers.get("content-type", "")
+                is_csv = "csv" in content_type.lower() or "text" in content_type.lower()
+                self.log_result(
+                    "5c. Admin Audit Export",
+                    True,
+                    "GET /api/admin/audit/export returned 200 OK",
+                    {
+                        "status_code": 200,
+                        "content_type": content_type,
+                        "is_csv": is_csv,
+                        "content_length": len(response.content)
+                    }
+                )
+            elif response.status_code == 403:
+                try:
+                    error_data = response.json()
+                    quota_error = (
+                        "error" in error_data and 
+                        error_data["error"].get("code") == "quota_exceeded"
+                    )
+                    self.log_result(
+                        "5c. Admin Audit Export",
+                        True,
+                        "GET /api/admin/audit/export returned 403 (quota exceeded) - correct behavior",
+                        {
+                            "status_code": 403,
+                            "has_quota_error": quota_error,
+                            "error_code": error_data.get("error", {}).get("code")
+                        }
+                    )
+                except:
+                    self.log_result(
+                        "5c. Admin Audit Export",
+                        True,
+                        "GET /api/admin/audit/export returned 403 (likely quota exceeded)",
+                        {"status_code": 403}
+                    )
+            elif response.status_code == 500:
+                self.log_result(
+                    "5c. Admin Audit Export",
+                    False,
+                    "GET /api/admin/audit/export returned 500 - SERVER ERROR (hard quota implementation issue!)",
+                    {"status_code": 500, "error": response.text[:200]}
+                )
+            else:
+                self.log_result(
+                    "5c. Admin Audit Export",
+                    False,
+                    f"GET /api/admin/audit/export returned unexpected status: {response.status_code}",
+                    {"status_code": response.status_code, "error": response.text[:100]}
+                )
+        except Exception as e:
+            self.log_result(
+                "5c. Admin Audit Export",
+                False,
+                f"Exception: {str(e)[:100]}",
+                {"exception": str(e)}
+            )
+
+    def test_6_quota_service_regression_check(self):
+        """Test 6: Check for regressions/import errors/serialization issues in hard quota implementation"""
+        
+        # Check if quota service endpoints are accessible (basic smoke test)
+        service_checks = []
+        
+        if self.agent_session:
+            try:
+                # Test quota service integration via usage endpoint
+                response = self.agent_session.get(
+                    f"{self.base_url}/api/tenant/usage-summary?days=30",
+                    timeout=10
+                )
+                service_checks.append({
+                    "endpoint": "/api/tenant/usage-summary",
+                    "accessible": response.status_code in [200, 403],
+                    "status_code": response.status_code
+                })
+            except Exception as e:
+                service_checks.append({
+                    "endpoint": "/api/tenant/usage-summary",
+                    "accessible": False,
+                    "error": str(e)[:100]
+                })
+        
+        # Check auth endpoint is still working
+        try:
+            test_session = requests.Session()
+            test_session.headers.update({"Content-Type": "application/json"})
+            
+            response = test_session.post(
+                f"{self.base_url}/api/auth/login",
+                json={"email": AGENT_EMAIL, "password": AGENT_PASSWORD},
+                timeout=10
+            )
+            service_checks.append({
+                "endpoint": "/api/auth/login",
+                "accessible": response.status_code == 200,
+                "status_code": response.status_code
+            })
+        except Exception as e:
+            service_checks.append({
+                "endpoint": "/api/auth/login",
+                "accessible": False,
+                "error": str(e)[:100]
+            })
+        
+        # Evaluate results
+        all_accessible = all(check.get("accessible", False) for check in service_checks)
+        
+        if all_accessible:
+            self.log_result(
+                "6. Quota Service Regression Check",
+                True,
+                "All tested endpoints accessible - no obvious import/serialization regressions detected",
+                {"service_checks": service_checks}
+            )
+        else:
+            failed_services = [
+                check for check in service_checks 
+                if not check.get("accessible", False)
+            ]
+            self.log_result(
+                "6. Quota Service Regression Check",
+                False,
+                f"Potential regression detected - {len(failed_services)} endpoints failed",
+                {"failed_services": failed_services, "all_checks": service_checks}
+            )
+
+    def run_all_tests(self):
+        """Run all smoke tests in order."""
+        print("🚀 BACKEND SMOKE/REGRESSION TEST FOR HARD QUOTA ENFORCEMENT")
+        print(f"Testing against: {self.base_url}")
+        print("=" * 80)
+        print()
+        
+        self.test_1_agent_login_auth_flow()
+        self.test_2_usage_summary_endpoint()
+        self.test_3_billing_subscription_endpoint()
+        self.test_4_sales_summary_csv_endpoint()
+        self.test_5_admin_endpoints()
+        self.test_6_quota_service_regression_check()
+        
+        return self.generate_summary()
+
+    def generate_summary(self) -> Dict[str, Any]:
+        """Generate test summary."""
+        total_tests = len(self.test_results)
+        passed_tests = len([r for r in self.test_results if r["passed"]])
+        failed_tests = total_tests - passed_tests
+        success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
+        
+        print("=" * 80)
+        print("📊 HARD QUOTA ENFORCEMENT SMOKE TEST SUMMARY")
+        print("=" * 80)
+        print(f"Total Tests: {total_tests}")
+        print(f"Passed: {passed_tests}")
+        print(f"Failed: {failed_tests}")
+        print(f"Success Rate: {success_rate:.1f}%")
+        print()
+        
+        # Show failed tests
+        failed_tests_list = [r for r in self.test_results if not r["passed"]]
+        if failed_tests_list:
+            print("❌ FAILED TESTS:")
+            for test in failed_tests_list:
+                print(f"  - {test['test']}: {test['message']}")
+            print()
+        
+        # Show passed tests
+        passed_tests_list = [r for r in self.test_results if r["passed"]]
+        if passed_tests_list:
+            print("✅ PASSED TESTS:")
+            for test in passed_tests_list:
+                print(f"  - {test['test']}")
+            print()
+        
+        # Check for critical issues
+        critical_issues = []
+        for test in self.test_results:
+            if not test["passed"]:
+                if "500" in test["message"] or "SERVER ERROR" in test["message"]:
+                    critical_issues.append(f"{test['test']}: {test['message']}")
+        
+        if critical_issues:
+            print("🚨 CRITICAL ISSUES DETECTED:")
+            for issue in critical_issues:
+                print(f"  - {issue}")
+            print()
+        
+        print("=" * 80)
+        
+        return {
+            "total_tests": total_tests,
+            "passed_tests": passed_tests,
+            "failed_tests": failed_tests,
+            "success_rate": success_rate,
+            "critical_issues": critical_issues,
+            "all_results": self.test_results
+        }
+
+def main():
+    """Main test execution."""
+    tester = BackendQuotaSmokeTester()
+    summary = tester.run_all_tests()
+    
+    # Exit with error code if critical issues found
+    if summary["critical_issues"]:
+        print(f"❌ Exiting with error due to {len(summary['critical_issues'])} critical issues")
+        sys.exit(1)
+    elif summary["failed_tests"] > 0:
+        print(f"⚠️ Tests completed with {summary['failed_tests']} non-critical failures")
+        sys.exit(0)
+    else:
+        print("✅ All tests passed successfully")
+        sys.exit(0)
 
 if __name__ == "__main__":
-    tester = StripeWebhookTester()
-    results = tester.run_all_tests()
-    tester.print_summary(results)
+    main()

@@ -42,9 +42,47 @@ function percentage(n, d) {
   return (Number(n || 0) / Number(d)) * 100;
 }
 
+function ChartSurface({ children, testId }) {
+  const containerRef = React.useRef(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node) {
+      return undefined;
+    }
+
+    const updateSize = () => {
+      const rect = node.getBoundingClientRect();
+      setSize({
+        width: Math.max(0, Math.floor(rect.width)),
+        height: Math.max(0, Math.floor(rect.height)),
+      });
+    };
+
+    updateSize();
+
+    if (typeof ResizeObserver === "undefined") {
+      return undefined;
+    }
+
+    const observer = new ResizeObserver(() => updateSize());
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={containerRef} className="h-full min-w-0" data-testid={testId}>
+      {size.width > 40 && size.height > 40
+        ? children(size)
+        : <p className="text-xs text-muted-foreground">Grafik hazırlanıyor...</p>}
+    </div>
+  );
+}
+
 export default function AdminExecutiveDashboardPage() {
   useSeo({
-    title: "Yönetim Dashboard",
+    title: "Yönetim Panosu",
     description: "Ciro, B2B performans ve risk özetleri için yönetim paneli.",
     canonicalPath: "/admin/executive-dashboard",
     type: "website",
@@ -208,7 +246,7 @@ export default function AdminExecutiveDashboardPage() {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between" data-testid="admin-executive-dashboard-header">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-foreground">Yönetim Dashboard</h1>
+          <h1 className="text-2xl font-bold text-foreground">Yönetim Panosu</h1>
           <p className="text-sm text-muted-foreground">
             Toplam ciro, B2B performans, iptal oranları ve tedarikçi riskini tek ekranda görüntüleyin.
           </p>
@@ -369,9 +407,9 @@ export default function AdminExecutiveDashboardPage() {
             ) : !chartsReady ? (
               <p className="text-xs text-muted-foreground">Grafik hazırlanıyor...</p>
             ) : (
-              <div className="h-full min-w-0" data-testid="admin-dashboard-trend-chart">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsLineChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <ChartSurface testId="admin-dashboard-trend-chart">
+                {({ width, height }) => (
+                  <RechartsLineChart width={width} height={height} data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                     <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
@@ -379,8 +417,8 @@ export default function AdminExecutiveDashboardPage() {
                     <Line type="monotone" dataKey="confirmed" stroke="#16a34a" strokeWidth={2} dot={false} name="Onaylanan" />
                     <Line type="monotone" dataKey="cancelled" stroke="#dc2626" strokeWidth={2} dot={false} name="İptal" />
                   </RechartsLineChart>
-                </ResponsiveContainer>
-              </div>
+                )}
+              </ChartSurface>
             )}
           </CardContent>
         </Card>
@@ -397,9 +435,9 @@ export default function AdminExecutiveDashboardPage() {
             ) : !chartsReady ? (
               <p className="text-xs text-muted-foreground">Grafik hazırlanıyor...</p>
             ) : (
-              <div className="h-full min-w-0" data-testid="admin-dashboard-top-products-chart">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={topProducts} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} layout="vertical">
+              <ChartSurface testId="admin-dashboard-top-products-chart">
+                {({ width, height }) => (
+                  <BarChart width={width} height={height} data={topProducts} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis type="number" tick={{ fontSize: 10 }} />
                     <YAxis
@@ -411,8 +449,8 @@ export default function AdminExecutiveDashboardPage() {
                     <Tooltip formatter={(value) => formatMoney(value, "EUR")} />
                     <Bar dataKey="sell_total" fill="#0f766e" name="Ciro" />
                   </BarChart>
-                </ResponsiveContainer>
-              </div>
+                )}
+              </ChartSurface>
             )}
           </CardContent>
         </Card>
@@ -429,9 +467,11 @@ export default function AdminExecutiveDashboardPage() {
             ) : !chartsReady ? (
               <p className="text-xs text-muted-foreground">Grafik hazırlanıyor...</p>
             ) : (
-              <div className="h-full min-w-0" data-testid="admin-dashboard-channel-chart">
-                <ResponsiveContainer width="100%" height="100%">
+              <ChartSurface testId="admin-dashboard-channel-chart">
+                {({ width, height }) => (
                   <BarChart
+                    width={width}
+                    height={height}
                     data={[
                       {
                         channel: "B2B",
@@ -458,8 +498,8 @@ export default function AdminExecutiveDashboardPage() {
                     <Bar dataKey="count" fill="#0f766e" name="Rezervasyon" />
                     <Bar dataKey="sell_total" fill="#f97316" name="Ciro" />
                   </BarChart>
-                </ResponsiveContainer>
-              </div>
+                )}
+              </ChartSurface>
             )}
           </CardContent>
         </Card>

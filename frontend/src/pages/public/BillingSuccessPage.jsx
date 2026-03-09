@@ -19,6 +19,19 @@ const ACTIVATION_CHECKLIST = [
   "İlk rezervasyonu oluşturun",
 ];
 
+function translatePaymentStatus(value) {
+  const labels = {
+    paid: "Ödeme alındı",
+    active: "Aktif",
+    complete: "Tamamlandı",
+    open: "Açık",
+    pending: "Beklemede",
+    expired: "Süresi doldu",
+  };
+
+  return labels[value] || value || "—";
+}
+
 function resolveDashboardPath(user) {
   const candidate = redirectByRole(user);
   if (!candidate || candidate === "/login" || candidate === "/unauthorized") {
@@ -60,7 +73,7 @@ export default function BillingSuccessPage() {
 
   useSeo({
     title: "Ödeme durumu",
-    description: "Stripe ödeme sonucunuz doğrulanıyor. Syroce hesabınızın aktivasyon durumunu buradan görebilirsiniz.",
+    description: "Ödeme sonucunuz doğrulanıyor. Syroce hesabınızın aktivasyon durumunu buradan görebilirsiniz.",
     canonicalPath: "/payment-success",
     type: "website",
   });
@@ -124,7 +137,7 @@ export default function BillingSuccessPage() {
       icon: Clock3,
       iconColor: "text-[#d16024]",
       title: "Ödemeniz doğrulanıyor",
-      text: "Stripe dönüşünüz alındı. Plan aktivasyonunuz birkaç saniye içinde tamamlanır.",
+      text: "Ödeme bildiriminiz alındı. Plan aktivasyonunuz birkaç saniye içinde tamamlanır.",
     },
     pending: {
       icon: Clock3,
@@ -162,7 +175,7 @@ export default function BillingSuccessPage() {
           <section className="space-y-5" data-testid="billing-success-copy-section">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#f6d2bd] bg-[#fff4ec] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#d16024]" data-testid="billing-success-badge">
               <Icon className={`h-4 w-4 ${current.iconColor}`} />
-              Stripe ödeme durumu
+              Ödeme durumu
             </div>
 
             <div className="space-y-4">
@@ -188,7 +201,7 @@ export default function BillingSuccessPage() {
                   </div>
                   <div className="rounded-2xl bg-white px-4 py-4" data-testid="billing-success-summary-status">
                     <p className="text-xs text-slate-500">Durum</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">{payload?.payment_status || payload?.status || "—"}</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{translatePaymentStatus(payload?.payment_status || payload?.status)}</p>
                   </div>
                 </div>
               </div>
@@ -197,7 +210,7 @@ export default function BillingSuccessPage() {
 
           <section className="rounded-[1.8rem] bg-[#264653] p-6 text-white" data-testid="billing-success-actions-section">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#e9c46a]" data-testid="billing-success-actions-eyebrow">
-              {phase === "success" ? "Aktivasyon checklist" : "Sonraki adım"}
+              {phase === "success" ? "İlk adımlar" : "Sonraki adım"}
             </p>
 
             {phase === "success" ? (
@@ -221,7 +234,7 @@ export default function BillingSuccessPage() {
             ) : (
               <div className="mt-5 grid gap-3" data-testid="billing-success-actions-list">
                 {[
-                  "Planınız aktif olduğunda quota ve entitlement ayarlarınız güncellenir",
+                  "Planınız aktif olduğunda kullanım limitleriniz ve erişim yetkileriniz otomatik güncellenir",
                   "Tüm trial verileriniz korunur",
                   "Panelinize dönerek kullanıma hemen devam edebilirsiniz",
                 ].map((item, index) => (

@@ -280,7 +280,7 @@ export default function PublicHomePage() {
             </div>
             <div>
               <p className="text-base font-extrabold tracking-tight text-slate-950" data-testid="landing-navbar-logo-name">Syroce</p>
-              <p className="hidden text-xs uppercase tracking-[0.18em] text-slate-500 sm:block sm:tracking-[0.22em]" data-testid="landing-navbar-logo-tagline">Travel Agency Operating System</p>
+              <p className="hidden text-xs uppercase tracking-[0.18em] text-slate-500 sm:block sm:tracking-[0.22em]" data-testid="landing-navbar-logo-tagline">Seyahat Acentesi Yönetim Sistemi</p>
             </div>
           </Link>
 
@@ -708,7 +708,7 @@ export default function PublicHomePage() {
           <div className="overflow-hidden rounded-[40px] bg-[linear-gradient(135deg,#2563EB,#0EA5E9)] px-6 py-10 text-white shadow-[0_34px_100px_rgba(37,99,235,0.28)] lg:px-10" data-testid="landing-final-cta-card">
             <div className="grid gap-8 lg:grid-cols-[1fr_0.72fr] lg:items-center" data-testid="landing-final-cta-layout">
               <div data-testid="landing-final-cta-copy">
-                <p className="text-sm font-semibold uppercase tracking-[0.28em] text-blue-100" data-testid="landing-final-cta-eyebrow">Final CTA</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.28em] text-blue-100" data-testid="landing-final-cta-eyebrow">Hazır mısınız?</p>
                 <h2 className="mt-4 text-3xl font-extrabold leading-[1.08] tracking-[-0.05em] sm:text-4xl lg:text-5xl" data-testid="landing-final-cta-title">
                   Acentenizin operasyonunu dijitalleştirmeye hazır mısınız?
                 </h2>

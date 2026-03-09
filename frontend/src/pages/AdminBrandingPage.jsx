@@ -148,10 +148,10 @@ export default function AdminBrandingPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Palette className="h-6 w-6" />
-            White-Label & Branding
+            Marka Ayarları
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Tenant markalamanızı özelleştirin. Logo, renk ve şirket adı ayarları.
+            Kurum adınızı, logonuzu ve ana renginizi buradan yönetin.
           </p>
         </div>
         <Button onClick={loadSettings} variant="outline" size="sm">
@@ -163,7 +163,7 @@ export default function AdminBrandingPage() {
         {/* Company Name */}
         <div className="rounded-lg border p-4">
           <label className="text-sm font-medium flex items-center gap-2 mb-2">
-            <Building2 className="h-4 w-4" /> Sirket Adi
+            <Building2 className="h-4 w-4" /> Şirket Adı
           </label>
           <input
             type="text"
@@ -172,10 +172,10 @@ export default function AdminBrandingPage() {
             onChange={(e) => canEditName && setSettings({ ...settings, company_name: e.target.value })}
             readOnly={!canEditName}
             className={`w-full rounded-md border px-3 py-2 text-sm bg-background ${!canEditName ? "opacity-60 cursor-not-allowed bg-muted" : ""}`}
-            placeholder="Sirket adiniz"
+            placeholder="Şirket adınız"
           />
           {!canEditName && (
-            <p className="text-xs text-muted-foreground mt-1">Sirket adi yalnizca platform yoneticisi tarafindan degistirilebilir.</p>
+            <p className="text-xs text-muted-foreground mt-1">Şirket adı yalnızca platform yöneticisi tarafından değiştirilebilir.</p>
           )}
         </div>
 
@@ -194,7 +194,7 @@ export default function AdminBrandingPage() {
           />
           {settings.logo_url && (
             <div className="mt-3 p-3 bg-muted/30 rounded-lg">
-              <p className="text-xs text-muted-foreground mb-2">Önizleme:</p>
+              <p className="text-xs text-muted-foreground mb-2">Logo önizlemesi:</p>
               <img
                 src={settings.logo_url}
                 alt="Logo preview"
@@ -250,7 +250,7 @@ export default function AdminBrandingPage() {
                 style={{ backgroundColor: settings.primary_color }}
                 data-testid="color-preview"
               >
-                Önizleme Butonu
+                Örnek Buton
               </div>
               <span className="text-xs text-muted-foreground">Bu renk butonlarda ve vurgularda kullanılır.</span>
             </div>
@@ -259,7 +259,7 @@ export default function AdminBrandingPage() {
 
         {/* Support Email */}
         <div className="rounded-lg border p-4">
-          <label className="text-sm font-medium mb-2 block">Destek E-postası</label>
+          <label className="text-sm font-medium mb-2 block">Destek E-posta Adresi</label>
           <input
             type="email"
             data-testid="support-email-input"

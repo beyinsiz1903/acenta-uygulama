@@ -130,9 +130,20 @@ function AppShellInner() {
     return () => window.removeEventListener("branding-updated", handler);
   }, [loadBranding]);
 
-  const brandName = branding?.company_name || branding?.brand_name || "Acenta Master";
-  const brandLogo = branding?.logo_url;
+  const brandName = branding?.company_name || branding?.brand_name || "Syroce";
+  const brandLogo = useMemo(() => {
+    const candidate = branding?.logo_url?.trim();
+    if (!candidate || /^https?:\/\/example\.com\//i.test(candidate)) {
+      return "";
+    }
+    return candidate;
+  }, [branding?.logo_url]);
+  const [brandLogoFailed, setBrandLogoFailed] = useState(false);
   const brandInitial = brandName.charAt(0).toUpperCase();
+
+  useEffect(() => {
+    setBrandLogoFailed(false);
+  }, [brandLogo]);
 
   // ── Agency module restrictions (dynamic nav) ──────────────
   const isAgencyUser = hasAnyRole(user, ["agency_admin", "agency_agent"])
@@ -374,8 +385,14 @@ function AppShellInner() {
               <Menu className="h-5 w-5" />
             </Button>
             <div className="hidden md:flex items-center gap-2">
-              {brandLogo ? (
-                <img src={brandLogo} alt={brandName} className="h-7 w-7 rounded-lg object-contain" data-testid="brand-logo" />
+              {brandLogo && !brandLogoFailed ? (
+                <img
+                  src={brandLogo}
+                  alt={brandName}
+                  className="h-7 w-7 rounded-lg object-contain"
+                  data-testid="brand-logo"
+                  onError={() => setBrandLogoFailed(true)}
+                />
               ) : (
                 <div className="h-7 w-7 rounded-lg bg-primary text-primary-foreground grid place-items-center font-semibold text-xs" style={branding?.primary_color ? { backgroundColor: branding.primary_color } : {}}>
                   {brandInitial}
@@ -453,8 +470,13 @@ function AppShellInner() {
         <SheetContent side="left" className="p-0 w-[280px]" data-testid="mobile-nav-sheet">
           <div className="border-b px-4 py-3">
             <div className="flex items-center gap-2">
-              {brandLogo ? (
-                <img src={brandLogo} alt={brandName} className="h-8 w-8 rounded-lg object-contain" />
+              {brandLogo && !brandLogoFailed ? (
+                <img
+                  src={brandLogo}
+                  alt={brandName}
+                  className="h-8 w-8 rounded-lg object-contain"
+                  onError={() => setBrandLogoFailed(true)}
+                />
               ) : (
                 <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground grid place-items-center font-semibold text-xs" style={branding?.primary_color ? { backgroundColor: branding.primary_color } : {}}>
                   {brandInitial}

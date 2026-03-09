@@ -94,7 +94,7 @@ export default function LoginPage() {
             </div>
             <div>
               <p className="text-lg font-extrabold tracking-tight text-slate-950" data-testid="login-brand-name">Syroce</p>
-              <p className="text-xs uppercase tracking-[0.22em] text-slate-500" data-testid="login-brand-tagline">Travel Agency Operating System</p>
+              <p className="text-xs uppercase tracking-[0.22em] text-slate-500" data-testid="login-brand-tagline">Seyahat Acentesi Yönetim Sistemi</p>
             </div>
           </Link>
 
@@ -104,7 +104,7 @@ export default function LoginPage() {
           </div>
 
           <h1 className="mt-6 text-4xl font-extrabold leading-[1.04] tracking-[-0.05em] text-slate-950 sm:text-5xl lg:text-6xl" data-testid="login-title">
-            Giriş alanı burada.
+            Hesabınıza güvenle giriş yapın.
             <span className="block text-[#2563EB]" data-testid="login-title-highlight">Syroce hesabınıza devam edin.</span>
           </h1>
 

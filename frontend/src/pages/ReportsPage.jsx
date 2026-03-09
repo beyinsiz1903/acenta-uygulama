@@ -171,7 +171,7 @@ export default function ReportsPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">Raporlar</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Operasyon araması yapın, satış özetini indirin ve quota sayılan yönetici raporunu manuel üretin.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Operasyon içinde arama yapın, satış özetini indirin ve seçili dönem için tek ekranda yönetim özeti oluşturun.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2" data-testid="reports-day-filter-group">
           {REPORT_DAY_OPTIONS.map((option) => (
@@ -259,7 +259,7 @@ export default function ReportsPage() {
               <Sparkles className="h-4 w-4 text-muted-foreground" />
               Operasyon raporu üret
             </CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">Bu aksiyon rapor kotasını kullanır ve seçili dönemin özetini tek payload içinde hazırlar.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Bu işlem seçili dönem için özet raporu hazırlar ve kullanım hakkınızdan 1 rapor düşer.</p>
           </div>
           <Button
             type="button"

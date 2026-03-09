@@ -4,6 +4,9 @@
 - `/api/v1` standardizasyonu tamamlandı
 - Web auth/session hardening tamamlandı
 - Entitlement Projection Engine V1 tamamlandı ve test edildi
+- Billing history timeline tamamlandı:
+  - `GET /api/billing/history`
+  - `/app/settings/billing` içinde plan değişimi / ödeme olay akışı görünürlüğü
 - Usage Metering için PR-UM1 foundation tamamlandı
 - Usage Metering için PR-UM2 `reservation.created` instrumentation tamamlandı
 - Usage Metering için PR-UM3 tamamlandı:
@@ -45,6 +48,14 @@ Teslim beklentisi:
 - PR-UM4 sonrası ele alınacak
 
 ## P1 — Sonraki İşler
+
+### Annual Pricing Revalidation
+- aylık / yıllık toggle ve checkout davranışını uçtan uca yeniden test et
+- sadeleştirilmiş ürün yüzeyi ve billing settings state’leriyle tam hizalama yap
+
+### Payment Failure Lifecycle Deepening
+- `invoice.payment_failed` ve renewal olaylarını billing timeline + banner + operasyon akışına bağla
+- grace period, retry ve başarısız ödeme sonrası kullanıcı yönlendirmelerini güçlendir
 
 ### Admin “Create Demo Agency” Action
 - Demo seed utility artık hazır olduğu için admin panelde tek tıkla tetiklenebilen küçük bir aksiyon PR’ı yapılabilir

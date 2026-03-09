@@ -356,11 +356,24 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - backend deep testing: agency bookings normalize alanları, ObjectId detay açılışı ve derived settlements doğrulandı
   - frontend smoke: preview `/pricing` yükleniyor, blank/crash yok
 
+## Son Uygulama Notu — 2026-03-09 (Billing history timeline teslimi)
+- `/api/billing/history` endpoint’i eklendi
+  - kaynak: `audit_logs` içindeki `scope=billing` kayıtları
+  - kullanıcı dostu timeline alanları dönüyor: `id`, `title`, `description`, `occurred_at`, `actor_label`, `actor_type`, `tone`
+  - desteklenen olaylar: checkout completion, immediate/scheduled plan change, cancel/reactivate, invoice paid, payment failed, subscription canceled
+- `/app/settings/billing` içine yeni `Faturalama Geçmişi` kartı eklendi
+  - loading / error / empty / populated state’leri hazır
+  - manuel `Geçmişi Yenile` aksiyonu eklendi
+  - mevcut billing overview, yönetim kartı ve plan değiştirme kartı korunarak regression’sız entegre edildi
+- Doğrulama:
+  - curl self-test: `GET /api/billing/subscription` ve `GET /api/billing/history` geçti
+  - browser smoke: preview üzerinde billing page + history card/list doğrulandı
+  - testing agent raporu: `/app/test_reports/iteration_34.json` → backend %100 / frontend %100 geçti
+
 ## Öncelikli Sonraki Adımlar
-- **P1:** Billing history / plan change timeline yüzeyini backend + frontend ile teslim etme
-- **P1:** CORE olmayan route yüzeyleri için ikinci faz pruning uygulaması: `partners`, marketplace, advanced campaign, sms/qr ve benzeri modülleri `internal-only / addon / remove` sınıflarına indirgeme
 - **P1:** Yıllık fiyatlandırma akışını yeniden uçtan uca test edip sadeleştirilmiş ürün yüzeyiyle hizalama
-- **P1:** Renewal / invoice paid / payment_failed lifecycle’ını derinleştirip ödeme problemi state’lerini otomatik operasyon akışlarına bağlama
+- **P1:** Renewal / invoice paid / payment_failed lifecycle’ını derinleştirip ödeme problemi state’lerini timeline + banner + operasyon akışlarıyla birleştirme
+- **P1:** CORE olmayan route yüzeyleri için ikinci faz pruning uygulaması: `partners`, marketplace, advanced campaign, sms/qr ve benzeri modülleri `internal-only / addon / remove` sınıflarına indirgeme
 - **P1:** Hard quota enforcement
 - **P1:** Billing analytics / churn görünürlüğü
 - **P2:** Admin demo agency oluşturma butonu

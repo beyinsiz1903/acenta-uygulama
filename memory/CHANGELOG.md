@@ -1,5 +1,19 @@
 # CHANGELOG — Acenta Master Travel SaaS
 
+## 2026-03-09 — Billing History Timeline
+- Backend teslimi:
+  - `GET /api/billing/history` endpoint’i eklendi
+  - `backend/app/services/billing_history_service.py` ile billing audit log’ları kullanıcı dostu timeline item’larına çevriliyor
+  - event mapping kapsamı: `billing.checkout_completed`, `billing.plan_changed_now`, `billing.plan_change_scheduled`, `billing.subscription_cancel_scheduled`, `billing.subscription_reactivated`, `subscription.invoice_paid`, `subscription.payment_failed`, `subscription.canceled`
+- Frontend teslimi:
+  - `frontend/src/components/settings/BillingHistoryTimeline.jsx` eklendi
+  - `frontend/src/pages/SettingsBillingPage.jsx` içine timeline kartı entegre edildi
+  - loading / error / empty / populated state + `Geçmişi Yenile` butonu teslim edildi
+- Doğrulama:
+  - manual curl smoke: `/api/billing/subscription`, `/api/billing/history`
+  - preview browser smoke: `/app/settings/billing`
+  - `testing_agent` iteration_34: backend 12/12 PASS + frontend PASS
+
 ## 2026-03-08 — Soft Quota Warning + Upgrade CTA PR-UM5
 - Backend warning katmanı eklendi:
   - `backend/app/services/quota_warning_service.py`

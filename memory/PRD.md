@@ -605,6 +605,21 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `auto_frontend_testing_agent` → login redirect, sade sidebar, `Tüm Modüller`, arama ve temsilî admin route’lar PASS
   - `deep_testing_backend_v2` → auth + admin endpoint no-regression PASS
 
+## Son Uygulama Notu — 2026-03-09 (Legacy superadmin uyumluluğu + landing responsive polish)
+- Super admin giriş hattı legacy rol isimleri için sertleştirildi
+  - backend tarafında `superadmin`, `super-admin` ve legacy `admin` rolleri kanonik `super_admin` olarak normalize ediliyor
+  - bu normalizasyon login response, `/api/auth/me`, auth guard, role redirect, AppShell navigation scope ve local auth session saklama katmanına yayıldı
+  - sonuç olarak legacy rol isimli hesaplar da admin yüzeyine güvenli şekilde düşüyor
+- Public landing sayfası responsive ve CTA tarafında ikinci tur polish aldı
+  - section heading ve kart başlıkları mobil öncelikli olarak yeniden dengelendi; overlap/taşma riski azaltıldı
+  - eski düzen / Syroce toggle ve solution stat pill alanları wrap-safe hale getirildi
+  - demo CTA’ları tutarlı olarak `/demo` rotasına bağlandı; trial CTA’ları `/signup?plan=trial` akışında kaldı
+- Doğrulama
+  - self-test: temp legacy `superadmin` kullanıcı ile `POST /api/auth/login` + `GET /api/auth/me` + `GET /api/admin/all-users` başarılı
+  - screenshot smoke: landing yüklenmesi + `admin@acenta.test` login sonrası `/app/admin/dashboard` açılışı doğrulandı
+  - `auto_frontend_testing_agent` → responsive landing + super admin redirect PASS
+  - `deep_testing_backend_v2` → auth/admin backend regression PASS
+
 ## Öncelikli Sonraki Adımlar
 - **P0:** Canlı email provider credential/config aktivasyonu yapılıp outbox -> gerçek teslimat hattını production benzeri ortamda doğrulama
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını timeline + banner + operasyon akışlarıyla daha da birleştirme

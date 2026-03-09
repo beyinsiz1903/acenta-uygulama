@@ -10,7 +10,7 @@ Test Cases:
 4) POST /api/auth/login agent@acenta.test / agent123 -> agency role verification
 5) GET /api/auth/me with agency bearer token -> agency user payload verification
 
-Base URL: https://syroce-staging.preview.emergentagent.com
+Base URL: https://syroce-preview.preview.emergentagent.com
 """
 
 import requests
@@ -18,7 +18,7 @@ import json
 import sys
 
 # Base configuration
-BASE_URL = "https://syroce-staging.preview.emergentagent.com"
+BASE_URL = "https://syroce-preview.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials

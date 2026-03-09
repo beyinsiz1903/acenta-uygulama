@@ -7,10 +7,12 @@ Backward compatible: existing /api/admin/import/* untouched.
 """
 from __future__ import annotations
 
+import io
 import uuid
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Query
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.auth import get_current_user, require_roles
@@ -18,15 +20,20 @@ from app.db import get_db
 from app.errors import AppError
 from app.services.audit_log_service import append_audit_log
 from app.services.google_sheet_schema_service import (
-    get_reservation_writeback_headers,
-    get_sheet_templates_payload,
     validate_inventory_headers,
 )
+from app.services.sheet_connection_service import (
+    build_sheet_preflight,
+    get_service_account_required_fields,
+    validate_service_account_json,
+)
+from app.services.sheet_template_service import (
+    build_sheet_templates_payload,
+    render_template_csv,
+)
 from app.services.sheets_provider import (
-    ensure_tab_with_headers,
     get_config_status,
     get_service_account_email,
-    get_sheet_metadata,
     is_configured,
     read_sheet,
     set_db_config,
@@ -47,6 +54,7 @@ def _tenant_id(user: Dict[str, Any]) -> str:
 
 
 def _configured_or_false_payload() -> Dict[str, Any]:
+    templates = build_sheet_templates_payload()
     return {
         "configured": False,
         "message": "Google Sheets yapilandirilmamis.",
@@ -54,56 +62,110 @@ def _configured_or_false_payload() -> Dict[str, Any]:
         "preview": [],
         "detected_mapping": {},
         "header_validation": {},
+        "required_service_account_fields": get_service_account_required_fields(),
+        "checklist": templates.get("checklist", []),
+        "downloadable_templates": templates.get("downloadable_templates", []),
     }
 
 
-def _build_sheet_preflight(
-    *,
-    tenant_id: str,
-    sheet_id: str,
-    sheet_tab: str,
-    writeback_tab: Optional[str] = None,
+async def _create_hotel_connection_record(
+    body: "ConnectSheetRequest",
+    user: Dict[str, Any],
+    db,
 ) -> Dict[str, Any]:
-    meta_result = get_sheet_metadata(sheet_id, tenant_id=tenant_id)
-    if not meta_result.success:
-        raise AppError(400, "sheet_metadata_error", meta_result.error or "Sheet metadata okunamadi.")
+    org_id = user["organization_id"]
+    tenant_id = _tenant_id(user)
 
-    sheet_title = meta_result.data.get("title", "")
-    worksheets = meta_result.data.get("worksheets", [])
-    worksheet_names = {worksheet.get("name", "") for worksheet in worksheets}
-    if sheet_tab not in worksheet_names:
-        raise AppError(400, "sheet_tab_not_found", f"'{sheet_tab}' sekmesi bulunamadi.")
+    existing = await db.hotel_portfolio_sources.find_one({
+        "tenant_id": tenant_id,
+        "hotel_id": body.hotel_id,
+        "source_type": "google_sheets",
+    })
+    if existing:
+        raise AppError(409, "connection_exists", "Bu otel icin zaten bir sheet baglantisi var.")
 
-    read_result = read_sheet(sheet_id, sheet_tab, "1:1", tenant_id=tenant_id)
-    if not read_result.success:
-        raise AppError(400, "sheet_read_error", read_result.error or "Sheet okunamadi.")
+    hotel = await db.hotels.find_one({"_id": body.hotel_id, "organization_id": org_id})
+    if not hotel:
+        raise AppError(404, "hotel_not_found", "Otel bulunamadi.")
 
-    detected_headers = read_result.data.get("headers", [])
-    header_validation = validate_inventory_headers(detected_headers)
-    if header_validation["missing_required_labels"]:
-        missing = ", ".join(header_validation["missing_required_labels"])
-        raise AppError(400, "missing_required_headers", f"Eksik zorunlu kolonlar: {missing}")
+    detected_headers = []
+    detected_mapping = {}
+    sheet_title = ""
+    worksheets = []
+    header_validation: Dict[str, Any] = {}
+    writeback_validation: Optional[Dict[str, Any]] = None
+    writeback_bootstrap: Optional[Dict[str, Any]] = None
+    validation_summary: Dict[str, Any] = {}
+    validation_status = "pending_configuration"
 
-    writeback_bootstrap = None
-    if writeback_tab:
-        ensure_result = ensure_tab_with_headers(
-            sheet_id,
-            writeback_tab,
-            get_reservation_writeback_headers(),
+    if is_configured(tenant_id):
+        preflight = build_sheet_preflight(
             tenant_id=tenant_id,
+            sheet_id=body.sheet_id,
+            sheet_tab=body.sheet_tab,
+            writeback_tab=body.writeback_tab,
+            strict_headers=True,
+            ensure_writeback=True,
         )
-        if not ensure_result.success:
-            raise AppError(400, "writeback_tab_invalid", ensure_result.error or "Write-back sekmesi hazirlanamadi.")
-        writeback_bootstrap = ensure_result.data
+        sheet_title = preflight["sheet_title"]
+        worksheets = preflight["worksheets"]
+        detected_headers = preflight["detected_headers"]
+        detected_mapping = preflight["detected_mapping"]
+        header_validation = preflight["header_validation"]
+        writeback_validation = preflight["writeback_validation"]
+        writeback_bootstrap = preflight["writeback_bootstrap"]
+        validation_summary = preflight["validation_summary"]
+        validation_status = "validated"
 
-    return {
+    effective_mapping = body.mapping if body.mapping else detected_mapping
+
+    doc = {
+        "_id": str(uuid.uuid4()),
+        "tenant_id": tenant_id,
+        "organization_id": org_id,
+        "hotel_id": body.hotel_id,
+        "hotel_name": hotel.get("name", ""),
+        "source_type": "google_sheets",
+        "sheet_id": body.sheet_id,
+        "sheet_tab": body.sheet_tab,
+        "writeback_tab": body.writeback_tab,
         "sheet_title": sheet_title,
-        "worksheets": worksheets,
-        "detected_headers": detected_headers,
-        "detected_mapping": header_validation["detected_mapping"],
-        "header_validation": header_validation,
-        "writeback_bootstrap": writeback_bootstrap,
+        "mapping": effective_mapping,
+        "validation_status": validation_status,
+        "validation_summary": validation_summary,
+        "sync_enabled": body.sync_enabled,
+        "sync_interval_minutes": body.sync_interval_minutes,
+        "last_sync_at": None,
+        "last_sync_status": None,
+        "last_error": None,
+        "last_fingerprint": None,
+        "status": "active",
+        "created_at": now_utc(),
+        "updated_at": now_utc(),
+        "created_by": user.get("email", ""),
     }
+    await db.hotel_portfolio_sources.insert_one(doc)
+
+    await append_audit_log(
+        scope="portfolio_sync",
+        tenant_id=tenant_id,
+        actor_user_id=user.get("_id", ""),
+        actor_email=user.get("email", ""),
+        action="sheet_connected",
+        after={"hotel_id": body.hotel_id, "sheet_id": body.sheet_id},
+    )
+
+    result = serialize_doc(doc)
+    result["configured"] = is_configured(tenant_id)
+    result["service_account_email"] = get_service_account_email(tenant_id)
+    result["detected_headers"] = detected_headers
+    result["detected_mapping"] = detected_mapping
+    result["header_validation"] = header_validation
+    result["validation_summary"] = validation_summary
+    result["writeback_validation"] = writeback_validation
+    result["writeback_bootstrap"] = writeback_bootstrap
+    result["worksheets"] = worksheets
+    return result
 
 
 # ── Config Status ─────────────────────────────────────────
@@ -111,16 +173,64 @@ def _build_sheet_preflight(
 @router.get("/config", dependencies=[AdminDep])
 async def get_sheets_config(user=Depends(get_current_user)):
     """Return Google Sheets integration configuration status."""
-    return get_config_status(_tenant_id(user))
+    payload = get_config_status(_tenant_id(user))
+    payload["required_service_account_fields"] = get_service_account_required_fields()
+    return payload
 
 
 @router.get("/templates", dependencies=[AdminDep])
 async def get_sheet_templates(user=Depends(get_current_user)):
     """Return the exact headers/checklist expected by Google Sheets sync."""
-    templates = get_sheet_templates_payload()
+    templates = build_sheet_templates_payload()
     templates["configured"] = is_configured(_tenant_id(user))
     templates["service_account_email"] = get_service_account_email(_tenant_id(user))
     return templates
+
+
+class ValidateSheetRequest(BaseModel):
+    sheet_id: str
+    sheet_tab: str = "Sheet1"
+    writeback_tab: str = "Rezervasyonlar"
+
+
+@router.post("/validate-sheet", dependencies=[AdminDep])
+async def validate_sheet(
+    body: ValidateSheetRequest,
+    user=Depends(get_current_user),
+):
+    tenant_id = _tenant_id(user)
+    if not is_configured(tenant_id):
+        payload = _configured_or_false_payload()
+        payload["sheet_id"] = body.sheet_id
+        payload["sheet_tab"] = body.sheet_tab
+        payload["writeback_tab"] = body.writeback_tab
+        return payload
+
+    result = build_sheet_preflight(
+        tenant_id=tenant_id,
+        sheet_id=body.sheet_id,
+        sheet_tab=body.sheet_tab,
+        writeback_tab=body.writeback_tab,
+        strict_headers=False,
+        ensure_writeback=False,
+    )
+    result["service_account_email"] = get_service_account_email(tenant_id)
+    result["required_service_account_fields"] = get_service_account_required_fields()
+    return result
+
+
+@router.get("/download-template/{template_name}", dependencies=[AdminDep])
+async def download_sheet_template(
+    template_name: str,
+    user=Depends(get_current_user),
+):
+    _ = user
+    payload = render_template_csv(template_name)
+    return StreamingResponse(
+        io.BytesIO(payload["content"]),
+        media_type=payload["media_type"],
+        headers={"Content-Disposition": f"attachment; filename={payload['filename']}"},
+    )
 
 
 # ── Connect a Hotel Sheet ─────────────────────────────────
@@ -142,94 +252,17 @@ async def connect_hotel_sheet(
     db=Depends(get_db),
 ):
     """Connect a Google Sheet to a hotel for portfolio sync."""
-    org_id = user["organization_id"]
-    tenant_id = _tenant_id(user)
+    return await _create_hotel_connection_record(body, user, db)
 
-    # Check if connection already exists
-    existing = await db.hotel_portfolio_sources.find_one({
-        "tenant_id": tenant_id,
-        "hotel_id": body.hotel_id,
-        "source_type": "google_sheets",
-    })
-    if existing:
-        raise AppError(409, "connection_exists", "Bu otel icin zaten bir sheet baglantisi var.")
 
-    # Validate hotel exists
-    hotel = await db.hotels.find_one({"_id": body.hotel_id, "organization_id": org_id})
-    if not hotel:
-        raise AppError(404, "hotel_not_found", "Otel bulunamadi.")
-
-    detected_headers = []
-    detected_mapping = {}
-    sheet_title = ""
-    worksheets = []
-    header_validation: Dict[str, Any] = {}
-    writeback_bootstrap: Optional[Dict[str, Any]] = None
-    validation_status = "pending_configuration"
-
-    if is_configured(tenant_id):
-        preflight = _build_sheet_preflight(
-            tenant_id=tenant_id,
-            sheet_id=body.sheet_id,
-            sheet_tab=body.sheet_tab,
-            writeback_tab=body.writeback_tab,
-        )
-        sheet_title = preflight["sheet_title"]
-        worksheets = preflight["worksheets"]
-        detected_headers = preflight["detected_headers"]
-        detected_mapping = preflight["detected_mapping"]
-        header_validation = preflight["header_validation"]
-        writeback_bootstrap = preflight["writeback_bootstrap"]
-        validation_status = "validated"
-
-    effective_mapping = body.mapping if body.mapping else detected_mapping
-
-    doc = {
-        "_id": str(uuid.uuid4()),
-        "tenant_id": tenant_id,
-        "organization_id": org_id,
-        "hotel_id": body.hotel_id,
-        "hotel_name": hotel.get("name", ""),
-        "source_type": "google_sheets",
-        "sheet_id": body.sheet_id,
-        "sheet_tab": body.sheet_tab,
-        "writeback_tab": body.writeback_tab,
-        "sheet_title": sheet_title,
-        "mapping": effective_mapping,
-        "validation_status": validation_status,
-        "validation_summary": header_validation,
-        "sync_enabled": body.sync_enabled,
-        "sync_interval_minutes": body.sync_interval_minutes,
-        "last_sync_at": None,
-        "last_sync_status": None,
-        "last_error": None,
-        "last_fingerprint": None,
-        "status": "active",
-        "created_at": now_utc(),
-        "updated_at": now_utc(),
-        "created_by": user.get("email", ""),
-    }
-    await db.hotel_portfolio_sources.insert_one(doc)
-
-    # Audit log
-    await append_audit_log(
-        scope="portfolio_sync",
-        tenant_id=tenant_id,
-        actor_user_id=user.get("_id", ""),
-        actor_email=user.get("email", ""),
-        action="sheet_connected",
-        after={"hotel_id": body.hotel_id, "sheet_id": body.sheet_id},
-    )
-
-    result = serialize_doc(doc)
-    result["configured"] = is_configured(tenant_id)
-    result["service_account_email"] = get_service_account_email(tenant_id)
-    result["detected_headers"] = detected_headers
-    result["detected_mapping"] = detected_mapping
-    result["header_validation"] = header_validation
-    result["writeback_bootstrap"] = writeback_bootstrap
-    result["worksheets"] = worksheets
-    return result
+@router.post("/connections", dependencies=[AdminDep])
+async def create_hotel_connection(
+    body: ConnectSheetRequest,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """REST-style alias for creating a Google Sheet connection."""
+    return await _create_hotel_connection_record(body, user, db)
 
 
 # ── List Connections ──────────────────────────────────────
@@ -696,23 +729,10 @@ async def save_service_account(
     db=Depends(get_db),
 ):
     """Save Google Service Account JSON to database."""
-    import json as _json
-    raw = body.service_account_json.strip()
-
-    # Validate JSON
-    try:
-        parsed = _json.loads(raw)
-    except _json.JSONDecodeError:
-        raise AppError(400, "invalid_json", "Gecersiz JSON formati.")
-
-    # Validate required fields
-    required_fields = ["client_email", "private_key", "project_id"]
-    missing = [f for f in required_fields if f not in parsed]
-    if missing:
-        raise AppError(400, "missing_fields", f"Eksik alanlar: {', '.join(missing)}")
-
-    client_email = parsed.get("client_email", "")
-    project_id = parsed.get("project_id", "")
+    validated_payload = validate_service_account_json(body.service_account_json)
+    raw = validated_payload["raw"]
+    client_email = validated_payload["client_email"]
+    project_id = validated_payload["project_id"]
 
     tenant_id = _tenant_id(user)
 
@@ -833,17 +853,28 @@ async def connect_agency_sheet(
     writeback_bootstrap: Optional[Dict[str, Any]] = None
     validation_status = "pending_configuration"
     if is_configured(tenant_id):
-        preflight = _build_sheet_preflight(
+        preflight = build_sheet_preflight(
             tenant_id=tenant_id,
             sheet_id=body.sheet_id,
             sheet_tab=body.sheet_tab,
             writeback_tab=body.writeback_tab,
+            strict_headers=True,
+            ensure_writeback=True,
         )
+        sheet_title = preflight["sheet_title"]
+        worksheets = preflight["worksheets"]
         detected_headers = preflight["detected_headers"]
         detected_mapping = preflight["detected_mapping"]
         header_validation = preflight["header_validation"]
+        validation_summary = preflight["validation_summary"]
+        writeback_validation = preflight["writeback_validation"]
         writeback_bootstrap = preflight["writeback_bootstrap"]
         validation_status = "validated"
+    else:
+        sheet_title = ""
+        worksheets = []
+        validation_summary = {}
+        writeback_validation = None
 
     effective_mapping = body.mapping if body.mapping else detected_mapping
 
@@ -859,9 +890,10 @@ async def connect_agency_sheet(
         "sheet_id": body.sheet_id,
         "sheet_tab": body.sheet_tab,
         "writeback_tab": body.writeback_tab,
+        "sheet_title": sheet_title,
         "mapping": effective_mapping,
         "validation_status": validation_status,
-        "validation_summary": header_validation,
+        "validation_summary": validation_summary,
         "sync_enabled": body.sync_enabled,
         "sync_interval_minutes": body.sync_interval_minutes,
         "last_sync_at": None,
@@ -893,7 +925,10 @@ async def connect_agency_sheet(
     result["detected_headers"] = detected_headers
     result["detected_mapping"] = detected_mapping
     result["header_validation"] = header_validation
+    result["validation_summary"] = validation_summary
+    result["writeback_validation"] = writeback_validation
     result["writeback_bootstrap"] = writeback_bootstrap
+    result["worksheets"] = worksheets
     return result
 
 

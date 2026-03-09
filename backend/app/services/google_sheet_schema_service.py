@@ -174,4 +174,11 @@ def get_sheet_templates_payload() -> Dict[str, Any]:
                 "Acenta / Not": "Mavi Tur / Erken rezervasyon",
             },
         },
+        "required_service_account_fields": [
+            "type",
+            "project_id",
+            "private_key",
+            "client_email",
+            "token_uri",
+        ],
     }

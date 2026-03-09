@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { api } from "../../lib/api";
+import { SheetTemplateCenter } from "../../components/admin/sheets/SheetTemplateCenter";
+import { SheetValidationPanel } from "../../components/admin/sheets/SheetValidationPanel";
 import {
   Sheet, Link2, RefreshCw, CheckCircle2, AlertTriangle, XCircle,
   ChevronRight, ChevronDown, Clock, Zap, ArrowRight, Search,
@@ -34,6 +36,16 @@ function StatusBadge({ status }) {
       {s.label}
     </span>
   );
+}
+
+function ValidationBadge({ status }) {
+  const map = {
+    validated: { label: "Doğrulandı", className: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" },
+    pending_configuration: { label: "Anahtar bekliyor", className: "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" },
+    pending_validation: { label: "Doğrulama bekliyor", className: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200" },
+  };
+  const current = map[status] || map.pending_validation;
+  return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${current.className}`}>{current.label}</span>;
 }
 
 function StatCard({ icon: Icon, label, value, color = "blue" }) {
@@ -211,7 +223,7 @@ function HealthDashboard({ status, onRefresh, refreshing }) {
 function ConnectionsTable({ connections, onSync, onToggle, onDelete, onViewRuns, syncing }) {
   if (!connections || connections.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 text-center">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 text-center" data-testid="portfolio-sync-empty-state">
         <Sheet className="w-12 h-12 mx-auto text-muted-foreground/40 dark:text-muted-foreground mb-3" />
         <h3 className="text-lg font-medium text-foreground dark:text-white mb-1">Henuz Sheet Baglantisi Yok</h3>
         <p className="text-sm text-muted-foreground dark:text-muted-foreground/60">Otelleri Google Sheet'lerine baglamak icin "Yeni Baglanti" butonunu kullanin.</p>
@@ -220,7 +232,7 @@ function ConnectionsTable({ connections, onSync, onToggle, onDelete, onViewRuns,
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden" data-testid="portfolio-sync-connections-table">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
@@ -235,7 +247,7 @@ function ConnectionsTable({ connections, onSync, onToggle, onDelete, onViewRuns,
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
             {connections.map((c) => (
-              <tr key={c._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <tr key={c._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" data-testid={`portfolio-sync-connection-row-${c._id}`}>
                 <td className="px-4 py-3">
                   <p className="font-medium text-foreground dark:text-white">{c.hotel_name || "—"}</p>
                   <p className="text-xs text-muted-foreground/60 truncate max-w-[180px]">{c.hotel_id}</p>
@@ -243,6 +255,14 @@ function ConnectionsTable({ connections, onSync, onToggle, onDelete, onViewRuns,
                 <td className="px-4 py-3">
                   <p className="text-foreground dark:text-muted-foreground/40 text-xs truncate max-w-[200px]" title={c.sheet_id}>{c.sheet_title || c.sheet_id}</p>
                   <p className="text-xs text-muted-foreground/60">{c.sheet_tab}</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2" data-testid={`portfolio-sync-connection-validation-${c._id}`}>
+                    <ValidationBadge status={c.validation_status || "pending_validation"} />
+                    {c.writeback_tab && (
+                      <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        Write-back: {c.writeback_tab}
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-3 text-center">
                   <StatusBadge status={c.last_sync_status || c.status || "active"} />
@@ -271,6 +291,7 @@ function ConnectionsTable({ connections, onSync, onToggle, onDelete, onViewRuns,
                       disabled={syncing === c.hotel_id}
                       className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 disabled:opacity-40 transition-colors"
                       title="Simdi Sync Et"
+                      data-testid={`portfolio-sync-run-button-${c._id}`}
                     >
                       <RefreshCw className={`w-4 h-4 ${syncing === c.hotel_id ? "animate-spin" : ""}`} />
                     </button>
@@ -278,6 +299,7 @@ function ConnectionsTable({ connections, onSync, onToggle, onDelete, onViewRuns,
                       onClick={() => onViewRuns(c)}
                       className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-muted-foreground dark:text-muted-foreground/60 transition-colors"
                       title="Sync Gecmisi"
+                      data-testid={`portfolio-sync-runs-button-${c._id}`}
                     >
                       <Eye className="w-4 h-4" />
                     </button>
@@ -285,6 +307,7 @@ function ConnectionsTable({ connections, onSync, onToggle, onDelete, onViewRuns,
                       onClick={() => onDelete(c)}
                       className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 dark:text-red-400 transition-colors"
                       title="Baglantiyi Sil"
+                      data-testid={`portfolio-sync-delete-button-${c._id}`}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -789,6 +812,7 @@ export default function AdminPortfolioSyncPage() {
   const [connections, setConnections] = useState([]);
   const [availableHotels, setAvailableHotels] = useState([]);
   const [writebackStats, setWritebackStats] = useState(null);
+  const [templates, setTemplates] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [syncing, setSyncing] = useState(null);
@@ -800,16 +824,18 @@ export default function AdminPortfolioSyncPage() {
     if (showLoader) setLoading(true);
     setRefreshing(true);
     try {
-      const [configRes, statusRes, connsRes, wbRes] = await Promise.all([
+      const [configRes, statusRes, connsRes, wbRes, templatesRes] = await Promise.all([
         api.get("/admin/sheets/config"),
         api.get("/admin/sheets/status"),
         api.get("/admin/sheets/connections"),
         api.get("/admin/sheets/writeback/stats").catch(() => ({ data: null })),
+        api.get("/admin/sheets/templates").catch(() => ({ data: null })),
       ]);
       setConfig(configRes.data);
       setStatus(statusRes.data);
       setConnections(connsRes.data || []);
       setWritebackStats(wbRes.data);
+      setTemplates(templatesRes.data);
     } catch (e) {
       setError(e.response?.data?.error?.message || e.message);
     } finally {
@@ -876,10 +902,10 @@ export default function AdminPortfolioSyncPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground dark:text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground dark:text-white flex items-center gap-2" data-testid="portfolio-sync-page-title">
             <Sheet className="w-7 h-7 text-blue-600" /> Portfolio Sync Engine
           </h1>
-          <p className="text-sm text-muted-foreground dark:text-muted-foreground/60 mt-1">
+          <p className="text-sm text-muted-foreground dark:text-muted-foreground/60 mt-1" data-testid="portfolio-sync-page-subtitle">
             Otel sheet'lerini bagla, fiyat ve musaitlik verisini otomatik sync et
           </p>
         </div>
@@ -888,12 +914,14 @@ export default function AdminPortfolioSyncPage() {
             onClick={() => loadAll(false)}
             disabled={refreshing}
             className="flex items-center gap-1.5 px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+            data-testid="portfolio-sync-refresh-button"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} /> Yenile
           </button>
           <button
             onClick={openWizard}
             className="flex items-center gap-1.5 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition-colors"
+            data-testid="portfolio-sync-open-wizard-button"
           >
             <Plus className="w-4 h-4" /> Yeni Baglanti
           </button>
@@ -913,6 +941,17 @@ export default function AdminPortfolioSyncPage() {
 
       {/* Config Banner */}
       <ConfigBanner config={config} onConfigSaved={() => loadAll(true)} />
+
+      <SheetTemplateCenter
+        templates={templates}
+        configured={Boolean(config?.configured)}
+        serviceAccountEmail={config?.service_account_email}
+      />
+
+      <SheetValidationPanel
+        configured={Boolean(config?.configured)}
+        serviceAccountEmail={config?.service_account_email}
+      />
 
       {/* Health Dashboard */}
       <HealthDashboard status={status} onRefresh={() => loadAll(false)} refreshing={refreshing} />

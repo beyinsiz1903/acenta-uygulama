@@ -20,15 +20,12 @@ from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.errors import AppError
 from app.services.audit_log_service import append_audit_log
-from app.services.google_sheet_schema_service import (
-    get_reservation_writeback_headers,
-    validate_inventory_headers,
+from app.services.sheet_connection_service import (
+    build_sheet_preflight,
 )
 from app.services.sheets_provider import (
-    ensure_tab_with_headers,
     get_service_account_email,
     is_configured,
-    read_sheet,
 )
 from app.services.hotel_portfolio_sync_service import run_hotel_sheet_sync
 from app.utils import now_utc, serialize_doc
@@ -162,27 +159,29 @@ async def connect_sheet(
     headers = []
     detected_mapping = {}
     header_validation = {}
+    validation_summary = {}
+    sheet_title = ""
+    worksheets = []
+    writeback_validation = None
     writeback_bootstrap = None
     validation_status = "pending_configuration"
     if is_configured(tenant_id):
-        read_result = read_sheet(body.sheet_id, body.sheet_tab, "1:1", tenant_id=tenant_id)
-        if read_result.success:
-            headers = read_result.data.get("headers", [])
-            if headers:
-                header_validation = validate_inventory_headers(headers)
-                if header_validation["missing_required_labels"]:
-                    missing = ", ".join(header_validation["missing_required_labels"])
-                    raise AppError(400, "missing_required_headers", f"Eksik zorunlu kolonlar: {missing}")
-                detected_mapping = header_validation["detected_mapping"]
-        ensure_result = ensure_tab_with_headers(
-            body.sheet_id,
-            body.writeback_tab,
-            get_reservation_writeback_headers(),
+        preflight = build_sheet_preflight(
             tenant_id=tenant_id,
+            sheet_id=body.sheet_id,
+            sheet_tab=body.sheet_tab,
+            writeback_tab=body.writeback_tab,
+            strict_headers=True,
+            ensure_writeback=True,
         )
-        if not ensure_result.success:
-            raise AppError(400, "writeback_tab_invalid", ensure_result.error or "Write-back sekmesi hazirlanamadi.")
-        writeback_bootstrap = ensure_result.data
+        sheet_title = preflight["sheet_title"]
+        worksheets = preflight["worksheets"]
+        headers = preflight["detected_headers"]
+        detected_mapping = preflight["detected_mapping"]
+        header_validation = preflight["header_validation"]
+        validation_summary = preflight["validation_summary"]
+        writeback_validation = preflight["writeback_validation"]
+        writeback_bootstrap = preflight["writeback_bootstrap"]
         validation_status = "validated"
 
     doc = {
@@ -197,9 +196,10 @@ async def connect_sheet(
         "sheet_id": body.sheet_id,
         "sheet_tab": body.sheet_tab,
         "writeback_tab": body.writeback_tab,
+        "sheet_title": sheet_title,
         "mapping": detected_mapping,
         "validation_status": validation_status,
-        "validation_summary": header_validation,
+        "validation_summary": validation_summary,
         "sync_enabled": True,
         "sync_interval_minutes": 5,
         "last_sync_at": None,
@@ -231,7 +231,10 @@ async def connect_sheet(
     result["detected_headers"] = headers
     result["detected_mapping"] = detected_mapping
     result["header_validation"] = header_validation
+    result["validation_summary"] = validation_summary
+    result["writeback_validation"] = writeback_validation
     result["writeback_bootstrap"] = writeback_bootstrap
+    result["worksheets"] = worksheets
     return result
 
 

@@ -498,10 +498,36 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - hard quota readiness regresyonu: `GET /api/tenant/usage-summary` ve `GET /api/billing/subscription` PASS
 - Not: bağımsız Playwright login doğrulaması aynı turda preview rate limit (`429 / 300s cooldown`) nedeniyle tam koşulamadı; bu uygulama kodunda fonksiyonel hata olarak raporlanmadı
 
+## Son Uygulama Notu — 2026-03-09 (Agency reports + global search + admin plan confirmation)
+- Placeholder olarak kalan arama/rapor yüzeyi gerçek iş mantığıyla güçlendirildi
+  - yeni `GET /api/search` federated operasyon araması eklendi; `customers`, `bookings`, `hotels`, `tours` bölümlerini döner
+  - agency kullanıcılarında sonuçlar otomatik `agency` scope’a daralır; admin tarafında organization-wide çalışır
+  - mevcut `POST /api/agency/search` availability akışı korunarak cache/PMS quote davranışı bozulmadı
+- Yeni `GET/POST /api/reports/generate` operasyon raporu eklendi
+  - payload içinde `period`, `kpis`, `status_breakdown`, `daily_revenue`, `top_hotels`, `payment_health`, `source_breakdown`, `recent_bookings` alanları dönüyor
+  - `report.generated` hard quota guard + usage metering bağlı çalışıyor
+  - tenant context olmayan agency oturumlarında yeni fallback (`_resolve_report_tenant_id`) ile `tenant_context_missing` hatası giderildi
+  - `GET /api/reports/sales-summary` artık `days` filtresini gerçekten uygular; CSV export da aynı filtreyle hizalandı
+- Frontend reports deneyimi yeniden kurgulandı (`/app/reports`)
+  - üstte gün filtreleri: `Son 7 / 30 / 90 gün`
+  - yeni `Hızlı operasyon araması` kartı canlı `/api/search` sonucunu render ediyor
+  - yeni `Operasyon raporu üret` kartı manuel rapor üretimi, KPI kartları ve breakdown blokları gösteriyor
+  - mevcut satış özeti ve CSV export yüzeyi korunarak no-regression entegre edildi
+- Admin tenant management UX güçlendirildi
+  - subscription iptali için `subscription-cancel-confirm-dialog` eklendi; `window.confirm` kaldırıldı
+  - plan değişikliği için `PlanChangeImpactCard` + `plan-change-confirm-dialog` eklendi
+  - plan geçişinde kullanıcı/adet/rapor kotası farkları kaydetmeden önce görünür hale geldi
+- Doğrulama:
+  - self-test: agency login ile `GET /api/agency/hotels`, `GET /api/agency/bookings`, `GET /api/agency/settlements?month=2026-03`, `GET /api/search?q=demo`, `GET /api/reports/generate?days=30` geçti
+  - browser smoke: `/app/reports` üzerinde global search + operations report generation görünürlüğü geçti
+  - `auto_frontend_testing_agent` raporu: tenant fallback bug’ı yakaladı; ardından fix uygulandı
+  - `deep_testing_backend_v2` → 11/11 PASS, tenant fallback fix doğrulandı
+  - testing agent raporu: `/app/test_reports/iteration_39.json` → backend %100 / frontend %100 PASS
+
 ## Öncelikli Sonraki Adımlar
-- **P0:** Hard quota enforcement için kullanıcı doğrulamasını sizden almak; `/app/usage`, export/report guard ve upgrade CTA davranışını birlikte teyit etmek
+- **P0:** Kullanıcıyla sonraki ürün önceliğini netleştirme; yeni arama/rapor yüzeyinden sonra sıradaki ana modül kararı
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını derinleştirip ödeme problemi state’lerini timeline + banner + operasyon akışlarıyla birleştirme
-- **P1:** Admin kullanıcı yönetimi için ikinci tur UX doğrulaması; login rate limit penceresi geçince create/edit/delete etkileşimlerini browser otomasyonuyla tekrar teyit etme
+- **P1:** Admin kullanıcı yönetimi ve tenant paneli için ikinci tur UX polish: aktif abonelikli tenant’larda cancel/reactivate ve plan geçiş mikro-copy optimizasyonu
 - **P1:** Admin cleanup faz-2: `partner-graph` ve tenant self-service duplicate endpoint’lerini (`/api/tenant/features`, `/api/tenant/quota-status`) konsolide etme
 - **P1:** CORE olmayan route yüzeyleri için ikinci faz pruning uygulaması: `partners`, marketplace, advanced campaign, sms/qr ve benzeri modülleri `internal-only / addon / remove` sınıflarına indirgeme
 - **P1:** `integration.call` ve gerekirse `b2b.match_request` için aynı hard quota guard modelini dış servis çağrısı öncesine genişletme

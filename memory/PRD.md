@@ -588,10 +588,27 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - sidebar içinde `Tenant Yönetimi`, `Acenta Modülleri`, `Matches`, `Ürünler`, `Kullanım Özeti` linkleri görünür doğrulandı
   - `Tenant Yönetimi` link tıklama sonrası `/app/admin/agencies` geçişi doğrulandı
 
+## Son Uygulama Notu — 2026-03-09 (Super Admin sidebar sadeleştirme + Tüm Modüller kataloğu)
+- Kullanıcı geri bildirimi üzerine super admin navigasyonu ikinci turda sadeleştirildi
+  - sidebar artık uzun admin liste yerine `ANA MENÜ` + kompakt `YÖNETİM` çekirdeği gösteriyor
+  - admin için sidebar stat kartları gizlendi; dikey yoğunluk azaltıldı
+  - `YÖNETİM` içinde çekirdek admin linkleri bırakıldı: yönetici dashboard, tenant yönetimi, acenta modülleri, tenant features, fiyatlandırma, analytics, perf dashboard, `Tüm Modüller`
+- Yeni katalog ekranı eklendi: `/app/admin/modules`
+  - super admin erişimine açık route’lar tek ekranda section bazlı listeleniyor
+  - arama ile sayfa / route / grup bazlı filtreleme aktif
+  - kartlarda `Sidebar` vs `Ek modül` ayrımı görünür
+- Route cleanup / erişim iyileştirmesi
+  - temiz alias route eklendi: `/app/admin/b2b/agency-products`
+  - eski `/app/admin/admin/b2b/agency-products` backward-compatible olarak korunuyor
+- Doğrulama
+  - testing agent raporu: `/app/test_reports/iteration_42.json` → frontend %100 PASS
+  - `auto_frontend_testing_agent` → login redirect, sade sidebar, `Tüm Modüller`, arama ve temsilî admin route’lar PASS
+  - `deep_testing_backend_v2` → auth + admin endpoint no-regression PASS
+
 ## Öncelikli Sonraki Adımlar
 - **P0:** Canlı email provider credential/config aktivasyonu yapılıp outbox -> gerçek teslimat hattını production benzeri ortamda doğrulama
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını timeline + banner + operasyon akışlarıyla daha da birleştirme
-- **P1:** Admin kullanıcı yönetimi ve tenant paneli için ikinci tur UX polish: aktif abonelikli tenant’larda cancel/reactivate ve plan geçiş mikro-copy optimizasyonu
+- **P1:** Admin kullanıcı yönetimi ve tenant paneli için ikinci tur UX polish: aktif abonelikli tenant’larda cancel/reactivate ve plan geçiş mikro-copy optimizasyonu; `Tüm Modüller` ekranına favoriler / komut paleti ekleme değerlendirmesi
 - **P1:** Admin cleanup faz-2: `partner-graph` ve tenant self-service duplicate endpoint’lerini (`/api/tenant/features`, `/api/tenant/quota-status`) konsolide etme
 - **P1:** CORE olmayan route yüzeyleri için ikinci faz pruning uygulaması: `partners`, marketplace, advanced campaign, sms/qr ve benzeri modülleri `internal-only / addon / remove` sınıflarına indirgeme
 - **P1:** `integration.call` ve gerekirse `b2b.match_request` için aynı hard quota guard modelini dış servis çağrısı öncesine genişletme

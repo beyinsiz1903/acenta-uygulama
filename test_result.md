@@ -483,6 +483,18 @@ frontend:
       - working: true
         agent: "testing"
         comment: "SYROCE GOOGLE SHEETS HARDENING TURKISH REVIEW REGRESSION TEST COMPLETED - ALL 6 VALIDATION POINTS PASSED (2026-03-09). Comprehensive validation performed per Turkish review request on https://kontenjan-update.preview.emergentagent.com with admin@acenta.test/admin123. Turkish Review Request Context: 'Syroce backend smoke/regression testi yap. Hedef Google Sheets hardening endpointleri.' All 6 validation points PASSED: 1) ✅ GET /api/admin/sheets/config returns 200 and required_service_account_fields - PASSED (Status: 200, configured: false, required_service_account_fields: ['type', 'project_id', 'private_key', 'client_email', 'token_uri']), 2) ✅ GET /api/admin/sheets/templates returns 200 and downloadable_templates - PASSED (Status: 200, downloadable_templates: [{'name': 'inventory-sync', 'label': 'Envanter Sync CSV'}, {'name': 'reservation-writeback', 'label': 'Rezervasyon Write-back CSV'}]), 3) ✅ POST /api/admin/sheets/validate-sheet no-config ortamında 200 graceful payload döner - PASSED (Status: 200, configured: false, message: 'Google Sheets yapilandirilmamis.', graceful behavior confirmed), 4) ✅ GET /api/admin/sheets/download-template/inventory-sync ve reservation-writeback 200 CSV döner - PASSED (Both templates return 200 with text/csv content-type, 301/300 bytes respectively), 5) ✅ POST /api/admin/sheets/connections configured=false iken pending_configuration kayıt oluşturup DELETE /api/admin/sheets/connections/{hotel_id} ile temizlenebilir - PASSED (Connection created with validation_status='pending_configuration', writeback_tab='Rezervasyonlar', successfully deleted), 6) ✅ Mevcut agency/admin sheets endpointlerinde regresyon yok - PASSED (All 5 existing endpoints return 200: /admin/sheets/config, /admin/sheets/templates, /admin/sheets/connections, /admin/sheets/available-hotels, /admin/sheets/status). BACKEND REGRESSION TEST VALIDATION: python -m pytest tests/test_agency_sheets_api.py -q ALL 14 TESTS PASSED with only non-critical deprecation warnings. CRITICAL FINDINGS: Gerçek Google credential yok ✅ - graceful davranış bekleniyor ve doğrulandı ✅, Canlı Sheets API çağrısı beklenmiyor ✅ - sistem configured=false durumunda graceful response veriyor ✅, Tüm hardening endpointleri çalışıyor ✅, No backend regression detected ✅. Test Scripts: /app/backend_sheets_regression_test.py (Turkish review specific) and existing /app/backend_test.py both confirm system stability. Success rate: 100% (6/6 Turkish validation points passed, 14/14 regression tests passed). Conclusion: Google Sheets hardening endpointleri PRODUCTION-READY ve Turkish review gereksinimlerini karşılıyor."
+
+  - task: "Syroce backend comprehensive sheets endpoint smoke validation"
+    implemented: true
+    working: true
+    file: "backend/app/routers/admin_sheets.py, backend/app/routers/agency_sheets.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "SYROCE BACKEND COMPREHENSIVE SHEETS ENDPOINT SMOKE VALIDATION COMPLETED - ALL 10 TESTS PASSED (2026-03-09). Detailed validation performed per Turkish review request on https://kontenjan-update.preview.emergentagent.com/api with admin@acenta.test/admin123 and agent@acenta.test/agent123. Specific endpoints validated: 1) ✅ GET /admin/sheets/config - 200 OK (returns configured=false, graceful no-credentials state), 2) ✅ GET /admin/sheets/connections - 200 OK (empty connections list as expected), 3) ✅ GET /admin/sheets/status - 200 OK (system health check working), 4) ✅ GET /admin/sheets/templates - 200 OK (template metadata available), 5) ✅ GET /admin/sheets/writeback/stats - 200 OK (stats endpoint functional), 6) ✅ GET /admin/sheets/runs - 200 OK (sync runs history), 7) ✅ GET /admin/sheets/available-hotels - 200 OK (8 hotels available for sync), 8) ✅ POST /admin/sheets/sync/{hotel_id} - 200 OK with graceful not_configured response ('Google Sheets yapilandirilmamis. Service Account JSON gerekli.'), 9) ✅ GET /agency/hotels - 200 OK (3290 chars response with hotel data), 10) ✅ Agency hotels payload contains sheet-related fields - VERIFIED (sheet_managed_inventory, sheet_inventory_date, sheet_last_sync_at, sheet_last_sync_status, sheet_reservations_imported, cm_status fields present). CRITICAL VALIDATIONS ALL MET: ✅ Backend kırılmadan düzgün payload dönüyor when Google credentials missing, ✅ All admin sheets endpoints return 200 OK responses, ✅ POST sync endpoint returns graceful not_configured message instead of crash, ✅ Agency hotels payload includes all required sheet-related fields for frontend integration, ✅ No 5xx errors or crashes detected in any endpoint. SUCCESS RATE: 100% (10/10 tests passed). CONCLUSION: All Turkish review requirements validated successfully. Backend handles missing Google credentials gracefully without breaking, returns proper payloads, and agency hotels endpoint contains necessary sheet-related fields. System is PRODUCTION-READY for Syroce Google Sheets integration scenarios."
 test_plan:
   current_focus: []
   stuck_tasks: []
@@ -10450,4 +10462,58 @@ agent_communication:
       ✓ Backend regression test suite passing (14/14 tests)
       
       NO ACTION REQUIRED FROM MAIN AGENT. System is stable, all Turkish review validation points passed, and Google Sheets hardening functionality is working correctly without real Google credentials as expected.
+
+  - agent: "testing"
+    message: |
+      ✅ SYROCE BACKEND SMOKE VALIDATION COMPLETED - ALL REQUIREMENTS MET
+      
+      Test Date: 2026-03-09
+      Test URL: https://kontenjan-update.preview.emergentagent.com/api
+      Test Type: Turkish review request - Syroce backend smoke doğrulaması
+      
+      📊 EXECUTIVE SUMMARY:
+      
+      10/10 tests PASSED (100% success rate)
+      • Admin Login: ✅ admin@acenta.test/admin123 working
+      • Agency Login: ✅ agent@acenta.test/agent123 working
+      • Admin Sheets Endpoints (7/7): ✅ ALL returning 200 OK
+      • Sheets Sync Graceful Handling: ✅ WORKING
+      • Agency Hotels Sheet Fields: ✅ PRESENT
+      
+      🎯 TURKISH REVIEW REQUIREMENTS VALIDATED:
+      
+      ✅ Google credential yokken backend'in kırılmadan düzgün payload dönmesi:
+         - All admin sheets endpoints return 200 OK without Google credentials
+         - GET /admin/sheets/config ✅, /connections ✅, /status ✅, /templates ✅
+         - GET /admin/sheets/writeback/stats ✅, /runs ✅, /available-hotels ✅
+         - POST /admin/sheets/sync/{hotel_id} returns graceful "Google Sheets yapilandirilmamis" message
+      
+      ✅ Agency hotels payload'ında sheet-related alanların bulunması:
+         - GET /agency/hotels contains required fields:
+         - sheet_managed_inventory ✅
+         - sheet_inventory_date ✅
+         - sheet_last_sync_at ✅
+         - sheet_last_sync_status ✅
+         - sheet_reservations_imported ✅
+         - cm_status ✅
+      
+      🔍 KEY FINDINGS:
+      
+      1. Backend gracefully handles missing Google credentials without crashes
+      2. All admin sheets endpoints operational (200 OK responses)
+      3. Sync endpoint returns proper not_configured message instead of error
+      4. Agency hotels payload enriched with sheet-related fields for frontend integration
+      5. No 5xx server errors detected
+      6. System maintains stability without Google Sheets service account configuration
+      
+      ✅ CONCLUSION:
+      
+      NO ISSUES FOUND - Kısa başarı özeti:
+      
+      • Backend kırılmıyor ✅ (Google credential yok iken)
+      • Düzgün payload dönüyor ✅ (tüm endpoints 200 OK)
+      • Agency hotels sheet alanları mevcut ✅ (frontend integration ready)
+      • Graceful error handling çalışıyor ✅ (not_configured responses)
+      
+      System is PRODUCTION-READY for Syroce Google Sheets integration scenarios. All Turkish review requirements successfully validated.
 

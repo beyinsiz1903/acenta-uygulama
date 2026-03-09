@@ -524,9 +524,25 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `deep_testing_backend_v2` → 11/11 PASS, tenant fallback fix doğrulandı
   - testing agent raporu: `/app/test_reports/iteration_39.json` → backend %100 / frontend %100 PASS
 
+## Son Uygulama Notu — 2026-03-09 (P0 email notification queue + P1 doğrulama)
+- P0 email notification pipeline teslim edildi
+  - yeni `backend/app/services/notification_email_service.py` eklendi
+  - `stripe_checkout_service.mark_payment_failed(...)` artık `billing.payment_failed` outbox job oluşturuyor
+  - `usage_service.track_usage_event(...)` artık 70% / 85% / 100% eşik geçişlerinde `usage.quota_warning`, `usage.quota_critical`, `usage.quota_limit_reached` outbox job üretiyor
+- Email outbox dayanıklılığı güçlendirildi
+  - `enqueue_generic_email(...)` artık `tenant_id`, `metadata`, `dedupe_key` destekliyor
+  - `email_outbox` için `dedupe_key` unique+sparse index eklendi
+  - provider konfigürasyonu yoksa worker artık job’ı yanlışlıkla `sent` işaretlemek yerine `skipped` durumuna alıyor
+- P1 search / reports hattı yeniden doğrulandı; ek geliştirme gerektirmeden çalışıyor
+  - preview self-test: `GET /api/search?q=demo`, `GET /api/reports/generate?days=30`, `GET /api/reports/sales-summary.csv?days=7` geçti
+  - testing agent raporu: `/app/test_reports/iteration_40.json` → email queue + skipped behavior PASS, search/reports no-regression PASS
+  - frontend smoke: `/pricing` ve `/app/reports` blank/crash olmadan geçti
+- Not:
+  - **MOCKED / DEGRADED:** canlı dış email teslimatı bu run’da aktif değil; provider credential verilmediği için doğrulanan kapsam `email_outbox` job creation + `skipped` davranışıdır
+
 ## Öncelikli Sonraki Adımlar
-- **P0:** Kullanıcıyla sonraki ürün önceliğini netleştirme; yeni arama/rapor yüzeyinden sonra sıradaki ana modül kararı
-- **P1:** Renewal / invoice paid / payment_failed lifecycle’ını derinleştirip ödeme problemi state’lerini timeline + banner + operasyon akışlarıyla birleştirme
+- **P0:** Canlı email provider credential/config aktivasyonu yapılıp outbox -> gerçek teslimat hattını production benzeri ortamda doğrulama
+- **P1:** Renewal / invoice paid / payment_failed lifecycle’ını timeline + banner + operasyon akışlarıyla daha da birleştirme
 - **P1:** Admin kullanıcı yönetimi ve tenant paneli için ikinci tur UX polish: aktif abonelikli tenant’larda cancel/reactivate ve plan geçiş mikro-copy optimizasyonu
 - **P1:** Admin cleanup faz-2: `partner-graph` ve tenant self-service duplicate endpoint’lerini (`/api/tenant/features`, `/api/tenant/quota-status`) konsolide etme
 - **P1:** CORE olmayan route yüzeyleri için ikinci faz pruning uygulaması: `partners`, marketplace, advanced campaign, sms/qr ve benzeri modülleri `internal-only / addon / remove` sınıflarına indirgeme

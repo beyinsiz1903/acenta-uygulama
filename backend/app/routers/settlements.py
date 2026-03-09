@@ -46,6 +46,11 @@ def _safe_float(value: Any, default: float = 0.0) -> float:
         return default
 
 
+def _money(value: Any) -> float:
+    amount = round(_safe_float(value, default=0.0), 2)
+    return 0.0 if abs(amount) < 0.005 else amount
+
+
 def _booking_month(doc: dict[str, Any]) -> str | None:
     stay = doc.get("stay") or {}
     check_in = stay.get("check_in") or doc.get("check_in_date") or doc.get("check_in") or doc.get("start_date")
@@ -138,9 +143,9 @@ def _derive_booking_financial_entry(
         "type": "reversal" if status == "cancelled" else "booking",
         "month": month,
         "currency": doc.get("currency") or price.get("currency") or "TRY",
-        "gross_amount": round(gross_amount, 2),
-        "commission_amount": round(commission_amount, 2),
-        "net_amount": round(net_amount, 2),
+        "gross_amount": _money(gross_amount),
+        "commission_amount": _money(commission_amount),
+        "net_amount": _money(net_amount),
         "source_status": status,
         "settlement_status": settlement_status,
         "created_at": created_at,

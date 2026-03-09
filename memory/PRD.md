@@ -342,7 +342,22 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - browser smoke: agency login → `/app`, simplified sidebar, bookings ve settlements sayfaları geçti
   - testing agent raporu: `/app/test_reports/iteration_33.json` → backend %100 / frontend %100 geçti
 
+## Son Uygulama Notu — 2026-03-09 (Agency endpoint logic finalize)
+- P0 agency endpoint hattı gerçek veri mantığıyla tamamlandı
+  - `GET /api/agency/bookings` artık agency kapsamındaki booking kayıtlarını normalize ederek UI’nin beklediği alanlarla döndürüyor
+  - sparse / legacy kayıtlar için `hotel_name`, `stay`, `guest`, `rate_snapshot`, `status_tr/en`, `total_amount` gibi alanlar türetiliyor
+  - `GET /api/agency/bookings/{booking_id}` artık hem string ID hem Mongo `ObjectId` tabanlı kayıtları açabiliyor
+- `GET /api/agency/settlements` agency finans kayıtları yoksa booking’lerden türetilmiş settlement satırları üretir hale getirildi
+  - önce gerçek `booking_financial_entries` okunuyor
+  - eksik durumda agency booking kayıtlarından aylık settlement görünümü derive ediliyor
+  - response içinde `hotel_name`, `booking_id`, `settlement_status`, `source_status`, `derived_from_booking` alanları korunuyor
+- Doğrulama:
+  - local backend self-test: login, bookings list/detail, settlements `2026-03` ve `2026-02` geçti
+  - backend deep testing: agency bookings normalize alanları, ObjectId detay açılışı ve derived settlements doğrulandı
+  - frontend smoke: preview `/pricing` yükleniyor, blank/crash yok
+
 ## Öncelikli Sonraki Adımlar
+- **P1:** Billing history / plan change timeline yüzeyini backend + frontend ile teslim etme
 - **P1:** CORE olmayan route yüzeyleri için ikinci faz pruning uygulaması: `partners`, marketplace, advanced campaign, sms/qr ve benzeri modülleri `internal-only / addon / remove` sınıflarına indirgeme
 - **P1:** Yıllık fiyatlandırma akışını yeniden uçtan uca test edip sadeleştirilmiş ürün yüzeyiyle hizalama
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını derinleştirip ödeme problemi state’lerini otomatik operasyon akışlarına bağlama

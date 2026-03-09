@@ -2,7 +2,7 @@
 """
 Syroce Backend Critical Regression Validation
 Turkish Review Request: Auth, RBAC, Public endpoints validation
-Base URL: https://syroce-preview-1.preview.emergentagent.com
+Base URL: https://syroce-demo-1.preview.emergentagent.com
 """
 
 import requests
@@ -11,7 +11,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Base configuration
-BASE_URL = "https://syroce-preview-1.preview.emergentagent.com"
+BASE_URL = "https://syroce-demo-1.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials from Turkish review request

@@ -712,6 +712,17 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
 - Browser smoke: landing → signup CTA, admin login → `/app/admin/dashboard`, logout PASS.
 - `auto_frontend_testing_agent` → 21/21 PASS, `deep_testing_backend_v2` → auth/public/admin/agency regression PASS.
 
+## Son Uygulama Notu — 2026-03-09 (CI lint hotfix: requirements + LoginPage)
+- Kullanıcı tarafından paylaşılan CI hatalarına göre iki nokta düzeltildi:
+  - `backend/requirements.txt` başına `--extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/` geri eklendi; böylece `emergentintegrations==0.1.0` çözümlemesi CI install aşamasında tekrar mümkün hale geldi
+  - `frontend/src/pages/LoginPage.jsx` içinde `useRef` tabanlı redirect flag, `react-hooks/refs` lint kuralına takılmayacak şekilde `useState` tabanlı hale getirildi
+- Doğrulama:
+  - frontend lint: `LoginPage.jsx` temiz geçti
+  - backend install smoke: `PIP_CONFIG_FILE=/dev/null python -m pip install --dry-run -r requirements.txt` PASS
+  - browser smoke: `/login` render + admin login redirect `/app/admin/dashboard` PASS
+  - `auto_frontend_testing_agent` → LoginPage regression PASS
+  - `deep_testing_backend_v2` → auth + admin endpoint no-regression PASS
+
 ## Öncelikli Sonraki Adımlar
 - **P0:** Canlı email provider credential/config aktivasyonu yapılıp outbox -> gerçek teslimat hattını production benzeri ortamda doğrulama
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını timeline + banner + operasyon akışlarıyla daha da birleştirme

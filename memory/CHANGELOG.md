@@ -1,5 +1,19 @@
 # CHANGELOG — Acenta Master Travel SaaS
 
+## 2026-03-09 — CI lint hotfix (requirements + LoginPage)
+- Backend CI fix:
+  - `backend/requirements.txt` içine CloudFront extra index satırı geri eklendi
+  - amaç: CI install sırasında `emergentintegrations==0.1.0` paketinin çözülmesini garanti etmek
+- Frontend lint fix:
+  - `frontend/src/pages/LoginPage.jsx` içinde redirect guard için kullanılan `useRef` kaldırıldı
+  - yerine `useState` kullanıldı; `react-hooks/refs` ESLint hatası temizlendi
+- Doğrulama:
+  - `mcp_lint_javascript` → `/app/frontend/src/pages/LoginPage.jsx` PASS
+  - `PIP_CONFIG_FILE=/dev/null python -m pip install --dry-run -r requirements.txt` PASS
+  - browser smoke: `/login` → admin login → `/app/admin/dashboard` PASS
+  - `auto_frontend_testing_agent` → LoginPage regression PASS
+  - `deep_testing_backend_v2` → auth + admin agencies PASS
+
 ## 2026-03-09 — Fork revalidation (kod değişikliği yok)
 - Bu forkta ek ürün kodu yazılmadan kalite turu tekrar koşuldu.
 - Doğrulama:

@@ -82,6 +82,7 @@ async def ensure_seed_indexes(db) -> None:
     # ── Email outbox ──────────────────────────────────────────
     await _safe_create(db.email_outbox, [("status", 1), ("next_retry_at", 1)])
     await _safe_create(db.email_outbox, [("organization_id", 1), ("booking_id", 1)])
+    await _safe_create(db.email_outbox, [("dedupe_key", 1)], unique=True, sparse=True)
 
     # ── Hotel integrations ────────────────────────────────────
     await _safe_create(db.hotel_integrations, [("organization_id", 1), ("hotel_id", 1), ("kind", 1)], unique=True)

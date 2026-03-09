@@ -100,11 +100,14 @@ async def enqueue_generic_email(
     db,
     *,
     organization_id: str,
+    tenant_id: str | None = None,
     to_addresses: Iterable[str],
     subject: str,
     html_body: str,
     text_body: str | None = None,
     event_type: str = "generic",
+    metadata: dict[str, Any] | None = None,
+    dedupe_key: str | None = None,
 ) -> str | None:
     """Create a generic email_outbox job (non-booking specific).
 
@@ -116,16 +119,27 @@ async def enqueue_generic_email(
     if not to_clean:
         return
 
+    if dedupe_key:
+        existing = await db.email_outbox.find_one(
+            {"organization_id": organization_id, "dedupe_key": dedupe_key},
+            {"_id": 1},
+        )
+        if existing and existing.get("_id") is not None:
+            return str(existing.get("_id"))
+
     now = now_utc()
 
     doc = {
         "organization_id": organization_id,
+        "tenant_id": tenant_id,
         "booking_id": None,
         "event_type": event_type,
         "to": to_clean,
         "subject": subject,
         "html_body": html_body,
         "text_body": text_body,
+        "metadata": metadata or {},
+        "dedupe_key": dedupe_key,
         "status": "pending",
         "attempt_count": 0,
         "last_error": None,
@@ -161,20 +175,33 @@ async def dispatch_pending_emails(db, *, limit: int = 10) -> int:
         text_body = job.get("text_body") or None
 
         try:
+            send_results = []
             for addr in to:
-                send_email_ses(to_address=addr, subject=subject, html_body=html_body, text_body=text_body)
+                send_results.append(
+                    send_email_ses(to_address=addr, subject=subject, html_body=html_body, text_body=text_body)
+                )
+
+            skipped_reasons = [
+                str(result.get("reason") or "email_provider_not_configured")
+                for result in send_results
+                if isinstance(result, dict) and result.get("skipped")
+            ]
+            final_status = "skipped" if skipped_reasons else "sent"
 
             await db.email_outbox.update_one(
                 {"_id": job["_id"]},
                 {
                     "$set": {
-                        "status": "sent",
-                        "sent_at": now,
+                        "status": final_status,
+                        "sent_at": now if final_status == "sent" else None,
                         "attempt_count": job.get("attempt_count", 0) + 1,
-                        "last_error": None,
+                        "last_error": ", ".join(sorted(set(skipped_reasons))) if skipped_reasons else None,
                     }
                 },
             )
+
+            if final_status != "sent":
+                continue
 
             # Audit log for each job
             try:

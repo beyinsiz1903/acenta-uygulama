@@ -16,6 +16,63 @@ from app.services.entitlement_service import entitlement_service
 logger = logging.getLogger(__name__)
 
 
+async def _maybe_enqueue_quota_warning_email(
+  *,
+  tenant_id: str,
+  organization_id: Optional[str],
+  metric: str,
+  quantity: int,
+  billing_period: str,
+) -> None:
+  try:
+    resolved_organization_id = organization_id or await _resolve_usage_organization_id(tenant_id, billing_period)
+    entitlements = await entitlement_service.get_tenant_entitlements(tenant_id)
+    limit = (entitlements.get("usage_allowances") or {}).get(metric)
+    if limit in (None, 0):
+      return
+
+    totals = await usage_daily_repo.get_period_totals(
+      tenant_id,
+      billing_period,
+      organization_id=resolved_organization_id,
+    )
+    if not totals:
+      totals = await usage_ledger_repo.get_period_totals(
+        tenant_id,
+        billing_period,
+        organization_id=resolved_organization_id,
+      )
+
+    used = int(totals.get(metric, 0) or 0)
+    previous_used = max(0, used - max(1, int(quantity or 1)))
+    if used <= 0:
+      return
+
+    from app.db import get_db
+    from app.services.notification_email_service import maybe_enqueue_quota_warning_email
+
+    db = await get_db()
+    await maybe_enqueue_quota_warning_email(
+      db,
+      organization_id=str(resolved_organization_id or ""),
+      tenant_id=tenant_id,
+      metric=metric,
+      used=used,
+      limit=int(limit),
+      previous_used=previous_used,
+      billing_period=billing_period,
+      plan_label=str(entitlements.get("plan_label") or entitlements.get("plan") or "Plan"),
+    )
+  except Exception:
+    logger.warning(
+      "quota warning email enqueue failed tenant=%s metric=%s period=%s",
+      tenant_id,
+      metric,
+      billing_period,
+      exc_info=True,
+    )
+
+
 def _clean_usage_metadata(metadata: Optional[Dict[str, Any]]) -> Dict[str, Any]:
   if not metadata:
     return {}
@@ -156,6 +213,14 @@ async def track_usage_event(
     await invalidate_tenant_features(tenant_id)
   except Exception:
     logger.debug("tenant usage cache invalidation failed tenant=%s", tenant_id, exc_info=True)
+
+  await _maybe_enqueue_quota_warning_email(
+    tenant_id=tenant_id,
+    organization_id=organization_id,
+    metric=metric,
+    quantity=quantity,
+    billing_period=billing_period,
+  )
 
   return True
 

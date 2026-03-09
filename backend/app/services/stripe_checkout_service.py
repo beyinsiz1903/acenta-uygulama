@@ -485,6 +485,28 @@ class StripeCheckoutService:
                 "invoice_pdf_url": invoice_pdf_url,
             },
         )
+        if org_id:
+            try:
+                from app.services.notification_email_service import enqueue_payment_failed_email
+
+                await enqueue_payment_failed_email(
+                    db,
+                    organization_id=org_id,
+                    tenant_id=tenant_id,
+                    subscription_id=subscription_id,
+                    amount_due=amount_minor,
+                    failed_at=failed_at_value,
+                    grace_period_until=grace_until,
+                    invoice_hosted_url=invoice_hosted_url,
+                    invoice_pdf_url=invoice_pdf_url,
+                )
+            except Exception:
+                logger.warning(
+                    "payment failed email enqueue failed tenant=%s subscription=%s",
+                    tenant_id,
+                    subscription_id,
+                    exc_info=True,
+                )
         return (await billing_repo.get_subscription(tenant_id)) or {}
 
     async def mark_subscription_canceled(

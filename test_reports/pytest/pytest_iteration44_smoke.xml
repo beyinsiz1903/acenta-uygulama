@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="1" skipped="9" tests="15" time="22.191" timestamp="2026-03-09T20:13:47.220442+00:00" hostname="agent-env-528f1e7a-d892-4245-ab19-67708f489188"><testcase classname="tests.test_iteration44_smoke.TestAuthEndpoints" name="test_admin_login_success" time="1.692" /><testcase classname="tests.test_iteration44_smoke.TestAuthEndpoints" name="test_agent_login_success" time="1.177"><failure message="AssertionError: Expected 200, got 429: {&quot;error&quot;:{&quot;code&quot;:&quot;rate_limit_exceeded&quot;,&quot;message&quot;:&quot;Çok fazla istek. Lütfen daha sonra tekrar deneyin.&quot;,&quot;details&quot;:{&quot;retry_after_seconds&quot;:300,&quot;remaining&quot;:0}}}&#10;assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_iteration44_smoke.py:73: in test_agent_login_success
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 429: {"error":{"code":"rate_limit_exceeded","message":"Çok fazla istek. Lütfen daha sonra tekrar deneyin.","details":{"retry_after_seconds":300,"remaining":0}}}
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration44_smoke.TestAuthEndpoints" name="test_auth_me_returns_user_info" time="1.111"><skipped type="pytest.skip" message="Admin auth failed">/app/backend/tests/test_iteration44_smoke.py:82: Admin auth failed</skipped></testcase><testcase classname="tests.test_iteration44_smoke.TestAuthEndpoints" name="test_login_invalid_credentials_returns_401" time="1.129" /><testcase classname="tests.test_iteration44_smoke.TestReportsEndpoints" name="test_reports_generate_returns_data" time="1.091"><skipped type="pytest.skip" message="Admin auth failed">/app/backend/tests/test_iteration44_smoke.py:105: Admin auth failed</skipped></testcase><testcase classname="tests.test_iteration44_smoke.TestReportsEndpoints" name="test_reports_reservations_summary" time="4.860"><error message="failed on setup with &quot;pymongo.errors.AutoReconnect: localhost:27017: connection closed&quot;">/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:932: in command
+    return command(
+/root/.venv/lib/python3.11/site-packages/pymongo/network.py:181: in command
+    reply = receive_message(conn, request_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/network.py:247: in receive_message
+    length, _, response_to, op_code = _UNPACK_HEADER(_receive_data_on_socket(conn, 16, deadline))
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/network.py:336: in _receive_data_on_socket
+    raise OSError("connection closed")
+E   OSError: connection closed
+
+The above exception was the direct cause of the following exception:
+/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:543: in minimal_search_seed
+    await test_db.products.insert_one(prod_doc)
+/usr/local/lib/python3.11/concurrent/futures/thread.py:58: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:671: in insert_one
+    self._insert_one(
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:611: in _insert_one
+    self.__database.client._retryable_write(acknowledged, _insert_command, session)
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:1568: in _retryable_write
+    return self._retry_with_session(retryable, func, s, None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:1413: in _retry_with_session
+    return self._retry_internal(retryable, func, session, bulk)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/_csot.py:108: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:1460: in _retry_internal
+    return func(session, conn, retryable)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:599: in _insert_command
+    result = conn.command(
+/root/.venv/lib/python3.11/site-packages/pymongo/helpers.py:315: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:960: in command
+    self._raise_connection_failure(error)
+/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:1134: in _raise_connection_failure
+    _raise_connection_failure(self.address, error)
+/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:406: in _raise_connection_failure
+    raise AutoReconnect(msg) from error
+E   pymongo.errors.AutoReconnect: localhost:27017: connection closed</error></testcase><testcase classname="tests.test_iteration44_smoke.TestReportsEndpoints" name="test_reports_sales_summary" time="1.267"><skipped type="pytest.skip" message="Admin auth failed">/app/backend/tests/test_iteration44_smoke.py:130: Admin auth failed</skipped></testcase><testcase classname="tests.test_iteration44_smoke.TestSearchEndpoint" name="test_search_endpoint_returns_results" time="1.070"><skipped type="pytest.skip" message="Admin auth failed">/app/backend/tests/test_iteration44_smoke.py:145: Admin auth failed</skipped></testcase><testcase classname="tests.test_iteration44_smoke.TestBillingEndpoints" name="test_billing_subscription_status" time="1.118"><skipped type="pytest.skip" message="Admin auth failed">/app/backend/tests/test_iteration44_smoke.py:160: Admin auth failed</skipped></testcase><testcase classname="tests.test_iteration44_smoke.TestAdminEndpoints" name="test_admin_agencies_list" time="1.108"><skipped type="pytest.skip" message="Admin auth failed">/app/backend/tests/test_iteration44_smoke.py:178: Admin auth failed</skipped></testcase><testcase classname="tests.test_iteration44_smoke.TestAdminEndpoints" name="test_admin_reporting_summary" time="1.189"><skipped type="pytest.skip" message="Admin auth failed">/app/backend/tests/test_iteration44_smoke.py:189: Admin auth failed</skipped></testcase><testcase classname="tests.test_iteration44_smoke.TestAgencyEndpoints" name="test_agency_profile_accessible" time="1.428"><skipped type="pytest.skip" message="Agent auth failed">/app/backend/tests/test_iteration44_smoke.py:202: Agent auth failed</skipped></testcase><testcase classname="tests.test_iteration44_smoke.TestAgencyEndpoints" name="test_dashboard_kpi_endpoint" time="1.160"><skipped type="pytest.skip" message="Agent auth failed">/app/backend/tests/test_iteration44_smoke.py:212: Agent auth failed</skipped></testcase><testcase classname="tests.test_iteration44_smoke.TestPublicEndpoints" name="test_public_theme_endpoint" time="1.220" /><testcase classname="tests.test_iteration44_smoke.TestPublicEndpoints" name="test_health_check" time="1.200" /></testsuite></testsuites>

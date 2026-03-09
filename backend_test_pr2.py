@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://admin-subscription-4.preview.emergentagent.com"
+BASE_URL = "https://agency-quota-system.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials

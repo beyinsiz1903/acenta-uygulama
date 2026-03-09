@@ -46,7 +46,7 @@ export const LandingDashboardMockup = ({ compact = false, testIdPrefix = "landin
 
   return (
     <div className={shellClassName} data-testid={`${testIdPrefix}-shell`}>
-      <div className="flex flex-wrap items-start justify-between gap-3 rounded-[24px] border border-slate-100 bg-white px-4 py-3 shadow-[0_10px_30px_rgba(15,23,42,0.05)] md:flex-nowrap md:items-center" data-testid={`${testIdPrefix}-topbar`}>
+      <div className="flex flex-wrap items-start justify-between gap-3 rounded-[24px] border border-slate-100 bg-white px-4 py-3 shadow-[0_10px_30px_rgba(15,23,42,0.05)] xl:flex-nowrap xl:items-center" data-testid={`${testIdPrefix}-topbar`}>
         <div className="flex min-w-0 items-center gap-3">
           <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[linear-gradient(135deg,#2563EB,#0EA5E9)] text-white" data-testid={`${testIdPrefix}-brand-badge`}>
             <LayoutDashboard className="h-5 w-5" />
@@ -60,7 +60,7 @@ export const LandingDashboardMockup = ({ compact = false, testIdPrefix = "landin
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-2" data-testid={`${testIdPrefix}-status-cluster`}>
+        <div className="flex w-full flex-wrap items-center justify-start gap-2 sm:w-auto sm:justify-end" data-testid={`${testIdPrefix}-status-cluster`}>
           <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700" data-testid={`${testIdPrefix}-status-online`}>
             Sistem aktif
           </div>
@@ -70,9 +70,9 @@ export const LandingDashboardMockup = ({ compact = false, testIdPrefix = "landin
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-3" data-testid={`${testIdPrefix}-kpis`}>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3" data-testid={`${testIdPrefix}-kpis`}>
         {KPI_CARDS.map((card, index) => (
-          <article key={card.label} className="rounded-[22px] border border-slate-100 bg-white px-4 py-4 shadow-[0_12px_34px_rgba(15,23,42,0.05)]" data-testid={`${testIdPrefix}-kpi-${index + 1}`}>
+          <article key={card.label} className={`rounded-[22px] border border-slate-100 bg-white px-4 py-4 shadow-[0_12px_34px_rgba(15,23,42,0.05)] ${index === KPI_CARDS.length - 1 ? "sm:col-span-2 xl:col-span-1" : ""}`} data-testid={`${testIdPrefix}-kpi-${index + 1}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-slate-500" data-testid={`${testIdPrefix}-kpi-label-${index + 1}`}>
@@ -93,14 +93,14 @@ export const LandingDashboardMockup = ({ compact = false, testIdPrefix = "landin
         ))}
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]" data-testid={`${testIdPrefix}-content-grid`}>
+      <div className="mt-4 grid gap-4 xl:grid-cols-[1.18fr_0.82fr]" data-testid={`${testIdPrefix}-content-grid`}>
         <section className="rounded-[26px] border border-slate-100 bg-white px-4 py-4 shadow-[0_12px_34px_rgba(15,23,42,0.05)]" data-testid={`${testIdPrefix}-reservation-panel`}>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400" data-testid={`${testIdPrefix}-reservation-eyebrow`}>
                 Rezervasyon paneli
               </p>
-              <h3 className="mt-2 text-base font-semibold text-slate-900" data-testid={`${testIdPrefix}-reservation-title`}>
+              <h3 className="mt-2 max-w-md text-base font-semibold leading-snug text-slate-900" data-testid={`${testIdPrefix}-reservation-title`}>
                 Operasyon ekipleri aynı ekranda
               </h3>
             </div>
@@ -111,7 +111,7 @@ export const LandingDashboardMockup = ({ compact = false, testIdPrefix = "landin
 
           <div className="mt-4 space-y-3" data-testid={`${testIdPrefix}-reservation-list`}>
             {BOOKING_ROWS.map((row, index) => (
-              <div key={row.id} className="grid gap-3 rounded-[20px] border border-slate-100 bg-slate-50/80 px-4 py-3 md:grid-cols-[0.9fr_1.2fr_0.9fr_0.7fr] md:items-center" data-testid={`${testIdPrefix}-reservation-row-${index + 1}`}>
+              <div key={row.id} className="grid gap-3 rounded-[20px] border border-slate-100 bg-slate-50/80 px-4 py-3 sm:grid-cols-2 xl:grid-cols-[0.9fr_1.2fr_0.9fr_0.7fr] xl:items-center" data-testid={`${testIdPrefix}-reservation-row-${index + 1}`}>
                 <div>
                   <p className="text-xs font-medium text-slate-500" data-testid={`${testIdPrefix}-reservation-id-label-${index + 1}`}>
                     Referans
@@ -136,7 +136,7 @@ export const LandingDashboardMockup = ({ compact = false, testIdPrefix = "landin
                     {row.status}
                   </p>
                 </div>
-                <div className="md:text-right">
+                <div className="sm:col-span-2 xl:col-span-1 xl:text-right">
                   <p className="text-xs font-medium text-slate-500" data-testid={`${testIdPrefix}-reservation-amount-label-${index + 1}`}>
                     Tutar
                   </p>
@@ -149,9 +149,9 @@ export const LandingDashboardMockup = ({ compact = false, testIdPrefix = "landin
           </div>
         </section>
 
-        <div className="grid gap-4" data-testid={`${testIdPrefix}-side-panels`}>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1" data-testid={`${testIdPrefix}-side-panels`}>
           <section className="rounded-[26px] border border-slate-100 bg-white px-4 py-4 shadow-[0_12px_34px_rgba(15,23,42,0.05)]" data-testid={`${testIdPrefix}-crm-panel`}>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400" data-testid={`${testIdPrefix}-crm-eyebrow`}>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 sm:text-xs sm:tracking-[0.22em]" data-testid={`${testIdPrefix}-crm-eyebrow`}>
               CRM müşteri görünümü
             </p>
             <div className="mt-4 space-y-3" data-testid={`${testIdPrefix}-crm-list`}>
@@ -174,7 +174,7 @@ export const LandingDashboardMockup = ({ compact = false, testIdPrefix = "landin
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-200/80" data-testid={`${testIdPrefix}-finance-eyebrow`}>
                   Finans görünümü
                 </p>
-                <p className="mt-2 text-sm font-semibold" data-testid={`${testIdPrefix}-finance-title`}>
+                <p className="mt-2 text-sm font-semibold leading-snug" data-testid={`${testIdPrefix}-finance-title`}>
                   Tahsilat & komisyon takibi
                 </p>
               </div>

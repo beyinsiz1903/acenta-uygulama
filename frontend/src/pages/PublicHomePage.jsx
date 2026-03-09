@@ -334,8 +334,8 @@ export default function PublicHomePage() {
       </nav>
 
       <main className="relative z-10" data-testid="landing-main">
-        <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-10 sm:px-6 md:pb-24 md:pt-16 lg:grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)] lg:items-center lg:px-8 lg:pt-20 xl:gap-14" data-testid="landing-hero-section">
-          <div className="max-w-2xl" data-testid="landing-hero-copy">
+        <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-10 sm:px-6 md:pb-24 md:pt-16 lg:gap-12 lg:px-8 lg:pt-20 xl:grid-cols-[minmax(0,0.94fr)_minmax(0,1.06fr)] xl:items-center xl:gap-14" data-testid="landing-hero-section">
+          <div className="max-w-2xl lg:max-w-3xl" data-testid="landing-hero-copy">
             <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#2563EB] shadow-[0_10px_30px_rgba(37,99,235,0.08)]" data-testid="landing-hero-badge">
               <Sparkles className="h-4 w-4" />
               Türkiye'deki turizm acenteleri için tasarlandı
@@ -378,8 +378,8 @@ export default function PublicHomePage() {
             </div>
           </div>
 
-          <div className="relative lg:pl-2 xl:pl-6" data-testid="landing-hero-visual-wrap">
-            <div className="absolute -left-4 top-10 hidden rounded-[24px] border border-white/70 bg-white/80 px-4 py-3 shadow-[0_22px_50px_rgba(37,99,235,0.15)] backdrop-blur-xl xl:block" data-testid="landing-floating-card-1">
+          <div className="relative mx-auto w-full max-w-4xl xl:max-w-none xl:pl-2 2xl:pl-6" data-testid="landing-hero-visual-wrap">
+            <div className="absolute -left-4 top-10 hidden rounded-[24px] border border-white/70 bg-white/80 px-4 py-3 shadow-[0_22px_50px_rgba(37,99,235,0.15)] backdrop-blur-xl 2xl:block" data-testid="landing-floating-card-1">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400" data-testid="landing-floating-card-1-label">Operasyon</p>
               <p className="mt-1 text-sm font-semibold text-slate-900" data-testid="landing-floating-card-1-value">12 yeni rezervasyon bugün</p>
             </div>
@@ -387,7 +387,7 @@ export default function PublicHomePage() {
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-200/70" data-testid="landing-floating-card-2-label">Finans</p>
               <p className="mt-1 text-sm font-semibold" data-testid="landing-floating-card-2-value">Tahsilat süresi %40 daha hızlı</p>
             </div>
-            <div className="mx-auto w-full max-w-[760px] lg:max-w-[680px] xl:max-w-[760px]" data-testid="landing-hero-dashboard-wrap">
+            <div className="mx-auto w-full max-w-[860px] xl:max-w-[760px]" data-testid="landing-hero-dashboard-wrap">
               <LandingDashboardMockup testIdPrefix="landing-hero-dashboard" />
             </div>
           </div>

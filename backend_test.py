@@ -22,7 +22,7 @@ import requests
 
 class BackendValidator:
     def __init__(self):
-        self.base_url = "https://travelops-staging.preview.emergentagent.com"
+        self.base_url = "https://syroce-staging.preview.emergentagent.com"
         self.admin_credentials = {"email": "admin@acenta.test", "password": "admin123"}
         self.agent_credentials = {"email": "agent@acenta.test", "password": "agent123"}
         self.admin_token = None

@@ -6478,6 +6478,18 @@ agent_communication:
         agent: "testing"
         comment: "BILLING/PAYMENT FAILURE IMPROVEMENTS BACKEND NO-REGRESSION TEST COMPLETED - ALL 4 TESTS PASSED (100% success rate). Comprehensive validation per review request using agent@acenta.test/agent123 on https://agency-billing-hub-1.preview.emergentagent.com. Test Results: 1) ✅ GET /api/billing/subscription returns 200 and includes new payment_issue shape fields - PASSED (all required fields present: has_issue, severity, title, message, cta_label, grace_period_until, last_failed_at, last_failed_amount, last_failed_amount_label, invoice_hosted_url, invoice_pdf_url; payment_issue correctly shows has_issue=False, severity=None for account without issues; subscription details: plan=starter, status=active, managed=True), 2) ✅ GET /api/billing/history works with no regression - PASSED (returns 200 OK with proper structure, contains 20 billing history items with all required fields: id, action, title, description, occurred_at, actor_label, actor_type, tone; limit parameter working correctly; sample item: 'Abonelik yeniden etkinleştirildi - agent@acenta.test'), 3) ✅ Auth guardrails for unauthenticated calls return 401/403 - PASSED (all 5 billing endpoints properly protected: /api/billing/subscription, /api/billing/history, /api/billing/customer-portal, /api/billing/cancel-subscription, /api/billing/reactivate-subscription all return 401 for unauthenticated requests), 4) ✅ Webhook code reference validation - PASSED (verified /api/webhook/stripe main flow handles invoice.paid, invoice.payment_failed, customer.subscription.deleted with proper helpers: mark_invoice_paid, mark_payment_failed, mark_subscription_canceled; idempotency protection confirmed with webhook_event_exists and record_webhook_event; webhook endpoint exists and rejects invalid requests with HTTP 500). All review request requirements validated successfully: new payment_issue shape fields included in subscription response, billing history functioning without regression, auth guardrails working correctly, webhook handlers using proper helper methods from stripe_checkout_service.py. No APIs mocked, all functionality tested against live preview environment. Billing/payment failure improvements are production-ready."
 
+  - task: "Frontend auth refactor no-regression backend validation"
+    implemented: true
+    working: true
+    file: "backend/app/routers/auth.py, backend/app/routers/billing_lifecycle.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "FRONTEND AUTH REFACTOR NO-REGRESSION BACKEND VALIDATION COMPLETED - ALL 5 TESTS PASSED (100% success rate). Comprehensive validation per Turkish review request on https://agency-billing-hub-1.preview.emergentagent.com using agent@acenta.test/agent123. Review Context: Bu iterasyonda backend kodu değişmedi; ancak frontend auth refactor'ının kullandığı akışları no-regression için kontrol et. Test Results: 1) ✅ POST /api/auth/login başarılı dönüyor - PASSED (200 OK, access_token received with 376 chars length, refresh_token included, all required response fields present), 2) ✅ Bearer token ile GET /api/auth/me başarılı - PASSED (200 OK, proper user data returned with id and email fields, email matches test account: agent@acenta.test), 3) ✅ Aynı token ile GET /api/billing/subscription başarılı - PASSED (200 OK, subscription data returned correctly with plan=starter, status=active, managed=False, all core billing fields present), 4) ✅ Aynı token ile GET /api/billing/history başarılı - PASSED (200 OK, billing history returned with 20 items, proper response structure with 'items' array), 5) ✅ Auth/billing regression kontrolü (500/401) - PASSED (authenticated endpoints return 200 correctly, unauthenticated requests properly return 401 for auth protection, no 500 server errors detected in auth or billing flows). CRITICAL VALIDATION: No regressions detected in backend auth or billing flows after frontend auth refactor. All Turkish review request requirements validated successfully. Authentication flow working correctly (login → auth/me → billing endpoints). Bearer token authentication functioning properly. No 500/401 regressions found. All APIs tested against live preview environment, no mocked functionality. Backend is stable and ready for frontend auth refactor deployment."
+
 frontend:
   - task: "Auth redirect & session-expired helper refactor validation"
     implemented: true
@@ -6630,3 +6642,78 @@ frontend:
       Double redirect bugfix SUCCESSFUL and VALIDATED. The hasHandledAuthRedirect ref guard correctly prevents the useEffect from re-running after form submission, completely eliminating the double redirect issue. Session-expired redirect feature now working correctly - users will properly return to their original page after re-authentication. Normal login flow also unaffected by the changes. Auth redirect & session-expired helper refactor is now PRODUCTION READY.
       
       Status: ✅ PRODUCTION READY - Critical double-redirect regression fixed and validated
+
+  - agent: "testing"
+    message: |
+      ✅ FRONTEND AUTH REFACTOR NO-REGRESSION BACKEND VALIDATION COMPLETED - ALL TESTS PASSED (2026-12-15)
+      
+      Performed comprehensive backend validation per Turkish review request on https://agency-billing-hub-1.preview.emergentagent.com
+      
+      Test Context:
+      - Review Request: Backend doğrulaması - frontend auth refactor'ının kullandığı akışları no-regression kontrolü
+      - Bu iterasyonda backend kodu değişmedi; ancak frontend auth refactor'ının kullandığı akışları test et
+      - Test Account: agent@acenta.test / agent123
+      - Base URL: https://agency-billing-hub-1.preview.emergentagent.com
+      - Focus: Sadece auth + billing akışlarına odaklan
+      
+      ✅ ALL 5 TURKISH VALIDATION REQUIREMENTS PASSED:
+      
+      1. ✅ POST /api/auth/login başarılı dönüyor - PASSED
+         - HTTP 200 OK response received
+         - access_token returned (376 characters)
+         - refresh_token included in response
+         - All required login response fields present
+         - Login flow working correctly
+      
+      2. ✅ Bearer token ile GET /api/auth/me başarılı - PASSED
+         - HTTP 200 OK response with bearer token
+         - User data returned correctly
+         - Email matches test account: agent@acenta.test
+         - Required fields (id, email) present in response
+         - Token authentication working properly
+      
+      3. ✅ Aynı token ile GET /api/billing/subscription başarılı - PASSED
+         - HTTP 200 OK response with same bearer token
+         - Subscription data returned: plan=starter, status=active, managed=False
+         - All core billing subscription fields present
+         - No authentication issues with billing endpoints
+      
+      4. ✅ Aynı token ile GET /api/billing/history başarılı - PASSED
+         - HTTP 200 OK response with same bearer token
+         - Billing history returned with proper structure
+         - Contains 20 billing history items
+         - Response includes required 'items' array field
+      
+      5. ✅ Auth/billing tarafında regression/500/401 kontrolü - PASSED
+         - ✅ No 500 server errors detected in any auth/billing endpoint
+         - ✅ No 401 authentication regressions in protected endpoints
+         - ✅ Authenticated requests return 200 correctly
+         - ✅ Unauthenticated requests properly return 401 (auth protection working)
+         - ✅ All auth and billing flows stable and functional
+      
+      Technical Details:
+      - All endpoints tested: /api/auth/login, /api/auth/me, /api/billing/subscription, /api/billing/history
+      - Bearer token authentication working correctly throughout all flows
+      - No server errors or authentication regressions detected
+      - Auth protection working properly (401 returned for unauthenticated access)
+      - Response structures maintained (no breaking changes)
+      - Live environment testing (no mocked APIs)
+      
+      Test Summary:
+      - Total Turkish Requirements: 5
+      - Passed: 5
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      Backend validation SUCCESSFUL. No regressions detected in auth or billing flows after frontend auth refactor. All Turkish review requirements validated and working correctly:
+      
+      ✅ Login endpoint working correctly
+      ✅ Bearer token authentication functional
+      ✅ Billing subscription endpoint accessible with token
+      ✅ Billing history endpoint accessible with token  
+      ✅ No 500/401 regressions in auth or billing flows
+      
+      Backend is stable and ready to support frontend auth refactor deployment. All auth + billing akışları functioning correctly without regression.
+      
+      Status: ✅ PASS - Backend no-regression validation completed successfully

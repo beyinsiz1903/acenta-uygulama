@@ -486,8 +486,22 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `GET /api/tenant/quota-status` → quota oranları ve warning alanları beklendiği gibi döndü
   - `GET /api/reports/sales-summary.csv` çağrısı sonrası `export.generated` sayacı 14 → 15 artarak hard quota metering zincirinin canlı çalıştığı tekrar doğrulandı
 
+## Son Uygulama Notu — 2026-03-09 (Admin all-users doğrulaması)
+- Super admin kullanıcı yönetimi akışı canlı preview üzerinde backend ağırlıklı olarak doğrulandı; ek kod değişikliği gerekmedi
+  - `GET /api/admin/all-users` listeleme geçti
+  - `POST /api/admin/all-users` ile kullanıcı oluşturma geçti
+  - `PUT /api/admin/all-users/{user_id}` ile ad / rol / durum güncelleme geçti
+  - `DELETE /api/admin/all-users/{user_id}` ile silme ve sonrasında listeden düşmesi geçti
+- Frontend tarafı için `/app/admin/all-users` smoke doğrulaması alındı; ekran render ve veri görünürlüğü doğru
+  - testing agent raporu: `/app/test_reports/iteration_38.json`
+  - backend sonucu: `16/16 PASS`
+  - hard quota readiness regresyonu: `GET /api/tenant/usage-summary` ve `GET /api/billing/subscription` PASS
+- Not: bağımsız Playwright login doğrulaması aynı turda preview rate limit (`429 / 300s cooldown`) nedeniyle tam koşulamadı; bu uygulama kodunda fonksiyonel hata olarak raporlanmadı
+
 ## Öncelikli Sonraki Adımlar
+- **P0:** Hard quota enforcement için kullanıcı doğrulamasını sizden almak; `/app/usage`, export/report guard ve upgrade CTA davranışını birlikte teyit etmek
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını derinleştirip ödeme problemi state’lerini timeline + banner + operasyon akışlarıyla birleştirme
+- **P1:** Admin kullanıcı yönetimi için ikinci tur UX doğrulaması; login rate limit penceresi geçince create/edit/delete etkileşimlerini browser otomasyonuyla tekrar teyit etme
 - **P1:** Admin cleanup faz-2: `partner-graph` ve tenant self-service duplicate endpoint’lerini (`/api/tenant/features`, `/api/tenant/quota-status`) konsolide etme
 - **P1:** CORE olmayan route yüzeyleri için ikinci faz pruning uygulaması: `partners`, marketplace, advanced campaign, sms/qr ve benzeri modülleri `internal-only / addon / remove` sınıflarına indirgeme
 - **P1:** `integration.call` ve gerekirse `b2b.match_request` için aynı hard quota guard modelini dış servis çağrısı öncesine genişletme

@@ -11,7 +11,7 @@ from typing import Dict, Any, Optional
 
 class BackendTester:
     def __init__(self):
-        self.base_url = "https://syroce-demo.preview.emergentagent.com/api"
+        self.base_url = "https://syroce-preview-1.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         self.agency_token = None
@@ -132,7 +132,7 @@ class BackendTester:
     def run_validation(self):
         """Run complete validation as per Turkish review request"""
         self.log("=== BACKEND VALIDATION STARTING ===")
-        self.log("Base URL: https://syroce-demo.preview.emergentagent.com/api")
+        self.log("Base URL: https://syroce-preview-1.preview.emergentagent.com/api")
         
         results = {}
         

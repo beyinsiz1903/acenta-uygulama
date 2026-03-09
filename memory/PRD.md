@@ -321,11 +321,31 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `agent@acenta.test` artık managed Stripe subscription state’inde (`Pro / monthly / active`)
   - `billing.test.83ce5350@example.com` QA hesabı ile managed lifecycle UI/API tekrar doğrulandı
 
+## Son Uygulama Notu — 2026-03-09 (NewSidebar entegrasyonu + sade route temizliği)
+- Ürün yüzeyi demo/onboarding odağıyla yeniden sadeleştirildi:
+  - yeni `NewSidebar.jsx` bileşeni çıkarıldı ve `AppShell` içine entegre edildi
+  - görünür ana navigasyon yalnız çekirdek menüye indirildi: `Dashboard`, `Rezervasyonlar`, `Müşteriler`, `Finans`, `Raporlar`
+  - `EXPANSION` ve `ENTERPRISE` yüzeyleri route katalogunda korunup görünür sidebar’dan çıkarıldı
+- Hesap yardımcı erişimleri korundu:
+  - sidebar footer’da `Faturalama` ve `Ayarlar` linkleri bırakıldı
+  - `redirectByRole` agency/admin kullanıcıları için `/app` iniş noktasına hizalandı; login sonrası kullanıcı artık `/app/partners` içine düşmüyor
+- Route cleanup tamamlandı:
+  - `App.js` içinde admin / agency / hotel index redirectleri eklendi
+  - legacy `/app/customers` rotası çekirdek CRM yoluna yönlendirildi
+- Agency 404 hattı giderildi:
+  - backend `router_registry.py` içine `agency hotels`, `agency bookings`, `agency settlements` ve `hotel settlements` router include’ları eklendi
+  - `GET /api/agency/bookings`, `GET /api/agency/settlements`, `GET /api/agency/hotels` artık 200 dönüyor
+- Yan etki olarak ortaya çıkan frontend crash de düzeltildi:
+  - `BookingDetailDrawer.jsx` içindeki `loadEvents` TDZ hatası giderildi; rezervasyon listesi artık drawer açılışında çökme üretmiyor
+- Doğrulama:
+  - curl self-test: agency bookings / settlements / hotels endpoint’leri geçti
+  - browser smoke: agency login → `/app`, simplified sidebar, bookings ve settlements sayfaları geçti
+  - testing agent raporu: `/app/test_reports/iteration_33.json` → backend %100 / frontend %100 geçti
+
 ## Öncelikli Sonraki Adımlar
-- **P0:** Agency tarafındaki `/api/agency/bookings` ve `/api/agency/settlements` 404 problemlerini giderip sadeleştirilmiş menü linklerini veriyle beslemek
-- **P0:** Ürün yüzeyinde CORE olmayan modülleri görünür menülerden sistematik olarak ayırmak (marketplace, partner graph, sms/qr, gelişmiş kampanyalar)
-- **P1:** Feature pruning roadmap oluşturup SECONDARY ve DEAD WEIGHT yüzeyleri addon / internal-only / remove olarak ayırmak
-- **P1:** Renewal / invoice paid / payment_failed lifecycle’ını daha da derinleştirip ödeme problemi state’lerini otomatik operasyon akışlarına bağlama
+- **P1:** CORE olmayan route yüzeyleri için ikinci faz pruning uygulaması: `partners`, marketplace, advanced campaign, sms/qr ve benzeri modülleri `internal-only / addon / remove` sınıflarına indirgeme
+- **P1:** Yıllık fiyatlandırma akışını yeniden uçtan uca test edip sadeleştirilmiş ürün yüzeyiyle hizalama
+- **P1:** Renewal / invoice paid / payment_failed lifecycle’ını derinleştirip ödeme problemi state’lerini otomatik operasyon akışlarına bağlama
 - **P1:** Hard quota enforcement
 - **P1:** Billing analytics / churn görünürlüğü
 - **P2:** Admin demo agency oluşturma butonu

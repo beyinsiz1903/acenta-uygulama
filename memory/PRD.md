@@ -641,6 +641,32 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - self-test: curl ile admin login + `/api/auth/me` + `/api/admin/all-users` PASS; agency login + `/api/auth/me` PASS
   - `deep_testing_backend_v2` → auth/RBAC smoke PASS
 
+## Son Uygulama Notu — 2026-03-09 (Demo seed düzeltmesi + rol akışı netleştirme)
+- Kullanıcı geri bildirimi üzerine demo seed akışı düzeltildi
+  - `POST /api/admin/demo/seed` artık `agency_admin` rolü için de çalışıyor
+  - seed pipeline yeniden yazıldı; artık gerçekçi ve kullanılabilir demo veri seti üretiyor:
+    - 5 otel
+    - 5 tur
+    - 5 ürün
+    - 10 müşteri (`light`) / 20 müşteri (`full`)
+    - 12 rezervasyon (`light`) / 30 rezervasyon (`full`)
+    - envanter, ödeme/cari, operasyon case ve opsiyonel CRM kayıtları
+  - önceki 500 hatasının kök nedeni olan `reservations` koleksiyonundaki `pnr=null` duplicate index çakışması giderildi
+  - eski/kısmi legacy demo seed kayıtları için güvenli cleanup + `seed_version=2` guard eklendi
+- Frontend demo seed deneyimi güçlendirildi
+  - `DemoSeedButton` yalnız yetkili roller için görünür hale getirildi (`super_admin`, `admin`, `tenant_admin`, `agency_admin`)
+  - modal metinleri ve success state güncellendi; count kartları oteller / turlar / rezervasyonlar dahil görünür
+  - kritik butonlar ve alanlar için `data-testid` kapsamı tamamlandı
+- Rol akışı kullanıcı testi bağlamında tekrar netleştirildi
+  - `admin@acenta.test` = `super_admin` → `/app/admin/dashboard`
+  - `agent@acenta.test` = `agency_admin` → `/app`
+- Doğrulama
+  - curl self-test: agent hesabıyla `POST /api/admin/demo/seed` 200 PASS
+  - smoke test: agent login → `/app` → demo seed modal → force seed success PASS
+  - testing agent raporu: `/app/test_reports/iteration_43.json` → backend %100 / frontend %100 PASS
+  - `deep_testing_backend_v2` → demo seed + role mapping PASS
+  - `auto_frontend_testing_agent` → login redirect + demo seed UI 7/7 PASS
+
 ## Öncelikli Sonraki Adımlar
 - **P0:** Canlı email provider credential/config aktivasyonu yapılıp outbox -> gerçek teslimat hattını production benzeri ortamda doğrulama
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını timeline + banner + operasyon akışlarıyla daha da birleştirme

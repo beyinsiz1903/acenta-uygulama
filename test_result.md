@@ -9202,3 +9202,80 @@ agent_communication:
       Authorization changes for POST /api/admin/demo/seed endpoint are PRODUCTION-READY and working correctly. Security enhancement validated - demo seeding is now restricted to super_admin role only as required by the Turkish review request. All specified test cases passed successfully.
       
       Status: ✅ PASS - Demo seed authorization validation completed successfully
+
+
+  - task: "Syroce frontend demo seed button authorization validation"
+    implemented: true
+    working: true
+    file: "frontend/src/components/DemoSeedButton.jsx, frontend/src/pages/AdminExecutiveDashboardPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "SYROCE FRONTEND DEMO SEED BUTTON AUTHORIZATION VALIDATION COMPLETED - ALL 7 TESTS PASSED (2026-03-09). Comprehensive validation of demo seed button authorization changes per Turkish review request on https://syroce-preview.preview.emergentagent.com. Test Results: AGENCY USER (agent@acenta.test/agent123): 1) ✅ TEST 1.1 PASSED - Agency user redirected to /app area correctly after login, 2) ✅ TEST 1.2 PASSED - Demo seed button NOT visible for agency user (as expected, conditional rendering based on super_admin role working correctly). ADMIN USER (admin@acenta.test/admin123): 1) ✅ TEST 2.1 PASSED - Admin user redirected to /app/admin/dashboard correctly after login, 2) ✅ TEST 2.2 PASSED - Demo seed button IS visible for admin user on /app/admin/dashboard (button with data-testid='demo-seed-open-button' found and visible in header actions section). MODAL FUNCTIONALITY: 1) ✅ TEST 3.1 PASSED - Demo seed modal opens correctly when admin clicks the button (modal with data-testid='demo-seed-modal' appears), 2) ✅ TEST 3.2 PASSED - Modal title is correct ('Demo verisi oluştur'), 3) ✅ TEST 3.3 PASSED - Demo seed form is visible in modal with all form elements (seed mode options: Hafif/Tam, checkboxes for finance/CRM data inclusion, force option). CRITICAL VALIDATIONS: All Turkish review request requirements validated ✅: 1) agent@acenta.test/agent123 login redirects to /app and demo seed button NOT shown ✅ (role-based conditional rendering working: hasAnyRole(user, ['super_admin']) returns false for agency_admin), 2) admin@acenta.test/admin123 login redirects to /app/admin/dashboard and demo seed button IS shown ✅ (hasAnyRole(user, ['super_admin']) returns true), 3) Clicking demo seed button opens modal with correct title and form ✅ (modal overlay, title, description, form state all rendering correctly). Console Analysis: No critical errors detected. Screenshots captured: agency_user_no_demo_button.png (showing agency dashboard without demo button), admin_user_with_demo_button.png (showing admin dashboard with 'Demo verisi oluştur' button in top right), admin_demo_seed_modal_open.png (showing modal with form options). Reference files validated: /app/frontend/src/components/DemoSeedButton.jsx (lines 24-46: conditional rendering based on super_admin role), /app/frontend/src/pages/AdminExecutiveDashboardPage.jsx (line 217: DemoSeedButton component rendered in header actions). Authorization logic working correctly: DemoSeedButton component uses getUser() and hasAnyRole(user, ['super_admin']) to determine if button should render, returns null if user lacks super_admin role. Test Summary: 7/7 checks passed, 100% success rate. Conclusion: Demo seed button authorization changes are PRODUCTION-READY and working exactly as specified in Turkish review request. Role-based UI rendering functioning correctly - button only visible to super_admin users, modal opens properly with all expected form elements. No mock APIs used - all functionality tested against live preview environment."
+
+agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ SYROCE DEMO SEED BUTTON AUTHORIZATION VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-09)
+      
+      Performed comprehensive validation of demo seed button authorization per Turkish review request.
+      
+      Test Context:
+      - Review Request: Validate demo seed button role-based authorization changes
+      - Agent (agent@acenta.test/agent123) should NOT see demo seed button
+      - Admin (admin@acenta.test/admin123) SHOULD see demo seed button on /app/admin/dashboard
+      - Modal should open when admin clicks the button
+      - Test URL: https://syroce-preview.preview.emergentagent.com
+      - Reference files: DemoSeedButton.jsx, AdminExecutiveDashboardPage.jsx, LoginPage.jsx
+      
+      ✅ ALL 7 VALIDATION REQUIREMENTS PASSED:
+      
+      AGENCY USER (agent@acenta.test / agent123):
+      1. ✅ Login successful and redirected to /app area
+      2. ✅ Demo seed button NOT visible (as expected)
+         - Conditional rendering working: hasAnyRole(user, ['super_admin']) returns false
+         - Component returns null for non-super_admin users
+      
+      ADMIN USER (admin@acenta.test / admin123):
+      1. ✅ Login successful and redirected to /app/admin/dashboard
+      2. ✅ Demo seed button IS visible in header actions section
+         - Button text: "Demo verisi oluştur"
+         - data-testid="demo-seed-open-button" found and visible
+         - hasAnyRole(user, ['super_admin']) returns true
+      
+      MODAL FUNCTIONALITY:
+      1. ✅ Modal opens when demo seed button clicked
+         - Modal overlay appears (data-testid="demo-seed-modal-overlay")
+         - Modal content visible (data-testid="demo-seed-modal")
+      2. ✅ Modal title correct: "Demo verisi oluştur"
+      3. ✅ Demo seed form visible with all options:
+         - Seed mode toggle: Hafif / Tam
+         - Finans verileri checkbox
+         - CRM fırsat ve görevleri checkbox
+         - Mevcut demo verilerini sil ve yeniden üret checkbox
+         - İptal and Demo verisini oluştur buttons
+      
+      Screenshots Captured:
+      - agency_user_no_demo_button.png: Agency dashboard showing NO demo seed button
+      - admin_user_with_demo_button.png: Admin dashboard with demo seed button in top right
+      - admin_demo_seed_modal_open.png: Modal opened with demo seed form
+      
+      Console & Errors:
+      - Zero critical console errors detected
+      - No React errors or error boundaries triggered
+      - Clean test execution
+      
+      Code Validation:
+      - DemoSeedButton.jsx lines 24-46: Conditional rendering based on super_admin role
+      - AdminExecutiveDashboardPage.jsx line 217: Button rendered in header actions
+      - Authorization logic: Component checks hasAnyRole(user, ['super_admin']) and returns null if false
+      
+      Test Summary: 7/7 checks PASSED, 100% success rate
+      
+      Conclusion:
+      Demo seed button authorization changes are PRODUCTION-READY and working correctly. Role-based UI rendering functioning as designed - button only visible to super_admin users, modal opens with proper form elements. All Turkish review request requirements validated successfully.
+      
+      Status: ✅ PASS - Demo seed button authorization validation completed successfully

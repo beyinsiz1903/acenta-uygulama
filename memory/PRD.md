@@ -370,6 +370,24 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - browser smoke: preview üzerinde billing page + history card/list doğrulandı
   - testing agent raporu: `/app/test_reports/iteration_34.json` → backend %100 / frontend %100 geçti
 
+## Son Uygulama Notu — 2026-03-09 (Payment failure lifecycle hardening)
+- Stripe billing lifecycle hattı payment failure görünürlüğü için sertleştirildi
+  - ana `/api/webhook/stripe` akışında `invoice.paid`, `invoice.payment_failed` ve `customer.subscription.deleted` olayları artık ortak helper’larla işleniyor
+  - yeni helper’lar: `mark_invoice_paid`, `mark_payment_failed`, `mark_subscription_canceled`
+  - payment failure state temizleme / kurma kuralları hizalandı: `grace_period_until`, `last_payment_failed_at`, `last_payment_failed_amount`, `invoice_hosted_url`, `invoice_pdf_url`
+- `GET /api/billing/subscription` payment issue payload’ı zenginleştirildi
+  - yeni alanlar: `severity`, `title`, `grace_period_until`, `last_failed_at`, `last_failed_amount`, `last_failed_amount_label`, `invoice_hosted_url`, `invoice_pdf_url`
+  - başarılı tahsilat sonrası payment issue alanları temizleniyor; canceled state scheduled/failure artıklarını da siliyor
+- Billing UI iyileştirildi
+  - yeni `BillingPaymentIssueBanner` bileşeni eklendi
+  - banner artık durum seviyesi, başarısız tutar, son deneme zamanı, son gün ve varsa direkt fatura linkini gösteriyor
+  - `SettingsBillingPage` içinde entegre edildi; canlı payment issue yoksa görünmemesi korunuyor
+- Doğrulama:
+  - backend self-test: temp tenant ile `mark_payment_failed -> get_billing_overview -> mark_invoice_paid` lifecycle doğrulandı
+  - browser smoke: mocked subscription response ile payment issue banner renderı doğrulandı
+  - testing agent raporu: `/app/test_reports/iteration_35.json` → backend %100 / frontend %100 geçti
+  - frontend testing subagent + backend deep testing subagent no-regression geçti
+
 ## Öncelikli Sonraki Adımlar
 - **P1:** Yıllık fiyatlandırma akışını yeniden uçtan uca test edip sadeleştirilmiş ürün yüzeyiyle hizalama
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını derinleştirip ödeme problemi state’lerini timeline + banner + operasyon akışlarıyla birleştirme

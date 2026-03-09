@@ -8578,3 +8578,15 @@ agent_communication:
       System is production-ready and meets all review requirements.
       
       Status: ✅ PASS - Super admin UX validation successful, all requirements met
+
+  - task: "Backend no-regression validation after frontend admin navigation changes"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "BACKEND NO-REGRESSION VALIDATION COMPLETED - ALL 7 TESTS PASSED (2026-03-09). Comprehensive backend API validation performed after frontend super admin login redirect and admin navigation cleanup per Turkish review request on https://travel-os-demo.preview.emergentagent.com/api. Test Results: 1) ✅ POST /api/auth/login with admin@acenta.test/admin123 - PASSED (Status: 200, access_token: 385 chars, login successful), 2) ✅ GET /api/auth/me with Bearer token - PASSED (Status: 200, user: admin@acenta.test, session working correctly), 3) ✅ GET /api/admin/agencies - PASSED (Status: 200, data length: 1061 chars, admin endpoint responding), 4) ✅ GET /api/admin/reporting/summary?days=30 - PASSED (Status: 200, data length: 236 chars, reporting endpoint working), 5) ✅ GET /api/admin/metrics/overview with date params - PASSED (Status: 200, data length: 223 chars, metrics endpoint working), 6) ✅ GET /api/admin/billing/tenants/{tenant_id}/usage - PASSED (Status: 200, data length: 12024 chars, billing endpoint working with valid tenant ID ec68a5dc-fd72-4bb3-b679-0416b616aee1), 7) ✅ GET /api/agency/bookings regression check - PASSED (Status: 403, correctly returns Forbidden for admin user accessing agency endpoint, no regression detected). CRITICAL VALIDATIONS: All Turkish review request requirements validated ✅: Admin login working correctly ✅, Auth/me with session working ✅, Admin agencies endpoint no regression ✅, Admin reporting summary no regression ✅, Admin metrics overview no regression ✅, Admin billing tenant usage working with real tenant ID ✅, Agency bookings endpoint still accessible (correct 403 for admin user) ✅. Rate limits (429) were configured to not be treated as bugs per review request. No 401/403/500 regressions detected - all endpoints responding correctly. Success rate: 100% (7/7 tests passed). Backend APIs stable and unaffected by frontend admin navigation changes. No regression detected from frontend-only changes to super admin login redirect and navigation structure. Backend no-regression PASS."

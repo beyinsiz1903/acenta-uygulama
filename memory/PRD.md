@@ -400,8 +400,18 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - frontend automation: expired session banner, post-login return-to `/app/settings/billing`, sessionStorage cleanup ve normal login akışı geçti
   - backend deep validation: `POST /api/auth/login`, `GET /api/auth/me`, `GET /api/billing/subscription`, `GET /api/billing/history` geçti; regression yok
 
+## Son Uygulama Notu — 2026-03-09 (Yıllık fiyatlandırma E2E revalidation)
+- Yıllık fiyatlandırma hattı mevcut sade ürün yüzeyi üzerinde yeniden uçtan uca doğrulandı
+  - public `/pricing` yıllık toggle: Starter `₺9.900`, Pro `₺24.900`, `2 ay ücretsiz` badge görünürlüğü geçti
+  - unauthenticated CTA yönlendirmesi `selectedPlan` parametresi korunarak `/signup` akışına düştü
+  - authenticated checkout create/status hattı `interval=yearly` ile tekrar doğrulandı
+  - `/app/settings/billing` yıllık toggle, yıllık plan kartları ve badge görünürlüğü regresyonsuz geçti
+- Kod değişikliği gerekmedi; mevcut annual pricing implementasyonu stabil bulundu
+- Doğrulama:
+  - testing agent raporu: `/app/test_reports/iteration_36.json` → backend %100 / frontend %100 annual pricing geçti
+  - oluşturulan referans test dosyası: `/app/backend/tests/test_annual_pricing_e2e_iter36.py`
+
 ## Öncelikli Sonraki Adımlar
-- **P1:** Yıllık fiyatlandırma akışını yeniden uçtan uca test edip sadeleştirilmiş ürün yüzeyiyle hizalama
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını derinleştirip ödeme problemi state’lerini timeline + banner + operasyon akışlarıyla birleştirme
 - **P1:** CORE olmayan route yüzeyleri için ikinci faz pruning uygulaması: `partners`, marketplace, advanced campaign, sms/qr ve benzeri modülleri `internal-only / addon / remove` sınıflarına indirgeme
 - **P1:** Hard quota enforcement

@@ -1,0 +1,88 @@
+{
+  "timestamp": "2026-03-09T20:51:52.147085",
+  "base_url": "https://syroce-preview-1.preview.emergentagent.com",
+  "total_tests": 8,
+  "results": [
+    {
+      "test": "Admin Login",
+      "status": "PASS",
+      "details": {
+        "token_length": 375,
+        "roles": [
+          "super_admin"
+        ],
+        "user_email": "admin@acenta.test"
+      }
+    },
+    {
+      "test": "Agency Login",
+      "status": "PASS",
+      "details": {
+        "token_length": 376,
+        "roles": [
+          "agency_admin"
+        ],
+        "user_email": "agent@acenta.test"
+      }
+    },
+    {
+      "test": "Admin Auth/Me",
+      "status": "PASS",
+      "details": {
+        "roles": [
+          "super_admin"
+        ],
+        "email": "admin@acenta.test",
+        "tenant_id": "9c5c1079-9dea-49bf-82c0-74838b146160",
+        "organization_id": "913ccb33-2717-448a-bceb-39e39f3ba48e"
+      }
+    },
+    {
+      "test": "Agency Auth/Me",
+      "status": "PASS",
+      "details": {
+        "roles": [
+          "agency_admin"
+        ],
+        "email": "agent@acenta.test",
+        "tenant_id": "9c5c1079-9dea-49bf-82c0-74838b146160",
+        "organization_id": "913ccb33-2717-448a-bceb-39e39f3ba48e"
+      }
+    },
+    {
+      "test": "Public Theme",
+      "status": "PASS",
+      "details": {
+        "company_name": "Syroce",
+        "primary_color": "#2563eb",
+        "response_size": 368
+      }
+    },
+    {
+      "test": "Onboarding Plans",
+      "status": "PASS",
+      "details": {
+        "plans_count": 4,
+        "response_size": 3364
+      }
+    },
+    {
+      "test": "Admin Endpoint Access",
+      "status": "PASS",
+      "details": {
+        "endpoint": "/admin/agencies",
+        "response_type": "list",
+        "response_size": 1061
+      }
+    },
+    {
+      "test": "Agency Context Endpoint",
+      "status": "PASS",
+      "details": {
+        "endpoint": "/agency/profile",
+        "status_code": 200,
+        "response_size": 162
+      }
+    }
+  ]
+}

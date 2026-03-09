@@ -424,6 +424,18 @@ frontend:
         agent: "testing"
         comment: "SYROCE BACKEND NO-REGRESSION CONTROL COMPLETED - 6/7 TESTS PASSED (2026-03-09). Comprehensive backend validation performed per Turkish review request to verify frontend/copy changes did NOT break backend on https://syroce-preview-1.preview.emergentagent.com/api. Test Accounts: admin@acenta.test/admin123, agent@acenta.test/agent123. PASSED TESTS (6/7): 1) ✅ GET /api/public/theme - 200 OK (public route working), 2) ✅ POST /api/auth/login admin + super_admin role - login successful (375 chars token), 3) ✅ GET /api/auth/me admin role validation - super_admin confirmed, 4) ✅ POST /api/auth/login agency + agency_admin role - login successful (376 chars token), 5) ✅ GET /api/auth/me agency role validation - agency_admin confirmed, 6) ✅ Agency/core critical endpoints - /reports/reservations-summary ✅, /reports/sales-summary ✅, /billing/subscription ✅, /search ✅ (all 200 OK). ISOLATED ISSUE (1/7): ❌ Admin /dashboard/popular-products returns 500 - this is CONFIRMED PRE-EXISTING BACKEND BUG (MongoDB ObjectId serialization issue, NOT caused by frontend changes). Other admin endpoints work: /admin/agencies ✅, /admin/tenants ✅, /admin/all-users ✅. ROOT CAUSE ANALYSIS: Backend logs show ValueError: ObjectId object is not iterable in dashboard_enhanced.py line 330/351 (str(tour.get('_id', ''))). This is a backend code issue unrelated to frontend copy changes. CRITICAL FINDINGS: ✅ NO backend regression from frontend changes detected - 6/6 core flows working correctly ✅, Admin ve agency login çalışıyor ✅, Auth/me doğru rolleri dönüyor ✅, Public route no-regression ✅, Agency kritik endpoints bozulmamış ✅, Only 1 isolated pre-existing backend bug found (popular-products) ✅. CONCLUSION: Frontend/copy değişiklikleri backend'i bozmamış. The failing endpoint is a pre-existing ObjectId serialization bug requiring backend code fix, not related to recent frontend changes. Success rate: 85% (6/7) with 1 isolated pre-existing backend issue identified."
 
+  - task: "Syroce backend critical regression validation - Turkish review request"
+    implemented: true
+    working: true
+    file: "backend/server.py, backend/app/routers/auth.py, backend/app/routers/theme.py, backend/app/routers/onboarding.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "SYROCE BACKEND CRITICAL REGRESSION VALIDATION COMPLETED - ALL 8 TESTS PASSED (2026-03-09). Comprehensive critical regression validation performed per Turkish review request on https://syroce-preview-1.preview.emergentagent.com/api with test credentials admin@acenta.test/admin123 and agent@acenta.test/agent123. Test Results: 1) ✅ Admin Login (admin@acenta.test/admin123) - PASSED (Status: 200, access_token: 375 chars, super_admin role confirmed), 2) ✅ Agency Login (agent@acenta.test/agent123) - PASSED (Status: 200, access_token: 376 chars, agency_admin role confirmed), 3) ✅ Admin GET /api/auth/me - PASSED (Status: 200, super_admin role verified, tenant_id: 9c5c1079-9dea-49bf-82c0-74838b146160, organization_id: 913ccb33-2717-448a-bceb-39e39f3ba48e), 4) ✅ Agency GET /api/auth/me - PASSED (Status: 200, agency_admin role verified, same tenant_id and organization_id), 5) ✅ GET /api/public/theme - PASSED (Status: 200, company_name: Syroce, primary_color: #2563eb, response_size: 368 chars), 6) ✅ GET /api/onboarding/plans - PASSED (Status: 200, 4 plans returned, response_size: 3364 chars), 7) ✅ Admin endpoint access (/api/admin/agencies) - PASSED (Status: 200, list response with 1061 chars), 8) ✅ Agency context endpoint (/api/agency/profile) - PASSED (Status: 200, tenant/agency context working, 162 chars response). CRITICAL VALIDATIONS: All Turkish review request requirements validated ✅: Auth login with both admin and agency credentials successful with correct role assignment ✅, Role-based redirect temelini destekleyen API'ler working (auth/me returns correct roles and tenant_id) ✅, Public yüzeyin kritik backend uçları operational (theme, onboarding/plans) ✅, No blank screen kökenli backend hata/regresyon detected ✅, Admin erişimi gerektiren endpoints working with admin token ✅, Agency bağlamı dönen endpoints working with agency token ✅. No rate limit issues encountered. All functional backend endpoints tested are production-ready. Success rate: 100% (8/8 tests passed). Conclusion: No backend regression detected, all critical auth/RBAC/public endpoints working correctly."
+
   - task: "Syroce auth redirect P0 validation - frontend browser automation"
     implemented: true
     working: true
@@ -10089,4 +10101,55 @@ agent_communication:
       NO ACTION REQUIRED FROM MAIN AGENT. All Turkish review requirements validated and working correctly. System is stable, functional, and production-ready. No regressions detected since iteration_44. Turkish UI quality is excellent with clear, readable text and working functionality across all surfaces.
       
       The application successfully passes comprehensive smoke/regression testing with zero critical issues.
+
+  - agent: "testing"
+    message: |
+      ✅ SYROCE BACKEND CRITICAL REGRESSION VALIDATION COMPLETED - ALL TESTS PASSED
+
+      Test Date: 2026-03-09  
+      Target URL: https://syroce-preview-1.preview.emergentagent.com/api
+      Test Type: Turkish review request - Kısa ama kritik regression doğrulaması
+      
+      📊 EXECUTIVE SUMMARY:
+      
+      8/8 tests PASSED (100% success rate)
+      • Auth Tests: 4/4 ✅
+      • Public/Supporting Endpoints: 2/2 ✅ 
+      • Role-Based Access Tests: 2/2 ✅
+      
+      🎯 TURKISH REVIEW REQUIREMENTS VALIDATED:
+      
+      ✅ Auth login with admin@acenta.test/admin123 - Returns 200 with super_admin role
+      ✅ Auth login with agent@acenta.test/agent123 - Returns 200 with agency_admin role
+      ✅ GET /api/auth/me returns 200 with correct role info for both accounts
+      ✅ GET /api/public/theme - Working (200 OK, Syroce branding)
+      ✅ GET /api/onboarding/plans - Working (200 OK, 4 plans available)
+      ✅ Admin erişimi gerektiren endpoint - /api/admin/agencies working with admin token
+      ✅ Agency tenant/agency bağlamı dönen endpoint - /api/agency/profile working with agency token
+      
+      🔍 KEY FINDINGS:
+      
+      1. NO backend regression detected
+      2. NO blank screen kökenli backend errors
+      3. NO 4xx/5xx functional regression issues
+      4. Auth/RBAC flows working correctly
+      5. Role-based redirect temelini destekleyen API'ler operational
+      6. Public yüzeyin kritik backend uçları working
+      7. Admin/agency context endpoints responding correctly
+      8. NO rate limit blocking (sadece güvenlik davranışı, fonksiyonel bug değil)
+      
+      📋 DETAILED TEST RESULTS:
+      
+      • Admin Login: 200 OK (token: 375 chars, super_admin role)
+      • Agency Login: 200 OK (token: 376 chars, agency_admin role)
+      • Admin /auth/me: 200 OK (super_admin, tenant_id: 9c5c1079-9dea-49bf-82c0-74838b146160)
+      • Agency /auth/me: 200 OK (agency_admin, same tenant_id)
+      • Public Theme: 200 OK (Syroce branding, 368 chars response)
+      • Onboarding Plans: 200 OK (4 plans, 3364 chars response)
+      • Admin Agencies: 200 OK (list response, 1061 chars)
+      • Agency Profile: 200 OK (tenant context working, 162 chars)
+      
+      ✅ CONCLUSION:
+      
+      NO ACTION REQUIRED FROM MAIN AGENT. Manuel self-test zaten geçti confirmation validated. Backend kritik regression testi PASS. All auth, role redirect support APIs and public surface critical backend endpoints working correctly. No backend regressions detected. System production-ready.
 

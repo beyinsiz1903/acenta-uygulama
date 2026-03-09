@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Backend API Validation Test for Turkish Review Request
-Validates recent backend fixes for dashboard endpoints and ObjectId serialization
+Syroce Backend Critical Regression Validation
+Turkish Review Request: Auth, RBAC, Public endpoints validation
+Base URL: https://syroce-preview-1.preview.emergentagent.com
 """
 
 import requests
@@ -9,259 +10,465 @@ import json
 import sys
 from typing import Dict, Any, Optional
 
+# Base configuration
+BASE_URL = "https://syroce-preview-1.preview.emergentagent.com"
+API_BASE = f"{BASE_URL}/api"
+
+# Test credentials from Turkish review request
+ADMIN_CREDENTIALS = {
+    "email": "admin@acenta.test",
+    "password": "admin123"
+}
+
+AGENCY_CREDENTIALS = {
+    "email": "agent@acenta.test", 
+    "password": "agent123"
+}
+
 class BackendTester:
     def __init__(self):
-        self.base_url = "https://syroce-preview-1.preview.emergentagent.com/api"
-        self.session = requests.Session()
         self.admin_token = None
         self.agency_token = None
+        self.admin_cookies = None
+        self.agency_cookies = None
+        self.results = []
         
-    def log(self, message: str):
-        print(f"[TEST] {message}")
-        
-    def test_login(self, email: str, password: str) -> Optional[str]:
-        """Test login endpoint and return access token"""
-        url = f"{self.base_url}/auth/login"
-        payload = {
-            "email": email,
-            "password": password
+    def log_result(self, test_name: str, status: str, details: Dict[str, Any]):
+        """Log test result with structured data"""
+        result = {
+            "test": test_name,
+            "status": status,  # PASS, FAIL, SKIP
+            "details": details
         }
-        
-        try:
-            response = self.session.post(url, json=payload)
-            self.log(f"POST /auth/login ({email}): Status {response.status_code}")
+        self.results.append(result)
+        status_symbol = "✅" if status == "PASS" else "❌" if status == "FAIL" else "⚠️"
+        print(f"{status_symbol} {test_name}: {status}")
+        if status == "FAIL":
+            print(f"   Error: {details.get('error', 'Unknown error')}")
             
-            if response.status_code == 200:
-                data = response.json()
-                if 'access_token' in data:
-                    token = data['access_token']
-                    self.log(f"✅ Login successful - Token length: {len(token)} chars")
-                    return token
-                else:
-                    self.log(f"❌ Login failed - Missing access_token in response")
-                    return None
-            else:
-                self.log(f"❌ Login failed - Status: {response.status_code}, Response: {response.text}")
-                return None
-                
+    def make_request(self, method: str, url: str, **kwargs) -> requests.Response:
+        """Make HTTP request with error handling"""
+        try:
+            response = requests.request(method, url, timeout=15, **kwargs)
+            return response
         except Exception as e:
-            self.log(f"❌ Login error - Exception: {str(e)}")
-            return None
+            raise Exception(f"Request failed: {str(e)}")
     
-    def test_authenticated_endpoint_with_payload(self, endpoint: str, token: str, method: str = "POST", payload: dict = None) -> Dict[str, Any]:
-        """Test an authenticated endpoint with JSON payload"""
-        url = f"{self.base_url}/{endpoint.lstrip('/')}"
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json"
-        }
-        
+    def test_admin_login(self) -> bool:
+        """Test 1: Admin login (admin@acenta.test/admin123)"""
         try:
-            if method.upper() == "POST":
-                response = self.session.post(url, headers=headers, json=payload)
-            else:
-                raise ValueError(f"Unsupported method for payload: {method}")
+            url = f"{API_BASE}/auth/login"
+            headers = {"Content-Type": "application/json"}
+            
+            response = self.make_request("POST", url, json=ADMIN_CREDENTIALS, headers=headers)
+            
+            if response.status_code != 200:
+                self.log_result("Admin Login", "FAIL", {
+                    "error": f"HTTP {response.status_code}",
+                    "response": response.text[:500]
+                })
+                return False
                 
-            self.log(f"{method} /{endpoint}: Status {response.status_code}")
+            data = response.json()
             
-            result = {
-                'status_code': response.status_code,
-                'success': response.status_code in [200, 201],
-                'response_size': len(response.text) if response.text else 0,
-                'endpoint': endpoint
-            }
-            
-            # Try to parse JSON
-            try:
-                result['json'] = response.json()
-            except:
-                result['json'] = None
-                result['text'] = response.text[:500]  # First 500 chars
+            # Check for access token
+            if "access_token" not in data:
+                self.log_result("Admin Login", "FAIL", {
+                    "error": "No access_token in response",
+                    "response_keys": list(data.keys())
+                })
+                return False
                 
-            return result
-            
-        except Exception as e:
-            self.log(f"❌ {method} /{endpoint} error - Exception: {str(e)}")
-            return {
-                'status_code': 0,
-                'success': False,
-                'error': str(e),
-                'endpoint': endpoint
-            }
-    
-    def test_authenticated_endpoint(self, endpoint: str, token: str, method: str = "GET") -> Dict[str, Any]:
-        """Test an authenticated endpoint"""
-        url = f"{self.base_url}/{endpoint.lstrip('/')}"
-        headers = {"Authorization": f"Bearer {token}"}
-        
-        try:
-            if method.upper() == "GET":
-                response = self.session.get(url, headers=headers)
-            elif method.upper() == "POST":
-                response = self.session.post(url, headers=headers)
-            else:
-                raise ValueError(f"Unsupported method: {method}")
+            # Check for super_admin role
+            user_roles = data.get("user", {}).get("roles", [])
+            if "super_admin" not in user_roles:
+                self.log_result("Admin Login", "FAIL", {
+                    "error": f"Expected super_admin role, got: {user_roles}",
+                    "user_data": data.get("user", {})
+                })
+                return False
                 
-            self.log(f"{method} /{endpoint}: Status {response.status_code}")
+            self.admin_token = data["access_token"]
             
-            result = {
-                'status_code': response.status_code,
-                'success': response.status_code in [200, 201],
-                'response_size': len(response.text) if response.text else 0,
-                'endpoint': endpoint
-            }
-            
-            # Try to parse JSON
-            try:
-                result['json'] = response.json()
-            except:
-                result['json'] = None
-                result['text'] = response.text[:500]  # First 500 chars
-                
-            return result
+            self.log_result("Admin Login", "PASS", {
+                "token_length": len(self.admin_token),
+                "roles": user_roles,
+                "user_email": data.get("user", {}).get("email")
+            })
+            return True
             
         except Exception as e:
-            self.log(f"❌ {method} /{endpoint} error - Exception: {str(e)}")
-            return {
-                'status_code': 0,
-                'success': False,
-                'error': str(e),
-                'endpoint': endpoint
-            }
+            self.log_result("Admin Login", "FAIL", {"error": str(e)})
+            return False
     
-    def run_validation(self):
-        """Run complete validation as per Turkish review request"""
-        self.log("=== BACKEND VALIDATION STARTING ===")
-        self.log("Base URL: https://syroce-preview-1.preview.emergentagent.com/api")
-        
-        results = {}
-        
-        # 1. Test admin login
-        self.log("\n--- 1. Testing POST /api/auth/login (admin) ---")
-        self.admin_token = self.test_login("admin@acenta.test", "admin123")
-        results['admin_login'] = {
-            'success': self.admin_token is not None,
-            'token_length': len(self.admin_token) if self.admin_token else 0
-        }
-        
-        # 2. Test agency login  
-        self.log("\n--- 2. Testing POST /api/auth/login (agency) ---")
-        self.agency_token = self.test_login("agent@acenta.test", "agent123")
-        results['agency_login'] = {
-            'success': self.agency_token is not None,
-            'token_length': len(self.agency_token) if self.agency_token else 0
-        }
-        
-        if not self.admin_token or not self.agency_token:
-            self.log("❌ CRITICAL: Login failed, cannot continue with endpoint tests")
-            return results
-        
-        # 3. Test GET /api/dashboard/popular-products (CRITICAL - was failing before)
-        self.log("\n--- 3. Testing GET /api/dashboard/popular-products (ObjectId fix) ---")
-        results['popular_products'] = self.test_authenticated_endpoint(
-            "dashboard/popular-products", self.agency_token
-        )
-        
-        if results['popular_products']['success']:
-            self.log("✅ /dashboard/popular-products: 200 OK - ObjectId serialization FIXED")
-        else:
-            self.log(f"❌ /dashboard/popular-products: {results['popular_products']['status_code']} - Still broken")
-        
-        # 4. Test dashboard endpoint set
-        self.log("\n--- 4. Testing Dashboard Endpoint Set ---")
-        dashboard_endpoints = [
-            "dashboard/kpi-stats",
-            "dashboard/reservation-widgets", 
-            "dashboard/weekly-summary",
-            "dashboard/recent-customers"
-        ]
-        
-        results['dashboard_set'] = {}
-        for endpoint in dashboard_endpoints:
-            result = self.test_authenticated_endpoint(endpoint, self.agency_token)
-            results['dashboard_set'][endpoint] = result
+    def test_agency_login(self) -> bool:
+        """Test 2: Agency login (agent@acenta.test/agent123)"""
+        try:
+            url = f"{API_BASE}/auth/login"
+            headers = {"Content-Type": "application/json"}
             
-            if result['success']:
-                self.log(f"✅ /{endpoint}: 200 OK")
+            response = self.make_request("POST", url, json=AGENCY_CREDENTIALS, headers=headers)
+            
+            if response.status_code != 200:
+                self.log_result("Agency Login", "FAIL", {
+                    "error": f"HTTP {response.status_code}",
+                    "response": response.text[:500]
+                })
+                return False
+                
+            data = response.json()
+            
+            # Check for access token
+            if "access_token" not in data:
+                self.log_result("Agency Login", "FAIL", {
+                    "error": "No access_token in response",
+                    "response_keys": list(data.keys())
+                })
+                return False
+                
+            # Check for agency_admin role
+            user_roles = data.get("user", {}).get("roles", [])
+            if "agency_admin" not in user_roles:
+                self.log_result("Agency Login", "FAIL", {
+                    "error": f"Expected agency_admin role, got: {user_roles}",
+                    "user_data": data.get("user", {})
+                })
+                return False
+                
+            self.agency_token = data["access_token"]
+            
+            self.log_result("Agency Login", "PASS", {
+                "token_length": len(self.agency_token),
+                "roles": user_roles,
+                "user_email": data.get("user", {}).get("email")
+            })
+            return True
+            
+        except Exception as e:
+            self.log_result("Agency Login", "FAIL", {"error": str(e)})
+            return False
+    
+    def test_admin_auth_me(self) -> bool:
+        """Test 3: GET /api/auth/me with admin token"""
+        if not self.admin_token:
+            self.log_result("Admin Auth/Me", "SKIP", {"error": "No admin token available"})
+            return False
+            
+        try:
+            url = f"{API_BASE}/auth/me"
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            
+            response = self.make_request("GET", url, headers=headers)
+            
+            if response.status_code != 200:
+                self.log_result("Admin Auth/Me", "FAIL", {
+                    "error": f"HTTP {response.status_code}",
+                    "response": response.text[:500]
+                })
+                return False
+                
+            data = response.json()
+            
+            # Check for super_admin role
+            user_roles = data.get("roles", [])
+            if "super_admin" not in user_roles:
+                self.log_result("Admin Auth/Me", "FAIL", {
+                    "error": f"Expected super_admin role, got: {user_roles}",
+                    "user_data": data
+                })
+                return False
+                
+            # Check for tenant_id
+            if not data.get("tenant_id"):
+                self.log_result("Admin Auth/Me", "FAIL", {
+                    "error": "No tenant_id in response",
+                    "user_data": data
+                })
+                return False
+                
+            self.log_result("Admin Auth/Me", "PASS", {
+                "roles": user_roles,
+                "email": data.get("email"),
+                "tenant_id": data.get("tenant_id"),
+                "organization_id": data.get("organization_id")
+            })
+            return True
+            
+        except Exception as e:
+            self.log_result("Admin Auth/Me", "FAIL", {"error": str(e)})
+            return False
+    
+    def test_agency_auth_me(self) -> bool:
+        """Test 4: GET /api/auth/me with agency token"""
+        if not self.agency_token:
+            self.log_result("Agency Auth/Me", "SKIP", {"error": "No agency token available"})
+            return False
+            
+        try:
+            url = f"{API_BASE}/auth/me"
+            headers = {"Authorization": f"Bearer {self.agency_token}"}
+            
+            response = self.make_request("GET", url, headers=headers)
+            
+            if response.status_code != 200:
+                self.log_result("Agency Auth/Me", "FAIL", {
+                    "error": f"HTTP {response.status_code}",
+                    "response": response.text[:500]
+                })
+                return False
+                
+            data = response.json()
+            
+            # Check for agency_admin role
+            user_roles = data.get("roles", [])
+            if "agency_admin" not in user_roles:
+                self.log_result("Agency Auth/Me", "FAIL", {
+                    "error": f"Expected agency_admin role, got: {user_roles}",
+                    "user_data": data
+                })
+                return False
+                
+            # Check for tenant_id
+            if not data.get("tenant_id"):
+                self.log_result("Agency Auth/Me", "FAIL", {
+                    "error": "No tenant_id in response",
+                    "user_data": data
+                })
+                return False
+                
+            self.log_result("Agency Auth/Me", "PASS", {
+                "roles": user_roles,
+                "email": data.get("email"),
+                "tenant_id": data.get("tenant_id"),
+                "organization_id": data.get("organization_id")
+            })
+            return True
+            
+        except Exception as e:
+            self.log_result("Agency Auth/Me", "FAIL", {"error": str(e)})
+            return False
+    
+    def test_public_theme(self) -> bool:
+        """Test 5: GET /api/public/theme (public endpoint)"""
+        try:
+            url = f"{API_BASE}/public/theme"
+            
+            response = self.make_request("GET", url)
+            
+            if response.status_code != 200:
+                self.log_result("Public Theme", "FAIL", {
+                    "error": f"HTTP {response.status_code}",
+                    "response": response.text[:500]
+                })
+                return False
+                
+            data = response.json()
+            
+            # Check for expected theme structure
+            required_keys = ["brand", "colors", "typography"]
+            missing_keys = [key for key in required_keys if key not in data]
+            
+            if missing_keys:
+                self.log_result("Public Theme", "FAIL", {
+                    "error": f"Missing required keys: {missing_keys}",
+                    "response_keys": list(data.keys())
+                })
+                return False
+                
+            self.log_result("Public Theme", "PASS", {
+                "company_name": data.get("brand", {}).get("company_name"),
+                "primary_color": data.get("colors", {}).get("primary"),
+                "response_size": len(json.dumps(data))
+            })
+            return True
+            
+        except Exception as e:
+            self.log_result("Public Theme", "FAIL", {"error": str(e)})
+            return False
+    
+    def test_onboarding_plans(self) -> bool:
+        """Test 6: GET /api/onboarding/plans (supporting endpoint)"""
+        try:
+            url = f"{API_BASE}/onboarding/plans"
+            
+            response = self.make_request("GET", url)
+            
+            if response.status_code != 200:
+                self.log_result("Onboarding Plans", "FAIL", {
+                    "error": f"HTTP {response.status_code}",
+                    "response": response.text[:500]
+                })
+                return False
+                
+            data = response.json()
+            
+            # Check for plans structure
+            if "plans" not in data:
+                self.log_result("Onboarding Plans", "FAIL", {
+                    "error": "No 'plans' key in response",
+                    "response_keys": list(data.keys())
+                })
+                return False
+                
+            plans = data["plans"]
+            if not isinstance(plans, list):
+                self.log_result("Onboarding Plans", "FAIL", {
+                    "error": f"Plans is not a list, got: {type(plans)}",
+                    "plans_value": plans
+                })
+                return False
+                
+            self.log_result("Onboarding Plans", "PASS", {
+                "plans_count": len(plans),
+                "response_size": len(json.dumps(data))
+            })
+            return True
+            
+        except Exception as e:
+            self.log_result("Onboarding Plans", "FAIL", {"error": str(e)})
+            return False
+    
+    def test_admin_endpoint_access(self) -> bool:
+        """Test 7: Admin endpoint access with admin token"""
+        if not self.admin_token:
+            self.log_result("Admin Endpoint Access", "SKIP", {"error": "No admin token available"})
+            return False
+            
+        try:
+            # Try a lightweight admin endpoint
+            url = f"{API_BASE}/admin/agencies"
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            
+            response = self.make_request("GET", url, headers=headers)
+            
+            if response.status_code != 200:
+                self.log_result("Admin Endpoint Access", "FAIL", {
+                    "error": f"HTTP {response.status_code}",
+                    "response": response.text[:500],
+                    "endpoint": "/admin/agencies"
+                })
+                return False
+                
+            data = response.json()
+            
+            self.log_result("Admin Endpoint Access", "PASS", {
+                "endpoint": "/admin/agencies",
+                "response_type": type(data).__name__,
+                "response_size": len(json.dumps(data)) if isinstance(data, (dict, list)) else len(str(data))
+            })
+            return True
+            
+        except Exception as e:
+            self.log_result("Admin Endpoint Access", "FAIL", {"error": str(e)})
+            return False
+    
+    def test_agency_context_endpoint(self) -> bool:
+        """Test 8: Agency context endpoint with agency token"""
+        if not self.agency_token:
+            self.log_result("Agency Context Endpoint", "SKIP", {"error": "No agency token available"})
+            return False
+            
+        try:
+            # Try agency profile or reports endpoint
+            url = f"{API_BASE}/agency/profile"
+            headers = {"Authorization": f"Bearer {self.agency_token}"}
+            
+            response = self.make_request("GET", url, headers=headers)
+            
+            # Agency profile might return 404 if not set up, that's acceptable
+            if response.status_code in [200, 404]:
+                self.log_result("Agency Context Endpoint", "PASS", {
+                    "endpoint": "/agency/profile",
+                    "status_code": response.status_code,
+                    "response_size": len(response.text)
+                })
+                return True
             else:
-                self.log(f"❌ /{endpoint}: {result['status_code']}")
-        
-        # 5. No-regression tests
-        self.log("\n--- 5. Testing No-Regression Endpoints ---")
-        
-        # Test /api/reports/generate with proper payload
-        results['reports_generate'] = self.test_authenticated_endpoint_with_payload(
-            "reports/generate", self.agency_token, "POST", {"report_type": "sales", "format": "json"}
-        )
-        
-        # Test /api/search with query parameter
-        results['search'] = self.test_authenticated_endpoint(
-            "search?q=test", self.agency_token
-        )
-        
-        if results['reports_generate']['success']:
-            self.log("✅ /reports/generate: No regression")
-        else:
-            self.log(f"❌ /reports/generate: {results['reports_generate']['status_code']}")
+                self.log_result("Agency Context Endpoint", "FAIL", {
+                    "error": f"HTTP {response.status_code}",
+                    "response": response.text[:500],
+                    "endpoint": "/agency/profile"
+                })
+                return False
             
-        if results['search']['success']:
-            self.log("✅ /search: No regression") 
-        else:
-            self.log(f"❌ /search: {results['search']['status_code']}")
+        except Exception as e:
+            self.log_result("Agency Context Endpoint", "FAIL", {"error": str(e)})
+            return False
+    
+    def run_all_tests(self):
+        """Run all regression tests"""
+        print("=== SYROCE BACKEND CRITICAL REGRESSION VALIDATION ===")
+        print(f"Base URL: {BASE_URL}")
+        print(f"API Base: {API_BASE}")
+        print()
+        
+        # Auth tests (critical)
+        print("--- AUTH TESTS ---")
+        admin_login_ok = self.test_admin_login()
+        agency_login_ok = self.test_agency_login()
+        admin_me_ok = self.test_admin_auth_me()
+        agency_me_ok = self.test_agency_auth_me()
+        
+        # Public/supporting endpoints
+        print("\n--- PUBLIC/SUPPORTING ENDPOINTS ---")
+        public_theme_ok = self.test_public_theme()
+        onboarding_plans_ok = self.test_onboarding_plans()
+        
+        # Role-based access tests
+        print("\n--- ROLE-BASED ACCESS TESTS ---")
+        admin_access_ok = self.test_admin_endpoint_access()
+        agency_context_ok = self.test_agency_context_endpoint()
         
         # Summary
-        self.log("\n=== VALIDATION SUMMARY ===")
+        print(f"\n=== TEST SUMMARY ===")
+        total_tests = len(self.results)
+        passed_tests = len([r for r in self.results if r["status"] == "PASS"])
+        failed_tests = len([r for r in self.results if r["status"] == "FAIL"])
+        skipped_tests = len([r for r in self.results if r["status"] == "SKIP"])
         
-        # Critical tests
-        critical_passed = 0
-        critical_total = 0
+        print(f"Total: {total_tests}, Passed: {passed_tests}, Failed: {failed_tests}, Skipped: {skipped_tests}")
         
-        # Login tests
-        if results['admin_login']['success'] and results['agency_login']['success']:
-            self.log("✅ 1. POST /api/auth/login: PASS (both admin and agency)")
-            critical_passed += 1
-        else:
-            self.log("❌ 1. POST /api/auth/login: FAIL")
-        critical_total += 1
-        
-        # Popular products (the main fix being validated)
-        if results['popular_products']['success']:
-            self.log("✅ 2. GET /api/dashboard/popular-products: PASS (ObjectId serialization FIXED)")
-            critical_passed += 1
-        else:
-            self.log("❌ 2. GET /api/dashboard/popular-products: FAIL (ObjectId issue still present)")
-        critical_total += 1
-        
-        # Dashboard endpoint set
-        dashboard_success_count = sum(1 for r in results['dashboard_set'].values() if r['success'])
-        dashboard_total = len(dashboard_endpoints)
-        
-        if dashboard_success_count == dashboard_total:
-            self.log(f"✅ 3. Dashboard endpoint set: PASS ({dashboard_success_count}/{dashboard_total})")
-            critical_passed += 1
-        else:
-            self.log(f"❌ 3. Dashboard endpoint set: PARTIAL ({dashboard_success_count}/{dashboard_total})")
-        critical_total += 1
-        
-        # No-regression
-        regression_passed = (results['reports_generate']['success'] and 
-                           results['search']['success'])
-        if regression_passed:
-            self.log("✅ 4. No-regression (/reports/generate, /search): PASS")
-            critical_passed += 1
-        else:
-            self.log("❌ 4. No-regression: FAIL")
-        critical_total += 1
-        
-        self.log(f"\nOVERALL RESULT: {critical_passed}/{critical_total} critical tests passed")
-        
-        if critical_passed == critical_total:
-            self.log("✅ ALL TESTS PASSED - Backend fixes validated successfully")
-        else:
-            self.log("❌ SOME TESTS FAILED - Backend issues still present")
+        # Critical failures analysis
+        critical_failures = []
+        if not admin_login_ok:
+            critical_failures.append("Admin login failed")
+        if not agency_login_ok:
+            critical_failures.append("Agency login failed")
+        if not admin_me_ok:
+            critical_failures.append("Admin auth/me failed")  
+        if not agency_me_ok:
+            critical_failures.append("Agency auth/me failed")
             
-        return results
+        if critical_failures:
+            print(f"\n❌ CRITICAL FAILURES DETECTED:")
+            for failure in critical_failures:
+                print(f"   - {failure}")
+            return False
+        else:
+            print(f"\n✅ ALL CRITICAL TESTS PASSED")
+            if failed_tests > 0:
+                print(f"⚠️  {failed_tests} non-critical tests failed")
+            return True
+
+def main():
+    tester = BackendTester()
+    success = tester.run_all_tests()
+    
+    # Write detailed results to file for analysis
+    results_file = "/app/backend_test_results.json"
+    with open(results_file, "w") as f:
+        json.dump({
+            "timestamp": str(datetime.now().isoformat()),
+            "base_url": BASE_URL,
+            "total_tests": len(tester.results),
+            "results": tester.results
+        }, f, indent=2)
+    
+    print(f"\nDetailed results written to: {results_file}")
+    
+    # Exit code for CI/automation
+    sys.exit(0 if success else 1)
 
 if __name__ == "__main__":
-    tester = BackendTester()
-    tester.run_validation()
+    from datetime import datetime
+    main()

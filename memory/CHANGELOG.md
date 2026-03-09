@@ -1,5 +1,23 @@
 # CHANGELOG — Acenta Master Travel SaaS
 
+## 2026-03-09 — Google Sheets admin validation UI + endpoint finalize
+- Backend tamamlamaları:
+  - `POST /api/admin/sheets/validate-sheet` eklendi; configured=false iken graceful checklist + required fields payload döner
+  - `GET /api/admin/sheets/download-template/{template_name}` eklendi; `inventory-sync` ve `reservation-writeback` CSV indirme aktif
+  - `POST /api/admin/sheets/connections` REST alias eklendi; mevcut connect flow ile hizalı
+  - yeni servisler: `sheet_connection_service.py`, `sheet_template_service.py`
+  - Service Account JSON doğrulaması sıkılaştırıldı; gerekli alanlar netleştirildi: `type`, `project_id`, `private_key`, `client_email`, `token_uri`
+- Frontend teslimi:
+  - `AdminPortfolioSyncPage` içine `Sheet şablon merkezi` ve `Sheet doğrulama merkezi` eklendi
+  - yeni bileşenler: `SheetTemplateCenter.jsx`, `SheetValidationPanel.jsx`
+  - connections table validation badge + write-back görünürlüğü aldı
+- Doğrulama:
+  - `pytest /app/backend/tests/test_admin_sheets_management.py -q` → 5/5 PASS
+  - `pytest /app/backend/tests/test_agency_sheets_api.py -q` → 14/14 PASS
+  - testing agent: `/app/test_reports/iteration_45.json` → backend %100 / frontend %100 PASS
+  - `auto_frontend_testing_agent` → portfolio-sync smoke PASS
+  - `deep_testing_backend_v2` → endpoint regression PASS
+
 ## 2026-03-09 — Google Sheets P0 hardening
 - Backend hardening teslim edildi:
   - tenant-aware Google Sheets config cache eklendi; DB üzerinden kaydedilen service account artık tenant bağlamında okunuyor

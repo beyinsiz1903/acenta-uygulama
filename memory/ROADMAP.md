@@ -43,6 +43,9 @@
   - templates endpoint
   - connect flow validation_status / writeback_tab standardizasyonu
   - legacy import config hizası
+- Google Sheets admin yönetim UI tamamlandı:
+  - `/app/admin/portfolio-sync` içinde şablon merkezi, kurulum checklist ve doğrulama paneli canlı
+  - `validate-sheet`, `download-template` ve REST-style `POST /connections` akışı aktif
 
 ## P0 — Sıradaki Kritik İş
 
@@ -53,7 +56,7 @@ Hedef: kritik Google Sheets entegrasyonunu gerçek credential + gerçek sheet il
 - gerçek Service Account JSON aktivasyonu
 - en az bir gerçek sheet üzerinde kolon doğrulama smoke testi
 - write-back `Rezervasyonlar` sekmesi canlı yetki / paylaşım doğrulaması
-- gerekiyorsa strict preflight UI (eksik kolon / yanlış tab uyarısı) ikinci turu
+- kullanıcıya Service Account kurulum ve sheet paylaşım rehberi
 
 ### Pricing Model
 Hedef: hazır usage/veri akışını gelir modeline çevirmek.

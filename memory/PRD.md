@@ -737,8 +737,26 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `pytest /app/backend/tests/test_agency_sheets_api.py -q` → 14/14 PASS
   - `deep_testing_backend_v2` → backend validation PASS
 
+## Son Uygulama Notu — 2026-03-09 (Google Sheets admin validation UI + endpoint tamamlaması)
+- Google Sheets yönetim akışı ikinci turda tamamlandı:
+  - yeni `POST /api/admin/sheets/validate-sheet` endpoint’i ile sheet / tab / write-back preflight sonucu artık ayrı olarak görülebiliyor
+  - yeni `GET /api/admin/sheets/download-template/{template_name}` endpoint’i ile `inventory-sync` ve `reservation-writeback` CSV şablonları indirilebiliyor
+  - yeni REST alias `POST /api/admin/sheets/connections` mevcut `/connect` akışıyla hizalandı; configured olmayan ortamda `pending_configuration` kayıt oluşturuyor
+  - service account JSON doğrulaması sıkılaştırıldı; gerekli alanlar netleşti: `type`, `project_id`, `private_key`, `client_email`, `token_uri`
+- Admin frontend teslimi:
+  - `/app/admin/portfolio-sync` içine `Sheet şablon merkezi`, `Kurulum checklist` ve `Sheet doğrulama merkezi` blokları eklendi
+  - bağlantılar tablosu artık validation durumu + write-back sekmesini gösteriyor
+- Doğrulama:
+  - yeni test dosyası: `/app/backend/tests/test_admin_sheets_management.py` → 5/5 PASS
+  - mevcut test: `/app/backend/tests/test_agency_sheets_api.py` → 14/14 PASS
+  - testing agent raporu: `/app/test_reports/iteration_45.json` → backend %100 / frontend %100 PASS
+  - `auto_frontend_testing_agent` → portfolio-sync smoke/regression PASS
+  - `deep_testing_backend_v2` → Google Sheets hardening smoke PASS
+- Not: canlı Google Sheets erişimi hâlâ kullanıcıdan gerçek Service Account credential gelene kadar bloklu; bu turda doğrulanan davranış graceful degraded akıştır.
+
 ## Öncelikli Sonraki Adımlar
 - **P0:** Google Sheets için gerçek Service Account credential/config aktivasyonu yapılıp canlı bir sheet üzerinde kolon + write-back smoke testi doğrulama
+- **P0:** Kullanıcıya Google Cloud Service Account oluşturma, Sheets API açma ve sheet paylaşımı için adım adım kurulum rehberi verme
 - **P0:** Canlı email provider credential/config aktivasyonu yapılıp outbox -> gerçek teslimat hattını production benzeri ortamda doğrulama
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını timeline + banner + operasyon akışlarıyla daha da birleştirme
 - **P1:** Admin kullanıcı yönetimi ve tenant paneli için ikinci tur UX polish: aktif abonelikli tenant’larda cancel/reactivate ve plan geçiş mikro-copy optimizasyonu; `Tüm Modüller` ekranına favoriler / komut paleti ekleme değerlendirmesi

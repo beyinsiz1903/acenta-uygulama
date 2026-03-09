@@ -620,6 +620,27 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `auto_frontend_testing_agent` → responsive landing + super admin redirect PASS
   - `deep_testing_backend_v2` → auth/admin backend regression PASS
 
+## Son Uygulama Notu — 2026-03-09 (Landing overlap fix + superadmin akış yeniden doğrulama)
+- Public landing hero dar desktop genişliğinde yeniden akışlandırıldı
+  - hero iki kolon düzeni `xl` breakpoint’ine taşındı; `~1100px` civarında metin ve mockup artık üst üste binmiyor
+  - sol floating bilgi kartı `2xl` altına gizlenerek hero içinde görsel sıkışma azaltıldı
+  - hero dashboard mockup alanı genişletildi; dar ekranlarda daha nefesli tek kolon deneyim veriyor
+- `LandingDashboardMockup` responsive olarak sertleştirildi
+  - topbar status cluster daha erken wrap-safe hale getirildi
+  - KPI kartları `sm:2 + xl:3` düzene geçti
+  - rezervasyon satırları `sm:2 + xl:4` kolona çevrildi; tutar alanı dar kırılımlarda ayrı satıra düşüyor
+  - CRM / finans yan panelleri `sm` sonrası 2 kolon, `xl` sonrası dikey stack olacak şekilde güncellendi
+  - dar kartlarda harf aralığı ve başlık leading değerleri sıkışmayı azaltacak şekilde dengelendi
+- Superadmin / agency login yönlendirmesi tekrar doğrulandı
+  - `admin@acenta.test` → `/app/admin/dashboard`
+  - `agent@acenta.test` → `/app`
+  - backend bearer auth doğrulamasında `/api/auth/me` ve `/api/admin/all-users` beklendiği gibi geçti
+- Doğrulama
+  - screenshot smoke: `/` için `390px`, `1100px`, `1280px` responsive kontroller PASS
+  - `auto_frontend_testing_agent` → 32/32 PASS, hero overlap yok, navbar taşması yok, CTA görünürlüğü PASS
+  - self-test: curl ile admin login + `/api/auth/me` + `/api/admin/all-users` PASS; agency login + `/api/auth/me` PASS
+  - `deep_testing_backend_v2` → auth/RBAC smoke PASS
+
 ## Öncelikli Sonraki Adımlar
 - **P0:** Canlı email provider credential/config aktivasyonu yapılıp outbox -> gerçek teslimat hattını production benzeri ortamda doğrulama
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını timeline + banner + operasyon akışlarıyla daha da birleştirme

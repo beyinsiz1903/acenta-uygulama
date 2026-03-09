@@ -376,6 +376,18 @@ frontend:
         agent: "testing"
         comment: "SYROCE DEMO SEED AND ROLE FLOWS VERIFICATION COMPLETED - ALL 7 TESTS PASSED (2026-03-09). Comprehensive verification of recently fixed demo seed and role flows per review request on https://syroce-preview.preview.emergentagent.com. Test Results: 1) ✅ Admin login (admin@acenta.test/admin123) returns super_admin role - PASSED (login successful, super_admin role confirmed in response), 2) ✅ Agent login (agent@acenta.test/agent123) returns agency_admin role - PASSED (login successful, agency_admin role confirmed in response), 3) ✅ POST /api/admin/demo/seed with agent token returns 200 with counts - PASSED (demo seed successful with counts: hotels=5, tours=5, reservations=12, plus products=5, customers=10, inventory=30, payments=4, ledger_entries=4, cases=3, deals=4, tasks=8), 4) ✅ Repeat seed without force returns already_seeded=true - PASSED (subsequent seed request correctly returned already_seeded=true with preserved counts), 5) ✅ GET /api/agency/hotels accessible - PASSED (found 7 hotels including seeded data), 6) ✅ GET /api/tours accessible - PASSED (found 5 tours matching seeded data), 7) ✅ GET /api/reservations accessible - PASSED (found 12 reservations matching seeded data). CRITICAL VALIDATIONS: All review request requirements validated ✅: admin@acenta.test returns super_admin role ✅, agent@acenta.test returns agency_admin role ✅, demo seed with agent token works and returns proper counts (hotels, tours, reservations) ✅, repeat seed without force correctly returns already_seeded=true ✅, seeded data accessible via GET endpoints ✅. Context validated: Main agent self-tested ✅, testing_agent iteration_43 passed ✅, current credential mapping correct (admin@acenta.test = super_admin, agent@acenta.test = agency_admin) ✅. Reference files confirmed working: /app/backend/app/routers/gtm_demo_seed.py (demo seed logic) and /app/frontend/src/utils/redirectByRole.js (role-based redirects). No mocked APIs - all functionality tested against live backend. Success rate: 100% (7/7 tests passed). Conclusion: Demo seed and role flows are PRODUCTION-READY and working correctly after recent fixes."
 
+  - task: "POST /api/admin/demo/seed super_admin only authorization validation"
+    implemented: true
+    working: true
+    file: "backend/app/routers/gtm_demo_seed.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "SYROCE DEMO SEED AUTHORIZATION VALIDATION COMPLETED - ALL 4 TESTS PASSED (2026-01-27). Comprehensive validation of authorization changes for POST /api/admin/demo/seed endpoint per Turkish review request on https://syroce-preview.preview.emergentagent.com. Test Results: 1) ✅ Agent login (agent@acenta.test/agent123) verification - PASSED (login successful with 376-char token, user confirmed as agent@acenta.test with roles: ['agency_admin']), 2) ✅ Agency admin demo seed access (expect 403) - PASSED (POST /api/admin/demo/seed with agency_admin token correctly returned 403 Forbidden, access denied as expected), 3) ✅ Admin login (admin@acenta.test/admin123) verification - PASSED (login successful with 375-char token, user confirmed as admin@acenta.test with roles: ['super_admin']), 4) ✅ Super admin demo seed access (expect 200) - PASSED (POST /api/admin/demo/seed with super_admin token correctly returned 200 OK with demo data counts: hotels=5, tours=5, products=5, customers=10, reservations=12, inventory=30, payments=4, ledger_entries=4, cases=3, deals=4, tasks=8). CRITICAL VALIDATIONS: All Turkish review request requirements validated ✅: agent@acenta.test has agency_admin role and gets 403 for demo seed ✅, admin@acenta.test has super_admin role and gets 200 for demo seed ✅, authorization requirement change from any role to super_admin only is working correctly ✅. Reference file confirmed: /app/backend/app/routers/gtm_demo_seed.py line 742 uses require_roles(['super_admin']) as expected. This validates the authorization change that POST /api/admin/demo/seed is now restricted to super_admin role only, preventing agency_admin users from accessing this endpoint. Success rate: 100% (4/4 tests passed). Conclusion: Authorization changes for demo seed endpoint are PRODUCTION-READY and working correctly. Security enhancement validated - only super_admin can now seed demo data."
+
 test_plan:
   current_focus: []
   stuck_tasks: []
@@ -9130,3 +9142,63 @@ agent_communication:
       Both login redirect control and demo seed UI control flows are PRODUCTION-READY and working correctly per Turkish review requirements. All specified elements are present, functional, and displaying correct data. No regressions detected from iteration_43. Zero console errors across all test flows. System is stable and ready for production use.
       
       Status: ✅ PASS - All login redirect and demo seed UI validation requirements met successfully
+
+agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ SYROCE DEMO SEED AUTHORIZATION VALIDATION COMPLETED - ALL TESTS PASSED (2026-01-27)
+      
+      Per Turkish review request, validated authorization changes for POST /api/admin/demo/seed endpoint.
+      
+      Test Context:
+      - Review Request: Validate that POST /api/admin/demo/seed now requires super_admin role only
+      - Target: agent@acenta.test should get 403, admin@acenta.test should get 200
+      - Reference Files: /app/backend/app/routers/gtm_demo_seed.py, /app/frontend/src/components/DemoSeedButton.jsx
+      - Test URL: https://syroce-preview.preview.emergentagent.com
+      - No mock APIs used - all live backend testing
+      
+      ✅ ALL 4 AUTHORIZATION TESTS PASSED:
+      
+      1. ✅ Agent Login & Role Verification
+         - agent@acenta.test/agent123 login successful
+         - Token received: 376 characters
+         - Role confirmed: ['agency_admin'] ✅
+      
+      2. ✅ Agent Demo Seed Access (Expect 403)
+         - POST /api/admin/demo/seed with agency_admin token
+         - Status: 403 Forbidden ✅
+         - Access correctly denied for agency_admin role
+      
+      3. ✅ Admin Login & Role Verification
+         - admin@acenta.test/admin123 login successful
+         - Token received: 375 characters
+         - Role confirmed: ['super_admin'] ✅
+      
+      4. ✅ Admin Demo Seed Access (Expect 200)
+         - POST /api/admin/demo/seed with super_admin token
+         - Status: 200 OK ✅
+         - Demo data created successfully
+         - Counts: hotels=5, tours=5, products=5, customers=10, reservations=12, inventory=30, payments=4, ledger_entries=4, cases=3, deals=4, tasks=8
+      
+      Authorization Implementation Verified:
+      ✅ Backend: /app/backend/app/routers/gtm_demo_seed.py line 742 uses require_roles(["super_admin"])
+      ✅ Frontend: /app/frontend/src/components/DemoSeedButton.jsx line 25 checks hasAnyRole(user, ["super_admin"])
+      ✅ Endpoint correctly restricted to super_admin role only
+      ✅ Agency admin users (agency_admin role) properly blocked with 403
+      
+      Security Enhancement Confirmed:
+      - Previous tests showed agent token could access demo seed (returned 200)
+      - Current test confirms authorization change implemented correctly
+      - Only super_admin can now seed demo data
+      - Agency admin access properly denied
+      
+      Test Summary:
+      - Total Authorization Tests: 4
+      - Passed: 4
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      Authorization changes for POST /api/admin/demo/seed endpoint are PRODUCTION-READY and working correctly. Security enhancement validated - demo seeding is now restricted to super_admin role only as required by the Turkish review request. All specified test cases passed successfully.
+      
+      Status: ✅ PASS - Demo seed authorization validation completed successfully

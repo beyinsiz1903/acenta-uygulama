@@ -22,7 +22,7 @@ const COUNT_LABELS = {
 
 export default function DemoSeedButton() {
   const user = getUser();
-  const canSeedDemoData = hasAnyRole(user, ["super_admin", "admin", "tenant_admin", "agency_admin"]);
+  const canSeedDemoData = hasAnyRole(user, ["super_admin"]);
   const [show, setShow] = useState(false);
   const [mode, setMode] = useState("light");
   const [withFinance, setWithFinance] = useState(true);

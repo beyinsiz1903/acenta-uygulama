@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
+import DemoSeedButton from "../components/DemoSeedButton";
 
 import {
   ResponsiveContainer,
@@ -205,11 +206,16 @@ export default function AdminExecutiveDashboardPage() {
 
   return (
     <div className="space-y-4">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold text-foreground">Yönetim Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
-          Toplam ciro, B2B performans, iptal oranları ve tedarikçi riskini tek ekranda görüntüleyin.
-        </p>
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between" data-testid="admin-executive-dashboard-header">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold text-foreground">Yönetim Dashboard</h1>
+          <p className="text-sm text-muted-foreground">
+            Toplam ciro, B2B performans, iptal oranları ve tedarikçi riskini tek ekranda görüntüleyin.
+          </p>
+        </div>
+        <div className="flex items-center gap-2" data-testid="admin-executive-dashboard-actions">
+          <DemoSeedButton />
+        </div>
       </div>
 
       {/* Tarih / filtre satırı */}

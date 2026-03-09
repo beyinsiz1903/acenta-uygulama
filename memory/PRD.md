@@ -94,6 +94,20 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
 - P0: Kullanıcıya Service Account kurulum rehberini net vermek
 - P1: Google Sheets üzerinden gelen rezervasyonların hotel-side status lifecycle/write-back kapanışını daha da güçlendirmek
 
+## Son Uygulama Güncellemesi — 2026-03-09
+- Admin Google Sheets yüzeyi `/app/admin/portfolio-sync` için UX sağlamlaştırıldı; `/app/admin/google-sheets` alias route'u eklendi.
+- Connect wizard içinde `writeback_tab` alanı frontend formuna bağlandı ve API payload'una eklendi.
+- Admin aksiyonlarına toast geri bildirimi eklendi: service account kaydetme, sync çalıştırma, toggle, silme, bağlantı oluşturma.
+- Kritik admin ve agency UI elemanlarına ek `data-testid` alanları eklendi.
+- Agency `Otellerim` kartlarında sheet ile ilişkili görünür alanlar için test kapsamı güçlendirildi.
+- Test sonucu: Iteration 47 raporunda admin + agency Google Sheets akışı ve ilgili backend endpointleri geçti; credential yokken graceful `not_configured` davranışı doğrulandı.
+
+## Kalan Öncelikli İşler
+- P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.
+- P1: Zamanlanmış otomatik sync davranışını gerçek credential ile doğrulamak ve gerekiyorsa UI'daki interval beklentisiyle birebir hizalamak.
+- P1: Sheet'ten gelen rezervasyonların rezervasyon listesi / durum yaşam döngüsü görünürlüğünü güçlendirmek.
+- P2: Önceki fork'tan kalan diğer UI doğrulamalarını topluca gözden geçirmek.
+
 ## Doküman Ayrımı
 - Bu dosya statik ürün bağlamını taşır
 - Detaylı teslim geçmişi için `CHANGELOG.md`

@@ -88,6 +88,10 @@ async def invalidate_tenant_features(tenant_id: str) -> None:
     """Invalidate tenant features + quota caches."""
     await _inv("tenant_feat", tenant_id)
     await _inv("tenant_quota", tenant_id)
+    await _inv("tenant_usage_summary", tenant_id)
+    await _inv(f"tenant_feat:{tenant_id}")
+    await _inv(f"tenant_quota:{tenant_id}")
+    await _inv(f"tenant_usage_summary:{tenant_id}")
 
 
 async def invalidate_b2b_announcements(org_id: str) -> None:

@@ -150,6 +150,13 @@ async def track_usage_event(
     await usage_ledger_repo.delete_event(inserted_id)
     raise
 
+  try:
+    from app.services.cache_invalidation import invalidate_tenant_features
+
+    await invalidate_tenant_features(tenant_id)
+  except Exception:
+    logger.debug("tenant usage cache invalidation failed tenant=%s", tenant_id, exc_info=True)
+
   return True
 
 

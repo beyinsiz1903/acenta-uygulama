@@ -5,10 +5,12 @@ from typing import Any
 from bson import ObjectId
 from fastapi import HTTPException
 
+from app.constants.usage_metrics import UsageMetric
 from app.constants.booking_statuses import can_transition, get_status_label
 from app.db import get_db
 from app.services.inventory import consume_inventory, release_inventory
 from app.services.pricing import calc_price_for_date
+from app.services.quota_enforcement_service import enforce_quota_or_raise
 from app.services.usage_service import track_reservation_created
 from app.utils import date_range_yyyy_mm_dd, generate_pnr, generate_voucher_no, now_utc, safe_float, to_object_id
 
@@ -35,6 +37,13 @@ async def create_reservation(*, org_id: str, user_email: str, payload: dict[str,
     customer = await db.customers.find_one({"organization_id": org_id, "_id": customer_oid})
     if not customer:
         raise HTTPException(status_code=404, detail="Müşteri bulunamadı")
+
+    await enforce_quota_or_raise(
+        organization_id=org_id,
+        tenant_id=tenant_id,
+        metric=UsageMetric.RESERVATION_CREATED,
+        action_label="Yeni rezervasyon oluşturma",
+    )
 
     rate_plan = await db.rate_plans.find_one({"organization_id": org_id, "product_id": product_oid})
 

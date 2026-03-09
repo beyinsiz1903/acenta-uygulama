@@ -16,7 +16,9 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 
 from app.auth import get_current_user, require_roles
+from app.constants.usage_metrics import UsageMetric
 from app.db import get_db
+from app.services.quota_enforcement_service import enforce_quota_or_raise
 from app.services.usage_service import track_export_generated
 from app.utils import serialize_doc
 from app.utils import get_or_create_correlation_id
@@ -52,6 +54,13 @@ async def export_tenant_data(
     """Export all tenant data as a ZIP file."""
     db = await get_db()
     org_id = user["organization_id"]
+
+    await enforce_quota_or_raise(
+        organization_id=org_id,
+        tenant_id=user.get("tenant_id"),
+        metric=UsageMetric.EXPORT_GENERATED,
+        action_label="ZIP export oluşturma",
+    )
 
     # Build ZIP in memory
     zip_buffer = io.BytesIO()

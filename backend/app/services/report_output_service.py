@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from app.constants.usage_metrics import UsageMetric
 from app.utils import now_utc
+from app.services.quota_enforcement_service import enforce_quota_or_raise
 from app.services.usage_service import track_report_generated
 
 
@@ -166,6 +168,13 @@ async def generate_match_risk_executive_pdf(
   correlation_id: str,
   tenant_id: Optional[str] = None,
 ) -> Dict[str, Any]:
+  await enforce_quota_or_raise(
+    organization_id=organization_id,
+    tenant_id=tenant_id,
+    metric=UsageMetric.REPORT_GENERATED,
+    action_label="PDF raporu oluşturma",
+  )
+
   docs = await _load_last_snapshots(db, organization_id, "match_risk_daily", limit=2)
   snapshot_date = None
 

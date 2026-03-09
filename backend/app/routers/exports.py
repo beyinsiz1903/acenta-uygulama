@@ -17,7 +17,9 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 
 from app.auth import get_current_user, require_roles
+from app.constants.usage_metrics import UsageMetric
 from app.db import get_db
+from app.services.quota_enforcement_service import enforce_quota_or_raise
 from app.services.usage_service import track_export_generated
 from app.utils import now_utc
 from app.utils import get_or_create_correlation_id
@@ -346,6 +348,14 @@ async def run_export(
 ):
     org_id = user.get("organization_id")
     policy = await _load_policy(db, org_id, key)
+
+    if not dry_run:
+        await enforce_quota_or_raise(
+            organization_id=org_id,
+            tenant_id=user.get("tenant_id"),
+            metric=UsageMetric.EXPORT_GENERATED,
+            action_label="Export oluşturma",
+        )
 
     params = ExportPolicyParams(**(policy.get("params") or {}))
     cooldown_hours = int(policy.get("cooldown_hours", 24))

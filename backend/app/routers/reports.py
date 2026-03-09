@@ -5,7 +5,9 @@ from fastapi import APIRouter, Depends, Request, Response
 
 from app.auth import get_current_user
 from app.constants.features import FEATURE_REPORTS
+from app.constants.usage_metrics import UsageMetric
 from app.db import get_db
+from app.services.quota_enforcement_service import enforce_quota_or_raise
 from app.services.usage_service import track_export_generated
 from app.utils import get_or_create_correlation_id
 from app.security.feature_flags import require_tenant_feature
@@ -55,6 +57,12 @@ async def sales_summary(days: int = 14, user=Depends(get_current_user)):
 
 @router.get("/sales-summary.csv", dependencies=[Depends(get_current_user)])
 async def sales_summary_csv(request: Request, user=Depends(get_current_user)):
+    await enforce_quota_or_raise(
+        organization_id=user.get("organization_id"),
+        tenant_id=user.get("tenant_id"),
+        metric=UsageMetric.EXPORT_GENERATED,
+        action_label="CSV export alma",
+    )
     rows = await sales_summary(user=user)
     csv_str = to_csv(rows, ["day", "revenue", "count"])
     await track_export_generated(

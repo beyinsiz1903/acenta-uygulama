@@ -15,7 +15,9 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 
 from app.auth import get_current_user
+from app.constants.usage_metrics import UsageMetric
 from app.db import get_db
+from app.services.quota_enforcement_service import enforce_quota_or_raise
 from app.services.usage_service import track_reservation_created
 
 router = APIRouter(prefix="/api/tours", tags=["tours_browse"])
@@ -189,6 +191,13 @@ async def create_reservation(
 
     now = datetime.now(timezone.utc)
     reservation_code = f"TR-{uuid4().hex[:8].upper()}"
+
+    await enforce_quota_or_raise(
+        organization_id=org_id,
+        tenant_id=user.get("tenant_id"),
+        metric=UsageMetric.RESERVATION_CREATED,
+        action_label="Tur rezervasyonu oluşturma",
+    )
 
     reservation_doc = {
         "reservation_code": reservation_code,

@@ -295,7 +295,12 @@ api.interceptors.response.use(
 );
 
 export function apiErrorMessage(err) {
+  const errorPayload = err?.response?.data?.error;
   const detail = err?.response?.data?.detail;
+
+  if (typeof errorPayload?.message === "string" && errorPayload.message.trim()) {
+    return errorPayload.message;
+  }
 
   if (typeof detail === "string") {
     return detail;

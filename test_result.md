@@ -292,6 +292,18 @@ frontend:
         agent: "testing"
         comment: "P0 BILLING LIFECYCLE VALIDATION COMPLETED - ALL TESTS PASSED (2026-03-09). Comprehensive backend validation per Turkish review request on https://travel-agency-os-2.preview.emergentagent.com with both test accounts. Test Results: ACCOUNT ANALYSIS: agent@acenta.test (expected legacy): Actually MANAGED subscription with provider_subscription_id=sub_1T8z22Fz2w4mYLKzb3wscpvU, managed_subscription=true, legacy_subscription=false - account has been migrated to managed billing. billing.test.83ce5350@example.com (managed QA): Correctly identified as managed subscription with provider_subscription_id=sub_1T8z2oFz2w4mYLKzF6DoaIKN, has scheduled change Starter monthly pending. BILLING API VALIDATION: 1) ✅ GET /api/billing/subscription - WORKING for both accounts, returns correct subscription state with all required fields (plan, interval, status, managed_subscription, legacy_subscription, can_cancel, change_flow, portal_available), 2) ✅ POST /api/billing/cancel-subscription - WORKING correctly, sets cancel_at_period_end=true, returns proper Turkish message 'Aboneliğiniz dönem sonunda sona erecek', 3) ✅ POST /api/billing/reactivate-subscription - WORKING correctly, sets cancel_at_period_end=false, returns proper Turkish message 'Aboneliğiniz yeniden aktif hale getirildi', 4) ✅ POST /api/billing/change-plan - WORKING correctly for both managed accounts, returns action='scheduled' for downgrades (proper behavior), no 500 or unexpected errors, handles upgrade/downgrade scenarios properly, 5) ✅ POST /api/billing/customer-portal - WORKING correctly, returns valid billing.stripe.com URLs for both accounts. STALE STRIPE REFERENCE GUARDRAILS: ✅ No 500 errors detected during any billing operations, stale reference handling working correctly. CRITICAL FINDINGS: Both test accounts are now MANAGED subscriptions (not legacy), meaning the billing system has been fully migrated to Stripe-managed subscriptions. All billing lifecycle endpoints working correctly with managed subscriptions. Turkish localization working correctly. Upgrade/downgrade flows working with proper scheduling. Customer portal integration working correctly. Success rate: 100% (42/42 tests passed, 0 failed). All billing lifecycle endpoints functioning correctly for managed subscription scenarios. No mock APIs - all tested against live Stripe integration."
 
+  - task: "Admin tenant cleanup validation - Turkish review request"
+    implemented: true
+    working: true
+    file: "backend/app/routers/admin.py, backend/app/models/tenant.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "ADMIN TENANT CLEANUP VALIDATION COMPLETED - ALL REQUIREMENTS PASSED (2026-03-09). Comprehensive validation performed per Turkish review request on https://travel-agency-os-2.preview.emergentagent.com/api with admin@acenta.test/admin123. All 6 validation points PASSED: 1) ✅ POST /api/auth/login admin authentication - WORKING (Status: 200, Token: 385 chars), 2) ✅ GET /api/admin/tenants?limit=5 endpoint returns 200 - WORKING (Status: 200, Response: 2093 chars), 3) ✅ Response structure with new fields validated - top-level summary object present with all required fields (total, payment_issue_count, trial_count, canceling_count, active_count, by_plan, lifecycle), tenant items contain all required fields (id, name, slug, status, organization_id, plan, plan_label, subscription_status, cancel_at_period_end, grace_period_until, current_period_end, lifecycle_stage, has_payment_issue), 4) ✅ GET /api/admin/tenants/{tenant_id}/features no-regression validated - WORKING (Status: 200, Response: 3895 chars), 5) ✅ Authorization guardrails working correctly - admin endpoint properly rejects unauthorized requests with HTTP 401 (not 500), 6) ✅ No MongoDB _id leakage detected - response clean, no _id fields exposed. TECHNICAL VALIDATION: Response analysis shows 5 total tenants with proper distribution (3 trial, 2 active), comprehensive summary object with by_plan breakdown (pro: 3, trial: 2) and lifecycle distribution (trialing: 3, active: 2), all tenant items have enriched fields including billing status and grace period information. Admin tenant list enrichment changes validated successfully. All Turkish review request requirements met. Success rate: 100% (6/6 tests passed). Admin tenant cleanup functionality working correctly and production-ready."
+
   - task: "Frontend smoke test - /pricing page"
     implemented: true
     working: true
@@ -7446,4 +7458,85 @@ agent_communication:
       No visual regressions, no interaction bugs, no blank states, no crashes detected. All components render correctly, data flows properly, and the admin experience is clean and functional. The page is production-ready and meets all requirements from the review request.
       
       Status: ✅ PASS - Admin tenant management screen validation completed successfully
+
+  - agent: "testing"
+    message: |
+      ✅ ADMIN TENANT CLEANUP VALIDATION COMPLETED - ALL REQUIREMENTS PASSED (2026-03-09)
+      
+      Performed comprehensive backend validation per Turkish review request for admin tenant cleanup functionality.
+      
+      Test Context:
+      - Review Request: Travel Agency Operating System backend için admin tenant cleanup doğrulaması
+      - Target URL: https://travel-agency-os-2.preview.emergentagent.com/api
+      - Test Account: admin@acenta.test / admin123
+      - Focus: Admin tenant list enrichment validation
+      
+      ✅ ALL 6 VALIDATION REQUIREMENTS PASSED:
+      
+      1. ✅ POST /api/auth/login admin ile çalışıyor
+         - Status: 200 OK
+         - Access token received: 385 characters
+         - Admin authentication working correctly
+      
+      2. ✅ GET /api/admin/tenants?limit=5 endpoint'i 200 dönsün
+         - Status: 200 OK  
+         - Response size: 2093 characters
+         - Endpoint operational and responding correctly
+      
+      3. ✅ Response yapısında yeni alanlar doğrulandı
+         - Top-level summary objesi mevcut ✅
+         - Summary içinde: total (5), payment_issue_count (0), trial_count (3), canceling_count (0), active_count (2), by_plan (pro: 3, trial: 2), lifecycle (trialing: 3, active: 2) ✅
+         - Her tenant item içinde: id, name, slug, status, organization_id, plan, plan_label, subscription_status, cancel_at_period_end, grace_period_until, current_period_end, lifecycle_stage, has_payment_issue ✅
+         - All required enrichment fields present and populated correctly
+      
+      4. ✅ GET /api/admin/tenants/{tenant_id}/features no-regression doğrulandı
+         - Test URL: /api/admin/tenants/ec68a5dc-fd72-4bb3-b679-0416b616aee1/features
+         - Status: 200 OK
+         - Response size: 3895 characters
+         - No regression detected, endpoint functioning correctly
+      
+      5. ✅ Yetki guardrail: admin endpoint auth_required/forbidden dışı 500 üretmemeli
+         - Unauthorized request status: 401 (not 500)
+         - Authorization guardrails working correctly
+         - Admin endpoints properly rejecting unauthorized access without 500 errors
+      
+      6. ✅ Response'larda Mongo _id sızıntısı olmamalı
+         - MongoDB _id leakage check: CLEAN
+         - No _id fields found in response data
+         - Proper data sanitization confirmed
+      
+      Technical Validation Details:
+      ✅ Response structure contains 5 tenants with proper distribution:
+         - Trial tenants: 3 (First Company, IDs Test Co, Demo Travel)  
+         - Active tenants: 2 (Billing QA Travel, Expired Checkout 75fede)
+         - Payment issues: 0 (all tenants healthy)
+         
+      ✅ Summary object provides comprehensive metrics:
+         - Real-time tenant counts by lifecycle stage
+         - Plan distribution breakdown (Pro: 3, Trial: 2)
+         - Payment issue tracking (0 issues detected)
+         - Cancellation tracking (0 canceling)
+         
+      ✅ Tenant items enriched with billing lifecycle data:
+         - Subscription status tracking (active, trialing)
+         - Grace period monitoring (none currently needed)
+         - Current period end dates for billing cycles
+         - Payment issue flags for admin attention
+         - Lifecycle stage classification for filtering
+      
+      Code Validation:
+      ✅ Admin tenant list enrichment implementation working correctly
+      ✅ No issues detected with the backend changes
+      ✅ All Turkish review request requirements validated successfully
+      
+      Test Summary:
+      - Total Validation Points: 6
+      - Passed: 6
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      Admin tenant cleanup backend validation SUCCESSFUL. All Turkish review request requirements met. The admin tenant list enrichment changes are working correctly with proper response structure, authorization guardrails, and no MongoDB _id leakage. The enriched tenant data provides comprehensive billing lifecycle information for admin cleanup workflows. Backend is production-ready and functioning as designed.
+      
+      Status: ✅ PASS - All admin tenant cleanup requirements validated successfully
 

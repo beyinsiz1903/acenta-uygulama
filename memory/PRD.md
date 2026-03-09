@@ -301,6 +301,26 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - backend smoke agent geçti
   - Not: `/api/agency/bookings` ve `/api/agency/settlements` 404 dönüyor; bu issue önceden mevcut, menü sadeleştirme değişikliğinden kaynaklanmıyor
 
+## Son Uygulama Notu — 2026-03-09 (Billing P0 revalidation + lifecycle stabilizasyonu)
+- `/app/settings/billing` P0 hattı tekrar önceliklendirildi ve uçtan uca yeniden doğrulandı
+- Stripe dayanıklılık düzeltmesi güçlendirildi:
+  - `stripe_checkout_service.create_checkout_session(...)` stale / silinmiş Stripe customer referansında artık 500 üretmiyor
+  - geçersiz customer referansı temizlenip checkout oluşturma güvenli şekilde yeniden deneniyor
+  - `_repair_customer_reference(...)` payment transaction içindeki provider customer / subscription referanslarını da kullanacak şekilde sertleştirildi
+- Legacy ve managed state guardrail’leri yeniden doğrulandı:
+  - legacy state için `change-plan -> checkout_redirect`, `cancel/reactivate -> 409 guardrail`, portal URL üretimi geçti
+  - managed state için `cancel -> pending`, `reactivate -> active`, `upgrade -> immediate`, `downgrade -> scheduled`, portal round-trip geçti
+- UI doğrulamaları tamamlandı:
+  - Türkçe başlıklar, tarih formatı (`09 Nisan 2026`), durum etiketleri (`Aylık · Aktif`) doğru
+  - cancel dialog, pending banner, reactivate butonu, scheduled downgrade banner ve portal dönüşü `/app/settings/billing` üzerinde doğrulandı
+- Doğrulama kaynakları:
+  - `/app/test_reports/iteration_32.json` → legacy/stale reference + checkout redirect + billing UI geçti
+  - self-test + browser smoke → managed lifecycle, portal round-trip, scheduled downgrade banner geçti
+  - backend deep validation ve frontend automation validation başarılı tamamlandı
+- Güncel test hesap state’i:
+  - `agent@acenta.test` artık managed Stripe subscription state’inde (`Pro / monthly / active`)
+  - `billing.test.83ce5350@example.com` QA hesabı ile managed lifecycle UI/API tekrar doğrulandı
+
 ## Öncelikli Sonraki Adımlar
 - **P0:** Agency tarafındaki `/api/agency/bookings` ve `/api/agency/settlements` 404 problemlerini giderip sadeleştirilmiş menü linklerini veriyle beslemek
 - **P0:** Ürün yüzeyinde CORE olmayan modülleri görünür menülerden sistematik olarak ayırmak (marketplace, partner graph, sms/qr, gelişmiş kampanyalar)

@@ -3,6 +3,8 @@ export const AUTH_TRANSPORT = Object.freeze({
   LEGACY_BEARER: "bearer",
 });
 
+import { normalizeRoles } from "./roles";
+
 const STORAGE_KEYS = Object.freeze({
   user: "acenta_user",
   tenantId: "acenta_tenant_id",
@@ -77,7 +79,13 @@ export function setUser(user) {
     removeStorage(STORAGE_KEYS.user);
     return;
   }
-  writeStorage(STORAGE_KEYS.user, JSON.stringify(user));
+  writeStorage(
+    STORAGE_KEYS.user,
+    JSON.stringify({
+      ...user,
+      roles: normalizeRoles(user),
+    })
+  );
 }
 
 export function getAuthTransport() {

@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://travel-os-demo.preview.emergentagent.com/api",
-    "frontend_url": "https://travel-os-demo.preview.emergentagent.com",
+    "backend_url": "https://travelops-staging.preview.emergentagent.com/api",
+    "frontend_url": "https://travelops-staging.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

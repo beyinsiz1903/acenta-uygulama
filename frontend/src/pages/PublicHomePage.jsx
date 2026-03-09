@@ -280,7 +280,7 @@ export default function PublicHomePage() {
             </div>
             <div>
               <p className="text-base font-extrabold tracking-tight text-slate-950" data-testid="landing-navbar-logo-name">Syroce</p>
-              <p className="text-xs uppercase tracking-[0.22em] text-slate-500" data-testid="landing-navbar-logo-tagline">Travel Agency Operating System</p>
+              <p className="hidden text-xs uppercase tracking-[0.18em] text-slate-500 sm:block sm:tracking-[0.22em]" data-testid="landing-navbar-logo-tagline">Travel Agency Operating System</p>
             </div>
           </Link>
 
@@ -297,7 +297,7 @@ export default function PublicHomePage() {
               Giriş
             </Link>
             <Button asChild variant="outline" className="h-11 rounded-full border-slate-200 px-5 text-sm font-semibold text-slate-700 hover:bg-slate-50" data-testid="landing-navbar-demo-cta">
-              <Link to="/login">Demo</Link>
+              <Link to="/demo">Demo</Link>
             </Button>
             <Button asChild className="h-11 rounded-full bg-[linear-gradient(135deg,#2563EB,#0EA5E9)] px-5 text-sm font-semibold text-white shadow-[0_16px_34px_rgba(37,99,235,0.28)] hover:brightness-110" data-testid="landing-navbar-trial-cta">
               <Link to="/signup?plan=trial">14 Gün Ücretsiz Dene</Link>
@@ -323,7 +323,7 @@ export default function PublicHomePage() {
                 <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Giriş Yap</Link>
               </Button>
               <Button asChild variant="outline" className="h-11 rounded-full border-slate-200 text-sm font-semibold" data-testid="landing-mobile-demo-cta">
-                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Demo Hesabı</Link>
+                <Link to="/demo" onClick={() => setMobileMenuOpen(false)}>Demo Hesabı</Link>
               </Button>
               <Button asChild className="h-11 rounded-full bg-[linear-gradient(135deg,#2563EB,#0EA5E9)] text-sm font-semibold text-white" data-testid="landing-mobile-trial-cta">
                 <Link to="/signup?plan=trial" onClick={() => setMobileMenuOpen(false)}>14 Gün Ücretsiz Dene</Link>
@@ -340,12 +340,12 @@ export default function PublicHomePage() {
               <Sparkles className="h-4 w-4" />
               Türkiye'deki turizm acenteleri için tasarlandı
             </div>
-            <h1 className="mt-6 text-4xl font-extrabold leading-[1.02] tracking-[-0.05em] text-slate-950 sm:text-5xl lg:text-6xl" data-testid="landing-hero-title">
+            <h1 className="mt-6 text-4xl font-extrabold leading-[1.04] tracking-[-0.05em] text-slate-950 sm:text-5xl lg:text-6xl" data-testid="landing-hero-title">
               Turizm Acentenizin
               <span className="block text-[#2563EB]" data-testid="landing-hero-title-highlight">Tüm Operasyonunu</span>
               Tek Panelden Yönetin
             </h1>
-            <p className="mt-6 max-w-xl text-base leading-8 text-slate-600 md:text-lg" data-testid="landing-hero-subtitle">
+            <p className="mt-6 max-w-xl text-sm leading-8 text-slate-600 sm:text-base md:text-lg" data-testid="landing-hero-subtitle">
               Rezervasyonları, müşterileri ve finans süreçlerini Excel yerine tek sistemde yönetin. Syroce; satış, operasyon ve finans ekiplerini aynı ekranda buluşturur.
             </p>
 
@@ -357,7 +357,7 @@ export default function PublicHomePage() {
                 </Link>
               </Button>
               <Button asChild variant="outline" className="h-14 rounded-full border-slate-200 bg-white/90 px-7 text-base font-semibold text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.06)] hover:bg-white" data-testid="hero-cta-demo">
-                <Link to="/login">Demo Hesap Oluştur</Link>
+                <Link to="/demo">Demo Hesap Oluştur</Link>
               </Button>
             </div>
 
@@ -421,7 +421,7 @@ export default function PublicHomePage() {
                       <problem.icon className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-extrabold tracking-tight text-slate-950" data-testid={`landing-problem-title-${index + 1}`}>
+                      <h3 className="text-xl font-extrabold tracking-tight text-slate-950 sm:text-2xl" data-testid={`landing-problem-title-${index + 1}`}>
                         {problem.title}
                       </h3>
                       <p className="mt-3 text-sm leading-7 text-slate-600" data-testid={`landing-problem-text-${index + 1}`}>
@@ -439,15 +439,15 @@ export default function PublicHomePage() {
                   <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#2563EB]" data-testid="landing-problem-board-eyebrow">
                     Eski düzen vs Syroce
                   </p>
-                  <p className="mt-2 text-lg font-semibold text-slate-900" data-testid="landing-problem-board-title">
+                  <p className="mt-2 text-base font-semibold text-slate-900 sm:text-lg" data-testid="landing-problem-board-title">
                     Aynı operasyonun iki farklı deneyimi
                   </p>
                 </div>
-                <div className="inline-flex rounded-full border border-slate-200 bg-white p-1" data-testid="landing-problem-toggle-group">
-                  <button type="button" className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${problemMode === "old" ? "bg-slate-950 text-white" : "text-slate-600"}`} onClick={() => setProblemMode("old")} data-testid="landing-problem-toggle-old">
+                <div className="inline-flex flex-wrap rounded-full border border-slate-200 bg-white p-1" data-testid="landing-problem-toggle-group">
+                  <button type="button" className={`flex-1 rounded-full px-4 py-2 text-center text-sm font-semibold transition-colors duration-200 sm:flex-none ${problemMode === "old" ? "bg-slate-950 text-white" : "text-slate-600"}`} onClick={() => setProblemMode("old")} data-testid="landing-problem-toggle-old">
                     Eski düzen
                   </button>
-                  <button type="button" className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${problemMode === "new" ? "bg-[#2563EB] text-white" : "text-slate-600"}`} onClick={() => setProblemMode("new")} data-testid="landing-problem-toggle-new">
+                  <button type="button" className={`flex-1 rounded-full px-4 py-2 text-center text-sm font-semibold transition-colors duration-200 sm:flex-none ${problemMode === "new" ? "bg-[#2563EB] text-white" : "text-slate-600"}`} onClick={() => setProblemMode("new")} data-testid="landing-problem-toggle-new">
                     Syroce ile
                   </button>
                 </div>
@@ -471,15 +471,15 @@ export default function PublicHomePage() {
           <div className="mt-10 grid gap-6 md:grid-cols-2" data-testid="landing-solution-grid">
             {SOLUTIONS.map((item, index) => (
               <article key={item.title} className="rounded-[30px] border border-white/80 bg-white/90 p-7 shadow-[0_22px_70px_rgba(15,23,42,0.05)]" data-testid={`landing-solution-card-${index + 1}`}>
-                <div className="flex items-center justify-between" data-testid={`landing-solution-card-header-${index + 1}`}>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" data-testid={`landing-solution-card-header-${index + 1}`}>
                   <div className="grid h-14 w-14 place-items-center rounded-[22px] bg-blue-50 text-[#2563EB]" data-testid={`landing-solution-icon-${index + 1}`}>
                     <item.icon className="h-6 w-6" />
                   </div>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500" data-testid={`landing-solution-stat-${index + 1}`}>
+                  <span className="max-w-full rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500" data-testid={`landing-solution-stat-${index + 1}`}>
                     {item.stat}
                   </span>
                 </div>
-                <h3 className="mt-6 text-2xl font-extrabold tracking-tight text-slate-950" data-testid={`landing-solution-title-${index + 1}`}>{item.title}</h3>
+                <h3 className="mt-6 text-xl font-extrabold tracking-tight text-slate-950 sm:text-2xl" data-testid={`landing-solution-title-${index + 1}`}>{item.title}</h3>
                 <p className="mt-4 text-sm leading-7 text-slate-600" data-testid={`landing-solution-text-${index + 1}`}>{item.text}</p>
               </article>
             ))}
@@ -500,7 +500,7 @@ export default function PublicHomePage() {
                   <Link to="/signup?plan=trial">Trial Başlat</Link>
                 </Button>
                 <Button asChild variant="outline" className="h-12 rounded-full border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700" data-testid="landing-product-preview-demo-cta">
-                  <Link to="/login">Demo Hesabı Gör</Link>
+                  <Link to="/demo">Demo Hesabı Gör</Link>
                 </Button>
               </div>
             </div>
@@ -514,7 +514,7 @@ export default function PublicHomePage() {
                     </span>
                     <ChevronRight className="h-4 w-4 text-slate-400" />
                   </div>
-                  <h3 className="mt-5 text-xl font-extrabold tracking-tight text-slate-950" data-testid={`landing-preview-card-title-${index + 1}`}>{panel.title}</h3>
+                  <h3 className="mt-5 text-lg font-extrabold tracking-tight text-slate-950 sm:text-xl" data-testid={`landing-preview-card-title-${index + 1}`}>{panel.title}</h3>
                   <p className="mt-3 text-sm leading-7 text-slate-600" data-testid={`landing-preview-card-text-${index + 1}`}>{panel.subtitle}</p>
                   <div className="mt-5 rounded-[24px] border border-white/80 bg-white/90 p-4" data-testid={`landing-preview-card-mockup-${index + 1}`}>
                     <div className="flex items-center justify-between" data-testid={`landing-preview-card-topbar-${index + 1}`}>
@@ -574,7 +574,7 @@ export default function PublicHomePage() {
                     <CheckCircle2 className="h-5 w-5" />
                   </div>
                 </div>
-                <h3 className="mt-6 text-2xl font-extrabold tracking-tight text-slate-950" data-testid={`landing-step-title-${index + 1}`}>{item.title}</h3>
+                <h3 className="mt-6 text-xl font-extrabold tracking-tight text-slate-950 sm:text-2xl" data-testid={`landing-step-title-${index + 1}`}>{item.title}</h3>
                 <p className="mt-4 text-sm leading-7 text-slate-600" data-testid={`landing-step-text-${index + 1}`}>{item.text}</p>
               </article>
             ))}
@@ -586,7 +586,7 @@ export default function PublicHomePage() {
             <div className="grid gap-8 lg:grid-cols-[1fr_0.92fr] lg:items-center" data-testid="landing-roi-layout">
               <div data-testid="landing-roi-copy">
                 <p className="text-sm font-semibold uppercase tracking-[0.28em] text-sky-200/80" data-testid="landing-roi-eyebrow">ROI</p>
-                <h2 className="mt-4 text-4xl font-extrabold tracking-[-0.04em] text-white sm:text-5xl" data-testid="landing-roi-title">
+                <h2 className="mt-4 text-3xl font-extrabold leading-[1.08] tracking-[-0.04em] text-white sm:text-4xl lg:text-5xl" data-testid="landing-roi-title">
                   Syroce kullanan acenteler operasyon süresini %40 azaltıyor
                 </h2>
                 <p className="mt-4 max-w-2xl text-base leading-8 text-white/70" data-testid="landing-roi-description">
@@ -623,7 +623,7 @@ export default function PublicHomePage() {
           <div className="grid gap-8 rounded-[36px] border border-blue-100 bg-white/92 px-6 py-8 shadow-[0_24px_80px_rgba(15,23,42,0.05)] lg:grid-cols-[0.92fr_1.08fr] lg:px-10" data-testid="landing-network-card">
             <div data-testid="landing-network-copy">
               <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#2563EB]" data-testid="landing-network-eyebrow">B2B Acenta Ağı</p>
-              <h2 className="mt-4 text-4xl font-extrabold tracking-[-0.04em] text-slate-950 sm:text-5xl" data-testid="landing-network-title">
+              <h2 className="mt-4 text-3xl font-extrabold leading-[1.08] tracking-[-0.04em] text-slate-950 sm:text-4xl lg:text-5xl" data-testid="landing-network-title">
                 Alt acentelerle çalışın, ürün paylaşın, komisyon yönetin
               </h2>
               <p className="mt-4 text-base leading-8 text-slate-600" data-testid="landing-network-description">
@@ -696,7 +696,7 @@ export default function PublicHomePage() {
 
                 <div className="mt-8" data-testid={`landing-pricing-cta-wrap-${index + 1}`}>
                   <Button asChild className={`h-12 w-full rounded-full text-sm font-semibold ${plan.featured ? "bg-white text-slate-950 hover:bg-slate-100" : "bg-[linear-gradient(135deg,#2563EB,#0EA5E9)] text-white hover:brightness-110"}`} data-testid={`landing-pricing-cta-${index + 1}`}>
-                    <Link to={plan.cta}>{plan.key === "enterprise" ? "Demo Hesap Oluştur" : "Planı Seç"}</Link>
+                    <Link to={plan.key === "enterprise" ? "/demo" : plan.cta}>{plan.key === "enterprise" ? "Demo Hesap Oluştur" : "Planı Seç"}</Link>
                   </Button>
                 </div>
               </article>
@@ -709,7 +709,7 @@ export default function PublicHomePage() {
             <div className="grid gap-8 lg:grid-cols-[1fr_0.72fr] lg:items-center" data-testid="landing-final-cta-layout">
               <div data-testid="landing-final-cta-copy">
                 <p className="text-sm font-semibold uppercase tracking-[0.28em] text-blue-100" data-testid="landing-final-cta-eyebrow">Final CTA</p>
-                <h2 className="mt-4 text-4xl font-extrabold tracking-[-0.05em] sm:text-5xl" data-testid="landing-final-cta-title">
+                <h2 className="mt-4 text-3xl font-extrabold leading-[1.08] tracking-[-0.05em] sm:text-4xl lg:text-5xl" data-testid="landing-final-cta-title">
                   Acentenizin operasyonunu dijitalleştirmeye hazır mısınız?
                 </h2>
                 <p className="mt-4 max-w-2xl text-base leading-8 text-blue-50/88" data-testid="landing-final-cta-text">
@@ -722,7 +722,7 @@ export default function PublicHomePage() {
                   <Link to="/signup?plan=trial">14 Gün Ücretsiz Dene</Link>
                 </Button>
                 <Button asChild variant="outline" className="h-14 rounded-full border-white/60 bg-transparent text-base font-semibold text-white hover:bg-white/10" data-testid="landing-final-cta-demo">
-                  <Link to="/login">Demo Hesap Oluştur</Link>
+                  <Link to="/demo">Demo Hesap Oluştur</Link>
                 </Button>
               </div>
             </div>

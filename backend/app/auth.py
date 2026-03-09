@@ -18,6 +18,14 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
+LEGACY_ROLE_ALIASES = {
+    "admin": "super_admin",
+    "superadmin": "super_admin",
+    "super_admin": "super_admin",
+    "super-admin": "super_admin",
+    "super admin": "super_admin",
+}
+
 
 def _jwt_secret() -> str:
     return get_jwt_secret()
@@ -75,6 +83,36 @@ def get_request_access_token(
     return None
 
 
+def normalize_role_name(role: Any) -> str:
+    if role is None:
+        return ""
+    normalized = str(role).strip().lower().replace("-", "_").replace(" ", "_")
+    return LEGACY_ROLE_ALIASES.get(normalized, normalized)
+
+
+def normalize_roles(user_or_roles: Any) -> list[str]:
+    raw_roles: list[Any] = []
+    if isinstance(user_or_roles, dict):
+        raw_roles.extend(user_or_roles.get("roles") or [])
+        single_role = user_or_roles.get("role")
+        if single_role:
+            raw_roles.append(single_role)
+    elif isinstance(user_or_roles, (list, tuple, set)):
+        raw_roles.extend(user_or_roles)
+    elif user_or_roles:
+        raw_roles.append(user_or_roles)
+
+    normalized_roles: list[str] = []
+    seen: set[str] = set()
+    for raw_role in raw_roles:
+        normalized_role = normalize_role_name(raw_role)
+        if not normalized_role or normalized_role in seen:
+            continue
+        seen.add(normalized_role)
+        normalized_roles.append(normalized_role)
+    return normalized_roles
+
+
 def _sanitize_auth_user(user: dict[str, Any]) -> dict[str, Any]:
     sanitized = serialize_doc(user)
     for sensitive_key in (
@@ -87,6 +125,7 @@ def _sanitize_auth_user(user: dict[str, Any]) -> dict[str, Any]:
         "reset_token_hash",
     ):
         sanitized.pop(sensitive_key, None)
+    sanitized["roles"] = normalize_roles(user)
     return sanitized
 
 
@@ -124,11 +163,7 @@ async def get_current_user(
         raise HTTPException(status_code=401, detail="Kullanıcı bulunamadı")
 
     # Legacy rol düzeltmesi: "admin" rolü her yerde "super_admin" olarak davransın
-    roles = set(user.get("roles") or [])
-    if "admin" in roles and "super_admin" not in roles:
-        roles.discard("admin")
-        roles.add("super_admin")
-        user["roles"] = list(roles)
+    user["roles"] = normalize_roles(user)
 
     if session_id:
         user["current_session_id"] = session_id
@@ -138,8 +173,9 @@ async def get_current_user(
 
 def require_roles(required: list[str]):
     async def _dep(user: dict[str, Any] = Depends(get_current_user)) -> dict[str, Any]:
-        roles = set(user.get("roles") or [])
-        if not roles.intersection(set(required)):
+        roles = set(normalize_roles(user))
+        required_roles = set(normalize_roles(required))
+        if not roles.intersection(required_roles):
             raise HTTPException(status_code=403, detail="Yetki yok")
         return user
 
@@ -237,14 +273,7 @@ async def load_org_doc(organization_id: str) -> Optional[dict[str, Any]]:
 
 def is_super_admin(user: dict[str, Any]) -> bool:
     """Check if user has super_admin role (handles both single role and roles list)"""
-    # Single role field
-    role = user.get("role")
-    if role == "super_admin":
-        return True
-
-    # Roles list (your system uses this)
-    roles = user.get("roles") or []
-    return "super_admin" in roles
+    return "super_admin" in normalize_roles(user)
 
 
 def require_feature(feature_key: str, not_found: bool = True):

@@ -20,6 +20,7 @@ import TrialExpiredGate from "./TrialExpiredGate";
 import { LanguageSwitcher, useI18n } from "../contexts/I18nContext";
 import AiAssistant from "./AiAssistant";
 import { NewSidebar } from "./NewSidebar";
+import { hasAnyRole } from "../lib/roles";
 import {
   ACCOUNT_NAV_ITEMS,
   ADMIN_NAV_SECTIONS,
@@ -71,7 +72,7 @@ function AppShellInner() {
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [agencyAllowedModules, setAgencyAllowedModules] = useState(null); // null = not loaded, [] = no restrictions
   const [trialStatus, setTrialStatus] = useState(null);
-  const canLoadAdminBranding = (user?.roles || []).some((role) => ["super_admin", "admin"].includes(role));
+  const canLoadAdminBranding = hasAnyRole(user, ["super_admin", "admin"]);
 
   // Enterprise White-Label branding
   const [branding, setBranding] = useState(null);
@@ -134,8 +135,8 @@ function AppShellInner() {
   const brandInitial = brandName.charAt(0).toUpperCase();
 
   // ── Agency module restrictions (dynamic nav) ──────────────
-  const isAgencyUser = (user?.roles || []).some((r) => ["agency_admin", "agency_agent"].includes(r))
-    && !(user?.roles || []).some((r) => ["super_admin", "admin"].includes(r));
+  const isAgencyUser = hasAnyRole(user, ["agency_admin", "agency_agent"])
+    && !hasAnyRole(user, ["super_admin", "admin"]);
 
   useEffect(() => {
     if (!isAgencyUser) return;
@@ -266,7 +267,7 @@ function AppShellInner() {
     return { total, pending: map.get("pending") || 0, revenue7d };
   }, [resSummary, sales]);
 
-  const isAdmin = (user?.roles || []).some((r) => ["super_admin", "admin"].includes(r));
+  const isAdmin = hasAnyRole(user, ["super_admin", "admin"]);
   const userScope = useMemo(() => getUserScope(user), [user]);
   const trialExpired = Boolean(trialStatus?.expired || trialStatus?.status === "expired");
   const { hasFeature, loading: featuresLoading, quotaAlerts } = useFeatures();

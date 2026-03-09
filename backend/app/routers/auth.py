@@ -8,7 +8,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
 from app.bootstrap.compat_headers import apply_compat_headers
-from app.auth import create_access_token, decode_token, get_current_user, get_request_access_token, verify_password, hash_password
+from app.auth import create_access_token, decode_token, get_current_user, get_request_access_token, verify_password, hash_password, normalize_role_name, normalize_roles
 from app.config import (
     AUTH_ACCESS_COOKIE_MAX_AGE,
     AUTH_ACCESS_COOKIE_NAME,
@@ -154,15 +154,9 @@ async def login(payload: LoginWith2FARequest, request: Request, response: Respon
     if not org_id:
         raise HTTPException(status_code=500, detail="Organizasyon bulunamadı")
 
-    # Legacy rol dönüştürmesi: "admin" => "super_admin"
-    raw_roles = user.get("roles") or ["admin"]
-    roles_set = set(raw_roles)
-    if "admin" in roles_set and "super_admin" not in roles_set:
-        roles_set.discard("admin")
-        roles_set.add("super_admin")
-    roles_list = list(roles_set) or ["super_admin"]
+    roles_list = normalize_roles(user) or ["super_admin"]
     if membership and membership.get("role"):
-        membership_role = str(membership["role"])
+        membership_role = normalize_role_name(membership["role"])
         if membership_role not in roles_list:
             roles_list.append(membership_role)
 

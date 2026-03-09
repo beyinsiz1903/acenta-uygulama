@@ -12,6 +12,7 @@ import {
   Users,
   Zap,
 } from "lucide-react";
+import { normalizeRoles } from "./roles";
 
 export const APP_NAV_SECTIONS = [
   {
@@ -854,7 +855,7 @@ export const ACCOUNT_NAV_ITEMS = [
 ];
 
 export function userHasRole(user, allowed) {
-  const roles = user?.roles || [];
+  const roles = normalizeRoles(user);
   return allowed.some((role) => roles.includes(role));
 }
 

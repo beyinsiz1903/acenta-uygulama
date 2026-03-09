@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
+from app.auth import normalize_roles
 from app.errors import AppError
 from app.repositories.tenant_membership_repository import TenantMembershipRepository
 from app.repositories.tenant_repository import TenantRepository
 
 
 def _is_admin_like(user_doc: dict[str, Any]) -> bool:
-    roles = set(user_doc.get("roles") or [])
+    roles = set(normalize_roles(user_doc))
     return bool(roles.intersection({"admin", "super_admin"}))
 
 

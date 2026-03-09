@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://kontenjan-update.preview.emergentagent.com/api",
-    "frontend_url": "https://kontenjan-update.preview.emergentagent.com",
+    "backend_url": "https://sheets-sync-5.preview.emergentagent.com/api",
+    "frontend_url": "https://sheets-sync-5.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

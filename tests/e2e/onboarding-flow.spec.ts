@@ -1,7 +1,7 @@
 // tests/e2e/onboarding-flow.spec.ts
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "https://agency-quota-system.preview.emergentagent.com";
+const BASE_URL = "https://travel-agency-os-3.preview.emergentagent.com";
 const UNIQUE = Date.now().toString(36);
 
 test.describe("Self-Service Onboarding Flow", () => {

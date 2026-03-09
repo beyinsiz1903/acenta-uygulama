@@ -1,186 +1,472 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { api } from "../lib/api";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { BarChart3, Download, RefreshCcw, Loader2, TrendingUp, Users, Clock } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { BarChart3, Download, Loader2, Search, Sparkles, TrendingUp } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-function formatMoney(amount) {
-  return new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(amount || 0);
+import { api, apiErrorMessage } from "../lib/api";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
+import EmptyState from "../components/EmptyState";
+
+const REPORT_DAY_OPTIONS = [7, 30, 90];
+
+const formatTRY = (amount) => new Intl.NumberFormat("tr-TR", {
+  style: "currency",
+  currency: "TRY",
+  maximumFractionDigits: 0,
+}).format(Number(amount || 0));
+
+function ReportKpiCard({ title, value, subtitle, testId }) {
+  return (
+    <div className="rounded-[1.5rem] border bg-card/90 p-4 shadow-sm" data-testid={testId}>
+      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{title}</div>
+      <div className="mt-3 text-3xl font-semibold tracking-tight text-foreground">{value}</div>
+      <div className="mt-1 text-sm text-muted-foreground">{subtitle}</div>
+    </div>
+  );
 }
 
-export default function AdvancedReportsPage() {
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
-  const [financial, setFinancial] = useState(null);
-  const [products, setProducts] = useState([]);
-  const [partners, setPartners] = useState([]);
-  const [aging, setAging] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState("financial");
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    const params = {};
-    if (fromDate) params.from_date = fromDate;
-    if (toDate) params.to_date = toDate;
-
-    try {
-      const [finRes, prodRes, partRes, agingRes] = await Promise.all([
-        api.get("/reports/financial-summary", { params }),
-        api.get("/reports/product-performance", { params }),
-        api.get("/reports/partner-performance", { params }),
-        api.get("/reports/aging"),
-      ]);
-      setFinancial(finRes.data);
-      setProducts(prodRes.data || []);
-      setPartners(partRes.data || []);
-      setAging(agingRes.data);
-    } catch {}
-    setLoading(false);
-  }, [fromDate, toDate]);
-
-  useEffect(() => { load(); }, [load]);
-
-  const handleExportCSV = () => {
-    let csv = "Rapor,Değer\n";
-    if (financial) {
-      csv += `Toplam Gelir,${financial.total_revenue}\n`;
-      csv += `Toplam Ödeme Sayısı,${financial.total_payments}\n`;
-      csv += `İade Toplamı,${financial.total_refunds}\n`;
-      csv += `Net Gelir,${financial.net_revenue}\n`;
-      csv += `Bekleyen Bakiye,${financial.outstanding_balance}\n`;
-    }
-    csv += "\nÜrün,Rezervasyon,Gelir\n";
-    products.forEach((p) => { csv += `${p.product_title},${p.reservation_count},${p.total_revenue}\n`; });
-    csv += "\nPartner,Eşleşme,Gelir\n";
-    partners.forEach((p) => { csv += `${p.partner_name},${p.match_count},${p.revenue}\n`; });
-
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `rapor_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const sections = [
-    { key: "financial", label: "Finansal Özet", icon: BarChart3 },
-    { key: "products", label: "Ürün Performansı", icon: TrendingUp },
-    { key: "partners", label: "Partner Performansı", icon: Users },
-    { key: "aging", label: "Yaşlandırma", icon: Clock },
-  ];
-
+function SearchResultGroup({ title, items, onOpen, testId }) {
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6" data-testid="reports-page">
+    <div className="space-y-2" data-testid={testId}>
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold" data-testid="reports-title">Raporlar</h1>
-          <p className="text-sm text-muted-foreground">Finansal ve operasyonel raporlar</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={load}><RefreshCcw className="h-4 w-4 mr-1" /> Yenile</Button>
-          <Button variant="outline" size="sm" onClick={handleExportCSV} data-testid="export-csv"><Download className="h-4 w-4 mr-1" /> CSV</Button>
-        </div>
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+        <span className="text-xs text-muted-foreground">{items.length} sonuç</span>
       </div>
-
-      {/* Date filters */}
-      <div className="flex gap-4 items-end">
-        <div><label className="text-xs text-muted-foreground">Başlangıç</label><Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-40" /></div>
-        <div><label className="text-xs text-muted-foreground">Bitiş</label><Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-40" /></div>
-        <Button size="sm" onClick={load}>Filtrele</Button>
-      </div>
-
-      {/* Section tabs */}
-      <div className="flex gap-2 border-b">
-        {sections.map((s) => (
-          <button key={s.key} onClick={() => setActiveSection(s.key)} className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-all ${activeSection === s.key ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-            <s.icon className="h-4 w-4" /> {s.label}
+      <div className="space-y-2">
+        {items.map((item) => (
+          <button
+            key={`${item.type}-${item.id}`}
+            type="button"
+            onClick={() => onOpen(item)}
+            className="w-full rounded-2xl border bg-background/70 px-4 py-3 text-left transition-colors hover:border-primary/30 hover:bg-primary/5"
+            data-testid={`search-result-${item.type}-${item.id}`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-foreground">{item.title}</p>
+                {item.subtitle ? <p className="truncate text-xs text-muted-foreground">{item.subtitle}</p> : null}
+              </div>
+              {item.amount ? <span className="text-xs font-medium text-foreground">{formatTRY(item.amount)}</span> : null}
+            </div>
+            {item.description ? <p className="mt-2 text-xs text-muted-foreground">{item.description}</p> : null}
           </button>
         ))}
       </div>
+    </div>
+  );
+}
 
-      {loading ? (
-        <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div>
-      ) : (
-        <>
-          {activeSection === "financial" && financial && (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4" data-testid="financial-summary">
-              <div className="bg-white dark:bg-slate-900 rounded-xl border p-4">
-                <div className="text-sm text-muted-foreground">Toplam Gelir</div>
-                <div className="text-xl font-bold text-green-600">{formatMoney(financial.total_revenue)}</div>
-              </div>
-              <div className="bg-white dark:bg-slate-900 rounded-xl border p-4">
-                <div className="text-sm text-muted-foreground">Ödeme Sayısı</div>
-                <div className="text-xl font-bold">{financial.total_payments}</div>
-              </div>
-              <div className="bg-white dark:bg-slate-900 rounded-xl border p-4">
-                <div className="text-sm text-muted-foreground">İade Toplamı</div>
-                <div className="text-xl font-bold text-rose-600">{formatMoney(financial.total_refunds)}</div>
-              </div>
-              <div className="bg-white dark:bg-slate-900 rounded-xl border p-4">
-                <div className="text-sm text-muted-foreground">Net Gelir</div>
-                <div className="text-xl font-bold text-blue-600">{formatMoney(financial.net_revenue)}</div>
-              </div>
-              <div className="bg-white dark:bg-slate-900 rounded-xl border p-4">
-                <div className="text-sm text-muted-foreground">Bekleyen</div>
-                <div className="text-xl font-bold text-amber-600">{formatMoney(financial.outstanding_balance)}</div>
-              </div>
-            </div>
-          )}
+export default function AdvancedReportsPage() {
+  const navigate = useNavigate();
+  const [resSummary, setResSummary] = useState([]);
+  const [sales, setSales] = useState([]);
+  const [overview, setOverview] = useState(null);
+  const [error, setError] = useState("");
+  const [overviewError, setOverviewError] = useState("");
+  const [days, setDays] = useState(30);
+  const [overviewLoading, setOverviewLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState("");
 
-          {activeSection === "products" && (
-            <div className="bg-white dark:bg-slate-900 rounded-xl border overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/50"><tr><th className="px-4 py-3 text-left">Ürün</th><th className="px-4 py-3 text-left">Rezervasyon</th><th className="px-4 py-3 text-left">Gelir</th></tr></thead>
-                <tbody>
-                  {products.length === 0 && <tr><td colSpan={3} className="px-4 py-8 text-center text-muted-foreground">Veri yok</td></tr>}
-                  {products.map((p, i) => (
-                    <tr key={i} className="border-t hover:bg-muted/20">
-                      <td className="px-4 py-3 font-medium">{p.product_title}</td>
-                      <td className="px-4 py-3">{p.reservation_count}</td>
-                      <td className="px-4 py-3">{formatMoney(p.total_revenue)}</td>
-                    </tr>
+  const load = useCallback(async () => {
+    setError("");
+    try {
+      const [a, b] = await Promise.all([
+        api.get("/reports/reservations-summary"),
+        api.get("/reports/sales-summary", { params: { days } }),
+      ]);
+      setResSummary(a.data || []);
+      setSales(b.data || []);
+    } catch (e) {
+      const msg = apiErrorMessage(e);
+      if (msg === "Not Found") {
+        setResSummary([]);
+        setSales([]);
+      } else {
+        setError(msg);
+      }
+    }
+  }, [days]);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      load();
+    }, 0);
+    return () => clearTimeout(t);
+  }, [load]);
+
+  const generateOverview = useCallback(async () => {
+    setOverviewLoading(true);
+    setOverviewError("");
+    try {
+      const response = await api.get("/reports/generate", { params: { days } });
+      setOverview(response.data || null);
+    } catch (e) {
+      setOverviewError(apiErrorMessage(e));
+      setOverview(null);
+    } finally {
+      setOverviewLoading(false);
+    }
+  }, [days]);
+
+  const runSearch = useCallback(async () => {
+    if (!searchQuery.trim()) {
+      setSearchError("Arama yapmak için en az 2 karakter girin.");
+      setSearchResults(null);
+      return;
+    }
+    setSearchLoading(true);
+    setSearchError("");
+    try {
+      const response = await api.get("/search", {
+        params: {
+          q: searchQuery.trim(),
+          limit: 4,
+        },
+      });
+      setSearchResults(response.data || null);
+    } catch (e) {
+      setSearchError(apiErrorMessage(e));
+      setSearchResults(null);
+    } finally {
+      setSearchLoading(false);
+    }
+  }, [searchQuery]);
+
+  async function downloadCsv() {
+    try {
+      const resp = await api.get("/reports/sales-summary.csv", { params: { days }, responseType: "blob" });
+      const blob = new Blob([resp.data], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `sales-summary-${days}d.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      alert(apiErrorMessage(e));
+    }
+  }
+
+  const searchSections = useMemo(() => {
+    if (!searchResults?.sections) return [];
+    return [
+      { key: "customers", title: "Müşteriler", items: searchResults.sections.customers || [] },
+      { key: "bookings", title: "Rezervasyonlar", items: searchResults.sections.bookings || [] },
+      { key: "hotels", title: "Oteller", items: searchResults.sections.hotels || [] },
+      { key: "tours", title: "Turlar", items: searchResults.sections.tours || [] },
+    ].filter((section) => section.items.length > 0);
+  }, [searchResults]);
+
+  const recentBookings = overview?.recent_bookings || [];
+  const dailyRevenue = overview?.daily_revenue || [];
+  const maxRevenue = Math.max(...dailyRevenue.map((entry) => entry.revenue || 0), 1);
+
+  return (
+    <div className="space-y-6 p-6" data-testid="reports-page">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground" data-testid="reports-title">Raporlar</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Operasyon araması yapın, satış özetini indirin ve quota sayılan yönetici raporunu manuel üretin.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2" data-testid="reports-day-filter-group">
+          {REPORT_DAY_OPTIONS.map((option) => (
+            <Button
+              key={option}
+              type="button"
+              variant={days === option ? "default" : "outline"}
+              onClick={() => setDays(option)}
+              data-testid={`reports-day-filter-${option}`}
+            >
+              Son {option} gün
+            </Button>
+          ))}
+          <Button variant="outline" onClick={downloadCsv} className="gap-2" data-testid="export-csv">
+            <Download className="h-4 w-4" /> CSV
+          </Button>
+        </div>
+      </div>
+
+      {error ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" data-testid="reports-error">
+          {error}
+        </div>
+      ) : null}
+
+      <Card className="rounded-[2rem] border bg-card/95 shadow-sm" data-testid="global-search-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            Hızlı operasyon araması
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-3 md:flex-row">
+            <Input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Müşteri, rezervasyon, otel veya tur ara..."
+              data-testid="global-search-input"
+            />
+            <Button
+              type="button"
+              onClick={runSearch}
+              disabled={searchLoading}
+              className="gap-2"
+              data-testid="global-search-submit-button"
+            >
+              {searchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              Ara
+            </Button>
+          </div>
+          {searchError ? <p className="text-sm text-rose-600" data-testid="global-search-error">{searchError}</p> : null}
+          {!searchResults && !searchError ? (
+            <p className="text-sm text-muted-foreground" data-testid="global-search-empty-state">Arama kutusu CRM, rezervasyon, otel ve tur kayıtlarını tek yerden tarar.</p>
+          ) : null}
+          {searchResults ? (
+            <div className="space-y-4" data-testid="global-search-results">
+              <div className="rounded-2xl border bg-muted/20 px-4 py-3 text-sm text-muted-foreground" data-testid="global-search-summary">
+                <strong className="text-foreground">{searchResults.total_results}</strong> sonuç bulundu · kapsam: {searchResults.scope}
+              </div>
+              {searchSections.length === 0 ? (
+                <EmptyState
+                  title="Eşleşen kayıt bulunamadı"
+                  description="Daha farklı bir anahtar kelime veya rezervasyon referansı deneyin."
+                />
+              ) : (
+                <div className="grid gap-4 xl:grid-cols-2">
+                  {searchSections.map((section) => (
+                    <SearchResultGroup
+                      key={section.key}
+                      title={section.title}
+                      items={section.items}
+                      testId={`global-search-group-${section.key}`}
+                      onOpen={(item) => navigate(item.route || "/app")}
+                    />
                   ))}
-                </tbody>
-              </table>
+                </div>
+              )}
             </div>
-          )}
+          ) : null}
+        </CardContent>
+      </Card>
 
-          {activeSection === "partners" && (
-            <div className="bg-white dark:bg-slate-900 rounded-xl border overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/50"><tr><th className="px-4 py-3 text-left">Partner</th><th className="px-4 py-3 text-left">Eşleşme</th><th className="px-4 py-3 text-left">Gelir</th></tr></thead>
-                <tbody>
-                  {partners.length === 0 && <tr><td colSpan={3} className="px-4 py-8 text-center text-muted-foreground">Veri yok</td></tr>}
-                  {partners.map((p, i) => (
-                    <tr key={i} className="border-t hover:bg-muted/20">
-                      <td className="px-4 py-3 font-medium">{p.partner_name}</td>
-                      <td className="px-4 py-3">{p.match_count}</td>
-                      <td className="px-4 py-3">{formatMoney(p.revenue)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+      <Card className="rounded-[2rem] border bg-card/95 shadow-sm" data-testid="generated-report-card">
+        <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Sparkles className="h-4 w-4 text-muted-foreground" />
+              Operasyon raporu üret
+            </CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">Bu aksiyon rapor kotasını kullanır ve seçili dönemin özetini tek payload içinde hazırlar.</p>
+          </div>
+          <Button
+            type="button"
+            onClick={generateOverview}
+            disabled={overviewLoading}
+            className="gap-2"
+            data-testid="generate-operations-report-button"
+          >
+            {overviewLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4" />}
+            {overview ? "Raporu yenile" : "Rapor oluştur"}
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {overviewError ? <p className="text-sm text-rose-600" data-testid="generated-report-error">{overviewError}</p> : null}
+          {!overview && !overviewLoading ? (
+            <EmptyState
+              title="Henüz operasyon raporu üretilmedi"
+              description="KPI, ödeme sağlığı, en güçlü oteller ve son rezervasyonları görmek için yukarıdaki butonu kullanın."
+            />
+          ) : null}
+          {overview ? (
+            <>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <ReportKpiCard
+                  title="Toplam rezervasyon"
+                  value={overview.kpis?.booking_count || 0}
+                  subtitle={`${overview.period?.start} → ${overview.period?.end}`}
+                  testId="generated-report-booking-count"
+                />
+                <ReportKpiCard
+                  title="Toplam ciro"
+                  value={formatTRY(overview.kpis?.revenue_total || 0)}
+                  subtitle="İptal dışı kayıtlar"
+                  testId="generated-report-revenue"
+                />
+                <ReportKpiCard
+                  title="Ortalama rezervasyon"
+                  value={formatTRY(overview.kpis?.avg_booking_value || 0)}
+                  subtitle="Rezervasyon başına gelir"
+                  testId="generated-report-average"
+                />
+                <ReportKpiCard
+                  title="Aktif müşteri"
+                  value={overview.kpis?.active_customer_count || 0}
+                  subtitle={`Onaylı: ${overview.kpis?.confirmed_count || 0} · İptal: ${overview.kpis?.cancelled_count || 0}`}
+                  testId="generated-report-customers"
+                />
+              </div>
 
-          {activeSection === "aging" && aging && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-testid="aging-report">
-              <div className="bg-white dark:bg-slate-900 rounded-xl border p-6">
-                <h3 className="font-bold text-lg mb-2">7 Günden Fazla</h3>
-                <div className="text-3xl font-bold text-amber-600">{aging.aging?.over_7_days?.count || 0}</div>
-                <div className="text-sm text-muted-foreground mt-1">{formatMoney(aging.aging?.over_7_days?.amount || 0)}</div>
+              <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+                <div className="rounded-[1.5rem] border bg-background/70 p-4" data-testid="generated-report-daily-revenue">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-foreground">Günlük gelir akışı</h3>
+                    <span className="text-xs text-muted-foreground">{dailyRevenue.length} gün</span>
+                  </div>
+                  <div className="space-y-3">
+                    {dailyRevenue.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Bu aralıkta günlük gelir verisi oluşmadı.</p>
+                    ) : dailyRevenue.map((entry) => (
+                      <div key={entry.day} className="space-y-1" data-testid={`generated-report-day-${entry.day}`}>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>{entry.day}</span>
+                          <span>{entry.count} rezervasyon · {formatTRY(entry.revenue)}</span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-muted">
+                          <div className="h-full rounded-full bg-primary" style={{ width: `${Math.max(6, Math.round((entry.revenue / maxRevenue) * 100))}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-[1.5rem] border bg-background/70 p-4" data-testid="generated-report-payment-health">
+                  <h3 className="text-sm font-semibold text-foreground">Ödeme sağlığı</h3>
+                  <div className="mt-4 space-y-2">
+                    {(overview.payment_health || []).map((item) => (
+                      <div key={item.status} className="flex items-center justify-between rounded-xl border px-3 py-2 text-sm" data-testid={`generated-report-payment-${item.status}`}>
+                        <span className="capitalize text-muted-foreground">{item.status}</span>
+                        <span className="font-medium text-foreground">{item.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div className="bg-white dark:bg-slate-900 rounded-xl border p-6">
-                <h3 className="font-bold text-lg mb-2">30 Günden Fazla</h3>
-                <div className="text-3xl font-bold text-rose-600">{aging.aging?.over_30_days?.count || 0}</div>
-                <div className="text-sm text-muted-foreground mt-1">{formatMoney(aging.aging?.over_30_days?.amount || 0)}</div>
+
+              <div className="grid gap-4 xl:grid-cols-2">
+                <Card className="rounded-[1.5rem] border bg-background/70" data-testid="generated-report-top-hotels">
+                  <CardHeader>
+                    <CardTitle className="text-base">En güçlü oteller</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Otel</TableHead>
+                          <TableHead>Rez.</TableHead>
+                          <TableHead>Ciro</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(overview.top_hotels || []).map((hotel) => (
+                          <TableRow key={hotel.hotel_name}>
+                            <TableCell className="font-medium text-foreground">{hotel.hotel_name}</TableCell>
+                            <TableCell>{hotel.booking_count}</TableCell>
+                            <TableCell>{formatTRY(hotel.revenue)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+
+                <Card className="rounded-[1.5rem] border bg-background/70" data-testid="generated-report-recent-bookings">
+                  <CardHeader>
+                    <CardTitle className="text-base">Son rezervasyonlar</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {recentBookings.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Bu dönemde rezervasyon kaydı bulunamadı.</p>
+                    ) : recentBookings.map((booking) => (
+                      <div key={`${booking.source}-${booking.id}`} className="rounded-xl border px-4 py-3" data-testid={`generated-report-booking-${booking.id}`}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-medium text-foreground">{booking.reference}</p>
+                            <p className="text-xs text-muted-foreground">{booking.hotel_name} · {booking.guest_name}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-medium text-foreground">{formatTRY(booking.amount)}</p>
+                            <p className="text-xs text-muted-foreground">{booking.status}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
               </div>
-            </div>
-          )}
-        </>
-      )}
+            </>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-2xl shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            Satış Özeti
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table data-testid="sales-table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Gün</TableHead>
+                  <TableHead>Rezervasyon</TableHead>
+                  <TableHead>Ciro</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sales.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="py-6">
+                      <EmptyState
+                        title="Henüz satış özeti yok"
+                        description="Satış raporu oluşturmak için önce rezervasyon ve tahsilat akışını kullanın."
+                      />
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  sales.map((r) => (
+                    <TableRow key={r.day}>
+                      <TableCell className="font-medium text-foreground">{r.day}</TableCell>
+                      <TableCell className="text-foreground/80">{r.count}</TableCell>
+                      <TableCell className="text-foreground/80">{formatTRY(r.revenue)}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-2xl shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base">Rezervasyon Durum Dağılımı</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-testid="res-summary">
+            {resSummary.length === 0 ? (
+              <p className="col-span-2 md:col-span-4 text-xs text-muted-foreground">
+                Henüz rezervasyon durum verisi oluşmamış. Rezervasyon oluştukça bu dağılım burada görünecektir.
+              </p>
+            ) : (
+              resSummary.map((r) => (
+                <div key={r.status} className="rounded-2xl border bg-card p-3" data-testid={`reservation-summary-${r.status}`}>
+                  <div className="text-xs text-muted-foreground">{r.status}</div>
+                  <div className="text-2xl font-semibold text-foreground">{r.count}</div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

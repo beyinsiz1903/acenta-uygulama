@@ -5,6 +5,16 @@ import { Input } from "../../components/ui/input";
 import { Checkbox } from "../../components/ui/checkbox";
 import { Badge } from "../../components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../../components/ui/alert-dialog";
 import { toast } from "sonner";
 import { FEATURE_CATALOG } from "../../config/featureCatalog";
 import { api, apiErrorMessage } from "../../lib/api";
@@ -136,6 +146,8 @@ function SubscriptionPanel({ tenantId }) {
   const [sub, setSub] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [canceling, setCanceling] = useState(false);
 
   const fetchSub = useCallback(async () => {
     if (!tenantId) return;
@@ -185,6 +197,20 @@ function SubscriptionPanel({ tenantId }) {
   const graceDays = sub.grace_period_until ? daysUntil(sub.grace_period_until) : null;
   const showGrace = graceDays !== null && graceDays > 0;
   const isPastDue = sub.status === "past_due" || sub.status === "unpaid" || sub.status === "incomplete";
+
+  const handleCancelSubscription = async () => {
+    setCanceling(true);
+    try {
+      await api.post(`/admin/billing/tenants/${tenantId}/cancel-subscription`, { at_period_end: true });
+      toast.success("Abonelik period sonunda iptal edilecek.");
+      setCancelDialogOpen(false);
+      fetchSub();
+    } catch (err) {
+      toast.error(apiErrorMessage(err));
+    } finally {
+      setCanceling(false);
+    }
+  };
 
   return (
     <div className="rounded-lg border bg-card p-3 space-y-2" data-testid="sub-panel">
@@ -251,19 +277,62 @@ function SubscriptionPanel({ tenantId }) {
             size="sm"
             className="text-xs text-destructive border-destructive/30 hover:bg-destructive/5"
             data-testid="cancel-sub-btn"
-            onClick={async () => {
-              if (!window.confirm("Aboneliği period sonunda iptal etmek istediğinize emin misiniz?")) return;
-              try {
-                await api.post(`/admin/billing/tenants/${tenantId}/cancel-subscription`, { at_period_end: true });
-                toast.success("Abonelik period sonunda iptal edilecek.");
-                fetchSub();
-              } catch (err) { toast.error(apiErrorMessage(err)); }
-            }}
+            onClick={() => setCancelDialogOpen(true)}
           >
             Period Sonunda İptal Et
           </Button>
         </div>
       )}
+
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent data-testid="subscription-cancel-confirm-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Aboneliği period sonunda iptal et</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tenant için plan hemen kapanmaz; mevcut dönem sonuna kadar aktif kalır. Bu aksiyon retention tarafında geri dönüş fırsatı yaratır.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={canceling} data-testid="subscription-cancel-confirm-cancel">Vazgeç</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                handleCancelSubscription();
+              }}
+              disabled={canceling}
+              data-testid="subscription-cancel-confirm-accept"
+            >
+              {canceling ? "İşleniyor..." : "İptali onayla"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+function PlanChangeImpactCard({ currentPlanLabel, nextPlanLabel, impactItems }) {
+  if (!impactItems.length) return null;
+
+  return (
+    <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4" data-testid="plan-change-impact-card">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Plan değişim özeti</p>
+          <p className="mt-1 text-sm text-foreground">
+            <strong>{currentPlanLabel}</strong> → <strong>{nextPlanLabel}</strong>
+          </p>
+        </div>
+        <Badge variant="outline" data-testid="plan-change-impact-badge">Onay gerekli</Badge>
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        {impactItems.map((item) => (
+          <div key={item.key} className="rounded-xl border bg-background/80 px-3 py-3" data-testid={`plan-impact-${item.key.replace(/\./g, "-")}`}>
+            <p className="text-xs text-muted-foreground">{item.label}</p>
+            <p className="mt-2 text-sm font-semibold text-foreground">{item.from} → {item.to}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -366,6 +435,7 @@ export default function AdminTenantFeaturesPage() {
 
   const [loadingFeatures, setLoadingFeatures] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [planConfirmOpen, setPlanConfirmOpen] = useState(false);
 
   const syncTenantSnapshot = useCallback((tenantId, patch) => {
     setTenants((prev) => prev.map((item) => (item.id === tenantId ? { ...item, ...patch } : item)));
@@ -479,6 +549,40 @@ export default function AdminTenantFeaturesPage() {
     () => planCatalog.find((item) => item.key === currentPlan || item.name === currentPlan) || null,
     [planCatalog, currentPlan]
   );
+  const initialPlanDefinition = useMemo(
+    () => planCatalog.find((item) => item.key === initialPlan || item.name === initialPlan) || null,
+    [planCatalog, initialPlan]
+  );
+
+  const planImpactItems = useMemo(() => {
+    if (currentPlan === initialPlan) return [];
+
+    const currentLimits = initialPlanDefinition?.limits || {};
+    const nextLimits = currentPlanDefinition?.limits || {};
+    const currentUsageAllowances = initialPlanDefinition?.usage_allowances || initialPlanDefinition?.quotas || {};
+    const nextUsageAllowances = currentPlanDefinition?.usage_allowances || currentPlanDefinition?.quotas || {};
+    const items = [
+      {
+        key: "users.active",
+        label: "Aktif kullanıcı limiti",
+        from: currentLimits["users.active"] ?? "—",
+        to: nextLimits["users.active"] ?? "—",
+      },
+      {
+        key: "reservations.monthly",
+        label: "Aylık rezervasyon limiti",
+        from: currentLimits["reservations.monthly"] ?? currentUsageAllowances["reservation.created"] ?? "—",
+        to: nextLimits["reservations.monthly"] ?? nextUsageAllowances["reservation.created"] ?? "—",
+      },
+      {
+        key: "reports.monthly",
+        label: "Aylık rapor kotası",
+        from: currentUsageAllowances["report.generated"] ?? "—",
+        to: nextUsageAllowances["report.generated"] ?? "—",
+      },
+    ];
+    return items;
+  }, [currentPlan, currentPlanDefinition, initialPlan, initialPlanDefinition]);
 
   const isDirty = useMemo(() => {
     if (currentPlan !== initialPlan) return true;
@@ -497,15 +601,13 @@ export default function AdminTenantFeaturesPage() {
     setAddOns([...initialAddOns]);
   };
 
-  const handleSave = async () => {
+  const performSave = useCallback(async () => {
     if (!selectedTenant) return;
     setSaving(true);
     try {
-      // Save plan
       if (currentPlan !== initialPlan) {
         await api.patch(`/admin/tenants/${selectedTenant.id}/plan`, { plan: currentPlan });
       }
-      // Save add-ons
       const res = await api.patch(`/admin/tenants/${selectedTenant.id}/add-ons`, { add_ons: addOns });
       const data = res.data;
       setCurrentPlan(data.plan || currentPlan);
@@ -519,11 +621,30 @@ export default function AdminTenantFeaturesPage() {
       });
       await loadTenantDirectory();
       toast.success("Özellikler güncellendi.");
+      setPlanConfirmOpen(false);
     } catch (err) {
       toast.error(apiErrorMessage(err));
     } finally {
       setSaving(false);
     }
+  }, [
+    addOns,
+    currentPlan,
+    currentPlanDefinition?.label,
+    entitlementSource,
+    initialPlan,
+    loadTenantDirectory,
+    selectedTenant,
+    syncTenantSnapshot,
+  ]);
+
+  const handleSave = () => {
+    if (!selectedTenant) return;
+    if (currentPlan !== initialPlan) {
+      setPlanConfirmOpen(true);
+      return;
+    }
+    performSave();
   };
 
   return (
@@ -685,6 +806,12 @@ export default function AdminTenantFeaturesPage() {
                     </p>
                   </div>
 
+                  <PlanChangeImpactCard
+                    currentPlanLabel={initialPlanDefinition?.label || initialPlan}
+                    nextPlanLabel={currentPlanDefinition?.label || currentPlan}
+                    impactItems={planImpactItems}
+                  />
+
                   {/* Add-on Modules */}
                   <div>
                     <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">
@@ -718,6 +845,44 @@ export default function AdminTenantFeaturesPage() {
           )}
         </div>
       </div>
+
+      <AlertDialog open={planConfirmOpen} onOpenChange={setPlanConfirmOpen}>
+        <AlertDialogContent data-testid="plan-change-confirm-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Plan değişikliğini onayla</AlertDialogTitle>
+            <AlertDialogDescription>
+              {selectedTenant?.name} tenant’ı için plan değişikliği anında entitlement çıktısını günceller. Kaydetmeden önce limit farklarını gözden geçirin.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3 rounded-xl border bg-muted/20 p-3 text-sm" data-testid="plan-change-confirm-summary">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-muted-foreground">Geçiş</span>
+              <span className="font-medium text-foreground">{initialPlanDefinition?.label || initialPlan} → {currentPlanDefinition?.label || currentPlan}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-muted-foreground">Toplam modül</span>
+              <span className="font-medium text-foreground">{effectiveFeatures.length}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-muted-foreground">Add-on sayısı</span>
+              <span className="font-medium text-foreground">{addOns.length}</span>
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={saving} data-testid="plan-change-confirm-cancel">Vazgeç</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={saving}
+              onClick={(event) => {
+                event.preventDefault();
+                performSave();
+              }}
+              data-testid="plan-change-confirm-accept"
+            >
+              {saving ? "Kaydediliyor..." : "Değişikliği uygula"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

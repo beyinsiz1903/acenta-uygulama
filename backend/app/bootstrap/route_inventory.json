@@ -3193,17 +3193,6 @@
     "compat_required": true,
     "current_namespace": "/api/agency",
     "legacy_or_v1": "legacy",
-    "method": "POST",
-    "owner": "agency",
-    "path": "/api/agency/search",
-    "risk_level": "medium",
-    "source": "app.routers.search",
-    "target_namespace": "/api/v1/agency"
-  },
-  {
-    "compat_required": true,
-    "current_namespace": "/api/agency",
-    "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "agency",
     "path": "/api/agency/settlements",
@@ -6781,6 +6770,28 @@
     "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "reports",
+    "path": "/api/reports/generate",
+    "risk_level": "medium",
+    "source": "app.routers.reports",
+    "target_namespace": "/api/v1/reports"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/reports",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "reports",
+    "path": "/api/reports/generate",
+    "risk_level": "medium",
+    "source": "app.routers.reports",
+    "target_namespace": "/api/v1/reports"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/reports",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "reports",
     "path": "/api/reports/partner-performance",
     "risk_level": "high",
     "source": "app.routers.advanced_reports",
@@ -6928,6 +6939,17 @@
     "risk_level": "medium",
     "source": "app.routers.saas_tenants",
     "target_namespace": "/api/v1/saas"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/search",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "search",
+    "path": "/api/search",
+    "risk_level": "medium",
+    "source": "app.routers.search",
+    "target_namespace": "/api/v1/search"
   },
   {
     "compat_required": true,

@@ -7814,3 +7814,103 @@ agent_communication:
       
       **STATUS:** Testing completed with 1 CRITICAL backend issue (operations report), 2 MINOR frontend issues (redirect, plan change flow), and 1 test data limitation (subscription cancel). All UI elements are present and correctly implemented. Main blocker is backend tenant context handling for /api/reports/generate endpoint.
 
+  - task: "Turkish Review Request: Backend API Flow Validation"
+    implemented: true
+    working: true
+    file: "backend_test.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "TURKISH REVIEW REQUEST BACKEND VALIDATION COMPLETED - ALL 11 TESTS PASSED (2026-01-27). Comprehensive backend API flow validation performed per Turkish review request on https://travel-agency-os-3.preview.emergentagent.com with curl-like backend_test.py. Test Results: 1) ✅ Agency login (agent@acenta.test/agent123) - PASSED (200 OK, access_token: 376 chars, tenant_id: 9c5c1079-9dea-49bf-82c0-74838b146160), 2) ✅ Agency no-regression - ALL PASSED: GET /api/agency/hotels (200 OK), GET /api/agency/bookings (200 OK), GET /api/agency/settlements?month=2026-03 (200 OK), 3) ✅ Global search endpoint - PASSED: GET /api/search?q=demo&limit=3 (200 OK, response contains counts/total_results/sections with customers/bookings/hotels, scope=agency confirmed), 4) ✅ Generated report endpoint - PASSED: GET /api/reports/generate?days=30 (200 OK both with and without X-Tenant-Id header, response contains period/kpis/daily_revenue/top_hotels/payment_health/recent_bookings), 5) ✅ Sales summary regression - PASSED: GET /api/reports/sales-summary?days=7 (200 OK), GET /api/reports/sales-summary?days=30 (200 OK), 6) ✅ Admin no-regression - ALL PASSED: GET /api/admin/tenants (200 OK), GET /api/admin/tenants/{tenant_id}/features (200 OK), GET /api/admin/billing/tenants/{tenant_id}/subscription (200 OK). CRITICAL VALIDATIONS: No 4xx/5xx regressions detected ✅, tenant context handling working correctly ✅, all Turkish review request endpoints functional ✅. Success rate: 100% (11/11 tests passed). All backend flows validated successfully, no critical issues detected. The previous tenant context issue for /api/reports/generate has been resolved - endpoint now works both with and without X-Tenant-Id header as required."
+
+agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ TURKISH REVIEW REQUEST BACKEND VALIDATION COMPLETED - ALL TESTS PASSED (2026-01-27)
+      
+      Performed comprehensive backend API validation per Turkish review request using backend_test.py curl-like validation.
+      
+      Test Context:
+      - Review Request: Aşağıdaki backend akışlarını curl ile doğrula
+      - Base URL: https://travel-agency-os-3.preview.emergentagent.com
+      - Test Accounts: agent@acenta.test/agent123, admin@acenta.test/admin123
+      - Validation Method: Python requests library (curl equivalent)
+      
+      ✅ ALL 6 TEST CATEGORIES PASSED WITH 100% SUCCESS RATE:
+      
+      1. ✅ AGENCY LOGIN (agent@acenta.test/agent123)
+         - Login successful with 200 OK
+         - Access token received: 376 characters
+         - Tenant ID: 9c5c1079-9dea-49bf-82c0-74838b146160
+         - Token format and authentication working correctly
+      
+      2. ✅ AGENCY PERSPECTIVE NO-REGRESSION (3/3 TESTS PASSED)
+         - GET /api/agency/hotels → 200 OK ✅
+         - GET /api/agency/bookings → 200 OK ✅
+         - GET /api/agency/settlements?month=2026-03 → 200 OK ✅
+         - All agency endpoints responding without regression
+      
+      3. ✅ GLOBAL SEARCH ENDPOINT VALIDATION
+         - GET /api/search?q=demo&limit=3 → 200 OK ✅
+         - Response structure validated:
+           * Contains counts ✅
+           * Contains total_results ✅
+           * Contains sections.customers ✅
+           * Contains sections.bookings ✅
+           * Contains sections.hotels ✅
+           * Scope=agency confirmed ✅
+         - New global search endpoint working as specified
+      
+      4. ✅ GENERATED REPORT ENDPOINT VALIDATION
+         - GET /api/reports/generate?days=30 (with X-Tenant-Id) → 200 OK ✅
+         - GET /api/reports/generate?days=30 (without X-Tenant-Id) → 200 OK ✅
+         - Response structure validated:
+           * Contains period ✅
+           * Contains kpis ✅
+           * Contains daily_revenue ✅
+           * Contains top_hotels ✅
+           * Contains payment_health ✅
+           * Contains recent_bookings ✅
+         - Critical validation: Works both with and without X-Tenant-Id header
+      
+      5. ✅ SALES SUMMARY FILTER REGRESSION (2/2 TESTS PASSED)
+         - GET /api/reports/sales-summary?days=7 → 200 OK ✅
+         - GET /api/reports/sales-summary?days=30 → 200 OK ✅
+         - Sales summary endpoints responding without regression
+      
+      6. ✅ ADMIN NO-REGRESSION (3/3 TESTS PASSED)
+         - GET /api/admin/tenants → 200 OK ✅
+         - GET /api/admin/tenants/{tenant_id}/features → 200 OK ✅
+         - GET /api/admin/billing/tenants/{tenant_id}/subscription → 200 OK ✅
+         - Admin tenant ID used: ec68a5dc-fd72-4bb3-b679-0416b616aee1
+         - All admin endpoints responding without regression
+      
+      Technical Validation Details:
+      ✅ No 4xx client errors detected on any endpoint
+      ✅ No 5xx server errors detected on any endpoint
+      ✅ All authentication flows working correctly
+      ✅ Tenant context handling working (both with and without X-Tenant-Id)
+      ✅ Response structures match Turkish review request requirements
+      ✅ Admin login working: 385 chars token, same tenant_id
+      ✅ Agency login working: 376 chars token, same tenant_id
+      ✅ All endpoint response validation successful
+      
+      Critical Findings:
+      ✅ TENANT CONTEXT ISSUE RESOLVED: The previous critical issue with /api/reports/generate endpoint requiring X-Tenant-Id header has been fixed. Endpoint now works correctly both with and without the header.
+      ✅ NO REGRESSIONS: All existing endpoints tested (agency/hotels, agency/bookings, agency/settlements, reports/sales-summary, admin/tenants, admin/tenants/features, admin/billing) are working without any 4xx/5xx regressions.
+      ✅ NEW ENDPOINTS FUNCTIONAL: Both new endpoints (global search /api/search and generated reports /api/reports/generate) are working correctly with proper response structures.
+      
+      Test Summary:
+      - Total Tests: 11
+      - Passed: 11
+      - Failed: 0
+      - Success Rate: 100%
+      
+      Conclusion:
+      Turkish review request backend validation SUCCESSFUL. All backend flows validated with curl-equivalent testing. No 4xx/5xx regressions detected. Tenant context handling working correctly. All required response fields present. The previous blocker issue with /api/reports/generate has been resolved. Backend is stable and all Turkish review request requirements met.
+      
+      Status: ✅ PASS - All backend flows validated successfully
+

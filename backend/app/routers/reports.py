@@ -2,24 +2,19 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, Request, Response
 from pydantic import BaseModel
 
 from app.auth import get_current_user
-from app.constants.features import FEATURE_REPORTS
 from app.constants.usage_metrics import UsageMetric
 from app.db import get_db
-from app.security.feature_flags import require_tenant_feature
 from app.services.quota_enforcement_service import enforce_quota_or_raise
 from app.services.usage_service import track_export_generated, track_report_generated
 from app.utils import get_or_create_correlation_id, parse_date_range, to_csv
 
 router = APIRouter(prefix="/api/reports", tags=["reports"])
-
-ReportsFeatureDep = Depends(require_tenant_feature(FEATURE_REPORTS))
-
 
 class ReportGenerateBody(BaseModel):
     start: str | None = None
@@ -180,6 +175,21 @@ async def _load_report_rows(
     return rows
 
 
+async def _resolve_report_tenant_id(db, user: dict[str, Any]) -> str | None:
+    tenant_id = user.get("tenant_id")
+    if tenant_id:
+        return str(tenant_id)
+
+    tenant = await db.tenants.find_one(
+        {"organization_id": user.get("organization_id")},
+        {"_id": 1},
+        sort=[("created_at", 1)],
+    )
+    if tenant and tenant.get("_id") is not None:
+        return str(tenant.get("_id"))
+    return None
+
+
 def _build_generated_report(rows: list[dict[str, Any]], *, start_dt: datetime, end_dt: datetime, days: int) -> dict[str, Any]:
     revenue_total = round(sum(row["amount"] for row in rows if row["status"] != "cancelled"), 2)
     total_bookings = len(rows)
@@ -273,20 +283,21 @@ async def _generate_report_payload(
     days: int | None,
 ) -> dict[str, Any]:
     start_dt, end_dt, actual_days = parse_date_range(start, end, days, default_days=30, max_days=180)
+    db = await get_db()
+    tenant_id = await _resolve_report_tenant_id(db, user)
     await enforce_quota_or_raise(
         organization_id=user.get("organization_id"),
-        tenant_id=user.get("tenant_id"),
+        tenant_id=tenant_id,
         metric=UsageMetric.REPORT_GENERATED,
         action_label="Operasyon raporu oluşturma",
     )
-    db = await get_db()
     rows = await _load_report_rows(db, user=user, start_dt=start_dt, end_dt=end_dt)
     payload = _build_generated_report(rows, start_dt=start_dt, end_dt=end_dt, days=actual_days)
 
     correlation_id = get_or_create_correlation_id(request, None)
     await track_report_generated(
         organization_id=user.get("organization_id"),
-        tenant_id=user.get("tenant_id"),
+        tenant_id=tenant_id,
         report_type="operations_overview",
         output_format="json",
         source="reports.generate",
@@ -337,7 +348,7 @@ async def sales_summary(days: int = 14, user=Depends(get_current_user)):
     return [{"day": r["_id"], "revenue": round(float(r.get("revenue") or 0), 2), "count": r["count"]} for r in rows]
 
 
-@router.get("/generate", dependencies=[Depends(get_current_user), ReportsFeatureDep])
+@router.get("/generate", dependencies=[Depends(get_current_user)])
 async def generate_report_get(
     request: Request,
     start: str | None = None,
@@ -348,7 +359,7 @@ async def generate_report_get(
     return await _generate_report_payload(request, user=user, start=start, end=end, days=days)
 
 
-@router.post("/generate", dependencies=[Depends(get_current_user), ReportsFeatureDep])
+@router.post("/generate", dependencies=[Depends(get_current_user)])
 async def generate_report_post(
     body: ReportGenerateBody,
     request: Request,

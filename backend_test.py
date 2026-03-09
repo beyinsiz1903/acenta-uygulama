@@ -1,16 +1,7 @@
 #!/usr/bin/env python3
 """
-Backend test for Syroce demo seed authorization changes validation.
-
-This test validates:
-1. agent@acenta.test / agent123 login returns agency_admin role
-2. Agency token calling POST /api/admin/demo/seed returns 403
-3. admin@acenta.test / admin123 login returns super_admin role  
-4. Admin token calling POST /api/admin/demo/seed returns 200
-
-Reference files:
-- /app/backend/app/routers/gtm_demo_seed.py
-- /app/frontend/src/components/DemoSeedButton.jsx
+Backend API Validation Test for Turkish Review Request
+Validates recent backend fixes for dashboard endpoints and ObjectId serialization
 """
 
 import requests
@@ -18,226 +9,259 @@ import json
 import sys
 from typing import Dict, Any, Optional
 
-# Base URL from frontend .env
-BASE_URL = "https://syroce-demo.preview.emergentagent.com"
-
-def print_test_step(step: str, description: str):
-    """Print formatted test step."""
-    print(f"\n{step}: {description}")
-    print("=" * 60)
-
-def login_user(email: str, password: str) -> Dict[str, Any]:
-    """Login user and return response with access_token and user roles."""
-    print(f"🔐 Logging in as {email}")
-    
-    login_data = {
-        "email": email,
-        "password": password
-    }
-    
-    response = requests.post(
-        f"{BASE_URL}/api/auth/login",
-        json=login_data,
-        headers={"Content-Type": "application/json"}
-    )
-    
-    print(f"   Status: {response.status_code}")
-    
-    if response.status_code != 200:
-        print(f"   ❌ Login failed: {response.text}")
-        return {"success": False, "status_code": response.status_code}
-    
-    login_result = response.json()
-    access_token = login_result.get("access_token")
-    
-    if not access_token:
-        print(f"   ❌ No access token in response: {login_result}")
-        return {"success": False, "message": "No access token"}
-    
-    print(f"   ✅ Login successful, token length: {len(access_token)}")
-    
-    return {
-        "success": True,
-        "access_token": access_token,
-        "response": login_result
-    }
-
-def get_user_info(access_token: str) -> Dict[str, Any]:
-    """Get user info using access token to verify roles."""
-    print("👤 Getting user info via /api/auth/me")
-    
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json"
-    }
-    
-    response = requests.get(f"{BASE_URL}/api/auth/me", headers=headers)
-    
-    print(f"   Status: {response.status_code}")
-    
-    if response.status_code != 200:
-        print(f"   ❌ Failed to get user info: {response.text}")
-        return {"success": False, "status_code": response.status_code}
-    
-    user_info = response.json()
-    roles = user_info.get("roles", [])
-    email = user_info.get("email")
-    
-    print(f"   ✅ User: {email}")
-    print(f"   ✅ Roles: {roles}")
-    
-    return {
-        "success": True,
-        "user_info": user_info,
-        "roles": roles,
-        "email": email
-    }
-
-def test_demo_seed_endpoint(access_token: str, user_role: str, expected_status: int) -> Dict[str, Any]:
-    """Test POST /api/admin/demo/seed endpoint with given token."""
-    print(f"🧪 Testing POST /api/admin/demo/seed with {user_role} token")
-    print(f"   Expected status: {expected_status}")
-    
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json"
-    }
-    
-    # Use light mode with minimal data for testing
-    demo_data = {
-        "mode": "light",
-        "with_finance": True,
-        "with_crm": True,
-        "force": False
-    }
-    
-    response = requests.post(
-        f"{BASE_URL}/api/admin/demo/seed",
-        json=demo_data,
-        headers=headers
-    )
-    
-    print(f"   Actual status: {response.status_code}")
-    
-    if response.status_code == expected_status:
-        print(f"   ✅ Status matches expectation ({expected_status})")
+class BackendTester:
+    def __init__(self):
+        self.base_url = "https://syroce-demo.preview.emergentagent.com/api"
+        self.session = requests.Session()
+        self.admin_token = None
+        self.agency_token = None
         
-        if response.status_code == 200:
-            result = response.json()
-            counts = result.get("counts", {})
-            print(f"   ✅ Demo seed successful, counts: {counts}")
-            return {"success": True, "result": result}
-        elif response.status_code == 403:
-            print(f"   ✅ Access denied as expected for {user_role}")
-            return {"success": True, "message": "Access denied as expected"}
-    else:
-        print(f"   ❌ Status mismatch! Expected {expected_status}, got {response.status_code}")
-        print(f"   Response: {response.text}")
-        return {"success": False, "status_code": response.status_code, "response": response.text}
+    def log(self, message: str):
+        print(f"[TEST] {message}")
+        
+    def test_login(self, email: str, password: str) -> Optional[str]:
+        """Test login endpoint and return access token"""
+        url = f"{self.base_url}/auth/login"
+        payload = {
+            "email": email,
+            "password": password
+        }
+        
+        try:
+            response = self.session.post(url, json=payload)
+            self.log(f"POST /auth/login ({email}): Status {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'access_token' in data:
+                    token = data['access_token']
+                    self.log(f"✅ Login successful - Token length: {len(token)} chars")
+                    return token
+                else:
+                    self.log(f"❌ Login failed - Missing access_token in response")
+                    return None
+            else:
+                self.log(f"❌ Login failed - Status: {response.status_code}, Response: {response.text}")
+                return None
+                
+        except Exception as e:
+            self.log(f"❌ Login error - Exception: {str(e)}")
+            return None
     
-    return {"success": True}
-
-def main():
-    """Main test function."""
-    print("🚀 SYROCE BACKEND AUTH VALIDATION FOR DEMO SEED ENDPOINT")
-    print("=" * 80)
-    print(f"🌐 Testing against: {BASE_URL}")
+    def test_authenticated_endpoint_with_payload(self, endpoint: str, token: str, method: str = "POST", payload: dict = None) -> Dict[str, Any]:
+        """Test an authenticated endpoint with JSON payload"""
+        url = f"{self.base_url}/{endpoint.lstrip('/')}"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+        
+        try:
+            if method.upper() == "POST":
+                response = self.session.post(url, headers=headers, json=payload)
+            else:
+                raise ValueError(f"Unsupported method for payload: {method}")
+                
+            self.log(f"{method} /{endpoint}: Status {response.status_code}")
+            
+            result = {
+                'status_code': response.status_code,
+                'success': response.status_code in [200, 201],
+                'response_size': len(response.text) if response.text else 0,
+                'endpoint': endpoint
+            }
+            
+            # Try to parse JSON
+            try:
+                result['json'] = response.json()
+            except:
+                result['json'] = None
+                result['text'] = response.text[:500]  # First 500 chars
+                
+            return result
+            
+        except Exception as e:
+            self.log(f"❌ {method} /{endpoint} error - Exception: {str(e)}")
+            return {
+                'status_code': 0,
+                'success': False,
+                'error': str(e),
+                'endpoint': endpoint
+            }
     
-    test_results = []
+    def test_authenticated_endpoint(self, endpoint: str, token: str, method: str = "GET") -> Dict[str, Any]:
+        """Test an authenticated endpoint"""
+        url = f"{self.base_url}/{endpoint.lstrip('/')}"
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        try:
+            if method.upper() == "GET":
+                response = self.session.get(url, headers=headers)
+            elif method.upper() == "POST":
+                response = self.session.post(url, headers=headers)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+                
+            self.log(f"{method} /{endpoint}: Status {response.status_code}")
+            
+            result = {
+                'status_code': response.status_code,
+                'success': response.status_code in [200, 201],
+                'response_size': len(response.text) if response.text else 0,
+                'endpoint': endpoint
+            }
+            
+            # Try to parse JSON
+            try:
+                result['json'] = response.json()
+            except:
+                result['json'] = None
+                result['text'] = response.text[:500]  # First 500 chars
+                
+            return result
+            
+        except Exception as e:
+            self.log(f"❌ {method} /{endpoint} error - Exception: {str(e)}")
+            return {
+                'status_code': 0,
+                'success': False,
+                'error': str(e),
+                'endpoint': endpoint
+            }
     
-    # Test 1: Agency admin login and role verification
-    print_test_step("TEST 1", "Login as agent@acenta.test and verify agency_admin role")
-    
-    agent_login = login_user("agent@acenta.test", "agent123")
-    if not agent_login["success"]:
-        print("❌ CRITICAL: Agent login failed")
-        test_results.append(False)
-        sys.exit(1)
-    
-    agent_token = agent_login["access_token"]
-    
-    agent_info = get_user_info(agent_token)
-    if not agent_info["success"]:
-        print("❌ CRITICAL: Failed to get agent user info")
-        test_results.append(False)
-    else:
-        agent_roles = agent_info["roles"]
-        if "agency_admin" in agent_roles:
-            print("   ✅ Agent has agency_admin role as expected")
-            test_results.append(True)
+    def run_validation(self):
+        """Run complete validation as per Turkish review request"""
+        self.log("=== BACKEND VALIDATION STARTING ===")
+        self.log("Base URL: https://syroce-demo.preview.emergentagent.com/api")
+        
+        results = {}
+        
+        # 1. Test admin login
+        self.log("\n--- 1. Testing POST /api/auth/login (admin) ---")
+        self.admin_token = self.test_login("admin@acenta.test", "admin123")
+        results['admin_login'] = {
+            'success': self.admin_token is not None,
+            'token_length': len(self.admin_token) if self.admin_token else 0
+        }
+        
+        # 2. Test agency login  
+        self.log("\n--- 2. Testing POST /api/auth/login (agency) ---")
+        self.agency_token = self.test_login("agent@acenta.test", "agent123")
+        results['agency_login'] = {
+            'success': self.agency_token is not None,
+            'token_length': len(self.agency_token) if self.agency_token else 0
+        }
+        
+        if not self.admin_token or not self.agency_token:
+            self.log("❌ CRITICAL: Login failed, cannot continue with endpoint tests")
+            return results
+        
+        # 3. Test GET /api/dashboard/popular-products (CRITICAL - was failing before)
+        self.log("\n--- 3. Testing GET /api/dashboard/popular-products (ObjectId fix) ---")
+        results['popular_products'] = self.test_authenticated_endpoint(
+            "dashboard/popular-products", self.agency_token
+        )
+        
+        if results['popular_products']['success']:
+            self.log("✅ /dashboard/popular-products: 200 OK - ObjectId serialization FIXED")
         else:
-            print(f"   ❌ Expected agency_admin role, got: {agent_roles}")
-            test_results.append(False)
-    
-    # Test 2: Agency admin tries to access demo seed (should return 403)
-    print_test_step("TEST 2", "Agency admin calls POST /api/admin/demo/seed (expect 403)")
-    
-    agent_demo_test = test_demo_seed_endpoint(agent_token, "agency_admin", 403)
-    test_results.append(agent_demo_test["success"])
-    
-    # Test 3: Super admin login and role verification
-    print_test_step("TEST 3", "Login as admin@acenta.test and verify super_admin role")
-    
-    admin_login = login_user("admin@acenta.test", "admin123")
-    if not admin_login["success"]:
-        print("❌ CRITICAL: Admin login failed")
-        test_results.append(False)
-        sys.exit(1)
-    
-    admin_token = admin_login["access_token"]
-    
-    admin_info = get_user_info(admin_token)
-    if not admin_info["success"]:
-        print("❌ CRITICAL: Failed to get admin user info")
-        test_results.append(False)
-    else:
-        admin_roles = admin_info["roles"]
-        if "super_admin" in admin_roles:
-            print("   ✅ Admin has super_admin role as expected")
-            test_results.append(True)
+            self.log(f"❌ /dashboard/popular-products: {results['popular_products']['status_code']} - Still broken")
+        
+        # 4. Test dashboard endpoint set
+        self.log("\n--- 4. Testing Dashboard Endpoint Set ---")
+        dashboard_endpoints = [
+            "dashboard/kpi-stats",
+            "dashboard/reservation-widgets", 
+            "dashboard/weekly-summary",
+            "dashboard/recent-customers"
+        ]
+        
+        results['dashboard_set'] = {}
+        for endpoint in dashboard_endpoints:
+            result = self.test_authenticated_endpoint(endpoint, self.agency_token)
+            results['dashboard_set'][endpoint] = result
+            
+            if result['success']:
+                self.log(f"✅ /{endpoint}: 200 OK")
+            else:
+                self.log(f"❌ /{endpoint}: {result['status_code']}")
+        
+        # 5. No-regression tests
+        self.log("\n--- 5. Testing No-Regression Endpoints ---")
+        
+        # Test /api/reports/generate with proper payload
+        results['reports_generate'] = self.test_authenticated_endpoint_with_payload(
+            "reports/generate", self.agency_token, "POST", {"report_type": "sales", "format": "json"}
+        )
+        
+        # Test /api/search with query parameter
+        results['search'] = self.test_authenticated_endpoint(
+            "search?q=test", self.agency_token
+        )
+        
+        if results['reports_generate']['success']:
+            self.log("✅ /reports/generate: No regression")
         else:
-            print(f"   ❌ Expected super_admin role, got: {admin_roles}")
-            test_results.append(False)
-    
-    # Test 4: Super admin accesses demo seed (should return 200)
-    print_test_step("TEST 4", "Super admin calls POST /api/admin/demo/seed (expect 200)")
-    
-    admin_demo_test = test_demo_seed_endpoint(admin_token, "super_admin", 200)
-    test_results.append(admin_demo_test["success"])
-    
-    # Summary
-    print("\n" + "=" * 80)
-    print("📊 TEST RESULTS SUMMARY")
-    print("=" * 80)
-    
-    test_names = [
-        "Agent login & role verification",
-        "Agent demo seed access (403)",
-        "Admin login & role verification", 
-        "Admin demo seed access (200)"
-    ]
-    
-    passed = 0
-    for i, (name, result) in enumerate(zip(test_names, test_results), 1):
-        status = "✅ PASS" if result else "❌ FAIL"
-        print(f"{i}. {name}: {status}")
-        if result:
-            passed += 1
-    
-    print("\n" + "=" * 80)
-    print(f"🎯 OVERALL RESULT: {passed}/{len(test_results)} tests passed")
-    
-    if passed == len(test_results):
-        print("🎉 ALL TESTS PASSED! Demo seed authorization changes working correctly.")
-        print("\n✅ VALIDATION CONFIRMED:")
-        print("   - agent@acenta.test has agency_admin role and gets 403 for demo seed")
-        print("   - admin@acenta.test has super_admin role and gets 200 for demo seed")
-        print("   - Authorization requirement for super_admin only is working correctly")
-        return True
-    else:
-        print("💥 SOME TESTS FAILED! Authorization changes may have issues.")
-        return False
+            self.log(f"❌ /reports/generate: {results['reports_generate']['status_code']}")
+            
+        if results['search']['success']:
+            self.log("✅ /search: No regression") 
+        else:
+            self.log(f"❌ /search: {results['search']['status_code']}")
+        
+        # Summary
+        self.log("\n=== VALIDATION SUMMARY ===")
+        
+        # Critical tests
+        critical_passed = 0
+        critical_total = 0
+        
+        # Login tests
+        if results['admin_login']['success'] and results['agency_login']['success']:
+            self.log("✅ 1. POST /api/auth/login: PASS (both admin and agency)")
+            critical_passed += 1
+        else:
+            self.log("❌ 1. POST /api/auth/login: FAIL")
+        critical_total += 1
+        
+        # Popular products (the main fix being validated)
+        if results['popular_products']['success']:
+            self.log("✅ 2. GET /api/dashboard/popular-products: PASS (ObjectId serialization FIXED)")
+            critical_passed += 1
+        else:
+            self.log("❌ 2. GET /api/dashboard/popular-products: FAIL (ObjectId issue still present)")
+        critical_total += 1
+        
+        # Dashboard endpoint set
+        dashboard_success_count = sum(1 for r in results['dashboard_set'].values() if r['success'])
+        dashboard_total = len(dashboard_endpoints)
+        
+        if dashboard_success_count == dashboard_total:
+            self.log(f"✅ 3. Dashboard endpoint set: PASS ({dashboard_success_count}/{dashboard_total})")
+            critical_passed += 1
+        else:
+            self.log(f"❌ 3. Dashboard endpoint set: PARTIAL ({dashboard_success_count}/{dashboard_total})")
+        critical_total += 1
+        
+        # No-regression
+        regression_passed = (results['reports_generate']['success'] and 
+                           results['search']['success'])
+        if regression_passed:
+            self.log("✅ 4. No-regression (/reports/generate, /search): PASS")
+            critical_passed += 1
+        else:
+            self.log("❌ 4. No-regression: FAIL")
+        critical_total += 1
+        
+        self.log(f"\nOVERALL RESULT: {critical_passed}/{critical_total} critical tests passed")
+        
+        if critical_passed == critical_total:
+            self.log("✅ ALL TESTS PASSED - Backend fixes validated successfully")
+        else:
+            self.log("❌ SOME TESTS FAILED - Backend issues still present")
+            
+        return results
 
 if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)
+    tester = BackendTester()
+    tester.run_validation()

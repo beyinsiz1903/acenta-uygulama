@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { api, apiErrorMessage } from "../lib/api";
 import { useCurrentUser, useLogin } from "../hooks/useAuth";
+import { clearSessionExpired } from "../lib/authRedirect";
 import { loginSchema } from "../lib/validations";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -68,11 +69,7 @@ export default function B2BLoginPage() {
       // Verify that this user has B2B access via /api/b2b/me
       await api.get("/b2b/me");
 
-      try {
-        window.sessionStorage.removeItem("acenta_session_expired");
-      } catch {
-        // ignore sessionStorage errors
-      }
+      clearSessionExpired();
 
       navigate(next, { replace: true });
     } catch (err) {

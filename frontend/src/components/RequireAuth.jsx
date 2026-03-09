@@ -1,15 +1,7 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useCurrentUser } from "../hooks/useAuth";
-
-function rememberPostLoginRedirect(location) {
-  try {
-    const from = `${location.pathname}${location.search}${location.hash}`;
-    window.sessionStorage.setItem("acenta_post_login_redirect", from);
-  } catch {
-    // ignore storage errors
-  }
-}
+import { rememberPostLoginRedirect } from "../lib/authRedirect";
 
 /**
  * @param {ReactNode} children

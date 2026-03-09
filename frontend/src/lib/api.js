@@ -6,6 +6,7 @@ import {
   persistRefreshSession,
   setUser,
 } from "./authSession";
+import { markSessionExpired, rememberPostLoginRedirect } from "./authRedirect";
 
 // Backend base URL: prefer REACT_APP_BACKEND_URL from env, fallback to same-origin /api
 // This prevents broken URLs like "undefined/api" when env is not set in certain environments.
@@ -254,14 +255,11 @@ api.interceptors.response.use(
           // 1) return-to: only set when not already on /login and do not overwrite existing
           if (!pathname.startsWith("/login")) {
             const from = `${pathname}${search}${hash}`;
-            const existing = window.sessionStorage.getItem("acenta_post_login_redirect");
-            if (!existing) {
-              window.sessionStorage.setItem("acenta_post_login_redirect", from);
-            }
-            window.sessionStorage.setItem("acenta_session_expired", "1");
+            rememberPostLoginRedirect(from);
+            markSessionExpired();
           } else {
             // On login, still keep the flag for UX messaging
-            window.sessionStorage.setItem("acenta_session_expired", "1");
+            markSessionExpired();
           }
 
           // 2) Token cleanup

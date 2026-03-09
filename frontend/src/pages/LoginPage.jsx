@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { apiErrorMessage } from "../lib/api";
 import { useCurrentUser, useLogin } from "../hooks/useAuth";
+import { consumePostLoginRedirect, hasSessionExpired } from "../lib/authRedirect";
 import { redirectByRole } from "../utils/redirectByRole";
 import { loginSchema } from "../lib/validations";
 import { Button } from "../components/ui/button";
@@ -46,17 +47,7 @@ export default function LoginPage() {
         return;
       }
 
-      // Role-based redirect with optional return-to from sessionStorage
-      let redirectPath = redirectByRole(resp.user);
-      try {
-        const saved = window.sessionStorage.getItem("acenta_post_login_redirect");
-        if (saved && typeof saved === "string" && saved.startsWith("/app")) {
-          redirectPath = saved;
-        }
-        window.sessionStorage.removeItem("acenta_post_login_redirect");
-        window.sessionStorage.removeItem("acenta_session_expired");
-      } catch {}
-
+      const redirectPath = consumePostLoginRedirect(redirectByRole(resp.user));
       navigate(redirectPath, { replace: true });
     } catch (err) {
       setServerError(apiErrorMessage(err));
@@ -67,32 +58,14 @@ export default function LoginPage() {
     if (!currentUser) {
       return;
     }
-
-    let redirectPath = redirectByRole(currentUser);
-    try {
-      const saved = window.sessionStorage.getItem("acenta_post_login_redirect");
-      if (saved && typeof saved === "string" && saved.startsWith("/app")) {
-        redirectPath = saved;
-      }
-      window.sessionStorage.removeItem("acenta_post_login_redirect");
-      window.sessionStorage.removeItem("acenta_session_expired");
-    } catch {
-      // ignore sessionStorage errors
-    }
-
+    const redirectPath = consumePostLoginRedirect(redirectByRole(currentUser));
     navigate(redirectPath, { replace: true });
   }, [currentUser, navigate]);
 
   const params = new URLSearchParams(location.search);
   const reason = params.get("reason");
 
-  let showExpired = reason === "session_expired";
-  try {
-    if (!showExpired && typeof window !== "undefined") {
-      showExpired =
-        window.sessionStorage.getItem("acenta_session_expired") === "1";
-    }
-  } catch {}
+  const showExpired = reason === "session_expired" || hasSessionExpired();
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4" data-testid="login-page">

@@ -411,6 +411,21 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - testing agent raporu: `/app/test_reports/iteration_36.json` → backend %100 / frontend %100 annual pricing geçti
   - oluşturulan referans test dosyası: `/app/backend/tests/test_annual_pricing_e2e_iter36.py`
 
+## Son Uygulama Notu — 2026-03-09 (Billing redirect re-smoke + branding request guard)
+- Agency kullanıcı için `AppShell` branding yükleme akışı role guard ile sertleştirildi
+  - admin olmayan kullanıcılar artık `/api/admin/whitelabel-settings` endpoint’ine istek atmıyor
+  - billing/settings gibi agency yüzeylerinde gereksiz 403 console gürültüsü kaldırıldı
+- `/app/settings/billing` post-login return-to akışı tekrar doğrulandı
+  - direkt korumalı route açılışı → `/login`
+  - giriş sonrası hedef sayfaya güvenli dönüş
+  - yıllık toggle ve billing summary görünümü regresyonsuz geçti
+- Doğrulama:
+  - browser smoke + console kontrolü geçti; admin whitelabel request’i agency kullanıcı için artık görünmüyor
+  - `auto_frontend_testing_agent` → 6/6 PASS
+  - `deep_testing_backend_v2` → auth + billing regression PASS
+- Test account durumu:
+  - `agent@acenta.test` bu doğrulama turunda `Pro / yearly / active` state’inde teyit edildi
+
 ## Öncelikli Sonraki Adımlar
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını derinleştirip ödeme problemi state’lerini timeline + banner + operasyon akışlarıyla birleştirme
 - **P1:** CORE olmayan route yüzeyleri için ikinci faz pruning uygulaması: `partners`, marketplace, advanced campaign, sms/qr ve benzeri modülleri `internal-only / addon / remove` sınıflarına indirgeme

@@ -7,6 +7,13 @@
 - Billing history timeline tamamlandı:
   - `GET /api/billing/history`
   - `/app/settings/billing` içinde plan değişimi / ödeme olay akışı görünürlüğü
+- Annual pricing E2E revalidation tamamlandı:
+  - public `/pricing` yearly toggle
+  - checkout create/status `interval=yearly`
+  - `/app/settings/billing` yearly görünümü
+- Billing shell regressions temizlendi:
+  - agency kullanıcıları için admin-only whitelabel request’i kaldırıldı
+  - `/app/settings/billing` login sonrası dönüş smoke testi tekrar geçti
 - Usage Metering için PR-UM1 foundation tamamlandı
 - Usage Metering için PR-UM2 `reservation.created` instrumentation tamamlandı
 - Usage Metering için PR-UM3 tamamlandı:
@@ -48,10 +55,6 @@ Teslim beklentisi:
 - PR-UM4 sonrası ele alınacak
 
 ## P1 — Sonraki İşler
-
-### Annual Pricing Revalidation
-- aylık / yıllık toggle ve checkout davranışını uçtan uca yeniden test et
-- sadeleştirilmiş ürün yüzeyi ve billing settings state’leriyle tam hizalama yap
 
 ### Payment Failure Lifecycle Deepening
 - `invoice.payment_failed` ve renewal olaylarını billing timeline + banner + operasyon akışına bağla

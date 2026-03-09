@@ -1,5 +1,17 @@
 # CHANGELOG — Acenta Master Travel SaaS
 
+## 2026-03-09 — Billing redirect re-smoke + AppShell branding guard
+- Frontend stabilizasyonu:
+  - `frontend/src/components/AppShell.jsx` içinde admin-only branding isteği role guard ile sınırlandı
+  - agency kullanıcıları artık `/api/admin/whitelabel-settings` endpoint’ine gereksiz 403 request atmıyor
+- Doğrulama:
+  - browser smoke: direkt `/app/settings/billing` → `/login` → başarılı giriş sonrası tekrar `/app/settings/billing`
+  - yıllık toggle ve billing summary kartları regresyonsuz geçti
+  - `auto_frontend_testing_agent` sonucu: 6/6 PASS, admin whitelabel request’i agency kullanıcı için artık yok
+  - `deep_testing_backend_v2` sonucu: auth + billing regression PASS
+- Test notu:
+  - `agent@acenta.test` doğrulama sırasında `Pro / yearly / active` state’ine geçti ve backend bu state’i tutarlı döndürüyor
+
 ## 2026-03-09 — Billing History Timeline
 - Backend teslimi:
   - `GET /api/billing/history` endpoint’i eklendi

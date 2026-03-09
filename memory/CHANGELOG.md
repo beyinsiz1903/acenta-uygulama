@@ -1,5 +1,22 @@
 # CHANGELOG — Acenta Master Travel SaaS
 
+## 2026-03-09 — Admin Tenant Panel Cleanup
+- Backend enrichment:
+  - `GET /api/admin/tenants` response’u plan + billing lifecycle alanlarıyla genişletildi
+  - yeni `summary` payload eklendi: total, payment_issue_count, trial_count, canceling_count, active_count, by_plan, lifecycle
+  - legacy subscription fallback korunarak admin liste görünümü daha dayanıklı hale getirildi
+- Frontend cleanup:
+  - `frontend/src/pages/admin/AdminTenantFeaturesPage.jsx` içinde yeni `Tenant Paket Merkezi` üst özet kartları eklendi
+  - tenant dizinine filtre chip’leri, manuel yenile butonu ve risk odaklı sıralama eklendi
+  - tenant satırları artık plan badge, lifecycle badge ve varsa grace date gösteriyor
+  - mevcut feature yönetimi / subscription / usage / entitlement paneli regressionsız korundu
+- Doğrulama:
+  - `pytest /app/backend/tests/integration/feature_flags/test_admin_tenant_features.py -q` → 5/5 PASS
+  - preview curl smoke: admin login + `/api/admin/tenants?limit=5` response shape PASS
+  - browser smoke screenshot: `/app/admin/tenant-features` render PASS
+  - `auto_frontend_testing_agent` → admin tenant cleanup akışı PASS
+  - `deep_testing_backend_v2` → backend enrichment PASS
+
 ## 2026-03-09 — Billing redirect re-smoke + AppShell branding guard
 - Frontend stabilizasyonu:
   - `frontend/src/components/AppShell.jsx` içinde admin-only branding isteği role guard ile sınırlandı

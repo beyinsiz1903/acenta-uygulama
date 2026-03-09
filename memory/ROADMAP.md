@@ -1,6 +1,9 @@
 # ROADMAP — Acenta Master Travel SaaS
 
 ## Güncel Durum
+- Admin tenant panel cleanup faz-1 tamamlandı:
+  - `GET /api/admin/tenants` plan + billing lifecycle summary ile zenginleştirildi
+  - admin tenant ekranına summary cards, lifecycle filtreleri ve risk öncelikli liste eklendi
 - `/api/v1` standardizasyonu tamamlandı
 - Web auth/session hardening tamamlandı
 - Entitlement Projection Engine V1 tamamlandı ve test edildi
@@ -77,6 +80,9 @@ Teslim beklentisi:
   - `/api/partner-graph/notifications/summary`
   - `/api/tenant/features`
   - `/api/tenant/quota-status`
+- Faz-1 tamamlandı:
+  - admin tenant listesi duplicate/basic endpoint görünümünden çıkarılıp zengin lifecycle özetine taşındı
+  - sonraki adım self-service duplicate endpoint konsolidasyonu
 
 ## P2 — Daha Sonra
 

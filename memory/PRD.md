@@ -459,13 +459,32 @@ Platform artık sadece teknik hardening değil, doğrudan gelir modeline hizmet 
   - `auto_frontend_testing_agent` → `/app/usage` + `/app/settings/billing` regression PASS
   - `deep_testing_backend_v2` → auth, usage-summary, billing subscription, CSV export, admin export ve audit export PASS
 
+## Son Uygulama Notu — 2026-03-09 (Admin tenant panel cleanup)
+- Admin tenant yönetim ekranı operasyon ekibi için daha aksiyon odaklı hale getirildi
+  - `GET /api/admin/tenants` artık yalnız temel tenant bilgisi değil, aynı zamanda `plan`, `plan_label`, `subscription_status`, `cancel_at_period_end`, `grace_period_until`, `current_period_end`, `lifecycle_stage`, `has_payment_issue` alanlarını döndürüyor
+  - response içine yeni `summary` objesi eklendi: `total`, `payment_issue_count`, `trial_count`, `canceling_count`, `active_count`, `by_plan`, `lifecycle`
+  - legacy subscription fallback korunarak liste görünümü billing_subscriptions olmayan tenant’larda da güvenli kaldı
+- `frontend/src/pages/admin/AdminTenantFeaturesPage.jsx` ekranı sadeleştirildi ve yeniden kurgulandı
+  - yeni üst özet kartları: `Toplam tenant`, `Ödeme sorunu`, `Trial`, `İptal sırada`
+  - tenant dizini için risk odaklı sıralama eklendi: payment issue → canceling → trial → active
+  - filtre chip’leri ve manuel `Yenile` aksiyonu eklendi
+  - her tenant satırında plan badge + lifecycle badge + varsa grace date görünürlüğü verildi
+  - mevcut sağ panel (`Subscription`, `Usage Overview`, `Tenant Entitlement Overview`) korunarak no-regression entegrasyon yapıldı
+- Doğrulama:
+  - pytest: `/app/backend/tests/integration/feature_flags/test_admin_tenant_features.py` → 5/5 PASS
+  - preview curl smoke: `POST /api/auth/login` + `GET /api/admin/tenants?limit=5` geçti; yeni `summary` ve item alanları doğrulandı
+  - browser smoke: admin login → `/app/admin/tenant-features` summary cards + filter bar render PASS
+  - `auto_frontend_testing_agent` → admin tenant cleanup akışı PASS
+  - `deep_testing_backend_v2` → admin tenant enrichment ve features no-regression PASS
+
 ## Öncelikli Sonraki Adımlar
 - **P1:** Renewal / invoice paid / payment_failed lifecycle’ını derinleştirip ödeme problemi state’lerini timeline + banner + operasyon akışlarıyla birleştirme
+- **P1:** Admin cleanup faz-2: `partner-graph` ve tenant self-service duplicate endpoint’lerini (`/api/tenant/features`, `/api/tenant/quota-status`) konsolide etme
 - **P1:** CORE olmayan route yüzeyleri için ikinci faz pruning uygulaması: `partners`, marketplace, advanced campaign, sms/qr ve benzeri modülleri `internal-only / addon / remove` sınıflarına indirgeme
 - **P1:** `integration.call` ve gerekirse `b2b.match_request` için aynı hard quota guard modelini dış servis çağrısı öncesine genişletme
 - **P1:** Billing analytics / churn görünürlüğü
 - **P2:** Admin demo agency oluşturma butonu
-- **P2:** Admin endpoint cleanup (`/api/partner-graph/notifications/summary`, `/api/tenant/features`, `/api/tenant/quota-status`)
+- **P2:** Admin endpoint cleanup kalan parçaları (`/api/partner-graph/notifications/summary` kullanım sadeleştirmesi ve duplicate tenant endpoint alias cleanup)
 
 ## Bu Dosyanın Kapsamı
 Bu PRD dosyası yalnızca statik ürün bağlamını taşır.

@@ -12,6 +12,7 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
 6. Change Password functionality
 7. Granular User Permissions (screen-level access control)
 8. UI/UX: Billing screen hidden from agency users
+9. **Inventory Calendar View**: Visual calendar showing room type, price, and allotment per date from Google Sheets data
 
 ## User Personas
 - **Superadmin**: Platform owner, manages agencies, hotels, pricing
@@ -26,29 +27,41 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
 
 ## What's Been Implemented
 
-### Completed (Verified) ✅
+### Completed (Verified)
 - [x] Agency CRUD + subscription management
 - [x] User management with direct password setting
 - [x] JWT-based authentication
-- [x] Change Password (agency users) — Verified
-- [x] Agency Module saving — Verified
-- [x] Billing link hidden from agency users — Verified
-- [x] Google Sheets Service Account integration — **Activated 2026-03-11**
-- [x] Google Sheets sync: 5 rows synced, 489ms, "Rezervasyonlar" writeback tab created
-- [x] Stop-sell date filtering fix — 2026-03-11
-- [x] Hotel detail page (AgencyHotelDetailPage) crash fix — 2026-03-11
-- [x] Turkish character encoding fix — 2026-03-11
-- [x] Hotel status correctly shows "Satışa Açık" when no active stop-sell rules
+- [x] Change Password (agency users)
+- [x] Agency Module saving
+- [x] Billing link hidden from agency users
+- [x] Google Sheets Service Account integration
+- [x] Google Sheets sync: availability data read from sheets
+- [x] Stop-sell date filtering fix
+- [x] Hotel detail page crash fix
+- [x] Turkish character encoding fix
+- [x] Hotel status correctly shows "Satışa Açık"
+- [x] **Inventory Calendar View** — 2026-03-10 ✅
+  - Visual monthly calendar on hotel detail page
+  - Color-coded cells: green (available), amber (low), orange (none), red (stop-sale)
+  - Per-day: min price (TL) + total room count
+  - Click-to-expand day detail: room type, price, allotment per room
+  - Room type filter dropdown
+  - Month navigation (prev/next)
+  - Stats bar: total records, room types, E-Tablo Bağlı badge, last sync time
+  - Backend fix: tenant_id $in query for org_id+tenant_id compatibility
+  - 270 demo inventory snapshots seeded (45 days × 3 room types × 2 hotels)
+  - Testing: Backend 11/11 PASS, Frontend 100% PASS (iteration_54)
 
 ### In Progress
 - None
 
 ### Blocked
-- None (Google Sheets was unblocked on 2026-03-11)
+- None
 
 ## Prioritized Backlog
 
 ### P1 (Next Up)
+- [ ] Reservation Write-Back: Write new reservations from app back to Google Sheet "Rezervasyonlar" tab
 - [ ] User-Based Screen Permissions: Granular permission model per user
 - [ ] Reservation Limits: Backend enforcement per pricing plan
 
@@ -61,7 +74,7 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
 
 ## Key Credentials
 - **Superadmin**: admin@acenta.test / admin123
-- **Agency Admin**: agency1@demo.test / Agency12345!
+- **Agency Admin**: agent@acenta.test / agent123
 - **Google Service Account**: syroce-sheets@syroce-sheets.iam.gserviceaccount.com
 
 ## Architecture
@@ -71,9 +84,10 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
 │   └── app/
 │       ├── main.py
 │       ├── routers/
-│       │   ├── admin_agencies.py
+│       │   ├── agency.py (hotel list with sheet sync data)
+│       │   ├── agency_availability.py (FIXED: tenant_id $in query for calendar)
 │       │   ├── admin_sheets.py
-│       │   ├── agency.py (stop-sell date filter fix)
+│       │   ├── agency_sheets.py
 │       │   ├── agency_users.py
 │       │   └── settings.py
 │       └── services/
@@ -82,9 +96,11 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
 │           └── sheets_provider.py
 └── frontend/
     └── src/
+        ├── components/
+        │   └── HotelInventoryCalendar.jsx (NEW: calendar view component)
         ├── pages/
-        │   ├── AgencyHotelDetailPage.jsx (TDZ fix, field mapping fix)
-        │   ├── AgencyHotelsPage.jsx
+        │   ├── AgencyHotelDetailPage.jsx (calendar integrated)
+        │   ├── AgencyHotelsPage.jsx (Detay & Takvim button)
         │   └── agency-admin/SettingsPage.jsx
         ├── layouts/AgencyAdminLayout.jsx
         └── lib/sidebar-links.js

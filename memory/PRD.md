@@ -102,6 +102,12 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
 - Agency `Otellerim` kartlarında sheet ile ilişkili görünür alanlar için test kapsamı güçlendirildi.
 - Test sonucu: Iteration 47 raporunda admin + agency Google Sheets akışı ve ilgili backend endpointleri geçti; credential yokken graceful `not_configured` davranışı doğrulandı.
 
+## Son Doğrulama Notu — 2026-03-10
+- Admin Portfolio Sync sayfası yeniden doğrulandı; `/app/admin/google-sheets` alias yönlendirmesi, manuel sync toast akışı ve connect wizard stabil çalışıyor.
+- Agency bağlantı bölümü ve health kartları için ek `data-testid` kapsaması tamamlandı; agency bağlantı formu artık daha güçlü testlenebilir durumda.
+- `Otellerim`/agency hotels akışı agency kullanıcı ile yeniden smoke test edildi; 7 otel kartı yüklendi ve beklenen alanlar doğrulandı.
+- Backend smoke testlerinde `config`, `status`, `connections`, `sync/{hotel_id}` ve `agency/hotels` endpointleri geçti; Google credential hâlâ eksik olduğundan canlı sync yerine graceful `not_configured` davranışı beklenen şekilde sürüyor.
+
 ## Kalan Öncelikli İşler
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.
 - P1: Zamanlanmış otomatik sync davranışını gerçek credential ile doğrulamak ve gerekiyorsa UI'daki interval beklentisiyle birebir hizalamak.

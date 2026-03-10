@@ -108,9 +108,19 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
 - `Otellerim`/agency hotels akışı agency kullanıcı ile yeniden smoke test edildi; 7 otel kartı yüklendi ve beklenen alanlar doğrulandı.
 - Backend smoke testlerinde `config`, `status`, `connections`, `sync/{hotel_id}` ve `agency/hotels` endpointleri geçti; Google credential hâlâ eksik olduğundan canlı sync yerine graceful `not_configured` davranışı beklenen şekilde sürüyor.
 
+## Son Uygulama Güncellemesi — 2026-03-10 Bulk Connection Sprint
+- Admin Portfolio Sync içine **Toplu Bağlantı** akışı eklendi; 300+ otel bağlantısını tek seferde kurmak için ayrı modal hazırlandı.
+- Aynı bulk akış agency-specific bağlantı alanına da eklendi; böylece otel×acenta bazlı toplu sheet bağlantısı kurulabiliyor.
+- Desteklenen giriş yöntemleri: **CSV/XLSX yükleme**, **tablo yapıştırma**, **master Google Sheet önizleme**.
+- Bulk akışta kullanıcı tercihi doğrultusunda **önizleme + doğrulama + sonra kaydet** modeli uygulandı.
+- Yeni backend endpointleri: `bulk-template/{scope}`, `bulk/preview-upload`, `bulk/preview-text`, `bulk/preview-master-sheet`, `bulk/execute`.
+- CSV parser semicolon / comma / tab delimiter için güçlendirildi; Türkçe locale export'larında daha dayanıklı hale getirildi.
+- Test sonucu: Iteration 48 raporunda bulk hotel + bulk agency akışı, template indirme, upload/paste preview, execute ve credential yokken graceful master-sheet davranışı geçti.
+
 ## Kalan Öncelikli İşler
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.
 - P1: Zamanlanmış otomatik sync davranışını gerçek credential ile doğrulamak ve gerekiyorsa UI'daki interval beklentisiyle birebir hizalamak.
+- P1: Bulk master sheet akışını gerçek Google credential ile canlı sheet üzerinden smoke test etmek.
 - P1: Sheet'ten gelen rezervasyonların rezervasyon listesi / durum yaşam döngüsü görünürlüğünü güçlendirmek.
 - P2: Önceki fork'tan kalan diğer UI doğrulamalarını topluca gözden geçirmek.
 

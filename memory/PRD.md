@@ -183,6 +183,13 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
 - Landing page içine de ayrı bir SSS accordion bölümü eklendi; navbar’a `SSS` anchor bağlantısı bağlandı.
 - Doğrulama: Iteration 50 frontend test raporunda hero floating kart fix’i, 4 paket görünürlüğü, E-Tablo vurgusu, comparison table ve FAQ accordion akışları %100 geçti.
 
+## Son Uygulama Güncellemesi — 2026-03-10 Landing Hero Floating Cards Removal
+- Kullanıcının son görsel tercihi doğrultusunda hero mockup üstündeki iki floating metin kartı tamamen kaldırıldı:
+  - `12 yeni rezervasyon bugün`
+  - `Tahsilat süresi %40 daha hızlı`
+- Hero görsel alanı sadeleştirildi; dashboard mockup tek başına bırakılarak daha temiz bir ilk izlenim sağlandı.
+- Doğrulama: screenshot smoke + frontend verification agent ile bu iki metnin artık DOM’da görünmediği ve hero’da clipping/overlap olmadığı doğrulandı.
+
 ## Kalan Öncelikli İşler
 - P0: `agency.syroce.com` custom domain'ini güncel frontend build ile hizalamak; eski `main.a26343a0.js` bundle referansını kaldırmak.
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.

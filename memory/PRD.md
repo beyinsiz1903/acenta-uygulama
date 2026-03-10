@@ -228,9 +228,21 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
 - `frontend/src/pages/LoginPage.jsx` login sonrası yönlendirmeyi yeni güvenli helper ile güncellendi; agency kullanıcılar varsayılan olarak `/app` dashboard’a düşüyor.
 - Doğrulama: preview üzerinde `acenta_post_login_redirect=/app/admin/agency-modules` seed edilerek agency login testi çalıştırıldı; sonuç `/app`, `/unauthorized` değil.
 
+## Son Bakım Güncellemesi — 2026-03-10 Agency Sidebar Module Visibility Fix
+- Kullanıcının bildirdiği “Google Sheets / turlar / oteller / müşteriler seçili ama görünmüyor” problemi agency sidebar ve modül anahtarı eşleme katmanında çözüldü.
+- Yeni normalizasyon katmanı eklendi: legacy modül anahtarları (`turlarimiz`, `urunler`, `musaitlik_takibi`, `google_sheet_baglantisi`) artık canonical anahtarlara (`turlar`, `oteller`, `musaitlik`, `sheet_baglantilari`) çevriliyor.
+- Backend `admin_agencies` ve `agency_profile` endpointleri normalize edilmiş `allowed_modules` döndürecek ve kayıt sırasında canonical liste saklayacak şekilde güncellendi.
+- Frontend `AppShell` agency filtreleme mantığı artık sadece non-core öğelerde değil, dashboard hariç tüm modül bazlı sidebar öğelerinde çalışıyor; böylece seçilen agency ekranları gerçekten görünür/gizli hale geliyor.
+- Agency sidebar'a görünür yeni bölüm eklendi: `Oteller`, `Müsaitlik`, `Turlar`, `Google Sheets`.
+- `AdminAgencyModulesPage` gerçek agency ekranlarını yönetecek şekilde sadeleştirildi ve canonical anahtarlarla hizalandı.
+- Doğrulama:
+  - Frontend verification agent: 17/17 test geçti; login, sidebar görünürlüğü ve 4 hedef sayfa navigasyonu doğrulandı.
+  - Backend testing agent: 6/6 test geçti; alias normalizasyonu ve profile/modules endpointleri doğrulandı.
+
 ## Kalan Öncelikli İşler
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.
 - P0: Agency sözleşme süresi dolunca backend tarafında route-level enforcement gerekip gerekmediğini kullanıcıyla doğrulayıp karar vermek (şu an UI kısıtlaması aktif).
+- P1: Agency bazlı modül görünürlüğüsünden kullanıcı bazlı ekran/izin modeline geçiş için veri modeli ve admin UX tasarımını netleştirmek.
 - P1: Custom domain build-time env string’ini tamamen temizleyecek daha katı runtime-only çözüm gerekip gerekmediğini izlemek (şu an canlı login akışı çalışıyor).
 - P1: Bu login redirect fix’inin custom domain build’ine yansımasını doğrulamak; preview doğrulandı, live domain eski bundle cache’i varsa yeniden gözlemek.
 - P1: Demo seed akışına acenta/tenant filtreleri ve toplu hedefleme (tek seferde birden fazla agency kullanıcı) eklemek.

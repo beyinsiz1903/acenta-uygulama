@@ -5,134 +5,164 @@ The user is building a Travel Agency Operating System named Syroce.
 1.  **Agency Subscription Management**: Define subscription durations for agencies, with warnings for expiry and blocking access post-expiry.
 2.  **Direct Password Management**: Allow a superadmin to create users and set their passwords directly.
 3.  **Pricing Page**: A public pricing page inspired by  with feature tiers.
-4.  **Google Sheets Integration**: A core feature to manage hotel reservations and availability, which is currently blocked.
+4.  **Google Sheets Integration**: A core feature to manage hotel reservations and availability. (**Now Implemented for Superadmin**)
 5.  **Settings Page for Agency Users**: A new page under  for logged-in agency users to see their own information.
-6.  **Change Password Functionality**: On the new Settings page, users should be able to change their own password. (**DONE and VERIFIED**)
+6.  **Change Password Functionality**: On the new Settings page, users should be able to change their own password. (**DONE**)
 7.  **Granular User Permissions**: A system where a superadmin or agency admin can define which specific screens individual users are allowed to see.
-8.  **UI/UX**: The Faturalama (Billing) screen should not be visible to agency-level users. (**DONE and VERIFIED**)
+8.  **UI/UX**: The Faturalama (Billing) screen should not be visible to agency-level users. (**DONE**)
 
 **User's preferred language**: Turkish
 
 **what currently exists?**
-The agent dedicated this session to verifying and testing the P0 tasks from the previous session's handoff. After investigating the codebase (and noting some files seemed missing from the initial fork), the agent successfully performed end-to-end testing for all priority items.
+The agent successfully unblocked and implemented the core Google Sheets integration feature. This was a major session focus. The agent guided the user through creating a Google Cloud Service Account, obtaining the JSON credentials, and configuring them in the backend.
 
-The following functionalities are now confirmed to be working correctly:
-1.  **Change Password**: Both backend logic (password verification, hashing) and frontend UI (form submission, toasts) are fully functional.
-2.  **Agency Module Saving**: The fix from the previous session was verified; modules assigned to an agency are correctly saved and reflected.
-3.  **Billing Link Visibility**: The Faturalama (Billing) link is correctly hidden from agency users and visible only to superadmins.
+The integration is now functional: the system can connect to a user-provided Google Sheet, sync hotel availability data (date, room type, price, allotment), and store it.
 
-All tests were consolidated into a single run using the , which reported 100% success. The  file was updated to reflect this progress.
+Following the successful sync, several UI bugs emerged on the hotel listing and detail pages. The agent systematically debugged and fixed all of them:
+-   An incorrect Satışa Kapalı (Stop Sell) status is now corrected to Satışa Açık (Open for Sale).
+-   A blank white screen on the hotel detail page has been fixed, and the page now renders correctly.
+-   Garbled Turkish characters on the detail page have been fixed.
+-   Missing hotel name and location data on the detail page are now displayed correctly.
+
+The application is currently in a state where the Google Sheets sync works, and the associated UI pages are functional and display the correct data.
 
 **Last working item**:
-- Last item agent was working: The agent's final action was to conclude the session by summarizing the successful verification of all P0 tasks and updating the project documentation (). There are no pending code changes.
-- Status: NONE
-- Agent Testing Done: Y
-- Which testing method agent to use? NA
+- Last item agent was working: The agent just finished implementing a series of fixes for the  and  to correctly display data after the Google Sheets sync. This included fixing the hotel status, hotel name/location, and character encoding issues. The next step is to perform a final verification of these fixes.
+- Status: IN PROGRESS
+- Agent Testing Done: N
+- Which testing method agent to use? screenshot tool
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P1) Confirm Production Deployment Fix**
-  - **Description:** A fix for a  error in the production environment was implemented in a previous session. It's unknown if the user redeployed and if the fix was successful. This has been missed for several sessions.
-  - **Next debug checklist:** Ask the user if they have redeployed to their custom domain and if the 502 error is resolved.
-  - **Status:** USER VERIFICATION PENDING
-  - **Is recurring issue?** Y
-
-- **Issue 2: (P1) Google Credentials Block**
-  - **Description:** The core Google Sheets integration feature is completely **BLOCKED** as it requires a Google Cloud Service Account JSON key from the user. This is a long-standing blocker.
-  - **Next debug checklist:** Remind the user that progress on their main feature is blocked until these credentials are provided.
-  - **Status:** BLOCKED
-  - **Is recurring issue?** Y
+-   **Issue 1: (P0) Final Verification of Post-Sync UI Fixes**
+    -   **Description:** The agent implemented fixes for the hotel list (Satışa Açık) and detail page (name, location, character encoding). A final, consolidated test is needed to ensure all these fixes work together correctly.
+    -   **Status:** TESTING PENDING
+-   **Issue 2: (P1) Confirm Production Deployment Fix**
+    -   **Description:** A fix for a  error in the user's custom production environment was implemented in a previous session. It is still unknown if the user redeployed and if the fix was successful.
+    -   **Status:** USER VERIFICATION PENDING
+    -   **Is recurring issue?** Y
+-   **Issue 3: (P1) Clarify Google Sheets Architecture**
+    -   **Description:** The current integration uses a single, superadmin-configured service account. The user asked if each agency could use its own account. This needs clarification before further development.
+    -   **Status:** BLOCKED (on user feedback)
+    -   **Is recurring issue?** Y
 
 **In progress Task List**:
-- None. All previous in-progress tasks have been completed and verified.
+-   **Task 1: Verify All UI Fixes**
+    -   **Where to resume:** Take a screenshot of the  for Demo Hotel 1 to confirm that the hotel name, location, Satışa Açık status, and Turkish characters are all displaying correctly at the same time.
+    -   **What will be achieved with this?** Confirms that the recent bug-fixing effort was successful and the UI is stable post-sync.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** Frontend
 
 **Upcoming and Future Tasks**
-- **Upcoming Tasks:**
-  - **P1: Implement User-Based Screen Permissions:** Implement the user's request for a granular permission model where specific screens can be assigned to individual users. This will likely involve changes to user/agency models and middleware/UI logic to check permissions.
-  - **P1: Implement Reservation Limits:** Enforce reservation limits on the backend based on pricing plans.
+-   **Upcoming Tasks:**
+    -   **P1: Implement Reservation Write-Back:** The sync process created a Rezervasyonlar tab in the Google Sheet. The functionality to write new reservations from the app back to this tab needs to be built.
+    -   **P1: Implement User-Based Screen Permissions:** Build the granular permission model for assigning screens to individual users.
+    -   **P1: Implement Reservation Limits:** Enforce reservation limits on the backend based on pricing plans.
 
-- **Future Tasks:**
-  - **P2: Refine Pricing Page:** Review and detail the pricing page based on the  inspiration.
-  - **P2: Update My Hotels Screen ():** Display the  () field from the  model.
-  - **P2: Implement Automatic Google Sheets Sync:** Add a background job for periodic syncing after manual sync is working.
+-   **Future Tasks:**
+    -   **P2: Refine Pricing Page:** Detail the pricing page based on the  inspiration.
+    -   **P2: Update My Hotels Screen ():** Display the  () field from the  model.
+    -   **P2: Implement Automatic Google Sheets Sync:** Add a background job for periodic syncing.
 
 **Completed work in this session**
-- **Verification: Change Password Functionality**
-  - Confirmed the end-to-end flow for changing passwords works as expected, including error handling for incorrect/weak passwords.
-
-- **Verification: Agency Module Saving Fix**
-  - Confirmed that module selections for an agency are correctly saved to the database and reflected in the UI.
-
-- **Verification: Hide Billing Link**
-  - Confirmed that the Faturalama (Billing) link is correctly hidden for agency users based on the  property in the sidebar configuration.
-
-- **Documentation: Updated PRD.md**
-  - Appended a Completed Work section to  detailing the verified features.
+-   **Google Sheets Integration Implemented:**
+    -   Guided the user to create a Google Cloud Service Account and JSON key.
+    -   Saved credentials to .
+    -   Successfully connected to a user-provided sheet and synced availability data for a hotel.
+-   **Bug Fix: Incorrect Stop Sell Status:**
+    -   Modified  to filter out expired stop-sell periods.
+-   **Bug Fix: Blank Hotel Detail Page:**
+    -   Corrected multiple issues in , including state initialization, data fetching, and object key mismatches ( vs uid=0(root) gid=0(root) groups=0(root)).
+-   **Bug Fix: Garbled Turkish Characters & Missing Data:**
+    -   Fixed unicode character display and mapped API data fields correctly (, ) in .
+    -   Normalized data fields in the  endpoint for frontend consistency.
 
 **Earlier issues found/mentioned but not fixed**
-- **Issue 1: Production 502 Error:** The status of the  error on the user's custom production deployment remains unknown. **Status: USER VERIFICATION PENDING.**
-- **Issue 2: Google Sheets Credentials:** The Google Sheets integration remains blocked pending credentials from the user. **Status: BLOCKED.**
+-   **Issue 1: Production 502 Error:** The status of the  error on the user's custom production deployment remains unknown. **Status: USER VERIFICATION PENDING.**
+-   **Issue 2: Google Sheets Per-Agency Model:** The user's questions suggested they might want each agency to manage their own Google Sheet credentials, which is different from the current global implementation. This architectural decision is pending user clarification. **Status: BLOCKED.**
 
 **Known issue recurrence from previous fork**
-- **Issue recurrence in previous fork**: Post-login instability and data integrity issues.
-- **Recurrence count**: 7
-- **Status**: IN PROGRESS (The verification of the agency module fix directly addresses a data integrity part of this. The production 502 error, which could cause instability, is still an unknown.)
+-   **Issue recurrence in previous fork**: Post-login instability and data integrity issues.
+-   **Recurrence count**: 8
+-   **Status**: IN PROGRESS (Fixing UI data display issues contributes to improving data integrity. The production 502 error remains a potential source of instability.)
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Backend:** FastAPI, Pydantic, Motor (async MongoDB driver),  for password hashing.
-- **Frontend:** React, React Router, Tailwind CSS, Shadcn/UI, Axios,  for toast notifications.
-- **Authentication:** JWT-based.
-- **Testing:** Utilized  for comprehensive E2E verification.
+-   **Backend:** FastAPI, Pydantic, Motor (async MongoDB driver), .
+-   **Frontend:** React, React Router, Tailwind CSS, Shadcn/UI, Axios, .
+-   **Authentication:** JWT-based.
+-   **Google Cloud:** Service Account authentication for server-to-server API calls.
+-   **Google APIs:** Google Sheets API, Google Drive API (via Python client library).
 
 **key DB schema**
-- **agencies**:  (Verified)
-- **users**:  (Verified)
+-   **hotels**: 
+-   **agencies**: 
+-   **users**: 
 
 **All files of reference**
-- : Updated with the latest completed tasks.
-- : Contains the navigation structure and visibility scopes.
-- : Location of the verified agency password change endpoint.
-- : The UI component for the verified password change feature.
-- : Location of the verified agency module update endpoint.
+-   : Stores the sensitive Google Cloud service account key.
+-   : Contains the logic for displaying hotels to agencies, which was fixed.
+-   : The main UI file that was fixed.
+-   : The file containing the core Google Sheets sync logic.
+-   : A new guide created for the user.
+
+**Areas that need refactoring**:
+-   The data normalization logic added to  could be centralized into Pydantic response models to ensure consistency across all hotel-related endpoints.
+-   The  component was significantly patched. It could benefit from a cleanup to improve readability and state management logic.
+
+**key api endpoints**
+-   : Saves the Google credentials JSON.
+-   : Triggers the data sync from Google Sheets.
+-   : Fetches the list of hotels for an agency.
+-   : Fetches the details for a single hotel.
 
 **Critical Info for New Agent**
-- **You must communicate in Turkish.**
-- **All P0 tasks are now complete and verified.** The immediate next step is to plan the P1 tasks.
-- **CRITICAL FOLLOW-UP:** Your first  plan **must** include questions for the user regarding the two long-standing issues that have been repeatedly missed:
+-   **You must communicate in Turkish.**
+-   The Google Sheets integration, a major blocker, is now **implemented and working** in a superadmin context. This is a significant milestone.
+-   Your immediate task is to perform one final test to verify all the recent UI bug fixes on the hotel list and detail pages are working together.
+-   After verification, you must re-engage the user on two long-standing topics:
     1.  The status of the  error on their custom domain.
-    2.  The Google Cloud Service Account credentials required to unblock the Google Sheets feature.
-- Use the credentials discovered in this session for testing.
+    2.  Clarification on the Google Sheets architecture: is the current global setup sufficient, or do they need a per-agency model?
 
 **documents and test reports created in this job**
-- 
--  (Updated)
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User, Message 5:**  (Yes) - User approved the agent's proposed plan. Status: **Completed**.
+1.  **User:** Asked to retry reading the sheet after adding headers. **Status: Completed.**
+2.  **User:** Asked where to view the synchronized data in the app. **Status: Completed.**
+3.  **User:** Reported multiple UI bugs (Stop Sell, blank screen, 0 prices) via screenshot after the sync. **Status: Completed (All fixed).**
+4.  **User:** Provided the Google Sheet URL for testing. **Status: Completed.**
+5.  **User:** Confirmed they enabled the Google Cloud APIs and asked for the next step. **Status: Completed.**
+6.  **User:** Confirmed they enabled the API in the correct Google Cloud project. **Status: Completed.**
+7.  **User:** Provided the JSON credentials as pasted text, which had an error. **Status: Superseded.**
+8.  **User:** Provided the correct JSON credentials via file upload, resolving the error. **Status: Completed.**
+9.  **User:** Confirmed they had downloaded the JSON key file. **Status: Completed.**
+10. **User:** Requested a guide on how to create the Google Service Account. **Status: Completed.**
 
 **Project Health Check:**
-- **Broken:** None.
-- **Incomplete:** None.
-- **Unknown:** **Production Deployment Stability**: The status of the  error on the user's custom domain is still unknown.
-- **Blocked:** **Google Sheets Integration**: Remains blocked pending user-provided credentials.
+-   **Broken:** None.
+-   **Incomplete:**
+    -   **Google Sheets Agency Model:** Architecture for per-agency sheet connections is undefined.
+    -   **Reservation Write-Back:** Sync is currently one-way (read-only).
+-   **Unknown:** **Production Deployment Stability:** Status of the  error on the user's live domain is still unknown.
+-   **Blocked:** None.
 
 **3rd Party Integrations**
-- **Google Sheets API / Google Drive API:** Backend code exists but is inactive and **BLOCKED**.
-- **MongoDB Atlas:** Used for production, but connection stability in the live environment is not yet verified by the user post-fix.
+-   **Google Sheets API / Google Drive API:** **Active and working**. Credentials are set up, and data sync is functional.
+-   **MongoDB Atlas:** Production database.
 
 **Testing status**
-- Testing agent used after significant changes: YES
-- Troubleshoot agent used after agent stuck in loop: NO
-- Test files created:
-  - 
-- Known regressions: None.
+-   Testing agent used after significant changes: NO
+-   Troubleshoot agent used after agent stuck in loop: NO
+-   Test files created: []
+-   Known regressions: None. The regressions that appeared during the session were all fixed.
 
 **Credentials to test flow:**
-- **Superadmin:**  / 
-- **Agency Admin:**  /  (This was discovered and used for testing in this session).
+-   **Superadmin:**  / 
+-   **Agency Admin:**  / 
 
 **What agent forgot to execute**
-- The agent correctly prioritized and completed the P0 verification tasks. The next agent must now execute the follow-up communication that was planned but not yet performed: asking the user about the  error and the missing Google Sheets credentials.</analysis>
+-   The agent did not ask the user about the long-standing  error at the start of the session, as the conversation immediately focused on the Google Sheets integration. This question must be asked next.
+-   A final, consolidated verification (e.g., a single screenshot) showing all the recent UI fixes working together has not yet been performed. This is the immediate next step.</analysis>

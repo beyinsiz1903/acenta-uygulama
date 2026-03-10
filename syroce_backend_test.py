@@ -24,7 +24,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Use the preview URL from frontend/.env
-BASE_URL = "https://agency-platform-19.preview.emergentagent.com"
+BASE_URL = "https://agency-sheets-dev.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials from Turkish review request

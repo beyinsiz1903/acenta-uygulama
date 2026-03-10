@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
+import { resolveAssetUrl } from "../lib/backendUrl";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -244,8 +245,7 @@ export default function ToursListPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {tours.map((tour, idx) => {
             const coverImg = tour.cover_image || getDefaultImage(idx);
-            const backendUrl = process.env.REACT_APP_BACKEND_URL || "";
-            const imgSrc = coverImg.startsWith("/api/") ? `${backendUrl}${coverImg}` : coverImg;
+            const imgSrc = resolveAssetUrl(coverImg);
 
             return (
               <Card

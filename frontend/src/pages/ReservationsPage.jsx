@@ -23,6 +23,7 @@ import {
 } from "../components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "../components/ui/sheet";
 import EmptyState from "../components/EmptyState";
+import { buildApiUrl } from "../lib/backendUrl";
 
 /* ───────── Status helpers ───────── */
 function statusConfig(status) {
@@ -487,7 +488,7 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
       `📊 Durum: ${status}`,
       ``,
       `Voucher linki:`,
-      `${process.env.REACT_APP_BACKEND_URL}/api/reservations/${reservationId}/voucher`,
+      buildApiUrl(`/reservations/${reservationId}/voucher`),
     ].filter(Boolean).join("\n");
 
     const phone = (data.customer_phone || data.guest_phone || "").replace(/[^0-9+]/g, "");

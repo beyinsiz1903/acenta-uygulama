@@ -30,11 +30,12 @@ def configure_middlewares(app: FastAPI) -> None:
     cors_logger = logging.getLogger("cors")
     if CORS_ORIGINS == ["*"]:
         cors_logger.warning("CORS: Allowing all origins (development/preview mode). Set CORS_ORIGINS env for production.")
-        print("[CORS] Mode: allow-all", file=sys.stderr)
+        print("[CORS] Mode: allow-all-regex", file=sys.stderr)
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=["*"],
-            allow_credentials=False,
+            allow_origins=[],
+            allow_origin_regex=r"https?://.*",
+            allow_credentials=True,
             allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
             allow_headers=["*"],
             expose_headers=["X-Request-ID", "X-RateLimit-Policy"],

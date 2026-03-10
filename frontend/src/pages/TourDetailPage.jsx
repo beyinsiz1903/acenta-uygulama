@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
+import { resolveAssetUrl } from "../lib/backendUrl";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -29,8 +30,7 @@ function formatPrice(price, currency) {
 
 function resolveImage(src) {
   if (!src) return DEFAULT_IMAGES[0];
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || "";
-  return src.startsWith("/api/") ? `${backendUrl}${src}` : src;
+  return resolveAssetUrl(src);
 }
 
 export default function TourDetailPage() {

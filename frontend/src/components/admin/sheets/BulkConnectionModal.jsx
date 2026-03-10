@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { api } from "../../../lib/api";
+import { buildApiUrl } from "../../../lib/backendUrl";
 import { toast } from "sonner";
 
 const SOURCE_OPTIONS = [
@@ -24,7 +25,7 @@ function getScopeMeta(scope) {
       title: "Toplu Acenta Bağlantısı",
       subtitle: "hotel_id + agency_id bazlı bağlantıları tek seferde önizleyip kaydedin.",
       columns: ["hotel_id", "agency_id", "sheet_id", "sheet_tab", "writeback_tab", "sync_enabled", "sync_interval_minutes"],
-      templateHref: `${process.env.REACT_APP_BACKEND_URL || ""}/api/admin/sheets/bulk-template/agency`,
+      templateHref: buildApiUrl("/admin/sheets/bulk-template/agency"),
       defaultMasterTab: "AgencyConnections",
     };
   }
@@ -33,7 +34,7 @@ function getScopeMeta(scope) {
     title: "Toplu Otel Bağlantısı",
     subtitle: "300+ otel için bağlantıları tek tabloda önizleyip kaydedin.",
     columns: ["hotel_id", "sheet_id", "sheet_tab", "writeback_tab", "sync_enabled", "sync_interval_minutes"],
-    templateHref: `${process.env.REACT_APP_BACKEND_URL || ""}/api/admin/sheets/bulk-template/hotel`,
+    templateHref: buildApiUrl("/admin/sheets/bulk-template/hotel"),
     defaultMasterTab: "Connections",
   };
 }

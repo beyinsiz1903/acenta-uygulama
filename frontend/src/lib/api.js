@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getActiveTenantId } from "./tenantContext";
+import { buildApiUrl, getApiBaseUrl } from "./backendUrl";
 import {
   clearToken,
   getUser,
@@ -8,34 +9,8 @@ import {
 } from "./authSession";
 import { markSessionExpired, rememberPostLoginRedirect } from "./authRedirect";
 
-// Backend base URL: prefer REACT_APP_BACKEND_URL from env, fallback to same-origin /api
-// This prevents broken URLs like "undefined/api" when env is not set in certain environments.
-const backendEnv =
-  (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.REACT_APP_BACKEND_URL)
-    || process.env.REACT_APP_BACKEND_URL
-    || "";
-
 export { clearToken, getUser, setUser };
-
-// If backendEnv is empty, axios will call relative to current origin.
-// Ayrıca: Eğer REACT_APP_BACKEND_URL localhost'u gösteriyor ama uygulama
-// başka bir hosttan (örn. preview/prod domain) çalışıyorsa, bu değeri yok
-// sayıp aynı origin /api üzerinden çağrı yaparız.
-let resolvedBaseURL = "/api";
-if (backendEnv) {
-  const isBrowser = typeof window !== "undefined";
-  if (isBrowser) {
-    const host = window.location.hostname;
-    const backendIsLocalhost = backendEnv.includes("://localhost") || backendEnv.includes("://127.0.0.1");
-    const originIsLocalhost = host === "localhost" || host === "127.0.0.1";
-    if (!backendIsLocalhost || originIsLocalhost) {
-      resolvedBaseURL = `${backendEnv}/api`;
-    }
-  } else {
-    // Node/test ortamında env'i doğrudan kullan
-    resolvedBaseURL = `${backendEnv}/api`;
-  }
-}
+const resolvedBaseURL = getApiBaseUrl();
 
 export const api = axios.create({
   baseURL: resolvedBaseURL,
@@ -83,7 +58,7 @@ async function requestWithNetworkFallback(method, url, options = {}) {
 
       return axios.request({
         method,
-        url: `${window.location.origin}/api${url}`,
+        url: buildApiUrl(url),
         withCredentials: true,
         ...options,
         headers: fallbackHeaders,
@@ -269,7 +244,7 @@ api.interceptors.response.use(
 
         try {
           const refreshResp = await axios.post(
-            `${resolvedBaseURL}/auth/refresh`,
+            buildApiUrl("/auth/refresh"),
             {},
             {
               headers: {

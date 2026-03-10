@@ -8,6 +8,7 @@ import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "../components/ui/sheet";
 import { Label } from "../components/ui/label";
+import { getBackendOrigin } from "../lib/backendUrl";
 
 function RiskBadge({ status }) {
   if (status === "over_limit") {
@@ -128,10 +129,7 @@ export default function AdminB2BAgenciesSummaryPage() {
     setSheetOpen(true);
   }
 
-  const backendBase =
-    (typeof window !== "undefined" &&
-      (window.__ACENTA_BACKEND_URL__ || window.importMetaEnvBackendUrl || process.env.REACT_APP_BACKEND_URL)) ||
-    "";
+  const backendBase = getBackendOrigin();
 
   function buildEmbedUrl(agency) {
     // Faz 1: basit partner + org parametresi ile public book sayfas31

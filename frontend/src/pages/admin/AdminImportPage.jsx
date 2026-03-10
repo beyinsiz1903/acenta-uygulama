@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { api } from "../../lib/api";
+import { buildApiUrl } from "../../lib/backendUrl";
 import {
   Upload, FileSpreadsheet, Table2, CheckCircle2, AlertTriangle,
   Download, RefreshCw, Clock, ArrowRight, X, Sheet, Link2, ChevronRight,
@@ -177,7 +178,7 @@ function ExcelUploadTab() {
             </div>
           )}
           <div className="flex items-center gap-2">
-            <a href={`${process.env.REACT_APP_BACKEND_URL || ""}/admin/import/export-template`}
+            <a href={buildApiUrl("/admin/import/export-template")}
               className="text-xs text-primary hover:underline flex items-center gap-1" target="_blank" rel="noreferrer">
               <Download className="h-3 w-3" /> Örnek şablon indir
             </a>

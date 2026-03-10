@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { AlertCircle, CalendarDays, Loader2, User, CreditCard, Timer, XCircle, RefreshCw, Store, Eye } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
+import { buildApiUrl } from "../lib/backendUrl";
 import { bookingStatusLabelTr } from "../utils/bookingStatusLabels";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -592,7 +593,7 @@ function BookingListTab() {
         )}
 
                   const canCancel = canCancelStatuses.has(s);
-                  const voucherUrl = s === "VOUCHERED" ? `${process.env.REACT_APP_BACKEND_URL}/api/b2b/bookings/${b.booking_id}/voucher` : null;
+                  const voucherUrl = s === "VOUCHERED" ? buildApiUrl(`/b2b/bookings/${b.booking_id}/voucher`) : null;
 
                   return (
                     <tr key={b.booking_id} className="border-b last:border-0">
@@ -1589,7 +1590,7 @@ export default function B2BPortalPage() {
                   <div className="space-y-1">
                     <div className="text-xs text-muted-foreground">Voucher</div>
                     <a
-                      href={`${process.env.REACT_APP_BACKEND_URL}/api/b2b/bookings/${booking.booking_id}/voucher`}
+                      href={buildApiUrl(`/b2b/bookings/${booking.booking_id}/voucher`)}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-flex items-center text-xs text-primary hover:underline"

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { AlertCircle, CheckCircle2, Loader2, RefreshCw, Search, XCircle } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
+import { buildApiUrl } from "../lib/backendUrl";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -766,7 +767,7 @@ export default function OpsB2BQueuesPage() {
                       {hasActiveVoucher && (
                         <div className="flex flex-wrap items-center gap-3 text-xs">
                           <a
-                            href={`${process.env.REACT_APP_BACKEND_URL}/api/ops/bookings/${bookingDetail.booking_id}/voucher`}
+                            href={buildApiUrl(`/ops/bookings/${bookingDetail.booking_id}/voucher`)}
                             target="_blank"
                             rel="noreferrer"
                             className="text-primary hover:underline"

@@ -3,6 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { api, apiErrorMessage } from "../lib/api";
+import { getBackendOrigin } from "../lib/backendUrl";
 import { Copy, RefreshCw, AlertCircle } from "lucide-react";
 
 const STATUS_LABELS = {
@@ -82,7 +83,7 @@ export function IntegrationDetailDrawer({ open, onOpenChange, integration, onRef
       lines.push(`Updated at: ${integration.updated_at}`);
     }
     if (typeof window !== "undefined") {
-      const base = process.env.REACT_APP_BACKEND_URL || "";
+      const base = getBackendOrigin() || window.location.origin;
       if (base) {
         lines.push(`Backend: ${base}`);
       }

@@ -1,10 +1,9 @@
 import React from "react";
 import { Download, FileSpreadsheet, ListChecks, ShieldCheck } from "lucide-react";
+import { buildApiUrl } from "../../../lib/backendUrl";
 
 function getDownloadHref(templateName) {
-  const backendBase = process.env.REACT_APP_BACKEND_URL || "";
-  const path = `/api/admin/sheets/download-template/${templateName}`;
-  return backendBase ? `${backendBase}${path}` : path;
+  return buildApiUrl(`/admin/sheets/download-template/${templateName}`);
 }
 
 export const SheetTemplateCenter = ({ templates, configured, serviceAccountEmail }) => {

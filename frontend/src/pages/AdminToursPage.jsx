@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { api } from "../lib/api";
+import { resolveAssetUrl } from "../lib/backendUrl";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -10,8 +11,6 @@ import {
   Globe, Save, Loader2, ArrowLeft, CheckCircle,
   Image as ImageIcon,
 } from "lucide-react";
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "";
 
 function formatPrice(price, currency) {
   if (!price) return "-";
@@ -105,7 +104,7 @@ export default function AdminToursPage() {
   const addListItem = (field) => setForm((f) => ({ ...f, [field]: [...f[field], ""] }));
   const updateListItem = (field, idx, value) => { const items = [...form[field]]; items[idx] = value; setForm((f) => ({ ...f, [field]: items })); };
   const removeListItem = (field, idx) => setForm((f) => ({ ...f, [field]: f[field].filter((_, i) => i !== idx) }));
-  const resolveImg = (src) => !src ? "" : src.startsWith("/api/") ? BACKEND_URL + src : src;
+  const resolveImg = (src) => resolveAssetUrl(src);
 
   if (view === "list") {
     return (

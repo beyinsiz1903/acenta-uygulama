@@ -1,0 +1,57 @@
+{
+  "summary": "Frontend UI testing for landing hero mockup floating cards fix and new Agentis-style pricing pages. All requested features verified: (1) Landing hero floating cards NOT clipped at 1700px+ widths, positioned correctly outside dashboard mockup, (2) No clipping/overlap issues in hero section, (3) 4 pricing package cards visible on both landing and /pricing pages, (4) E-Tablo integration correctly shown from Standart package onwards, (5) FAQ accordions working on both pages, (6) Monthly/yearly toggle working on /pricing page, (7) Comparison section with all 8 feature rows visible.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Landing hero section loads correctly at 1920px width",
+    "Left floating card (Operasyon) is visible and NOT clipped at 1800px+ widths",
+    "Left floating card positioned left of dashboard mockup (x=921.2 < dash x=993.2)",
+    "Right floating card (Finans) is visible at 1800px+ widths",
+    "Hero section has overflow: visible (no clipping)",
+    "Visual wrapper has overflow: visible (no clipping)",
+    "Landing pricing section shows all 4 package cards (Giriş, Standart, Profesyonel, Platinum)",
+    "E-Tablo/Google Sheets mentioned in Standart package and above",
+    "Offer strip shows 'Google Sheets / E-Tablo entegrasyonu Standart paket ve üstünde'",
+    "Landing FAQ section has 7 FAQ items",
+    "Landing FAQ accordion expands/collapses correctly",
+    "/pricing page hero section loads with correct title",
+    "/pricing hero mentions E-Tablo/Google Sheets in subtitle",
+    "/pricing shows all 4 package cards",
+    "Monthly/yearly toggle works (Standart: ₺6.450/ay → ₺64.500/yıl)",
+    "/pricing comparison section shows all 4 package headers",
+    "/pricing comparison has E-Tablo row with correct values (Giriş: —, Standart+: Dahil)",
+    "/pricing FAQ section has 7 items with working accordion",
+    "/pricing final CTA section displays correctly"
+  ],
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Floating cards use min-[1700px]:block breakpoint for visibility - correct approach to only show on wide screens",
+    "Floating card 1 uses -translate-x-8 to position outside dashboard - working correctly",
+    "Hero visual wrapper and hero section both have overflow: visible - no clipping issues",
+    "SyrocePricingCard component correctly uses getPricingForCycle() for monthly/yearly prices",
+    "Comparison table correctly uses formatComparisonValue() to show 'Dahil' for true and '—' for false",
+    "All interactive elements have data-testid attributes for testing"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A - Frontend only testing",
+    "frontend": "100% (19/19 tests passed)"
+  },
+  "test_credentials": {},
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 50 verified landing hero floating card positioning fix and new Agentis-style pricing structure. Floating cards appear only at min-[1700px] breakpoint and are correctly positioned outside the dashboard mockup. Pricing pages show 4 packages (Giriş, Standart, Profesyonel, Platinum) with E-Tablo integration starting from Standart package. Monthly/yearly toggle and FAQ accordions work correctly on both /landing and /pricing pages. All data-testid attributes are in place for UI testing.",
+  "mocked_apis": {
+    "has_mocked_apis": false,
+    "mocked_apis_list": []
+  }
+}

@@ -20,13 +20,17 @@ import {
 
 import { LandingDashboardMockup } from "../components/landing/LandingDashboardMockup";
 import { LandingSectionHeading } from "../components/landing/LandingSectionHeading";
+import { SyroceFaqSection } from "../components/marketing/SyroceFaqSection";
+import { SyrocePricingCard } from "../components/marketing/SyrocePricingCard";
 import { Button } from "../components/ui/button";
 import { useSeo } from "../hooks/useSeo";
+import { SYROCE_FAQS, SYROCE_PUBLIC_PACKAGES } from "../lib/syrocePricingContent";
 
 const NAV_LINKS = [
   { label: "Çözüm", href: "#cozumler" },
   { label: "Nasıl Çalışır", href: "#nasil-calisir" },
   { label: "Fiyatlandırma", href: "#fiyatlandirma" },
+  { label: "SSS", href: "#sss" },
   { label: "Demo", href: "#final-cta" },
 ];
 
@@ -133,69 +137,6 @@ const NETWORK_POINTS = [
   "B2B iş ortaklıklarını ek panel açmadan büyütün",
 ];
 
-const PRICING = {
-  monthly: [
-    {
-      key: "starter",
-      name: "Starter",
-      price: "₺990",
-      period: "/ ay",
-      description: "Excel'den çıkmak isteyen çekirdek ekipler için.",
-      features: ["100 rezervasyon", "3 kullanıcı", "Temel raporlar"],
-      cta: "/signup?plan=trial&selectedPlan=starter",
-    },
-    {
-      key: "pro",
-      name: "Pro",
-      price: "₺2.490",
-      period: "/ ay",
-      description: "Rezervasyon ve operasyon hacmi büyüyen acenteler için.",
-      features: ["500 rezervasyon", "10 kullanıcı", "Tüm raporlar + entegrasyonlar"],
-      featured: true,
-      cta: "/signup?plan=trial&selectedPlan=pro",
-    },
-    {
-      key: "enterprise",
-      name: "Enterprise",
-      price: "₺6.990",
-      period: "/ ay",
-      description: "Sınırsız hacim, API ve özel entegrasyon isteyen ekipler için.",
-      features: ["Sınırsız rezervasyon", "API erişimi", "Özel entegrasyon"],
-      cta: "/login",
-    },
-  ],
-  yearly: [
-    {
-      key: "starter",
-      name: "Starter",
-      price: "₺9.900",
-      period: "/ yıl",
-      description: "Yıllık geçişle ekip maliyetini sabitleyin.",
-      features: ["100 rezervasyon", "3 kullanıcı", "2 ay avantaj"],
-      cta: "/signup?plan=trial&selectedPlan=starter&billingCycle=yearly",
-    },
-    {
-      key: "pro",
-      name: "Pro",
-      price: "₺24.900",
-      period: "/ yıl",
-      description: "Büyüme odaklı acenteler için en popüler plan.",
-      features: ["500 rezervasyon", "10 kullanıcı", "2 ay avantaj + entegrasyonlar"],
-      featured: true,
-      cta: "/signup?plan=trial&selectedPlan=pro&billingCycle=yearly",
-    },
-    {
-      key: "enterprise",
-      name: "Enterprise",
-      price: "Özel teklif",
-      period: "",
-      description: "Yüksek hacimli ağlar için sözleşmeli kurulum.",
-      features: ["Sınırsız rezervasyon", "Özel entegrasyon", "API erişimi"],
-      cta: "/login",
-    },
-  ],
-};
-
 const HERO_SIGNALS = ["Kurulum gerektirmez", "5 dakikada hesap aç", "Kredi kartı gerekmez"];
 
 function ProblemBoard({ mode }) {
@@ -265,7 +206,7 @@ export default function PublicHomePage() {
     type: "website",
   });
 
-  const pricingPlans = useMemo(() => PRICING[billingCycle], [billingCycle]);
+  const pricingPlans = useMemo(() => SYROCE_PUBLIC_PACKAGES, []);
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#F8FAFC] text-slate-900" data-testid="syroce-landing-page">
@@ -378,16 +319,16 @@ export default function PublicHomePage() {
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-4xl xl:max-w-none xl:pl-2 2xl:pl-6" data-testid="landing-hero-visual-wrap">
-            <div className="absolute -left-4 top-10 hidden rounded-[24px] border border-white/70 bg-white/80 px-4 py-3 shadow-[0_22px_50px_rgba(37,99,235,0.15)] backdrop-blur-xl 2xl:block" data-testid="landing-floating-card-1">
+          <div className="relative mx-auto w-full max-w-4xl xl:max-w-none xl:pl-2 min-[1700px]:px-10" data-testid="landing-hero-visual-wrap">
+            <div className="absolute left-0 top-14 z-20 hidden -translate-x-8 rounded-[24px] border border-white/70 bg-white/90 px-4 py-3 shadow-[0_22px_50px_rgba(37,99,235,0.15)] backdrop-blur-xl min-[1700px]:block" data-testid="landing-floating-card-1">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400" data-testid="landing-floating-card-1-label">Operasyon</p>
               <p className="mt-1 text-sm font-semibold text-slate-900" data-testid="landing-floating-card-1-value">12 yeni rezervasyon bugün</p>
             </div>
-            <div className="absolute right-0 top-8 hidden rounded-[24px] border border-blue-100 bg-[#0F172A] px-4 py-3 text-white shadow-[0_24px_50px_rgba(15,23,42,0.28)] 2xl:block" data-testid="landing-floating-card-2">
+            <div className="absolute right-0 top-10 z-20 hidden translate-x-6 rounded-[24px] border border-blue-100 bg-[#0F172A] px-4 py-3 text-white shadow-[0_24px_50px_rgba(15,23,42,0.28)] min-[1700px]:block" data-testid="landing-floating-card-2">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-200/70" data-testid="landing-floating-card-2-label">Finans</p>
               <p className="mt-1 text-sm font-semibold" data-testid="landing-floating-card-2-value">Tahsilat süresi %40 daha hızlı</p>
             </div>
-            <div className="mx-auto w-full max-w-[860px] xl:max-w-[760px]" data-testid="landing-hero-dashboard-wrap">
+            <div className="relative z-10 mx-auto w-full max-w-[860px] xl:max-w-[760px] min-[1700px]:max-w-[780px]" data-testid="landing-hero-dashboard-wrap">
               <LandingDashboardMockup testIdPrefix="landing-hero-dashboard" />
             </div>
           </div>
@@ -653,8 +594,8 @@ export default function PublicHomePage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between" data-testid="landing-pricing-header">
             <LandingSectionHeading
               eyebrow="Fiyatlandırma"
-              title="Acenteniz büyürken paketiniz de birlikte büyüsün"
-              description="14 gün ücretsiz trial ile başlayın; işiniz netleştiğinde size uygun planı seçin."
+              title="Şeffaf, net ve turizm operasyonuna göre ayrışan paketler"
+              description="Syroce paketleri rezervasyon sınırı ile değil; entegrasyon seviyesi, ekip yapısı ve destek modeline göre ayrışır. E-Tablo entegrasyonu ikinci paketten itibaren dahildir."
               testIdPrefix="landing-pricing-heading"
             />
             <div className="inline-flex rounded-full border border-slate-200 bg-white p-1 shadow-[0_12px_26px_rgba(15,23,42,0.04)]" data-testid="landing-pricing-toggle-group">
@@ -667,42 +608,47 @@ export default function PublicHomePage() {
             </div>
           </div>
 
-          <div className="mt-10 grid gap-6 lg:grid-cols-3" data-testid="landing-pricing-grid">
-            {pricingPlans.map((plan, index) => (
-              <article key={`${billingCycle}-${plan.key}`} className={`relative flex h-full flex-col rounded-[34px] p-7 shadow-[0_24px_80px_rgba(15,23,42,0.05)] ${plan.featured ? "border border-slate-950 bg-slate-950 text-white" : "border border-white/80 bg-white/92 text-slate-900"}`} data-testid={`pricing-plan-${plan.key}`}>
-                {plan.featured ? (
-                  <span className="absolute right-6 top-6 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-950" data-testid={`landing-pricing-badge-${plan.key}`}>
-                    En popüler
-                  </span>
-                ) : null}
-                <div data-testid={`landing-pricing-card-body-${index + 1}`}>
-                  <p className={`text-sm font-semibold uppercase tracking-[0.22em] ${plan.featured ? "text-sky-200/80" : "text-[#2563EB]"}`} data-testid={`landing-pricing-name-${index + 1}`}>
-                    {plan.name}
-                  </p>
-                  <div className="mt-5 flex items-end gap-2" data-testid={`landing-pricing-price-wrap-${index + 1}`}>
-                    <span className="text-4xl font-extrabold tracking-[-0.05em]" data-testid={`landing-pricing-price-${index + 1}`}>{plan.price}</span>
-                    <span className={`pb-1 text-sm ${plan.featured ? "text-white/65" : "text-slate-500"}`} data-testid={`landing-pricing-period-${index + 1}`}>{plan.period}</span>
-                  </div>
-                  <p className={`mt-4 text-sm leading-7 ${plan.featured ? "text-white/72" : "text-slate-600"}`} data-testid={`landing-pricing-description-${index + 1}`}>{plan.description}</p>
-                  <div className="mt-6 grid gap-3" data-testid={`landing-pricing-features-${index + 1}`}>
-                    {plan.features.map((feature, featureIndex) => (
-                      <div key={feature} className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm ${plan.featured ? "bg-white/10 text-white/90" : "bg-slate-50 text-slate-700"}`} data-testid={`landing-pricing-feature-${index + 1}-${featureIndex + 1}`}>
-                        <ShieldCheck className={`h-4 w-4 ${plan.featured ? "text-sky-300" : "text-[#2563EB]"}`} />
-                        {feature}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+          <div className="mt-8 rounded-[2rem] border border-[#f1ddcf] bg-[linear-gradient(135deg,#fff8f2,#ffffff)] px-6 py-5 shadow-[0_20px_70px_rgba(15,23,42,0.04)]" data-testid="landing-pricing-offer-strip">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#d16024]" data-testid="landing-pricing-offer-eyebrow">Özel teklif</p>
+                <p className="mt-2 text-base font-semibold text-slate-900" data-testid="landing-pricing-offer-title">Yıllık paketlerde kurulum + ilk yıl kullanım dahil. Profesyonel pakette çok yıllı alımlara ek avantaj sunuyoruz.</p>
+              </div>
+              <div className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700" data-testid="landing-pricing-offer-badge">
+                Google Sheets / E-Tablo entegrasyonu Standart paket ve üstünde
+              </div>
+            </div>
+          </div>
 
-                <div className="mt-8" data-testid={`landing-pricing-cta-wrap-${index + 1}`}>
-                  <Button asChild className={`h-12 w-full rounded-full text-sm font-semibold ${plan.featured ? "bg-white text-slate-950 hover:bg-slate-100" : "bg-[linear-gradient(135deg,#2563EB,#0EA5E9)] text-white hover:brightness-110"}`} data-testid={`landing-pricing-cta-${index + 1}`}>
-                    <Link to={plan.key === "enterprise" ? "/demo" : plan.cta}>{plan.key === "enterprise" ? "Demo Hesap Oluştur" : "Planı Seç"}</Link>
-                  </Button>
-                </div>
-              </article>
+          <div className="mt-10 grid gap-6 lg:grid-cols-2 2xl:grid-cols-4" data-testid="landing-pricing-grid">
+            {pricingPlans.map((pkg) => (
+              <SyrocePricingCard
+                key={`${billingCycle}-${pkg.key}`}
+                pkg={pkg}
+                billingCycle={billingCycle}
+                testIdPrefix="landing-pricing"
+              />
             ))}
           </div>
+
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-[1.8rem] border border-white/80 bg-white/92 px-6 py-5 shadow-[0_16px_50px_rgba(15,23,42,0.04)]" data-testid="landing-pricing-helper-bar">
+            <p className="text-sm font-medium text-slate-600" data-testid="landing-pricing-helper-text">
+              Tüm paket detaylarını, karşılaştırma tablosunu ve SSS cevaplarını görmek için detaylı fiyatlandırma ekranına geçin.
+            </p>
+            <Button asChild variant="outline" className="rounded-full border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700" data-testid="landing-pricing-helper-cta">
+              <Link to="/pricing">Detaylı fiyatlandırmayı incele</Link>
+            </Button>
+          </div>
         </section>
+
+        <div id="sss" className="mx-auto max-w-7xl px-4 pb-24 sm:px-6 lg:px-8 lg:pb-28">
+          <SyroceFaqSection
+            items={SYROCE_FAQS}
+            title="Paketler, entegrasyonlar ve geçiş süreci hakkında merak edilenler"
+            description="Agentis benzeri netlikte, ama Syroce operasyonuna özel cevaplarla paketleri anlamanızı kolaylaştırdık."
+            sectionTestId="landing-faq-section"
+          />
+        </div>
 
         <section id="final-cta" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8 lg:pb-24" data-testid="landing-final-cta-section">
           <div className="overflow-hidden rounded-[40px] bg-[linear-gradient(135deg,#2563EB,#0EA5E9)] px-6 py-10 text-white shadow-[0_34px_100px_rgba(37,99,235,0.28)] lg:px-10" data-testid="landing-final-cta-card">

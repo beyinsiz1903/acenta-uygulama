@@ -20,6 +20,8 @@ import {
 } from "../components/ui/dialog";
 import { Checkbox } from "../components/ui/checkbox";
 import { SettingsSectionNav } from "../components/settings/SettingsSectionNav";
+import { UserProfileSummaryCard } from "../components/settings/UserProfileSummaryCard";
+import { useCurrentUser } from "../hooks/useAuth";
 
 const AVAILABLE_ROLES = [
   { id: "super_admin", label: "Süper Admin" },
@@ -172,11 +174,15 @@ function UserForm({ open, onOpenChange, onSaved }) {
 }
 
 export default function SettingsPage() {
-  const currentUser = getUser();
+  const cachedUser = getUser();
+  const { data: sessionUser } = useCurrentUser();
+  const currentUser = sessionUser || cachedUser;
   const canManageUsers = (currentUser?.roles || []).some((role) => ["super_admin", "admin"].includes(role));
+  const isAgencyUser = (currentUser?.roles || []).some((role) => ["agency_admin", "agency_agent"].includes(role));
   const [users, setUsers] = useState([]);
   const [error, setError] = useState("");
   const [openUser, setOpenUser] = useState(false);
+  const [agencyName, setAgencyName] = useState("");
 
   const load = useCallback(async () => {
     if (!canManageUsers) {
@@ -207,27 +213,58 @@ export default function SettingsPage() {
     return () => clearTimeout(t);
   }, [load]);
 
+  useEffect(() => {
+    if (!isAgencyUser) {
+      setAgencyName("");
+      return undefined;
+    }
+
+    let active = true;
+    api.get("/agency/profile")
+      .then((resp) => {
+        if (active) {
+          setAgencyName(resp.data?.name || "");
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setAgencyName("");
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [isAgencyUser, currentUser?.agency_id]);
+
   if (!canManageUsers) {
     return (
       <div className="space-y-6" data-testid="settings-users-page">
         <div>
           <h2 className="text-4xl font-semibold text-foreground">Ayarlar</h2>
-          <p className="mt-2 text-base text-muted-foreground">Güvenlik ve yönetim bölümleri.</p>
+          <p className="mt-2 text-base text-muted-foreground">Kullanıcı bilgileriniz, güvenlik ve hesap bağlantıları.</p>
         </div>
 
         <SettingsSectionNav showUsersSection={false} />
 
+        <UserProfileSummaryCard user={currentUser} agencyName={agencyName} canManageUsers={false} />
+
         <Card className="rounded-3xl border-border/60" data-testid="settings-users-unauthorized-state">
           <CardContent className="space-y-3 p-6">
             <div>
-              <h3 className="text-lg font-semibold text-foreground">Kullanıcı yönetimi yetkisi gerekiyor</h3>
+              <h3 className="text-lg font-semibold text-foreground">Bu alanda profil bilgileriniz gösterilir</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Bu bölüm yalnızca yönetici rolleri için açıktır. Güvenlik ayarlarından aktif oturumlarınızı yönetebilirsiniz.
+                Ekip kullanıcılarını yönetmek için yönetici rolü gerekir. Siz yine de güvenlik ve faturalama sayfalarından kendi hesabınızı yönetebilirsiniz.
               </p>
             </div>
-            <Button asChild data-testid="settings-users-go-security-button">
-              <Link to="/app/settings/security">Aktif Oturumlara Git</Link>
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild data-testid="settings-users-go-security-button">
+                <Link to="/app/settings/security">Aktif Oturumlara Git</Link>
+              </Button>
+              <Button asChild variant="outline" data-testid="settings-users-go-billing-button">
+                <Link to="/app/settings/billing">Faturalamayı Aç</Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -239,10 +276,12 @@ export default function SettingsPage() {
       <div className="space-y-4">
         <div>
           <h2 className="text-4xl font-semibold text-foreground">Ayarlar</h2>
-          <p className="mt-2 text-base text-muted-foreground">Kullanıcı, rol ve güvenlik bölümleri.</p>
+          <p className="mt-2 text-base text-muted-foreground">Kullanıcı profiliniz, ekip üyeleri ve güvenlik bölümleri.</p>
         </div>
 
         <SettingsSectionNav showUsersSection />
+
+        <UserProfileSummaryCard user={currentUser} agencyName={agencyName} canManageUsers />
 
         <div className="flex items-start justify-between gap-4">
           <div>

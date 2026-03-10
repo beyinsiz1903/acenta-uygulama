@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { api, apiErrorMessage, apiGetWithNetworkFallback } from "../lib/api";
+import { hasStoredSessionCandidate } from "../lib/authSession";
 import { useCurrentUser, useLogin } from "../hooks/useAuth";
 import { clearSessionExpired } from "../lib/authRedirect";
 import { loginSchema } from "../lib/validations";
@@ -16,7 +17,8 @@ export default function B2BLoginPage() {
   const location = useLocation();
   const [serverError, setServerError] = useState("");
   const loginMutation = useLogin();
-  const { data: currentUser, isLoading: isBootstrapping } = useCurrentUser();
+  const shouldBootstrapSession = hasStoredSessionCandidate();
+  const { data: currentUser, isLoading: isBootstrapping } = useCurrentUser({ enabled: shouldBootstrapSession });
 
   const {
     register,
@@ -98,7 +100,7 @@ export default function B2BLoginPage() {
           </div>
         )}
 
-        {isBootstrapping && !currentUser ? (
+        {shouldBootstrapSession && isBootstrapping && !currentUser ? (
           <div className="mb-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700" data-testid="b2b-login-bootstrap-status">
             Aktif oturum kontrol ediliyor...
           </div>

@@ -7,6 +7,7 @@ import { ArrowRight, CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
 import { apiErrorMessage } from "../lib/api";
 import { useCurrentUser, useLogin } from "../hooks/useAuth";
 import { consumePostLoginRedirectForUser, hasSessionExpired } from "../lib/authRedirect";
+import { hasStoredSessionCandidate } from "../lib/authSession";
 import { redirectByRole } from "../utils/redirectByRole";
 import { loginSchema } from "../lib/validations";
 import { Button } from "../components/ui/button";
@@ -26,7 +27,8 @@ export default function LoginPage() {
   const [serverError, setServerError] = useState("");
   const [hasHandledAuthRedirect, setHasHandledAuthRedirect] = useState(false);
   const loginMutation = useLogin();
-  const { data: currentUser, isLoading: isBootstrapping } = useCurrentUser();
+  const shouldBootstrapSession = hasStoredSessionCandidate();
+  const { data: currentUser, isLoading: isBootstrapping } = useCurrentUser({ enabled: shouldBootstrapSession });
 
   const {
     register,
@@ -142,7 +144,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            {isBootstrapping && !currentUser ? (
+            {shouldBootstrapSession && isBootstrapping && !currentUser ? (
               <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700" data-testid="login-bootstrap-status">
                 Aktif oturum kontrol ediliyor...
               </div>

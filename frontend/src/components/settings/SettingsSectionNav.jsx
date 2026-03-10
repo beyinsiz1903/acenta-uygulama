@@ -21,8 +21,8 @@ const SETTINGS_LINKS = [
   },
   {
     to: "/app/settings",
-    label: "Kullanıcılar",
-    description: "Kullanıcı ve rol yönetimi ayarları.",
+    label: "Kullanıcı Bilgileri",
+    description: "Profiliniz ve yetkiliyseniz kullanıcı yönetimi.",
     icon: Users,
     testId: "settings-section-link-users",
   },

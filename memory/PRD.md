@@ -129,6 +129,23 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
 - `/b2b/login` tarafında B2B yetki kontrol isteği de network fallback ile güçlendirildi.
 - Smoke + frontend login regresyon testi sonucu: admin ve B2B login akışları geçti; `Network Error` yeniden üretilemedi.
 
+## Son Bakım Güncellemesi — 2026-03-10 Perf RCA + Optimizasyon
+- Perf dashboard’daki yavaş endpointlerin önemli kök nedenleri bulundu:
+  - `/api/billing/subscription` her GET’te billing overview + Stripe sync yoluna girebiliyordu
+  - dashboard endpointlerinde cold miss sırasında çoklu Mongo query yükü vardı
+  - `endpoint_cache` Mongo fallback katmanı, naive/aware datetime karşılaştırma bug’ı yüzünden efektif çalışmıyordu
+  - super_admin akışında tenant resolve için ek DB lookup yapılıyordu
+- Yapılan iyileştirmeler:
+  - billing overview için cache eklendi
+  - tenant resolve için cached servis eklendi
+  - dashboard KPI / weekly / reservation widgets akışlarında cache ve concurrency iyileştirildi
+  - endpoint cache Mongo fallback düzeltildi; böylece Redis yokken de cache gerçekten hit alıyor
+  - performans için ek index kapsamı genişletildi (`request_logs`, `storefront_sessions`, `products`, `tours`, `public_quotes`, billing collections)
+- Ölçülen sonuç:
+  - `/api/billing/subscription` tekrar eden isteklerde ~500-800ms bandından ~60-120ms bandına indi
+  - `weekly-summary`, `tenant/features`, `kpi-stats`, `reservation-widgets` ~60-80ms bandında doğrulandı
+- Not: Perf dashboard’daki **24 saatlik p95** metrikleri tarihsel örnekleri tuttuğu için eski yavaş sample’lar hemen kaybolmaz; 1 saatlik pencerede yeni iyileşme çok daha net görünür.
+
 ## Kalan Öncelikli İşler
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.
 - P1: Zamanlanmış otomatik sync davranışını gerçek credential ile doğrulamak ve gerekiyorsa UI'daki interval beklentisiyle birebir hizalamak.

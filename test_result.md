@@ -11405,6 +11405,18 @@ agent_communication:
         agent: "testing"
         comment: "SYROCE LANDING PAGE HERO TYPOGRAPHY REGRESSION TEST COMPLETED - PASSED (2026-03-10). Desktop hero tipografi regresyon testi performed per Turkish review request on https://agency-assign.preview.emergentagent.com/. TURKISH REVIEW REQUIREMENTS: Test dashboard mockup üst kartındaki yazıların dikey kesiliyor mu kontrol et across viewports 1920x800, 1600x900, 1366x768. Test Results: 1) ✅ 'Syroce Dashboard' text - NO CLIPPING detected across all 3 viewports (scrollHeight=17px, clientHeight=17px, difference=0px), 2) ✅ 'Bugünün operasyon özeti' text - NO CLIPPING detected across all 3 viewports (scrollHeight=24px, clientHeight=24px, difference=0px), 3) ✅ 'Sistem aktif' status badge - NO CLIPPING detected across all 3 viewports (scrollHeight=27px, clientHeight=27px, difference=0px), 4) ✅ '7/24 bulut erişim' status badge - NO CLIPPING detected across all 3 viewports (scrollHeight=27px, clientHeight=27px, difference=0px), 5) ✅ Reservation panel title - NO CLIPPING detected, 6) ✅ Horizontal overflow check - NO OVERFLOW detected (mockup width fits within hero container), 7) ⚠️ Minor: KPI card values (128, %94, 672) show sub-pixel clipping artifact (scrollHeight exceeds clientHeight by 1px) - this is browser rendering precision issue, NOT functional typography problem. CRITICAL VALIDATION: Hero tipografi clipping sorunu ÇÖZÜLMÜŞ ✅. All dashboard mockup topbar texts rendering correctly without vertical clipping across desktop viewports. No horizontal overflow or text overlap detected. Screenshots captured: hero_typography_1920x800.png, hero_typography_1600x900.png, hero_typography_1366x768.png. Success rate: 100% on Turkish review requirements (6/6 critical texts passed). Conclusion: Hero typography regression GEÇTI - dashboard mockup içindeki metinlerde clipping/overlap YOK."
 
+  - task: "Syroce landing hero floating cards removal verification"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/PublicHomePage.jsx, frontend/src/components/landing/LandingDashboardMockup.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "SYROCE LANDING HERO FLOATING CARDS REMOVAL VERIFICATION COMPLETED - ALL TESTS PASSED (2026-03-10). Visual verification performed per Turkish review request on https://agency-assign.preview.emergentagent.com/ to confirm removal of two floating text cards from hero section. TURKISH REVIEW REQUIREMENTS: 1) Hero bölümünde artık şu floating metin kartları görünmemeli: '12 yeni rezervasyon bugün' and 'Tahsilat süresi %40 daha hızlı', 2) Dashboard mockup tek başına temiz ve dengeli görünmeli, 3) Hero bölümünde clipping / overlap olmamalı. Test Results: 1) ✅ FLOATING CARDS REMOVAL CONFIRMED - '12 yeni rezervasyon bugün' NOT found anywhere on page (text search count: 0, page content search: not present), 2) ✅ FLOATING CARDS REMOVAL CONFIRMED - 'Tahsilat süresi %40 daha hızlı' NOT found anywhere on page (text search count: 0, page content search: not present), 3) ✅ Dashboard mockup structure intact - All components present: topbar ✅, KPI cards section ✅, reservation panel ✅, CRM panel ✅, finance panel ✅, 4) ✅ Dashboard mockup balanced and clean - Dimensions: 606.8px × 999.1px, properly positioned at top=80px left=961.2px, no visual issues, 5) ✅ NO clipping or overlap detected - Zero overlapping floating/absolute positioned elements found in hero section, dashboard mockup overflow check clean, 6) ✅ Visual confirmation - Screenshots captured showing clean hero section with dashboard mockup displaying standard content: 'SYROCE DASHBOARD' header, 'Bugünün operasyon özeti' subtitle, status badges ('Sistem aktif', '7/24 bulut erişim'), KPI cards (Aktif rezervasyon: 128, Tahsilat oranı: %94, Aktif müşteri: 672), Rezervasyon paneli with 3 booking rows, CRM müşteri görünümü with 3 customer rows, Finans görünümü with chart and summary. CRITICAL VALIDATIONS: ALL Turkish review requirements MET ✅: Floating text cards '12 yeni rezervasyon bugün' and 'Tahsilat süresi %40 daha hızlı' successfully removed from hero section ✅, Dashboard mockup appears clean, balanced and properly positioned without floating overlays ✅, No clipping, overlap or visual issues detected in hero section ✅. Screenshots: hero_section_clean.png (hero section detail), landing_page_full.png (full viewport), hero_verification_error.png (initial test screenshot). SUCCESS RATE: 100% (6/6 validation points passed). TURKISH REVIEW VERDICT: GEÇTI ✅ - İki floating kart gerçekten kaldırılmış, dashboard mockup temiz ve dengeli, hero bölümünde clipping/overlap yok."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
@@ -11419,4 +11431,51 @@ test_plan:
 agent_communication:
   - agent: "testing"
     message: "Syroce landing page hero typography regression test completed successfully. All critical topbar texts ('Syroce Dashboard', 'Bugünün operasyon özeti', 'Sistem aktif', '7/24 bulut erişim') render without clipping across desktop viewports (1920x800, 1600x900, 1366x768). Hero typography regression issue RESOLVED. Minor sub-pixel KPI value rendering artifact detected but not visually significant."
+  
+  - agent: "testing"
+    message: |
+      ✅ SYROCE LANDING HERO FLOATING CARDS REMOVAL VERIFIED (2026-03-10)
+      
+      Turkish review request: Syroce landing hero için çok küçük bir görsel doğrulama yap.
+      
+      Test URL: https://agency-assign.preview.emergentagent.com/
+      
+      🎯 VERIFICATION RESULTS: ALL PASSED ✅
+      
+      1. ✅ Floating card '12 yeni rezervasyon bugün' - REMOVED
+         • Text search: 0 occurrences
+         • Page content: NOT PRESENT
+         • Status: Successfully removed ✅
+      
+      2. ✅ Floating card 'Tahsilat süresi %40 daha hızlı' - REMOVED
+         • Text search: 0 occurrences
+         • Page content: NOT PRESENT
+         • Status: Successfully removed ✅
+      
+      3. ✅ Dashboard mockup clean and balanced
+         • Dimensions: 606.8px × 999.1px
+         • Position: Properly placed in hero
+         • All components intact:
+           - Topbar with 'SYROCE DASHBOARD' ✅
+           - 'Bugünün operasyon özeti' subtitle ✅
+           - Status badges: 'Sistem aktif', '7/24 bulut erişim' ✅
+           - KPI cards: 128, %94, 672 ✅
+           - Rezervasyon paneli ✅
+           - CRM müşteri görünümü ✅
+           - Finans görünümü ✅
+      
+      4. ✅ No clipping or overlap
+         • Overlapping elements: 0
+         • Clipping check: Clean
+         • Visual balance: Correct
+      
+      📸 SCREENSHOTS:
+      • hero_section_clean.png - Clean hero section
+      • landing_page_full.png - Full page context
+      • hero_verification_error.png - Initial verification
+      
+      🎯 TURKISH REVIEW VERDICT:
+      ✅ GEÇTI - Bu iki kart gerçekten kaldırılmış
+      
+      Hero section is clean, dashboard mockup is balanced, no floating overlay cards present. All Turkish review requirements met.
 

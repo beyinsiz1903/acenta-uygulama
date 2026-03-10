@@ -319,16 +319,8 @@ export default function PublicHomePage() {
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-4xl xl:max-w-none xl:pl-2 min-[1700px]:px-10" data-testid="landing-hero-visual-wrap">
-            <div className="absolute left-0 top-14 z-20 hidden -translate-x-8 rounded-[24px] border border-white/70 bg-white/90 px-4 py-3 shadow-[0_22px_50px_rgba(37,99,235,0.15)] backdrop-blur-xl min-[1700px]:block" data-testid="landing-floating-card-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400" data-testid="landing-floating-card-1-label">Operasyon</p>
-              <p className="mt-1 text-sm font-semibold text-slate-900" data-testid="landing-floating-card-1-value">12 yeni rezervasyon bugün</p>
-            </div>
-            <div className="absolute right-0 top-10 z-20 hidden translate-x-6 rounded-[24px] border border-blue-100 bg-[#0F172A] px-4 py-3 text-white shadow-[0_24px_50px_rgba(15,23,42,0.28)] min-[1700px]:block" data-testid="landing-floating-card-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-200/70" data-testid="landing-floating-card-2-label">Finans</p>
-              <p className="mt-1 text-sm font-semibold" data-testid="landing-floating-card-2-value">Tahsilat süresi %40 daha hızlı</p>
-            </div>
-            <div className="relative z-10 mx-auto w-full max-w-[860px] xl:max-w-[760px] min-[1700px]:max-w-[780px]" data-testid="landing-hero-dashboard-wrap">
+          <div className="relative mx-auto w-full max-w-4xl xl:max-w-none xl:pl-2" data-testid="landing-hero-visual-wrap">
+            <div className="relative z-10 mx-auto w-full max-w-[860px] xl:max-w-[760px]" data-testid="landing-hero-dashboard-wrap">
               <LandingDashboardMockup testIdPrefix="landing-hero-dashboard" />
             </div>
           </div>

@@ -183,6 +183,7 @@ export default function AgencyHotelsPage() {
           <button
             onClick={loadHotels}
             className="mt-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
+            data-testid="agency-hotels-retry-button"
           >
             Tekrar Dene
           </button>

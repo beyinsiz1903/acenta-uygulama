@@ -10517,3 +10517,196 @@ agent_communication:
       
       System is PRODUCTION-READY for Syroce Google Sheets integration scenarios. All Turkish review requirements successfully validated.
 
+
+  - task: "Syroce Turkish flow validation - Portfolio Sync & Agency Hotels"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/admin/AdminPortfolioSyncPage.jsx, frontend/src/pages/AgencyHotelsPage.jsx, frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: |
+          SYROCE TURKISH FLOW VALIDATION COMPLETED - ALL 9 TESTS PASSED (2026-03-10)
+          
+          Comprehensive Turkish review validation performed per review request on https://sheets-sync-5.preview.emergentagent.com
+          
+          Test Credentials: admin@acenta.test / admin123, agent@acenta.test / agent123
+          
+          🎯 TURKISH REVIEW REQUEST REQUIREMENTS - ALL VALIDATED:
+          
+          1. ✅ Admin kullanıcı ile giriş yapıldı (admin@acenta.test / admin123)
+             - Login successful
+             - Redirected to /app/admin/dashboard
+             - Admin role confirmed
+          
+          2. ✅ Route alias /app/admin/google-sheets → /app/admin/portfolio-sync doğrulandı
+             - Alias route working correctly
+             - Proper redirect to portfolio-sync page
+             - No broken links or redirect loops
+          
+          3. ✅ Admin Portfolio Sync sayfası elementleri doğrulandı
+             Page elements validated:
+             - portfolio-sync-page-title ✓ ("Portfolio Sync Engine")
+             - portfolio-sync-refresh-button ✓
+             - portfolio-sync-open-wizard-button ✓ ("Yeni Baglanti")
+             - portfolio-sync-health-refresh-button ✓
+             
+             Health cards (sağlık kartları) all validated:
+             - portfolio-sync-health-total ✓ (4 Toplam Baglanti)
+             - portfolio-sync-health-enabled ✓ (4 Aktif Sync)
+             - portfolio-sync-health-healthy ✓ (0 Saglikli)
+             - portfolio-sync-health-no-change ✓ (0 Degisiklik Yok)
+             - portfolio-sync-health-failed ✓ (0 Basarisiz)
+             - portfolio-sync-health-not-configured ✓ (4 Yapilandirilmamis)
+             
+             Agency bağlantı bölümü validated:
+             - portfolio-sync-agency-connections-toggle ✓
+             - portfolio-sync-agency-connections-add-button ✓ ("Acenta Baglantisi")
+          
+          4. ✅ Manuel sync butonu graceful davranış gösterdi
+             - First connection manual sync button clicked
+             - Graceful error message displayed: "Google Sheets yapilandirilmamis"
+             - NO hard crash or 500 error
+             - Toast message shown correctly
+             - Expected behavior: Service Account JSON gerekli
+          
+          5. ✅ Yeni Baglanti wizard açılıp kapandı - render bozulması YOK
+             - Wizard opened successfully
+             - All wizard UI elements visible
+             - Wizard closed without issues
+             - No rendering problems detected
+          
+          6. ✅ Agency bağlantı bölümü form elementleri doğrulandı
+             Form açıldı, tüm test id'ler doğrulandı:
+             - portfolio-sync-agency-connection-form ✓
+             - portfolio-sync-agency-hotel-select ✓
+             - portfolio-sync-agency-select ✓
+             - portfolio-sync-agency-sheet-id-input ✓
+             - portfolio-sync-agency-sheet-tab-input ✓
+             - portfolio-sync-agency-writeback-tab-input ✓
+             - portfolio-sync-agency-cancel-button ✓
+             - portfolio-sync-agency-save-button ✓
+          
+          7. ✅ Agency kullanıcı ile giriş yapıldı (agent@acenta.test / agent123)
+             - Login successful in separate session
+             - Redirected to /app
+             - Agency role confirmed
+          
+          8. ✅ Agency hotels sayfası doğrulandı (/app/agency/hotels)
+             - Page loaded successfully: "Hızlı Rezervasyon"
+             - Found 7 hotel cards
+             - All test IDs working correctly
+             
+             Validated hotel cards (sample: 3 hotels):
+             • Antalya Beach Resort (Antalya, Satışa Açık) ✓
+             • Cappadocia Cave Hotel (Nevşehir, Satışa Açık) ✓
+             • Demo Hotel 1 (Istanbul, Satışa Kapalı) ✓
+             
+             Test ID patterns validated for ALL 7 hotels:
+             - agency-hotel-card-* ✓ (7 elements)
+             - agency-hotel-name-* ✓ (7 elements)
+             - agency-hotel-status-* ✓ (7 elements)
+             - agency-hotel-location-* ✓ (7 elements)
+             - agency-hotel-create-booking-* ✓ (7 elements - "Rezervasyon Oluştur")
+             - agency-hotel-bookings-* ✓ (7 elements - "Rezervasyonlar")
+             - agency-hotel-detail-* ✓ (7 elements - "Detay")
+          
+          9. ✅ Hata durumu kontrolü
+             - No error state on agency hotels page
+             - agency-hotels-retry-button checked (not needed, page loaded successfully)
+             - No critical console errors
+          
+          📊 TECHNICAL VALIDATION:
+          
+          • Google Service Account TANIMLI DEĞİL ✓ - expected and confirmed
+          • Graceful davranış working: "Google Sheets yapilandirilmamis. Service Account JSON gerekli." ✓
+          • Admin + Agency UI akışı regression YOK ✓
+          • Route alias çalışıyor ✓
+          • Tüm test ID'ler mevcut ve çalışıyor ✓
+          • Manual sync graceful error handling correct ✓
+          • Wizard render bozulması YOK ✓
+          • Agency hotels kart listesi geldi (7 otel) ✓
+          
+          🔍 KEY FINDINGS:
+          
+          1. Route alias working perfectly: /app/admin/google-sheets → /app/admin/portfolio-sync
+          2. All admin Portfolio Sync UI elements present and functional
+          3. Health dashboard showing correct counts (4 not_configured connections as expected)
+          4. Agency connection form fully functional with all required fields
+          5. Manual sync gracefully handles missing Google credentials
+          6. Agency hotels page rendering 7 hotels with all test IDs working
+          7. No critical errors or rendering issues detected
+          8. Both admin and agency flows stable and production-ready
+          
+          ✅ CONCLUSION:
+          
+          ALL TURKISH REVIEW REQUEST REQUIREMENTS VALIDATED AND PASSED. Admin+Agency UI akışı regrese olmadı. Google credential olmadan graceful davranış gösteriliyor. Tüm test ID'ler çalışıyor. No critical issues detected. System stable and production-ready.
+          
+          Screenshots captured:
+          - admin_portfolio_sync_complete.png (Admin Portfolio Sync page)
+          - agency_hotels_final.png (Agency Hotels page with 7 hotel cards)
+          
+          Success rate: 100% (9/9 tests passed).
+
+agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ SYROCE TURKISH FLOW VALIDATION COMPLETED - ALL 9 TESTS PASSED
+      
+      Test Date: 2026-03-10
+      Test URL: https://sheets-sync-5.preview.emergentagent.com
+      Test Type: Turkish review - Portfolio Sync & Agency Hotels validation
+      
+      📊 EXECUTIVE SUMMARY:
+      
+      9/9 tests PASSED (100% success rate)
+      • Admin login: ✅ admin@acenta.test/admin123 working
+      • Route alias: ✅ /app/admin/google-sheets → /app/admin/portfolio-sync
+      • Portfolio Sync page: ✅ ALL elements validated (title, buttons, health cards, agency section)
+      • Manual sync: ✅ Graceful error handling ("Google Sheets yapilandirilmamis")
+      • Wizard: ✅ Open/close working, no render issues
+      • Agency form: ✅ ALL 8 form elements validated
+      • Agency login: ✅ agent@acenta.test/agent123 working
+      • Agency hotels: ✅ 7 hotel cards with ALL test IDs working
+      • Error handling: ✅ No critical errors detected
+      
+      🎯 TURKISH REVIEW REQUIREMENTS VALIDATED:
+      
+      1. ✅ Admin kullanıcı ile giriş yapıldı (admin@acenta.test / admin123)
+      2. ✅ Route alias /app/admin/google-sheets → /app/admin/portfolio-sync doğrulandı
+      3. ✅ Admin Portfolio Sync sayfası elementleri:
+         - portfolio-sync-page-title ✓
+         - portfolio-sync-refresh-button ✓
+         - portfolio-sync-open-wizard-button ✓
+         - portfolio-sync-health-refresh-button ✓
+         - Sağlık kartları: total, enabled, healthy, no-change, failed, not-configured ✓
+         - Agency bağlantı: toggle, add-button ✓
+      4. ✅ Manuel sync graceful error: "Google Sheets yapilandirilmamis. Service Account JSON gerekli." ✓
+      5. ✅ Yeni Baglanti wizard açıldı/kapandı - render bozulması YOK ✓
+      6. ✅ Agency bağlantı form elementleri (8 element): form, hotel-select, agency-select, sheet-id, sheet-tab, writeback-tab, cancel, save ✓
+      7. ✅ Agency kullanıcı ile giriş yapıldı (agent@acenta.test / agent123) ✓
+      8. ✅ Agency hotels sayfası: 7 otel, tüm test ID'ler çalışıyor ✓
+         - agency-hotel-card-* (7 elements) ✓
+         - agency-hotel-name-* (7 elements) ✓
+         - agency-hotel-status-* (7 elements) ✓
+         - agency-hotel-location-* (7 elements) ✓
+         - agency-hotel-create-booking-* (7 elements) ✓
+         - agency-hotel-bookings-* (7 elements) ✓
+         - agency-hotel-detail-* (7 elements) ✓
+      9. ✅ Hata durumu: error retry button checked (not needed, page working) ✓
+      
+      🔍 KEY FINDINGS:
+      
+      • Google Service Account TANIMLI DEĞİL (expected) - graceful davranış ✓
+      • Admin+Agency UI akışı regrese olmadı ✓
+      • Tüm test ID'ler mevcut ve çalışıyor ✓
+      • No critical errors or rendering issues ✓
+      • Both flows stable and production-ready ✓
+      
+      ✅ CONCLUSION:
+      
+      NO ACTION REQUIRED FROM MAIN AGENT. Turkish review requirements validated successfully. Admin Portfolio Sync page and Agency Hotels page working correctly with all test IDs in place. Graceful error handling for missing Google credentials confirmed. No regressions detected. System production-ready.
+

@@ -49,7 +49,7 @@ function ValidationBadge({ status }) {
   return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${current.className}`}>{current.label}</span>;
 }
 
-function StatCard({ icon: Icon, label, value, color = "blue" }) {
+function StatCard({ icon: Icon, label, value, color = "blue", dataTestId }) {
   const colors = {
     blue: "from-blue-500 to-blue-600",
     green: "from-emerald-500 to-emerald-600",
@@ -59,7 +59,7 @@ function StatCard({ icon: Icon, label, value, color = "blue" }) {
     purple: "from-purple-500 to-purple-600",
   };
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition-shadow" data-testid={dataTestId}>
       <div className="flex items-center gap-3">
         <div className={`p-2.5 rounded-lg bg-gradient-to-br ${colors[color]} text-white shadow-sm`}>
           <Icon className="w-5 h-5" />
@@ -210,17 +210,18 @@ function HealthDashboard({ status, onRefresh, refreshing }) {
           onClick={onRefresh}
           disabled={refreshing}
           className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+          data-testid="portfolio-sync-health-refresh-button"
         >
           <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} /> Yenile
         </button>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <StatCard icon={Database} label="Toplam Baglanti" value={status.total || 0} color="blue" />
-        <StatCard icon={Zap} label="Aktif Sync" value={status.enabled || 0} color="purple" />
-        <StatCard icon={CheckCircle2} label="Saglikli" value={status.healthy || 0} color="green" />
-        <StatCard icon={CheckCircle2} label="Degisiklik Yok" value={status.no_change || 0} color="gray" />
-        <StatCard icon={XCircle} label="Basarisiz" value={status.failed || 0} color="red" />
-        <StatCard icon={WifiOff} label="Yapilandirilmamis" value={status.not_configured || 0} color="amber" />
+        <StatCard icon={Database} label="Toplam Baglanti" value={status.total || 0} color="blue" dataTestId="portfolio-sync-health-total" />
+        <StatCard icon={Zap} label="Aktif Sync" value={status.enabled || 0} color="purple" dataTestId="portfolio-sync-health-enabled" />
+        <StatCard icon={CheckCircle2} label="Saglikli" value={status.healthy || 0} color="green" dataTestId="portfolio-sync-health-healthy" />
+        <StatCard icon={CheckCircle2} label="Degisiklik Yok" value={status.no_change || 0} color="gray" dataTestId="portfolio-sync-health-no-change" />
+        <StatCard icon={XCircle} label="Basarisiz" value={status.failed || 0} color="red" dataTestId="portfolio-sync-health-failed" />
+        <StatCard icon={WifiOff} label="Yapilandirilmamis" value={status.not_configured || 0} color="amber" dataTestId="portfolio-sync-health-not-configured" />
       </div>
     </div>
   );
@@ -582,8 +583,8 @@ function SyncRunsDrawer({ hotelId, hotelName, onClose }) {
       <div className="bg-white dark:bg-gray-800 w-full max-w-lg h-full shadow-2xl overflow-y-auto" onClick={e => e.stopPropagation()} data-testid="portfolio-sync-runs-drawer">
         <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-10">
           <div>
-            <h2 className="text-lg font-semibold text-foreground dark:text-white">Sync Gecmisi</h2>
-            <p className="text-xs text-muted-foreground">{hotelName}</p>
+            <h2 className="text-lg font-semibold text-foreground dark:text-white" data-testid="portfolio-sync-runs-drawer-title">Sync Gecmisi</h2>
+            <p className="text-xs text-muted-foreground" data-testid="portfolio-sync-runs-drawer-hotel-name">{hotelName}</p>
           </div>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" data-testid="portfolio-sync-close-runs-drawer">
             <X className="w-5 h-5 text-muted-foreground" />
@@ -594,11 +595,11 @@ function SyncRunsDrawer({ hotelId, hotelName, onClose }) {
           {loading ? (
             <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-blue-600" /></div>
           ) : runs.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground text-sm">Henuz sync calismadi</div>
+            <div className="text-center py-12 text-muted-foreground text-sm" data-testid="portfolio-sync-runs-empty-state">Henuz sync calismadi</div>
           ) : runs.map((r, index) => {
             const runKey = r._id || `${r.started_at || 'run'}-${index}`;
             return (
-            <div key={runKey} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-2">
+            <div key={runKey} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-2" data-testid={`portfolio-sync-run-card-${runKey}`}>
               <div className="flex items-center justify-between">
                 <StatusBadge status={r.status} />
                 <span className="text-xs text-muted-foreground/60">{formatDate(r.started_at)}</span>
@@ -704,22 +705,24 @@ function AgencyConnectionsSection() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm" data-testid="portfolio-sync-agency-connections-section">
       <div
         className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors rounded-t-xl"
         onClick={() => setExpanded(!expanded)}
+        data-testid="portfolio-sync-agency-connections-toggle"
       >
         <div className="flex items-center gap-2">
           <Database className="w-5 h-5 text-purple-600" />
-          <h2 className="text-base font-semibold text-foreground dark:text-white">
+          <h2 className="text-base font-semibold text-foreground dark:text-white" data-testid="portfolio-sync-agency-connections-title">
             Acenta Bazli Sheet Baglantilari
           </h2>
-          <span className="text-xs text-muted-foreground/60">({agencyConns.length})</span>
+          <span className="text-xs text-muted-foreground/60" data-testid="portfolio-sync-agency-connections-count">({agencyConns.length})</span>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={(e) => { e.stopPropagation(); setShowAdd(!showAdd); setExpanded(true); }}
             className="flex items-center gap-1 px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            data-testid="portfolio-sync-agency-connections-add-button"
           >
             <Plus className="w-3.5 h-3.5" /> Acenta Baglantisi
           </button>
@@ -735,8 +738,8 @@ function AgencyConnectionsSection() {
 
           {/* Add Form */}
           {showAdd && (
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-3 border border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-semibold text-foreground dark:text-foreground">Yeni Acenta Sheet Baglantisi</h3>
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-3 border border-gray-200 dark:border-gray-700" data-testid="portfolio-sync-agency-connection-form">
+              <h3 className="text-sm font-semibold text-foreground dark:text-foreground" data-testid="portfolio-sync-agency-connection-form-title">Yeni Acenta Sheet Baglantisi</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
@@ -745,6 +748,7 @@ function AgencyConnectionsSection() {
                     value={selectedHotel}
                     onChange={e => setSelectedHotel(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800"
+                    data-testid="portfolio-sync-agency-hotel-select"
                   >
                     <option value="">Otel Secin...</option>
                     {hotels.map(h => (
@@ -760,6 +764,7 @@ function AgencyConnectionsSection() {
                     onChange={e => setSelectedAgency(e.target.value)}
                     disabled={!selectedHotel}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 disabled:opacity-50"
+                    data-testid="portfolio-sync-agency-select"
                   >
                     <option value="">Acenta Secin...</option>
                     {agencies.filter(a => !a.connected).map(a => (
@@ -776,6 +781,7 @@ function AgencyConnectionsSection() {
                     onChange={e => setSheetId(e.target.value)}
                     placeholder="1BxiMVs0XRA5nFMdKvBdBZjg..."
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800"
+                    data-testid="portfolio-sync-agency-sheet-id-input"
                   />
                 </div>
 
@@ -787,6 +793,7 @@ function AgencyConnectionsSection() {
                       value={sheetTab}
                       onChange={e => setSheetTab(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800"
+                      data-testid="portfolio-sync-agency-sheet-tab-input"
                     />
                   </div>
                   <div>
@@ -796,16 +803,17 @@ function AgencyConnectionsSection() {
                       value={writebackTab}
                       onChange={e => setWritebackTab(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800"
+                      data-testid="portfolio-sync-agency-writeback-tab-input"
                     />
                   </div>
                 </div>
               </div>
 
-              {error && <div className="text-xs text-red-600 bg-red-50 rounded p-2">{error}</div>}
+              {error && <div className="text-xs text-red-600 bg-red-50 rounded p-2" data-testid="portfolio-sync-agency-connection-error">{error}</div>}
 
               <div className="flex justify-end gap-2">
-                <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">Vazgec</button>
-                <button onClick={handleSave} disabled={saving} className="px-4 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors">
+                <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors" data-testid="portfolio-sync-agency-cancel-button">Vazgec</button>
+                <button onClick={handleSave} disabled={saving} className="px-4 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors" data-testid="portfolio-sync-agency-save-button">
                   {saving ? "Kaydediliyor..." : "Bagla"}
                 </button>
               </div>
@@ -816,13 +824,13 @@ function AgencyConnectionsSection() {
           {loading ? (
             <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-purple-500" /></div>
           ) : agencyConns.length === 0 ? (
-            <div className="text-center py-6 text-muted-foreground/60">
+            <div className="text-center py-6 text-muted-foreground/60" data-testid="portfolio-sync-agency-empty-state">
               <Database className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">Henuz acenta bazli sheet baglantisi yok</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm" data-testid="portfolio-sync-agency-connections-table">
                 <thead className="bg-gray-50 dark:bg-gray-900/50 border-b">
                   <tr>
                     <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Otel</th>
@@ -836,10 +844,10 @@ function AgencyConnectionsSection() {
                   {agencyConns.map((c, index) => {
                     const agencyRowKey = c._id || `${c.hotel_id || 'hotel'}-${c.agency_id || 'agency'}-${index}`;
                     return (
-                    <tr key={agencyRowKey} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <td className="px-3 py-2.5 font-medium text-foreground dark:text-white text-xs">{c.hotel_name}</td>
-                      <td className="px-3 py-2.5 text-xs text-purple-600 font-medium">{c.agency_name || c.agency_id}</td>
-                      <td className="px-3 py-2.5 text-xs text-muted-foreground truncate max-w-[150px]">{c.sheet_title || c.sheet_id}</td>
+                    <tr key={agencyRowKey} className="hover:bg-gray-50 dark:hover:bg-gray-800/50" data-testid={`portfolio-sync-agency-row-${agencyRowKey}`}>
+                      <td className="px-3 py-2.5 font-medium text-foreground dark:text-white text-xs" data-testid={`portfolio-sync-agency-hotel-${agencyRowKey}`}>{c.hotel_name}</td>
+                      <td className="px-3 py-2.5 text-xs text-purple-600 font-medium" data-testid={`portfolio-sync-agency-name-${agencyRowKey}`}>{c.agency_name || c.agency_id}</td>
+                      <td className="px-3 py-2.5 text-xs text-muted-foreground truncate max-w-[150px]" data-testid={`portfolio-sync-agency-sheet-${agencyRowKey}`}>{c.sheet_title || c.sheet_id}</td>
                       <td className="px-3 py-2.5 text-center">
                         <StatusBadge status={c.last_sync_status || c.status || "active"} />
                         {c.last_error && (

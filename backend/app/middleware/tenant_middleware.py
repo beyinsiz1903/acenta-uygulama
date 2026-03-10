@@ -14,6 +14,7 @@ from app.request_context import RequestContext, set_request_context
 from app.repositories.membership_repository import MembershipRepository
 from app.repositories.roles_permissions_repository import RolesPermissionsRepository
 from app.repositories.tenant_repository import TenantRepository
+from app.services.tenant_membership_repair_service import ensure_user_membership
 
 
 def _error_response(status_code: int, code: str, message: str, details: Optional[dict[str, Any]] = None) -> JSONResponse:
@@ -53,6 +54,10 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
 
         requested_tenant = self._normalize_tenant_id(tenant_id_header) if tenant_id_header else ""
         active_memberships = await mem_repo.list_active_memberships(user_id)
+        if not active_memberships and not super_admin:
+            repaired_membership = await ensure_user_membership(db, user_doc=user_doc)
+            if repaired_membership:
+                active_memberships = [repaired_membership]
         allowed_tenant_ids = [str(m.get("tenant_id")) for m in active_memberships if m.get("tenant_id")]
         membership_map = {str(m.get("tenant_id")): m for m in active_memberships if m.get("tenant_id")}
 

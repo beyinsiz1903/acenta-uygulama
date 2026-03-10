@@ -12,6 +12,7 @@ from app.errors import AppError
 from app.repositories.base_repository import with_org_filter, with_tenant_filter
 from app.services.agency_contract_status_service import enforce_agency_user_limit
 from app.services.audit import write_audit_log, audit_snapshot
+from app.services.tenant_membership_repair_service import ensure_user_membership, repair_agency_user_memberships
 from app.utils import now_utc
 from app.utils_ids import build_id_filter
 
@@ -49,6 +50,12 @@ class AgencyUserUpdateIn(BaseModel):
 
 class ResetPasswordResponse(BaseModel):
     reset_link: str
+
+
+class MembershipRepairOut(BaseModel):
+    scanned: int
+    repaired: int
+    skipped: int
 
 
 def _request_tenant_id(request: Optional[Request]) -> Optional[str]:
@@ -196,6 +203,12 @@ async def invite_or_link_agency_user(
         )
 
         user_doc = await db.users.find_one({"_id": existing["_id"]})
+        await ensure_user_membership(
+            db,
+            user_doc=user_doc,
+            explicit_role=payload.role,
+            fallback_tenant_id=str(agency.get("tenant_id") or tenant_id or "") or None,
+        )
     else:
         # Create new user for this agency
         await enforce_agency_user_limit(
@@ -218,6 +231,13 @@ async def invite_or_link_agency_user(
             "is_active": True,
         }
         ins = await db.users.insert_one(doc)
+        user_doc = await db.users.find_one({"_id": ins.inserted_id})
+        await ensure_user_membership(
+            db,
+            user_doc=user_doc,
+            explicit_role=payload.role,
+            fallback_tenant_id=str(agency.get("tenant_id") or tenant_id or "") or None,
+        )
         user_doc = await db.users.find_one({"_id": ins.inserted_id})
 
     after_snapshot = audit_snapshot("agency_user", user_doc)
@@ -312,6 +332,13 @@ async def update_agency_user(
         {"$set": updates},
     )
 
+    updated = await _load_user_by_id(db, org_id, user_id, tenant_id)
+    await ensure_user_membership(
+        db,
+        user_doc=updated,
+        explicit_role=_extract_agency_role(updated.get("roles") or []),
+        fallback_tenant_id=str(agency.get("tenant_id") or tenant_id or "") or None,
+    )
     updated = await _load_user_by_id(db, org_id, user_id, tenant_id)
     after_snapshot = audit_snapshot("agency_user", updated)
 
@@ -491,6 +518,17 @@ class AllUsersUserOut(BaseModel):
     last_login_at: Optional[str] = None
 
 
+@all_users_router.post("/all-users/repair-memberships", dependencies=[AdminDep], response_model=MembershipRepairOut)
+async def repair_all_user_memberships(
+    request: Request,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+) -> MembershipRepairOut:
+    org_id = user["organization_id"]
+    result = await repair_agency_user_memberships(db, organization_id=org_id)
+    return MembershipRepairOut(**result)
+
+
 @all_users_router.get("/all-users", dependencies=[AdminDep], response_model=List[AllUsersUserOut])
 async def list_all_agency_users(
     request: Request,
@@ -594,6 +632,13 @@ async def create_user(
         "updated_at": now_utc(),
     }
     ins = await db.users.insert_one(doc)
+    user_doc = await db.users.find_one({"_id": ins.inserted_id})
+    await ensure_user_membership(
+        db,
+        user_doc=user_doc,
+        explicit_role=payload.role,
+        fallback_tenant_id=str(agency.get("tenant_id") or tenant_id or "") or None,
+    )
     user_doc = await db.users.find_one({"_id": ins.inserted_id})
 
     aid = str(user_doc["agency_id"]) if user_doc.get("agency_id") else None
@@ -720,6 +765,13 @@ async def update_user(
             {"$set": updates},
         )
 
+    updated = await _load_user_by_id(db, org_id, user_id, tenant_id)
+    await ensure_user_membership(
+        db,
+        user_doc=updated,
+        explicit_role=_extract_agency_role(updated.get("roles") or []),
+        fallback_tenant_id=str((target_agency or {}).get("tenant_id") or updated.get("tenant_id") or tenant_id or "") or None,
+    )
     updated = await _load_user_by_id(db, org_id, user_id, tenant_id)
 
     # Agency name lookup

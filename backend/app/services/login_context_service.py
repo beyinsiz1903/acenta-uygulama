@@ -6,6 +6,7 @@ from app.auth import normalize_roles
 from app.errors import AppError
 from app.repositories.tenant_membership_repository import TenantMembershipRepository
 from app.repositories.tenant_repository import TenantRepository
+from app.services.tenant_membership_repair_service import ensure_user_membership
 
 
 def _is_admin_like(user_doc: dict[str, Any]) -> bool:
@@ -21,6 +22,10 @@ async def _build_candidate_contexts(db, users: list[dict[str, Any]]) -> list[dic
     for user_doc in users:
         user_id = str(user_doc.get("_id"))
         memberships = await membership_repo.list_active_by_user_id(user_id)
+        if not memberships:
+            repaired_membership = await ensure_user_membership(db, user_doc=user_doc)
+            if repaired_membership:
+                memberships = [repaired_membership]
         if memberships:
             for membership in memberships:
                 tenant_id = str(membership.get("tenant_id"))

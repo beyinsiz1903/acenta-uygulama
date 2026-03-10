@@ -1204,6 +1204,17 @@
     "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "admin",
+    "path": "/api/admin/demo/seed-targets",
+    "risk_level": "medium",
+    "source": "app.routers.gtm_demo_seed",
+    "target_namespace": "/api/v1/admin"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/admin",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "admin",
     "path": "/api/admin/email-outbox",
     "risk_level": "medium",
     "source": "app.routers.admin",

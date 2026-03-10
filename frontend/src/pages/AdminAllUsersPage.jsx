@@ -7,6 +7,7 @@ import {
   Pencil, Trash2,
 } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
+import DemoSeedButton from "../components/DemoSeedButton";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "../components/ui/table";
@@ -508,6 +509,12 @@ export default function AdminAllUsersPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
+                      <DemoSeedButton
+                        buttonLabel="Demo"
+                        defaultTargetUserId={u.id}
+                        triggerClassName="inline-flex items-center gap-1 rounded-md border border-sky-200 bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700 transition-colors hover:bg-sky-100"
+                        triggerTestId={`seed-demo-user-${u.id}`}
+                      />
                       <Button
                         variant="outline"
                         size="sm"

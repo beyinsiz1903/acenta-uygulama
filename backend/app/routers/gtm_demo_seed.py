@@ -4,15 +4,17 @@ import logging
 import random
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Optional
 
 from bson import ObjectId
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 
+from app.errors import AppError
 from app.auth import require_roles
 from app.db import get_db
 from app.services.audit import write_audit_log
+from app.utils_ids import build_id_filter
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +25,7 @@ SEED_RATE: dict[str, tuple[int, datetime]] = {}
 SEED_LIMIT = 3
 SEED_VERSION = 2
 DEMO_SOURCE = "demo_seed"
+AGENCY_ROLES = {"agency_admin", "agency_agent"}
 
 TOUR_BLUEPRINTS: list[dict[str, Any]] = [
     {
@@ -149,12 +152,29 @@ class DemoSeedRequest(BaseModel):
     with_finance: bool = True
     with_crm: bool = True
     force: bool = False
+    target_user_id: Optional[str] = None
 
 
 class DemoSeedResponse(BaseModel):
     ok: bool
     already_seeded: bool = False
     counts: dict[str, int] = Field(default_factory=dict)
+    target_user_id: Optional[str] = None
+    target_user_name: Optional[str] = None
+    target_user_email: Optional[str] = None
+    target_agency_id: Optional[str] = None
+    target_agency_name: Optional[str] = None
+
+
+class DemoSeedTargetOut(BaseModel):
+    id: str
+    email: str
+    name: Optional[str] = None
+    agency_id: Optional[str] = None
+    agency_name: Optional[str] = None
+    tenant_id: Optional[str] = None
+    status: str
+    roles: list[str] = Field(default_factory=list)
 
 
 def _now() -> datetime:
@@ -228,6 +248,49 @@ async def _resolve_agency_id(user: dict[str, Any], db) -> str | None:
         return str(user_with_agency.get("agency_id"))
 
     return None
+
+
+async def _resolve_seed_target(db, actor: dict[str, Any], target_user_id: Optional[str]) -> dict[str, Any]:
+    actor_org_id = str(actor.get("organization_id") or "")
+    if not actor_org_id:
+        raise AppError(400, "organization_required", "Süper admin organizasyon bilgisi bulunamadı.", {})
+
+    seed_user = actor
+    if target_user_id:
+        user_filter = {"organization_id": actor_org_id}
+        user_filter.update(build_id_filter(target_user_id, field_name="_id"))
+        target_user = await db.users.find_one(user_filter, {"password_hash": 0})
+        if not target_user:
+            raise AppError(404, "seed_target_not_found", "Seçilen kullanıcı bulunamadı.", {})
+        seed_user = target_user
+
+    roles = list(seed_user.get("roles") or [])
+    if not any(role in AGENCY_ROLES for role in roles):
+        raise AppError(422, "seed_target_role_invalid", "Demo verisi sadece acenta kullanıcılarına yüklenebilir.", {})
+
+    agency_id = str(seed_user.get("agency_id") or "")
+    if not agency_id:
+        raise AppError(422, "seed_target_agency_missing", "Seçilen kullanıcı bir acenteye bağlı değil.", {})
+
+    tenant_id = await _resolve_tenant_id(seed_user, db)
+    organization_id = str(seed_user.get("organization_id") or actor_org_id)
+
+    agency_filter = {"organization_id": organization_id}
+    agency_filter.update(build_id_filter(agency_id, field_name="_id"))
+    agency_doc = await db.agencies.find_one(agency_filter, {"name": 1})
+    if not agency_doc:
+        raise AppError(404, "seed_target_agency_not_found", "Seçilen kullanıcıya bağlı acenta bulunamadı.", {})
+
+    return {
+        "user_id": str(seed_user.get("_id") or seed_user.get("id") or ""),
+        "user_name": seed_user.get("name"),
+        "user_email": seed_user.get("email"),
+        "organization_id": organization_id,
+        "tenant_id": tenant_id,
+        "agency_id": agency_id,
+        "agency_name": agency_doc.get("name"),
+        "roles": roles,
+    }
 
 
 async def _cleanup_demo_documents(db, org_id: str, tenant_id: str) -> None:
@@ -734,6 +797,52 @@ async def _insert_many_if_any(collection, docs: list[dict[str, Any]]) -> None:
         await collection.insert_many(docs, ordered=True)
 
 
+@router.get("/seed-targets", response_model=list[DemoSeedTargetOut])
+async def list_demo_seed_targets(
+    db=Depends(get_db),
+    user=Depends(require_roles(["super_admin"])),
+):
+    org_id = str(user.get("organization_id") or "")
+    if not org_id:
+        return []
+
+    agencies = await db.agencies.find(
+        {"organization_id": org_id},
+        {"_id": 1, "name": 1},
+    ).to_list(length=2000)
+    agency_map = {str(doc.get("_id")): doc.get("name") for doc in agencies if doc.get("_id") is not None}
+
+    cursor = db.users.find(
+        {
+            "organization_id": org_id,
+            "roles": {"$in": list(AGENCY_ROLES)},
+            "agency_id": {"$exists": True, "$ne": None},
+        },
+        {
+            "password_hash": 0,
+        },
+    ).sort("created_at", -1)
+    docs = await cursor.to_list(length=2000)
+
+    results: list[DemoSeedTargetOut] = []
+    for doc in docs:
+        agency_id = str(doc.get("agency_id")) if doc.get("agency_id") else None
+        results.append(
+            DemoSeedTargetOut(
+                id=str(doc.get("_id")),
+                email=doc.get("email") or "",
+                name=doc.get("name"),
+                agency_id=agency_id,
+                agency_name=agency_map.get(agency_id) if agency_id else None,
+                tenant_id=str(doc.get("tenant_id")) if doc.get("tenant_id") else None,
+                status="active" if doc.get("is_active", True) else "disabled",
+                roles=list(doc.get("roles") or []),
+            )
+        )
+
+    return results
+
+
 @router.post("/seed", response_model=DemoSeedResponse)
 async def seed_demo_data(
     body: DemoSeedRequest,
@@ -743,29 +852,36 @@ async def seed_demo_data(
 ):
     """Tenant scoped demo data seed for dashboard, hotels, tours and reservations."""
 
-    user_id = str(user.get("id") or user.get("_id") or user.get("email"))
-    org_id = str(user.get("organization_id"))
-    tenant_id = await _resolve_tenant_id(user, db)
-    agency_id = await _resolve_agency_id(user, db)
+    actor_user_id = str(user.get("id") or user.get("_id") or user.get("email"))
+    seed_target = await _resolve_seed_target(db, user, body.target_user_id)
+    user_id = seed_target["user_id"]
+    org_id = seed_target["organization_id"]
+    tenant_id = seed_target["tenant_id"]
+    agency_id = seed_target["agency_id"]
 
-    _check_seed_rate(user_id)
+    _check_seed_rate(actor_user_id)
 
     existing_run = await db.demo_seed_runs.find_one({"tenant_id": tenant_id})
     stale_demo_docs = await _has_stale_demo_documents(db, org_id)
     legacy_seed_run = bool(existing_run and existing_run.get("seed_version") != SEED_VERSION)
+    admin_email = seed_target.get("user_email") or user.get("email") or "demo@seed.test"
+    agency_name = seed_target.get("agency_name")
 
     if body.force or legacy_seed_run or (stale_demo_docs and not existing_run):
         await _cleanup_demo_documents(db, org_id, tenant_id)
         existing_run = None
 
     if existing_run and not body.force:
-        return DemoSeedResponse(ok=True, already_seeded=True, counts=existing_run.get("counts", {}))
-
-    admin_email = user.get("email") or "demo@seed.test"
-    agency_name = None
-    if agency_id:
-        agency_doc = await db.agencies.find_one({"organization_id": org_id, "_id": agency_id}, {"name": 1})
-        agency_name = agency_doc.get("name") if agency_doc else None
+        return DemoSeedResponse(
+            ok=True,
+            already_seeded=True,
+            counts=existing_run.get("counts", {}),
+            target_user_id=existing_run.get("target_user_id") or user_id,
+            target_user_name=existing_run.get("target_user_name") or seed_target.get("user_name"),
+            target_user_email=existing_run.get("target_user_email") or seed_target.get("user_email"),
+            target_agency_id=existing_run.get("target_agency_id") or agency_id,
+            target_agency_name=existing_run.get("target_agency_name") or agency_name,
+        )
 
     mode_config = {
         "light": {
@@ -865,7 +981,12 @@ async def seed_demo_data(
                 "counts": counts,
                 "seed_version": SEED_VERSION,
                 "seeded_at": _now(),
-                "seeded_by": user_id,
+                "seeded_by": actor_user_id,
+                "target_user_id": user_id,
+                "target_user_email": seed_target.get("user_email"),
+                "target_user_name": seed_target.get("user_name"),
+                "target_agency_id": agency_id,
+                "target_agency_name": agency_name,
                 "source": DEMO_SOURCE,
             }
         },
@@ -878,7 +999,7 @@ async def seed_demo_data(
             organization_id=org_id,
             actor={
                 "actor_type": "user",
-                "actor_id": user_id,
+                "actor_id": actor_user_id,
                 "email": user.get("email"),
                 "roles": user.get("roles", []),
             },
@@ -886,9 +1007,26 @@ async def seed_demo_data(
             action="demo.seed_run",
             target_type="demo_seed",
             target_id=tenant_id,
-            meta={"mode": body.mode, "counts": counts, "seed_version": SEED_VERSION},
+            meta={
+                "mode": body.mode,
+                "counts": counts,
+                "seed_version": SEED_VERSION,
+                "target_user_id": user_id,
+                "target_user_email": seed_target.get("user_email"),
+                "target_agency_id": agency_id,
+                "target_agency_name": agency_name,
+            },
         )
     except Exception as exc:  # pragma: no cover - best effort only
         logger.warning("Audit log failed for demo seed: %s", exc)
 
-    return DemoSeedResponse(ok=True, already_seeded=False, counts=counts)
+    return DemoSeedResponse(
+        ok=True,
+        already_seeded=False,
+        counts=counts,
+        target_user_id=user_id,
+        target_user_name=seed_target.get("user_name"),
+        target_user_email=seed_target.get("user_email"),
+        target_agency_id=agency_id,
+        target_agency_name=agency_name,
+    )

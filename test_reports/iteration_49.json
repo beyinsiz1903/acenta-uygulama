@@ -1,0 +1,62 @@
+{
+  "summary": "Iteration 49: Demo Seed Target User Selection Feature - Full E2E testing completed. Backend API tests: 7/8 passed (1 failed due to rate limiting which is expected behavior). Frontend UI verification: All checks passed - Demo buttons visible in user rows, modal opens with target user select field, target summary displays selected user info, submit flow shows result state with target info preserved.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/admin/demo/seed (already_seeded test)", "issue": "Rate limit (429) hit when testing already_seeded state in rapid succession - expected behavior due to rate limiting protection"}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "GET /api/admin/demo/seed-targets returns 200 for superadmin",
+    "GET /api/admin/demo/seed-targets returns users with agency_admin or agency_agent role",
+    "GET /api/admin/demo/seed-targets response contains required fields (id, email, status, roles)",
+    "GET /api/admin/demo/seed-targets returns 403 for non-superadmin (agency_admin)",
+    "POST /api/admin/demo/seed with target_user_id returns 200 and seeds data",
+    "POST /api/admin/demo/seed response contains target_user_id, target_user_email, target_agency_id, target_agency_name",
+    "POST /api/admin/demo/seed with invalid target_user_id returns 404/422/400",
+    "Admin All Users page displays Demo buttons per user row with testid seed-demo-user-{userId}",
+    "Demo modal opens when clicking row Demo button",
+    "Demo modal shows target user select field (demo-seed-target-select)",
+    "Demo modal target select populates with agency users (4 options)",
+    "Demo modal shows target summary with user name, email, and agency",
+    "Demo modal submit flow works without user-facing errors",
+    "Demo modal result state shows 'Demo verisi zaten hazir' (already_seeded state)",
+    "Demo modal result state preserves and displays target user info (Yüklenen hedef section)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_demo_seed_target_iteration49.py",
+    "/app/test_reports/pytest/pytest_demo_seed_target_iter49.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Backend correctly validates target_user_id belongs to agency role user with agency_id",
+    "DemoSeedResponse model properly includes target_user_id, target_user_name, target_user_email, target_agency_id, target_agency_name fields",
+    "Already seeded response correctly preserves target user info from demo_seed_runs collection",
+    "Frontend DemoSeedButton correctly loads seed targets via getDemoSeedTargets() and displays select field",
+    "Frontend correctly passes target_user_id in seedDemoData() API call",
+    "Frontend result state properly displays target info from response"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_demo_seed_target_iteration49.py"
+  ],
+  "success_rate": {
+    "backend": "87.5% (7/8 tests passed - 1 failed due to expected rate limiting)",
+    "frontend": "100% (all UI checks passed)"
+  },
+  "test_credentials": {
+    "super_admin": "admin@acenta.test / admin123"
+  },
+  "seed_data_creation": "Demo seed was triggered for agency2@demo.test user (Demo Acente A) during UI testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 49 verified demo seed target user selection feature. Backend endpoints: GET /api/admin/demo/seed-targets (returns agency users list), POST /api/admin/demo/seed with target_user_id parameter. Frontend: DemoSeedButton component on AdminAllUsersPage with row-level Demo buttons (testid: seed-demo-user-{userId}). Modal shows target select field (testid: demo-seed-target-select) and target summary. Rate limiting is active (3 requests per 60 seconds per user). 8 pytest tests + comprehensive UI verification complete.",
+  "mocked_apis": {
+    "has_mocked_apis": false,
+    "mocked_apis_list": []
+  }
+}

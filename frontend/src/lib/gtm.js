@@ -9,6 +9,15 @@ export async function seedDemoData(body) {
   }
 }
 
+export async function getDemoSeedTargets() {
+  try {
+    const res = await api.get("/admin/demo/seed-targets");
+    return res.data || [];
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}
+
 export async function getChecklist() {
   try {
     const res = await api.get("/activation/checklist");

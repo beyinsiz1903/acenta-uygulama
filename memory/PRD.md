@@ -190,6 +190,10 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
 - Hero görsel alanı sadeleştirildi; dashboard mockup tek başına bırakılarak daha temiz bir ilk izlenim sağlandı.
 - Doğrulama: screenshot smoke + frontend verification agent ile bu iki metnin artık DOM’da görünmediği ve hero’da clipping/overlap olmadığı doğrulandı.
 
+## Son Bakım Güncellemesi — 2026-03-10 Backend Lint EOF Fix
+- CI ekranında görünen `agency_contract_status_service.py` dosyası için EOF/trailing newline sorunu düzeltildi.
+- Lokal doğrulama: `ruff check /app/backend/app/services/agency_contract_status_service.py` temiz geçti.
+
 ## Kalan Öncelikli İşler
 - P0: `agency.syroce.com` custom domain'ini güncel frontend build ile hizalamak; eski `main.a26343a0.js` bundle referansını kaldırmak.
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.

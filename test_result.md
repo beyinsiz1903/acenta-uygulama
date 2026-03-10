@@ -11606,6 +11606,85 @@ test_plan:
 
 agent_communication:
   - agent: "testing"
+    message: |
+      ✅ SYROCE SETTINGS PAGE USER INFO EXPERIENCE VALIDATION COMPLETED - ALL 17 TESTS PASSED (2026-03-10)
+      
+      Review Request: Frontend smoke/regression test for settings page user info experience after recent changes.
+      Test URL: https://agency-os-preview-3.preview.emergentagent.com
+      Test Type: Syroce settings page verification for non-superadmin and superadmin user experiences
+      
+      🎯 ALL 17 TEST REQUIREMENTS PASSED ✅
+      
+      AGENCY ADMIN USER EXPERIENCE (agent@acenta.test / agent123):
+      1. ✅ Login page loads cleanly without stored session - NO auth bootstrap noise detected
+      2. ✅ Agency admin login successful - redirects to /app
+      3. ✅ Navigation to /app/settings successful
+      4. ✅ settings-profile-card visible and rendering correctly
+      5. ✅ Name field visible - "Acenta Kullanıcı"
+      6. ✅ Email field visible - "agent@acenta.test"
+      7. ✅ Agency field visible - "Demo Acenta"
+      8. ✅ Tenant field visible - "9c5c1079-9dea-49bf-82c0-74838b146160"
+      9. ✅ agency_admin role badge visible - "Acente Yöneticisi"
+      10. ✅ Non-blocking informational card present (shows helpful message, does NOT block access)
+      11. ✅ Security CTA button present - "Aktif Oturumlara Git"
+      12. ✅ Billing CTA button present - "Faturalamayı Aç"
+      13. ✅ Security CTA navigation works - redirects to /app/settings/security
+      14. ✅ Billing CTA navigation works - redirects to /app/settings/billing
+      
+      SUPERADMIN USER EXPERIENCE (admin@acenta.test / admin123):
+      15. ✅ Superadmin login successful - redirects to /app/admin/dashboard
+      16. ✅ /app/settings shows user management table - users-table element visible with user list
+      17. ✅ Non-admin informational state NOT shown for superadmin - no unauthorized card visible
+      18. ✅ "New User" button (Kullanıcı) visible - admin user management feature accessible
+      
+      📸 SCREENSHOTS CAPTURED:
+      • settings_agency_admin.png - Agency admin view of settings page with profile card and CTA buttons
+      • settings_security.png - Security page with active sessions (accessible from CTA)
+      • settings_billing.png - Billing page with subscription management (accessible from CTA)
+      • settings_superadmin.png - Superadmin view with user management table
+      
+      🔍 CRITICAL VALIDATIONS ALL MET:
+      ✅ Login page loads without auth bootstrap noise for non-authenticated users
+      ✅ Agency admin login flow working correctly
+      ✅ All profile fields (name, email, agency, tenant) visible for agency admin
+      ✅ agency_admin role badge correctly displayed
+      ✅ Informational unauthorized card present but NOT blocking (user-friendly message)
+      ✅ CTA buttons to security and billing pages functional
+      ✅ Security and billing pages load correctly from CTA buttons
+      ✅ Superadmin login and redirect working correctly
+      ✅ Superadmin sees user management table (admin view)
+      ✅ Superadmin does NOT see non-admin informational state
+      
+      ⚠️ INITIAL BLOCKING ISSUE ENCOUNTERED & RESOLVED:
+      During initial testing, encountered HTTP 429 (Rate Limit Exceeded) on /api/auth/login:
+      • Rate limit configuration: 10 attempts per 5 minutes by IP (file: /app/backend/app/middleware/rate_limit_middleware.py line 30)
+      • Error message: "Çok fazla istek. Lütfen daha sonra tekrar deneyin."
+      • Root cause: Previous testing activity exhausted rate limit quota
+      • Resolution: Waited for rate limit window to expire (~5 minutes)
+      • Status: Rate limit is working as designed for production security
+      • Impact: No impact on actual functionality, only on rapid testing scenarios
+      
+      📊 TECHNICAL FINDINGS:
+      • UserProfileSummaryCard component (data-testid="settings-profile-card") rendering correctly for both user types
+      • Role-based conditional rendering working correctly:
+        - canManageUsers flag properly determines view type
+        - Agency users see informational card with CTA buttons
+        - Superadmin users see user management table with "New User" button
+      • Navigation flow stable with proper redirects:
+        - Agency admin → /app
+        - Superadmin → /app/admin/dashboard
+      • All data-testid attributes present and accessible for automated testing
+      • Turkish localization working correctly throughout the UI
+      
+      🎯 CONCLUSION:
+      Settings page user info experience is PRODUCTION-READY and working correctly for both non-superadmin and superadmin users. All review requirements validated successfully. The new user info experience provides clear, role-appropriate information without blocking access. CTA buttons for security and billing are functional and properly linked.
+      
+      SUCCESS RATE: 100% (17/17 tests passed, 0 failed, 0 blocking issues)
+      
+      NO ACTION REQUIRED FROM MAIN AGENT. Settings page user info experience smoke/regression test completed successfully.
+  
+
+  - agent: "testing"
     message: "Syroce landing page hero typography regression test completed successfully. All critical topbar texts ('Syroce Dashboard', 'Bugünün operasyon özeti', 'Sistem aktif', '7/24 bulut erişim') render without clipping across desktop viewports (1920x800, 1600x900, 1366x768). Hero typography regression issue RESOLVED. Minor sub-pixel KPI value rendering artifact detected but not visually significant."
   
   - agent: "testing"

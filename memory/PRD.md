@@ -239,6 +239,10 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
   - Frontend verification agent: 17/17 test geçti; login, sidebar görünürlüğü ve 4 hedef sayfa navigasyonu doğrulandı.
   - Backend testing agent: 6/6 test geçti; alias normalizasyonu ve profile/modules endpointleri doğrulandı.
 
+## Son Bakım Güncellemesi — 2026-03-10 Backend Lint EOF Fix (Agency Module Service)
+- CI'da görülen `W292 no newline at end of file` hatası `backend/app/services/agency_module_service.py` için giderildi.
+- Lokal doğrulama: dosya artık newline ile bitiyor ve `ruff`/python lint temiz geçiyor.
+
 ## Kalan Öncelikli İşler
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.
 - P0: Agency sözleşme süresi dolunca backend tarafında route-level enforcement gerekip gerekmediğini kullanıcıyla doğrulayıp karar vermek (şu an UI kısıtlaması aktif).

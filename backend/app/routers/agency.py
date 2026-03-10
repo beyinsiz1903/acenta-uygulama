@@ -101,9 +101,16 @@ async def my_hotels(user=Depends(get_current_user)):
 
     org_id = user["organization_id"]
 
-    # Aggregate stop-sell rules per hotel (any active rule marks hotel as stop_sell_active)
+    # Aggregate stop-sell rules per hotel (only rules covering today's date)
+    today = now_utc().date().isoformat()
     stop_rules = await db.stop_sell_rules.find(
-        {"organization_id": org_id, "tenant_id": {"$in": hotel_ids}, "is_active": True}
+        {
+            "organization_id": org_id,
+            "tenant_id": {"$in": hotel_ids},
+            "is_active": True,
+            "start_date": {"$lte": today},
+            "end_date": {"$gte": today},
+        }
     ).to_list(2000)
     stop_by_hotel: dict[str, bool] = {}
     for r in stop_rules:

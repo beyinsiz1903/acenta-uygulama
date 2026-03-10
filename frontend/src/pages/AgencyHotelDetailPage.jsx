@@ -38,44 +38,6 @@ export default function AgencyHotelDetailPage() {
   const { hotelId } = useParams();
   const navigate = useNavigate();
   const user = getUser();
-  useEffect(() => {
-    if (!hotel) return;
-    const { title, description } = buildHotelSeo(hotel);
-    document.title = title;
-    let meta = document.querySelector('meta[name="description"]');
-    if (!meta) {
-      meta = document.createElement("meta");
-      meta.name = "description";
-      document.head.appendChild(meta);
-    }
-    meta.content = description;
-  }, [hotel]);
-
-  useEffect(() => {
-    if (!hotel) return;
-    const { schema } = buildHotelSeo(hotel);
-    if (!schema) return;
-
-    const script = document.createElement("script");
-    script.type = "application/ld+json";
-    script.id = "hotel-schema-jsonld";
-    script.text = JSON.stringify(schema);
-
-    // Remove existing if any
-    const existing = document.getElementById("hotel-schema-jsonld");
-    if (existing && existing.parentNode) {
-      existing.parentNode.removeChild(existing);
-    }
-    document.head.appendChild(script);
-
-    return () => {
-      const el = document.getElementById("hotel-schema-jsonld");
-      if (el && el.parentNode) {
-        el.parentNode.removeChild(el);
-      }
-    };
-  }, [hotel]);
-
 
   const [hotel, setHotel] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -94,16 +56,10 @@ export default function AgencyHotelDetailPage() {
     loadHotelDetail();
   }, [hotelId]);
 
-  // SEO: dynamic title & meta description based on hotel
+  // SEO: dynamic title & meta description
   useEffect(() => {
     if (!hotel) return;
-    const name = hotel.name || "Otel";
-    const city = hotel.city || "";
-    const title = city ? `${name} | ${city} Otel Fırsatları` : `${name} | Otel Fırsatları`;
-    const desc = city
-      ? `${name} için ${city} bölgesinde avantajlı fiyatlar, güvenli rezervasyon ve bayi özel kontenjanları.`
-      : `${name} için avantajlı fiyatlar, güvenli rezervasyon ve bayi özel kontenjanları.`;
-
+    const { title, description, schema } = buildHotelSeo(hotel);
     document.title = title;
     let meta = document.querySelector('meta[name="description"]');
     if (!meta) {
@@ -111,7 +67,22 @@ export default function AgencyHotelDetailPage() {
       meta.name = "description";
       document.head.appendChild(meta);
     }
-    meta.content = desc;
+    meta.content = description;
+
+    if (schema) {
+      const script = document.createElement("script");
+      script.type = "application/ld+json";
+      script.id = "hotel-schema-jsonld";
+      script.text = JSON.stringify(schema);
+      const existing = document.getElementById("hotel-schema-jsonld");
+      if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      const el = document.getElementById("hotel-schema-jsonld");
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    };
   }, [hotel]);
 
   async function loadHotelDetail() {
@@ -120,19 +91,25 @@ export default function AgencyHotelDetailPage() {
     try {
       // Get all linked hotels
       const resp = await api.get("/agency/hotels");
-      const hotels = resp.data || [];
+      const rawData = resp.data || {};
+      const hotels = Array.isArray(rawData) ? rawData : (rawData.items || []);
       
       // Find the hotel
-      const foundHotel = hotels.find((h) => h.id === hotelId);
+      const foundHotel = hotels.find((h) => h.hotel_id === hotelId || h.id === hotelId);
       
       if (!foundHotel) {
-        setError("Otel bulunamad\u0131 veya eri\u015fim yetkiniz yok");
+        setError("Otel bulunamadı veya erişim yetkiniz yok");
         console.warn(`[HotelDetail] Hotel ${hotelId} not found or not linked`);
         return;
       }
 
       console.log("[HotelDetail] Loaded:", foundHotel);
-      setHotel(foundHotel);
+      // Normalize field names
+      setHotel({
+        ...foundHotel,
+        name: foundHotel.hotel_name || foundHotel.name || "",
+        city: foundHotel.location || foundHotel.city || "",
+      });
     } catch (err) {
       console.error("[HotelDetail] Load error:", err);
       setError(apiErrorMessage(err));
@@ -145,7 +122,7 @@ export default function AgencyHotelDetailPage() {
     const { check_in, check_out, adults } = formData;
 
     if (!check_in || !check_out) {
-      return "Giri\u015f ve \u00e7\u0131k\u0131\u015f tarihleri gerekli";
+      return "Giriş ve çıkış tarihleri gerekli";
     }
 
     const checkInDate = new Date(check_in);
@@ -154,20 +131,20 @@ export default function AgencyHotelDetailPage() {
     today.setHours(0, 0, 0, 0);
 
     if (checkInDate < today) {
-      return "Giri\u015f tarihi bug\u00fcnden \u00f6nce olamaz";
+      return "Giriş tarihi bugünden önce olamaz";
     }
 
     if (checkOutDate <= checkInDate) {
-      return "\u00c7\u0131k\u0131\u015f tarihi giri\u015f tarihinden sonra olmal\u0131";
+      return "Çıkış tarihi giriş tarihinden sonra olmalı";
     }
 
     const nights = Math.floor((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
     if (nights < 1) {
-      return "En az 1 gece kalman\u0131z gerekli";
+      return "En az 1 gece kalmanız gerekli";
     }
 
     if (adults < 1) {
-      return "En az 1 yeti\u015fkin gerekli";
+      return "En az 1 yetişkin gerekli";
     }
 
     return null;
@@ -222,7 +199,7 @@ export default function AgencyHotelDetailPage() {
       <div className="space-y-6">
         <div className="rounded-2xl border bg-card shadow-sm p-12 flex flex-col items-center justify-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Otel bilgileri y\u00fckleniyor...</p>
+          <p className="text-sm text-muted-foreground">Otel bilgileri yükleniyor...</p>
         </div>
       </div>
     );
@@ -235,10 +212,10 @@ export default function AgencyHotelDetailPage() {
         <div className="rounded-2xl border border-destructive/50 bg-destructive/5 p-8 flex flex-col items-center justify-center gap-4">
           <AlertCircle className="h-10 w-10 text-destructive" />
           <div className="text-center">
-            <p className="font-semibold text-foreground">{error || "Otel bulunamad\u0131"}</p>
+            <p className="font-semibold text-foreground">{error || "Otel bulunamadı"}</p>
           </div>
           <Button onClick={() => navigate("/app/agency/hotels")} variant="outline">
-            Otellerime D\u00f6n
+            Otellerime Dön
           </Button>
         </div>
       </div>
@@ -263,7 +240,7 @@ export default function AgencyHotelDetailPage() {
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
                 {hotel.city}
-                {hotel.city && hotel.country && " \u2022 "}
+                {hotel.city && hotel.country && " • "}
                 {hotel.country}
               </p>
             </div>
@@ -279,7 +256,7 @@ export default function AgencyHotelDetailPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Search className="h-5 w-5" />
-            M\u00fcsaitlik Arama
+            Müsaitlik Arama
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -289,7 +266,7 @@ export default function AgencyHotelDetailPage() {
               <div className="space-y-2">
                 <Label htmlFor="check-in" className="flex items-center gap-2">
                   <CalendarDays className="h-4 w-4" />
-                  Giri\u015f Tarihi *
+                  Giriş Tarihi *
                 </Label>
                 <Input
                   id="check-in"
@@ -304,7 +281,7 @@ export default function AgencyHotelDetailPage() {
               <div className="space-y-2">
                 <Label htmlFor="check-out" className="flex items-center gap-2">
                   <CalendarDays className="h-4 w-4" />
-                  \u00c7\u0131k\u0131\u015f Tarihi *
+                  Çıkış Tarihi *
                 </Label>
                 <Input
                   id="check-out"
@@ -328,7 +305,7 @@ export default function AgencyHotelDetailPage() {
               <div className="space-y-2">
                 <Label htmlFor="adults" className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
-                  Yeti\u015fkin Say\u0131s\u0131 *
+                  Yetişkin Sayısı *
                 </Label>
                 <Input
                   id="adults"
@@ -343,7 +320,7 @@ export default function AgencyHotelDetailPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="children">
-                  \u00c7ocuk Say\u0131s\u0131
+                  Çocuk Sayısı
                 </Label>
                 <Input
                   id="children"
@@ -365,7 +342,7 @@ export default function AgencyHotelDetailPage() {
 
             <Button type="submit" disabled={searchLoading} className="w-full gap-2">
               {searchLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {searchLoading ? "Aran\u0131yor..." : "M\u00fcsaitlik Ara"}
+              {searchLoading ? "Aranıyor..." : "Müsaitlik Ara"}
             </Button>
           </form>
         </CardContent>

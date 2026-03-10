@@ -48,7 +48,13 @@ def with_tenant_filter(
     base = dict(filter_dict or {})
     tenant_clause: Dict[str, Any]
     if include_legacy_without_tenant:
-        tenant_clause = {"$or": [{"tenant_id": tenant_id}, {"tenant_id": {"$exists": False}}]}
+        tenant_clause = {
+            "$or": [
+                {"tenant_id": tenant_id},
+                {"tenant_id": None},
+                {"tenant_id": {"$exists": False}},
+            ]
+        }
     else:
         tenant_clause = {"tenant_id": tenant_id}
 

@@ -243,6 +243,15 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
 - CI'da görülen `W292 no newline at end of file` hatası `backend/app/services/agency_module_service.py` için giderildi.
 - Lokal doğrulama: dosya artık newline ile bitiyor ve `ruff`/python lint temiz geçiyor.
 
+## Son Bakım Güncellemesi — 2026-03-10 Settings Kullanıcı Bilgileri + Auth Probe Temizliği
+- Kullanıcının talebi doğrultusunda **superadmin dışındaki kullanıcılar** için `/app/settings` sayfası artık boş/yetkisiz hissi yerine gerçek **Kullanıcı Bilgileri** deneyimi sunuyor.
+- Yeni `UserProfileSummaryCard` ile ad, e-posta, rol badge'i, bağlı acente ve çalışma alanı bilgileri görünür hale getirildi; agency kullanıcılarında acente adı `/api/agency/profile` üzerinden gösteriliyor.
+- Non-admin kullanıcılar için Ayarlar ana sayfasında artık bloklayıcı unauthorized görünümü yerine güvenlik ve faturalama CTA'ları olan bilgilendirici bir durum kartı var.
+- `/login` ve `/b2b/login` sayfalarında `hasStoredSessionCandidate()` guard'ı eklendi; böylece aktif oturum adayı yokken gereksiz `/api/auth/me` ve `/api/auth/refresh` probe'ları tetiklenmiyor.
+- Doğrulama:
+  - Screenshot smoke: agency admin ile `/app/settings` üzerinde kullanıcı bilgileri kartı ve CTA akışları geçti.
+  - Iteration 51 test raporu: auth endpointleri, agency profile, admin module update ve settings UX regresyonları **100% geçti**.
+
 ## Kalan Öncelikli İşler
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.
 - P0: Agency sözleşme süresi dolunca backend tarafında route-level enforcement gerekip gerekmediğini kullanıcıyla doğrulayıp karar vermek (şu an UI kısıtlaması aktif).

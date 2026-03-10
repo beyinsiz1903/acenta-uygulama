@@ -252,10 +252,29 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
   - Screenshot smoke: agency admin ile `/app/settings` üzerinde kullanıcı bilgileri kartı ve CTA akışları geçti.
   - Iteration 51 test raporu: auth endpointleri, agency profile, admin module update ve settings UX regresyonları **100% geçti**.
 
+## Son Uygulama Güncellemesi — 2026-03-10 Agency Settings Şifre Değiştir + Billing Gizleme
+- `/api/settings/change-password` endpointi eklendi; mevcut şifre doğrulaması, enterprise password policy enforcement ve diğer aktif oturumları kapatma davranışı çalışıyor.
+- Frontend `SettingsPage` içine yeni `ChangePasswordCard` yerleştirildi; kullanıcı bilgileri ve şifre değiştirme akışı aynı ekranda agency kullanıcıya da açıldı.
+- Agency kullanıcılar için `Faturalama` görünürlüğü kaldırıldı:
+  - settings nav içinden billing linki gizlendi
+  - account navigation içinden billing linki agency scope için kaldırıldı
+  - `/app/settings/billing` direct access agency kullanıcıyı `/app/settings` sayfasına yönlendiriyor
+- P0 regresyon doğrulaması: admin `Acenta Modülleri` kaydetme akışı ve agency sidebar modül görünürlüğü yeniden test edildi; save/persist akışı geçti.
+- Test / doğrulama:
+  - Manual backend smoke: admin module PUT+GET, agency profile sync, password change success/error senaryoları doğrulandı
+  - Screenshot smoke: agency kullanıcı settings ekranında billing linkinin gizli olduğu ve direct billing URL'in redirect olduğu doğrulandı
+  - Iteration 52 test raporu: admin module CRUD, sidebar yansıması, password endpoint ve billing visibility akışları geçti
+
+## Son Bakım Güncellemesi — 2026-03-10 Tenant Legacy Null Filter Fix
+- `with_tenant_filter(..., include_legacy_without_tenant=True)` davranışı güçlendirildi; artık legacy `tenant_id: null` kayıtları da `tenant_id` alanı hiç olmayan kayıtlar gibi erişilebilir.
+- Böylece eski veride `tenant_id=null` olan acentalar admin module endpointlerinde görünmez/erişilemez olma riskinden çıkarıldı.
+- Lokal doğrulama: helper çıktısında `tenant_id == active`, `tenant_id == null`, `tenant_id missing` üç yolu da aynı filter altında yer alıyor.
+
 ## Kalan Öncelikli İşler
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.
 - P0: Agency sözleşme süresi dolunca backend tarafında route-level enforcement gerekip gerekmediğini kullanıcıyla doğrulayıp karar vermek (şu an UI kısıtlaması aktif).
 - P1: Agency bazlı modül görünürlüğüsünden kullanıcı bazlı ekran/izin modeline geçiş için veri modeli ve admin UX tasarımını netleştirmek.
+- P1: Settings sayfasında gerekirse şifre geçmişi / son değişim zamanı / güçlü parola ipuçları gibi ek güvenlik UX detaylarını değerlendirmek.
 - P1: Custom domain build-time env string’ini tamamen temizleyecek daha katı runtime-only çözüm gerekip gerekmediğini izlemek (şu an canlı login akışı çalışıyor).
 - P1: Bu login redirect fix’inin custom domain build’ine yansımasını doğrulamak; preview doğrulandı, live domain eski bundle cache’i varsa yeniden gözlemek.
 - P1: Demo seed akışına acenta/tenant filtreleri ve toplu hedefleme (tek seferde birden fazla agency kullanıcı) eklemek.

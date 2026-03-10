@@ -1,5 +1,17 @@
 ---
 backend:
+  - task: "Syroce Travel Agency OS backend smoke test - module normalization validation"
+    implemented: true
+    working: true
+    file: "backend/app/routers/admin_agencies.py, backend/app/routers/agency.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "SYROCE TRAVEL AGENCY OS BACKEND SMOKE TEST COMPLETED - ALL 6 TESTS PASSED (2026-01-27). Comprehensive backend validation performed per Turkish review request on https://travel-sys-preview.preview.emergentagent.com with admin@acenta.test/admin123 and agent@acenta.test/agent123 credentials targeting agency f5f7a2a3-5de1-4d65-b700-ec4f9807d83a. Test Results: 1) ✅ POST /api/auth/login admin authentication - PASSED (Status: 200, Token: 375 chars, Role: super_admin), 2) ✅ POST /api/auth/login agency authentication - PASSED (Status: 200, Token: 376 chars, Role: agency_admin), 3) ✅ GET /api/admin/agencies/{agency_id}/modules with admin token - PASSED (Status: 200, Response: 205 chars, Current modules: dashboard, rezervasyonlar, musteriler, oteller, musaitlik, turlar, sheet_baglantilari), 4) ✅ PUT /api/admin/agencies/{agency_id}/modules legacy + canonical module normalization - PASSED (Status: 200, Response: 217 chars, Successfully normalized all legacy keys: musaitlik_takibi->musaitlik ✓, turlarimiz->turlar ✓, otellerim->oteller ✓, urunler->oteller ✓, google_sheet_baglantisi->sheet_baglantilari ✓, google_sheets->sheet_baglantilari ✓), 5) ✅ GET /api/agency/profile with normalized allowed_modules - PASSED (Status: 200, Response: 675 chars, Normalized modules returned: musaitlik, turlar, oteller, sheet_baglantilari, dashboard, rezervasyonlar, musteriler, raporlar, No legacy keys present ✓), 6) ✅ Alias normalization validation - PASSED (All expected alias mappings confirmed working correctly). CRITICAL VALIDATIONS: All Turkish review requirements validated ✅: POST /api/auth/login admin ve agency kullanıcıları için 200 dönmeli ✅, GET /api/admin/agencies/{agency_id}/modules admin token ile 200 dönmeli ✅, PUT /api/admin/agencies/{agency_id}/modules legacy + canonical modül anahtarlarını normalize ederek saklayabilmeli ✅, GET /api/agency/profile agency token ile normalize edilmiş allowed_modules döndürmeli ✅, Alias normalization (musaitlik_takibi->musaitlik, turlarimiz->turlar, urunler/otellerim->oteller, google_sheet_baglantisi/google_sheets->sheet_baglantilari) working correctly ✅, 2xx responses received ✅, No ObjectId serialization problems ✅, Normalized list returned ✅, No critical backend errors ✅. Success rate: 100% (6/6 tests passed). Backend module normalization system working correctly and production-ready."
+
   - task: "Syroce backend requirements.txt regression validation"
     implemented: true
     working: true
@@ -11805,6 +11817,84 @@ metadata:
   test_sequence: 0
 
 agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ SYROCE TRAVEL AGENCY OS BACKEND SMOKE TEST COMPLETED - ALL 6 TESTS PASSED (2026-01-27)
+      
+      Review Request: Backend smoke test for Syroce Travel Agency OS
+      Base URL: https://travel-sys-preview.preview.emergentagent.com
+      Test Credentials: admin@acenta.test/admin123, agent@acenta.test/agent123
+      Target Agency: f5f7a2a3-5de1-4d65-b700-ec4f9807d83a
+      
+      🎯 ALL TURKISH REVIEW REQUIREMENTS VALIDATED ✅
+      
+      ═══════════════════════════════════════════════════════════════════════════════
+      AUTHENTICATION ENDPOINTS (Requirements 1)
+      ═══════════════════════════════════════════════════════════════════════════════
+      
+      1. ✅ POST /api/auth/login admin@acenta.test/admin123 returns 200
+         • Status: 200 OK ✅
+         • Token length: 375 chars ✅
+         • User role: super_admin ✅
+         • No authentication errors ✅
+      
+      2. ✅ POST /api/auth/login agent@acenta.test/agent123 returns 200  
+         • Status: 200 OK ✅
+         • Token length: 376 chars ✅
+         • User role: agency_admin ✅
+         • No authentication errors ✅
+      
+      ═══════════════════════════════════════════════════════════════════════════════
+      ADMIN AGENCY MODULES API (Requirements 2, 3)
+      ═══════════════════════════════════════════════════════════════════════════════
+      
+      3. ✅ GET /api/admin/agencies/{agency_id}/modules admin token ile 200 dönmeli
+         • Status: 200 OK ✅
+         • Response size: 205 chars ✅
+         • Current modules: dashboard, rezervasyonlar, musteriler, oteller, musaitlik, turlar, sheet_baglantilari ✅
+         • No ObjectId serialization issues ✅
+      
+      4. ✅ PUT /api/admin/agencies/{agency_id}/modules legacy + canonical normalization
+         • Status: 200 OK ✅
+         • Response size: 217 chars ✅
+         • ALL ALIAS NORMALIZATIONS WORKING:
+           - musaitlik_takibi -> musaitlik ✅
+           - turlarimiz -> turlar ✅
+           - otellerim -> oteller ✅
+           - urunler -> oteller ✅
+           - google_sheet_baglantisi -> sheet_baglantilari ✅
+           - google_sheets -> sheet_baglantilari ✅
+         • No ObjectId serialization issues ✅
+      
+      ═══════════════════════════════════════════════════════════════════════════════
+      AGENCY PROFILE NORMALIZED MODULES (Requirements 4, 5)
+      ═══════════════════════════════════════════════════════════════════════════════
+      
+      5. ✅ GET /api/agency/profile agency token ile normalize edilmiş allowed_modules
+         • Status: 200 OK ✅
+         • Response size: 675 chars ✅
+         • Normalized modules returned: musaitlik, turlar, oteller, sheet_baglantilari, dashboard, rezervasyonlar, musteriler, raporlar ✅
+         • No legacy keys present in response ✅
+         • All canonical keys found ✅
+         • No ObjectId serialization issues ✅
+      
+      6. ✅ Alias normalization verification documented
+         • All expected mappings confirmed ✅
+         • Backend properly handling legacy->canonical conversion ✅
+      
+      ═══════════════════════════════════════════════════════════════════════════════
+      CRITICAL REQUIREMENTS VALIDATION
+      ═══════════════════════════════════════════════════════════════════════════════
+      
+      ✅ 2xx yanıtlar - All endpoints returned 200 status codes
+      ✅ ObjectId serialization problemi olmamalı - No ObjectId issues detected
+      ✅ Normalize edilmiş liste dönmeli - Normalized modules returned correctly
+      ✅ Kritik backend error olmamalı - No critical backend errors
+      
+      SUCCESS RATE: 100% (6/6 tests passed)
+      
+      CONCLUSION: Syroce Travel Agency OS backend module normalization system is PRODUCTION-READY and working correctly. All Turkish review requirements validated successfully.
+      
   - agent: "testing"
     message: |
       ✅ SYROCE AGENCY SIDEBAR MODULE VISIBILITY REGRESSION TEST COMPLETED - ALL TESTS PASSED (2026-03-10)

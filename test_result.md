@@ -12210,3 +12210,84 @@ agent_communication:
       
       NO ACTION REQUIRED FROM MAIN AGENT. Agency sidebar module visibility regression test completed successfully.
 
+  - task: "Syroce backend regression check - Turkish review request validation"
+    implemented: true
+    working: true
+    file: "backend/app/routers/auth.py, backend/app/routers/admin_agencies.py, backend/app/routers/agency.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "SYROCE BACKEND REGRESSION CHECK COMPLETED - ALL 7 TESTS PASSED (2026-03-10). Comprehensive backend regression validation performed per Turkish review request on https://agency-os-preview-3.preview.emergentagent.com targeting specific auth/API flows. Test Results: 1) ✅ POST /api/auth/login superadmin (admin@acenta.test/admin123) - PASSED (Status: 200, access_token received, super_admin role confirmed), 2) ✅ POST /api/auth/login agency admin (agent@acenta.test/agent123) - PASSED (Status: 200, access_token received, agency_admin role confirmed), 3) ✅ GET /api/auth/me authenticated behavior - PASSED (Status: 200, returns correct user data with admin@acenta.test and super_admin role), 4) ✅ GET /api/auth/me unauthenticated behavior - PASSED (Status: 401, correctly returns Unauthorized), 5) ✅ GET /api/agency/profile for agency admin - PASSED (Status: 200, returns allowed_modules: dashboard, rezervasyonlar, musteriler, raporlar, oteller, musaitlik, turlar, sheet_baglantilari), 6) ✅ GET /api/admin/agencies/{agency_id}/modules for superadmin - PASSED (Status: 200, tested with Demo Acenta agency f5f7a2a3-5de1-4d65-b700-ec4f9807d83a), 7) ✅ PUT /api/admin/agencies/{agency_id}/modules for superadmin - PASSED (Status: 200, module updates working correctly with allowed_modules payload). CRITICAL VALIDATIONS: All Turkish review requirements validated ✅: Superadmin login working with correct role assignment ✅, Agency admin login working with correct role assignment ✅, Auth/me endpoint handles both authenticated and unauthenticated states correctly ✅, Agency profile returns allowed_modules successfully ✅, Admin agencies modules GET/PUT endpoints operational for superadmin ✅, Module updates reflected in agency profile ✅, No auth/session regressions detected ✅, No ObjectId serialization issues detected ✅. CONTEXT NOTES: Frontend changes mentioned in review request (avoiding unnecessary login-page auth probes) do not affect backend auth behavior - all backend endpoints working correctly ✅. Rate limiting encountered during extended testing (expected production behavior) but core functionality validated ✅. Success rate: 100% (7/7 tests passed). All backend auth and agency module management flows working correctly and production-ready. No regression detected from recent changes."
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 8
+  last_updated: "2026-03-10"
+
+test_plan:
+  current_focus: []
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "testing"
+    message: |
+      ✅ SYROCE BACKEND REGRESSION CHECK COMPLETED - ALL TESTS PASSED (2026-03-10)
+      
+      Performed comprehensive backend regression validation per Turkish review request.
+      
+      Test Context:
+      - Review Request: Backend regression check for specific auth/API flows after frontend changes
+      - Target URL: https://agency-os-preview-3.preview.emergentagent.com
+      - Test Credentials: admin@acenta.test/admin123 (superadmin), agent@acenta.test/agent123 (agency admin)
+      
+      🎯 ALL 7 CRITICAL TEST REQUIREMENTS PASSED ✅
+      
+      1. ✅ POST /api/auth/login superadmin authentication - WORKING
+         - admin@acenta.test/admin123 login successful
+         - super_admin role correctly assigned
+         - Access token generated (375 chars)
+      
+      2. ✅ POST /api/auth/login agency admin authentication - WORKING  
+         - agent@acenta.test/agent123 login successful
+         - agency_admin role correctly assigned
+         - Access token generated (376 chars)
+      
+      3. ✅ GET /api/auth/me authenticated behavior - WORKING
+         - Returns 200 with correct user data
+         - Email: admin@acenta.test, Roles: ['super_admin']
+         - Tenant ID provided: 9c5c1079-9dea-49bf-82c0-74838b146160
+      
+      4. ✅ GET /api/auth/me unauthenticated behavior - WORKING
+         - Correctly returns 401 Unauthorized
+         - Proper error response structure
+      
+      5. ✅ GET /api/agency/profile for agency admin - WORKING
+         - Returns allowed_modules successfully
+         - Modules: dashboard, rezervasyonlar, musteriler, raporlar, oteller, musaitlik, turlar, sheet_baglantilari
+      
+      6. ✅ GET /api/admin/agencies/{agency_id}/modules for superadmin - WORKING
+         - Tested with Demo Acenta agency (f5f7a2a3-5de1-4d65-b700-ec4f9807d83a)
+         - Returns agency module configuration
+      
+      7. ✅ PUT /api/admin/agencies/{agency_id}/modules for superadmin - WORKING
+         - Module updates working correctly
+         - Uses allowed_modules payload format
+         - Successfully updates agency module configuration
+      
+      🔍 ADDITIONAL VALIDATIONS CONFIRMED:
+      ✅ Module updates reflected in agency profile allowed_modules
+      ✅ No auth/session regressions detected
+      ✅ No ObjectId serialization issues detected  
+      ✅ All JSON responses valid and properly formatted
+      ✅ Frontend changes do not affect backend auth behavior
+      
+      📊 SUCCESS RATE: 100% (7/7 tests passed)
+      
+      🎉 CONCLUSION: All backend auth and agency module management flows working correctly. No regression detected from recent frontend changes mentioned in review request. Backend is stable and production-ready.
+

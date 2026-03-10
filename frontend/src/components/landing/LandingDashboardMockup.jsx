@@ -46,25 +46,25 @@ export const LandingDashboardMockup = ({ compact = false, testIdPrefix = "landin
 
   return (
     <div className={shellClassName} data-testid={`${testIdPrefix}-shell`}>
-      <div className="flex flex-wrap items-start justify-between gap-3 rounded-[24px] border border-slate-100 bg-white px-4 py-3 shadow-[0_10px_30px_rgba(15,23,42,0.05)] xl:flex-nowrap xl:items-center" data-testid={`${testIdPrefix}-topbar`}>
+      <div className="flex flex-wrap items-start justify-between gap-3 rounded-[24px] border border-slate-100 bg-white px-4 py-3.5 shadow-[0_10px_30px_rgba(15,23,42,0.05)] xl:flex-nowrap xl:items-center" data-testid={`${testIdPrefix}-topbar`}>
         <div className="flex min-w-0 items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[linear-gradient(135deg,#2563EB,#0EA5E9)] text-white" data-testid={`${testIdPrefix}-brand-badge`}>
+          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[linear-gradient(135deg,#2563EB,#0EA5E9)] text-white" data-testid={`${testIdPrefix}-brand-badge`}>
             <LayoutDashboard className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 sm:tracking-[0.24em]" data-testid={`${testIdPrefix}-eyebrow`}>
+            <p className="pb-0.5 text-[11px] font-semibold uppercase leading-[1.35] tracking-[0.18em] text-slate-400 sm:tracking-[0.24em]" data-testid={`${testIdPrefix}-eyebrow`}>
               Syroce Dashboard
             </p>
-            <p className="text-sm font-semibold leading-tight text-slate-900" data-testid={`${testIdPrefix}-title`}>
+            <p className="pb-0.5 text-base font-semibold leading-[1.28] text-slate-900 sm:text-[1.05rem]" data-testid={`${testIdPrefix}-title`}>
               Bugünün operasyon özeti
             </p>
           </div>
         </div>
         <div className="flex w-full flex-wrap items-center justify-start gap-2 sm:w-auto sm:justify-end" data-testid={`${testIdPrefix}-status-cluster`}>
-          <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700" data-testid={`${testIdPrefix}-status-online`}>
+          <div className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold leading-[1.25] text-emerald-700" data-testid={`${testIdPrefix}-status-online`}>
             Sistem aktif
           </div>
-          <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600" data-testid={`${testIdPrefix}-status-response`}>
+          <div className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold leading-[1.25] text-slate-600" data-testid={`${testIdPrefix}-status-response`}>
             7/24 bulut erişim
           </div>
         </div>
@@ -75,10 +75,10 @@ export const LandingDashboardMockup = ({ compact = false, testIdPrefix = "landin
           <article key={card.label} className={`rounded-[22px] border border-slate-100 bg-white px-4 py-4 shadow-[0_12px_34px_rgba(15,23,42,0.05)] ${index === KPI_CARDS.length - 1 ? "sm:col-span-2 xl:col-span-1" : ""}`} data-testid={`${testIdPrefix}-kpi-${index + 1}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-slate-500" data-testid={`${testIdPrefix}-kpi-label-${index + 1}`}>
+                <p className="pb-0.5 text-xs font-medium leading-[1.35] text-slate-500" data-testid={`${testIdPrefix}-kpi-label-${index + 1}`}>
                   {card.label}
                 </p>
-                <p className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900" data-testid={`${testIdPrefix}-kpi-value-${index + 1}`}>
+                <p className="mt-2 text-2xl font-extrabold leading-none tracking-tight text-slate-900" data-testid={`${testIdPrefix}-kpi-value-${index + 1}`}>
                   {card.value}
                 </p>
               </div>
@@ -86,7 +86,7 @@ export const LandingDashboardMockup = ({ compact = false, testIdPrefix = "landin
                 <card.icon className="h-4 w-4" />
               </div>
             </div>
-            <p className="mt-3 text-xs font-semibold text-emerald-600" data-testid={`${testIdPrefix}-kpi-delta-${index + 1}`}>
+            <p className="mt-3 pb-0.5 text-xs font-semibold leading-[1.35] text-emerald-600" data-testid={`${testIdPrefix}-kpi-delta-${index + 1}`}>
               {card.delta} son 30 gün
             </p>
           </article>
@@ -97,14 +97,14 @@ export const LandingDashboardMockup = ({ compact = false, testIdPrefix = "landin
         <section className="rounded-[26px] border border-slate-100 bg-white px-4 py-4 shadow-[0_12px_34px_rgba(15,23,42,0.05)]" data-testid={`${testIdPrefix}-reservation-panel`}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400" data-testid={`${testIdPrefix}-reservation-eyebrow`}>
+              <p className="pb-0.5 text-xs font-semibold uppercase leading-[1.35] tracking-[0.24em] text-slate-400" data-testid={`${testIdPrefix}-reservation-eyebrow`}>
                 Rezervasyon paneli
               </p>
-              <h3 className="mt-2 max-w-md text-base font-semibold leading-snug text-slate-900" data-testid={`${testIdPrefix}-reservation-title`}>
+              <h3 className="mt-2 max-w-md pb-0.5 text-base font-semibold leading-[1.3] text-slate-900" data-testid={`${testIdPrefix}-reservation-title`}>
                 Operasyon ekipleri aynı ekranda
               </h3>
             </div>
-            <div className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700" data-testid={`${testIdPrefix}-reservation-filter`}>
+            <div className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold leading-[1.25] text-blue-700" data-testid={`${testIdPrefix}-reservation-filter`}>
               Bugün
             </div>
           </div>
@@ -113,34 +113,34 @@ export const LandingDashboardMockup = ({ compact = false, testIdPrefix = "landin
             {BOOKING_ROWS.map((row, index) => (
               <div key={row.id} className="grid gap-3 rounded-[20px] border border-slate-100 bg-slate-50/80 px-4 py-3 sm:grid-cols-2 xl:grid-cols-[0.9fr_1.2fr_0.9fr_0.7fr] xl:items-center" data-testid={`${testIdPrefix}-reservation-row-${index + 1}`}>
                 <div>
-                  <p className="text-xs font-medium text-slate-500" data-testid={`${testIdPrefix}-reservation-id-label-${index + 1}`}>
+                  <p className="pb-0.5 text-xs font-medium leading-[1.35] text-slate-500" data-testid={`${testIdPrefix}-reservation-id-label-${index + 1}`}>
                     Referans
                   </p>
-                  <p className="text-sm font-semibold text-slate-900" data-testid={`${testIdPrefix}-reservation-id-${index + 1}`}>
+                  <p className="pb-0.5 text-sm font-semibold leading-[1.3] text-slate-900" data-testid={`${testIdPrefix}-reservation-id-${index + 1}`}>
                     {row.id}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-slate-500" data-testid={`${testIdPrefix}-reservation-guest-label-${index + 1}`}>
+                  <p className="pb-0.5 text-xs font-medium leading-[1.35] text-slate-500" data-testid={`${testIdPrefix}-reservation-guest-label-${index + 1}`}>
                     Misafir / Acente
                   </p>
-                  <p className="text-sm font-semibold text-slate-900" data-testid={`${testIdPrefix}-reservation-guest-${index + 1}`}>
+                  <p className="pb-0.5 text-sm font-semibold leading-[1.3] text-slate-900" data-testid={`${testIdPrefix}-reservation-guest-${index + 1}`}>
                     {row.guest}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-slate-500" data-testid={`${testIdPrefix}-reservation-status-label-${index + 1}`}>
+                  <p className="pb-0.5 text-xs font-medium leading-[1.35] text-slate-500" data-testid={`${testIdPrefix}-reservation-status-label-${index + 1}`}>
                     Durum
                   </p>
-                  <p className="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200" data-testid={`${testIdPrefix}-reservation-status-${index + 1}`}>
+                  <p className="inline-flex rounded-full bg-white px-3 py-1.5 text-xs font-semibold leading-[1.25] text-slate-700 ring-1 ring-slate-200" data-testid={`${testIdPrefix}-reservation-status-${index + 1}`}>
                     {row.status}
                   </p>
                 </div>
                 <div className="sm:col-span-2 xl:col-span-1 xl:text-right">
-                  <p className="text-xs font-medium text-slate-500" data-testid={`${testIdPrefix}-reservation-amount-label-${index + 1}`}>
+                  <p className="pb-0.5 text-xs font-medium leading-[1.35] text-slate-500" data-testid={`${testIdPrefix}-reservation-amount-label-${index + 1}`}>
                     Tutar
                   </p>
-                  <p className="text-sm font-semibold text-slate-900" data-testid={`${testIdPrefix}-reservation-amount-${index + 1}`}>
+                  <p className="pb-0.5 text-sm font-semibold leading-[1.3] text-slate-900" data-testid={`${testIdPrefix}-reservation-amount-${index + 1}`}>
                     {row.amount}
                   </p>
                 </div>
@@ -151,16 +151,16 @@ export const LandingDashboardMockup = ({ compact = false, testIdPrefix = "landin
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1" data-testid={`${testIdPrefix}-side-panels`}>
           <section className="rounded-[26px] border border-slate-100 bg-white px-4 py-4 shadow-[0_12px_34px_rgba(15,23,42,0.05)]" data-testid={`${testIdPrefix}-crm-panel`}>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 sm:text-xs sm:tracking-[0.22em]" data-testid={`${testIdPrefix}-crm-eyebrow`}>
+            <p className="pb-0.5 text-[11px] font-semibold uppercase leading-[1.35] tracking-[0.16em] text-slate-400 sm:text-xs sm:tracking-[0.22em]" data-testid={`${testIdPrefix}-crm-eyebrow`}>
               CRM müşteri görünümü
             </p>
             <div className="mt-4 space-y-3" data-testid={`${testIdPrefix}-crm-list`}>
               {CUSTOMER_ROWS.map((row, index) => (
                 <div key={row.name} className="rounded-[18px] bg-slate-50 px-4 py-3" data-testid={`${testIdPrefix}-crm-row-${index + 1}`}>
-                  <p className="text-sm font-semibold text-slate-900" data-testid={`${testIdPrefix}-crm-name-${index + 1}`}>
+                  <p className="pb-0.5 text-sm font-semibold leading-[1.3] text-slate-900" data-testid={`${testIdPrefix}-crm-name-${index + 1}`}>
                     {row.name}
                   </p>
-                  <p className="mt-1 text-xs text-slate-500" data-testid={`${testIdPrefix}-crm-detail-${index + 1}`}>
+                  <p className="mt-1 pb-0.5 text-xs leading-[1.45] text-slate-500" data-testid={`${testIdPrefix}-crm-detail-${index + 1}`}>
                     {row.detail}
                   </p>
                 </div>
@@ -171,10 +171,10 @@ export const LandingDashboardMockup = ({ compact = false, testIdPrefix = "landin
           <section className="rounded-[26px] border border-slate-100 bg-slate-950 px-4 py-4 text-white shadow-[0_20px_40px_rgba(15,23,42,0.28)]" data-testid={`${testIdPrefix}-finance-panel`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-200/80" data-testid={`${testIdPrefix}-finance-eyebrow`}>
+                <p className="pb-0.5 text-xs font-semibold uppercase leading-[1.35] tracking-[0.24em] text-sky-200/80" data-testid={`${testIdPrefix}-finance-eyebrow`}>
                   Finans görünümü
                 </p>
-                <p className="mt-2 text-sm font-semibold leading-snug" data-testid={`${testIdPrefix}-finance-title`}>
+                <p className="mt-2 pb-0.5 text-sm font-semibold leading-[1.3]" data-testid={`${testIdPrefix}-finance-title`}>
                   Tahsilat & komisyon takibi
                 </p>
               </div>
@@ -195,10 +195,10 @@ export const LandingDashboardMockup = ({ compact = false, testIdPrefix = "landin
             </div>
 
             <div className="mt-4 rounded-[18px] bg-white/8 px-4 py-3" data-testid={`${testIdPrefix}-finance-summary`}>
-              <p className="text-xs text-white/60" data-testid={`${testIdPrefix}-finance-summary-label`}>
+              <p className="pb-0.5 text-xs leading-[1.35] text-white/60" data-testid={`${testIdPrefix}-finance-summary-label`}>
                 Bekleyen tahsilat
               </p>
-              <p className="mt-1 text-lg font-semibold" data-testid={`${testIdPrefix}-finance-summary-value`}>
+              <p className="mt-1 pb-0.5 text-lg font-semibold leading-[1.25]" data-testid={`${testIdPrefix}-finance-summary-value`}>
                 ₺182.400
               </p>
             </div>

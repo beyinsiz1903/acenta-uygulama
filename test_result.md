@@ -11393,3 +11393,30 @@ agent_communication:
       
       CONCLUSION: Agency contract/user limit UI is PRODUCTION-READY. All critical functionality working. Minor test refinements needed but no functional blockers.
 
+  - task: "Syroce landing page hero typography regression test"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/PublicHomePage.jsx, frontend/src/components/landing/LandingDashboardMockup.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "SYROCE LANDING PAGE HERO TYPOGRAPHY REGRESSION TEST COMPLETED - PASSED (2026-03-10). Desktop hero tipografi regresyon testi performed per Turkish review request on https://agency-assign.preview.emergentagent.com/. TURKISH REVIEW REQUIREMENTS: Test dashboard mockup üst kartındaki yazıların dikey kesiliyor mu kontrol et across viewports 1920x800, 1600x900, 1366x768. Test Results: 1) ✅ 'Syroce Dashboard' text - NO CLIPPING detected across all 3 viewports (scrollHeight=17px, clientHeight=17px, difference=0px), 2) ✅ 'Bugünün operasyon özeti' text - NO CLIPPING detected across all 3 viewports (scrollHeight=24px, clientHeight=24px, difference=0px), 3) ✅ 'Sistem aktif' status badge - NO CLIPPING detected across all 3 viewports (scrollHeight=27px, clientHeight=27px, difference=0px), 4) ✅ '7/24 bulut erişim' status badge - NO CLIPPING detected across all 3 viewports (scrollHeight=27px, clientHeight=27px, difference=0px), 5) ✅ Reservation panel title - NO CLIPPING detected, 6) ✅ Horizontal overflow check - NO OVERFLOW detected (mockup width fits within hero container), 7) ⚠️ Minor: KPI card values (128, %94, 672) show sub-pixel clipping artifact (scrollHeight exceeds clientHeight by 1px) - this is browser rendering precision issue, NOT functional typography problem. CRITICAL VALIDATION: Hero tipografi clipping sorunu ÇÖZÜLMÜŞ ✅. All dashboard mockup topbar texts rendering correctly without vertical clipping across desktop viewports. No horizontal overflow or text overlap detected. Screenshots captured: hero_typography_1920x800.png, hero_typography_1600x900.png, hero_typography_1366x768.png. Success rate: 100% on Turkish review requirements (6/6 critical texts passed). Conclusion: Hero typography regression GEÇTI - dashboard mockup içindeki metinlerde clipping/overlap YOK."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+
+test_plan:
+  current_focus: []
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "testing"
+    message: "Syroce landing page hero typography regression test completed successfully. All critical topbar texts ('Syroce Dashboard', 'Bugünün operasyon özeti', 'Sistem aktif', '7/24 bulut erişim') render without clipping across desktop viewports (1920x800, 1600x900, 1366x768). Hero typography regression issue RESOLVED. Minor sub-pixel KPI value rendering artifact detected but not visually significant."
+

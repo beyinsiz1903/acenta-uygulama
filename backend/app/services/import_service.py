@@ -61,7 +61,13 @@ def _parse_xlsx(file_bytes: bytes) -> Tuple[List[str], List[List[str]]]:
 
 def _parse_csv(file_bytes: bytes) -> Tuple[List[str], List[List[str]]]:
     text = file_bytes.decode("utf-8-sig")
-    reader = csv.reader(io.StringIO(text))
+    delimiter = ","
+    try:
+        dialect = csv.Sniffer().sniff(text[:2048], delimiters=",;\t")
+        delimiter = dialect.delimiter
+    except Exception:
+        delimiter = "\t" if "\t" in text.splitlines()[0] else ","
+    reader = csv.reader(io.StringIO(text), delimiter=delimiter)
     rows_raw = list(reader)
 
     if len(rows_raw) < 2:

@@ -2,11 +2,12 @@ import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { api } from "../../lib/api";
 import { SheetTemplateCenter } from "../../components/admin/sheets/SheetTemplateCenter";
 import { SheetValidationPanel } from "../../components/admin/sheets/SheetValidationPanel";
+import { BulkConnectionModal } from "../../components/admin/sheets/BulkConnectionModal";
 import { toast } from "sonner";
 import {
   Sheet, Link2, RefreshCw, CheckCircle2, AlertTriangle, XCircle,
   ChevronRight, ChevronDown, Clock, Zap, ArrowRight, Search,
-  Plus, Settings, Trash2, Activity, Database, WifiOff, Copy,
+  Plus, Settings, Trash2, Activity, Database, WifiOff, Copy, Upload,
   BarChart3, Eye, Loader2, Info, X,
 } from "lucide-react";
 
@@ -636,6 +637,7 @@ function AgencyConnectionsSection() {
   const [agencyConns, setAgencyConns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  const [showBulk, setShowBulk] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
   // Add form state
@@ -725,6 +727,13 @@ function AgencyConnectionsSection() {
             data-testid="portfolio-sync-agency-connections-add-button"
           >
             <Plus className="w-3.5 h-3.5" /> Acenta Baglantisi
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowBulk(true); setExpanded(true); }}
+            className="flex items-center gap-1 px-3 py-1.5 text-xs border border-purple-200 bg-white text-purple-700 rounded-lg hover:bg-purple-50 transition-colors"
+            data-testid="portfolio-sync-agency-open-bulk-button"
+          >
+            <Upload className="w-3.5 h-3.5" /> Toplu
           </button>
           {expanded ? <ChevronDown className="w-4 h-4 text-muted-foreground/60" /> : <ChevronRight className="w-4 h-4 text-muted-foreground/60" />}
         </div>
@@ -863,6 +872,18 @@ function AgencyConnectionsSection() {
           )}
         </div>
       )}
+
+      {showBulk && (
+        <BulkConnectionModal
+          scope="agency"
+          open={showBulk}
+          onClose={() => setShowBulk(false)}
+          onCompleted={async () => {
+            await loadConns();
+            await loadHotels();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -883,6 +904,7 @@ export default function AdminPortfolioSyncPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [syncing, setSyncing] = useState(null);
   const [showWizard, setShowWizard] = useState(false);
+  const [showBulkWizard, setShowBulkWizard] = useState(false);
   const [runsDrawer, setRunsDrawer] = useState(null);
   const [error, setError] = useState(null);
 
@@ -1013,6 +1035,13 @@ export default function AdminPortfolioSyncPage() {
           >
             <Plus className="w-4 h-4" /> Yeni Baglanti
           </button>
+          <button
+            onClick={() => setShowBulkWizard(true)}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm border border-blue-200 bg-white text-blue-700 rounded-lg hover:bg-blue-50 shadow-sm transition-colors"
+            data-testid="portfolio-sync-open-bulk-hotel-button"
+          >
+            <Upload className="w-4 h-4" /> Toplu Baglanti
+          </button>
         </div>
       </div>
 
@@ -1113,6 +1142,18 @@ export default function AdminPortfolioSyncPage() {
           hotels={availableHotels}
           onConnect={handleConnect}
           onClose={() => setShowWizard(false)}
+        />
+      )}
+
+      {showBulkWizard && (
+        <BulkConnectionModal
+          scope="hotel"
+          open={showBulkWizard}
+          onClose={() => setShowBulkWizard(false)}
+          onCompleted={async () => {
+            await loadAll(false);
+            await loadHotels();
+          }}
         />
       )}
 

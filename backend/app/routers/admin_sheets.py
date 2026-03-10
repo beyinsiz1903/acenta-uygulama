@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import io
 import uuid
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Query, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -30,6 +30,14 @@ from app.services.sheet_connection_service import (
 from app.services.sheet_template_service import (
     build_sheet_templates_payload,
     render_template_csv,
+)
+from app.services.import_service import parse_excel
+from app.services.sheet_bulk_connection_service import (
+    BulkConnectionScope,
+    normalize_bulk_rows,
+    parse_bulk_text,
+    render_bulk_connection_template,
+    validate_bulk_connection_rows,
 )
 from app.services.sheets_provider import (
     get_config_status,
@@ -158,6 +166,116 @@ async def _create_hotel_connection_record(
     result = serialize_doc(doc)
     result["configured"] = is_configured(tenant_id)
     result["service_account_email"] = get_service_account_email(tenant_id)
+    result["detected_headers"] = detected_headers
+    result["detected_mapping"] = detected_mapping
+    result["header_validation"] = header_validation
+    result["validation_summary"] = validation_summary
+    result["writeback_validation"] = writeback_validation
+    result["writeback_bootstrap"] = writeback_bootstrap
+    result["worksheets"] = worksheets
+    return result
+
+
+async def _create_agency_connection_record(
+    body: "ConnectAgencySheetRequest",
+    user: Dict[str, Any],
+    db,
+) -> Dict[str, Any]:
+    org_id = user["organization_id"]
+    tenant_id = _tenant_id(user)
+
+    hotel = await db.hotels.find_one({"_id": body.hotel_id, "organization_id": org_id})
+    if not hotel:
+        raise AppError(404, "hotel_not_found", "Otel bulunamadi.")
+
+    agency = await db.agencies.find_one({"_id": body.agency_id, "organization_id": org_id})
+    if not agency:
+        raise AppError(404, "agency_not_found", "Acenta bulunamadi.")
+
+    existing = await db.hotel_portfolio_sources.find_one({
+        "tenant_id": tenant_id,
+        "hotel_id": body.hotel_id,
+        "agency_id": body.agency_id,
+        "source_type": "google_sheets",
+    })
+    if existing:
+        raise AppError(409, "connection_exists", "Bu otel-acenta ikilisi icin zaten bir sheet baglantisi var.")
+
+    detected_headers = []
+    detected_mapping = {}
+    header_validation: Dict[str, Any] = {}
+    writeback_bootstrap: Optional[Dict[str, Any]] = None
+    validation_status = "pending_configuration"
+    if is_configured(tenant_id):
+        preflight = build_sheet_preflight(
+            tenant_id=tenant_id,
+            sheet_id=body.sheet_id,
+            sheet_tab=body.sheet_tab,
+            writeback_tab=body.writeback_tab,
+            strict_headers=True,
+            ensure_writeback=True,
+        )
+        sheet_title = preflight["sheet_title"]
+        worksheets = preflight["worksheets"]
+        detected_headers = preflight["detected_headers"]
+        detected_mapping = preflight["detected_mapping"]
+        header_validation = preflight["header_validation"]
+        validation_summary = preflight["validation_summary"]
+        writeback_validation = preflight["writeback_validation"]
+        writeback_bootstrap = preflight["writeback_bootstrap"]
+        validation_status = "validated"
+    else:
+        sheet_title = ""
+        worksheets = []
+        validation_summary = {}
+        writeback_validation = None
+
+    effective_mapping = body.mapping if body.mapping else detected_mapping
+
+    doc = {
+        "_id": str(uuid.uuid4()),
+        "tenant_id": tenant_id,
+        "organization_id": org_id,
+        "hotel_id": body.hotel_id,
+        "hotel_name": hotel.get("name", ""),
+        "agency_id": body.agency_id,
+        "agency_name": agency.get("name", ""),
+        "source_type": "google_sheets",
+        "sheet_id": body.sheet_id,
+        "sheet_tab": body.sheet_tab,
+        "writeback_tab": body.writeback_tab,
+        "sheet_title": sheet_title,
+        "mapping": effective_mapping,
+        "validation_status": validation_status,
+        "validation_summary": validation_summary,
+        "sync_enabled": body.sync_enabled,
+        "sync_interval_minutes": body.sync_interval_minutes,
+        "last_sync_at": None,
+        "last_sync_status": None,
+        "last_error": None,
+        "last_fingerprint": None,
+        "status": "active",
+        "created_at": now_utc(),
+        "updated_at": now_utc(),
+        "created_by": user.get("email", ""),
+    }
+    await db.hotel_portfolio_sources.insert_one(doc)
+
+    await append_audit_log(
+        scope="portfolio_sync",
+        tenant_id=tenant_id,
+        actor_user_id=user.get("_id", ""),
+        actor_email=user.get("email", ""),
+        action="agency_sheet_connected",
+        after={
+            "hotel_id": body.hotel_id,
+            "agency_id": body.agency_id,
+            "sheet_id": body.sheet_id,
+        },
+    )
+
+    result = serialize_doc(doc)
+    result["configured"] = is_configured(tenant_id)
     result["detected_headers"] = detected_headers
     result["detected_mapping"] = detected_mapping
     result["header_validation"] = header_validation
@@ -634,6 +752,200 @@ async def list_available_hotels(
     return result
 
 
+class BulkConnectionsPreviewTextRequest(BaseModel):
+    scope: BulkConnectionScope
+    raw_text: str
+
+
+class BulkConnectionsPreviewMasterSheetRequest(BaseModel):
+    scope: BulkConnectionScope
+    sheet_id: str
+    sheet_tab: str = "Connections"
+
+
+class BulkConnectionsExecuteRequest(BaseModel):
+    scope: BulkConnectionScope
+    rows: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+@router.get("/bulk-template/{scope}", dependencies=[AdminDep])
+async def download_bulk_connections_template(
+    scope: BulkConnectionScope,
+    user=Depends(get_current_user),
+):
+    _ = user
+    payload = render_bulk_connection_template(scope)
+    return StreamingResponse(
+        io.BytesIO(payload["content"]),
+        media_type=payload["media_type"],
+        headers={"Content-Disposition": f"attachment; filename={payload['filename']}"},
+    )
+
+
+@router.post("/bulk/preview-upload", dependencies=[AdminDep])
+async def preview_bulk_connections_upload(
+    scope: BulkConnectionScope = Form(...),
+    file: UploadFile = File(...),
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    filename = file.filename or "bulk_connections.csv"
+    if not filename.lower().endswith((".csv", ".xlsx", ".xls")):
+        raise AppError(400, "invalid_file", "Sadece CSV veya XLSX dosyalari kabul edilir.")
+
+    contents = await file.read()
+    if len(contents) > 10 * 1024 * 1024:
+        raise AppError(400, "file_too_large", "Dosya boyutu 10MB'dan buyuk olamaz.")
+
+    try:
+        headers, rows = parse_excel(contents, filename)
+    except Exception as exc:
+        raise AppError(400, "parse_error", f"Dosya okunamadi: {str(exc)}") from exc
+
+    normalized_rows = normalize_bulk_rows(headers, rows, scope)
+    preview = await validate_bulk_connection_rows(
+        db,
+        organization_id=user["organization_id"],
+        tenant_id=_tenant_id(user),
+        scope=scope,
+        rows=normalized_rows,
+    )
+    preview["source"] = "upload"
+    preview["filename"] = filename
+    preview["headers"] = headers
+    return preview
+
+
+@router.post("/bulk/preview-text", dependencies=[AdminDep])
+async def preview_bulk_connections_text(
+    body: BulkConnectionsPreviewTextRequest,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    try:
+        headers, rows = parse_bulk_text(body.raw_text)
+    except ValueError as exc:
+        raise AppError(400, "parse_error", str(exc)) from exc
+
+    normalized_rows = normalize_bulk_rows(headers, rows, body.scope)
+    preview = await validate_bulk_connection_rows(
+        db,
+        organization_id=user["organization_id"],
+        tenant_id=_tenant_id(user),
+        scope=body.scope,
+        rows=normalized_rows,
+    )
+    preview["source"] = "paste"
+    preview["headers"] = headers
+    return preview
+
+
+@router.post("/bulk/preview-master-sheet", dependencies=[AdminDep])
+async def preview_bulk_connections_master_sheet(
+    body: BulkConnectionsPreviewMasterSheetRequest,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    tenant_id = _tenant_id(user)
+    if not is_configured(tenant_id):
+        return {
+            "scope": body.scope,
+            "configured": False,
+            "source": "master_sheet",
+            "sheet_id": body.sheet_id,
+            "sheet_tab": body.sheet_tab,
+            "message": "Master sheet onizlemesi icin Google Service Account JSON gerekli.",
+            "summary": {"total_rows": 0, "valid_rows": 0, "invalid_rows": 0},
+            "required_fields": render_bulk_connection_template(body.scope)["headers"],
+            "valid_rows": [],
+            "invalid_rows": [],
+            "headers": [],
+        }
+
+    sheet_result = read_sheet(body.sheet_id, body.sheet_tab, tenant_id=tenant_id)
+    if not sheet_result.success:
+        raise AppError(400, "sheet_read_error", sheet_result.error or "Master sheet okunamadi.")
+
+    headers = sheet_result.data.get("headers", [])
+    rows = sheet_result.data.get("rows", [])
+    normalized_rows = normalize_bulk_rows(headers, rows, body.scope)
+    preview = await validate_bulk_connection_rows(
+        db,
+        organization_id=user["organization_id"],
+        tenant_id=tenant_id,
+        scope=body.scope,
+        rows=normalized_rows,
+    )
+    preview["configured"] = True
+    preview["source"] = "master_sheet"
+    preview["sheet_id"] = body.sheet_id
+    preview["sheet_tab"] = body.sheet_tab
+    preview["headers"] = headers
+    return preview
+
+
+@router.post("/bulk/execute", dependencies=[AdminDep])
+async def execute_bulk_connections(
+    body: BulkConnectionsExecuteRequest,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    if not body.rows:
+        raise AppError(400, "empty_rows", "Kaydedilecek gecerli satir bulunamadi.")
+
+    created_count = 0
+    created_preview: List[Dict[str, Any]] = []
+    errors: List[Dict[str, Any]] = []
+
+    for index, row in enumerate(body.rows, start=1):
+        clean_row = {
+            key: row.get(key)
+            for key in {
+                "hotel_id",
+                "agency_id",
+                "sheet_id",
+                "sheet_tab",
+                "writeback_tab",
+                "sync_enabled",
+                "sync_interval_minutes",
+                "mapping",
+            }
+            if row.get(key) is not None
+        }
+        clean_row.setdefault("sheet_tab", "Sheet1")
+        clean_row.setdefault("writeback_tab", "Rezervasyonlar")
+        clean_row.setdefault("sync_enabled", True)
+        clean_row.setdefault("sync_interval_minutes", 5)
+        clean_row.setdefault("mapping", {})
+
+        try:
+            if body.scope == "hotel":
+                connection_body = ConnectSheetRequest(**clean_row)
+                created = await _create_hotel_connection_record(connection_body, user, db)
+            else:
+                connection_body = ConnectAgencySheetRequest(**clean_row)
+                created = await _create_agency_connection_record(connection_body, user, db)
+            created_count += 1
+            if len(created_preview) < 20:
+                created_preview.append(created)
+        except AppError as exc:
+            errors.append({
+                "row_number": row.get("row_number") or index,
+                "hotel_id": row.get("hotel_id"),
+                "agency_id": row.get("agency_id"),
+                "message": exc.message,
+                "code": exc.code,
+            })
+
+    return {
+        "scope": body.scope,
+        "created_count": created_count,
+        "error_count": len(errors),
+        "created_preview": created_preview,
+        "errors": errors,
+    }
+
+
 
 # ── Write-Back Endpoints ─────────────────────────────────────
 
@@ -824,112 +1136,7 @@ async def connect_agency_sheet(
     db=Depends(get_db),
 ):
     """Connect a Google Sheet to a hotel×agency pair."""
-    org_id = user["organization_id"]
-    tenant_id = _tenant_id(user)
-
-    # Validate hotel
-    hotel = await db.hotels.find_one({"_id": body.hotel_id, "organization_id": org_id})
-    if not hotel:
-        raise AppError(404, "hotel_not_found", "Otel bulunamadi.")
-
-    # Validate agency
-    agency = await db.agencies.find_one({"_id": body.agency_id, "organization_id": org_id})
-    if not agency:
-        raise AppError(404, "agency_not_found", "Acenta bulunamadi.")
-
-    # Check existing
-    existing = await db.hotel_portfolio_sources.find_one({
-        "tenant_id": tenant_id,
-        "hotel_id": body.hotel_id,
-        "agency_id": body.agency_id,
-        "source_type": "google_sheets",
-    })
-    if existing:
-        raise AppError(409, "connection_exists", "Bu otel-acenta ikilisi icin zaten bir sheet baglantisi var.")
-
-    detected_headers = []
-    detected_mapping = {}
-    header_validation: Dict[str, Any] = {}
-    writeback_bootstrap: Optional[Dict[str, Any]] = None
-    validation_status = "pending_configuration"
-    if is_configured(tenant_id):
-        preflight = build_sheet_preflight(
-            tenant_id=tenant_id,
-            sheet_id=body.sheet_id,
-            sheet_tab=body.sheet_tab,
-            writeback_tab=body.writeback_tab,
-            strict_headers=True,
-            ensure_writeback=True,
-        )
-        sheet_title = preflight["sheet_title"]
-        worksheets = preflight["worksheets"]
-        detected_headers = preflight["detected_headers"]
-        detected_mapping = preflight["detected_mapping"]
-        header_validation = preflight["header_validation"]
-        validation_summary = preflight["validation_summary"]
-        writeback_validation = preflight["writeback_validation"]
-        writeback_bootstrap = preflight["writeback_bootstrap"]
-        validation_status = "validated"
-    else:
-        sheet_title = ""
-        worksheets = []
-        validation_summary = {}
-        writeback_validation = None
-
-    effective_mapping = body.mapping if body.mapping else detected_mapping
-
-    doc = {
-        "_id": str(uuid.uuid4()),
-        "tenant_id": tenant_id,
-        "organization_id": org_id,
-        "hotel_id": body.hotel_id,
-        "hotel_name": hotel.get("name", ""),
-        "agency_id": body.agency_id,
-        "agency_name": agency.get("name", ""),
-        "source_type": "google_sheets",
-        "sheet_id": body.sheet_id,
-        "sheet_tab": body.sheet_tab,
-        "writeback_tab": body.writeback_tab,
-        "sheet_title": sheet_title,
-        "mapping": effective_mapping,
-        "validation_status": validation_status,
-        "validation_summary": validation_summary,
-        "sync_enabled": body.sync_enabled,
-        "sync_interval_minutes": body.sync_interval_minutes,
-        "last_sync_at": None,
-        "last_sync_status": None,
-        "last_error": None,
-        "last_fingerprint": None,
-        "status": "active",
-        "created_at": now_utc(),
-        "updated_at": now_utc(),
-        "created_by": user.get("email", ""),
-    }
-    await db.hotel_portfolio_sources.insert_one(doc)
-
-    await append_audit_log(
-        scope="portfolio_sync",
-        tenant_id=tenant_id,
-        actor_user_id=user.get("_id", ""),
-        actor_email=user.get("email", ""),
-        action="agency_sheet_connected",
-        after={
-            "hotel_id": body.hotel_id,
-            "agency_id": body.agency_id,
-            "sheet_id": body.sheet_id,
-        },
-    )
-
-    result = serialize_doc(doc)
-    result["configured"] = is_configured(tenant_id)
-    result["detected_headers"] = detected_headers
-    result["detected_mapping"] = detected_mapping
-    result["header_validation"] = header_validation
-    result["validation_summary"] = validation_summary
-    result["writeback_validation"] = writeback_validation
-    result["writeback_bootstrap"] = writeback_bootstrap
-    result["worksheets"] = worksheets
-    return result
+    return await _create_agency_connection_record(body, user, db)
 
 
 @router.get("/agency-connections", dependencies=[AdminDep])

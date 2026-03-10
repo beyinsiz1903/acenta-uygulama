@@ -11013,3 +11013,83 @@ agent_communication:
       ✅ Sayfada crash / blank screen / console kritik hata olmasın
       
       CONCLUSION: Admin performance dashboard PRODUCTION-READY. Backend performance iyileştirmeleri frontend perf dashboard'ı bozmamış. All UI elements working correctly, data loading successfully, zero critical errors. Smoke test fully successful.
+
+
+  - task: "Syroce custom-domain CORS regression validation"
+    implemented: true
+    working: false
+    file: "frontend/src/lib/backendUrl.js, frontend/src/lib/api.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "SYROCE CUSTOM-DOMAIN CORS REGRESSION TEST COMPLETED - CRITICAL FAILURE DETECTED (2026-03-10). Comprehensive CORS regression testing performed per Turkish review request on both preview domain (https://agency-ops-core.preview.emergentagent.com) and custom domain (https://agency.syroce.com) with admin@acenta.test/admin123. Test Context: Bu iterasyonda frontend backend URL çözümü değişti; custom domain ile backend env host'u farklıysa same-origin /api kullanılmalı. PREVIEW DOMAIN RESULTS (6/6 PASSED): 1) ✅ Login flow successful (redirects to /app/admin/dashboard), 2) ✅ /app/reservations accessible (1216 chars content, reservation list displayed with 11 reservations), 3) ✅ No error banners visible, 4) ✅ CORS errors: 0, 5) ✅ Requests to improvement-areas.emergent.host: 0, 6) ✅ All API requests correctly go to preview domain. CUSTOM DOMAIN RESULTS (0/6 PASSED - ALL FAILING): 1) ❌ Login flow: Partial success but issues after, 2) ❌ /app/reservations: Shows empty state with network error banner 'Ağ bağlantısı kurulamadı. Sunucu kısa süreli yeniden başlıyor olabilir; lütfen 2-3 saniye sonra tekrar deneyin.', empty state message 'Henüz rezervasyon yok' (due to failed API calls), 3) ❌ Error banner visible: YES (network error), 4) ❌ CORS errors in console: 40 CRITICAL ERRORS, 5) ❌ Requests to improvement-areas.emergent.host: 40 BLOCKED REQUESTS, 6) ❌ All API calls fail with CORS policy violations. ROOT CAUSE: Custom domain (agency.syroce.com) is making cross-origin requests to 'https://improvement-areas.emergent.host' instead of using same-origin '/api' requests. Sample CORS error: 'Access to XMLHttpRequest at https://improvement-areas.emergent.host/api/auth/me from origin https://agency.syroce.com has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The value of the Access-Control-Allow-Origin header in the response must not be the wildcard * when the requests credentials mode is include.' Affected endpoints (all failing): /api/auth/me, /api/auth/refresh, /api/public/theme, /api/reservations, /api/reports/*, /api/admin/*, /api/tenant/*, /api/notifications/*. Host analysis shows 40 requests to improvement-areas.emergent.host (ALL BLOCKED BY CORS) vs 24 requests to agency.syroce.com (static assets only). EXPECTED BEHAVIOR: When custom domain host differs from backend env URL, app should use same-origin '/api' requests. The getBackendOrigin() function in /app/frontend/src/lib/backendUrl.js should return empty string when current origin (agency.syroce.com) ≠ Backend env origin, then getApiBaseUrl() should default to '/api'. However, app is resolving backend URL to 'https://improvement-areas.emergent.host' suggesting: 1) Runtime value window.__ACENTA_BACKEND_URL__ may be set to improvement-areas.emergent.host on custom domain deployment, 2) OR build-time REACT_APP_BACKEND_URL is incorrectly configured for custom domain build, 3) The logic to detect different origins and use same-origin /api is not working as expected. IMPACT: Custom domain is completely non-functional for authenticated users, all API calls fail with CORS errors, users see network error banners and empty data, login works but any subsequent API call fails. Screenshots captured: preview_domain_reservations.png (working reservation list with 11 items), custom_domain_reservations.png (error banner and empty state). CONCLUSION: Preview domain OK ✅, Custom domain FAIL ❌. CRITICAL regression detected - custom domain CORS implementation not working as designed. Requires main agent investigation into backend URL resolution on custom domain deployment."
+
+  - agent: "testing"
+    message: |
+      ❌ CRITICAL: SYROCE CUSTOM-DOMAIN CORS REGRESSION DETECTED (2026-03-10)
+      
+      Performed comprehensive CORS regression testing per Turkish review request.
+      
+      Test Credentials: admin@acenta.test / admin123
+      Test URLs:
+      - Preview: https://agency-ops-core.preview.emergentagent.com
+      - Custom: https://agency.syroce.com
+      
+      🎯 TEST RESULTS SUMMARY:
+      
+      ✅ PREVIEW DOMAIN: WORKING PERFECTLY (6/6 tests passed)
+      • Login flow → /app/reservations: Successful
+      • Reservation list displayed: 11 items (1216 chars)
+      • Error banners: None
+      • CORS errors: 0
+      • improvement-areas.emergent.host requests: 0
+      • All API calls go to correct preview domain
+      
+      ❌ CUSTOM DOMAIN: CRITICAL FAILURE (0/6 tests passed)
+      • Login flow: Partial (redirects but API fails)
+      • /app/reservations: Empty with error banner
+      • Error banner: "Ağ bağlantısı kurulamadı..." (Network error)
+      • Empty state: "Henüz rezervasyon yok"
+      • CORS errors: 40 CRITICAL ERRORS
+      • improvement-areas.emergent.host requests: 40 BLOCKED
+      
+      🔥 ROOT CAUSE:
+      Custom domain makes cross-origin requests to 'improvement-areas.emergent.host'
+      instead of same-origin '/api'. All blocked by CORS policy.
+      
+      Sample error: "Access to XMLHttpRequest at 'https://improvement-areas.emergent.host/api/auth/me'
+      from origin 'https://agency.syroce.com' has been blocked by CORS policy..."
+      
+      Failing endpoints: /api/auth/me, /api/auth/refresh, /api/public/theme,
+      /api/reservations, /api/reports/*, /api/admin/*, /api/tenant/*, /api/notifications/*
+      
+      🔍 EXPECTED vs ACTUAL:
+      EXPECTED: Custom domain should use same-origin '/api' when host differs
+      ACTUAL: Custom domain uses 'https://improvement-areas.emergent.host' (cross-origin)
+      
+      💡 SUSPECTED ISSUE:
+      getBackendOrigin() in /app/frontend/src/lib/backendUrl.js should return ""
+      when agency.syroce.com ≠ backend env, but resolves to improvement-areas.emergent.host
+      
+      Likely causes:
+      1. window.__ACENTA_BACKEND_URL__ runtime value incorrectly set on custom domain
+      2. REACT_APP_BACKEND_URL build-time config wrong for custom domain
+      3. Origin detection logic not working
+      
+      ⚠️ IMPACT:
+      • Custom domain COMPLETELY NON-FUNCTIONAL
+      • All authenticated API calls fail
+      • Users see errors and empty data
+      • Login works but nothing else
+      
+      📸 Evidence:
+      • preview_domain_reservations.png: Working list with 11 reservations
+      • custom_domain_reservations.png: Error banner + empty state
+      
+      🎯 FINAL VERDICT:
+      Preview OK ✅ / Custom domain FAIL ❌
+      
+      This is a BLOCKING P0 issue - custom domain completely broken.

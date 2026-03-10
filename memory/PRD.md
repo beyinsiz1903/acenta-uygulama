@@ -146,7 +146,16 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
   - `weekly-summary`, `tenant/features`, `kpi-stats`, `reservation-widgets` ~60-80ms bandında doğrulandı
 - Not: Perf dashboard’daki **24 saatlik p95** metrikleri tarihsel örnekleri tuttuğu için eski yavaş sample’lar hemen kaybolmaz; 1 saatlik pencerede yeni iyileşme çok daha net görünür.
 
+## Son Bakım Güncellemesi — 2026-03-10 Custom Domain CORS RCA
+- Frontend için `backendUrl.js` yardımcı katmanı eklendi; custom domain ile backend env host'u farklıysa istekler artık same-origin `/api` üstünden çözülüyor.
+- `lib/api.js` ve doğrudan backend URL kullanan indirme / voucher / asset akışları bu yardımcıya taşındı; böylece yeni build’de cross-origin bağımlılık azaltıldı.
+- Backend CORS preview/dev modunda regex tabanlı explicit origin echo davranışına alındı; local preflight testinde `Origin: https://agency.syroce.com` için `Access-Control-Allow-Origin: https://agency.syroce.com` ve `allow-credentials: true` doğrulandı.
+- Smoke sonucu: preview domain (`agency-ops-core.preview.emergentagent.com`) üzerinde login + `/app/reservations` geçti ve hata bannerı görünmedi.
+- Kritik RCA: `agency.syroce.com` halen eski production bundle `main.a26343a0.js` servis ediyor; bundle içine `https://improvement-areas.emergent.host` hardcode gömülü. Yani custom domain şu an bu workspace’teki güncel frontend kodunu değil, eski deploy build’ini sunuyor.
+- Sonuç: Kod düzeltmesi hazır ve preview’de doğrulandı; **custom domain canlı akışı deployment/cache senkronu olmadan tamamen düzelmiş sayılmaz**.
+
 ## Kalan Öncelikli İşler
+- P0: `agency.syroce.com` custom domain'ini güncel frontend build ile hizalamak; eski `main.a26343a0.js` bundle referansını kaldırmak.
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.
 - P1: Zamanlanmış otomatik sync davranışını gerçek credential ile doğrulamak ve gerekiyorsa UI'daki interval beklentisiyle birebir hizalamak.
 - P1: Bulk master sheet akışını gerçek Google credential ile canlı sheet üzerinden smoke test etmek.

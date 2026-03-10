@@ -162,9 +162,18 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
 - Frontend’de `DemoSeedButton` modalına kullanıcı seçici eklendi; `Kullanıcı Yönetimi` ekranında her agency kullanıcı satırına hızlı **Demo** butonu yerleştirildi.
 - Doğrulama: Iteration 49 raporunda backend endpointleri ve row-level Demo butonu + modal hedef kullanıcı seçimi geçti.
 
+## Son Uygulama Güncellemesi — 2026-03-10 Agency Contract / Süre Yönetimi
+- Acenta bazlı sözleşme alanları eklendi: `contract_start_date`, `contract_end_date`, `payment_status`, `package_type`, `user_limit`.
+- `/api/admin/agencies` ve `/api/admin/agencies/` artık sözleşme özetini (`contract_summary`), aktif kullanıcı sayısını ve kalan koltuk bilgisini döndürüyor; legacy `/api/admin/agencies` yolu yeni davranışla hizalandı.
+- Superadmin kullanıcı oluşturma ve acentaya kullanıcı bağlama akışlarında **kullanıcı limiti enforcement** eklendi; limit doluysa `agency_user_limit_reached` ile bloklanıyor.
+- Admin `Acentalar`, `Kullanıcı Yönetimi` ve `Acenta Kullanıcıları` sayfaları sözleşme süresi, ödeme durumu, paket tipi ve kullanıcı limiti görünürlüğüyle güncellendi.
+- Agency kullanıcı oturumunda 30 gün kala üst uyarı banner’ı, süre geçince de erişim kısıtlı overlay’i eklendi.
+- Doğrulama: backend pytest dosyası `test_admin_agency_contract_controls.py` geçti; preview smoke + backend/ frontend test agent akışları create/update/list/user-limit senaryolarını doğruladı.
+
 ## Kalan Öncelikli İşler
 - P0: `agency.syroce.com` custom domain'ini güncel frontend build ile hizalamak; eski `main.a26343a0.js` bundle referansını kaldırmak.
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.
+- P0: Agency sözleşme süresi dolunca backend tarafında route-level enforcement gerekip gerekmediğini kullanıcıyla doğrulayıp karar vermek (şu an UI kısıtlaması aktif).
 - P1: Demo seed akışına acenta/tenant filtreleri ve toplu hedefleme (tek seferde birden fazla agency kullanıcı) eklemek.
 - P1: Zamanlanmış otomatik sync davranışını gerçek credential ile doğrulamak ve gerekiyorsa UI'daki interval beklentisiyle birebir hizalamak.
 - P1: Bulk master sheet akışını gerçek Google credential ile canlı sheet üzerinden smoke test etmek.

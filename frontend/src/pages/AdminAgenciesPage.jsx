@@ -80,36 +80,37 @@ function AgencyContractBadge({ summary, testId }) {
 function AgencyMiniSummary({ agency, prefix }) {
   const summary = agency?.contract_summary;
   const paymentMeta = getPaymentStatusMeta(summary?.payment_status);
+  const testBase = `${prefix}-summary`;
 
   return (
-    <div className="grid gap-2 rounded-2xl border bg-muted/20 p-4" data-testid={`${prefix}-contract-summary`}>
+    <div className="grid gap-2 rounded-2xl border bg-muted/20 p-4" data-testid={`${testBase}-card`}>
       <div className="flex flex-wrap items-center gap-2">
-        <AgencyContractBadge summary={summary} testId={`${prefix}-contract-status`} />
-        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${paymentMeta.className}`} data-testid={`${prefix}-payment-status`}>
+        <AgencyContractBadge summary={summary} testId={`${testBase}-contract-status`} />
+        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${paymentMeta.className}`} data-testid={`${testBase}-payment-status`}>
           {paymentMeta.label}
         </span>
       </div>
       <div className="grid gap-2 text-xs text-muted-foreground md:grid-cols-3">
-        <div className="flex items-center gap-2 rounded-xl bg-background px-3 py-2" data-testid={`${prefix}-contract-window`}>
+        <div className="flex items-center gap-2 rounded-xl bg-background px-3 py-2" data-testid={`${testBase}-contract-window`}>
           <CalendarRange className="h-3.5 w-3.5 text-muted-foreground" />
           <span>{formatContractWindow(summary)}</span>
         </div>
-        <div className="flex items-center gap-2 rounded-xl bg-background px-3 py-2" data-testid={`${prefix}-package-type`}>
+        <div className="flex items-center gap-2 rounded-xl bg-background px-3 py-2" data-testid={`${testBase}-package-type`}>
           <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
           <span>{summary?.package_type || "Paket tanımlanmadı"}</span>
         </div>
-        <div className="flex items-center gap-2 rounded-xl bg-background px-3 py-2" data-testid={`${prefix}-seat-usage`}>
+        <div className="flex items-center gap-2 rounded-xl bg-background px-3 py-2" data-testid={`${testBase}-seat-usage`}>
           <Users className="h-3.5 w-3.5 text-muted-foreground" />
           <span>{formatSeatUsage(summary)}</span>
         </div>
       </div>
       {summary?.warning_message ? (
-        <p className="text-xs font-medium text-amber-700" data-testid={`${prefix}-warning-message`}>
+        <p className="text-xs font-medium text-amber-700" data-testid={`${testBase}-warning-message`}>
           {summary.warning_message}
         </p>
       ) : null}
       {summary?.lock_message ? (
-        <p className="text-xs font-medium text-rose-700" data-testid={`${prefix}-lock-message`}>
+        <p className="text-xs font-medium text-rose-700" data-testid={`${testBase}-lock-message`}>
           {summary.lock_message}
         </p>
       ) : null}

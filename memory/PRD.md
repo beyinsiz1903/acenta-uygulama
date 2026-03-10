@@ -176,6 +176,13 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
 - Aynı mockup component landing içinde birden fazla yerde tekrar kullanıldığı için düzeltme ilgili önizleme kartlarına da yansıdı.
 - Doğrulama: screenshot smoke + frontend testing agent ile `1920x800`, `1600x900`, `1366x768` viewportlarında kritik hero metinlerinde clipping/overflow görülmedi.
 
+## Son Uygulama Güncellemesi — 2026-03-10 Landing Floating Card + Pricing Refresh
+- Kullanıcının ikinci görsel geri bildirimi sonrası hero’daki sol floating kart yeniden konumlandırıldı; artık büyük dashboard kutusunun altında yarım görünmüyor. Kartlar sadece `min-[1700px]` genişlikte gösteriliyor ve dashboard’ın dışında konumlanıyor.
+- Landing page fiyatlandırma bölümü Agentis mantığı incelenerek yeniden yazıldı: `Giriş`, `Standart`, `Profesyonel`, `Platinum` paketleri; aylık/yıllık görünüm, özel teklif barı ve **Google Sheets / E-Tablo entegrasyonu Standart paket ve üstünde** vurgusu eklendi.
+- `/pricing` sayfası tamamen yenilendi: yeni hero, 4 paket kartı, aylık/yıllık toggle, detaylı karşılaştırma tablosu ve Syroce’a özel SSS bölümü eklendi.
+- Landing page içine de ayrı bir SSS accordion bölümü eklendi; navbar’a `SSS` anchor bağlantısı bağlandı.
+- Doğrulama: Iteration 50 frontend test raporunda hero floating kart fix’i, 4 paket görünürlüğü, E-Tablo vurgusu, comparison table ve FAQ accordion akışları %100 geçti.
+
 ## Kalan Öncelikli İşler
 - P0: `agency.syroce.com` custom domain'ini güncel frontend build ile hizalamak; eski `main.a26343a0.js` bundle referansını kaldırmak.
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.

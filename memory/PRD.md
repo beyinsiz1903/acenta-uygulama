@@ -154,9 +154,18 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
 - Kritik RCA: `agency.syroce.com` halen eski production bundle `main.a26343a0.js` servis ediyor; bundle içine `https://improvement-areas.emergent.host` hardcode gömülü. Yani custom domain şu an bu workspace’teki güncel frontend kodunu değil, eski deploy build’ini sunuyor.
 - Sonuç: Kod düzeltmesi hazır ve preview’de doğrulandı; **custom domain canlı akışı deployment/cache senkronu olmadan tamamen düzelmiş sayılmaz**.
 
+## Son Uygulama Güncellemesi — 2026-03-10 Demo Seed Target User Flow
+- Superadmin için demo seed akışı genişletildi: demo verisi artık **hedef agency kullanıcı** seçilerek yüklenebiliyor.
+- Yeni backend endpointi: `GET /api/admin/demo/seed-targets` → agency rolündeki ve acenteye bağlı kullanıcıları döndürür.
+- `POST /api/admin/demo/seed` artık `target_user_id` kabul ediyor; seed işlemi seçilen agency kullanıcısının tenant/acenta bağlamında çalışıyor.
+- `already_seeded` yanıtı da hedef kullanıcı/acenta bilgisini koruyacak şekilde güçlendirildi.
+- Frontend’de `DemoSeedButton` modalına kullanıcı seçici eklendi; `Kullanıcı Yönetimi` ekranında her agency kullanıcı satırına hızlı **Demo** butonu yerleştirildi.
+- Doğrulama: Iteration 49 raporunda backend endpointleri ve row-level Demo butonu + modal hedef kullanıcı seçimi geçti.
+
 ## Kalan Öncelikli İşler
 - P0: `agency.syroce.com` custom domain'ini güncel frontend build ile hizalamak; eski `main.a26343a0.js` bundle referansını kaldırmak.
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.
+- P1: Demo seed akışına acenta/tenant filtreleri ve toplu hedefleme (tek seferde birden fazla agency kullanıcı) eklemek.
 - P1: Zamanlanmış otomatik sync davranışını gerçek credential ile doğrulamak ve gerekiyorsa UI'daki interval beklentisiyle birebir hizalamak.
 - P1: Bulk master sheet akışını gerçek Google credential ile canlı sheet üzerinden smoke test etmek.
 - P1: Sheet'ten gelen rezervasyonların rezervasyon listesi / durum yaşam döngüsü görünürlüğünü güçlendirmek.

@@ -4,9 +4,22 @@ import {
   persistRefreshSession,
 } from "./authSession";
 
+import {
+  apiGetWithNetworkFallback,
+  apiPostWithNetworkFallback,
+  clearToken as clearApiToken,
+} from "./api";
+
+// keep backward compatibility: auth session cleanup from both modules
+const clearAllTokens = () => {
+  clearToken();
+  clearApiToken();
+};
+
 export async function bootstrapAuthSession(client) {
+  void client;
   try {
-    const { data } = await client.get("/auth/me", {
+    const { data } = await apiGetWithNetworkFallback("/auth/me", {
       skipAuthRefresh: true,
       skipAuthRedirect: true,
     });
@@ -18,19 +31,19 @@ export async function bootstrapAuthSession(client) {
   }
 
   try {
-    const refreshResponse = await client.post("/auth/refresh", {}, {
+    const refreshResponse = await apiPostWithNetworkFallback("/auth/refresh", {}, {
       skipAuthRefresh: true,
       skipAuthRedirect: true,
     });
     persistRefreshSession(refreshResponse.data);
 
-    const { data } = await client.get("/auth/me", {
+    const { data } = await apiGetWithNetworkFallback("/auth/me", {
       skipAuthRefresh: true,
       skipAuthRedirect: true,
     });
     return persistBootstrappedUser(data);
   } catch {
-    clearToken();
+    clearAllTokens();
     return null;
   }
 }

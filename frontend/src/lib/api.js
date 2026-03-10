@@ -42,6 +42,67 @@ export const api = axios.create({
   withCredentials: true,
 });
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function isNetworkError(err) {
+  return Boolean(
+    !err?.response &&
+      (String(err?.message || "").toLowerCase().includes("network error") || err?.code === "ERR_NETWORK")
+  );
+}
+
+async function requestWithNetworkFallback(method, url, options = {}) {
+  const attemptPrimary = () => api.request({
+    method,
+    url,
+    ...options,
+  });
+
+  try {
+    return await attemptPrimary();
+  } catch (err) {
+    if (!isNetworkError(err)) {
+      throw err;
+    }
+
+    await sleep(700);
+
+    try {
+      return await attemptPrimary();
+    } catch (retryErr) {
+      if (!isNetworkError(retryErr) || typeof window === "undefined") {
+        throw retryErr;
+      }
+
+      const fallbackHeaders = {
+        "X-Client-Platform": "web",
+        ...(options.headers || {}),
+      };
+
+      return axios.request({
+        method,
+        url: `${window.location.origin}/api${url}`,
+        withCredentials: true,
+        ...options,
+        headers: fallbackHeaders,
+      });
+    }
+  }
+}
+
+export function apiGetWithNetworkFallback(url, options = {}) {
+  return requestWithNetworkFallback("get", url, options);
+}
+
+export function apiPostWithNetworkFallback(url, data, options = {}) {
+  return requestWithNetworkFallback("post", url, {
+    ...options,
+    data,
+  });
+}
+
 // Simple uuid4 fallback for environments without crypto.randomUUID
 function generateCorrelationId() {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -295,6 +356,10 @@ api.interceptors.response.use(
 );
 
 export function apiErrorMessage(err) {
+  if (isNetworkError(err)) {
+    return "Ağ bağlantısı kurulamadı. Sunucu kısa süreli yeniden başlıyor olabilir; lütfen 2-3 saniye sonra tekrar deneyin.";
+  }
+
   const errorPayload = err?.response?.data?.error;
   const detail = err?.response?.data?.detail;
 

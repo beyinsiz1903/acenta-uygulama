@@ -8,7 +8,7 @@
  * - useRevokeAllSessions: Mutation for revoking all sessions
  */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, clearToken } from "../lib/api";
+import { api, apiPostWithNetworkFallback, clearToken } from "../lib/api";
 import { bootstrapAuthSession } from "../lib/cookieAuthCompat";
 import { persistLoginSession } from "../lib/authSession";
 
@@ -33,7 +33,13 @@ export function useLogin() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ email, password, otp_code, tenant_id, tenant_slug }) => {
-      const { data } = await api.post("/auth/login", { email, password, otp_code, tenant_id, tenant_slug });
+      const { data } = await apiPostWithNetworkFallback("/auth/login", {
+        email,
+        password,
+        otp_code,
+        tenant_id,
+        tenant_slug,
+      });
       return data;
     },
     onSuccess: (data) => {

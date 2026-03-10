@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { api, apiErrorMessage } from "../lib/api";
+import { api, apiErrorMessage, apiGetWithNetworkFallback } from "../lib/api";
 import { useCurrentUser, useLogin } from "../hooks/useAuth";
 import { clearSessionExpired } from "../lib/authRedirect";
 import { loginSchema } from "../lib/validations";
@@ -44,7 +44,7 @@ export default function B2BLoginPage() {
       return;
     }
 
-    api.get("/b2b/me")
+    apiGetWithNetworkFallback("/b2b/me")
       .then(() => {
         navigate(next, { replace: true });
       })
@@ -67,7 +67,7 @@ export default function B2BLoginPage() {
       }
 
       // Verify that this user has B2B access via /api/b2b/me
-      await api.get("/b2b/me");
+      await apiGetWithNetworkFallback("/b2b/me");
 
       clearSessionExpired();
 

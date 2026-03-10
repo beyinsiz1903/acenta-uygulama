@@ -19,6 +19,7 @@ import {
   DialogFooter,
 } from "../components/ui/dialog";
 import { Checkbox } from "../components/ui/checkbox";
+import { ChangePasswordCard } from "../components/settings/ChangePasswordCard";
 import { SettingsSectionNav } from "../components/settings/SettingsSectionNav";
 import { UserProfileSummaryCard } from "../components/settings/UserProfileSummaryCard";
 import { useCurrentUser } from "../hooks/useAuth";
@@ -178,6 +179,7 @@ export default function SettingsPage() {
   const { data: sessionUser } = useCurrentUser();
   const currentUser = sessionUser || cachedUser;
   const canManageUsers = (currentUser?.roles || []).some((role) => ["super_admin", "admin"].includes(role));
+  const canAccessBilling = (currentUser?.roles || []).some((role) => ["super_admin", "admin"].includes(role));
   const isAgencyUser = (currentUser?.roles || []).some((role) => ["agency_admin", "agency_agent"].includes(role));
   const [users, setUsers] = useState([]);
   const [error, setError] = useState("");
@@ -245,24 +247,23 @@ export default function SettingsPage() {
           <p className="mt-2 text-base text-muted-foreground">Kullanıcı bilgileriniz, güvenlik ve hesap bağlantıları.</p>
         </div>
 
-        <SettingsSectionNav showUsersSection={false} />
+        <SettingsSectionNav showUsersSection showBillingSection={canAccessBilling} />
 
-        <UserProfileSummaryCard user={currentUser} agencyName={agencyName} canManageUsers={false} />
+        <UserProfileSummaryCard user={currentUser} agencyName={agencyName} canManageUsers={false} showBillingSection={canAccessBilling} />
+
+        <ChangePasswordCard />
 
         <Card className="rounded-3xl border-border/60" data-testid="settings-users-unauthorized-state">
           <CardContent className="space-y-3 p-6">
             <div>
               <h3 className="text-lg font-semibold text-foreground">Bu alanda profil bilgileriniz gösterilir</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Ekip kullanıcılarını yönetmek için yönetici rolü gerekir. Siz yine de güvenlik ve faturalama sayfalarından kendi hesabınızı yönetebilirsiniz.
+                Ekip kullanıcılarını yönetmek için yönetici rolü gerekir. Güvenlik ve şifre işlemlerini yine kendi hesabınız için kullanabilirsiniz.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button asChild data-testid="settings-users-go-security-button">
                 <Link to="/app/settings/security">Aktif Oturumlara Git</Link>
-              </Button>
-              <Button asChild variant="outline" data-testid="settings-users-go-billing-button">
-                <Link to="/app/settings/billing">Faturalamayı Aç</Link>
               </Button>
             </div>
           </CardContent>
@@ -279,9 +280,11 @@ export default function SettingsPage() {
           <p className="mt-2 text-base text-muted-foreground">Kullanıcı profiliniz, ekip üyeleri ve güvenlik bölümleri.</p>
         </div>
 
-        <SettingsSectionNav showUsersSection />
+        <SettingsSectionNav showUsersSection showBillingSection={canAccessBilling} />
 
-        <UserProfileSummaryCard user={currentUser} agencyName={agencyName} canManageUsers />
+        <UserProfileSummaryCard user={currentUser} agencyName={agencyName} canManageUsers showBillingSection={canAccessBilling} />
+
+        <ChangePasswordCard />
 
         <div className="flex items-start justify-between gap-4">
           <div>

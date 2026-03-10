@@ -46,6 +46,7 @@ export default function SettingsSecurityPage() {
 
   const cachedUser = getUser();
   const canManageUsers = (cachedUser?.roles || []).some((role) => ["super_admin", "admin"].includes(role));
+  const canAccessBilling = canManageUsers;
 
   const currentUserQuery = useCurrentUser();
   const sessionsQuery = useQuery({
@@ -155,7 +156,7 @@ export default function SettingsSecurityPage() {
             Aktif cihazları görüntüleyin, mevcut oturumu ayırt edin ve ihtiyaç halinde oturumları sonlandırın.
           </p>
         </div>
-        <SettingsSectionNav showUsersSection={canManageUsers} />
+        <SettingsSectionNav showUsersSection showBillingSection={canAccessBilling} />
       </div>
 
       <Card

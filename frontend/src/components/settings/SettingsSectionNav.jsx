@@ -28,8 +28,18 @@ const SETTINGS_LINKS = [
   },
 ];
 
-export const SettingsSectionNav = ({ showUsersSection = true }) => {
-  const items = showUsersSection ? SETTINGS_LINKS : SETTINGS_LINKS.filter((item) => item.to !== "/app/settings");
+export const SettingsSectionNav = ({ showUsersSection = true, showBillingSection = true }) => {
+  const items = SETTINGS_LINKS.filter((item) => {
+    if (!showUsersSection && item.to === "/app/settings") {
+      return false;
+    }
+
+    if (!showBillingSection && item.to === "/app/settings/billing") {
+      return false;
+    }
+
+    return true;
+  });
 
   return (
     <div className="grid gap-3 md:grid-cols-3" data-testid="settings-section-nav">

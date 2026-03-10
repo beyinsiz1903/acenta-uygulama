@@ -7098,6 +7098,17 @@
     "compat_required": true,
     "current_namespace": "/api/settings",
     "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "settings",
+    "path": "/api/settings/change-password",
+    "risk_level": "medium",
+    "source": "app.routers.settings",
+    "target_namespace": "/api/v1/settings"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/settings",
+    "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "settings",
     "path": "/api/settings/users",
@@ -7676,6 +7687,17 @@
     "risk_level": "high",
     "source": "app.routers.theme",
     "target_namespace": "/api/v1/public"
+  },
+  {
+    "compat_required": false,
+    "current_namespace": "/api/v1/settings",
+    "legacy_or_v1": "v1",
+    "method": "POST",
+    "owner": "settings",
+    "path": "/api/v1/settings/change-password",
+    "risk_level": "medium",
+    "source": "app.routers.settings",
+    "target_namespace": "/api/v1/settings"
   },
   {
     "compat_required": false,

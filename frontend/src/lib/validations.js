@@ -131,7 +131,13 @@ export const profileSchema = z.object({
 export const changePasswordSchema = z
   .object({
     current_password: z.string().min(1, "Mevcut şifre zorunludur"),
-    new_password: z.string().min(6, msg.minPassword).max(128, msg.maxPassword),
+    new_password: z
+      .string()
+      .min(10, "Yeni şifre en az 10 karakter olmalıdır")
+      .max(128, msg.maxPassword)
+      .regex(/[A-Z]/, "Yeni şifre en az 1 büyük harf içermelidir")
+      .regex(/[0-9]/, "Yeni şifre en az 1 rakam içermelidir")
+      .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?~`]/, "Yeni şifre en az 1 özel karakter içermelidir"),
     confirm_password: z.string().min(1, msg.required),
   })
   .refine((d) => d.new_password === d.confirm_password, {

@@ -897,7 +897,7 @@ export const ACCOUNT_NAV_ITEMS = [
     label: "Faturalama",
     icon: CreditCard,
     pathByScope: { default: "/app/settings/billing" },
-    visibleScopes: ["admin", "agency"],
+    visibleScopes: ["admin"],
   },
   {
     key: "settings",

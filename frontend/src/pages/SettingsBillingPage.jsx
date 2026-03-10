@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { AlertTriangle, CreditCard, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { Navigate } from "react-router-dom";
 
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
@@ -43,6 +44,11 @@ function translateStatus(status) {
 export default function SettingsBillingPage() {
   const currentUser = getUser();
   const canManageUsers = (currentUser?.roles || []).some((role) => ["super_admin", "admin"].includes(role));
+
+  if (!canManageUsers) {
+    return <Navigate to="/app/settings" replace />;
+  }
+
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [billingCycle, setBillingCycle] = useState("monthly");
@@ -178,7 +184,7 @@ export default function SettingsBillingPage() {
             Mevcut planınızı, yenileme tarihinizi ve abonelik yaşam döngünüzü buradan yönetin.
           </p>
         </div>
-        <SettingsSectionNav showUsersSection={canManageUsers} />
+        <SettingsSectionNav showUsersSection={canManageUsers} showBillingSection={canManageUsers} />
       </div>
 
       <BillingSummaryCards

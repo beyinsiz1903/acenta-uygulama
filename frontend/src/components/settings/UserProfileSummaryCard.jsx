@@ -21,7 +21,7 @@ function getRoleLabel(role) {
   return ROLE_LABELS[role] || role;
 }
 
-export const UserProfileSummaryCard = ({ user, agencyName = "", canManageUsers = false }) => {
+export const UserProfileSummaryCard = ({ user, agencyName = "", canManageUsers = false, showBillingSection = true }) => {
   const roles = user?.roles || [];
   const agencyValue = agencyName || user?.agency_id || "Tanımlı değil";
   const tenantValue = user?.tenant_id || user?.organization_id || "Tanımlı değil";
@@ -34,7 +34,7 @@ export const UserProfileSummaryCard = ({ user, agencyName = "", canManageUsers =
             <User2 className="h-5 w-5 text-primary" /> Kullanıcı Bilgileri
           </CardTitle>
           <CardDescription className="mt-2 max-w-2xl text-sm" data-testid="settings-profile-description">
-            Hesabınıza ait temel bilgiler burada görünür. {canManageUsers ? "Aşağıda ekip kullanıcılarını da yönetebilirsiniz." : "Güvenlik ve faturalama bağlantılarını bu sayfadan kullanabilirsiniz."}
+            Hesabınıza ait temel bilgiler burada görünür. {canManageUsers ? "Aşağıda ekip kullanıcılarını da yönetebilirsiniz." : showBillingSection ? "Güvenlik ve faturalama bağlantılarını bu sayfadan kullanabilirsiniz." : "Güvenlik ve şifre işlemlerini bu sayfadan yönetebilirsiniz."}
           </CardDescription>
         </div>
 

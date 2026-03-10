@@ -54,7 +54,7 @@ class TestYearlyCheckoutCreation:
         response = authenticated_client.post(f"{BASE_URL}/api/billing/create-checkout", json={
             "plan": "starter",
             "interval": "yearly",
-            "origin_url": "https://sheets-sync-5.preview.emergentagent.com",
+            "origin_url": "https://agency-ops-core.preview.emergentagent.com",
             "cancel_path": "/pricing"
         })
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text[:200]}"
@@ -81,7 +81,7 @@ class TestYearlyCheckoutCreation:
         response = authenticated_client.post(f"{BASE_URL}/api/billing/create-checkout", json={
             "plan": "pro",
             "interval": "yearly",
-            "origin_url": "https://sheets-sync-5.preview.emergentagent.com",
+            "origin_url": "https://agency-ops-core.preview.emergentagent.com",
             "cancel_path": "/pricing"
         })
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text[:200]}"
@@ -102,7 +102,7 @@ class TestYearlyCheckoutCreation:
         response = authenticated_client.post(f"{BASE_URL}/api/billing/create-checkout", json={
             "plan": "starter",
             "interval": "biannual",  # Invalid
-            "origin_url": "https://sheets-sync-5.preview.emergentagent.com"
+            "origin_url": "https://agency-ops-core.preview.emergentagent.com"
         })
         assert response.status_code == 422, f"Expected 422 for invalid interval, got {response.status_code}"
         print("SUCCESS: Invalid interval 'biannual' rejected with 422")
@@ -170,7 +170,7 @@ class TestPlanChangeYearly:
         response = authenticated_client.post(f"{BASE_URL}/api/billing/change-plan", json={
             "plan": "pro",
             "interval": "yearly",
-            "origin_url": "https://sheets-sync-5.preview.emergentagent.com",
+            "origin_url": "https://agency-ops-core.preview.emergentagent.com",
             "cancel_path": "/app/settings/billing"
         })
         
@@ -211,7 +211,7 @@ class TestUnauthenticatedAccess:
         response = fresh_session.post(f"{BASE_URL}/api/billing/create-checkout", json={
             "plan": "starter",
             "interval": "yearly",
-            "origin_url": "https://sheets-sync-5.preview.emergentagent.com"
+            "origin_url": "https://agency-ops-core.preview.emergentagent.com"
         })
         assert response.status_code == 401, f"Expected 401 for unauthenticated, got {response.status_code}"
         print("SUCCESS: create-checkout returns 401 for unauthenticated request")

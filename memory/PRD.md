@@ -221,10 +221,18 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
   - Browser smoke: `https://agency.syroce.com/login` üzerinden giriş sonrası `/app` ekranına başarılı yönlendirme doğrulandı.
 - Ek not: current custom bundle içinde build-time `REACT_APP_BACKEND_URL` olarak eski host string hâlâ gömülü görünüyor; ancak `frontend/src/lib/backendUrl.js` same-origin fallback’i sayesinde canlı custom domain login akışı kırılmadan çalışıyor.
 
+## Son Bakım Güncellemesi — 2026-03-10 Agency Login Unauthorized Redirect Fix
+- Kullanıcının bildirdiği agency kullanıcı login sonrası yanlışlıkla `/unauthorized` ekranına düşme problemi frontend redirect katmanında ele alındı.
+- Kök neden: sessionStorage içinde kalan eski `/app/admin/...` post-login redirect değeri agency kullanıcı login’inde yeniden tüketilip yetkisiz admin route’una götürebiliyordu.
+- `frontend/src/lib/authRedirect.js` içine role-aware güvenlik kontrolü eklendi; artık hatalı/stale redirect sadece kullanıcı rolüyle uyumluysa tüketiliyor, aksi halde güvenli fallback kullanılıyor.
+- `frontend/src/pages/LoginPage.jsx` login sonrası yönlendirmeyi yeni güvenli helper ile güncellendi; agency kullanıcılar varsayılan olarak `/app` dashboard’a düşüyor.
+- Doğrulama: preview üzerinde `acenta_post_login_redirect=/app/admin/agency-modules` seed edilerek agency login testi çalıştırıldı; sonuç `/app`, `/unauthorized` değil.
+
 ## Kalan Öncelikli İşler
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.
 - P0: Agency sözleşme süresi dolunca backend tarafında route-level enforcement gerekip gerekmediğini kullanıcıyla doğrulayıp karar vermek (şu an UI kısıtlaması aktif).
 - P1: Custom domain build-time env string’ini tamamen temizleyecek daha katı runtime-only çözüm gerekip gerekmediğini izlemek (şu an canlı login akışı çalışıyor).
+- P1: Bu login redirect fix’inin custom domain build’ine yansımasını doğrulamak; preview doğrulandı, live domain eski bundle cache’i varsa yeniden gözlemek.
 - P1: Demo seed akışına acenta/tenant filtreleri ve toplu hedefleme (tek seferde birden fazla agency kullanıcı) eklemek.
 - P1: Zamanlanmış otomatik sync davranışını gerçek credential ile doğrulamak ve gerekiyorsa UI'daki interval beklentisiyle birebir hizalamak.
 - P1: Bulk master sheet akışını gerçek Google credential ile canlı sheet üzerinden smoke test etmek.

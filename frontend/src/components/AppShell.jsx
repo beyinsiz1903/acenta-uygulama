@@ -17,6 +17,8 @@ import NotificationDrawer from "./NotificationDrawer";
 import NotificationBell from "./NotificationBell";
 import TrialBanner from "./TrialBanner";
 import TrialExpiredGate from "./TrialExpiredGate";
+import AgencyContractBanner from "./AgencyContractBanner";
+import AgencyContractExpiredGate from "./AgencyContractExpiredGate";
 import { LanguageSwitcher, useI18n } from "../contexts/I18nContext";
 import AiAssistant from "./AiAssistant";
 import { NewSidebar } from "./NewSidebar";
@@ -71,6 +73,7 @@ function AppShellInner() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [agencyAllowedModules, setAgencyAllowedModules] = useState(null); // null = not loaded, [] = no restrictions
+  const [agencyContract, setAgencyContract] = useState(null);
   const [trialStatus, setTrialStatus] = useState(null);
   const canLoadAdminBranding = hasAnyRole(user, ["super_admin", "admin"]);
 
@@ -150,7 +153,11 @@ function AppShellInner() {
     && !hasAnyRole(user, ["super_admin", "admin"]);
 
   useEffect(() => {
-    if (!isAgencyUser) return;
+    if (!isAgencyUser) {
+      setAgencyAllowedModules(null);
+      setAgencyContract(null);
+      return undefined;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -158,8 +165,14 @@ function AppShellInner() {
         if (!cancelled) {
           const modules = res.data?.allowed_modules || [];
           setAgencyAllowedModules(modules);
+          setAgencyContract(res.data?.contract || null);
         }
-      } catch { if (!cancelled) setAgencyAllowedModules([]); }
+      } catch {
+        if (!cancelled) {
+          setAgencyAllowedModules([]);
+          setAgencyContract(null);
+        }
+      }
     })();
     return () => { cancelled = true; };
   }, [isAgencyUser]);
@@ -281,6 +294,12 @@ function AppShellInner() {
   const isAdmin = hasAnyRole(user, ["super_admin", "admin"]);
   const userScope = useMemo(() => getUserScope(user), [user]);
   const trialExpired = Boolean(trialStatus?.expired || trialStatus?.status === "expired");
+  const agencyContractExpired = Boolean(isAgencyUser && agencyContract?.access_blocked);
+  const showAgencyContractWarning = Boolean(
+    isAgencyUser &&
+    !agencyContractExpired &&
+    agencyContract?.contract_status === "expiring_soon"
+  );
   const { hasFeature, loading: featuresLoading, quotaAlerts } = useFeatures();
   const { mode: productMode, hiddenNavItems, loading: modeLoading } = useProductMode();
 
@@ -522,7 +541,12 @@ function AppShellInner() {
         {/* --- Main Content --- */}
         <main className="flex-1 min-h-[calc(100vh-53px)] overflow-auto">
           {!trialExpired ? <TrialBanner /> : null}
-          {!trialExpired && !isAdmin && quotaAlerts && quotaAlerts.length > 0 && (
+          {!trialExpired && showAgencyContractWarning ? (
+            <div className="mx-4 mt-3">
+              <AgencyContractBanner contract={agencyContract} />
+            </div>
+          ) : null}
+          {!trialExpired && !agencyContractExpired && !isAdmin && quotaAlerts && quotaAlerts.length > 0 && (
             <div className="mx-4 mt-3 space-y-2" data-testid="quota-alert-banners">
               {quotaAlerts.map((q) => (
                 <div
@@ -562,6 +586,7 @@ function AppShellInner() {
       </footer>
 
       {trialExpired ? <TrialExpiredGate /> : null}
+      {!trialExpired && agencyContractExpired ? <AgencyContractExpiredGate contract={agencyContract} /> : null}
 
       {/* AI Assistant floating panel */}
       <AiAssistant />

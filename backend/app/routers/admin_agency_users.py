@@ -10,6 +10,7 @@ from app.auth import get_current_user, require_feature, require_roles, hash_pass
 from app.db import get_db
 from app.errors import AppError
 from app.repositories.base_repository import with_org_filter, with_tenant_filter
+from app.services.agency_contract_status_service import enforce_agency_user_limit
 from app.services.audit import write_audit_log, audit_snapshot
 from app.utils import now_utc
 from app.utils_ids import build_id_filter
@@ -172,6 +173,14 @@ async def invite_or_link_agency_user(
 
         before_snapshot = audit_snapshot("agency_user", existing)
 
+        if existing.get("is_active", True):
+            await enforce_agency_user_limit(
+                db,
+                organization_id=org_id,
+                agency_doc=agency,
+                tenant_id=tenant_id,
+            )
+
         # Link to this agency + update agency role
         new_roles = _apply_agency_role(existing.get("roles") or [], payload.role)
         await db.users.update_one(
@@ -189,6 +198,12 @@ async def invite_or_link_agency_user(
         user_doc = await db.users.find_one({"_id": existing["_id"]})
     else:
         # Create new user for this agency
+        await enforce_agency_user_limit(
+            db,
+            organization_id=org_id,
+            agency_doc=agency,
+            tenant_id=tenant_id,
+        )
         random_password = now_utc().isoformat()  # opaque value; user will set real password via reset
         doc = {
             "organization_id": org_id,
@@ -274,6 +289,13 @@ async def update_agency_user(
 
     if payload.status is not None:
         new_is_active = payload.status == "active"
+        if new_is_active and not bool(user_doc.get("is_active", True)):
+            await enforce_agency_user_limit(
+                db,
+                organization_id=org_id,
+                agency_doc=agency,
+                tenant_id=tenant_id,
+            )
         if bool(user_doc.get("is_active", True)) != new_is_active:
             updates["is_active"] = new_is_active
             changed_status = True
@@ -552,6 +574,13 @@ async def create_user(
     if existing:
         raise AppError(409, "email_exists", "Bu e-posta adresi zaten kullaniliyor")
 
+    await enforce_agency_user_limit(
+        db,
+        organization_id=org_id,
+        agency_doc=agency,
+        tenant_id=tenant_id,
+    )
+
     doc = {
         "organization_id": org_id,
         "email": email,
@@ -632,6 +661,7 @@ async def update_user(
 
     before_snapshot = audit_snapshot("agency_user", user_doc)
     updates: Dict[str, Any] = {}
+    target_agency = None
 
     if payload.name is not None and payload.name.strip():
         updates["name"] = payload.name.strip()
@@ -649,12 +679,34 @@ async def update_user(
         updates["roles"] = new_roles
 
     if payload.status is not None:
+        if payload.status == "active" and not bool(user_doc.get("is_active", True)):
+            target_agency_id = payload.agency_id or str(user_doc.get("agency_id") or "")
+            if target_agency_id:
+                target_agency = await _load_agency_by_id(db, org_id, target_agency_id, tenant_id)
+                if not target_agency:
+                    raise AppError(404, "agency_not_found", "Acenta bulunamadi")
+                await enforce_agency_user_limit(
+                    db,
+                    organization_id=org_id,
+                    agency_doc=target_agency,
+                    tenant_id=tenant_id,
+                )
         updates["is_active"] = payload.status == "active"
 
     if payload.agency_id is not None:
         new_agency = await _load_agency_by_id(db, org_id, payload.agency_id, tenant_id)
         if not new_agency:
             raise AppError(404, "agency_not_found", "Acenta bulunamadi")
+        moving_to_new_agency = str(user_doc.get("agency_id") or "") != str(new_agency.get("_id") or "")
+        activating_with_move = payload.status == "active" or bool(user_doc.get("is_active", True))
+        if moving_to_new_agency and activating_with_move:
+            await enforce_agency_user_limit(
+                db,
+                organization_id=org_id,
+                agency_doc=new_agency,
+                tenant_id=tenant_id,
+            )
+        target_agency = new_agency
         updates["agency_id"] = new_agency["_id"]
         updates["tenant_id"] = tenant_id
 

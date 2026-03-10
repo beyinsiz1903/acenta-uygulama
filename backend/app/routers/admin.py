@@ -8,6 +8,13 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
+from app.routers.admin_agencies import (
+    _normalize_optional_text,
+    _serialize_agency_with_contract,
+    _validate_contract_window,
+    _validate_parent_chain,
+)
+from app.services.agency_contract_status_service import get_agency_active_user_counts
 from app.services.audit import write_audit_log
 from app.schemas import (
     AgencyHotelLinkCreateIn,
@@ -32,8 +39,14 @@ def _oid_or_404(id_str: str):
         raise HTTPException(status_code=404, detail="EMAIL_JOB_NOT_FOUND")
 
 
+def _request_tenant_id(request: Request | None) -> Optional[str]:
+    if request is None:
+        return None
+    return getattr(request.state, "tenant_id", None)
+
+
 @router.post("/agencies", dependencies=[Depends(require_roles(["super_admin"]))])
-async def create_agency(payload: dict, user=Depends(get_current_user)):
+async def create_agency(payload: dict, request: Request, user=Depends(get_current_user)):
     """Create an agency.
 
     Minimal payload for Phase-1:
@@ -47,10 +60,35 @@ async def create_agency(payload: dict, user=Depends(get_current_user)):
     if not name:
         raise HTTPException(status_code=400, detail="name gerekli")
 
+    tenant_id = _request_tenant_id(request)
+    parent_agency_id = (payload or {}).get("parent_agency_id")
+    contract_start_date = (payload or {}).get("contract_start_date")
+    contract_end_date = (payload or {}).get("contract_end_date")
+    payment_status = (payload or {}).get("payment_status")
+    package_type = (payload or {}).get("package_type")
+    user_limit = (payload or {}).get("user_limit")
+
+    _validate_contract_window(start_date=contract_start_date, end_date=contract_end_date)
+    await _validate_parent_chain(
+        db,
+        org_id=user["organization_id"],
+        current_agency_id=None,
+        parent_agency_id=parent_agency_id,
+        tenant_id=tenant_id,
+    )
+
     doc = {
         "_id": _new_id(),
         "organization_id": user["organization_id"],
+        "tenant_id": tenant_id,
         "name": name,
+        "parent_agency_id": parent_agency_id,
+        "status": "active",
+        "contract_start_date": contract_start_date,
+        "contract_end_date": contract_end_date,
+        "payment_status": payment_status,
+        "package_type": _normalize_optional_text(package_type),
+        "user_limit": int(user_limit) if user_limit not in (None, "") else None,
         "created_at": now_utc(),
         "updated_at": now_utc(),
         "created_by": user.get("email"),
@@ -59,14 +97,24 @@ async def create_agency(payload: dict, user=Depends(get_current_user)):
     }
     await db.agencies.insert_one(doc)
     saved = await db.agencies.find_one({"_id": doc["_id"]})
-    return serialize_doc(saved)
+    return _serialize_agency_with_contract(saved)
 
 
 @router.get("/agencies", dependencies=[Depends(require_roles(["super_admin"]))])
-async def list_agencies(user=Depends(get_current_user)):
+async def list_agencies(request: Request, user=Depends(get_current_user)):
     db = await get_db()
+    tenant_id = _request_tenant_id(request)
     docs = await db.agencies.find({"organization_id": user["organization_id"]}).sort("created_at", -1).to_list(500)
-    return [serialize_doc(d) for d in docs]
+    user_counts = await get_agency_active_user_counts(
+        db,
+        organization_id=user["organization_id"],
+        agency_ids=[doc.get("_id") for doc in docs],
+        tenant_id=tenant_id,
+    )
+    return [
+        _serialize_agency_with_contract(doc, active_user_count=user_counts.get(str(doc.get("_id")), 0))
+        for doc in docs
+    ]
 
 
 @router.post("/hotels", dependencies=[Depends(require_roles(["super_admin"]))])

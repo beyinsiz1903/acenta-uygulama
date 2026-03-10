@@ -9,6 +9,11 @@ import {
 import { api, apiErrorMessage } from "../lib/api";
 import DemoSeedButton from "../components/DemoSeedButton";
 import {
+  formatContractWindow,
+  formatSeatUsage,
+  getContractStatusMeta,
+} from "../lib/agencyContract";
+import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "../components/ui/table";
 import { Badge } from "../components/ui/badge";
@@ -35,6 +40,7 @@ const agencyRole = (roles) => {
 function CreateUserDialog({ open, onOpenChange, agencies, onCreated }) {
   const [form, setForm] = useState({ name: "", email: "", password: "", agency_id: "", role: "agency_agent" });
   const [saving, setSaving] = useState(false);
+  const selectedAgency = agencies.find((agency) => agency.id === form.agency_id);
 
   const reset = () => setForm({ name: "", email: "", password: "", agency_id: "", role: "agency_agent" });
 
@@ -86,9 +92,30 @@ function CreateUserDialog({ open, onOpenChange, agencies, onCreated }) {
               className="w-full h-9 rounded-md border bg-background px-3 text-sm"
               value={form.agency_id} onChange={(e) => setForm((p) => ({ ...p, agency_id: e.target.value }))}>
               <option value="">Acenta secin...</option>
-              {agencies.map((a) => <option key={a.id} value={a.id}>{safeName(a.name)}</option>)}
+              {agencies.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {safeName(a.name)}{a.contract_summary?.user_limit != null ? ` · ${a.active_user_count || 0}/${a.contract_summary.user_limit}` : ""}
+                </option>
+              ))}
             </select>
           </div>
+          {selectedAgency?.contract_summary ? (
+            <div className="rounded-xl border bg-muted/20 px-3 py-3 text-xs text-muted-foreground" data-testid="create-user-agency-summary">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={`inline-flex items-center rounded-full border px-2 py-1 font-semibold ${getContractStatusMeta(selectedAgency.contract_summary.contract_status).className}`} data-testid="create-user-agency-contract-status">
+                  {getContractStatusMeta(selectedAgency.contract_summary.contract_status).label}
+                </span>
+                <span data-testid="create-user-agency-seat-usage">{formatSeatUsage(selectedAgency.contract_summary)}</span>
+              </div>
+              <div className="mt-2" data-testid="create-user-agency-contract-window">{formatContractWindow(selectedAgency.contract_summary)}</div>
+              {selectedAgency.contract_summary.warning_message ? (
+                <div className="mt-2 font-medium text-amber-700" data-testid="create-user-agency-warning-message">{selectedAgency.contract_summary.warning_message}</div>
+              ) : null}
+              {selectedAgency.contract_summary.lock_message ? (
+                <div className="mt-2 font-medium text-rose-700" data-testid="create-user-agency-lock-message">{selectedAgency.contract_summary.lock_message}</div>
+              ) : null}
+            </div>
+          ) : null}
           <div className="space-y-2">
             <Label htmlFor="cu-role">Rol</Label>
             <select id="cu-role" data-testid="create-user-role"
@@ -115,6 +142,7 @@ function CreateUserDialog({ open, onOpenChange, agencies, onCreated }) {
 function EditUserDialog({ open, onOpenChange, userToEdit, agencies, onUpdated }) {
   const [form, setForm] = useState({ name: "", email: "", role: "agency_agent", status: "active", agency_id: "" });
   const [saving, setSaving] = useState(false);
+  const selectedAgency = agencies.find((agency) => agency.id === form.agency_id);
 
   useEffect(() => {
     if (userToEdit) {
@@ -167,9 +195,30 @@ function EditUserDialog({ open, onOpenChange, userToEdit, agencies, onUpdated })
               className="w-full h-9 rounded-md border bg-background px-3 text-sm"
               value={form.agency_id} onChange={(e) => setForm((p) => ({ ...p, agency_id: e.target.value }))}>
               <option value="">Acenta secin...</option>
-              {agencies.map((a) => <option key={a.id} value={a.id}>{safeName(a.name)}</option>)}
+              {agencies.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {safeName(a.name)}{a.contract_summary?.user_limit != null ? ` · ${a.active_user_count || 0}/${a.contract_summary.user_limit}` : ""}
+                </option>
+              ))}
             </select>
           </div>
+          {selectedAgency?.contract_summary ? (
+            <div className="rounded-xl border bg-muted/20 px-3 py-3 text-xs text-muted-foreground" data-testid="edit-user-agency-summary">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={`inline-flex items-center rounded-full border px-2 py-1 font-semibold ${getContractStatusMeta(selectedAgency.contract_summary.contract_status).className}`} data-testid="edit-user-agency-contract-status">
+                  {getContractStatusMeta(selectedAgency.contract_summary.contract_status).label}
+                </span>
+                <span data-testid="edit-user-agency-seat-usage">{formatSeatUsage(selectedAgency.contract_summary)}</span>
+              </div>
+              <div className="mt-2" data-testid="edit-user-agency-contract-window">{formatContractWindow(selectedAgency.contract_summary)}</div>
+              {selectedAgency.contract_summary.warning_message ? (
+                <div className="mt-2 font-medium text-amber-700" data-testid="edit-user-agency-warning-message">{selectedAgency.contract_summary.warning_message}</div>
+              ) : null}
+              {selectedAgency.contract_summary.lock_message ? (
+                <div className="mt-2 font-medium text-rose-700" data-testid="edit-user-agency-lock-message">{selectedAgency.contract_summary.lock_message}</div>
+              ) : null}
+            </div>
+          ) : null}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="eu-role">Rol</Label>

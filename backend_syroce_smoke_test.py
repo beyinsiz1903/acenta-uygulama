@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Test configuration
-BASE_URL = "https://agency-ops-core.preview.emergentagent.com/api"
+BASE_URL = "https://agency-assign.preview.emergentagent.com/api"
 ADMIN_CREDENTIALS = {
     "email": "admin@acenta.test", 
     "password": "admin123"

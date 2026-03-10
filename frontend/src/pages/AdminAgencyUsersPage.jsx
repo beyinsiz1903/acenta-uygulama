@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Users, AlertCircle, Loader2, Copy, ExternalLink } from "lucide-react";
+import { Users, AlertCircle, Loader2, Copy, ExternalLink, CalendarRange, CreditCard } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
 import { safeName } from "../utils/formatters";
+import {
+  formatContractWindow,
+  formatSeatUsage,
+  getContractStatusMeta,
+  getPaymentStatusMeta,
+} from "../lib/agencyContract";
 import {
   Table,
   TableBody,
@@ -95,6 +101,8 @@ export default function AdminAgencyUsersPage() {
       const resp = err?.response?.data;
       if (resp?.error?.code === "user_linked_to_other_agency") {
         setInviteError("Bu kullanıcı başka bir acenteye bağlı olduğu için bu acenteye eklenemez.");
+      } else if (resp?.error?.code === "agency_user_limit_reached") {
+        setInviteError(resp?.error?.message || "Bu acentanın kullanıcı limiti dolu.");
       } else {
         const msg = apiErrorMessage(err);
         setInviteError(msg);
@@ -193,6 +201,60 @@ export default function AdminAgencyUsersPage() {
 
   return (
     <div className="space-y-6">
+      {agency?.contract_summary ? (
+        <div className="rounded-[1.75rem] border bg-card p-5 shadow-sm" data-testid="agency-users-contract-summary-card">
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${getContractStatusMeta(agency.contract_summary.contract_status).className}`}
+              data-testid="agency-users-contract-status"
+            >
+              {getContractStatusMeta(agency.contract_summary.contract_status).label}
+            </span>
+            <span
+              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${getPaymentStatusMeta(agency.contract_summary.payment_status).className}`}
+              data-testid="agency-users-payment-status"
+            >
+              {getPaymentStatusMeta(agency.contract_summary.payment_status).label}
+            </span>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="rounded-xl border bg-muted/20 px-4 py-3 text-xs text-muted-foreground" data-testid="agency-users-contract-window">
+              <div className="mb-1 flex items-center gap-2 font-semibold text-foreground">
+                <CalendarRange className="h-3.5 w-3.5 text-muted-foreground" />
+                Sözleşme Süresi
+              </div>
+              <div>{formatContractWindow(agency.contract_summary)}</div>
+            </div>
+            <div className="rounded-xl border bg-muted/20 px-4 py-3 text-xs text-muted-foreground" data-testid="agency-users-package-type">
+              <div className="mb-1 flex items-center gap-2 font-semibold text-foreground">
+                <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+                Paket
+              </div>
+              <div>{agency.contract_summary.package_type || "Tanımlanmadı"}</div>
+            </div>
+            <div className="rounded-xl border bg-muted/20 px-4 py-3 text-xs text-muted-foreground" data-testid="agency-users-seat-usage">
+              <div className="mb-1 flex items-center gap-2 font-semibold text-foreground">
+                <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                Kullanıcı Limiti
+              </div>
+              <div>{formatSeatUsage(agency.contract_summary)}</div>
+            </div>
+          </div>
+
+          {agency.contract_summary.warning_message ? (
+            <p className="mt-3 text-xs font-medium text-amber-700" data-testid="agency-users-warning-message">
+              {agency.contract_summary.warning_message}
+            </p>
+          ) : null}
+          {agency.contract_summary.lock_message ? (
+            <p className="mt-3 text-xs font-medium text-rose-700" data-testid="agency-users-lock-message">
+              {agency.contract_summary.lock_message}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Acenta Kullanıcıları</h1>

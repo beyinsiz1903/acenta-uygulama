@@ -10,6 +10,7 @@ from app.auth import get_current_user, require_feature, require_roles
 from app.db import get_db
 from app.repositories.base_repository import with_org_filter, with_tenant_filter
 from app.services.audit import write_audit_log
+from app.services.agency_module_service import normalize_agency_modules
 from app.services.agency_contract_status_service import (
     build_agency_contract_summary,
     get_agency_active_user_counts,
@@ -418,7 +419,7 @@ async def get_agency_modules(
     return {
         "agency_id": str(existing["_id"]),
         "agency_name": existing.get("name", ""),
-        "allowed_modules": existing.get("allowed_modules", []),
+        "allowed_modules": normalize_agency_modules(existing.get("allowed_modules", [])),
     }
 
 
@@ -437,10 +438,12 @@ async def update_agency_modules(
     if not existing:
         raise HTTPException(status_code=404, detail="AGENCY_NOT_FOUND")
 
+    normalized_modules = normalize_agency_modules(payload.allowed_modules)
+
     await db.agencies.update_one(
         with_tenant_filter({"_id": existing["_id"], "organization_id": org_id}, tenant_id, include_legacy_without_tenant=True) if tenant_id else {"_id": existing["_id"], "organization_id": org_id},
         {"$set": {
-            "allowed_modules": payload.allowed_modules,
+            "allowed_modules": normalized_modules,
             "updated_at": now_utc(),
             "updated_by": user.get("email"),
         }},
@@ -449,5 +452,5 @@ async def update_agency_modules(
     return {
         "agency_id": str(existing["_id"]),
         "agency_name": existing.get("name", ""),
-        "allowed_modules": payload.allowed_modules,
+        "allowed_modules": normalized_modules,
     }

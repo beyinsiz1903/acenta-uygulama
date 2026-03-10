@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://booking-system-177.preview.emergentagent.com/api",
-    "frontend_url": "https://booking-system-177.preview.emergentagent.com",
+    "backend_url": "https://travel-sys-preview.preview.emergentagent.com/api",
+    "frontend_url": "https://travel-sys-preview.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

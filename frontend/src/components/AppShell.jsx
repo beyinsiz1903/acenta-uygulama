@@ -22,6 +22,7 @@ import AgencyContractExpiredGate from "./AgencyContractExpiredGate";
 import { LanguageSwitcher, useI18n } from "../contexts/I18nContext";
 import AiAssistant from "./AiAssistant";
 import { NewSidebar } from "./NewSidebar";
+import { normalizeAgencyModuleKeys } from "../lib/agencyModules";
 import { hasAnyRole } from "../lib/roles";
 import {
   ACCOUNT_NAV_ITEMS,
@@ -302,10 +303,23 @@ function AppShellInner() {
   );
   const { hasFeature, loading: featuresLoading, quotaAlerts } = useFeatures();
   const { mode: productMode, hiddenNavItems, loading: modeLoading } = useProductMode();
+  const normalizedAgencyAllowedModules = useMemo(
+    () => new Set(normalizeAgencyModuleKeys(agencyAllowedModules || [])),
+    [agencyAllowedModules]
+  );
 
   /* Mode-aware nav filter helper */
   const MODE_ORDER_MAP = { lite: 0, pro: 1, enterprise: 2 };
   const currentModeLevel = MODE_ORDER_MAP[productMode] ?? 2;
+
+  const isAgencyModuleVisible = useCallback((item) => {
+    if (!isAgencyUser) return true;
+    if (normalizedAgencyAllowedModules.size === 0) return true;
+    if (!item?.modeKey || item.modeKey === "dashboard") return true;
+
+    const candidateKeys = normalizeAgencyModuleKeys([item.modeKey, ...(item.moduleAliases || [])]);
+    return candidateKeys.some((moduleKey) => normalizedAgencyAllowedModules.has(moduleKey));
+  }, [isAgencyUser, normalizedAgencyAllowedModules]);
 
   const filterNavByMode = useCallback((items) => {
     return items.filter((it) => {
@@ -320,13 +334,10 @@ function AppShellInner() {
       }
       // Server-side hidden items check
       if (!it.isCore && it.modeKey && hiddenNavItems.includes(it.modeKey)) return false;
-      // Agency module restriction: if user is agency and allowed_modules is set, only show matching items
-      if (!it.isCore && isAgencyUser && agencyAllowedModules && agencyAllowedModules.length > 0) {
-        if (it.modeKey && !agencyAllowedModules.includes(it.modeKey)) return false;
-      }
+      if (!isAgencyModuleVisible(it)) return false;
       return true;
     });
-  }, [featuresLoading, hasFeature, currentModeLevel, hiddenNavItems, isAgencyUser, agencyAllowedModules, userScope]);
+  }, [featuresLoading, hasFeature, currentModeLevel, hiddenNavItems, isAgencyModuleVisible, userScope]);
 
   const navSource = useMemo(
     () => (isAdmin ? [...APP_NAV_SECTIONS, ...ADMIN_NAV_SECTIONS] : APP_NAV_SECTIONS),
@@ -367,6 +378,10 @@ function AppShellInner() {
         }
         if (!it.isCore && it.modeKey && hiddenNavItems.includes(it.modeKey)) {
           if (it.to) hiddenPaths.push(it.to);
+          return;
+        }
+        if (!isAgencyModuleVisible(it) && it.to) {
+          hiddenPaths.push(it.to);
         }
       });
     });
@@ -375,7 +390,7 @@ function AppShellInner() {
     if (isBlocked) {
       navigate("/app", { replace: true });
     }
-  }, [location.pathname, modeLoading, currentModeLevel, hiddenNavItems, navigate, navSections]);
+  }, [location.pathname, modeLoading, currentModeLevel, hiddenNavItems, isAgencyModuleVisible, navigate, navSections]);
 
   const toggleCollapse = () => {
     setCollapsed((v) => {

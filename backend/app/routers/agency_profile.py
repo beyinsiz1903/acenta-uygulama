@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
+from app.services.agency_module_service import normalize_agency_modules
 from app.services.agency_contract_status_service import (
     build_agency_contract_summary,
     get_agency_active_user_count,
@@ -45,6 +46,6 @@ async def get_agency_profile(
         "agency_id": str(agency["_id"]),
         "name": agency.get("name", ""),
         "status": agency.get("status") or "active",
-        "allowed_modules": agency.get("allowed_modules", []),
+        "allowed_modules": normalize_agency_modules(agency.get("allowed_modules", [])),
         "contract": contract_summary,
     }

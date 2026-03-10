@@ -1,46 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { api } from "../lib/api";
+import { AGENCY_MODULE_GROUPS, normalizeAgencyModuleKeys } from "../lib/agencyModules";
 import { safeName } from "../utils/formatters";
 import {
   Building2, CheckSquare, Square, Loader2, Save,
   RefreshCw, ChevronDown, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
-
-const ALL_MODULES = [
-  { group: "TEMEL", items: [
-    { key: "dashboard", label: "Genel Bakis" },
-    { key: "turlarimiz", label: "Turlarimiz" },
-    { key: "rezervasyonlar", label: "Rezervasyonlar" },
-    { key: "urunler", label: "Urunler" },
-    { key: "musaitlik", label: "Musaitlik" },
-  ]},
-  { group: "MUSTERI ILISKILERI", items: [
-    { key: "musteriler", label: "Musteriler" },
-    { key: "pipeline", label: "Satis Sureci" },
-    { key: "gorevler", label: "Gorevler" },
-    { key: "inbox", label: "Gelen Kutusu" },
-  ]},
-  { group: "B2B AG", items: [
-    { key: "partner_yonetimi", label: "Ortaklik Yonetimi" },
-    { key: "musaitlik_takibi", label: "Musaitlik Takibi" },
-    { key: "sheet_baglantilari", label: "Sheet Baglantilari" },
-    { key: "marketplace", label: "Pazar Yeri" },
-    { key: "b2b_funnel", label: "Satis Hunisi" },
-  ]},
-  { group: "FINANS", items: [
-    { key: "webpos", label: "Sanal Kasa" },
-    { key: "mutabakat", label: "Mutabakat" },
-    { key: "iadeler", label: "Iadeler" },
-    { key: "exposure", label: "Acik Bakiye" },
-    { key: "raporlar", label: "Raporlar" },
-  ]},
-  { group: "OPERASYON", items: [
-    { key: "guest_cases", label: "Misafir Talepleri" },
-    { key: "ops_tasks", label: "Gorev Takibi" },
-    { key: "ops_incidents", label: "Olaylar" },
-  ]},
-];
 
 function AgencyModuleCard({ agency, onSaved }) {
   const [expanded, setExpanded] = useState(false);
@@ -52,7 +18,7 @@ function AgencyModuleCard({ agency, onSaved }) {
     setLoading(true);
     try {
       const res = await api.get(`/admin/agencies/${agency._id || agency.id}/modules`);
-      setModules(res.data?.allowed_modules || []);
+      setModules(normalizeAgencyModuleKeys(res.data?.allowed_modules || []));
     } catch { /* silent */ }
     setLoading(false);
   }, [agency]);
@@ -68,7 +34,7 @@ function AgencyModuleCard({ agency, onSaved }) {
   };
 
   const selectAll = () => {
-    const allKeys = ALL_MODULES.flatMap((g) => g.items.map((i) => i.key));
+    const allKeys = AGENCY_MODULE_GROUPS.flatMap((group) => group.items.map((item) => item.key));
     setModules(allKeys);
   };
 
@@ -122,7 +88,7 @@ function AgencyModuleCard({ agency, onSaved }) {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {ALL_MODULES.map((group) => (
+                {AGENCY_MODULE_GROUPS.map((group) => (
                   <div key={group.group} className="space-y-1">
                     <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider pb-1">{group.group}</div>
                     {group.items.map((item) => (
@@ -195,7 +161,7 @@ export default function AdminAgencyModulesPage() {
             Acente Modul Yonetimi
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Her acentenin gorebilecegi sekmeleri buradan yonetin. Bos birakilan acenteler tum modulleri gorur.
+            Her acentenin agency panelinde gorecegi ekranlari buradan yonetin. Bos birakilan acenteler tum ekranlari gorur.
           </p>
         </div>
         <button

@@ -89,6 +89,58 @@ export const APP_NAV_SECTIONS = [
     ],
   },
   {
+    group: "SATIŞ & ENVANTER",
+    showInSidebar: true,
+    items: [
+      {
+        key: "agency-hotels",
+        label: "Oteller",
+        icon: Building2,
+        pathByScope: {
+          agency: "/app/agency/hotels",
+        },
+        feature: "inventory",
+        modeKey: "oteller",
+        moduleAliases: ["otellerim", "urunler"],
+        minMode: "lite",
+      },
+      {
+        key: "agency-availability",
+        label: "Müsaitlik",
+        icon: LayoutGrid,
+        pathByScope: {
+          agency: "/app/agency/availability",
+        },
+        feature: "inventory",
+        modeKey: "musaitlik",
+        moduleAliases: ["musaitlik_takibi"],
+        minMode: "lite",
+      },
+      {
+        key: "agency-tours",
+        label: "Turlar",
+        icon: Ticket,
+        pathByScope: {
+          agency: "/app/tours",
+        },
+        modeKey: "turlar",
+        moduleAliases: ["turlarimiz"],
+        minMode: "lite",
+      },
+      {
+        key: "agency-sheet-connections",
+        label: "Google Sheets",
+        icon: Zap,
+        pathByScope: {
+          agency: "/app/agency/sheets",
+        },
+        modeKey: "sheet_baglantilari",
+        moduleAliases: ["google_sheets", "google_sheet_baglantisi", "google_sheet_baglantilari"],
+        minMode: "pro",
+      },
+    ],
+  },
+  {
     group: "EXPANSION",
     showInSidebar: false,
     items: [
@@ -101,6 +153,8 @@ export const APP_NAV_SECTIONS = [
           agency: "/app/agency/sheets",
           hotel: "/app/hotel/integrations",
         },
+        modeKey: "sheet_baglantilari",
+        moduleAliases: ["google_sheets", "google_sheet_baglantisi", "google_sheet_baglantilari"],
         minMode: "pro",
       },
       {

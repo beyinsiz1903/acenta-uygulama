@@ -1,6 +1,7 @@
 """Enhanced Dashboard API - Agentis-style dashboard stats."""
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Query
@@ -27,6 +28,64 @@ def _stringify_id(value) -> str:
     return str(value)
 
 
+async def _build_weekly_day_summary(db, org_id: str, day_start, day_end, day_name: str, today_date):
+    tour_count_coro = db.products.count_documents({
+        "organization_id": org_id,
+        "$or": [
+            {"departure_date": {"$gte": day_start, "$lt": day_end}},
+            {"travel_date": {"$gte": day_start, "$lt": day_end}},
+            {"start_date": {"$gte": day_start, "$lt": day_end}},
+        ],
+    })
+    tour_count2_coro = db.tours.count_documents({
+        "organization_id": org_id,
+        "$or": [
+            {"departure_date": {"$gte": day_start, "$lt": day_end}},
+            {"start_date": {"$gte": day_start, "$lt": day_end}},
+        ],
+    })
+    res_count_coro = db.reservations.count_documents({
+        "organization_id": org_id,
+        "created_at": {"$gte": day_start, "$lt": day_end},
+    })
+    pax_pipeline = [
+        {"$match": {"organization_id": org_id, "created_at": {"$gte": day_start, "$lt": day_end}}},
+        {"$group": {"_id": None, "total_pax": {"$sum": {"$add": [
+            {"$ifNull": ["$adults", 1]},
+            {"$ifNull": ["$children", 0]},
+        ]}}}},
+    ]
+    payment_pipeline = [
+        {"$match": {
+            "organization_id": org_id,
+            "created_at": {"$gte": day_start, "$lt": day_end},
+            "status": {"$in": ["paid", "completed"]},
+        }},
+        {"$group": {"_id": None, "total": {"$sum": "$total_price"}}},
+    ]
+
+    tour_count, tour_count2, res_count, pax_result, payment_result = await asyncio.gather(
+        tour_count_coro,
+        tour_count2_coro,
+        res_count_coro,
+        db.reservations.aggregate(pax_pipeline).to_list(1),
+        db.reservations.aggregate(payment_pipeline).to_list(1),
+    )
+
+    total_pax = pax_result[0]["total_pax"] if pax_result else 0
+    total_payment = round(float(payment_result[0]["total"]), 2) if payment_result else 0
+    return {
+        "date": day_start.strftime("%d"),
+        "day_name": day_name,
+        "full_date": day_start.strftime("%Y-%m-%d"),
+        "tours": tour_count + tour_count2,
+        "reservations": res_count,
+        "pax": total_pax,
+        "payments": total_payment,
+        "is_today": day_start.date() == today_date,
+    }
+
+
 @router.get("/kpi-stats")
 async def kpi_stats(user=Depends(get_current_user)):
     """Return Agentis-style KPI cards: Satışlar, Rezervasyon ratio, Dönüşüm Oranı, Online."""
@@ -39,37 +98,23 @@ async def kpi_stats(user=Depends(get_current_user)):
 
     db = await get_db()
 
-    # Total sales
+    thirty_min_ago = datetime.now(timezone.utc) - timedelta(minutes=30)
     sales_pipeline = [
         {"$match": {"organization_id": org_id, "status": {"$in": ["paid", "confirmed", "completed"]}}},
         {"$group": {"_id": None, "total": {"$sum": "$total_price"}}},
     ]
-    sales_result = await db.reservations.aggregate(sales_pipeline).to_list(1)
+    sales_result, total_res, completed_res, funnel_total, online_sessions, recent_requests = await asyncio.gather(
+        db.reservations.aggregate(sales_pipeline).to_list(1),
+        db.reservations.count_documents({"organization_id": org_id}),
+        db.reservations.count_documents({"organization_id": org_id, "status": {"$in": ["paid", "completed"]}}),
+        db.funnel_events.count_documents({"organization_id": org_id}),
+        db.storefront_sessions.count_documents({"organization_id": org_id, "last_activity": {"$gte": thirty_min_ago}}),
+        db.request_logs.count_documents({"organization_id": org_id, "created_at": {"$gte": thirty_min_ago}}),
+    )
     total_sales = round(float(sales_result[0]["total"]), 2) if sales_result else 0
-
-    # Reservation counts
-    total_res = await db.reservations.count_documents({"organization_id": org_id})
-    completed_res = await db.reservations.count_documents(
-        {"organization_id": org_id, "status": {"$in": ["paid", "completed"]}}
-    )
-
-    # Conversion rate: completed / total (or from funnel events)
-    funnel_total = await db.funnel_events.count_documents({"organization_id": org_id})
-    if funnel_total > 0:
-        conversion_rate = round((completed_res / funnel_total) * 100, 3) if funnel_total else 0
-    else:
-        conversion_rate = round((completed_res / total_res) * 100, 3) if total_res else 0
-
-    # Online users (approximate: active sessions in last 30 min)
-    thirty_min_ago = datetime.now(timezone.utc) - timedelta(minutes=30)
-    online_count = await db.storefront_sessions.count_documents(
-        {"organization_id": org_id, "last_activity": {"$gte": thirty_min_ago}}
-    )
-    # Fallback: count active users
-    if online_count == 0:
-        online_count = await db.request_logs.count_documents(
-            {"organization_id": org_id, "created_at": {"$gte": thirty_min_ago}}
-        )
+    conversion_base = funnel_total or total_res
+    conversion_rate = round((completed_res / conversion_base) * 100, 3) if conversion_base else 0
+    online_count = online_sessions or recent_requests
 
     result = {
         "total_sales": total_sales,
@@ -79,7 +124,7 @@ async def kpi_stats(user=Depends(get_current_user)):
         "online_count": online_count,
         "currency": "TRY",
     }
-    return await cache_and_return(ck, result, ttl=30)
+    return await cache_and_return(ck, result, ttl=120)
 
 
 @router.get("/reservation-widgets")
@@ -90,6 +135,10 @@ async def reservation_widgets(
     """Gerçekleşen, Bekleyen, Sepet Terk reservation lists."""
     db = await get_db()
     org_id = user["organization_id"]
+
+    hit, ck = await try_cache_get("dash_widgets", org_id, {"limit": limit})
+    if hit:
+        return hit
 
     def _serialize(doc):
         return {
@@ -104,24 +153,34 @@ async def reservation_widgets(
             "check_in": str(doc.get("check_in") or doc.get("travel_date") or ""),
         }
 
-    # Completed reservations
-    completed = await db.reservations.find(
+    completed_coro = db.reservations.find(
         {"organization_id": org_id, "status": {"$in": ["paid", "completed"]}},
         {"_id": 0}
     ).sort("created_at", -1).limit(limit).to_list(limit)
-
-    # Pending reservations
-    pending = await db.reservations.find(
+    pending_coro = db.reservations.find(
         {"organization_id": org_id, "status": {"$in": ["pending", "confirmed"]}},
         {"_id": 0}
     ).sort("created_at", -1).limit(limit).to_list(limit)
+    completed_count_coro = db.reservations.count_documents({"organization_id": org_id, "status": {"$in": ["paid", "completed"]}})
+    pending_count_coro = db.reservations.count_documents({"organization_id": org_id, "status": {"$in": ["pending", "confirmed"]}})
+    abandoned_quotes_coro = db.public_quotes.find(
+        {"organization_id": org_id, "status": {"$in": ["draft", "expired", "abandoned"]}},
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    abandoned_bookings_coro = db.bookings.find(
+        {"organization_id": org_id, "status": {"$in": ["draft", "expired", "abandoned", "cancelled"]}},
+    ).sort("created_at", -1).limit(limit).to_list(limit)
 
-    # Cart abandoned (public quotes/checkouts that weren't completed)
+    completed, pending, completed_count, pending_count, abandoned_raw, abandoned_bookings = await asyncio.gather(
+        completed_coro,
+        pending_coro,
+        completed_count_coro,
+        pending_count_coro,
+        abandoned_quotes_coro,
+        abandoned_bookings_coro,
+    )
+
     abandoned = []
     try:
-        abandoned_raw = await db.public_quotes.find(
-            {"organization_id": org_id, "status": {"$in": ["draft", "expired", "abandoned"]}},
-        ).sort("created_at", -1).limit(limit).to_list(limit)
         for doc in abandoned_raw:
             abandoned.append({
                 "id": doc.get("id") or str(doc.get("_id", "")),
@@ -137,9 +196,6 @@ async def reservation_widgets(
     # Also check abandoned bookings
     if not abandoned:
         try:
-            abandoned_bookings = await db.bookings.find(
-                {"organization_id": org_id, "status": {"$in": ["draft", "expired", "abandoned", "cancelled"]}},
-            ).sort("created_at", -1).limit(limit).to_list(limit)
             for doc in abandoned_bookings:
                 abandoned.append({
                     "id": doc.get("id") or str(doc.get("_id", "")),
@@ -152,18 +208,14 @@ async def reservation_widgets(
         except Exception:
             pass
 
-    return {
+    return await cache_and_return(ck, {
         "completed": [_serialize(r) for r in completed],
-        "completed_count": await db.reservations.count_documents(
-            {"organization_id": org_id, "status": {"$in": ["paid", "completed"]}}
-        ),
+        "completed_count": completed_count,
         "pending": [_serialize(r) for r in pending],
-        "pending_count": await db.reservations.count_documents(
-            {"organization_id": org_id, "status": {"$in": ["pending", "confirmed"]}}
-        ),
+        "pending_count": pending_count,
         "abandoned": abandoned,
         "abandoned_count": len(abandoned),
-    }
+    }, ttl=60)
 
 
 @router.get("/weekly-summary")
@@ -184,75 +236,14 @@ async def weekly_summary(user=Depends(get_current_user)):
     monday = today - timedelta(days=weekday)
 
     days_tr = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
-    result = []
-
+    tasks = []
     for i in range(7):
         day_start = monday + timedelta(days=i)
         day_end = day_start + timedelta(days=1)
+        tasks.append(_build_weekly_day_summary(db, org_id, day_start, day_end, days_tr[i], today.date()))
 
-        # Count tours for that day
-        tour_count = await db.products.count_documents({
-            "organization_id": org_id,
-            "$or": [
-                {"departure_date": {"$gte": day_start, "$lt": day_end}},
-                {"travel_date": {"$gte": day_start, "$lt": day_end}},
-                {"start_date": {"$gte": day_start, "$lt": day_end}},
-            ]
-        })
-        # Also check tours collection
-        tour_count2 = await db.tours.count_documents({
-            "organization_id": org_id,
-            "$or": [
-                {"departure_date": {"$gte": day_start, "$lt": day_end}},
-                {"start_date": {"$gte": day_start, "$lt": day_end}},
-            ]
-        })
-        total_tours = tour_count + tour_count2
-
-        # Count reservations for that day
-        res_count = await db.reservations.count_documents({
-            "organization_id": org_id,
-            "created_at": {"$gte": day_start, "$lt": day_end}
-        })
-
-        # Count seats (pax)
-        pax_pipeline = [
-            {"$match": {
-                "organization_id": org_id,
-                "created_at": {"$gte": day_start, "$lt": day_end}
-            }},
-            {"$group": {"_id": None, "total_pax": {"$sum": {"$add": [
-                {"$ifNull": ["$adults", 1]},
-                {"$ifNull": ["$children", 0]},
-            ]}}}},
-        ]
-        pax_result = await db.reservations.aggregate(pax_pipeline).to_list(1)
-        total_pax = pax_result[0]["total_pax"] if pax_result else 0
-
-        # Sum payments for that day
-        payment_pipeline = [
-            {"$match": {
-                "organization_id": org_id,
-                "created_at": {"$gte": day_start, "$lt": day_end},
-                "status": {"$in": ["paid", "completed"]}
-            }},
-            {"$group": {"_id": None, "total": {"$sum": "$total_price"}}},
-        ]
-        payment_result = await db.reservations.aggregate(payment_pipeline).to_list(1)
-        total_payment = round(float(payment_result[0]["total"]), 2) if payment_result else 0
-
-        result.append({
-            "date": day_start.strftime("%d"),
-            "day_name": days_tr[i],
-            "full_date": day_start.strftime("%Y-%m-%d"),
-            "tours": total_tours,
-            "reservations": res_count,
-            "pax": total_pax,
-            "payments": total_payment,
-            "is_today": day_start.date() == today.date(),
-        })
-
-    return await cache_and_return(ck, result, ttl=120)
+    result = await asyncio.gather(*tasks)
+    return await cache_and_return(ck, result, ttl=300)
 
 
 @router.get("/popular-products")

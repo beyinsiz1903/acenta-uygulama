@@ -84,6 +84,29 @@ def _schedule_id(value: Any) -> Optional[str]:
     return getattr(value, "id", None)
 
 
+def _coerce_datetime(value: Any) -> Optional[datetime]:
+    if value in (None, ""):
+        return None
+    if isinstance(value, datetime):
+        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+    if isinstance(value, str):
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+        except Exception:
+            return None
+    return None
+
+
+def _should_refresh_subscription_snapshot(subscription: Optional[dict[str, Any]], *, max_age_minutes: int = 10) -> bool:
+    if not subscription:
+        return False
+    updated_at = _coerce_datetime(subscription.get("updated_at"))
+    if updated_at is None:
+        return True
+    return (_now() - updated_at) >= timedelta(minutes=max_age_minutes)
+
+
 def _subscription_first_item(subscription: Any) -> Any:
     if not subscription:
         return None
@@ -1074,7 +1097,11 @@ class StripeCheckoutService:
     async def get_billing_overview(self, tenant_id: str, *, user_email: str = "") -> dict[str, Any]:
         await self._repair_customer_reference(tenant_id, user_email=user_email)
         subscription = await billing_repo.get_subscription(tenant_id)
-        if subscription and _is_real_subscription_id(subscription.get("provider_subscription_id")):
+        if (
+            subscription
+            and _is_real_subscription_id(subscription.get("provider_subscription_id"))
+            and _should_refresh_subscription_snapshot(subscription)
+        ):
             try:
                 subscription = await self._sync_subscription_document(
                     tenant_id,

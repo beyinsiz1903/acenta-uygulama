@@ -48,10 +48,25 @@ async def try_cache_get(prefix: str, org_id: str = "", params: Optional[dict] = 
     """Try to get from Redis cache. Returns (hit, key) tuple."""
     key = _build_cache_key(prefix, org_id, params)
     hit = await redis_get(key)
+    if hit is None:
+        try:
+            from app.services.cache_service import cache_get as mongo_get
+
+            hit = await mongo_get(key)
+            if hit is not None:
+                await redis_set(key, hit, ttl_seconds=120)
+        except Exception:
+            hit = None
     return hit, key
 
 
 async def cache_and_return(key: str, data: Any, ttl: int = 120):
     """Store in Redis and return the data."""
     await redis_set(key, data, ttl_seconds=ttl)
+    try:
+        from app.services.cache_service import cache_set as mongo_set
+
+        await mongo_set(key, data, ttl_seconds=ttl)
+    except Exception:
+        logger.debug("endpoint_cache mongo set failed", exc_info=True)
     return data

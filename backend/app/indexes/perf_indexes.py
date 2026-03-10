@@ -31,6 +31,7 @@ async def ensure_perf_indexes(db) -> dict[str, list[str]]:
         ("ops_cases", [("organization_id", 1), ("status", 1), ("created_at", -1)], {}),
         # B2: Billing
         ("billing_subscriptions", [("tenant_id", 1), ("status", 1)], {}),
+        ("billing_customers", [("tenant_id", 1)], {}),
         # B2: Audit supplement
         ("audit_logs_chain", [("tenant_id", 1), ("action", 1), ("created_at", -1)], {}),
         # B2: Bookings
@@ -38,6 +39,12 @@ async def ensure_perf_indexes(db) -> dict[str, list[str]]:
         ("bookings", [("organization_id", 1), ("customer_id", 1)], {}),
         # B2: Products
         ("products", [("organization_id", 1), ("status", 1)], {}),
+        ("products", [("organization_id", 1), ("departure_date", 1)], {}),
+        ("products", [("organization_id", 1), ("travel_date", 1)], {}),
+        ("products", [("organization_id", 1), ("start_date", 1)], {}),
+        ("tours", [("organization_id", 1), ("departure_date", 1)], {}),
+        ("tours", [("organization_id", 1), ("start_date", 1)], {}),
+        ("public_quotes", [("organization_id", 1), ("status", 1), ("created_at", -1)], {}),
         # B2: Invoices
         ("efatura_invoices", [("tenant_id", 1), ("created_at", -1)], {}),
         # B2: Tickets

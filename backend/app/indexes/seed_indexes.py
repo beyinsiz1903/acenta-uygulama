@@ -241,6 +241,8 @@ async def ensure_seed_indexes(db) -> None:
     await _safe_create(db.request_logs, "timestamp", expireAfterSeconds=86400)
     await _safe_create(db.request_logs, [("timestamp", -1)])
     await _safe_create(db.request_logs, [("status_code", 1), ("timestamp", 1)])
+    await _safe_create(db.request_logs, [("organization_id", 1), ("created_at", -1)])
+    await _safe_create(db.request_logs, [("organization_id", 1), ("timestamp", -1)])
 
     # Performance indexes (B2)
     from app.indexes.perf_indexes import ensure_perf_indexes

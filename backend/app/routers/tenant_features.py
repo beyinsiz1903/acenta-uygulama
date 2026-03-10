@@ -4,11 +4,11 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query, Request
 
 from app.auth import get_current_user
-from app.db import get_db
 from app.errors import AppError
 from app.request_context import get_request_context
 from app.services.entitlement_service import entitlement_service
 from app.services.endpoint_cache import try_cache_get, cache_and_return
+from app.services.tenant_resolver_service import resolve_tenant_id_for_org
 from app.services.usage_read_service import PRIMARY_USAGE_METRICS, get_usage_overview
 
 router = APIRouter(prefix="/api/tenant", tags=["tenant_features"])
@@ -25,10 +25,7 @@ async def _resolve_tenant_id(request: Request, user: dict) -> str:
 
   org_id = user.get("organization_id")
   if org_id:
-    db = await get_db()
-    tenant = await db.tenants.find_one({"organization_id": org_id}, {"_id": 1}, sort=[("created_at", 1)])
-    if tenant and tenant.get("_id") is not None:
-      return str(tenant.get("_id"))
+    return await resolve_tenant_id_for_org(org_id)
 
   raise AppError(400, "tenant_context_missing", "Tenant context bulunamadı.", None)
 
@@ -46,7 +43,7 @@ async def get_tenant_features(request: Request, user=Depends(get_current_user)) 
   if hit:
     return hit
 
-  projection = await entitlement_service.get_tenant_entitlements(tenant_id, refresh=True)
+  projection = await entitlement_service.get_tenant_entitlements(tenant_id, refresh=False)
 
   result = {
     "tenant_id": tenant_id,

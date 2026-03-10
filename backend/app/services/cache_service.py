@@ -13,6 +13,14 @@ from app.db import get_db
 from app.utils import now_utc
 
 
+def _coerce_utc(value):
+    if value is None:
+        return None
+    if getattr(value, "tzinfo", None) is None:
+        return value.replace(tzinfo=now_utc().tzinfo)
+    return value
+
+
 async def cache_get(key: str, tenant_id: str = "") -> Optional[Any]:
     """Get cached value. Returns None on miss or expired."""
     try:
@@ -21,7 +29,8 @@ async def cache_get(key: str, tenant_id: str = "") -> Optional[Any]:
         doc = await db.app_cache.find_one(query)
         if not doc:
             return None
-        if doc.get("expires_at") and doc["expires_at"] < now_utc():
+        expires_at = _coerce_utc(doc.get("expires_at"))
+        if expires_at and expires_at < now_utc():
             return None
         return doc.get("value")
     except Exception:
@@ -81,7 +90,7 @@ async def get_cache_stats() -> dict[str, Any]:
         db = await get_db()
         total = await db.app_cache.count_documents({})
         now = now_utc()
-        expired = await db.app_cache.count_documents({"expires_at": {"$lt": now}})
+        expired = await db.app_cache.count_documents({"expires_at": {"$lt": now.replace(tzinfo=None)}})
         active = total - expired
         return {"total_entries": total, "active_entries": active, "expired_entries": expired}
     except Exception:

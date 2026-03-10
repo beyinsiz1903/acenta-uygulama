@@ -6,10 +6,10 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 from app.auth import get_current_user
-from app.db import get_db
-from app.errors import AppError
+from app.services.endpoint_cache import try_cache_get, cache_and_return
 from app.services.billing_history_service import billing_history_service
 from app.services.stripe_checkout_service import stripe_checkout_service
+from app.services.tenant_resolver_service import resolve_tenant_id_for_org
 
 router = APIRouter(tags=["billing_lifecycle"])
 
@@ -32,14 +32,7 @@ async def _resolve_tenant_id(user: dict) -> str:
         return tenant_id
 
     organization_id = str(user.get("organization_id") or "")
-    if not organization_id:
-        raise AppError(404, "tenant_not_found", "Tenant bulunamadı.", {"reason": "organization_missing"})
-
-    db = await get_db()
-    tenant = await db.tenants.find_one({"organization_id": organization_id})
-    if not tenant:
-        raise AppError(404, "tenant_not_found", "Tenant bulunamadı.", {"organization_id": organization_id})
-    return str(tenant.get("_id") or "")
+    return await resolve_tenant_id_for_org(organization_id)
 
 
 @router.get("/api/billing/subscription")
@@ -47,13 +40,15 @@ async def get_billing_subscription(
     user=Depends(get_current_user),
 ) -> dict:
     tenant_id = await _resolve_tenant_id(user)
+    hit, ck = await try_cache_get("billing_overview", tenant_id)
+    if hit:
+        return hit
+
     overview = await stripe_checkout_service.get_billing_overview(
         tenant_id,
         user_email=str(user.get("email") or ""),
     )
-
-
-    return {"tenant_id": tenant_id, **overview}
+    return await cache_and_return(ck, {"tenant_id": tenant_id, **overview}, ttl=60)
 
 
 @router.get("/api/billing/history")

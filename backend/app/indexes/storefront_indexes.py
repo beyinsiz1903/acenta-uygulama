@@ -18,3 +18,4 @@ async def ensure_storefront_indexes(db: AsyncIOMotorDatabase) -> None:
     await db.storefront_sessions.create_index("search_id", unique=True)
     # TTL index: documents expire when expires_at < now
     await db.storefront_sessions.create_index("expires_at", expireAfterSeconds=0)
+    await db.storefront_sessions.create_index([("organization_id", 1), ("last_activity", -1)])

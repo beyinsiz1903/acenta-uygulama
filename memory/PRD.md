@@ -211,10 +211,20 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
 - Tenant middleware zaten `/api/healthz` ve `/api/health/*` yollarını auth/tenant çözümlemesinden muaf tuttuğu için endpointler deploy probe’ları için uygun hale geldi.
 - Doğrulama: backend smoke + backend testing agent ile `/api/healthz`, `/api/health/ready`, `/api/health` üçü de 200 döndü; authsuz `/api/auth/me` 401 davranışının normal olduğu not edildi.
 
+## Son Doğrulama Notu — 2026-03-10 Custom Domain 502 Verification
+- Kullanıcının önceliği doğrultusunda deploy sonrası custom domain tekrar doğrulandı.
+- Smoke sonuçları:
+  - Preview `GET /api/healthz` → `200`
+  - Preview `POST /api/auth/login` (`agent@acenta.test` / `agent123`) → `200`
+  - Custom domain `https://agency.syroce.com/api/healthz` → `200`
+  - Custom domain `POST /api/auth/login` → `200`
+  - Browser smoke: `https://agency.syroce.com/login` üzerinden giriş sonrası `/app` ekranına başarılı yönlendirme doğrulandı.
+- Ek not: current custom bundle içinde build-time `REACT_APP_BACKEND_URL` olarak eski host string hâlâ gömülü görünüyor; ancak `frontend/src/lib/backendUrl.js` same-origin fallback’i sayesinde canlı custom domain login akışı kırılmadan çalışıyor.
+
 ## Kalan Öncelikli İşler
-- P0: `agency.syroce.com` custom domain'ini güncel frontend build ile hizalamak; eski `main.a26343a0.js` bundle referansını kaldırmak.
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.
 - P0: Agency sözleşme süresi dolunca backend tarafında route-level enforcement gerekip gerekmediğini kullanıcıyla doğrulayıp karar vermek (şu an UI kısıtlaması aktif).
+- P1: Custom domain build-time env string’ini tamamen temizleyecek daha katı runtime-only çözüm gerekip gerekmediğini izlemek (şu an canlı login akışı çalışıyor).
 - P1: Demo seed akışına acenta/tenant filtreleri ve toplu hedefleme (tek seferde birden fazla agency kullanıcı) eklemek.
 - P1: Zamanlanmış otomatik sync davranışını gerçek credential ile doğrulamak ve gerekiyorsa UI'daki interval beklentisiyle birebir hizalamak.
 - P1: Bulk master sheet akışını gerçek Google credential ile canlı sheet üzerinden smoke test etmek.

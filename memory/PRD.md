@@ -122,6 +122,13 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
 - `ruff check app` yeniden çalıştırıldı ve temiz geçti.
 - Hızlı smoke test sonucu: admin login, `/api/admin/sheets/config`, `/api/admin/sheets/bulk-template/hotel` ve admin Portfolio Sync sayfası başarılı çalıştı.
 
+## Son Bakım Güncellemesi — 2026-03-10 Login Network Error Hardening
+- Kullanıcının bildirdiği `/login` ve `/b2b/login` üzerindeki `Network Error` akışı için frontend auth katmanı güçlendirildi.
+- Login ve auth bootstrap isteklerine kısa gecikmeli retry + same-origin fallback eklendi.
+- Raw `Network Error` mesajı yerine Türkçe ve aksiyon verici hata mesajı gösterilecek şekilde UX iyileştirildi.
+- `/b2b/login` tarafında B2B yetki kontrol isteği de network fallback ile güçlendirildi.
+- Smoke + frontend login regresyon testi sonucu: admin ve B2B login akışları geçti; `Network Error` yeniden üretilemedi.
+
 ## Kalan Öncelikli İşler
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.
 - P1: Zamanlanmış otomatik sync davranışını gerçek credential ile doğrulamak ve gerekiyorsa UI'daki interval beklentisiyle birebir hizalamak.

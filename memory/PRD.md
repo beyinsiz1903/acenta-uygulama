@@ -202,6 +202,15 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
 - Preview’de toplu onarım çalıştırıldı: `scanned: 11, repaired: 11, skipped: 0`.
 - Doğrulama: backend pytest `test_admin_user_membership_repair.py` geçti; preview smoke testte yeni oluşturulan kullanıcı login’i 200 döndü ve membership hatası yeniden oluşmadı.
 
+## Son Bakım Güncellemesi — 2026-03-10 Production Deploy Healthz Fix
+- Emergent deployment loglarında görülen ana blocker tespit edildi: platform `GET /api/healthz` probe atıyor, uygulama ise bu endpointi 404 döndürüyordu.
+- `backend/app/routers/health.py` içine hafif ve authsuz readiness endpointleri eklendi:
+  - `/api/healthz`
+  - `/api/health/ready`
+  - mevcut `/api/health` korunuyor
+- Tenant middleware zaten `/api/healthz` ve `/api/health/*` yollarını auth/tenant çözümlemesinden muaf tuttuğu için endpointler deploy probe’ları için uygun hale geldi.
+- Doğrulama: backend smoke + backend testing agent ile `/api/healthz`, `/api/health/ready`, `/api/health` üçü de 200 döndü; authsuz `/api/auth/me` 401 davranışının normal olduğu not edildi.
+
 ## Kalan Öncelikli İşler
 - P0: `agency.syroce.com` custom domain'ini güncel frontend build ile hizalamak; eski `main.a26343a0.js` bundle referansını kaldırmak.
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.

@@ -10951,3 +10951,65 @@ agent_communication:
       CONCLUSION: Performance optimization SUCCESSFUL. Cache improvements working as expected, especially for billing endpoint. All endpoints production-ready with acceptable performance.
 
 
+
+  - task: "Admin Perf Dashboard smoke test - Turkish review"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/admin/AdminPerfDashboardPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "ADMIN PERF DASHBOARD SMOKE TEST COMPLETED - ALL 7 TESTS PASSED (2026-03-10). Comprehensive smoke validation performed per Turkish review request on https://sheets-sync-5.preview.emergentagent.com/app/admin/perf-dashboard with admin@acenta.test/admin123. Test Context: Backend performance iyileştirmesi ve cache davranışı sonrası frontend perf dashboard'ın bozulmadığını smoke test etmek. Test Results: 1) ✅ Admin login başarılı - admin@acenta.test/admin123 ile giriş yapıldı ve /app/admin/dashboard'a yönlendirildi, 2) ✅ Perf dashboard sayfası açılsın - /app/admin/perf-dashboard sayfasına başarıyla navigasyon yapıldı, 3) ✅ 'Performans Paneli' başlığı görünsün - sayfa başlığı doğru şekilde render edildi, 4) ✅ Son 24 saat seçimi ve 'Yenile' butonu render olsun - time window selector (Son 24 saat) ve Yenile butonu görünür ve çalışır durumda, 5) ✅ Cache kartları görünür olsun - üç cache kartı başarıyla render edildi: 'Cache Toplam' (2), 'Aktif' (2), 'Süresi Dolmuş' (0), 6) ✅ Top endpoint tablosu render olsun - 'Top Endpoint'ler (İstek Hacmi)' tablosu gerçek veriyle render edildi (empty state değil), tablo başlığı ve satırlar görünür, ek olarak 'Yavaş Endpoint'ler (p95 > 200ms)' uyarı bölümü de doğru şekilde gösteriliyor (12 yavaş endpoint tespit edilmiş, 5 tanesi listelenmiş), 7) ✅ Sayfada crash / blank screen / console kritik hata olmasın - sayfa düzgün yüklendi (2053 chars body text), React error boundary tetiklenmedi, perf-dashboard-page testid mevcut, sadece 2 non-critical 401 hata (auth bootstrap checks), hiç 500 hata yok, network hatası yok, kritik React hatası yok. CRITICAL VALIDATIONS: All Turkish review requirements validated ✅: Admin login working ✅, Perf dashboard page loads correctly ✅, Page title 'Performans Paneli' visible ✅, Time selector and refresh button rendered ✅, All cache cards visible with correct data ✅, Top endpoints table rendered with data (not empty) ✅, Slow endpoints alert section working correctly ✅, No crashes, blank screens, or critical errors ✅. VISUAL VERIFICATION: Screenshot captured showing clean UI with sidebar navigation (Perf Dashboard selected), cache stats cards with data (Cache Toplam: 2, Aktif: 2, Süresi Dolmuş: 0), slow endpoints alert section (amber warning box) with 5 endpoints listed showing p95 latency values, top endpoints table with proper columns (Endpoint, İstek, Hata%, Ort., p50, p95, p99, Max) and multiple rows of data. Success rate: 100% (7/7 tests passed). Conclusion: Admin performance dashboard is PRODUCTION-READY and working correctly. Backend performance improvements did NOT break frontend perf dashboard. All UI elements render correctly, data loads successfully, and no critical errors detected. Smoke test requirements fully met."
+
+  - agent: "testing"
+    message: |
+      ✅ ADMIN PERF DASHBOARD SMOKE TEST COMPLETED - ALL REQUIREMENTS PASSED (2026-03-10)
+      
+      Performed comprehensive smoke validation per Turkish review request on https://sheets-sync-5.preview.emergentagent.com
+      
+      Test Context:
+      - Validated /app/admin/perf-dashboard after backend performance optimization round
+      - Smoke test to ensure frontend perf dashboard not broken by cache behavior changes
+      - Focus on UI element rendering, data loading, and error-free page display
+      
+      Test Results (7 Validation Points):
+      
+      ✅ PERFECT SMOKE TEST:
+      1. ✅ Admin login (admin@acenta.test/admin123) - redirects to /app/admin/dashboard
+      2. ✅ Navigate to /app/admin/perf-dashboard - successful navigation
+      3. ✅ "Performans Paneli" title visible - page heading renders correctly
+      4. ✅ "Son 24 saat" selector and "Yenile" button - both rendered and functional
+      5. ✅ Cache cards visible:
+         • Cache Toplam: 2 entries
+         • Aktif: 2 active entries
+         • Süresi Dolmuş: 0 expired entries
+      6. ✅ Top endpoint table renders with data (not empty state):
+         • Table heading "Top Endpoint'ler (İstek Hacmi)" visible
+         • Multiple endpoint rows with proper columns (Endpoint, İstek, Hata%, Ort., p50, p95, p99, Max)
+         • "Yavaş Endpoint'ler (p95 > 200ms)" alert section also working (12 slow endpoints detected)
+      7. ✅ No crashes / blank screens / critical console errors:
+         • Page content loaded: 2053 chars body text
+         • No React error boundaries
+         • Only 2 non-critical 401 errors (auth bootstrap)
+         • Zero 500 errors, zero network errors
+      
+      📸 SCREENSHOT CAPTURED:
+      • perf_dashboard_smoke.png: Shows clean UI with:
+        - Sidebar navigation (Perf Dashboard selected)
+        - Cache stats cards with data
+        - Slow endpoints alert section (amber warning box)
+        - Top endpoints table with proper data display
+      
+      🎯 Turkish Review Requirements ALL MET:
+      ✅ Admin login başarılı olsun
+      ✅ Perf dashboard sayfası açılsın
+      ✅ Performans Paneli başlığı görünsün
+      ✅ Son 24 saat seçimi ve Yenile butonu render olsun
+      ✅ Cache kartları görünür olsun (Cache Toplam, Aktif, Süresi Dolmuş)
+      ✅ Top endpoint tablosu render olsun (with data, not empty)
+      ✅ Sayfada crash / blank screen / console kritik hata olmasın
+      
+      CONCLUSION: Admin performance dashboard PRODUCTION-READY. Backend performance iyileştirmeleri frontend perf dashboard'ı bozmamış. All UI elements working correctly, data loading successfully, zero critical errors. Smoke test fully successful.

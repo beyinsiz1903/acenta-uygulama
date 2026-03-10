@@ -117,6 +117,11 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
 - CSV parser semicolon / comma / tab delimiter için güçlendirildi; Türkçe locale export'larında daha dayanıklı hale getirildi.
 - Test sonucu: Iteration 48 raporunda bulk hotel + bulk agency akışı, template indirme, upload/paste preview, execute ve credential yokken graceful master-sheet davranışı geçti.
 
+## Son Bakım Güncellemesi — 2026-03-10 Lint Fix
+- Backend Ruff lint hataları temizlendi: kullanılmayan import kaldırıldı ve eksik EOF newline sorunları düzeltildi.
+- `ruff check app` yeniden çalıştırıldı ve temiz geçti.
+- Hızlı smoke test sonucu: admin login, `/api/admin/sheets/config`, `/api/admin/sheets/bulk-template/hotel` ve admin Portfolio Sync sayfası başarılı çalıştı.
+
 ## Kalan Öncelikli İşler
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.
 - P1: Zamanlanmış otomatik sync davranışını gerçek credential ile doğrulamak ve gerekiyorsa UI'daki interval beklentisiyle birebir hizalamak.

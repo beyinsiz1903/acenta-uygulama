@@ -4,7 +4,7 @@ import hashlib
 import json
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from app.services.google_sheet_schema_service import get_reservation_writeback_headers
 from app.utils import now_utc

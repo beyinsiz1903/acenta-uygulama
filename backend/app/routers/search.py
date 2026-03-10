@@ -157,6 +157,7 @@ async def _search_bookings(
         "currency": 1,
         "created_at": 1,
     }
+
     booking_query = {
         **base_filter,
         "$or": [

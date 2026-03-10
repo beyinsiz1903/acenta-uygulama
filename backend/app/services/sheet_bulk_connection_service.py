@@ -99,6 +99,7 @@ def render_bulk_connection_template(scope: BulkConnectionScope) -> Dict[str, Any
     }
 
 
+
 def parse_bulk_text(raw_text: str) -> Tuple[List[str], List[List[str]]]:
     cleaned_lines = [line for line in (raw_text or "").replace("\r\n", "\n").split("\n") if line.strip()]
     if len(cleaned_lines) < 2:

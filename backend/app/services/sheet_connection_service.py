@@ -58,6 +58,7 @@ def validate_service_account_json(raw_json: str) -> Dict[str, Any]:
     }
 
 
+
 def _raise_sheet_error(code: str, message: str) -> None:
     raise AppError(400, code, message)
 

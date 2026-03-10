@@ -133,6 +133,7 @@ async def enqueue_payment_failed_email(
         {"tenant_id": tenant_id},
         {"_id": 0, "plan": 1, "interval": 1},
     )
+
     recipients = await resolve_notification_recipients(db, organization_id=organization_id, tenant_id=tenant_id)
     if not recipients:
         return None

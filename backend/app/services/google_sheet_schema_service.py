@@ -120,6 +120,7 @@ def validate_inventory_headers(headers: List[str]) -> Dict[str, Any]:
     }
 
 
+
 def headers_match_expected(headers: List[str], expected_headers: List[str]) -> bool:
     normalized_actual = [_normalize_header(header) for header in headers if str(header or "").strip()]
     normalized_expected = [_normalize_header(header) for header in expected_headers]

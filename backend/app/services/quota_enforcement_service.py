@@ -75,6 +75,7 @@ async def get_quota_guard_snapshot(
     period,
     organization_id=resolved_organization_id,
   )
+
   if not totals:
     totals = await usage_ledger_repo.get_period_totals(
       resolved_tenant_id,

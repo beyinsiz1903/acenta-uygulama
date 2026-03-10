@@ -5138,6 +5138,28 @@
   },
   {
     "compat_required": true,
+    "current_namespace": "/api/health",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "system",
+    "path": "/api/health/ready",
+    "risk_level": "low",
+    "source": "app.routers.health",
+    "target_namespace": "/api/v1/health"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/healthz",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "system",
+    "path": "/api/healthz",
+    "risk_level": "low",
+    "source": "app.routers.health",
+    "target_namespace": "/api/v1/health"
+  },
+  {
+    "compat_required": true,
     "current_namespace": "/api/hotel",
     "legacy_or_v1": "legacy",
     "method": "GET",
@@ -7519,6 +7541,17 @@
     "method": "GET",
     "owner": "system",
     "path": "/api/v1/health",
+    "risk_level": "low",
+    "source": "app.routers.health",
+    "target_namespace": "/api/v1/health"
+  },
+  {
+    "compat_required": false,
+    "current_namespace": "/api/v1/health",
+    "legacy_or_v1": "v1",
+    "method": "GET",
+    "owner": "system",
+    "path": "/api/v1/health/ready",
     "risk_level": "low",
     "source": "app.routers.health",
     "target_namespace": "/api/v1/health"

@@ -1,0 +1,73 @@
+{
+  "test_time": "2026-03-10T15:52:52.547175",
+  "base_url": "https://agency-assign.preview.emergentagent.com",
+  "tests": [
+    {
+      "test_number": 1,
+      "name": "GET /api/healthz",
+      "url": "https://agency-assign.preview.emergentagent.com/api/healthz",
+      "expected_status": 200,
+      "description": "Main health check endpoint - was returning 404 (deployment blocker)",
+      "actual_status": 200,
+      "response_time_ms": 184,
+      "response_size": 15,
+      "content_type": "application/json",
+      "success": true,
+      "response_json": {
+        "status": "ok"
+      }
+    },
+    {
+      "test_number": 2,
+      "name": "GET /api/health/ready",
+      "url": "https://agency-assign.preview.emergentagent.com/api/health/ready",
+      "expected_status": 200,
+      "description": "Readiness probe endpoint",
+      "actual_status": 200,
+      "response_time_ms": 158,
+      "response_size": 15,
+      "content_type": "application/json",
+      "success": true,
+      "response_json": {
+        "status": "ok"
+      }
+    },
+    {
+      "test_number": 3,
+      "name": "GET /api/health",
+      "url": "https://agency-assign.preview.emergentagent.com/api/health",
+      "expected_status": 200,
+      "description": "General health endpoint",
+      "actual_status": 200,
+      "response_time_ms": 126,
+      "response_size": 15,
+      "content_type": "application/json",
+      "success": true,
+      "response_json": {
+        "status": "ok"
+      }
+    },
+    {
+      "test_number": 4,
+      "name": "GET /api/auth/me (no auth)",
+      "url": "https://agency-assign.preview.emergentagent.com/api/auth/me",
+      "expected_status": 401,
+      "description": "Auth endpoint without credentials - should return 401 (normal, not deployment blocker)",
+      "actual_status": 401,
+      "response_time_ms": 154,
+      "response_size": 151,
+      "content_type": "application/json",
+      "success": true,
+      "response_json": {
+        "error": {
+          "code": "auth_required",
+          "message": "Giri\u015f gerekli",
+          "details": {
+            "correlation_id": "a5a2635e-10af-4751-99fb-892e895cc10e",
+            "path": "/api/auth/me"
+          }
+        }
+      }
+    }
+  ]
+}

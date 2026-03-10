@@ -194,6 +194,14 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
 - CI ekranında görünen `agency_contract_status_service.py` dosyası için EOF/trailing newline sorunu düzeltildi.
 - Lokal doğrulama: `ruff check /app/backend/app/services/agency_contract_status_service.py` temiz geçti.
 
+## Son Bakım Güncellemesi — 2026-03-10 Agency User Tenant Membership Fix
+- Kullanıcının ekran görüntüsündeki `Aktif tenant üyeliği bulunamadı` login hatası için agency kullanıcı yaratma akışı güçlendirildi.
+- Yeni servis: `tenant_membership_repair_service.py` ile kullanıcı oluşturma / acentaya bağlama / kullanıcı güncelleme akışlarında tenant membership otomatik upsert ediliyor.
+- Login context ve tenant middleware içine self-heal eklendi; membership eksik legacy kullanıcılar login veya admin repair akışı sırasında otomatik toparlanabiliyor.
+- Yeni admin endpoint: `POST /api/admin/all-users/repair-memberships` → mevcut agency kullanıcılarını topluca onarıyor.
+- Preview’de toplu onarım çalıştırıldı: `scanned: 11, repaired: 11, skipped: 0`.
+- Doğrulama: backend pytest `test_admin_user_membership_repair.py` geçti; preview smoke testte yeni oluşturulan kullanıcı login’i 200 döndü ve membership hatası yeniden oluşmadı.
+
 ## Kalan Öncelikli İşler
 - P0: `agency.syroce.com` custom domain'ini güncel frontend build ile hizalamak; eski `main.a26343a0.js` bundle referansını kaldırmak.
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.

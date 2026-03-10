@@ -170,6 +170,12 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
 - Agency kullanıcı oturumunda 30 gün kala üst uyarı banner’ı, süre geçince de erişim kısıtlı overlay’i eklendi.
 - Doğrulama: backend pytest dosyası `test_admin_agency_contract_controls.py` geçti; preview smoke + backend/ frontend test agent akışları create/update/list/user-limit senaryolarını doğruladı.
 
+## Son Uygulama Güncellemesi — 2026-03-10 Landing Hero Typography Fix
+- Kullanıcının bildirdiği desktop/fullscreen hero mockup yazı kesilmesi için `LandingDashboardMockup.jsx` tipografi güvenlik payı artırıldı.
+- Üst mockup kartı, status badge’leri, KPI etiketleri, rezervasyon satırları, CRM ve finans metinlerinde line-height/padding değerleri genişletildi; böylece descender clipping riski azaltıldı.
+- Aynı mockup component landing içinde birden fazla yerde tekrar kullanıldığı için düzeltme ilgili önizleme kartlarına da yansıdı.
+- Doğrulama: screenshot smoke + frontend testing agent ile `1920x800`, `1600x900`, `1366x768` viewportlarında kritik hero metinlerinde clipping/overflow görülmedi.
+
 ## Kalan Öncelikli İşler
 - P0: `agency.syroce.com` custom domain'ini güncel frontend build ile hizalamak; eski `main.a26343a0.js` bundle referansını kaldırmak.
 - P0: Kullanıcıdan gerçek Google Service Account JSON alıp canlı doğrulama ve gerçek sync smoke test yapmak.

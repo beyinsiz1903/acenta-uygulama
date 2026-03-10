@@ -10,7 +10,7 @@ Tests the specific validation points requested in Turkish review:
 5. POST /api/admin/sheets/connections with configured=false should create pending_configuration record and be cleanable with DELETE /api/admin/sheets/connections/{hotel_id}
 6. No regression in existing agency/admin sheets endpoints
 
-Preview URL: https://agency-os-test.preview.emergentagent.com
+Preview URL: https://syroce-staging-1.preview.emergentagent.com
 Admin credentials: admin@acenta.test / admin123
 """
 
@@ -22,7 +22,7 @@ import uuid
 from typing import Dict, Any, Optional
 
 # Configuration
-BASE_URL = "https://agency-os-test.preview.emergentagent.com"
+BASE_URL = "https://syroce-staging-1.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"

@@ -7,141 +7,145 @@ The user is building a Travel Agency Operating System named Syroce.
 3.  **Pricing Page**: A public pricing page inspired by  with feature tiers.
 4.  **Google Sheets Integration**: A core feature to manage hotel reservations and availability, which is currently blocked.
 5.  **Settings Page for Agency Users**: A new page under  for logged-in agency users to see their own information.
-6.  **Change Password Functionality**: On the new Settings page, users should be able to change their own password.
+6.  **Change Password Functionality**: On the new Settings page, users should be able to change their own password. (Implementation Done, Testing Pending).
 7.  **Granular User Permissions**: A system where a superadmin or agency admin can define which specific screens individual users are allowed to see.
+8.  **UI/UX**: The Faturalama (Billing) screen should not be visible to agency-level users. (Done).
 
 **User's preferred language**: Turkish
 
 **what currently exists?**
-The application is a full-stack React/FastAPI app. In this session, the agent initially addressed a new user request to create a Settings page for agency users. A basic, non-functional page was created at  and a navigation link was added to the agency admin sidebar.
+The agent successfully addressed the critical P0 bug from the previous session, where modules assigned to an agency were not being saved. The fix involved updating the backend Pydantic model to accept the  field and modifying the frontend to send the complete updated agency object. The agent verified via backend logs that the correct payload is now being received.
 
-Following a prompt from the user to refocus on existing priorities, the agent returned to the critical bug from the previous session: modules selected in the superadmin panel for an agency were not being saved to the database. To fix this, the agent implemented the debugging steps planned previously:
-1.  Modified  to add an explicit Save button to trigger the update.
-2.  Modified  to add  statements to log the incoming payload on the update endpoint.
+Additionally, the agent implemented two user requests from the current session:
+1.  Hid the Faturalama (Billing) navigation link from the agency admin sidebar, as requested.
+2.  Implemented the Change Password functionality. This included creating the frontend form on the , building a new backend endpoint (), and connecting the two.
 
-The agent was in the middle of testing this fix when the session ended.
+The implementation of the change password feature is complete, but it has not yet been tested.
 
 **Last working item**:
-- Last item agent was working: Testing the fix for the P0 bug where agency modules selected in the admin panel are not being saved to the database. The agent has applied changes to the frontend and backend and was about to verify them.
+- Last item agent was working: Implementing the Change Password functionality for agency users. The agent has created the frontend form, the backend endpoint, and connected them.
 - Status: IN PROGRESS
 - Agent Testing Done: N
-- Which testing method agent to use? Manual testing by main agent. The agent needs to:
-    1. Log in as superadmin ().
-    2. Navigate to the Agencies page.
-    3. Modify the modules for an agency and click the new Save button.
-    4. Check the backend logs () to inspect the payload printed by the  endpoint.
-    5. If the payload is correct, log in as that agency's admin to verify if the sidebar navigation now reflects the saved modules.
+- Which testing method agent to use? Manual testing by the main agent.
+    1. Log in as an agency user (e.g.,  / ).
+    2. Navigate to the Ayarlar (Settings) page.
+    3. Attempt to change the password using the new form. Test both a successful change (correct current password) and a failed change (incorrect current password).
+    4. Verify success by logging out and logging back in with the new password. Check for appropriate success/error toast messages from .
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P0) Root Cause of Agency Modules Not Saving**
-  - **Description:** When a superadmin selects/deselects modules for an agency on the admin page, the changes are not persisted in the database. A temporary fix was applied directly to the DB for one agency, but the underlying bug in the admin panel remains.
-  - **Attempted fixes:** Frontend  was modified to include an explicit save button, and the backend  was modified to log the incoming request payload for debugging. Testing of these changes is in progress.
-  - **Next debug checklist:**
-    1.  Complete the manual test described in Last working item.
-    2.  If the  field is still missing or incorrect in the backend logs, debug the  function in .
-    3.  If the payload is correct in the logs but the database isn't updated, debug the  operation in .
-  - **Why fix this issue and what will be achieved with the fix?** This is a critical bug. Fixing it will allow admins to correctly configure which features each agency has access to, a core part of the application's business logic.
-  - **Status:** IN PROGRESS
-  - **Is recurring issue?** N
-  - **Should Test frontend/backend/both after fix?** both
-  - **Blocked on other issue:** None.
-
-- **Issue 2: (P1) Confirm Production Deployment Fix**
-  - **Description:** A fix for a  error in the production environment (related to DB connection) was implemented in a previous session. It has not been confirmed if the user redeployed and if the fix was successful. The agent forgot to ask the user about this.
-  - **Next debug checklist:** Ask the user if they have redeployed and if the 502 error on their custom domain is resolved.
+- **Issue 1: (P1) Confirm Production Deployment Fix**
+  - **Description:** A fix for a  error in the production environment was implemented in a previous session. It's unknown if the user redeployed and if the fix was successful. The agent has forgotten to ask about this for two consecutive sessions.
+  - **Next debug checklist:** Ask the user if they have redeployed to their custom domain and if the 502 error is resolved.
   - **Status:** USER VERIFICATION PENDING
   - **Is recurring issue?** Y
-  - **Should Test frontend/backend/both after fix?** N/A (Awaiting user confirmation)
+  - **Should Test frontend/backend/both after fix?** N/A
   - **Blocked on other issue:** None.
 
-- **Issue 3: (P2) Google Credentials Block**
-  - **Description:** The core Google Sheets integration feature is completely **BLOCKED** because it requires a Google Cloud Service Account JSON key from the user. The agent forgot to remind the user about this.
-  - **Next debug checklist:** Gently remind the user that this is required to make progress on the application's main feature.
+- **Issue 2: (P1) Google Credentials Block**
+  - **Description:** The core Google Sheets integration feature is completely **BLOCKED** as it requires a Google Cloud Service Account JSON key from the user. This has been a long-standing blocker.
+  - **Next debug checklist:** Remind the user that progress on their main feature is blocked until these credentials are provided.
   - **Status:** BLOCKED
   - **Is recurring issue?** Y
   - **Should Test frontend/backend/both after fix?** both
   - **Blocked on other issue:** Awaiting user-provided credentials.
 
 **In progress Task List**:
-- **Task 1: Complete the Agency Module Saving Fix**
-  - **Where to resume:** Continue the testing process outlined in the Last working item section. The code changes have been applied; verification is needed.
-  - **What will be achieved with this?** A reliable way for admins to update agency settings.
+- **Task 1: (P0) Test Change Password Functionality**
+  - **Where to resume:** Test the feature as described in the Last working item section.
+  - **What will be achieved with this?** Users will be able to securely manage their own passwords.
   - **Status:** IN PROGRESS
+  - **Should Test frontend/backend/both after fix?** both
+  - **Blocked on something:** None.
+
+- **Task 2: (P0) Final Verification of Agency Module Saving Fix**
+  - **Where to resume:** Perform a final end-to-end test. The backend payload has been verified, but the UI impact has not.
+    1. Log in as superadmin ().
+    2. Navigate to Agencies, select an agency (e.g., Denkmal Travel), and change its assigned modules. Click Save.
+    3. Log out. Log in as that agency's admin ().
+    4. Verify that the navigation sidebar correctly reflects the modules that were just saved.
+  - **What will be achieved with this?** Confirms that a critical bug is fully resolved, and the fix works end-to-end.
+  - **Status:** TESTING PENDING
   - **Should Test frontend/backend/both after fix?** both
   - **Blocked on something:** None.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-  - **P0: Implement Change Password:** After fixing Issue #1, implement the Change Password functionality on the newly created  as requested by the user.
-  - **P1: Implement User-Based Screen Permissions:** Implement the user's request for a more granular permission model where specific screens can be assigned to individual users.
+  - **P1: Implement User-Based Screen Permissions:** Implement the user's request for a granular permission model where specific screens can be assigned to individual users.
   - **P1: Implement Reservation Limits:** Enforce reservation limits on the backend based on pricing plans.
-  - **P1: Refine Pricing Page:** Review and detail the pricing page based on the  inspiration.
 - **Future Tasks:**
+  - **P2: Refine Pricing Page:** Review and detail the pricing page based on the  inspiration.
   - **P2: Update My Hotels Screen ():** Display the  () field from the  model.
   - **P2: Implement Automatic Google Sheets Sync:** Add a background job for periodic syncing after manual sync is working.
 
 **Completed work in this session**
-- **Feature: Basic Settings Page**
-  - Created a placeholder page at .
-  - Added a navigation link (Ayarlar) to the agency admin sidebar in .
-  - Added the route for the new page in .
+- **Bug Fix: Agency Modules Not Saving**
+  - Fixed the critical bug preventing agency module selections from being saved in the database.
+  - Modified  to correctly handle the  payload.
+  - Modified  to send the correct data on save.
+- **Feature: Change Password**
+  - Implemented the full Change Password flow.
+  - Created a form in .
+  - Created a new router and endpoint in .
+  - Registered the new router in .
+- **UX Improvement: Hide Billing Link**
+  - Commented out the Faturalama (Billing) link in  to hide it from agency users.
 
 **Earlier issues found/mentioned but not fixed**
-- The task to update the My Hotels () page to display room availability () is still pending.
-- The implementation of reservation limits based on pricing tiers was requested but has not been built yet.
+- **Issue 1: Production 502 Error:** The agent again failed to ask the user for the status of the production deployment fix for the  error. **Status: USER VERIFICATION PENDING.**
+- **Issue 2: Google Sheets Credentials:** The agent again failed to remind the user that the Google Sheets integration is blocked pending their credentials. **Status: BLOCKED.**
 
 **Known issue recurrence from previous fork**
-- **Issue recurrence in previous fork**: Post-login instability and data integrity issues. The previous fork dealt with redirection. The current fork is fixing a data-saving bug that affects the post-login experience. The production  also falls into this category.
-- **Recurrence count**: 6
-- **Status**: IN PROGRESS
+- **Issue recurrence in previous fork**: Post-login instability and data integrity issues.
+- **Recurrence count**: 7
+- **Status**: IN PROGRESS (The agency module fix directly addresses a data integrity part of this. The production 502 error is still an unknown part of this).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Backend:** FastAPI, Pydantic, Motor (async MongoDB driver).
-- **Frontend:** React, React Router, Tailwind CSS, Shadcn/UI, Axios for API calls.
-- **Database:** MongoDB.
-- **Debugging:** Using  on the backend, explicit save buttons on the frontend, and  for manual test verification.
+- **Backend:** FastAPI, Pydantic, Motor (async MongoDB driver),  for password hashing.
+- **Frontend:** React, React Router, Tailwind CSS, Shadcn/UI, Axios,  for toast notifications.
+- **Authentication:** JWT-based, with a new endpoint for password changes that verifies the current password before updating.
 
 **key DB schema**
-- **agencies**:  (This field stores the list of enabled module identifiers for an agency and is the focus of the current bug).
+- **agencies**:  (Field is now being correctly updated).
+- **users**:  (This field is now updatable via the new change password endpoint).
 
 **All files of reference**
-- : Modified to add logging for debugging module updates.
-- : Modified to add an explicit save button to improve the module update flow.
-- : Created as a new page for agency user settings.
-- : Modified to add a link to the new Settings page.
-- : Modified to add the route for the new Settings page.
+- : Modified to include  in the  Pydantic model.
+- : Modified  to send the full updated agency data.
+- : Modified to hide the Billing link for agency users.
+- : Modified to include a complete Change Password form and its submission logic.
+- : Created to house the  endpoint.
+- : Modified to include the new  router.
 
 **Critical Info for New Agent**
 - **You must communicate in Turkish.**
-- **Top Priority (P0):** Your immediate task is to complete the test of the fix for the agency module saving bug. The previous agent has already modified the frontend and backend. You must now log in, perform the test, check the logs, and verify the result.
-- **Next Priority (P0):** Once the module bug is fixed and verified, the user's next priority is to implement Change Password functionality on the new .
-- **Follow-up (P1/P2):** You MUST remember to ask the user about the status of the  error on their custom domain and remind them that the Google Sheets feature is blocked pending their credentials. These items have been missed in the last two sessions.
+- **Top Priority (P0):** Your immediate task is to test the Change Password feature that was just implemented. After that, perform the final end-to-end verification of the agency module saving fix.
+- **CRITICAL FOLLOW-UP (P1):** The previous two agents have forgotten to follow up on critical, long-standing issues. In your initial plan, you **must** ask the user about:
+    1.  The status of the  error on their custom domain.
+    2.  The Google Cloud Service Account credentials required to unblock the Google Sheets feature.
 
 **documents and test reports created in this job**
 - None.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User, Message 5:**  (Besides the superadmin, have user information in the settings section, and also fix these errors.) - User requested a new settings page and a fix for the existing bugs.
-2.  **Agent, Message 31:** (Agent confirms adding a basic settings page and asks for prioritization.)
-3.  **User, Message 32:**  (First, let's handle the issues I mentioned initially. Also, the user should be able to change their password. Afterwards, the users I define should see the screens I define for them.) - User redirects the agent to fix the original bugs first, and adds requirements for change password and granular user permissions.
+1.  **User, Message 5:**  (Do P0, also the agency user does not need to see the billing screen.) - User approved P0 tasks and added a new requirement. Status: **Completed**.
 
 **Project Health Check:**
 - **Broken:**
-  - **Agency Module Management**: The admin panel feature to assign modules to an agency is not working correctly. A fix is in progress.
+  - None. The main bug has been fixed, pending final verification.
 - **Incomplete:**
-  - **Agency User Settings**: A page has been created but is a placeholder. It needs user details and a change password function.
+  - **Change Password**: The feature is fully coded but requires testing.
 - **Unknown:**
-  - **Production Deployment**: The stability of the production deployment on the user's custom domain is unknown. A fix for a critical  is awaiting user verification.
+  - **Production Deployment Stability**: The status of the  error on the user's custom domain is still unknown.
 - **Blocked:**
-  - **Google Sheets Integration**: Non-functional and blocked pending user credentials.
+  - **Google Sheets Integration**: Remains blocked pending user-provided credentials.
 
 **3rd Party Integrations**
 - **Google Sheets API / Google Drive API:** Backend code exists but is inactive and blocked.
-- **MongoDB Atlas:** Used for production, but connection stability is not yet verified by the user post-fix.
+- **MongoDB Atlas:** Used for production, but connection stability in the live environment is not yet verified by the user post-fix.
 
 **Testing status**
 - Testing agent used after significant changes: NO
@@ -154,8 +158,5 @@ The agent was in the middle of testing this fix when the session ended.
 - **Agency Admin:**  / 
 
 **What agent forgot to execute**
-- The agent did not present an initial plan via  as required.
-- The agent was initially distracted by a new user feature request instead of addressing the P0 bug from the previous handoff summary.
-- The agent again forgot to follow up on the two critical long-pending items:
-    1.  Verifying the fix for the  error on the user's custom production domain.
-    2.  Reminding the user that the Google Sheets integration is blocked pending their credentials.</analysis>
+- The agent failed to ask the user about the status of the  error on their production deployment.
+- The agent failed to remind the user that the core Google Sheets feature remains blocked because their credentials are required.</analysis>

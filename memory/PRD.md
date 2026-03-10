@@ -287,3 +287,13 @@ Son kritik ürün odağı Google Sheets entegrasyonu oldu:
 - Bu dosya statik ürün bağlamını taşır
 - Detaylı teslim geçmişi için `CHANGELOG.md`
 - Kalan ve öncelikli işler için `ROADMAP.md`
+## Son Doğrulama — 2026-03-10 P0 Kapsamlı Test (Iteration 53)
+- Şifre Değiştirme: Backend + Frontend tamamen doğrulandı (hatalı şifre reddi, güçsüz şifre reddi, aynı şifre reddi, başarılı değişiklik, yeni şifre ile login). %100 geçti.
+- Acenta Modül Kaydetme: CRUD işlemleri (GET/PUT/clear) doğrulandı. %100 geçti.
+- Faturalama Gizleme: Agency kullanıcılar sidebar'da görmüyor, admin kullanıcılar görüyor. %100 geçti.
+
+## Test Kimlik Bilgileri (Güncel)
+| Portal | Email | Password | Rol |
+|---|---|---|---|
+| Super Admin | admin@acenta.test | admin123 | super_admin |
+| Agency Admin | agency1@demo.test | Agency12345! | agency_admin |

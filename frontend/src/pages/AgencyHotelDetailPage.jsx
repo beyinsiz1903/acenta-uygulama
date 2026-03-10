@@ -33,6 +33,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { toast } from "sonner";
+import { HotelInventoryCalendar } from "../components/HotelInventoryCalendar";
 
 export default function AgencyHotelDetailPage() {
   const { hotelId } = useParams();
@@ -250,6 +251,9 @@ export default function AgencyHotelDetailPage() {
           </div>
         </CardHeader>
       </Card>
+
+      {/* Inventory Calendar View */}
+      <HotelInventoryCalendar hotelId={hotelId} />
 
       {/* Search Form */}
       <Card>

@@ -1205,7 +1205,7 @@ export default function AgencyHotelsPage() {
                   onClick={() => goHotelDetail(hotel.hotel_id)}
                   data-testid={`agency-hotel-detail-${hotel.hotel_id}`}
                 >
-                  Detay
+                  Detay & Takvim
                 </Button>
               </div>
             </CardContent>

@@ -1,0 +1,73 @@
+{
+  "summary": "Iteration 54: Complete testing of Hotel Inventory Calendar View feature (E-Tablo/Google Sheets integration). All backend API tests (11/11) passed. All UI tests passed. Calendar displays room availability, pricing, and allotment data correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Backend: GET /api/agency/availability/{hotel_id} returns grid data for March 2026",
+    "Backend: Grid has valid price and allotment values (numeric, in range)",
+    "Backend: Grid has stop_sale boolean flag (some entries with stop_sale=true)",
+    "Backend: Date range filtering (start_date/end_date params) works correctly",
+    "Backend: Room type filtering (?room_type=Deluxe) works correctly",
+    "Backend: Second hotel (Antalya Beach Resort) availability works",
+    "Backend: Hotels list returns linked hotels with sheet_managed_inventory flag",
+    "Backend: Hotels have sheet sync info (allocation_available, sheet_last_sync_at)",
+    "Backend: Hotels have status_label for UI badges",
+    "Backend: Availability endpoint requires authentication (401 without token)",
+    "Backend: Hotels list requires authentication (401 without token)",
+    "UI: Login as agency user (agent@acenta.test / agent123) - successful",
+    "UI: Hotels page shows 4 hotels with 'Detay & Takvim' buttons",
+    "UI: Hotel detail page loads for Demo Hotel 1 (b54305a3...)",
+    "UI: 'Envanter Takvimi' calendar component renders correctly",
+    "UI: Calendar title shows 'Envanter Takvimi'",
+    "UI: Month navigation shows 'Mart 2026' with prev/next arrows",
+    "UI: Room type filter dropdown shows 'Tüm Oda Tipleri' with options",
+    "UI: Stats bar shows 'Toplam kayıt: 66', room types, 'E-Tablo Bağlı' badge",
+    "UI: Calendar shows 31 day cells for March",
+    "UI: Day cells show price (TL) and room count (oda) for days with data",
+    "UI: Clicking day cell (Mar 15) opens expanded detail panel",
+    "UI: Expanded detail shows 3 room type cards (Deluxe, Standart, Suite)",
+    "UI: Each room card shows Fiyat (price) and Kontenjan (allotment)",
+    "UI: Month navigation (next/prev) works and changes month label",
+    "UI: Room type filter filters calendar data (Deluxe filter works)",
+    "UI: Today (2026-03-10) has highlight ring"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_iteration54_calendar_inventory.py",
+    "/app/test_reports/pytest/pytest_iteration54_calendar.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Good: HotelInventoryCalendar.jsx has comprehensive data-testid coverage for automated testing",
+    "Good: Calendar component uses color-coding: green (available), amber (low), orange (none), red (stop-sale)",
+    "Good: API returns complete grid data with price, allotment, stop_sale per room type per date",
+    "Good: tenant_id query uses $in to support both org_id and tenant_id (fixes previous bug)",
+    "Good: Stats bar shows total records, room types, E-Tablo Bağlı badge, last sync time",
+    "Good: Expanded day detail shows room type cards with Fiyat and Kontenjan labels"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration54_calendar_inventory.py"
+  ],
+  "success_rate": {
+    "backend": "100% (11/11 tests passed)",
+    "frontend": "100% (all UI verification passed)"
+  },
+  "test_credentials": {
+    "agency_user": "agent@acenta.test / agent123",
+    "admin_user": "admin@acenta.test / admin123"
+  },
+  "seed_data_creation": "No new seed data. 270 inventory snapshots already seeded for 2 hotels (Demo Hotel 1, Antalya Beach Resort) covering 45 days from today with 3 room types each.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 54 verified complete Hotel Inventory Calendar feature: (1) Backend API /api/agency/availability/{hotel_id} returns dates, room_types, grid with price/allotment/stop_sale, (2) Frontend calendar renders with color-coded days, month navigation, room type filter, expanded day detail, stats bar with E-Tablo Bağlı badge, (3) Hotels list page shows 'Detay & Takvim' button and Sheets Sync badge. All data-testid attributes in place. Test hotel: b54305a3-d21b-4758-b86b-3a176c447c63 (Demo Hotel 1).",
+  "mocked_apis": {
+    "has_mocked_apis": false,
+    "mocked_apis_list": []
+  }
+}

@@ -69,11 +69,14 @@ async def list_hotels_availability(
 
     # Get sheet connection info for each hotel
     # Priority: agency-specific connection > hotel-level default connection
+    # tenant_id can be either the user's tenant_id or organization_id
+    # (sheet sync stores snapshots with org_id as tenant_id)
     tenant_id = user.get("tenant_id") or org_id
+    tenant_ids = list({t for t in [tenant_id, org_id] if t})
 
     # First get agency-specific connections
     agency_conns = await db.hotel_portfolio_sources.find({
-        "tenant_id": tenant_id,
+        "tenant_id": {"$in": tenant_ids},
         "hotel_id": {"$in": hotel_ids},
         "agency_id": agency_id,
     }).to_list(2000)
@@ -81,7 +84,7 @@ async def list_hotels_availability(
 
     # Then get default (no agency_id) connections for hotels without agency-specific ones
     default_conns = await db.hotel_portfolio_sources.find({
-        "tenant_id": tenant_id,
+        "tenant_id": {"$in": tenant_ids},
         "hotel_id": {"$in": hotel_ids},
         "agency_id": {"$exists": False},
     }).to_list(2000)
@@ -108,7 +111,7 @@ async def list_hotels_availability(
         pipeline = [
             {
                 "$match": {
-                    "tenant_id": tenant_id,
+                    "tenant_id": {"$in": tenant_ids},
                     "hotel_id": hid,
                     "date": {"$gte": today, "$lte": end_date},
                 }
@@ -187,8 +190,10 @@ async def list_availability_changes(
         return {"items": [], "total": 0}
 
     # Build query for sync runs
+    tenant_id = user.get("tenant_id") or org_id
+    tenant_ids = list({t for t in [tenant_id, org_id] if t})
     query: Dict[str, Any] = {
-        "tenant_id": tenant_id,
+        "tenant_id": {"$in": tenant_ids},
         "hotel_id": {"$in": hotel_ids},
         "status": {"$in": ["success", "partial"]},
     }
@@ -237,6 +242,7 @@ async def get_hotel_availability(
     agency_id = user.get("agency_id")
     org_id = user["organization_id"]
     tenant_id = user.get("tenant_id") or org_id
+    tenant_ids = list({t for t in [tenant_id, org_id] if t})
 
     if not agency_id:
         return {"hotel": None, "grid": [], "dates": [], "room_types": []}
@@ -264,7 +270,7 @@ async def get_hotel_availability(
 
     # Query inventory snapshots
     query: Dict[str, Any] = {
-        "tenant_id": tenant_id,
+        "tenant_id": {"$in": tenant_ids},
         "hotel_id": hotel_id,
         "date": {"$gte": start_date, "$lte": end_date},
     }
@@ -318,7 +324,7 @@ async def get_hotel_availability(
 
     # Get sheet connection info
     conn = await db.hotel_portfolio_sources.find_one({
-        "tenant_id": tenant_id,
+        "tenant_id": {"$in": tenant_ids},
         "hotel_id": hotel_id,
     })
 

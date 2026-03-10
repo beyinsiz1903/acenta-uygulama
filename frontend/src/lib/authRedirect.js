@@ -1,3 +1,5 @@
+import { hasAnyRole } from "./roles";
+
 const STORAGE_KEYS = Object.freeze({
   postLoginRedirect: "acenta_post_login_redirect",
   sessionExpired: "acenta_session_expired",
@@ -39,6 +41,46 @@ function isAllowedPath(pathname, allowedPrefixes) {
   return allowedPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
+function normalizeRedirectPath(path = "") {
+  if (!path) {
+    return "";
+  }
+
+  return String(path).split("#")[0].split("?")[0];
+}
+
+export function isPostLoginRedirectAllowedForUser(user, path) {
+  const normalizedPath = normalizeRedirectPath(path);
+  if (!user || !normalizedPath || !normalizedPath.startsWith("/")) {
+    return false;
+  }
+
+  if (hasAnyRole(user, ["super_admin", "admin"])) {
+    return normalizedPath.startsWith("/app");
+  }
+
+  if (hasAnyRole(user, ["agency_admin", "agency_agent"])) {
+    return normalizedPath.startsWith("/app")
+      && !normalizedPath.startsWith("/app/admin")
+      && !normalizedPath.startsWith("/app/hotel");
+  }
+
+  if (hasAnyRole(user, ["hotel_admin", "hotel_staff"])) {
+    return normalizedPath.startsWith("/app")
+      && !normalizedPath.startsWith("/app/admin")
+      && !normalizedPath.startsWith("/app/agency");
+  }
+
+  if (hasAnyRole(user, ["sales", "ops", "accounting", "b2b_agent"])) {
+    return normalizedPath.startsWith("/app")
+      && !normalizedPath.startsWith("/app/admin")
+      && !normalizedPath.startsWith("/app/agency")
+      && !normalizedPath.startsWith("/app/hotel");
+  }
+
+  return false;
+}
+
 export function rememberPostLoginRedirect(locationOrPath, options = {}) {
   const { overwrite = false } = options;
   const path = normalizePath(locationOrPath);
@@ -74,6 +116,21 @@ export function peekPostLoginRedirect(options = {}) {
 export function consumePostLoginRedirect(fallbackPath, options = {}) {
   const { clearExpired = true, allowedPrefixes = ["/app"] } = options;
   const redirectPath = peekPostLoginRedirect({ allowedPrefixes }) || fallbackPath;
+
+  clearPostLoginRedirect();
+  if (clearExpired) {
+    clearSessionExpired();
+  }
+
+  return redirectPath;
+}
+
+export function consumePostLoginRedirectForUser(user, fallbackPath, options = {}) {
+  const { clearExpired = true, allowedPrefixes = ["/app"] } = options;
+  const rememberedPath = peekPostLoginRedirect({ allowedPrefixes });
+  const redirectPath = isPostLoginRedirectAllowedForUser(user, rememberedPath)
+    ? rememberedPath
+    : fallbackPath;
 
   clearPostLoginRedirect();
   if (clearExpired) {

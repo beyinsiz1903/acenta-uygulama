@@ -6,7 +6,7 @@ import { ArrowRight, CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
 
 import { apiErrorMessage } from "../lib/api";
 import { useCurrentUser, useLogin } from "../hooks/useAuth";
-import { consumePostLoginRedirect, hasSessionExpired } from "../lib/authRedirect";
+import { consumePostLoginRedirectForUser, hasSessionExpired } from "../lib/authRedirect";
 import { redirectByRole } from "../utils/redirectByRole";
 import { loginSchema } from "../lib/validations";
 import { Button } from "../components/ui/button";
@@ -55,7 +55,7 @@ export default function LoginPage() {
         return;
       }
 
-      const redirectPath = consumePostLoginRedirect(redirectByRole(resp.user));
+      const redirectPath = consumePostLoginRedirectForUser(resp.user, redirectByRole(resp.user));
       setHasHandledAuthRedirect(true);
       navigate(redirectPath, { replace: true });
     } catch (err) {
@@ -73,7 +73,7 @@ export default function LoginPage() {
     }
 
     setHasHandledAuthRedirect(true);
-    const redirectPath = consumePostLoginRedirect(redirectByRole(currentUser));
+    const redirectPath = consumePostLoginRedirectForUser(currentUser, redirectByRole(currentUser));
     navigate(redirectPath, { replace: true });
   }, [currentUser, hasHandledAuthRedirect, navigate]);
 

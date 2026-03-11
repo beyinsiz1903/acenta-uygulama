@@ -6,6 +6,7 @@ export const agencyNav = [
     children: [
       { label: "Otellerim", path: "/app/agency/hotels" },
       { label: "Müsaitlik", path: "/app/agency/availability" },
+      { label: "Sheet Bağlantıları", path: "/app/agency/sheets" },
       { label: "Rezervasyonlarım", path: "/app/agency/bookings" },
       { label: "Mutabakat", path: "/app/agency/settlements" },
       { label: "Yardım", path: "/app/agency/help" },

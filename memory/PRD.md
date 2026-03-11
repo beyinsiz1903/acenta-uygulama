@@ -10,80 +10,88 @@ Syroce is a Travel Agency Operating System that pivoted to focus on building a *
 4. **Stayover Report**: Dedicated stayover list with count and guest details
 5. **Reservation Enrichment**: Flight and tour details in reservations
 6. **Accounting & Invoicing**: Payments, cari hesap, invoice management with KDV
-7. **Automatic Integrations**: Flight API integration (future)
+7. **Flight API Integration**: Automatic flight data lookup via AviationStack API
 
 ## Tech Stack
-- **Backend**: FastAPI, Motor (async MongoDB), Pydantic, passlib
+- **Backend**: FastAPI, Motor (async MongoDB), Pydantic, passlib, httpx
 - **Frontend**: React, React Router, Tailwind CSS, Shadcn/UI, Axios, Sonner
 - **Database**: MongoDB (MongoDB Atlas in production)
 - **Auth**: Cookie-based with httpOnly cookies, JWT
+- **External APIs**: AviationStack (flight lookup)
 
 ## Architecture
 ```
 /app
 ├── backend/app/routers/
-│   ├── agency_pms.py              # PMS operations (dashboard, rooms, check-in/out, stayovers)
-│   └── agency_pms_accounting.py   # Accounting & invoicing (folios, charges, payments, invoices)
+│   ├── agency_pms.py              # PMS operations + flight lookup
+│   └── agency_pms_accounting.py   # Accounting & invoicing
 ├── frontend/src/pages/
-│   ├── PMSDashboardPage.jsx       # PMS dashboard with 5 stat cards, 5 tabs
-│   ├── PMSRoomsPage.jsx           # Room management (CRUD, floor grouping)
-│   ├── PMSAccountingPage.jsx      # Accounting (folios, charges, payments)
-│   └── PMSInvoicesPage.jsx        # Invoice list and management
-├── frontend/src/nav/agencyNav.js  # Agency sidebar navigation
-└── frontend/src/lib/appNavigation.js # App-wide navigation config
+│   ├── PMSDashboardPage.jsx       # PMS dashboard with flight auto-fill
+│   ├── PMSRoomsPage.jsx           # Room management
+│   ├── PMSAccountingPage.jsx      # Accounting
+│   └── PMSInvoicesPage.jsx        # Invoice management
 ```
 
 ## Key DB Collections
-- **reservations**: Guest reservations with PMS status
+- **reservations**: Guest reservations with PMS status, flight info, tour info
 - **pms_rooms**: Hotel room inventory
 - **pms_transactions**: Charges and payments (folio transactions)
 - **pms_invoices**: Generated invoices
 
 ## API Endpoints
 ### PMS Operations
-- `GET /api/agency/pms/dashboard` - Dashboard summary (arrivals, in-house, stayover, departures, occupancy)
+- `GET /api/agency/pms/dashboard` - Dashboard summary
 - `GET /api/agency/pms/arrivals` - Today's arrivals
 - `GET /api/agency/pms/in-house` - In-house guests
-- `GET /api/agency/pms/stayovers` - Stayover guests (mid-stay, not arriving/departing today)
+- `GET /api/agency/pms/stayovers` - Stayover guests
 - `GET /api/agency/pms/departures` - Today's departures
 - `GET/POST/PUT/DELETE /api/agency/pms/rooms` - Room CRUD
 - `POST /api/agency/pms/reservations/{id}/check-in` - Check in
 - `POST /api/agency/pms/reservations/{id}/check-out` - Check out
 
+### Flight Integration (NEW - 2026-03-11)
+- `GET /api/agency/pms/flights/lookup?flight_no=TK1234&flight_date=2026-03-11` - Lookup flight info from AviationStack
+- `POST /api/agency/pms/reservations/{id}/auto-flight` - Auto-fill reservation flight info from API
+
 ### Accounting & Invoicing
 - `GET /api/agency/pms/accounting/summary` - Financial summary
-- `GET /api/agency/pms/accounting/folios` - List folios (cari hesaplar)
-- `GET /api/agency/pms/accounting/folios/{id}` - Folio detail with transactions
+- `GET /api/agency/pms/accounting/folios` - List folios
 - `POST /api/agency/pms/accounting/folios/{id}/charge` - Post charge
 - `POST /api/agency/pms/accounting/folios/{id}/payment` - Post payment
-- `DELETE /api/agency/pms/accounting/transactions/{id}` - Delete transaction
 - `GET/POST /api/agency/pms/accounting/invoices` - Invoice CRUD
-- `PUT /api/agency/pms/accounting/invoices/{id}` - Update invoice status
 
 ## Completed Features
-- [x] PMS Dashboard (stats, arrivals/in-house/departures/all reservations tabs)
+- [x] PMS Dashboard (stats, arrivals/in-house/departures/stayovers/all tabs)
 - [x] Room Management (CRUD, floor grouping, status management)
 - [x] Check-in / Check-out flow
 - [x] Reservation enrichment (flight info, tour info)
 - [x] Hotel selector for multi-hotel agencies
 - [x] Accounting Module (folios, charges, payments, balance tracking)
-- [x] Invoice Management (create, issue, mark paid, cancel, with KDV calculation)
-- [x] Navigation with PMS section (4 pages)
-- [x] Stayover (Konaklama) list - dedicated endpoint + dashboard stat + tab (2026-03-11)
+- [x] Invoice Management (create, issue, mark paid, cancel, KDV)
+- [x] Stayover (Konaklama) list (2026-03-11)
+- [x] Flight API Integration - AviationStack (2026-03-11)
+  - Backend: Flight lookup endpoint + auto-fill endpoint
+  - Frontend: "Otomatik Doldur" buttons in reservation detail edit mode
+  - Flight status display in view mode
+  - Graceful error handling when API key not configured
 
 ## Remaining Backlog
-### P2 - Flight API Integration
-- Automatic flight data enrichment via external API
+### P0 - AviationStack API Key Configuration
+- User needs to obtain and configure AVIATIONSTACK_API_KEY in backend/.env
+- Free plan available at https://aviationstack.com/signup/free
 
-### P3 - Agency Subscription Management
+### P2 - Agency Subscription Management
 - Subscription duration and access control based on expiry
 
-### P4 - Direct Password Management
+### P3 - Direct Password Management
 - Superadmin can create users and set passwords directly
 
-### P5 - Refactoring
+### P4 - Refactoring
 - Centralize data normalization in agency_hotels.py
 - Decompose AgencyHotelDetailPage.jsx
+
+## Environment Variables
+- `AVIATIONSTACK_API_KEY` - AviationStack API key for flight lookup (backend/.env)
 
 ## Test Credentials
 - **Agency Admin**: agency1@demo.test / agency123

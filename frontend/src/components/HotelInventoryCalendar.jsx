@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Loader2, AlertCircle, Ban } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, AlertCircle, Ban, CalendarPlus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { api, apiErrorMessage } from "../lib/api";
+import { QuickReservationDialog } from "./QuickReservationDialog";
 
 const WEEKDAYS_TR = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 
@@ -34,7 +35,7 @@ function monthLabel(year, month) {
   return `${labels[month]} ${year}`;
 }
 
-export function HotelInventoryCalendar({ hotelId }) {
+export function HotelInventoryCalendar({ hotelId, hotelName }) {
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -43,6 +44,7 @@ export function HotelInventoryCalendar({ hotelId }) {
   const [data, setData] = useState(null);
   const [selectedRoomType, setSelectedRoomType] = useState("all");
   const [expandedDate, setExpandedDate] = useState(null);
+  const [reservationDialog, setReservationDialog] = useState({ open: false, roomType: "", price: 0, allotment: 0, date: "" });
 
   useEffect(() => {
     if (!hotelId) return;
@@ -113,6 +115,14 @@ export function HotelInventoryCalendar({ hotelId }) {
     const allStopSale = filtered.every((r) => r.stop_sale);
 
     return { minPrice: isFinite(minPrice) ? minPrice : null, totalAllotment, anyStopSale, allStopSale, rooms: filtered };
+  }
+
+  function openReservation(roomType, price, allotment, dateStr) {
+    setReservationDialog({ open: true, roomType, price, allotment, date: dateStr });
+  }
+
+  function handleReservationSuccess() {
+    loadData(); // refresh calendar data after booking
   }
 
   function getCellColor(summary) {
@@ -278,6 +288,7 @@ export function HotelInventoryCalendar({ hotelId }) {
                 dateStr={expandedDate}
                 rooms={selectedRoomType === "all" ? gridByDate[expandedDate] : gridByDate[expandedDate].filter((r) => r.room_type === selectedRoomType)}
                 onClose={() => setExpandedDate(null)}
+                onReserve={openReservation}
               />
             )}
 
@@ -299,11 +310,23 @@ export function HotelInventoryCalendar({ hotelId }) {
           </>
         )}
       </CardContent>
+
+      <QuickReservationDialog
+        open={reservationDialog.open}
+        onOpenChange={(open) => setReservationDialog((prev) => ({ ...prev, open }))}
+        hotelId={hotelId}
+        hotelName={hotelName || data?.hotel?.name || ""}
+        roomType={reservationDialog.roomType}
+        dateStr={reservationDialog.date}
+        price={reservationDialog.price}
+        allotment={reservationDialog.allotment}
+        onSuccess={handleReservationSuccess}
+      />
     </Card>
   );
 }
 
-function ExpandedDayDetail({ dateStr, rooms, onClose }) {
+function ExpandedDayDetail({ dateStr, rooms, onClose, onReserve }) {
   const dateParts = dateStr.split("-");
   const displayDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
 
@@ -343,6 +366,19 @@ function ExpandedDayDetail({ dateStr, rooms, onClose }) {
                 {r.allotment != null ? `${r.allotment} oda` : "-"}
               </span>
             </div>
+            {/* Reserve button */}
+            {!r.stop_sale && (r.allotment || 0) > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-2 h-6 text-[10px] w-full border-primary/30 text-primary hover:bg-primary/5"
+                onClick={() => onReserve(r.room_type, r.price, r.allotment, dateStr)}
+                data-testid={`reserve-btn-${r.room_type}-${dateStr}`}
+              >
+                <CalendarPlus className="h-3 w-3 mr-1" />
+                Rezervasyon Yap
+              </Button>
+            )}
           </div>
         ))}
       </div>

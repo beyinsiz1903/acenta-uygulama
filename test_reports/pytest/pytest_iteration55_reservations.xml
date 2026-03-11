@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="2" failures="1" skipped="3" tests="18" time="31.091" timestamp="2026-03-10T23:57:34.228839+00:00" hostname="agent-env-0292e01d-3363-48e6-8088-731fac990487"><testcase classname="tests.test_iteration55_reservations.TestReservationAuth" name="test_quick_reservation_requires_auth" time="1.348" /><testcase classname="tests.test_iteration55_reservations.TestReservationAuth" name="test_list_reservations_requires_auth" time="1.272" /><testcase classname="tests.test_iteration55_reservations.TestReservationAuth" name="test_cancel_reservation_requires_auth" time="1.345" /><testcase classname="tests.test_iteration55_reservations.TestAllotmentBaseline" name="test_get_initial_allotment" time="1.713" /><testcase classname="tests.test_iteration55_reservations.TestQuickReservation" name="test_create_quick_reservation" time="4.328"><error message="failed on setup with &quot;pymongo.errors.AutoReconnect: localhost:27017: connection closed&quot;">/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:932: in command
+    return command(
+/root/.venv/lib/python3.11/site-packages/pymongo/network.py:181: in command
+    reply = receive_message(conn, request_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/network.py:247: in receive_message
+    length, _, response_to, op_code = _UNPACK_HEADER(_receive_data_on_socket(conn, 16, deadline))
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/network.py:336: in _receive_data_on_socket
+    raise OSError("connection closed")
+E   OSError: connection closed
+
+The above exception was the direct cause of the following exception:
+/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:321: in seed_default_org_and_users
+    await test_db.users.insert_one(
+/usr/local/lib/python3.11/concurrent/futures/thread.py:58: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:671: in insert_one
+    self._insert_one(
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:611: in _insert_one
+    self.__database.client._retryable_write(acknowledged, _insert_command, session)
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:1568: in _retryable_write
+    return self._retry_with_session(retryable, func, s, None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:1413: in _retry_with_session
+    return self._retry_internal(retryable, func, session, bulk)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/_csot.py:108: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:1460: in _retry_internal
+    return func(session, conn, retryable)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:599: in _insert_command
+    result = conn.command(
+/root/.venv/lib/python3.11/site-packages/pymongo/helpers.py:315: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:960: in command
+    self._raise_connection_failure(error)
+/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:1134: in _raise_connection_failure
+    _raise_connection_failure(self.address, error)
+/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:406: in _raise_connection_failure
+    raise AutoReconnect(msg) from error
+E   pymongo.errors.AutoReconnect: localhost:27017: connection closed</error></testcase><testcase classname="tests.test_iteration55_reservations.TestQuickReservation" name="test_reservation_stored_in_db" time="1.168"><skipped type="pytest.skip" message="No reservation created in previous test">/app/backend/tests/test_iteration55_reservations.py:166: No reservation created in previous test</skipped></testcase><testcase classname="tests.test_iteration55_reservations.TestAllotmentDecrement" name="test_allotment_decremented" time="1.360"><failure message="AssertionError: Allotment not decremented on 2026-03-25&#10;assert 7 &lt; 7&#10; +  where 7 = pytest.initial_allotment">backend/tests/test_iteration55_reservations.py:226: in test_allotment_decremented
+    assert new_allotment &lt; pytest.initial_allotment, f"Allotment not decremented on {date}"
+E   AssertionError: Allotment not decremented on 2026-03-25
+E   assert 7 &lt; 7
+E    +  where 7 = pytest.initial_allotment</failure></testcase><testcase classname="tests.test_iteration55_reservations.TestWriteBackQueue" name="test_writeback_queued" time="1.166" /><testcase classname="tests.test_iteration55_reservations.TestListReservations" name="test_list_all_reservations" time="1.568" /><testcase classname="tests.test_iteration55_reservations.TestListReservations" name="test_list_reservations_by_hotel" time="1.338" /><testcase classname="tests.test_iteration55_reservations.TestReservationValidation" name="test_invalid_date_format" time="1.311" /><testcase classname="tests.test_iteration55_reservations.TestReservationValidation" name="test_checkout_before_checkin" time="1.305" /><testcase classname="tests.test_iteration55_reservations.TestReservationValidation" name="test_unavailable_date_stop_sale" time="1.288" /><testcase classname="tests.test_iteration55_reservations.TestCancelReservation" name="test_cancel_nonexistent_reservation" time="1.422" /><testcase classname="tests.test_iteration55_reservations.TestCancelReservation" name="test_cancel_reservation" time="1.190"><skipped type="pytest.skip" message="No reservation created in previous test">/app/backend/tests/test_iteration55_reservations.py:369: No reservation created in previous test</skipped></testcase><testcase classname="tests.test_iteration55_reservations.TestCancelReservation" name="test_already_cancelled_reservation" time="4.655"><error message="failed on setup with &quot;pymongo.errors.AutoReconnect: localhost:27017: connection closed&quot;">/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:932: in command
+    return command(
+/root/.venv/lib/python3.11/site-packages/pymongo/network.py:181: in command
+    reply = receive_message(conn, request_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/network.py:247: in receive_message
+    length, _, response_to, op_code = _UNPACK_HEADER(_receive_data_on_socket(conn, 16, deadline))
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/network.py:336: in _receive_data_on_socket
+    raise OSError("connection closed")
+E   OSError: connection closed
+
+The above exception was the direct cause of the following exception:
+/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+backend/tests/conftest.py:373: in seed_default_org_and_users
+    await test_db.memberships.update_one(
+/usr/local/lib/python3.11/concurrent/futures/thread.py:58: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:1088: in update_one
+    self._update_retryable(
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:883: in _update_retryable
+    return self.__database.client._retryable_write(
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:1568: in _retryable_write
+    return self._retry_with_session(retryable, func, s, None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:1413: in _retry_with_session
+    return self._retry_internal(retryable, func, session, bulk)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/_csot.py:108: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:1460: in _retry_internal
+    return func(session, conn, retryable)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:864: in _update
+    return self._update(
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:818: in _update
+    result = conn.command(
+/root/.venv/lib/python3.11/site-packages/pymongo/helpers.py:315: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:960: in command
+    self._raise_connection_failure(error)
+/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:1134: in _raise_connection_failure
+    _raise_connection_failure(self.address, error)
+/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:406: in _raise_connection_failure
+    raise AutoReconnect(msg) from error
+E   pymongo.errors.AutoReconnect: localhost:27017: connection closed</error></testcase><testcase classname="tests.test_iteration55_reservations.TestAllotmentRestore" name="test_allotment_restored_after_cancel" time="1.531" /><testcase classname="tests.test_iteration55_reservations.TestReservationStatusAfterCancel" name="test_cancelled_status_in_list" time="1.160"><skipped type="pytest.skip" message="No reservation created">/app/backend/tests/test_iteration55_reservations.py:434: No reservation created</skipped></testcase></testsuite></testsuites>

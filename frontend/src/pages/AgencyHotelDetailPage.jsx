@@ -253,7 +253,7 @@ export default function AgencyHotelDetailPage() {
       </Card>
 
       {/* Inventory Calendar View */}
-      <HotelInventoryCalendar hotelId={hotelId} />
+      <HotelInventoryCalendar hotelId={hotelId} hotelName={hotel?.name || hotel?.hotel_name || ""} />
 
       {/* Search Form */}
       <Card>

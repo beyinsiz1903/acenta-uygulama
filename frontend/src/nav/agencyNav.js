@@ -6,6 +6,8 @@ export const agencyNav = [
     children: [
       { label: "PMS Paneli", path: "/app/agency/pms" },
       { label: "Oda Yonetimi", path: "/app/agency/pms/rooms" },
+      { label: "Muhasebe", path: "/app/agency/pms/accounting" },
+      { label: "Faturalar", path: "/app/agency/pms/invoices" },
     ],
   },
   {

@@ -6,12 +6,14 @@ import {
   DollarSign,
   DoorOpen,
   Eye,
+  FileText,
   LayoutGrid,
   Megaphone,
   Settings,
   ShieldCheck,
   Ticket,
   Users,
+  Wallet,
   Zap,
 } from "lucide-react";
 import { normalizeRoles } from "./roles";
@@ -114,6 +116,28 @@ export const APP_NAV_SECTIONS = [
         },
         isCore: true,
         modeKey: "oda_yonetimi",
+        minMode: "lite",
+      },
+      {
+        key: "pms-accounting",
+        label: "Muhasebe",
+        icon: Wallet,
+        pathByScope: {
+          agency: "/app/agency/pms/accounting",
+        },
+        isCore: true,
+        modeKey: "muhasebe",
+        minMode: "lite",
+      },
+      {
+        key: "pms-invoices",
+        label: "Faturalar",
+        icon: FileText,
+        pathByScope: {
+          agency: "/app/agency/pms/invoices",
+        },
+        isCore: true,
+        modeKey: "faturalar",
         minMode: "lite",
       },
     ],

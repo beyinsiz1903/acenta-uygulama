@@ -13,6 +13,8 @@ MODULE_ALIASES = {
     "oteller": {"oteller", "otellerim", "urunler"},
     "musaitlik": {"musaitlik", "musaitlik_takibi"},
     "turlar": {"turlar", "turlarimiz"},
+    "pms_paneli": {"pms_paneli", "pms", "pms_dashboard"},
+    "oda_yonetimi": {"oda_yonetimi", "rooms", "room_management"},
     "sheet_baglantilari": {
         "sheet_baglantilari",
         "google_sheets",

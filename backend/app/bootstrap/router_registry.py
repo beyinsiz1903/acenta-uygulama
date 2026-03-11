@@ -71,6 +71,7 @@ from app.routers.agency_profile import router as agency_profile_router
 from app.routers.agency_sheets import router as agency_sheets_router
 from app.routers.agency_writeback import router as agency_writeback_router
 from app.routers.agency_reservations import router as agency_reservations_router
+from app.routers.agency_pms import router as agency_pms_router
 from app.routers.agency_contracts import router as agency_contracts_router
 from app.routers.ai_assistant import router as ai_assistant_router
 from app.routers.approval_tasks import router as approval_tasks_router
@@ -362,6 +363,7 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(agency_booking_router)
     app.include_router(agency_writeback_router)
     app.include_router(agency_reservations_router)
+    app.include_router(agency_pms_router)
     app.include_router(agency_sheets_router)
     app.include_router(agency_profile_router)
     app.include_router(agency_settlements_router)

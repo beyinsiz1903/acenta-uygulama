@@ -196,6 +196,8 @@ const AgencyBookingsListPage = lazy(() => import("./pages/AgencyBookingsListPage
 const AgencySettlementsPage = lazy(() => import("./pages/AgencySettlementsPage"));
 const AgencyHelpPage = lazy(() => import("./pages/AgencyHelpPage"));
 const AgencySheetConnectionsPage = lazy(() => import("./pages/AgencySheetConnectionsPage"));
+const PMSDashboardPage = lazy(() => import("./pages/PMSDashboardPage"));
+const PMSRoomsPage = lazy(() => import("./pages/PMSRoomsPage"));
 const B2BPortalPage = lazy(() => import("./pages/B2BPortalPage"));
 const OpsGuestCasesPage = lazy(() => import("./pages/OpsGuestCasesPage"));
 const OpsBookingDetailPage = lazy(() => import("./pages/ops/OpsBookingDetailPage"));
@@ -483,7 +485,9 @@ function App() {
           }
         >
           <Route element={<AgencyLayout />}>
-            <Route index element={<Navigate to="bookings" replace />} />
+            <Route index element={<Navigate to="pms" replace />} />
+            <Route path="pms" element={<PMSDashboardPage />} />
+            <Route path="pms/rooms" element={<PMSRoomsPage />} />
             <Route path="hotels" element={<AgencyHotelsPage />} />
             <Route path="hotels/:hotelId" element={<AgencyHotelDetailPage />} />
             <Route path="hotels/:hotelId/search" element={<AgencyHotelSearchPage />} />

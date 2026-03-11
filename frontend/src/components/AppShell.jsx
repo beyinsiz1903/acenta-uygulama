@@ -344,17 +344,13 @@ function AppShellInner() {
     return items.filter((it) => {
       if (it.visibleScopes && !it.visibleScopes.includes(userScope)) return false;
       if (!it.to) return false;
-      // Feature flag filter
       if (!it.isCore && it.feature && !(!featuresLoading && hasFeature(it.feature))) return false;
-      // Mode filter: item's minMode must be <= current mode
       if (it.minMode) {
         const itemLevel = MODE_ORDER_MAP[it.minMode] ?? 0;
         if (itemLevel > currentModeLevel) return false;
       }
-      // Server-side hidden items check
       if (!it.isCore && it.modeKey && hiddenNavItems.includes(it.modeKey)) return false;
       if (!isAgencyModuleVisible(it)) return false;
-      // User-level screen permissions (only for agency_agent)
       if (userAllowedScreens && userAllowedScreens.length > 0 && it.modeKey) {
         if (!userAllowedScreens.includes(it.modeKey)) return false;
       }

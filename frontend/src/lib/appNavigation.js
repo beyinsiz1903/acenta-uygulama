@@ -1,8 +1,10 @@
 import {
   BarChart3,
+  BedDouble,
   Building2,
   CreditCard,
   DollarSign,
+  DoorOpen,
   Eye,
   LayoutGrid,
   Megaphone,
@@ -84,6 +86,34 @@ export const APP_NAV_SECTIONS = [
         isCore: true,
         feature: "reports",
         modeKey: "raporlar",
+        minMode: "lite",
+      },
+    ],
+  },
+  {
+    group: "PMS",
+    showInSidebar: true,
+    items: [
+      {
+        key: "pms-dashboard",
+        label: "PMS Paneli",
+        icon: BedDouble,
+        pathByScope: {
+          agency: "/app/agency/pms",
+        },
+        isCore: true,
+        modeKey: "pms_paneli",
+        minMode: "lite",
+      },
+      {
+        key: "pms-rooms",
+        label: "Oda Yonetimi",
+        icon: DoorOpen,
+        pathByScope: {
+          agency: "/app/agency/pms/rooms",
+        },
+        isCore: true,
+        modeKey: "oda_yonetimi",
         minMode: "lite",
       },
     ],

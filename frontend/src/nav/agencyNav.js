@@ -2,6 +2,13 @@
 
 export const agencyNav = [
   {
+    label: "PMS",
+    children: [
+      { label: "PMS Paneli", path: "/app/agency/pms" },
+      { label: "Oda Yonetimi", path: "/app/agency/pms/rooms" },
+    ],
+  },
+  {
     label: "B2B",
     children: [
       { label: "Otellerim", path: "/app/agency/hotels" },

@@ -13,10 +13,12 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
 7. Granular User Permissions (screen-level access control)
 8. UI/UX: Billing screen hidden from agency users
 9. **Inventory Calendar View**: Visual calendar showing room type, price, and allotment per date
-10. **Reservation Write-Back**: Quick reservation from calendar → DB + Google Sheet + allotment management
+10. **Reservation Write-Back**: Quick reservation from calendar -> DB + Google Sheet + allotment management
+11. **Automatic Google Sheets Sync**: Background scheduler for periodic sync + write-back processing
+12. **Multi-Agency Google Sheets Credentials**: Each agency can use their own Google Service Account
 
 ## Tech Stack
-- **Backend**: FastAPI, Motor (async MongoDB), passlib, JWT auth
+- **Backend**: FastAPI, Motor (async MongoDB), passlib, JWT auth, APScheduler
 - **Frontend**: React, React Router, Tailwind CSS, Shadcn/UI, Axios, Sonner
 - **Database**: MongoDB Atlas
 - **Integrations**: Google Sheets API, Google Drive API
@@ -35,7 +37,7 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
 - [x] Stop-sell date filtering fix
 - [x] Hotel detail page crash fix
 - [x] Turkish character encoding fix
-- [x] Hotel status correctly shows "Satışa Açık"
+- [x] Hotel status correctly shows "Satisa Acik"
 - [x] **Inventory Calendar View** — 2026-03-10
 - [x] **Reservation Write-Back** — 2026-03-10
   - Quick reservation from calendar (POST /api/agency/reservations/quick)
@@ -44,19 +46,37 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
   - Auto-decrement allotment in hotel_inventory_snapshots
   - Write-back job queued to sheet_writeback_queue (for Google Sheet sync)
   - QuickReservationDialog with hotel/room summary, price calculation, form
-  - "Rezervasyon Yap" buttons on calendar day detail cards
-  - Testing: Backend 100%, Frontend 95% PASS (iteration_55)
+- [x] **Automatic Google Sheets Sync** — 2026-03-11
+  - Background scheduler running via APScheduler (backend-scheduler process)
+  - Portfolio sync every 5 minutes (configurable per connection)
+  - Write-back processing every 30 seconds
+  - API: GET /api/agency/sheets/sync-status (sync overview)
+  - API: GET /api/agency/sheets/sync-history (paginated sync runs)
+  - API: PATCH /api/agency/sheets/connections/{id}/settings (toggle sync, change interval)
+  - Frontend: Auto-sync toggle and interval selector per connection
+  - Frontend: Sync status overview cards
+  - Frontend: Expandable sync history panel
+- [x] **Multi-Agency Google Sheets Credentials** — 2026-03-11
+  - API: POST /api/agency/sheets/credentials (save agency's own service account)
+  - API: GET /api/agency/sheets/credentials/status (check credential source)
+  - API: DELETE /api/agency/sheets/credentials (remove, fallback to global)
+  - Frontend: Credentials management section with active source indicator
+  - Frontend: JSON textarea form for pasting Service Account credentials
+  - Validation: JSON format, required fields (client_email, private_key)
+  - In-memory caching via sheets_provider.set_db_config()
+  - Persistent storage in platform_config collection
 
 ## Prioritized Backlog
 
-### P1 (Next Up)
+### P0 (Next Up)
 - [ ] User-Based Screen Permissions: Granular permission model per user
 
-### P2
+### P1
 - [ ] Refine Pricing Page (agentis.com.tr inspiration)
 - [ ] "Otellerim" screen: Display availability (kontenjan) field
-- [ ] Automatic Google Sheets Sync (background scheduler)
-- [ ] Process pending write-back queue (scheduler to execute queued sheet writes)
+
+### P2
+- [ ] Process pending write-back queue (improve retry/monitoring)
 
 ## Key Credentials
 - **Superadmin**: admin@acenta.test / admin123
@@ -67,32 +87,50 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
 /app
 ├── backend/
 │   └── app/
+│       ├── bootstrap/
+│       │   └── scheduler_app.py (APScheduler: portfolio sync, writeback, reports, ops)
 │       ├── routers/
 │       │   ├── agency.py
-│       │   ├── agency_availability.py (tenant_id $in query fix)
-│       │   ├── agency_reservations.py (NEW: quick reservation CRUD)
-│       │   ├── agency_writeback.py (write-back status/queue)
+│       │   ├── agency_availability.py
+│       │   ├── agency_reservations.py
+│       │   ├── agency_writeback.py
 │       │   ├── agency_booking.py
-│       │   └── agency_sheets.py
+│       │   └── agency_sheets.py (UPDATED: credentials CRUD, sync-status, sync-history, settings)
 │       └── services/
-│           ├── sheet_writeback_service.py (write-back + allotment mgmt)
+│           ├── hotel_portfolio_sync_service.py (full sync engine)
+│           ├── sheet_writeback_service.py (write-back + allotment)
 │           ├── google_sheets_client.py
-│           └── sheets_provider.py
+│           └── sheets_provider.py (tenant-based credential caching)
 └── frontend/
     └── src/
         ├── components/
-        │   ├── HotelInventoryCalendar.jsx (calendar + reserve buttons)
-        │   └── QuickReservationDialog.jsx (NEW: reservation form dialog)
+        │   ├── HotelInventoryCalendar.jsx
+        │   └── QuickReservationDialog.jsx
+        ├── nav/
+        │   └── agencyNav.js (UPDATED: Sheet Baglantilari link added)
         └── pages/
-            ├── AgencyHotelDetailPage.jsx (calendar integrated)
-            └── AgencyHotelsPage.jsx (Detay & Takvim button)
+            ├── AgencySheetConnectionsPage.jsx (REWRITTEN: credentials, sync status/history, settings)
+            └── AgencyHotelDetailPage.jsx
 ```
 
 ## Key DB Collections
 - `hotels`: Hotel definitions
 - `hotel_inventory_snapshots`: Sheet-synced inventory (date, room_type, price, allotment, stop_sale)
-- `hotel_portfolio_sources`: Google Sheets connection config per hotel
+- `hotel_portfolio_sources`: Google Sheets connection config per hotel (with sync_enabled, sync_interval_minutes)
 - `reservations`: Quick reservations from calendar (with pnr, idempotency_key)
 - `sheet_writeback_queue`: Queued write-back jobs for Google Sheets
 - `sheet_writeback_markers`: Idempotency markers for write-back dedup
+- `sheet_sync_runs`: Sync run history (status, rows_read, upserted, duration_ms)
+- `platform_config`: Agency-specific Google credentials (config_key: google_service_account_agency_{agency_id})
 - `agencies`, `users`, `bookings`, `booking_drafts`
+
+## Key API Endpoints
+- `GET /api/agency/availability/{hotel_id}`: Fetches aggregated inventory data for calendar
+- `POST /api/agency/reservations/quick`: Creates reservation, decrements allotment, triggers write-back
+- `POST /api/agency/sheets/sync/{connection_id}`: Triggers manual sync
+- `GET /api/agency/sheets/sync-status`: Auto-sync overview
+- `GET /api/agency/sheets/sync-history`: Sync run history
+- `PATCH /api/agency/sheets/connections/{id}/settings`: Update sync settings
+- `POST /api/agency/sheets/credentials`: Save agency Google credentials
+- `GET /api/agency/sheets/credentials/status`: Check credential source
+- `DELETE /api/agency/sheets/credentials`: Remove agency credentials

@@ -1137,24 +1137,36 @@ export default function AgencyHotelsPage() {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        {filtered.map((hotel) => (
-          <Card key={hotel.hotel_id} className="rounded-2xl border bg-card shadow-sm" data-testid={`agency-hotel-card-${hotel.hotel_id}`}>
-            <CardContent className="p-5 flex items-start justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="text-lg font-semibold" data-testid={`agency-hotel-name-${hotel.hotel_id}`}>{hotel.hotel_name || "-"}</div>
-                  <Badge
-                    className={
-                      hotel.status_label === "Satışa Açık"
-                        ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
-                        : hotel.status_label === "Kısıtlı"
-                        ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
-                        : "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20"
-                    }
-                    data-testid={`agency-hotel-status-${hotel.hotel_id}`}
-                  >
-                    {hotel.status_label || "-"}
-                  </Badge>
+        {filtered.map((hotel) => {
+          const alloc = hotel.allocation_available;
+          const allocLabel = alloc == null ? "-" : String(Math.floor(alloc));
+          const allocColor =
+            alloc == null
+              ? "bg-slate-100 text-slate-500 border-slate-200"
+              : alloc > 5
+              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+              : alloc > 0
+              ? "bg-amber-50 text-amber-700 border-amber-200"
+              : "bg-red-50 text-red-700 border-red-200";
+
+          return (
+            <Card key={hotel.hotel_id} className="rounded-2xl border bg-card shadow-sm" data-testid={`agency-hotel-card-${hotel.hotel_id}`}>
+              <CardContent className="p-5 flex items-start justify-between gap-4">
+                <div className="space-y-2 flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="text-lg font-semibold" data-testid={`agency-hotel-name-${hotel.hotel_id}`}>{hotel.hotel_name || "-"}</div>
+                    <Badge
+                      className={
+                        hotel.status_label === "Satışa Açık"
+                          ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                          : hotel.status_label === "Kısıtlı"
+                          ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                          : "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20"
+                      }
+                      data-testid={`agency-hotel-status-${hotel.hotel_id}`}
+                    >
+                      {hotel.status_label || "-"}
+                    </Badge>
                     {hotel.sheet_managed_inventory && (
                       <Badge
                         variant="outline"
@@ -1164,53 +1176,62 @@ export default function AgencyHotelsPage() {
                         Sheets Sync
                       </Badge>
                     )}
-                </div>
-                <div className="text-sm text-muted-foreground" data-testid={`agency-hotel-location-${hotel.hotel_id}`}>
-                  {hotel.location || "-"}
-                </div>
-                  {hotel.sheet_managed_inventory && (
-                    <div
-                      className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-200"
-                      data-testid={`agency-hotel-sheet-sync-${hotel.hotel_id}`}
-                    >
-                      Sync kontenjanı: <strong>{hotel.allocation_available ?? 0}</strong>
-                      {hotel.sheet_inventory_date ? ` · Tarih: ${hotel.sheet_inventory_date}` : ""}
-                      {hotel.sheet_last_sync_at ? ` · Son sync: ${new Date(hotel.sheet_last_sync_at).toLocaleString("tr-TR")}` : ""}
-                    </div>
-                  )}
-              </div>
+                  </div>
+                  <div className="text-sm text-muted-foreground" data-testid={`agency-hotel-location-${hotel.hotel_id}`}>
+                    {hotel.location || "-"}
+                  </div>
 
-              <div className="flex flex-col gap-2 shrink-0">
-                <Button
-                  className="px-3 py-1.5 text-xs font-medium"
-                  onClick={() => navigate(`/app/agency/hotels/${hotel.hotel_id}/search`)}
-                  disabled={!isLinkActive(hotel) || hotel.status_label === "Satışa Kapalı"}
-                  data-testid={`agency-hotel-create-booking-${hotel.hotel_id}`}
-                >
-                  Rezervasyon Oluştur
-                </Button>
-                <Button
-                  variant="outline"
-                  className="px-3 py-1.5 text-xs font-medium"
-                  type="button"
-                  onClick={() => goHotelBookings(hotel.hotel_id)}
-                  data-testid={`agency-hotel-bookings-${hotel.hotel_id}`}
-                >
-                  Rezervasyonlar
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="px-3 py-1.5 text-xs font-medium"
-                  type="button"
-                  onClick={() => goHotelDetail(hotel.hotel_id)}
-                  data-testid={`agency-hotel-detail-${hotel.hotel_id}`}
-                >
-                  Detay & Takvim
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                  {/* Kontenjan Bilgisi */}
+                  <div className="flex items-center gap-3 flex-wrap" data-testid={`agency-hotel-availability-row-${hotel.hotel_id}`}>
+                    <div className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold ${allocColor}`} data-testid={`agency-hotel-availability-${hotel.hotel_id}`}>
+                      <span>Kontenjan:</span>
+                      <span className="text-sm font-bold" data-testid={`agency-hotel-availability-value-${hotel.hotel_id}`}>{allocLabel}</span>
+                    </div>
+                    {hotel.sheet_managed_inventory && hotel.sheet_inventory_date && (
+                      <span className="text-xs text-muted-foreground" data-testid={`agency-hotel-inv-date-${hotel.hotel_id}`}>
+                        Tarih: {hotel.sheet_inventory_date}
+                      </span>
+                    )}
+                    {hotel.sheet_managed_inventory && hotel.sheet_last_sync_at && (
+                      <span className="text-xs text-muted-foreground" data-testid={`agency-hotel-last-sync-${hotel.hotel_id}`}>
+                        Son sync: {new Date(hotel.sheet_last_sync_at).toLocaleString("tr-TR")}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2 shrink-0">
+                  <Button
+                    className="px-3 py-1.5 text-xs font-medium"
+                    onClick={() => navigate(`/app/agency/hotels/${hotel.hotel_id}/search`)}
+                    disabled={!isLinkActive(hotel) || hotel.status_label === "Satışa Kapalı"}
+                    data-testid={`agency-hotel-create-booking-${hotel.hotel_id}`}
+                  >
+                    Rezervasyon Oluştur
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="px-3 py-1.5 text-xs font-medium"
+                    type="button"
+                    onClick={() => goHotelBookings(hotel.hotel_id)}
+                    data-testid={`agency-hotel-bookings-${hotel.hotel_id}`}
+                  >
+                    Rezervasyonlar
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="px-3 py-1.5 text-xs font-medium"
+                    type="button"
+                    onClick={() => goHotelDetail(hotel.hotel_id)}
+                    data-testid={`agency-hotel-detail-${hotel.hotel_id}`}
+                  >
+                    Detay & Takvim
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

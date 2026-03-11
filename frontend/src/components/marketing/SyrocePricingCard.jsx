@@ -1,16 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, ChevronDown, ChevronUp, Check, X } from "lucide-react";
 
 import { Button } from "../ui/button";
 import { getPricingForCycle } from "../../lib/syrocePricingContent";
 
 export const SyrocePricingCard = ({ pkg, billingCycle, testIdPrefix = "marketing-pricing" }) => {
   const pricing = getPricingForCycle(pkg, billingCycle);
+  const [expanded, setExpanded] = useState(false);
+  const detailedFeatures = pkg.detailedFeatures || [];
 
   return (
     <article
-      className={`relative flex h-full flex-col overflow-hidden rounded-[2rem] border p-7 shadow-[0_26px_90px_rgba(15,23,42,0.06)] ${pkg.accent}`}
+      className={`relative flex h-full flex-col overflow-hidden rounded-[2rem] border p-7 shadow-[0_26px_90px_rgba(15,23,42,0.06)] transition-shadow duration-300 hover:shadow-[0_32px_100px_rgba(15,23,42,0.12)] ${pkg.accent}`}
       data-testid={`${testIdPrefix}-card-${pkg.key}`}
     >
       {pkg.featuredLabel ? (
@@ -19,7 +21,7 @@ export const SyrocePricingCard = ({ pkg, billingCycle, testIdPrefix = "marketing
         </div>
       ) : null}
 
-      <div className="space-y-5">
+      <div className="space-y-5 flex-1">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#2a9d8f]" data-testid={`${testIdPrefix}-audience-${pkg.key}`}>
             {pkg.audience}
@@ -32,15 +34,22 @@ export const SyrocePricingCard = ({ pkg, billingCycle, testIdPrefix = "marketing
           </p>
         </div>
 
-        <div className="flex flex-wrap items-end gap-2" data-testid={`${testIdPrefix}-price-wrap-${pkg.key}`}>
-          <span className="text-4xl font-extrabold tracking-[-0.05em]" style={{ fontFamily: "Manrope, Inter, sans-serif" }} data-testid={`${testIdPrefix}-price-${pkg.key}`}>
-            {pricing.label}
-          </span>
-          <span className="pb-1 text-sm opacity-70" data-testid={`${testIdPrefix}-period-${pkg.key}`}>
-            {pricing.period}
-          </span>
+        <div className="space-y-1" data-testid={`${testIdPrefix}-price-wrap-${pkg.key}`}>
+          {pricing.oldPrice && billingCycle === "yearly" && (
+            <div className="text-sm line-through opacity-50" data-testid={`${testIdPrefix}-old-price-${pkg.key}`}>
+              {pricing.oldPrice}
+            </div>
+          )}
+          <div className="flex flex-wrap items-end gap-2">
+            <span className="text-4xl font-extrabold tracking-[-0.05em]" style={{ fontFamily: "Manrope, Inter, sans-serif" }} data-testid={`${testIdPrefix}-price-${pkg.key}`}>
+              {pricing.label}
+            </span>
+            <span className="pb-1 text-sm opacity-70" data-testid={`${testIdPrefix}-period-${pkg.key}`}>
+              {pricing.period}
+            </span>
+          </div>
           {pricing.badge ? (
-            <span className="rounded-full bg-[#fff1e8] px-3 py-1 text-xs font-semibold text-[#d16024]" data-testid={`${testIdPrefix}-price-badge-${pkg.key}`}>
+            <span className="inline-block mt-1 rounded-full bg-[#fff1e8] px-3 py-1 text-xs font-semibold text-[#d16024]" data-testid={`${testIdPrefix}-price-badge-${pkg.key}`}>
               {pricing.badge}
             </span>
           ) : null}
@@ -58,6 +67,35 @@ export const SyrocePricingCard = ({ pkg, billingCycle, testIdPrefix = "marketing
             </div>
           ))}
         </div>
+
+        {detailedFeatures.length > 0 && (
+          <div data-testid={`${testIdPrefix}-details-${pkg.key}`}>
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="flex items-center gap-1.5 text-xs font-semibold text-[#2563EB] hover:underline transition-colors duration-200"
+              data-testid={`${testIdPrefix}-details-toggle-${pkg.key}`}
+            >
+              {expanded ? "Detayları gizle" : "Tüm özellikleri gör"}
+              {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+            </button>
+            {expanded && (
+              <div className="mt-3 space-y-2 animate-in fade-in-0 slide-in-from-top-2 duration-200" data-testid={`${testIdPrefix}-details-list-${pkg.key}`}>
+                {detailedFeatures.map((feat, i) => (
+                  <div key={i} className="flex items-center gap-2.5 text-xs">
+                    {feat.included ? (
+                      <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                    ) : (
+                      <X className="h-3.5 w-3.5 shrink-0 text-slate-300" />
+                    )}
+                    <span className={feat.included ? "opacity-90" : "opacity-50 line-through"}>
+                      {feat.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="mt-8 pt-2">

@@ -68,10 +68,12 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
 - [x] **Granular User Permissions** — 2026-03-11
   - Backend: AGENCY_SCREEN_DEFINITIONS with 10 screens (dashboard, rezervasyonlar, oteller, musaitlik, sheet_baglantilari, mutabakat, raporlar, turlar, musteriler, ayarlar)
   - API: GET /api/admin/permissions/screens (list available screens)
+  - API: GET /api/admin/permissions/templates (predefined permission templates)
   - API: GET /api/admin/all-users/{user_id}/permissions (get user permissions)
   - API: PUT /api/admin/all-users/{user_id}/permissions (update user permissions)
   - allowed_screens included in login response and /api/auth/me
   - Frontend: PermissionsDialog with checkboxes, Select All/Clear, Save
+  - Frontend: Permission Templates (Satis Personeli, Operasyon Muduru, Finans, Sadece Goruntuleme) — one-click apply
   - agency_admin always has full access (shows info notice in dialog)
   - agency_agent can be restricted (empty = full access, non-empty = restricted)
   - Navigation sidebar filtered by userAllowedScreens

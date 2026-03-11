@@ -900,6 +900,33 @@ AGENCY_SCREEN_DEFINITIONS = [
 
 VALID_SCREEN_KEYS = {s["key"] for s in AGENCY_SCREEN_DEFINITIONS}
 
+PERMISSION_TEMPLATES = [
+    {
+        "key": "satis_personeli",
+        "label": "Satis Personeli",
+        "description": "Rezervasyon, otel ve musteri islemleri",
+        "screens": ["dashboard", "rezervasyonlar", "oteller", "musaitlik", "musteriler", "ayarlar"],
+    },
+    {
+        "key": "operasyon_muduru",
+        "label": "Operasyon Muduru",
+        "description": "Tum operasyonel ekranlar",
+        "screens": ["dashboard", "rezervasyonlar", "oteller", "musaitlik", "sheet_baglantilari", "mutabakat", "raporlar", "turlar", "musteriler", "ayarlar"],
+    },
+    {
+        "key": "finans",
+        "label": "Finans",
+        "description": "Mutabakat ve raporlama odakli",
+        "screens": ["dashboard", "rezervasyonlar", "mutabakat", "raporlar", "ayarlar"],
+    },
+    {
+        "key": "sadece_goruntuleyici",
+        "label": "Sadece Goruntuleme",
+        "description": "Temel bilgi ekranlari",
+        "screens": ["dashboard", "oteller", "musaitlik", "ayarlar"],
+    },
+]
+
 
 class ScreenPermissionsIn(BaseModel):
     allowed_screens: List[str] = Field(default_factory=list)
@@ -914,6 +941,12 @@ class ScreenPermissionsOut(BaseModel):
 async def list_available_screens():
     """List all available screen definitions for agency users."""
     return AGENCY_SCREEN_DEFINITIONS
+
+
+@all_users_router.get("/permissions/templates", dependencies=[AdminDep])
+async def list_permission_templates():
+    """List predefined permission templates."""
+    return PERMISSION_TEMPLATES
 
 
 @all_users_router.get("/all-users/{user_id}/permissions", dependencies=[AdminDep], response_model=ScreenPermissionsOut)

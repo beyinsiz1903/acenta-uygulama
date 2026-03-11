@@ -300,6 +300,7 @@ function DeleteUserDialog({ open, onOpenChange, userToDelete, onDeleted }) {
 /* ── Permissions Dialog ─────────────────────────────────── */
 function PermissionsDialog({ open, onOpenChange, userToEdit, onUpdated }) {
   const [screens, setScreens] = useState([]);
+  const [templates, setTemplates] = useState([]);
   const [selected, setSelected] = useState([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -312,12 +313,14 @@ function PermissionsDialog({ open, onOpenChange, userToEdit, onUpdated }) {
     setLoading(true);
     (async () => {
       try {
-        const [screensRes, permsRes] = await Promise.all([
+        const [screensRes, templatesRes, permsRes] = await Promise.all([
           api.get("/admin/permissions/screens"),
+          api.get("/admin/permissions/templates"),
           userToEdit ? api.get(`/admin/all-users/${userToEdit.id}/permissions`) : Promise.resolve({ data: { allowed_screens: [] } }),
         ]);
         if (!cancelled) {
           setScreens(screensRes.data || []);
+          setTemplates(templatesRes.data || []);
           const current = permsRes.data?.allowed_screens || [];
           setSelected(current.length > 0 ? current : []);
         }
@@ -341,6 +344,16 @@ function PermissionsDialog({ open, onOpenChange, userToEdit, onUpdated }) {
   function deselectAll() {
     setSelected([]);
   }
+
+  function applyTemplate(template) {
+    setSelected([...template.screens]);
+  }
+
+  // Detect which template matches current selection
+  const activeTemplateKey = templates.find((t) => {
+    if (t.screens.length !== selected.length) return false;
+    return t.screens.every((s) => selected.includes(s));
+  })?.key || null;
 
   async function handleSave() {
     if (!userToEdit) return;
@@ -389,6 +402,31 @@ function PermissionsDialog({ open, onOpenChange, userToEdit, onUpdated }) {
           </div>
         ) : (
           <div className="space-y-3">
+            {/* Template quick-apply buttons */}
+            {templates.length > 0 && (
+              <div className="space-y-1.5" data-testid="permissions-templates">
+                <p className="text-xs font-medium text-muted-foreground">Hazir Sablonlar</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {templates.map((tpl) => (
+                    <button
+                      key={tpl.key}
+                      type="button"
+                      data-testid={`template-${tpl.key}`}
+                      onClick={() => applyTemplate(tpl)}
+                      title={tpl.description}
+                      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                        activeTemplateKey === tpl.key
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                      }`}
+                    >
+                      {tpl.label}
+                      <span className="ml-1 text-[10px] opacity-60">({tpl.screens.length})</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground">
                 {selected.length === 0

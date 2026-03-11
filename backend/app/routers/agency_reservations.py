@@ -113,7 +113,7 @@ async def create_quick_reservation(
 
     reservation_id = str(uuid.uuid4())
     now = _now()
-    
+
     # Generate unique PNR and idempotency_key for the reservation (required by unique indexes)
     pnr = f"QR-{uuid.uuid4().hex[:8].upper()}"
     idempotency_key = f"quick-{reservation_id}"

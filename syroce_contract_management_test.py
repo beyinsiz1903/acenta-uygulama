@@ -5,7 +5,7 @@ Syroce Backend Contract/Agreement Management Flow Test
 
 Test için backend kontrat/sözleşme yönetimi akışını test eder.
 
-Base URL: https://hotel-inventory-sync.preview.emergentagent.com
+Base URL: https://hotel-ops-hub-7.preview.emergentagent.com
 Test credentials: admin@acenta.test / admin123
 
 Test cases:
@@ -25,7 +25,7 @@ from typing import Any, Dict, List, Optional
 import aiohttp
 
 
-BASE_URL = "https://hotel-inventory-sync.preview.emergentagent.com"
+BASE_URL = "https://hotel-ops-hub-7.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

@@ -30,7 +30,7 @@ from app.services.stripe_checkout_service import stripe_checkout_service
 from app.services.usage_service import track_usage_event
 
 # BASE_URL from frontend .env for HTTP tests
-BASE_URL = "https://hotel-inventory-sync.preview.emergentagent.com"
+BASE_URL = "https://hotel-ops-hub-7.preview.emergentagent.com"
 
 
 # ========================================

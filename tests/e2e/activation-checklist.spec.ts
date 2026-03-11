@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const BASE = "https://hotel-inventory-sync.preview.emergentagent.com";
+const BASE = "https://hotel-ops-hub-7.preview.emergentagent.com";
 const UID = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 test("activation-checklist: create, complete, persist", async ({ request }) => {

@@ -3,7 +3,7 @@
     "success": true,
     "total_tests": 6,
     "passed_tests": 6,
-    "backend_url": "https://hotel-inventory-sync.preview.emergentagent.com",
+    "backend_url": "https://hotel-ops-hub-7.preview.emergentagent.com",
     "test_timestamp": "2026-03-07"
   },
   "results": {

@@ -40,58 +40,33 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
 - [x] Hotel status correctly shows "Satisa Acik"
 - [x] **Inventory Calendar View** — 2026-03-10
 - [x] **Reservation Write-Back** — 2026-03-10
-  - Quick reservation from calendar (POST /api/agency/reservations/quick)
-  - List reservations (GET /api/agency/reservations)
-  - Cancel reservation with allotment restore (POST /api/agency/reservations/{id}/cancel)
-  - Auto-decrement allotment in hotel_inventory_snapshots
-  - Write-back job queued to sheet_writeback_queue (for Google Sheet sync)
-  - QuickReservationDialog with hotel/room summary, price calculation, form
 - [x] **Automatic Google Sheets Sync** — 2026-03-11
-  - Background scheduler running via APScheduler (backend-scheduler process)
-  - Portfolio sync every 5 minutes (configurable per connection)
-  - Write-back processing every 30 seconds
-  - API: GET /api/agency/sheets/sync-status (sync overview)
-  - API: GET /api/agency/sheets/sync-history (paginated sync runs)
-  - API: PATCH /api/agency/sheets/connections/{id}/settings (toggle sync, change interval)
-  - Frontend: Auto-sync toggle and interval selector per connection
-  - Frontend: Sync status overview cards
-  - Frontend: Expandable sync history panel
 - [x] **Multi-Agency Google Sheets Credentials** — 2026-03-11
-  - API: POST /api/agency/sheets/credentials (save agency's own service account)
-  - API: GET /api/agency/sheets/credentials/status (check credential source)
-  - API: DELETE /api/agency/sheets/credentials (remove, fallback to global)
-  - Frontend: Credentials management section with active source indicator
-  - Frontend: JSON textarea form for pasting Service Account credentials
-  - Validation: JSON format, required fields (client_email, private_key)
-  - In-memory caching via sheets_provider.set_db_config()
-  - Persistent storage in platform_config collection
 - [x] **Granular User Permissions** — 2026-03-11
-  - Backend: AGENCY_SCREEN_DEFINITIONS with 10 screens (dashboard, rezervasyonlar, oteller, musaitlik, sheet_baglantilari, mutabakat, raporlar, turlar, musteriler, ayarlar)
-  - API: GET /api/admin/permissions/screens (list available screens)
-  - API: GET /api/admin/permissions/templates (predefined permission templates)
-  - API: GET /api/admin/all-users/{user_id}/permissions (get user permissions)
-  - API: PUT /api/admin/all-users/{user_id}/permissions (update user permissions)
-  - allowed_screens included in login response and /api/auth/me
-  - Frontend: PermissionsDialog with checkboxes, Select All/Clear, Save
-  - Frontend: Permission Templates (Satis Personeli, Operasyon Muduru, Finans, Sadece Goruntuleme) — one-click apply
-  - agency_admin always has full access (shows info notice in dialog)
-  - agency_agent can be restricted (empty = full access, non-empty = restricted)
-  - Navigation sidebar filtered by userAllowedScreens
-  - Route guard redirects unauthorized URL access to /app
-  - All tests passed (100% backend, 100% frontend)
+- [x] **Permission Templates** — 2026-03-11
+- [x] **Refined Pricing Page** — 2026-03-12
+  - PublicNavbar component with logo, nav links (Ana Sayfa, Fiyatlar, Demo), and CTAs
+  - Promotional banner ("Süre Sınırlı Teklif: 2 yıllık alımlarda +1 yıl bizden!")
+  - Trust bar with 4 items (SSL, 7/24 altyapı, Destek, Kurulum)
+  - 4 pricing cards with old price strikethrough, expandable detailed features
+  - Billing cycle toggle (Aylık/Yıllık) defaulting to Yıllık
+  - Comparison table, FAQ accordion
+  - Contact section with phone, email, hours
+  - Footer with copyright and links
+- [x] **Otellerim Kontenjan Görünümü** — 2026-03-12
+  - All hotel cards now show "Kontenjan" badge with color-coding
+  - Green (>5), Amber (1-5), Red (0), Gray (no data)
+  - Sheet sync details (date, last sync) shown inline
 
 ## Prioritized Backlog
 
-### P1
-- [ ] Refine Pricing Page (agentis.com.tr inspiration)
-- [ ] "Otellerim" screen: Display availability (kontenjan) field
-
 ### P2
 - [ ] Process pending write-back queue (improve retry/monitoring)
+- [ ] Refactoring: agency_hotels.py data normalization, AgencyHotelDetailPage.jsx component breakdown
 
 ## Key Credentials
 - **Superadmin**: admin@acenta.test / admin123
-- **Agency Admin**: agent@acenta.test / agency123
+- **Agency Admin**: agent@acenta.test / agent123
 
 ## Architecture
 ```
@@ -99,57 +74,55 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
 ├── backend/
 │   └── app/
 │       ├── bootstrap/
-│       │   └── scheduler_app.py (APScheduler: portfolio sync, writeback, reports, ops)
+│       │   └── scheduler_app.py
 │       ├── routers/
-│       │   ├── agency.py
+│       │   ├── agency.py (hotels endpoint with allocation_available)
 │       │   ├── agency_availability.py
 │       │   ├── agency_reservations.py
 │       │   ├── agency_writeback.py
 │       │   ├── agency_booking.py
-│       │   ├── agency_sheets.py (credentials CRUD, sync-status, sync-history, settings)
-│       │   └── admin_agency_users.py (UPDATED: permission endpoints, AGENCY_SCREEN_DEFINITIONS)
-│       ├── auth.py (UPDATED: _sanitize_auth_user includes allowed_screens)
-│       ├── schemas/main.py (UPDATED: AuthUser includes allowed_screens)
+│       │   ├── agency_sheets.py
+│       │   └── admin_agency_users.py
+│       ├── auth.py
+│       ├── schemas/main.py
 │       └── services/
-│           ├── hotel_portfolio_sync_service.py (full sync engine)
-│           ├── sheet_writeback_service.py (write-back + allotment)
+│           ├── hotel_portfolio_sync_service.py
+│           ├── sheet_writeback_service.py
 │           ├── google_sheets_client.py
-│           └── sheets_provider.py (tenant-based credential caching)
+│           └── sheets_provider.py
 └── frontend/
     └── src/
         ├── components/
-        │   ├── AppShell.jsx (UPDATED: userAllowedScreens filtering + route guard)
+        │   ├── AppShell.jsx
         │   ├── HotelInventoryCalendar.jsx
-        │   └── QuickReservationDialog.jsx
-        ├── nav/
-        │   └── agencyNav.js
+        │   ├── QuickReservationDialog.jsx
+        │   └── marketing/
+        │       ├── PublicNavbar.jsx (NEW)
+        │       ├── SyrocePricingCard.jsx (UPDATED: expandable details, old price)
+        │       ├── SyrocePricingComparison.jsx
+        │       └── SyroceFaqSection.jsx
+        ├── lib/
+        │   └── syrocePricingContent.js (UPDATED: detailedFeatures, oldPrice)
         └── pages/
-            ├── AdminAllUsersPage.jsx (UPDATED: PermissionsDialog + Lock icon button)
+            ├── AgencyHotelsPage.jsx (UPDATED: kontenjan display)
             ├── AgencySheetConnectionsPage.jsx
-            └── AgencyHotelDetailPage.jsx
+            ├── AgencyHotelDetailPage.jsx
+            └── public/
+                └── PricingPage.jsx (UPDATED: full refinement)
 ```
 
 ## Key DB Collections
-- `hotels`: Hotel definitions
-- `hotel_inventory_snapshots`: Sheet-synced inventory (date, room_type, price, allotment, stop_sale)
-- `hotel_portfolio_sources`: Google Sheets connection config per hotel (with sync_enabled, sync_interval_minutes)
-- `reservations`: Quick reservations from calendar (with pnr, idempotency_key)
-- `sheet_writeback_queue`: Queued write-back jobs for Google Sheets
-- `sheet_writeback_markers`: Idempotency markers for write-back dedup
-- `sheet_sync_runs`: Sync run history (status, rows_read, upserted, duration_ms)
-- `platform_config`: Agency-specific Google credentials
+- `hotels`, `hotel_inventory_snapshots`, `hotel_portfolio_sources`
+- `reservations`, `sheet_writeback_queue`, `sheet_writeback_markers`
+- `sheet_sync_runs`, `platform_config`
 - `agencies`, `users` (with allowed_screens field), `bookings`, `booking_drafts`
 
 ## Key API Endpoints
-- `GET /api/agency/availability/{hotel_id}`: Fetches aggregated inventory data for calendar
-- `POST /api/agency/reservations/quick`: Creates reservation, decrements allotment, triggers write-back
-- `POST /api/agency/sheets/sync/{connection_id}`: Triggers manual sync
+- `GET /api/agency/hotels`: Returns hotel list with allocation_available field
+- `GET /api/agency/availability/{hotel_id}`: Inventory data for calendar
+- `POST /api/agency/reservations/quick`: Creates reservation
+- `POST /api/agency/sheets/sync/{connection_id}`: Manual sync trigger
 - `GET /api/agency/sheets/sync-status`: Auto-sync overview
-- `GET /api/agency/sheets/sync-history`: Sync run history
-- `PATCH /api/agency/sheets/connections/{id}/settings`: Update sync settings
-- `POST /api/agency/sheets/credentials`: Save agency Google credentials
-- `GET /api/agency/sheets/credentials/status`: Check credential source
-- `DELETE /api/agency/sheets/credentials`: Remove agency credentials
-- `GET /api/admin/permissions/screens`: List available screen definitions
-- `GET /api/admin/all-users/{user_id}/permissions`: Get user screen permissions
-- `PUT /api/admin/all-users/{user_id}/permissions`: Update user screen permissions
+- `PUT /api/admin/agency-users/{user_id}/permissions`: User permissions
+- `GET /api/admin/permissions/screens`: Available screen definitions
+- `GET /api/admin/permissions/templates`: Permission templates

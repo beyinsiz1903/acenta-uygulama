@@ -1,154 +1,91 @@
-# PRD — Syroce Travel Agency Operating System
+# Syroce - Hotel PMS (Property Management System) PRD
 
 ## Original Problem Statement
-The user is building a "Travel Agency Operating System" named "Syroce". It manages agencies, hotels, reservations, pricing, and integrations (Google Sheets for inventory). Recent user feedback from an agency partner requested PMS (Property Management System) functionality to manage hotel operations like a mini-PMS: arrival/in-house/departure lists, room management, guest check-in/check-out, flight/tour info tracking, and future financial (cari hesap/fatura) capabilities.
+Syroce is a Travel Agency Operating System that pivoted to focus on building a **Property Management System (PMS)** for hotels, based on agency user feedback.
 
 ## Core Requirements
-1. Agency Subscription Management with expiry warnings
-2. Direct Password Management (superadmin creates users)
-3. Public Pricing Page (inspired by agentis.com.tr)
-4. Google Sheets Integration for hotel reservations/availability
-5. Settings Page for agency users
-6. Change Password functionality
-7. Granular User Permissions (screen-level access control)
-8. UI/UX: Billing screen hidden from agency users
-9. **Inventory Calendar View**: Visual calendar showing room type, price, and allotment per date
-10. **Reservation Write-Back**: Quick reservation from calendar -> DB + Google Sheet + allotment management
-11. **Automatic Google Sheets Sync**: Background scheduler for periodic sync + write-back processing
-12. **Multi-Agency Google Sheets Credentials**: Each agency can use their own Google Service Account
-13. **PMS (Property Management System)**: Arrival/In-house/Departure/Stayover operational lists, room management, check-in/check-out, flight/tour info on reservations
-14. **Cari Hesap & Fatura**: Agency-level current account, balance tracking, invoice generation (UPCOMING)
-15. **Flight API Integration**: Automatic flight info lookup from flight number (UPCOMING)
+1. **Hotel PMS Focus**: Application functions as a PMS for agency hotel operations
+2. **Room Management**: CRUD for hotel rooms ✅
+3. **Operational Lists**: Arrivals, in-house, departures ✅
+4. **Stayover Report**: Count of stayover rooms ✅ (included in dashboard)
+5. **Reservation Enrichment**: Flight and tour details in reservations ✅
+6. **Accounting & Invoicing**: Payments, cari hesap, invoice management ✅
+7. **Automatic Integrations**: Flight API integration (future)
 
 ## Tech Stack
-- **Backend**: FastAPI, Motor (async MongoDB), passlib, JWT auth, APScheduler
+- **Backend**: FastAPI, Motor (async MongoDB), Pydantic, passlib
 - **Frontend**: React, React Router, Tailwind CSS, Shadcn/UI, Axios, Sonner
-- **Database**: MongoDB Atlas
-- **Integrations**: Google Sheets API, Google Drive API
-
-## What's Been Implemented
-
-### Completed (Verified)
-- [x] Agency CRUD + subscription management
-- [x] User management with direct password setting
-- [x] JWT-based authentication
-- [x] Change Password (agency users)
-- [x] Agency Module saving
-- [x] Billing link hidden from agency users
-- [x] Google Sheets Service Account integration
-- [x] Google Sheets sync: availability data read from sheets
-- [x] Stop-sell date filtering fix
-- [x] Hotel detail page crash fix
-- [x] Turkish character encoding fix
-- [x] Hotel status correctly shows "Satisa Acik"
-- [x] **Inventory Calendar View** — 2026-03-10
-- [x] **Reservation Write-Back** — 2026-03-10
-- [x] **Automatic Google Sheets Sync** — 2026-03-11
-- [x] **Multi-Agency Google Sheets Credentials** — 2026-03-11
-- [x] **Granular User Permissions** — 2026-03-11
-- [x] **Permission Templates** — 2026-03-11
-- [x] **Refined Pricing Page** — 2026-03-12
-- [x] **Otellerim Kontenjan Gorünümü** — 2026-03-12
-- [x] **PMS Dashboard** — 2026-03-11
-  - Stat cards: Girisler (arrivals), Otelde (in-house), Cikislar (departures), Doluluk (occupancy)
-  - Hotel selector dropdown for filtering
-  - Tabs: Girisler, Otelde, Cikislar, Tum Rezervasyonlar
-  - Check-in / Check-out buttons on reservation rows
-  - Reservation detail modal with guest, flight, tour info
-  - Edit mode for updating flight/tour/guest details
-- [x] **Room Management** — 2026-03-11
-  - Rooms grouped by floor in a visual grid
-  - CRUD: Create, Edit, Delete rooms
-  - Room status tracking (available, occupied, cleaning, maintenance)
-  - Hotel and status filter dropdowns
-- [x] **PMS Navigation Integration** — 2026-03-11
-  - PMS Paneli and Oda Yonetimi added to sidebar under PMS section
-  - Module aliases added (pms_paneli, oda_yonetimi)
-  - Agency allowed_modules updated to include PMS
-
-## Prioritized Backlog
-
-### P0
-- [ ] Cari Hesap (Current Account) system: agency-level balance tracking, payment recording, invoice generation
-- [ ] Flight API integration: auto-lookup flight info from flight number
-
-### P1
-- [ ] Agency Subscription Management: expiry warnings, access blocking
-- [ ] Direct Password Management for superadmin
-
-### P2
-- [ ] Process pending write-back queue (improve retry/monitoring)
-- [ ] Refactoring: agency_hotels.py data normalization, AgencyHotelDetailPage.jsx component breakdown
-
-## Key Credentials
-- **Superadmin**: admin@acenta.test / admin123
-- **Agency Admin**: agent@acenta.test / agent123
+- **Database**: MongoDB (MongoDB Atlas in production)
+- **Auth**: Cookie-based with httpOnly cookies, JWT
 
 ## Architecture
 ```
 /app
-├── backend/
-│   └── app/
-│       ├── bootstrap/
-│       │   ├── scheduler_app.py
-│       │   └── router_registry.py
-│       ├── routers/
-│       │   ├── agency.py
-│       │   ├── agency_availability.py
-│       │   ├── agency_reservations.py
-│       │   ├── agency_pms.py (NEW - PMS endpoints)
-│       │   ├── agency_writeback.py
-│       │   ├── agency_booking.py
-│       │   ├── agency_sheets.py
-│       │   ├── agency_profile.py
-│       │   └── admin_agency_users.py
-│       ├── auth.py
-│       ├── schemas/main.py
-│       └── services/
-│           ├── agency_module_service.py (UPDATED: PMS aliases)
-│           ├── hotel_portfolio_sync_service.py
-│           ├── sheet_writeback_service.py
-│           └── sheets_provider.py
-└── frontend/
-    └── src/
-        ├── components/
-        │   ├── AppShell.jsx
-        │   ├── NewSidebar.jsx
-        │   └── ...
-        ├── lib/
-        │   └── appNavigation.js (UPDATED: PMS nav items)
-        ├── nav/
-        │   └── agencyNav.js (UPDATED: PMS section)
-        └── pages/
-            ├── PMSDashboardPage.jsx (NEW)
-            ├── PMSRoomsPage.jsx (NEW)
-            └── ...
+├── backend/app/routers/
+│   ├── agency_pms.py              # PMS operations (dashboard, rooms, check-in/out)
+│   └── agency_pms_accounting.py   # Accounting & invoicing (folios, charges, payments, invoices)
+├── frontend/src/pages/
+│   ├── PMSDashboardPage.jsx       # PMS dashboard with stats, tabs, reservation list
+│   ├── PMSRoomsPage.jsx           # Room management (CRUD, floor grouping)
+│   ├── PMSAccountingPage.jsx      # Accounting (folios, charges, payments)
+│   └── PMSInvoicesPage.jsx        # Invoice list and management
+├── frontend/src/nav/agencyNav.js  # Agency sidebar navigation
+└── frontend/src/lib/appNavigation.js # App-wide navigation config
 ```
 
 ## Key DB Collections
-- `hotels`, `hotel_inventory_snapshots`, `hotel_portfolio_sources`
-- `reservations` (enhanced with pms_status, flight_info, tour_info, room_number)
-- `pms_rooms` (NEW - room management)
-- `sheet_writeback_queue`, `sheet_writeback_markers`
-- `sheet_sync_runs`, `platform_config`
-- `agencies` (with allowed_modules including pms_paneli, oda_yonetimi)
-- `users` (with allowed_screens field)
+- **reservations**: Guest reservations with PMS status
+- **pms_rooms**: Hotel room inventory
+- **pms_transactions**: Charges and payments (folio transactions)
+- **pms_invoices**: Generated invoices
 
-## Key API Endpoints
-- `GET /api/agency/pms/dashboard`: PMS dashboard with stats
-- `GET /api/agency/pms/arrivals`: Today's arrivals
-- `GET /api/agency/pms/in-house`: In-house guests
-- `GET /api/agency/pms/departures`: Today's departures
-- `GET /api/agency/pms/reservations`: Filtered reservations list
-- `GET /api/agency/pms/reservations/{id}`: Single reservation detail
-- `PUT /api/agency/pms/reservations/{id}`: Update reservation (flight/tour/room)
-- `POST /api/agency/pms/reservations/{id}/check-in`: Check in guest
-- `POST /api/agency/pms/reservations/{id}/check-out`: Check out guest
-- `POST /api/agency/pms/reservations/{id}/assign-room`: Assign room
-- `GET /api/agency/pms/rooms`: List rooms
-- `POST /api/agency/pms/rooms`: Create room
-- `PUT /api/agency/pms/rooms/{id}`: Update room
-- `DELETE /api/agency/pms/rooms/{id}`: Delete room
-- `GET /api/agency/hotels`: Returns hotel list with allocation_available field
-- `GET /api/agency/availability/{hotel_id}`: Inventory data for calendar
-- `POST /api/agency/reservations/quick`: Creates reservation
+## API Endpoints
+### PMS Operations
+- `GET /api/agency/pms/dashboard` — Dashboard summary
+- `GET /api/agency/pms/arrivals` — Today's arrivals
+- `GET /api/agency/pms/in-house` — In-house guests
+- `GET /api/agency/pms/departures` — Today's departures
+- `GET/POST/PUT/DELETE /api/agency/pms/rooms` — Room CRUD
+- `POST /api/agency/pms/reservations/{id}/check-in` — Check in
+- `POST /api/agency/pms/reservations/{id}/check-out` — Check out
+
+### Accounting & Invoicing
+- `GET /api/agency/pms/accounting/summary` — Financial summary
+- `GET /api/agency/pms/accounting/folios` — List folios (cari hesaplar)
+- `GET /api/agency/pms/accounting/folios/{id}` — Folio detail with transactions
+- `POST /api/agency/pms/accounting/folios/{id}/charge` — Post charge
+- `POST /api/agency/pms/accounting/folios/{id}/payment` — Post payment
+- `DELETE /api/agency/pms/accounting/transactions/{id}` — Delete transaction
+- `GET/POST /api/agency/pms/accounting/invoices` — Invoice CRUD
+- `PUT /api/agency/pms/accounting/invoices/{id}` — Update invoice status
+
+## Completed Features
+- [x] PMS Dashboard (stats, arrivals/in-house/departures/all reservations tabs)
+- [x] Room Management (CRUD, floor grouping, status management)
+- [x] Check-in / Check-out flow
+- [x] Reservation enrichment (flight info, tour info)
+- [x] Hotel selector for multi-hotel agencies
+- [x] Accounting Module (folios, charges, payments, balance tracking)
+- [x] Invoice Management (create, issue, mark paid, cancel, with KDV calculation)
+- [x] Navigation with PMS section (4 pages)
+
+## Remaining Backlog
+### P1 - Stayover List (Separate view)
+- Dedicated stayover list/report page beyond dashboard count
+
+### P2 - Flight API Integration
+- Automatic flight data enrichment via external API
+
+### P3 - Agency Subscription Management
+- Subscription duration and access control based on expiry
+
+### P4 - Direct Password Management
+- Superadmin can create users and set passwords directly
+
+### P5 - Refactoring
+- Centralize data normalization in agency_hotels.py
+- Decompose AgencyHotelDetailPage.jsx
+
+## Test Credentials
+- **Agency Admin**: agency1@demo.test / agency123
+- **Superadmin**: agent@acenta.test / agent123

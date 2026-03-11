@@ -361,14 +361,14 @@ function PermissionsDialog({ open, onOpenChange, userToEdit, onUpdated }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg" data-testid="permissions-dialog">
+      <DialogContent className="sm:max-w-lg" data-testid="permissions-dialog" aria-describedby="permissions-dialog-desc">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Lock className="h-5 w-5 text-primary" />
             Ekran Yetkileri
           </DialogTitle>
           {userToEdit && (
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground mt-1" id="permissions-dialog-desc">
               {userToEdit.name || userToEdit.email}
               {isAdmin && (
                 <Badge className="ml-2 bg-emerald-500/10 text-emerald-700 border-emerald-500/20 text-[10px]">

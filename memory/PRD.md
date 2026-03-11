@@ -65,11 +65,20 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
   - Validation: JSON format, required fields (client_email, private_key)
   - In-memory caching via sheets_provider.set_db_config()
   - Persistent storage in platform_config collection
+- [x] **Granular User Permissions** — 2026-03-11
+  - Backend: AGENCY_SCREEN_DEFINITIONS with 10 screens (dashboard, rezervasyonlar, oteller, musaitlik, sheet_baglantilari, mutabakat, raporlar, turlar, musteriler, ayarlar)
+  - API: GET /api/admin/permissions/screens (list available screens)
+  - API: GET /api/admin/all-users/{user_id}/permissions (get user permissions)
+  - API: PUT /api/admin/all-users/{user_id}/permissions (update user permissions)
+  - allowed_screens included in login response and /api/auth/me
+  - Frontend: PermissionsDialog with checkboxes, Select All/Clear, Save
+  - agency_admin always has full access (shows info notice in dialog)
+  - agency_agent can be restricted (empty = full access, non-empty = restricted)
+  - Navigation sidebar filtered by userAllowedScreens
+  - Route guard redirects unauthorized URL access to /app
+  - All tests passed (100% backend, 100% frontend)
 
 ## Prioritized Backlog
-
-### P0 (Next Up)
-- [ ] User-Based Screen Permissions: Granular permission model per user
 
 ### P1
 - [ ] Refine Pricing Page (agentis.com.tr inspiration)
@@ -80,7 +89,7 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
 
 ## Key Credentials
 - **Superadmin**: admin@acenta.test / admin123
-- **Agency Admin**: agent@acenta.test / agent123
+- **Agency Admin**: agent@acenta.test / agency123
 
 ## Architecture
 ```
@@ -95,7 +104,10 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
 │       │   ├── agency_reservations.py
 │       │   ├── agency_writeback.py
 │       │   ├── agency_booking.py
-│       │   └── agency_sheets.py (UPDATED: credentials CRUD, sync-status, sync-history, settings)
+│       │   ├── agency_sheets.py (credentials CRUD, sync-status, sync-history, settings)
+│       │   └── admin_agency_users.py (UPDATED: permission endpoints, AGENCY_SCREEN_DEFINITIONS)
+│       ├── auth.py (UPDATED: _sanitize_auth_user includes allowed_screens)
+│       ├── schemas/main.py (UPDATED: AuthUser includes allowed_screens)
 │       └── services/
 │           ├── hotel_portfolio_sync_service.py (full sync engine)
 │           ├── sheet_writeback_service.py (write-back + allotment)
@@ -104,12 +116,14 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
 └── frontend/
     └── src/
         ├── components/
+        │   ├── AppShell.jsx (UPDATED: userAllowedScreens filtering + route guard)
         │   ├── HotelInventoryCalendar.jsx
         │   └── QuickReservationDialog.jsx
         ├── nav/
-        │   └── agencyNav.js (UPDATED: Sheet Baglantilari link added)
+        │   └── agencyNav.js
         └── pages/
-            ├── AgencySheetConnectionsPage.jsx (REWRITTEN: credentials, sync status/history, settings)
+            ├── AdminAllUsersPage.jsx (UPDATED: PermissionsDialog + Lock icon button)
+            ├── AgencySheetConnectionsPage.jsx
             └── AgencyHotelDetailPage.jsx
 ```
 
@@ -121,8 +135,8 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
 - `sheet_writeback_queue`: Queued write-back jobs for Google Sheets
 - `sheet_writeback_markers`: Idempotency markers for write-back dedup
 - `sheet_sync_runs`: Sync run history (status, rows_read, upserted, duration_ms)
-- `platform_config`: Agency-specific Google credentials (config_key: google_service_account_agency_{agency_id})
-- `agencies`, `users`, `bookings`, `booking_drafts`
+- `platform_config`: Agency-specific Google credentials
+- `agencies`, `users` (with allowed_screens field), `bookings`, `booking_drafts`
 
 ## Key API Endpoints
 - `GET /api/agency/availability/{hotel_id}`: Fetches aggregated inventory data for calendar
@@ -134,3 +148,6 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
 - `POST /api/agency/sheets/credentials`: Save agency Google credentials
 - `GET /api/agency/sheets/credentials/status`: Check credential source
 - `DELETE /api/agency/sheets/credentials`: Remove agency credentials
+- `GET /api/admin/permissions/screens`: List available screen definitions
+- `GET /api/admin/all-users/{user_id}/permissions`: Get user screen permissions
+- `PUT /api/admin/all-users/{user_id}/permissions`: Update user screen permissions

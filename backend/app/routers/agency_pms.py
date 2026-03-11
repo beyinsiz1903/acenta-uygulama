@@ -194,6 +194,21 @@ async def pms_dashboard(
     }
     occupied_rooms = await db.reservations.count_documents(occupied_rooms_query)
 
+    # Stayovers: in-house guests not arriving or departing today
+    stayover_explicit = await db.reservations.count_documents({
+        **base_query,
+        "pms_status": "in_house",
+        "check_in": {"$lt": today},
+        "check_out": {"$gt": today},
+    })
+    stayover_implicit = await db.reservations.count_documents({
+        **base_query,
+        "pms_status": {"$exists": False},
+        "check_in": {"$lt": today},
+        "check_out": {"$gt": today},
+    })
+    stayover_count = stayover_explicit + stayover_implicit
+
     # Tomorrow arrivals
     tomorrow = (date.fromisoformat(today) + timedelta(days=1)).isoformat()
     tomorrow_arrivals = await db.reservations.count_documents({
@@ -216,7 +231,7 @@ async def pms_dashboard(
         "arrivals": arrivals_count,
         "departures": departures_count,
         "in_house": in_house_count,
-        "stayover": in_house_count,
+        "stayover": stayover_count,
         "total_rooms": total_rooms,
         "occupied_rooms": occupied_rooms,
         "occupancy_rate": round((occupied_rooms / total_rooms * 100), 1) if total_rooms > 0 else 0,
@@ -292,6 +307,44 @@ async def pms_in_house(
                 "check_out": {"$gt": today},
                 "pms_status": {"$exists": False},
             },
+        ],
+    }
+    if hotel_id:
+        query["hotel_id"] = hotel_id
+
+    docs = await db.reservations.find(query).sort("guest_name", 1).to_list(500)
+    items = [_serialize_reservation(doc) for doc in docs]
+    for item in items:
+        if not item.get("pms_status"):
+            item["pms_status"] = "in_house"
+
+    return {"items": items, "total": len(items)}
+
+
+@router.get("/stayovers", dependencies=[AgencyDep])
+async def pms_stayovers(
+    hotel_id: Optional[str] = None,
+    user=Depends(get_current_user),
+):
+    """Stayover guests: in the middle of their stay (not arriving or departing today)."""
+    db = await get_db()
+    agency_id = user.get("agency_id")
+    org_id = user["organization_id"]
+
+    if not agency_id:
+        return {"items": [], "total": 0}
+
+    today = _today_str()
+
+    query = {
+        "organization_id": org_id,
+        "agency_id": agency_id,
+        "status": {"$ne": "cancelled"},
+        "check_in": {"$lt": today},
+        "check_out": {"$gt": today},
+        "$or": [
+            {"pms_status": "in_house"},
+            {"pms_status": {"$exists": False}},
         ],
     }
     if hotel_id:

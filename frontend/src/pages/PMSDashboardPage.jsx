@@ -6,7 +6,7 @@ import { Badge } from "../components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Input } from "../components/ui/input";
 import { toast } from "sonner";
-import { LogIn, LogOut, BedDouble, Users, CalendarCheck, Plane, Building2, Search, ChevronDown, ChevronUp, Phone, Mail, DoorOpen, Hash } from "lucide-react";
+import { LogIn, LogOut, BedDouble, Users, CalendarCheck, Plane, Building2, Search, ChevronDown, ChevronUp, Phone, Mail, DoorOpen, Hash, Moon } from "lucide-react";
 
 const PMS_STATUS_MAP = {
   pending: { label: "Beklemede", color: "bg-slate-100 text-slate-700" },
@@ -420,6 +420,7 @@ export default function PMSDashboardPage() {
   const tabs = [
     { key: "arrivals", label: "Girisler", icon: LogIn },
     { key: "in-house", label: "Otelde", icon: BedDouble },
+    { key: "stayovers", label: "Konaklama", icon: Moon },
     { key: "departures", label: "Cikislar", icon: LogOut },
     { key: "reservations", label: "Tum Rezervasyonlar", icon: CalendarCheck },
   ];
@@ -458,9 +459,10 @@ export default function PMSDashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <StatCard icon={LogIn} label="Girisler" value={dashboard?.arrivals || 0} subtitle="Bugun" color="text-blue-600" />
         <StatCard icon={BedDouble} label="Otelde" value={dashboard?.in_house || 0} subtitle="Mevcut" color="text-green-600" />
+        <StatCard icon={Moon} label="Konaklama" value={dashboard?.stayover || 0} subtitle="Stayover" color="text-purple-600" />
         <StatCard icon={LogOut} label="Cikislar" value={dashboard?.departures || 0} subtitle="Bugun" color="text-amber-600" />
         <StatCard
           icon={Building2}

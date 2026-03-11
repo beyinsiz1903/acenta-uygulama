@@ -32,9 +32,9 @@
       "v1_migration_percent": 100.0
     },
     "tenant": {
-      "target_route_count": 97,
+      "target_route_count": 98,
       "migrated_v1_route_count": 0,
-      "remaining_route_count": 97,
+      "remaining_route_count": 98,
       "v1_migration_percent": 0.0
     },
     "finance": {
@@ -50,14 +50,14 @@
       "v1_migration_percent": 0.0
     }
   },
-  "generated_at": "2026-03-11T15:10:34.277367+00:00",
-  "inventory_hash": "73f69f5e2c78c7d17f0c10cc3e8e7261e8196d7fda4884b6a88f4b880379d80b",
+  "generated_at": "2026-03-11T15:17:08.248067+00:00",
+  "inventory_hash": "ef10033a0dd1f8b31f3995aec7fb94b1cef91fdaeb5e85cf7596706a1206b4ee",
   "inventory_path": "/app/backend/app/bootstrap/route_inventory.json",
-  "legacy_routes_remaining": 732,
-  "legacy_count": 732,
+  "legacy_routes_remaining": 733,
+  "legacy_count": 733,
   "migration_velocity": {
     "routes_migrated_this_pr": 0,
-    "routes_remaining": 732,
+    "routes_remaining": 733,
     "estimated_prs_remaining": 13
   },
   "namespaces": {
@@ -66,12 +66,12 @@
     "public": 36,
     "system": 30,
     "mobile": 6,
-    "tenant": 97,
+    "tenant": 98,
     "finance": 17,
     "misc": 260
   },
-  "route_count": 759,
+  "route_count": 760,
   "runtime_name": "api",
   "v1_count": 27,
-  "compat_required_count": 732
+  "compat_required_count": 733
 }

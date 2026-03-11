@@ -1,7 +1,7 @@
 // tests/e2e/dashboard-drilldown.spec.ts
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "https://syroce-preview-2.preview.emergentagent.com";
+const BASE_URL = "https://hotel-inventory-sync.preview.emergentagent.com";
 
 async function login(page) {
   await page.goto(`${BASE_URL}/login`);

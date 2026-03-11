@@ -10,7 +10,7 @@ import json
 import sys
 
 # Test configuration
-BACKEND_URL = "https://syroce-preview-2.preview.emergentagent.com"
+BACKEND_URL = "https://hotel-inventory-sync.preview.emergentagent.com"
 TEST_CREDENTIALS = {
     "email": "agent@acenta.test",
     "password": "agent123"

@@ -9,7 +9,7 @@ This test validates per Turkish review request:
 4. Admin flow no-regression: admin login sonrası admin dashboard'u besleyen ana endpointlerden en az gerekli olanlar 200 dönüyor mu
 5. Agency/core flow no-regression: /api/reports/generate, /api/search, /api/billing/subscription gibi kritik endpointlerde bozulma var mı
 
-Test base: https://syroce-preview-2.preview.emergentagent.com/api
+Test base: https://hotel-inventory-sync.preview.emergentagent.com/api
 Test accounts:
 - Super admin: admin@acenta.test / admin123
 - Agency admin: agent@acenta.test / agent123
@@ -24,7 +24,7 @@ import time
 from typing import Dict, Any, List, Optional
 
 # Base URL from review request
-BASE_URL = "https://syroce-preview-2.preview.emergentagent.com"
+BASE_URL = "https://hotel-inventory-sync.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 def print_test_step(step: str, description: str):

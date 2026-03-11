@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://agency-ledger-5.preview.emergentagent.com/api",
-    "frontend_url": "https://agency-ledger-5.preview.emergentagent.com",
+    "backend_url": "https://pms-flight-api.preview.emergentagent.com/api",
+    "frontend_url": "https://pms-flight-api.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

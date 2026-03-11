@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://agency-ledger-5.preview.emergentagent.com"
+BASE_URL = "https://pms-flight-api.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials

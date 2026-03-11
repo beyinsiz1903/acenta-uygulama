@@ -6,7 +6,7 @@ Detailed investigation of the failing tests
 import requests
 import json
 
-BASE_URL = "https://agency-ledger-5.preview.emergentagent.com/api"
+BASE_URL = "https://pms-flight-api.preview.emergentagent.com/api"
 ADMIN_CREDENTIALS = {"email": "admin@acenta.test", "password": "admin123"}
 AGENCY_CREDENTIALS = {"email": "agent@acenta.test", "password": "agent123"}
 

@@ -13,7 +13,7 @@ import json
 import sys
 
 # Backend URL
-BACKEND_URL = "https://agency-ledger-5.preview.emergentagent.com/api"
+BACKEND_URL = "https://pms-flight-api.preview.emergentagent.com/api"
 
 # Test credentials from review request
 ADMIN_EMAIL = "admin@acenta.test"

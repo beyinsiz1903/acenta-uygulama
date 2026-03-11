@@ -1,7 +1,8 @@
 """PMS (Property Management System) API for Agency Users.
 
 Provides hotel operations: arrival/departure/in-house lists,
-room management, check-in/check-out, reservation enrichment.
+room management, check-in/check-out, reservation enrichment,
+and flight lookup via AviationStack API.
 
 Endpoints:
   GET  /api/agency/pms/dashboard          — PMS dashboard summary
@@ -18,14 +19,18 @@ Endpoints:
   PUT  /api/agency/pms/rooms/{id}         — Update room
   DELETE /api/agency/pms/rooms/{id}       — Delete room
   POST /api/agency/pms/reservations/{id}/assign-room — Assign room
+  GET  /api/agency/pms/flights/lookup     — Lookup flight info from AviationStack
+  POST /api/agency/pms/reservations/{id}/auto-flight — Auto-fill flight info from API
 """
 from __future__ import annotations
 
 import logging
+import os
 import uuid
 from datetime import datetime, timezone, date, timedelta
 from typing import Optional
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
@@ -706,6 +711,158 @@ async def assign_room(
 
     updated = await db.reservations.find_one({"_id": reservation_id})
     return _serialize_reservation(updated)
+
+
+# ---------------------------------------------------------------------------
+# Flight Lookup (AviationStack API)
+# ---------------------------------------------------------------------------
+
+AVIATIONSTACK_BASE = "http://api.aviationstack.com/v1"
+
+
+async def _lookup_flight_aviationstack(flight_no: str, flight_date: Optional[str] = None) -> dict:
+    """Query AviationStack API for flight info by IATA flight number."""
+    api_key = os.environ.get("AVIATIONSTACK_API_KEY", "")
+    if not api_key:
+        raise HTTPException(
+            status_code=503,
+            detail="Ucus API anahtari yapilandirilmamis. Ayarlarda AVIATIONSTACK_API_KEY tanimlayin.",
+        )
+
+    params = {
+        "access_key": api_key,
+        "flight_iata": flight_no.strip().upper(),
+    }
+    if flight_date:
+        params["flight_date"] = flight_date
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get(f"{AVIATIONSTACK_BASE}/flights", params=params)
+            data = resp.json()
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="Ucus API zaman asimina ugradi")
+    except Exception as e:
+        logger.error(f"AviationStack error: {e}")
+        raise HTTPException(status_code=502, detail="Ucus API hatasi")
+
+    if "error" in data:
+        err_info = data["error"].get("info", "Bilinmeyen hata")
+        logger.warning(f"AviationStack API error: {err_info}")
+        raise HTTPException(status_code=400, detail=f"Ucus API: {err_info}")
+
+    flights = data.get("data", [])
+    if not flights:
+        return {"found": False, "message": "Ucus bulunamadi", "flight_no": flight_no}
+
+    flight = flights[0]
+
+    departure = flight.get("departure", {})
+    arrival = flight.get("arrival", {})
+    airline_info = flight.get("airline", {})
+
+    result = {
+        "found": True,
+        "flight_no": flight.get("flight", {}).get("iata", flight_no),
+        "airline": airline_info.get("name", ""),
+        "airline_iata": airline_info.get("iata", ""),
+        "departure_airport": departure.get("airport", ""),
+        "departure_iata": departure.get("iata", ""),
+        "departure_scheduled": departure.get("scheduled", ""),
+        "departure_estimated": departure.get("estimated", ""),
+        "departure_terminal": departure.get("terminal", ""),
+        "departure_gate": departure.get("gate", ""),
+        "arrival_airport": arrival.get("airport", ""),
+        "arrival_iata": arrival.get("iata", ""),
+        "arrival_scheduled": arrival.get("scheduled", ""),
+        "arrival_estimated": arrival.get("estimated", ""),
+        "arrival_terminal": arrival.get("terminal", ""),
+        "arrival_gate": arrival.get("gate", ""),
+        "flight_status": flight.get("flight_status", ""),
+        "flight_date": flight.get("flight_date", ""),
+    }
+    return result
+
+
+@router.get("/flights/lookup", dependencies=[AgencyDep])
+async def lookup_flight(
+    flight_no: str = Query(..., description="IATA ucus kodu (orn: TK1234)"),
+    flight_date: Optional[str] = Query(None, description="Ucus tarihi (YYYY-MM-DD)"),
+    user=Depends(get_current_user),
+):
+    """Lookup flight information from AviationStack API."""
+    if not flight_no or len(flight_no.strip()) < 3:
+        raise HTTPException(status_code=400, detail="Gecerli bir ucus numarasi girin (orn: TK1234)")
+
+    result = await _lookup_flight_aviationstack(flight_no, flight_date)
+    return result
+
+
+class AutoFlightPayload(BaseModel):
+    flight_type: str  # "arrival" or "departure"
+    flight_no: str
+    flight_date: Optional[str] = None
+
+
+@router.post("/reservations/{reservation_id}/auto-flight", dependencies=[AgencyDep])
+async def auto_fill_flight(
+    reservation_id: str,
+    payload: AutoFlightPayload,
+    user=Depends(get_current_user),
+):
+    """Lookup flight and auto-fill reservation flight info."""
+    db = await get_db()
+    agency_id = user.get("agency_id")
+    org_id = user["organization_id"]
+
+    doc = await db.reservations.find_one({
+        "_id": reservation_id,
+        "organization_id": org_id,
+        "agency_id": agency_id,
+    })
+    if not doc:
+        raise HTTPException(status_code=404, detail="Rezervasyon bulunamadi")
+
+    if payload.flight_type not in ("arrival", "departure"):
+        raise HTTPException(status_code=400, detail="flight_type 'arrival' veya 'departure' olmali")
+
+    result = await _lookup_flight_aviationstack(payload.flight_no, payload.flight_date)
+
+    if not result.get("found"):
+        return {"updated": False, "message": "Ucus bulunamadi", "lookup": result}
+
+    if payload.flight_type == "arrival":
+        flight_data = {
+            "flight_no": result["flight_no"],
+            "airline": result["airline"],
+            "airport": f"{result['arrival_airport']} ({result['arrival_iata']})",
+            "flight_datetime": result["arrival_scheduled"] or result["arrival_estimated"] or "",
+            "departure_airport": f"{result['departure_airport']} ({result['departure_iata']})",
+            "flight_status": result["flight_status"],
+        }
+        update_field = "arrival_flight"
+    else:
+        flight_data = {
+            "flight_no": result["flight_no"],
+            "airline": result["airline"],
+            "airport": f"{result['departure_airport']} ({result['departure_iata']})",
+            "flight_datetime": result["departure_scheduled"] or result["departure_estimated"] or "",
+            "arrival_airport": f"{result['arrival_airport']} ({result['arrival_iata']})",
+            "flight_status": result["flight_status"],
+        }
+        update_field = "departure_flight"
+
+    await db.reservations.update_one(
+        {"_id": reservation_id},
+        {"$set": {update_field: flight_data, "updated_at": _now()}},
+    )
+
+    updated = await db.reservations.find_one({"_id": reservation_id})
+    item = _serialize_reservation(updated)
+    if not item.get("pms_status"):
+        item["pms_status"] = _derive_pms_status(updated)
+
+    return {"updated": True, "reservation": item, "flight_data": flight_data, "lookup": result}
 
 
 # ---------------------------------------------------------------------------

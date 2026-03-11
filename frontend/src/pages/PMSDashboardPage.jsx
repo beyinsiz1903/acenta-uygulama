@@ -6,7 +6,7 @@ import { Badge } from "../components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Input } from "../components/ui/input";
 import { toast } from "sonner";
-import { LogIn, LogOut, BedDouble, Users, CalendarCheck, Plane, Building2, Search, ChevronDown, ChevronUp, Phone, Mail, DoorOpen, Hash, Moon } from "lucide-react";
+import { LogIn, LogOut, BedDouble, Users, CalendarCheck, Plane, Building2, Search, ChevronDown, ChevronUp, Phone, Mail, DoorOpen, Hash, Moon, Loader2, Zap } from "lucide-react";
 
 const PMS_STATUS_MAP = {
   pending: { label: "Beklemede", color: "bg-slate-100 text-slate-700" },
@@ -140,6 +140,60 @@ function ReservationDetailPanel({ item, onClose, onUpdate }) {
     tour_code: item.tour_info?.tour_code || "",
   });
   const [saving, setSaving] = useState(false);
+  const [lookupLoading, setLookupLoading] = useState({ arrival: false, departure: false });
+  const [lookupResult, setLookupResult] = useState(null);
+
+  const handleFlightLookup = async (type) => {
+    const flightNo = type === "arrival" ? form.arrival_flight_no : form.departure_flight_no;
+    if (!flightNo || flightNo.trim().length < 3) {
+      toast.error("Gecerli bir ucus numarasi girin (orn: TK1234)");
+      return;
+    }
+    setLookupLoading((prev) => ({ ...prev, [type]: true }));
+    setLookupResult(null);
+    try {
+      const dateParam = type === "arrival" ? item.check_in : item.check_out;
+      const res = await api.post(`/agency/pms/reservations/${item.id}/auto-flight`, {
+        flight_type: type,
+        flight_no: flightNo.trim(),
+        flight_date: dateParam || undefined,
+      });
+      if (res.data.updated) {
+        const fd = res.data.flight_data;
+        if (type === "arrival") {
+          setForm((prev) => ({
+            ...prev,
+            arrival_flight_no: fd.flight_no || prev.arrival_flight_no,
+            arrival_airline: fd.airline || prev.arrival_airline,
+            arrival_airport: fd.airport || prev.arrival_airport,
+            arrival_flight_datetime: fd.flight_datetime || prev.arrival_flight_datetime,
+          }));
+        } else {
+          setForm((prev) => ({
+            ...prev,
+            departure_flight_no: fd.flight_no || prev.departure_flight_no,
+            departure_airline: fd.airline || prev.departure_airline,
+            departure_airport: fd.airport || prev.departure_airport,
+            departure_flight_datetime: fd.flight_datetime || prev.departure_flight_datetime,
+          }));
+        }
+        setLookupResult(res.data.lookup);
+        toast.success("Ucus bilgileri otomatik dolduruldu");
+        onUpdate();
+      } else {
+        toast.error(res.data.message || "Ucus bulunamadi");
+      }
+    } catch (err) {
+      const detail = err.response?.data?.detail;
+      if (detail?.includes("API anahtari")) {
+        toast.error("Ucus API anahtari yapilandirilmamis. Yoneticiyle iletisime gecin.");
+      } else {
+        toast.error(detail || "Ucus arama basarisiz");
+      }
+    } finally {
+      setLookupLoading((prev) => ({ ...prev, [type]: false }));
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -254,27 +308,71 @@ function ReservationDetailPanel({ item, onClose, onUpdate }) {
             <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Plane className="h-4 w-4" /> Ucus Bilgileri</h3>
             {editing ? (
               <div className="space-y-3">
-                <p className="text-xs text-muted-foreground">Gelis Ucusu</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">Gelis Ucusu</p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs gap-1"
+                    disabled={lookupLoading.arrival || !form.arrival_flight_no}
+                    onClick={() => handleFlightLookup("arrival")}
+                    data-testid="lookup-arrival-flight-btn"
+                  >
+                    {lookupLoading.arrival ? <Loader2 className="h-3 w-3 animate-spin" /> : <Zap className="h-3 w-3" />}
+                    Otomatik Doldur
+                  </Button>
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <Input value={form.arrival_flight_no} onChange={(e) => setForm({...form, arrival_flight_no: e.target.value})} placeholder="Ucus No (TK1234)" data-testid="arrival-flight-input" />
                   <Input value={form.arrival_airline} onChange={(e) => setForm({...form, arrival_airline: e.target.value})} placeholder="Havayolu" />
                   <Input value={form.arrival_airport} onChange={(e) => setForm({...form, arrival_airport: e.target.value})} placeholder="Havaalani" />
                   <Input type="datetime-local" value={form.arrival_flight_datetime} onChange={(e) => setForm({...form, arrival_flight_datetime: e.target.value})} />
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">Donus Ucusu</p>
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-xs text-muted-foreground">Donus Ucusu</p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs gap-1"
+                    disabled={lookupLoading.departure || !form.departure_flight_no}
+                    onClick={() => handleFlightLookup("departure")}
+                    data-testid="lookup-departure-flight-btn"
+                  >
+                    {lookupLoading.departure ? <Loader2 className="h-3 w-3 animate-spin" /> : <Zap className="h-3 w-3" />}
+                    Otomatik Doldur
+                  </Button>
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <Input value={form.departure_flight_no} onChange={(e) => setForm({...form, departure_flight_no: e.target.value})} placeholder="Ucus No" data-testid="departure-flight-input" />
                   <Input value={form.departure_airline} onChange={(e) => setForm({...form, departure_airline: e.target.value})} placeholder="Havayolu" />
                   <Input value={form.departure_airport} onChange={(e) => setForm({...form, departure_airport: e.target.value})} placeholder="Havaalani" />
                   <Input type="datetime-local" value={form.departure_flight_datetime} onChange={(e) => setForm({...form, departure_flight_datetime: e.target.value})} />
                 </div>
+                {lookupResult && lookupResult.found && (
+                  <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg text-xs space-y-1" data-testid="flight-lookup-result">
+                    <p className="font-semibold text-green-800">Ucus Bilgisi Bulundu</p>
+                    <p><span className="text-muted-foreground">Havayolu:</span> {lookupResult.airline} ({lookupResult.airline_iata})</p>
+                    <p><span className="text-muted-foreground">Kalkis:</span> {lookupResult.departure_airport} ({lookupResult.departure_iata})</p>
+                    <p><span className="text-muted-foreground">Varis:</span> {lookupResult.arrival_airport} ({lookupResult.arrival_iata})</p>
+                    <p><span className="text-muted-foreground">Durum:</span> <Badge className="text-[10px] px-1.5">{lookupResult.flight_status}</Badge></p>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Gelis</p>
                   {form.arrival_flight_no ? (
-                    <p>{form.arrival_flight_no} {form.arrival_airline && `(${form.arrival_airline})`} {form.arrival_airport && `- ${form.arrival_airport}`}</p>
+                    <div>
+                      <p className="font-medium">{form.arrival_flight_no} {form.arrival_airline && `(${form.arrival_airline})`}</p>
+                      {form.arrival_airport && <p className="text-xs text-muted-foreground">{form.arrival_airport}</p>}
+                      {form.arrival_flight_datetime && <p className="text-xs text-muted-foreground">{form.arrival_flight_datetime}</p>}
+                      {item.arrival_flight?.flight_status && (
+                        <Badge className="text-[10px] px-1.5 mt-1">{item.arrival_flight.flight_status}</Badge>
+                      )}
+                    </div>
                   ) : (
                     <p className="text-muted-foreground">Girilmemis</p>
                   )}
@@ -282,7 +380,14 @@ function ReservationDetailPanel({ item, onClose, onUpdate }) {
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Donus</p>
                   {form.departure_flight_no ? (
-                    <p>{form.departure_flight_no} {form.departure_airline && `(${form.departure_airline})`} {form.departure_airport && `- ${form.departure_airport}`}</p>
+                    <div>
+                      <p className="font-medium">{form.departure_flight_no} {form.departure_airline && `(${form.departure_airline})`}</p>
+                      {form.departure_airport && <p className="text-xs text-muted-foreground">{form.departure_airport}</p>}
+                      {form.departure_flight_datetime && <p className="text-xs text-muted-foreground">{form.departure_flight_datetime}</p>}
+                      {item.departure_flight?.flight_status && (
+                        <Badge className="text-[10px] px-1.5 mt-1">{item.departure_flight.flight_status}</Badge>
+                      )}
+                    </div>
                   ) : (
                     <p className="text-muted-foreground">Girilmemis</p>
                   )}

@@ -3492,6 +3492,17 @@
     "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "agency",
+    "path": "/api/agency/pms/flights/lookup",
+    "risk_level": "medium",
+    "source": "app.routers.agency_pms",
+    "target_namespace": "/api/v1/agency"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/agency",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "agency",
     "path": "/api/agency/pms/in-house",
     "risk_level": "medium",
     "source": "app.routers.agency_pms",
@@ -3537,6 +3548,17 @@
     "method": "POST",
     "owner": "agency",
     "path": "/api/agency/pms/reservations/{reservation_id}/assign-room",
+    "risk_level": "medium",
+    "source": "app.routers.agency_pms",
+    "target_namespace": "/api/v1/agency"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/agency",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "agency",
+    "path": "/api/agency/pms/reservations/{reservation_id}/auto-flight",
     "risk_level": "medium",
     "source": "app.routers.agency_pms",
     "target_namespace": "/api/v1/agency"

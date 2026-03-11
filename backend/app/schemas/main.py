@@ -19,6 +19,7 @@ class AuthUser(BaseModel):
     organization_id: str
     agency_id: str | None = None
     hotel_id: str | None = None
+    allowed_screens: list[str] = Field(default_factory=list)
 
 
 class LoginResponse(BaseModel):

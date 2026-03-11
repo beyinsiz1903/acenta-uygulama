@@ -126,6 +126,8 @@ def _sanitize_auth_user(user: dict[str, Any]) -> dict[str, Any]:
     ):
         sanitized.pop(sensitive_key, None)
     sanitized["roles"] = normalize_roles(user)
+    # Include allowed_screens for granular permission enforcement
+    sanitized["allowed_screens"] = user.get("allowed_screens") or []
     return sanitized
 
 

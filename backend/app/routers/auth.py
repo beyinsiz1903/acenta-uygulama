@@ -222,6 +222,7 @@ async def login(payload: LoginWith2FARequest, request: Request, response: Respon
             organization_id=user_out.get("organization_id"),
             agency_id=user_out.get("agency_id"),
             hotel_id=user_out.get("hotel_id"),
+            allowed_screens=user.get("allowed_screens") or [],
         ),
         organization=org_doc
     )

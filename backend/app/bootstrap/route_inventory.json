@@ -368,6 +368,28 @@
     "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "admin",
+    "path": "/api/admin/all-users/{user_id}/permissions",
+    "risk_level": "medium",
+    "source": "app.routers.admin_agency_users",
+    "target_namespace": "/api/v1/admin"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/admin",
+    "legacy_or_v1": "legacy",
+    "method": "PUT",
+    "owner": "admin",
+    "path": "/api/admin/all-users/{user_id}/permissions",
+    "risk_level": "medium",
+    "source": "app.routers.admin_agency_users",
+    "target_namespace": "/api/v1/admin"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/admin",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "admin",
     "path": "/api/admin/analytics/revenue-summary",
     "risk_level": "medium",
     "source": "app.routers.admin_analytics",
@@ -2010,6 +2032,17 @@
     "path": "/api/admin/partners/{partner_id}/summary",
     "risk_level": "medium",
     "source": "app.routers.admin_partners",
+    "target_namespace": "/api/v1/admin"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/admin",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "admin",
+    "path": "/api/admin/permissions/screens",
+    "risk_level": "medium",
+    "source": "app.routers.admin_agency_users",
     "target_namespace": "/api/v1/admin"
   },
   {

@@ -75,6 +75,7 @@ function AppShellInner() {
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [agencyAllowedModules, setAgencyAllowedModules] = useState(null); // null = not loaded, [] = no restrictions
   const [agencyContract, setAgencyContract] = useState(null);
+  const [userAllowedScreens, setUserAllowedScreens] = useState(null); // null = not loaded, [] = full access
   const [trialStatus, setTrialStatus] = useState(null);
   const canLoadAdminBranding = hasAnyRole(user, ["super_admin", "admin"]);
 
@@ -177,6 +178,24 @@ function AppShellInner() {
     })();
     return () => { cancelled = true; };
   }, [isAgencyUser]);
+
+  // ── Load user-level screen permissions ──────────────────────
+  useEffect(() => {
+    // Only agency_agent users can have screen restrictions
+    const isAgentOnly = hasAnyRole(user, ["agency_agent"])
+      && !hasAnyRole(user, ["agency_admin", "super_admin", "admin"]);
+    if (!isAgentOnly) {
+      setUserAllowedScreens(null);
+      return;
+    }
+    // Read from cached user object (set during login/me)
+    const screens = user?.allowed_screens;
+    if (Array.isArray(screens) && screens.length > 0) {
+      setUserAllowedScreens(screens);
+    } else {
+      setUserAllowedScreens(null); // null = full access
+    }
+  }, [user]);
 
   // ── P0: Onboarding auto-redirect ──────────────────────────
   useEffect(() => {
@@ -335,9 +354,13 @@ function AppShellInner() {
       // Server-side hidden items check
       if (!it.isCore && it.modeKey && hiddenNavItems.includes(it.modeKey)) return false;
       if (!isAgencyModuleVisible(it)) return false;
+      // User-level screen permissions (only for agency_agent)
+      if (userAllowedScreens && userAllowedScreens.length > 0 && it.modeKey) {
+        if (!userAllowedScreens.includes(it.modeKey)) return false;
+      }
       return true;
     });
-  }, [featuresLoading, hasFeature, currentModeLevel, hiddenNavItems, isAgencyModuleVisible, userScope]);
+  }, [featuresLoading, hasFeature, currentModeLevel, hiddenNavItems, isAgencyModuleVisible, userScope, userAllowedScreens]);
 
   const navSource = useMemo(
     () => (isAdmin ? [...APP_NAV_SECTIONS, ...ADMIN_NAV_SECTIONS] : APP_NAV_SECTIONS),
@@ -383,6 +406,10 @@ function AppShellInner() {
         if (!isAgencyModuleVisible(it) && it.to) {
           hiddenPaths.push(it.to);
         }
+        // User-level screen permissions enforcement
+        if (userAllowedScreens && userAllowedScreens.length > 0 && it.modeKey && !userAllowedScreens.includes(it.modeKey) && it.to) {
+          hiddenPaths.push(it.to);
+        }
       });
     });
     // If current path starts with a hidden path, redirect
@@ -390,7 +417,7 @@ function AppShellInner() {
     if (isBlocked) {
       navigate("/app", { replace: true });
     }
-  }, [location.pathname, modeLoading, currentModeLevel, hiddenNavItems, isAgencyModuleVisible, navigate, navSections]);
+  }, [location.pathname, modeLoading, currentModeLevel, hiddenNavItems, isAgencyModuleVisible, navigate, navSections, userAllowedScreens]);
 
   const toggleCollapse = () => {
     setCollapsed((v) => {

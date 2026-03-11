@@ -4,7 +4,7 @@ import { safeName } from "../utils/formatters";
 import {
   Users, AlertCircle, Loader2, Search,
   ChevronDown, UserPlus, ShieldCheck, ShieldOff,
-  Pencil, Trash2,
+  Pencil, Trash2, Lock,
 } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
 import DemoSeedButton from "../components/DemoSeedButton";
@@ -297,6 +297,152 @@ function DeleteUserDialog({ open, onOpenChange, userToDelete, onDeleted }) {
   );
 }
 
+/* ── Permissions Dialog ─────────────────────────────────── */
+function PermissionsDialog({ open, onOpenChange, userToEdit, onUpdated }) {
+  const [screens, setScreens] = useState([]);
+  const [selected, setSelected] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const isAdmin = userToEdit?.roles?.includes("agency_admin");
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      try {
+        const [screensRes, permsRes] = await Promise.all([
+          api.get("/admin/permissions/screens"),
+          userToEdit ? api.get(`/admin/all-users/${userToEdit.id}/permissions`) : Promise.resolve({ data: { allowed_screens: [] } }),
+        ]);
+        if (!cancelled) {
+          setScreens(screensRes.data || []);
+          const current = permsRes.data?.allowed_screens || [];
+          setSelected(current.length > 0 ? current : []);
+        }
+      } catch {
+        if (!cancelled) setScreens([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [open, userToEdit]);
+
+  function toggleScreen(key) {
+    setSelected((prev) => prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]);
+  }
+
+  function selectAll() {
+    setSelected(screens.map((s) => s.key));
+  }
+
+  function deselectAll() {
+    setSelected([]);
+  }
+
+  async function handleSave() {
+    if (!userToEdit) return;
+    setSaving(true);
+    try {
+      await api.put(`/admin/all-users/${userToEdit.id}/permissions`, {
+        allowed_screens: selected,
+      });
+      toast.success("Yetkiler guncellendi");
+      onOpenChange(false);
+      onUpdated();
+    } catch (err) {
+      toast.error(apiErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg" data-testid="permissions-dialog">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Lock className="h-5 w-5 text-primary" />
+            Ekran Yetkileri
+          </DialogTitle>
+          {userToEdit && (
+            <p className="text-sm text-muted-foreground mt-1">
+              {userToEdit.name || userToEdit.email}
+              {isAdmin && (
+                <Badge className="ml-2 bg-emerald-500/10 text-emerald-700 border-emerald-500/20 text-[10px]">
+                  Yonetici - Tam Erisim
+                </Badge>
+              )}
+            </p>
+          )}
+        </DialogHeader>
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        ) : isAdmin ? (
+          <div className="rounded-xl border bg-emerald-50/50 dark:bg-emerald-950/20 p-4 text-sm text-muted-foreground" data-testid="permissions-admin-notice">
+            <ShieldCheck className="h-5 w-5 text-emerald-600 mb-2" />
+            <p>Yonetici (agency_admin) rolundeki kullanicilar tum ekranlara otomatik olarak erisebilir. Yetki kisitlamasi sadece Satis/Operasyon (agency_agent) rolundeki kullanicilar icin gecerlidir.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                {selected.length === 0
+                  ? "Hicbir ekran secilmedi — tam erisim (varsayilan)"
+                  : `${selected.length} / ${screens.length} ekran secili`}
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={selectAll} data-testid="permissions-select-all">
+                  Tumunu Sec
+                </Button>
+                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={deselectAll} data-testid="permissions-deselect-all">
+                  Temizle
+                </Button>
+              </div>
+            </div>
+            <div className="rounded-xl border bg-muted/20 p-1 space-y-0.5 max-h-[320px] overflow-y-auto">
+              {screens.map((screen) => (
+                <label
+                  key={screen.key}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 cursor-pointer transition-colors hover:bg-accent"
+                  data-testid={`permission-screen-${screen.key}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(screen.key)}
+                    onChange={() => toggleScreen(screen.key)}
+                    className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-foreground">{screen.label}</div>
+                    <div className="text-xs text-muted-foreground">{screen.description}</div>
+                  </div>
+                </label>
+              ))}
+            </div>
+            <div className="rounded-lg border border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
+              Hicbir ekran secilmezse kullanici tum ekranlara erisebilir (varsayilan davranis).
+            </div>
+          </div>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Iptal</Button>
+          {!isAdmin && (
+            <Button onClick={handleSave} disabled={saving || loading} data-testid="permissions-save-btn">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Lock className="h-4 w-4 mr-1" />}
+              Kaydet
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 /* ── Main Page ──────────────────────────────────────────── */
 export default function AdminAllUsersPage() {
   const navigate = useNavigate();
@@ -312,6 +458,7 @@ export default function AdminAllUsersPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [permissionsOpen, setPermissionsOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => { loadData(); }, []);
@@ -567,6 +714,19 @@ export default function AdminAllUsersPage() {
                       <Button
                         variant="outline"
                         size="sm"
+                        data-testid={`permissions-user-${u.id}`}
+                        onClick={() => { setSelectedUser(u); setPermissionsOpen(true); }}
+                        className="text-xs gap-1"
+                        title="Ekran Yetkileri"
+                      >
+                        <Lock className="h-3.5 w-3.5" />
+                        {u.allowed_screens?.length > 0 && (
+                          <span className="text-[10px] font-bold bg-primary/10 text-primary rounded-full px-1">{u.allowed_screens.length}</span>
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         data-testid={`toggle-status-${u.id}`}
                         onClick={() => handleStatusToggle(u)}
                         className="text-xs gap-1"
@@ -608,6 +768,7 @@ export default function AdminAllUsersPage() {
       <CreateUserDialog open={createOpen} onOpenChange={setCreateOpen} agencies={agencies} onCreated={loadData} />
       <EditUserDialog open={editOpen} onOpenChange={setEditOpen} userToEdit={selectedUser} agencies={agencies} onUpdated={loadData} />
       <DeleteUserDialog open={deleteOpen} onOpenChange={setDeleteOpen} userToDelete={selectedUser} onDeleted={loadData} />
+      <PermissionsDialog open={permissionsOpen} onOpenChange={setPermissionsOpen} userToEdit={selectedUser} onUpdated={loadData} />
     </div>
   );
 }

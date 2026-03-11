@@ -513,6 +513,7 @@ class AllUsersUserOut(BaseModel):
     status: str
     agency_id: Optional[str] = None
     agency_name: Optional[str] = None
+    allowed_screens: List[str] = Field(default_factory=list)
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
     last_login_at: Optional[str] = None
@@ -575,6 +576,7 @@ async def list_all_agency_users(
             status="active" if d.get("is_active", True) else "disabled",
             agency_id=aid,
             agency_name=agency_map.get(aid, "") if aid else None,
+            allowed_screens=list(d.get("allowed_screens") or []),
             created_at=d["created_at"].isoformat() if d.get("created_at") else None,
             updated_at=d["updated_at"].isoformat() if d.get("updated_at") else None,
             last_login_at=d["last_login_at"].isoformat() if d.get("last_login_at") else None,
@@ -673,6 +675,7 @@ async def create_user(
         status="active",
         agency_id=aid,
         agency_name=agency_name,
+        allowed_screens=list(user_doc.get("allowed_screens") or []),
         created_at=user_doc["created_at"].isoformat() if user_doc.get("created_at") else None,
         updated_at=user_doc["updated_at"].isoformat() if user_doc.get("updated_at") else None,
         last_login_at=None,
@@ -811,6 +814,7 @@ async def update_user(
         status="active" if updated.get("is_active", True) else "disabled",
         agency_id=aid,
         agency_name=agency_map.get(aid, "") if aid else None,
+        allowed_screens=list(updated.get("allowed_screens") or []),
         created_at=updated["created_at"].isoformat() if updated.get("created_at") else None,
         updated_at=updated["updated_at"].isoformat() if updated.get("updated_at") else None,
         last_login_at=updated["last_login_at"].isoformat() if updated.get("last_login_at") else None,
@@ -874,3 +878,119 @@ async def delete_user(
         pass
 
     return DeleteUserOut(ok=True, deleted_id=str(user_doc["_id"]))
+
+
+
+# ══════════════════════════════════════════════════════════
+# Granular Screen Permissions
+# ══════════════════════════════════════════════════════════
+
+AGENCY_SCREEN_DEFINITIONS = [
+    {"key": "dashboard", "label": "Dashboard", "description": "Ana dashboard sayfasi"},
+    {"key": "rezervasyonlar", "label": "Rezervasyonlar", "description": "Rezervasyon listesi ve yonetimi"},
+    {"key": "oteller", "label": "Oteller", "description": "Otel listesi ve detaylari"},
+    {"key": "musaitlik", "label": "Musaitlik", "description": "Musaitlik takibi"},
+    {"key": "sheet_baglantilari", "label": "Google Sheets", "description": "Google Sheets baglantilari"},
+    {"key": "mutabakat", "label": "Mutabakat", "description": "Finansal mutabakat"},
+    {"key": "raporlar", "label": "Raporlar", "description": "Raporlama"},
+    {"key": "turlar", "label": "Turlar", "description": "Tur operasyonlari"},
+    {"key": "musteriler", "label": "Musteriler", "description": "Musteri yonetimi"},
+    {"key": "ayarlar", "label": "Ayarlar", "description": "Hesap ayarlari"},
+]
+
+VALID_SCREEN_KEYS = {s["key"] for s in AGENCY_SCREEN_DEFINITIONS}
+
+
+class ScreenPermissionsIn(BaseModel):
+    allowed_screens: List[str] = Field(default_factory=list)
+
+
+class ScreenPermissionsOut(BaseModel):
+    user_id: str
+    allowed_screens: List[str] = Field(default_factory=list)
+
+
+@all_users_router.get("/permissions/screens", dependencies=[AdminDep])
+async def list_available_screens():
+    """List all available screen definitions for agency users."""
+    return AGENCY_SCREEN_DEFINITIONS
+
+
+@all_users_router.get("/all-users/{user_id}/permissions", dependencies=[AdminDep], response_model=ScreenPermissionsOut)
+async def get_user_permissions(
+    user_id: str,
+    request: Request,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+) -> ScreenPermissionsOut:
+    """Get the screen permissions for an agency user."""
+    org_id = user["organization_id"]
+    tenant_id = _request_tenant_id(request)
+
+    user_doc = await _load_user_by_id(db, org_id, user_id, tenant_id)
+    if not user_doc:
+        raise AppError(404, "user_not_found", "Kullanici bulunamadi")
+
+    return ScreenPermissionsOut(
+        user_id=str(user_doc["_id"]),
+        allowed_screens=list(user_doc.get("allowed_screens") or []),
+    )
+
+
+@all_users_router.put("/all-users/{user_id}/permissions", dependencies=[AdminDep], response_model=ScreenPermissionsOut)
+async def update_user_permissions(
+    user_id: str,
+    payload: ScreenPermissionsIn,
+    request: Request,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+) -> ScreenPermissionsOut:
+    """Update the screen permissions for an agency user."""
+    org_id = user["organization_id"]
+    tenant_id = _request_tenant_id(request)
+
+    user_doc = await _load_user_by_id(db, org_id, user_id, tenant_id)
+    if not user_doc:
+        raise AppError(404, "user_not_found", "Kullanici bulunamadi")
+
+    # Validate screen keys
+    validated = [s for s in payload.allowed_screens if s in VALID_SCREEN_KEYS]
+
+    before_snapshot = audit_snapshot("agency_user", user_doc)
+
+    await db.users.update_one(
+        {"_id": user_doc["_id"], "organization_id": org_id},
+        {"$set": {"allowed_screens": validated, "updated_at": now_utc()}},
+    )
+
+    updated = await _load_user_by_id(db, org_id, user_id, tenant_id)
+    after_snapshot = audit_snapshot("agency_user", updated)
+
+    try:
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={
+                "actor_type": "user",
+                "actor_id": user.get("id") or user.get("email"),
+                "email": user.get("email"),
+                "roles": user.get("roles") or [],
+            },
+            request=request,
+            action="user_permissions_updated",
+            target_type="agency_user",
+            target_id=str(user_doc["_id"]),
+            before=before_snapshot,
+            after=after_snapshot,
+            meta={
+                "email": user_doc.get("email"),
+                "allowed_screens": validated,
+            },
+        )
+    except Exception:
+        pass
+
+    return ScreenPermissionsOut(
+        user_id=str(updated["_id"]),
+        allowed_screens=list(updated.get("allowed_screens") or []),
+    )

@@ -85,7 +85,7 @@ export function QuickReservationDialog({ open, onOpenChange, hotelId, hotelName,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md" data-testid="quick-reservation-dialog">
+      <DialogContent className="sm:max-w-md" data-testid="quick-reservation-dialog" aria-describedby="quick-reservation-desc">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <CalendarPlus className="h-4 w-4 text-primary" />
@@ -95,7 +95,7 @@ export function QuickReservationDialog({ open, onOpenChange, hotelId, hotelName,
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Hotel & Room Summary */}
-          <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
+          <div id="quick-reservation-desc" className="rounded-lg border bg-muted/30 p-3 space-y-1">
             <div className="text-sm font-medium">{hotelName}</div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Badge variant="outline" className="text-[10px]">{roomType}</Badge>

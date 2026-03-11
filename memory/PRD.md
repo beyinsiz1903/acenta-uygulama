@@ -12,12 +12,8 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
 6. Change Password functionality
 7. Granular User Permissions (screen-level access control)
 8. UI/UX: Billing screen hidden from agency users
-9. **Inventory Calendar View**: Visual calendar showing room type, price, and allotment per date from Google Sheets data
-
-## User Personas
-- **Superadmin**: Platform owner, manages agencies, hotels, pricing
-- **Agency Admin**: Manages their agency's hotels, reservations, users
-- **Agency User**: Views assigned hotels, creates reservations
+9. **Inventory Calendar View**: Visual calendar showing room type, price, and allotment per date
+10. **Reservation Write-Back**: Quick reservation from calendar → DB + Google Sheet + allotment management
 
 ## Tech Stack
 - **Backend**: FastAPI, Motor (async MongoDB), passlib, JWT auth
@@ -40,77 +36,63 @@ The user is building a "Travel Agency Operating System" named "Syroce". It manag
 - [x] Hotel detail page crash fix
 - [x] Turkish character encoding fix
 - [x] Hotel status correctly shows "Satışa Açık"
-- [x] **Inventory Calendar View** — 2026-03-10 ✅
-  - Visual monthly calendar on hotel detail page
-  - Color-coded cells: green (available), amber (low), orange (none), red (stop-sale)
-  - Per-day: min price (TL) + total room count
-  - Click-to-expand day detail: room type, price, allotment per room
-  - Room type filter dropdown
-  - Month navigation (prev/next)
-  - Stats bar: total records, room types, E-Tablo Bağlı badge, last sync time
-  - Backend fix: tenant_id $in query for org_id+tenant_id compatibility
-  - 270 demo inventory snapshots seeded (45 days × 3 room types × 2 hotels)
-  - Testing: Backend 11/11 PASS, Frontend 100% PASS (iteration_54)
-
-### In Progress
-- None
-
-### Blocked
-- None
+- [x] **Inventory Calendar View** — 2026-03-10
+- [x] **Reservation Write-Back** — 2026-03-10
+  - Quick reservation from calendar (POST /api/agency/reservations/quick)
+  - List reservations (GET /api/agency/reservations)
+  - Cancel reservation with allotment restore (POST /api/agency/reservations/{id}/cancel)
+  - Auto-decrement allotment in hotel_inventory_snapshots
+  - Write-back job queued to sheet_writeback_queue (for Google Sheet sync)
+  - QuickReservationDialog with hotel/room summary, price calculation, form
+  - "Rezervasyon Yap" buttons on calendar day detail cards
+  - Testing: Backend 100%, Frontend 95% PASS (iteration_55)
 
 ## Prioritized Backlog
 
 ### P1 (Next Up)
-- [ ] Reservation Write-Back: Write new reservations from app back to Google Sheet "Rezervasyonlar" tab
 - [ ] User-Based Screen Permissions: Granular permission model per user
-- [ ] Reservation Limits: Backend enforcement per pricing plan
 
 ### P2
 - [ ] Refine Pricing Page (agentis.com.tr inspiration)
 - [ ] "Otellerim" screen: Display availability (kontenjan) field
 - [ ] Automatic Google Sheets Sync (background scheduler)
-- [ ] Payment Failure Lifecycle
-- [ ] Landing Funnel Optimization
+- [ ] Process pending write-back queue (scheduler to execute queued sheet writes)
 
 ## Key Credentials
 - **Superadmin**: admin@acenta.test / admin123
 - **Agency Admin**: agent@acenta.test / agent123
-- **Google Service Account**: syroce-sheets@syroce-sheets.iam.gserviceaccount.com
 
 ## Architecture
 ```
 /app
 ├── backend/
 │   └── app/
-│       ├── main.py
 │       ├── routers/
-│       │   ├── agency.py (hotel list with sheet sync data)
-│       │   ├── agency_availability.py (FIXED: tenant_id $in query for calendar)
-│       │   ├── admin_sheets.py
-│       │   ├── agency_sheets.py
-│       │   ├── agency_users.py
-│       │   └── settings.py
+│       │   ├── agency.py
+│       │   ├── agency_availability.py (tenant_id $in query fix)
+│       │   ├── agency_reservations.py (NEW: quick reservation CRUD)
+│       │   ├── agency_writeback.py (write-back status/queue)
+│       │   ├── agency_booking.py
+│       │   └── agency_sheets.py
 │       └── services/
+│           ├── sheet_writeback_service.py (write-back + allotment mgmt)
 │           ├── google_sheets_client.py
-│           ├── hotel_portfolio_sync_service.py
 │           └── sheets_provider.py
 └── frontend/
     └── src/
         ├── components/
-        │   └── HotelInventoryCalendar.jsx (NEW: calendar view component)
-        ├── pages/
-        │   ├── AgencyHotelDetailPage.jsx (calendar integrated)
-        │   ├── AgencyHotelsPage.jsx (Detay & Takvim button)
-        │   └── agency-admin/SettingsPage.jsx
-        ├── layouts/AgencyAdminLayout.jsx
-        └── lib/sidebar-links.js
+        │   ├── HotelInventoryCalendar.jsx (calendar + reserve buttons)
+        │   └── QuickReservationDialog.jsx (NEW: reservation form dialog)
+        └── pages/
+            ├── AgencyHotelDetailPage.jsx (calendar integrated)
+            └── AgencyHotelsPage.jsx (Detay & Takvim button)
 ```
 
 ## Key DB Collections
 - `hotels`: Hotel definitions
 - `hotel_inventory_snapshots`: Sheet-synced inventory (date, room_type, price, allotment, stop_sale)
 - `hotel_portfolio_sources`: Google Sheets connection config per hotel
-- `stop_sell_rules`: Date-ranged stop-sell rules per hotel/room
-- `agencies`: Agency definitions with modules
-- `users`: User accounts with hashed passwords
-- `platform_config`: Google Service Account JSON storage
+- `reservations`: Quick reservations from calendar (with pnr, idempotency_key)
+- `sheet_writeback_queue`: Queued write-back jobs for Google Sheets
+- `sheet_writeback_markers`: Idempotency markers for write-back dedup
+- `agencies`, `users`, `bookings`, `booking_drafts`

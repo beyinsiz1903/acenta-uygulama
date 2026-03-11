@@ -5,11 +5,11 @@ Syroce is a Travel Agency Operating System that pivoted to focus on building a *
 
 ## Core Requirements
 1. **Hotel PMS Focus**: Application functions as a PMS for agency hotel operations
-2. **Room Management**: CRUD for hotel rooms ✅
-3. **Operational Lists**: Arrivals, in-house, departures ✅
-4. **Stayover Report**: Count of stayover rooms ✅ (included in dashboard)
-5. **Reservation Enrichment**: Flight and tour details in reservations ✅
-6. **Accounting & Invoicing**: Payments, cari hesap, invoice management ✅
+2. **Room Management**: CRUD for hotel rooms
+3. **Operational Lists**: Arrivals, in-house, departures
+4. **Stayover Report**: Dedicated stayover list with count and guest details
+5. **Reservation Enrichment**: Flight and tour details in reservations
+6. **Accounting & Invoicing**: Payments, cari hesap, invoice management with KDV
 7. **Automatic Integrations**: Flight API integration (future)
 
 ## Tech Stack
@@ -22,10 +22,10 @@ Syroce is a Travel Agency Operating System that pivoted to focus on building a *
 ```
 /app
 ├── backend/app/routers/
-│   ├── agency_pms.py              # PMS operations (dashboard, rooms, check-in/out)
+│   ├── agency_pms.py              # PMS operations (dashboard, rooms, check-in/out, stayovers)
 │   └── agency_pms_accounting.py   # Accounting & invoicing (folios, charges, payments, invoices)
 ├── frontend/src/pages/
-│   ├── PMSDashboardPage.jsx       # PMS dashboard with stats, tabs, reservation list
+│   ├── PMSDashboardPage.jsx       # PMS dashboard with 5 stat cards, 5 tabs
 │   ├── PMSRoomsPage.jsx           # Room management (CRUD, floor grouping)
 │   ├── PMSAccountingPage.jsx      # Accounting (folios, charges, payments)
 │   └── PMSInvoicesPage.jsx        # Invoice list and management
@@ -41,23 +41,24 @@ Syroce is a Travel Agency Operating System that pivoted to focus on building a *
 
 ## API Endpoints
 ### PMS Operations
-- `GET /api/agency/pms/dashboard` — Dashboard summary
-- `GET /api/agency/pms/arrivals` — Today's arrivals
-- `GET /api/agency/pms/in-house` — In-house guests
-- `GET /api/agency/pms/departures` — Today's departures
-- `GET/POST/PUT/DELETE /api/agency/pms/rooms` — Room CRUD
-- `POST /api/agency/pms/reservations/{id}/check-in` — Check in
-- `POST /api/agency/pms/reservations/{id}/check-out` — Check out
+- `GET /api/agency/pms/dashboard` - Dashboard summary (arrivals, in-house, stayover, departures, occupancy)
+- `GET /api/agency/pms/arrivals` - Today's arrivals
+- `GET /api/agency/pms/in-house` - In-house guests
+- `GET /api/agency/pms/stayovers` - Stayover guests (mid-stay, not arriving/departing today)
+- `GET /api/agency/pms/departures` - Today's departures
+- `GET/POST/PUT/DELETE /api/agency/pms/rooms` - Room CRUD
+- `POST /api/agency/pms/reservations/{id}/check-in` - Check in
+- `POST /api/agency/pms/reservations/{id}/check-out` - Check out
 
 ### Accounting & Invoicing
-- `GET /api/agency/pms/accounting/summary` — Financial summary
-- `GET /api/agency/pms/accounting/folios` — List folios (cari hesaplar)
-- `GET /api/agency/pms/accounting/folios/{id}` — Folio detail with transactions
-- `POST /api/agency/pms/accounting/folios/{id}/charge` — Post charge
-- `POST /api/agency/pms/accounting/folios/{id}/payment` — Post payment
-- `DELETE /api/agency/pms/accounting/transactions/{id}` — Delete transaction
-- `GET/POST /api/agency/pms/accounting/invoices` — Invoice CRUD
-- `PUT /api/agency/pms/accounting/invoices/{id}` — Update invoice status
+- `GET /api/agency/pms/accounting/summary` - Financial summary
+- `GET /api/agency/pms/accounting/folios` - List folios (cari hesaplar)
+- `GET /api/agency/pms/accounting/folios/{id}` - Folio detail with transactions
+- `POST /api/agency/pms/accounting/folios/{id}/charge` - Post charge
+- `POST /api/agency/pms/accounting/folios/{id}/payment` - Post payment
+- `DELETE /api/agency/pms/accounting/transactions/{id}` - Delete transaction
+- `GET/POST /api/agency/pms/accounting/invoices` - Invoice CRUD
+- `PUT /api/agency/pms/accounting/invoices/{id}` - Update invoice status
 
 ## Completed Features
 - [x] PMS Dashboard (stats, arrivals/in-house/departures/all reservations tabs)
@@ -68,11 +69,9 @@ Syroce is a Travel Agency Operating System that pivoted to focus on building a *
 - [x] Accounting Module (folios, charges, payments, balance tracking)
 - [x] Invoice Management (create, issue, mark paid, cancel, with KDV calculation)
 - [x] Navigation with PMS section (4 pages)
+- [x] Stayover (Konaklama) list - dedicated endpoint + dashboard stat + tab (2026-03-11)
 
 ## Remaining Backlog
-### P1 - Stayover List (Separate view)
-- Dedicated stayover list/report page beyond dashboard count
-
 ### P2 - Flight API Integration
 - Automatic flight data enrichment via external API
 

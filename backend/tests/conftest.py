@@ -54,6 +54,7 @@ def _is_external_preview_http_test() -> bool:
             "test_agency_modules_and_branding.py",
             "test_admin_all_users_and_agency_nav.py",
             "test_agency_sheets_api.py",
+            "test_ops_supplier_operations_iter67.py",
         )
     )
 

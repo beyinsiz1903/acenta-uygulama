@@ -81,6 +81,14 @@ def create_app() -> FastAPI:
             import logging
             logging.getLogger("startup").warning("Supplier event handlers: %s", exc)
 
+        # Initialize Operations Layer indexes
+        try:
+            from app.suppliers.operations.indexes import ensure_operations_indexes
+            await ensure_operations_indexes(db)
+        except Exception as exc:
+            import logging
+            logging.getLogger("startup").warning("Operations indexes: %s", exc)
+
         yield
         shutdown_runtime_resources()
         # Shutdown Redis

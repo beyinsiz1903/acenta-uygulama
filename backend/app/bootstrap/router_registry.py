@@ -149,6 +149,7 @@ from app.routers.ops_cases import router as ops_cases_router
 from app.routers.ops_click_to_pay import router as ops_click_to_pay_router
 from app.routers.ops_finance import router as ops_finance_router
 from app.routers.ops_incidents import router as ops_incidents_router
+from app.routers.ops_supplier_operations import router as ops_supplier_operations_router
 from app.routers.ops_tasks import router as ops_tasks_router
 from app.routers.partner_graph import router as partner_graph_router
 from app.routers.partner_v1 import router as partner_v1_router
@@ -388,3 +389,4 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(health_dashboard_router)
     app.include_router(infrastructure_router)
     app.include_router(supplier_ecosystem_router)
+    app.include_router(ops_supplier_operations_router)

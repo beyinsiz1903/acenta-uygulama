@@ -1,50 +1,61 @@
 <analysis>**original_problem_statement:**
-The user is building a Travel Agency Operating System named Syroce. The project has recently pivoted based on user feedback to focus heavily on building a **Property Management System (PMS)** for hotels.
+The user is building a Travel Agency Operating System named Syroce. The project's initial focus was on a **Property Management System (PMS)** for hotels, which included room management, guest lists, and basic invoicing.
 
-**PRODUCT REQUIREMENTS (Based on recent user feedback):**
-1.  **Hotel PMS Focus**: The application should function more like a PMS rather than a general tour agency tool.
-2.  **Room Management**: Agencies should be able to manage their hotel rooms (CRUD operations). (DONE)
-3.  **Operational Lists**: The system must provide lists for ,  guests, and . (DONE)
-4.  **Accounting & Invoicing**: A system to handle payments, post them to a current account (), and then issue/process invoices. (DONE)
-5.  **Stayover Report**: Users want to see a count of stayover rooms. (DONE)
-6.  **Reservation Enrichment**: Ability to add tour and flight details into a reservation for tracking purposes. (IN PROGRESS)
-7.  **Automatic Integrations**: The user expressed a desire for automatic integrations, specifically for enriching reservation data (e.g., flights). (IN PROGRESS)
+However, the user has issued a new, comprehensive request to perform a deep technical, architectural, and product audit of the entire project. The goal is to create a **complete transformation plan to convert the application into a world-class, enterprise-grade Travel SaaS platform**. This new request overrides all previous priorities. The detailed requirements for this audit and transformation cover architecture, security, domain modeling, DevOps, and product strategy.
 
 **User's preferred language**: Turkish
 
 **what currently exists?**
-The application is a functional Hotel Property Management System (PMS). It includes modules for room management, guest lists (arrivals, in-house, departures, stayovers), and a fully verified accounting/invoicing system. A flight information lookup feature has just been added. The backend is wired to use the AviationStack API, and the frontend has Auto Fill buttons on the reservation details panel to fetch and populate flight data. The implementation is complete but requires a user-provided API key to function.
+The application is a basic, functional Property Management System (PMS) with a React frontend, FastAPI backend, and MongoDB database. It includes features for room management, guest lists (arrivals, in-house, departures), and invoicing. A flight information lookup feature using the AviationStack API was previously implemented but is not user-configurable.
+
+In the last session, the agent performed an exhaustive analysis of the entire codebase in response to the user's request for a platform audit. A comprehensive report and transformation plan has been generated and saved as .
 
 **Last working item**:
--   Last item agent was working: Implementing the Flight API Integration to automatically fetch flight details. This involved adding a new backend endpoint () that calls the AviationStack API and updating the frontend  with buttons to trigger this lookup.
--   Status: USER VERIFICATION PENDING
--   Agent Testing Done: Y
--   Which testing method agent to use? NA
+-   Last item agent was working: The agent's sole focus was to analyze the entire codebase to fulfill the user's request for a comprehensive audit and transformation plan. This involved inspecting over 60 files covering the backend, frontend, architecture, and domain logic. The agent then synthesized this information into a detailed report.
+-   Status: FINISHED (The audit report has been generated).
+-   Agent Testing Done: N/A
+-   Which testing method agent to use? N/A
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   None.
+-   **Issue 1: Technical Debt - Hardcoded API Key (Priority: P1)**
+    -   The AviationStack flight info feature relies on a hardcoded backend environment variable (), making it unusable for end-users who need to provide their own key.
+    -   **Attempted fixes:** None. This was the next task before the user's audit request.
+    -   **Next debug checklist:** This issue should be resolved as part of Phase 1 - Stabilization from the new audit report. It involves creating a UI for the agency to save their API key and updating the backend to use this key from the database.
+    -   **Why fix this issue and what will be achieved with the fix?** To make the existing flight information feature functional for users.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Both.
+    -   **Blocked on other issue:** No, but it should be integrated into the new transformation roadmap.
 
 **In progress Task List**:
--   None.
+-   **Task 1: Enterprise SaaS Platform Transformation (Priority: P0)**
+    -   **Where to resume:** The audit and initial plan are complete and located in . The next step is to begin **Phase 1: Stabilization** as outlined in the report. This involves fixing critical bugs, improving logging, and addressing immediate technical debt like the hardcoded API key.
+    -   **What will be achieved with this?** This is the first step in transforming the current prototype into a stable, secure, and scalable enterprise platform, as requested by the user.
+    -   **Status:** IN PROGRESS (Audit complete, implementation not started)
+    -   **Should Test frontend/backend/both after fix?** Both.
+    -   **Blocked on something:** No.
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks:**
-    -   **P0: Agency API Key Management**: The current flight integration requires a hardcoded  in the backend environment. This is not user-configurable. A new UI must be created (e.g., in an agency settings page) to allow an agency admin to enter and save their own AviationStack API key. The backend needs to be updated to retrieve and use this key from the database instead of the environment variable.
--   **Future Tasks:**
-    -   **Agency Subscription Management**: A core requirement from the original problem statement that is still pending. This involves managing subscription durations and access control based on expiry.
-    -   **Direct Password Management**: Allow a superadmin to create users and set their passwords directly.
-    -   **Refactoring**: Centralize data normalization in  and decompose the  component.
+The entire roadmap is now defined by the . The previous task list is obsolete.
+-   **Upcoming Tasks (Based on Audit Report):**
+    -   **P0: Phase 1 - Stabilization**: Address critical bugs, set up centralized logging and error tracking, fix hardcoded secrets (AviationStack API key), and establish a basic CI/CD pipeline.
+    -   **P1: Phase 2 - Security Hardening**: Implement proper multi-tenant data isolation, introduce Role-Based Access Control (RBAC), secure API endpoints against common vulnerabilities (BOLA, IDOR), and implement secure token management with refresh tokens.
+-   **Future Tasks (Based on Audit Report):**
+    -   **Phase 3 - Architecture Cleanup**: Refactor the monolith into a modular structure (services, domain, repositories), establish clear domain boundaries, and implement a proper service and repository pattern.
+    -   **Phase 4 - Domain Restructuring**: Redesign the data models to support a full travel booking lifecycle (quote, hold, confirm, ticket, etc.), pricing engines (markups, commissions), and settlement systems.
+    -   **Phase 5 - Infrastructure Scaling**: Design and implement a production-grade cloud infrastructure with load balancers, worker queues, read replicas, and a full observability stack.
+    -   **Phase 6 - Enterprise Features**: Build out missing enterprise-grade features like audit trails, tenant configuration, white-labeling, and partner APIs.
 
 **Completed work in this session**
--   **Flight API Integration (DONE & TESTED):**
-    -   **Backend**: Added  to get the playbook for AviationStack.
-    -   **Backend**: Added a new endpoint  in  to look up flight data using the AviationStack API via .
-    -   **Frontend**: Modified  to add Otomatik Doldur (Auto Fill) buttons to the reservation detail panel, which call the new backend endpoint.
-    -   **Testing**: Verified the feature end-to-end using , screenshots, and a full run of .
+-   **Platform Audit & Transformation Plan (DONE):**
+    -   Performed a comprehensive audit of the entire application codebase, covering architecture, security, domain logic, and infrastructure.
+    -   Created a detailed report with a multi-phase transformation roadmap, saved to .
+    -   Updated the Product Requirements Document () to reflect the new project direction.
 
 **Earlier issues found/mentioned but not fixed**
--   None.
+-   **Agency Subscription Management**: A core requirement from the original problem statement that is still pending. This should now be incorporated into the new roadmap.
+-   **Direct Password Management**: A request for a superadmin to create users and set their passwords directly. This should be addressed as part of the RBAC and user management features in the new roadmap.
 
 **Known issue recurrence from previous fork**
 -   None.
@@ -53,65 +64,76 @@ The application is a functional Hotel Property Management System (PMS). It inclu
 
 
 **Key Technical Concepts**
--   **Backend:** FastAPI, Motor. Made an external API call using  to the AviationStack API.
--   **Frontend:** React, React Router, Shadcn/UI, Axios. Added state management () and async functions to handle the flight lookup and update the UI.
+-   **Backend:** FastAPI, Motor (async MongoDB driver), Pydantic
+-   **Frontend:** React, React Router, Axios, Shadcn/UI, Tailwind CSS
+-   **Database:** MongoDB
+-   **Analysis:** The agent conducted a deep dive into the existing stack to produce the audit report.
 
 **key DB schema**
--   No schema changes were made in this session. A new task (P0) will likely require adding an API key field to the  collection.
+-   **agencies**: Stores agency information.
+-   **users**: Stores user accounts, linked to agencies.
+-   **hotels**: Stores hotel properties, linked to agencies.
+-   **rooms**: Stores room types and details for each hotel.
+-   **reservations**: Stores guest reservation data.
 
 **changes in tech stack**
--   None. The  library was already installed.
+-   None.
 
 **All files of reference**
--    (Modified for flight lookup)
--    (Modified for flight lookup UI)
--    (Latest test report)
--    (Updated with completed work)
+-   : **CRITICAL**. This is the new master plan for the project.
+-   : Updated to reflect the new direction.
+-   All files under  and  were reviewed during the audit.
 
 **Areas that need refactoring**:
--   Data normalization logic in  could be centralized into Pydantic response models.
--   The  component is large and could be broken down into smaller sub-components.
+The audit report () identified significant refactoring needs across the entire application, including:
+-   **Monolithic Architecture**: Lack of clear boundaries between domain, service, and data layers.
+-   **Security**: Missing multi-tenant isolation, inadequate authorization (BOLA risks), and insecure secret management.
+-   **Domain Model**: The current models are simple and do not support complex travel-specific concepts like a full booking lifecycle or advanced pricing.
+-   **Frontend**: Large, monolithic components and inconsistent state management.
 
 **key api endpoints**
--   : (New) Fetches flight details from the AviationStack API.
+-   
+-   
+-   
+-   
 
 **Critical Info for New Agent**
--   **You must communicate in Turkish.**
--   The user's next priority is making the new Flight API integration usable.
--   **CRITICAL BLOCKER**: The flight integration is complete but **unusable** by the end-user. It relies on a server-side environment variable () for the API key. The user has no way to provide their key. Your **immediate priority (P0)** is to build a UI for agency admins to submit and save their own AviationStack API key, and update the backend to use the stored key instead of the environment variable.
--   After resolving the API key issue, confirm with the user that the flight feature and the previously completed Stayover feature meet their expectations.
+-   **Project Direction has Pivoted**: The user's priority is no longer incremental PMS features. The new, overarching goal is to execute the transformation plan outlined in . You must read and understand this document before starting any work.
+-   **Start with Phase 1**: Your immediate task is to begin implementing Phase 1: Stabilization from the audit report. Present a plan to the user based on the tasks in this phase.
+-   **Communicate in Turkish**: It is mandatory to continue all communication with the user in Turkish.
+-   The old P0 task (AviationStack API key UI) is still relevant but should now be framed as part of the Phase 1 stabilization and security hardening effort.
 
 **documents and test reports created in this job**
--    (Updated)
--    (New)
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** 1 a / henüz yok / uygun (**Translation**: 1 a / not yet / suitable)
-    -   **Summary**: The user selected AviationStack (option 1a) from the list of flight API providers, confirmed they do not have an API key yet, and approved the agent's plan to proceed with the integration.
-    -   **Status**: Completed.
+1.  **User:** (A very long and detailed prompt requesting a full audit and transformation plan for the application to become a world-class enterprise SaaS platform).
+    -   **Summary**: The user completely changed the project's direction, asking for a strategic audit instead of continuing with feature development.
+    -   **Status**: Completed. The agent performed the audit and generated the requested report.
 
 **Project Health Check:**
--   **Broken:** The new Flight Lookup feature is functionally broken for the user as there is no way for them to provide the required API key.
+-   **Broken:**
+    -   **Security**: The audit revealed significant security risks, including a lack of proper multi-tenant data isolation and potential for Broken Object Level Authorization (BOLA).
+    -   **Flight Feature**: The feature is unusable for end-users due to the hardcoded API key.
 -   **Mocked:** None
--   **Incomplete:**
-    -   Agency Subscription Management
-    -   Direct Password Management
+-   **Incomplete:** The application is considered a prototype. Almost all enterprise-grade features identified in the audit are missing (RBAC, audit trails, advanced pricing, partner APIs, etc.).
 
 **3rd Party Integrations**
--   **AviationStack API**: A backend integration has been built, but it's not yet usable as it requires a user-configurable API key.
--   **Google Sheets API / Google Drive API**: Active and working.
+-   **AviationStack API**: Integrated but not user-configurable.
+-   **Google Sheets API / Google Drive API**: Previously integrated and assumed to be active.
 -   **MongoDB Atlas**: Production database.
 
 **Testing status**
--   Testing agent used after significant changes: YES
+-   Testing agent used after significant changes: N/A (Session was for analysis only)
 -   Troubleshoot agent used after agent stuck in loop: NO
--   Test files created: []
--   Known regressions: None.
+-   Test files created: None
+-   Known regressions: None
 
 **Credentials to test flow:**
 -   **Superadmin:**  / 
 -   **Agency Admin:**  / 
--   **Agency User:**  /  (This user belongs to )
+-   **Agency User:**  / 
 
 **What agent forgot to execute**
--   The agent successfully implemented the technical side of the flight integration but overlooked the user-facing requirement of configuring the API key. The implementation relies on a backend environment variable, making the feature impossible for the user to enable on their own. This must be the next task to be addressed.</analysis>
+-   The agent correctly prioritized the user's new, overriding request to perform a platform audit. All previous pending tasks were implicitly superseded by this new directive. No tasks were forgotten.</analysis>

@@ -13,7 +13,7 @@ import json
 import sys
 
 # Backend URL
-BACKEND_URL = "https://agency-ops-13.preview.emergentagent.com/api"
+BACKEND_URL = "https://syroce-transform.preview.emergentagent.com/api"
 
 # Test credentials from review request
 ADMIN_EMAIL = "admin@acenta.test"

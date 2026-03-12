@@ -43,8 +43,30 @@ def create_app() -> FastAPI:
             import logging
             logging.getLogger("startup").warning("Schema validation setup: %s", exc)
 
+        # Apply scalability indexes
+        try:
+            from app.indexes.scalability_indexes import ensure_scalability_indexes
+            await ensure_scalability_indexes(db)
+        except Exception as exc:
+            import logging
+            logging.getLogger("startup").warning("Scalability indexes setup: %s", exc)
+
+        # Initialize observability
+        try:
+            from app.infrastructure.observability import init_opentelemetry
+            init_opentelemetry("syroce-api")
+        except Exception as exc:
+            import logging
+            logging.getLogger("startup").warning("OpenTelemetry init: %s", exc)
+
         yield
         shutdown_runtime_resources()
+        # Shutdown Redis
+        try:
+            from app.infrastructure.redis_client import shutdown_redis
+            await shutdown_redis()
+        except Exception:
+            pass
         await close_mongo()
 
     app = FastAPI(

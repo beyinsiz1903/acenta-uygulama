@@ -1,0 +1,74 @@
+{
+  "summary": "Iteration 65: Phase 2 Scalability Infrastructure testing. All 12 infrastructure endpoints verified: (1) 8 infrastructure monitoring endpoints working - /api/infrastructure/health, /redis, /circuit-breakers, /circuit-breakers/{name}/reset, /events, /rate-limits, /metrics, /queues, (2) Redis token bucket rate limiting confirmed with X-RateLimit-Policy header, (3) 6 circuit breakers in closed state (aviationstack, paximum, stripe, iyzico, google_sheets, email_provider), (4) 8 rate limit tiers configured (auth_login, auth_signup, auth_password, api_global, b2b_booking, public_checkout, export, supplier_api), (5) 9 Celery queues configured (6 regular + 3 DLQ).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/infrastructure/metrics/prometheus", "issue": "Returns empty metrics (0 bytes) - metrics not yet being recorded to observability counters. Future work needed to instrument code paths."},
+      {"endpoint": "/api/infrastructure/events", "issue": "Returns 0 registered handlers and 0 persisted events - event handlers not yet subscribed. Future work needed to wire up event handlers."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "GET /api/health returns {status: 'ok'} - existing health endpoint still works",
+    "GET /api/health/deep returns MongoDB collection stats - existing deep health still works",
+    "GET /api/infrastructure/health requires auth (returns 401 without token)",
+    "GET /api/infrastructure/health returns Redis=healthy, Celery=configured, 6 circuit breakers",
+    "GET /api/infrastructure/redis requires auth (returns 401 without token)",
+    "GET /api/infrastructure/redis returns memory (1.18M), hit_rate (65.5%), uptime (891s)",
+    "GET /api/infrastructure/circuit-breakers requires auth (returns 401 without token)",
+    "GET /api/infrastructure/circuit-breakers returns 6 breakers all in 'closed' state",
+    "POST /api/infrastructure/circuit-breakers/aviationstack/reset returns {status: 'reset', breaker.state: 'closed'}",
+    "GET /api/infrastructure/events requires auth (returns 401 without token)",
+    "GET /api/infrastructure/events returns handler registry (0 handlers, 0 events currently)",
+    "GET /api/infrastructure/rate-limits requires auth (returns 401 without token)",
+    "GET /api/infrastructure/rate-limits returns 8 tiers: auth_login(10), auth_signup(3), auth_password(5), api_global(200), b2b_booking(30), public_checkout(10), export(5), supplier_api(60)",
+    "GET /api/infrastructure/metrics requires auth (returns 401 without token)",
+    "GET /api/infrastructure/metrics returns {counters: {}, gauges: {}, histograms: {}}",
+    "GET /api/infrastructure/queues requires auth (returns 401 without token)",
+    "GET /api/infrastructure/queues returns 9 queues: default, critical, supplier, notifications, reports, maintenance, dlq.default, dlq.critical, dlq.supplier (all length=0)",
+    "GET /api/healthz includes X-RateLimit-Policy: token_bucket header",
+    "POST /api/auth/login includes X-RateLimit-Policy: token_bucket header",
+    "GET /api/infrastructure/metrics/prometheus returns text/plain format (0 bytes)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_infrastructure_scalability_iter65.py",
+    "/app/test_reports/pytest/pytest_infrastructure_iter65.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Good: Redis token bucket implementation uses atomic Lua script for O(1) performance (~0.1ms per check)",
+    "Good: Rate limiter has MongoDB fallback if Redis unavailable - graceful degradation",
+    "Good: 6 pre-configured circuit breakers for external services with appropriate thresholds (3-10 failures)",
+    "Good: Event bus supports Redis Pub/Sub with MongoDB persistence for audit trail",
+    "Good: Celery configured with 6 regular queues + 3 DLQ for proper task routing",
+    "Good: 26 scalability indexes defined for domain_events, rate_limits, jobs, bookings, reservations, ledger_postings, settlement_runs, supplier_accruals, usage_daily, audit_log, app_cache, products",
+    "Good: TTL indexes for auto-cleanup of rate_limits, app_cache, and domain_events (30-day retention)",
+    "Good: Async tasks use exponential backoff with jitter for retry reliability",
+    "Note: Observability metrics (counters, gauges, histograms) are not yet being recorded - infrastructure is ready but instrumentation pending",
+    "Note: Event handlers are not yet subscribed - event bus ready but handlers pending wiring"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_infrastructure_scalability_iter65.py"
+  ],
+  "success_rate": {
+    "backend": "100% (20/20 tests passed)",
+    "frontend": "N/A (backend only testing requested)"
+  },
+  "test_credentials": {
+    "admin": "agent@acenta.test / agent123",
+    "agency_admin": "agency1@demo.test / agency123"
+  },
+  "seed_data_creation": "None - used existing seeded data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 65 verified Phase 2 Scalability Infrastructure. All /api/infrastructure/* endpoints require authentication (admin, super_admin, or agency_admin role). Redis running locally on port 6379 with 65.5% hit rate. 6 circuit breakers configured for external services (aviationstack, paximum, stripe, iyzico, google_sheets, email_provider) - all in closed state. 8 rate limit tiers using token bucket algorithm. 9 Celery queues (6 regular + 3 DLQ). Infrastructure endpoints return real-time data from Redis. X-RateLimit-Policy: token_bucket header present on API responses (not on /api/health which is explicitly skipped). Event handlers and metrics instrumentation are infrastructure-ready but not yet wired. Preview URL: https://syroce-phase2.preview.emergentagent.com",
+  "mocked_apis": {
+    "has_mocked_apis": false,
+    "mocked_apis_list": [],
+    "notes": "All APIs use real Redis and MongoDB. No mocking in scalability infrastructure."
+  }
+}

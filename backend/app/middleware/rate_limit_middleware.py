@@ -1,4 +1,4 @@
-"""Rate limiting middleware (E3.3 + Enhanced).
+"""Rate limiting middleware — Redis Token Bucket with MongoDB fallback.
 
 Targets:
 - Login brute force: 10 attempts / 5 min
@@ -9,38 +9,32 @@ Targets:
 - File uploads: 10 / 5 min
 - Global API rate limit: 200 requests / 1 min per IP
 
-Uses MongoDB TTL collection for simplicity.
+Uses Redis token bucket (O(1), ~0.1ms) with MongoDB fallback.
 """
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from app.db import get_db
-
 logger = logging.getLogger("rate_limit")
 
-# Rate limit rules: path_prefix -> (max_attempts, window_seconds, key_type)
-RATE_LIMIT_RULES = {
-    "/api/auth/login": (10, 300, "ip"),        # 10 per 5 min by IP
-    "/api/auth/signup": (3, 300, "ip"),         # 3 per 5 min by IP
-    "/api/auth/password-reset": (5, 900, "ip"), # 5 per 15 min by IP
-    "/api/admin/tenant/export": (5, 600, "user"),  # 5 per 10 min by user
-    "/api/admin/audit/export": (5, 600, "user"),   # 5 per 10 min by user
-    "/api/approvals": (10, 300, "user"),           # 10 per 5 min by user
-    "/api/admin/tours/upload-image": (10, 300, "user"),  # 10 per 5 min by user
-    "/api/b2b/bookings": (30, 60, "user"),        # 30 per 1 min by user
-    "/api/public/checkout": (10, 300, "ip"),       # 10 per 5 min by IP
-    "/api/public/click-to-pay": (20, 300, "ip"),   # 20 per 5 min by IP
+# Path → (tier, key_type)
+PATH_TIER_MAP = {
+    "/api/auth/login":              ("auth_login", "ip"),
+    "/api/auth/signup":             ("auth_signup", "ip"),
+    "/api/auth/password-reset":     ("auth_password", "ip"),
+    "/api/admin/tenant/export":     ("export", "user"),
+    "/api/admin/audit/export":      ("export", "user"),
+    "/api/approvals":               ("auth_login", "user"),
+    "/api/admin/tours/upload-image": ("auth_login", "user"),
+    "/api/b2b/bookings":            ("b2b_booking", "user"),
+    "/api/public/checkout":         ("public_checkout", "ip"),
+    "/api/public/click-to-pay":     ("public_checkout", "ip"),
 }
-
-# Global rate limit: applies to ALL API requests per IP
-GLOBAL_RATE_LIMIT = (200, 60)  # 200 requests per 60 seconds per IP
 
 
 def _get_client_ip(request: Request) -> str:
@@ -55,123 +49,112 @@ def _get_client_ip(request: Request) -> str:
 def _get_user_from_auth(request: Request) -> Optional[str]:
     auth = request.headers.get("authorization", "")
     if auth.lower().startswith("bearer "):
-        # Use token hash as user key (fast, no decode needed)
         import hashlib
         token = auth.split(" ", 1)[1][:32]
         return hashlib.md5(token.encode()).hexdigest()
     return None
 
 
-def _find_matching_rule(path: str):
-    """Find the most specific matching rate limit rule."""
+def _find_matching_tier(path: str):
+    """Find the most specific matching rate limit tier."""
     best_match = None
     best_length = 0
-    for rule_path, config in RATE_LIMIT_RULES.items():
+    for rule_path, config in PATH_TIER_MAP.items():
         if path.startswith(rule_path) and len(rule_path) > best_length:
             best_match = (rule_path, config)
             best_length = len(rule_path)
-    return best_match if best_match else (None, None)
+    return best_match
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    """Rate limiting using MongoDB counters with TTL."""
+    """Rate limiting using Redis token bucket with MongoDB fallback."""
 
     async def dispatch(self, request: Request, call_next):
         path = request.url.path or ""
         method = request.method
 
-        # Skip rate limiting for health checks and OPTIONS
+        # Skip for health checks and OPTIONS
         if method == "OPTIONS" or path in ("/health", "/", "/api/health"):
             return await call_next(request)
 
-        # Only apply specific endpoint rate limits on POST/PUT/DELETE
+        # Endpoint-specific rate limits on state-changing methods
         if method in ("POST", "PUT", "DELETE"):
-            rule_path, config = _find_matching_rule(path)
-            if config:
-                max_attempts, window_seconds, key_type = config
+            match = _find_matching_tier(path)
+            if match:
+                _, (tier, key_type) = match
 
-                # Build rate limit key
                 if key_type == "ip":
-                    key = f"rl:{rule_path}:ip:{_get_client_ip(request)}"
+                    key = _get_client_ip(request)
                 else:
-                    user_key = _get_user_from_auth(request) or _get_client_ip(request)
-                    key = f"rl:{rule_path}:user:{user_key}"
+                    key = _get_user_from_auth(request) or _get_client_ip(request)
 
-                try:
-                    exceeded, remaining = await self._check_rate_limit(
-                        key, max_attempts, window_seconds
-                    )
-                    if exceeded:
-                        logger.warning(
-                            "Rate limit exceeded: key=%s path=%s",
-                            key, path,
-                        )
-                        return self._rate_limit_response(window_seconds, remaining)
-                except Exception as e:
-                    logger.error("Rate limit check failed: %s", e)
+                result = await self._check_redis_rate_limit(key, tier)
+                if result and not result.allowed:
+                    retry_after = max(1, result.retry_after_ms // 1000)
+                    return self._rate_limit_response(retry_after, result.remaining)
 
-        # Global rate limit check (all methods, all paths under /api)
+        # Global rate limit for all API requests
         if path.startswith("/api"):
             client_ip = _get_client_ip(request)
-            global_key = f"rl:global:ip:{client_ip}"
-            global_max, global_window = GLOBAL_RATE_LIMIT
-            try:
-                exceeded, remaining = await self._check_rate_limit(
-                    global_key, global_max, global_window
-                )
-                if exceeded:
-                    logger.warning(
-                        "Global rate limit exceeded: ip=%s path=%s",
-                        client_ip, path,
-                    )
-                    return self._rate_limit_response(global_window, remaining)
-            except Exception as e:
-                logger.error("Global rate limit check failed: %s", e)
+            result = await self._check_redis_rate_limit(client_ip, "api_global")
+            if result and not result.allowed:
+                retry_after = max(1, result.retry_after_ms // 1000)
+                return self._rate_limit_response(retry_after, result.remaining)
 
         response = await call_next(request)
-
-        # Add rate limit headers to response
-        response.headers["X-RateLimit-Policy"] = "standard"
-
+        response.headers["X-RateLimit-Policy"] = "token_bucket"
         return response
 
-    async def _check_rate_limit(
-        self, key: str, max_attempts: int, window_seconds: int
-    ) -> tuple:
-        """Check and record rate limit. Returns (exceeded: bool, remaining: int)."""
-        db = await get_db()
-        now = datetime.now(timezone.utc)
-        window_start = now - timedelta(seconds=window_seconds)
+    async def _check_redis_rate_limit(self, key: str, tier: str):
+        """Try Redis rate limit, fall back to MongoDB if Redis unavailable."""
+        try:
+            from app.infrastructure.rate_limiter import check_rate_limit
+            return await check_rate_limit(key, tier)
+        except Exception as e:
+            logger.debug("Redis rate limit failed, falling back to MongoDB: %s", e)
+            return await self._check_mongo_fallback(key, tier)
 
-        # Count recent attempts
-        count = await db.rate_limits.count_documents({
-            "key": key,
-            "created_at": {"$gte": window_start},
-        })
+    async def _check_mongo_fallback(self, key: str, tier: str):
+        """MongoDB-based rate limit fallback."""
+        from datetime import datetime, timedelta, timezone
+        from app.db import get_db
+        from app.infrastructure.rate_limiter import RATE_TIERS, RateLimitResult
 
-        remaining = max(0, max_attempts - count - 1)
+        config = RATE_TIERS.get(tier, RATE_TIERS["api_global"])
+        max_attempts = config["capacity"]
+        window_seconds = int(config["capacity"] / max(config["refill_rate"], 0.001))
 
-        if count >= max_attempts:
-            return True, 0
+        try:
+            db = await get_db()
+            now = datetime.now(timezone.utc)
+            window_start = now - timedelta(seconds=window_seconds)
+            rl_key = f"rl:{tier}:{key}"
 
-        # Record this attempt
-        await db.rate_limits.insert_one({
-            "key": key,
-            "path": key.split(":")[1] if ":" in key else "",
-            "created_at": now,
-            "expires_at": now + timedelta(seconds=window_seconds),
-        })
+            count = await db.rate_limits.count_documents({
+                "key": rl_key,
+                "created_at": {"$gte": window_start},
+            })
 
-        return False, remaining
+            if count >= max_attempts:
+                return RateLimitResult(allowed=False, remaining=0, retry_after_ms=window_seconds * 1000)
+
+            await db.rate_limits.insert_one({
+                "key": rl_key,
+                "created_at": now,
+                "expires_at": now + timedelta(seconds=window_seconds),
+            })
+
+            return RateLimitResult(allowed=True, remaining=max_attempts - count - 1, retry_after_ms=0)
+        except Exception:
+            return RateLimitResult(allowed=True, remaining=-1, retry_after_ms=0)
 
     def _rate_limit_response(self, retry_after: int, remaining: int) -> JSONResponse:
-        """Create a standardized 429 response."""
         return JSONResponse(
             status_code=429,
             content={
                 "error": {
                     "code": "rate_limit_exceeded",
-                    "message": "Çok fazla istek. Lütfen daha sonra tekrar deneyin.",
+                    "message": "Too many requests. Please try again later.",
                     "details": {
                         "retry_after_seconds": retry_after,
                         "remaining": remaining,

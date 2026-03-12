@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://syroce-transform.preview.emergentagent.com/api",
-    "frontend_url": "https://syroce-transform.preview.emergentagent.com",
+    "backend_url": "https://syroce-phase2.preview.emergentagent.com/api",
+    "frontend_url": "https://syroce-phase2.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

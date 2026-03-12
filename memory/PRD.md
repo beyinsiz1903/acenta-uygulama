@@ -1,140 +1,133 @@
-# Syroce — Travel Agency Operating System PRD
+# Syroce — Travel Agency Operating System (PRD)
 
-## Original Problem Statement
-Syroce is a Travel Agency Operating System that started as a **Property Management System (PMS)** for hotels and has evolved into a comprehensive **Enterprise Travel SaaS Platform**. The platform now covers booking lifecycle, B2B agency ecosystem, CRM, pricing engine, settlements, supplier integrations, and Google Sheets import tools.
-
-## Current Phase: Enterprise Scalability (Phase 2)
-The platform completed **Phase 1: Stabilization** (CI/CD, testing, CSRF) and is now in **Phase 2: Scalability & Async Operations**.
-
-### Maturity Score Progress
-- Overall Maturity: 5.5/10 → 6.3/10 (post-Phase 1) → **6.8/10** (post-Phase 2)
-- Security: 6.5/10 → 7.5/10
-- Architecture: 5/10 → 5.5/10 → **7/10**
-- Scalability: 3/10 → **6.5/10**
-- Observability: 3/10 → **6/10**
-- Test Coverage: 2/10 → 4/10
+## Core Product
+Multi-tenant SaaS platform for travel agencies. Manages bookings, finance, suppliers, B2B distribution, and internal operations.
 
 ## Tech Stack
-- **Backend**: FastAPI, Motor (async MongoDB), Pydantic, passlib, httpx
-- **Frontend**: React, React Router, Tailwind CSS, Shadcn/UI, Axios, Sonner
-- **Database**: MongoDB (MongoDB Atlas in production)
-- **Auth**: Cookie-based with httpOnly cookies, JWT, 2FA
-- **Payments**: Stripe + Iyzico (Turkish payment gateway)
-- **External APIs**: AviationStack (flight lookup), Google Sheets, Paximum
-- **Caching**: Redis (L1) + MongoDB (L2)
-- **Queue**: Celery + Redis (6 queues + 3 DLQ)
-- **Events**: Redis Pub/Sub + MongoDB persistence
-- **Observability**: OpenTelemetry, Prometheus, Sentry
-- **CI/CD**: GitHub Actions (7-stage pipeline)
+- **Backend:** FastAPI, Motor, Pydantic, Celery, Redis
+- **Frontend:** React, Shadcn/UI
+- **Database:** MongoDB
+- **Infrastructure:** Redis (cache, rate limiting, Celery broker)
+- **Architecture:** Event-Driven, CQRS-lite, Circuit Breaker, Distributed Rate Limiting
+- **Observability:** OpenTelemetry, Prometheus-ready
 
-## Architecture
-```
-/app
-├── backend/app/
-│   ├── bootstrap/          # App factory, router registry, middleware
-│   ├── billing/            # Stripe + Iyzico payment providers
-│   ├── domain/             # Booking state machine
-│   ├── indexes/            # MongoDB indexes + schema validation + scalability indexes
-│   ├── infrastructure/     # (NEW) Redis, Celery, Event Bus, Circuit Breaker, Rate Limiter, Observability
-│   ├── middleware/          # 9 middleware (+ CSRF, updated rate limiter)
-│   ├── repositories/       # 25+ data access repos
-│   ├── routers/            # 180+ API router files + infrastructure router
-│   ├── services/           # 120+ business logic services
-│   ├── security/           # B2B context, feature flags, JWT config
-│   └── tasks/              # (NEW) Celery tasks (booking, supplier, report, notification, maintenance)
-├── frontend/src/
-│   ├── b2b/               # B2B portal
-│   ├── components/        # Shared UI components
-│   ├── pages/             # 100+ page components
-│   └── hooks/             # Auth, dashboard, reservations hooks
-├── .github/workflows/
-│   └── ci.yml             # 7-stage CI/CD pipeline
-└── memory/
-    ├── PRD.md
-    ├── CHANGELOG.md
-    └── ROADMAP.md
-```
+## Current Architecture Version: 3.0 (Supplier Ecosystem)
 
-## Key DB Collections
-- **users**: User accounts with email, password_hash, roles, organization_id
-- **organizations**: Multi-tenant organizations with settings
-- **tenants**: Tenant records with status and organization link
-- **bookings**: Booking lifecycle with state machine statuses
-- **agencies**: Travel agency records
-- **products**: Hotel/tour/transfer products
-- **domain_events**: (NEW) Event bus persistence with TTL
-- **rate_limits**: Rate limit tracking (Redis primary, MongoDB fallback)
-- **jobs**: Background job queue
+---
 
-## Completed Features
+## What's Been Implemented
 
-### Phase 1: Stabilization (2026-03-12)
-- [x] Enhanced Health Checks (4-tier)
-- [x] CSRF Protection Middleware
-- [x] MongoDB $jsonSchema Validation (10 collections)
-- [x] CI/CD Pipeline (7-stage)
-- [x] Stabilization Test Suite (42 tests)
-- [x] Architecture Documentation
+### Phase 1 — Core Platform (Complete)
+- Multi-tenant agency management
+- User auth with JWT (role-based)
+- Booking CRUD
+- Finance (accounts, transactions, payments, invoices)
+- Customer management
+- Document management
+- Web catalog & WebPOS
+- Google Sheets & AviationStack integrations
 
-### Phase 2: Scalability (2026-03-12)
-- [x] Redis infrastructure + connection pooling (sync + async)
-- [x] Token bucket rate limiter (Lua script, 8 tiers)
-- [x] Celery + Redis background job system (6 queues + 3 DLQ)
-- [x] Event-driven architecture (Redis Pub/Sub + MongoDB persistence)
-- [x] Circuit breaker implementation (6 external services)
-- [x] OpenTelemetry distributed tracing initialization
-- [x] Prometheus metrics collection framework
-- [x] Infrastructure health API (8 endpoints)
-- [x] 26 performance-critical MongoDB indexes
-- [x] TTL indexes for auto-cleanup (rate_limits, cache, events)
-- [x] Full scalability architecture document (SCALABILITY_ARCHITECTURE.md)
+### Phase 2 — Enterprise Infrastructure (Complete)
+- Celery + Redis async task queue
+- Redis-based distributed rate limiting (token bucket)
+- Event-driven architecture (Redis Pub/Sub)
+- Circuit breaker pattern (pybreaker)
+- OpenTelemetry instrumentation
+- MongoDB index optimization
+- Infrastructure monitoring router (/api/infra/*)
 
-## API Endpoints (Key)
-### Infrastructure (NEW)
-- `GET /api/infrastructure/health` - Full infrastructure health
-- `GET /api/infrastructure/redis` - Redis stats
-- `GET /api/infrastructure/circuit-breakers` - Circuit breaker statuses
-- `POST /api/infrastructure/circuit-breakers/{name}/reset` - Reset breaker
-- `GET /api/infrastructure/events` - Event bus status
-- `GET /api/infrastructure/rate-limits` - Rate limiter stats
-- `GET /api/infrastructure/metrics` - Application metrics
-- `GET /api/infrastructure/queues` - Celery queue status
+### Phase 3 — Supplier Ecosystem (Complete - 2026-03-12)
+**14-part production-grade supplier integration architecture:**
 
-### Health
-- `GET /api/health` - Liveness probe
-- `GET /api/healthz` - Kubernetes readiness
-- `GET /api/health/ready` - DB connectivity
-- `GET /api/health/deep` - Full diagnostic
+1. **Supplier Adapter Contracts** — ABC with 7 lifecycle methods (healthcheck, search, availability, pricing, hold, confirm, cancel), typed error hierarchy, normalized schemas (20+ Pydantic models)
 
-## Remaining Backlog
+2. **5 Supplier Adapters** — Mock implementations for hotel, flight, tour, insurance, transport (full lifecycle support)
 
-### P0 — In Progress
-- [ ] Event handler wiring (booking lifecycle events)
-- [ ] Metrics instrumentation (HTTP, business, infra counters)
-- [ ] God Router decomposition (ops_finance.py → 6 modules)
+3. **Inventory Aggregation** — Multi-supplier parallel fan-out, deduplication, normalization, sorting, pagination, degraded mode
 
-### P1 — Next
-- [ ] Event-driven cache invalidation
-- [ ] Payment event handlers
-- [ ] Grafana dashboard templates
-- [ ] Alerting rules configuration
-- [ ] Cursor-based pagination
-- [ ] N+1 query elimination
+4. **Booking State Machine** — 13 states, 22 transitions, atomic MongoDB state updates with event emission, rollback map
 
-### P2 — Future
-- [ ] MongoDB replica set with read preferences
-- [ ] Redis Sentinel for HA
-- [ ] API Gateway (Kong)
-- [ ] Service mesh preparation
-- [ ] Multi-region deployment design
-- [ ] Load testing & capacity planning
+5. **Booking Orchestration Engine** — Full lifecycle (search → price validate → hold → payment → confirm → voucher), retry with exponential backoff, failover, compensation
+
+6. **Supplier Failover Engine** — Weighted composite scoring (health 40%, price 30%, reliability 30%), automatic fallback chain, audit logging
+
+7. **Supplier Health Scoring** — 5-metric formula (latency, error rate, timeout rate, confirmation rate, freshness), 4 health states, auto-disable at score < 40
+
+8. **Redis Inventory Cache** — Per-product-type TTL (flight: 5min, hotel: 15min, tour: 30min), stale-while-revalidate, cache invalidation API
+
+9. **Pricing Engine** — 6-stage pipeline (markup → channel → tier → commission → promo → currency), 4 agency tiers (starter/standard/premium/enterprise)
+
+10. **Channel Manager** — B2B partner CRUD, supplier/product access control, credit limits, API key generation, approval workflow
+
+11. **Domain Events** — 15 event types, 5 handlers registered (search, booking, failover, health, cancellation)
+
+12. **Database Design** — 7 new collections, 20 indexes (with TTL policies), full tenant isolation
+
+13. **API Router** — 18 endpoints under /api/suppliers/ecosystem/*, role-based auth
+
+14. **Architecture Documentation** — /app/memory/supplier_ecosystem_architecture.md (complete with diagrams, schemas, top 50 tasks, top 20 risks, maturity score)
+
+---
+
+## API Endpoints — Supplier Ecosystem
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/suppliers/ecosystem/search | Multi-supplier search |
+| POST | /api/suppliers/ecosystem/availability | Availability check |
+| POST | /api/suppliers/ecosystem/pricing | Price validation |
+| POST | /api/suppliers/ecosystem/hold | Create hold |
+| POST | /api/suppliers/ecosystem/confirm | Confirm booking |
+| POST | /api/suppliers/ecosystem/cancel | Cancel booking |
+| POST | /api/suppliers/ecosystem/orchestrate | Full booking flow |
+| GET  | /api/suppliers/ecosystem/health | Health dashboard |
+| POST | /api/suppliers/ecosystem/health/{code}/compute | Compute health score |
+| GET  | /api/suppliers/ecosystem/failover-logs | Failover audit |
+| GET  | /api/suppliers/ecosystem/orchestration-runs | Orchestration history |
+| GET  | /api/suppliers/ecosystem/partners | List partners |
+| POST | /api/suppliers/ecosystem/partners | Create partner |
+| POST | /api/suppliers/ecosystem/partners/{id}/approve | Approve partner |
+| GET  | /api/suppliers/ecosystem/cache/stats | Cache stats |
+| POST | /api/suppliers/ecosystem/cache/invalidate | Invalidate cache |
+| GET  | /api/suppliers/ecosystem/registry | Adapter registry |
+| GET  | /api/suppliers/ecosystem/booking-states | State machine info |
+
+---
+
+## Pending / Backlog
+
+### P0 — Critical
+- Replace mock adapters with real supplier integrations (Paximum, AviationStack)
+- God Router decomposition (ops_finance.py → domain routers)
+- Implement real Celery task bodies (voucher PDF, email)
+
+### P1 — High
+- Implement RBAC (role-based access control)
+- Supplier onboarding API
+- Booking amendment flow
+- Multi-currency support in pricing engine
+- Webhook receiver for supplier push notifications
+
+### P2 — Medium
+- GDS connectivity (Amadeus, Sabre)
+- Supplier sandbox environment
+- Booking reconciliation
+- Dynamic pricing based on demand
+- Grafana dashboards
+
+### P3 — Future
+- ML-based supplier ranking
+- A/B testing for pricing rules
+- Multi-region deployment
+- Booking fraud detection
+
+---
 
 ## Test Credentials
-- **Admin**: agent@acenta.test / agent123
-- **Agency Admin**: agency1@demo.test / agency123
+- **Agency Admin:** agent@acenta.test / agent123
+- **Agency User:** agency1@demo.test / agency123
 
-## Environment Variables
-- `REDIS_URL` - Redis connection (redis://localhost:6379/0)
-- `CELERY_BROKER_URL` - Celery broker (default: REDIS_URL)
-- `JWT_SECRET` - JWT signing secret
-- `STRIPE_WEBHOOK_SECRET` - Stripe webhook verification
+## Key Files
+- `/app/backend/app/suppliers/` — Supplier ecosystem domain
+- `/app/memory/supplier_ecosystem_architecture.md` — Architecture docs
+- `/app/test_reports/iteration_66.json` — Full test report (23/23 passed)

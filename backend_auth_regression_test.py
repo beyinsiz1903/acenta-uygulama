@@ -10,7 +10,7 @@ import json
 import sys
 
 # Test configuration
-BACKEND_URL = "https://pms-flight-api.preview.emergentagent.com"
+BACKEND_URL = "https://agency-ops-13.preview.emergentagent.com"
 TEST_CREDENTIALS = {
     "email": "agent@acenta.test",
     "password": "agent123"

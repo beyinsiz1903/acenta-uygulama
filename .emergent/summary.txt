@@ -1,0 +1,117 @@
+<analysis>**original_problem_statement:**
+The user is building a Travel Agency Operating System named Syroce. The project has recently pivoted based on user feedback to focus heavily on building a **Property Management System (PMS)** for hotels.
+
+**PRODUCT REQUIREMENTS (Based on recent user feedback):**
+1.  **Hotel PMS Focus**: The application should function more like a PMS rather than a general tour agency tool.
+2.  **Room Management**: Agencies should be able to manage their hotel rooms (CRUD operations). (DONE)
+3.  **Operational Lists**: The system must provide lists for ,  guests, and . (DONE)
+4.  **Accounting & Invoicing**: A system to handle payments, post them to a current account (), and then issue/process invoices. (DONE)
+5.  **Stayover Report**: Users want to see a count of stayover rooms. (DONE)
+6.  **Reservation Enrichment**: Ability to add tour and flight details into a reservation for tracking purposes. (IN PROGRESS)
+7.  **Automatic Integrations**: The user expressed a desire for automatic integrations, specifically for enriching reservation data (e.g., flights). (IN PROGRESS)
+
+**User's preferred language**: Turkish
+
+**what currently exists?**
+The application is a functional Hotel Property Management System (PMS). It includes modules for room management, guest lists (arrivals, in-house, departures, stayovers), and a fully verified accounting/invoicing system. A flight information lookup feature has just been added. The backend is wired to use the AviationStack API, and the frontend has Auto Fill buttons on the reservation details panel to fetch and populate flight data. The implementation is complete but requires a user-provided API key to function.
+
+**Last working item**:
+-   Last item agent was working: Implementing the Flight API Integration to automatically fetch flight details. This involved adding a new backend endpoint () that calls the AviationStack API and updating the frontend  with buttons to trigger this lookup.
+-   Status: USER VERIFICATION PENDING
+-   Agent Testing Done: Y
+-   Which testing method agent to use? NA
+-   User Testing Done: N
+
+**All Pending/In progress Issue list**:
+-   None.
+
+**In progress Task List**:
+-   None.
+
+**Upcoming and Future Tasks**
+-   **Upcoming Tasks:**
+    -   **P0: Agency API Key Management**: The current flight integration requires a hardcoded  in the backend environment. This is not user-configurable. A new UI must be created (e.g., in an agency settings page) to allow an agency admin to enter and save their own AviationStack API key. The backend needs to be updated to retrieve and use this key from the database instead of the environment variable.
+-   **Future Tasks:**
+    -   **Agency Subscription Management**: A core requirement from the original problem statement that is still pending. This involves managing subscription durations and access control based on expiry.
+    -   **Direct Password Management**: Allow a superadmin to create users and set their passwords directly.
+    -   **Refactoring**: Centralize data normalization in  and decompose the  component.
+
+**Completed work in this session**
+-   **Flight API Integration (DONE & TESTED):**
+    -   **Backend**: Added  to get the playbook for AviationStack.
+    -   **Backend**: Added a new endpoint  in  to look up flight data using the AviationStack API via .
+    -   **Frontend**: Modified  to add Otomatik Doldur (Auto Fill) buttons to the reservation detail panel, which call the new backend endpoint.
+    -   **Testing**: Verified the feature end-to-end using , screenshots, and a full run of .
+
+**Earlier issues found/mentioned but not fixed**
+-   None.
+
+**Known issue recurrence from previous fork**
+-   None.
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+-   **Backend:** FastAPI, Motor. Made an external API call using  to the AviationStack API.
+-   **Frontend:** React, React Router, Shadcn/UI, Axios. Added state management () and async functions to handle the flight lookup and update the UI.
+
+**key DB schema**
+-   No schema changes were made in this session. A new task (P0) will likely require adding an API key field to the  collection.
+
+**changes in tech stack**
+-   None. The  library was already installed.
+
+**All files of reference**
+-    (Modified for flight lookup)
+-    (Modified for flight lookup UI)
+-    (Latest test report)
+-    (Updated with completed work)
+
+**Areas that need refactoring**:
+-   Data normalization logic in  could be centralized into Pydantic response models.
+-   The  component is large and could be broken down into smaller sub-components.
+
+**key api endpoints**
+-   : (New) Fetches flight details from the AviationStack API.
+
+**Critical Info for New Agent**
+-   **You must communicate in Turkish.**
+-   The user's next priority is making the new Flight API integration usable.
+-   **CRITICAL BLOCKER**: The flight integration is complete but **unusable** by the end-user. It relies on a server-side environment variable () for the API key. The user has no way to provide their key. Your **immediate priority (P0)** is to build a UI for agency admins to submit and save their own AviationStack API key, and update the backend to use the stored key instead of the environment variable.
+-   After resolving the API key issue, confirm with the user that the flight feature and the previously completed Stayover feature meet their expectations.
+
+**documents and test reports created in this job**
+-    (Updated)
+-    (New)
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User:** 1 a / henüz yok / uygun (**Translation**: 1 a / not yet / suitable)
+    -   **Summary**: The user selected AviationStack (option 1a) from the list of flight API providers, confirmed they do not have an API key yet, and approved the agent's plan to proceed with the integration.
+    -   **Status**: Completed.
+
+**Project Health Check:**
+-   **Broken:** The new Flight Lookup feature is functionally broken for the user as there is no way for them to provide the required API key.
+-   **Mocked:** None
+-   **Incomplete:**
+    -   Agency Subscription Management
+    -   Direct Password Management
+
+**3rd Party Integrations**
+-   **AviationStack API**: A backend integration has been built, but it's not yet usable as it requires a user-configurable API key.
+-   **Google Sheets API / Google Drive API**: Active and working.
+-   **MongoDB Atlas**: Production database.
+
+**Testing status**
+-   Testing agent used after significant changes: YES
+-   Troubleshoot agent used after agent stuck in loop: NO
+-   Test files created: []
+-   Known regressions: None.
+
+**Credentials to test flow:**
+-   **Superadmin:**  / 
+-   **Agency Admin:**  / 
+-   **Agency User:**  /  (This user belongs to )
+
+**What agent forgot to execute**
+-   The agent successfully implemented the technical side of the flight integration but overlooked the user-facing requirement of configuring the API key. The implementation relies on a backend environment variable, making the feature impossible for the user to enable on their own. This must be the next task to be addressed.</analysis>

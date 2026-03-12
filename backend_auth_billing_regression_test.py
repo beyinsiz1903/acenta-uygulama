@@ -5,7 +5,7 @@ Backend Auth & Billing Regression Test
 
 Turkish Review Request:
 Backend doğrulaması yap:
-- Base URL: https://pms-flight-api.preview.emergentagent.com
+- Base URL: https://agency-ops-13.preview.emergentagent.com
 - Bu iterasyonda backend kodu değişmedi; ancak frontend auth refactor'ının kullandığı akışları no-regression için kontrol et.
 - Test hesabı: agent@acenta.test / agent123
 
@@ -26,7 +26,7 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 # Configuration
-BASE_URL = "https://pms-flight-api.preview.emergentagent.com"
+BASE_URL = "https://agency-ops-13.preview.emergentagent.com"
 TEST_CREDENTIALS = {
     "email": "agent@acenta.test", 
     "password": "agent123"

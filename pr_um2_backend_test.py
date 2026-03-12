@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Base URL from environment
-BASE_URL = "https://distributed-ops.preview.emergentagent.com"
+BASE_URL = "https://romantic-thompson-3.preview.emergentagent.com"
 
 # Demo credentials from review request
 DEMO_EMAIL = "admin@demo-travel.demo.test"

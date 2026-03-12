@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import CORS_ORIGINS
 from app.middleware.correlation_id import CorrelationIdMiddleware
+from app.middleware.csrf_middleware import CSRFProtectionMiddleware
 from app.middleware.error_tracking_middleware import ErrorTrackingMiddleware
 from app.middleware.ip_whitelist_middleware import IPWhitelistMiddleware
 from app.middleware.prometheus_middleware import PrometheusMiddleware
@@ -20,6 +21,7 @@ from app.middleware.tenant_middleware import TenantResolutionMiddleware
 def configure_middlewares(app: FastAPI) -> None:
     app.add_middleware(CorrelationIdMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(CSRFProtectionMiddleware)
     app.add_middleware(ErrorTrackingMiddleware)
     app.add_middleware(PrometheusMiddleware)
     app.add_middleware(StructuredLoggingMiddleware)

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="5" skipped="0" tests="58" time="134.187" timestamp="2026-03-12T18:27:20.753456+00:00" hostname="agent-env-7aea0f2f-fe3d-4a8e-98b1-dcc247ec2560"><testcase classname="tests.test_stabilization_auth.TestAuthLogin" name="test_login_success_admin" time="2.006" /><testcase classname="tests.test_stabilization_auth.TestAuthLogin" name="test_login_success_agency" time="1.966" /><testcase classname="tests.test_stabilization_auth.TestAuthLogin" name="test_login_invalid_password" time="1.942" /><testcase classname="tests.test_stabilization_auth.TestAuthLogin" name="test_login_nonexistent_user" time="1.713" /><testcase classname="tests.test_stabilization_auth.TestAuthLogin" name="test_login_missing_fields" time="1.741" /><testcase classname="tests.test_stabilization_auth.TestTokenValidation" name="test_me_endpoint_with_valid_token" time="1.966" /><testcase classname="tests.test_stabilization_auth.TestTokenValidation" name="test_me_endpoint_without_token" time="1.718" /><testcase classname="tests.test_stabilization_auth.TestTokenValidation" name="test_me_endpoint_with_invalid_token" time="7.816" /><testcase classname="tests.test_stabilization_auth.TestTokenValidation" name="test_expired_token_rejected" time="2.738" /><testcase classname="tests.test_stabilization_auth.TestRoleNormalization" name="test_normalize_legacy_roles" time="1.701" /><testcase classname="tests.test_stabilization_auth.TestRoleNormalization" name="test_normalize_preserves_standard_roles" time="1.701" /><testcase classname="tests.test_stabilization_auth.TestPasswordPolicy" name="test_short_password_rejected" time="1.722" /><testcase classname="tests.test_stabilization_auth.TestPasswordPolicy" name="test_strong_password_accepted" time="1.696" /><testcase classname="tests.test_stabilization_auth.TestPasswordHashing" name="test_hash_and_verify" time="2.437" /><testcase classname="tests.test_stabilization_auth.TestPasswordHashing" name="test_different_hashes_for_same_password" time="2.190" /><testcase classname="tests.test_stabilization_booking.TestBookingStateMachine" name="test_valid_transitions" time="1.700" /><testcase classname="tests.test_stabilization_booking.TestBookingStateMachine" name="test_invalid_transitions" time="1.703" /><testcase classname="tests.test_stabilization_booking.TestBookingStateMachine" name="test_refund_workflow" time="7.285" /><testcase classname="tests.test_stabilization_booking.TestBookingStateMachine" name="test_hold_workflow" time="1.723" /><testcase classname="tests.test_stabilization_booking.TestLifecycleGuards" name="test_cancel_guard_confirmed_booking" time="1.723" /><testcase classname="tests.test_stabilization_booking.TestLifecycleGuards" name="test_cancel_guard_already_cancelled" time="1.725" /><testcase classname="tests.test_stabilization_booking.TestLifecycleGuards" name="test_cancel_guard_draft_booking_fails" time="1.727" /><testcase classname="tests.test_stabilization_booking.TestLifecycleGuards" name="test_amend_guard_confirmed_booking" time="1.724" /><testcase classname="tests.test_stabilization_booking.TestLifecycleGuards" name="test_amend_guard_cancelled_booking_fails" time="1.745" /><testcase classname="tests.test_stabilization_booking.TestLifecycleEvents" name="test_append_event_creates_document" time="1.763" /><testcase classname="tests.test_stabilization_booking.TestBookingAPI" name="test_hotel_search_returns_results" time="1.792" /><testcase classname="tests.test_stabilization_health.TestHealthEndpoints" name="test_health_liveness" time="1.761" /><testcase classname="tests.test_stabilization_health.TestHealthEndpoints" name="test_healthz_probe" time="1.726" /><testcase classname="tests.test_stabilization_health.TestHealthEndpoints" name="test_health_ready_with_db" time="5.966"><error message="failed on setup with &quot;pymongo.errors.AutoReconnect: localhost:27017: connection closed&quot;">/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:932: in command
+    return command(
+/root/.venv/lib/python3.11/site-packages/pymongo/network.py:181: in command
+    reply = receive_message(conn, request_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/network.py:247: in receive_message
+    length, _, response_to, op_code = _UNPACK_HEADER(_receive_data_on_socket(conn, 16, deadline))
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/network.py:336: in _receive_data_on_socket
+    raise OSError("connection closed")
+E   OSError: connection closed
+
+The above exception was the direct cause of the following exception:
+/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:121: in wrapper
+    yield from runner.run_asyncgen_fixture(local_func, kwargs)
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2291: in run_asyncgen_fixture
+    fixturevalue: T_Retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:312: in seed_default_org_and_users
+    await test_db.tenants.insert_one(tenant_doc)
+/usr/local/lib/python3.11/concurrent/futures/thread.py:58: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:671: in insert_one
+    self._insert_one(
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:611: in _insert_one
+    self.__database.client._retryable_write(acknowledged, _insert_command, session)
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:1568: in _retryable_write
+    return self._retry_with_session(retryable, func, s, None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:1413: in _retry_with_session
+    return self._retry_internal(retryable, func, session, bulk)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/_csot.py:108: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:1460: in _retry_internal
+    return func(session, conn, retryable)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/collection.py:599: in _insert_command
+    result = conn.command(
+/root/.venv/lib/python3.11/site-packages/pymongo/helpers.py:315: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:960: in command
+    self._raise_connection_failure(error)
+/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:1134: in _raise_connection_failure
+    _raise_connection_failure(self.address, error)
+/root/.venv/lib/python3.11/site-packages/pymongo/pool.py:406: in _raise_connection_failure
+    raise AutoReconnect(msg) from error
+E   pymongo.errors.AutoReconnect: localhost:27017: connection closed</error></testcase><testcase classname="tests.test_stabilization_health.TestHealthEndpoints" name="test_health_deep_diagnostic" time="1.717" /><testcase classname="tests.test_stabilization_preview_http.TestHealthEndpointsHTTP" name="test_health_liveness" time="2.033" /><testcase classname="tests.test_stabilization_preview_http.TestHealthEndpointsHTTP" name="test_healthz_probe" time="1.833" /><testcase classname="tests.test_stabilization_preview_http.TestHealthEndpointsHTTP" name="test_health_ready_with_db" time="1.865" /><testcase classname="tests.test_stabilization_preview_http.TestHealthEndpointsHTTP" name="test_health_deep_diagnostic" time="1.850" /><testcase classname="tests.test_stabilization_preview_http.TestAuthEndpointsHTTP" name="test_login_admin_success" time="1.816"><failure message="AssertionError: Admin login failed: 429: {&quot;error&quot;:{&quot;code&quot;:&quot;rate_limit_exceeded&quot;,&quot;message&quot;:&quot;Çok fazla istek. Lütfen daha sonra tekrar deneyin.&quot;,&quot;details&quot;:{&quot;retry_after_seconds&quot;:300,&quot;remaining&quot;:0}}}&#10;assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">tests/test_stabilization_preview_http.py:83: in test_login_admin_success
+    assert resp.status_code == 200, f"Admin login failed: {resp.status_code}: {resp.text}"
+E   AssertionError: Admin login failed: 429: {"error":{"code":"rate_limit_exceeded","message":"Çok fazla istek. Lütfen daha sonra tekrar deneyin.","details":{"retry_after_seconds":300,"remaining":0}}}
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="tests.test_stabilization_preview_http.TestAuthEndpointsHTTP" name="test_login_agency_success" time="1.843"><failure message="AssertionError: Agency login failed: 429: {&quot;error&quot;:{&quot;code&quot;:&quot;rate_limit_exceeded&quot;,&quot;message&quot;:&quot;Çok fazla istek. Lütfen daha sonra tekrar deneyin.&quot;,&quot;details&quot;:{&quot;retry_after_seconds&quot;:300,&quot;remaining&quot;:0}}}&#10;assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">tests/test_stabilization_preview_http.py:97: in test_login_agency_success
+    assert resp.status_code == 200, f"Agency login failed: {resp.status_code}: {resp.text}"
+E   AssertionError: Agency login failed: 429: {"error":{"code":"rate_limit_exceeded","message":"Çok fazla istek. Lütfen daha sonra tekrar deneyin.","details":{"retry_after_seconds":300,"remaining":0}}}
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="tests.test_stabilization_preview_http.TestAuthEndpointsHTTP" name="test_login_invalid_credentials" time="1.913"><failure message="AssertionError: Expected 401, got 429: {&quot;error&quot;:{&quot;code&quot;:&quot;rate_limit_exceeded&quot;,&quot;message&quot;:&quot;Çok fazla istek. Lütfen daha sonra tekrar deneyin.&quot;,&quot;details&quot;:{&quot;retry_after_seconds&quot;:300,&quot;remaining&quot;:0}}}&#10;assert 429 == 401&#10; +  where 429 = &lt;Response [429]&gt;.status_code">tests/test_stabilization_preview_http.py:110: in test_login_invalid_credentials
+    assert resp.status_code == 401, f"Expected 401, got {resp.status_code}: {resp.text}"
+E   AssertionError: Expected 401, got 429: {"error":{"code":"rate_limit_exceeded","message":"Çok fazla istek. Lütfen daha sonra tekrar deneyin.","details":{"retry_after_seconds":300,"remaining":0}}}
+E   assert 429 == 401
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="tests.test_stabilization_preview_http.TestAuthEndpointsHTTP" name="test_me_with_valid_token" time="1.856"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">tests/test_stabilization_preview_http.py:121: in test_me_with_valid_token
+    assert login_resp.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="tests.test_stabilization_preview_http.TestAuthEndpointsHTTP" name="test_me_without_token" time="1.855" /><testcase classname="tests.test_stabilization_preview_http.TestSecurityHeadersHTTP" name="test_security_headers_present" time="1.854" /><testcase classname="tests.test_stabilization_preview_http.TestSecurityHeadersHTTP" name="test_request_id_header" time="7.981" /><testcase classname="tests.test_stabilization_preview_http.TestSecurityHeadersHTTP" name="test_custom_request_id_echoed" time="1.858" /><testcase classname="tests.test_stabilization_preview_http.TestCSRFMiddleware" name="test_csrf_cookie_set_on_get" time="1.856" /><testcase classname="tests.test_stabilization_preview_http.TestCSRFMiddleware" name="test_bearer_auth_bypasses_csrf" time="1.917"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">tests/test_stabilization_preview_http.py:226: in test_bearer_auth_bypasses_csrf
+    assert login_resp.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="tests.test_stabilization_security.TestSecurityHeaders" name="test_nosniff_header" time="1.707" /><testcase classname="tests.test_stabilization_security.TestSecurityHeaders" name="test_frame_options_header" time="1.703" /><testcase classname="tests.test_stabilization_security.TestSecurityHeaders" name="test_hsts_header" time="1.732" /><testcase classname="tests.test_stabilization_security.TestSecurityHeaders" name="test_referrer_policy" time="1.730" /><testcase classname="tests.test_stabilization_security.TestSecurityHeaders" name="test_csp_header" time="1.689" /><testcase classname="tests.test_stabilization_security.TestSecurityHeaders" name="test_cache_control_for_api" time="1.735" /><testcase classname="tests.test_stabilization_security.TestCorrelationId" name="test_request_id_in_response" time="1.720" /><testcase classname="tests.test_stabilization_security.TestCorrelationId" name="test_custom_request_id_echoed" time="7.752" /><testcase classname="tests.test_stabilization_tenant_isolation.TestTenantContext" name="test_admin_login_resolves_tenant" time="1.934" /><testcase classname="tests.test_stabilization_tenant_isolation.TestTenantContext" name="test_agency_login_resolves_tenant" time="1.745" /><testcase classname="tests.test_stabilization_tenant_isolation.TestCrossTenantIsolation" name="test_agency_cannot_see_other_org_bookings" time="1.730" /><testcase classname="tests.test_stabilization_tenant_isolation.TestCrossTenantIsolation" name="test_agency_cannot_see_other_org_customers" time="1.748" /><testcase classname="tests.test_stabilization_tenant_isolation.TestOrgScopedAPIs" name="test_agencies_list_scoped" time="1.966" /><testcase classname="tests.test_stabilization_tenant_isolation.TestOrgScopedAPIs" name="test_hotel_search_requires_auth" time="1.710" /></testsuite></testsuites>

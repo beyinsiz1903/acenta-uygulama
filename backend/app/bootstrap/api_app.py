@@ -32,6 +32,17 @@ def create_app() -> FastAPI:
         await ensure_api_runtime_indexes(db)
         await ensure_service_runtime_indexes()
         await load_sheets_config_from_db(db)
+
+        # Apply MongoDB schema validation (warn mode in dev, error in prod)
+        try:
+            from app.indexes.schema_validation import apply_schema_validation
+            import os
+            strict = os.environ.get("ENV", "dev").lower() in ("production", "prod")
+            await apply_schema_validation(db, strict=strict)
+        except Exception as exc:
+            import logging
+            logging.getLogger("startup").warning("Schema validation setup: %s", exc)
+
         yield
         shutdown_runtime_resources()
         await close_mongo()

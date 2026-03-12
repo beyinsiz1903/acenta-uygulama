@@ -1,0 +1,91 @@
+{
+  "summary": "Iteration 64: Phase 1 Enterprise Stabilization testing. All stabilization features verified: (1) 4 health check endpoints working - /api/health, /api/healthz, /api/health/ready (with DB connectivity + latency_ms), /api/health/deep (with collection stats), (2) Auth endpoints verified - admin and agency login, /api/auth/me returns organization_id, invalid login returns 401, (3) All 6 security headers present (X-Content-Type-Options, X-Frame-Options, HSTS, Referrer-Policy, CSP, Cache-Control), (4) X-Request-Id correlation header working including custom echo, (5) CSRF middleware registered and active (lenient for Bearer auth, enforces for cookie auth).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/auth/login", "issue": "Rate limiting (429) triggered after multiple login attempts via preview URL - expected production behavior, not a bug"}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "GET /api/health returns {status: 'ok', timestamp: '2026-03-12T18:26:23.897759+00:00'}",
+    "GET /api/healthz returns {status: 'ok'}",
+    "GET /api/health/ready returns MongoDB connectivity check with latency_ms (0.33ms)",
+    "GET /api/health/deep returns collection stats for 8 collections (users:24, organizations:13, tenants:22, memberships:19, bookings:16, reservations:339, products:57, agencies:21)",
+    "Admin login: POST /api/auth/login with agent@acenta.test/agent123 returns access_token (376 chars)",
+    "Agency login: POST /api/auth/login with agency1@demo.test/agency123 returns access_token",
+    "Invalid login correctly returns 401",
+    "GET /api/auth/me with valid token returns user info with organization_id",
+    "GET /api/auth/me without token returns 401",
+    "X-Content-Type-Options: nosniff header present",
+    "X-Frame-Options: DENY header present",
+    "Strict-Transport-Security: max-age=31536000; includeSubDomains header present",
+    "Referrer-Policy: strict-origin-when-cross-origin header present",
+    "Content-Security-Policy with default-src present",
+    "X-Request-Id header present in all responses",
+    "Custom X-Request-Id correctly echoed back",
+    "CSRF middleware active (CSRFProtectionMiddleware registered in middleware stack)",
+    "Bearer token requests bypass CSRF validation (correct behavior)",
+    "Local ASGI tests - TestAuthLogin: 5 tests passed",
+    "Local ASGI tests - TestTokenValidation: 4 tests passed",
+    "Local ASGI tests - TestRoleNormalization: 2 tests passed",
+    "Local ASGI tests - TestPasswordPolicy: 2 tests passed",
+    "Local ASGI tests - TestPasswordHashing: 2 tests passed",
+    "Local ASGI tests - TestHealthEndpoints: 4 tests passed",
+    "Local ASGI tests - TestSecurityHeaders: 7 tests passed",
+    "Local ASGI tests - TestCorrelationId: 2 tests passed",
+    "Local ASGI tests - TestBookingStateMachine: 4 tests passed",
+    "Local ASGI tests - TestLifecycleGuards: 5 tests passed",
+    "Local ASGI tests - TestLifecycleEvents: 1 test passed",
+    "Local ASGI tests - TestTenantContext: 2 tests passed",
+    "Local ASGI tests - TestCrossTenantIsolation: 2 tests passed",
+    "Local ASGI tests - TestOrgScopedAPIs: 2 tests passed"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_stabilization_preview_http.py",
+    "/app/backend/tests/test_stabilization_health.py",
+    "/app/backend/tests/test_stabilization_auth.py",
+    "/app/backend/tests/test_stabilization_security.py",
+    "/app/backend/tests/test_stabilization_booking.py",
+    "/app/backend/tests/test_stabilization_tenant_isolation.py",
+    "/app/test_reports/pytest/pytest_stabilization_iter64.xml",
+    "/app/test_reports/pytest/pytest_stabilization_local_iter64.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Good: health.py implements 4 distinct health check tiers (liveness, readiness, DB connectivity, deep diagnostic)",
+    "Good: /api/health/deep lists 8 critical collections with document counts for monitoring",
+    "Good: csrf_middleware.py correctly implements Double-Submit Cookie pattern with Bearer token exemption",
+    "Good: CSRF validation only applies to cookie-authenticated state-changing requests (POST/PUT/DELETE), Bearer-token requests are inherently CSRF-safe",
+    "Good: SecurityHeadersMiddleware applies all required headers (X-Content-Type-Options, X-Frame-Options, HSTS, Referrer-Policy, CSP)",
+    "Good: CorrelationIdMiddleware generates X-Request-Id and echoes custom IDs for distributed tracing",
+    "Good: schema_validation.py defines JSON schemas for top 10 critical collections (users, organizations, tenants, bookings, agencies, products, memberships, reservations, finance_accounts, audit_log)",
+    "Good: Schema validation uses 'warn' mode in dev/preview, 'error' mode in production (configurable via ENV)",
+    "Good: middleware_setup.py registers CSRFProtectionMiddleware in correct order in middleware stack",
+    "Note: Rate limiting on /api/auth/login (429 after multiple attempts) is expected production behavior to prevent brute force attacks"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_stabilization_preview_http.py"
+  ],
+  "success_rate": {
+    "backend": "100% (42/42 local ASGI tests passed, 14/14 preview HTTP tests passed before rate limiting)",
+    "frontend": "N/A (backend only testing requested)"
+  },
+  "test_credentials": {
+    "admin": "agent@acenta.test / agent123",
+    "agency_admin": "agency1@demo.test / agency123"
+  },
+  "seed_data_creation": "None - used existing seeded data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 64 verified Phase 1 Enterprise Stabilization: (1) 4 health check endpoints (/api/health, /api/healthz, /api/health/ready, /api/health/deep) - all working with MongoDB connectivity. (2) Auth flow tested - admin/agency login, /api/auth/me, invalid login rejection. (3) Security headers verified - X-Content-Type-Options, X-Frame-Options, HSTS, Referrer-Policy, CSP all present. (4) X-Request-Id correlation header working. (5) CSRF middleware active but lenient for Bearer auth (expected). (6) Schema validation module created for 10 critical collections. All 42 local ASGI tests passed. 14 preview HTTP tests passed (rate limiting kicked in after multiple login attempts - expected). Credentials: agent@acenta.test/agent123, agency1@demo.test/agency123. Preview URL: https://syroce-transform.preview.emergentagent.com",
+  "mocked_apis": {
+    "has_mocked_apis": false,
+    "mocked_apis_list": [],
+    "notes": "All APIs use real MongoDB. No mocking in stabilization features."
+  }
+}

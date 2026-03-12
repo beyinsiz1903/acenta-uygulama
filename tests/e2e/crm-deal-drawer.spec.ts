@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const BASE = "https://romantic-thompson-3.preview.emergentagent.com";
+const BASE = "https://ops-layer-preview.preview.emergentagent.com";
 const UID = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 test("deal-drawer: open, switch tabs, add note, close", async ({ request }) => {

@@ -89,6 +89,14 @@ def create_app() -> FastAPI:
             import logging
             logging.getLogger("startup").warning("Operations indexes: %s", exc)
 
+        # Initialize Governance Layer indexes
+        try:
+            from app.domain.governance.indexes import ensure_governance_indexes
+            await ensure_governance_indexes(db)
+        except Exception as exc:
+            import logging
+            logging.getLogger("startup").warning("Governance indexes: %s", exc)
+
         yield
         shutdown_runtime_resources()
         # Shutdown Redis

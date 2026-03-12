@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 # Get BASE_URL from environment
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
-    BASE_URL = "https://romantic-thompson-3.preview.emergentagent.com"
+    BASE_URL = "https://ops-layer-preview.preview.emergentagent.com"
 
 
 class TestOpsAuth:

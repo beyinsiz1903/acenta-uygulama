@@ -11,7 +11,7 @@ Multi-tenant SaaS platform for travel agencies. Manages bookings, finance, suppl
 - **Architecture:** Event-Driven, CQRS-lite, Circuit Breaker, Distributed Rate Limiting, DDD
 - **Observability:** OpenTelemetry, Prometheus-ready
 
-## Current Architecture Version: 4.0 (Operations Layer)
+## Current Architecture Version: 5.0 (Governance Layer)
 
 ---
 
@@ -52,115 +52,140 @@ Multi-tenant SaaS platform for travel agencies. Manages bookings, finance, suppl
 
 ### Phase 4 — Operations Layer (Complete - 2026-03-12)
 10-part operations architecture:
-
-1. **Supplier Performance Dashboard** — Real-time latency (p50/p95/p99), error rate, timeout rate, confirmation rate, failover frequency, timeseries
-2. **Booking Funnel Analytics** — 8-stage funnel (draft→voucher_issued), conversion rates, supplier reliability
-3. **Failover Visibility** — Failover summary, circuit breaker states, health timeline, recent events
-4. **Booking Incident Tracking** — Stuck booking detection, failed confirmations, payment mismatches, manual recovery (force-state)
+1. **Supplier Performance Dashboard** — Real-time latency (p50/p95/p99), error rate, timeout rate
+2. **Booking Funnel Analytics** — 8-stage funnel (draft->voucher_issued), conversion rates
+3. **Failover Visibility** — Failover summary, circuit breaker states, health timeline
+4. **Booking Incident Tracking** — Stuck booking detection, payment mismatches, manual recovery
 5. **Supplier Debugging Tools** — Interaction logging, request/response inspection, dry-run replay
-6. **Real-Time Alerting** — Alert rules engine, Slack/email dispatch, acknowledge/resolve lifecycle
-7. **Voucher Pipeline** — Create→Generate(HTML)→Send, retry logic, pipeline status
-8. **OPS Admin Panel** — Booking inspection, supplier override (circuit open/close, disable/enable), manual failover, price override, audit log
-9. **Operations Metrics** — Prometheus exposition format, JSON metrics, bookings/min, conversion rates, error rates
-10. **Operations Roadmap** — 30 improvements, risk analysis, production readiness score (62/100)
+6. **Real-Time Alerting** — Alert rules engine, Slack/email dispatch, lifecycle
+7. **Voucher Pipeline** — Create->Generate(HTML)->Send, retry logic
+8. **OPS Admin Panel** — Booking inspection, supplier override, manual failover
+9. **Operations Metrics** — Prometheus exposition format, JSON metrics
+10. **Operations Roadmap** — 30 improvements, risk analysis, production readiness score
+
+### Phase 5 — Enterprise Governance (Complete - 2026-03-12)
+10-part governance architecture:
+1. **RBAC System** — 6 hierarchical roles (super_admin > ops_admin > finance_admin > agency_admin > agent > support), role inheritance
+2. **Permission Model** — 46 fine-grained permissions (resource.action format), wildcard matching, user permission resolution
+3. **Audit Logging** — Full change tracking (who/what/when/before/after), hash-based tamper detection, category filtering
+4. **Secret Management** — Encrypted storage, version-tracked rotation, access logging, rotation status monitoring
+5. **Tenant Security** — Cross-tenant access blocking, violation logging, isolation health scoring, collection coverage analysis
+6. **Compliance Logging** — Hash-chain integrity (GENESIS-linked), financial operation logging, chain verification, tax audit support
+7. **Data Access Policies** — Configurable rules (allow/deny), role-based conditions, 4 default policies, policy evaluation engine
+8. **Security Alerting** — 10 alert types, 5 severity levels, detect suspicious login/privilege escalation/mass data access, full lifecycle (open->ack->resolve)
+9. **Admin Governance Panel** — Aggregated dashboard, user governance profile inspection, cross-domain overview
+10. **Governance Roadmap** — Top 25 improvements, dynamic security maturity score, risk analysis (critical/high/medium)
 
 ---
 
-## API Endpoints — Operations Layer (/api/ops/suppliers/*)
+## API Endpoints — Governance Layer (/api/governance/*)
 
 | Method | Endpoint | Part | Description |
 |--------|----------|------|-------------|
-| GET | /api/ops/suppliers/performance/dashboard | P1 | Real-time supplier dashboard |
-| GET | /api/ops/suppliers/performance/timeseries/{code} | P1 | Latency timeseries |
-| GET | /api/ops/suppliers/funnel/analytics | P2 | Booking funnel |
-| GET | /api/ops/suppliers/funnel/timeseries | P2 | Funnel trends |
-| GET | /api/ops/suppliers/failover/dashboard | P3 | Failover visibility |
-| GET | /api/ops/suppliers/incidents/detect | P4 | Auto-detect incidents |
-| GET | /api/ops/suppliers/incidents | P4 | List incidents |
-| POST | /api/ops/suppliers/incidents | P4 | Create incident |
-| POST | /api/ops/suppliers/incidents/{id}/resolve | P4 | Resolve incident |
-| POST | /api/ops/suppliers/incidents/recovery/force-state/{id} | P4 | Force booking state |
-| GET | /api/ops/suppliers/debug/interactions | P5 | Debug logs |
-| GET | /api/ops/suppliers/debug/interactions/{id} | P5 | Interaction detail |
-| POST | /api/ops/suppliers/debug/replay/{id} | P5 | Replay request |
-| GET | /api/ops/suppliers/alerts | P6 | List alerts |
-| POST | /api/ops/suppliers/alerts/{id}/acknowledge | P6 | Acknowledge |
-| POST | /api/ops/suppliers/alerts/{id}/resolve | P6 | Resolve |
-| POST | /api/ops/suppliers/alerts/evaluate | P6 | Evaluate rules |
-| POST | /api/ops/suppliers/alerts/config | P6 | Configure channels |
-| POST | /api/ops/suppliers/vouchers | P7 | Create voucher |
-| POST | /api/ops/suppliers/vouchers/{id}/generate | P7 | Generate PDF |
-| POST | /api/ops/suppliers/vouchers/{id}/send | P7 | Send email |
-| GET | /api/ops/suppliers/vouchers/pipeline | P7 | Pipeline status |
-| POST | /api/ops/suppliers/vouchers/retry-failed | P7 | Retry failed |
-| GET | /api/ops/suppliers/admin/booking/{id} | P8 | Inspect booking |
-| POST | /api/ops/suppliers/admin/supplier/{code}/override | P8 | Supplier override |
-| POST | /api/ops/suppliers/admin/supplier/{code}/manual-failover | P8 | Manual failover |
-| POST | /api/ops/suppliers/admin/price-override | P8 | Price override |
-| GET | /api/ops/suppliers/admin/audit-log | P8 | Audit trail |
-| GET | /api/ops/suppliers/metrics | P9 | JSON metrics |
-| GET | /api/ops/suppliers/metrics/prometheus | P9 | Prometheus format |
+| POST | /api/governance/rbac/seed | P1 | Seed RBAC roles & permissions |
+| GET | /api/governance/rbac/roles | P1 | List all roles with hierarchy |
+| GET | /api/governance/rbac/hierarchy | P1 | Role hierarchy tree |
+| GET | /api/governance/rbac/permissions | P2 | List all 46 permissions |
+| PUT | /api/governance/rbac/roles | P1 | Update role permissions |
+| GET | /api/governance/rbac/user-permissions | P2 | Resolve user effective permissions |
+| GET | /api/governance/rbac/check-permission | P2 | Check specific permission |
+| GET | /api/governance/audit/logs | P3 | Search audit logs |
+| GET | /api/governance/audit/logs/{id} | P3 | Get audit entry |
+| GET | /api/governance/audit/stats | P3 | Audit statistics |
+| POST | /api/governance/secrets | P4 | Store/rotate secret |
+| GET | /api/governance/secrets | P4 | List secrets (masked) |
+| GET | /api/governance/secrets/{name}/value | P4 | Retrieve secret value |
+| DELETE | /api/governance/secrets/{name} | P4 | Delete secret |
+| GET | /api/governance/secrets/rotation/status | P4 | Rotation status |
+| GET | /api/governance/tenant/isolation-report | P5 | Tenant isolation report |
+| GET | /api/governance/tenant/violations | P5 | List violations |
+| POST | /api/governance/tenant/validate-access | P5 | Validate tenant boundary |
+| POST | /api/governance/compliance/log | P6 | Log financial operation |
+| GET | /api/governance/compliance/logs | P6 | Search compliance logs |
+| GET | /api/governance/compliance/verify-chain | P6 | Verify chain integrity |
+| GET | /api/governance/compliance/summary | P6 | Compliance summary |
+| POST | /api/governance/data-policies | P7 | Create data policy |
+| GET | /api/governance/data-policies | P7 | List data policies |
+| POST | /api/governance/data-policies/evaluate | P7 | Evaluate data access |
+| PUT | /api/governance/data-policies/{id} | P7 | Update policy |
+| DELETE | /api/governance/data-policies/{id} | P7 | Delete policy |
+| POST | /api/governance/data-policies/seed | P7 | Seed default policies |
+| POST | /api/governance/security/alerts | P8 | Create security alert |
+| GET | /api/governance/security/alerts | P8 | List security alerts |
+| POST | /api/governance/security/alerts/{id}/acknowledge | P8 | Acknowledge alert |
+| POST | /api/governance/security/alerts/{id}/resolve | P8 | Resolve alert |
+| GET | /api/governance/security/dashboard | P8 | Security dashboard |
+| POST | /api/governance/security/detect/suspicious-login | P8 | Detect suspicious login |
+| GET | /api/governance/panel/overview | P9 | Governance overview |
+| GET | /api/governance/panel/user/{email} | P9 | User governance profile |
+| GET | /api/governance/roadmap | P10 | Roadmap + maturity score |
 
 ---
 
-## New MongoDB Collections (Operations Layer)
+## New MongoDB Collections (Governance Layer)
 
 | Collection | Purpose | TTL |
 |------------|---------|-----|
-| supplier_debug_logs | Supplier request/response logs | 7 days |
-| ops_incidents | Incident tracking | None |
-| ops_alerts | Alert history | 30 days |
-| ops_alert_config | Per-org alert config | None |
-| ops_audit_log | Audit trail | 90 days |
-| ops_email_queue | Email delivery queue | 7 days |
-| voucher_pipeline | Voucher generation | None |
+| gov_roles | RBAC role definitions | None |
+| gov_permissions | Permission catalog | None |
+| gov_audit_log | Governance audit trail | 90 days |
+| gov_secrets | Encrypted secret storage | None |
+| gov_secret_history | Secret rotation history | None |
+| gov_secret_access_log | Secret access tracking | 30 days |
+| gov_tenant_violations | Cross-tenant violation log | 90 days |
+| gov_compliance_log | Financial compliance records | None |
+| gov_data_policies | Data access policy rules | None |
+| gov_security_alerts | Security alert lifecycle | 180 days |
 
 ---
 
 ## Pending / Backlog
 
 ### P0 — Critical
-- God Router decomposition (ops_finance.py → domain routers)
+- God Router decomposition (ops_finance.py -> domain routers)
 - Replace mock adapters with real supplier integrations (Paximum, AviationStack)
 - Implement real Celery task bodies
-- Real PDF generation (weasyprint) for voucher pipeline
-- Email delivery integration (SendGrid/SES)
-- Slack webhook integration
+- Enforce RBAC permission checks on ALL existing endpoints (middleware)
+- Migrate secret encryption from base64 to Vault/KMS
 
 ### P1 — High
-- Frontend ops admin panel (React dashboard)
-- RBAC (role-based access control)
+- Frontend governance admin panel (React dashboard)
+- API-level permission middleware enforcement
+- Auto-log all payment/refund operations to compliance
 - Alert deduplication and rate limiting
 - Auto-incident detection scheduler (Celery beat)
-- Supplier debug middleware (auto-log all adapter calls)
-- Grafana dashboard templates
-- Secret management (replace hardcoded API keys)
+- Slack/email notification integration for security alerts
+- Row-level tenant isolation on all collections
 
 ### P2 — Medium
 - GDS connectivity (Amadeus, Sabre)
 - Supplier sandbox environment
 - Booking reconciliation
 - Dynamic pricing
-- PagerDuty integration
-- WebSocket real-time feed
+- GDPR data retention automation
+- Audit log export to S3/GCS
 
 ### P3 — Future
 - ML-based supplier ranking
 - Predictive failure detection
 - Multi-region failover
 - Fraud detection
+- ABAC (attribute-based access control)
+- ML-based insider threat detection
 
 ---
 
 ## Test Credentials
-- **Agency Admin:** agent@acenta.test / agent123
+- **Super Admin:** agent@acenta.test / agent123 (super_admin + agency_admin)
 - **Agency User:** agency1@demo.test / agency123
 
 ## Key Files
+- `/app/backend/app/domain/governance/` — Governance layer domain
+- `/app/backend/app/routers/governance.py` — Governance API router (37 endpoints)
 - `/app/backend/app/suppliers/` — Supplier ecosystem
 - `/app/backend/app/suppliers/operations/` — Operations layer
 - `/app/backend/app/routers/ops_supplier_operations.py` — Operations API router
-- `/app/memory/supplier_ecosystem_architecture.md` — Supplier ecosystem docs
-- `/app/memory/operations_architecture.md` — Operations layer docs
-- `/app/test_reports/iteration_67.json` — Operations test report (30/30 passed)
-- `/app/test_reports/iteration_3.json` — Supplier ecosystem test report (23/23 passed)
+- `/app/memory/governance_roadmap.md` — Governance roadmap doc
+- `/app/memory/operations_roadmap.md` — Operations roadmap doc
+- `/app/test_reports/iteration_68.json` — Governance test report (37/37 passed)
+- `/app/test_reports/iteration_4.json` — Operations test report (30/30 passed)

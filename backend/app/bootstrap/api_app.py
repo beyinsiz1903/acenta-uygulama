@@ -59,6 +59,28 @@ def create_app() -> FastAPI:
             import logging
             logging.getLogger("startup").warning("OpenTelemetry init: %s", exc)
 
+        # Initialize supplier ecosystem
+        try:
+            from app.suppliers.registry import register_default_adapters
+            register_default_adapters()
+        except Exception as exc:
+            import logging
+            logging.getLogger("startup").warning("Supplier registry init: %s", exc)
+
+        try:
+            from app.suppliers.indexes import ensure_supplier_ecosystem_indexes
+            await ensure_supplier_ecosystem_indexes(db)
+        except Exception as exc:
+            import logging
+            logging.getLogger("startup").warning("Supplier ecosystem indexes: %s", exc)
+
+        try:
+            from app.suppliers.events import register_supplier_event_handlers
+            register_supplier_event_handlers()
+        except Exception as exc:
+            import logging
+            logging.getLogger("startup").warning("Supplier event handlers: %s", exc)
+
         yield
         shutdown_runtime_resources()
         # Shutdown Redis

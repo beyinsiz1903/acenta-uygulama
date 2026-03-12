@@ -129,6 +129,7 @@ from app.routers.gtm_demo_seed import router as gtm_demo_seed_router
 from app.routers.health import router as health_router
 from app.routers.health_dashboard import router as health_dashboard_router
 from app.routers.infrastructure import router as infrastructure_router
+from app.suppliers.router import router as supplier_ecosystem_router
 from app.routers.inbox_v2 import router as inbox_v2_router
 from app.routers.inventory_shares import router as inventory_shares_router
 from app.routers.inventory_snapshots_api import router as inventory_snapshots_api_router
@@ -386,3 +387,4 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(distributed_locks_router)
     app.include_router(health_dashboard_router)
     app.include_router(infrastructure_router)
+    app.include_router(supplier_ecosystem_router)

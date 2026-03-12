@@ -1,5 +1,63 @@
 # CHANGELOG — Acenta Master Travel SaaS
 
+## 2026-03-12 — Enterprise Scalability Phase 2
+
+### Redis Infrastructure
+- Centralized async/sync Redis client singleton (`infrastructure/redis_client.py`)
+- Redis health check integration in `/api/infrastructure/redis`
+- Graceful fallback to MongoDB when Redis unavailable
+
+### Token Bucket Rate Limiter
+- Atomic Lua script for O(1) token bucket operations (~0.1ms per check)
+- 8 rate limit tiers: auth_login, auth_signup, auth_password, api_global, b2b_booking, public_checkout, export, supplier_api
+- MongoDB fallback for graceful degradation
+- `X-RateLimit-Policy: token_bucket` header on all API responses
+
+### Celery Background Job System
+- 6 task queues: default, critical, supplier, notifications, reports, maintenance
+- 3 dead letter queues: dlq.default, dlq.critical, dlq.supplier
+- Task modules: booking_tasks, supplier_tasks, report_tasks, notification_tasks, maintenance_tasks
+- Exponential backoff with jitter retry policies
+- Beat schedule for periodic maintenance tasks
+
+### Event-Driven Architecture
+- Redis Pub/Sub + MongoDB persistence event bus
+- 15 domain event types defined (booking.created, payment.completed, etc.)
+- In-process handler registry with async support
+- Event query API for audit trail
+
+### Circuit Breaker Pattern
+- 6 pre-configured circuit breakers: aviationstack, paximum, stripe, iyzico, google_sheets, email_provider
+- States: CLOSED → OPEN → HALF_OPEN → CLOSED
+- Configurable thresholds, recovery timeouts, half-open limits
+- Manual reset API endpoint
+
+### Observability Stack
+- OpenTelemetry tracing initialization
+- Prometheus metrics collection framework (counters, gauges, histograms)
+- Infrastructure health API (8 endpoints)
+- Prometheus text format export endpoint
+
+### Database Performance
+- 26 new performance-critical MongoDB indexes
+- TTL indexes for auto-cleanup (rate_limits, app_cache, domain_events)
+- Covered indexes for booking, reservation, ledger, audit queries
+
+### Architecture Documentation
+- `SCALABILITY_ARCHITECTURE.md`: 10-part architecture assessment
+- Top 40 scalability improvements ranked by priority
+- 120-day roadmap with 4 monthly phases
+- Risk analysis matrix
+- Platform maturity score: 5.5 → 6.8/10
+
+### Verification
+- Testing agent iteration_65: 20/20 backend tests PASSED
+- All infrastructure endpoints verified with real Redis
+- All existing endpoints confirmed working (health, auth, deep diagnostic)
+- Rate limiting confirmed via X-RateLimit-Policy header
+
+---
+
 ## 2026-03-12 — Enterprise Stabilization Phase 1
 
 ### Enhanced Health Checks

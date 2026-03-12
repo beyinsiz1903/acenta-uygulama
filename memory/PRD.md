@@ -75,10 +75,19 @@ Syroce is a Travel Agency Operating System that pivoted to focus on building a *
   - Flight status display in view mode
   - Graceful error handling when API key not configured
 
+## Enterprise Audit (February 2026)
+- Full 12-part audit completed at `/app/ENTERPRISE_AUDIT_REPORT.md`
+- Overall Maturity: 5.5/10, Security: 6.5/10, Architecture: 5/10, Scalability: 3/10
+- Recommended: Modular monolith approach, 6-phase transformation roadmap
+
 ## Remaining Backlog
 ### P0 - AviationStack API Key Configuration
 - User needs to obtain and configure AVIATIONSTACK_API_KEY in backend/.env
 - Free plan available at https://aviationstack.com/signup/free
+
+### P1 - Agency API Key Management UI
+- Agency admins should be able to enter/save their AviationStack API key via UI
+- Backend should read key from DB instead of env variable
 
 ### P2 - Agency Subscription Management
 - Subscription duration and access control based on expiry
@@ -89,6 +98,14 @@ Syroce is a Travel Agency Operating System that pivoted to focus on building a *
 ### P4 - Refactoring
 - Centralize data normalization in agency_hotels.py
 - Decompose AgencyHotelDetailPage.jsx
+- Split router_registry.py into domain-grouped registries
+- Split App.js routes into domain files
+
+### P5 - Infrastructure & Testing
+- CI/CD pipeline setup
+- Automated test coverage for booking lifecycle
+- Redis caching layer
+- MongoDB schema validation
 
 ## Environment Variables
 - `AVIATIONSTACK_API_KEY` - AviationStack API key for flight lookup (backend/.env)

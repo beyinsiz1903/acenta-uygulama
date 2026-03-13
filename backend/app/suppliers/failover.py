@@ -65,6 +65,11 @@ class FailoverEngine:
     def register_fallback_chain(self, primary: str, fallbacks: List[str]):
         self._fallback_chains[primary] = fallbacks
 
+    def get_fallback_chain(self, primary: str) -> List[str]:
+        """Get the fallback chain for a supplier."""
+        return self._fallback_chains.get(primary, [])
+
+
     def update_ranking(self, supplier_code: str, rank: SupplierRank):
         self._rankings[supplier_code] = rank
 

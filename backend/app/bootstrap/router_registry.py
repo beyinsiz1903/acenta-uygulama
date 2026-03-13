@@ -437,3 +437,7 @@ def register_routers(app: FastAPI) -> None:
     # --- Supplier Aggregator Layer ---
     from app.routers.supplier_aggregator_router import router as supplier_aggregator_router
     app.include_router(supplier_aggregator_router)
+
+    # --- Unified Booking & Fallback Layer ---
+    from app.routers.unified_booking_router import router as unified_booking_router
+    app.include_router(unified_booking_router)

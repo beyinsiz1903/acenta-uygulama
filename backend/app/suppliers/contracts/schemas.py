@@ -37,6 +37,8 @@ class SupplierProductType(str, Enum):
     TOUR = "tour"
     INSURANCE = "insurance"
     TRANSPORT = "transport"
+    TRANSFER = "transfer"
+    ACTIVITY = "activity"
 
 
 # ---------------------------------------------------------------------------
@@ -145,6 +147,30 @@ class TransportSearchItem(SearchItem):
     pickup_time: Optional[datetime] = None
     estimated_duration_minutes: Optional[int] = None
     distance_km: Optional[float] = None
+
+
+
+class TransferSearchItem(SearchItem):
+    product_type: SupplierProductType = SupplierProductType.TRANSFER
+    vehicle_type: Optional[str] = None
+    capacity: Optional[int] = None
+    pickup_location: Optional[str] = None
+    dropoff_location: Optional[str] = None
+    pickup_time: Optional[datetime] = None
+    estimated_duration_minutes: Optional[int] = None
+    distance_km: Optional[float] = None
+
+
+class ActivitySearchItem(SearchItem):
+    product_type: SupplierProductType = SupplierProductType.ACTIVITY
+    activity_code: Optional[str] = None
+    duration_hours: Optional[float] = None
+    activity_date: Optional[date] = None
+    location_name: Optional[str] = None
+    included_services: List[str] = Field(default_factory=list)
+    min_participants: Optional[int] = None
+    max_participants: Optional[int] = None
+    guide_language: Optional[str] = None
 
 
 class SearchResult(BaseModel):
@@ -297,3 +323,130 @@ class CancelResult(BaseModel):
     currency: str = "TRY"
     cancelled_at: Optional[datetime] = None
     supplier_metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+
+# ---------------------------------------------------------------------------
+# Unified Booking Request / Response — canonical models for real suppliers
+# ---------------------------------------------------------------------------
+
+class Traveller(BaseModel):
+    """Individual traveller in a booking."""
+    title: str = ""  # Mr, Mrs, Ms
+    first_name: str
+    last_name: str
+    date_of_birth: Optional[str] = None
+    nationality: Optional[str] = None
+    passport_number: Optional[str] = None
+    passport_expiry: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    is_lead: bool = False
+    type: str = "adult"  # adult, child, infant
+
+
+class ContactInfo(BaseModel):
+    email: str
+    phone: str
+    name: Optional[str] = None
+
+
+class BillingInfo(BaseModel):
+    company_name: Optional[str] = None
+    tax_id: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    country: Optional[str] = None
+    postal_code: Optional[str] = None
+
+
+class UnifiedBookingRequest(BaseModel):
+    """Canonical booking request — transformed into supplier-specific payloads."""
+    # Selection
+    supplier_code: str
+    supplier_item_id: str
+    product_type: SupplierProductType
+    # Travellers
+    travellers: List[Traveller] = Field(default_factory=list)
+    contact: ContactInfo
+    billing: Optional[BillingInfo] = None
+    # Agency context
+    organization_id: str
+    agency_id: Optional[str] = None
+    agent_id: Optional[str] = None
+    # Pricing
+    pricing_snapshot: Optional[PriceBreakdown] = None
+    expected_price: Optional[float] = None
+    currency: str = "TRY"
+    # Idempotency
+    idempotency_key: str
+    # Search reference
+    search_result_id: Optional[str] = None
+    # Extra
+    special_requests: Optional[str] = None
+    supplier_metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class SupplierCapabilityInfo(BaseModel):
+    """Describes what a supplier supports in the booking lifecycle."""
+    supplier_code: str
+    product_types: List[str]
+    supports_hold: bool = False
+    supports_direct_confirm: bool = True
+    supports_cancel: bool = False
+    supports_pricing_check: bool = False
+    requires_precheck: bool = False
+    max_timeout_ms: int = 15000
+
+
+class UnifiedBookingResponse(BaseModel):
+    """Canonical booking response — normalized from supplier-specific responses."""
+    # Internal
+    internal_booking_id: str
+    run_id: str
+    # Supplier
+    supplier_code: str
+    supplier_booking_id: str
+    product_type: str
+    # Status
+    status: str  # confirmed | failed | pending | cancelled
+    # Pricing
+    booked_price: Optional[float] = None
+    confirmed_price: Optional[float] = None
+    price_drift: Optional[float] = None
+    currency: str = "TRY"
+    # Travellers echo
+    travellers: List[Traveller] = Field(default_factory=list)
+    # Cancellation
+    cancellation_deadline: Optional[datetime] = None
+    cancellation_penalty: Optional[float] = None
+    free_cancellation: bool = False
+    # Confirmation
+    confirmation_code: Optional[str] = None
+    voucher_url: Optional[str] = None
+    # Supplier raw
+    supplier_confirmation: Dict[str, Any] = Field(default_factory=dict)
+    notes: List[str] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)
+    # Timing
+    booked_at: Optional[datetime] = None
+    total_duration_ms: int = 0
+
+
+class PriceRevalidationResult(BaseModel):
+    """Result of pre-booking price check."""
+    supplier_code: str
+    supplier_item_id: str
+    valid: bool
+    original_price: float
+    current_price: float
+    price_drift_amount: float = 0.0
+    price_drift_pct: float = 0.0
+    currency: str = "TRY"
+    still_available: bool = True
+    warnings: List[str] = Field(default_factory=list)
+    # Decision
+    can_proceed: bool = True
+    requires_approval: bool = False
+    abort_reason: Optional[str] = None
+    checked_at: Optional[datetime] = None

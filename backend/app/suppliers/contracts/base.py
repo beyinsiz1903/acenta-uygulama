@@ -35,6 +35,8 @@ class SupplierType(str, Enum):
     TOUR = "tour"
     INSURANCE = "insurance"
     TRANSPORT = "transport"
+    TRANSFER = "transfer"
+    ACTIVITY = "activity"
 
 
 class LifecycleMethod(str, Enum):

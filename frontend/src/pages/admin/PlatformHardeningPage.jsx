@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Progress } from "../../components/ui/progress";
-import { Shield, Activity, Server, Zap, Lock, AlertTriangle, Scale, Database, RefreshCw, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, Eye } from "lucide-react";
+import { Shield, Activity, Server, Zap, Lock, AlertTriangle, Scale, Database, RefreshCw, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, Eye, Play, Target, TrendingUp, Layers } from "lucide-react";
 import { api } from "../../lib/api";
 
 function useApi(path) {
@@ -22,43 +22,52 @@ function useApi(path) {
   return { data, loading, refetch: fetch_ };
 }
 
-/* strip /api prefix since api module adds it */
 const severityColor = (s) => ({ critical: "destructive", high: "default", medium: "secondary", low: "outline" }[s] || "outline");
 const statusBadge = (s) => {
-  if (s === "done") return <Badge data-testid="status-done" className="bg-emerald-600 text-white">Done</Badge>;
+  if (s === "done" || s === "completed") return <Badge data-testid="status-done" className="bg-emerald-600 text-white">Done</Badge>;
   if (s === "in_progress") return <Badge data-testid="status-progress" className="bg-amber-500 text-white">In Progress</Badge>;
   return <Badge data-testid="status-planned" variant="outline">Planned</Badge>;
 };
 
-function MaturityGauge({ score, label }) {
-  const pct = (score / 10) * 100;
+function ScoreGauge({ score, max, label, size = "lg" }) {
+  const pct = (score / max) * 100;
   const color = score >= 8 ? "text-emerald-400" : score >= 5 ? "text-amber-400" : "text-red-400";
+  const dim = size === "lg" ? "w-32 h-32" : "w-20 h-20";
+  const textSize = size === "lg" ? "text-2xl" : "text-lg";
+  const subSize = size === "lg" ? "text-xs" : "text-[10px]";
   return (
-    <div data-testid="maturity-gauge" className="flex flex-col items-center gap-2">
-      <div className="relative w-32 h-32">
+    <div data-testid={`gauge-${label?.replace(/\s/g, "-").toLowerCase()}`} className="flex flex-col items-center gap-1.5">
+      <div className={`relative ${dim}`}>
         <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
           <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" className="text-zinc-800" strokeWidth="8" />
           <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" className={color} strokeWidth="8" strokeDasharray={`${pct * 2.64} 264`} strokeLinecap="round" />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={`text-2xl font-bold ${color}`}>{score}</span>
-          <span className="text-xs text-zinc-500">/10</span>
+          <span className={`${textSize} font-bold ${color}`}>{score}</span>
+          <span className={`${subSize} text-zinc-500`}>/{max}</span>
         </div>
       </div>
-      <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">{label?.replace(/_/g, " ")}</span>
+      {label && <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider text-center leading-tight">{label}</span>}
     </div>
   );
 }
 
+/* ========== OVERVIEW TAB (Dual Scores) ========== */
 function OverviewTab() {
   const { data, loading, refetch } = useApi("/hardening/status");
   if (loading || !data) return <div className="animate-pulse h-64 bg-zinc-900 rounded-lg" />;
   return (
     <div data-testid="overview-tab" className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Dual Score Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-zinc-900 border-zinc-800">
           <CardContent className="pt-6 flex justify-center">
-            <MaturityGauge score={data.maturity_score} label={data.maturity_label} />
+            <ScoreGauge score={data.architecture_maturity} max={10} label="Architecture Maturity" />
+          </CardContent>
+        </Card>
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardContent className="pt-6 flex justify-center">
+            <ScoreGauge score={data.production_readiness} max={10} label="Production Readiness" />
           </CardContent>
         </Card>
         <Card className="bg-zinc-900 border-zinc-800">
@@ -67,7 +76,8 @@ function OverviewTab() {
             <div data-testid="go-live-status" className={`text-2xl font-bold ${data.go_live_ready ? "text-emerald-400" : "text-red-400"}`}>
               {data.go_live_ready ? "READY" : "NOT READY"}
             </div>
-            <p className="text-xs text-zinc-500 mt-1">Critical blockers: {data.components.critical_blockers}</p>
+            <p className="text-xs text-zinc-500 mt-1">Target: 8.5/10 readiness</p>
+            <p className="text-xs text-zinc-500">Open blockers: {data.blockers?.open || 0}</p>
           </CardContent>
         </Card>
         <Card className="bg-zinc-900 border-zinc-800">
@@ -78,6 +88,56 @@ function OverviewTab() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Architecture Breakdown */}
+      {data.architecture_breakdown && (
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardHeader className="pb-2"><CardTitle className="text-sm">CTO Architecture Assessment</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {Object.entries(data.architecture_breakdown).map(([key, score]) => (
+                <div key={key} className="bg-zinc-800/50 rounded-lg p-3 text-center">
+                  <div className="text-lg font-bold text-emerald-400">{score}</div>
+                  <div className="text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">{key.replace(/_/g, " ")}</div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Blockers */}
+      {data.blockers?.critical_items?.length > 0 && (
+        <Card className="bg-red-950/20 border-red-900/40">
+          <CardHeader className="pb-2"><CardTitle className="text-sm text-red-400">Go-Live Blockers ({data.blockers.open})</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-1.5">
+              {data.blockers.critical_items.map((b, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs">
+                  <XCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                  <span className="text-red-200">{b}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Execution Progress */}
+      {data.execution_progress && (
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Execution Progress</CardTitle></CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <Progress value={data.execution_progress.completion_pct} className="flex-1 h-3" />
+              <span className="text-sm font-mono text-zinc-300">{data.execution_progress.completion_pct}%</span>
+            </div>
+            <p className="text-xs text-zinc-500 mt-1">{data.execution_progress.completed_tasks}/{data.execution_progress.total_tasks} tasks completed</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Hardening Components */}
       <Card className="bg-zinc-900 border-zinc-800">
         <CardHeader><CardTitle className="text-sm">Hardening Components</CardTitle></CardHeader>
         <CardContent>
@@ -95,6 +155,282 @@ function OverviewTab() {
     </div>
   );
 }
+
+/* ========== EXECUTION TAB (Phase Tracker + Blockers) ========== */
+function ExecutionTab() {
+  const { data, loading, refetch } = useApi("/hardening/execution/status");
+  if (loading || !data) return <div className="animate-pulse h-64 bg-zinc-900 rounded-lg" />;
+
+  const handleStartPhase = async (phaseId) => {
+    try {
+      await api.post(`/hardening/execution/phase/${phaseId}/start`);
+      refetch();
+    } catch {}
+  };
+
+  const handleCompleteTask = async (phaseId, taskId) => {
+    try {
+      await api.post(`/hardening/execution/phase/${phaseId}/task/${taskId}/complete`);
+      refetch();
+    } catch {}
+  };
+
+  const handleResolveBlocker = async (blockerId) => {
+    try {
+      await api.post(`/hardening/execution/blocker/${blockerId}/resolve`);
+      refetch();
+    } catch {}
+  };
+
+  const r = data.readiness;
+  return (
+    <div data-testid="execution-tab" className="space-y-6">
+      {/* Readiness Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardContent className="pt-6 flex justify-center">
+            <ScoreGauge score={r.architecture_maturity_score} max={10} label="Architecture" size="sm" />
+          </CardContent>
+        </Card>
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardContent className="pt-6 flex justify-center">
+            <ScoreGauge score={r.production_readiness_score} max={10} label="Production" size="sm" />
+          </CardContent>
+        </Card>
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardContent className="pt-6 text-center">
+            <div className="text-2xl font-bold text-zinc-100">{r.completed_tasks}/{r.total_tasks}</div>
+            <p className="text-xs text-zinc-500 mt-1">Tasks Completed</p>
+            <Progress value={r.completion_pct} className="mt-2 h-2" />
+          </CardContent>
+        </Card>
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardContent className="pt-6 text-center">
+            <div className={`text-2xl font-bold ${r.open_blockers === 0 ? "text-emerald-400" : "text-red-400"}`}>{r.open_blockers}</div>
+            <p className="text-xs text-zinc-500 mt-1">Open Blockers</p>
+            <p className="text-[10px] text-zinc-600 mt-1">Target: 0 for go-live</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Sprint Progress */}
+      <Card className="bg-zinc-900 border-zinc-800">
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Sprint Progress</CardTitle></CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {Object.entries(data.sprints).map(([key, sprint]) => {
+              const sprintNum = key.replace("sprint_", "");
+              const label = sprintNum === "1" ? "Go-Live Blockers" : sprintNum === "2" ? "Real Integrations" : "Load & Failure Testing";
+              return (
+                <div key={key} className="bg-zinc-800/50 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-medium text-zinc-300">Sprint {sprintNum}: {label}</span>
+                    <span className="text-xs font-mono text-zinc-400">{sprint.completed_tasks}/{sprint.total_tasks}</span>
+                  </div>
+                  <Progress value={sprint.progress_pct} className="h-2" />
+                  <p className="text-[10px] text-zinc-500 mt-1">{sprint.phases} phases | {sprint.progress_pct}% complete</p>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Go-Live Blockers */}
+      <Card className="bg-red-950/20 border-red-900/40">
+        <CardHeader className="pb-2"><CardTitle className="text-sm text-red-400">Go-Live Blockers</CardTitle></CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {data.blockers.map((b) => (
+              <div key={b.id} data-testid={`blocker-${b.id}`} className="flex items-center justify-between bg-zinc-900/50 rounded p-3">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  {b.status === "resolved"
+                    ? <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    : <XCircle className="w-4 h-4 text-red-400 flex-shrink-0" />}
+                  <div className="min-w-0">
+                    <p className={`text-xs ${b.status === "resolved" ? "text-zinc-500 line-through" : "text-zinc-200"}`}>{b.blocker}</p>
+                    <p className="text-[10px] text-zinc-500 mt-0.5">{b.fix_strategy}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+                  <Badge variant={severityColor(b.risk)} className="text-[10px]">{b.risk}</Badge>
+                  <span className="text-[10px] text-zinc-500">{b.estimated_hours}h</span>
+                  {b.status === "open" && (
+                    <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => handleResolveBlocker(b.id)}>Resolve</Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Phase Execution */}
+      <Card className="bg-zinc-900 border-zinc-800">
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Execution Phases</CardTitle></CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {data.phases.map((phase) => (
+              <PhaseCard key={phase.id} phase={phase} onStart={handleStartPhase} onCompleteTask={handleCompleteTask} refetch={refetch} />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Button data-testid="refresh-execution" variant="outline" size="sm" onClick={refetch}><RefreshCw className="w-3.5 h-3.5 mr-1" />Refresh</Button>
+    </div>
+  );
+}
+
+function PhaseCard({ phase, onStart, onCompleteTask, refetch }) {
+  const [expanded, setExpanded] = useState(false);
+  const [detail, setDetail] = useState(null);
+
+  const loadDetail = async () => {
+    try {
+      const res = await api.get(`/hardening/execution/phase/${phase.id}`);
+      setDetail(res.data);
+    } catch {}
+  };
+
+  const toggleExpand = () => {
+    if (!expanded && !detail) loadDetail();
+    setExpanded(!expanded);
+  };
+
+  const statusColor = phase.status === "completed" ? "border-l-emerald-500" : phase.status === "in_progress" ? "border-l-amber-500" : "border-l-zinc-700";
+
+  return (
+    <div data-testid={`phase-${phase.id}`} className={`bg-zinc-800/50 rounded-lg border-l-4 ${statusColor}`}>
+      <div className="flex items-center justify-between p-3 cursor-pointer" onClick={toggleExpand}>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-mono text-zinc-500 w-5">P{phase.id}</span>
+          <span className="text-xs font-medium text-zinc-200">{phase.name}</span>
+          <Badge variant="outline" className="text-[10px]">Sprint {phase.sprint}</Badge>
+          <Badge variant={phase.priority === "P0" ? "destructive" : "default"} className="text-[10px]">{phase.priority}</Badge>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-mono text-zinc-400">{phase.completed_tasks}/{phase.total_tasks}</span>
+          <div className="w-16"><Progress value={phase.progress_pct} className="h-1.5" /></div>
+          {phase.status === "not_started" && (
+            <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={(e) => { e.stopPropagation(); onStart(phase.id); }}>
+              <Play className="w-3 h-3 mr-1" />Start
+            </Button>
+          )}
+          {expanded ? <ChevronUp className="w-4 h-4 text-zinc-500" /> : <ChevronDown className="w-4 h-4 text-zinc-500" />}
+        </div>
+      </div>
+      {expanded && detail && (
+        <div className="px-3 pb-3 space-y-1.5">
+          <p className="text-[10px] text-zinc-500 mb-2">{detail.description}</p>
+          {detail.tasks.map((task) => (
+            <div key={task.id} data-testid={`task-${task.id}`} className="flex items-center justify-between bg-zinc-900/50 rounded p-2">
+              <div className="flex items-center gap-2">
+                {task.status === "completed"
+                  ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  : <div className="w-3.5 h-3.5 rounded-full border border-zinc-600" />}
+                <span className={`text-xs ${task.status === "completed" ? "text-zinc-500 line-through" : "text-zinc-300"}`}>{task.name}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-[10px]">{task.category}</Badge>
+                {task.status !== "completed" && (
+                  <Button size="sm" variant="ghost" className="h-5 text-[10px] px-1.5" onClick={() => onCompleteTask(phase.id, task.id)}>
+                    <CheckCircle2 className="w-3 h-3" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ========== CERTIFICATION TAB ========== */
+function CertificationTab() {
+  const { data, loading, refetch } = useApi("/hardening/execution/certification");
+  if (loading || !data) return <div className="animate-pulse h-48 bg-zinc-900 rounded-lg" />;
+  return (
+    <div data-testid="certification-tab" className="space-y-6">
+      <Card className={`${data.certified ? "bg-emerald-950/20 border-emerald-900/40" : "bg-red-950/20 border-red-900/40"}`}>
+        <CardContent className="pt-6 text-center">
+          <div className={`text-3xl font-bold ${data.certified ? "text-emerald-400" : "text-red-400"}`}>
+            {data.certified ? "CERTIFIED FOR GO-LIVE" : "NOT CERTIFIED"}
+          </div>
+          <p className="text-sm text-zinc-400 mt-2">{data.recommendation}</p>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardContent className="pt-6 flex justify-center">
+            <ScoreGauge score={data.architecture_maturity} max={10} label="Architecture" />
+          </CardContent>
+        </Card>
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardContent className="pt-6 flex justify-center">
+            <ScoreGauge score={data.production_readiness} max={10} label="Production" />
+          </CardContent>
+        </Card>
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardContent className="pt-6 text-center">
+            <div className="text-2xl font-bold text-zinc-100">{data.gap > 0 ? `${data.gap}` : "0"}</div>
+            <p className="text-xs text-zinc-500 mt-1">Gap to Target ({data.target_readiness})</p>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+              <div className="bg-zinc-800/50 rounded p-2">
+                <span className="text-emerald-400 font-bold">{data.phases_completed}</span>
+                <span className="text-zinc-500">/{data.phases_total} phases</span>
+              </div>
+              <div className="bg-zinc-800/50 rounded p-2">
+                <span className="text-emerald-400 font-bold">{data.blockers_resolved}</span>
+                <span className="text-zinc-500"> resolved</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {data.architecture_breakdown && (
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Architecture Breakdown</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {Object.entries(data.architecture_breakdown).map(([key, score]) => (
+                <div key={key} className="bg-zinc-800/50 rounded-lg p-3 text-center">
+                  <div className="text-lg font-bold text-emerald-400">{score}</div>
+                  <div className="text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">{key.replace(/_/g, " ")}</div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {data.open_blocker_details?.length > 0 && (
+        <Card className="bg-red-950/20 border-red-900/40">
+          <CardHeader className="pb-2"><CardTitle className="text-sm text-red-400">Remaining Blockers ({data.blockers_open})</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-1.5">
+              {data.open_blocker_details.map((b) => (
+                <div key={b.id} className="flex items-center gap-2 text-xs bg-zinc-900/50 rounded p-2">
+                  <XCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                  <span className="text-red-200">{b.blocker}</span>
+                  <Badge variant="destructive" className="text-[10px] ml-auto">{b.risk}</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="text-xs text-zinc-600">Risk Level: <Badge variant={data.risk_level === "critical" ? "destructive" : data.risk_level === "high" ? "default" : "outline"} className="text-[10px]">{data.risk_level}</Badge></div>
+      <Button data-testid="refresh-cert" variant="outline" size="sm" onClick={refetch}><RefreshCw className="w-3.5 h-3.5 mr-1" />Refresh</Button>
+    </div>
+  );
+}
+
+/* ========== EXISTING TABS (unchanged logic, compact) ========== */
 
 function TrafficTestingTab() {
   const { data, loading } = useApi("/hardening/traffic/status");
@@ -533,7 +869,7 @@ function ChecklistTab() {
   return (
     <div data-testid="checklist-tab" className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card className="bg-zinc-900 border-zinc-800"><CardContent className="pt-6 text-center"><MaturityGauge score={m.maturity_score} label={m.maturity_label} /></CardContent></Card>
+        <Card className="bg-zinc-900 border-zinc-800"><CardContent className="pt-6 text-center"><ScoreGauge score={m.maturity_score} max={10} label={m.maturity_label?.replace(/_/g, " ")} size="sm" /></CardContent></Card>
         <Card className="bg-zinc-900 border-zinc-800"><CardContent className="pt-6 text-center"><div className="text-2xl font-bold text-emerald-400">{m.summary.done}</div><p className="text-xs text-zinc-500">Done</p></CardContent></Card>
         <Card className="bg-zinc-900 border-zinc-800"><CardContent className="pt-6 text-center"><div className="text-2xl font-bold text-amber-400">{m.summary.in_progress}</div><p className="text-xs text-zinc-500">In Progress</p></CardContent></Card>
         <Card className="bg-zinc-900 border-zinc-800"><CardContent className="pt-6 text-center"><div className="text-2xl font-bold text-zinc-400">{m.summary.planned}</div><p className="text-xs text-zinc-500">Planned</p></CardContent></Card>
@@ -575,6 +911,7 @@ function ChecklistTab() {
   );
 }
 
+/* ========== MAIN PAGE ========== */
 export default function PlatformHardeningPage() {
   return (
     <div data-testid="platform-hardening-page" className="p-4 md:p-6 max-w-7xl mx-auto">
@@ -582,13 +919,15 @@ export default function PlatformHardeningPage() {
         <Shield className="w-7 h-7 text-emerald-400" />
         <div>
           <h1 className="text-xl font-bold text-zinc-100">Platform Hardening Dashboard</h1>
-          <p className="text-xs text-zinc-500">Enterprise production readiness — 10-part hardening phase</p>
+          <p className="text-xs text-zinc-500">Enterprise production readiness — Execution Phase</p>
         </div>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList data-testid="hardening-tabs" className="bg-zinc-900 border border-zinc-800 flex-wrap h-auto gap-1 p-1">
           <TabsTrigger value="overview" className="text-xs gap-1"><Shield className="w-3.5 h-3.5" />Overview</TabsTrigger>
+          <TabsTrigger value="execution" className="text-xs gap-1"><Target className="w-3.5 h-3.5" />Execution</TabsTrigger>
+          <TabsTrigger value="certification" className="text-xs gap-1"><TrendingUp className="w-3.5 h-3.5" />Certification</TabsTrigger>
           <TabsTrigger value="traffic" className="text-xs gap-1"><Zap className="w-3.5 h-3.5" />Traffic</TabsTrigger>
           <TabsTrigger value="workers" className="text-xs gap-1"><Server className="w-3.5 h-3.5" />Workers</TabsTrigger>
           <TabsTrigger value="observability" className="text-xs gap-1"><Activity className="w-3.5 h-3.5" />Observability</TabsTrigger>
@@ -602,6 +941,8 @@ export default function PlatformHardeningPage() {
         </TabsList>
 
         <TabsContent value="overview"><OverviewTab /></TabsContent>
+        <TabsContent value="execution"><ExecutionTab /></TabsContent>
+        <TabsContent value="certification"><CertificationTab /></TabsContent>
         <TabsContent value="traffic"><TrafficTestingTab /></TabsContent>
         <TabsContent value="workers"><WorkerStrategyTab /></TabsContent>
         <TabsContent value="observability"><ObservabilityTab /></TabsContent>

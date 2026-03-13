@@ -1,6 +1,7 @@
 """Platform Hardening API Router.
 
 Unified router for all 10 parts of the Platform Hardening Phase.
+Includes execution tracking for the go-live certification process.
 """
 from __future__ import annotations
 
@@ -12,6 +13,66 @@ from app.db import get_db
 from app.auth import require_roles
 
 router = APIRouter(prefix="/api/hardening", tags=["platform_hardening"])
+
+
+# ============================================================================
+# EXECUTION TRACKER — Phases, Blockers, Certification
+# ============================================================================
+
+@router.get("/execution/status")
+async def get_execution_status(
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+):
+    from app.hardening.execution_tracker import get_execution_status
+    return get_execution_status()
+
+
+@router.get("/execution/phase/{phase_id}")
+async def get_phase_detail(
+    phase_id: int,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+):
+    from app.hardening.execution_tracker import get_phase_detail
+    result = get_phase_detail(phase_id)
+    if result is None:
+        return {"error": f"Phase {phase_id} not found"}
+    return result
+
+
+@router.post("/execution/phase/{phase_id}/start")
+async def start_phase(
+    phase_id: int,
+    current_user=Depends(require_roles(["admin", "super_admin"])),
+):
+    from app.hardening.execution_tracker import start_phase
+    return start_phase(phase_id)
+
+
+@router.post("/execution/phase/{phase_id}/task/{task_id}/complete")
+async def complete_task(
+    phase_id: int,
+    task_id: str,
+    current_user=Depends(require_roles(["admin", "super_admin"])),
+):
+    from app.hardening.execution_tracker import complete_task
+    return complete_task(phase_id, task_id)
+
+
+@router.post("/execution/blocker/{blocker_id}/resolve")
+async def resolve_blocker(
+    blocker_id: str,
+    current_user=Depends(require_roles(["admin", "super_admin"])),
+):
+    from app.hardening.execution_tracker import resolve_blocker
+    return resolve_blocker(blocker_id)
+
+
+@router.get("/execution/certification")
+async def get_certification(
+    current_user=Depends(require_roles(["admin", "super_admin"])),
+):
+    from app.hardening.execution_tracker import get_go_live_certification
+    return get_go_live_certification()
 
 
 # ============================================================================
@@ -205,25 +266,46 @@ async def get_full_hardening_status(
     current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
     db=Depends(get_db),
 ):
-    """Get combined status of all hardening components."""
+    """Get combined status of all hardening components with dual scoring."""
     from app.hardening.traffic_testing import traffic_gate
     from app.hardening.hardening_checklist import _calculate_maturity_score
     from app.hardening.secret_management import get_secret_management_status
+    from app.hardening.execution_tracker import (
+        _calculate_production_readiness,
+        ARCHITECTURE_MATURITY,
+        ARCHITECTURE_SCORES,
+        GO_LIVE_BLOCKERS,
+    )
 
-    maturity = _calculate_maturity_score()
+    checklist = _calculate_maturity_score()
     secrets = get_secret_management_status()
+    readiness = _calculate_production_readiness()
+
+    open_blockers = [b for b in GO_LIVE_BLOCKERS if b["status"] == "open"]
 
     return {
-        "platform_hardening_phase": "active",
-        "maturity_score": maturity["maturity_score"],
-        "maturity_label": maturity["maturity_label"],
-        "go_live_ready": maturity["go_live_ready"],
+        "platform_hardening_phase": "execution",
+        "architecture_maturity": ARCHITECTURE_MATURITY,
+        "architecture_breakdown": ARCHITECTURE_SCORES,
+        "production_readiness": readiness["production_readiness_score"],
+        "target_readiness": 8.5,
+        "go_live_ready": readiness["go_live_ready"],
+        "blockers": {
+            "total": len(GO_LIVE_BLOCKERS),
+            "open": len(open_blockers),
+            "resolved": len(GO_LIVE_BLOCKERS) - len(open_blockers),
+            "critical_items": [b["blocker"] for b in open_blockers],
+        },
         "components": {
             "traffic_testing": traffic_gate.get_status(),
-            "checklist_completion": maturity["summary"]["completion_pct"],
+            "checklist_completion": checklist["summary"]["completion_pct"],
             "secrets_configured": secrets["summary"]["configured"],
             "secrets_total": secrets["summary"]["total_secrets"],
-            "critical_blockers": maturity["risk_analysis"]["critical_unresolved"],
+        },
+        "execution_progress": {
+            "total_tasks": readiness["total_tasks"],
+            "completed_tasks": readiness["completed_tasks"],
+            "completion_pct": readiness["completion_pct"],
         },
         "parts": [
             {"part": 1, "name": "Supplier Traffic Testing", "status": "active"},

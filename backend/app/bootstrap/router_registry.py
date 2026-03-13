@@ -429,3 +429,7 @@ def register_routers(app: FastAPI) -> None:
     # --- Pilot Launch Layer ---
     from app.routers.pilot_launch_router import router as pilot_launch_router
     app.include_router(pilot_launch_router)
+
+    # --- Supplier Credentials Layer ---
+    from app.routers.supplier_credentials_router import router as supplier_credentials_router
+    app.include_router(supplier_credentials_router)

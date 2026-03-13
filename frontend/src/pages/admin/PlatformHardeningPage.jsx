@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Progress } from "../../components/ui/progress";
-import { Shield, Activity, Server, Zap, Lock, AlertTriangle, Scale, Database, RefreshCw, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, Eye, Play, Target, TrendingUp, Layers, Gauge, Radio, FlaskConical, Users, FileCheck, Truck } from "lucide-react";
+import { Shield, Activity, Server, Zap, Lock, AlertTriangle, Scale, Database, RefreshCw, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, Eye, Play, Target, TrendingUp, Layers, Gauge, Radio, FlaskConical, Users, FileCheck, Truck, Plug } from "lucide-react";
 import SupplierActivationTab from "./SupplierActivationTab";
 import StressTestTab from "./StressTestTab";
 import PilotLaunchTab from "./PilotLaunchTab";
+import SupplierSettingsTab from "./SupplierSettingsTab";
 import { api } from "../../lib/api";
 
 function useApi(path) {
@@ -1869,6 +1870,7 @@ export default function PlatformHardeningPage() {
           <TabsTrigger value="onboarding" className="text-xs gap-1"><Users className="w-3.5 h-3.5" />Onboarding</TabsTrigger>
           <TabsTrigger value="stresstest" className="text-xs gap-1 data-[state=active]:bg-orange-700 data-[state=active]:text-white"><Zap className="w-3.5 h-3.5" />Stress Test</TabsTrigger>
           <TabsTrigger value="pilot" className="text-xs gap-1 data-[state=active]:bg-sky-700 data-[state=active]:text-white"><Play className="w-3.5 h-3.5" />Pilot Launch</TabsTrigger>
+          <TabsTrigger value="supplier-settings" className="text-xs gap-1 data-[state=active]:bg-emerald-700 data-[state=active]:text-white"><Plug className="w-3.5 h-3.5" />Supplier Settings</TabsTrigger>
           {/* Design & Execution Tabs */}
           <TabsTrigger value="overview" className="text-xs gap-1"><Shield className="w-3.5 h-3.5" />Overview</TabsTrigger>
           <TabsTrigger value="execution" className="text-xs gap-1"><Target className="w-3.5 h-3.5" />Execution</TabsTrigger>
@@ -1893,6 +1895,7 @@ export default function PlatformHardeningPage() {
         <TabsContent value="onboarding"><OnboardingTab /></TabsContent>
         <TabsContent value="stresstest"><StressTestTab /></TabsContent>
         <TabsContent value="pilot"><PilotLaunchTab /></TabsContent>
+        <TabsContent value="supplier-settings"><SupplierSettingsTab /></TabsContent>
         {/* Design & Execution */}
         <TabsContent value="overview"><OverviewTab /></TabsContent>
         <TabsContent value="execution"><ExecutionTab /></TabsContent>

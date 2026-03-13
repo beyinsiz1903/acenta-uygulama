@@ -61,6 +61,8 @@ export const adminNav = [
       { label: "Platform Hardening", path: "/app/admin/platform-hardening" },
       { label: "Mutabakat & Izleme", path: "/app/admin/reconciliation" },
       { label: "KPI & Analitik", path: "/app/admin/analytics-kpi" },
+      { label: "Supplier Ekonomisi", path: "/app/admin/supplier-economics" },
+      { label: "Gelir Optimizasyonu", path: "/app/admin/revenue-optimization" },
     ],
   },
   {

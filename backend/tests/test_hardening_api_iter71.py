@@ -12,7 +12,7 @@ import time
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
-    BASE_URL = "https://unified-booking-flow.preview.emergentagent.com"
+    BASE_URL = "https://agency-marketplace-1.preview.emergentagent.com"
 
 
 @pytest.fixture(scope="module")

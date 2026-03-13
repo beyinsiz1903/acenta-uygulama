@@ -219,6 +219,8 @@ const TourDetailPage = lazy(() => import("./pages/TourDetailPage"));
 const UnifiedSearchPage = lazy(() => import("./pages/agency/UnifiedSearchPage"));
 const ReconciliationDashboardPage = lazy(() => import("./pages/admin/ReconciliationDashboardPage"));
 const KPIAnalyticsDashboardPage = lazy(() => import("./pages/admin/KPIAnalyticsDashboardPage"));
+const SupplierEconomicsPage = lazy(() => import("./pages/admin/SupplierEconomicsPage"));
+const RevenueOptimizationPage = lazy(() => import("./pages/admin/RevenueOptimizationPage"));
 
 const HotelBookingsPage = lazy(() => import("./pages/HotelBookingsPage"));
 const HotelStopSellPage = lazy(() => import("./pages/HotelStopSellPage"));
@@ -415,6 +417,10 @@ function App() {
             <Route path="reconciliation" element={<ReconciliationDashboardPage />} />
             {/* KPI Analytics Dashboard */}
             <Route path="analytics-kpi" element={<KPIAnalyticsDashboardPage />} />
+            {/* Supplier Economics Dashboard */}
+            <Route path="supplier-economics" element={<SupplierEconomicsPage />} />
+            {/* Revenue Optimization Dashboard */}
+            <Route path="revenue-optimization" element={<RevenueOptimizationPage />} />
           </Route>
         </Route>
 

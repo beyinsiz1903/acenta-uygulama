@@ -9,7 +9,7 @@ import json
 import sys
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://unified-booking-flow.preview.emergentagent.com"
+BACKEND_URL = "https://agency-marketplace-1.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 def test_auth_login():

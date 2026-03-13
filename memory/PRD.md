@@ -4,7 +4,7 @@
 Enterprise travel SaaS platform serving B2B travel agencies. The platform provides supplier ecosystem, booking orchestration, operations layer, governance layer, integration reliability layer, and production activation layer.
 
 ## Current Phase: Platform Hardening Execution Phase
-Architecture maturity score: 9.2/10 | Production readiness: 0/10 (execution not started)
+Architecture maturity score: 9.2/10 | Production readiness: 6.2/10
 Target: Production readiness >= 8.5/10
 
 ## Core Tech Stack
@@ -38,68 +38,102 @@ All 10 parts designed and tested (28/28 tests):
 9. Disaster Recovery — 3 scenarios (region, DB, queue)
 10. Hardening Checklist — 50 tasks, maturity scoring
 
-### Platform Hardening Execution Phase (Complete - Mar 13, 2026)
+### Platform Hardening Execution Tracker (Complete - Mar 13, 2026)
 - **Dual Score System**: Architecture Maturity (9.2) vs Production Readiness (calculated)
 - **Execution Tracker**: 10 phases, 3 sprints, 46 tasks
-- **Go-Live Blocker Management**: 6 blockers with fix strategies and resolve capability
-- **Go-Live Certification**: Automated readiness assessment with target 8.5/10
-- **Sprint Organization**: Sprint 1 (Go-Live Blockers), Sprint 2 (Real Integrations), Sprint 3 (Load & Failure Testing)
-- **CTO Architecture Assessment**: Architecture 9.4, Reliability 9.2, Security 9.3, Domain Model 9.3, Operations 9.0
-- Tested: 18/18 backend + 13/13 frontend = 100%
+- **Go-Live Blocker Management**: 6 blockers with fix strategies
+- Tested: 31/31 backend + frontend = 100%
+
+### Production Activation Engine (Complete - Mar 13, 2026)
+**11 new activation endpoints with REAL infrastructure data:**
+1. **Infrastructure Health** (`/api/hardening/activation/infrastructure`): Real Redis (healthy, latency, memory, queue depths), Celery (worker count, queues, DLQ), MongoDB (latency, collections, data size)
+2. **Secret Audit** (`/api/hardening/activation/secrets`): 9 secrets scanned, risk levels, rotation policy, production-readiness percentage
+3. **Supplier Verification** (`/api/hardening/activation/suppliers`): 3 suppliers (Paximum, AviationStack, Amadeus), deployment strategy tracking
+4. **Performance Baseline** (`/api/hardening/activation/performance`): Real MongoDB read latency, Redis latency, MongoDB ping latency with SLA targets
+5. **Incident Simulation** (`/api/hardening/activation/incident/{type}`): 3 incident types (supplier_outage, queue_backlog, payment_failure) with playbook execution
+6. **Tenant Isolation** (`/api/hardening/activation/tenant-isolation`): 20 collections scanned, cross-tenant read/write/API tests
+7. **Real-time Metrics** (`/api/hardening/activation/metrics`): Aggregated from Prometheus, Redis queues, MongoDB business data
+8. **Go-Live Dry Run** (`/api/hardening/activation/dry-run`): 5-step pipeline (Search -> Price -> Book -> Voucher -> Notify)
+9. **Onboarding Readiness** (`/api/hardening/activation/onboarding`): 5 checks (agency, pricing, payment, email, users) with workflow
+10. **Go-Live Certification** (`/api/hardening/activation/certification`): Weighted 5-dimension scoring (Infrastructure 25%, Security 25%, Reliability 20%, Observability 15%, Operations 15%)
+
+**7 new frontend tabs:**
+- Go-Live (default, certification dashboard)
+- Infrastructure (live Redis/Celery/MongoDB health)
+- Performance (SLA pass rate, latency tests)
+- Incidents (simulation buttons)
+- Isolation (collection audit table)
+- Dry Run (5-step pipeline)
+- Onboarding (readiness checks)
+
+Tested: 35/35 backend + 7/7 frontend tabs = 100%
+
+## Current Production Readiness Score: 6.2/10
+| Dimension | Score | Weight |
+|-----------|-------|--------|
+| Infrastructure | 6.7 | 25% |
+| Security | 0.8 | 25% |
+| Reliability | 10.0 | 20% |
+| Observability | 8.0 | 15% |
+| Operations | 7.5 | 15% |
+
+### Active Risks
+- Weak/default secrets detected (severity: high)
+- Celery workers not deployed (severity: high)
 
 ## Key API Endpoints
-### Execution Tracker (NEW)
-- `GET /api/hardening/execution/status` — Full execution status with phases, sprints, blockers
-- `GET /api/hardening/execution/phase/{id}` — Phase detail with tasks
-- `POST /api/hardening/execution/phase/{id}/start` — Start a phase
-- `POST /api/hardening/execution/phase/{id}/task/{task_id}/complete` — Complete a task
-- `POST /api/hardening/execution/blocker/{id}/resolve` — Resolve a blocker
-- `GET /api/hardening/execution/certification` — Go-live certification report
 
-### Hardening Design
-- `GET /api/hardening/status` — Combined status with dual scores
-- `GET /api/hardening/traffic/status` — Supplier traffic testing
-- `GET /api/hardening/workers/status` — Worker pools
-- `GET /api/hardening/observability/status` — Observability stack
-- `GET /api/hardening/performance/profiles` — Performance testing
-- `GET /api/hardening/tenant-safety/audit` — Tenant isolation
-- `GET /api/hardening/secrets/status` — Secret management
-- `GET /api/hardening/incidents/playbooks` — Incident playbooks
-- `GET /api/hardening/scaling/status` — Auto-scaling
-- `GET /api/hardening/dr/plan` — Disaster recovery
-- `GET /api/hardening/checklist` — Hardening checklist
+### Production Activation (NEW)
+- `GET /api/hardening/activation/infrastructure` — Real infra health
+- `GET /api/hardening/activation/secrets` — Secret audit
+- `GET /api/hardening/activation/suppliers` — Supplier status
+- `GET /api/hardening/activation/performance` — Performance baseline
+- `POST /api/hardening/activation/incident/{type}` — Incident simulation
+- `GET /api/hardening/activation/tenant-isolation` — Isolation tests
+- `GET /api/hardening/activation/metrics` — Real-time metrics
+- `GET /api/hardening/activation/dry-run` — Go-live dry run
+- `GET /api/hardening/activation/onboarding` — Onboarding readiness
+- `GET /api/hardening/activation/certification` — Full certification
+
+### Execution Tracker
+- `GET /api/hardening/execution/status` — Full execution status
+- `POST /api/hardening/execution/phase/{id}/start` — Start phase
+- `POST /api/hardening/execution/phase/{id}/task/{task_id}/complete` — Complete task
+- `POST /api/hardening/execution/blocker/{id}/resolve` — Resolve blocker
+- `GET /api/hardening/execution/certification` — Certification report
 
 ## Frontend Routes
-- `/app/admin/platform-hardening` — 13-tab Dashboard (Overview, Execution, Certification + 10 design tabs)
+- `/app/admin/platform-hardening` — 16-tab Dashboard (7 activation + 9 design/execution)
 
 ## Prioritized Backlog
 
-### P0 — Execute Hardening (Sprint 1: Go-Live Blockers)
-1. Secret management migration (Vault/KMS)
-2. Worker deployment with queue isolation
-3. Monitoring stack activation (Prometheus + Grafana)
-4. Redis cluster verification
-5. Tenant isolation verification
-6. Remove hardcoded AviationStack API key
+### P0 — Raise Security Score (currently 0.8)
+1. Rotate all weak/default secrets (JWT_SECRET, STRIPE keys, etc.)
+2. Remove hardcoded AviationStack API key from codebase
+3. Enable secret rotation policies
 
-### P0 — Sprint 2: Real Integrations
-7. Paximum shadow traffic activation
-8. AviationStack shadow traffic activation
-9. Amadeus shadow traffic (optional)
-10. Canary deployment and gradual rollout
+### P0 — Raise Infrastructure Score (currently 6.7)
+4. Deploy Celery workers (currently no_workers)
+5. Configure Redis cluster for cache/queue isolation
 
-### P1 — Sprint 3: Load & Failure Testing
-11. 10k searches/hour simulation
-12. 1k bookings/hour simulation
-13. Supplier outage simulation
-14. Queue backlog simulation
-15. Incident response testing
-16. DR testing (DB, Redis, region failover)
-17. Go-live certification
+### P1 — Real Supplier Activation
+6. Activate Paximum shadow traffic
+7. Activate AviationStack with valid API key
+8. Canary deployment and gradual rollout
 
-### P2 — Business Features
-18. Agency Subscription Management
-19. Customer acquisition tools
+### P1 — Load Testing
+9. 10k searches/hour simulation
+10. 1k bookings/hour simulation
+11. Bottleneck analysis
+
+### P2 — Tenant Isolation Improvements
+12. Add org_id/tenant_id to all collections without it
+13. Create compound indexes for tenant queries
+
+### P2 — Go-Live
+14. Complete all blocker resolutions
+15. Final certification with score >= 8.5
+16. First customer onboarding
 
 ## Go-Live Blockers (6 Open)
 | ID | Blocker | Risk | Est. Hours |

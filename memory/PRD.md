@@ -8,6 +8,7 @@ Enterprise Travel Agency SaaS + Multi-Supplier Distribution Engine + Revenue Opt
 supplier adapters → aggregator → unified search (cached) → unified booking
 → commission binding → fallback → reconciliation → analytics → intelligence
 → revenue optimization → scalability → operations → market launch
+→ per-agency supplier credential management
 ```
 
 ## Credentials
@@ -18,67 +19,82 @@ supplier adapters → aggregator → unified search (cached) → unified booking
 
 ## Completed Phases
 
-### Phase 1-4: Foundation ✅
+### Phase 1-4: Foundation
 Unified Booking, Fallback, Commercial UX, Intelligence, Revenue Optimization
 
-### Phase 5: Scalability (MEGA PROMPT #26) ✅
+### Phase 5: Scalability (MEGA PROMPT #26)
 Search Caching, Commission Binding, Rate Limiting, Job Scheduler, Prometheus, Multi-Currency, Tax
 
-### Phase 6: Operations (MEGA PROMPT #27) ✅
+### Phase 6: Operations (MEGA PROMPT #27)
 Validation Framework, Capability Matrix, Cache/Fallback/Rate Limit Tests, Launch Readiness
 
-### Phase 7: Market Launch (MEGA PROMPT #28) ✅ — Mar 13, 2026
+### Phase 7: Market Launch (MEGA PROMPT #28) — Mar 13, 2026
+Pilot Agency Tracking, Usage Metrics, Feedback System, SaaS Pricing, Launch Dashboard
 
-**Faz A — Pilot Operations:**
-- Pilot Agency Tracking (onboard, activate, metrics, status management)
-- Real Usage Metrics (searches, bookings, conversion, revenue, daily breakdown)
-- Feedback System (6-category star ratings, comments, averages, overall score)
-- Pilot Performance Dashboard (5 KPI cards + agencies table)
+### Phase 8: Per-Agency Supplier Credential Management — Mar 13, 2026
 
-**Faz B — Launch Dashboard:**
-- Market Launch Page (5 tabs: Pilot Acenteler, Kullanim, Feedback, Fiyatlandirma, Launch Raporu)
+**Backend:**
+- AES-256 encrypted credential storage (Fernet)
+- Supplier-specific field validation (WWTatil, Paximum, RateHawk, TBO)
+- CRUD endpoints for agencies (own) and admin (any agency)
+- Real supplier API connection testing
+- Enable/Disable toggle with test-gate (must PASS before enabling)
+- Credential audit logging (save, test, enable, disable, delete)
+- Token caching per supplier per agency
+- Masked credential display (****1234)
 
-**Faz C — Pricing Model:**
-- SaaS Pricing: Free (0EUR/3%), Starter (49EUR/2%), Pro (149EUR/1%), Enterprise (custom)
+**RBAC:**
+- super_admin: manage ALL agencies' credentials
+- agency_admin: manage only own tenant credentials
+- 403 enforcement on admin endpoints
 
-**Faz D — Support & Positioning:**
-- Support Channels (email, WhatsApp, documentation, FAQ with SLAs)
-- Market Positioning (tagline, value props, differentiators, target audience)
-- Launch Report (Market Readiness Score, pilot summary, usage, risks, checklist)
+**Frontend:**
+- AdminSupplierCredentialsPage: agencies list + audit log tabs
+- Agency detail view: 4 supplier cards with supplier-specific forms
+- Masked sensitive fields, Test/Edit/Enable/Disable/Remove actions
+- SupplierSettingsTab (agency self-service): updated with enable/disable
+
+**DB Collections:**
+- `supplier_credentials`: per-agency encrypted credentials with status
+- `supplier_tokens`: cached authentication tokens per supplier
+- `credential_audit_log`: action audit trail
 
 ---
 
 ## Key API Endpoints
 
-### Market Launch (NEW - Phase 7)
-- `GET/POST /api/market-launch/pilot-agencies` — Pilot agency CRUD
-- `PUT /api/market-launch/pilot-agencies/update` — Agency status update
-- `GET /api/market-launch/usage-metrics?days=N` — Usage metrics
-- `GET/POST /api/market-launch/feedback` — Feedback CRUD
-- `GET /api/market-launch/pricing` — SaaS pricing tiers
-- `GET /api/market-launch/launch-kpis` — Launch KPIs
-- `GET /api/market-launch/launch-report` — Full launch report
-- `GET /api/market-launch/support` — Support channels
-- `GET /api/market-launch/positioning` — Market positioning
+### Supplier Credentials (Phase 8 — NEW)
+- `GET /api/supplier-credentials/supported` — List supported suppliers + fields
+- `GET /api/supplier-credentials/my` — Own agency credentials (masked)
+- `POST /api/supplier-credentials/save` — Save credentials for own agency
+- `DELETE /api/supplier-credentials/{supplier}` — Delete own credential
+- `POST /api/supplier-credentials/test/{supplier}` — Test connection
+- `PUT /api/supplier-credentials/toggle/{supplier}` — Enable/Disable
+- `GET /api/supplier-credentials/admin/agencies` — All agencies summary (super_admin)
+- `GET /api/supplier-credentials/admin/agency/{org_id}` — Agency credentials (super_admin)
+- `POST /api/supplier-credentials/admin/agency/{org_id}/save` — Save for agency (super_admin)
+- `DELETE /api/supplier-credentials/admin/agency/{org_id}/{supplier}` — Delete for agency
+- `PUT /api/supplier-credentials/admin/agency/{org_id}/toggle/{supplier}` — Toggle for agency
+- `GET /api/supplier-credentials/admin/audit-log` — Audit log with optional org filter
 
 ---
 
-## CTO Platform Score: 9.95/10
-
 ## Prioritized Backlog
 
-### P0 — MEGA PROMPT #29: Growth Engine
+### P0 — Real Operations
+- Real supplier credential validation with live APIs
+- Shadow traffic activation
+- Revenue forecasting
+
+### P1 — MEGA PROMPT #29: Growth Engine
 - Agency acquisition funnel
 - Referral system
 - Supplier expansion
 - Growth analytics
 
-### P1 — Real Operations
-- Real supplier credential validation
-- Shadow traffic activation
-- Revenue forecasting
-
 ### P2 — Backlog
 - PyMongo AutoReconnect fix
+- Secret rotation & expiry alerts
+- Credential health dashboard
 - Multi-region deployment
 - White-label support

@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://shadow-traffic.preview.emergentagent.com"
+BASE_URL = "https://agency-pilot-v2.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials

@@ -115,6 +115,7 @@ const AdminProductModePage = lazy(() => import("./pages/admin/AdminProductModePa
 const AdminImportPage = lazy(() => import("./pages/admin/AdminImportPage"));
 const AdminPortfolioSyncPage = lazy(() => import("./pages/admin/AdminPortfolioSyncPage"));
 const AdminAllModulesPage = lazy(() => import("./pages/admin/AdminAllModulesPage"));
+const ProductionActivationPage = lazy(() => import("./pages/admin/ProductionActivationPage"));
 
 const AdminMatchesPage = lazy(() => import("./pages/AdminMatchesPage"));
 const AdminExportsPage = lazy(() => import("./pages/AdminExportsPage"));
@@ -400,6 +401,8 @@ function App() {
             <Route path="import" element={<AdminImportPage />} />
             <Route path="google-sheets" element={<Navigate to="/app/admin/portfolio-sync" replace />} />
             <Route path="portfolio-sync" element={<AdminPortfolioSyncPage />} />
+            {/* Production Activation Layer */}
+            <Route path="production-activation" element={<ProductionActivationPage />} />
           </Route>
         </Route>
 

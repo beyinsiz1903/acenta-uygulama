@@ -148,6 +148,11 @@ from app.routers.ops_booking_events import router as ops_booking_events_router
 from app.routers.ops_cases import router as ops_cases_router
 from app.routers.ops_click_to_pay import router as ops_click_to_pay_router
 from app.routers.ops_finance import router as ops_finance_router
+from app.routers.ops_finance_accounts import router as ops_finance_accounts_router
+from app.routers.ops_finance_refunds import router as ops_finance_refunds_router
+from app.routers.ops_finance_settlements import router as ops_finance_settlements_router
+from app.routers.ops_finance_documents import router as ops_finance_documents_router
+from app.routers.ops_finance_suppliers import router as ops_finance_suppliers_router
 from app.routers.ops_incidents import router as ops_incidents_router
 from app.routers.ops_supplier_operations import router as ops_supplier_operations_router
 from app.routers.governance import router as governance_router
@@ -283,6 +288,11 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(ops_cases_router)
     app.include_router(ops_click_to_pay_router)
     app.include_router(ops_finance_router)
+    app.include_router(ops_finance_accounts_router)
+    app.include_router(ops_finance_refunds_router)
+    app.include_router(ops_finance_settlements_router)
+    app.include_router(ops_finance_documents_router)
+    app.include_router(ops_finance_suppliers_router)
     app.include_router(ops_tasks_router)
     app.include_router(ops_incidents_router)
     app.include_router(admin_supplier_health_router)
@@ -394,3 +404,7 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(ops_supplier_operations_router)
     app.include_router(governance_router)
     app.include_router(reliability_router)
+
+    # --- Production Activation Layer ---
+    from app.routers.production import router as production_router
+    app.include_router(production_router)

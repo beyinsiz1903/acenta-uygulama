@@ -16,6 +16,7 @@ from app.middleware.rate_limit_middleware import RateLimitMiddleware
 from app.middleware.security_headers_middleware import SecurityHeadersMiddleware
 from app.middleware.structured_logging_middleware import StructuredLoggingMiddleware
 from app.middleware.tenant_middleware import TenantResolutionMiddleware
+from app.middleware.rbac_middleware import RBACMiddleware
 
 
 def configure_middlewares(app: FastAPI) -> None:
@@ -28,6 +29,7 @@ def configure_middlewares(app: FastAPI) -> None:
     app.add_middleware(RateLimitMiddleware)
     app.add_middleware(IPWhitelistMiddleware)
     app.add_middleware(TenantResolutionMiddleware)
+    app.add_middleware(RBACMiddleware)
 
     cors_logger = logging.getLogger("cors")
     if CORS_ORIGINS == ["*"]:

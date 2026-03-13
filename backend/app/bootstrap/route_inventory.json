@@ -6735,11 +6735,22 @@
     "compat_required": true,
     "current_namespace": "/api/ops",
     "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "ops",
+    "path": "/api/ops/finance/_decomposed",
+    "risk_level": "medium",
+    "source": "app.routers.ops_finance",
+    "target_namespace": "/api/v1/ops"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/ops",
+    "legacy_or_v1": "legacy",
     "method": "POST",
     "owner": "ops",
     "path": "/api/ops/finance/_test/posting",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_accounts",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6750,7 +6761,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/_test/recalc",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_accounts",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6761,7 +6772,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/accounts",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_accounts",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6772,7 +6783,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/accounts",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_accounts",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6783,7 +6794,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/accounts/{account_id}/statement",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_accounts",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6794,7 +6805,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/bookings/{booking_id}/financials",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_accounts",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6805,7 +6816,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/bookings/{booking_id}/ledger-summary",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_accounts",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6816,7 +6827,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/bookings/{booking_id}/payment-state",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_accounts",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6827,7 +6838,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/credit-profiles",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_accounts",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6838,7 +6849,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/credit-profiles/{agency_id}",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_accounts",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6849,7 +6860,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/documents",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_documents",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6860,7 +6871,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/documents/upload",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_documents",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6871,7 +6882,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/documents/{document_id}",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_documents",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6882,7 +6893,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/documents/{document_id}/download",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_documents",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6893,7 +6904,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/exposure",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_accounts",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6904,7 +6915,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/exposure/{agency_id}/entries",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_accounts",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6915,7 +6926,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/payments",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_accounts",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6926,7 +6937,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/refunds",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_refunds",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6937,7 +6948,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/refunds",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_refunds",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6948,7 +6959,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/refunds/{case_id}",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_refunds",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6959,7 +6970,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/refunds/{case_id}/approve",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_refunds",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6970,7 +6981,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/refunds/{case_id}/approve-step1",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_refunds",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6981,7 +6992,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/refunds/{case_id}/approve-step2",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_refunds",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -6992,7 +7003,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/refunds/{case_id}/close",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_refunds",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -7003,7 +7014,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/refunds/{case_id}/mark-paid",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_refunds",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -7014,7 +7025,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/refunds/{case_id}/reject",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_refunds",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -7025,7 +7036,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/settlements",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_settlements",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -7036,7 +7047,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/settlements",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_settlements",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -7047,7 +7058,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/settlements/{settlement_id}",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_settlements",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -7058,7 +7069,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/settlements/{settlement_id}/approve",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_settlements",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -7069,7 +7080,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/settlements/{settlement_id}/cancel",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_settlements",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -7080,7 +7091,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/settlements/{settlement_id}/items:add",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_settlements",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -7091,7 +7102,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/settlements/{settlement_id}/items:remove",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_settlements",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -7102,7 +7113,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/settlements/{settlement_id}/mark-paid",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_settlements",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -7113,7 +7124,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/supplier-accruals",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_settlements",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -7124,7 +7135,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/supplier-accruals/{booking_id}/adjust",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_settlements",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -7135,7 +7146,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/supplier-accruals/{booking_id}/reverse",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_settlements",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -7146,7 +7157,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/suppliers/payable-summary",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_suppliers",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -7157,7 +7168,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/suppliers/{supplier_id}/accounts",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_suppliers",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -7168,7 +7179,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/suppliers/{supplier_id}/accounts/ensure",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_suppliers",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -7179,7 +7190,7 @@
     "owner": "ops",
     "path": "/api/ops/finance/suppliers/{supplier_id}/balances",
     "risk_level": "medium",
-    "source": "app.routers.ops_finance",
+    "source": "app.routers.ops_finance_suppliers",
     "target_namespace": "/api/v1/ops"
   },
   {
@@ -7852,6 +7863,138 @@
     "risk_level": "medium",
     "source": "app.routers.pricing",
     "target_namespace": "/api/v1/pricing"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/production",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "production",
+    "path": "/api/production/notifications/delivery-log",
+    "risk_level": "medium",
+    "source": "app.routers.production",
+    "target_namespace": "/api/v1/production"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/production",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "production",
+    "path": "/api/production/notifications/email",
+    "risk_level": "medium",
+    "source": "app.routers.production",
+    "target_namespace": "/api/v1/production"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/production",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "production",
+    "path": "/api/production/notifications/slack",
+    "risk_level": "medium",
+    "source": "app.routers.production",
+    "target_namespace": "/api/v1/production"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/production",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "production",
+    "path": "/api/production/notifications/webhook",
+    "risk_level": "high",
+    "source": "app.routers.production",
+    "target_namespace": "/api/v1/production"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/production",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "production",
+    "path": "/api/production/pipeline/status",
+    "risk_level": "medium",
+    "source": "app.routers.production",
+    "target_namespace": "/api/v1/production"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/production",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "production",
+    "path": "/api/production/readiness",
+    "risk_level": "medium",
+    "source": "app.routers.production",
+    "target_namespace": "/api/v1/production"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/production",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "production",
+    "path": "/api/production/readiness/secrets",
+    "risk_level": "medium",
+    "source": "app.routers.production",
+    "target_namespace": "/api/v1/production"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/production",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "production",
+    "path": "/api/production/readiness/tasks",
+    "risk_level": "medium",
+    "source": "app.routers.production",
+    "target_namespace": "/api/v1/production"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/production",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "production",
+    "path": "/api/production/suppliers/integrations",
+    "risk_level": "medium",
+    "source": "app.routers.production",
+    "target_namespace": "/api/v1/production"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/production",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "production",
+    "path": "/api/production/vouchers",
+    "risk_level": "medium",
+    "source": "app.routers.production",
+    "target_namespace": "/api/v1/production"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/production",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "production",
+    "path": "/api/production/vouchers/generate",
+    "risk_level": "medium",
+    "source": "app.routers.production",
+    "target_namespace": "/api/v1/production"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/production",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "production",
+    "path": "/api/production/vouchers/{booking_id}/download",
+    "risk_level": "medium",
+    "source": "app.routers.production",
+    "target_namespace": "/api/v1/production"
   },
   {
     "compat_required": true,

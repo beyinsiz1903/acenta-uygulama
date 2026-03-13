@@ -20,7 +20,7 @@ async def test_admin_settlements_feature_disabled(async_client, test_db, anyio_b
         "organization_id": org_id,
         "email": email,
         "name": "Admin No PRO",
-        "roles": ["admin"],
+        "roles": ["agency_admin"],
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),
     }

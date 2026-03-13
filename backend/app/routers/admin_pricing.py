@@ -283,29 +283,20 @@ async def list_rules(
 
     out: list[PricingRuleResponse] = []
     for d in docs:
-        action_raw = d.get("action") or {}
-        # Simple rules store type as 'markup_percent'; normalize for response model
-        action_type = action_raw.get("type", "markup")
-        if action_type == "markup_percent":
-            action_type = "markup"
-        action_mode = action_raw.get("mode", "percent")
-        try:
-            out.append(
-                PricingRuleResponse(
-                    rule_id=_id(d["_id"]),
-                    organization_id=org_id,
-                    code=d.get("code") or d.get("notes") or "auto",
-                    status=d.get("status", "draft"),
-                    priority=d.get("priority", 0),
-                    scope=d.get("scope") or {},
-                    action={"type": action_type, "mode": action_mode, "value": action_raw.get("value", 0)},
-                    created_at=d.get("created_at", datetime.utcnow()),
-                    updated_at=d.get("updated_at", datetime.utcnow()),
-                    created_by_email=d.get("created_by_email"),
-                )
+        out.append(
+            PricingRuleResponse(
+                rule_id=_id(d["_id"]),
+                organization_id=org_id,
+                code=d.get("code") or d.get("notes"),
+                status=d.get("status", "draft"),
+                priority=d.get("priority", 0),
+                scope=d.get("scope") or {},
+                action=d.get("action") or {},
+                created_at=d.get("created_at", datetime.utcnow()),
+                updated_at=d.get("updated_at", datetime.utcnow()),
+                created_by_email=d.get("created_by_email"),
             )
-        except Exception:
-            pass  # Skip rules that don't match the response model
+        )
     return out
 
 

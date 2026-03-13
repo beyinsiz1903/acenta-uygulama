@@ -10,7 +10,7 @@ ContractStatus = Literal["draft", "active", "archived"]
 GridStatus = Literal["draft", "active", "archived"]
 RuleStatus = Literal["draft", "active", "archived"]
 
-RuleActionType = Literal["markup", "markdown", "override"]
+RuleActionType = Literal["markup", "markdown", "override", "markup_percent"]
 RuleActionMode = Literal["percent", "absolute"]
 
 
@@ -92,15 +92,15 @@ class PricingRuleScope(BaseModel):
 
 
 class PricingRuleAction(BaseModel):
-    type: RuleActionType  # markup | markdown | override
-    mode: RuleActionMode  # percent | absolute
+    type: RuleActionType  # markup | markdown | override | markup_percent
+    mode: RuleActionMode = "percent"  # percent | absolute (default for simple rules)
     value: float
     min_margin: Optional[float] = None   # percent
     max_discount: Optional[float] = None # percent
 
 
 class PricingRuleCreateRequest(BaseModel):
-    code: str = Field(min_length=2, max_length=64)
+    code: Optional[str] = Field(default=None, max_length=64)
     status: RuleStatus = "draft"
     priority: int = 100
     scope: PricingRuleScope

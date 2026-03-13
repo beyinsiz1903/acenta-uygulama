@@ -66,6 +66,7 @@ export const adminNav = [
       { label: "Platform Izleme", path: "/app/admin/platform-monitoring" },
       { label: "Operasyon & Launch", path: "/app/admin/operations-readiness" },
       { label: "Market Launch", path: "/app/admin/market-launch" },
+      { label: "Supplier Credentials", path: "/app/admin/supplier-credentials" },
     ],
   },
   {

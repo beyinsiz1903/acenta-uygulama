@@ -224,6 +224,7 @@ const RevenueOptimizationPage = lazy(() => import("./pages/admin/RevenueOptimiza
 const PlatformMonitoringPage = lazy(() => import("./pages/admin/PlatformMonitoringPage"));
 const OperationsReadinessPage = lazy(() => import("./pages/admin/OperationsReadinessPage"));
 const MarketLaunchPage = lazy(() => import("./pages/admin/MarketLaunchPage"));
+const AdminSupplierCredentialsPage = lazy(() => import("./pages/admin/AdminSupplierCredentialsPage"));
 
 const HotelBookingsPage = lazy(() => import("./pages/HotelBookingsPage"));
 const HotelStopSellPage = lazy(() => import("./pages/HotelStopSellPage"));
@@ -430,6 +431,8 @@ function App() {
             <Route path="operations-readiness" element={<OperationsReadinessPage />} />
             {/* Market Launch & First Customers */}
             <Route path="market-launch" element={<MarketLaunchPage />} />
+            {/* Supplier Credential Management (Super Admin) */}
+            <Route path="supplier-credentials" element={<AdminSupplierCredentialsPage />} />
           </Route>
         </Route>
 

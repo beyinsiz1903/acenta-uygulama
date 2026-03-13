@@ -2,6 +2,8 @@
 
 Stores per-agency supplier credentials with AES encryption.
 Each agency can connect their own supplier accounts (wwtatil, paximum, etc.).
+Supports: RBAC (super_admin sees all, agency_admin sees own), audit logging,
+enable/disable, and supplier-specific validation.
 """
 from __future__ import annotations
 
@@ -16,7 +18,6 @@ from cryptography.fernet import Fernet
 
 logger = logging.getLogger("suppliers.credentials")
 
-# Derive a stable Fernet key from a secret. In production use a Vault/KMS.
 _SECRET = os.environ.get("CREDENTIAL_ENCRYPTION_KEY", "syroce-supplier-credential-key-2026")
 _KEY = base64.urlsafe_b64encode(hashlib.sha256(_SECRET.encode()).digest())
 _fernet = Fernet(_KEY)
@@ -36,6 +37,18 @@ def _decrypt(value: str) -> str:
 
 def _ts() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+async def _write_audit(db, *, organization_id: str, supplier: str, action: str, actor: str, details: str = ""):
+    """Write an entry to the credential audit log."""
+    await db["credential_audit_log"].insert_one({
+        "organization_id": organization_id,
+        "supplier": supplier,
+        "action": action,
+        "actor": actor,
+        "details": details,
+        "timestamp": _ts(),
+    })
 
 
 SUPPORTED_SUPPLIERS = {
@@ -115,7 +128,7 @@ async def get_agency_credentials(db, organization_id: str) -> dict[str, Any]:
     return {"credentials": creds, "organization_id": organization_id}
 
 
-async def save_credential(db, organization_id: str, supplier: str, fields: dict[str, str]) -> dict[str, Any]:
+async def save_credential(db, organization_id: str, supplier: str, fields: dict[str, str], *, actor: str = "") -> dict[str, Any]:
     """Save or update supplier credentials for an agency."""
     if supplier not in SUPPORTED_SUPPLIERS:
         return {"error": f"Unsupported supplier: {supplier}", "supported": list(SUPPORTED_SUPPLIERS.keys())}
@@ -128,14 +141,15 @@ async def save_credential(db, organization_id: str, supplier: str, fields: dict[
 
     all_fields = required + optional
 
-    # Encrypt sensitive fields
     doc = {
         "organization_id": organization_id,
         "supplier": supplier,
-        "status": "saved",
+        "status": "draft",
         "connected_at": None,
         "last_tested": None,
+        "last_test_result": None,
         "updated_at": _ts(),
+        "updated_by": actor,
     }
     for field in all_fields:
         val = fields.get(field, "")
@@ -147,24 +161,29 @@ async def save_credential(db, organization_id: str, supplier: str, fields: dict[
         upsert=True,
     )
 
+    await _write_audit(db, organization_id=organization_id, supplier=supplier,
+                       action="save", actor=actor, details="Credentials saved/updated")
+
     return {
         "action": "save_credential",
         "supplier": supplier,
         "organization_id": organization_id,
-        "status": "saved",
+        "status": "draft",
         "message": f"{supplier} credentials saved. Run 'Test Connection' to verify.",
     }
 
 
-async def delete_credential(db, organization_id: str, supplier: str) -> dict[str, Any]:
+async def delete_credential(db, organization_id: str, supplier: str, *, actor: str = "") -> dict[str, Any]:
     """Delete supplier credentials for an agency."""
     result = await db["supplier_credentials"].delete_one(
         {"organization_id": organization_id, "supplier": supplier}
     )
-    # Also clear cached tokens
     await db["supplier_tokens"].delete_many(
         {"organization_id": organization_id, "supplier": supplier}
     )
+    if result.deleted_count > 0:
+        await _write_audit(db, organization_id=organization_id, supplier=supplier,
+                           action="delete", actor=actor, details="Credentials deleted")
     return {
         "action": "delete_credential",
         "supplier": supplier,
@@ -189,22 +208,31 @@ async def get_decrypted_credentials(db, organization_id: str, supplier: str) -> 
     return result
 
 
-async def test_connection(db, organization_id: str, supplier: str) -> dict[str, Any]:
+async def test_connection(db, organization_id: str, supplier: str, *, actor: str = "") -> dict[str, Any]:
     """Test supplier connection using agency's credentials."""
     creds = await get_decrypted_credentials(db, organization_id, supplier)
     if not creds:
         return {"verdict": "FAIL", "error": "No credentials found for this supplier"}
 
     if supplier == "wwtatil":
-        return await _test_wwtatil(db, organization_id, creds)
+        result = await _test_wwtatil(db, organization_id, creds)
     elif supplier == "paximum":
-        return await _test_paximum(db, organization_id, creds)
+        result = await _test_paximum(db, organization_id, creds)
     elif supplier == "ratehawk":
-        return await _test_ratehawk(db, organization_id, creds)
+        result = await _test_ratehawk(db, organization_id, creds)
     elif supplier == "tbo":
-        return await _test_tbo(db, organization_id, creds)
+        result = await _test_tbo(db, organization_id, creds)
     else:
         return {"verdict": "FAIL", "error": f"No test handler for {supplier}"}
+
+    # Store last_test_result on the credential doc
+    await db["supplier_credentials"].update_one(
+        {"organization_id": organization_id, "supplier": supplier},
+        {"$set": {"last_tested": _ts(), "last_test_result": result.get("verdict", "FAIL")}},
+    )
+    await _write_audit(db, organization_id=organization_id, supplier=supplier,
+                       action="test", actor=actor, details=f"Result: {result.get('verdict')}")
+    return result
 
 
 async def _test_wwtatil(db, organization_id: str, creds: dict) -> dict[str, Any]:
@@ -445,3 +473,76 @@ async def get_cached_token(db, organization_id: str, supplier: str) -> str | Non
         return None
     # Simple expiry check — wwtatil tokens are 24h
     return doc.get("token")
+
+
+async def toggle_credential(db, organization_id: str, supplier: str, enabled: bool, *, actor: str = "") -> dict[str, Any]:
+    """Enable or disable a supplier credential for an agency."""
+    doc = await db["supplier_credentials"].find_one(
+        {"organization_id": organization_id, "supplier": supplier}, {"_id": 0}
+    )
+    if not doc:
+        return {"error": "Credential not found"}
+
+    if enabled:
+        # Only allow enabling if the last test was successful
+        if doc.get("last_test_result") != "PASS":
+            return {"error": "Cannot enable — last connection test did not pass. Please test first."}
+        new_status = "connected"
+    else:
+        new_status = "disabled"
+
+    await db["supplier_credentials"].update_one(
+        {"organization_id": organization_id, "supplier": supplier},
+        {"$set": {"status": new_status, "updated_at": _ts(), "updated_by": actor}},
+    )
+    action_str = "enable" if enabled else "disable"
+    await _write_audit(db, organization_id=organization_id, supplier=supplier,
+                       action=action_str, actor=actor, details=f"Status → {new_status}")
+    return {"supplier": supplier, "status": new_status, "message": f"Supplier {action_str}d"}
+
+
+async def get_credentials_for_agency(db, target_org_id: str) -> dict[str, Any]:
+    """Admin: Get all supplier credentials for a specific agency (masked)."""
+    return await get_agency_credentials(db, target_org_id)
+
+
+async def admin_list_agencies_credentials(db) -> dict[str, Any]:
+    """Admin: List all agencies and their supplier credential summary."""
+    pipeline = [
+        {"$group": {
+            "_id": "$organization_id",
+            "suppliers": {"$push": {"supplier": "$supplier", "status": "$status", "last_tested": "$last_tested", "last_test_result": "$last_test_result"}},
+            "total": {"$sum": 1},
+            "connected": {"$sum": {"$cond": [{"$eq": ["$status", "connected"]}, 1, 0]}},
+            "disabled": {"$sum": {"$cond": [{"$eq": ["$status", "disabled"]}, 1, 0]}},
+        }},
+        {"$sort": {"_id": 1}},
+    ]
+    cursor = db["supplier_credentials"].aggregate(pipeline)
+    agencies = []
+    async for doc in cursor:
+        org_id = doc["_id"]
+        # Try to get agency name from organizations collection
+        org = await db["organizations"].find_one({"org_id": org_id}, {"_id": 0, "name": 1, "org_id": 1})
+        agencies.append({
+            "organization_id": org_id,
+            "company_name": org.get("name", org_id) if org else org_id,
+            "suppliers": doc["suppliers"],
+            "total_credentials": doc["total"],
+            "connected_count": doc["connected"],
+            "disabled_count": doc["disabled"],
+        })
+    return {"agencies": agencies}
+
+
+async def get_audit_log(db, organization_id: str | None = None, limit: int = 50) -> dict[str, Any]:
+    """Get audit log entries, optionally filtered by organization."""
+    query = {}
+    if organization_id:
+        query["organization_id"] = organization_id
+    cursor = db["credential_audit_log"].find(query, {"_id": 0}).sort("timestamp", -1).limit(limit)
+    logs = []
+    async for doc in cursor:
+        logs.append(doc)
+    return {"logs": logs, "count": len(logs)}
+

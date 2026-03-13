@@ -84,6 +84,7 @@ function SupplierCard({ code, config, savedCred, onRefresh }) {
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [toggling, setToggling] = useState(false);
   const [showSensitive, setShowSensitive] = useState({});
 
   useEffect(() => {
@@ -125,12 +126,27 @@ function SupplierCard({ code, config, savedCred, onRefresh }) {
     setDeleting(false);
   };
 
+  const toggle = async (enabled) => {
+    setToggling(true);
+    try {
+      const r = await api.put(`/supplier-credentials/toggle/${code}`, { enabled });
+      if (r.data?.error) {
+        setTestResult({ verdict: "FAIL", error: r.data.error });
+      } else {
+        onRefresh();
+      }
+    } catch (e) { console.error(e); }
+    setToggling(false);
+  };
+
   const status = savedCred?.status;
 
   const statusConfig = {
     connected: { label: "Connected", cls: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
+    draft: { label: "Draft", cls: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
     saved: { label: "Saved", cls: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
     auth_failed: { label: "Auth Failed", cls: "bg-red-500/20 text-red-300 border-red-500/30" },
+    disabled: { label: "Disabled", cls: "bg-zinc-600/30 text-zinc-400 border-zinc-600/30" },
   };
   const sc = statusConfig[status] || { label: "Not Connected", cls: "bg-zinc-700/30 text-zinc-400 border-zinc-600/30" };
 
@@ -205,13 +221,23 @@ function SupplierCard({ code, config, savedCred, onRefresh }) {
         )}
 
         {savedCred && !editing && (
-          <div className="flex gap-2 pt-1 border-t border-zinc-800">
+          <div className="flex flex-wrap gap-2 pt-1 border-t border-zinc-800">
             <Button data-testid={`test-${code}`} size="sm" variant="outline" className="text-xs h-7 mt-2" disabled={testing} onClick={test}>
               <TestTube className="w-3 h-3 mr-1" />{testing ? "Testing..." : "Test Connection"}
             </Button>
             <Button data-testid={`edit-${code}`} size="sm" variant="outline" className="text-xs h-7 mt-2" onClick={() => setEditing(true)}>
               <Plug className="w-3 h-3 mr-1" />Edit
             </Button>
+            {status === "connected" && (
+              <Button data-testid={`disable-${code}`} size="sm" variant="outline" className="text-xs h-7 mt-2 text-amber-400 hover:text-amber-300 border-amber-900/30" disabled={toggling} onClick={() => toggle(false)}>
+                <XCircle className="w-3 h-3 mr-1" />{toggling ? "..." : "Disable"}
+              </Button>
+            )}
+            {status === "disabled" && (
+              <Button data-testid={`enable-${code}`} size="sm" variant="outline" className="text-xs h-7 mt-2 text-emerald-400 hover:text-emerald-300 border-emerald-900/30" disabled={toggling} onClick={() => toggle(true)}>
+                <CheckCircle2 className="w-3 h-3 mr-1" />{toggling ? "..." : "Enable"}
+              </Button>
+            )}
             <Button data-testid={`delete-${code}`} size="sm" variant="outline" className="text-xs h-7 mt-2 text-red-400 hover:text-red-300 border-red-900/30" disabled={deleting} onClick={del}>
               <Trash2 className="w-3 h-3 mr-1" />{deleting ? "..." : "Remove"}
             </Button>

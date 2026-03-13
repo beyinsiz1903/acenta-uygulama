@@ -116,6 +116,7 @@ const AdminImportPage = lazy(() => import("./pages/admin/AdminImportPage"));
 const AdminPortfolioSyncPage = lazy(() => import("./pages/admin/AdminPortfolioSyncPage"));
 const AdminAllModulesPage = lazy(() => import("./pages/admin/AdminAllModulesPage"));
 const ProductionActivationPage = lazy(() => import("./pages/admin/ProductionActivationPage"));
+const PlatformHardeningPage = lazy(() => import("./pages/admin/PlatformHardeningPage"));
 
 const AdminMatchesPage = lazy(() => import("./pages/AdminMatchesPage"));
 const AdminExportsPage = lazy(() => import("./pages/AdminExportsPage"));
@@ -403,6 +404,8 @@ function App() {
             <Route path="portfolio-sync" element={<AdminPortfolioSyncPage />} />
             {/* Production Activation Layer */}
             <Route path="production-activation" element={<ProductionActivationPage />} />
+            {/* Platform Hardening Dashboard */}
+            <Route path="platform-hardening" element={<PlatformHardeningPage />} />
           </Route>
         </Route>
 

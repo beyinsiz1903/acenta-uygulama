@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="10" failures="0" skipped="0" tests="20" time="27.944" timestamp="2026-03-13T04:17:37.333228+00:00" hostname="agent-env-cd46e3ed-d5de-404c-82c6-fad849762261"><testcase classname="tests.test_platform_hardening_iter71.TestPlatformHardeningAuth" name="test_login_super_admin" time="1.846" /><testcase classname="tests.test_platform_hardening_iter71.TestHardeningCombinedStatus" name="test_hardening_status" time="1.564" /><testcase classname="tests.test_platform_hardening_iter71.TestTrafficTesting" name="test_traffic_status" time="1.624" /><testcase classname="tests.test_platform_hardening_iter71.TestTrafficTesting" name="test_set_traffic_mode" time="1.272" /><testcase classname="tests.test_platform_hardening_iter71.TestTrafficTesting" name="test_sandbox_test_paximum" time="1.252" /><testcase classname="tests.test_platform_hardening_iter71.TestWorkerStrategy" name="test_workers_status" time="1.626" /><testcase classname="tests.test_platform_hardening_iter71.TestObservabilityStack" name="test_observability_status" time="1.586" /><testcase classname="tests.test_platform_hardening_iter71.TestObservabilityStack" name="test_grafana_dashboards" time="1.227" /><testcase classname="tests.test_platform_hardening_iter71.TestPerformanceTesting" name="test_performance_assessment" time="1.585" /><testcase classname="tests.test_platform_hardening_iter71.TestPerformanceTesting" name="test_performance_profiles" time="1.231" /><testcase classname="tests.test_platform_hardening_iter71.TestTenantSafety" name="test_tenant_isolation_audit" time="1.234"><error message="failed on setup with &quot;AssertionError: Agency login failed: {&quot;error&quot;:{&quot;code&quot;:&quot;rate_limit_exceeded&quot;,&quot;message&quot;:&quot;Too many requests. Please try again later.&quot;,&quot;details&quot;:{&quot;retry_after_seconds&quot;:30,&quot;remaining&quot;:0}}}&#10;assert 429 == 200&#10; +  where 429 = &lt;Response [429 Too Many Requests]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:123: in wrapper
+    yield runner.run_fixture(local_func, kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2313: in run_fixture
+    retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:1009: in agency_token
+    assert response.status_code == 200, f"Agency login failed: {response.text}"
+E   AssertionError: Agency login failed: {"error":{"code":"rate_limit_exceeded","message":"Too many requests. Please try again later.","details":{"retry_after_seconds":30,"remaining":0}}}
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429 Too Many Requests]&gt;.status_code</error></testcase><testcase classname="tests.test_platform_hardening_iter71.TestSecretManagement" name="test_secrets_status" time="1.199"><error message="failed on setup with &quot;AssertionError: Agency login failed: {&quot;error&quot;:{&quot;code&quot;:&quot;rate_limit_exceeded&quot;,&quot;message&quot;:&quot;Too many requests. Please try again later.&quot;,&quot;details&quot;:{&quot;retry_after_seconds&quot;:30,&quot;remaining&quot;:0}}}&#10;assert 429 == 200&#10; +  where 429 = &lt;Response [429 Too Many Requests]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:123: in wrapper
+    yield runner.run_fixture(local_func, kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2313: in run_fixture
+    retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:1009: in agency_token
+    assert response.status_code == 200, f"Agency login failed: {response.text}"
+E   AssertionError: Agency login failed: {"error":{"code":"rate_limit_exceeded","message":"Too many requests. Please try again later.","details":{"retry_after_seconds":30,"remaining":0}}}
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429 Too Many Requests]&gt;.status_code</error></testcase><testcase classname="tests.test_platform_hardening_iter71.TestIncidentPlaybooks" name="test_incident_playbooks" time="1.209"><error message="failed on setup with &quot;AssertionError: Agency login failed: {&quot;error&quot;:{&quot;code&quot;:&quot;rate_limit_exceeded&quot;,&quot;message&quot;:&quot;Too many requests. Please try again later.&quot;,&quot;details&quot;:{&quot;retry_after_seconds&quot;:30,&quot;remaining&quot;:0}}}&#10;assert 429 == 200&#10; +  where 429 = &lt;Response [429 Too Many Requests]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:123: in wrapper
+    yield runner.run_fixture(local_func, kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2313: in run_fixture
+    retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:1009: in agency_token
+    assert response.status_code == 200, f"Agency login failed: {response.text}"
+E   AssertionError: Agency login failed: {"error":{"code":"rate_limit_exceeded","message":"Too many requests. Please try again later.","details":{"retry_after_seconds":30,"remaining":0}}}
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429 Too Many Requests]&gt;.status_code</error></testcase><testcase classname="tests.test_platform_hardening_iter71.TestIncidentPlaybooks" name="test_simulate_incident" time="0.857"><error message="failed on setup with &quot;AssertionError: Agency login failed: {&quot;error&quot;:{&quot;code&quot;:&quot;rate_limit_exceeded&quot;,&quot;message&quot;:&quot;Too many requests. Please try again later.&quot;,&quot;details&quot;:{&quot;retry_after_seconds&quot;:30,&quot;remaining&quot;:0}}}&#10;assert 429 == 200&#10; +  where 429 = &lt;Response [429 Too Many Requests]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:123: in wrapper
+    yield runner.run_fixture(local_func, kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2313: in run_fixture
+    retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:1009: in agency_token
+    assert response.status_code == 200, f"Agency login failed: {response.text}"
+E   AssertionError: Agency login failed: {"error":{"code":"rate_limit_exceeded","message":"Too many requests. Please try again later.","details":{"retry_after_seconds":30,"remaining":0}}}
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429 Too Many Requests]&gt;.status_code</error></testcase><testcase classname="tests.test_platform_hardening_iter71.TestAutoScaling" name="test_scaling_status" time="1.195"><error message="failed on setup with &quot;AssertionError: Agency login failed: {&quot;error&quot;:{&quot;code&quot;:&quot;rate_limit_exceeded&quot;,&quot;message&quot;:&quot;Too many requests. Please try again later.&quot;,&quot;details&quot;:{&quot;retry_after_seconds&quot;:30,&quot;remaining&quot;:0}}}&#10;assert 429 == 200&#10; +  where 429 = &lt;Response [429 Too Many Requests]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:123: in wrapper
+    yield runner.run_fixture(local_func, kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2313: in run_fixture
+    retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:1009: in agency_token
+    assert response.status_code == 200, f"Agency login failed: {response.text}"
+E   AssertionError: Agency login failed: {"error":{"code":"rate_limit_exceeded","message":"Too many requests. Please try again later.","details":{"retry_after_seconds":30,"remaining":0}}}
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429 Too Many Requests]&gt;.status_code</error></testcase><testcase classname="tests.test_platform_hardening_iter71.TestDisasterRecovery" name="test_dr_plan" time="0.129"><error message="failed on setup with &quot;assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code&quot;">tests/test_platform_hardening_iter71.py:540: in auth_session
+    assert login_response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</error></testcase><testcase classname="tests.test_platform_hardening_iter71.TestHardeningChecklist" name="test_hardening_checklist" time="0.101"><error message="failed on setup with &quot;assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code&quot;">tests/test_platform_hardening_iter71.py:588: in auth_session
+    assert login_response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</error></testcase><testcase classname="tests.test_platform_hardening_iter71.TestUnauthorizedAccess" name="test_hardening_status_requires_auth" time="0.838"><error message="failed on setup with &quot;AssertionError: Agency login failed: {&quot;error&quot;:{&quot;code&quot;:&quot;rate_limit_exceeded&quot;,&quot;message&quot;:&quot;Too many requests. Please try again later.&quot;,&quot;details&quot;:{&quot;retry_after_seconds&quot;:30,&quot;remaining&quot;:0}}}&#10;assert 429 == 200&#10; +  where 429 = &lt;Response [429 Too Many Requests]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:123: in wrapper
+    yield runner.run_fixture(local_func, kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2313: in run_fixture
+    retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:1009: in agency_token
+    assert response.status_code == 200, f"Agency login failed: {response.text}"
+E   AssertionError: Agency login failed: {"error":{"code":"rate_limit_exceeded","message":"Too many requests. Please try again later.","details":{"retry_after_seconds":30,"remaining":0}}}
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429 Too Many Requests]&gt;.status_code</error></testcase><testcase classname="tests.test_platform_hardening_iter71.TestUnauthorizedAccess" name="test_traffic_status_requires_auth" time="0.855"><error message="failed on setup with &quot;AssertionError: Agency login failed: {&quot;error&quot;:{&quot;code&quot;:&quot;rate_limit_exceeded&quot;,&quot;message&quot;:&quot;Too many requests. Please try again later.&quot;,&quot;details&quot;:{&quot;retry_after_seconds&quot;:30,&quot;remaining&quot;:0}}}&#10;assert 429 == 200&#10; +  where 429 = &lt;Response [429 Too Many Requests]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:123: in wrapper
+    yield runner.run_fixture(local_func, kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2313: in run_fixture
+    retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:1009: in agency_token
+    assert response.status_code == 200, f"Agency login failed: {response.text}"
+E   AssertionError: Agency login failed: {"error":{"code":"rate_limit_exceeded","message":"Too many requests. Please try again later.","details":{"retry_after_seconds":30,"remaining":0}}}
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429 Too Many Requests]&gt;.status_code</error></testcase><testcase classname="tests.test_platform_hardening_iter71.TestUnauthorizedAccess" name="test_checklist_requires_auth" time="4.413"><error message="failed on setup with &quot;AssertionError: Agency login failed: {&quot;error&quot;:{&quot;code&quot;:&quot;rate_limit_exceeded&quot;,&quot;message&quot;:&quot;Too many requests. Please try again later.&quot;,&quot;details&quot;:{&quot;retry_after_seconds&quot;:30,&quot;remaining&quot;:0}}}&#10;assert 429 == 200&#10; +  where 429 = &lt;Response [429 Too Many Requests]&gt;.status_code&quot;">/root/.venv/lib/python3.11/site-packages/anyio/pytest_plugin.py:123: in wrapper
+    yield runner.run_fixture(local_func, kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2313: in run_fixture
+    retval = self.get_loop().run_until_complete(
+/usr/local/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2283: in _call_in_runner_task
+    return await future
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py:2250: in _run_tests_and_fixtures
+    retval = await coro
+             ^^^^^^^^^^
+tests/conftest.py:1009: in agency_token
+    assert response.status_code == 200, f"Agency login failed: {response.text}"
+E   AssertionError: Agency login failed: {"error":{"code":"rate_limit_exceeded","message":"Too many requests. Please try again later.","details":{"retry_after_seconds":30,"remaining":0}}}
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429 Too Many Requests]&gt;.status_code</error></testcase></testsuite></testsuites>

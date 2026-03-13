@@ -408,3 +408,8 @@ def register_routers(app: FastAPI) -> None:
     # --- Production Activation Layer ---
     from app.routers.production import router as production_router
     app.include_router(production_router)
+
+
+    # --- Platform Hardening Layer ---
+    from app.routers.hardening import router as hardening_router
+    app.include_router(hardening_router)

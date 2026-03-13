@@ -9945,6 +9945,39 @@
   },
   {
     "compat_required": true,
+    "current_namespace": "/api/supplier-aggregator",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "supplier-aggregator",
+    "path": "/api/supplier-aggregator/capabilities",
+    "risk_level": "medium",
+    "source": "app.routers.supplier_aggregator_router",
+    "target_namespace": "/api/v1/supplier-aggregator"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/supplier-aggregator",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "supplier-aggregator",
+    "path": "/api/supplier-aggregator/coverage",
+    "risk_level": "medium",
+    "source": "app.routers.supplier_aggregator_router",
+    "target_namespace": "/api/v1/supplier-aggregator"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/supplier-aggregator",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "supplier-aggregator",
+    "path": "/api/supplier-aggregator/search",
+    "risk_level": "medium",
+    "source": "app.routers.supplier_aggregator_router",
+    "target_namespace": "/api/v1/supplier-aggregator"
+  },
+  {
+    "compat_required": true,
     "current_namespace": "/api/supplier-credentials",
     "legacy_or_v1": "legacy",
     "method": "GET",

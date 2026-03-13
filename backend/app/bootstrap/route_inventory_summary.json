@@ -44,20 +44,20 @@
       "v1_migration_percent": 0.0
     },
     "misc": {
-      "target_route_count": 509,
+      "target_route_count": 512,
       "migrated_v1_route_count": 0,
-      "remaining_route_count": 509,
+      "remaining_route_count": 512,
       "v1_migration_percent": 0.0
     }
   },
-  "generated_at": "2026-03-13T09:35:21.607525+00:00",
-  "inventory_hash": "ff95b57252a6b0322ef3031fe9fbd713810f4c674275ab5191e3fad4310f93d3",
+  "generated_at": "2026-03-13T09:45:05.137132+00:00",
+  "inventory_hash": "0659eeb7f2120258c340ac2d2b084c2070ad8b268bfee32b941228f3d9dd068e",
   "inventory_path": "/app/backend/app/bootstrap/route_inventory.json",
-  "legacy_routes_remaining": 985,
-  "legacy_count": 985,
+  "legacy_routes_remaining": 988,
+  "legacy_count": 988,
   "migration_velocity": {
     "routes_migrated_this_pr": 0,
-    "routes_remaining": 985,
+    "routes_remaining": 988,
     "estimated_prs_remaining": 17
   },
   "namespaces": {
@@ -68,10 +68,10 @@
     "mobile": 6,
     "tenant": 100,
     "finance": 17,
-    "misc": 509
+    "misc": 512
   },
-  "route_count": 1013,
+  "route_count": 1016,
   "runtime_name": "api",
   "v1_count": 28,
-  "compat_required_count": 985
+  "compat_required_count": 988
 }

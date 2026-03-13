@@ -39,23 +39,34 @@ def _ts() -> str:
 
 
 SUPPORTED_SUPPLIERS = {
-    "wwtatil": {
-        "name": "WWTatil Tour API",
-        "type": "tour",
-        "fields": ["base_url", "application_secret_key", "username", "password", "agency_id"],
-        "auth_endpoint": "/api/Auth/get-token-async",
+    "ratehawk": {
+        "name": "RateHawk Hotel API",
+        "type": "hotel",
+        "product_types": ["hotel"],
+        "fields": ["base_url", "key_id", "api_key"],
+        "auth_endpoint": "/api/b2b/v3/search/region/",
+    },
+    "tbo": {
+        "name": "TBO Holidays API",
+        "type": "hotel+flight+tour",
+        "product_types": ["hotel", "flight", "tour"],
+        "fields": ["base_url", "username", "password"],
+        "optional_fields": ["client_id"],
+        "auth_endpoint": "/api/auth/token",
     },
     "paximum": {
         "name": "Paximum Travel API",
-        "type": "hotel",
-        "fields": ["base_url", "api_key"],
-        "auth_endpoint": "/api/auth/token",
+        "type": "hotel+transfer+activity",
+        "product_types": ["hotel", "transfer", "activity"],
+        "fields": ["base_url", "username", "password", "agency_code"],
+        "auth_endpoint": "/api/authenticationservice/login",
     },
-    "aviationstack": {
-        "name": "AviationStack Flight API",
-        "type": "flight",
-        "fields": ["base_url", "api_key"],
-        "auth_endpoint": None,
+    "wwtatil": {
+        "name": "WWTatil Tour API",
+        "type": "tour",
+        "product_types": ["tour"],
+        "fields": ["base_url", "application_secret_key", "username", "password", "agency_id"],
+        "auth_endpoint": "/api/Auth/get-token-async",
     },
 }
 
@@ -68,7 +79,9 @@ async def list_supported_suppliers() -> dict[str, Any]:
             "code": code,
             "name": info["name"],
             "type": info["type"],
+            "product_types": info.get("product_types", []),
             "required_fields": info["fields"],
+            "optional_fields": info.get("optional_fields", []),
         })
     return {"suppliers": suppliers}
 
@@ -89,7 +102,8 @@ async def get_agency_credentials(db, organization_id: str) -> dict[str, Any]:
             "organization_id": doc["organization_id"],
         }
         # Show masked values
-        for field in SUPPORTED_SUPPLIERS.get(doc["supplier"], {}).get("fields", []):
+        all_fields = SUPPORTED_SUPPLIERS.get(doc["supplier"], {}).get("fields", []) + SUPPORTED_SUPPLIERS.get(doc["supplier"], {}).get("optional_fields", [])
+        for field in all_fields:
             val = doc.get(f"enc_{field}", "")
             if val and field != "base_url":
                 masked[field] = "****" + _decrypt(val)[-4:] if len(_decrypt(val)) > 4 else "****"
@@ -107,9 +121,12 @@ async def save_credential(db, organization_id: str, supplier: str, fields: dict[
         return {"error": f"Unsupported supplier: {supplier}", "supported": list(SUPPORTED_SUPPLIERS.keys())}
 
     required = SUPPORTED_SUPPLIERS[supplier]["fields"]
+    optional = SUPPORTED_SUPPLIERS[supplier].get("optional_fields", [])
     missing = [f for f in required if not fields.get(f)]
     if missing:
         return {"error": f"Missing required fields: {missing}"}
+
+    all_fields = required + optional
 
     # Encrypt sensitive fields
     doc = {
@@ -120,8 +137,9 @@ async def save_credential(db, organization_id: str, supplier: str, fields: dict[
         "last_tested": None,
         "updated_at": _ts(),
     }
-    for field in required:
-        doc[f"enc_{field}"] = _encrypt(fields[field])
+    for field in all_fields:
+        val = fields.get(field, "")
+        doc[f"enc_{field}"] = _encrypt(val) if val else ""
 
     await db["supplier_credentials"].update_one(
         {"organization_id": organization_id, "supplier": supplier},
@@ -163,7 +181,7 @@ async def get_decrypted_credentials(db, organization_id: str, supplier: str) -> 
     if not doc:
         return None
 
-    fields = SUPPORTED_SUPPLIERS.get(supplier, {}).get("fields", [])
+    fields = SUPPORTED_SUPPLIERS.get(supplier, {}).get("fields", []) + SUPPORTED_SUPPLIERS.get(supplier, {}).get("optional_fields", [])
     result = {}
     for field in fields:
         enc_val = doc.get(f"enc_{field}", "")
@@ -181,8 +199,10 @@ async def test_connection(db, organization_id: str, supplier: str) -> dict[str, 
         return await _test_wwtatil(db, organization_id, creds)
     elif supplier == "paximum":
         return await _test_paximum(db, organization_id, creds)
-    elif supplier == "aviationstack":
-        return await _test_aviationstack(db, organization_id, creds)
+    elif supplier == "ratehawk":
+        return await _test_ratehawk(db, organization_id, creds)
+    elif supplier == "tbo":
+        return await _test_tbo(db, organization_id, creds)
     else:
         return {"verdict": "FAIL", "error": f"No test handler for {supplier}"}
 
@@ -269,69 +289,150 @@ async def _test_wwtatil(db, organization_id: str, creds: dict) -> dict[str, Any]
 
 
 async def _test_paximum(db, organization_id: str, creds: dict) -> dict[str, Any]:
-    """Test paximum connection."""
+    """Test paximum connection via auth endpoint."""
     import httpx
     import time
 
     base_url = creds.get("base_url", "").rstrip("/")
-    api_key = creds.get("api_key", "")
-    if not base_url or not api_key:
-        return {"verdict": "FAIL", "error": "base_url or api_key is empty"}
+    username = creds.get("username", "")
+    password = creds.get("password", "")
+    agency_code = creds.get("agency_code", "")
+    if not base_url or not username or not password:
+        return {"verdict": "FAIL", "error": "base_url, username, and password are required"}
 
     start = time.monotonic()
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
-            resp = await client.get(
-                f"{base_url}/v2/api/productservice/getarrivalautocomplete",
-                headers={"Authorization": f"Bearer {api_key}"},
-                params={"query": "istanbul"},
+            resp = await client.post(
+                f"{base_url}/api/authenticationservice/login",
+                json={"Agency": agency_code, "User": username, "Password": password},
             )
         latency_ms = round((time.monotonic() - start) * 1000, 1)
-        connected = resp.status_code in (200, 401, 403)
-
         if resp.status_code == 200:
-            await db["supplier_credentials"].update_one(
-                {"organization_id": organization_id, "supplier": "paximum"},
-                {"$set": {"status": "connected", "connected_at": _ts(), "last_tested": _ts()}},
-            )
-            return {"verdict": "PASS", "supplier": "paximum", "status": "connected", "latency_ms": latency_ms}
+            data = resp.json()
+            body = data.get("body") or data
+            token = body.get("token") or body.get("Token") or ""
+            if token:
+                await db["supplier_tokens"].update_one(
+                    {"organization_id": organization_id, "supplier": "paximum"},
+                    {"$set": {"token": token, "obtained_at": _ts(), "expires_hours": 24}},
+                    upsert=True,
+                )
+                await db["supplier_credentials"].update_one(
+                    {"organization_id": organization_id, "supplier": "paximum"},
+                    {"$set": {"status": "connected", "connected_at": _ts(), "last_tested": _ts()}},
+                )
+                return {"verdict": "PASS", "supplier": "paximum", "status": "connected", "latency_ms": latency_ms}
+            return {"verdict": "FAIL", "supplier": "paximum", "status": "auth_failed", "latency_ms": latency_ms, "message": "No token in response"}
         else:
             await db["supplier_credentials"].update_one(
                 {"organization_id": organization_id, "supplier": "paximum"},
                 {"$set": {"status": "auth_failed", "last_tested": _ts()}},
             )
             return {"verdict": "FAIL", "supplier": "paximum", "http_status": resp.status_code, "latency_ms": latency_ms}
+    except httpx.ConnectError as e:
+        return {"verdict": "FAIL", "supplier": "paximum", "status": "connection_error", "error": str(e)}
+    except httpx.TimeoutException:
+        return {"verdict": "FAIL", "supplier": "paximum", "status": "timeout", "error": "Connection timed out (15s)"}
     except Exception as e:
         return {"verdict": "FAIL", "supplier": "paximum", "error": str(e)}
 
 
-async def _test_aviationstack(db, organization_id: str, creds: dict) -> dict[str, Any]:
-    """Test aviationstack connection."""
+async def _test_ratehawk(db, organization_id: str, creds: dict) -> dict[str, Any]:
+    """Test RateHawk connection via region search endpoint."""
+    import httpx
+    import time
+    import base64
+
+    base_url = creds.get("base_url", "").rstrip("/")
+    key_id = creds.get("key_id", "")
+    api_key = creds.get("api_key", "")
+    if not base_url or not key_id or not api_key:
+        return {"verdict": "FAIL", "error": "base_url, key_id, and api_key are required"}
+
+    token = base64.b64encode(f"{key_id}:{api_key}".encode()).decode()
+    start = time.monotonic()
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(
+                f"{base_url}/api/b2b/v3/search/region/",
+                json={"query": "istanbul", "language": "en"},
+                headers={"Authorization": f"Basic {token}", "Content-Type": "application/json"},
+            )
+        latency_ms = round((time.monotonic() - start) * 1000, 1)
+        if resp.status_code == 200:
+            await db["supplier_tokens"].update_one(
+                {"organization_id": organization_id, "supplier": "ratehawk"},
+                {"$set": {"token": token, "obtained_at": _ts(), "expires_hours": 720}},
+                upsert=True,
+            )
+            await db["supplier_credentials"].update_one(
+                {"organization_id": organization_id, "supplier": "ratehawk"},
+                {"$set": {"status": "connected", "connected_at": _ts(), "last_tested": _ts()}},
+            )
+            return {"verdict": "PASS", "supplier": "ratehawk", "status": "connected", "latency_ms": latency_ms}
+        else:
+            await db["supplier_credentials"].update_one(
+                {"organization_id": organization_id, "supplier": "ratehawk"},
+                {"$set": {"status": "auth_failed", "last_tested": _ts()}},
+            )
+            return {"verdict": "FAIL", "supplier": "ratehawk", "http_status": resp.status_code, "latency_ms": latency_ms, "response": resp.text[:200]}
+    except httpx.ConnectError as e:
+        return {"verdict": "FAIL", "supplier": "ratehawk", "status": "connection_error", "error": str(e)}
+    except httpx.TimeoutException:
+        return {"verdict": "FAIL", "supplier": "ratehawk", "status": "timeout", "error": "Connection timed out (15s)"}
+    except Exception as e:
+        return {"verdict": "FAIL", "supplier": "ratehawk", "error": str(e)}
+
+
+async def _test_tbo(db, organization_id: str, creds: dict) -> dict[str, Any]:
+    """Test TBO connection via auth endpoint."""
     import httpx
     import time
 
     base_url = creds.get("base_url", "").rstrip("/")
-    api_key = creds.get("api_key", "")
-    if not api_key:
-        return {"verdict": "FAIL", "error": "api_key is empty"}
+    username = creds.get("username", "")
+    password = creds.get("password", "")
+    client_id = creds.get("client_id", "")
+    if not base_url or not username or not password:
+        return {"verdict": "FAIL", "error": "base_url, username, and password are required"}
 
-    base_url = base_url or "https://api.aviationstack.com/v1"
+    payload = {"UserName": username, "Password": password}
+    if client_id:
+        payload["ClientId"] = client_id
+
     start = time.monotonic()
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
-            resp = await client.get(f"{base_url}/flights", params={"access_key": api_key, "limit": 1})
+            resp = await client.post(f"{base_url}/api/auth/token", json=payload)
         latency_ms = round((time.monotonic() - start) * 1000, 1)
-
         if resp.status_code == 200:
-            await db["supplier_credentials"].update_one(
-                {"organization_id": organization_id, "supplier": "aviationstack"},
-                {"$set": {"status": "connected", "connected_at": _ts(), "last_tested": _ts()}},
-            )
-            return {"verdict": "PASS", "supplier": "aviationstack", "status": "connected", "latency_ms": latency_ms}
+            data = resp.json()
+            token = data.get("Token") or data.get("token") or data.get("TokenId") or ""
+            if token:
+                await db["supplier_tokens"].update_one(
+                    {"organization_id": organization_id, "supplier": "tbo"},
+                    {"$set": {"token": token, "obtained_at": _ts(), "expires_hours": 24}},
+                    upsert=True,
+                )
+                await db["supplier_credentials"].update_one(
+                    {"organization_id": organization_id, "supplier": "tbo"},
+                    {"$set": {"status": "connected", "connected_at": _ts(), "last_tested": _ts()}},
+                )
+                return {"verdict": "PASS", "supplier": "tbo", "status": "connected", "latency_ms": latency_ms}
+            return {"verdict": "FAIL", "supplier": "tbo", "status": "auth_failed", "latency_ms": latency_ms, "message": "No token in response"}
         else:
-            return {"verdict": "FAIL", "supplier": "aviationstack", "http_status": resp.status_code, "latency_ms": latency_ms}
+            await db["supplier_credentials"].update_one(
+                {"organization_id": organization_id, "supplier": "tbo"},
+                {"$set": {"status": "auth_failed", "last_tested": _ts()}},
+            )
+            return {"verdict": "FAIL", "supplier": "tbo", "http_status": resp.status_code, "latency_ms": latency_ms}
+    except httpx.ConnectError as e:
+        return {"verdict": "FAIL", "supplier": "tbo", "status": "connection_error", "error": str(e)}
+    except httpx.TimeoutException:
+        return {"verdict": "FAIL", "supplier": "tbo", "status": "timeout", "error": "Connection timed out (15s)"}
     except Exception as e:
-        return {"verdict": "FAIL", "supplier": "aviationstack", "error": str(e)}
+        return {"verdict": "FAIL", "supplier": "tbo", "error": str(e)}
 
 
 async def get_cached_token(db, organization_id: str, supplier: str) -> str | None:

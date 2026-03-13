@@ -433,3 +433,7 @@ def register_routers(app: FastAPI) -> None:
     # --- Supplier Credentials Layer ---
     from app.routers.supplier_credentials_router import router as supplier_credentials_router
     app.include_router(supplier_credentials_router)
+
+    # --- Supplier Aggregator Layer ---
+    from app.routers.supplier_aggregator_router import router as supplier_aggregator_router
+    app.include_router(supplier_aggregator_router)

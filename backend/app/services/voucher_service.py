@@ -104,7 +104,7 @@ def render_voucher_html(
             "footer": "This document was generated electronically.",
         },
     }
-    l = labels.get(locale, labels["en"])
+    lbl = labels.get(locale, labels["en"])
 
     return f"""<!DOCTYPE html>
 <html>
@@ -128,29 +128,29 @@ body {{ font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 20px; b
   <div class="header">
     <div>
       {logo_tag}
-      <h1>{l['voucher_title']}</h1>
+      <h1>{lbl['voucher_title']}</h1>
     </div>
     <div style="text-align:right;font-size:12px;">
       <div>{brand_name}</div>
-      <div>{l['generated']}: {created_at[:10]}</div>
+      <div>{lbl['generated']}: {created_at[:10]}</div>
     </div>
   </div>
   <div class="body">
-    <div class="row"><span class="label">{l['booking_ref']}</span><span class="value accent">{booking_id}</span></div>
-    <div class="row"><span class="label">{l['confirmation']}</span><span class="value">{confirmation_code}</span></div>
-    <div class="row"><span class="label">{l['guest']}</span><span class="value">{guest_name}</span></div>
-    <div class="row"><span class="label">{l['hotel']}</span><span class="value">{hotel_name}</span></div>
-    <div class="row"><span class="label">{l['check_in']}</span><span class="value">{check_in}</span></div>
-    <div class="row"><span class="label">{l['check_out']}</span><span class="value">{check_out}</span></div>
-    <div class="row"><span class="label">{l['room']}</span><span class="value">{room_type}</span></div>
-    <div class="row"><span class="label">{l['total']}</span><span class="value accent">{total_price} {currency}</span></div>
-    {"<div class='special'><strong>" + l['special'] + ":</strong> " + special_requests + "</div>" if special_requests else ""}
+    <div class="row"><span class="label">{lbl['booking_ref']}</span><span class="value accent">{booking_id}</span></div>
+    <div class="row"><span class="label">{lbl['confirmation']}</span><span class="value">{confirmation_code}</span></div>
+    <div class="row"><span class="label">{lbl['guest']}</span><span class="value">{guest_name}</span></div>
+    <div class="row"><span class="label">{lbl['hotel']}</span><span class="value">{hotel_name}</span></div>
+    <div class="row"><span class="label">{lbl['check_in']}</span><span class="value">{check_in}</span></div>
+    <div class="row"><span class="label">{lbl['check_out']}</span><span class="value">{check_out}</span></div>
+    <div class="row"><span class="label">{lbl['room']}</span><span class="value">{room_type}</span></div>
+    <div class="row"><span class="label">{lbl['total']}</span><span class="value accent">{total_price} {currency}</span></div>
+    {"<div class='special'><strong>" + lbl['special'] + ":</strong> " + special_requests + "</div>" if special_requests else ""}
     <div class="qr-section">
       {qr_img_tag}
       <div style="font-size:11px;color:#999;margin-top:8px;">Scan for booking details</div>
     </div>
   </div>
-  <div class="footer">{l['footer']}</div>
+  <div class="footer">{lbl['footer']}</div>
 </div>
 </body></html>"""
 

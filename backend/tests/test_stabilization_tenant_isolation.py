@@ -14,7 +14,6 @@ import httpx
 from bson import ObjectId
 
 from app.utils import now_utc
-from app.auth import hash_password
 
 pytestmark = pytest.mark.anyio
 
@@ -62,7 +61,7 @@ class TestCrossTenantIsolation:
             "/api/auth/me",
             headers={"Authorization": f"Bearer {agency_token}"},
         )
-        user_org = me_resp.json()["organization_id"]
+        me_resp.json()["organization_id"]
 
         # Insert a booking in a DIFFERENT org
         other_org = "org_other_" + ObjectId().__str__()[:8]
@@ -91,7 +90,7 @@ class TestCrossTenantIsolation:
             "/api/auth/me",
             headers={"Authorization": f"Bearer {agency_token}"},
         )
-        user_org = me_resp.json()["organization_id"]
+        me_resp.json()["organization_id"]
 
         other_org = "org_other_" + ObjectId().__str__()[:8]
         await test_db.customers.insert_one({

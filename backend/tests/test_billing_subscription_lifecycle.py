@@ -78,15 +78,15 @@ class TestBillingSubscriptionEndpoint:
 
         resp = session.get(f"{BASE_URL}/api/billing/subscription", headers=auth)
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:300]}"
-        
+
         data = resp.json()
-        
+
         # Required fields per API spec
         assert "plan" in data, "Response should contain plan"
         assert "interval" in data, "Response should contain interval"
         assert "status" in data, "Response should contain status"
         assert "next_renewal_at" in data or "current_period_end" in data, "Response should contain renewal date"
-        
+
         # Flags for lifecycle management
         assert "managed_subscription" in data, "Response should contain managed_subscription flag"
         assert "legacy_subscription" in data, "Response should contain legacy_subscription flag"
@@ -94,18 +94,18 @@ class TestBillingSubscriptionEndpoint:
         assert "can_cancel" in data, "Response should contain can_cancel flag"
         assert "can_change_plan" in data, "Response should contain can_change_plan flag"
         assert "change_flow" in data, "Response should contain change_flow"
-        
+
         # Payment issue fields
         assert "payment_issue" in data, "Response should contain payment_issue"
         assert "has_issue" in data["payment_issue"], "payment_issue should have has_issue"
-        
+
         # Verify legacy subscription state
         if data.get("legacy_subscription"):
             assert data.get("change_flow") == "checkout_redirect", "Legacy subscription should use checkout_redirect flow"
-            assert data.get("managed_subscription") == False, "Legacy subscription should have managed_subscription=false"
-            assert data.get("can_cancel") == False, "Legacy subscription should not allow self-serve cancel"
+            assert not data.get("managed_subscription"), "Legacy subscription should have managed_subscription=false"
+            assert not data.get("can_cancel"), "Legacy subscription should not allow self-serve cancel"
             print(f"✅ Legacy subscription detected: change_flow={data.get('change_flow')}")
-        
+
         print(f"✅ Subscription overview: plan={data.get('plan')}, interval={data.get('interval')}, status={data.get('status')}")
         print(f"   managed_subscription={data.get('managed_subscription')}, legacy_subscription={data.get('legacy_subscription')}")
         print(f"   portal_available={data.get('portal_available')}, can_cancel={data.get('can_cancel')}")
@@ -118,7 +118,7 @@ class TestBillingSubscriptionEndpoint:
 
         resp = session.get(f"{BASE_URL}/api/billing/subscription", headers=auth)
         assert resp.status_code == 200
-        
+
         data = resp.json()
         assert "interval_label" in data, "Response should contain interval_label"
         # Turkish labels: Aylık or Yıllık
@@ -155,13 +155,13 @@ class TestCustomerPortalEndpoint:
                 "return_path": "/app/settings/billing"
             }
         )
-        
+
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:300]}"
-        
+
         data = resp.json()
         assert "url" in data, "Response should contain portal URL"
         assert "stripe.com" in data.get("url", ""), f"URL should be Stripe portal, got {data.get('url')[:100] if data.get('url') else 'None'}"
-        
+
         print(f"✅ Customer portal URL returned: {data.get('url')[:80]}...")
 
     def test_customer_portal_return_path(self, session):
@@ -179,7 +179,7 @@ class TestCustomerPortalEndpoint:
                 "return_path": "/app/settings/billing"  # Required path per spec
             }
         )
-        
+
         assert resp.status_code == 200, f"Return path /app/settings/billing should be accepted: {resp.text[:200]}"
         print("✅ Portal return path /app/settings/billing accepted")
 
@@ -210,14 +210,14 @@ class TestChangePlanEndpoint:
         sub_resp = session.get(f"{BASE_URL}/api/billing/subscription", headers=auth)
         if sub_resp.status_code != 200:
             pytest.skip("Could not fetch subscription")
-        
+
         sub_data = sub_resp.json()
         if not sub_data.get("legacy_subscription"):
             pytest.skip("User does not have legacy subscription")
-        
+
         current_plan = sub_data.get("plan")
         target_plan = "pro" if current_plan == "starter" else "starter"
-        
+
         resp = session.post(
             f"{BASE_URL}/api/billing/change-plan",
             headers=auth,
@@ -228,15 +228,15 @@ class TestChangePlanEndpoint:
                 "cancel_path": "/app/settings/billing"
             }
         )
-        
+
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:300]}"
-        
+
         data = resp.json()
         assert data.get("action") == "checkout_redirect", f"Legacy subscription should return checkout_redirect, got {data.get('action')}"
         assert "url" in data, "Response should contain checkout URL"
         assert "stripe.com" in data.get("url", ""), "URL should be Stripe checkout"
-        
-        print(f"✅ Legacy subscription change-plan returns checkout_redirect")
+
+        print("✅ Legacy subscription change-plan returns checkout_redirect")
         print(f"   URL: {data.get('url')[:80]}...")
 
     def test_change_plan_enterprise_rejected(self, session):
@@ -254,13 +254,13 @@ class TestChangePlanEndpoint:
                 "origin_url": "https://pilot-agencies-hub.preview.emergentagent.com"
             }
         )
-        
+
         assert resp.status_code == 422, f"Enterprise should return 422, got {resp.status_code}: {resp.text[:200]}"
-        
+
         data = resp.json()
         error_code = data.get("error", {}).get("code") or data.get("code")
         assert error_code == "enterprise_contact_required", f"Should return enterprise_contact_required, got {error_code}"
-        
+
         print("✅ Enterprise plan correctly rejected with contact flow message")
 
     def test_change_plan_same_plan_rejected(self, session):
@@ -273,11 +273,11 @@ class TestChangePlanEndpoint:
         sub_resp = session.get(f"{BASE_URL}/api/billing/subscription", headers=auth)
         if sub_resp.status_code != 200:
             pytest.skip("Could not fetch subscription")
-        
+
         sub_data = sub_resp.json()
         current_plan = sub_data.get("plan")
         current_interval = sub_data.get("interval")
-        
+
         # Try to change to same plan
         resp = session.post(
             f"{BASE_URL}/api/billing/change-plan",
@@ -288,7 +288,7 @@ class TestChangePlanEndpoint:
                 "origin_url": "https://pilot-agencies-hub.preview.emergentagent.com"
             }
         )
-        
+
         # Should be rejected with 409 plan_already_active
         assert resp.status_code == 409, f"Same plan should return 409, got {resp.status_code}: {resp.text[:200]}"
         print(f"✅ Change to same plan ({current_plan}/{current_interval}) correctly rejected with 409")
@@ -316,23 +316,23 @@ class TestCancelSubscriptionEndpoint:
         sub_resp = session.get(f"{BASE_URL}/api/billing/subscription", headers=auth)
         if sub_resp.status_code != 200:
             pytest.skip("Could not fetch subscription")
-        
+
         sub_data = sub_resp.json()
         if not sub_data.get("legacy_subscription"):
             pytest.skip("User does not have legacy subscription")
-        
-        if sub_data.get("can_cancel") == True:
+
+        if sub_data.get("can_cancel"):
             pytest.skip("User can cancel - may have real Stripe subscription")
 
         resp = session.post(f"{BASE_URL}/api/billing/cancel-subscription", headers=auth)
-        
+
         # Legacy subscriptions should return 409 subscription_management_unavailable
         assert resp.status_code == 409, f"Expected 409 for legacy subscription cancel, got {resp.status_code}: {resp.text[:200]}"
-        
+
         data = resp.json()
         error_code = data.get("error", {}).get("code") or data.get("code")
         assert error_code == "subscription_management_unavailable", f"Expected subscription_management_unavailable, got {error_code}"
-        
+
         print("✅ Legacy subscription cancel correctly rejected with 409")
 
 
@@ -358,16 +358,16 @@ class TestCreateCheckoutSubscriptionMode:
                 "cancel_path": "/pricing"
             }
         )
-        
+
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:300]}"
-        
+
         data = resp.json()
         assert "url" in data, "Response should contain checkout URL"
         assert "session_id" in data, "Response should contain session_id"
         assert data.get("plan") == "starter"
         assert data.get("amount") == 990.0
         assert "stripe.com" in data.get("url", "")
-        
+
         print(f"✅ Create checkout Starter: session_id={data.get('session_id')[:20]}...")
 
     def test_create_checkout_pro(self, session):
@@ -385,13 +385,13 @@ class TestCreateCheckoutSubscriptionMode:
                 "origin_url": "https://pilot-agencies-hub.preview.emergentagent.com"
             }
         )
-        
+
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:300]}"
-        
+
         data = resp.json()
         assert data.get("plan") == "pro"
         assert data.get("amount") == 2490.0
-        
+
         print(f"✅ Create checkout Pro: amount={data.get('amount')}")
 
 

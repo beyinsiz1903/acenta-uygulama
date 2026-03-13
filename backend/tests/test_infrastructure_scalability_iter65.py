@@ -26,7 +26,7 @@ def get_admin_token():
     global _admin_token
     if _admin_token is not None:
         return _admin_token
-    
+
     response = requests.post(
         f"{BASE_URL}/api/auth/login",
         json={"email": "agent@acenta.test", "password": "agent123"},
@@ -83,7 +83,7 @@ class TestExistingHealthEndpoints:
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         data = response.json()
         assert "collections" in data or "status" in data
-        print(f"✓ /api/health/deep returned collection stats")
+        print("✓ /api/health/deep returned collection stats")
 
 
 # ============================================================================
@@ -98,7 +98,7 @@ class TestInfrastructureHealth:
         """Infrastructure health should require authentication."""
         response = fresh_session.get(f"{BASE_URL}/api/infrastructure/health")
         assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}: {response.text[:200]}"
-        print(f"✓ /api/infrastructure/health requires auth (401/403)")
+        print("✓ /api/infrastructure/health requires auth (401/403)")
 
     def test_infrastructure_health_with_auth(self, authed_session):
         """Infrastructure health with valid auth."""
@@ -137,7 +137,7 @@ class TestRedisStatus:
         """Redis endpoint should require authentication."""
         response = fresh_session.get(f"{BASE_URL}/api/infrastructure/redis")
         assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}: {response.text[:200]}"
-        print(f"✓ /api/infrastructure/redis requires auth")
+        print("✓ /api/infrastructure/redis requires auth")
 
     def test_redis_status_with_auth(self, authed_session):
         """Redis status with valid auth."""
@@ -182,7 +182,7 @@ class TestCircuitBreakers:
         """Circuit breakers endpoint should require authentication."""
         response = fresh_session.get(f"{BASE_URL}/api/infrastructure/circuit-breakers")
         assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}: {response.text[:200]}"
-        print(f"✓ /api/infrastructure/circuit-breakers requires auth")
+        print("✓ /api/infrastructure/circuit-breakers requires auth")
 
     def test_circuit_breakers_status(self, authed_session):
         """Circuit breakers status with valid auth."""
@@ -223,7 +223,7 @@ class TestCircuitBreakers:
         assert "status" in data, "Missing 'status' in response"
         assert data.get("status") == "reset"
         assert "breaker" in data, "Missing 'breaker' in response"
-        
+
         breaker = data.get("breaker", {})
         assert breaker.get("state") == "closed", f"Expected 'closed' state after reset, got {breaker.get('state')}"
         print(f"✓ Circuit breaker reset: aviationstack → state={breaker.get('state')}")
@@ -241,7 +241,7 @@ class TestEventBus:
         """Events endpoint should require authentication."""
         response = fresh_session.get(f"{BASE_URL}/api/infrastructure/events")
         assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}: {response.text[:200]}"
-        print(f"✓ /api/infrastructure/events requires auth")
+        print("✓ /api/infrastructure/events requires auth")
 
     def test_event_bus_status(self, authed_session):
         """Event bus status with valid auth."""
@@ -272,7 +272,7 @@ class TestRateLimits:
         """Rate limits endpoint should require authentication."""
         response = fresh_session.get(f"{BASE_URL}/api/infrastructure/rate-limits")
         assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}: {response.text[:200]}"
-        print(f"✓ /api/infrastructure/rate-limits requires auth")
+        print("✓ /api/infrastructure/rate-limits requires auth")
 
     def test_rate_limits_status(self, authed_session):
         """Rate limits status with valid auth."""
@@ -282,7 +282,7 @@ class TestRateLimits:
 
         # Validate response structure
         assert "status" in data, "Missing 'status' in response"
-        
+
         if data.get("status") == "healthy":
             assert "tiers" in data, "Missing 'tiers' in response"
             tiers = data.get("tiers", {})
@@ -316,7 +316,7 @@ class TestMetrics:
         """Metrics endpoint should require authentication."""
         response = fresh_session.get(f"{BASE_URL}/api/infrastructure/metrics")
         assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}: {response.text[:200]}"
-        print(f"✓ /api/infrastructure/metrics requires auth")
+        print("✓ /api/infrastructure/metrics requires auth")
 
     def test_metrics_summary(self, authed_session):
         """Metrics summary with valid auth."""
@@ -348,7 +348,7 @@ class TestQueues:
         """Queues endpoint should require authentication."""
         response = fresh_session.get(f"{BASE_URL}/api/infrastructure/queues")
         assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}: {response.text[:200]}"
-        print(f"✓ /api/infrastructure/queues requires auth")
+        print("✓ /api/infrastructure/queues requires auth")
 
     def test_celery_queue_status(self, authed_session):
         """Celery queue status with valid auth."""
@@ -358,7 +358,7 @@ class TestQueues:
 
         # Validate response structure
         assert "status" in data, "Missing 'status' in response"
-        
+
         if data.get("status") == "healthy":
             assert "queues" in data, "Missing 'queues' in response"
             queues = data.get("queues", {})
@@ -391,25 +391,25 @@ class TestRateLimitingHeaders:
 
     def test_rate_limit_policy_header_on_api(self, fresh_session):
         """Verify X-RateLimit-Policy: token_bucket header is present on API endpoints.
-        
+
         Note: /api/health is explicitly skipped by rate limit middleware, so we test
         a different endpoint that goes through rate limiting.
         """
         # Test on /api/healthz which should go through rate limiting
         response = fresh_session.get(f"{BASE_URL}/api/healthz")
         assert response.status_code == 200
-        
+
         # Check for rate limit policy header (may not be present on health endpoints)
         policy_header = response.headers.get("X-RateLimit-Policy")
         print(f"✓ /api/healthz response with X-RateLimit-Policy: {policy_header}")
-        
+
         # If the header is present, verify it's token_bucket
         if policy_header:
             assert policy_header == "token_bucket", f"Expected 'token_bucket', got '{policy_header}'"
             print(f"✓ X-RateLimit-Policy header confirmed: {policy_header}")
         else:
             # For health endpoints, it may be skipped - this is expected behavior
-            print(f"ℹ X-RateLimit-Policy header not present on health endpoints (expected)")
+            print("ℹ X-RateLimit-Policy header not present on health endpoints (expected)")
 
     def test_auth_login_rate_limiting(self, fresh_session):
         """Test auth login includes rate limiting."""
@@ -451,7 +451,7 @@ class TestPrometheusMetrics:
             assert len(text) >= 0  # Can be empty if no metrics yet
             print(f"✓ /api/infrastructure/metrics/prometheus: text/plain format, {len(text)} bytes")
         elif response.status_code in [401, 403]:
-            print(f"✓ /api/infrastructure/metrics/prometheus requires auth (acceptable)")
+            print("✓ /api/infrastructure/metrics/prometheus requires auth (acceptable)")
         else:
             pytest.fail(f"Unexpected status: {response.status_code}")
 

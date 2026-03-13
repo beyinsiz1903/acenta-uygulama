@@ -23,7 +23,6 @@ from app.domain.reliability.resilience_service import (
 )
 from app.domain.reliability.contract_service import validate_and_log
 from app.domain.reliability.metrics_service import record_metric
-from app.domain.reliability.incident_service import detect_supplier_issues
 
 logger = logging.getLogger("reliability.pipeline")
 
@@ -72,7 +71,7 @@ async def reliable_supplier_call(
     6. Incident detection — auto-escalate on high error rates
     """
     pipeline_start = time.monotonic()
-    now_iso = datetime.now(timezone.utc).isoformat()
+    datetime.now(timezone.utc).isoformat()
 
     # Stage 1: Degrade/Disable check
     disabled = await _check_supplier_enabled(db, org_id, supplier_code)
@@ -88,7 +87,7 @@ async def reliable_supplier_call(
         }
 
     # Stage 2+3: Timeout + Retry with backoff
-    ctx = get_isolation_context(supplier_code)
+    get_isolation_context(supplier_code)
     effective_timeout = min(timeout_ms, 30000) / 1000.0  # convert to seconds
     last_error = None
     result_data = None

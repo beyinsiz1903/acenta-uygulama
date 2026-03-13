@@ -17,11 +17,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
-import re
-import secrets
-import time
 from datetime import datetime, timezone
-from typing import Any
 
 logger = logging.getLogger("security.hardening")
 
@@ -723,7 +719,7 @@ async def calculate_security_readiness(db) -> dict:
     jwt = verify_jwt_security()
     tenant = await audit_tenant_isolation(db)
     rbac = await audit_rbac(db)
-    api_keys = audit_api_keys()
+    audit_api_keys()
     monitoring = await get_security_monitoring_status(db)
     tests = await run_security_tests(db)
 

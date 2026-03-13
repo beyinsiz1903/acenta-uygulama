@@ -5,7 +5,6 @@ Scaling design for: API servers, worker nodes, Redis cluster, MongoDB replicas.
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 logger = logging.getLogger("hardening.autoscaling")
 

@@ -170,7 +170,6 @@ async def delete_secret(
 
 async def check_rotation_status(db: Any, org_id: str) -> list[dict]:
     """Check which secrets need rotation."""
-    from datetime import timedelta
     now = datetime.now(timezone.utc)
     docs = await db.gov_secrets.find(
         {"organization_id": org_id, "is_active": True},

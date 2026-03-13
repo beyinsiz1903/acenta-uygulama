@@ -57,14 +57,14 @@ class TestBillingHistoryEndpoint:
         """Each item should have required user-facing fields"""
         response = authenticated_session.get(f"{BASE_URL}/api/billing/history", timeout=30)
         data = response.json()
-        
+
         if len(data["items"]) == 0:
             pytest.skip("No billing history items to validate structure")
-        
+
         # Validate first item has all required fields
         item = data["items"][0]
         required_fields = ["id", "title", "description", "occurred_at", "actor_label", "actor_type", "tone"]
-        
+
         for field in required_fields:
             assert field in item, f"Item missing required field: {field}"
 
@@ -72,10 +72,10 @@ class TestBillingHistoryEndpoint:
         """tone field should have valid values (success, warning, info)"""
         response = authenticated_session.get(f"{BASE_URL}/api/billing/history", timeout=30)
         data = response.json()
-        
+
         if len(data["items"]) == 0:
             pytest.skip("No billing history items to validate")
-        
+
         valid_tones = {"success", "warning", "info"}
         for item in data["items"]:
             assert item["tone"] in valid_tones, f"Invalid tone value: {item['tone']}"
@@ -84,10 +84,10 @@ class TestBillingHistoryEndpoint:
         """actor_type field should have valid values (system, user)"""
         response = authenticated_session.get(f"{BASE_URL}/api/billing/history", timeout=30)
         data = response.json()
-        
+
         if len(data["items"]) == 0:
             pytest.skip("No billing history items to validate")
-        
+
         valid_actor_types = {"system", "user"}
         for item in data["items"]:
             assert item["actor_type"] in valid_actor_types, f"Invalid actor_type: {item['actor_type']}"
@@ -117,12 +117,12 @@ class TestBillingSubscriptionRegression:
         """Subscription response should have required billing overview fields"""
         response = authenticated_session.get(f"{BASE_URL}/api/billing/subscription", timeout=30)
         data = response.json()
-        
+
         required_fields = [
             "tenant_id", "plan", "interval", "status",
             "portal_available", "can_cancel", "can_change_plan"
         ]
-        
+
         for field in required_fields:
             assert field in data, f"Response missing required field: {field}"
 
@@ -130,7 +130,7 @@ class TestBillingSubscriptionRegression:
         """Plan should be a valid plan key"""
         response = authenticated_session.get(f"{BASE_URL}/api/billing/subscription", timeout=30)
         data = response.json()
-        
+
         valid_plans = {"trial", "starter", "pro", "enterprise"}
         assert data["plan"] in valid_plans, f"Invalid plan: {data['plan']}"
 
@@ -138,7 +138,7 @@ class TestBillingSubscriptionRegression:
         """Interval should be monthly or yearly"""
         response = authenticated_session.get(f"{BASE_URL}/api/billing/subscription", timeout=30)
         data = response.json()
-        
+
         valid_intervals = {"monthly", "yearly"}
         assert data["interval"] in valid_intervals, f"Invalid interval: {data['interval']}"
 

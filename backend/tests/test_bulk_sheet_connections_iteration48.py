@@ -256,7 +256,7 @@ class TestBulkSheetConnectionsIteration48:
     def test_bulk_execute_duplicate_hotel_returns_conflict_error(self, admin_session):
         """POST /api/admin/sheets/bulk/execute returns conflict error for duplicate hotel"""
         hotel = _pick_available_hotel(admin_session)
-        
+
         # First: create a connection
         preview_response = admin_session.post(
             "/api/admin/sheets/bulk/preview-text",
@@ -274,7 +274,7 @@ class TestBulkSheetConnectionsIteration48:
             json={"scope": "hotel", "rows": preview_response.json()["valid_rows"]},
         )
         assert execute_response.status_code == 200, execute_response.text
-        
+
         try:
             # Second: try to create duplicate - should fail
             duplicate_execute = admin_session.post(

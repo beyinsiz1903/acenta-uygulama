@@ -6,7 +6,6 @@ Dead-letter queue for failed operations.
 from __future__ import annotations
 
 import logging
-import math
 import random
 import uuid
 from datetime import datetime, timezone

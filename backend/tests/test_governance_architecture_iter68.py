@@ -21,7 +21,6 @@ import os
 import pytest
 import requests
 import uuid
-from datetime import datetime
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
@@ -105,7 +104,7 @@ class TestPart1RBACSystem:
         data = response.json()
         assert isinstance(data, list)
         assert len(data) >= 6, f"Expected at least 6 roles, got {len(data)}"
-        
+
         # Verify hierarchy levels
         role_levels = {r["role"]: r.get("level", 0) for r in data}
         assert role_levels.get("super_admin", 0) >= role_levels.get("ops_admin", 0)
@@ -118,7 +117,7 @@ class TestPart1RBACSystem:
         assert response.status_code == 200
         data = response.json()
         assert isinstance(data, list)
-        
+
         # Verify sorted by level descending
         levels = [r.get("level", 0) for r in data]
         assert levels == sorted(levels, reverse=True), "Hierarchy should be sorted by level descending"
@@ -135,7 +134,7 @@ class TestPart2PermissionModel:
         data = response.json()
         assert isinstance(data, list)
         assert len(data) >= 46, f"Expected at least 46 permissions, got {len(data)}"
-        
+
         # Verify permission structure
         sample = data[0]
         assert "code" in sample
@@ -246,7 +245,7 @@ class TestPart4SecretManagement:
     def test_rotate_secret(self, headers):
         """POST /api/governance/secrets - Rotate existing secret (version increments)"""
         secret_name = f"TEST_rotate_{uuid.uuid4().hex[:8]}"
-        
+
         # Create initial secret
         requests.post(
             f"{BASE_URL}/api/governance/secrets",
@@ -257,7 +256,7 @@ class TestPart4SecretManagement:
                 "secret_type": "api_key",
             },
         )
-        
+
         # Rotate the secret
         response = requests.post(
             f"{BASE_URL}/api/governance/secrets",
@@ -280,7 +279,7 @@ class TestPart4SecretManagement:
         assert response.status_code == 200
         data = response.json()
         assert isinstance(data, list)
-        
+
         # Verify values are not exposed in list
         for secret in data:
             assert "encrypted_value" not in secret, "Encrypted value should not be exposed"
@@ -291,13 +290,13 @@ class TestPart4SecretManagement:
         # Create a test secret first
         secret_name = f"TEST_retrieve_{uuid.uuid4().hex[:8]}"
         secret_value = "my_secret_test_value_xyz"
-        
+
         requests.post(
             f"{BASE_URL}/api/governance/secrets",
             headers=headers,
             json={"name": secret_name, "value": secret_value, "secret_type": "api_key"},
         )
-        
+
         # Retrieve the value
         response = requests.get(
             f"{BASE_URL}/api/governance/secrets/{secret_name}/value",
@@ -312,14 +311,14 @@ class TestPart4SecretManagement:
     def test_delete_secret(self, headers):
         """DELETE /api/governance/secrets/{name} - Soft delete a secret"""
         secret_name = f"TEST_delete_{uuid.uuid4().hex[:8]}"
-        
+
         # Create secret
         requests.post(
             f"{BASE_URL}/api/governance/secrets",
             headers=headers,
             json={"name": secret_name, "value": "to_be_deleted", "secret_type": "api_key"},
         )
-        
+
         # Delete it
         response = requests.delete(
             f"{BASE_URL}/api/governance/secrets/{secret_name}",
@@ -339,7 +338,7 @@ class TestPart4SecretManagement:
         assert response.status_code == 200
         data = response.json()
         assert isinstance(data, list)
-        
+
         # Verify rotation status structure
         for item in data:
             assert "name" in item
@@ -575,7 +574,7 @@ class TestPart8SecurityAlerting:
             },
         )
         alert_id = create_resp.json().get("alert_id")
-        
+
         # Acknowledge it
         response = requests.post(
             f"{BASE_URL}/api/governance/security/alerts/{alert_id}/acknowledge",
@@ -599,7 +598,7 @@ class TestPart8SecurityAlerting:
             },
         )
         alert_id = create_resp.json().get("alert_id")
-        
+
         # Resolve it
         response = requests.post(
             f"{BASE_URL}/api/governance/security/alerts/{alert_id}/resolve",
@@ -636,7 +635,7 @@ class TestPart9AdminGovernancePanel:
         )
         assert response.status_code == 200
         data = response.json()
-        
+
         # Verify all sections present
         assert "rbac" in data
         assert "audit" in data
@@ -644,7 +643,7 @@ class TestPart9AdminGovernancePanel:
         assert "secrets" in data
         assert "tenant_isolation" in data
         assert "compliance" in data
-        
+
         print(f"✓ Governance overview - roles: {data['rbac']['total_roles']}, "
               f"open alerts: {data['security']['open_alerts']}, "
               f"secrets: {data['secrets']['total_secrets']}")
@@ -660,7 +659,7 @@ class TestPart9AdminGovernancePanel:
         assert "user" in data
         assert "permissions" in data
         assert "recent_activity" in data
-        
+
         user = data["user"]
         assert user.get("email") == "agent@acenta.test"
         print(f"✓ User profile inspected - roles: {user.get('roles')}, permissions count: {len(data['permissions'].get('permissions', []))}")
@@ -674,7 +673,7 @@ class TestPart10GovernanceRoadmap:
         response = requests.get(f"{BASE_URL}/api/governance/roadmap", headers=headers)
         assert response.status_code == 200
         data = response.json()
-        
+
         # Verify maturity score
         assert "security_maturity_score" in data
         score = data["security_maturity_score"]
@@ -682,12 +681,12 @@ class TestPart10GovernanceRoadmap:
         assert "max_score" in score
         assert "percentage" in score
         assert "grade" in score
-        
+
         # Verify roadmap
         assert "top_25_improvements" in data
         improvements = data["top_25_improvements"]
         assert len(improvements) == 25, f"Expected 25 improvements, got {len(improvements)}"
-        
+
         # Verify improvement structure
         first = improvements[0]
         assert "rank" in first
@@ -696,14 +695,14 @@ class TestPart10GovernanceRoadmap:
         assert "impact" in first
         assert "effort" in first
         assert "status" in first
-        
+
         # Verify risk analysis
         assert "risk_analysis" in data
         risks = data["risk_analysis"]
         assert "critical_risks" in risks
         assert "high_risks" in risks
         assert "medium_risks" in risks
-        
+
         print(f"✓ Governance roadmap - maturity score: {score['percentage']}% (Grade {score['grade']}), "
               f"improvements: {len(improvements)}, critical risks: {len(risks['critical_risks'])}")
 

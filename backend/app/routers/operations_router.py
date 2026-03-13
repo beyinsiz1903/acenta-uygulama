@@ -16,7 +16,7 @@ Endpoints for:
 from __future__ import annotations
 
 from typing import Any
-from fastapi import APIRouter, Depends, Body, Query
+from fastapi import APIRouter, Depends, Body
 
 from app.db import get_db
 from app.auth import require_roles

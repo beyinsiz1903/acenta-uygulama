@@ -60,7 +60,7 @@ class TestBillingSubscriptionPaymentIssue:
         response = api_client.get(f"{BASE_URL}/api/billing/subscription", timeout=15)
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "payment_issue" in data, "Missing payment_issue field"
         payment_issue = data["payment_issue"]
         assert isinstance(payment_issue, dict), "payment_issue must be a dict"
@@ -71,7 +71,7 @@ class TestBillingSubscriptionPaymentIssue:
         response = api_client.get(f"{BASE_URL}/api/billing/subscription", timeout=15)
         assert response.status_code == 200
         payment_issue = response.json().get("payment_issue", {})
-        
+
         required_fields = [
             "has_issue",
             "severity",
@@ -85,11 +85,11 @@ class TestBillingSubscriptionPaymentIssue:
             "invoice_hosted_url",
             "invoice_pdf_url",
         ]
-        
+
         for field in required_fields:
             assert field in payment_issue, f"Missing payment_issue.{field}"
             print(f"  ✓ payment_issue.{field} exists")
-        
+
         print("✓ All payment_issue required fields present")
 
     def test_payment_issue_has_issue_is_boolean(self, api_client):
@@ -97,7 +97,7 @@ class TestBillingSubscriptionPaymentIssue:
         response = api_client.get(f"{BASE_URL}/api/billing/subscription", timeout=15)
         assert response.status_code == 200
         payment_issue = response.json().get("payment_issue", {})
-        
+
         assert isinstance(payment_issue.get("has_issue"), bool), "has_issue must be boolean"
         print(f"✓ payment_issue.has_issue = {payment_issue.get('has_issue')} (boolean)")
 
@@ -106,7 +106,7 @@ class TestBillingSubscriptionPaymentIssue:
         response = api_client.get(f"{BASE_URL}/api/billing/subscription", timeout=15)
         assert response.status_code == 200
         payment_issue = response.json().get("payment_issue", {})
-        
+
         severity = payment_issue.get("severity")
         valid_values = [None, "warning", "critical"]
         assert severity in valid_values, f"severity must be one of {valid_values}, got {severity}"
@@ -117,7 +117,7 @@ class TestBillingSubscriptionPaymentIssue:
         response = api_client.get(f"{BASE_URL}/api/billing/subscription", timeout=15)
         assert response.status_code == 200
         data = response.json()
-        
+
         core_fields = [
             "tenant_id",
             "plan",
@@ -127,10 +127,10 @@ class TestBillingSubscriptionPaymentIssue:
             "can_cancel",
             "can_change_plan",
         ]
-        
+
         for field in core_fields:
             assert field in data, f"Missing core field: {field}"
-        
+
         print("✓ All core billing fields present (regression OK)")
 
     def test_subscription_valid_plan_values(self, api_client):
@@ -138,7 +138,7 @@ class TestBillingSubscriptionPaymentIssue:
         response = api_client.get(f"{BASE_URL}/api/billing/subscription", timeout=15)
         assert response.status_code == 200
         data = response.json()
-        
+
         valid_plans = ["trial", "starter", "pro", "enterprise"]
         assert data.get("plan") in valid_plans, f"Invalid plan: {data.get('plan')}"
         print(f"✓ plan = {data.get('plan')} (valid)")
@@ -148,7 +148,7 @@ class TestBillingSubscriptionPaymentIssue:
         response = api_client.get(f"{BASE_URL}/api/billing/subscription", timeout=15)
         assert response.status_code == 200
         data = response.json()
-        
+
         valid_intervals = ["monthly", "yearly"]
         assert data.get("interval") in valid_intervals, f"Invalid interval: {data.get('interval')}"
         print(f"✓ interval = {data.get('interval')} (valid)")
@@ -174,7 +174,7 @@ class TestBillingHistoryRegression:
         response = api_client.get(f"{BASE_URL}/api/billing/history", timeout=15)
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "items" in data, "Missing items field"
         assert isinstance(data["items"], list), "items must be a list"
         print(f"✓ items array returned with {len(data['items'])} items")
@@ -184,15 +184,15 @@ class TestBillingHistoryRegression:
         response = api_client.get(f"{BASE_URL}/api/billing/history", timeout=15)
         assert response.status_code == 200
         items = response.json().get("items", [])
-        
+
         if not items:
             pytest.skip("No history items to validate structure")
-        
+
         required_fields = ["id", "title", "description", "occurred_at", "actor_label", "actor_type", "tone"]
-        
+
         for field in required_fields:
             assert field in items[0], f"Missing field in history item: {field}"
-        
+
         print("✓ History item structure validated")
 
     def test_history_limit_parameter(self, api_client):
@@ -223,61 +223,61 @@ class TestWebhookCodeReview:
     def test_stripe_checkout_service_methods_exist(self):
         """Verify stripe_checkout_service has required methods."""
         from app.services.stripe_checkout_service import stripe_checkout_service
-        
+
         required_methods = [
             "mark_invoice_paid",
             "mark_payment_failed",
             "mark_subscription_canceled",
             "get_billing_overview",
         ]
-        
+
         for method in required_methods:
             assert hasattr(stripe_checkout_service, method), f"Missing method: {method}"
             print(f"  ✓ {method} exists")
-        
+
         print("✓ All required service methods exist")
 
     def test_mark_invoice_paid_signature(self):
         """Verify mark_invoice_paid accepts required parameters."""
         from app.services.stripe_checkout_service import stripe_checkout_service
         import inspect
-        
+
         sig = inspect.signature(stripe_checkout_service.mark_invoice_paid)
         params = list(sig.parameters.keys())
-        
+
         required = ["tenant_id", "subscription_id", "amount_paid", "paid_at"]
         for param in required:
             # Check param exists or is in **kwargs
             assert param in params or "kwargs" in params or any("**" in str(p) for p in sig.parameters.values()), f"Missing param: {param}"
-        
+
         print("✓ mark_invoice_paid signature validated")
 
     def test_mark_payment_failed_signature(self):
         """Verify mark_payment_failed accepts required parameters."""
         from app.services.stripe_checkout_service import stripe_checkout_service
         import inspect
-        
+
         sig = inspect.signature(stripe_checkout_service.mark_payment_failed)
         params = list(sig.parameters.keys())
-        
+
         required = ["tenant_id", "subscription_id", "amount_due", "invoice_hosted_url", "invoice_pdf_url", "failed_at"]
         for param in required:
             assert param in params or "kwargs" in params or any("**" in str(p) for p in sig.parameters.values()), f"Missing param: {param}"
-        
+
         print("✓ mark_payment_failed signature validated")
 
     def test_mark_subscription_canceled_signature(self):
         """Verify mark_subscription_canceled accepts required parameters."""
         from app.services.stripe_checkout_service import stripe_checkout_service
         import inspect
-        
+
         sig = inspect.signature(stripe_checkout_service.mark_subscription_canceled)
         params = list(sig.parameters.keys())
-        
+
         required = ["tenant_id", "subscription_id", "canceled_at"]
         for param in required:
             assert param in params or "kwargs" in params or any("**" in str(p) for p in sig.parameters.values()), f"Missing param: {param}"
-        
+
         print("✓ mark_subscription_canceled signature validated")
 
 

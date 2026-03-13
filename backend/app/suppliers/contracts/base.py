@@ -10,10 +10,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import time
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from app.suppliers.contracts.errors import SupplierTimeoutError
 from app.suppliers.contracts.schemas import (
@@ -23,7 +22,7 @@ from app.suppliers.contracts.schemas import (
     HoldRequest, HoldResult,
     PricingRequest, PricingResult,
     SearchRequest, SearchResult,
-    SupplierContext, SupplierProductType,
+    SupplierContext,
 )
 
 logger = logging.getLogger("suppliers.adapter")

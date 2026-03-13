@@ -6,7 +6,6 @@ All sensitive actions are logged with full change tracking.
 from __future__ import annotations
 
 import hashlib
-import json
 import logging
 import uuid
 from datetime import datetime, timezone

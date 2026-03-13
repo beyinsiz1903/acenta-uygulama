@@ -56,14 +56,14 @@ class TestAuthRouteDuplicates:
         """Check route inventory for duplicate auth routes."""
         inventory_path = Path("/app/backend/app/bootstrap/route_inventory.json")
         assert inventory_path.exists(), "Route inventory JSON not found"
-        
+
         with open(inventory_path) as f:
             inventory = json.load(f)
-        
+
         auth_routes = [(r["method"], r["path"]) for r in inventory if r["path"].startswith("/api/auth/")]
         counts = Counter(auth_routes)
         duplicates = [(k, v) for k, v in counts.items() if v > 1]
-        
+
         assert not duplicates, f"Duplicate auth routes found: {duplicates}"
 
 
@@ -115,7 +115,7 @@ class TestMobileV1Route:
         inventory_path = Path("/app/backend/app/bootstrap/route_inventory.json")
         with open(inventory_path) as f:
             inventory = json.load(f)
-        
+
         mobile_route = next(
             (r for r in inventory if r["path"] == "/api/v1/mobile/auth/me" and r["method"] == "GET"),
             None
@@ -134,13 +134,13 @@ class TestRouteInventory:
         inventory_path = Path("/app/backend/app/bootstrap/route_inventory.json")
         with open(inventory_path) as f:
             inventory = json.load(f)
-        
+
         required_fields = {
-            "path", "method", "source", "current_namespace", 
-            "target_namespace", "legacy_or_v1", "compat_required", 
+            "path", "method", "source", "current_namespace",
+            "target_namespace", "legacy_or_v1", "compat_required",
             "risk_level", "owner"
         }
-        
+
         for idx, entry in enumerate(inventory[:10]):  # Sample first 10
             missing = required_fields - set(entry.keys())
             assert not missing, f"Entry {idx} missing fields: {missing}"
@@ -150,9 +150,9 @@ class TestRouteInventory:
         inventory_path = Path("/app/backend/app/bootstrap/route_inventory.json")
         with open(inventory_path) as f:
             inventory = json.load(f)
-        
+
         expected_order = sorted(
-            inventory, 
+            inventory,
             key=lambda item: (item["path"], item["method"], item["source"])
         )
         assert inventory == expected_order, "Inventory is not sorted deterministically"
@@ -161,10 +161,10 @@ class TestRouteInventory:
         """Verify export script produces deterministic output."""
         import subprocess
         import sys
-        
+
         # Run export twice
         script_path = "/app/backend/scripts/export_route_inventory.py"
-        
+
         subprocess.run(
             [sys.executable, script_path],
             cwd="/app/backend",
@@ -173,7 +173,7 @@ class TestRouteInventory:
         )
         with open("/app/backend/app/bootstrap/route_inventory.json", "rb") as f:
             hash1 = hashlib.md5(f.read()).hexdigest()
-        
+
         subprocess.run(
             [sys.executable, script_path],
             cwd="/app/backend",
@@ -182,7 +182,7 @@ class TestRouteInventory:
         )
         with open("/app/backend/app/bootstrap/route_inventory.json", "rb") as f:
             hash2 = hashlib.md5(f.read()).hexdigest()
-        
+
         assert hash1 == hash2, "Export script produces non-deterministic output"
 
 

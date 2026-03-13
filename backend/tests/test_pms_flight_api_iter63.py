@@ -41,7 +41,7 @@ def authenticated_client(api_client):
         f"{BASE_URL}/api/auth/login",
         json=AGENCY_CREDENTIALS
     )
-    
+
     if response.status_code == 429:
         retry_after = response.json().get("error", {}).get("details", {}).get("retry_after_seconds", 60)
         print(f"Rate limited, waiting {min(retry_after, 30)}s...")
@@ -50,40 +50,40 @@ def authenticated_client(api_client):
             f"{BASE_URL}/api/auth/login",
             json=AGENCY_CREDENTIALS
         )
-    
+
     if response.status_code != 200:
         pytest.skip(f"Authentication failed: {response.status_code} - {response.text}")
-    
+
     data = response.json()
     token = data.get("access_token") or data.get("token")
     if token:
         api_client.headers.update({"Authorization": f"Bearer {token}"})
-    
+
     return api_client
 
 
 class TestAuthentication:
     """Test authentication for PMS endpoints"""
-    
+
     def test_login_with_agency_credentials(self, api_client):
         """Test login with agency1@demo.test returns access_token"""
         response = api_client.post(
             f"{BASE_URL}/api/auth/login",
             json=AGENCY_CREDENTIALS
         )
-        
+
         if response.status_code == 429:
             pytest.skip("Rate limited")
-        
+
         assert response.status_code == 200, f"Login failed: {response.text}"
         data = response.json()
         assert "access_token" in data, "Response should contain access_token"
-        print(f"Login successful - access_token received")
+        print("Login successful - access_token received")
 
 
 class TestPMSDashboard:
     """PMS Dashboard endpoint tests"""
-    
+
     def test_dashboard_returns_stats(self, authenticated_client):
         """Test dashboard returns arrivals, departures, in_house, stayover, occupancy_rate"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/dashboard")
@@ -96,7 +96,7 @@ class TestPMSDashboard:
         assert "stayover" in data, "Missing stayover stat"
         assert "occupancy_rate" in data, "Missing occupancy_rate stat"
         print(f"Dashboard stats: arrivals={data['arrivals']}, departures={data['departures']}, in_house={data['in_house']}, stayover={data['stayover']}, occupancy={data['occupancy_rate']}%")
-    
+
     def test_dashboard_has_hotels_list(self, authenticated_client):
         """Test dashboard returns hotels list for selector"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/dashboard")
@@ -109,7 +109,7 @@ class TestPMSDashboard:
 
 class TestPMSTabs:
     """PMS tab endpoints (Girisler, Otelde, Konaklama, Cikislar, Tum Rezervasyonlar)"""
-    
+
     def test_arrivals_endpoint(self, authenticated_client):
         """Test GET /api/agency/pms/arrivals (Girisler tab)"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/arrivals")
@@ -118,7 +118,7 @@ class TestPMSTabs:
         assert "items" in data, "Missing items field"
         assert "total" in data, "Missing total field"
         print(f"Arrivals: {data['total']} items")
-    
+
     def test_in_house_endpoint(self, authenticated_client):
         """Test GET /api/agency/pms/in-house (Otelde tab)"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/in-house")
@@ -126,7 +126,7 @@ class TestPMSTabs:
         data = response.json()
         assert "items" in data
         print(f"In-house: {data['total']} items")
-    
+
     def test_stayovers_endpoint(self, authenticated_client):
         """Test GET /api/agency/pms/stayovers (Konaklama tab)"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/stayovers")
@@ -134,7 +134,7 @@ class TestPMSTabs:
         data = response.json()
         assert "items" in data
         print(f"Stayovers: {data['total']} items")
-    
+
     def test_departures_endpoint(self, authenticated_client):
         """Test GET /api/agency/pms/departures (Cikislar tab)"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/departures")
@@ -142,7 +142,7 @@ class TestPMSTabs:
         data = response.json()
         assert "items" in data
         print(f"Departures: {data['total']} items")
-    
+
     def test_reservations_endpoint(self, authenticated_client):
         """Test GET /api/agency/pms/reservations (Tum Rezervasyonlar tab)"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/reservations?limit=10")
@@ -154,7 +154,7 @@ class TestPMSTabs:
 
 class TestFlightLookupAPI:
     """Test NEW flight lookup endpoints (AviationStack integration)"""
-    
+
     def test_flight_lookup_returns_503_no_api_key(self, authenticated_client):
         """Test GET /api/agency/pms/flights/lookup returns 503 when API key not configured"""
         response = authenticated_client.get(
@@ -168,7 +168,7 @@ class TestFlightLookupAPI:
         error_msg = data.get("detail") or data.get("error", {}).get("message", "")
         assert "API anahtari" in error_msg or "yapilandirilmamis" in error_msg, f"Unexpected error: {error_msg}"
         print(f"Flight lookup correctly returns 503: {error_msg}")
-    
+
     def test_flight_lookup_with_date_parameter(self, authenticated_client):
         """Test flight lookup accepts optional date parameter"""
         response = authenticated_client.get(
@@ -178,7 +178,7 @@ class TestFlightLookupAPI:
         # Should still return 503 since no API key
         assert response.status_code == 503, f"Expected 503, got {response.status_code}"
         print("Flight lookup with date parameter correctly returns 503")
-    
+
     def test_flight_lookup_requires_auth(self):
         """Test flight lookup requires authentication"""
         session = requests.Session()  # No auth
@@ -192,7 +192,7 @@ class TestFlightLookupAPI:
 
 class TestAutoFlightAPI:
     """Test auto-flight endpoint POST /api/agency/pms/reservations/{id}/auto-flight"""
-    
+
     @pytest.fixture(scope="class")
     def reservation_id(self, authenticated_client):
         """Get a reservation ID to test with"""
@@ -202,12 +202,12 @@ class TestAutoFlightAPI:
             if data.get("items"):
                 return data["items"][0]["id"]
         return None
-    
+
     def test_auto_flight_returns_503_no_api_key(self, authenticated_client, reservation_id):
         """Test auto-flight returns 503 when API key not configured"""
         if not reservation_id:
             pytest.skip("No reservations available for testing")
-        
+
         response = authenticated_client.post(
             f"{BASE_URL}/api/agency/pms/reservations/{reservation_id}/auto-flight",
             json={
@@ -222,12 +222,12 @@ class TestAutoFlightAPI:
         error_msg = data.get("detail") or data.get("error", {}).get("message", "")
         assert "API anahtari" in error_msg or "yapilandirilmamis" in error_msg, f"Unexpected error: {error_msg}"
         print(f"Auto-flight correctly returns 503: {error_msg}")
-    
+
     def test_auto_flight_departure_type(self, authenticated_client, reservation_id):
         """Test auto-flight with departure flight type"""
         if not reservation_id:
             pytest.skip("No reservations available for testing")
-        
+
         response = authenticated_client.post(
             f"{BASE_URL}/api/agency/pms/reservations/{reservation_id}/auto-flight",
             json={
@@ -238,7 +238,7 @@ class TestAutoFlightAPI:
         # Should return 503 since no API key
         assert response.status_code == 503, f"Expected 503, got {response.status_code}"
         print("Auto-flight departure type correctly returns 503")
-    
+
     def test_auto_flight_reservation_not_found(self, authenticated_client):
         """Test auto-flight returns 404 for non-existent reservation"""
         response = authenticated_client.post(
@@ -255,7 +255,7 @@ class TestAutoFlightAPI:
 
 class TestReservationManualUpdate:
     """Test manual reservation update (flight info editing) still works"""
-    
+
     @pytest.fixture(scope="class")
     def reservation_data(self, authenticated_client):
         """Get a reservation to test updates"""
@@ -265,23 +265,23 @@ class TestReservationManualUpdate:
             if data.get("items"):
                 return data["items"][0]
         return None
-    
+
     def test_get_reservation_detail(self, authenticated_client, reservation_data):
         """Test GET /api/agency/pms/reservations/{id} returns reservation details"""
         if not reservation_data:
             pytest.skip("No reservations available")
-        
+
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/reservations/{reservation_data['id']}")
         assert response.status_code == 200, f"Get reservation failed: {response.text}"
         data = response.json()
         assert "id" in data
         print(f"Reservation detail: {data.get('guest_name', 'No name')} - {data.get('check_in')} to {data.get('check_out')}")
-    
+
     def test_update_reservation_flight_info(self, authenticated_client, reservation_data):
         """Test PUT /api/agency/pms/reservations/{id} for manual flight info update"""
         if not reservation_data:
             pytest.skip("No reservations available")
-        
+
         # Update with manual flight info
         response = authenticated_client.put(
             f"{BASE_URL}/api/agency/pms/reservations/{reservation_data['id']}",
@@ -306,12 +306,12 @@ class TestReservationManualUpdate:
         assert data.get("arrival_flight", {}).get("flight_no") == "TEST_TK999", "Arrival flight not saved"
         assert data.get("departure_flight", {}).get("flight_no") == "TEST_TK998", "Departure flight not saved"
         print("Manual flight info update successful")
-    
+
     def test_update_reservation_guest_info(self, authenticated_client, reservation_data):
         """Test updating guest info still works"""
         if not reservation_data:
             pytest.skip("No reservations available")
-        
+
         response = authenticated_client.put(
             f"{BASE_URL}/api/agency/pms/reservations/{reservation_data['id']}",
             json={"notes": "TEST_iter63 - Testing flight API"}
@@ -324,7 +324,7 @@ class TestReservationManualUpdate:
 
 class TestCheckInCheckOut:
     """Test check-in and check-out still work correctly"""
-    
+
     def test_check_in_endpoint_exists(self, authenticated_client):
         """Test check-in endpoint responds correctly"""
         response = authenticated_client.post(
@@ -333,7 +333,7 @@ class TestCheckInCheckOut:
         )
         assert response.status_code == 404, f"Expected 404, got {response.status_code}"
         print("Check-in endpoint exists and returns 404 for non-existent reservation")
-    
+
     def test_check_out_endpoint_exists(self, authenticated_client):
         """Test check-out endpoint responds correctly"""
         response = authenticated_client.post(f"{BASE_URL}/api/agency/pms/reservations/nonexistent-id/check-out")
@@ -343,7 +343,7 @@ class TestCheckInCheckOut:
 
 class TestRoomManagement:
     """Test room management CRUD still works"""
-    
+
     def test_list_rooms(self, authenticated_client):
         """Test GET /api/agency/pms/rooms"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/rooms")
@@ -351,20 +351,20 @@ class TestRoomManagement:
         data = response.json()
         assert "items" in data
         print(f"Rooms: {data['total']} rooms")
-    
+
     def test_create_and_delete_room(self, authenticated_client):
         """Test room CRUD (create and delete)"""
         # First get a hotel_id from dashboard
         dashboard = authenticated_client.get(f"{BASE_URL}/api/agency/pms/dashboard")
         if dashboard.status_code != 200:
             pytest.skip("Cannot get dashboard")
-        
+
         hotels = dashboard.json().get("hotels", [])
         if not hotels:
             pytest.skip("No hotels available")
-        
+
         hotel_id = hotels[0]["id"]
-        
+
         # Create a test room
         create_resp = authenticated_client.post(
             f"{BASE_URL}/api/agency/pms/rooms",
@@ -376,7 +376,7 @@ class TestRoomManagement:
                 "status": "available"
             }
         )
-        
+
         if create_resp.status_code == 409:
             # Room already exists, try to delete it first
             rooms = authenticated_client.get(f"{BASE_URL}/api/agency/pms/rooms").json().get("items", [])
@@ -395,13 +395,13 @@ class TestRoomManagement:
                     "status": "available"
                 }
             )
-        
+
         assert create_resp.status_code == 200, f"Create room failed: {create_resp.text}"
         room = create_resp.json()
         room_id = room["id"]
         assert room["room_number"] == "TEST_999_iter63"
         print(f"Created room: {room_id}")
-        
+
         # Delete the test room
         delete_resp = authenticated_client.delete(f"{BASE_URL}/api/agency/pms/rooms/{room_id}")
         assert delete_resp.status_code == 200, f"Delete room failed: {delete_resp.text}"

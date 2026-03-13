@@ -18,25 +18,21 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, date, timezone
-from typing import Any, Dict, Optional
+from datetime import datetime, timezone
 
 from app.suppliers.contracts.base import SupplierAdapter, SupplierType, LifecycleMethod
 from app.suppliers.contracts.schemas import (
-    AvailabilityRequest, AvailabilityResult,
     CancelRequest, CancelResult,
     ConfirmRequest, ConfirmResult,
     HoldRequest, HoldResult,
     HotelSearchItem, TourSearchItem, FlightSearchItem,
     TransferSearchItem, ActivitySearchItem,
-    PriceBreakdown,
-    PricingRequest, PricingResult,
     SearchRequest, SearchResult,
     SupplierContext, SupplierProductType,
     SupplierCapabilityInfo,
 )
 from app.suppliers.contracts.errors import (
-    SupplierAuthError, SupplierError, SupplierTimeoutError, SupplierUnavailableError,
+    SupplierAuthError, SupplierError,
 )
 
 logger = logging.getLogger("suppliers.bridges")

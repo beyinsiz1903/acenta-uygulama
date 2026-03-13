@@ -17,9 +17,9 @@ Covers all 10 parts:
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, Field
 
 from app.auth import require_roles

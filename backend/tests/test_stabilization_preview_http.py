@@ -9,7 +9,6 @@ Tests the Phase 1 stabilization endpoints against the live preview URL:
 from __future__ import annotations
 
 import os
-import pytest
 import requests
 
 # Use the preview URL from environment
@@ -56,7 +55,7 @@ class TestHealthEndpointsHTTP:
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
         data = resp.json()
         assert "checks" in data, f"Missing 'checks' in response: {data}"
-        
+
         if "mongodb" in data["checks"] and data["checks"]["mongodb"].get("status") == "ok":
             mongo = data["checks"]["mongodb"]
             assert "collections" in mongo, f"Missing 'collections' in mongodb check: {mongo}"
@@ -108,7 +107,7 @@ class TestAuthEndpointsHTTP:
             timeout=10,
         )
         assert resp.status_code == 401, f"Expected 401, got {resp.status_code}: {resp.text}"
-        print(f"✓ Invalid login correctly rejected with 401")
+        print("✓ Invalid login correctly rejected with 401")
 
     def test_me_with_valid_token(self):
         """GET /api/auth/me with valid token returns user info with organization_id."""
@@ -120,7 +119,7 @@ class TestAuthEndpointsHTTP:
         )
         assert login_resp.status_code == 200
         token = login_resp.json()["access_token"]
-        
+
         # Now test /api/auth/me
         resp = requests.get(
             f"{BASE_URL}/api/auth/me",
@@ -137,7 +136,7 @@ class TestAuthEndpointsHTTP:
         """GET /api/auth/me without token returns 401."""
         resp = requests.get(f"{BASE_URL}/api/auth/me", timeout=10)
         assert resp.status_code == 401, f"Expected 401, got {resp.status_code}: {resp.text}"
-        print(f"✓ /api/auth/me correctly rejected without token (401)")
+        print("✓ /api/auth/me correctly rejected without token (401)")
 
 
 class TestSecurityHeadersHTTP:
@@ -147,43 +146,43 @@ class TestSecurityHeadersHTTP:
         """Verify all security headers are present in API responses."""
         resp = requests.get(f"{BASE_URL}/api/health", timeout=10)
         assert resp.status_code == 200
-        
+
         headers = resp.headers
-        
+
         # X-Content-Type-Options
         assert headers.get("x-content-type-options") == "nosniff", \
             f"Missing/wrong x-content-type-options: {headers.get('x-content-type-options')}"
         print(f"✓ X-Content-Type-Options: {headers.get('x-content-type-options')}")
-        
+
         # X-Frame-Options
         assert headers.get("x-frame-options") == "DENY", \
             f"Missing/wrong x-frame-options: {headers.get('x-frame-options')}"
         print(f"✓ X-Frame-Options: {headers.get('x-frame-options')}")
-        
+
         # Strict-Transport-Security
         hsts = headers.get("strict-transport-security", "")
         assert "max-age" in hsts, f"Missing HSTS header or max-age: {hsts}"
         print(f"✓ Strict-Transport-Security: {hsts}")
-        
+
         # Referrer-Policy
         rp = headers.get("referrer-policy")
         assert rp == "strict-origin-when-cross-origin", \
             f"Missing/wrong referrer-policy: {rp}"
         print(f"✓ Referrer-Policy: {rp}")
-        
+
         # Content-Security-Policy
         csp = headers.get("content-security-policy", "")
         assert "default-src" in csp, f"Missing CSP or default-src: {csp}"
-        print(f"✓ Content-Security-Policy present (default-src found)")
+        print("✓ Content-Security-Policy present (default-src found)")
 
     def test_request_id_header(self):
         """Verify X-Request-Id header is present in all responses."""
         resp = requests.get(f"{BASE_URL}/api/health", timeout=10)
         assert resp.status_code == 200
-        
+
         request_id = resp.headers.get("x-request-id")
-        assert request_id is not None, f"Missing X-Request-Id header"
-        assert len(request_id) > 0, f"Empty X-Request-Id header"
+        assert request_id is not None, "Missing X-Request-Id header"
+        assert len(request_id) > 0, "Empty X-Request-Id header"
         print(f"✓ X-Request-Id: {request_id}")
 
     def test_custom_request_id_echoed(self):
@@ -195,7 +194,7 @@ class TestSecurityHeadersHTTP:
             timeout=10,
         )
         assert resp.status_code == 200
-        
+
         echoed_id = resp.headers.get("x-request-id")
         assert echoed_id == custom_id, f"Expected '{custom_id}', got '{echoed_id}'"
         print(f"✓ Custom X-Request-Id correctly echoed: {echoed_id}")
@@ -209,11 +208,11 @@ class TestCSRFMiddleware:
         session = requests.Session()
         resp = session.get(f"{BASE_URL}/api/health", timeout=10)
         assert resp.status_code == 200
-        
+
         # Check if csrf_token cookie exists
         # Note: CSRF middleware only sets cookie for authenticated requests
         # For health endpoints, it may not set the cookie
-        print(f"✓ GET request successful (CSRF middleware active but exempt for health paths)")
+        print("✓ GET request successful (CSRF middleware active but exempt for health paths)")
 
     def test_bearer_auth_bypasses_csrf(self):
         """Bearer token authenticated requests bypass CSRF validation."""
@@ -225,7 +224,7 @@ class TestCSRFMiddleware:
         )
         assert login_resp.status_code == 200
         token = login_resp.json()["access_token"]
-        
+
         # Make a state-changing request with Bearer token (should work without CSRF)
         # Using /api/auth/me as a safe endpoint to test
         resp = requests.get(
@@ -234,17 +233,17 @@ class TestCSRFMiddleware:
             timeout=10,
         )
         assert resp.status_code == 200, f"Bearer auth request failed: {resp.status_code}: {resp.text}"
-        print(f"✓ Bearer token requests correctly bypass CSRF validation")
+        print("✓ Bearer token requests correctly bypass CSRF validation")
 
 
 if __name__ == "__main__":
     # Run tests
     import sys
-    
+
     print(f"\n{'='*60}")
     print(f"Running Stabilization Tests against: {BASE_URL}")
     print(f"{'='*60}\n")
-    
+
     # Health endpoints
     print("## Health Endpoints Tests ##")
     health_tests = TestHealthEndpointsHTTP()
@@ -256,8 +255,8 @@ if __name__ == "__main__":
     except AssertionError as e:
         print(f"✗ Health test failed: {e}")
         sys.exit(1)
-    
-    print(f"\n## Auth Endpoints Tests ##")
+
+    print("\n## Auth Endpoints Tests ##")
     auth_tests = TestAuthEndpointsHTTP()
     try:
         auth_tests.test_login_admin_success()
@@ -268,8 +267,8 @@ if __name__ == "__main__":
     except AssertionError as e:
         print(f"✗ Auth test failed: {e}")
         sys.exit(1)
-    
-    print(f"\n## Security Headers Tests ##")
+
+    print("\n## Security Headers Tests ##")
     security_tests = TestSecurityHeadersHTTP()
     try:
         security_tests.test_security_headers_present()
@@ -278,8 +277,8 @@ if __name__ == "__main__":
     except AssertionError as e:
         print(f"✗ Security test failed: {e}")
         sys.exit(1)
-    
-    print(f"\n## CSRF Middleware Tests ##")
+
+    print("\n## CSRF Middleware Tests ##")
     csrf_tests = TestCSRFMiddleware()
     try:
         csrf_tests.test_csrf_cookie_set_on_get()
@@ -287,7 +286,7 @@ if __name__ == "__main__":
     except AssertionError as e:
         print(f"✗ CSRF test failed: {e}")
         sys.exit(1)
-    
+
     print(f"\n{'='*60}")
-    print(f"All stabilization tests passed!")
+    print("All stabilization tests passed!")
     print(f"{'='*60}\n")

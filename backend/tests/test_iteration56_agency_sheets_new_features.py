@@ -2,7 +2,7 @@
 
 New Backend Endpoints:
 - GET /api/agency/sheets/sync-status - auto-sync overview with connection count, enabled/healthy/failed counts
-- GET /api/agency/sheets/sync-history - sync run history with filtering  
+- GET /api/agency/sheets/sync-history - sync run history with filtering
 - PATCH /api/agency/sheets/connections/{id}/settings - update sync_enabled and sync_interval_minutes
 - POST /api/agency/sheets/credentials - save agency Google credentials (validate JSON)
 - GET /api/agency/sheets/credentials/status - check agency credential status with active_source field
@@ -53,7 +53,7 @@ class TestSyncStatusEndpoint:
         """GET /api/agency/sheets/sync-status returns sync overview with counts."""
         response = agency_client.get(f"{BASE_URL}/api/agency/sheets/sync-status")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        
+
         data = response.json()
         # Verify required fields
         assert "total_connections" in data, f"Missing 'total_connections' in response: {data}"
@@ -62,7 +62,7 @@ class TestSyncStatusEndpoint:
         assert "failed_count" in data, f"Missing 'failed_count' in response: {data}"
         assert "scheduler_active" in data, f"Missing 'scheduler_active' in response: {data}"
         assert "connections" in data, f"Missing 'connections' in response: {data}"
-        
+
         # Verify types
         assert isinstance(data["total_connections"], int)
         assert isinstance(data["sync_enabled_count"], int)
@@ -70,7 +70,7 @@ class TestSyncStatusEndpoint:
         assert isinstance(data["failed_count"], int)
         assert isinstance(data["scheduler_active"], bool)
         assert isinstance(data["connections"], list)
-        
+
         print(f"✅ GET /api/agency/sheets/sync-status returns overview: total={data['total_connections']}, enabled={data['sync_enabled_count']}, healthy={data['healthy_count']}, failed={data['failed_count']}")
 
     def test_sync_status_requires_auth(self, unauthenticated_client):
@@ -89,34 +89,34 @@ class TestSyncHistoryEndpoint:
         """GET /api/agency/sheets/sync-history returns history items."""
         response = agency_client.get(f"{BASE_URL}/api/agency/sheets/sync-history")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        
+
         data = response.json()
         assert "items" in data, f"Missing 'items' in response: {data}"
         assert "total" in data, f"Missing 'total' in response: {data}"
         assert isinstance(data["items"], list)
         assert isinstance(data["total"], int)
-        
+
         print(f"✅ GET /api/agency/sheets/sync-history returns {data['total']} history items")
 
     def test_sync_history_with_limit(self, agency_client):
         """GET /api/agency/sheets/sync-history?limit=5 respects limit param."""
         response = agency_client.get(f"{BASE_URL}/api/agency/sheets/sync-history?limit=5")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        
+
         data = response.json()
         # Limit may affect results if there are more than 5 items
         assert len(data["items"]) <= 5, f"Expected at most 5 items, got {len(data['items'])}"
-        print(f"✅ GET /api/agency/sheets/sync-history?limit=5 respects limit parameter")
+        print("✅ GET /api/agency/sheets/sync-history?limit=5 respects limit parameter")
 
     def test_sync_history_with_connection_filter(self, agency_client):
         """GET /api/agency/sheets/sync-history?connection_id=xxx filters by connection."""
         response = agency_client.get(f"{BASE_URL}/api/agency/sheets/sync-history?connection_id=nonexistent-id")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        
+
         data = response.json()
         # Should return empty or filtered results (since connection doesn't exist)
         assert "items" in data
-        print(f"✅ GET /api/agency/sheets/sync-history?connection_id=xxx accepts connection_id param")
+        print("✅ GET /api/agency/sheets/sync-history?connection_id=xxx accepts connection_id param")
 
     def test_sync_history_requires_auth(self, unauthenticated_client):
         """GET /api/agency/sheets/sync-history returns 401 without auth."""
@@ -145,7 +145,7 @@ class TestConnectionSettingsEndpoint:
             f"{BASE_URL}/api/agency/sheets/connections/nonexistent-id/settings",
             json={"sync_interval_minutes": 0}  # Invalid: must be 1-1440
         )
-        # Will be 404 (connection not found) before interval validation 
+        # Will be 404 (connection not found) before interval validation
         # Because we don't have actual connections
         assert response.status_code in [400, 404], f"Expected 400/404, got {response.status_code}: {response.text}"
         print("✅ PATCH /api/agency/sheets/connections/{id}/settings validates interval")
@@ -172,7 +172,7 @@ class TestCredentialsSaveEndpoint:
             json={"service_account_json": "not valid json"}
         )
         assert response.status_code == 400, f"Expected 400, got {response.status_code}: {response.text}"
-        
+
         data = response.json()
         assert "error" in data or "detail" in data, f"Expected error details in response: {data}"
         print("✅ POST /api/agency/sheets/credentials returns 400 for invalid JSON")
@@ -206,18 +206,18 @@ class TestCredentialsStatusEndpoint:
         """GET /api/agency/sheets/credentials/status returns active_source field."""
         response = agency_client.get(f"{BASE_URL}/api/agency/sheets/credentials/status")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        
+
         data = response.json()
         # Verify required fields
         assert "has_own_credentials" in data, f"Missing 'has_own_credentials' in response: {data}"
         assert "global_configured" in data, f"Missing 'global_configured' in response: {data}"
         assert "active_source" in data, f"Missing 'active_source' in response: {data}"
-        
+
         # Verify types
         assert isinstance(data["has_own_credentials"], bool)
         assert isinstance(data["global_configured"], bool)
         assert data["active_source"] in ["agency", "global", "none"], f"Invalid active_source: {data['active_source']}"
-        
+
         print(f"✅ GET /api/agency/sheets/credentials/status returns: has_own={data['has_own_credentials']}, global={data['global_configured']}, active_source={data['active_source']}")
 
     def test_credentials_status_requires_auth(self, unauthenticated_client):
@@ -236,15 +236,15 @@ class TestCredentialsDeleteEndpoint:
         """DELETE /api/agency/sheets/credentials returns deleted status and fallback."""
         response = agency_client.delete(f"{BASE_URL}/api/agency/sheets/credentials")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        
+
         data = response.json()
         assert "deleted" in data, f"Missing 'deleted' in response: {data}"
         assert "fallback" in data, f"Missing 'fallback' in response: {data}"
-        
+
         # deleted might be false if no credentials existed
         assert isinstance(data["deleted"], bool)
         assert data["fallback"] in ["global", "none"], f"Invalid fallback: {data['fallback']}"
-        
+
         print(f"✅ DELETE /api/agency/sheets/credentials returns: deleted={data['deleted']}, fallback={data['fallback']}")
 
     def test_delete_credentials_requires_auth(self, unauthenticated_client):
@@ -266,7 +266,7 @@ class TestCredentialsCRUDFlow:
         assert status_response.status_code == 200
         initial_status = status_response.json()
         print(f"Initial status: has_own={initial_status.get('has_own_credentials')}, active_source={initial_status.get('active_source')}")
-        
+
         # 2. Attempt to save valid credentials (with mock data)
         mock_credentials = {
             "type": "service_account",
@@ -288,28 +288,28 @@ class TestCredentialsCRUDFlow:
         assert save_data.get("status") == "saved", f"Expected status='saved': {save_data}"
         assert save_data.get("client_email") == "test@test-project.iam.gserviceaccount.com"
         print(f"✅ Credentials saved: client_email={save_data.get('client_email')}")
-        
+
         # 3. Check updated status
         status_after = agency_client.get(f"{BASE_URL}/api/agency/sheets/credentials/status")
         assert status_after.status_code == 200
         updated_status = status_after.json()
-        assert updated_status.get("has_own_credentials") == True, f"Expected has_own_credentials=True: {updated_status}"
+        assert updated_status.get("has_own_credentials"), f"Expected has_own_credentials=True: {updated_status}"
         assert updated_status.get("active_source") == "agency", f"Expected active_source='agency': {updated_status}"
         assert updated_status.get("own_service_account_email") == "test@test-project.iam.gserviceaccount.com"
         print(f"✅ Status after save: has_own={updated_status.get('has_own_credentials')}, active_source={updated_status.get('active_source')}")
-        
+
         # 4. Delete credentials
         delete_response = agency_client.delete(f"{BASE_URL}/api/agency/sheets/credentials")
         assert delete_response.status_code == 200
         delete_data = delete_response.json()
-        assert delete_data.get("deleted") == True, f"Expected deleted=True: {delete_data}"
+        assert delete_data.get("deleted"), f"Expected deleted=True: {delete_data}"
         print(f"✅ Credentials deleted: deleted={delete_data.get('deleted')}, fallback={delete_data.get('fallback')}")
-        
+
         # 5. Verify status after delete
         final_status = agency_client.get(f"{BASE_URL}/api/agency/sheets/credentials/status")
         assert final_status.status_code == 200
         final_data = final_status.json()
-        assert final_data.get("has_own_credentials") == False, f"Expected has_own_credentials=False: {final_data}"
+        assert not final_data.get("has_own_credentials"), f"Expected has_own_credentials=False: {final_data}"
         # active_source should be 'none' since no global configured in preview env
         assert final_data.get("active_source") in ["global", "none"], f"Unexpected active_source: {final_data}"
         print(f"✅ Final status: has_own={final_data.get('has_own_credentials')}, active_source={final_data.get('active_source')}")

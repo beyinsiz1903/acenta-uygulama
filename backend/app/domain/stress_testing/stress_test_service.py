@@ -39,7 +39,7 @@ async def run_load_test(db, config: dict | None = None) -> dict[str, Any]:
     cfg = config or {}
     searches_per_hour = cfg.get("searches_per_hour", 10000)
     bookings_per_hour = cfg.get("bookings_per_hour", 1000)
-    duration_seconds = cfg.get("duration_seconds", 5)
+    cfg.get("duration_seconds", 5)
 
     start = time.monotonic()
     search_results = []
@@ -372,7 +372,7 @@ async def run_cache_failure_test(db) -> dict[str, Any]:
 
     degraded_phase = next(p for p in phases if p["phase"] == "degraded")
     normal_phase = next(p for p in phases if p["phase"] == "normal")
-    recovery_phase = next(p for p in phases if p["phase"] == "recovery")
+    next(p for p in phases if p["phase"] == "recovery")
 
     service_continued = degraded_phase["throughput_rps"] > 100
     latency_acceptable = degraded_phase["avg_response_ms"] < 1000
@@ -757,7 +757,7 @@ async def generate_stress_test_report(db) -> dict[str, Any]:
             bottlenecks.append({"component": key, "severity": "medium", "detail": f"{key} test not yet executed"})
 
     # Capacity limits
-    load_result = results.get("load_test", {})
+    results.get("load_test", {})
     capacity_limits = {
         "max_searches_per_hour": 10000,
         "max_bookings_per_hour": 1000,

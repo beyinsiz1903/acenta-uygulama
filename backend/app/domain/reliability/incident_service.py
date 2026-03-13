@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from app.domain.reliability.models import AUTO_ACTIONS, INCIDENT_SEVERITY, INCIDENT_TYPES
+from app.domain.reliability.models import AUTO_ACTIONS, INCIDENT_TYPES
 
 logger = logging.getLogger("reliability.incidents")
 
@@ -135,7 +135,7 @@ async def detect_supplier_issues(db, org_id: str, window_minutes: int = 15) -> l
             continue
 
         error_rate = (r["errors"] + r["timeouts"]) / total
-        timeout_rate = r["timeouts"] / total
+        r["timeouts"] / total
 
         # Supplier outage: >80% error rate
         if error_rate > 0.8:

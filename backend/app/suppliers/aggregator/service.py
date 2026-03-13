@@ -14,16 +14,14 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-import uuid
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from app.suppliers.contracts.base import SupplierAdapter, SupplierType
 from app.suppliers.contracts.schemas import (
     SearchItem, SearchRequest, SearchResult,
-    SupplierContext, SupplierProductType,
+    SupplierContext,
 )
-from app.suppliers.contracts.errors import SupplierError, SupplierTimeoutError
+from app.suppliers.contracts.errors import SupplierError
 from app.suppliers.registry import supplier_registry
 
 logger = logging.getLogger("suppliers.aggregator")

@@ -18,7 +18,6 @@ import os
 import pytest
 import requests
 import time
-import json
 
 from tests.preview_auth_helper import get_preview_base_url_or_skip
 
@@ -97,7 +96,7 @@ class TestCreateCheckoutSubscriptionMode:
 
         # Verify Stripe URL
         assert "stripe.com" in data["url"], f"URL should be Stripe checkout: {data['url'][:100]}"
-        
+
         # Verify session_id starts with cs_ (checkout session)
         assert data["session_id"].startswith("cs_"), f"session_id should start with cs_: {data['session_id'][:30]}"
 
@@ -188,7 +187,7 @@ class TestBillingSubscriptionState:
         assert resp.status_code == 200
 
         data = resp.json()
-        print(f"[INFO] Expired trial user state:")
+        print("[INFO] Expired trial user state:")
         print(f"       plan: {data.get('plan')}")
         print(f"       status: {data.get('status')}")
         print(f"       managed_subscription: {data.get('managed_subscription')}")
@@ -197,10 +196,10 @@ class TestBillingSubscriptionState:
 
         # Verify expected state for expired trial
         assert data.get("plan") == "trial", f"Expected trial plan, got {data.get('plan')}"
-        assert data.get("managed_subscription") == False, "Should not have managed subscription"
-        assert data.get("legacy_subscription") == False, "Should not be legacy subscription"
+        assert not data.get("managed_subscription"), "Should not have managed subscription"
+        assert not data.get("legacy_subscription"), "Should not be legacy subscription"
         assert data.get("change_flow") == "checkout_redirect", "Change flow should be checkout_redirect"
-        assert data.get("can_change_plan") == True, "Should be able to change plan"
+        assert data.get("can_change_plan"), "Should be able to change plan"
 
     def test_legacy_paid_user_state(self, session):
         """Legacy paid user should have legacy_subscription=true, managed_subscription=false"""
@@ -213,7 +212,7 @@ class TestBillingSubscriptionState:
 
         data = resp.json()
         provider_sub_id = data.get("provider_subscription_id") or ""
-        print(f"[INFO] Legacy paid user state:")
+        print("[INFO] Legacy paid user state:")
         print(f"       plan: {data.get('plan')}")
         print(f"       managed_subscription: {data.get('managed_subscription')}")
         print(f"       legacy_subscription: {data.get('legacy_subscription')}")
@@ -221,14 +220,14 @@ class TestBillingSubscriptionState:
 
         # Legacy user should have subscription starting with cs_ (session ID)
         if provider_sub_id.startswith("cs_"):
-            assert data.get("legacy_subscription") == True, "cs_ subscription should be legacy"
-            assert data.get("managed_subscription") == False, "cs_ subscription should not be managed"
-            assert data.get("can_cancel") == False, "Legacy subscription should not allow cancel"
+            assert data.get("legacy_subscription"), "cs_ subscription should be legacy"
+            assert not data.get("managed_subscription"), "cs_ subscription should not be managed"
+            assert not data.get("can_cancel"), "Legacy subscription should not allow cancel"
             print("✅ Legacy subscription detected (cs_ prefix)")
         elif provider_sub_id.startswith("sub_"):
             # User has been upgraded to managed subscription
-            assert data.get("managed_subscription") == True, "sub_ subscription should be managed"
-            assert data.get("legacy_subscription") == False, "sub_ subscription should not be legacy"
+            assert data.get("managed_subscription"), "sub_ subscription should be managed"
+            assert not data.get("legacy_subscription"), "sub_ subscription should not be legacy"
             print("✅ Managed subscription detected (sub_ prefix)")
 
     def test_subscription_response_fields(self, session):
@@ -241,20 +240,20 @@ class TestBillingSubscriptionState:
         assert resp.status_code == 200
 
         data = resp.json()
-        
+
         # Required fields per API spec
         required_fields = [
             "plan", "interval", "status", "managed_subscription",
             "legacy_subscription", "portal_available", "can_cancel",
             "can_change_plan", "change_flow", "payment_issue"
         ]
-        
+
         for field in required_fields:
             assert field in data, f"Missing required field: {field}"
-        
+
         # Verify payment_issue structure
         assert "has_issue" in data.get("payment_issue", {}), "payment_issue should have has_issue"
-        
+
         print("✅ All required fields present in subscription response")
 
 
@@ -274,22 +273,22 @@ class TestCancelSubscription:
         sub_resp = session.get(f"{BASE_URL}/api/billing/subscription", headers=auth)
         if sub_resp.status_code != 200:
             pytest.skip("Could not fetch subscription")
-        
+
         sub_data = sub_resp.json()
-        if sub_data.get("managed_subscription") == True:
+        if sub_data.get("managed_subscription"):
             pytest.skip("User has managed subscription, not legacy")
-        
-        if sub_data.get("can_cancel") == True:
+
+        if sub_data.get("can_cancel"):
             pytest.skip("User can cancel - may have real managed subscription")
 
         resp = session.post(f"{BASE_URL}/api/billing/cancel-subscription", headers=auth)
-        
+
         assert resp.status_code == 409, f"Expected 409 for legacy cancel, got {resp.status_code}"
-        
+
         data = resp.json()
         error_code = data.get("error", {}).get("code") or data.get("code")
         assert error_code == "subscription_management_unavailable"
-        
+
         print("✅ Legacy subscription cancel correctly rejected (409)")
 
     def test_cancel_managed_subscription_returns_period_end_message(self, session):
@@ -302,18 +301,18 @@ class TestCancelSubscription:
         sub_resp = session.get(f"{BASE_URL}/api/billing/subscription", headers=auth)
         if sub_resp.status_code != 200:
             pytest.skip("Could not fetch subscription")
-        
+
         sub_data = sub_resp.json()
         if not sub_data.get("managed_subscription"):
             pytest.skip("User does not have managed subscription")
 
         resp = session.post(f"{BASE_URL}/api/billing/cancel-subscription", headers=auth)
-        
+
         if resp.status_code == 200:
             data = resp.json()
             # Should have period-end cancel message
             assert "message" in data, "Response should contain message"
-            assert data.get("cancel_at_period_end") == True, "Should be period-end cancel"
+            assert data.get("cancel_at_period_end"), "Should be period-end cancel"
             assert "current_period_end" in data, "Should contain current_period_end"
             # Turkish message: "Aboneliğiniz dönem sonunda sona erecek"
             print(f"✅ Managed subscription cancel: {data.get('message')}")
@@ -340,7 +339,7 @@ class TestChangePlan:
         sub_resp = session.get(f"{BASE_URL}/api/billing/subscription", headers=auth)
         if sub_resp.status_code != 200:
             pytest.skip("Could not fetch subscription")
-        
+
         sub_data = sub_resp.json()
         if sub_data.get("managed_subscription"):
             pytest.skip("User has managed subscription, not legacy")
@@ -360,13 +359,13 @@ class TestChangePlan:
         )
 
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
-        
+
         data = resp.json()
         assert data.get("action") == "checkout_redirect", f"Expected checkout_redirect, got {data.get('action')}"
         assert "url" in data, "Response should contain URL"
         assert "stripe.com" in data["url"], "URL should be Stripe checkout"
-        
-        print(f"✅ Legacy change-plan returns checkout_redirect to Stripe")
+
+        print("✅ Legacy change-plan returns checkout_redirect to Stripe")
 
     def test_change_plan_enterprise_returns_422(self, session):
         """Enterprise plan should return 422 enterprise_contact_required"""
@@ -385,11 +384,11 @@ class TestChangePlan:
         )
 
         assert resp.status_code == 422, f"Expected 422, got {resp.status_code}"
-        
+
         data = resp.json()
         error_code = data.get("error", {}).get("code") or data.get("code")
         assert error_code == "enterprise_contact_required"
-        
+
         print("✅ Enterprise plan correctly returns 422 with contact flow")
 
     def test_change_plan_same_plan_returns_409(self, session):
@@ -402,7 +401,7 @@ class TestChangePlan:
         sub_resp = session.get(f"{BASE_URL}/api/billing/subscription", headers=auth)
         if sub_resp.status_code != 200:
             pytest.skip("Could not fetch subscription")
-        
+
         sub_data = sub_resp.json()
         current_plan = sub_data.get("plan")
         current_interval = sub_data.get("interval")
@@ -446,10 +445,10 @@ class TestCustomerPortal:
 
         data = resp.json()
         assert "url" in data, "Response should contain portal URL"
-        
+
         url = data["url"]
         assert "stripe.com" in url or "billing.stripe.com" in url, f"URL should be Stripe portal: {url[:80]}"
-        
+
         print(f"✅ Customer portal URL: {url[:80]}...")
 
     def test_customer_portal_return_path(self, session):
@@ -467,7 +466,7 @@ class TestCustomerPortal:
             }
         )
 
-        assert resp.status_code == 200, f"Return path /app/settings/billing should be accepted"
+        assert resp.status_code == 200, "Return path /app/settings/billing should be accepted"
         print("✅ Portal return path /app/settings/billing accepted")
 
 
@@ -513,7 +512,7 @@ class TestCheckoutStatus:
             pytest.skip("Could not create checkout session")
 
         session_id = create_resp.json().get("session_id")
-        
+
         # Check status
         status_resp = session.get(
             f"{BASE_URL}/api/billing/checkout-status/{session_id}",
@@ -521,13 +520,13 @@ class TestCheckoutStatus:
         )
 
         assert status_resp.status_code == 200, f"Expected 200, got {status_resp.status_code}"
-        
+
         data = status_resp.json()
         # Expected fields
         assert "session_id" in data
         assert "status" in data
         assert "payment_status" in data
-        
+
         print(f"✅ Checkout status: session={session_id[:30]}..., status={data.get('status')}, payment_status={data.get('payment_status')}")
 
 

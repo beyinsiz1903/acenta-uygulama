@@ -15,41 +15,41 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 class TestAuthEndpoints:
     """Test basic auth endpoints"""
-    
+
     @pytest.fixture(autouse=True)
     def setup(self):
         """Setup test session"""
         self.session = requests.Session()
         self.session.headers.update({"Content-Type": "application/json"})
-    
+
     def test_login_superadmin(self):
         """Test superadmin login returns valid token"""
         response = self.session.post(f"{BASE_URL}/api/auth/login", json={
             "email": "admin@acenta.test",
             "password": "admin123"
         })
-        
+
         # Check status (may hit rate limit, which is fine)
         if response.status_code == 429:
             pytest.skip("Rate limit hit - expected behavior")
-            
+
         assert response.status_code == 200
         data = response.json()
         assert "access_token" in data
         assert "user" in data
         assert data["user"]["email"] == "admin@acenta.test"
         assert "super_admin" in data["user"]["roles"]
-    
+
     def test_login_agency_admin(self):
         """Test agency admin login returns valid token with agency_id"""
         response = self.session.post(f"{BASE_URL}/api/auth/login", json={
             "email": "agent@acenta.test",
             "password": "agent123"
         })
-        
+
         if response.status_code == 429:
             pytest.skip("Rate limit hit - expected behavior")
-            
+
         assert response.status_code == 200
         data = response.json()
         assert "access_token" in data
@@ -57,56 +57,56 @@ class TestAuthEndpoints:
         assert data["user"]["email"] == "agent@acenta.test"
         assert "agency_admin" in data["user"]["roles"]
         assert data["user"]["agency_id"] is not None
-    
+
     def test_login_invalid_credentials(self):
         """Test login with invalid credentials returns 401"""
         response = self.session.post(f"{BASE_URL}/api/auth/login", json={
             "email": "invalid@test.com",
             "password": "wrongpassword"
         })
-        
+
         if response.status_code == 429:
             pytest.skip("Rate limit hit - expected behavior")
-            
+
         assert response.status_code == 401
 
 
 class TestAuthMe:
     """Test /api/auth/me endpoint"""
-    
+
     @pytest.fixture(autouse=True)
     def setup(self):
         """Setup test session with auth"""
         self.session = requests.Session()
         self.session.headers.update({"Content-Type": "application/json"})
-        
+
         # Get token
         login_resp = self.session.post(f"{BASE_URL}/api/auth/login", json={
             "email": "agent@acenta.test",
             "password": "agent123"
         })
-        
+
         if login_resp.status_code == 429:
             self.token = None
         else:
             self.token = login_resp.json().get("access_token")
-    
+
     def test_auth_me_with_valid_token(self):
         """Test /api/auth/me returns user info with valid token"""
         if not self.token:
             pytest.skip("Could not get token due to rate limit")
-            
+
         response = self.session.get(
             f"{BASE_URL}/api/auth/me",
             headers={"Authorization": f"Bearer {self.token}"}
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["email"] == "agent@acenta.test"
         assert "agency_admin" in data["roles"]
         assert data["agency_id"] is not None
-    
+
     def test_auth_me_without_token(self):
         """Test /api/auth/me returns 401 without token"""
         response = self.session.get(f"{BASE_URL}/api/auth/me")
@@ -115,19 +115,19 @@ class TestAuthMe:
 
 class TestAgencyProfile:
     """Test /api/agency/profile endpoint"""
-    
+
     @pytest.fixture(autouse=True)
     def setup(self):
         """Setup test session with agency admin auth"""
         self.session = requests.Session()
         self.session.headers.update({"Content-Type": "application/json"})
-        
+
         # Get token
         login_resp = self.session.post(f"{BASE_URL}/api/auth/login", json={
             "email": "agent@acenta.test",
             "password": "agent123"
         })
-        
+
         if login_resp.status_code == 429:
             self.token = None
             self.agency_id = None
@@ -135,24 +135,24 @@ class TestAgencyProfile:
             data = login_resp.json()
             self.token = data.get("access_token")
             self.agency_id = data.get("user", {}).get("agency_id")
-    
+
     def test_agency_profile_returns_data(self):
         """Test agency profile returns agency data for agency user"""
         if not self.token:
             pytest.skip("Could not get token due to rate limit")
-            
+
         response = self.session.get(
             f"{BASE_URL}/api/agency/profile",
             headers={"Authorization": f"Bearer {self.token}"}
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "agency_id" in data
         assert "name" in data
         assert "allowed_modules" in data
         assert isinstance(data["allowed_modules"], list)
-    
+
     def test_agency_profile_without_auth(self):
         """Test agency profile returns 401 without auth"""
         response = self.session.get(f"{BASE_URL}/api/agency/profile")
@@ -161,54 +161,54 @@ class TestAgencyProfile:
 
 class TestAdminAgencyModules:
     """Test admin agency modules endpoints"""
-    
+
     @pytest.fixture(autouse=True)
     def setup(self):
         """Setup test session with superadmin auth"""
         self.session = requests.Session()
         self.session.headers.update({"Content-Type": "application/json"})
-        
+
         # Get superadmin token
         login_resp = self.session.post(f"{BASE_URL}/api/auth/login", json={
             "email": "admin@acenta.test",
             "password": "admin123"
         })
-        
+
         if login_resp.status_code == 429:
             self.token = None
         else:
             self.token = login_resp.json().get("access_token")
-        
+
         self.test_agency_id = "f5f7a2a3-5de1-4d65-b700-ec4f9807d83a"  # Demo Acenta
-    
+
     def test_get_agency_modules(self):
         """Test GET /api/admin/agencies/{id}/modules returns modules"""
         if not self.token:
             pytest.skip("Could not get token due to rate limit")
-            
+
         response = self.session.get(
             f"{BASE_URL}/api/admin/agencies/{self.test_agency_id}/modules",
             headers={"Authorization": f"Bearer {self.token}"}
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "agency_id" in data
         assert "allowed_modules" in data
         assert isinstance(data["allowed_modules"], list)
-    
+
     def test_update_agency_modules(self):
         """Test PUT /api/admin/agencies/{id}/modules updates modules"""
         if not self.token:
             pytest.skip("Could not get token due to rate limit")
-        
+
         # First get current modules
         get_resp = self.session.get(
             f"{BASE_URL}/api/admin/agencies/{self.test_agency_id}/modules",
             headers={"Authorization": f"Bearer {self.token}"}
         )
         original_modules = get_resp.json().get("allowed_modules", [])
-        
+
         # Update with test modules
         test_modules = ["dashboard", "rezervasyonlar", "musteriler"]
         update_resp = self.session.put(
@@ -216,40 +216,40 @@ class TestAdminAgencyModules:
             headers={"Authorization": f"Bearer {self.token}"},
             json={"allowed_modules": test_modules}
         )
-        
+
         assert update_resp.status_code == 200
         data = update_resp.json()
         assert set(data["allowed_modules"]) == set(test_modules)
-        
+
         # Restore original modules
         self.session.put(
             f"{BASE_URL}/api/admin/agencies/{self.test_agency_id}/modules",
             headers={"Authorization": f"Bearer {self.token}"},
             json={"allowed_modules": original_modules}
         )
-    
+
     def test_modules_reflect_in_agency_profile(self):
         """Test that updated modules reflect in agency profile"""
         if not self.token:
             pytest.skip("Could not get token due to rate limit")
-        
+
         # Get agency user token
         agent_login = self.session.post(f"{BASE_URL}/api/auth/login", json={
             "email": "agent@acenta.test",
             "password": "agent123"
         })
-        
+
         if agent_login.status_code == 429:
             pytest.skip("Rate limit hit")
-            
+
         agent_token = agent_login.json().get("access_token")
-        
+
         # Get original modules from profile
         profile_resp = self.session.get(
             f"{BASE_URL}/api/agency/profile",
             headers={"Authorization": f"Bearer {agent_token}"}
         )
-        
+
         assert profile_resp.status_code == 200
         profile_data = profile_resp.json()
         assert "allowed_modules" in profile_data

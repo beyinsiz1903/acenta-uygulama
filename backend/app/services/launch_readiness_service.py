@@ -39,7 +39,7 @@ async def generate_launch_readiness_report(db, organization_id: str) -> dict[str
     recon = await run_reconciliation_validation(db)
     monitoring = await run_monitoring_validation(db)
     cache = get_cache_hit_miss()
-    supplier_metrics = get_supplier_metrics_snapshot()
+    get_supplier_metrics_snapshot()
     search_metrics = get_search_metrics_snapshot()
 
     # Score each dimension (0-10)

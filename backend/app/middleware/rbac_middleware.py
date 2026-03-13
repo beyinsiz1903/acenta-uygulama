@@ -6,8 +6,6 @@ Routes without explicit permission mapping are denied by default.
 from __future__ import annotations
 
 import logging
-import time
-from typing import Any
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -230,7 +228,7 @@ class RBACMiddleware(BaseHTTPMiddleware):
 
         # Best-effort audit log
         try:
-            from app.db import get_db_sync
+            pass
             # Audit is logged asynchronously; don't block the response
         except Exception:
             pass

@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from app.domain.governance.models import DATA_ACCESS_RESOURCES, POLICY_EFFECT_ALLOW, POLICY_EFFECT_DENY
+from app.domain.governance.models import POLICY_EFFECT_ALLOW, POLICY_EFFECT_DENY
 
 logger = logging.getLogger("governance.data_access")
 

@@ -13,12 +13,10 @@ Part 10 — Activation Report (scores + readiness)
 """
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import logging
 import random
 import time
-from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
 from typing import Any

@@ -9,14 +9,11 @@ Provides sandbox routing, shadow traffic mirroring, and traffic isolation gates.
 """
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import logging
 import time
 from datetime import datetime, timezone
-from typing import Any
 
-from app.db import get_db
 
 logger = logging.getLogger("hardening.traffic_testing")
 

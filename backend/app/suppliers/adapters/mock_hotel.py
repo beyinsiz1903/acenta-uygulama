@@ -9,8 +9,7 @@ from datetime import datetime, timezone
 
 from app.suppliers.contracts.base import SupplierAdapter, SupplierType, LifecycleMethod
 from app.suppliers.contracts.schemas import (
-    AvailabilityRequest, AvailabilityResult, AvailabilitySlot,
-    CancelRequest, CancelResult,
+    AvailabilityRequest, AvailabilityResult, CancelRequest, CancelResult,
     ConfirmRequest, ConfirmResult,
     HoldRequest, HoldResult,
     HotelSearchItem,

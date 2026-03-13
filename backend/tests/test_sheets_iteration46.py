@@ -3,7 +3,7 @@
 Tests the features requested:
 1. Admin portfolio sync page loads with new reservation-import explanation blocks
 2. GET /api/admin/sheets/templates - no regression
-3. GET /api/admin/sheets/config - no regression  
+3. GET /api/admin/sheets/config - no regression
 4. GET /api/admin/sheets/connections - no regression
 5. GET /api/agency/hotels - no regression, returns sheet_managed_inventory fields
 6. Graceful degradation when no Google credentials
@@ -54,7 +54,7 @@ class TestAdminSheetsTemplates:
         assert "inventory_sync" in data
         assert "reservation_writeback" in data
         assert "checklist" in data
-        print(f"✅ GET /api/admin/sheets/templates returns 200 with all expected fields")
+        print("✅ GET /api/admin/sheets/templates returns 200 with all expected fields")
 
     def test_templates_has_required_fields_in_inventory(self, admin_client):
         response = admin_client.get(f"{BASE_URL}/api/admin/sheets/templates")
@@ -86,7 +86,7 @@ class TestAdminSheetsTemplates:
         checklist_text = " ".join(checklist).lower()
         has_reservation_import = "incoming_reservation" in checklist_text or "reservation" in checklist_text
         assert has_reservation_import, f"Checklist doesn't mention reservation import: {checklist}"
-        print(f"✅ Templates checklist mentions reservation import")
+        print("✅ Templates checklist mentions reservation import")
 
 
 class TestAdminSheetsConfig:
@@ -105,10 +105,10 @@ class TestAdminSheetsConfig:
         if not data.get("configured"):
             # Should have helpful fields for setup
             assert "required_service_account_fields" in data or "service_account_email" in data or True
-            print(f"✅ Config gracefully returns not-configured state with setup guidance")
+            print("✅ Config gracefully returns not-configured state with setup guidance")
         else:
             assert "service_account_email" in data
-            print(f"✅ Config shows configured state with service_account_email")
+            print("✅ Config shows configured state with service_account_email")
 
 
 class TestAdminSheetsConnections:
@@ -131,7 +131,7 @@ class TestAdminSheetsConnections:
                 assert field in conn, f"Missing field {field} in connection"
             # New fields for reservation import
             if "last_reservation_import_summary" in conn:
-                print(f"✅ Connection has last_reservation_import_summary field")
+                print("✅ Connection has last_reservation_import_summary field")
             print(f"✅ Connections have expected fields: {list(conn.keys())[:10]}...")
 
 
@@ -220,7 +220,7 @@ class TestGracefulDegradation:
         conns = admin_client.get(f"{BASE_URL}/api/admin/sheets/connections").json()
         if not conns:
             pytest.skip("No connections to test sync")
-        
+
         hotel_id = conns[0].get("hotel_id")
         response = admin_client.post(f"{BASE_URL}/api/admin/sheets/sync/{hotel_id}")
         # Should return 200 even when not configured (with status=not_configured in response)

@@ -13,7 +13,6 @@ import logging
 import random
 import time
 from datetime import datetime, timezone
-from typing import Any
 
 logger = logging.getLogger("hardening.performance")
 
@@ -182,7 +181,7 @@ async def run_performance_assessment(db) -> dict:
 
     sla_compliance = {}
     for name, target in SLA_TARGETS.items():
-        actual = simulated_metrics.get(f"{name}", None)
+        simulated_metrics.get(f"{name}", None)
         sla_compliance[name] = {
             "target": target["target"],
             "unit": target["unit"],

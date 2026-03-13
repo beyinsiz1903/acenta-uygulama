@@ -23,21 +23,15 @@ import asyncio
 import logging
 import time
 import uuid
-from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from app.suppliers.contracts.schemas import (
-    ConfirmRequest, ConfirmResult,
-    CancelRequest, CancelResult,
-    HoldRequest, HoldResult,
-    PricingRequest, PricingResult,
-    SearchRequest, SearchResult,
-    SupplierContext,
+    ConfirmRequest, PricingRequest, SupplierContext,
 )
-from app.suppliers.contracts.errors import SupplierError, SupplierTimeoutError
-from app.suppliers.state_machine import BookingState, transition_booking, get_rollback_state
+from app.suppliers.contracts.errors import SupplierError
+from app.suppliers.state_machine import BookingState, transition_booking
 from app.suppliers.registry import supplier_registry
-from app.suppliers.failover import failover_engine, FailoverDecision
+from app.suppliers.failover import failover_engine
 from app.suppliers.events import SupplierEventTypes
 
 logger = logging.getLogger("suppliers.orchestrator")
@@ -196,7 +190,7 @@ async def orchestrate_booking(
         step_start = time.monotonic()
         hold_result = None
         try:
-            from app.suppliers.contracts.schemas import HoldRequest, PriceBreakdown
+            from app.suppliers.contracts.schemas import HoldRequest
             hold_result = await _retry_with_backoff(
                 lambda: adapter.create_hold(
                     ctx,

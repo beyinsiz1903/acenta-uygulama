@@ -11,7 +11,6 @@ Test cases:
 Note: This test uses direct requests to localhost:8001 to avoid conftest fixture conflicts.
 """
 
-import os
 import pytest
 import requests
 import pymongo
@@ -59,7 +58,7 @@ def _get_admin_token():
 
 class TestChangePasswordAgencyUser:
     """Change Password tests for agency user (agency1@demo.test)"""
-    
+
     def test_wrong_current_password_rejected(self):
         """Wrong current password should return 400 error"""
         _clear_rate_limits()
@@ -80,7 +79,7 @@ class TestChangePasswordAgencyUser:
         assert "error" in data
         assert "Mevcut şifre hatalı" in data["error"]["message"]
         print("PASS: Wrong current password correctly rejected")
-    
+
     def test_weak_password_rejected_too_short(self):
         """Password less than 8 chars should be rejected"""
         _clear_rate_limits()
@@ -98,7 +97,7 @@ class TestChangePasswordAgencyUser:
         )
         assert response.status_code == 422 or response.status_code == 400
         print("PASS: Short password correctly rejected")
-    
+
     def test_weak_password_rejected_no_special_char(self):
         """Password without special character should be rejected"""
         _clear_rate_limits()
@@ -118,7 +117,7 @@ class TestChangePasswordAgencyUser:
         data = response.json()
         assert "violations" in str(data) or "special" in str(data).lower()
         print("PASS: Password without special char correctly rejected")
-    
+
     def test_same_password_rejected(self):
         """New password same as current should be rejected"""
         _clear_rate_limits()
@@ -138,11 +137,11 @@ class TestChangePasswordAgencyUser:
         data = response.json()
         assert "aynı olamaz" in data["error"]["message"].lower() or "same" in str(data).lower()
         print("PASS: Same password correctly rejected")
-    
+
     def test_successful_password_change_and_login(self):
         """Test full password change flow: change -> login with new -> restore"""
         _clear_rate_limits()
-        
+
         # Step 1: Login with original password
         login_resp = requests.post(
             f"{BASE_URL}/api/auth/login",
@@ -151,7 +150,7 @@ class TestChangePasswordAgencyUser:
         )
         assert login_resp.status_code == 200, "Initial login failed"
         token = login_resp.json()["access_token"]
-        
+
         # Step 2: Change password
         new_password = "NewAgency12345!"
         change_resp = requests.post(
@@ -169,10 +168,10 @@ class TestChangePasswordAgencyUser:
         change_data = change_resp.json()
         assert "Şifreniz güncellendi" in change_data.get("message", "")
         print(f"Password changed. Revoked sessions: {change_data.get('revoked_other_sessions', 0)}")
-        
+
         # Clear rate limits before login tests
         _clear_rate_limits()
-        
+
         # Step 3: Login with NEW password
         new_login_resp = requests.post(
             f"{BASE_URL}/api/auth/login",
@@ -182,7 +181,7 @@ class TestChangePasswordAgencyUser:
         assert new_login_resp.status_code == 200, "Login with new password failed"
         new_token = new_login_resp.json()["access_token"]
         print("PASS: Login with new password successful")
-        
+
         # Step 4: Login with OLD password should FAIL
         old_login_resp = requests.post(
             f"{BASE_URL}/api/auth/login",
@@ -191,7 +190,7 @@ class TestChangePasswordAgencyUser:
         )
         assert old_login_resp.status_code == 401, "Login with old password should fail"
         print("PASS: Login with old password correctly rejected")
-        
+
         # Step 5: Restore original password
         restore_resp = requests.post(
             f"{BASE_URL}/api/settings/change-password",
@@ -206,10 +205,10 @@ class TestChangePasswordAgencyUser:
         )
         assert restore_resp.status_code == 200, f"Password restore failed: {restore_resp.text}"
         print("PASS: Password restored to original")
-        
+
         # Clear rate limits before final verification
         _clear_rate_limits()
-        
+
         # Step 6: Verify login with original password works again
         final_login = requests.post(
             f"{BASE_URL}/api/auth/login",
@@ -222,12 +221,12 @@ class TestChangePasswordAgencyUser:
 
 class TestChangePasswordAdminUser:
     """Change Password tests for admin user (admin@acenta.test)"""
-    
+
     def test_admin_can_access_change_password_endpoint(self):
         """Admin user should have access to change-password endpoint"""
         _clear_rate_limits()
         token = _get_admin_token()
-        
+
         # Test with wrong password to verify endpoint access (not actual change)
         response = requests.post(
             f"{BASE_URL}/api/settings/change-password",
@@ -249,12 +248,12 @@ class TestChangePasswordAdminUser:
 
 class TestAgencyModuleSaving:
     """Agency Module CRUD tests via admin API"""
-    
+
     def test_get_agency_modules(self):
         """Admin can get agency modules"""
         _clear_rate_limits()
         token = _get_admin_token()
-        
+
         response = requests.get(
             f"{BASE_URL}/api/admin/agencies/{AGENCY_ID}/modules",
             headers={"Authorization": f"Bearer {token}"}
@@ -266,19 +265,19 @@ class TestAgencyModuleSaving:
         assert isinstance(data["allowed_modules"], list)
         print(f"PASS: Got modules for agency: {data['agency_name']}")
         print(f"Current modules: {data['allowed_modules']}")
-    
+
     def test_update_agency_modules(self):
         """Admin can update agency modules"""
         _clear_rate_limits()
         token = _get_admin_token()
-        
+
         # First, get current modules
         get_resp = requests.get(
             f"{BASE_URL}/api/admin/agencies/{AGENCY_ID}/modules",
             headers={"Authorization": f"Bearer {token}"}
         )
         original_modules = get_resp.json()["allowed_modules"]
-        
+
         # Update to a subset
         new_modules = ["dashboard", "rezervasyonlar", "musteriler"]
         update_resp = requests.put(
@@ -293,7 +292,7 @@ class TestAgencyModuleSaving:
         update_data = update_resp.json()
         assert update_data["allowed_modules"] == new_modules
         print(f"PASS: Updated modules to: {new_modules}")
-        
+
         # Verify persistence
         verify_resp = requests.get(
             f"{BASE_URL}/api/admin/agencies/{AGENCY_ID}/modules",
@@ -301,7 +300,7 @@ class TestAgencyModuleSaving:
         )
         assert verify_resp.json()["allowed_modules"] == new_modules
         print("PASS: Modules persisted correctly")
-        
+
         # Restore original modules
         restore_resp = requests.put(
             f"{BASE_URL}/api/admin/agencies/{AGENCY_ID}/modules",
@@ -313,19 +312,19 @@ class TestAgencyModuleSaving:
         )
         assert restore_resp.status_code == 200
         print(f"PASS: Restored original modules: {original_modules}")
-    
+
     def test_clear_all_modules(self):
         """Admin can clear all modules (empty array)"""
         _clear_rate_limits()
         token = _get_admin_token()
-        
+
         # Get current modules first
         get_resp = requests.get(
             f"{BASE_URL}/api/admin/agencies/{AGENCY_ID}/modules",
             headers={"Authorization": f"Bearer {token}"}
         )
         original_modules = get_resp.json()["allowed_modules"]
-        
+
         # Set to empty array
         clear_resp = requests.put(
             f"{BASE_URL}/api/admin/agencies/{AGENCY_ID}/modules",
@@ -338,7 +337,7 @@ class TestAgencyModuleSaving:
         assert clear_resp.status_code == 200
         assert clear_resp.json()["allowed_modules"] == []
         print("PASS: Cleared all modules")
-        
+
         # Restore
         restore_resp = requests.put(
             f"{BASE_URL}/api/admin/agencies/{AGENCY_ID}/modules",
@@ -350,12 +349,12 @@ class TestAgencyModuleSaving:
         )
         assert restore_resp.status_code == 200
         print("PASS: Restored modules after clear test")
-    
+
     def test_agency_user_cannot_access_module_endpoint(self):
         """Agency user should not have access to admin module endpoints"""
         _clear_rate_limits()
         token = _get_agency_token()
-        
+
         response = requests.get(
             f"{BASE_URL}/api/admin/agencies/{AGENCY_ID}/modules",
             headers={"Authorization": f"Bearer {token}"}
@@ -366,12 +365,12 @@ class TestAgencyModuleSaving:
 
 class TestBillingVisibilityAPI:
     """Billing visibility is frontend-only, but we test related endpoints"""
-    
+
     def test_settings_endpoint_accessible_for_agency(self):
         """Agency user can access settings endpoint"""
         _clear_rate_limits()
         token = _get_agency_token()
-        
+
         # This verifies the settings page is accessible
         response = requests.get(
             f"{BASE_URL}/api/auth/me",
@@ -381,12 +380,12 @@ class TestBillingVisibilityAPI:
         data = response.json()
         assert "agency_admin" in data["roles"]
         print(f"PASS: Agency user verified: {data['email']} with roles {data['roles']}")
-    
+
     def test_admin_has_billing_access_roles(self):
         """Admin user has roles that allow billing access"""
         _clear_rate_limits()
         token = _get_admin_token()
-        
+
         response = requests.get(
             f"{BASE_URL}/api/auth/me",
             headers={"Authorization": f"Bearer {token}"}

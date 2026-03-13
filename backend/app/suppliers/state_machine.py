@@ -12,7 +12,6 @@ Every transition emits a domain event and validates preconditions.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 

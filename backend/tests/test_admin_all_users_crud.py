@@ -16,7 +16,6 @@ Validations tested:
 import pytest
 import requests
 import os
-import time
 import uuid
 
 from tests.preview_auth_helper import get_preview_auth_context, get_preview_base_url_or_skip

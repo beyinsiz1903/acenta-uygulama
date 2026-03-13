@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Any
 
 from app.suppliers.contracts.schemas import PriceRevalidationResult
 

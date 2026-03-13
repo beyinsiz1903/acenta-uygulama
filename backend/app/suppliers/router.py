@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import uuid
 import logging
-from datetime import datetime, timezone, date
+from datetime import date
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Query, Request

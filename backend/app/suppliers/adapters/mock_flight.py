@@ -10,8 +10,6 @@ from app.suppliers.contracts.schemas import (
     ConfirmRequest, ConfirmResult,
     FlightSearchItem,
     HoldRequest, HoldResult,
-    PriceBreakdown,
-    PricingRequest, PricingResult,
     SearchRequest, SearchResult,
     SupplierContext, SupplierProductType,
 )

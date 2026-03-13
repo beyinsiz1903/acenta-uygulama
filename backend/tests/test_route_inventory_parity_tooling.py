@@ -29,7 +29,7 @@ class TestRouteInventorySummaryGeneration:
         """Summary JSON must have route_count, v1_count, legacy_count, inventory_hash"""
         inventory_path = tmp_path / "inventory.json"
         summary_path = tmp_path / "summary.json"
-        
+
         result = subprocess.run(
             [
                 sys.executable, str(SCRIPTS_DIR / "export_route_inventory.py"),
@@ -42,9 +42,9 @@ class TestRouteInventorySummaryGeneration:
             cwd=str(ROOT_DIR),
         )
         assert result.returncode == 0, f"Export failed: {result.stderr}"
-        
+
         summary = json.loads(summary_path.read_text())
-        
+
         # Required fields
         assert "route_count" in summary
         assert "v1_count" in summary
@@ -54,7 +54,7 @@ class TestRouteInventorySummaryGeneration:
         assert "namespaces" in summary
         assert "domain_v1_progress" in summary
         assert "migration_velocity" in summary
-        
+
         # Type checks
         assert isinstance(summary["route_count"], int)
         assert isinstance(summary["v1_count"], int)
@@ -65,7 +65,7 @@ class TestRouteInventorySummaryGeneration:
         assert isinstance(summary["domain_v1_progress"], dict)
         assert isinstance(summary["migration_velocity"], dict)
         assert len(summary["inventory_hash"]) == 64  # SHA-256 hex
-        
+
         # Count consistency
         assert summary["route_count"] == summary["v1_count"] + summary["legacy_count"]
         assert summary["legacy_routes_remaining"] == summary["legacy_count"]
@@ -169,7 +169,7 @@ class TestRouteInventorySummaryGeneration:
     def test_summary_includes_compat_required_count(self, tmp_path: Path) -> None:
         """Summary should include compat_required_count for migration tracking"""
         summary_path = tmp_path / "summary.json"
-        
+
         result = subprocess.run(
             [
                 sys.executable, str(SCRIPTS_DIR / "export_route_inventory.py"),
@@ -182,7 +182,7 @@ class TestRouteInventorySummaryGeneration:
             cwd=str(ROOT_DIR),
         )
         assert result.returncode == 0
-        
+
         summary = json.loads(summary_path.read_text())
         assert "compat_required_count" in summary
         assert isinstance(summary["compat_required_count"], int)
@@ -195,7 +195,7 @@ class TestExportRouteInventoryCLI:
         """export_route_inventory.py must support custom output paths"""
         custom_inventory = tmp_path / "custom" / "inventory.json"
         custom_summary = tmp_path / "custom" / "summary.json"
-        
+
         result = subprocess.run(
             [
                 sys.executable, str(SCRIPTS_DIR / "export_route_inventory.py"),
@@ -207,16 +207,16 @@ class TestExportRouteInventoryCLI:
             text=True,
             cwd=str(ROOT_DIR),
         )
-        
+
         assert result.returncode == 0, f"Export failed: {result.stderr}"
         assert custom_inventory.exists(), "Inventory not created at custom path"
         assert custom_summary.exists(), "Summary not created at custom path"
-        
+
         # Verify inventory is valid JSON array
         inventory = json.loads(custom_inventory.read_text())
         assert isinstance(inventory, list)
         assert len(inventory) > 0
-        
+
         # Verify summary contains environment label
         summary = json.loads(custom_summary.read_text())
         assert summary["environment"] == "custom_env"
@@ -225,7 +225,7 @@ class TestExportRouteInventoryCLI:
         """CLI should create parent directories if they don't exist"""
         nested_inventory = tmp_path / "a" / "b" / "c" / "inventory.json"
         nested_summary = tmp_path / "d" / "e" / "summary.json"
-        
+
         result = subprocess.run(
             [
                 sys.executable, str(SCRIPTS_DIR / "export_route_inventory.py"),
@@ -236,7 +236,7 @@ class TestExportRouteInventoryCLI:
             text=True,
             cwd=str(ROOT_DIR),
         )
-        
+
         assert result.returncode == 0
         assert nested_inventory.exists()
         assert nested_summary.exists()
@@ -282,10 +282,10 @@ class TestCheckRouteInventoryParityCLI:
             text=True,
             cwd=str(ROOT_DIR),
         )
-        
+
         assert result.returncode == 0
         report = json.loads(result.stdout)
-        
+
         assert report["all_match"] is True
         assert report["mismatches"] == []
         assert "preview" in report["counts"]
@@ -302,7 +302,7 @@ class TestCheckRouteInventoryParityCLI:
         data["route_count"] = data["route_count"] + 100  # Simulate drift
         data["v1_count"] = data["v1_count"] + 50
         drifted_summary.write_text(json.dumps(data))
-        
+
         result = subprocess.run(
             [
                 sys.executable, str(SCRIPTS_DIR / "check_route_inventory_parity.py"),
@@ -314,10 +314,10 @@ class TestCheckRouteInventoryParityCLI:
             text=True,
             cwd=str(ROOT_DIR),
         )
-        
+
         assert result.returncode == 0
         report = json.loads(result.stdout)
-        
+
         assert report["all_match"] is False
         assert len(report["mismatches"]) > 0
         assert any(m["environment"] == "staging" and m["kind"] == "counts" for m in report["mismatches"])
@@ -331,7 +331,7 @@ class TestCheckRouteInventoryParityCLI:
         data = json.loads(matching_summaries["preview"].read_text())
         data["route_count"] = 999
         drifted_path.write_text(json.dumps(data))
-        
+
         result = subprocess.run(
             [
                 sys.executable, str(SCRIPTS_DIR / "check_route_inventory_parity.py"),
@@ -344,7 +344,7 @@ class TestCheckRouteInventoryParityCLI:
             text=True,
             cwd=str(ROOT_DIR),
         )
-        
+
         assert result.returncode == 1  # Should fail due to mismatch
 
     def test_text_output_format(
@@ -362,7 +362,7 @@ class TestCheckRouteInventoryParityCLI:
             text=True,
             cwd=str(ROOT_DIR),
         )
-        
+
         assert result.returncode == 0
         assert "route_inventory parity" in result.stdout
         assert "all_match: True" in result.stdout
@@ -376,7 +376,7 @@ class TestDeterministicRouteInventory:
     def test_inventory_is_deterministic_across_runs(self, tmp_path: Path) -> None:
         """Same codebase should produce identical inventory hashes"""
         hashes = []
-        
+
         for i in range(3):
             summary_path = tmp_path / f"summary_{i}.json"
             result = subprocess.run(
@@ -393,14 +393,14 @@ class TestDeterministicRouteInventory:
             assert result.returncode == 0
             summary = json.loads(summary_path.read_text())
             hashes.append(summary["inventory_hash"])
-        
+
         # All hashes should be identical
         assert len(set(hashes)) == 1, f"Non-deterministic hashes: {hashes}"
 
     def test_inventory_entries_are_sorted(self, tmp_path: Path) -> None:
         """Inventory entries should be sorted by (path, method, source)"""
         inventory_path = tmp_path / "inventory.json"
-        
+
         result = subprocess.run(
             [
                 sys.executable, str(SCRIPTS_DIR / "export_route_inventory.py"),
@@ -412,8 +412,8 @@ class TestDeterministicRouteInventory:
             cwd=str(ROOT_DIR),
         )
         assert result.returncode == 0
-        
+
         inventory = json.loads(inventory_path.read_text())
         sorted_inventory = sorted(inventory, key=lambda x: (x["path"], x["method"], x["source"]))
-        
+
         assert inventory == sorted_inventory, "Inventory is not sorted correctly"

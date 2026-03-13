@@ -3,7 +3,7 @@ HTTP-level tests for hard quota enforcement (Iteration 37).
 
 Tests:
 - Reservation creation blocked when reservation.created quota full
-- CSV export blocked when export.generated quota full  
+- CSV export blocked when export.generated quota full
 - PDF report blocked when report.generated quota full
 - quota_exceeded error envelope structure validation
 - No regression: /api/usage endpoint still loads
@@ -26,7 +26,7 @@ class TestHardQuotaEnforcementHTTP:
         import requests
         session = requests.Session()
         session.headers.update({"Content-Type": "application/json"})
-        
+
         # Login as agency user
         response = session.post(
             f"{BASE_URL}/api/auth/login",
@@ -45,7 +45,7 @@ class TestHardQuotaEnforcementHTTP:
         import requests
         session = requests.Session()
         session.headers.update({"Content-Type": "application/json"})
-        
+
         # Login as admin user
         response = session.post(
             f"{BASE_URL}/api/auth/login",
@@ -74,14 +74,14 @@ class TestHardQuotaEnforcementHTTP:
         session, success = agency_session
         if not success:
             pytest.skip("Agency login failed")
-        
+
         response = session.get(f"{BASE_URL}/api/tenant/usage-summary?days=30")
         print(f"GET /api/tenant/usage-summary -> {response.status_code}")
-        
+
         # Should return 200 with usage data
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         data = response.json()
-        
+
         # Verify response structure has expected fields
         assert "metrics" in data or "tenant_id" in data or "plan" in data, f"Missing expected fields in response: {data}"
         print(f"PASS: /api/tenant/usage-summary returns valid response with keys: {list(data.keys())}")
@@ -91,14 +91,14 @@ class TestHardQuotaEnforcementHTTP:
         session, success = agency_session
         if not success:
             pytest.skip("Agency login failed")
-        
+
         response = session.get(f"{BASE_URL}/api/billing/subscription")
         print(f"GET /api/billing/subscription -> {response.status_code}")
-        
+
         # Should return 200 with subscription data
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         data = response.json()
-        
+
         # Verify response has expected fields
         assert "plan" in data, f"Missing 'plan' in response: {data}"
         print(f"PASS: /api/billing/subscription returns valid response, plan={data.get('plan')}")
@@ -106,24 +106,24 @@ class TestHardQuotaEnforcementHTTP:
     def test_quota_exceeded_error_envelope_structure(self, agency_session):
         """
         Verify quota_exceeded error has correct envelope structure with required fields.
-        
+
         This test validates the AppError envelope by checking the service code directly
         since we can't easily force quota exceeded state in production preview.
         """
         session, success = agency_session
         if not success:
             pytest.skip("Agency login failed")
-        
+
         # We can't easily trigger quota exceeded in preview without manipulating DB
         # Instead, verify the service code produces correct envelope by checking
         # that the error handling service exists and has correct structure
-        
+
         # Test the quota enforcement service exists by checking /api/tenant/usage-summary endpoint
         response = session.get(f"{BASE_URL}/api/tenant/usage-summary?days=30")
         assert response.status_code == 200
-        
+
         print("PASS: Quota enforcement service is active (verified via /api/tenant/usage-summary)")
-        
+
         # The actual quota_exceeded envelope structure is validated in unit tests:
         # - code: "quota_exceeded"
         # - details.metric: string
@@ -138,14 +138,14 @@ class TestHardQuotaEnforcementHTTP:
         session, success = agency_session
         if not success:
             pytest.skip("Agency login failed")
-        
+
         response = session.get(f"{BASE_URL}/api/reports/sales-summary.csv")
         print(f"GET /api/reports/sales-summary.csv -> {response.status_code}")
-        
+
         # Should return 200 (CSV data) or 403 (quota exceeded)
         # Not 404 or 500
         assert response.status_code in [200, 403], f"Expected 200 or 403, got {response.status_code}: {response.text}"
-        
+
         if response.status_code == 200:
             # Verify it's CSV content
             content_type = response.headers.get("content-type", "")
@@ -163,21 +163,21 @@ class TestHardQuotaEnforcementHTTP:
         session, success = admin_session
         if not success:
             pytest.skip("Admin login failed")
-        
+
         # This endpoint requires key parameter and is POST
         response = session.post(f"{BASE_URL}/api/admin/exports/run?key=test_policy&dry_run=true")
         print(f"POST /api/admin/exports/run -> {response.status_code}")
-        
+
         # Expected: 404 (policy not found) or 200 (dry run succeeded) or 403 (quota exceeded)
         # Not 500 (server error)
         assert response.status_code in [200, 403, 404], f"Expected 200/403/404, got {response.status_code}: {response.text}"
-        
+
         if response.status_code == 403:
             data = response.json()
             if "error" in data:
                 print(f"PASS: /api/admin/exports/run endpoint protected, code={data['error'].get('code')}")
             else:
-                print(f"PASS: /api/admin/exports/run endpoint protected, status=403")
+                print("PASS: /api/admin/exports/run endpoint protected, status=403")
         elif response.status_code == 404:
             print("PASS: /api/admin/exports/run endpoint exists but policy not found (expected)")
         else:
@@ -188,13 +188,13 @@ class TestHardQuotaEnforcementHTTP:
         session, success = admin_session
         if not success:
             pytest.skip("Admin login failed")
-        
+
         response = session.post(f"{BASE_URL}/api/admin/tenant/export")
         print(f"POST /api/admin/tenant/export -> {response.status_code}")
-        
+
         # Expected: 200 (returns ZIP) or 403 (quota exceeded)
         assert response.status_code in [200, 403], f"Expected 200 or 403, got {response.status_code}: {response.text}"
-        
+
         if response.status_code == 200:
             content_type = response.headers.get("content-type", "")
             assert "zip" in content_type, f"Expected ZIP content, got {content_type}"
@@ -210,13 +210,13 @@ class TestHardQuotaEnforcementHTTP:
         session, success = admin_session
         if not success:
             pytest.skip("Admin login failed")
-        
+
         response = session.get(f"{BASE_URL}/api/admin/audit/export")
         print(f"GET /api/admin/audit/export -> {response.status_code}")
-        
+
         # Expected: 200 (returns CSV) or 403 (quota exceeded)
         assert response.status_code in [200, 403], f"Expected 200 or 403, got {response.status_code}: {response.text}"
-        
+
         if response.status_code == 200:
             content_type = response.headers.get("content-type", "")
             assert "csv" in content_type or "text" in content_type, f"Expected CSV content, got {content_type}"

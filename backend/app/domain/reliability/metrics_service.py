@@ -8,7 +8,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from app.domain.reliability.models import METRIC_TYPES, METRIC_WINDOWS
+from app.domain.reliability.models import METRIC_WINDOWS
 
 logger = logging.getLogger("reliability.metrics")
 

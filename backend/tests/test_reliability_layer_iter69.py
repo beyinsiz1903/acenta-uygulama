@@ -95,9 +95,9 @@ class TestP1ResilienceConfig:
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
         data = response.json()
         assert data.get("status") == "updated", f"Expected status=updated, got {data.get('status')}"
-        assert data.get("supplier_code") == "mock_hotel", f"Supplier code mismatch"
+        assert data.get("supplier_code") == "mock_hotel", "Supplier code mismatch"
         assert data.get("config", {}).get("timeout_ms") == 10000, "Timeout not updated"
-        print(f"✅ P1: PUT resilience config - updated mock_hotel timeout to 10000ms")
+        print("✅ P1: PUT resilience config - updated mock_hotel timeout to 10000ms")
 
     def test_get_resilience_stats(self, headers):
         """GET /api/reliability/resilience/stats returns stats."""
@@ -143,7 +143,7 @@ class TestP2Sandbox:
         data = response.json()
         assert data.get("status") == "updated", f"Expected status=updated, got {data.get('status')}"
         config = data.get("config", {})
-        assert config.get("enabled") == True, "Sandbox not enabled"
+        assert config.get("enabled"), "Sandbox not enabled"
         print(f"✅ P2: PUT sandbox config - enabled=True, fault_injection={config.get('fault_injection', {}).get('enabled')}")
 
     def test_execute_sandbox_call_search(self, headers):
@@ -156,7 +156,7 @@ class TestP2Sandbox:
         response = requests.post(f"{BASE_URL}/api/reliability/sandbox/call", headers=headers, json=payload)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
         data = response.json()
-        assert data.get("sandbox") == True, "Response should indicate sandbox mode"
+        assert data.get("sandbox"), "Response should indicate sandbox mode"
         assert data.get("supplier_code") == "mock_hotel", "Supplier code mismatch"
         # If fault injected, we might get error response; if not, we get mock items
         if "items" in data:
@@ -253,7 +253,7 @@ class TestP3RetryAndDLQ:
         create_resp = requests.post(f"{BASE_URL}/api/reliability/dlq", headers=headers, json=payload)
         assert create_resp.status_code == 200
         entry_id = create_resp.json().get("entry_id")
-        
+
         # Discard it
         response = requests.delete(
             f"{BASE_URL}/api/reliability/dlq/{entry_id}",
@@ -290,9 +290,9 @@ class TestP4Idempotency:
         response = requests.post(f"{BASE_URL}/api/reliability/idempotency/check", headers=headers, json=payload)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
         data = response.json()
-        assert data.get("duplicate") == False, f"Expected duplicate=false for new key, got {data.get('duplicate')}"
+        assert not data.get("duplicate"), f"Expected duplicate=false for new key, got {data.get('duplicate')}"
         assert data.get("cached_result") is None, "Expected no cached result for new key"
-        print(f"✅ P4: POST idempotency check - new key returns duplicate=False")
+        print("✅ P4: POST idempotency check - new key returns duplicate=False")
 
     def test_get_idempotency_stats(self, headers):
         """GET /api/reliability/idempotency/stats returns supported operations."""
@@ -337,8 +337,8 @@ class TestP5Versioning:
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
         data = response.json()
         assert data.get("status") == "registered", f"Expected status=registered, got {data.get('status')}"
-        assert data.get("version") == "v2", f"Version mismatch"
-        print(f"✅ P5: POST versions - registered v2 for mock_hotel")
+        assert data.get("version") == "v2", "Version mismatch"
+        print("✅ P5: POST versions - registered v2 for mock_hotel")
 
     def test_deprecate_version(self, headers):
         """POST /api/reliability/versions/deprecate marks version as deprecated."""
@@ -350,7 +350,7 @@ class TestP5Versioning:
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
         data = response.json()
         assert data.get("status") == "deprecated", f"Expected status=deprecated, got {data.get('status')}"
-        print(f"✅ P5: POST versions/deprecate - deprecated v1 for mock_hotel")
+        print("✅ P5: POST versions/deprecate - deprecated v1 for mock_hotel")
 
     def test_get_version_history(self, headers):
         """GET /api/reliability/versions/history returns version change log."""
@@ -402,7 +402,7 @@ class TestP6ContractValidation:
         response = requests.post(f"{BASE_URL}/api/reliability/contracts/validate", headers=headers, json=payload)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
         data = response.json()
-        assert data.get("valid") == True, f"Expected valid=true, got {data.get('valid')}, violations: {data.get('violations')}"
+        assert data.get("valid"), f"Expected valid=true, got {data.get('valid')}, violations: {data.get('violations')}"
         assert "schema_hash" in data, "Missing schema_hash"
         print(f"✅ P6: POST contracts/validate (valid) - valid=True, schema_hash={data.get('schema_hash')}")
 
@@ -423,7 +423,7 @@ class TestP6ContractValidation:
         response = requests.post(f"{BASE_URL}/api/reliability/contracts/validate", headers=headers, json=payload)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
         data = response.json()
-        assert data.get("valid") == False, f"Expected valid=false for missing fields, got {data.get('valid')}"
+        assert not data.get("valid"), f"Expected valid=false for missing fields, got {data.get('valid')}"
         violations = data.get("violations", [])
         assert len(violations) > 0, "Expected violations for missing fields"
         print(f"✅ P6: POST contracts/validate (invalid) - valid=False, violations={len(violations)}")
@@ -436,7 +436,7 @@ class TestP6ContractValidation:
             "method": "search",
             "payload": {
                 "items": [
-                    {"item_id": "tour_001", "supplier_code": "mock_tour", "name": "City Tour", 
+                    {"item_id": "tour_001", "supplier_code": "mock_tour", "name": "City Tour",
                      "supplier_price": 50.0, "sell_price": 60.0, "currency": "EUR"}
                 ]
             },
@@ -444,7 +444,7 @@ class TestP6ContractValidation:
         }
         resp1 = requests.post(f"{BASE_URL}/api/reliability/contracts/validate", headers=headers, json=payload1)
         assert resp1.status_code == 200
-        hash1 = resp1.json().get("schema_hash")
+        resp1.json().get("schema_hash")
 
         # Second call with different schema (added extra field)
         payload2 = {
@@ -452,7 +452,7 @@ class TestP6ContractValidation:
             "method": "search",
             "payload": {
                 "items": [
-                    {"item_id": "tour_001", "supplier_code": "mock_tour", "name": "City Tour", 
+                    {"item_id": "tour_001", "supplier_code": "mock_tour", "name": "City Tour",
                      "supplier_price": 50.0, "sell_price": 60.0, "currency": "EUR",
                      "new_field": "extra_data", "duration_hours": 4}
                 ]
@@ -466,7 +466,7 @@ class TestP6ContractValidation:
         if data2.get("schema_drift"):
             print(f"✅ P6: POST contracts/validate - schema drift detected (prev_hash={data2.get('previous_hash')}, new_hash={data2.get('schema_hash')})")
         else:
-            print(f"✅ P6: POST contracts/validate - no drift (hash same or first call)")
+            print("✅ P6: POST contracts/validate - no drift (hash same or first call)")
 
     def test_get_contract_status(self, headers):
         """GET /api/reliability/contracts/status returns contract status."""

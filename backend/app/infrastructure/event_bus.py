@@ -18,7 +18,7 @@ import json
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Callable, Coroutine, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger("infrastructure.event_bus")
 

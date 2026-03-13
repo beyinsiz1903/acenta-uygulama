@@ -13,7 +13,6 @@ import logging
 import os
 import time
 from datetime import datetime, timezone
-from typing import Any
 
 logger = logging.getLogger("hardening.activation")
 
@@ -131,7 +130,7 @@ async def check_mongodb_health(db) -> dict:
     }
     try:
         start = time.monotonic()
-        server_info = await db.command("ping")
+        await db.command("ping")
         latency = (time.monotonic() - start) * 1000
 
         # Get stats

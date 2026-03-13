@@ -6,7 +6,7 @@ query the registry to find adapters by supplier_code or product_type.
 from __future__ import annotations
 
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from app.suppliers.contracts.base import SupplierAdapter, SupplierType
 from app.suppliers.contracts.errors import SupplierError

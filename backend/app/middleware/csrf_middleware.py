@@ -13,12 +13,10 @@ Strategy:
 """
 from __future__ import annotations
 
-import hashlib
 import hmac
 import logging
 import os
 import secrets
-from typing import Optional
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request

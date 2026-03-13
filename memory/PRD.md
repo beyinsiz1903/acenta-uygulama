@@ -6,7 +6,7 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 ## Architecture
 - **Frontend:** React + Tailwind + Shadcn/UI
 - **Backend:** FastAPI + MongoDB + Redis + Celery
-- **Suppliers:** WWTatil (tour), Paximum (hotel), AviationStack (flight)
+- **Suppliers:** RateHawk (hotel), TBO (hotel+flight+tour), Paximum (hotel+transfer+activity), WWTatil (tour)
 
 ## Core Requirements
 - Multi-tenant agency management
@@ -15,6 +15,7 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 - Production readiness with monitoring
 - Multi-tenant supplier credentials (per-agency)
 - Real supplier API adapters
+- Supplier Aggregator for unified search
 
 ## Completed Features
 
@@ -33,15 +34,28 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 
 ### Multi-Tenant Supplier Integration (DONE)
 - **Supplier Credentials Service:** AES-256 encrypted per-agency credential storage
-- **WWTatil Tour API Adapter:** Full production-grade adapter
-  - Auth: `/api/Auth/get-token-async` (24h token, per-agency cache)
-  - Tour Catalog: `getall-tour-async`, `search-tour-async`
-  - Basket: `add-basket-item-async`, `get-basket-by-id-async`, delete operations
-  - Booking: `create-succeeded-booking-async`, notes, cancellation
-  - Post-Sale: tour change, period change, service add/delete/cancel
 - **Connection Testing:** Real HTTP calls to supplier APIs with latency measurement
-- **Frontend:** Supplier Settings tab with 3 supplier cards (WWTatil, Paximum, AviationStack)
+- **Frontend:** Supplier Settings tab with 4 supplier cards
 - **Multi-tenant model:** Each agency manages their own supplier credentials
+
+### Supplier Adapter Pattern + Aggregator (DONE - 13 Mar 2026)
+- **Base Adapter:** Abstract interface (authenticate, search_hotels, search_tours, search_flights, search_transfers, search_activities, create_booking, cancel_booking)
+- **RateHawk Adapter:** Hotel supplier with Basic auth (key_id:api_key)
+- **TBO Adapter:** Multi-product (hotel, flight, tour) with token auth
+- **Paximum Adapter:** Multi-product (hotel, transfer, activity) with token auth
+- **WWTatil Adapter:** Tour supplier with token auth (24h validity), full booking flow
+- **Supplier Aggregator:** Fan-out parallel search across all connected suppliers, price sorting, capability matrix
+- **Capability Matrix UI:** Table showing supplier vs product type coverage, product coverage badges
+- **Test report:** 31/31 backend tests passed (iteration_80)
+
+## Supplier Capability Matrix
+
+| Supplier | Hotel | Flight | Tour | Transfer | Activity |
+|----------|-------|--------|------|----------|----------|
+| RateHawk | Yes   | -      | -    | -        | -        |
+| TBO      | Yes   | Yes    | Yes  | -        | -        |
+| Paximum  | Yes   | -      | -    | Yes      | Yes      |
+| WWTatil  | -     | -      | Yes  | -        | -        |
 
 ## Key APIs
 
@@ -51,8 +65,15 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 - `POST /api/supplier-credentials/save` — Save credentials (encrypted)
 - `DELETE /api/supplier-credentials/{supplier}` — Delete credentials
 - `POST /api/supplier-credentials/test/{supplier}` — Test connection
-- `POST /api/supplier-credentials/wwtatil/tours` — Get tours via wwtatil
-- `POST /api/supplier-credentials/wwtatil/search` — Search tours via wwtatil
+
+### Supplier Aggregator APIs
+- `POST /api/supplier-aggregator/search` — Unified search across all connected suppliers
+- `GET /api/supplier-aggregator/capabilities` — Supplier capability matrix
+- `GET /api/supplier-aggregator/coverage` — Product type coverage
+
+### WWTatil Direct APIs
+- `POST /api/supplier-credentials/wwtatil/tours` — Get tours
+- `POST /api/supplier-credentials/wwtatil/search` — Search tours
 - `POST /api/supplier-credentials/wwtatil/basket/add` — Add basket item
 - `POST /api/supplier-credentials/wwtatil/booking/create` — Create booking
 
@@ -62,13 +83,17 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 ```
 {
   organization_id: str,       // Agency ID (tenant)
-  supplier: str,              // "wwtatil" | "paximum" | "aviationstack"
+  supplier: str,              // "ratehawk" | "tbo" | "paximum" | "wwtatil"
   status: str,                // "saved" | "connected" | "auth_failed"
   enc_base_url: str,          // AES encrypted
-  enc_application_secret_key: str,
-  enc_username: str,
-  enc_password: str,
-  enc_agency_id: str,
+  enc_key_id: str,            // RateHawk
+  enc_api_key: str,           // RateHawk
+  enc_username: str,          // TBO, Paximum, WWTatil
+  enc_password: str,          // TBO, Paximum, WWTatil
+  enc_client_id: str,         // TBO (optional)
+  enc_agency_code: str,       // Paximum
+  enc_application_secret_key: str, // WWTatil
+  enc_agency_id: str,         // WWTatil
   connected_at: str,
   last_tested: str
 }
@@ -87,14 +112,21 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 
 ## Remaining Backlog
 
+### P0 — Immediate
+- Activate real supplier connections with live API credentials
+- Connect unified search aggregator to platform booking flow
+
 ### P1 — Next
-- Complete remaining 10-part activation flow (shadow traffic, limited booking, monitoring, etc.)
-- Connect real booking flow through wwtatil adapter
+- Complete remaining 10-part activation flow (shadow traffic, limited booking, monitoring)
+- Connect real booking flow through supplier adapters
+- Implement supplier fallback logic (if one fails, try next)
 
 ### P2 — Future
 - Real Prometheus/Grafana integration
 - Full customer onboarding workflow
 - Dedicated cross-tenant security testing
+- Supplier rate comparison dashboard
+- Booking reconciliation across suppliers
 
 ## Test Credentials
 - Super Admin: agent@acenta.test / agent123

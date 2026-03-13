@@ -31,14 +31,43 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
   - RealRateHawkBridge, RealTBOBridge, RealPaximumBridge, RealWWTatilBridge
   - Each implements: search, confirm_booking, cancel_booking (wwtatil also create_hold)
 - **Registry Integration:** 9 adapters registered (4 real + 5 mock), capability metadata, product type routing
-- **Unified Search:** Fan-out search via contract interface (hotel→3, tour→2, flight→1, transfer→1, activity→1)
+- **Unified Search:** Fan-out search via contract interface (hotel->3, tour->2, flight->1, transfer->1, activity->1)
 - **Price Revalidation:** Drift thresholds (<2% silent, 2-5% warn, 5-10% approval, >10% abort)
 - **Booking Execution:** Full orchestration with fallback chain execution
-- **Fallback Chains:** ratehawk→[tbo,paximum], tbo→[ratehawk,paximum], paximum→[ratehawk,tbo], wwtatil→[tbo]
+- **Fallback Chains:** ratehawk->[tbo,paximum], tbo->[ratehawk,paximum], paximum->[ratehawk,tbo], wwtatil->[tbo]
 - **Reconciliation:** Price/status mismatch detection, aggregated summaries
 - **Audit & Observability:** In-memory metrics + MongoDB audit trail (booking_audit_log)
-- **Capability Metadata:** supports_hold, supports_direct_confirm, supports_cancel per supplier
 - **Test report:** 32/32 tests passed (iteration_81)
+
+### Commercial Booking Experience Layer (DONE - 13 Mar 2026)
+- **Unified Search Page** (`/app/agency/unified-search`):
+  - Product type tabs (hotel, tour, flight, transfer, activity)
+  - Multi-field search form (destination, dates, adults, children)
+  - Fan-out search results table with supplier badges, pricing, availability
+  - Supplier filtering and sorting
+  - Results vs Comparison view toggle
+  - Price Comparison Panel grouping same products across suppliers
+- **Booking Flow UI** (5-step wizard):
+  - Step 1: Traveller details with add/remove, contact info
+  - Step 2: Billing information
+  - Step 3: Price revalidation with drift visualization
+  - Step 4: Booking confirmation summary
+  - Step 5: Booking result (success/failure) with fallback info
+- **Price Drift UX:**
+  - <2% silent refresh
+  - 2-5% warning toast
+  - 5-10% approval dialog
+  - >10% abort with message
+- **Fallback UX:**
+  - Fallback info dialog showing original vs used supplier
+  - Fallback badge on confirmed bookings
+- **Reconciliation Dashboard** (`/app/admin/reconciliation`):
+  - 6 KPI metric cards (total, success, failure, fallback, drift, abort)
+  - Uyumsuzluklar tab with severity-based mismatch table
+  - Audit Trail tab with event history
+  - Summary cards (total checked, matched, mismatched, pending)
+  - Severity filtering (critical, high, medium, low)
+- **Test report:** 32/32 backend + 100% frontend (iteration_82)
 
 ## Supplier Capability Matrix
 
@@ -88,16 +117,17 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 - End-to-end booking test with a real supplier
 
 ### P1
-- Frontend unified booking flow UI (search → select → book)
-- Booking reconciliation dashboard
 - Shadow traffic activation
 - Scheduled reconciliation jobs
+- Metrics & Product Analytics (KPI funnel dashboard)
+- Role-based visibility matrix
 
 ### P2
 - Real Prometheus/Grafana metrics
 - Supplier rate comparison dashboard
 - Full customer onboarding workflow
 - Cross-tenant security testing
+- PyMongo AutoReconnect fix (recurring issue)
 
 ## Test Credentials
 - Super Admin: agent@acenta.test / agent123

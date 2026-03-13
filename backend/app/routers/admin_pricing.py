@@ -295,6 +295,7 @@ async def list_rules(
                 created_at=d.get("created_at", datetime.utcnow()),
                 updated_at=d.get("updated_at", datetime.utcnow()),
                 created_by_email=d.get("created_by_email"),
+                notes=d.get("notes"),
             )
         )
     return out

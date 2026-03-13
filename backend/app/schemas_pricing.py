@@ -113,6 +113,7 @@ class PricingRuleResponse(PricingRuleCreateRequest):
     created_at: datetime
     updated_at: datetime
     created_by_email: Optional[str] = None
+    notes: Optional[str] = None
 
 
 # ---- Pricing trace ----

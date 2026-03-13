@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://go-certification.preview.emergentagent.com"
+BASE_URL = "https://worker-pool-dash.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials

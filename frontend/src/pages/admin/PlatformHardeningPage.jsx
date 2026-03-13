@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Progress } from "../../components/ui/progress";
-import { Shield, Activity, Server, Zap, Lock, AlertTriangle, Scale, Database, RefreshCw, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, Eye, Play, Target, TrendingUp, Layers, Gauge, Radio, FlaskConical, Users, FileCheck } from "lucide-react";
+import { Shield, Activity, Server, Zap, Lock, AlertTriangle, Scale, Database, RefreshCw, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, Eye, Play, Target, TrendingUp, Layers, Gauge, Radio, FlaskConical, Users, FileCheck, Truck } from "lucide-react";
+import SupplierActivationTab from "./SupplierActivationTab";
 import { api } from "../../lib/api";
 
 function useApi(path) {
@@ -1856,6 +1857,7 @@ export default function PlatformHardeningPage() {
         <TabsList data-testid="hardening-tabs" className="bg-zinc-900 border border-zinc-800 flex-wrap h-auto gap-1 p-1">
           {/* Production Activation Tabs */}
           <TabsTrigger value="golive" className="text-xs gap-1 data-[state=active]:bg-emerald-700 data-[state=active]:text-white"><FileCheck className="w-3.5 h-3.5" />Go-Live</TabsTrigger>
+          <TabsTrigger value="suppliers" className="text-xs gap-1 data-[state=active]:bg-purple-700 data-[state=active]:text-white"><Truck className="w-3.5 h-3.5" />Suppliers</TabsTrigger>
           <TabsTrigger value="security" className="text-xs gap-1 data-[state=active]:bg-red-700 data-[state=active]:text-white"><Shield className="w-3.5 h-3.5" />Security</TabsTrigger>
           <TabsTrigger value="infra" className="text-xs gap-1"><Radio className="w-3.5 h-3.5" />Infrastructure</TabsTrigger>
           <TabsTrigger value="perfbaseline" className="text-xs gap-1"><Gauge className="w-3.5 h-3.5" />Performance</TabsTrigger>
@@ -1877,6 +1879,7 @@ export default function PlatformHardeningPage() {
 
         {/* Production Activation */}
         <TabsContent value="golive"><GoLiveCertificationTab /></TabsContent>
+        <TabsContent value="suppliers"><SupplierActivationTab /></TabsContent>
         <TabsContent value="security"><SecurityDashboardTab /></TabsContent>
         <TabsContent value="infra"><LiveInfrastructureTab /></TabsContent>
         <TabsContent value="perfbaseline"><PerformanceBaselineTab /></TabsContent>

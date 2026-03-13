@@ -6,7 +6,7 @@ Final comprehensive Syroce backend validation
 import requests
 import json
 
-BASE_URL = "https://go-certification.preview.emergentagent.com/api"
+BASE_URL = "https://worker-pool-dash.preview.emergentagent.com/api"
 ADMIN_CREDENTIALS = {"email": "admin@acenta.test", "password": "admin123"}
 AGENCY_CREDENTIALS = {"email": "agent@acenta.test", "password": "agent123"}
 

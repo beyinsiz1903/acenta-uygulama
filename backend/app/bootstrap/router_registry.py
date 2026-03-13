@@ -417,3 +417,7 @@ def register_routers(app: FastAPI) -> None:
     # --- Worker Infrastructure Layer ---
     from app.routers.worker_infrastructure import router as worker_infra_router
     app.include_router(worker_infra_router)
+
+    # --- Supplier Activation Layer ---
+    from app.routers.supplier_activation import router as supplier_activation_router
+    app.include_router(supplier_activation_router)

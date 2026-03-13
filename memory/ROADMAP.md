@@ -1,167 +1,35 @@
-# ROADMAP — Acenta Master Travel SaaS
+# Syroce — ROADMAP
 
-## Güncel Durum
-- Public acquisition tarafı yeni Syroce landing page ile güçlendirildi:
-  - `/` ana sayfası premium SaaS landing olarak yeniden kurgulandı
-  - Hero → Trust → Problem/Solution → Preview → ROI → Network → Pricing → Final CTA akışı tamamlandı
-  - trial CTA `/signup?plan=trial`, demo CTA `/login` olarak hizalandı
-  - landing içinde aylık/yıllık pricing toggle aktif
-- Admin tenant panel cleanup faz-1 tamamlandı:
-  - `GET /api/admin/tenants` plan + billing lifecycle summary ile zenginleştirildi
-  - admin tenant ekranına summary cards, lifecycle filtreleri ve risk öncelikli liste eklendi
-- `/api/v1` standardizasyonu tamamlandı
-- Web auth/session hardening tamamlandı
-- Entitlement Projection Engine V1 tamamlandı ve test edildi
-- Billing history timeline tamamlandı:
-  - `GET /api/billing/history`
-  - `/app/settings/billing` içinde plan değişimi / ödeme olay akışı görünürlüğü
-- Annual pricing E2E revalidation tamamlandı:
-  - public `/pricing` yearly toggle
-  - checkout create/status `interval=yearly`
-  - `/app/settings/billing` yearly görünümü
-- Billing shell regressions temizlendi:
-  - agency kullanıcıları için admin-only whitelabel request’i kaldırıldı
-  - `/app/settings/billing` login sonrası dönüş smoke testi tekrar geçti
-- Usage Metering için PR-UM1 foundation tamamlandı
-- Usage Metering için PR-UM2 `reservation.created` instrumentation tamamlandı
-- Usage Metering için PR-UM3 tamamlandı:
-  - `report.generated`
-  - `export.generated`
-  - `integration.call` wiring
-- Usage Visibility için PR-UM4 tamamlandı:
-  - tenant usage read API
-  - admin usage trend görünürlüğü
-  - dashboard mini kart
-  - detay usage sayfası
-  - admin usage overview kartı
-- Soft Quota Warning için PR-UM5 tamamlandı:
-  - warning seviyeleri
-  - dashboard + usage page CTA
-  - trial recommendation
-- Google Sheets P0 hardening tamamlandı:
-  - tenant-aware config cache
-  - templates endpoint
-  - connect flow validation_status / writeback_tab standardizasyonu
-  - legacy import config hizası
-- Google Sheets admin yönetim UI tamamlandı:
-  - `/app/admin/portfolio-sync` içinde şablon merkezi, kurulum checklist ve doğrulama paneli canlı
-  - `validate-sheet`, `download-template` ve REST-style `POST /connections` akışı aktif
-- Google Sheets reservation import ve Otellerim yansıması tamamlandı:
-  - `incoming_reservation` / `external_reservation` kayıtları otel booking akışına alınabiliyor
-  - agency `/api/agency/hotels` response'u artık sheet sync alanlarını ve senkron kontenjan sinyalini döndürüyor
+## P0 — Critical Path
+- [ ] Activate real supplier API credentials (RateHawk, TBO, Paximum, WWTatil)
+- [ ] End-to-end real booking test with at least 1 supplier
 
-## P0 — Sıradaki Kritik İş
+## P1 — Near-Term
+- [ ] Search Caching & Optimization (reduce fan-out API costs)
+- [ ] Agency Behavior Personalization (per-agency models)
+- [ ] Scheduled Reconciliation Jobs (hourly sync, daily reconciliation, price mismatch)
+- [ ] Commission/markup integration into actual booking flow (record commission on each booking)
 
-### Google Sheets Production Activation
-Hedef: kritik Google Sheets entegrasyonunu gerçek credential + gerçek sheet ile production-benzeri doğrulamadan geçirmek.
+## P2 — Medium-Term
+- [ ] SaaS Pricing Model infrastructure
+- [ ] Prometheus / Grafana metrics export
+- [ ] Shadow traffic activation for new supplier testing
+- [ ] Cross-tenant security audit
+- [ ] PyMongo AutoReconnect resilience fix
 
-Öncelikli teslimler:
-- gerçek Service Account JSON aktivasyonu
-- en az bir gerçek sheet üzerinde kolon doğrulama smoke testi
-- write-back `Rezervasyonlar` sekmesi canlı yetki / paylaşım doğrulaması
-- gerçek sheet üzerinde `incoming_reservation` satırı ile booking import smoke testi
-- canlı sync sonrası `Otellerim` ekranında kontenjan sinyalinin gözle doğrulanması
-- kullanıcıya Service Account kurulum ve sheet paylaşım rehberi
+## P3 — Backlog
+- [ ] Advanced agency tiering system (VIP, Standard, Basic)
+- [ ] Seasonal markup automation (auto-activate season rules)
+- [ ] Multi-currency commission tracking
+- [ ] Revenue alert system (notify on margin drops)
+- [ ] API rate limiting per agency tier
 
-### Pricing Model
-Hedef: hazır usage/veri akışını gelir modeline çevirmek.
-
-Öncelikli teslimler:
-- Türkiye pazarı için trial / starter / pro / enterprise sınırları
-- rezervasyon hacmine göre en iyi fiyat-kota dengesi
-- MRR odaklı plan kurgusu
-
-Teslim beklentisi:
-- fiyatlandırma tablosu
-- quota → plan eşleşmesi
-- satış / demo anlatısı ile hizalı paketleme
-
-### Demo Sales Flow
-- Demo tenant / pricing / upgrade akışının satış demosu için cilalanması
-- özellikle trial → paid dönüşüm anlatısı
-
-### Sonraki Stratejik İş — Pricing Model
-- Trial / Starter / Pro / Enterprise kotalarının gelir optimizasyonu için ayrı çalışma
-- PR-UM4 sonrası ele alınacak
-
-## P1 — Sonraki İşler
-
-### Payment Failure Lifecycle Deepening
-- `invoice.payment_failed` ve renewal olaylarını billing timeline + banner + operasyon akışına bağla
-- grace period, retry ve başarısız ödeme sonrası kullanıcı yönlendirmelerini güçlendir
-
-### Google Sheets Hotel Lifecycle Closing
-- hotel panelinden onay/red/iptal edilen sheet-import rezervasyonlarının write-back kapanışını netleştir
-- gerekirse reservation import için ayrı status mapping ve audit görünürlüğü ekle
-
-### Landing Funnel Optimization
-- Trial signup dönüşümünü artırmak için `/signup` onboarding üst copy ve proof alanı optimize edilebilir
-- Demo CTA için login üzerinde “demo erişim” mikro-copy / yönlendirme katmanı eklenebilir
-- Gerçek müşteri logosu / vaka çalışması geldiğinde trust bar altında sosyal kanıt bandı genişletilebilir
-
-### Admin “Create Demo Agency” Action
-- Demo seed utility artık hazır olduğu için admin panelde tek tıkla tetiklenebilen küçük bir aksiyon PR’ı yapılabilir
-- Teknik olmayan ekip üyelerinin demo tenant açmasını hızlandırır
-
-### Migration Dashboard Card
-- Admin dashboard içinde `domain_v1_progress` gösteren küçük kart
-- Ayrı ve küçük PR olarak ele alınmalı
-
-### Observability Stack
-- request / error / job görünürlüğünü artırmak
-- üretim öncesi operasyonel güveni yükseltmek
-
-### Admin Endpoint Cleanup
-- Defer edilmiş sorunlar:
-  - `/api/partner-graph/notifications/summary`
-  - `/api/tenant/features`
-  - `/api/tenant/quota-status`
-- Faz-1 tamamlandı:
-  - admin tenant listesi duplicate/basic endpoint görünümünden çıkarılıp zengin lifecycle özetine taşındı
-  - sonraki adım self-service duplicate endpoint konsolidasyonu
-
-## P2 — Daha Sonra
-
-### Mobile PR-5B
-- Mobil repo bağlandığında secure session bootstrap
-- mevcut durumda bloklu / ertelendi
-
-### Daha İleri Monetizasyon
-- hard quota enforcement
-- billing alignment
-- overage ve self-service plan geçişleri
-
-## Bloklar
-- PR-5B için mobil repository erişimi yok
-- Google Sheets canlı dış servis smoke’u için henüz gerçek service account credential paylaşılmadı
-
-## Son Tamamlanan İş
-- **Google Sheets reservation import + kapasite sinyali**
-  - `incoming_reservation` / `external_reservation` satırları artık booking kaydı üretebiliyor
-  - `Otellerim` ekranı için sheet tabanlı kontenjan sinyali backend response'una eklendi
-  - admin portfolio sync UI içinde iki yönlü reservation sekmesi dokümantasyonu görünür hale getirildi
-
-## Daha Önce Tamamlanan Önemli İşler
-- **Soft Quota Warning PR-UM5**
-  - warning_level + warning_message
-  - dashboard + usage page pricing CTA
-  - trial recommendation payload + UI
-- **Usage Visibility PR-UM4**
-  - tenant usage summary endpoint
-  - admin usage trend görünürlüğü
-  - dashboard mini usage kartı + `/app/usage`
-  - admin tenant usage overview
-- **Usage Metering PR-UM3**
-  - gerçek report/export output instrumentation
-  - Google Sheets integration.call metering wiring
-  - correlation-id bazlı dedupe doğrulandı
-- **Usage Metering PR-UM1 Foundation**
-  - usage metric constants
-  - usage_daily aggregate repository
-  - canonical `track_usage_event(...)`
-  - ledger + daily index zemini
-- **Entitlement Projection Engine V1**
-  - plan katalogu
-  - tenant entitlement projection snapshot
-  - admin entitlement görünürlüğü
-  - public pricing entegrasyonu
+## Completed
+- [x] Core Platform (Auth, Multi-tenancy, RBAC)
+- [x] Production Hardening (Security, Reliability, Monitoring)
+- [x] Multi-Tenant Supplier Integration
+- [x] Supplier Adapter Pattern + Aggregator
+- [x] Unified Booking & Fallback Layer
+- [x] Commercial Booking Experience Layer
+- [x] Smart Search & Supplier Intelligence Layer
+- [x] Revenue & Supplier Optimization Engine

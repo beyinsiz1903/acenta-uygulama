@@ -42,35 +42,49 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 - Reconciliation Dashboard with KPI cards, mismatch table, audit trail
 
 ### Smart Search & Supplier Intelligence Layer (DONE - 13 Mar 2026)
-- **Search Analytics Engine:**
-  - Tracks 5 core funnel events: search, result_view, supplier_select, booking_start, booking_confirm
-  - Persists to `search_analytics` MongoDB collection
-  - Updates `recent_searches` and `destination_popularity` collections automatically
-  - Daily search/booking aggregation for charts
-  - Revenue per supplier tracking from booking confirmations
-- **Supplier Performance Scoring:**
-  - Weighted formula: 0.35*price + 0.25*success_rate + 0.15*latency + 0.15*cancel_reliability + 0.10*fallback_inverse
-  - Generates tags: best_price, fastest_confirmation, most_reliable, best_cancellation
-  - Default recommendations when no data
-- **Smart Search Suggestions UI:**
-  - Son Aramalar (Recent Searches) - clickable to re-run
-  - Populer Destinasyonlar (Popular Destinations) - clickable with count badges
-  - En Iyi Supplier'lar (Best Suppliers) - 3 categories with colored badges
-- **KPI Analytics Dashboard (`/app/admin/analytics-kpi`):**
-  - 6 KPI metric cards: Toplam Arama, Toplam Rezervasyon, Donusum Orani, Toplam Gelir, Basari Orani, Fallback Orani
-  - Donusum Hunisi (Conversion Funnel): 5 steps with drop-off percentages
-  - Gunluk Arama & Rezervasyon chart
-  - 3 tabs: Genel Bakis, Supplier Performans, Gelir
-  - Time filter: Son 7/30/90 gun + Refresh
-- **Frontend Event Tracking:** result_view, supplier_select events auto-tracked
-- **Test report:** 34/34 backend + 100% frontend (iteration_83)
+- Search Analytics Engine: 5 funnel events, aggregation, destination popularity
+- Supplier Performance Scoring: weighted formula (price 35%, success 25%, latency 15%, cancel 15%, fallback 10%)
+- Smart Search Suggestions UI: Recent, Popular, Best Suppliers
+- KPI Analytics Dashboard (`/app/admin/analytics-kpi`)
+- Test: 34/34 backend + 100% frontend
+
+### Revenue & Supplier Optimization Engine (DONE - 13 Mar 2026)
+- **Supplier Revenue Analytics:** Revenue contribution, bookings, avg value per supplier
+- **Supplier Profitability Scoring:** Weighted formula (commission 30%, success 25%, fallback 15%, latency 15%, cancel risk 15%) with tier ranking (platinum/gold/silver/bronze)
+- **Revenue-Aware Supplier Selection:** Weighted ranking (price 35%, reliability 25%, profitability 25%, preference 15%)
+- **Commission Management Model:** Supplier commission, platform markup, agency markup tracking
+- **Smart Markup Engine:** Dynamic rules by supplier, destination, season, agency tier; CRUD API
+- **Revenue Forecasting:** Linear regression on historical data, supplier projections, agency growth trends
+- **Supplier Economics Dashboard (`/app/admin/supplier-economics`):**
+  - 6 commission summary cards
+  - 3 tabs: Genel Bakis (economics table), Karlilik Skoru (profitability cards + table), Markup Kurallari (rules panel)
+- **Revenue Optimization Dashboard (`/app/admin/revenue-optimization`):**
+  - 6 GMV cards (GMV, Platform Geliri, Toplam Rez., Ort. Deger, Aktif Acenta, Aktif Supplier)
+  - 4 tabs: Genel Bakis (funnel + destinations + suppliers + profitability), Tahmin (forecast), Acenta Analizi, Supplier Geliri
+- **Test:** 38/38 backend + 100% frontend (iteration_84)
+
+## Revenue API Endpoints
+- `GET /api/revenue/supplier-analytics` — Supplier revenue analytics
+- `GET /api/revenue/agency-analytics` — Agency revenue analytics
+- `GET /api/revenue/gmv-summary` — Gross Merchandise Value
+- `GET /api/revenue/profitability-scores` — Supplier profitability with tiers
+- `GET /api/revenue/commission-summary` — Commission aggregation
+- `GET /api/revenue/markup-rules` — List active markup rules
+- `POST /api/revenue/markup-rules` — Create/update markup rule
+- `DELETE /api/revenue/markup-rules/{rule_id}` — Deactivate rule
+- `POST /api/revenue/calculate-markup` — Calculate markup for booking
+- `GET /api/revenue/supplier-economics` — Combined economics view
+- `GET /api/revenue/forecast` — Revenue/booking forecasting
+- `GET /api/revenue/business-kpi` — Complete business KPI dashboard
+- `GET /api/revenue/destination-revenue` — Revenue by destination
+- `POST /api/revenue/supplier-selection` — Revenue-aware supplier ranking
 
 ## Intelligence API Endpoints
 - `GET /api/intelligence/suggestions` — Recent searches, popular destinations, supplier recommendations
-- `GET /api/intelligence/funnel` — Conversion funnel metrics (5 stages + rates)
-- `GET /api/intelligence/daily-stats` — Daily search/booking counts for charts
-- `GET /api/intelligence/supplier-scores` — Weighted supplier performance scores
-- `GET /api/intelligence/supplier-recommendations` — Top 3 category recommendations
+- `GET /api/intelligence/funnel` — Conversion funnel metrics
+- `GET /api/intelligence/daily-stats` — Daily search/booking counts
+- `GET /api/intelligence/supplier-scores` — Supplier performance scores
+- `GET /api/intelligence/supplier-recommendations` — Top 3 recommendations
 - `GET /api/intelligence/supplier-revenue` — Revenue per supplier
 - `POST /api/intelligence/track` — Track frontend funnel events
 - `GET /api/intelligence/kpi-summary` — Aggregated KPI summary
@@ -84,12 +98,9 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 | Paximum  | Yes   | -      | -    | Yes      | Yes      |
 | WWTatil  | -     | -      | Yes  | -        | -        |
 
-## New DB Collections
-- `search_analytics` — Funnel event tracking
-- `recent_searches` — Per-org recent search history
-- `destination_popularity` — Global destination popularity
-- `booking_audit_log` — Audit trail events
-- `unified_bookings` — Bookings via unified flow
+## New DB Collections (Revenue Phase)
+- `commission_records` — Commission/markup records per booking
+- `markup_rules` — Smart markup rule engine configuration
 
 ## Remaining Backlog
 
@@ -98,10 +109,9 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 - End-to-end booking test with a real supplier
 
 ### P1
-- Smart Supplier Selection (weighted auto-selection in booking flow)
 - Search Caching & Optimization
 - Agency Behavior Personalization
-- Scheduled reconciliation jobs
+- Scheduled reconciliation jobs (hourly booking sync, daily reconciliation, price mismatch detection)
 
 ### P2
 - SaaS Pricing Model

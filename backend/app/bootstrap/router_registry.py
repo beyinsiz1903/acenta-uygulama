@@ -425,3 +425,7 @@ def register_routers(app: FastAPI) -> None:
     # --- Stress Testing Layer ---
     from app.routers.stress_test_router import router as stress_test_router
     app.include_router(stress_test_router)
+
+    # --- Pilot Launch Layer ---
+    from app.routers.pilot_launch_router import router as pilot_launch_router
+    app.include_router(pilot_launch_router)

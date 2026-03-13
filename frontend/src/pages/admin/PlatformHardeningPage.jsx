@@ -7,6 +7,7 @@ import { Progress } from "../../components/ui/progress";
 import { Shield, Activity, Server, Zap, Lock, AlertTriangle, Scale, Database, RefreshCw, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, Eye, Play, Target, TrendingUp, Layers, Gauge, Radio, FlaskConical, Users, FileCheck, Truck } from "lucide-react";
 import SupplierActivationTab from "./SupplierActivationTab";
 import StressTestTab from "./StressTestTab";
+import PilotLaunchTab from "./PilotLaunchTab";
 import { api } from "../../lib/api";
 
 function useApi(path) {
@@ -1867,6 +1868,7 @@ export default function PlatformHardeningPage() {
           <TabsTrigger value="dryrun" className="text-xs gap-1"><Play className="w-3.5 h-3.5" />Dry Run</TabsTrigger>
           <TabsTrigger value="onboarding" className="text-xs gap-1"><Users className="w-3.5 h-3.5" />Onboarding</TabsTrigger>
           <TabsTrigger value="stresstest" className="text-xs gap-1 data-[state=active]:bg-orange-700 data-[state=active]:text-white"><Zap className="w-3.5 h-3.5" />Stress Test</TabsTrigger>
+          <TabsTrigger value="pilot" className="text-xs gap-1 data-[state=active]:bg-sky-700 data-[state=active]:text-white"><Play className="w-3.5 h-3.5" />Pilot Launch</TabsTrigger>
           {/* Design & Execution Tabs */}
           <TabsTrigger value="overview" className="text-xs gap-1"><Shield className="w-3.5 h-3.5" />Overview</TabsTrigger>
           <TabsTrigger value="execution" className="text-xs gap-1"><Target className="w-3.5 h-3.5" />Execution</TabsTrigger>
@@ -1890,6 +1892,7 @@ export default function PlatformHardeningPage() {
         <TabsContent value="dryrun"><DryRunTab /></TabsContent>
         <TabsContent value="onboarding"><OnboardingTab /></TabsContent>
         <TabsContent value="stresstest"><StressTestTab /></TabsContent>
+        <TabsContent value="pilot"><PilotLaunchTab /></TabsContent>
         {/* Design & Execution */}
         <TabsContent value="overview"><OverviewTab /></TabsContent>
         <TabsContent value="execution"><ExecutionTab /></TabsContent>

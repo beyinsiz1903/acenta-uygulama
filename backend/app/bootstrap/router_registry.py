@@ -453,3 +453,7 @@ def register_routers(app: FastAPI) -> None:
     # --- Platform Scalability & Monitoring ---
     from app.routers.scalability_router import router as scalability_router
     app.include_router(scalability_router)
+
+    # --- Operations & Launch Readiness ---
+    from app.routers.operations_router import router as operations_router
+    app.include_router(operations_router)

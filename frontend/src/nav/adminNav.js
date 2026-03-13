@@ -64,6 +64,7 @@ export const adminNav = [
       { label: "Supplier Ekonomisi", path: "/app/admin/supplier-economics" },
       { label: "Gelir Optimizasyonu", path: "/app/admin/revenue-optimization" },
       { label: "Platform Izleme", path: "/app/admin/platform-monitoring" },
+      { label: "Operasyon & Launch", path: "/app/admin/operations-readiness" },
     ],
   },
   {

@@ -7,15 +7,7 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 - **Frontend:** React + Tailwind + Shadcn/UI
 - **Backend:** FastAPI + MongoDB + Redis + Celery
 - **Suppliers:** RateHawk (hotel), TBO (hotel+flight+tour), Paximum (hotel+transfer+activity), WWTatil (tour)
-
-## Core Requirements
-- Multi-tenant agency management
-- Search, booking, voucher pipelines
-- Supplier integrations with failover
-- Production readiness with monitoring
-- Multi-tenant supplier credentials (per-agency)
-- Real supplier API adapters
-- Supplier Aggregator for unified search
+- **Booking Core:** Orchestrator + State Machine + Failover Engine + Registry
 
 ## Completed Features
 
@@ -27,106 +19,85 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 ### Phase 3: Production Hardening (DONE)
 - Security, reliability, DLQ, monitoring, 15+ tabs
 
-### Celery Worker Infrastructure (DONE - 9.88/10)
-### Supplier Activation (DONE - 9.88/10)
-### Stress Testing (DONE - 10.0/10)
-### Production Pilot Launch (DONE - 10.0/10)
-
 ### Multi-Tenant Supplier Integration (DONE)
-- **Supplier Credentials Service:** AES-256 encrypted per-agency credential storage
-- **Connection Testing:** Real HTTP calls to supplier APIs with latency measurement
-- **Frontend:** Supplier Settings tab with 4 supplier cards
-- **Multi-tenant model:** Each agency manages their own supplier credentials
+- AES-256 encrypted per-agency credential storage
+- Connection testing, 4 supplier cards UI
 
 ### Supplier Adapter Pattern + Aggregator (DONE - 13 Mar 2026)
-- **Base Adapter:** Abstract interface (authenticate, search_hotels, search_tours, search_flights, search_transfers, search_activities, create_booking, cancel_booking)
-- **RateHawk Adapter:** Hotel supplier with Basic auth (key_id:api_key)
-- **TBO Adapter:** Multi-product (hotel, flight, tour) with token auth
-- **Paximum Adapter:** Multi-product (hotel, transfer, activity) with token auth
-- **WWTatil Adapter:** Tour supplier with token auth (24h validity), full booking flow
-- **Supplier Aggregator:** Fan-out parallel search across all connected suppliers, price sorting, capability matrix
-- **Capability Matrix UI:** Table showing supplier vs product type coverage, product coverage badges
-- **Test report:** 31/31 backend tests passed (iteration_80)
+- Base Adapter interface, 4 real adapters, Aggregator, Capability Matrix
+
+### Unified Booking & Fallback Layer (DONE - 13 Mar 2026)
+- **Real Adapter Bridge:** 4 bridges wrapping HTTP adapters in canonical contract interface
+  - RealRateHawkBridge, RealTBOBridge, RealPaximumBridge, RealWWTatilBridge
+  - Each implements: search, confirm_booking, cancel_booking (wwtatil also create_hold)
+- **Registry Integration:** 9 adapters registered (4 real + 5 mock), capability metadata, product type routing
+- **Unified Search:** Fan-out search via contract interface (hotel→3, tour→2, flight→1, transfer→1, activity→1)
+- **Price Revalidation:** Drift thresholds (<2% silent, 2-5% warn, 5-10% approval, >10% abort)
+- **Booking Execution:** Full orchestration with fallback chain execution
+- **Fallback Chains:** ratehawk→[tbo,paximum], tbo→[ratehawk,paximum], paximum→[ratehawk,tbo], wwtatil→[tbo]
+- **Reconciliation:** Price/status mismatch detection, aggregated summaries
+- **Audit & Observability:** In-memory metrics + MongoDB audit trail (booking_audit_log)
+- **Capability Metadata:** supports_hold, supports_direct_confirm, supports_cancel per supplier
+- **Test report:** 32/32 tests passed (iteration_81)
 
 ## Supplier Capability Matrix
 
-| Supplier | Hotel | Flight | Tour | Transfer | Activity |
-|----------|-------|--------|------|----------|----------|
-| RateHawk | Yes   | -      | -    | -        | -        |
-| TBO      | Yes   | Yes    | Yes  | -        | -        |
-| Paximum  | Yes   | -      | -    | Yes      | Yes      |
-| WWTatil  | -     | -      | Yes  | -        | -        |
+| Supplier | Hotel | Flight | Tour | Transfer | Activity | Hold | Cancel |
+|----------|-------|--------|------|----------|----------|------|--------|
+| RateHawk | Yes   | -      | -    | -        | -        | No   | Yes    |
+| TBO      | Yes   | Yes    | Yes  | -        | -        | No   | Yes    |
+| Paximum  | Yes   | -      | -    | Yes      | Yes      | No   | Yes    |
+| WWTatil  | -     | -      | Yes  | -        | -        | Yes  | Yes    |
 
-## Key APIs
+## Key API Endpoints
 
-### Supplier Credentials APIs
-- `GET /api/supplier-credentials/supported` — List supported suppliers
-- `GET /api/supplier-credentials/my` — Get agency's credentials (masked)
-- `POST /api/supplier-credentials/save` — Save credentials (encrypted)
-- `DELETE /api/supplier-credentials/{supplier}` — Delete credentials
-- `POST /api/supplier-credentials/test/{supplier}` — Test connection
+### Unified Booking APIs
+- `POST /api/unified-booking/search` — Fan-out search across real suppliers
+- `POST /api/unified-booking/revalidate` — Pre-booking price/availability check
+- `POST /api/unified-booking/book` — Execute booking with fallback chain
+- `GET /api/unified-booking/registry` — Registered adapters and capabilities
+- `GET /api/unified-booking/metrics` — Booking execution metrics
+- `GET /api/unified-booking/audit` — Organization audit trail
+- `GET /api/unified-booking/audit/{booking_id}` — Booking-specific audit
+- `GET /api/unified-booking/reconciliation/{booking_id}` — Reconciliation check
+- `GET /api/unified-booking/reconciliation-mismatches` — Mismatched bookings
+
+### Supplier Credential APIs
+- `GET /api/supplier-credentials/supported`
+- `GET /api/supplier-credentials/my`
+- `POST /api/supplier-credentials/save`
+- `DELETE /api/supplier-credentials/{supplier}`
+- `POST /api/supplier-credentials/test/{supplier}`
 
 ### Supplier Aggregator APIs
-- `POST /api/supplier-aggregator/search` — Unified search across all connected suppliers
-- `GET /api/supplier-aggregator/capabilities` — Supplier capability matrix
-- `GET /api/supplier-aggregator/coverage` — Product type coverage
+- `POST /api/supplier-aggregator/search`
+- `GET /api/supplier-aggregator/capabilities`
+- `GET /api/supplier-aggregator/coverage`
 
-### WWTatil Direct APIs
-- `POST /api/supplier-credentials/wwtatil/tours` — Get tours
-- `POST /api/supplier-credentials/wwtatil/search` — Search tours
-- `POST /api/supplier-credentials/wwtatil/basket/add` — Add basket item
-- `POST /api/supplier-credentials/wwtatil/booking/create` — Create booking
-
-## DB Schema
-
-### supplier_credentials collection
-```
-{
-  organization_id: str,       // Agency ID (tenant)
-  supplier: str,              // "ratehawk" | "tbo" | "paximum" | "wwtatil"
-  status: str,                // "saved" | "connected" | "auth_failed"
-  enc_base_url: str,          // AES encrypted
-  enc_key_id: str,            // RateHawk
-  enc_api_key: str,           // RateHawk
-  enc_username: str,          // TBO, Paximum, WWTatil
-  enc_password: str,          // TBO, Paximum, WWTatil
-  enc_client_id: str,         // TBO (optional)
-  enc_agency_code: str,       // Paximum
-  enc_application_secret_key: str, // WWTatil
-  enc_agency_id: str,         // WWTatil
-  connected_at: str,
-  last_tested: str
-}
-```
-
-### supplier_tokens collection
-```
-{
-  organization_id: str,
-  supplier: str,
-  token: str,
-  obtained_at: str,
-  expires_hours: int
-}
-```
+## DB Collections (New)
+- `price_revalidations` — Pre-booking price checks
+- `booking_reconciliation` — Internal vs supplier state tracking
+- `booking_audit_log` — Audit trail events
+- `unified_bookings` — Bookings created via unified flow
+- `supplier_tokens` — Cached supplier auth tokens
 
 ## Remaining Backlog
 
-### P0 — Immediate
+### P0
 - Activate real supplier connections with live API credentials
-- Connect unified search aggregator to platform booking flow
+- End-to-end booking test with a real supplier
 
-### P1 — Next
-- Complete remaining 10-part activation flow (shadow traffic, limited booking, monitoring)
-- Connect real booking flow through supplier adapters
-- Implement supplier fallback logic (if one fails, try next)
+### P1
+- Frontend unified booking flow UI (search → select → book)
+- Booking reconciliation dashboard
+- Shadow traffic activation
+- Scheduled reconciliation jobs
 
-### P2 — Future
-- Real Prometheus/Grafana integration
-- Full customer onboarding workflow
-- Dedicated cross-tenant security testing
+### P2
+- Real Prometheus/Grafana metrics
 - Supplier rate comparison dashboard
-- Booking reconciliation across suppliers
+- Full customer onboarding workflow
+- Cross-tenant security testing
 
 ## Test Credentials
 - Super Admin: agent@acenta.test / agent123

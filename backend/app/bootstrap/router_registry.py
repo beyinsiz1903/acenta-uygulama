@@ -457,3 +457,7 @@ def register_routers(app: FastAPI) -> None:
     # --- Operations & Launch Readiness ---
     from app.routers.operations_router import router as operations_router
     app.include_router(operations_router)
+
+    # --- Market Launch & First Customers ---
+    from app.routers.market_launch_router import router as market_launch_router
+    app.include_router(market_launch_router)

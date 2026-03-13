@@ -65,6 +65,7 @@ export const adminNav = [
       { label: "Gelir Optimizasyonu", path: "/app/admin/revenue-optimization" },
       { label: "Platform Izleme", path: "/app/admin/platform-monitoring" },
       { label: "Operasyon & Launch", path: "/app/admin/operations-readiness" },
+      { label: "Market Launch", path: "/app/admin/market-launch" },
     ],
   },
   {

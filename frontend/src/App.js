@@ -223,6 +223,7 @@ const SupplierEconomicsPage = lazy(() => import("./pages/admin/SupplierEconomics
 const RevenueOptimizationPage = lazy(() => import("./pages/admin/RevenueOptimizationPage"));
 const PlatformMonitoringPage = lazy(() => import("./pages/admin/PlatformMonitoringPage"));
 const OperationsReadinessPage = lazy(() => import("./pages/admin/OperationsReadinessPage"));
+const MarketLaunchPage = lazy(() => import("./pages/admin/MarketLaunchPage"));
 
 const HotelBookingsPage = lazy(() => import("./pages/HotelBookingsPage"));
 const HotelStopSellPage = lazy(() => import("./pages/HotelStopSellPage"));
@@ -427,6 +428,8 @@ function App() {
             <Route path="platform-monitoring" element={<PlatformMonitoringPage />} />
             {/* Operations & Launch Readiness */}
             <Route path="operations-readiness" element={<OperationsReadinessPage />} />
+            {/* Market Launch & First Customers */}
+            <Route path="market-launch" element={<MarketLaunchPage />} />
           </Route>
         </Route>
 

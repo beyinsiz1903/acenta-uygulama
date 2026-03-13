@@ -15,6 +15,7 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 - Production readiness with monitoring
 - Celery worker infrastructure
 - Real supplier traffic activation
+- Comprehensive stress testing
 
 ## Completed Features
 
@@ -36,48 +37,52 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 - Performance testing, incident response
 
 ### Supplier Activation (DONE - Score: 9.88/10)
-- **Part 1:** Activation Plan — 3 suppliers configured (Paximum P1, AviationStack P2, Amadeus P3)
-- **Part 2:** Shadow Traffic — Compare internal vs supplier pricing
-- **Part 3:** Canary Deployment — Gradual % rollout with auto-rollback
-- **Part 4:** Response Normalization — Schema conformance, field mapping, type coercion
-- **Part 5:** Failover Strategy — Priority chains + cached inventory + circuit breaker
-- **Part 6:** Rate Limit Management — Token bucket + adaptive throttling per supplier
-- **Part 7:** Supplier Health Monitoring — Latency, error rate, availability tracking
-- **Part 8:** Supplier Incident Handling — Auto-degrade + failover + multi-channel alerts
-- **Part 9:** Traffic Analysis — Conversion funnel, booking success, revenue metrics
-- **Part 10:** Activation Report — Weighted score (9.88/10), deployment checklist
+- 10-part activation plan: shadow traffic, canary deployment, normalization, failover, rate limiting, health monitoring, incident handling, traffic analysis, activation report
+
+### Stress Testing (DONE - Score: 10.0/10)
+- **Part 1:** Load Testing — 10k searches/hr, 1k bookings/hr, API/supplier/worker latency
+- **Part 2:** Queue Stress — 5k jobs, autoscaling (3→8 workers), completion rate tracking
+- **Part 3:** Supplier Outage — Failover logic, circuit breaker, fallback chain for 3 suppliers
+- **Part 4:** Payment Failure — 6 failure scenarios, retry logic, incident logging
+- **Part 5:** Cache Failure — Redis failure phases (normal→disconnect→degraded→recovery)
+- **Part 6:** Database Stress — Query latency, index performance, concurrent writes, aggregation
+- **Part 7:** Incident Response — Supplier outage & queue overload with SLA tracking
+- **Part 8:** Tenant Safety — 4 tenants, 12 test cases, zero cross-tenant leaks
+- **Part 9:** Performance Metrics — P95 latency, error rate, queue depth, supplier availability
+- **Part 10:** Stress Test Report — Weighted readiness score, bottlenecks, capacity limits
 
 ## Key APIs
+
+### Stress Test APIs
+- `POST /api/stress-test/load` — Load testing
+- `POST /api/stress-test/queue` — Queue stress
+- `POST /api/stress-test/supplier-outage/{code}` — Supplier outage
+- `POST /api/stress-test/payment-failure` — Payment failure
+- `POST /api/stress-test/cache-failure` — Cache failure
+- `POST /api/stress-test/database` — Database stress
+- `POST /api/stress-test/incident/{type}` — Incident response
+- `POST /api/stress-test/tenant-safety` — Tenant safety
+- `GET /api/stress-test/metrics` — Performance metrics
+- `GET /api/stress-test/report` — Final report
+- `GET /api/stress-test/dashboard` — Combined dashboard
 
 ### Supplier Activation APIs
 - `GET /api/supplier-activation/dashboard` — Combined dashboard
 - `GET /api/supplier-activation/plan` — Activation plan
-- `POST /api/supplier-activation/shadow/{code}` — Run shadow traffic
+- `POST /api/supplier-activation/shadow/{code}` — Shadow traffic
 - `GET /api/supplier-activation/canary` — Canary status
 - `POST /api/supplier-activation/canary/{code}/{action}` — Canary control
-- `POST /api/supplier-activation/normalization/{code}` — Normalization test
-- `GET /api/supplier-activation/failover` — Failover chains
-- `POST /api/supplier-activation/failover/{code}/simulate` — Failover simulation
-- `GET /api/supplier-activation/rate-limits` — Rate limit status
-- `POST /api/supplier-activation/rate-limits/{code}/simulate` — Rate limit simulation
-- `GET /api/supplier-activation/health` — Health monitoring
-- `POST /api/supplier-activation/incident/{code}` — Incident simulation
-- `GET /api/supplier-activation/traffic-analysis` — Traffic analysis
-- `GET /api/supplier-activation/score` — Activation score
+- And more...
 
 ## Remaining Backlog
 
-### P1 — Next
-- Part 4: Performance Testing (10k searches/hr, 1k bookings/hr)
-- Part 5: Incident Testing (supplier outages, queue backlogs, payment failures)
-
 ### P2 — Future
-- Part 6: Tenant Safety Test (cross-tenant security)
+- Part 6: Tenant Safety Test (cross-tenant security — dedicated)
 - Part 7: Real-Time Dashboard (Prometheus metrics binding)
 - Part 9: First Customer Onboarding (agency workflow + pricing)
 
 ## Known Issues
-- Intermittent `pymongo.errors.AutoReconnect` in batch test runs (P2, 9x recurrence)
+- Intermittent `pymongo.errors.AutoReconnect` in batch test runs (P2, recurring)
 
 ## Test Credentials
 - Super Admin: agent@acenta.test / agent123

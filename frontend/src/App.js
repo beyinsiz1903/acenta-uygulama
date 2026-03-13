@@ -215,6 +215,10 @@ const OpsTasksPage = lazy(() => import("./pages/OpsTasksPage"));
 const ToursListPage = lazy(() => import("./pages/ToursListPage"));
 const TourDetailPage = lazy(() => import("./pages/TourDetailPage"));
 
+// Unified Booking Experience
+const UnifiedSearchPage = lazy(() => import("./pages/agency/UnifiedSearchPage"));
+const ReconciliationDashboardPage = lazy(() => import("./pages/admin/ReconciliationDashboardPage"));
+
 const HotelBookingsPage = lazy(() => import("./pages/HotelBookingsPage"));
 const HotelStopSellPage = lazy(() => import("./pages/HotelStopSellPage"));
 const HotelAllocationsPage = lazy(() => import("./pages/HotelAllocationsPage"));
@@ -406,6 +410,8 @@ function App() {
             <Route path="production-activation" element={<ProductionActivationPage />} />
             {/* Platform Hardening Dashboard */}
             <Route path="platform-hardening" element={<PlatformHardeningPage />} />
+            {/* Reconciliation Dashboard */}
+            <Route path="reconciliation" element={<ReconciliationDashboardPage />} />
           </Route>
         </Route>
 
@@ -511,6 +517,7 @@ function App() {
             <Route path="bookings" element={<AgencyBookingsListPage />} />
             <Route path="settlements" element={<AgencySettlementsPage />} />
             <Route path="help" element={<AgencyHelpPage />} />
+            <Route path="unified-search" element={<UnifiedSearchPage />} />
           </Route>
         </Route>
 

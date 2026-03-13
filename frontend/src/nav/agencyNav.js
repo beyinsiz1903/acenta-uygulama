@@ -18,6 +18,7 @@ export const agencyNav = [
       { label: "Sheet Bağlantıları", path: "/app/agency/sheets" },
       { label: "Rezervasyonlarım", path: "/app/agency/bookings" },
       { label: "Mutabakat", path: "/app/agency/settlements" },
+      { label: "Coklu Supplier Arama", path: "/app/agency/unified-search" },
       { label: "Yardım", path: "/app/agency/help" },
     ],
   },

@@ -59,6 +59,7 @@ export const adminNav = [
       { label: "Performans Takibi", path: "/app/admin/perf-dashboard" },
       { label: "Tanıtım Rehberi", path: "/app/admin/demo-guide" },
       { label: "Platform Hardening", path: "/app/admin/platform-hardening" },
+      { label: "Mutabakat & Izleme", path: "/app/admin/reconciliation" },
     ],
   },
   {

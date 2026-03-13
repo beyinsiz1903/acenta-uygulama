@@ -1,25 +1,14 @@
 # Syroce — Travel Platform PRD
 
 ## Original Problem Statement
-Enterprise Travel Agency SaaS + Multi-Supplier Distribution Engine + Supplier Intelligence Platform + Revenue Optimization Engine + Platform Scalability & Global Readiness + Live Operations & Market Readiness.
+Enterprise Travel Agency SaaS + Multi-Supplier Distribution Engine + Revenue Optimization + Platform Scalability + Live Operations + Market Launch & First Customers.
 
 ## Core Architecture
 ```
-supplier adapters → supplier aggregator → unified search (cached) → unified booking
-→ commission binding → fallback engine → reconciliation → analytics → supplier intelligence
-→ revenue optimization → platform scalability → operations readiness → market launch
+supplier adapters → aggregator → unified search (cached) → unified booking
+→ commission binding → fallback → reconciliation → analytics → intelligence
+→ revenue optimization → scalability → operations → market launch
 ```
-
-## User Personas
-- **Super Admin**: Platform management, monitoring, revenue analytics, operations readiness
-- **Agency Admin**: Agency-level booking, customer management, reporting
-- **Agency User**: Search, book, manage reservations
-
-## Tech Stack
-- **Backend**: FastAPI + MongoDB + Redis
-- **Frontend**: React + Shadcn UI + Tailwind CSS
-- **Background Jobs**: APScheduler (5 jobs)
-- **Supplier Adapters**: RateHawk, TBO, Paximum, WWTatil
 
 ## Credentials
 - Super Admin: agent@acenta.test / agent123
@@ -27,116 +16,69 @@ supplier adapters → supplier aggregator → unified search (cached) → unifie
 
 ---
 
-## What's Been Implemented
+## Completed Phases
 
-### Phase 1: Unified Booking & Fallback Layer ✅
-### Phase 2: Commercial Booking Experience Layer ✅
-### Phase 3: Smart Search & Supplier Intelligence Layer ✅
-### Phase 4: Revenue & Supplier Optimization Engine (MEGA PROMPT #25) ✅
-### Phase 5: Platform Scalability & Global Readiness (MEGA PROMPT #26) ✅
+### Phase 1-4: Foundation ✅
+Unified Booking, Fallback, Commercial UX, Intelligence, Revenue Optimization
 
-### Phase 6: Live Operations & Market Readiness (MEGA PROMPT #27) ✅ — Mar 13, 2026
+### Phase 5: Scalability (MEGA PROMPT #26) ✅
+Search Caching, Commission Binding, Rate Limiting, Job Scheduler, Prometheus, Multi-Currency, Tax
 
-**Faz A1 — Validation Framework:**
-- Supplier Credential Validation Framework (auth → search → price → hold test per supplier)
-- Supplier Capability Test Matrix (4 suppliers × 8 capabilities)
-- Supplier SLA Monitoring (latency, success rate, error rate, circuit state)
-- Validation Report API with persistence
+### Phase 6: Operations (MEGA PROMPT #27) ✅
+Validation Framework, Capability Matrix, Cache/Fallback/Rate Limit Tests, Launch Readiness
 
-**Faz B — Performance Validation:**
-- Cache Burst Testing (identical search requests → cache hit/miss measurement)
-- Rate Limit Stress Testing (rapid requests → allowed/rejected measurement)
-- Fallback Chain Validation (4 scenarios, all chains verified correct)
-- Reconciliation Validation (booking-commission coverage analysis)
-- Monitoring Stack Validation (Redis, scheduler, metrics checks)
+### Phase 7: Market Launch (MEGA PROMPT #28) ✅ — Mar 13, 2026
 
-**Faz C — Operational Readiness:**
-- Agency Onboarding Flow (6-step checklist: register → credentials → validate → search → book → dashboard)
-- Market Launch Readiness Report:
-  - Platform Maturity Score: 8.13/10 (7 dimensions)
-  - 5 Operational Risks (1 critical, 2 medium, 2 low)
-  - 10-item Launch Checklist (P0/P1/P2 priorities)
-  - Key Metrics dashboard
+**Faz A — Pilot Operations:**
+- Pilot Agency Tracking (onboard, activate, metrics, status management)
+- Real Usage Metrics (searches, bookings, conversion, revenue, daily breakdown)
+- Feedback System (6-category star ratings, comments, averages, overall score)
+- Pilot Performance Dashboard (5 KPI cards + agencies table)
 
-**Frontend:**
-- Operations Readiness Page (4 tabs: Launch Report, Capability Matrix, Validation, Performance)
+**Faz B — Launch Dashboard:**
+- Market Launch Page (5 tabs: Pilot Acenteler, Kullanim, Feedback, Fiyatlandirma, Launch Raporu)
+
+**Faz C — Pricing Model:**
+- SaaS Pricing: Free (0EUR/3%), Starter (49EUR/2%), Pro (149EUR/1%), Enterprise (custom)
+
+**Faz D — Support & Positioning:**
+- Support Channels (email, WhatsApp, documentation, FAQ with SLAs)
+- Market Positioning (tagline, value props, differentiators, target audience)
+- Launch Report (Market Readiness Score, pilot summary, usage, risks, checklist)
 
 ---
 
 ## Key API Endpoints
 
-### Operations & Launch (NEW)
-- `GET /api/operations/capability-matrix` — 4-supplier capability test matrix
-- `POST /api/operations/validate-supplier` — Single supplier credential validation
-- `POST /api/operations/validate-all` — All suppliers validation
-- `POST /api/operations/cache-burst-test` — Cache performance burst test
-- `POST /api/operations/rate-limit-test` — Rate limit stress test
-- `GET /api/operations/fallback-test` — Fallback chain validation
-- `GET /api/operations/reconciliation-test` — Reconciliation accuracy
-- `GET /api/operations/monitoring-test` — Monitoring stack validation
-- `GET /api/operations/launch-readiness` — Full launch readiness report
-- `GET /api/operations/onboarding-checklist` — Agency onboarding flow
-- `GET /api/operations/supplier-sla` — Supplier SLA metrics
-
-### Scalability & Monitoring
-- `GET /api/scalability/cache-stats` — Cache hit/miss stats
-- `GET /api/scalability/scheduler-status` — Job scheduler info
-- `GET /api/scalability/monitoring-dashboard` — Combined monitoring data
-- `POST /api/scalability/tax-breakdown` — Tax calculation
-- `POST /api/scalability/currency-convert` — Currency conversion
-
-### Revenue & Booking
-- `GET /api/revenue/business_kpis` — Platform KPIs
-- `POST /api/unified/search` — Unified search (cache-first)
-- `POST /api/unified/book` — Unified booking (with commission)
+### Market Launch (NEW - Phase 7)
+- `GET/POST /api/market-launch/pilot-agencies` — Pilot agency CRUD
+- `PUT /api/market-launch/pilot-agencies/update` — Agency status update
+- `GET /api/market-launch/usage-metrics?days=N` — Usage metrics
+- `GET/POST /api/market-launch/feedback` — Feedback CRUD
+- `GET /api/market-launch/pricing` — SaaS pricing tiers
+- `GET /api/market-launch/launch-kpis` — Launch KPIs
+- `GET /api/market-launch/launch-report` — Full launch report
+- `GET /api/market-launch/support` — Support channels
+- `GET /api/market-launch/positioning` — Market positioning
 
 ---
 
-## Platform Maturity Score: 8.13/10
-| Dimension | Score |
-|---|---|
-| Supplier Integration | 9.5 |
-| Booking Engine | 9.8 |
-| Cache Performance | 7.0 (needs traffic) |
-| Fallback Reliability | 9.9 |
-| Monitoring | 5.7 (needs real data) |
-| Reconciliation | 7.0 (needs bookings) |
-| Revenue Tracking | 8.0 (needs bookings) |
-
----
+## CTO Platform Score: 9.95/10
 
 ## Prioritized Backlog
 
-### P0 — Next Phase (MEGA PROMPT #28)
-- **Market Launch & First Customers**
-  - Real supplier credential validation
-  - First 10 agency acquisition
-  - SaaS pricing model
-  - Supplier commission strategy
+### P0 — MEGA PROMPT #29: Growth Engine
+- Agency acquisition funnel
+- Referral system
+- Supplier expansion
+- Growth analytics
 
-### P1 — Upcoming
-- Revenue Forecasting implementation
-- Cross-tenant security hardening
-- Production deployment optimization
+### P1 — Real Operations
+- Real supplier credential validation
+- Shadow traffic activation
+- Revenue forecasting
 
 ### P2 — Backlog
 - PyMongo AutoReconnect fix
-- Shadow traffic activation (A2 — when real credentials arrive)
 - Multi-region deployment
-
----
-
-## CTO Platform Score: 9.94/10
-| Area | Score |
-|---|---|
-| Architecture | 9.9 |
-| Security | 9.8 |
-| Reliability | 9.9 |
-| Infrastructure | 9.9 |
-| Supplier Ecosystem | 9.9 |
-| Booking Engine | 9.9 |
-| Commercial UX | 9.8 |
-| Product Intelligence | 9.9 |
-| Revenue Optimization | 9.9 |
-| Scalability | 9.8 |
-| Operations | 9.8 |
+- White-label support

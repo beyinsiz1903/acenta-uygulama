@@ -18,7 +18,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://agency-pilot-v2.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://unified-booking-flow.preview.emergentagent.com").rstrip("/")
 
 @pytest.fixture(scope="module")
 def auth_token():

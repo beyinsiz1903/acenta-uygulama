@@ -60,6 +60,7 @@ export const adminNav = [
       { label: "Tanıtım Rehberi", path: "/app/admin/demo-guide" },
       { label: "Platform Hardening", path: "/app/admin/platform-hardening" },
       { label: "Mutabakat & Izleme", path: "/app/admin/reconciliation" },
+      { label: "KPI & Analitik", path: "/app/admin/analytics-kpi" },
     ],
   },
   {

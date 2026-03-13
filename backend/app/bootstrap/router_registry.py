@@ -441,3 +441,7 @@ def register_routers(app: FastAPI) -> None:
     # --- Unified Booking & Fallback Layer ---
     from app.routers.unified_booking_router import router as unified_booking_router
     app.include_router(unified_booking_router)
+
+    # --- Intelligence & Analytics ---
+    from app.routers.intelligence_router import router as intelligence_router
+    app.include_router(intelligence_router)

@@ -218,6 +218,7 @@ const TourDetailPage = lazy(() => import("./pages/TourDetailPage"));
 // Unified Booking Experience
 const UnifiedSearchPage = lazy(() => import("./pages/agency/UnifiedSearchPage"));
 const ReconciliationDashboardPage = lazy(() => import("./pages/admin/ReconciliationDashboardPage"));
+const KPIAnalyticsDashboardPage = lazy(() => import("./pages/admin/KPIAnalyticsDashboardPage"));
 
 const HotelBookingsPage = lazy(() => import("./pages/HotelBookingsPage"));
 const HotelStopSellPage = lazy(() => import("./pages/HotelStopSellPage"));
@@ -412,6 +413,8 @@ function App() {
             <Route path="platform-hardening" element={<PlatformHardeningPage />} />
             {/* Reconciliation Dashboard */}
             <Route path="reconciliation" element={<ReconciliationDashboardPage />} />
+            {/* KPI Analytics Dashboard */}
+            <Route path="analytics-kpi" element={<KPIAnalyticsDashboardPage />} />
           </Route>
         </Route>
 

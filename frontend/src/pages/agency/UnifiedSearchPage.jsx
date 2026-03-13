@@ -1,8 +1,9 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Search, Loader2, ArrowUpDown, Filter, Hotel, Plane, Map, Bus, Ticket,
   ChevronRight, AlertTriangle, CheckCircle2, XCircle, ShieldCheck, RefreshCw,
-  ArrowLeft, User, Mail, Phone, Building2, CreditCard, Clock, Zap, Star
+  ArrowLeft, User, Mail, Phone, Building2, CreditCard, Clock, Zap, Star,
+  TrendingUp, Award, Globe, History
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -21,7 +22,7 @@ import {
 } from "../../components/ui/dialog";
 import { Separator } from "../../components/ui/separator";
 import { toast } from "sonner";
-import { unifiedSearch, revalidatePrice, executeBooking } from "../../lib/unifiedBooking";
+import { unifiedSearch, revalidatePrice, executeBooking, getSearchSuggestions, trackFunnelEvent } from "../../lib/unifiedBooking";
 
 const PRODUCT_TYPES = [
   { value: "hotel", label: "Otel", icon: Hotel },
@@ -50,6 +51,110 @@ function formatSupplierName(code) {
 function formatPrice(amount, currency = "TRY") {
   if (!amount && amount !== 0) return "-";
   return new Intl.NumberFormat("tr-TR", { style: "currency", currency }).format(amount);
+}
+
+// ===================== SMART SUGGESTIONS =====================
+function SmartSuggestions({ suggestions, onSelectDestination, onSelectRecent }) {
+  if (!suggestions) return null;
+  const { recent_searches, popular_destinations, supplier_recommendations } = suggestions;
+
+  const hasContent = (recent_searches?.length > 0) || (popular_destinations?.length > 0) || (supplier_recommendations?.length > 0);
+  if (!hasContent) return null;
+
+  const RECOMMENDATION_ICONS = {
+    best_price: { icon: TrendingUp, color: "text-green-600 bg-green-50" },
+    fastest_confirmation: { icon: Zap, color: "text-amber-600 bg-amber-50" },
+    most_reliable: { icon: Award, color: "text-blue-600 bg-blue-50" },
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4" data-testid="smart-suggestions">
+      {/* Recent Searches */}
+      {recent_searches?.length > 0 && (
+        <Card className="border-dashed" data-testid="recent-searches-card">
+          <CardHeader className="py-3 pb-2">
+            <CardTitle className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground">
+              <History className="h-3.5 w-3.5" />
+              Son Aramalar
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="py-0 pb-3">
+            <div className="space-y-1">
+              {recent_searches.slice(0, 5).map((s, i) => (
+                <button
+                  key={i}
+                  data-testid={`recent-search-${i}`}
+                  onClick={() => onSelectRecent(s)}
+                  className="w-full text-left px-2 py-1.5 rounded-md text-xs hover:bg-muted transition-colors flex items-center justify-between"
+                >
+                  <span className="font-medium">{s.destination}</span>
+                  <Badge variant="secondary" className="text-[9px] h-4">{s.product_type}</Badge>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Popular Destinations */}
+      {popular_destinations?.length > 0 && (
+        <Card className="border-dashed" data-testid="popular-destinations-card">
+          <CardHeader className="py-3 pb-2">
+            <CardTitle className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground">
+              <Globe className="h-3.5 w-3.5" />
+              Populer Destinasyonlar
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="py-0 pb-3">
+            <div className="flex flex-wrap gap-1.5">
+              {popular_destinations.slice(0, 8).map((d, i) => (
+                <Button
+                  key={i}
+                  variant="outline"
+                  size="sm"
+                  data-testid={`popular-dest-${i}`}
+                  onClick={() => onSelectDestination(d.destination)}
+                  className="text-xs h-7"
+                >
+                  {d.destination}
+                  <Badge variant="secondary" className="text-[9px] h-4 ml-1">{d.search_count}</Badge>
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Supplier Recommendations */}
+      {supplier_recommendations?.length > 0 && (
+        <Card className="border-dashed" data-testid="supplier-recommendations-card">
+          <CardHeader className="py-3 pb-2">
+            <CardTitle className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground">
+              <Star className="h-3.5 w-3.5" />
+              En Iyi Supplier'lar
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="py-0 pb-3">
+            <div className="space-y-1.5">
+              {supplier_recommendations.map((r, i) => {
+                const cfg = RECOMMENDATION_ICONS[r.category] || RECOMMENDATION_ICONS.best_price;
+                const Icon = cfg.icon;
+                return (
+                  <div key={i} className={`flex items-center gap-2 px-2 py-1.5 rounded-md ${cfg.color}`} data-testid={`supplier-rec-${i}`}>
+                    <Icon className="h-3.5 w-3.5 shrink-0" />
+                    <span className="text-xs font-medium flex-1">{r.label}</span>
+                    <Badge variant="outline" className={`text-[9px] ${getSupplierBadgeClass(r.supplier_code)}`}>
+                      {formatSupplierName(r.supplier_code)}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
 }
 
 // ===================== SEARCH FORM =====================
@@ -981,6 +1086,12 @@ export default function UnifiedSearchPage() {
   const [sortField, setSortField] = useState("supplier_price");
   const [sortDir, setSortDir] = useState("asc");
   const [filterSupplier, setFilterSupplier] = useState("all");
+  const [suggestions, setSuggestions] = useState(null);
+
+  // Fetch smart suggestions on mount
+  useEffect(() => {
+    getSearchSuggestions("hotel").then(setSuggestions).catch(() => {});
+  }, []);
 
   const handleSearch = useCallback(async (params) => {
     setSearchLoading(true);
@@ -998,7 +1109,9 @@ export default function UnifiedSearchPage() {
         suppliers_failed: data.suppliers_failed,
         search_duration_ms: data.search_duration_ms,
       });
+      // Track result view
       if (data.items?.length > 0) {
+        trackFunnelEvent("result_view_event", { product_type: data.product_type, results_count: data.items.length }).catch(() => {});
         toast.success(`${data.items.length} sonuc bulundu (${data.search_duration_ms}ms)`);
       } else {
         toast.info("Sonuc bulunamadi. Farkli parametrelerle tekrar deneyin.");
@@ -1008,6 +1121,16 @@ export default function UnifiedSearchPage() {
     } finally {
       setSearchLoading(false);
     }
+  }, []);
+
+  const handleSelectItem = useCallback((item) => {
+    // Track supplier select
+    trackFunnelEvent("supplier_select_event", {
+      supplier_code: item.supplier_code,
+      product_type: item.product_type,
+      price: item.supplier_price,
+    }).catch(() => {});
+    setSelectedItem(item);
   }, []);
 
   // Sort and filter results
@@ -1061,6 +1184,15 @@ export default function UnifiedSearchPage() {
 
       <SearchForm onSearch={handleSearch} loading={searchLoading} />
 
+      {/* Smart Suggestions - show when no search results yet */}
+      {!searchResults && !searchLoading && (
+        <SmartSuggestions
+          suggestions={suggestions}
+          onSelectDestination={(dest) => handleSearch({ product_type: "hotel", destination: dest, adults: 2, children: 0, currency: "TRY" })}
+          onSelectRecent={(s) => handleSearch({ product_type: s.product_type, destination: s.destination, adults: s.adults || 2, children: s.children || 0, check_in: s.check_in, check_out: s.check_out, currency: "TRY" })}
+        />
+      )}
+
       {/* Results section */}
       {searchResults && searchResults.length > 0 && (
         <div className="space-y-4">
@@ -1099,13 +1231,13 @@ export default function UnifiedSearchPage() {
             <SearchResultsTable
               items={filteredResults}
               searchMeta={searchMeta}
-              onSelect={setSelectedItem}
+              onSelect={handleSelectItem}
               sortField={sortField}
               sortDir={sortDir}
               onSort={(field, dir) => { setSortField(field); setSortDir(dir); }}
             />
           ) : (
-            <PriceComparisonPanel items={filteredResults} onSelect={setSelectedItem} />
+            <PriceComparisonPanel items={filteredResults} onSelect={handleSelectItem} />
           )}
         </div>
       )}

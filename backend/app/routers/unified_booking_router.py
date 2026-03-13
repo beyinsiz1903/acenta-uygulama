@@ -145,6 +145,15 @@ async def unified_search(
         "total_items": len(all_items), "total_ms": total_ms,
     })
 
+    # Track search analytics
+    from app.suppliers.search_analytics import track_search
+    await track_search(
+        db, org_id, product_type, payload.get("destination", ""),
+        payload.get("check_in"), payload.get("check_out"),
+        payload.get("adults", 2), payload.get("children", 0),
+        len(all_items), suppliers_queried, total_ms,
+    )
+
     return {
         "request_id": request_id,
         "product_type": product_type,
@@ -365,6 +374,10 @@ async def execute_booking(
         await booking_audit.log_booking_event(db, "booking_confirmed", org_id, used_supplier, internal_booking_id, {
             "supplier_booking_id": result.supplier_booking_id, "duration_ms": duration_ms, "fallback_used": fallback_used,
         })
+
+        # Track booking confirm analytics
+        from app.suppliers.search_analytics import track_booking_confirm
+        await track_booking_confirm(db, org_id, used_supplier, payload.get("product_type", "hotel"), confirmed_price, fallback_used)
 
         return {
             "status": "confirmed",

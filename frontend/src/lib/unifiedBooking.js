@@ -45,3 +45,44 @@ export async function getReconciliationMismatches() {
   const { data } = await api.get("/unified-booking/reconciliation-mismatches");
   return data;
 }
+
+// Intelligence APIs
+export async function getSearchSuggestions(productType = "hotel") {
+  const { data } = await api.get(`/intelligence/suggestions?product_type=${productType}`);
+  return data;
+}
+
+export async function getConversionFunnel(days = 30) {
+  const { data } = await api.get(`/intelligence/funnel?days=${days}`);
+  return data;
+}
+
+export async function getDailyStats(days = 30) {
+  const { data } = await api.get(`/intelligence/daily-stats?days=${days}`);
+  return data;
+}
+
+export async function getSupplierScores(days = 30) {
+  const { data } = await api.get(`/intelligence/supplier-scores?days=${days}`);
+  return data;
+}
+
+export async function getSupplierRecommendations() {
+  const { data } = await api.get("/intelligence/supplier-recommendations");
+  return data;
+}
+
+export async function getSupplierRevenue(days = 30) {
+  const { data } = await api.get(`/intelligence/supplier-revenue?days=${days}`);
+  return data;
+}
+
+export async function trackFunnelEvent(eventType, details = {}) {
+  const { data } = await api.post("/intelligence/track", { event_type: eventType, details });
+  return data;
+}
+
+export async function getKPISummary(days = 30) {
+  const { data } = await api.get(`/intelligence/kpi-summary?days=${days}`);
+  return data;
+}

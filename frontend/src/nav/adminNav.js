@@ -67,6 +67,7 @@ export const adminNav = [
       { label: "Operasyon & Launch", path: "/app/admin/operations-readiness" },
       { label: "Market Launch", path: "/app/admin/market-launch" },
       { label: "Supplier Credentials", path: "/app/admin/supplier-credentials" },
+      { label: "Growth Engine", path: "/app/admin/growth-engine" },
     ],
   },
   {

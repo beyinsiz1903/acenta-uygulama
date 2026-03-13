@@ -461,3 +461,7 @@ def register_routers(app: FastAPI) -> None:
     # --- Market Launch & First Customers ---
     from app.routers.market_launch_router import router as market_launch_router
     app.include_router(market_launch_router)
+
+    # --- Growth Engine ---
+    from app.routers.growth_engine_router import router as growth_engine_router
+    app.include_router(growth_engine_router)

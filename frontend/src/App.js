@@ -225,6 +225,7 @@ const PlatformMonitoringPage = lazy(() => import("./pages/admin/PlatformMonitori
 const OperationsReadinessPage = lazy(() => import("./pages/admin/OperationsReadinessPage"));
 const MarketLaunchPage = lazy(() => import("./pages/admin/MarketLaunchPage"));
 const AdminSupplierCredentialsPage = lazy(() => import("./pages/admin/AdminSupplierCredentialsPage"));
+const GrowthEnginePage = lazy(() => import("./pages/admin/GrowthEnginePage"));
 
 const HotelBookingsPage = lazy(() => import("./pages/HotelBookingsPage"));
 const HotelStopSellPage = lazy(() => import("./pages/HotelStopSellPage"));
@@ -433,6 +434,8 @@ function App() {
             <Route path="market-launch" element={<MarketLaunchPage />} />
             {/* Supplier Credential Management (Super Admin) */}
             <Route path="supplier-credentials" element={<AdminSupplierCredentialsPage />} />
+            {/* Growth Engine */}
+            <Route path="growth-engine" element={<GrowthEnginePage />} />
           </Route>
         </Route>
 

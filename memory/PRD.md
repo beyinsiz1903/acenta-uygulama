@@ -11,7 +11,7 @@ Multi-tenant SaaS platform for travel agencies. Manages bookings, finance, suppl
 - **Architecture:** Event-Driven, CQRS-lite, Circuit Breaker, Distributed Rate Limiting, DDD
 - **Observability:** OpenTelemetry, Prometheus-ready
 
-## Current Architecture Version: 5.0 (Governance Layer)
+## Current Architecture Version: 6.0 (Integration Reliability Layer)
 
 ---
 
@@ -65,77 +65,93 @@ Multi-tenant SaaS platform for travel agencies. Manages bookings, finance, suppl
 
 ### Phase 5 — Enterprise Governance (Complete - 2026-03-12)
 10-part governance architecture:
-1. **RBAC System** — 6 hierarchical roles (super_admin > ops_admin > finance_admin > agency_admin > agent > support), role inheritance
-2. **Permission Model** — 46 fine-grained permissions (resource.action format), wildcard matching, user permission resolution
-3. **Audit Logging** — Full change tracking (who/what/when/before/after), hash-based tamper detection, category filtering
-4. **Secret Management** — Encrypted storage, version-tracked rotation, access logging, rotation status monitoring
-5. **Tenant Security** — Cross-tenant access blocking, violation logging, isolation health scoring, collection coverage analysis
-6. **Compliance Logging** — Hash-chain integrity (GENESIS-linked), financial operation logging, chain verification, tax audit support
-7. **Data Access Policies** — Configurable rules (allow/deny), role-based conditions, 4 default policies, policy evaluation engine
-8. **Security Alerting** — 10 alert types, 5 severity levels, detect suspicious login/privilege escalation/mass data access, full lifecycle (open->ack->resolve)
-9. **Admin Governance Panel** — Aggregated dashboard, user governance profile inspection, cross-domain overview
-10. **Governance Roadmap** — Top 25 improvements, dynamic security maturity score, risk analysis (critical/high/medium)
+1. **RBAC System** — 6 hierarchical roles, role inheritance
+2. **Permission Model** — 46 fine-grained permissions, wildcard matching
+3. **Audit Logging** — Full change tracking, hash-based tamper detection
+4. **Secret Management** — Encrypted storage, version-tracked rotation
+5. **Tenant Security** — Cross-tenant access blocking, violation logging
+6. **Compliance Logging** — Hash-chain integrity, financial operation logging
+7. **Data Access Policies** — Configurable rules (allow/deny), role-based conditions
+8. **Security Alerting** — 10 alert types, 5 severity levels, full lifecycle
+9. **Admin Governance Panel** — Aggregated dashboard, user inspection
+10. **Governance Roadmap** — Top 25 improvements, security maturity score
+
+### Phase 6 — Integration Reliability (Complete - 2026-03-13)
+10-part reliability architecture (35 API endpoints, 13 MongoDB collections):
+1. **Supplier API Resilience** — Configurable timeouts, token-bucket rate limiting, adapter isolation, automatic retries with exponential backoff
+2. **Supplier Sandbox** — Mock responses, test bookings, fault injection (9 fault types), call history logging
+3. **Retry Strategy & DLQ** — Per-category retry config (supplier/payment/voucher), exponential backoff with jitter, dead-letter queue with full lifecycle (enqueue/retry/discard)
+4. **Identity & Idempotency** — Idempotency key store with 24h TTL, request deduplication (60s window), duplicate detection for 6 operation types
+5. **API Versioning** — Multi-version support per supplier, version registration/deprecation, version change history
+6. **Contract Validation** — Schema validation for search/confirm/cancel responses, schema hash computation, drift detection, violation logging
+7. **Integration Metrics** — Per-supplier metrics (call count, errors, latency), latency percentiles (p50/p95/p99), error rate timeline, success rate summary
+8. **Supplier Incident Response** — Auto-detection of outages/high error rates/high latency, auto-actions (disable/degrade supplier, increase timeout), full incident lifecycle (open->acknowledge->resolve)
+9. **Integration Dashboard** — Engineering overview (supplier health, open incidents, DLQ pending, contract violations), per-supplier detail view
+10. **Reliability Roadmap** — Top 20 improvements, 8-dimension maturity score, risk analysis
 
 ---
 
-## API Endpoints — Governance Layer (/api/governance/*)
+## API Endpoints — Reliability Layer (/api/reliability/*)
 
 | Method | Endpoint | Part | Description |
 |--------|----------|------|-------------|
-| POST | /api/governance/rbac/seed | P1 | Seed RBAC roles & permissions |
-| GET | /api/governance/rbac/roles | P1 | List all roles with hierarchy |
-| GET | /api/governance/rbac/hierarchy | P1 | Role hierarchy tree |
-| GET | /api/governance/rbac/permissions | P2 | List all 46 permissions |
-| PUT | /api/governance/rbac/roles | P1 | Update role permissions |
-| GET | /api/governance/rbac/user-permissions | P2 | Resolve user effective permissions |
-| GET | /api/governance/rbac/check-permission | P2 | Check specific permission |
-| GET | /api/governance/audit/logs | P3 | Search audit logs |
-| GET | /api/governance/audit/logs/{id} | P3 | Get audit entry |
-| GET | /api/governance/audit/stats | P3 | Audit statistics |
-| POST | /api/governance/secrets | P4 | Store/rotate secret |
-| GET | /api/governance/secrets | P4 | List secrets (masked) |
-| GET | /api/governance/secrets/{name}/value | P4 | Retrieve secret value |
-| DELETE | /api/governance/secrets/{name} | P4 | Delete secret |
-| GET | /api/governance/secrets/rotation/status | P4 | Rotation status |
-| GET | /api/governance/tenant/isolation-report | P5 | Tenant isolation report |
-| GET | /api/governance/tenant/violations | P5 | List violations |
-| POST | /api/governance/tenant/validate-access | P5 | Validate tenant boundary |
-| POST | /api/governance/compliance/log | P6 | Log financial operation |
-| GET | /api/governance/compliance/logs | P6 | Search compliance logs |
-| GET | /api/governance/compliance/verify-chain | P6 | Verify chain integrity |
-| GET | /api/governance/compliance/summary | P6 | Compliance summary |
-| POST | /api/governance/data-policies | P7 | Create data policy |
-| GET | /api/governance/data-policies | P7 | List data policies |
-| POST | /api/governance/data-policies/evaluate | P7 | Evaluate data access |
-| PUT | /api/governance/data-policies/{id} | P7 | Update policy |
-| DELETE | /api/governance/data-policies/{id} | P7 | Delete policy |
-| POST | /api/governance/data-policies/seed | P7 | Seed default policies |
-| POST | /api/governance/security/alerts | P8 | Create security alert |
-| GET | /api/governance/security/alerts | P8 | List security alerts |
-| POST | /api/governance/security/alerts/{id}/acknowledge | P8 | Acknowledge alert |
-| POST | /api/governance/security/alerts/{id}/resolve | P8 | Resolve alert |
-| GET | /api/governance/security/dashboard | P8 | Security dashboard |
-| POST | /api/governance/security/detect/suspicious-login | P8 | Detect suspicious login |
-| GET | /api/governance/panel/overview | P9 | Governance overview |
-| GET | /api/governance/panel/user/{email} | P9 | User governance profile |
-| GET | /api/governance/roadmap | P10 | Roadmap + maturity score |
+| GET | /api/reliability/resilience/config | P1 | Resilience configuration |
+| PUT | /api/reliability/resilience/config | P1 | Update supplier resilience |
+| GET | /api/reliability/resilience/stats | P1 | Resilience stats |
+| GET | /api/reliability/sandbox/config | P2 | Sandbox configuration |
+| PUT | /api/reliability/sandbox/config | P2 | Update sandbox |
+| POST | /api/reliability/sandbox/call | P2 | Execute sandbox call |
+| GET | /api/reliability/sandbox/log | P2 | Sandbox call history |
+| GET | /api/reliability/retry/config | P3 | Retry configuration |
+| POST | /api/reliability/dlq | P3 | Enqueue to DLQ |
+| GET | /api/reliability/dlq | P3 | List DLQ entries |
+| POST | /api/reliability/dlq/{id}/retry | P3 | Retry DLQ entry |
+| DELETE | /api/reliability/dlq/{id} | P3 | Discard DLQ entry |
+| GET | /api/reliability/dlq/stats | P3 | DLQ statistics |
+| POST | /api/reliability/idempotency/check | P4 | Check idempotency |
+| GET | /api/reliability/idempotency/stats | P4 | Idempotency stats |
+| GET | /api/reliability/versions | P5 | Version registry |
+| POST | /api/reliability/versions | P5 | Register version |
+| POST | /api/reliability/versions/deprecate | P5 | Deprecate version |
+| GET | /api/reliability/versions/history | P5 | Version history |
+| POST | /api/reliability/contracts/validate | P6 | Validate contract |
+| GET | /api/reliability/contracts/status | P6 | Contract status |
+| GET | /api/reliability/metrics/suppliers | P7 | Supplier metrics |
+| GET | /api/reliability/metrics/latency/{code} | P7 | Latency percentiles |
+| GET | /api/reliability/metrics/error-rate | P7 | Error rate timeline |
+| GET | /api/reliability/metrics/success-rate | P7 | Success rate summary |
+| POST | /api/reliability/incidents | P8 | Create incident |
+| GET | /api/reliability/incidents | P8 | List incidents |
+| POST | /api/reliability/incidents/{id}/acknowledge | P8 | Acknowledge |
+| POST | /api/reliability/incidents/{id}/resolve | P8 | Resolve |
+| POST | /api/reliability/incidents/detect | P8 | Auto-detect issues |
+| GET | /api/reliability/incidents/stats | P8 | Incident stats |
+| GET | /api/reliability/dashboard | P9 | Dashboard overview |
+| GET | /api/reliability/dashboard/supplier/{code} | P9 | Supplier detail |
+| GET | /api/reliability/roadmap | P10 | Roadmap + maturity |
+| GET | /api/reliability/maturity | P10 | Maturity score |
 
 ---
 
-## New MongoDB Collections (Governance Layer)
+## MongoDB Collections — Reliability Layer (13 total)
 
-| Collection | Purpose | TTL |
-|------------|---------|-----|
-| gov_roles | RBAC role definitions | None |
-| gov_permissions | Permission catalog | None |
-| gov_audit_log | Governance audit trail | 90 days |
-| gov_secrets | Encrypted secret storage | None |
-| gov_secret_history | Secret rotation history | None |
-| gov_secret_access_log | Secret access tracking | 30 days |
-| gov_tenant_violations | Cross-tenant violation log | 90 days |
-| gov_compliance_log | Financial compliance records | None |
-| gov_data_policies | Data access policy rules | None |
-| gov_security_alerts | Security alert lifecycle | 180 days |
+| Collection | Part | TTL |
+|------------|------|-----|
+| rel_resilience_events | P1 | 30 days |
+| rel_resilience_config | P1 | None |
+| rel_sandbox_config | P2 | None |
+| rel_sandbox_log | P2 | 7 days |
+| rel_dead_letter_queue | P3 | None |
+| rel_retry_config | P3 | None |
+| rel_idempotency_store | P4 | 24h |
+| rel_request_dedup | P4 | 60s |
+| rel_api_versions | P5 | None |
+| rel_version_history | P5 | None |
+| rel_contract_schemas | P6 | None |
+| rel_contract_violations | P6 | 90 days |
+| rel_metrics | P7 | 30 days |
+| rel_incidents | P8 | None |
+| rel_supplier_status | P8/P9 | None |
 
 ---
 
@@ -150,20 +166,26 @@ Multi-tenant SaaS platform for travel agencies. Manages bookings, finance, suppl
 
 ### P1 — High
 - Frontend governance admin panel (React dashboard)
+- Frontend reliability dashboard (React)
 - API-level permission middleware enforcement
 - Auto-log all payment/refund operations to compliance
 - Alert deduplication and rate limiting
 - Auto-incident detection scheduler (Celery beat)
 - Slack/email notification integration for security alerts
 - Row-level tenant isolation on all collections
+- DLQ consumer workers (Celery)
+- Prometheus metrics exporter for reliability
+- Redis-backed distributed rate limiter
 
 ### P2 — Medium
 - GDS connectivity (Amadeus, Sabre)
-- Supplier sandbox environment
+- Supplier sandbox for staging/QA
 - Booking reconciliation
 - Dynamic pricing
 - GDPR data retention automation
 - Audit log export to S3/GCS
+- Schema drift alerting
+- Supplier SLA tracking
 
 ### P3 — Future
 - ML-based supplier ranking
@@ -172,6 +194,7 @@ Multi-tenant SaaS platform for travel agencies. Manages bookings, finance, suppl
 - Fraud detection
 - ABAC (attribute-based access control)
 - ML-based insider threat detection
+- ML anomaly detection on metrics
 
 ---
 
@@ -180,12 +203,13 @@ Multi-tenant SaaS platform for travel agencies. Manages bookings, finance, suppl
 - **Agency User:** agency1@demo.test / agency123
 
 ## Key Files
+- `/app/backend/app/domain/reliability/` — Reliability layer domain (10 services)
+- `/app/backend/app/routers/reliability.py` — Reliability API router (35 endpoints)
 - `/app/backend/app/domain/governance/` — Governance layer domain
 - `/app/backend/app/routers/governance.py` — Governance API router (37 endpoints)
 - `/app/backend/app/suppliers/` — Supplier ecosystem
 - `/app/backend/app/suppliers/operations/` — Operations layer
-- `/app/backend/app/routers/ops_supplier_operations.py` — Operations API router
+- `/app/memory/reliability_roadmap.md` — Reliability roadmap doc
 - `/app/memory/governance_roadmap.md` — Governance roadmap doc
-- `/app/memory/operations_roadmap.md` — Operations roadmap doc
-- `/app/test_reports/iteration_68.json` — Governance test report (37/37 passed)
-- `/app/test_reports/iteration_4.json` — Operations test report (30/30 passed)
+- `/app/test_reports/iteration_69.json` — Reliability test report (40/40 passed)
+- `/app/test_reports/iteration_5.json` — Governance test report (37/37 passed)

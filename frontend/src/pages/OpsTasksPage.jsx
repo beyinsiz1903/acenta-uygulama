@@ -90,7 +90,7 @@ export default function OpsTasksPage() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [statusFilter, assigneeFilter, overdueOnly]);
 
   const onUpdateStatus = async (task, newStatus) => {
@@ -99,7 +99,7 @@ export default function OpsTasksPage() {
       await load();
     } catch (e) {
       // toast yerine basit alert; istenirse sonra toast eklenir
-      // eslint-disable-next-line no-alert
+       
       alert("Görev güncellenemedi: " + apiErrorMessage(e));
     }
   };
@@ -345,10 +345,10 @@ function NewTaskForm({ onCreated }) {
       setAssigneeEmail("");
       setTags("");
       // entityId is left as is for convenience
-      // eslint-disable-next-line no-alert
+       
       alert("Görev oluşturuldu");
     } catch (e) {
-      // eslint-disable-next-line no-alert
+       
       alert("Görev oluşturulamadı: " + apiErrorMessage(e));
     } finally {
       setSubmitting(false);

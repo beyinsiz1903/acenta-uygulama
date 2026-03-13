@@ -47,7 +47,7 @@ export default function AdminSupplierSettlementBridgePage() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const merged = useMemo(() => {

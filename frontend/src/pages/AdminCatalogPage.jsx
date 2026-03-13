@@ -135,7 +135,7 @@ function VersionsPanel({ productId, productStatus }) {
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [productId]);
 
   const toggleRoomType = (id) => {
@@ -356,7 +356,7 @@ export default function AdminCatalogPage() {
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const select = async (productId) => {

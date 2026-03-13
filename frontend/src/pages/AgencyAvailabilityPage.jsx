@@ -250,11 +250,7 @@ function ChangesTimeline({ changes }) {
 // ── Detail Grid View ──────────────────────────────────────
 
 function AvailabilityGrid({ data, startDate, endDate, onDateChange }) {
-  if (!data || !data.hotel) {
-    return null;
-  }
-
-  const { hotel, dates, room_types, grid } = data;
+  const { hotel, dates, room_types, grid } = data || {};
 
   // Build lookup: grid_map[date][room_type] = cell
   const gridMap = useMemo(() => {
@@ -265,6 +261,10 @@ function AvailabilityGrid({ data, startDate, endDate, onDateChange }) {
     });
     return m;
   }, [grid]);
+
+  if (!data || !data.hotel) {
+    return null;
+  }
 
   // Stats
   const totalRooms = grid.reduce((acc, c) => acc + (c.allotment || 0), 0);

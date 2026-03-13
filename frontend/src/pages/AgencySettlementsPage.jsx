@@ -79,7 +79,7 @@ export default function AgencySettlementsPage() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line
+     
   }, []);
 
   const rows = useMemo(() => data?.totals || [], [data]);

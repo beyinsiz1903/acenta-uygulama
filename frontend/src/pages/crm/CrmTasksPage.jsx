@@ -105,7 +105,7 @@ export default function CrmTasksPage() {
 
   useEffect(() => {
     refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [activeTab]);
 
   async function markDone(taskId) {

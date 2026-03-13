@@ -131,7 +131,7 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
       return;
     }
     loadDetail(customerId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [customerId, hasCustomer]);
 
   async function handleLink(e) {
@@ -368,7 +368,7 @@ function ParasutPushPanel({ bookingId }) {
 
   useEffect(() => {
     loadLogs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [bookingId]);
 
   async function handlePush() {

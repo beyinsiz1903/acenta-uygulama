@@ -131,7 +131,7 @@ export default function AdminActionPoliciesPage() {
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const handleRuleChange = (index, nextRule) => {

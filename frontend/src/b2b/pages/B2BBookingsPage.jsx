@@ -40,7 +40,7 @@ export default function B2BBookingsPage() {
   useEffect(() => {
     if (!fromDate || !toDate) return;
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [fromDate, toDate, status]);
 
   async function load(paramsOverride) {

@@ -103,7 +103,7 @@ export default function AdminB2BMarketplacePage() {
       return;
     }
     void loadProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [selectedPartnerId, productTypeFilter, productStatusFilter, debouncedProductSearch, productPage, productLimit]);
 
   async function loadProducts() {

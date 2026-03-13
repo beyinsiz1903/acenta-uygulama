@@ -53,7 +53,7 @@ export default function AgencyBookingConfirmedPage() {
     } catch {
       // ignore
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [noteStorageKey]);
 
   useEffect(() => {

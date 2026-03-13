@@ -31,7 +31,7 @@ export default function AdminB2BAgencyProductsPage() {
   useEffect(() => {
     if (!agencyId) return;
     void loadProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [agencyId]);
 
   async function loadProducts() {

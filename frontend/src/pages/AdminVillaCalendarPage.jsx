@@ -119,12 +119,12 @@ export default function AdminVillaCalendarPage() {
 
   useEffect(() => {
     void loadFeeds();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [productId]);
 
   useEffect(() => {
     void loadCalendar();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [productId, year, month]);
 
   const addFeed = async () => {

@@ -184,12 +184,12 @@ function OpsGuestCasesPage() {
     if (!Number.isNaN(pageFromUrl) && pageFromUrl > 0) {
       setPage(pageFromUrl);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   useEffect(() => {
     loadCases();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [status, type, source, page, pageSize]);
 
   const onRefetch = () => {

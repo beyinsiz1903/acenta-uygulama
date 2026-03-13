@@ -318,7 +318,7 @@ export default function AdminMetricsPage() {
     // Initial load with default range
     void load({ mode: "preset", days: 7 });
     setAppliedRange({ mode: "preset", days: 7 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   // FAZ-11: Load followed bookings from localStorage

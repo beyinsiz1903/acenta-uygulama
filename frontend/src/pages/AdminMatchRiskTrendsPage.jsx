@@ -227,7 +227,7 @@ export default function AdminMatchRiskTrendsPage() {
 
   useEffect(() => {
     void load(limit);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const kpiHighRisk = useMemo(

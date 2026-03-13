@@ -59,7 +59,7 @@ export default function WebBookingPage() {
       }
     }
     void loadHotelDeps();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [form.hotel_id]);
 
   function handleChange(e) {

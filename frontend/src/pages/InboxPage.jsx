@@ -141,7 +141,7 @@ function InboxPage() {
   useEffect(() => {
     if (!isAllowed) return;
     loadThreads({ reset: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [statusFilter, searchQ, isAllowed]);
 
   useEffect(() => {
@@ -153,7 +153,7 @@ function InboxPage() {
       setMessagesTotal(0);
       setMessagesPage(1);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [selectedThreadId, isAllowed]);
 
   const handleSendMessage = async (e) => {

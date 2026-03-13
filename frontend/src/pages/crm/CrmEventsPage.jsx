@@ -311,7 +311,7 @@ export default function CrmEventsPage() {
 
   useEffect(() => {
     load(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   function applyFilters(e) {

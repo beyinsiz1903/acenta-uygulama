@@ -452,7 +452,7 @@ function BookingListTab() {
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   // Phase 1: Liste üzerinden iptal işlemi yok; sadece ana flow kullanılsın.

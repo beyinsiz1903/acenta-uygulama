@@ -56,7 +56,7 @@ export default function HotelIntegrationsPage() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line
+     
   }, []);
 
   async function load() {

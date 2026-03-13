@@ -297,7 +297,7 @@ function SearchResultsTable({ items, searchMeta, onSelect, sortField, sortDir, o
     onSort(field, sortField === field && sortDir === "asc" ? "desc" : "asc");
   };
 
-  const SortHeader = ({ field, children }) => (
+  const renderSortHeader = (field, children) => (
     <TableHead
       className="cursor-pointer select-none hover:bg-muted/50 transition-colors"
       onClick={() => handleSort(field)}
@@ -337,11 +337,11 @@ function SearchResultsTable({ items, searchMeta, onSelect, sortField, sortDir, o
           <Table>
             <TableHeader className="sticky top-0 bg-white dark:bg-background z-10">
               <TableRow>
-                <SortHeader field="supplier_code">Supplier</SortHeader>
-                <SortHeader field="name">Urun</SortHeader>
+                {renderSortHeader("supplier_code", "Supplier")}
+                {renderSortHeader("name", "Urun")}
                 <TableHead>Tip</TableHead>
-                <SortHeader field="supplier_price">Supplier Fiyat</SortHeader>
-                <SortHeader field="sell_price">Satis Fiyati</SortHeader>
+                {renderSortHeader("supplier_price", "Supplier Fiyat")}
+                {renderSortHeader("sell_price", "Satis Fiyati")}
                 <TableHead>Musaitlik</TableHead>
                 <TableHead>Iptal</TableHead>
                 <TableHead className="text-right">Islem</TableHead>

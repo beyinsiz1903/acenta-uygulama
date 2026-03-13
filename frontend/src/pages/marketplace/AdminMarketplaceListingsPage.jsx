@@ -245,7 +245,7 @@ export default function AdminMarketplaceListingsPage() {
     if (tenantKey) {
       void load();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [tenantKey, statusFilter]);
 
   const handlePublish = async (listing) => {
@@ -254,7 +254,7 @@ export default function AdminMarketplaceListingsPage() {
       await api.post(`/marketplace/listings/${listing.id}/publish`, null, { headers });
       await load();
     } catch (err) {
-      // eslint-disable-next-line no-alert
+       
       alert(apiErrorMessage(err));
     } finally {
       setBusyActionId(null);
@@ -267,7 +267,7 @@ export default function AdminMarketplaceListingsPage() {
       await api.post(`/marketplace/listings/${listing.id}/archive`, null, { headers });
       await load();
     } catch (err) {
-      // eslint-disable-next-line no-alert
+       
       alert(apiErrorMessage(err));
     } finally {
       setBusyActionId(null);

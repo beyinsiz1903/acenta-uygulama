@@ -64,7 +64,7 @@ export default function AdminThemePage() {
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const save = async () => {

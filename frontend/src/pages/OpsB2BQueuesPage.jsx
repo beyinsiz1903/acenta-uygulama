@@ -273,7 +273,7 @@ export default function OpsB2BQueuesPage() {
     } else {
       void loadCases();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [activeTab]);
 
   async function loadBookings() {

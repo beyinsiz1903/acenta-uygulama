@@ -545,7 +545,7 @@ function RefundDocumentsSection({ caseData }) {
     } else {
       setItems([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [caseData?.case_id]);
 
   const TAG_OPTIONS = ["dekont", "iptal_yazisi", "musteri_yazismasi", "kimlik", "diger"];
@@ -847,7 +847,7 @@ function RefundTasksSection({ caseData }) {
     } else {
       setItems([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [caseData?.case_id]);
 
   const onQuickStatus = async (task, status) => {
@@ -1779,7 +1779,7 @@ export default function AdminFinanceRefundsPage() {
         .join("; ");
       setBulkErrorSummary(`Hatalı: ${errors.length} case. İlk hatalar: ${firstFive}`);
       // Detay için console
-      // eslint-disable-next-line no-console
+       
       console.error("Bulk refund action errors", errors);
     } else {
       setBulkErrorSummary("");
@@ -1899,7 +1899,7 @@ export default function AdminFinanceRefundsPage() {
       setBookingFinancials(null);
       setSelectedCaseIds([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [list]);
 
   const onAfterDecision = async () => {

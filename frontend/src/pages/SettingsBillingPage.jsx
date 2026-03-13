@@ -45,10 +45,6 @@ export default function SettingsBillingPage() {
   const currentUser = getUser();
   const canManageUsers = (currentUser?.roles || []).some((role) => ["super_admin", "admin"].includes(role));
 
-  if (!canManageUsers) {
-    return <Navigate to="/app/settings" replace />;
-  }
-
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [billingCycle, setBillingCycle] = useState("monthly");
@@ -104,6 +100,10 @@ export default function SettingsBillingPage() {
   const currentPlanLabel = BILLING_PLAN_OPTIONS[currentPlanKey]?.label || (currentPlanKey ? currentPlanKey.toUpperCase() : "Trial");
   const statusLabel = translateStatus(overview?.status);
   const planCards = useMemo(() => BILLING_PLAN_ORDER.map((key) => BILLING_PLAN_OPTIONS[key]), []);
+
+  if (!canManageUsers) {
+    return <Navigate to="/app/settings" replace />;
+  }
 
   async function handlePortalOpen() {
     setActionKey("portal");

@@ -89,7 +89,7 @@ export default function AgencyHotelSearchPage() {
     if (!initialHotelFromState) {
       loadHotel();
     }
-    // eslint-disable-next-line
+     
   }, [hotelId]);
 
   async function loadHotel() {
@@ -199,6 +199,118 @@ export default function AgencyHotelSearchPage() {
     }
   }
 
+  // Derived search data (must be before conditional returns for hook rules)
+  const hasSearch = !!searchResult;
+  const rooms = searchResult?.rooms || [];
+  const stay = searchResult?.stay;
+  const occupancy = searchResult?.occupancy;
+  const hotelFromSearch = searchResult?.hotel;
+  const filteredRatePlansByRoomKey = useMemo(() => {
+    if (!selectedRoomTypeKey) return {};
+
+    const result = {};
+    (rooms || []).forEach((room) => {
+      const roomKey = roomTypeKeyOf(room);
+      const basePlans = room.rate_plans || [];
+
+      if (!roomKey) {
+        result[room.room_type_id] = basePlans;
+        return;
+      }
+
+      const filtered = basePlans.filter((rp) => {
+        const applies = rp?.applies_to_room_types;
+        if (!applies) return true;
+        const list = Array.isArray(applies) ? applies : [applies];
+        const normalizedList = list.map((x) => normalizeKey(x));
+        return normalizedList.includes(normalizeKey(roomKey));
+      });
+
+      result[room.room_type_id] = filtered;
+    });
+
+    return result;
+  }, [rooms, selectedRoomTypeKey]);
+
+  const source = searchResult?.source;
+
+  const cacheHint = useMemo(() => {
+    if (!hasSearch || !cacheLikely) return null;
+    return "Aynı kriterler (cache olabilir)";
+  }, [hasSearch, cacheLikely]);
+
+  const availableBoards = useMemo(() => {
+    const set = new Set();
+    rooms.forEach((room) => {
+      (room.rate_plans || []).forEach((rp) => {
+        if (rp.board) set.add(rp.board);
+      });
+    });
+    return Array.from(set);
+  }, [rooms]);
+
+  const availableRoomTypes = useMemo(() => {
+    return rooms.map((r) => ({
+      id: r.room_type_id,
+      name: r.name,
+      key: roomTypeKeyOf(r),
+    }));
+  }, [rooms]);
+
+  const filteredRooms = useMemo(() => {
+    if (!rooms.length) return [];
+
+    let nextRooms = rooms.map((room) => {
+      const filteredByKey = filteredRatePlansByRoomKey[room.room_type_id];
+      let ratePlans = (filteredByKey ?? room.rate_plans) || [];
+
+      if (boardFilter !== "all") {
+        ratePlans = ratePlans.filter((rp) => rp.board === boardFilter);
+      }
+
+      if (onlyAvailable) {
+        if (!room.inventory_left || room.inventory_left <= 0) {
+          ratePlans = [];
+        }
+      }
+
+      if (priceSort !== "none") {
+        ratePlans = [...ratePlans].sort((a, b) => {
+          const at = a.price?.total ?? 0;
+          const bt = b.price?.total ?? 0;
+          return priceSort === "asc" ? at - bt : bt - at;
+        });
+      }
+
+      return {
+        ...room,
+        rate_plans: ratePlans,
+      };
+    });
+
+    if (roomFilter !== "all") {
+      nextRooms = nextRooms.filter((r) => r.room_type_id === roomFilter);
+    }
+
+    nextRooms = nextRooms.filter((r) => (r.rate_plans || []).length > 0);
+
+    return nextRooms;
+  }, [rooms, boardFilter, roomFilter, priceSort, onlyAvailable]);
+
+  const selectedRoom = useMemo(() => {
+    if (!selected || !rooms.length) return null;
+    return (
+      rooms.find((r) => r.room_type_id === selected.room_type_id) || null
+    );
+  }, [selected, rooms]);
+
+  const selectedRatePlan = useMemo(() => {
+    if (!selectedRoom || !selected) return null;
+    return (
+      (selectedRoom.rate_plans || []).find((rp) => rp.rate_plan_id === selected.rate_plan_id) || null
+    );
+  }, [selectedRoom, selected]);
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -225,123 +337,6 @@ export default function AgencyHotelSearchPage() {
       </div>
     );
   }
-
-  // Derived search data
-  const hasSearch = !!searchResult;
-  const rooms = searchResult?.rooms || [];
-  const stay = searchResult?.stay;
-  const occupancy = searchResult?.occupancy;
-  const hotelFromSearch = searchResult?.hotel;
-  const filteredRatePlansByRoomKey = useMemo(() => {
-    if (!selectedRoomTypeKey) return {};
-
-    const result = {};
-    (rooms || []).forEach((room) => {
-      const roomKey = roomTypeKeyOf(room);
-      const basePlans = room.rate_plans || [];
-
-      if (!roomKey) {
-        result[room.room_type_id] = basePlans;
-        return;
-      }
-
-      const filtered = basePlans.filter((rp) => {
-        const applies = rp?.applies_to_room_types;
-        if (!applies) return true; // None -> tüm odalara uygulanır
-        const list = Array.isArray(applies) ? applies : [applies];
-        const normalizedList = list.map((x) => normalizeKey(x));
-        return normalizedList.includes(normalizeKey(roomKey));
-      });
-
-      result[room.room_type_id] = filtered;
-    });
-
-    return result;
-  }, [rooms, selectedRoomTypeKey]);
-
-  const source = searchResult?.source;
-
-  const cacheHint = useMemo(() => {
-    if (!hasSearch || !cacheLikely) return null;
-    // Sadece aynı kriterlerle tekrar arama yapıldığında gösteriyoruz
-    return "Aynı kriterler (cache olabilir)";
-  }, [hasSearch, cacheLikely]);
-
-  const availableBoards = useMemo(() => {
-    const set = new Set();
-    rooms.forEach((room) => {
-      (room.rate_plans || []).forEach((rp) => {
-        if (rp.board) set.add(rp.board);
-      });
-    });
-    return Array.from(set);
-  }, [rooms]);
-
-  const availableRoomTypes = useMemo(() => {
-    return rooms.map((r) => ({
-      id: r.room_type_id,
-      name: r.name,
-      key: roomTypeKeyOf(r),
-    }));
-  }, [rooms]);
-
-  const filteredRooms = useMemo(() => {
-    if (!rooms.length) return [];
-
-    let nextRooms = rooms.map((room) => {
-      // FAZ-2: room_type → rate_plan filtre (applies_to_room_types)
-      const filteredByKey = filteredRatePlansByRoomKey[room.room_type_id];
-      let ratePlans = (filteredByKey ?? room.rate_plans) || [];
-
-      if (boardFilter !== "all") {
-        ratePlans = ratePlans.filter((rp) => rp.board === boardFilter);
-      }
-
-      if (onlyAvailable) {
-        // Oda tamamen stok dışıysa yine de gösteriyoruz ama 0 olanları altta bırakabiliriz
-        // Şimdilik sadece room.inventory_left > 0 ise gösterelim
-        if (!room.inventory_left || room.inventory_left <= 0) {
-          ratePlans = [];
-        }
-      }
-
-      if (priceSort !== "none") {
-        ratePlans = [...ratePlans].sort((a, b) => {
-          const at = a.price?.total ?? 0;
-          const bt = b.price?.total ?? 0;
-          return priceSort === "asc" ? at - bt : bt - at;
-        });
-      }
-
-      return {
-        ...room,
-        rate_plans: ratePlans,
-      };
-    });
-
-    if (roomFilter !== "all") {
-      nextRooms = nextRooms.filter((r) => r.room_type_id === roomFilter);
-    }
-
-    // Oda içinde hiç rate plan kalmadıysa odayı gizle
-    nextRooms = nextRooms.filter((r) => (r.rate_plans || []).length > 0);
-
-    return nextRooms;
-  }, [rooms, boardFilter, roomFilter, priceSort, onlyAvailable]);
-
-  const selectedRoom = useMemo(() => {
-    if (!selected || !rooms.length) return null;
-    return (
-      rooms.find((r) => r.room_type_id === selected.room_type_id) || null
-    );
-  }, [selected, rooms]);
-
-  const selectedRatePlan = useMemo(() => {
-    if (!selectedRoom || !selected) return null;
-    return (
-      (selectedRoom.rate_plans || []).find((rp) => rp.rate_plan_id === selected.rate_plan_id) || null
-    );
-  }, [selectedRoom, selected]);
 
   const handleSelectOffer = (room_type_id, rate_plan_id) => {
     setSelected({ room_type_id, rate_plan_id });

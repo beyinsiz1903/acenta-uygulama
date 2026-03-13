@@ -90,7 +90,7 @@ export default function AdminEmailLogsPage() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line
+     
   }, []);
 
   const sorted = useMemo(() => {

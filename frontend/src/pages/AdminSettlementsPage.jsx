@@ -207,7 +207,7 @@ export default function AdminSettlementsPage() {
 
   useEffect(() => {
     load("json");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const onFilterChange = (patch) => {

@@ -217,7 +217,7 @@ export default function CrmCustomerDetailPage() {
   }
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [customerId]);
 
   useEffect(() => {
@@ -227,7 +227,7 @@ export default function CrmCustomerDetailPage() {
     if (activeTab === "overview") {
       loadInboxThreads();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [activeTab, customerId]);
 
   async function saveTags() {

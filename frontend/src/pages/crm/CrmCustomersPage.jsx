@@ -125,7 +125,7 @@ export default function CrmCustomersPage() {
     if (tag?.trim()) next.tag = tag.trim();
     if (page && page !== 1) next.page = String(page);
     setSearchParams(next, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [search, type, tag, page]);
 
   async function refresh() {
@@ -143,7 +143,7 @@ export default function CrmCustomersPage() {
 
   useEffect(() => {
     refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [queryParams]);
 
   function openCreate() {

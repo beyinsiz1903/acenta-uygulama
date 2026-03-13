@@ -181,7 +181,7 @@ export default function AdminOpsIncidentsPage() {
 
   useEffect(() => {
     loadIncidents();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [filters, offset]);
 
   useEffect(() => {

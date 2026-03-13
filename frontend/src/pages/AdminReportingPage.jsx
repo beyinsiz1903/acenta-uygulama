@@ -77,7 +77,7 @@ export default function AdminReportingPage() {
     void loadSummary(days);
     void loadTopProducts(days);
     void loadFunnel(days);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [days]);
 
   const formatMoney = (v) => {

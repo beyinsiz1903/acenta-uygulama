@@ -79,7 +79,7 @@ export default function HotelBookingsPage() {
 
   useEffect(() => {
     loadBookings();
-    // eslint-disable-next-line
+     
   }, []);
   const todayStr = new Date().toISOString().slice(0, 10);
   const tomorrowStr = new Date(Date.now() + 24 * 60 * 60 * 1000)
@@ -109,7 +109,7 @@ export default function HotelBookingsPage() {
     } catch {
       // ignore
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [noteStorageKey]);
 
   useEffect(() => {

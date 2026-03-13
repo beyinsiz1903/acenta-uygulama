@@ -59,12 +59,9 @@ export default function DemoSeedButton({
     [result]
   );
 
-  if (!canSeedDemoData) {
-    return null;
-  }
-
+   
   useEffect(() => {
-    if (!show) {
+    if (!canSeedDemoData || !show) {
       return;
     }
 
@@ -102,6 +99,10 @@ export default function DemoSeedButton({
       cancelled = true;
     };
   }, [show, defaultTargetUserId]);
+
+  if (!canSeedDemoData) {
+    return null;
+  }
 
   async function handleSeed() {
     if (!targetUserId) {

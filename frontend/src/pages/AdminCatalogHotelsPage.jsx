@@ -154,7 +154,7 @@ function RatePlansPanel({ productId }) {
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [productId]);
 
   const save = async () => {
@@ -325,7 +325,7 @@ export default function AdminCatalogHotelsPage() {
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const select = async (productId) => {

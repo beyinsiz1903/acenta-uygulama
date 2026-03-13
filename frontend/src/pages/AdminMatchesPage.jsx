@@ -126,7 +126,7 @@ export default function AdminMatchesPage() {
 
   useEffect(() => {
     loadMatches();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [onlyHighRisk, sort]);
 
   if (loading) {

@@ -98,7 +98,7 @@ export default function AdminAuditLogsPage() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line
+     
   }, []);
 
   const diffCount = (it) => {

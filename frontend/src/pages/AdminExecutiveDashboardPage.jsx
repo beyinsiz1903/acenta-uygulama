@@ -114,7 +114,7 @@ export default function AdminExecutiveDashboardPage() {
 
   useEffect(() => {
     void loadAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   useEffect(() => {

@@ -82,7 +82,7 @@ export default function B2BMarketplaceCatalogPage() {
     if (tenantKey) {
       void fetchPage({ append: false, cursor: null });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [tenantKey]);
 
   return (

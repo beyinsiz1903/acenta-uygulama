@@ -1,14 +1,14 @@
 # Syroce — Travel Platform PRD
 
 ## Original Problem Statement
-Enterprise Travel Agency SaaS + Multi-Supplier Distribution Engine + Revenue Optimization + Platform Scalability + Live Operations + Market Launch & First Customers.
+Enterprise Travel Agency SaaS + Multi-Supplier Distribution Engine + Revenue Optimization + Platform Scalability + Live Operations + Market Launch + Per-Agency Credential Management + Growth Engine.
 
 ## Core Architecture
 ```
 supplier adapters → aggregator → unified search (cached) → unified booking
 → commission binding → fallback → reconciliation → analytics → intelligence
 → revenue optimization → scalability → operations → market launch
-→ per-agency supplier credential management
+→ per-agency credential governance → growth engine
 ```
 
 ## Credentials
@@ -28,54 +28,68 @@ Search Caching, Commission Binding, Rate Limiting, Job Scheduler, Prometheus, Mu
 ### Phase 6: Operations (MEGA PROMPT #27)
 Validation Framework, Capability Matrix, Cache/Fallback/Rate Limit Tests, Launch Readiness
 
-### Phase 7: Market Launch (MEGA PROMPT #28) — Mar 13, 2026
+### Phase 7: Market Launch (MEGA PROMPT #28)
 Pilot Agency Tracking, Usage Metrics, Feedback System, SaaS Pricing, Launch Dashboard
 
 ### Phase 8: Per-Agency Supplier Credential Management — Mar 13, 2026
+AES-256 encrypted credential storage, supplier-specific forms (WWTatil, Paximum, RateHawk, TBO), RBAC, audit logging, enable/disable toggle, token caching
 
-**Backend:**
-- AES-256 encrypted credential storage (Fernet)
-- Supplier-specific field validation (WWTatil, Paximum, RateHawk, TBO)
-- CRUD endpoints for agencies (own) and admin (any agency)
-- Real supplier API connection testing
-- Enable/Disable toggle with test-gate (must PASS before enabling)
-- Credential audit logging (save, test, enable, disable, delete)
-- Token caching per supplier per agency
-- Masked credential display (****1234)
+### Phase 9: Growth Engine (MEGA PROMPT #29) — Mar 13, 2026
 
-**RBAC:**
-- super_admin: manage ALL agencies' credentials
-- agency_admin: manage only own tenant credentials
-- 403 enforcement on admin endpoints
+**10 Components Delivered:**
 
-**Frontend:**
-- AdminSupplierCredentialsPage: agencies list + audit log tabs
-- Agency detail view: 4 supplier cards with supplier-specific forms
-- Masked sensitive fields, Test/Edit/Enable/Disable/Remove actions
-- SupplierSettingsTab (agency self-service): updated with enable/disable
+1. **Agency Acquisition Funnel** — 7 stages (lead_captured → activated), conversion metrics
+2. **Lead & Demo Management** — CRM-like lead tracking, demo pipeline, stage progression
+3. **Referral System** — Invite + reward rules (10% discount on register, 50 EUR credit on activate), fraud prevention (duplicate email rejection)
+4. **Activation Metrics** — 5 milestones (credential_entered, connection_tested, first_search, first_booking, first_revenue), weighted scoring (max 100), status classification (new/progressing/activated)
+5. **Customer Success Dashboard** — Agency categorization (active, dormant, at_risk, failed_connections, zero_bookings), success playbook
+6. **Supplier Expansion Model** — Demand tracking, priority scoring, request management
+7. **Growth KPI Dashboard** — Period-based metrics (leads, activations, booking rates, referral conversions)
+8. **Onboarding Automation** — 8-item checklist, trigger rules for automated reminders
+9. **Agency Segmentation** — 4 segments (enterprise 50+, growth 10-49, starter 1-9, inactive 0)
+10. **Full Growth Report** — Maturity score, dimension scores, 25 implementation tasks (P0/P1/P2), 15 growth risks (high/medium/low)
 
-**DB Collections:**
-- `supplier_credentials`: per-agency encrypted credentials with status
-- `supplier_tokens`: cached authentication tokens per supplier
-- `credential_audit_log`: action audit trail
+**Backend:** 22 API endpoints via `/api/growth/*`
+**Frontend:** GrowthEnginePage with 7 tabs (Funnel, Leads, Referrals, Customer Success, KPIs, Supplier Expansion, Growth Report)
+**Testing:** 32/32 backend + all frontend tests PASS
 
 ---
 
 ## Key API Endpoints
 
-### Supplier Credentials (Phase 8 — NEW)
-- `GET /api/supplier-credentials/supported` — List supported suppliers + fields
-- `GET /api/supplier-credentials/my` — Own agency credentials (masked)
-- `POST /api/supplier-credentials/save` — Save credentials for own agency
-- `DELETE /api/supplier-credentials/{supplier}` — Delete own credential
-- `POST /api/supplier-credentials/test/{supplier}` — Test connection
-- `PUT /api/supplier-credentials/toggle/{supplier}` — Enable/Disable
-- `GET /api/supplier-credentials/admin/agencies` — All agencies summary (super_admin)
-- `GET /api/supplier-credentials/admin/agency/{org_id}` — Agency credentials (super_admin)
-- `POST /api/supplier-credentials/admin/agency/{org_id}/save` — Save for agency (super_admin)
-- `DELETE /api/supplier-credentials/admin/agency/{org_id}/{supplier}` — Delete for agency
-- `PUT /api/supplier-credentials/admin/agency/{org_id}/toggle/{supplier}` — Toggle for agency
-- `GET /api/supplier-credentials/admin/audit-log` — Audit log with optional org filter
+### Growth Engine (Phase 9 — NEW)
+- `GET /api/growth/funnel` — Funnel stages with conversion rates
+- `GET/POST /api/growth/leads` — Lead CRUD
+- `PUT /api/growth/leads/{lead_id}/stage` — Stage progression
+- `GET/POST /api/growth/demos` — Demo management
+- `GET/POST /api/growth/referrals` — Referral system
+- `PUT /api/growth/referrals/{id}/status` — Referral status + rewards
+- `GET /api/growth/activation` — All activations
+- `GET /api/growth/activation/{agency_id}` — Agency activation score
+- `POST /api/growth/activation/{agency_id}/event` — Record event
+- `GET /api/growth/customer-success` — Success dashboard
+- `GET /api/growth/onboarding/{agency_id}` — Checklist
+- `POST /api/growth/onboarding/{agency_id}/complete` — Complete task
+- `GET /api/growth/segments` — Agency segmentation
+- `GET/POST /api/growth/supplier-requests` — Expansion requests
+- `GET /api/growth/kpis` — Growth KPIs
+- `GET /api/growth/report` — Full growth report
+
+### Supplier Credentials (Phase 8)
+- `GET/POST/DELETE /api/supplier-credentials/*` — Agency CRUD
+- `GET/POST/PUT/DELETE /api/supplier-credentials/admin/*` — Super admin
+- `GET /api/supplier-credentials/admin/audit-log` — Audit trail
+
+---
+
+## DB Collections (New)
+- `growth_leads` — Lead tracking with funnel stages
+- `growth_demos` — Demo pipeline
+- `growth_referrals` — Referral tracking with rewards
+- `growth_activation_events` — Per-agency activation milestones
+- `growth_onboarding_tasks` — Onboarding checklist completion
+- `growth_supplier_requests` — Supplier expansion demand tracking
+- `credential_audit_log` — Credential change audit trail
 
 ---
 
@@ -83,18 +97,19 @@ Pilot Agency Tracking, Usage Metrics, Feedback System, SaaS Pricing, Launch Dash
 
 ### P0 — Real Operations
 - Real supplier credential validation with live APIs
-- Shadow traffic activation
-- Revenue forecasting
+- Onboard first 3 pilot agencies with real credentials
+- Execute first real booking flow
 
-### P1 — MEGA PROMPT #29: Growth Engine
-- Agency acquisition funnel
-- Referral system
-- Supplier expansion
-- Growth analytics
+### P1 — Growth Execution
+- Lead capture form for public-facing landing page
+- Email automation for onboarding triggers
+- Referral program launch to pilot agencies
 
 ### P2 — Backlog
-- PyMongo AutoReconnect fix
-- Secret rotation & expiry alerts
-- Credential health dashboard
+- A/B testing infrastructure
+- Churn prediction model
+- Revenue forecasting
+- NPS survey automation
+- White-label partner program
 - Multi-region deployment
-- White-label support
+- PyMongo AutoReconnect fix

@@ -48,6 +48,7 @@ function UserForm({ open, onOpenChange, onSaved }) {
     defaultValues: { email: "", name: "", password: "pass123", roles: ["sales"] },
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const selectedRoles = watch("roles") || [];
 
   useEffect(() => {

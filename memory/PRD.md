@@ -1,123 +1,95 @@
-# Syroce — Travel Agency SaaS Platform
+# Syroce — Travel SaaS Platform PRD
 
-## Product Requirements Document (PRD)
+## Problem Statement
+Enterprise travel SaaS platform serving B2B travel agencies. The platform provides supplier ecosystem, booking orchestration, operations layer, governance layer, integration reliability layer, and production activation layer.
 
-### Original Problem Statement
-Enterprise travel SaaS platform with supplier ecosystem, booking orchestration, operations layer, governance layer, and integration reliability layer. Built on Domain-Driven Design with MongoDB, FastAPI, Redis, Celery.
+## Current Phase: Platform Hardening Phase
+Architecture maturity score: 3.15/10 (hardening readiness) | 9.3/10 (architectural completeness)
 
-### User Personas
-- **Super Admin**: Full platform access, manages all tenants, system config
-- **Ops Admin**: Operations management, supplier overrides, incident resolution
-- **Finance Admin**: Payment overrides, refund approvals, settlement management
-- **Agency Admin**: Agency-level management, bookings, settings
-- **Agent**: Standard booking agent, CRM operations
-- **Support**: Read-only troubleshooting access
+## Core Tech Stack
+- **Backend**: FastAPI, Motor (async MongoDB), Celery, Redis, WeasyPrint, Resend
+- **Frontend**: React, Shadcn UI, Lucide Icons
+- **Database**: MongoDB
+- **Infrastructure**: Redis, Kubernetes
 
-### Core Architecture
-```
-/app/backend/app/
-├── domain/
-│   ├── reliability/       # Integration Reliability Layer
-│   ├── governance/        # RBAC, Audit, Secrets, Compliance
-│   ├── suppliers/         # Supplier contracts, adapters
-│   └── operations/        # Booking lifecycle, financials
-├── routers/
-│   ├── production.py              # NEW - Production Activation API
-│   ├── ops_finance_accounts.py    # DECOMPOSED from ops_finance.py
-│   ├── ops_finance_refunds.py     # DECOMPOSED
-│   ├── ops_finance_settlements.py # DECOMPOSED
-│   ├── ops_finance_documents.py   # DECOMPOSED
-│   ├── ops_finance_suppliers.py   # DECOMPOSED
-│   ├── reliability.py             # Reliability API
-│   ├── governance.py              # Governance API
-│   └── suppliers_ecosystem.py     # Supplier API
-├── middleware/
-│   └── rbac_middleware.py  # NEW - Default-deny RBAC enforcement
-├── services/
-│   ├── voucher_service.py      # NEW - WeasyPrint PDF pipeline
-│   ├── delivery_service.py     # NEW - Resend/Slack/Webhook delivery
-│   └── production_readiness.py # NEW - Go-live certification
-├── suppliers/
-│   └── real_integrations.py    # NEW - Paximum/AviationStack/Amadeus skeletons
-└── tasks/
-    └── production_tasks.py     # NEW - Real Celery task bodies
-```
+## Users / Personas
+- **Super Admin**: Full platform control, hardening dashboard access
+- **Agency Admin**: Agency operations, bookings, reports
+- **Ops Admin**: Operations monitoring, incident response
 
-### What's Been Implemented
+## What's Been Implemented
 
-#### Phase 1: Foundation (Complete)
-- Multi-tenant SaaS with agency management
-- Booking lifecycle (search, hold, confirm, cancel)
-- Financial operations (accounts, payments, refunds, settlements)
-- Pricing engine with rules and markup
-- CRM and customer management
+### Production Activation Layer (Complete)
+- Redis recovery
+- God Router decomposition (6 finance routers)
+- RBAC enforcement middleware
+- Reliability pipeline wiring
+- PDF/Voucher pipeline (WeasyPrint)
+- Notification delivery service (Resend)
+- Celery task skeletons
+- Supplier adapter skeletons (Paximum, Amadeus, AviationStack)
+- Frontend Production Dashboard
 
-#### Phase 2: Enterprise Layers (Complete)
-- Supplier Ecosystem Layer (adapters, failover, registry)
-- Operations Layer (playbooks, incidents, financials)
-- Governance Layer (RBAC, audit, secrets, compliance)
-- Integration Reliability Layer (resilience, retry, contract validation)
+### Platform Hardening Phase (Complete - Feb 13, 2026)
+All 10 parts implemented and tested (17/17 backend + 11/11 frontend):
 
-#### Phase 3: Production Activation Layer (JUST COMPLETED - March 2026)
-- **P0 - Redis Recovery**: Installed and verified Redis health
-- **P0 - Reliability Pipeline Wiring**: Every supplier call passes through timeout → retry → contract validation → metrics → incident logging → degrade/disable
-- **P0 - RBAC Enforcement Middleware**: Default-deny permission checks on all API routes
-- **P0 - God Router Decomposition**: ops_finance.py (2453 lines) → 5 domain routers
-- **P1 - Real Celery Task Bodies**: Voucher generation, email, Slack alerts, cleanup, incident escalation
-- **P1 - PDF/Voucher Pipeline**: WeasyPrint with branded templates, QR codes, localization
-- **P1 - Notification Delivery**: Resend (primary), Slack/webhook (secondary) with audit log
-- **P2 - Frontend Dashboard**: Production Activation page with 5 tabs
-- **P2 - Secret Management Migration**: Env-based → Vault/KMS migration path
-- **P2 - Supplier Integration Prep**: Paximum, AviationStack, Amadeus adapter skeletons
-- **P2 - Production Readiness Certification**: 30 tasks, risk matrix, maturity score
+1. **Supplier Traffic Testing** — sandbox/shadow/canary/production modes for 3 suppliers
+2. **Worker Deployment Strategy** — 5 Celery pools, DLQ consumers, auto-scaling rules
+3. **Observability Stack** — 17 Prometheus metrics, 4 Grafana dashboards, 6 alert rules, OpenTelemetry
+4. **Performance Testing** — 3 load profiles (up to 500 agencies), 4 scenarios, 7 SLA targets
+5. **Multi-Tenant Safety** — 20 collection audit, 7 isolation scenarios
+6. **Secret Management Migration** — 9 secrets inventory, 4-phase migration plan
+7. **Incident Response Playbooks** — 3 playbooks (supplier outage, queue backlog, payment failure)
+8. **Auto-Scaling Strategy** — 4 component configs (API, workers, Redis, MongoDB)
+9. **Disaster Recovery** — 3 scenarios (region outage, DB corruption, queue loss)
+10. **Hardening Checklist** — 50 tasks, maturity scoring
 
-### Testing Status
-- Reliability Layer: 40/40 tests (iteration_6.json)
-- Production Activation Layer: 21/21 backend + 5/5 frontend tabs (iteration_70.json)
+## Key API Endpoints
+- `/api/hardening/status` — Combined hardening status
+- `/api/hardening/traffic/*` — Supplier traffic testing
+- `/api/hardening/workers/status` — Worker pools
+- `/api/hardening/observability/*` — Observability stack
+- `/api/hardening/performance/*` — Performance testing
+- `/api/hardening/tenant-safety/audit` — Tenant isolation
+- `/api/hardening/secrets/status` — Secret management
+- `/api/hardening/incidents/*` — Incident playbooks
+- `/api/hardening/scaling/status` — Auto-scaling
+- `/api/hardening/dr/plan` — Disaster recovery
+- `/api/hardening/checklist` — Hardening checklist
 
-### Current Scores
-- Production Readiness: 80%
-- Platform Maturity: 7.5/10 (near_ready)
-- Go-Live Ready: YES (0 critical failures)
+## Frontend Routes
+- `/app/admin/platform-hardening` — Platform Hardening Dashboard (11 tabs)
+- `/app/admin/production-activation` — Production Activation Dashboard
 
-### Mocked Services
-- Resend email (no RESEND_API_KEY)
-- Slack webhook (no SLACK_WEBHOOK_URL)
-- Celery tasks (Redis available but worker not running in preview)
+## Prioritized Backlog
 
-### Prioritized Backlog
+### P0 — Go-Live Blockers (6 remaining)
+1. Migrate secrets to Vault/KMS
+2. Remove hardcoded AviationStack API key
+3. Deploy Redis HA
+4. Deploy MongoDB ReplicaSet
+5. JWT secret rotation
+6. Full tenant isolation verification
 
-#### P0 (Critical - Next)
-- Live supplier integrations (Paximum first)
-- Configure Resend API key for real email delivery
-- Celery worker deployment with beat scheduler
+### P1 — High Priority
+7. Deploy Prometheus + Grafana
+8. OpenTelemetry instrumentation
+9. Load testing execution
+10. Supplier failover testing
 
-#### P1 (High Priority)
-- Supplier dashboard enhancements
-- Audit drill-down UI
-- Live refresh (WebSocket/SSE) for dashboards
-- DLQ consumer implementation
-- Secret rotation automation
+### P2 — Important
+11. Kubernetes HPA for API servers
+12. KEDA for worker scaling
+13. Automated backups with validation
+14. Graceful shutdown
 
-#### P2 (Future)
-- Multi-language voucher templates
-- Cross-tenant isolation enforcement
-- Prometheus alerting rules
-- Performance testing and tuning
-- API versioning documentation
+### P3 — Future
+15. Chaos engineering
+16. CDN for static assets
+17. Blue-green deployments
+18. SLO/SLI tracking
+19. GitOps with ArgoCD
 
-### Key API Endpoints
-- `/api/production/pipeline/status` - Pipeline health
-- `/api/production/readiness` - Readiness certification
-- `/api/production/readiness/tasks` - Top 30 tasks
-- `/api/production/readiness/secrets` - Secret inventory
-- `/api/production/vouchers/generate` - PDF voucher generation
-- `/api/production/notifications/email` - Email dispatch
-- `/api/production/suppliers/integrations` - Supplier configs
-- `/api/ops/finance/accounts` - Finance accounts (decomposed)
-- `/api/ops/finance/refunds` - Refund cases (decomposed)
-- `/api/ops/finance/settlements` - Settlements (decomposed)
-
-### Test Credentials
+## Credentials
 - Super Admin: agent@acenta.test / agent123
 - Agency Admin: agency1@demo.test / agency123

@@ -20,7 +20,7 @@ from app.utils import now_utc
 def _org_from_token(token: str) -> str:
     """Extract org_id from JWT without verification (test-only)."""
     payload = jwt.decode(token, options={"verify_signature": False})
-    return payload.get("organization_id", payload.get("org_id", ""))
+    return payload.get("org", "")
 
 
 @pytest.mark.anyio

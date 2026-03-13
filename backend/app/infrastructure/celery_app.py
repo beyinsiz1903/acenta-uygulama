@@ -41,32 +41,58 @@ def _result_url() -> str:
 default_exchange = Exchange("default", type="direct")
 dlx_exchange = Exchange("dlx", type="direct")  # Dead Letter Exchange
 
-# Queue definitions
+# Queue definitions — Production worker pools
 TASK_QUEUES = (
+    # Legacy queues (backward compat)
     Queue("default", default_exchange, routing_key="default"),
     Queue("critical", default_exchange, routing_key="critical"),
     Queue("supplier", default_exchange, routing_key="supplier"),
     Queue("notifications", default_exchange, routing_key="notifications"),
     Queue("reports", default_exchange, routing_key="reports"),
     Queue("maintenance", default_exchange, routing_key="maintenance"),
+    Queue("email", default_exchange, routing_key="email"),
+    Queue("alerts", default_exchange, routing_key="alerts"),
+    Queue("incidents", default_exchange, routing_key="incidents"),
+    # Production worker pool queues
+    Queue("booking_queue", default_exchange, routing_key="booking_queue"),
+    Queue("voucher_queue", default_exchange, routing_key="voucher_queue"),
+    Queue("notification_queue", default_exchange, routing_key="notification_queue"),
+    Queue("incident_queue", default_exchange, routing_key="incident_queue"),
+    Queue("cleanup_queue", default_exchange, routing_key="cleanup_queue"),
     # Dead Letter Queues
     Queue("dlq.default", dlx_exchange, routing_key="dlq.default"),
     Queue("dlq.critical", dlx_exchange, routing_key="dlq.critical"),
     Queue("dlq.supplier", dlx_exchange, routing_key="dlq.supplier"),
+    Queue("dlq.booking", dlx_exchange, routing_key="dlq.booking"),
+    Queue("dlq.voucher", dlx_exchange, routing_key="dlq.voucher"),
+    Queue("dlq.notification", dlx_exchange, routing_key="dlq.notification"),
+    Queue("dlq.incident", dlx_exchange, routing_key="dlq.incident"),
+    Queue("dlq.cleanup", dlx_exchange, routing_key="dlq.cleanup"),
 )
 
 # Route tasks to queues by name pattern
 TASK_ROUTES = {
-    "app.tasks.booking.*": {"queue": "critical"},
-    "app.tasks.payment.*": {"queue": "critical"},
+    # Production pool routes
+    "app.tasks.booking.*": {"queue": "booking_queue"},
+    "app.tasks.payment.*": {"queue": "booking_queue"},
+    "tasks.generate_voucher": {"queue": "voucher_queue"},
+    "tasks.send_voucher_email": {"queue": "voucher_queue"},
     "app.tasks.supplier.*": {"queue": "supplier"},
-    "app.tasks.email.*": {"queue": "notifications"},
-    "app.tasks.sms.*": {"queue": "notifications"},
-    "app.tasks.notification.*": {"queue": "notifications"},
-    "app.tasks.report.*": {"queue": "reports"},
-    "app.tasks.invoice.*": {"queue": "reports"},
-    "app.tasks.voucher.*": {"queue": "reports"},
-    "app.tasks.maintenance.*": {"queue": "maintenance"},
+    "app.tasks.email.*": {"queue": "notification_queue"},
+    "app.tasks.sms.*": {"queue": "notification_queue"},
+    "app.tasks.notification.*": {"queue": "notification_queue"},
+    "tasks.send_email": {"queue": "notification_queue"},
+    "tasks.send_slack_alert": {"queue": "notification_queue"},
+    "tasks.send_webhook": {"queue": "notification_queue"},
+    "app.tasks.report.*": {"queue": "voucher_queue"},
+    "app.tasks.invoice.*": {"queue": "voucher_queue"},
+    "app.tasks.voucher.*": {"queue": "voucher_queue"},
+    "tasks.escalate_incident": {"queue": "incident_queue"},
+    "app.tasks.maintenance.*": {"queue": "cleanup_queue"},
+    "tasks.cleanup_expired_holds": {"queue": "cleanup_queue"},
+    "tasks.cleanup_stale_orchestration_runs": {"queue": "cleanup_queue"},
+    "tasks.refresh_supplier_status_cache": {"queue": "cleanup_queue"},
+    "tasks.cleanup_old_metrics": {"queue": "cleanup_queue"},
 }
 
 

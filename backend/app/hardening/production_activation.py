@@ -83,101 +83,42 @@ async def check_redis_health() -> dict:
 
 
 async def check_celery_health() -> dict:
-    """Real Celery worker health check via Redis keys."""
-    import json as _json
+    """Real Celery worker health check via worker_pools module."""
+    from app.infrastructure.worker_pools import check_worker_health
 
-    result = {
+    health = await check_worker_health()
+
+    # Map to the format expected by the activation engine
+    workers = []
+    if health.get("worker_details"):
+        for w in health["worker_details"]:
+            workers.append({
+                "name": w.get("name", "unknown"),
+                "alive": w.get("alive", False),
+                "active_tasks": 0,
+            })
+
+    return {
         "service": "celery",
-        "status": "down",
-        "workers": [],
-        "details": {},
-    }
-    try:
-        import redis.asyncio as aioredis
-        url = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
-        r = aioredis.from_url(url, decode_responses=True, socket_connect_timeout=2)
-
-        # Check for celery worker heartbeat keys
-        # Celery stores worker info in Redis under _kombu.binding.* keys
-        worker_keys = []
-        async for key in r.scan_iter("_kombu.binding.*"):
-            worker_keys.append(key)
-
-        # Also check celery-task-meta-* for evidence of task processing
-        task_keys = []
-        async for key in r.scan_iter("celery-task-meta-*"):
-            task_keys.append(key)
-
-        # Try actual inspect via sync subprocess with stderr redirect
-        import subprocess
-        loop = asyncio.get_event_loop()
-
-        def _inspect():
-            try:
-                env = dict(os.environ)
-                env["PYTHONPATH"] = "/app/backend"
-                env["PATH"] = "/root/.venv/bin:" + env.get("PATH", "/usr/bin")
-                proc = subprocess.run(
-                    ["/root/.venv/bin/celery",
-                     "-A", "app.infrastructure.celery_app:celery_app",
-                     "inspect", "ping", "--timeout=3", "--json"],
-                    capture_output=True, text=True, timeout=10,
-                    cwd="/app/backend",
-                    env=env,
-                )
-                out = proc.stdout.strip()
-                if proc.returncode == 0 and out:
-                    try:
-                        return _json.loads(out)
-                    except _json.JSONDecodeError:
-                        pass
-                return None
-            except Exception:
-                return None
-
-        ping_result = await loop.run_in_executor(None, _inspect)
-
-        workers = []
-        if ping_result:
-            for worker_name, pong in ping_result.items():
-                workers.append({
-                    "name": worker_name,
-                    "alive": pong.get("ok") == "pong" if isinstance(pong, dict) else False,
-                    "active_tasks": 0,
-                })
-
-        # If no workers from inspect but we have kombu bindings, workers exist but may not respond
-        has_kombu = len(worker_keys) > 0
-
-        await r.aclose()
-
-        result.update({
-            "status": "healthy" if workers else ("registered" if has_kombu else "no_workers"),
-            "workers": workers,
-            "details": {
-                "worker_count": len(workers),
-                "total_active_tasks": len(task_keys),
-                "kombu_bindings": len(worker_keys),
-                "queues_configured": [
-                    "default", "critical", "supplier",
-                    "notifications", "reports", "maintenance",
-                ],
-                "dlq_configured": ["dlq.default", "dlq.critical", "dlq.supplier"],
-            },
-        })
-    except Exception as e:
-        result["error"] = str(e)
-        result["status"] = "error"
-        result["details"] = {
-            "worker_count": 0,
-            "total_active_tasks": 0,
+        "status": health["status"],
+        "workers": workers,
+        "details": {
+            "worker_count": health.get("total_workers", 0),
+            "total_active_tasks": health.get("task_results_count", 0),
+            "kombu_bindings": health.get("kombu_bindings", 0),
             "queues_configured": [
+                "booking_queue", "voucher_queue", "notification_queue",
+                "incident_queue", "cleanup_queue",
                 "default", "critical", "supplier",
                 "notifications", "reports", "maintenance",
             ],
-            "dlq_configured": ["dlq.default", "dlq.critical", "dlq.supplier"],
-        }
-    return result
+            "dlq_configured": [
+                "dlq.booking", "dlq.voucher", "dlq.notification",
+                "dlq.incident", "dlq.cleanup",
+                "dlq.default", "dlq.critical", "dlq.supplier",
+            ],
+        },
+    }
 
 
 async def check_mongodb_health(db) -> dict:

@@ -413,3 +413,7 @@ def register_routers(app: FastAPI) -> None:
     # --- Platform Hardening Layer ---
     from app.routers.hardening import router as hardening_router
     app.include_router(hardening_router)
+
+    # --- Worker Infrastructure Layer ---
+    from app.routers.worker_infrastructure import router as worker_infra_router
+    app.include_router(worker_infra_router)

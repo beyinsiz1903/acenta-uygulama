@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Progress } from "../../components/ui/progress";
-import { Shield, Activity, Server, Zap, Lock, AlertTriangle, Scale, Database, RefreshCw, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, Eye, Play, Target, TrendingUp, Layers } from "lucide-react";
+import { Shield, Activity, Server, Zap, Lock, AlertTriangle, Scale, Database, RefreshCw, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, Eye, Play, Target, TrendingUp, Layers, Gauge, Radio, FlaskConical, Users, FileCheck } from "lucide-react";
 import { api } from "../../lib/api";
 
 function useApi(path) {
@@ -911,6 +911,473 @@ function ChecklistTab() {
   );
 }
 
+/* ========== LIVE INFRASTRUCTURE TAB ========== */
+function LiveInfrastructureTab() {
+  const { data, loading, refetch } = useApi("/hardening/activation/infrastructure");
+  if (loading || !data) return <div className="animate-pulse h-64 bg-zinc-900 rounded-lg" />;
+
+  const svc = data.services;
+  const statusIcon = (s) => s === "healthy" ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : s === "no_workers" ? <Clock className="w-4 h-4 text-amber-400" /> : <XCircle className="w-4 h-4 text-red-400" />;
+  const statusColor = (s) => s === "healthy" ? "border-emerald-600/40 bg-emerald-950/10" : s === "no_workers" ? "border-amber-600/40 bg-amber-950/10" : "border-red-600/40 bg-red-950/10";
+
+  return (
+    <div data-testid="live-infra-tab" className="space-y-6">
+      {/* Overall Status */}
+      <div className={`rounded-lg border p-4 flex items-center gap-4 ${data.overall_status === "healthy" ? "border-emerald-600/40 bg-emerald-950/10" : "border-amber-600/40 bg-amber-950/10"}`}>
+        <Radio className={`w-6 h-6 ${data.overall_status === "healthy" ? "text-emerald-400" : "text-amber-400"} animate-pulse`} />
+        <div>
+          <div data-testid="infra-overall-status" className="text-lg font-bold text-zinc-100 uppercase">{data.overall_status}</div>
+          <p className="text-xs text-zinc-500">{data.healthy_services}/{data.total_services} services healthy</p>
+        </div>
+      </div>
+
+      {/* Service Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Redis */}
+        <Card className={`border ${statusColor(svc.redis.status)}`}>
+          <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2">{statusIcon(svc.redis.status)} Redis</CardTitle></CardHeader>
+          <CardContent className="text-xs space-y-2 text-zinc-400">
+            <div className="flex justify-between"><span>Status</span><Badge data-testid="redis-live-status" className={svc.redis.status === "healthy" ? "bg-emerald-600 text-white" : "bg-red-600 text-white"}>{svc.redis.status}</Badge></div>
+            <div className="flex justify-between"><span>Latency</span><span className="font-mono text-zinc-200">{svc.redis.latency_ms}ms</span></div>
+            {svc.redis.details && <>
+              <div className="flex justify-between"><span>Memory</span><span className="font-mono text-zinc-200">{svc.redis.details.used_memory_human}</span></div>
+              <div className="flex justify-between"><span>Clients</span><span className="font-mono text-zinc-200">{svc.redis.details.connected_clients}</span></div>
+              <div className="flex justify-between"><span>Version</span><span className="font-mono text-zinc-200">{svc.redis.details.redis_version}</span></div>
+              <div className="flex justify-between"><span>Keys</span><span className="font-mono text-zinc-200">{svc.redis.details.total_keys}</span></div>
+              <div className="flex justify-between"><span>Queue Depth</span><span className="font-mono text-zinc-200">{svc.redis.details.total_queue_depth}</span></div>
+            </>}
+          </CardContent>
+        </Card>
+
+        {/* Celery */}
+        <Card className={`border ${statusColor(svc.celery.status)}`}>
+          <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2">{statusIcon(svc.celery.status)} Celery Workers</CardTitle></CardHeader>
+          <CardContent className="text-xs space-y-2 text-zinc-400">
+            <div className="flex justify-between"><span>Status</span><Badge data-testid="celery-live-status" className={svc.celery.status === "healthy" ? "bg-emerald-600 text-white" : svc.celery.status === "no_workers" ? "bg-amber-500 text-white" : "bg-red-600 text-white"}>{svc.celery.status}</Badge></div>
+            <div className="flex justify-between"><span>Workers</span><span className="font-mono text-zinc-200">{svc.celery.details?.worker_count || 0}</span></div>
+            <div className="flex justify-between"><span>Active Tasks</span><span className="font-mono text-zinc-200">{svc.celery.details?.total_active_tasks || 0}</span></div>
+            <div className="border-t border-zinc-800 pt-2 mt-2">
+              <p className="text-zinc-500 mb-1">Queues:</p>
+              <div className="flex flex-wrap gap-1">
+                {(svc.celery.details?.queues_configured || []).map(q => <Badge key={q} variant="outline" className="text-[10px]">{q}</Badge>)}
+              </div>
+            </div>
+            <div>
+              <p className="text-zinc-500 mb-1">DLQ:</p>
+              <div className="flex flex-wrap gap-1">
+                {(svc.celery.details?.dlq_configured || []).map(q => <Badge key={q} variant="outline" className="text-[10px] border-red-800 text-red-400">{q}</Badge>)}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* MongoDB */}
+        <Card className={`border ${statusColor(svc.mongodb.status)}`}>
+          <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2">{statusIcon(svc.mongodb.status)} MongoDB</CardTitle></CardHeader>
+          <CardContent className="text-xs space-y-2 text-zinc-400">
+            <div className="flex justify-between"><span>Status</span><Badge data-testid="mongodb-live-status" className={svc.mongodb.status === "healthy" ? "bg-emerald-600 text-white" : "bg-red-600 text-white"}>{svc.mongodb.status}</Badge></div>
+            <div className="flex justify-between"><span>Latency</span><span className="font-mono text-zinc-200">{svc.mongodb.latency_ms}ms</span></div>
+            {svc.mongodb.details && <>
+              <div className="flex justify-between"><span>Collections</span><span className="font-mono text-zinc-200">{svc.mongodb.details.collections}</span></div>
+              <div className="flex justify-between"><span>Data Size</span><span className="font-mono text-zinc-200">{svc.mongodb.details.data_size_mb} MB</span></div>
+              <div className="flex justify-between"><span>Indexes</span><span className="font-mono text-zinc-200">{svc.mongodb.details.indexes}</span></div>
+              <div className="flex justify-between"><span>Objects</span><span className="font-mono text-zinc-200">{svc.mongodb.details.objects?.toLocaleString()}</span></div>
+            </>}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Queue Depths Detail */}
+      {svc.redis.details?.queue_depths && (
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Celery Queue Depths</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+              {Object.entries(svc.redis.details.queue_depths).map(([q, depth]) => (
+                <div key={q} className={`flex flex-col items-center p-3 rounded-lg ${depth > 0 ? "bg-amber-950/20 border border-amber-800/30" : "bg-zinc-800/50"}`}>
+                  <span className={`text-lg font-bold font-mono ${depth > 0 ? "text-amber-400" : "text-zinc-400"}`}>{depth}</span>
+                  <span className="text-[10px] text-zinc-500 mt-1 text-center">{q}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Button data-testid="refresh-infra" variant="outline" size="sm" onClick={refetch}><RefreshCw className="w-3.5 h-3.5 mr-1" />Refresh</Button>
+    </div>
+  );
+}
+
+/* ========== PERFORMANCE BASELINE TAB ========== */
+function PerformanceBaselineTab() {
+  const { data, loading, refetch } = useApi("/hardening/activation/performance");
+  if (loading || !data) return <div className="animate-pulse h-64 bg-zinc-900 rounded-lg" />;
+
+  const results = data.results;
+  const sla = data.sla_summary;
+
+  return (
+    <div data-testid="perf-baseline-tab" className="space-y-6">
+      {/* SLA Summary */}
+      <div className={`rounded-lg border p-4 ${sla.pass_rate_pct === 100 ? "border-emerald-600/40 bg-emerald-950/10" : "border-amber-600/40 bg-amber-950/10"}`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <div data-testid="sla-pass-rate" className="text-2xl font-bold text-zinc-100">{sla.pass_rate_pct}%</div>
+            <p className="text-xs text-zinc-500">SLA Pass Rate ({sla.passing}/{sla.total_tests} tests)</p>
+          </div>
+          <div className="text-right text-xs text-zinc-500">
+            <p>Target: 10k searches/hr</p>
+            <p>Target: 1k bookings/hr</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Individual Test Results */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {Object.entries(results).map(([key, result]) => {
+          if (result.error) return (
+            <Card key={key} className="bg-red-950/20 border-red-900/40">
+              <CardHeader className="pb-2"><CardTitle className="text-sm">{key.replace(/_/g, " ")}</CardTitle></CardHeader>
+              <CardContent><p className="text-xs text-red-400">{result.error}</p></CardContent>
+            </Card>
+          );
+          return (
+            <Card key={key} className={`border ${result.passes_sla ? "border-emerald-600/40 bg-emerald-950/10" : "border-red-600/40 bg-red-950/10"}`}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  {result.passes_sla ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <XCircle className="w-4 h-4 text-red-400" />}
+                  {key.replace(/_/g, " ")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-xs space-y-1.5 text-zinc-400">
+                <div className="flex justify-between"><span>Avg</span><span className="font-mono text-zinc-200">{result.avg_ms}ms</span></div>
+                {result.p95_ms !== undefined && <div className="flex justify-between"><span>P95</span><span className="font-mono text-zinc-200">{result.p95_ms}ms</span></div>}
+                {result.min_ms !== undefined && <div className="flex justify-between"><span>Min/Max</span><span className="font-mono text-zinc-200">{result.min_ms}/{result.max_ms}ms</span></div>}
+                <div className="flex justify-between"><span>SLA Target</span><span className="font-mono text-zinc-200">{result.sla_target_ms}ms</span></div>
+                <div className="flex justify-between"><span>Samples</span><span className="font-mono text-zinc-200">{result.samples}</span></div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <Button data-testid="refresh-perf" variant="outline" size="sm" onClick={refetch}><RefreshCw className="w-3.5 h-3.5 mr-1" />Re-run Baseline</Button>
+    </div>
+  );
+}
+
+/* ========== INCIDENT SIMULATION TAB ========== */
+function IncidentSimulationTab() {
+  const [results, setResults] = useState({});
+  const [running, setRunning] = useState(null);
+
+  const runSimulation = async (type) => {
+    setRunning(type);
+    try {
+      const res = await api.post(`/hardening/activation/incident/${type}`);
+      setResults(prev => ({ ...prev, [type]: res.data }));
+    } catch (e) {
+      setResults(prev => ({ ...prev, [type]: { error: "Simulation failed" } }));
+    }
+    setRunning(null);
+  };
+
+  const incidents = [
+    { type: "supplier_outage", label: "Supplier Outage", icon: <Zap className="w-4 h-4" />, desc: "Simulate Paximum API timeout" },
+    { type: "queue_backlog", label: "Queue Backlog", icon: <Server className="w-4 h-4" />, desc: "Measure queue depths & backlog handling" },
+    { type: "payment_failure", label: "Payment Failure", icon: <AlertTriangle className="w-4 h-4" />, desc: "Simulate Stripe webhook failure" },
+  ];
+
+  return (
+    <div data-testid="incident-sim-tab" className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {incidents.map(({ type, label, icon, desc }) => (
+          <Card key={type} className={`border ${results[type]?.verdict === "PASS" ? "border-emerald-600/40 bg-emerald-950/10" : "bg-zinc-900 border-zinc-800"}`}>
+            <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2">{icon} {label}</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-xs text-zinc-500">{desc}</p>
+              <Button data-testid={`simulate-${type}`} size="sm" variant="outline" className="w-full" onClick={() => runSimulation(type)} disabled={running === type}>
+                {running === type ? <RefreshCw className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Play className="w-3.5 h-3.5 mr-1" />}
+                {running === type ? "Running..." : "Simulate"}
+              </Button>
+              {results[type] && !results[type].error && (
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="text-zinc-400">Verdict</span>
+                    <Badge className={results[type].verdict === "PASS" ? "bg-emerald-600 text-white" : "bg-red-600 text-white"}>{results[type].verdict}</Badge>
+                  </div>
+                  {results[type].playbook_executed && (
+                    <div className="border-t border-zinc-800 pt-2">
+                      <p className="text-zinc-500 mb-1">Playbook Steps:</p>
+                      {Object.entries(results[type].playbook_executed).map(([step, action]) => (
+                        <div key={step} className="flex items-start gap-1.5 py-0.5">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-400 mt-0.5 flex-shrink-0" />
+                          <span className="text-zinc-300">{action}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ========== TENANT ISOLATION (REAL) TAB ========== */
+function TenantIsolationRealTab() {
+  const { data, loading, refetch } = useApi("/hardening/activation/tenant-isolation");
+  if (loading || !data) return <div className="animate-pulse h-64 bg-zinc-900 rounded-lg" />;
+
+  const s = data.summary;
+  return (
+    <div data-testid="tenant-real-tab" className="space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <Card className="bg-zinc-900 border-zinc-800"><CardContent className="pt-6 text-center"><div className="text-2xl font-bold text-zinc-100">{s.collections_checked}</div><p className="text-xs text-zinc-500">Checked</p></CardContent></Card>
+        <Card className="bg-zinc-900 border-zinc-800"><CardContent className="pt-6 text-center"><div className="text-2xl font-bold text-emerald-400">{s.isolated}</div><p className="text-xs text-zinc-500">Isolated</p></CardContent></Card>
+        <Card className="bg-zinc-900 border-zinc-800"><CardContent className="pt-6 text-center"><div className="text-2xl font-bold text-amber-400">{s.partial}</div><p className="text-xs text-zinc-500">Partial</p></CardContent></Card>
+        <Card className="bg-zinc-900 border-zinc-800"><CardContent className="pt-6 text-center"><div className="text-2xl font-bold text-red-400">{s.not_isolated}</div><p className="text-xs text-zinc-500">Not Isolated</p></CardContent></Card>
+        <Card className="bg-zinc-900 border-zinc-800"><CardContent className="pt-6 text-center"><div data-testid="isolation-score" className="text-2xl font-bold text-zinc-100">{s.isolation_score_pct}%</div><p className="text-xs text-zinc-500">Score</p></CardContent></Card>
+      </div>
+
+      {/* Cross-tenant test results */}
+      <div className="grid grid-cols-3 gap-4">
+        {Object.entries(data.cross_tenant_test).map(([test, result]) => (
+          <Card key={test} className={`border ${result === "PASS" ? "border-emerald-600/40 bg-emerald-950/10" : "border-red-600/40 bg-red-950/10"}`}>
+            <CardContent className="pt-4 flex items-center justify-between">
+              <span className="text-xs text-zinc-300">{test.replace(/_/g, " ")}</span>
+              <Badge className={result === "PASS" ? "bg-emerald-600 text-white" : "bg-red-600 text-white"}>{result}</Badge>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Collection details */}
+      <Card className="bg-zinc-900 border-zinc-800">
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Collection Isolation Details</CardTitle></CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead><tr className="text-zinc-500 border-b border-zinc-800">
+                <th className="text-left py-2">Collection</th><th className="text-center">Status</th><th className="text-center">Tenant Field</th><th className="text-right">Docs</th><th className="text-center">Risk</th>
+              </tr></thead>
+              <tbody>
+                {data.results.map((r, i) => (
+                  <tr key={i} className="border-b border-zinc-800/50">
+                    <td className="py-1.5 text-zinc-300 font-mono">{r.collection}</td>
+                    <td className="text-center">
+                      <Badge variant={r.status === "isolated" ? "default" : r.status === "empty" ? "outline" : "destructive"} className="text-[10px]">{r.status}</Badge>
+                    </td>
+                    <td className="text-center text-zinc-400">{r.field_name || "-"}</td>
+                    <td className="text-right font-mono text-zinc-400">{r.total_docs ?? "-"}</td>
+                    <td className="text-center"><Badge variant={r.risk === "low" ? "outline" : r.risk === "critical" ? "destructive" : "default"} className="text-[10px]">{r.risk}</Badge></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Button data-testid="refresh-tenant-real" variant="outline" size="sm" onClick={refetch}><RefreshCw className="w-3.5 h-3.5 mr-1" />Re-run Tests</Button>
+    </div>
+  );
+}
+
+/* ========== DRY RUN TAB ========== */
+function DryRunTab() {
+  const { data, loading, refetch } = useApi("/hardening/activation/dry-run");
+  if (loading || !data) return <div className="animate-pulse h-64 bg-zinc-900 rounded-lg" />;
+
+  return (
+    <div data-testid="dry-run-tab" className="space-y-6">
+      {/* Overall Result */}
+      <div className={`rounded-lg border p-4 text-center ${data.dry_run_result === "PASS" ? "border-emerald-600/40 bg-emerald-950/10" : "border-red-600/40 bg-red-950/10"}`}>
+        <div data-testid="dry-run-result" className={`text-3xl font-bold ${data.dry_run_result === "PASS" ? "text-emerald-400" : "text-red-400"}`}>
+          {data.dry_run_result}
+        </div>
+        <p className="text-xs text-zinc-500 mt-1">{data.summary.passing}/{data.summary.total_steps} steps passed in {data.summary.total_duration_ms}ms</p>
+      </div>
+
+      {/* Steps */}
+      <Card className="bg-zinc-900 border-zinc-800">
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Pipeline Steps: Search &rarr; Price &rarr; Book &rarr; Voucher &rarr; Notify</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {data.steps.map((step) => (
+            <div key={step.step} data-testid={`dry-run-step-${step.step}`} className={`flex items-center justify-between rounded-lg p-3 border ${step.status === "pass" ? "border-emerald-600/30 bg-emerald-950/10" : "border-red-600/30 bg-red-950/10"}`}>
+              <div className="flex items-center gap-3">
+                {step.status === "pass" ? <CheckCircle2 className="w-5 h-5 text-emerald-400" /> : <XCircle className="w-5 h-5 text-red-400" />}
+                <div>
+                  <p className="text-sm font-medium text-zinc-200">Step {step.step}: {step.name}</p>
+                  <p className="text-xs text-zinc-500">{step.details || step.error}</p>
+                </div>
+              </div>
+              {step.duration_ms !== undefined && <span className="text-xs font-mono text-zinc-400">{step.duration_ms}ms</span>}
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Button data-testid="rerun-dry-run" variant="outline" size="sm" onClick={refetch}><RefreshCw className="w-3.5 h-3.5 mr-1" />Re-run Dry Run</Button>
+    </div>
+  );
+}
+
+/* ========== ONBOARDING TAB ========== */
+function OnboardingTab() {
+  const { data, loading, refetch } = useApi("/hardening/activation/onboarding");
+  if (loading || !data) return <div className="animate-pulse h-64 bg-zinc-900 rounded-lg" />;
+
+  const s = data.summary;
+  return (
+    <div data-testid="onboarding-tab" className="space-y-6">
+      <div className={`rounded-lg border p-4 ${s.onboarding_ready_pct >= 80 ? "border-emerald-600/40 bg-emerald-950/10" : "border-amber-600/40 bg-amber-950/10"}`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <div data-testid="onboarding-readiness" className="text-2xl font-bold text-zinc-100">{s.onboarding_ready_pct}%</div>
+            <p className="text-xs text-zinc-500">Onboarding Readiness ({s.ready}/{s.total_checks} checks pass)</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Checks */}
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Readiness Checks</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            {data.checks.map((c, i) => (
+              <div key={i} className="flex items-center justify-between bg-zinc-800/50 rounded p-2.5">
+                <div className="flex items-center gap-2">
+                  {c.status === "ready" ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : c.status === "test_mode" ? <Clock className="w-4 h-4 text-amber-400" /> : <XCircle className="w-4 h-4 text-red-400" />}
+                  <div>
+                    <p className="text-xs text-zinc-200">{c.check}</p>
+                    <p className="text-[10px] text-zinc-500">{c.details}</p>
+                  </div>
+                </div>
+                <Badge variant={c.status === "ready" ? "default" : c.status === "test_mode" ? "outline" : "destructive"} className="text-[10px]">{c.status}</Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Workflow */}
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Onboarding Workflow</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            {Object.entries(data.onboarding_workflow).map(([step, desc]) => (
+              <div key={step} className="flex items-center gap-3 bg-zinc-800/50 rounded p-2.5">
+                <div className="w-6 h-6 rounded-full bg-zinc-700 flex items-center justify-center text-[10px] font-bold text-zinc-300">{step.split("_")[1]}</div>
+                <span className="text-xs text-zinc-300">{desc}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Button data-testid="refresh-onboarding" variant="outline" size="sm" onClick={refetch}><RefreshCw className="w-3.5 h-3.5 mr-1" />Refresh</Button>
+    </div>
+  );
+}
+
+/* ========== GO-LIVE CERTIFICATION (REAL) TAB ========== */
+function GoLiveCertificationTab() {
+  const { data, loading, refetch } = useApi("/hardening/activation/certification");
+  if (loading || !data) return <div className="animate-pulse h-64 bg-zinc-900 rounded-lg" />;
+
+  const cert = data.certification;
+  const scores = data.dimension_scores;
+  const weights = data.weights;
+
+  return (
+    <div data-testid="golive-cert-tab" className="space-y-6">
+      {/* Decision Banner */}
+      <div className={`rounded-lg border-2 p-6 text-center ${cert.decision === "GO" ? "border-emerald-500 bg-emerald-950/20" : "border-red-500 bg-red-950/20"}`}>
+        <div data-testid="golive-decision" className={`text-4xl font-black tracking-wider ${cert.decision === "GO" ? "text-emerald-400" : "text-red-400"}`}>
+          {cert.decision}
+        </div>
+        <div className="text-lg mt-2 text-zinc-300">Production Readiness: <span className="font-bold">{cert.production_readiness_score}/10</span></div>
+        {cert.gap > 0 && <p className="text-sm text-zinc-500 mt-1">Gap to target (8.5): {cert.gap} points</p>}
+      </div>
+
+      {/* Dimension Scores */}
+      <Card className="bg-zinc-900 border-zinc-800">
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Dimension Scores (Weighted)</CardTitle></CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {Object.entries(scores).map(([dim, score]) => (
+              <div key={dim} className="bg-zinc-800/50 rounded-lg p-3 text-center">
+                <div className={`text-xl font-bold ${score >= 8 ? "text-emerald-400" : score >= 5 ? "text-amber-400" : "text-red-400"}`}>{score}</div>
+                <div className="text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">{dim}</div>
+                <div className="text-[9px] text-zinc-600 mt-0.5">weight: {((weights[dim] || 0) * 100).toFixed(0)}%</div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Status Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardContent className="pt-4 text-center">
+            <Badge className={data.infrastructure.status === "healthy" ? "bg-emerald-600 text-white" : "bg-amber-500 text-white"}>{data.infrastructure.status}</Badge>
+            <p className="text-xs text-zinc-500 mt-1">Infrastructure</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardContent className="pt-4 text-center">
+            <div className="text-xl font-bold text-zinc-100">{data.security.secrets_ready_pct}%</div>
+            <p className="text-xs text-zinc-500 mt-1">Secrets Ready</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardContent className="pt-4 text-center">
+            <Badge className={data.reliability.dry_run_result === "PASS" ? "bg-emerald-600 text-white" : "bg-red-600 text-white"}>{data.reliability.dry_run_result}</Badge>
+            <p className="text-xs text-zinc-500 mt-1">Dry Run</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardContent className="pt-4 text-center">
+            <div className="text-xl font-bold text-zinc-100">{data.suppliers.active}/{data.suppliers.total}</div>
+            <p className="text-xs text-zinc-500 mt-1">Suppliers Active</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Risks */}
+      {data.risks.length > 0 && (
+        <Card className="bg-red-950/20 border-red-900/40">
+          <CardHeader className="pb-2"><CardTitle className="text-sm text-red-400">Risk Analysis ({data.risks.length} items)</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            {data.risks.map((r, i) => (
+              <div key={i} className="flex items-center justify-between bg-zinc-900/50 rounded p-2.5">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className={`w-4 h-4 flex-shrink-0 ${r.severity === "critical" ? "text-red-400" : "text-amber-400"}`} />
+                  <div>
+                    <p className="text-xs text-zinc-200">{r.risk}</p>
+                    <p className="text-[10px] text-zinc-500">{r.mitigation}</p>
+                  </div>
+                </div>
+                <Badge variant={r.severity === "critical" ? "destructive" : "default"} className="text-[10px]">{r.severity}</Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="flex items-center gap-2 text-xs text-zinc-600">
+        Risk Level: <Badge variant={data.risk_level === "critical" ? "destructive" : data.risk_level === "high" ? "default" : "outline"} className="text-[10px]">{data.risk_level}</Badge>
+        <span className="ml-auto">Onboarding: {data.onboarding_ready}% ready</span>
+      </div>
+
+      <Button data-testid="refresh-golive" variant="outline" size="sm" onClick={refetch}><RefreshCw className="w-3.5 h-3.5 mr-1" />Re-certify</Button>
+    </div>
+  );
+}
+
 /* ========== MAIN PAGE ========== */
 export default function PlatformHardeningPage() {
   return (
@@ -923,33 +1390,43 @@ export default function PlatformHardeningPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
+      <Tabs defaultValue="golive" className="space-y-4">
         <TabsList data-testid="hardening-tabs" className="bg-zinc-900 border border-zinc-800 flex-wrap h-auto gap-1 p-1">
+          {/* Production Activation Tabs */}
+          <TabsTrigger value="golive" className="text-xs gap-1 data-[state=active]:bg-emerald-700 data-[state=active]:text-white"><FileCheck className="w-3.5 h-3.5" />Go-Live</TabsTrigger>
+          <TabsTrigger value="infra" className="text-xs gap-1"><Radio className="w-3.5 h-3.5" />Infrastructure</TabsTrigger>
+          <TabsTrigger value="perfbaseline" className="text-xs gap-1"><Gauge className="w-3.5 h-3.5" />Performance</TabsTrigger>
+          <TabsTrigger value="incidents" className="text-xs gap-1"><FlaskConical className="w-3.5 h-3.5" />Incidents</TabsTrigger>
+          <TabsTrigger value="isolation" className="text-xs gap-1"><Lock className="w-3.5 h-3.5" />Isolation</TabsTrigger>
+          <TabsTrigger value="dryrun" className="text-xs gap-1"><Play className="w-3.5 h-3.5" />Dry Run</TabsTrigger>
+          <TabsTrigger value="onboarding" className="text-xs gap-1"><Users className="w-3.5 h-3.5" />Onboarding</TabsTrigger>
+          {/* Design & Execution Tabs */}
           <TabsTrigger value="overview" className="text-xs gap-1"><Shield className="w-3.5 h-3.5" />Overview</TabsTrigger>
           <TabsTrigger value="execution" className="text-xs gap-1"><Target className="w-3.5 h-3.5" />Execution</TabsTrigger>
-          <TabsTrigger value="certification" className="text-xs gap-1"><TrendingUp className="w-3.5 h-3.5" />Certification</TabsTrigger>
           <TabsTrigger value="traffic" className="text-xs gap-1"><Zap className="w-3.5 h-3.5" />Traffic</TabsTrigger>
           <TabsTrigger value="workers" className="text-xs gap-1"><Server className="w-3.5 h-3.5" />Workers</TabsTrigger>
           <TabsTrigger value="observability" className="text-xs gap-1"><Activity className="w-3.5 h-3.5" />Observability</TabsTrigger>
-          <TabsTrigger value="performance" className="text-xs gap-1"><Zap className="w-3.5 h-3.5" />Performance</TabsTrigger>
-          <TabsTrigger value="tenant" className="text-xs gap-1"><Lock className="w-3.5 h-3.5" />Tenants</TabsTrigger>
           <TabsTrigger value="secrets" className="text-xs gap-1"><Lock className="w-3.5 h-3.5" />Secrets</TabsTrigger>
-          <TabsTrigger value="playbooks" className="text-xs gap-1"><AlertTriangle className="w-3.5 h-3.5" />Playbooks</TabsTrigger>
           <TabsTrigger value="scaling" className="text-xs gap-1"><Scale className="w-3.5 h-3.5" />Scaling</TabsTrigger>
           <TabsTrigger value="dr" className="text-xs gap-1"><Database className="w-3.5 h-3.5" />DR</TabsTrigger>
           <TabsTrigger value="checklist" className="text-xs gap-1"><CheckCircle2 className="w-3.5 h-3.5" />Checklist</TabsTrigger>
         </TabsList>
 
+        {/* Production Activation */}
+        <TabsContent value="golive"><GoLiveCertificationTab /></TabsContent>
+        <TabsContent value="infra"><LiveInfrastructureTab /></TabsContent>
+        <TabsContent value="perfbaseline"><PerformanceBaselineTab /></TabsContent>
+        <TabsContent value="incidents"><IncidentSimulationTab /></TabsContent>
+        <TabsContent value="isolation"><TenantIsolationRealTab /></TabsContent>
+        <TabsContent value="dryrun"><DryRunTab /></TabsContent>
+        <TabsContent value="onboarding"><OnboardingTab /></TabsContent>
+        {/* Design & Execution */}
         <TabsContent value="overview"><OverviewTab /></TabsContent>
         <TabsContent value="execution"><ExecutionTab /></TabsContent>
-        <TabsContent value="certification"><CertificationTab /></TabsContent>
         <TabsContent value="traffic"><TrafficTestingTab /></TabsContent>
         <TabsContent value="workers"><WorkerStrategyTab /></TabsContent>
         <TabsContent value="observability"><ObservabilityTab /></TabsContent>
-        <TabsContent value="performance"><PerformanceTab /></TabsContent>
-        <TabsContent value="tenant"><TenantSafetyTab /></TabsContent>
         <TabsContent value="secrets"><SecretsTab /></TabsContent>
-        <TabsContent value="playbooks"><PlaybooksTab /></TabsContent>
         <TabsContent value="scaling"><ScalingTab /></TabsContent>
         <TabsContent value="dr"><DRTab /></TabsContent>
         <TabsContent value="checklist"><ChecklistTab /></TabsContent>

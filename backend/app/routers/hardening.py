@@ -1,7 +1,7 @@
 """Platform Hardening API Router.
 
 Unified router for all 10 parts of the Platform Hardening Phase.
-Includes execution tracking for the go-live certification process.
+Includes execution tracking and production activation endpoints.
 """
 from __future__ import annotations
 
@@ -73,6 +73,110 @@ async def get_certification(
 ):
     from app.hardening.execution_tracker import get_go_live_certification
     return get_go_live_certification()
+
+
+# ============================================================================
+# PRODUCTION ACTIVATION — Real Infrastructure Checks
+# ============================================================================
+
+@router.get("/activation/infrastructure")
+async def get_infrastructure_health(
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Real infrastructure health: Redis, Celery, MongoDB."""
+    from app.hardening.production_activation import run_full_infrastructure_check
+    return await run_full_infrastructure_check(db)
+
+
+@router.get("/activation/secrets")
+async def get_secret_audit(
+    current_user=Depends(require_roles(["admin", "super_admin"])),
+):
+    """Real secret management audit."""
+    from app.hardening.production_activation import audit_secrets
+    return audit_secrets()
+
+
+@router.get("/activation/suppliers")
+async def get_supplier_status(
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Real supplier adapter status."""
+    from app.hardening.production_activation import verify_supplier_adapters
+    return await verify_supplier_adapters(db)
+
+
+@router.get("/activation/performance")
+async def get_performance_baseline(
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Real performance baseline tests."""
+    from app.hardening.production_activation import run_performance_baseline
+    return await run_performance_baseline(db)
+
+
+@router.post("/activation/incident/{incident_type}")
+async def simulate_incident_endpoint(
+    incident_type: str,
+    current_user=Depends(require_roles(["admin", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Simulate an incident: supplier_outage, queue_backlog, payment_failure."""
+    from app.hardening.production_activation import simulate_incident
+    return await simulate_incident(db, incident_type)
+
+
+@router.get("/activation/tenant-isolation")
+async def get_tenant_isolation(
+    current_user=Depends(require_roles(["admin", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Real tenant isolation verification."""
+    from app.hardening.production_activation import run_tenant_isolation_tests
+    return await run_tenant_isolation_tests(db)
+
+
+@router.get("/activation/metrics")
+async def get_realtime_metrics(
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Real-time aggregated metrics."""
+    from app.hardening.production_activation import get_realtime_metrics
+    return await get_realtime_metrics(db)
+
+
+@router.get("/activation/dry-run")
+async def run_dry_run(
+    current_user=Depends(require_roles(["admin", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Go-live dry run: search -> price -> book -> voucher -> notify."""
+    from app.hardening.production_activation import run_go_live_dry_run
+    return await run_go_live_dry_run(db)
+
+
+@router.get("/activation/onboarding")
+async def get_onboarding_readiness(
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Agency onboarding readiness check."""
+    from app.hardening.production_activation import check_onboarding_readiness
+    return await check_onboarding_readiness(db)
+
+
+@router.get("/activation/certification")
+async def get_go_live_certification(
+    current_user=Depends(require_roles(["admin", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Full go-live certification with real data from all systems."""
+    from app.hardening.production_activation import generate_go_live_certification
+    return await generate_go_live_certification(db)
 
 
 # ============================================================================

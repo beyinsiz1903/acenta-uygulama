@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://platform-ready-2.preview.emergentagent.com"
+BASE_URL = "https://go-live-sprint.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials

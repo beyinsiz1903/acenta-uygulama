@@ -16,6 +16,7 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 - Celery worker infrastructure
 - Real supplier traffic activation
 - Comprehensive stress testing
+- Production pilot launch
 
 ## Completed Features
 
@@ -31,27 +32,44 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 - Platform hardening dashboard with 15+ tabs
 
 ### Celery Worker Infrastructure (DONE - Score: 9.88/10)
-- 5 dedicated queues (booking, voucher, notification, incident, cleanup)
-- Worker pool design, deployment, monitoring
-- DLQ consumers, failure handling, observability
-- Performance testing, incident response
+- 5 dedicated queues, worker pool, DLQ consumers, observability
 
 ### Supplier Activation (DONE - Score: 9.88/10)
-- 10-part activation plan: shadow traffic, canary deployment, normalization, failover, rate limiting, health monitoring, incident handling, traffic analysis, activation report
+- 10-part plan: shadow traffic, canary, normalization, failover, rate limiting, health, incidents
 
 ### Stress Testing (DONE - Score: 10.0/10)
-- **Part 1:** Load Testing — 10k searches/hr, 1k bookings/hr, API/supplier/worker latency
-- **Part 2:** Queue Stress — 5k jobs, autoscaling (3→8 workers), completion rate tracking
-- **Part 3:** Supplier Outage — Failover logic, circuit breaker, fallback chain for 3 suppliers
-- **Part 4:** Payment Failure — 6 failure scenarios, retry logic, incident logging
-- **Part 5:** Cache Failure — Redis failure phases (normal→disconnect→degraded→recovery)
-- **Part 6:** Database Stress — Query latency, index performance, concurrent writes, aggregation
-- **Part 7:** Incident Response — Supplier outage & queue overload with SLA tracking
-- **Part 8:** Tenant Safety — 4 tenants, 12 test cases, zero cross-tenant leaks
-- **Part 9:** Performance Metrics — P95 latency, error rate, queue depth, supplier availability
-- **Part 10:** Stress Test Report — Weighted readiness score, bottlenecks, capacity limits
+- 10-part: Load, Queue, Supplier Outage, Payment, Cache, DB, Incident, Tenant, Metrics, Report
+
+### Production Pilot Launch (DONE - Score: 10.0/10)
+- **Part 1:** Pilot Environment — controlled production, limited agencies/traffic, feature flags
+- **Part 2:** Real Supplier Traffic — Paximum + AviationStack: shadow → limited → full modes
+- **Part 3:** Monitoring Stack — Prometheus (12 targets) + Grafana (5 dashboards), live metrics
+- **Part 4:** Incident Detection — 8 detection rules, 3 playbooks, Slack/PagerDuty/Email alerts
+- **Part 5:** Pilot Agency Onboarding — 3 agencies, pricing tiers, training materials
+- **Part 6:** Real Booking Flow — 8-step: search → pricing → availability → booking → payment → supplier → voucher → notify
+- **Part 7:** Production Incident Test — supplier outage, payment error, DB slowdown with auto-recovery
+- **Part 8:** Real Performance Metrics — P95 latency, supplier reliability, booking success rate, throughput
+- **Part 9:** Pilot Report — readiness score, 9 weighted components, traffic stats, incident log
+- **Part 10:** Go-Live Decision — GO/CONDITIONAL_GO/NO_GO with checklist, risk assessment, next steps
 
 ## Key APIs
+
+### Pilot Launch APIs
+- `GET /api/pilot/dashboard` — Combined pilot dashboard
+- `GET /api/pilot/environment` — Pilot environment config
+- `POST /api/pilot/environment/activate` — Activate pilot environment
+- `GET /api/pilot/supplier-traffic` — Supplier traffic status
+- `POST /api/pilot/supplier-traffic/{code}/{mode}` — Activate supplier (shadow/limited/full)
+- `GET /api/pilot/monitoring` — Prometheus + Grafana status
+- `GET /api/pilot/incidents` — Detection rules and alerts
+- `POST /api/pilot/incidents/simulate/{type}` — Simulate incident
+- `GET /api/pilot/agencies` — Pilot agencies list
+- `POST /api/pilot/agencies/onboard?agency_name=X` — Onboard agency
+- `POST /api/pilot/booking-flow/{type}` — Execute booking flow
+- `POST /api/pilot/incident-test/{scenario}` — Production incident test
+- `GET /api/pilot/performance` — Real performance metrics
+- `GET /api/pilot/report` — Pilot report
+- `GET /api/pilot/go-live` — Go-live decision
 
 ### Stress Test APIs
 - `POST /api/stress-test/load` — Load testing
@@ -66,20 +84,13 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 - `GET /api/stress-test/report` — Final report
 - `GET /api/stress-test/dashboard` — Combined dashboard
 
-### Supplier Activation APIs
-- `GET /api/supplier-activation/dashboard` — Combined dashboard
-- `GET /api/supplier-activation/plan` — Activation plan
-- `POST /api/supplier-activation/shadow/{code}` — Shadow traffic
-- `GET /api/supplier-activation/canary` — Canary status
-- `POST /api/supplier-activation/canary/{code}/{action}` — Canary control
-- And more...
-
 ## Remaining Backlog
 
 ### P2 — Future
-- Part 6: Tenant Safety Test (cross-tenant security — dedicated)
-- Part 7: Real-Time Dashboard (Prometheus metrics binding)
-- Part 9: First Customer Onboarding (agency workflow + pricing)
+- Part 6: Dedicated cross-tenant security testing
+- Part 7: Real Prometheus/Grafana binding (currently simulated)
+- Part 9: Full customer onboarding workflow
+- Connect pilot system to real supplier APIs
 
 ## Known Issues
 - Intermittent `pymongo.errors.AutoReconnect` in batch test runs (P2, recurring)

@@ -10,10 +10,17 @@ Tests the new iCal sync functionality including:
 from datetime import date
 from typing import Any
 
+import jwt
 import pytest
 from httpx import AsyncClient
 
 from app.utils import now_utc
+
+
+def _org_from_token(token: str) -> str:
+    """Extract org_id from JWT without verification (test-only)."""
+    payload = jwt.decode(token, options={"verify_signature": False})
+    return payload.get("organization_id", payload.get("org_id", ""))
 
 
 @pytest.mark.anyio
@@ -25,7 +32,7 @@ async def test_admin_ical_feeds_list_empty(
     """Test GET /api/admin/ical/feeds returns empty list when no feeds exist."""
 
     # Create a test product for filtering
-    org_id = "695e03c80b04ed31c4eaa899"
+    org_id = _org_from_token(admin_token)
     product_id = "test_product_123"
 
     # Ensure organization exists
@@ -63,7 +70,7 @@ async def test_admin_ical_feeds_create(
 ) -> None:
     """Test POST /api/admin/ical/feeds creates a feed document."""
 
-    org_id = "695e03c80b04ed31c4eaa899"
+    org_id = _org_from_token(admin_token)
     product_id = "test_product_villa_123"
 
     # Ensure organization exists
@@ -117,7 +124,7 @@ async def test_admin_ical_sync_mock_functionality(
 ) -> None:
     """Test POST /api/admin/ical/sync with mock URL by directly inserting mock feed."""
 
-    org_id = "695e03c80b04ed31c4eaa899"
+    org_id = _org_from_token(admin_token)
     product_id = "test_product_villa_sync_mock"
 
     # Ensure organization exists
@@ -200,7 +207,7 @@ async def test_admin_ical_sync(
 ) -> None:
     """Test POST /api/admin/ical/sync with real HTTP URL (expects failure in test environment)."""
 
-    org_id = "695e03c80b04ed31c4eaa899"
+    org_id = _org_from_token(admin_token)
     product_id = "test_product_villa_sync"
 
     # Ensure organization exists
@@ -243,7 +250,7 @@ async def test_admin_ical_calendar(
 ) -> None:
     """Test GET /api/admin/ical/calendar returns blocked dates."""
 
-    org_id = "695e03c80b04ed31c4eaa899"
+    org_id = _org_from_token(admin_token)
     product_id = "test_product_villa_calendar"
 
     # Ensure organization exists
@@ -328,7 +335,7 @@ async def test_admin_ical_feeds_list_with_data(
 ) -> None:
     """Test GET /api/admin/ical/feeds returns feeds after creation."""
 
-    org_id = "695e03c80b04ed31c4eaa899"
+    org_id = _org_from_token(admin_token)
     product_id = "test_product_villa_list"
 
     # Ensure organization exists
@@ -387,7 +394,7 @@ async def test_admin_ical_sync_nonexistent_feed(
 ) -> None:
     """Test POST /api/admin/ical/sync returns 404 for non-existent feed."""
 
-    org_id = "695e03c80b04ed31c4eaa899"
+    org_id = _org_from_token(admin_token)
 
     # Ensure organization exists
     await test_db.organizations.insert_one({
@@ -448,7 +455,7 @@ async def test_admin_ical_comprehensive_flow(
 ) -> None:
     """Test complete iCal workflow: create feed -> sync -> check calendar."""
 
-    org_id = "695e03c80b04ed31c4eaa899"
+    org_id = _org_from_token(admin_token)
     product_id = "test_product_villa_comprehensive"
 
     # Ensure organization exists

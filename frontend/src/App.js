@@ -221,6 +221,7 @@ const ReconciliationDashboardPage = lazy(() => import("./pages/admin/Reconciliat
 const KPIAnalyticsDashboardPage = lazy(() => import("./pages/admin/KPIAnalyticsDashboardPage"));
 const SupplierEconomicsPage = lazy(() => import("./pages/admin/SupplierEconomicsPage"));
 const RevenueOptimizationPage = lazy(() => import("./pages/admin/RevenueOptimizationPage"));
+const PlatformMonitoringPage = lazy(() => import("./pages/admin/PlatformMonitoringPage"));
 
 const HotelBookingsPage = lazy(() => import("./pages/HotelBookingsPage"));
 const HotelStopSellPage = lazy(() => import("./pages/HotelStopSellPage"));
@@ -421,6 +422,8 @@ function App() {
             <Route path="supplier-economics" element={<SupplierEconomicsPage />} />
             {/* Revenue Optimization Dashboard */}
             <Route path="revenue-optimization" element={<RevenueOptimizationPage />} />
+            {/* Platform Monitoring Dashboard */}
+            <Route path="platform-monitoring" element={<PlatformMonitoringPage />} />
           </Route>
         </Route>
 

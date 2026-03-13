@@ -95,6 +95,28 @@ async def unified_search(
     if target_suppliers:
         real_adapters = [a for a in real_adapters if a.supplier_code in target_suppliers]
 
+    # --- Cache-first lookup ---
+    from app.suppliers.cache import get_cached_results, cache_search_results
+    try:
+        cached = await get_cached_results(ctx, search_req)
+        if cached and cached.items:
+            cached_items = [item.model_dump() if hasattr(item, "model_dump") else item.dict() for item in cached.items]
+            from app.services.prometheus_metrics_service import record_search_event
+            record_search_event(product_type, "cache_hit", 0)
+            return {
+                "request_id": request_id,
+                "product_type": product_type,
+                "items": cached_items,
+                "total": len(cached_items),
+                "suppliers_queried": [],
+                "suppliers_failed": [],
+                "search_duration_ms": 0,
+                "organization_id": org_id,
+                "from_cache": True,
+            }
+    except Exception:
+        pass
+
     # Inject db into real bridges
     for a in real_adapters:
         if hasattr(a, "db"):
@@ -115,8 +137,18 @@ async def unified_search(
 
     async def _search_one(adapter):
         try:
+            # Check supplier-specific rate limit
+            from app.infrastructure.rate_limiter import check_rate_limit
+            rl = await check_rate_limit(f"supplier:{adapter.supplier_code}", tier="supplier_api")
+            if not rl.allowed:
+                return {"supplier": adapter.supplier_code, "result": None, "error": f"rate_limited (retry after {rl.retry_after_ms}ms)"}
+
             result = await adapter.search(ctx, search_req)
-            booking_audit.record_latency(adapter.supplier_code, result.search_duration_ms if result.search_duration_ms else 0)
+            latency = result.search_duration_ms if result.search_duration_ms else 0
+            booking_audit.record_latency(adapter.supplier_code, latency)
+            # Record supplier search metric
+            from app.services.prometheus_metrics_service import record_supplier_search
+            record_supplier_search(adapter.supplier_code, latency)
             return {"supplier": adapter.supplier_code, "result": result, "error": None}
         except Exception as e:
             return {"supplier": adapter.supplier_code, "result": None, "error": str(e)}
@@ -153,6 +185,18 @@ async def unified_search(
         payload.get("adults", 2), payload.get("children", 0),
         len(all_items), suppliers_queried, total_ms,
     )
+
+    # Record search metric (cache miss / fresh fetch)
+    from app.services.prometheus_metrics_service import record_search_event
+    record_search_event(product_type, "cache_miss", total_ms)
+
+    # Cache fresh results for next request
+    try:
+        from app.suppliers.contracts.schemas import SearchItem as CacheSearchItem
+        cache_items = [CacheSearchItem(**item) for item in all_items]
+        await cache_search_results(ctx, search_req, cache_items)
+    except Exception:
+        pass
 
     return {
         "request_id": request_id,
@@ -347,7 +391,38 @@ async def execute_booking(
             payload.get("currency", "TRY"), "confirmed",
         )
 
-        # Persist booking
+        # --- Commission & Markup Binding ---
+        # Calculate markup and record commission on confirmed booking
+        from app.suppliers.commission_engine import calculate_markup, record_commission
+        markup_result = await calculate_markup(
+            db,
+            supplier_code=used_supplier,
+            base_price=confirmed_price,
+            destination=payload.get("destination", ""),
+            agency_tier=payload.get("agency_tier", "standard"),
+        )
+        sell_price = markup_result["final_price"]
+        platform_markup = markup_result["total_markup"]
+
+        # Record commission event
+        await record_commission(
+            db,
+            booking_id=internal_booking_id,
+            supplier_code=used_supplier,
+            organization_id=org_id,
+            supplier_cost=confirmed_price,
+            sell_price=sell_price,
+            platform_commission=0,
+            platform_markup=platform_markup,
+            agency_markup=0,
+            currency=payload.get("currency", "TRY"),
+        )
+
+        # Track supplier-level revenue metric
+        from app.services.prometheus_metrics_service import record_supplier_booking
+        record_supplier_booking(used_supplier, confirmed_price, platform_markup)
+
+        # Persist booking (with markup info)
         booking_doc = {
             "internal_booking_id": internal_booking_id,
             "supplier_code": used_supplier,
@@ -360,6 +435,9 @@ async def execute_booking(
             "billing": payload.get("billing", {}),
             "booked_price": expected_price,
             "confirmed_price": confirmed_price,
+            "sell_price": sell_price,
+            "platform_markup": platform_markup,
+            "markup_rules_applied": markup_result.get("applied_rules", []),
             "currency": payload.get("currency", "TRY"),
             "fallback_used": fallback_used,
             "original_supplier": supplier_code if fallback_used else None,
@@ -373,6 +451,7 @@ async def execute_booking(
 
         await booking_audit.log_booking_event(db, "booking_confirmed", org_id, used_supplier, internal_booking_id, {
             "supplier_booking_id": result.supplier_booking_id, "duration_ms": duration_ms, "fallback_used": fallback_used,
+            "sell_price": sell_price, "platform_markup": platform_markup,
         })
 
         # Track booking confirm analytics
@@ -387,6 +466,8 @@ async def execute_booking(
             "confirmation_code": result.confirmation_code,
             "booked_price": expected_price,
             "confirmed_price": confirmed_price,
+            "sell_price": sell_price,
+            "platform_markup": platform_markup,
             "currency": payload.get("currency", "TRY"),
             "fallback_used": fallback_used,
             "original_supplier": supplier_code if fallback_used else None,

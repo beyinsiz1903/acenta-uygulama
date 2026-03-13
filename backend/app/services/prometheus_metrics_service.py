@@ -22,6 +22,14 @@ logger = logging.getLogger("prometheus")
 _request_durations: list[dict[str, Any]] = []
 _error_counts: dict[str, int] = defaultdict(int)
 _booking_counts: dict[str, int] = defaultdict(int)
+_supplier_metrics: dict[str, dict[str, Any]] = defaultdict(lambda: {
+    "search_count": 0, "search_latency_sum": 0.0,
+    "booking_count": 0, "booking_success": 0, "booking_fail": 0,
+    "revenue": 0.0, "markup": 0.0, "fallback_count": 0,
+})
+_search_metrics: dict[str, dict[str, int]] = defaultdict(lambda: {
+    "cache_hit": 0, "cache_miss": 0, "total_latency_ms": 0,
+})
 
 
 def record_request_duration(method: str, path: str, status_code: int, duration_ms: float) -> None:
@@ -43,6 +51,44 @@ def record_request_duration(method: str, path: str, status_code: int, duration_m
 
 def record_booking_event(event_type: str) -> None:
     _booking_counts[event_type] += 1
+
+
+def record_supplier_booking(supplier_code: str, revenue: float, markup: float) -> None:
+    """Record a confirmed booking for a supplier."""
+    m = _supplier_metrics[supplier_code]
+    m["booking_count"] += 1
+    m["booking_success"] += 1
+    m["revenue"] += revenue
+    m["markup"] += markup
+
+
+def record_supplier_failure(supplier_code: str) -> None:
+    """Record a booking failure for a supplier."""
+    _supplier_metrics[supplier_code]["booking_fail"] += 1
+
+
+def record_supplier_search(supplier_code: str, latency_ms: float) -> None:
+    """Record a search call for a supplier."""
+    m = _supplier_metrics[supplier_code]
+    m["search_count"] += 1
+    m["search_latency_sum"] += latency_ms
+
+
+def record_search_event(product_type: str, cache_status: str, latency_ms: float) -> None:
+    """Record a search event (cache_hit or cache_miss)."""
+    m = _search_metrics[product_type]
+    m[cache_status] = m.get(cache_status, 0) + 1
+    m["total_latency_ms"] += int(latency_ms)
+
+
+def get_supplier_metrics_snapshot() -> dict[str, Any]:
+    """Return current supplier-level metrics."""
+    return dict(_supplier_metrics)
+
+
+def get_search_metrics_snapshot() -> dict[str, Any]:
+    """Return current search-level metrics."""
+    return dict(_search_metrics)
 
 
 def _normalize_path(path: str) -> str:
@@ -157,5 +203,34 @@ async def generate_prometheus_metrics() -> str:
         lines.append(f'cache_entries{{state="active"}} {cache_active}')
     except Exception:
         pass
+
+    # --- Supplier-Level Metrics ---
+    lines.append("")
+    lines.append("# HELP supplier_search_total Supplier search count")
+    lines.append("# TYPE supplier_search_total counter")
+    for sc, m in _supplier_metrics.items():
+        safe_sc = sc.replace('"', '')
+        lines.append(f'supplier_search_total{{supplier="{safe_sc}"}} {m["search_count"]}')
+        avg_lat = m["search_latency_sum"] / max(m["search_count"], 1)
+        lines.append(f'supplier_search_latency_avg_ms{{supplier="{safe_sc}"}} {avg_lat:.1f}')
+        lines.append(f'supplier_booking_total{{supplier="{safe_sc}"}} {m["booking_count"]}')
+        lines.append(f'supplier_booking_success{{supplier="{safe_sc}"}} {m["booking_success"]}')
+        lines.append(f'supplier_booking_fail{{supplier="{safe_sc}"}} {m["booking_fail"]}')
+        success_rate = m["booking_success"] / max(m["booking_count"], 1) * 100
+        lines.append(f'supplier_booking_success_rate{{supplier="{safe_sc}"}} {success_rate:.1f}')
+        lines.append(f'supplier_revenue_total{{supplier="{safe_sc}"}} {m["revenue"]:.2f}')
+        lines.append(f'supplier_markup_total{{supplier="{safe_sc}"}} {m["markup"]:.2f}')
+
+    # --- Search Cache Metrics ---
+    lines.append("")
+    lines.append("# HELP search_cache Search cache hit/miss by product type")
+    lines.append("# TYPE search_cache counter")
+    for pt, sm in _search_metrics.items():
+        safe_pt = pt.replace('"', '')
+        lines.append(f'search_cache_hit{{product_type="{safe_pt}"}} {sm.get("cache_hit", 0)}')
+        lines.append(f'search_cache_miss{{product_type="{safe_pt}"}} {sm.get("cache_miss", 0)}')
+        total = sm.get("cache_hit", 0) + sm.get("cache_miss", 0)
+        hit_rate = sm.get("cache_hit", 0) / max(total, 1) * 100
+        lines.append(f'search_cache_hit_rate{{product_type="{safe_pt}"}} {hit_rate:.1f}')
 
     return "\n".join(lines) + "\n"

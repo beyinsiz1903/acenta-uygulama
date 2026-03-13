@@ -449,3 +449,7 @@ def register_routers(app: FastAPI) -> None:
     # --- Revenue & Supplier Optimization ---
     from app.routers.revenue_router import router as revenue_router
     app.include_router(revenue_router)
+
+    # --- Platform Scalability & Monitoring ---
+    from app.routers.scalability_router import router as scalability_router
+    app.include_router(scalability_router)

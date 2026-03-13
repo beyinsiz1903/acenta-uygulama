@@ -105,6 +105,14 @@ def create_app() -> FastAPI:
             import logging
             logging.getLogger("startup").warning("Reliability indexes: %s", exc)
 
+        # Start Job Scheduler
+        try:
+            from app.services.job_scheduler_service import start_scheduler
+            start_scheduler()
+        except Exception as exc:
+            import logging
+            logging.getLogger("startup").warning("Job scheduler start: %s", exc)
+
         yield
         shutdown_runtime_resources()
         # Shutdown Redis

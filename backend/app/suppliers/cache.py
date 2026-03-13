@@ -44,7 +44,10 @@ STALE_BUFFER_S = 120
 
 
 def _cache_key(ctx: SupplierContext, request: SearchRequest) -> str:
-    """Generate deterministic cache key from search parameters."""
+    """Generate deterministic cache key from search parameters.
+
+    Key includes agency_id to prevent cross-agency pricing leaks.
+    """
     params = {
         "product_type": request.product_type.value,
         "destination": request.destination,
@@ -56,9 +59,26 @@ def _cache_key(ctx: SupplierContext, request: SearchRequest) -> str:
         "children": request.children,
         "rooms": request.rooms,
         "suppliers": sorted(request.supplier_codes) if request.supplier_codes else [],
+        "currency": ctx.currency,
     }
     param_hash = hashlib.md5(json.dumps(params, sort_keys=True).encode()).hexdigest()[:12]
     return f"supplier_cache:{ctx.organization_id}:{request.product_type.value}:{param_hash}"
+
+
+# --- Cache hit/miss tracking ---
+_cache_hits = 0
+_cache_misses = 0
+
+
+def get_cache_hit_miss() -> dict:
+    """Return current cache hit/miss counters."""
+    total = _cache_hits + _cache_misses
+    return {
+        "hits": _cache_hits,
+        "misses": _cache_misses,
+        "total": total,
+        "hit_rate_pct": round(_cache_hits / max(total, 1) * 100, 2),
+    }
 
 
 async def cache_search_results(
@@ -96,16 +116,21 @@ async def get_cached_results(
     request: SearchRequest,
 ) -> Optional[SearchResult]:
     """Retrieve cached search results. Returns None on miss."""
+    global _cache_hits, _cache_misses
     try:
         from app.infrastructure.redis_client import get_async_redis
         r = await get_async_redis()
         if not r:
+            _cache_misses += 1
             return None
 
         key = _cache_key(ctx, request)
         raw = await r.get(key)
         if not raw:
+            _cache_misses += 1
             return None
+
+        _cache_hits += 1
 
         data = json.loads(raw)
         items_raw = data.get("items", [])

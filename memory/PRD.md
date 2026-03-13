@@ -23,92 +23,73 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 - AES-256 encrypted per-agency credential storage
 - Connection testing, 4 supplier cards UI
 
-### Supplier Adapter Pattern + Aggregator (DONE - 13 Mar 2026)
+### Supplier Adapter Pattern + Aggregator (DONE)
 - Base Adapter interface, 4 real adapters, Aggregator, Capability Matrix
 
-### Unified Booking & Fallback Layer (DONE - 13 Mar 2026)
-- **Real Adapter Bridge:** 4 bridges wrapping HTTP adapters in canonical contract interface
-  - RealRateHawkBridge, RealTBOBridge, RealPaximumBridge, RealWWTatilBridge
-  - Each implements: search, confirm_booking, cancel_booking (wwtatil also create_hold)
-- **Registry Integration:** 9 adapters registered (4 real + 5 mock), capability metadata, product type routing
-- **Unified Search:** Fan-out search via contract interface (hotel->3, tour->2, flight->1, transfer->1, activity->1)
-- **Price Revalidation:** Drift thresholds (<2% silent, 2-5% warn, 5-10% approval, >10% abort)
-- **Booking Execution:** Full orchestration with fallback chain execution
-- **Fallback Chains:** ratehawk->[tbo,paximum], tbo->[ratehawk,paximum], paximum->[ratehawk,tbo], wwtatil->[tbo]
-- **Reconciliation:** Price/status mismatch detection, aggregated summaries
-- **Audit & Observability:** In-memory metrics + MongoDB audit trail (booking_audit_log)
-- **Test report:** 32/32 tests passed (iteration_81)
+### Unified Booking & Fallback Layer (DONE)
+- Real Adapter Bridges (RateHawk, TBO, Paximum, WWTatil)
+- Registry Integration: 9 adapters, capability metadata, product type routing
+- Unified Search: Fan-out across suppliers
+- Price Revalidation: <2% silent, 2-5% warn, 5-10% approval, >10% abort
+- Booking Execution with fallback chains
+- Reconciliation: Price/status mismatch detection
+- Audit & Observability: In-memory metrics + MongoDB audit trail
 
-### Commercial Booking Experience Layer (DONE - 13 Mar 2026)
-- **Unified Search Page** (`/app/agency/unified-search`):
-  - Product type tabs (hotel, tour, flight, transfer, activity)
-  - Multi-field search form (destination, dates, adults, children)
-  - Fan-out search results table with supplier badges, pricing, availability
-  - Supplier filtering and sorting
-  - Results vs Comparison view toggle
-  - Price Comparison Panel grouping same products across suppliers
-- **Booking Flow UI** (5-step wizard):
-  - Step 1: Traveller details with add/remove, contact info
-  - Step 2: Billing information
-  - Step 3: Price revalidation with drift visualization
-  - Step 4: Booking confirmation summary
-  - Step 5: Booking result (success/failure) with fallback info
-- **Price Drift UX:**
-  - <2% silent refresh
-  - 2-5% warning toast
-  - 5-10% approval dialog
-  - >10% abort with message
-- **Fallback UX:**
-  - Fallback info dialog showing original vs used supplier
-  - Fallback badge on confirmed bookings
-- **Reconciliation Dashboard** (`/app/admin/reconciliation`):
-  - 6 KPI metric cards (total, success, failure, fallback, drift, abort)
-  - Uyumsuzluklar tab with severity-based mismatch table
-  - Audit Trail tab with event history
-  - Summary cards (total checked, matched, mismatched, pending)
-  - Severity filtering (critical, high, medium, low)
-- **Test report:** 32/32 backend + 100% frontend (iteration_82)
+### Commercial Booking Experience Layer (DONE)
+- Unified Search Page with 5 product types, supplier filtering, comparison view
+- 5-step Booking Flow (travellers, billing, revalidation, confirm, result)
+- Price Drift UX and Fallback UX
+- Reconciliation Dashboard with KPI cards, mismatch table, audit trail
+
+### Smart Search & Supplier Intelligence Layer (DONE - 13 Mar 2026)
+- **Search Analytics Engine:**
+  - Tracks 5 core funnel events: search, result_view, supplier_select, booking_start, booking_confirm
+  - Persists to `search_analytics` MongoDB collection
+  - Updates `recent_searches` and `destination_popularity` collections automatically
+  - Daily search/booking aggregation for charts
+  - Revenue per supplier tracking from booking confirmations
+- **Supplier Performance Scoring:**
+  - Weighted formula: 0.35*price + 0.25*success_rate + 0.15*latency + 0.15*cancel_reliability + 0.10*fallback_inverse
+  - Generates tags: best_price, fastest_confirmation, most_reliable, best_cancellation
+  - Default recommendations when no data
+- **Smart Search Suggestions UI:**
+  - Son Aramalar (Recent Searches) - clickable to re-run
+  - Populer Destinasyonlar (Popular Destinations) - clickable with count badges
+  - En Iyi Supplier'lar (Best Suppliers) - 3 categories with colored badges
+- **KPI Analytics Dashboard (`/app/admin/analytics-kpi`):**
+  - 6 KPI metric cards: Toplam Arama, Toplam Rezervasyon, Donusum Orani, Toplam Gelir, Basari Orani, Fallback Orani
+  - Donusum Hunisi (Conversion Funnel): 5 steps with drop-off percentages
+  - Gunluk Arama & Rezervasyon chart
+  - 3 tabs: Genel Bakis, Supplier Performans, Gelir
+  - Time filter: Son 7/30/90 gun + Refresh
+- **Frontend Event Tracking:** result_view, supplier_select events auto-tracked
+- **Test report:** 34/34 backend + 100% frontend (iteration_83)
+
+## Intelligence API Endpoints
+- `GET /api/intelligence/suggestions` — Recent searches, popular destinations, supplier recommendations
+- `GET /api/intelligence/funnel` — Conversion funnel metrics (5 stages + rates)
+- `GET /api/intelligence/daily-stats` — Daily search/booking counts for charts
+- `GET /api/intelligence/supplier-scores` — Weighted supplier performance scores
+- `GET /api/intelligence/supplier-recommendations` — Top 3 category recommendations
+- `GET /api/intelligence/supplier-revenue` — Revenue per supplier
+- `POST /api/intelligence/track` — Track frontend funnel events
+- `GET /api/intelligence/kpi-summary` — Aggregated KPI summary
 
 ## Supplier Capability Matrix
 
-| Supplier | Hotel | Flight | Tour | Transfer | Activity | Hold | Cancel |
-|----------|-------|--------|------|----------|----------|------|--------|
-| RateHawk | Yes   | -      | -    | -        | -        | No   | Yes    |
-| TBO      | Yes   | Yes    | Yes  | -        | -        | No   | Yes    |
-| Paximum  | Yes   | -      | -    | Yes      | Yes      | No   | Yes    |
-| WWTatil  | -     | -      | Yes  | -        | -        | Yes  | Yes    |
+| Supplier | Hotel | Flight | Tour | Transfer | Activity |
+|----------|-------|--------|------|----------|----------|
+| RateHawk | Yes   | -      | -    | -        | -        |
+| TBO      | Yes   | Yes    | Yes  | -        | -        |
+| Paximum  | Yes   | -      | -    | Yes      | Yes      |
+| WWTatil  | -     | -      | Yes  | -        | -        |
 
-## Key API Endpoints
-
-### Unified Booking APIs
-- `POST /api/unified-booking/search` — Fan-out search across real suppliers
-- `POST /api/unified-booking/revalidate` — Pre-booking price/availability check
-- `POST /api/unified-booking/book` — Execute booking with fallback chain
-- `GET /api/unified-booking/registry` — Registered adapters and capabilities
-- `GET /api/unified-booking/metrics` — Booking execution metrics
-- `GET /api/unified-booking/audit` — Organization audit trail
-- `GET /api/unified-booking/audit/{booking_id}` — Booking-specific audit
-- `GET /api/unified-booking/reconciliation/{booking_id}` — Reconciliation check
-- `GET /api/unified-booking/reconciliation-mismatches` — Mismatched bookings
-
-### Supplier Credential APIs
-- `GET /api/supplier-credentials/supported`
-- `GET /api/supplier-credentials/my`
-- `POST /api/supplier-credentials/save`
-- `DELETE /api/supplier-credentials/{supplier}`
-- `POST /api/supplier-credentials/test/{supplier}`
-
-### Supplier Aggregator APIs
-- `POST /api/supplier-aggregator/search`
-- `GET /api/supplier-aggregator/capabilities`
-- `GET /api/supplier-aggregator/coverage`
-
-## DB Collections (New)
-- `price_revalidations` — Pre-booking price checks
-- `booking_reconciliation` — Internal vs supplier state tracking
+## New DB Collections
+- `search_analytics` — Funnel event tracking
+- `recent_searches` — Per-org recent search history
+- `destination_popularity` — Global destination popularity
 - `booking_audit_log` — Audit trail events
-- `unified_bookings` — Bookings created via unified flow
-- `supplier_tokens` — Cached supplier auth tokens
+- `unified_bookings` — Bookings via unified flow
 
 ## Remaining Backlog
 
@@ -117,17 +98,17 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 - End-to-end booking test with a real supplier
 
 ### P1
-- Shadow traffic activation
+- Smart Supplier Selection (weighted auto-selection in booking flow)
+- Search Caching & Optimization
+- Agency Behavior Personalization
 - Scheduled reconciliation jobs
-- Metrics & Product Analytics (KPI funnel dashboard)
-- Role-based visibility matrix
 
 ### P2
-- Real Prometheus/Grafana metrics
-- Supplier rate comparison dashboard
-- Full customer onboarding workflow
+- SaaS Pricing Model
+- Prometheus/Grafana metrics
+- Shadow traffic activation
 - Cross-tenant security testing
-- PyMongo AutoReconnect fix (recurring issue)
+- PyMongo AutoReconnect fix
 
 ## Test Credentials
 - Super Admin: agent@acenta.test / agent123

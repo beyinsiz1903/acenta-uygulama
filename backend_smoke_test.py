@@ -10,7 +10,7 @@ Test Requirements:
 4. Landing CTA hedefleri olan /signup ve /login public route akışı backend tarafında sorun üretmiyor mu
 5. Genel olarak landing değişikliği backend API'lerde regresyon üretmediğini PASS/FAIL formatında bildir
 
-Backend URL: https://security-admin-1.preview.emergentagent.com/api
+Backend URL: https://reliability-platform.preview.emergentagent.com/api
 Test Context: Frontend landing page redesigned, NO backend code changes made
 """
 
@@ -21,7 +21,7 @@ from datetime import datetime
 
 class BackendSmokeTest:
     def __init__(self):
-        self.base_url = "https://security-admin-1.preview.emergentagent.com/api"
+        self.base_url = "https://reliability-platform.preview.emergentagent.com/api"
         self.test_results = []
         self.passed_tests = 0
         self.total_tests = 0

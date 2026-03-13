@@ -3,8 +3,9 @@
 ## Problem Statement
 Enterprise travel SaaS platform serving B2B travel agencies. The platform provides supplier ecosystem, booking orchestration, operations layer, governance layer, integration reliability layer, and production activation layer.
 
-## Current Phase: Platform Hardening Phase
-Architecture maturity score: 3.15/10 (hardening readiness) | 9.3/10 (architectural completeness)
+## Current Phase: Platform Hardening Execution Phase
+Architecture maturity score: 9.2/10 | Production readiness: 0/10 (execution not started)
+Target: Production readiness >= 8.5/10
 
 ## Core Tech Stack
 - **Backend**: FastAPI, Motor (async MongoDB), Celery, Redis, WeasyPrint, Resend
@@ -20,75 +21,95 @@ Architecture maturity score: 3.15/10 (hardening readiness) | 9.3/10 (architectur
 ## What's Been Implemented
 
 ### Production Activation Layer (Complete)
-- Redis recovery
-- God Router decomposition (6 finance routers)
-- RBAC enforcement middleware
-- Reliability pipeline wiring
-- PDF/Voucher pipeline (WeasyPrint)
-- Notification delivery service (Resend)
-- Celery task skeletons
-- Supplier adapter skeletons (Paximum, Amadeus, AviationStack)
-- Frontend Production Dashboard
+- Redis recovery, God Router decomposition, RBAC enforcement
+- PDF/Voucher pipeline, Notification delivery, Celery tasks
+- Supplier adapters (Paximum, Amadeus, AviationStack)
 
-### Platform Hardening Phase (Complete - Feb 13, 2026)
-All 10 parts implemented and tested (17/17 backend + 11/11 frontend):
+### Platform Hardening Design Phase (Complete)
+All 10 parts designed and tested (28/28 tests):
+1. Supplier Traffic Testing — sandbox/shadow/canary/production modes
+2. Worker Deployment Strategy — 5 Celery pools, DLQ, auto-scaling
+3. Observability Stack — 17 Prometheus metrics, 4 Grafana dashboards, 6 alerts
+4. Performance Testing — 3 load profiles, 4 scenarios, 7 SLA targets
+5. Multi-Tenant Safety — 20 collection audit, 7 isolation scenarios
+6. Secret Management — 9 secrets inventory, 4-phase migration plan
+7. Incident Response — 3 playbooks (supplier, queue, payment)
+8. Auto-Scaling Strategy — 4 components (API, workers, Redis, MongoDB)
+9. Disaster Recovery — 3 scenarios (region, DB, queue)
+10. Hardening Checklist — 50 tasks, maturity scoring
 
-1. **Supplier Traffic Testing** — sandbox/shadow/canary/production modes for 3 suppliers
-2. **Worker Deployment Strategy** — 5 Celery pools, DLQ consumers, auto-scaling rules
-3. **Observability Stack** — 17 Prometheus metrics, 4 Grafana dashboards, 6 alert rules, OpenTelemetry
-4. **Performance Testing** — 3 load profiles (up to 500 agencies), 4 scenarios, 7 SLA targets
-5. **Multi-Tenant Safety** — 20 collection audit, 7 isolation scenarios
-6. **Secret Management Migration** — 9 secrets inventory, 4-phase migration plan
-7. **Incident Response Playbooks** — 3 playbooks (supplier outage, queue backlog, payment failure)
-8. **Auto-Scaling Strategy** — 4 component configs (API, workers, Redis, MongoDB)
-9. **Disaster Recovery** — 3 scenarios (region outage, DB corruption, queue loss)
-10. **Hardening Checklist** — 50 tasks, maturity scoring
+### Platform Hardening Execution Phase (Complete - Mar 13, 2026)
+- **Dual Score System**: Architecture Maturity (9.2) vs Production Readiness (calculated)
+- **Execution Tracker**: 10 phases, 3 sprints, 46 tasks
+- **Go-Live Blocker Management**: 6 blockers with fix strategies and resolve capability
+- **Go-Live Certification**: Automated readiness assessment with target 8.5/10
+- **Sprint Organization**: Sprint 1 (Go-Live Blockers), Sprint 2 (Real Integrations), Sprint 3 (Load & Failure Testing)
+- **CTO Architecture Assessment**: Architecture 9.4, Reliability 9.2, Security 9.3, Domain Model 9.3, Operations 9.0
+- Tested: 18/18 backend + 13/13 frontend = 100%
 
 ## Key API Endpoints
-- `/api/hardening/status` — Combined hardening status
-- `/api/hardening/traffic/*` — Supplier traffic testing
-- `/api/hardening/workers/status` — Worker pools
-- `/api/hardening/observability/*` — Observability stack
-- `/api/hardening/performance/*` — Performance testing
-- `/api/hardening/tenant-safety/audit` — Tenant isolation
-- `/api/hardening/secrets/status` — Secret management
-- `/api/hardening/incidents/*` — Incident playbooks
-- `/api/hardening/scaling/status` — Auto-scaling
-- `/api/hardening/dr/plan` — Disaster recovery
-- `/api/hardening/checklist` — Hardening checklist
+### Execution Tracker (NEW)
+- `GET /api/hardening/execution/status` — Full execution status with phases, sprints, blockers
+- `GET /api/hardening/execution/phase/{id}` — Phase detail with tasks
+- `POST /api/hardening/execution/phase/{id}/start` — Start a phase
+- `POST /api/hardening/execution/phase/{id}/task/{task_id}/complete` — Complete a task
+- `POST /api/hardening/execution/blocker/{id}/resolve` — Resolve a blocker
+- `GET /api/hardening/execution/certification` — Go-live certification report
+
+### Hardening Design
+- `GET /api/hardening/status` — Combined status with dual scores
+- `GET /api/hardening/traffic/status` — Supplier traffic testing
+- `GET /api/hardening/workers/status` — Worker pools
+- `GET /api/hardening/observability/status` — Observability stack
+- `GET /api/hardening/performance/profiles` — Performance testing
+- `GET /api/hardening/tenant-safety/audit` — Tenant isolation
+- `GET /api/hardening/secrets/status` — Secret management
+- `GET /api/hardening/incidents/playbooks` — Incident playbooks
+- `GET /api/hardening/scaling/status` — Auto-scaling
+- `GET /api/hardening/dr/plan` — Disaster recovery
+- `GET /api/hardening/checklist` — Hardening checklist
 
 ## Frontend Routes
-- `/app/admin/platform-hardening` — Platform Hardening Dashboard (11 tabs)
-- `/app/admin/production-activation` — Production Activation Dashboard
+- `/app/admin/platform-hardening` — 13-tab Dashboard (Overview, Execution, Certification + 10 design tabs)
 
 ## Prioritized Backlog
 
-### P0 — Go-Live Blockers (6 remaining)
-1. Migrate secrets to Vault/KMS
-2. Remove hardcoded AviationStack API key
-3. Deploy Redis HA
-4. Deploy MongoDB ReplicaSet
-5. JWT secret rotation
-6. Full tenant isolation verification
+### P0 — Execute Hardening (Sprint 1: Go-Live Blockers)
+1. Secret management migration (Vault/KMS)
+2. Worker deployment with queue isolation
+3. Monitoring stack activation (Prometheus + Grafana)
+4. Redis cluster verification
+5. Tenant isolation verification
+6. Remove hardcoded AviationStack API key
 
-### P1 — High Priority
-7. Deploy Prometheus + Grafana
-8. OpenTelemetry instrumentation
-9. Load testing execution
-10. Supplier failover testing
+### P0 — Sprint 2: Real Integrations
+7. Paximum shadow traffic activation
+8. AviationStack shadow traffic activation
+9. Amadeus shadow traffic (optional)
+10. Canary deployment and gradual rollout
 
-### P2 — Important
-11. Kubernetes HPA for API servers
-12. KEDA for worker scaling
-13. Automated backups with validation
-14. Graceful shutdown
+### P1 — Sprint 3: Load & Failure Testing
+11. 10k searches/hour simulation
+12. 1k bookings/hour simulation
+13. Supplier outage simulation
+14. Queue backlog simulation
+15. Incident response testing
+16. DR testing (DB, Redis, region failover)
+17. Go-live certification
 
-### P3 — Future
-15. Chaos engineering
-16. CDN for static assets
-17. Blue-green deployments
-18. SLO/SLI tracking
-19. GitOps with ArgoCD
+### P2 — Business Features
+18. Agency Subscription Management
+19. Customer acquisition tools
+
+## Go-Live Blockers (6 Open)
+| ID | Blocker | Risk | Est. Hours |
+|---|---|---|---|
+| BLK-001 | Secrets in .env files | critical | 8h |
+| BLK-002 | Hardcoded AviationStack key | critical | 1h |
+| BLK-003 | No real supplier integration | critical | 16h |
+| BLK-004 | No production monitoring | critical | 8h |
+| BLK-005 | Worker deployment not isolated | high | 6h |
+| BLK-006 | Tenant isolation unverified | critical | 4h |
 
 ## Credentials
 - Super Admin: agent@acenta.test / agent123

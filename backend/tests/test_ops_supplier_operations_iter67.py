@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 # Get BASE_URL from environment
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
-    BASE_URL = "https://go-live-sprint.preview.emergentagent.com"
+    BASE_URL = "https://go-certification.preview.emergentagent.com"
 
 
 class TestOpsAuth:

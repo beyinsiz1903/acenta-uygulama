@@ -13,7 +13,7 @@ import uuid
 from typing import Dict, Any, Optional
 
 # Use the preview URL from frontend/.env
-BASE_URL = "https://go-live-sprint.preview.emergentagent.com"
+BASE_URL = "https://go-certification.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials from review request

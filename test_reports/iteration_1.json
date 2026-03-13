@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://go-live-sprint.preview.emergentagent.com/api",
-    "frontend_url": "https://go-live-sprint.preview.emergentagent.com",
+    "backend_url": "https://go-certification.preview.emergentagent.com/api",
+    "frontend_url": "https://go-certification.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

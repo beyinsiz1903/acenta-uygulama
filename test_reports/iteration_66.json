@@ -63,7 +63,7 @@
   "seed_data_creation": "None - used existing seeded data and created test bookings/partners during test execution",
   "retest_needed": false,
   "should_main_agent_self_test": false,
-  "context_for_next_testing_agent": "Supplier Ecosystem API fully tested in iteration 66. All 21 endpoints working correctly. Fixed AvailabilityRequest schema bug where 'date' field shadowed datetime.date type. Redis cache unavailable but endpoints handle gracefully. 5 mock supplier adapters (mock_hotel, mock_flight, mock_tour, mock_insurance, mock_transport) registered. All supplier adapters return MOCK data for development/testing. Test credentials: agent@acenta.test / agent123. Preview URL: https://go-live-sprint.preview.emergentagent.com",
+  "context_for_next_testing_agent": "Supplier Ecosystem API fully tested in iteration 66. All 21 endpoints working correctly. Fixed AvailabilityRequest schema bug where 'date' field shadowed datetime.date type. Redis cache unavailable but endpoints handle gracefully. 5 mock supplier adapters (mock_hotel, mock_flight, mock_tour, mock_insurance, mock_transport) registered. All supplier adapters return MOCK data for development/testing. Test credentials: agent@acenta.test / agent123. Preview URL: https://go-certification.preview.emergentagent.com",
   "mocked_apis": {
     "has_mocked_apis": true,
     "mocked_apis_list": ["mock_hotel", "mock_flight", "mock_tour", "mock_insurance", "mock_transport"],

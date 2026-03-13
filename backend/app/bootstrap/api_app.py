@@ -97,6 +97,14 @@ def create_app() -> FastAPI:
             import logging
             logging.getLogger("startup").warning("Governance indexes: %s", exc)
 
+        # Initialize Integration Reliability indexes
+        try:
+            from app.domain.reliability.indexes import ensure_reliability_indexes
+            await ensure_reliability_indexes(db)
+        except Exception as exc:
+            import logging
+            logging.getLogger("startup").warning("Reliability indexes: %s", exc)
+
         yield
         shutdown_runtime_resources()
         # Shutdown Redis

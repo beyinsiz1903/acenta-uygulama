@@ -7,7 +7,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = "https://worker-pool-dash.preview.emergentagent.com/api"
+BACKEND_URL = "https://shadow-traffic.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

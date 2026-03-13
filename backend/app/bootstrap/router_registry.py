@@ -421,3 +421,7 @@ def register_routers(app: FastAPI) -> None:
     # --- Supplier Activation Layer ---
     from app.routers.supplier_activation import router as supplier_activation_router
     app.include_router(supplier_activation_router)
+
+    # --- Stress Testing Layer ---
+    from app.routers.stress_test_router import router as stress_test_router
+    app.include_router(stress_test_router)

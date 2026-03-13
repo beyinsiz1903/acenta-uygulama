@@ -5,7 +5,7 @@ import { test, expect } from "@playwright/test";
 // render olup olmadığını doğrular. Data varlığını değil, sadece başlık ve
 // ana bölümlerin görünürlüğünü kontrol eder.
 
-const BASE_URL = "https://worker-pool-dash.preview.emergentagent.com";
+const BASE_URL = "https://shadow-traffic.preview.emergentagent.com";
 
 async function login(page, email: string, password: string) {
   await page.goto(`${BASE_URL}/login`);

@@ -6,94 +6,95 @@ Enterprise multi-tenant travel B2B SaaS platform for agencies. Includes search, 
 ## Architecture
 - **Frontend:** React + Tailwind + Shadcn/UI
 - **Backend:** FastAPI + MongoDB + Redis + Celery
-- **Suppliers:** Paximum, AviationStack, Amadeus (simulated)
+- **Suppliers:** WWTatil (tour), Paximum (hotel), AviationStack (flight)
 
 ## Core Requirements
 - Multi-tenant agency management
 - Search, booking, voucher pipelines
 - Supplier integrations with failover
 - Production readiness with monitoring
-- Celery worker infrastructure
-- Real supplier traffic activation
-- Comprehensive stress testing
-- Production pilot launch
+- Multi-tenant supplier credentials (per-agency)
+- Real supplier API adapters
 
 ## Completed Features
 
 ### Phase 1-2: Core Platform (DONE)
 - Authentication, multi-tenancy, RBAC
 - Hotel/flight search and booking
-- Pricing, payments, CRM
-- Admin dashboards
+- Pricing, payments, CRM, Admin dashboards
 
 ### Phase 3: Production Hardening (DONE)
-- Security hardening, reliability pipeline
-- DLQ system, monitoring
-- Platform hardening dashboard with 15+ tabs
+- Security, reliability, DLQ, monitoring, 15+ tabs
 
-### Celery Worker Infrastructure (DONE - Score: 9.88/10)
-- 5 dedicated queues, worker pool, DLQ consumers, observability
+### Celery Worker Infrastructure (DONE - 9.88/10)
+### Supplier Activation (DONE - 9.88/10)
+### Stress Testing (DONE - 10.0/10)
+### Production Pilot Launch (DONE - 10.0/10)
 
-### Supplier Activation (DONE - Score: 9.88/10)
-- 10-part plan: shadow traffic, canary, normalization, failover, rate limiting, health, incidents
-
-### Stress Testing (DONE - Score: 10.0/10)
-- 10-part: Load, Queue, Supplier Outage, Payment, Cache, DB, Incident, Tenant, Metrics, Report
-
-### Production Pilot Launch (DONE - Score: 10.0/10)
-- **Part 1:** Pilot Environment — controlled production, limited agencies/traffic, feature flags
-- **Part 2:** Real Supplier Traffic — Paximum + AviationStack: shadow → limited → full modes
-- **Part 3:** Monitoring Stack — Prometheus (12 targets) + Grafana (5 dashboards), live metrics
-- **Part 4:** Incident Detection — 8 detection rules, 3 playbooks, Slack/PagerDuty/Email alerts
-- **Part 5:** Pilot Agency Onboarding — 3 agencies, pricing tiers, training materials
-- **Part 6:** Real Booking Flow — 8-step: search → pricing → availability → booking → payment → supplier → voucher → notify
-- **Part 7:** Production Incident Test — supplier outage, payment error, DB slowdown with auto-recovery
-- **Part 8:** Real Performance Metrics — P95 latency, supplier reliability, booking success rate, throughput
-- **Part 9:** Pilot Report — readiness score, 9 weighted components, traffic stats, incident log
-- **Part 10:** Go-Live Decision — GO/CONDITIONAL_GO/NO_GO with checklist, risk assessment, next steps
+### Multi-Tenant Supplier Integration (DONE)
+- **Supplier Credentials Service:** AES-256 encrypted per-agency credential storage
+- **WWTatil Tour API Adapter:** Full production-grade adapter
+  - Auth: `/api/Auth/get-token-async` (24h token, per-agency cache)
+  - Tour Catalog: `getall-tour-async`, `search-tour-async`
+  - Basket: `add-basket-item-async`, `get-basket-by-id-async`, delete operations
+  - Booking: `create-succeeded-booking-async`, notes, cancellation
+  - Post-Sale: tour change, period change, service add/delete/cancel
+- **Connection Testing:** Real HTTP calls to supplier APIs with latency measurement
+- **Frontend:** Supplier Settings tab with 3 supplier cards (WWTatil, Paximum, AviationStack)
+- **Multi-tenant model:** Each agency manages their own supplier credentials
 
 ## Key APIs
 
-### Pilot Launch APIs
-- `GET /api/pilot/dashboard` — Combined pilot dashboard
-- `GET /api/pilot/environment` — Pilot environment config
-- `POST /api/pilot/environment/activate` — Activate pilot environment
-- `GET /api/pilot/supplier-traffic` — Supplier traffic status
-- `POST /api/pilot/supplier-traffic/{code}/{mode}` — Activate supplier (shadow/limited/full)
-- `GET /api/pilot/monitoring` — Prometheus + Grafana status
-- `GET /api/pilot/incidents` — Detection rules and alerts
-- `POST /api/pilot/incidents/simulate/{type}` — Simulate incident
-- `GET /api/pilot/agencies` — Pilot agencies list
-- `POST /api/pilot/agencies/onboard?agency_name=X` — Onboard agency
-- `POST /api/pilot/booking-flow/{type}` — Execute booking flow
-- `POST /api/pilot/incident-test/{scenario}` — Production incident test
-- `GET /api/pilot/performance` — Real performance metrics
-- `GET /api/pilot/report` — Pilot report
-- `GET /api/pilot/go-live` — Go-live decision
+### Supplier Credentials APIs
+- `GET /api/supplier-credentials/supported` — List supported suppliers
+- `GET /api/supplier-credentials/my` — Get agency's credentials (masked)
+- `POST /api/supplier-credentials/save` — Save credentials (encrypted)
+- `DELETE /api/supplier-credentials/{supplier}` — Delete credentials
+- `POST /api/supplier-credentials/test/{supplier}` — Test connection
+- `POST /api/supplier-credentials/wwtatil/tours` — Get tours via wwtatil
+- `POST /api/supplier-credentials/wwtatil/search` — Search tours via wwtatil
+- `POST /api/supplier-credentials/wwtatil/basket/add` — Add basket item
+- `POST /api/supplier-credentials/wwtatil/booking/create` — Create booking
 
-### Stress Test APIs
-- `POST /api/stress-test/load` — Load testing
-- `POST /api/stress-test/queue` — Queue stress
-- `POST /api/stress-test/supplier-outage/{code}` — Supplier outage
-- `POST /api/stress-test/payment-failure` — Payment failure
-- `POST /api/stress-test/cache-failure` — Cache failure
-- `POST /api/stress-test/database` — Database stress
-- `POST /api/stress-test/incident/{type}` — Incident response
-- `POST /api/stress-test/tenant-safety` — Tenant safety
-- `GET /api/stress-test/metrics` — Performance metrics
-- `GET /api/stress-test/report` — Final report
-- `GET /api/stress-test/dashboard` — Combined dashboard
+## DB Schema
+
+### supplier_credentials collection
+```
+{
+  organization_id: str,       // Agency ID (tenant)
+  supplier: str,              // "wwtatil" | "paximum" | "aviationstack"
+  status: str,                // "saved" | "connected" | "auth_failed"
+  enc_base_url: str,          // AES encrypted
+  enc_application_secret_key: str,
+  enc_username: str,
+  enc_password: str,
+  enc_agency_id: str,
+  connected_at: str,
+  last_tested: str
+}
+```
+
+### supplier_tokens collection
+```
+{
+  organization_id: str,
+  supplier: str,
+  token: str,
+  obtained_at: str,
+  expires_hours: int
+}
+```
 
 ## Remaining Backlog
 
-### P2 — Future
-- Part 6: Dedicated cross-tenant security testing
-- Part 7: Real Prometheus/Grafana binding (currently simulated)
-- Part 9: Full customer onboarding workflow
-- Connect pilot system to real supplier APIs
+### P1 — Next
+- Complete remaining 10-part activation flow (shadow traffic, limited booking, monitoring, etc.)
+- Connect real booking flow through wwtatil adapter
 
-## Known Issues
-- Intermittent `pymongo.errors.AutoReconnect` in batch test runs (P2, recurring)
+### P2 — Future
+- Real Prometheus/Grafana integration
+- Full customer onboarding workflow
+- Dedicated cross-tenant security testing
 
 ## Test Credentials
 - Super Admin: agent@acenta.test / agent123

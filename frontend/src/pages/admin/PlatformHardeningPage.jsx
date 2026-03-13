@@ -1329,8 +1329,8 @@ function GoLiveCertificationTab() {
         </Card>
         <Card className="bg-zinc-900 border-zinc-800">
           <CardContent className="pt-4 text-center">
-            <div className="text-xl font-bold text-zinc-100">{data.security.secrets_ready_pct}%</div>
-            <p className="text-xs text-zinc-500 mt-1">Secrets Ready</p>
+            <div className="text-xl font-bold text-zinc-100">{data.security?.security_score ?? "?"}/10</div>
+            <p className="text-xs text-zinc-500 mt-1">Security Score</p>
           </CardContent>
         </Card>
         <Card className="bg-zinc-900 border-zinc-800">
@@ -1378,6 +1378,105 @@ function GoLiveCertificationTab() {
   );
 }
 
+/* ========== SECURITY DASHBOARD TAB ========== */
+function SecurityDashboardTab() {
+  const { data, loading, refetch } = useApi("/hardening/security/readiness");
+  const { data: jwt } = useApi("/hardening/security/jwt");
+  const { data: tests } = useApi("/hardening/security/tests");
+
+  if (loading || !data) return <div className="animate-pulse h-64 bg-zinc-900 rounded-lg" />;
+
+  const dims = data.dimensions;
+
+  return (
+    <div data-testid="security-dashboard-tab" className="space-y-6">
+      {/* Score Banner */}
+      <div className={`rounded-lg border-2 p-6 text-center ${data.meets_target ? "border-emerald-500 bg-emerald-950/20" : "border-red-500 bg-red-950/20"}`}>
+        <div data-testid="security-score" className={`text-4xl font-black tracking-wider ${data.meets_target ? "text-emerald-400" : "text-red-400"}`}>
+          {data.security_readiness_score}/10
+        </div>
+        <p className="text-sm text-zinc-400 mt-1">Security Readiness {data.meets_target ? "(TARGET MET)" : `(Gap: ${data.gap})`}</p>
+      </div>
+
+      {/* Dimension Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {Object.entries(dims).map(([dim, info]) => (
+          <Card key={dim} className={`border ${info.score >= 8 ? "border-emerald-600/40 bg-emerald-950/10" : info.score >= 5 ? "border-amber-600/40 bg-amber-950/10" : "border-red-600/40 bg-red-950/10"}`}>
+            <CardContent className="pt-4 text-center">
+              <div className={`text-2xl font-bold ${info.score >= 8 ? "text-emerald-400" : info.score >= 5 ? "text-amber-400" : "text-red-400"}`}>{info.score}</div>
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">{dim.replace(/_/g, " ")}</div>
+              <p className="text-[9px] text-zinc-600 mt-1">{info.details}</p>
+              <div className="text-[9px] text-zinc-600">weight: {(info.weight * 100).toFixed(0)}%</div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* JWT Security */}
+      {jwt && (
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Lock className="w-4 h-4" /> JWT Security ({jwt.summary.score_pct}%)</CardTitle></CardHeader>
+          <CardContent className="space-y-1.5">
+            {jwt.checks.map((c, i) => (
+              <div key={i} className="flex items-center justify-between text-xs bg-zinc-800/50 rounded p-2">
+                <div className="flex items-center gap-2">
+                  {c.status === "pass" ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <XCircle className="w-3.5 h-3.5 text-red-400" />}
+                  <span className="text-zinc-300">{c.check}</span>
+                </div>
+                <span className="text-zinc-500 text-[10px] max-w-[40%] text-right">{c.details}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Security Tests */}
+      {tests && (
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Shield className="w-4 h-4" /> Security Tests ({tests.summary.pass_rate_pct}%)</CardTitle></CardHeader>
+          <CardContent className="space-y-1.5">
+            {tests.tests.map((t, i) => (
+              <div key={i} className="flex items-center justify-between text-xs bg-zinc-800/50 rounded p-2">
+                <div className="flex items-center gap-2">
+                  {t.status === "pass" ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <XCircle className="w-3.5 h-3.5 text-red-400" />}
+                  <span className="text-zinc-300">{t.test}</span>
+                </div>
+                <span className="text-zinc-500 text-[10px] max-w-[40%] text-right">{t.details}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Risks */}
+      {data.risks.length > 0 && (
+        <Card className="bg-red-950/20 border-red-900/40">
+          <CardHeader className="pb-2"><CardTitle className="text-sm text-red-400">Risks ({data.risks.length})</CardTitle></CardHeader>
+          <CardContent className="space-y-1.5">
+            {data.risks.map((r, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs"><AlertTriangle className="w-3.5 h-3.5 text-red-400" /><span className="text-zinc-300">{r.risk}</span><Badge variant="destructive" className="text-[10px] ml-auto">{r.severity}</Badge></div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Top Fixes */}
+      {data.top_fixes.length > 0 && (
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Top Fixes ({data.top_fixes.length})</CardTitle></CardHeader>
+          <CardContent className="space-y-1.5">
+            {data.top_fixes.map((f, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs"><span className="text-zinc-300">{f.fix}</span><Badge variant={f.impact === "high" ? "destructive" : "default"} className="text-[10px] ml-auto">{f.impact}</Badge></div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      <Button data-testid="refresh-security" variant="outline" size="sm" onClick={refetch}><RefreshCw className="w-3.5 h-3.5 mr-1" />Re-scan</Button>
+    </div>
+  );
+}
+
 /* ========== MAIN PAGE ========== */
 export default function PlatformHardeningPage() {
   return (
@@ -1394,6 +1493,7 @@ export default function PlatformHardeningPage() {
         <TabsList data-testid="hardening-tabs" className="bg-zinc-900 border border-zinc-800 flex-wrap h-auto gap-1 p-1">
           {/* Production Activation Tabs */}
           <TabsTrigger value="golive" className="text-xs gap-1 data-[state=active]:bg-emerald-700 data-[state=active]:text-white"><FileCheck className="w-3.5 h-3.5" />Go-Live</TabsTrigger>
+          <TabsTrigger value="security" className="text-xs gap-1 data-[state=active]:bg-red-700 data-[state=active]:text-white"><Shield className="w-3.5 h-3.5" />Security</TabsTrigger>
           <TabsTrigger value="infra" className="text-xs gap-1"><Radio className="w-3.5 h-3.5" />Infrastructure</TabsTrigger>
           <TabsTrigger value="perfbaseline" className="text-xs gap-1"><Gauge className="w-3.5 h-3.5" />Performance</TabsTrigger>
           <TabsTrigger value="incidents" className="text-xs gap-1"><FlaskConical className="w-3.5 h-3.5" />Incidents</TabsTrigger>
@@ -1414,6 +1514,7 @@ export default function PlatformHardeningPage() {
 
         {/* Production Activation */}
         <TabsContent value="golive"><GoLiveCertificationTab /></TabsContent>
+        <TabsContent value="security"><SecurityDashboardTab /></TabsContent>
         <TabsContent value="infra"><LiveInfrastructureTab /></TabsContent>
         <TabsContent value="perfbaseline"><PerformanceBaselineTab /></TabsContent>
         <TabsContent value="incidents"><IncidentSimulationTab /></TabsContent>

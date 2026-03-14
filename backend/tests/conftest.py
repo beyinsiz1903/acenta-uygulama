@@ -29,6 +29,30 @@ os.environ.setdefault("DB_NAME", "test_database")
 os.environ.setdefault("JWT_SECRET", "test-secret")
 os.environ.setdefault("STRIPE_WEBHOOK_SECRET", "whsec_test")
 
+
+def pytest_collection_modifyitems(config, items):
+    """Auto-skip external HTTP tests when REACT_APP_BACKEND_URL is not set.
+
+    Many legacy test files use ``requests`` + ``BASE_URL`` derived from the env
+    var.  In CI (unit-test job) the var is intentionally unset so these tests
+    would fail with ``MissingSchema``.  We detect them by inspecting the
+    module-level ``BASE_URL`` attribute and skip them gracefully.
+    """
+    preview_url = os.environ.get("REACT_APP_BACKEND_URL", "").strip()
+    if preview_url:
+        return  # URL available — run everything
+
+    skip_marker = pytest.mark.skip(
+        reason="REACT_APP_BACKEND_URL not set — skipping external HTTP test"
+    )
+    for item in items:
+        mod = getattr(item, "module", None)
+        if mod is None:
+            continue
+        base_url = getattr(mod, "BASE_URL", None)
+        if base_url is not None and not base_url:
+            item.add_marker(skip_marker)
+
 from server import app
 from app.db import get_db, _mongo_url
 from app.utils import now_utc

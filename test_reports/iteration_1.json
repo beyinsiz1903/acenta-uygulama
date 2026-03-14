@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://pilot-agencies-hub.preview.emergentagent.com/api",
-    "frontend_url": "https://pilot-agencies-hub.preview.emergentagent.com",
+    "backend_url": "https://permission-guard-fix.preview.emergentagent.com/api",
+    "frontend_url": "https://permission-guard-fix.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

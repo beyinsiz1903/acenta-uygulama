@@ -21,7 +21,7 @@ import os
 import pytest
 import requests
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://pilot-agencies-hub.preview.emergentagent.com")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://permission-guard-fix.preview.emergentagent.com")
 
 @pytest.fixture(scope="module")
 def auth_token():

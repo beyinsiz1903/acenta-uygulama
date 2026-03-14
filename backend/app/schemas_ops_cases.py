@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class OpsCaseBase(BaseModel):
@@ -45,6 +45,8 @@ class OpsCaseUpdate(BaseModel):
 
 
 class OpsCaseOut(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     case_id: str
     booking_id: str
     organization_id: str
@@ -57,6 +59,3 @@ class OpsCaseOut(BaseModel):
     created_at: datetime
     updated_at: datetime
     closed_at: Optional[datetime] = None
-
-    class Config:
-        arbitrary_types_allowed = True

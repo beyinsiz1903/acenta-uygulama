@@ -134,10 +134,12 @@ AES-256 encrypted credential storage, supplier-specific forms (WWTatil, Paximum,
 - **test_b2b_pro_v1.py**: Fixed error response format assertions (`detail` vs `error.message`) — 3/3 PASS
 - **test_billing_subscription_lifecycle.py**: Updated same-plan check to accept 200/409 — 15/15 PASS
 - All verified via testing agent (iteration_91): 43/43 functionally passing
-- A/B testing infrastructure
-- Churn prediction model
-- Revenue forecasting
-- NPS survey automation
-- White-label partner program
-- Multi-region deployment
-- PyMongo AutoReconnect fix
+
+### Pydantic V2 Migration & Test CI Fix — Mar 14, 2026
+- **test_annual_pricing_e2e_iter36.py**: Converted from `requests` library to `async_client` fixture — 8/8 PASS
+- **schemas_finance.py**: Migrated 6x `class Config:` → `model_config = ConfigDict(...)`
+- **schemas_ops_cases.py, schemas_pricing.py**: Migrated `class Config:` → `model_config`
+- **admin_partners.py, admin_campaigns.py, admin_coupons.py, ops_cases.py**: Same migration
+- **theme.py, action_policies.py**: Migrated `@validator` → `@field_validator` (Pydantic V2)
+- **admin_metrics.py, admin_reporting.py**: Migrated `regex=` → `pattern=` (FastAPI/Pydantic V2)
+- All Pydantic deprecation warnings from project code eliminated

@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
@@ -75,6 +75,8 @@ class PartnerUpdateIn(BaseModel):
 
 
 class PartnerOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     name: str
     contact_email: Optional[str] = None
@@ -85,9 +87,6 @@ class PartnerOut(BaseModel):
     notes: Optional[str] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
-
-    class Config:
-        from_attributes = True
 
 
 @router.get("", dependencies=[AdminDep])

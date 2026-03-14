@@ -252,7 +252,7 @@ async def reporting_top_b2b_agencies(
 async def reporting_top_products(
     days: int = Query(7, ge=1, le=90),
     limit: int = Query(10, ge=1, le=50),
-    by: str = Query("sell", regex="^(sell|bookings)$"),
+    by: str = Query("sell", pattern="^(sell|bookings)$"),
     db=Depends(get_db),
     user: Dict[str, Any] = Depends(require_roles(["super_admin", "admin", "ops"])),
 ) -> Dict[str, Any]:

@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
@@ -46,6 +46,8 @@ class CampaignUpdateIn(BaseModel):
 
 
 class CampaignOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     name: str
     slug: str
@@ -57,9 +59,6 @@ class CampaignOut(BaseModel):
     coupon_codes: List[str] = []
     created_at: datetime
     updated_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
 
 
 @router.get("", response_model=List[CampaignOut], dependencies=[AdminDep])

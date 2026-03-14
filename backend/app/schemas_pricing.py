@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, date
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 ContractStatus = Literal["draft", "active", "archived"]
@@ -127,12 +127,10 @@ class SimpleRuleValidity(BaseModel):
 
     Semantics: from <= check_in < to  (to is exclusive).
     """
+    model_config = ConfigDict(populate_by_name=True)
 
     from_: date = Field(alias="from")
     to: date
-
-    class Config:
-        populate_by_name = True
 
 
 class SimpleRuleScope(BaseModel):

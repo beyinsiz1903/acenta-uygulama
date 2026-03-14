@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, Optional, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.auth import require_roles
 from app.db import get_db
@@ -19,9 +19,7 @@ OpsUserDep = Depends(require_roles(["admin", "ops", "super_admin"]))
 
 
 class OpsCaseListResponse(BaseModel):
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class OpsCaseCloseBody(BaseModel):

@@ -5,7 +5,7 @@ from typing import Any, Optional
 
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.auth import require_roles
 from app.db import get_db
@@ -45,6 +45,8 @@ class CouponUpdateIn(BaseModel):
 
 
 class CouponOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     code: str
     discount_type: str
@@ -53,15 +55,12 @@ class CouponOut(BaseModel):
     min_total: float
     usage_limit: Optional[int]
     usage_count: int
-    per_customer_limit: Optional[int] = None  # Make optional for backward compatibility
+    per_customer_limit: Optional[int] = None
     valid_from: datetime
     valid_to: datetime
     active: bool
     created_at: datetime
-    updated_at: Optional[datetime] = None  # Make optional for backward compatibility
-
-    class Config:
-        from_attributes = True
+    updated_at: Optional[datetime] = None
 
 
 def _oid_or_404(id_str: str) -> ObjectId:

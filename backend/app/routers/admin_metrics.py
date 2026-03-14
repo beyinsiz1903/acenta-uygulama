@@ -218,8 +218,8 @@ async def aggregate_daily_trends(db, org_id: str, cutoff: datetime) -> List[Tren
 @router.get("/overview", response_model=MetricsOverviewOut, dependencies=[Depends(require_roles(["super_admin", "admin"]))])
 async def metrics_overview(
     days: Optional[int] = Query(None, ge=1, le=365),
-    start: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
-    end: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
+    start: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    end: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
     db=Depends(get_db),
     user=Depends(get_current_user),
 ):
@@ -246,8 +246,8 @@ async def metrics_overview(
 @router.get("/trends", response_model=MetricsTrendsOut, dependencies=[Depends(require_roles(["super_admin", "admin"]))])
 async def metrics_trends(
     days: Optional[int] = Query(None, ge=1, le=365),
-    start: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
-    end: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
+    start: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    end: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
     db=Depends(get_db),
     user=Depends(get_current_user),
 ):

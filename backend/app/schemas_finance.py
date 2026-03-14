@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Literal, Optional, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ============================================================================
@@ -25,6 +25,8 @@ class FinanceAccountCreate(BaseModel):
 
 class FinanceAccount(BaseModel):
     """Finance account (ledger account)"""
+    model_config = ConfigDict(populate_by_name=True)
+
     id: str = Field(..., alias="account_id")
     organization_id: str
     type: Literal["agency", "platform", "supplier"]
@@ -35,9 +37,6 @@ class FinanceAccount(BaseModel):
     status: Literal["active", "suspended"]
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        populate_by_name = True
 
 
 class FinanceAccountListResponse(BaseModel):
@@ -65,6 +64,8 @@ class LedgerEntryMeta(BaseModel):
 
 class LedgerEntry(BaseModel):
     """Single ledger entry (immutable)"""
+    model_config = ConfigDict(populate_by_name=True)
+
     id: str = Field(..., alias="entry_id")
     organization_id: str
     account_id: str
@@ -77,9 +78,6 @@ class LedgerEntry(BaseModel):
     event: str = Field(..., description="BOOKING_CONFIRMED, PAYMENT_RECEIVED, etc.")
     memo: str
     meta: LedgerEntryMeta = Field(default_factory=LedgerEntryMeta)
-
-    class Config:
-        populate_by_name = True
 
 
 # ============================================================================
@@ -95,6 +93,8 @@ class LedgerPostingLine(BaseModel):
 
 class LedgerPosting(BaseModel):
     """Posting header (idempotency + audit)"""
+    model_config = ConfigDict(populate_by_name=True)
+
     id: str = Field(..., alias="posting_id")
     organization_id: str
     source: LedgerEntrySource
@@ -104,9 +104,6 @@ class LedgerPosting(BaseModel):
     checksum: str = Field(..., description="SHA256 of lines+source for integrity")
     created_at: datetime
     created_by: str = Field(default="system")
-
-    class Config:
-        populate_by_name = True
 
 
 # ============================================================================
@@ -123,6 +120,8 @@ class CreditProfileUpdate(BaseModel):
 
 class CreditProfile(BaseModel):
     """Agency credit profile"""
+    model_config = ConfigDict(populate_by_name=True)
+
     id: str = Field(..., alias="profile_id")
     organization_id: str
     agency_id: str
@@ -133,9 +132,6 @@ class CreditProfile(BaseModel):
     status: Literal["active", "suspended"]
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        populate_by_name = True
 
 
 class CreditProfileListResponse(BaseModel):
@@ -149,6 +145,8 @@ class CreditProfileListResponse(BaseModel):
 
 class AccountBalance(BaseModel):
     """Cached account balance"""
+    model_config = ConfigDict(populate_by_name=True)
+
     id: str = Field(..., alias="balance_id")
     organization_id: str
     account_id: str
@@ -156,9 +154,6 @@ class AccountBalance(BaseModel):
     balance: float = Field(..., description="Net balance (debit - credit for agencies)")
     as_of: datetime
     updated_at: datetime
-
-    class Config:
-        populate_by_name = True
 
 
 # ============================================================================
@@ -177,6 +172,8 @@ class PaymentCreate(BaseModel):
 
 class Payment(BaseModel):
     """Payment record"""
+    model_config = ConfigDict(populate_by_name=True)
+
     id: str = Field(..., alias="payment_id")
     organization_id: str
     account_id: str
@@ -187,9 +184,6 @@ class Payment(BaseModel):
     received_at: datetime
     created_at: datetime
     created_by_email: str
-
-    class Config:
-        populate_by_name = True
 
 
 # ============================================================================

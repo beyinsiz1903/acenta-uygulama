@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
@@ -15,10 +15,12 @@ class ActionRuleWhen(BaseModel):
     high_risk: bool = True
     reasons_any: List[str] = Field(default_factory=list)
 
-    @validator("reasons_any", each_item=True)
-    def _validate_reason(cls, v: str) -> str:
-        if v not in {"rate", "repeat"}:
-            raise ValueError("reasons_any can only contain 'rate' or 'repeat'")
+    @field_validator("reasons_any")
+    @classmethod
+    def _validate_reason(cls, v: List[str]) -> List[str]:
+        for item in v:
+            if item not in {"rate", "repeat"}:
+                raise ValueError("reasons_any can only contain 'rate' or 'repeat'")
         return v
 
 
@@ -27,16 +29,19 @@ class ActionRuleThen(BaseModel):
     requires_approval_to_unblock: bool = False
     notify_channels: List[str] = Field(default_factory=list)
 
-    @validator("action")
+    @field_validator("action")
+    @classmethod
     def _validate_action(cls, v: str) -> str:
         if v not in {"none", "watchlist", "manual_review", "block"}:
             raise ValueError("invalid action")
         return v
 
-    @validator("notify_channels", each_item=True)
-    def _validate_channel(cls, v: str) -> str:
-        if v not in {"email", "webhook"}:
-            raise ValueError("invalid notify channel")
+    @field_validator("notify_channels")
+    @classmethod
+    def _validate_channel(cls, v: List[str]) -> List[str]:
+        for item in v:
+            if item not in {"email", "webhook"}:
+                raise ValueError("invalid notify channel")
         return v
 
 
@@ -50,7 +55,8 @@ class MatchRiskActionPolicy(BaseModel):
     default_action: str = Field("watchlist", description="none|watchlist|manual_review|block")
     rules: List[ActionRule] = Field(default_factory=list)
 
-    @validator("default_action")
+    @field_validator("default_action")
+    @classmethod
     def _validate_default_action(cls, v: str) -> str:
         if v not in {"none", "watchlist", "manual_review", "block"}:
             raise ValueError("invalid default action")

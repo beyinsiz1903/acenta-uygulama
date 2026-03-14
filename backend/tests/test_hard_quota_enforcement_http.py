@@ -14,7 +14,7 @@ from __future__ import annotations
 import os
 import pytest
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://permission-guard-fix.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://test-suite-green.preview.emergentagent.com").rstrip("/")
 
 
 class TestHardQuotaEnforcementHTTP:

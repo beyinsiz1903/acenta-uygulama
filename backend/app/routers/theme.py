@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from app.auth import require_roles
 from app.db import get_db
@@ -28,8 +28,9 @@ class ThemeColors(BaseModel):
   muted_foreground: Optional[str] = None
   border: Optional[str] = None
 
-  @validator("primary", "primary_foreground", "background", "foreground", "muted", "muted_foreground", "border", pre=True)
-  def _validate_hex(cls, v: Optional[str]) -> Optional[str]:  # type: ignore[override]
+  @field_validator("primary", "primary_foreground", "background", "foreground", "muted", "muted_foreground", "border", mode="before")
+  @classmethod
+  def _validate_hex(cls, v: Optional[str]) -> Optional[str]:
     if v is None or v == "":
       return None
     if isinstance(v, str) and len(v) == 7 and v.startswith("#"):

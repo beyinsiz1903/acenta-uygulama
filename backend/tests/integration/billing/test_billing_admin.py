@@ -482,8 +482,10 @@ async def test_iyzico_provider_returns_501() -> None:
 # ============================================================================
 
 @pytest.mark.anyio
-async def test_billing_provider_factory() -> None:
+async def test_billing_provider_factory(monkeypatch) -> None:
     """get_billing_provider should return correct provider."""
+    monkeypatch.setenv("STRIPE_API_KEY", "sk_test_fake_for_ci")
+
     from app.billing import get_billing_provider
     from app.billing.stripe_provider import StripeBillingProvider
     from app.billing.iyzico_provider import IyzicoBillingProvider

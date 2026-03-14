@@ -29,6 +29,7 @@ jobs:
       DB_NAME: test_db
       JWT_SECRET: test-secret
       STRIPE_WEBHOOK_SECRET: whsec_test
+      STRIPE_API_KEY: sk_test_ci_dummy_key
 
     steps:
       - name: Checkout

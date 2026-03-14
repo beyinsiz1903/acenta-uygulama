@@ -15,6 +15,7 @@ env:
   DB_NAME: syroce_test
   JWT_SECRET: ci-test-secret-do-not-use-in-production
   STRIPE_WEBHOOK_SECRET: whsec_test
+  STRIPE_API_KEY: sk_test_ci_dummy_key
   ENV: test
 
 jobs:

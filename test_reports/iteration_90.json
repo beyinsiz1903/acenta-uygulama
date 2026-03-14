@@ -1,0 +1,65 @@
+{
+  "summary": "LEGACY_ROLE_ALIASES Security Fix Verification - All 24 tests PASS. The fix correctly prevents plain 'admin' users from bypassing feature flags while preserving backward compatibility for route access.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_feature_flag_security.py",
+    "/app/backend/tests/test_admin_settlements.py",
+    "/app/backend/tests/test_admin_whitelabel.py",
+    "/app/backend/tests/test_admin_statements.py",
+    "/app/test_reports/pytest/pytest_all_security_iter90.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "is_super_admin() correctly uses _raw_roles to distinguish explicit super_admin from normalized admin",
+    "Plain 'admin' role users NO longer bypass feature flag checks (require_feature)",
+    "Explicit 'super_admin'/'superadmin' users correctly bypass feature flags",
+    "LEGACY_ROLE_ALIASES still works for require_roles() backward compatibility",
+    "get_current_user() correctly stores _raw_roles before normalization"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_feature_flag_security.py"
+  ],
+  "success_rate": {
+    "backend": "100% (24/24 tests passed)"
+  },
+  "test_credentials": {
+    "super_admin": "agent@acenta.test / agent123",
+    "agency_admin": "agency1@demo.test / agency123"
+  },
+  "seed_data_creation": "Tests create TEST_ prefixed orgs and users for isolated testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Security fix for LEGACY_ROLE_ALIASES verified. Key verification points: 1) is_super_admin() checks _raw_roles (pre-normalization) - only explicit super_admin/superadmin passes, 2) require_feature() uses is_super_admin() so admin users get feature-checked, 3) require_roles() uses normalize_roles() so admin→super_admin aliasing still works for route access, 4) Live verification: agent@acenta.test (super_admin) gets 200 on /api/admin/settlements and /api/admin/whitelabel, agency1@demo.test (agency_admin) gets 404/403 on same endpoints.",
+  "security_verification": {
+    "admin_without_b2b_pro_settlements": "PASS - returns 404 (not 200)",
+    "admin_without_b2b_pro_whitelabel": "PASS - returns 404 (not 200)",
+    "super_admin_bypasses_feature_flags": "PASS - returns 200 regardless of org features",
+    "agency_admin_without_b2b_pro_blocked": "PASS - returns 403/404",
+    "admin_with_b2b_pro_settlements": "PASS - returns 200",
+    "admin_with_b2b_pro_whitelabel": "PASS - returns 200",
+    "require_roles_backward_compatibility": "PASS - admin can access super_admin routes via normalization"
+  },
+  "unit_tests": {
+    "test_plain_admin_is_not_super_admin": "PASS - user with _raw_roles=['admin'] returns is_super_admin=False",
+    "test_explicit_super_admin_is_super_admin": "PASS - user with _raw_roles=['super_admin'] returns True",
+    "test_explicit_superadmin_is_super_admin": "PASS - user with _raw_roles=['superadmin'] returns True",
+    "test_agency_admin_is_not_super_admin": "PASS - agency_admin returns False",
+    "test_admin_normalizes_to_super_admin": "PASS - normalize_roles(['admin']) == ['super_admin']"
+  },
+  "live_api_verification": {
+    "super_admin_login": "PASS - agent@acenta.test login successful, roles=['super_admin', 'agency_admin']",
+    "super_admin_settlements_access": "PASS - HTTP 200",
+    "super_admin_whitelabel_access": "PASS - HTTP 200",
+    "agency_admin_login": "PASS - agency1@demo.test login successful, roles=['agency_admin']",
+    "agency_admin_settlements_blocked": "PASS - HTTP 404 (feature disabled)",
+    "agency_admin_whitelabel_blocked": "PASS - HTTP 403 (role not allowed)"
+  }
+}

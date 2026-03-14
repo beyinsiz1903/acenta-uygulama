@@ -126,6 +126,9 @@ def _sanitize_auth_user(user: dict[str, Any]) -> dict[str, Any]:
     ):
         sanitized.pop(sensitive_key, None)
     sanitized["roles"] = normalize_roles(user)
+    # Carry forward pre-normalization roles for is_super_admin checks
+    if "_raw_roles" in user:
+        sanitized["_raw_roles"] = user["_raw_roles"]
     # Include allowed_screens for granular permission enforcement
     sanitized["allowed_screens"] = user.get("allowed_screens") or []
     return sanitized
@@ -164,7 +167,9 @@ async def get_current_user(
     if not user:
         raise HTTPException(status_code=401, detail="Kullanıcı bulunamadı")
 
-    # Legacy rol düzeltmesi: "admin" rolü her yerde "super_admin" olarak davransın
+    # Preserve raw roles before normalization so is_super_admin can distinguish
+    # plain "admin" from explicit "super_admin".
+    user["_raw_roles"] = list(user.get("roles") or [])
     user["roles"] = normalize_roles(user)
 
     if session_id:
@@ -273,9 +278,42 @@ async def load_org_doc(organization_id: str, _db=None) -> Optional[dict[str, Any
     return None
 
 
+_EXPLICIT_SUPER_ADMIN_NAMES = frozenset({"super_admin", "superadmin"})
+
+
 def is_super_admin(user: dict[str, Any]) -> bool:
-    """Check if user has super_admin role (handles both single role and roles list)"""
-    return "super_admin" in normalize_roles(user)
+    """Check if user has *explicit* super_admin role.
+
+    Uses pre-normalization roles (``_raw_roles``) when available so that a
+    plain ``"admin"`` role — which LEGACY_ROLE_ALIASES maps to
+    ``"super_admin"`` for backward-compatible route matching — does **not**
+    bypass feature-flag and super-admin-only guards.
+    """
+    raw_roles = user.get("_raw_roles")
+    if raw_roles is not None:
+        for r in raw_roles:
+            if isinstance(r, str):
+                canonical = r.strip().lower().replace("-", "_").replace(" ", "_")
+                if canonical in _EXPLICIT_SUPER_ADMIN_NAMES:
+                    return True
+        return False
+    # Fallback for user dicts that don't come through get_current_user
+    # (e.g. raw DB docs in tenant middleware). DB users should already
+    # have been migrated by seed.ensure_seed_data.
+    roles = user.get("roles") or []
+    if isinstance(roles, str):
+        roles = [roles]
+    for r in roles:
+        if isinstance(r, str):
+            canonical = r.strip().lower().replace("-", "_").replace(" ", "_")
+            if canonical in _EXPLICIT_SUPER_ADMIN_NAMES:
+                return True
+    single = user.get("role")
+    if isinstance(single, str):
+        canonical = single.strip().lower().replace("-", "_").replace(" ", "_")
+        if canonical in _EXPLICIT_SUPER_ADMIN_NAMES:
+            return True
+    return False
 
 
 def require_feature(feature_key: str, not_found: bool = True):

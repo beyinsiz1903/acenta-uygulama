@@ -33,7 +33,7 @@ router = APIRouter(tags=["vouchers"])
 OpsUserDep = Depends(require_roles(["admin", "ops", "super_admin"]))
 
 
-@router.post("/api/ops/bookings/{booking_id}/voucher/generate", response_model=VoucherGenerateResponse)
+@router.post("/ops/bookings/{booking_id}/voucher/generate", response_model=VoucherGenerateResponse)
 async def ops_generate_voucher_for_booking(
     booking_id: str,
     user=OpsUserDep,
@@ -44,7 +44,7 @@ async def ops_generate_voucher_for_booking(
     return await generate_for_booking(db, org_id, booking_id, created_by_email)
 
 
-@router.get("/api/ops/bookings/{booking_id}/vouchers", response_model=VoucherHistoryResponse)
+@router.get("/ops/bookings/{booking_id}/vouchers", response_model=VoucherHistoryResponse)
 async def ops_list_vouchers_for_booking(
     booking_id: str,
     user=OpsUserDep,
@@ -86,7 +86,7 @@ class VoucherFileMeta(BaseModel):
     created_by: str | None = None
 
 
-@router.post("/api/ops/bookings/{booking_id}/voucher/issue", response_model=VoucherFileMeta)
+@router.post("/ops/bookings/{booking_id}/voucher/issue", response_model=VoucherFileMeta)
 async def ops_issue_voucher_pdf(
     booking_id: str,
     payload: VoucherIssueRequest,
@@ -120,7 +120,7 @@ async def ops_issue_voucher_pdf(
     return VoucherFileMeta(**meta)
 
 
-@router.get("/api/b2b/bookings/{booking_id}/voucher/latest")
+@router.get("/b2b/bookings/{booking_id}/voucher/latest")
 async def b2b_download_latest_voucher_pdf(
     booking_id: str,
     user=Depends(get_current_user),
@@ -171,7 +171,7 @@ async def b2b_download_latest_voucher_pdf(
 
 
 
-@router.post("/api/ops/bookings/{booking_id}/voucher/resend", response_model=VoucherResendResponse)
+@router.post("/ops/bookings/{booking_id}/voucher/resend", response_model=VoucherResendResponse)
 async def ops_resend_voucher(
     booking_id: str,
     payload: VoucherResendRequest,
@@ -202,7 +202,7 @@ async def ops_resend_voucher(
     return VoucherResendResponse(voucher_id=voucher_id, status="queued")
 
 
-@router.get("/api/ops/bookings/{booking_id}/voucher", response_class=HTMLResponse)
+@router.get("/ops/bookings/{booking_id}/voucher", response_class=HTMLResponse)
 async def ops_view_voucher_html(
     booking_id: str,
     user=OpsUserDep,
@@ -226,7 +226,7 @@ async def ops_view_voucher_html(
     return HTMLResponse(content=html)
 
 
-@router.get("/api/b2b/bookings/{booking_id}/voucher", response_class=HTMLResponse)
+@router.get("/b2b/bookings/{booking_id}/voucher", response_class=HTMLResponse)
 async def b2b_view_voucher_html(
     booking_id: str,
     user=Depends(get_current_user),
@@ -253,7 +253,7 @@ async def b2b_view_voucher_html(
     return HTMLResponse(content=html)
 
 
-@router.get("/api/b2b/bookings/{booking_id}/voucher.pdf")
+@router.get("/b2b/bookings/{booking_id}/voucher.pdf")
 async def b2b_download_voucher_pdf(
     booking_id: str,
     user=Depends(get_current_user),

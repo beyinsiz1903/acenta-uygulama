@@ -187,7 +187,7 @@ AES-256 encrypted credential storage, supplier-specific forms (WWTatil, Paximum,
 **All 2/2 tests PASS**
 
 ### External HTTP Test CI Skip Fix — Mar 14, 2026
-**Problem**: `test_hard_quota_enforcement_http.py` and 6+ other test files had hardcoded preview URL fallbacks (`https://cache-bug-fixed.preview.emergentagent.com`). In CI, `REACT_APP_BACKEND_URL` env var is not set, so tests tried to connect to stale preview URLs and failed.
+**Problem**: `test_hard_quota_enforcement_http.py` and 6+ other test files had hardcoded preview URL fallbacks (`https://test-fixed-v2.preview.emergentagent.com`). In CI, `REACT_APP_BACKEND_URL` env var is not set, so tests tried to connect to stale preview URLs and failed.
 **Root Cause**: `pytest_collection_modifyitems` only skipped tests where `BASE_URL` was empty. Tests with hardcoded fallback URLs bypassed this check.
 **Fix**:
 1. Updated `pytest_collection_modifyitems` to skip sync tests in any module with `BASE_URL` when env var is not set (async tests still run)

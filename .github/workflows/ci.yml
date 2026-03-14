@@ -113,13 +113,14 @@ jobs:
         run: |
           cd backend
           pip install -r requirements.txt
-          pip install pytest pytest-anyio pytest-cov httpx
+          pip install pytest pytest-anyio pytest-cov httpx pytest-rerunfailures
 
       - name: Run unit tests
         run: |
           cd backend
           python -m pytest tests/ \
             -x --timeout=60 \
+            --reruns=2 --reruns-delay=3 --only-rerun="AutoReconnect" \
             --cov=app --cov-report=xml:coverage.xml \
             -k "not preview and not external" \
             --ignore=tests/integration \

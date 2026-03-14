@@ -66,4 +66,5 @@ async def test_public_booking_summary_not_found(async_client):
     resp = await async_client.get("/api/public/bookings/by-code/NOPE", params={"org": "org_x"})
     assert resp.status_code == 404
     data = resp.json()
-    assert data["detail"] == "NOT_FOUND"
+    # Custom exception handler wraps detail in {"error": {"message": ...}}
+    assert data.get("detail") == "NOT_FOUND" or data.get("error", {}).get("message") == "NOT_FOUND"

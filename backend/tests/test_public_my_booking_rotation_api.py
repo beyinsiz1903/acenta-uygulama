@@ -88,7 +88,8 @@ async def test_root_token_second_use_is_not_found(async_client, test_db):
     second = await async_client.get(f"/api/public/my-booking/{root_token}")
     assert second.status_code == 404
     body = second.json()
-    assert body.get("detail") == "NOT_FOUND"
+    # Custom exception handler wraps detail in {"error": {"message": ...}}
+    assert body.get("detail") == "NOT_FOUND" or body.get("error", {}).get("message") == "NOT_FOUND"
 
 
 @pytest.mark.anyio

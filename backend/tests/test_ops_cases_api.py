@@ -73,7 +73,7 @@ async def test_list_cases_default_open(async_client: httpx.AsyncClient, minimal_
     token = login_resp.json()["access_token"]
 
     resp = await async_client.get(
-        "/api/ops/guest-cases", headers={"Authorization": f"Bearer {token}"}
+        "/api/ops-cases/", headers={"Authorization": f"Bearer {token}"}
     )
     assert resp.status_code == 200
     data = resp.json()
@@ -134,7 +134,7 @@ async def test_list_cases_filter_type_and_status(async_client: httpx.AsyncClient
     token = login_resp.json()["access_token"]
 
     resp = await async_client.get(
-        "/api/ops/guest-cases?status=open&type=cancel",
+        "/api/ops-cases/?status=open&type=cancel",
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 200
@@ -182,7 +182,7 @@ async def test_get_case_wrong_org_404(async_client: httpx.AsyncClient):
     token = login_resp.json()["access_token"]
 
     resp = await async_client.get(
-        "/api/ops/guest-cases/CASE-ORG-A",
+        "/api/ops-cases/CASE-ORG-A",
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 404
@@ -226,7 +226,7 @@ async def test_close_case_sets_status_and_emits_event(async_client: httpx.AsyncC
     token = login_resp.json()["access_token"]
 
     resp = await async_client.post(
-        "/api/ops/guest-cases/CASE-CLOSE-1/close",
+        "/api/ops-cases/CASE-CLOSE-1/close",
         json={"note": "Ops note"},
         headers={"Authorization": f"Bearer {token}"},
     )
@@ -244,7 +244,7 @@ async def test_close_case_sets_status_and_emits_event(async_client: httpx.AsyncC
 
     # Verify booking_events
     events = await db.booking_events.find({"organization_id": org_id, "booking_id": "BKG-CLOSE-1"}).to_list(10)
-    types = [e.get("type") for e in events]
+    types = [e.get("event") for e in events]
     assert "OPS_CASE_CLOSED" in types
 
 
@@ -287,7 +287,7 @@ async def test_close_case_idempotent(async_client: httpx.AsyncClient):
 
     # First close
     resp1 = await async_client.post(
-        "/api/ops/guest-cases/CASE-IDEM-1/close",
+        "/api/ops-cases/CASE-IDEM-1/close",
         json={"note": "First"},
         headers={"Authorization": f"Bearer {token}"},
     )
@@ -295,7 +295,7 @@ async def test_close_case_idempotent(async_client: httpx.AsyncClient):
 
     # Second close (idempotent)
     resp2 = await async_client.post(
-        "/api/ops/guest-cases/CASE-IDEM-1/close",
+        "/api/ops-cases/CASE-IDEM-1/close",
         json={"note": "Second"},
         headers={"Authorization": f"Bearer {token}"},
     )
@@ -303,5 +303,5 @@ async def test_close_case_idempotent(async_client: httpx.AsyncClient):
 
     # There should be only one OPS_CASE_CLOSED event
     events = await db.booking_events.find({"organization_id": org_id, "booking_id": "BKG-IDEM-1"}).to_list(10)
-    types = [e.get("type") for e in events]
+    types = [e.get("event") for e in events]
     assert types.count("OPS_CASE_CLOSED") == 1

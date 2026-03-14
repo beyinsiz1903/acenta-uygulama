@@ -3906,94 +3906,6 @@
   },
   {
     "compat_required": true,
-    "current_namespace": "/api/api",
-    "legacy_or_v1": "legacy",
-    "method": "GET",
-    "owner": "api",
-    "path": "/api/api/b2b/bookings/{booking_id}/voucher",
-    "risk_level": "medium",
-    "source": "app.routers.vouchers",
-    "target_namespace": "/api/v1/api"
-  },
-  {
-    "compat_required": true,
-    "current_namespace": "/api/api",
-    "legacy_or_v1": "legacy",
-    "method": "GET",
-    "owner": "api",
-    "path": "/api/api/b2b/bookings/{booking_id}/voucher.pdf",
-    "risk_level": "medium",
-    "source": "app.routers.vouchers",
-    "target_namespace": "/api/v1/api"
-  },
-  {
-    "compat_required": true,
-    "current_namespace": "/api/api",
-    "legacy_or_v1": "legacy",
-    "method": "GET",
-    "owner": "api",
-    "path": "/api/api/b2b/bookings/{booking_id}/voucher/latest",
-    "risk_level": "medium",
-    "source": "app.routers.vouchers",
-    "target_namespace": "/api/v1/api"
-  },
-  {
-    "compat_required": true,
-    "current_namespace": "/api/api",
-    "legacy_or_v1": "legacy",
-    "method": "GET",
-    "owner": "api",
-    "path": "/api/api/ops/bookings/{booking_id}/voucher",
-    "risk_level": "medium",
-    "source": "app.routers.vouchers",
-    "target_namespace": "/api/v1/api"
-  },
-  {
-    "compat_required": true,
-    "current_namespace": "/api/api",
-    "legacy_or_v1": "legacy",
-    "method": "POST",
-    "owner": "api",
-    "path": "/api/api/ops/bookings/{booking_id}/voucher/generate",
-    "risk_level": "medium",
-    "source": "app.routers.vouchers",
-    "target_namespace": "/api/v1/api"
-  },
-  {
-    "compat_required": true,
-    "current_namespace": "/api/api",
-    "legacy_or_v1": "legacy",
-    "method": "POST",
-    "owner": "api",
-    "path": "/api/api/ops/bookings/{booking_id}/voucher/issue",
-    "risk_level": "medium",
-    "source": "app.routers.vouchers",
-    "target_namespace": "/api/v1/api"
-  },
-  {
-    "compat_required": true,
-    "current_namespace": "/api/api",
-    "legacy_or_v1": "legacy",
-    "method": "POST",
-    "owner": "api",
-    "path": "/api/api/ops/bookings/{booking_id}/voucher/resend",
-    "risk_level": "medium",
-    "source": "app.routers.vouchers",
-    "target_namespace": "/api/v1/api"
-  },
-  {
-    "compat_required": true,
-    "current_namespace": "/api/api",
-    "legacy_or_v1": "legacy",
-    "method": "GET",
-    "owner": "api",
-    "path": "/api/api/ops/bookings/{booking_id}/vouchers",
-    "risk_level": "medium",
-    "source": "app.routers.vouchers",
-    "target_namespace": "/api/v1/api"
-  },
-  {
-    "compat_required": true,
     "current_namespace": "/api/approvals",
     "legacy_or_v1": "legacy",
     "method": "GET",
@@ -4430,6 +4342,39 @@
     "path": "/api/b2b/bookings/{booking_id}/risk/reject",
     "risk_level": "medium",
     "source": "app.routers.b2b_bookings",
+    "target_namespace": "/api/v1/b2b"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/b2b",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "b2b",
+    "path": "/api/b2b/bookings/{booking_id}/voucher",
+    "risk_level": "medium",
+    "source": "app.routers.vouchers",
+    "target_namespace": "/api/v1/b2b"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/b2b",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "b2b",
+    "path": "/api/b2b/bookings/{booking_id}/voucher.pdf",
+    "risk_level": "medium",
+    "source": "app.routers.vouchers",
+    "target_namespace": "/api/v1/b2b"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/b2b",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "b2b",
+    "path": "/api/b2b/bookings/{booking_id}/voucher/latest",
+    "risk_level": "medium",
+    "source": "app.routers.vouchers",
     "target_namespace": "/api/v1/b2b"
   },
   {
@@ -7708,6 +7653,61 @@
     "path": "/api/ops/bookings/{booking_id}/events",
     "risk_level": "medium",
     "source": "app.routers.ops_booking_events",
+    "target_namespace": "/api/v1/ops"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/ops",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "ops",
+    "path": "/api/ops/bookings/{booking_id}/voucher",
+    "risk_level": "medium",
+    "source": "app.routers.vouchers",
+    "target_namespace": "/api/v1/ops"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/ops",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "ops",
+    "path": "/api/ops/bookings/{booking_id}/voucher/generate",
+    "risk_level": "medium",
+    "source": "app.routers.vouchers",
+    "target_namespace": "/api/v1/ops"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/ops",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "ops",
+    "path": "/api/ops/bookings/{booking_id}/voucher/issue",
+    "risk_level": "medium",
+    "source": "app.routers.vouchers",
+    "target_namespace": "/api/v1/ops"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/ops",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "ops",
+    "path": "/api/ops/bookings/{booking_id}/voucher/resend",
+    "risk_level": "medium",
+    "source": "app.routers.vouchers",
+    "target_namespace": "/api/v1/ops"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/ops",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "ops",
+    "path": "/api/ops/bookings/{booking_id}/vouchers",
+    "risk_level": "medium",
+    "source": "app.routers.vouchers",
     "target_namespace": "/api/v1/ops"
   },
   {

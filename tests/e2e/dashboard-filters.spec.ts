@@ -1,7 +1,7 @@
 // tests/e2e/dashboard-filters.spec.ts
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "https://cache-bug-fixed.preview.emergentagent.com";
+const BASE_URL = "https://test-fixed-v2.preview.emergentagent.com";
 
 async function login(page) {
   await page.goto(`${BASE_URL}/login`);

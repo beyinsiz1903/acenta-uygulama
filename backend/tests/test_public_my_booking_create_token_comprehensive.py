@@ -379,6 +379,13 @@ async def test_create_token_ttl_and_expiry_format(async_client):
     assert token_doc is not None
     db_expires_at = token_doc["expires_at"]
 
+    # Normalize both to timezone-aware (UTC) for comparison
+    from datetime import timezone as _tz
+    if db_expires_at.tzinfo is None:
+        db_expires_at = db_expires_at.replace(tzinfo=_tz.utc)
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=_tz.utc)
+
     # Allow small time difference between response and DB (should be very close)
     time_diff = abs((expires_at - db_expires_at).total_seconds())
     assert time_diff < 2  # Less than 2 seconds difference
@@ -454,6 +461,7 @@ async def test_create_token_db_isolation_with_conftest_fixtures(async_client):
     booking = {
         "_id": "booking-isolation-001",
         "organization_id": org,
+        "code": booking_code,
         "booking_code": booking_code,
         "status": "CONFIRMED",
         "created_at": now,

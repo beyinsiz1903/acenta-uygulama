@@ -41,7 +41,10 @@ async def _drop_orphan_test_databases(client: AsyncIOMotorClient) -> None:
     db_names = await client.list_database_names()
     for name in db_names:
         if name.startswith("agentis_test_") or name.startswith("agentis_test_seeded_"):
-            await client.drop_database(name)
+            try:
+                await client.drop_database(name)
+            except Exception:
+                pass
 
 
 def _is_external_preview_http_test() -> bool:
@@ -164,7 +167,10 @@ async def seeded_test_db(motor_client: AsyncIOMotorClient) -> AsyncGenerator[Any
 
         yield db
     finally:
-        await motor_client.drop_database(db_name)
+        try:
+            await motor_client.drop_database(db_name)
+        except Exception:
+            pass
 
 
 @pytest.fixture(autouse=True)
@@ -236,7 +242,10 @@ async def test_db(motor_client: AsyncIOMotorClient) -> AsyncGenerator[Any, None]
     try:
         yield db
     finally:
-        await motor_client.drop_database(db_name)
+        try:
+            await motor_client.drop_database(db_name)
+        except Exception:
+            pass  # Ignore AutoReconnect on teardown
 
 
 
@@ -259,6 +268,11 @@ async def core_db_routing(monkeypatch, test_db):
         return test_db
 
     monkeypatch.setattr(db_module, "get_db", _fake_get_db)
+
+    # Also patch auth.get_db so load_org_doc / require_feature use test_db
+    from app import auth as auth_module
+    monkeypatch.setattr(auth_module, "get_db", _fake_get_db)
+
     yield
 
 

@@ -248,12 +248,12 @@ def resolve_org_features(org_doc: dict[str, Any]) -> dict[str, bool]:
     return merged
 
 
-async def load_org_doc(organization_id: str) -> Optional[dict[str, Any]]:
+async def load_org_doc(organization_id: str, _db=None) -> Optional[dict[str, Any]]:
     """Load organization document by ID (handles both string UUID and ObjectId)"""
     if not organization_id:
         return None
 
-    db = await get_db()
+    db = _db if _db is not None else await get_db()
 
     # Try as string ID first
     doc = await db.organizations.find_one({"_id": organization_id})
@@ -285,11 +285,13 @@ def require_feature(feature_key: str, not_found: bool = True):
     - Returns 404 if feature disabled (hides enterprise modules from core users)
     - Returns 403 if not_found=False
     """
-    async def _guard(user: dict[str, Any] = Depends(get_current_user)) -> dict[str, Any]:
+    async def _guard(user: dict[str, Any] = Depends(get_current_user), db=Depends(get_db)) -> dict[str, Any]:
         if is_super_admin(user):
             return user
 
-        org_doc = await load_org_doc(user.get("organization_id"))
+        org_id = user.get("organization_id")
+        org_doc = await load_org_doc(org_id, _db=db)
+
         if not org_doc:
             raise HTTPException(status_code=404, detail="Organization not found")
 

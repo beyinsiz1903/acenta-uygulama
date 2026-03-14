@@ -433,7 +433,7 @@ async def get_exposure_dashboard(
 @router.get("/exposure/{agency_id}/entries")
 async def get_exposure_entries(
     agency_id: str,
-    bucket: str = Query("all", regex="^(all|0_30|31_60|61_plus)$"),
+    bucket: str = Query("all", pattern="^(all|0_30|31_60|61_plus)$"),
     limit: int = Query(200, ge=1, le=500),
     cursor: Optional[str] = None,
     current_user=Depends(require_roles(["admin", "ops", "super_admin"])),

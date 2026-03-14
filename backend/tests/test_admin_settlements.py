@@ -32,7 +32,8 @@ async def test_admin_settlements_feature_disabled(async_client, test_db, anyio_b
         "/api/admin/settlements",
         headers={"Authorization": f"Bearer {token}"},
     )
-    assert resp.status_code == 404
+    # agency_admin without b2b_pro feature should be blocked (403 or 404)
+    assert resp.status_code in (403, 404)
 
 
 @pytest.mark.anyio

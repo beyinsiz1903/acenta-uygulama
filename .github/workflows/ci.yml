@@ -112,7 +112,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
-          pip install -r requirements.txt
+          pip install -r requirements.txt --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
           pip install pytest pytest-anyio pytest-cov httpx pytest-rerunfailures
 
       - name: Run unit tests
@@ -192,7 +192,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
-          pip install -r requirements.txt
+          pip install -r requirements.txt --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
           pip install pytest pytest-anyio httpx schemathesis
 
       - name: Run contract tests

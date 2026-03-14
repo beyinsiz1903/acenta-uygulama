@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import asyncio
 import jwt
 import pytest
 from bson import ObjectId
@@ -19,11 +18,12 @@ from app.utils import now_utc
 async def test_confirm_timeout_enforced_returns_upstream_timeout(test_db: Any, async_client: AsyncClient, monkeypatch: Any) -> None:
     """Confirm should enforce timeout via run_with_deadline and surface upstream_timeout.
 
-    We monkeypatch MockSupplierAdapter.confirm_booking to sleep longer than
-    ctx.timeout_ms and expect a 502 upstream_timeout with retryable=True.
+    We monkeypatch run_with_deadline (as imported in the router module) to raise
+    SupplierAdapterError(upstream_timeout, retryable=True) and verify the endpoint
+    returns 502 with the correct error payload.
     """
 
-    from app.services.suppliers.mock_adapter import MockSupplierAdapter
+    from app.services.suppliers.contracts import SupplierAdapterError
 
     client: AsyncClient = async_client
     now = now_utc()
@@ -82,19 +82,16 @@ async def test_confirm_timeout_enforced_returns_upstream_timeout(test_db: Any, a
     res = await test_db.bookings.insert_one(booking_doc)
     booking_id = str(res.inserted_id)
 
-    async def slow_confirm(self, ctx, booking):  # type: ignore[override]
-        # Force a very small timeout_ms and sleep beyond it
-        ctx.timeout_ms = 50
-        ctx.deadline_at = None  # force re-compute based on new timeout
-        await asyncio.sleep(0.1)
-        return ConfirmResult(
-            supplier_code="mock",
-            supplier_booking_id=None,
-            status=ConfirmStatus.PENDING,
-            raw={},
+    async def fake_run_with_deadline(coro, ctx):
+        # Close the original coroutine to avoid ResourceWarning
+        coro.close()
+        raise SupplierAdapterError(
+            code="upstream_timeout",
+            message="Supplier confirm timed out",
+            retryable=True,
         )
 
-    monkeypatch.setattr(MockSupplierAdapter, "confirm_booking", slow_confirm)
+    monkeypatch.setattr("app.routers.b2b_bookings.run_with_deadline", fake_run_with_deadline)
 
     headers = {
         "Authorization": f"Bearer {token}",

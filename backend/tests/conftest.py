@@ -18,6 +18,8 @@ import pytest
 import httpx
 from httpx import ASGITransport
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.errors import AutoReconnect
+import asyncio as _asyncio
 
 # Ensure backend root is on sys.path so that `server` module is importable
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -61,14 +63,33 @@ from app.utils import now_utc
 MONGO_URL = _mongo_url()
 
 
+async def _mongo_retry(coro_fn, *args, retries=5, **kwargs):
+    """Retry a MongoDB coroutine on AutoReconnect errors."""
+    last_exc = None
+    for attempt in range(retries):
+        try:
+            return await coro_fn(*args, **kwargs)
+        except AutoReconnect as exc:
+            last_exc = exc
+            if attempt < retries - 1:
+                await _asyncio.sleep(0.5 * (attempt + 1))
+    raise last_exc
+
+
 async def _drop_orphan_test_databases(client: AsyncIOMotorClient) -> None:
-    db_names = await client.list_database_names()
-    for name in db_names:
-        if name.startswith("agentis_test_") or name.startswith("agentis_test_seeded_"):
-            try:
-                await client.drop_database(name)
-            except Exception:
-                pass
+    for attempt in range(3):
+        try:
+            db_names = await client.list_database_names()
+            for name in db_names:
+                if name.startswith("agentis_test_") or name.startswith("agentis_test_seeded_"):
+                    try:
+                        await client.drop_database(name)
+                    except Exception:
+                        pass
+            return
+        except AutoReconnect:
+            if attempt < 2:
+                await _asyncio.sleep(0.3 * (attempt + 1))
 
 
 def _is_external_preview_http_test() -> bool:
@@ -108,15 +129,24 @@ async def motor_client() -> AsyncGenerator[AsyncIOMotorClient, None]:
     """Session-scoped Motor client for all tests.
 
     This avoids creating/closing clients per test and keeps a single
-    event loop / IO stack for Mongo.
+    event loop / IO stack for Mongo.  Connection pool settings are tuned
+    for batch test runs to avoid intermittent AutoReconnect errors.
     """
 
-    # Ensure Stripe webhook secret is set for contract tests
-    # to exercise real signature verification logic deterministically.
     os.environ.setdefault("STRIPE_WEBHOOK_SECRET", "whsec_test")
 
-    client = AsyncIOMotorClient(MONGO_URL)
+    client = AsyncIOMotorClient(
+        MONGO_URL,
+        maxPoolSize=10,
+        minPoolSize=1,
+        maxIdleTimeMS=30000,
+        connectTimeoutMS=5000,
+        serverSelectionTimeoutMS=10000,
+        retryWrites=True,
+        retryReads=True,
+    )
     try:
+        await client.admin.command("ping")
         await _drop_orphan_test_databases(client)
         yield client
     finally:
@@ -126,29 +156,20 @@ async def motor_client() -> AsyncGenerator[AsyncIOMotorClient, None]:
 
 @pytest.fixture(scope="function")
 async def seeded_test_db(motor_client: AsyncIOMotorClient) -> AsyncGenerator[Any, None]:
-    """Function-scoped DB with minimal catalog/inventory seed for hotel search.
-
-    Ensures P0.2 /api/b2b/hotels/search returns at least one item for
-    deterministic FX and refund tests.
-    """
+    """Function-scoped DB with minimal catalog/inventory seed for hotel search."""
 
     db_name = f"agentis_test_seeded_{uuid.uuid4().hex}"
     db = motor_client[db_name]
 
-    try:
-        # Minimal organization
+    async def _do_seed():
         org_id = "org_demo"
         await db.organizations.insert_one({"_id": org_id, "slug": "default", "name": "Demo Org"})
-
-        # Minimal agency linked to org
         await db.agencies.insert_one({
             "_id": "agency_demo",
             "organization_id": org_id,
             "name": "Demo Agency",
             "settings": {"selling_currency": "EUR"},
         })
-
-        # One active hotel product in Istanbul with EUR rate plan
         from bson import ObjectId
 
         hotel_id = ObjectId()
@@ -174,7 +195,6 @@ async def seeded_test_db(motor_client: AsyncIOMotorClient) -> AsyncGenerator[Any
             "base_net_price": 100.0,
         })
 
-        # Simple inventory for the FX tests' date window (2026-01-10 .. 2026-01-12)
         from datetime import date, timedelta
 
         start = date(2026, 1, 10)
@@ -189,12 +209,19 @@ async def seeded_test_db(motor_client: AsyncIOMotorClient) -> AsyncGenerator[Any
                 "restrictions": {"closed": False},
             })
 
+    try:
+        await _mongo_retry(_do_seed)
         yield db
     finally:
-        try:
-            await motor_client.drop_database(db_name)
-        except Exception:
-            pass
+        for attempt in range(3):
+            try:
+                await motor_client.drop_database(db_name)
+                break
+            except AutoReconnect:
+                if attempt < 2:
+                    await _asyncio.sleep(0.2 * (attempt + 1))
+            except Exception:
+                break
 
 
 @pytest.fixture(autouse=True)
@@ -232,23 +259,8 @@ async def ensure_finance_indexes_for_test_db(test_db, anyio_backend):
         return
 
     from app.indexes.finance_indexes import ensure_finance_indexes
-    from pymongo.errors import AutoReconnect
-    import asyncio
 
-    last_exc: Exception | None = None
-    for attempt in range(3):
-        try:
-            await ensure_finance_indexes(test_db)
-            last_exc = None
-            break
-        except AutoReconnect as exc:  # pragma: no cover - infra flakiness
-            last_exc = exc
-            # simple linear backoff: 0.2s, 0.4s, 0.6s
-            await asyncio.sleep(0.2 * (attempt + 1))
-
-    if last_exc is not None:
-        # If we still failed after retries, surface the original exception
-        raise last_exc
+    await _mongo_retry(ensure_finance_indexes, test_db)
 
     yield
 
@@ -266,10 +278,15 @@ async def test_db(motor_client: AsyncIOMotorClient) -> AsyncGenerator[Any, None]
     try:
         yield db
     finally:
-        try:
-            await motor_client.drop_database(db_name)
-        except Exception:
-            pass  # Ignore AutoReconnect on teardown
+        for attempt in range(3):
+            try:
+                await motor_client.drop_database(db_name)
+                break
+            except AutoReconnect:
+                if attempt < 2:
+                    await _asyncio.sleep(0.2 * (attempt + 1))
+            except Exception:
+                break
 
 
 
@@ -307,6 +324,9 @@ async def seed_default_org_and_users(test_db):
     This mirrors the minimal part of app.seed.ensure_seed_data that tests rely on
     (default organization + admin + demo agencies) but runs against the
     per-test database instead of the shared dev DB.
+
+    Wraps all MongoDB operations with retry logic to handle transient
+    AutoReconnect errors during batch test runs.
     """
     if _is_external_preview_http_test():
         yield
@@ -316,130 +336,133 @@ async def seed_default_org_and_users(test_db):
     from app.auth import hash_password
     from app.utils import now_utc
 
-    now = now_utc()
+    async def _do_seed():
+        now = now_utc()
 
-    # 1) Default organization (used by most tests)
-    org = await test_db.organizations.find_one({"slug": "default"})
-    if not org:
-        res = await test_db.organizations.insert_one(
-            {
-                "name": "Varsayilan Acenta",
-                "slug": "default",
-                "created_at": now,
-                "updated_at": now,
-                "settings": {"currency": "TRY"},
-                "plan": "core_small_hotel",
-                "features": {"partner_api": True},
-            }
-        )
-        default_org_id = str(res.inserted_id)
-    else:
-        default_org_id = str(org["_id"])
-
-    tenant = await test_db.tenants.find_one({"organization_id": default_org_id})
-    if not tenant:
-        tenant_doc = {
-            "_id": "tenant_default",
-            "organization_id": default_org_id,
-            "name": "Default Tenant",
-            "slug": "default-tenant",
-            "status": "active",
-            "is_active": True,
-            "created_at": now,
-            "updated_at": now,
-        }
-        await test_db.tenants.insert_one(tenant_doc)
-        default_tenant_id = tenant_doc["_id"]
-    else:
-        default_tenant_id = str(tenant["_id"])
-
-    # 2) Admin user (always in default organization to match /api/auth/login)
-    admin_org_id = default_org_id
-    admin = await test_db.users.find_one({"organization_id": admin_org_id, "email": DEFAULT_ADMIN_EMAIL})
-    if not admin:
-        await test_db.users.insert_one(
-            {
-                "organization_id": admin_org_id,
-                "tenant_id": default_tenant_id,
-                "email": DEFAULT_ADMIN_EMAIL,
-                "name": "Admin",
-                "password_hash": hash_password(DEFAULT_ADMIN_PASSWORD),
-                "roles": ["super_admin"],
-                "created_at": now,
-                "updated_at": now,
-                "is_active": True,
-            }
-        )
-
-    # 3) Demo agency + agency user (agency1@demo.test) always tied to default_org_id
-    agency = await test_db.agencies.find_one({"organization_id": default_org_id, "name": "Demo Agency"})
-    if not agency:
-        from bson import ObjectId
-
-        agency_id = str(ObjectId())
-        await test_db.agencies.insert_one(
-            {
-                "_id": agency_id,
-                "organization_id": default_org_id,
-                "name": "Demo Agency",
-                "settings": {"selling_currency": "EUR"},
-                "created_at": now,
-                "updated_at": now,
-            }
-        )
-    else:
-        agency_id = str(agency["_id"])
-
-    agency_user = await test_db.users.find_one({"organization_id": default_org_id, "email": "agency1@demo.test"})
-    if not agency_user:
-        await test_db.users.insert_one(
-            {
-                "organization_id": default_org_id,
-                "agency_id": agency_id,
-                "tenant_id": default_tenant_id,
-                "email": "agency1@demo.test",
-                "name": "Demo Agency User",
-                "password_hash": hash_password("agency123"),
-                "roles": ["agency_admin"],
-                "created_at": now,
-                "updated_at": now,
-                "is_active": True,
-            }
-        )
-
-    admin_user = await test_db.users.find_one({"organization_id": admin_org_id, "email": DEFAULT_ADMIN_EMAIL})
-    if admin_user:
-        await test_db.memberships.update_one(
-            {"user_id": str(admin_user["_id"]), "tenant_id": default_tenant_id},
-            {
-                "$set": {
-                    "user_id": str(admin_user["_id"]),
-                    "tenant_id": default_tenant_id,
-                    "role": "admin",
-                    "status": "active",
+        # 1) Default organization (used by most tests)
+        org = await test_db.organizations.find_one({"slug": "default"})
+        if not org:
+            res = await test_db.organizations.insert_one(
+                {
+                    "name": "Varsayilan Acenta",
+                    "slug": "default",
+                    "created_at": now,
                     "updated_at": now,
-                },
-                "$setOnInsert": {"created_at": now},
-            },
-            upsert=True,
-        )
+                    "settings": {"currency": "TRY"},
+                    "plan": "core_small_hotel",
+                    "features": {"partner_api": True},
+                }
+            )
+            default_org_id = str(res.inserted_id)
+        else:
+            default_org_id = str(org["_id"])
 
-    agency_user_doc = await test_db.users.find_one({"organization_id": default_org_id, "email": "agency1@demo.test"})
-    if agency_user_doc:
-        await test_db.memberships.update_one(
-            {"user_id": str(agency_user_doc["_id"]), "tenant_id": default_tenant_id},
-            {
-                "$set": {
-                    "user_id": str(agency_user_doc["_id"]),
+        tenant = await test_db.tenants.find_one({"organization_id": default_org_id})
+        if not tenant:
+            tenant_doc = {
+                "_id": "tenant_default",
+                "organization_id": default_org_id,
+                "name": "Default Tenant",
+                "slug": "default-tenant",
+                "status": "active",
+                "is_active": True,
+                "created_at": now,
+                "updated_at": now,
+            }
+            await test_db.tenants.insert_one(tenant_doc)
+            default_tenant_id = tenant_doc["_id"]
+        else:
+            default_tenant_id = str(tenant["_id"])
+
+        # 2) Admin user (always in default organization to match /api/auth/login)
+        admin_org_id = default_org_id
+        admin = await test_db.users.find_one({"organization_id": admin_org_id, "email": DEFAULT_ADMIN_EMAIL})
+        if not admin:
+            await test_db.users.insert_one(
+                {
+                    "organization_id": admin_org_id,
                     "tenant_id": default_tenant_id,
-                    "role": "agency_admin",
-                    "status": "active",
+                    "email": DEFAULT_ADMIN_EMAIL,
+                    "name": "Admin",
+                    "password_hash": hash_password(DEFAULT_ADMIN_PASSWORD),
+                    "roles": ["super_admin"],
+                    "created_at": now,
                     "updated_at": now,
+                    "is_active": True,
+                }
+            )
+
+        # 3) Demo agency + agency user (agency1@demo.test) always tied to default_org_id
+        agency = await test_db.agencies.find_one({"organization_id": default_org_id, "name": "Demo Agency"})
+        if not agency:
+            from bson import ObjectId
+
+            agency_id = str(ObjectId())
+            await test_db.agencies.insert_one(
+                {
+                    "_id": agency_id,
+                    "organization_id": default_org_id,
+                    "name": "Demo Agency",
+                    "settings": {"selling_currency": "EUR"},
+                    "created_at": now,
+                    "updated_at": now,
+                }
+            )
+        else:
+            agency_id = str(agency["_id"])
+
+        agency_user = await test_db.users.find_one({"organization_id": default_org_id, "email": "agency1@demo.test"})
+        if not agency_user:
+            await test_db.users.insert_one(
+                {
+                    "organization_id": default_org_id,
+                    "agency_id": agency_id,
+                    "tenant_id": default_tenant_id,
+                    "email": "agency1@demo.test",
+                    "name": "Demo Agency User",
+                    "password_hash": hash_password("agency123"),
+                    "roles": ["agency_admin"],
+                    "created_at": now,
+                    "updated_at": now,
+                    "is_active": True,
+                }
+            )
+
+        admin_user = await test_db.users.find_one({"organization_id": admin_org_id, "email": DEFAULT_ADMIN_EMAIL})
+        if admin_user:
+            await test_db.memberships.update_one(
+                {"user_id": str(admin_user["_id"]), "tenant_id": default_tenant_id},
+                {
+                    "$set": {
+                        "user_id": str(admin_user["_id"]),
+                        "tenant_id": default_tenant_id,
+                        "role": "admin",
+                        "status": "active",
+                        "updated_at": now,
+                    },
+                    "$setOnInsert": {"created_at": now},
                 },
-                "$setOnInsert": {"created_at": now},
-            },
-            upsert=True,
-        )
+                upsert=True,
+            )
+
+        agency_user_doc = await test_db.users.find_one({"organization_id": default_org_id, "email": "agency1@demo.test"})
+        if agency_user_doc:
+            await test_db.memberships.update_one(
+                {"user_id": str(agency_user_doc["_id"]), "tenant_id": default_tenant_id},
+                {
+                    "$set": {
+                        "user_id": str(agency_user_doc["_id"]),
+                        "tenant_id": default_tenant_id,
+                        "role": "agency_admin",
+                        "status": "active",
+                        "updated_at": now,
+                    },
+                    "$setOnInsert": {"created_at": now},
+                },
+                upsert=True,
+            )
+
+    await _mongo_retry(_do_seed)
 
     yield
 
@@ -555,92 +578,80 @@ async def minimal_search_seed(test_db, async_client: httpx.AsyncClient, agency_t
 
     from bson import ObjectId
 
-    # Upsert product (hotel) in test_db
-    prod_filter = {
-        "organization_id": org_id,
-        "type": "hotel",
-        "status": "active",
-        "location.city": "Istanbul",
-        "code": "FXTEST-HOTEL",
-    }
-    existing_prod = await test_db.products.find_one(prod_filter)
-    if existing_prod:
-        product_id = existing_prod["_id"]
-    else:
-        product_id = ObjectId()
-        prod_doc = {
-            "_id": product_id,
+    async def _do_search_seed():
+        # Upsert product (hotel) in test_db
+        prod_filter = {
             "organization_id": org_id,
             "type": "hotel",
             "status": "active",
+            "location.city": "Istanbul",
             "code": "FXTEST-HOTEL",
-            "name": {"tr": "FX Test Hotel"},
-            "location": {"city": "Istanbul", "country": "TR"},
-            "default_currency": "EUR",
-            "created_at": now_utc(),
         }
-        await test_db.products.insert_one(prod_doc)
+        existing_prod = await test_db.products.find_one(prod_filter)
+        if existing_prod:
+            product_id = existing_prod["_id"]
+        else:
+            product_id = ObjectId()
+            prod_doc = {
+                "_id": product_id,
+                "organization_id": org_id,
+                "type": "hotel",
+                "status": "active",
+                "code": "FXTEST-HOTEL",
+                "name": {"tr": "FX Test Hotel"},
+                "location": {"city": "Istanbul", "country": "TR"},
+                "default_currency": "EUR",
+                "created_at": now_utc(),
+            }
+            await test_db.products.insert_one(prod_doc)
 
-    # Upsert active EUR rate plan with base_net_price > 0
-    rp_filter = {
-        "organization_id": org_id,
-        "product_id": product_id,
-        "status": "active",
-        "currency": "EUR",
-        "code": "FXTEST-RP",
-    }
-    existing_rp = await test_db.rate_plans.find_one(rp_filter)
-    if not existing_rp:
-        rp_doc = {
+        # Upsert active EUR rate plan with base_net_price > 0
+        rp_filter = {
             "organization_id": org_id,
             "product_id": product_id,
             "status": "active",
             "currency": "EUR",
             "code": "FXTEST-RP",
-            "board": "BB",
-            "base_net_price": 100.0,
         }
-        from pymongo.errors import AutoReconnect
-        import asyncio
-
-        last_exc = None
-        for attempt in range(3):
-            try:
-                await test_db.rate_plans.insert_one(rp_doc)
-                last_exc = None
-                break
-            except AutoReconnect as exc:  # pragma: no cover - infra flakiness
-                last_exc = exc
-                await asyncio.sleep(0.1 * (attempt + 1))
-
-        if last_exc is not None:
-            raise last_exc
-
-    # Seed minimal inventory/availability for inventory-based availability check
-    # (b2b_pricing._price_item reads from `inventory` collection)
-    today = now_utc().date()
-    check_in_date = today.replace(year=2026, month=1, day=10)
-    for offset in range(0, 2):
-        d = check_in_date + timedelta(days=offset)
-        await test_db.inventory.update_one(
-            {
+        existing_rp = await test_db.rate_plans.find_one(rp_filter)
+        if not existing_rp:
+            rp_doc = {
                 "organization_id": org_id,
                 "product_id": product_id,
-                "date": d.isoformat(),
-            },
-            {
-                "$set": {
+                "status": "active",
+                "currency": "EUR",
+                "code": "FXTEST-RP",
+                "board": "BB",
+                "base_net_price": 100.0,
+            }
+            await test_db.rate_plans.insert_one(rp_doc)
+
+        # Seed minimal inventory/availability for inventory-based availability check
+        today = now_utc().date()
+        check_in_date = today.replace(year=2026, month=1, day=10)
+        for offset in range(0, 2):
+            d = check_in_date + timedelta(days=offset)
+            await test_db.inventory.update_one(
+                {
                     "organization_id": org_id,
                     "product_id": product_id,
                     "date": d.isoformat(),
-                    "capacity_available": 10,
-                    "price": 100.0,
-                    "restrictions": {"closed": False},
-                    "updated_at": now_utc(),
-                }
-            },
-            upsert=True,
-        )
+                },
+                {
+                    "$set": {
+                        "organization_id": org_id,
+                        "product_id": product_id,
+                        "date": d.isoformat(),
+                        "capacity_available": 10,
+                        "price": 100.0,
+                        "restrictions": {"closed": False},
+                        "updated_at": now_utc(),
+                    }
+                },
+                upsert=True,
+            )
+
+    await _mongo_retry(_do_search_seed)
 
     # Optional HTTP-level validation only for FX-related tests
     if run_http_check:
@@ -706,106 +717,107 @@ async def minimal_finance_seed(test_db, async_client: httpx.AsyncClient, agency_
 
     now = now_utc()
 
-    # Ensure organization document exists with cancel penalty settings
-    await test_db.organizations.update_one(
-        {"_id": org_id},
-        {
-            "$setOnInsert": {
-                "_id": org_id,
-                "slug": "default",
-                "name": "Demo Org",
-                "created_at": now,
-                "updated_at": now,
+    async def _do_finance_seed():
+        # Ensure organization document exists with cancel penalty settings
+        await test_db.organizations.update_one(
+            {"_id": org_id},
+            {
+                "$setOnInsert": {
+                    "_id": org_id,
+                    "slug": "default",
+                    "name": "Demo Org",
+                    "created_at": now,
+                    "updated_at": now,
+                },
+                "$set": {"settings.cancel_penalty_percent": 20.0},
             },
-            "$set": {"settings.cancel_penalty_percent": 20.0},
-        },
-        upsert=True,
-    )
+            upsert=True,
+        )
 
-    # 1) Agency finance account required by booking finance checks
-    agency_acct_filter = {
-        "organization_id": org_id,
-        "type": "agency",
-        "owner_id": agency_id,
-    }
-    from bson import ObjectId
+        # 1) Agency finance account required by booking finance checks
+        agency_acct_filter = {
+            "organization_id": org_id,
+            "type": "agency",
+            "owner_id": agency_id,
+        }
+        from bson import ObjectId
 
-    agency_acct_id = str(ObjectId())
-    agency_acct_doc = {
-        "_id": agency_acct_id,
-        **agency_acct_filter,
-        "currency": "EUR",
-        "code": "AGENCY_AR",
-        "name": "Agency Receivable",
-        "status": "active",
-        "created_at": now,
-        "updated_at": now,
-    }
-    await test_db.finance_accounts.update_one(
-        {"_id": agency_acct_id},
-        {"$setOnInsert": agency_acct_doc},
-        upsert=True,
-    )
+        agency_acct_id = str(ObjectId())
+        agency_acct_doc = {
+            "_id": agency_acct_id,
+            **agency_acct_filter,
+            "currency": "EUR",
+            "code": "AGENCY_AR",
+            "name": "Agency Receivable",
+            "status": "active",
+            "created_at": now,
+            "updated_at": now,
+        }
+        await test_db.finance_accounts.update_one(
+            {"_id": agency_acct_id},
+            {"$setOnInsert": agency_acct_doc},
+            upsert=True,
+        )
 
-    agency_account = agency_acct_doc
+        # 2) Platform finance account required by booking_confirmed posting
+        platform_acct_filter = {
+            "organization_id": org_id,
+            "type": "platform",
+        }
+        platform_acct_id = str(ObjectId())
+        platform_acct_doc = {
+            "_id": platform_acct_id,
+            **platform_acct_filter,
+            "currency": "EUR",
+            "code": "PLATFORM",
+            "name": "Platform Clearing",
+            "status": "active",
+            "created_at": now,
+            "updated_at": now,
+        }
+        await test_db.finance_accounts.update_one(
+            {"_id": platform_acct_id},
+            {"$setOnInsert": platform_acct_doc},
+            upsert=True,
+        )
 
-    # 2) Platform finance account required by booking_confirmed posting
-    platform_acct_filter = {
-        "organization_id": org_id,
-        "type": "platform",
-    }
-    platform_acct_id = str(ObjectId())
-    platform_acct_doc = {
-        "_id": platform_acct_id,
-        **platform_acct_filter,
-        "currency": "EUR",
-        "code": "PLATFORM",
-        "name": "Platform Clearing",
-        "status": "active",
-        "created_at": now,
-        "updated_at": now,
-    }
-    await test_db.finance_accounts.update_one(
-        {"_id": platform_acct_id},
-        {"$setOnInsert": platform_acct_doc},
-        upsert=True,
-    )
+        # 3) Credit profile for the agency (high limit to avoid limit errors)
+        credit_profile_filter = {
+            "organization_id": org_id,
+            "agency_id": agency_id,
+        }
+        credit_profile_doc = {
+            **credit_profile_filter,
+            "limit": 1_000_000.0,
+            "soft_limit": 500_000.0,
+            "created_at": now,
+            "updated_at": now,
+        }
+        await test_db.credit_profiles.update_one(
+            credit_profile_filter,
+            {"$setOnInsert": credit_profile_doc},
+            upsert=True,
+        )
 
-    # 3) Credit profile for the agency (high limit to avoid limit errors)
-    credit_profile_filter = {
-        "organization_id": org_id,
-        "agency_id": agency_id,
-    }
-    credit_profile_doc = {
-        **credit_profile_filter,
-        "limit": 1_000_000.0,
-        "soft_limit": 500_000.0,
-        "created_at": now,
-        "updated_at": now,
-    }
-    await test_db.credit_profiles.update_one(
-        credit_profile_filter,
-        {"$setOnInsert": credit_profile_doc},
-        upsert=True,
-    )
+        # 4) Zero balance for the agency account
+        balance_filter = {
+            "organization_id": org_id,
+            "account_id": agency_acct_doc["_id"],
+            "currency": "EUR",
+        }
+        balance_doc = {
+            **balance_filter,
+            "balance": 0.0,
+            "created_at": now,
+            "updated_at": now,
+        }
+        await test_db.account_balances.update_one(
+            balance_filter,
+            {"$setOnInsert": balance_doc},
+            upsert=True,
+        )
 
-    # 4) Zero balance for the agency account
-    balance_filter = {
-        "organization_id": org_id,
-        "account_id": agency_account["_id"],
-        "currency": "EUR",
-    }
-    balance_doc = {
-        **balance_filter,
-        "balance": 0.0,
-        "created_at": now,
-        "updated_at": now,
-    }
-    await test_db.account_balances.update_one(
-        balance_filter,
-        {"$setOnInsert": balance_doc},
-        upsert=True,
-    )
+    await _mongo_retry(_do_finance_seed)
 
     yield
 

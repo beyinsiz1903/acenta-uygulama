@@ -83,8 +83,12 @@ async def test_booking_cancel_creates_net_zero_ledger_and_full_refund(async_clie
 
     assert postings, "No ledger postings found for booking (CONFIRMED/CANCELLED)"
 
-    total_debit = sum(float(p.get("debit", 0.0) or 0.0) for p in postings)
-    total_credit = sum(float(p.get("credit", 0.0) or 0.0) for p in postings)
+    total_debit = 0.0
+    total_credit = 0.0
+    for p in postings:
+        for line in p.get("lines", []):
+            total_debit += float(line.get("debit", 0.0) or 0.0)
+            total_credit += float(line.get("credit", 0.0) or 0.0)
 
     # Balanced ledger overall
     assert total_debit == pytest.approx(total_credit, abs=0.02)
@@ -95,11 +99,12 @@ async def test_booking_cancel_creates_net_zero_ledger_and_full_refund(async_clie
 
     by_account = defaultdict(lambda: {"debit": 0.0, "credit": 0.0})
     for p in postings:
-        acc = p.get("account_id")
-        if acc is None:
-            continue
-        by_account[acc]["debit"] += float(p.get("debit", 0.0) or 0.0)
-        by_account[acc]["credit"] += float(p.get("credit", 0.0) or 0.0)
+        for line in p.get("lines", []):
+            acc = line.get("account_id")
+            if acc is None:
+                continue
+            by_account[acc]["debit"] += float(line.get("debit", 0.0) or 0.0)
+            by_account[acc]["credit"] += float(line.get("credit", 0.0) or 0.0)
 
     # Agency ve platform hesaplarını ayırt etmek için finance_accounts'a bak
     fa_cursor = db.finance_accounts.find({"organization_id": org_id})

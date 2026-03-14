@@ -21,7 +21,7 @@ import sys
 import json
 import requests
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://test-suite-green.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://travel-growth-engine.preview.emergentagent.com").rstrip("/")
 
 # Test credentials
 ADMIN_CREDS = {"email": "admin@acenta.test", "password": "admin123"}

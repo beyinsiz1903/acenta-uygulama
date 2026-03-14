@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://test-suite-green.preview.emergentagent.com/api",
-    "frontend_url": "https://test-suite-green.preview.emergentagent.com",
+    "backend_url": "https://travel-growth-engine.preview.emergentagent.com/api",
+    "frontend_url": "https://travel-growth-engine.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

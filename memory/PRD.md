@@ -143,3 +143,11 @@ AES-256 encrypted credential storage, supplier-specific forms (WWTatil, Paximum,
 - **theme.py, action_policies.py**: Migrated `@validator` → `@field_validator` (Pydantic V2)
 - **admin_metrics.py, admin_reporting.py**: Migrated `regex=` → `pattern=` (FastAPI/Pydantic V2)
 - All Pydantic deprecation warnings from project code eliminated
+
+### B2B Booking Create Test Fix — Mar 14, 2026
+- **Root Cause**: Tests used `X-Tenant-Key` header but `TenantResolutionMiddleware` reads `X-Tenant-Id`. Also, user role `"admin"` is no longer `super_admin` due to security fix in `is_super_admin()`.
+- **Fix**: Updated all 3 tests in `test_exit_b2b_booking_create_v1.py`:
+  - Test 1 (happy_path): Changed role to `super_admin`, header to `X-Tenant-Id`, added `supplier_mapping` to listing
+  - Test 2 (forbidden_without_access): Same header/role fix, captured `buyer_tenant_id`
+  - Test 3 (requires_tenant_context): Rewrote to test middleware-level rejection (no tenants in org → `tenant_resolution_failed`)
+- **All 3/3 tests PASS locally**

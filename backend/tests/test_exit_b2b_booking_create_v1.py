@@ -71,7 +71,7 @@ async def test_b2b_booking_create_happy_path(test_db: Any, async_client: AsyncCl
         {
             "organization_id": org_id,
             "email": email,
-            "roles": ["admin"],
+            "roles": ["super_admin"],
             "is_active": True,
             "created_at": now,
             "updated_at": now,
@@ -106,6 +106,11 @@ async def test_b2b_booking_create_happy_path(test_db: Any, async_client: AsyncCl
             "currency": "TRY",
             "base_price": Decimal128("100.00"),
             "tags": ["b2b"],
+            "supplier_mapping": {
+                "status": "resolved",
+                "supplier": "mock_supplier_v1",
+                "offer_id": "MOCK-TEST-1",
+            },
             "created_at": now,
             "updated_at": now,
         }
@@ -124,7 +129,7 @@ async def test_b2b_booking_create_happy_path(test_db: Any, async_client: AsyncCl
 
     headers = {
         "Authorization": f"Bearer {token}",
-        "X-Tenant-Key": "buyer-b2b",
+        "X-Tenant-Id": buyer_tenant_id,
         "Idempotency-Key": "mkp-test-1",
     }
 
@@ -205,7 +210,7 @@ async def test_b2b_booking_create_forbidden_without_access(test_db: Any, async_c
     )
     seller_tenant_id = str(seller.inserted_id)
 
-    await test_db.tenants.insert_one(
+    buyer = await test_db.tenants.insert_one(
         {
             "tenant_key": "buyer-b2b2",
             "organization_id": org_id,
@@ -218,13 +223,14 @@ async def test_b2b_booking_create_forbidden_without_access(test_db: Any, async_c
             "updated_at": now,
         }
     )
+    buyer_tenant_id = str(buyer.inserted_id)
 
     email = "b2b_admin2@example.com"
     await test_db.users.insert_one(
         {
             "organization_id": org_id,
             "email": email,
-            "roles": ["admin"],
+            "roles": ["super_admin"],
             "is_active": True,
             "created_at": now,
             "updated_at": now,
@@ -250,7 +256,7 @@ async def test_b2b_booking_create_forbidden_without_access(test_db: Any, async_c
 
     headers = {
         "Authorization": f"Bearer {token}",
-        "X-Tenant-Key": "buyer-b2b2",
+        "X-Tenant-Id": buyer_tenant_id,
         "Idempotency-Key": "mkp-test-2",
     }
     payload = {
@@ -275,37 +281,23 @@ async def test_b2b_booking_create_forbidden_without_access(test_db: Any, async_c
 @pytest.mark.exit_b2b_booking_create_v1
 @pytest.mark.anyio
 async def test_b2b_booking_create_requires_tenant_context(test_db: Any, async_client: AsyncClient) -> None:
-    """Tenant context is required; without X-Tenant-Key booking creation is forbidden."""
+    """Without resolvable tenant context, the middleware rejects the request."""
 
     client: AsyncClient = async_client
     now = now_utc()
 
+    # Org with NO tenants — middleware cannot resolve tenant for non-super-admin
     org = await test_db.organizations.insert_one(
         {"name": "B2B Org3", "slug": "b2b_org3", "created_at": now, "updated_at": now}
     )
     org_id = str(org.inserted_id)
-
-    seller = await test_db.tenants.insert_one(
-        {
-            "tenant_key": "seller-b2b3",
-            "organization_id": org_id,
-            "brand_name": "Seller B2B3",
-            "primary_domain": "seller-b2b3.example.com",
-            "subdomain": "seller-b2b3",
-            "theme_config": {},
-            "is_active": True,
-            "created_at": now,
-            "updated_at": now,
-        }
-    )
-    seller_tenant_id = str(seller.inserted_id)
 
     email = "b2b_admin3@example.com"
     await test_db.users.insert_one(
         {
             "organization_id": org_id,
             "email": email,
-            "roles": ["admin"],
+            "roles": ["agency_admin"],
             "is_active": True,
             "created_at": now,
             "updated_at": now,
@@ -314,28 +306,13 @@ async def test_b2b_booking_create_requires_tenant_context(test_db: Any, async_cl
 
     token = jwt.encode({"sub": email, "org": org_id}, _jwt_secret(), algorithm="HS256")
 
-    listing_res = await test_db.marketplace_listings.insert_one(
-        {
-            "organization_id": org_id,
-            "tenant_id": seller_tenant_id,
-            "status": "published",
-            "title": "No Tenant Listing",
-            "currency": "TRY",
-            "base_price": Decimal128("300.00"),
-            "tags": [],
-            "created_at": now,
-            "updated_at": now,
-        }
-    )
-    listing_id = str(listing_res.inserted_id)
-
     headers = {
-        "Authorization": f"Bearer {token}",  # No X-Tenant-Key
+        "Authorization": f"Bearer {token}",  # No X-Tenant-Id
         "Idempotency-Key": "mkp-test-3",
     }
     payload = {
         "source": "marketplace",
-        "listing_id": listing_id,
+        "listing_id": str(ObjectId()),
         "customer": {
             "full_name": "B2B Customer3",
             "email": "b2b3@example.com",
@@ -349,4 +326,4 @@ async def test_b2b_booking_create_requires_tenant_context(test_db: Any, async_cl
     resp = await client.post("/api/b2b/bookings", json=payload, headers=headers)
     assert resp.status_code == status.HTTP_403_FORBIDDEN
     err = resp.json().get("error", {})
-    assert err.get("message") == "TENANT_CONTEXT_REQUIRED"
+    assert err.get("code") == "tenant_resolution_failed"

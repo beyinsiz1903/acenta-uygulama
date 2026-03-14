@@ -14,7 +14,7 @@ import requests
 # Use the preview URL from environment
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
-    BASE_URL = "https://test-suite-green.preview.emergentagent.com"
+    BASE_URL = "https://travel-growth-engine.preview.emergentagent.com"
 
 
 class TestHealthEndpointsHTTP:

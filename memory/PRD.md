@@ -53,6 +53,14 @@ AES-256 encrypted credential storage, supplier-specific forms (WWTatil, Paximum,
 **Frontend:** GrowthEnginePage with 7 tabs (Funnel, Leads, Referrals, Customer Success, KPIs, Supplier Expansion, Growth Report)
 **Testing:** 32/32 backend + all frontend tests PASS
 
+### Security Fix: LEGACY_ROLE_ALIASES Privilege Escalation — Mar 14, 2026
+**Problem:** `LEGACY_ROLE_ALIASES` mapped `"admin"` → `"super_admin"`, causing `is_super_admin()` to return True for plain admin users. This bypassed all `require_feature()` and `require_super_admin_only()` guards — a critical security vulnerability.
+
+**Fix:** `is_super_admin()` now checks `_raw_roles` (pre-normalization) stored by `get_current_user()`. Only explicit `super_admin`/`superadmin` pass. `require_roles()` backward compatibility preserved via `normalize_roles()`.
+
+**Files changed:** `backend/app/auth.py`, `backend/tests/test_admin_statements.py`
+**Testing:** 24/24 security tests PASS (iteration_90)
+
 ---
 
 ## Key API Endpoints

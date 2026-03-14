@@ -74,7 +74,7 @@ async def test_get_plan_catalog(
     assert "items" in body
     assert "plans" in body
     assert len(body["items"]) == 6
-    assert set(body["plans"]) == {"starter", "pro", "enterprise"}
+    assert set(body["plans"]) == {"trial", "starter", "pro", "enterprise"}
 
 
 @pytest.mark.anyio

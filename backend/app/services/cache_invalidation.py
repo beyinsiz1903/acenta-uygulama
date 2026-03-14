@@ -17,12 +17,24 @@ from app.services.mongo_cache_service import cache_invalidate_pattern as mongo_i
 logger = logging.getLogger("cache_invalidation")
 
 
+async def _inv_app_cache(prefix: str) -> int:
+    """Also clear the B3 app_cache collection (cache_service.py stores there)."""
+    try:
+        from app.db import get_db
+        db = await get_db()
+        result = await db.app_cache.delete_many({"key": {"$regex": f"^{prefix}"}})
+        return result.deleted_count
+    except Exception:
+        return 0
+
+
 async def _inv(prefix: str, scope: str = "") -> int:
     """Invalidate both Redis + MongoDB for a prefix. Returns total cleared."""
     try:
         r_count = await redis_invalidate_pattern(prefix, scope)
         m_count = await mongo_invalidate(f"{prefix}")
-        total = r_count + m_count
+        a_count = await _inv_app_cache(prefix)
+        total = r_count + m_count + a_count
         if total > 0:
             logger.debug("Invalidated %s:%s → %d keys", prefix, scope, total)
         return total

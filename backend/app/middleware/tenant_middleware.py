@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from fastapi import HTTPException, Request
@@ -72,7 +73,25 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
 
             membership = membership_map.get(tenant_id_str)
             if not membership:
-                raise HTTPException(status_code=403, detail="Bu tenant için aktif üyelik bulunamadı")
+                # Auto-repair: create membership if tenant is in the same org
+                if str(tenant_doc.get("organization_id")) == str(org_id):
+                    try:
+                        role = (user_doc.get("roles") or ["agency_agent"])[0]
+                        now = datetime.now(timezone.utc)
+                        new_mem = {
+                            "user_id": user_id,
+                            "tenant_id": tenant_id_str,
+                            "role": role,
+                            "status": "active",
+                            "created_at": now,
+                            "updated_at": now,
+                        }
+                        await db.memberships.insert_one(new_mem)
+                        membership = new_mem
+                    except Exception:
+                        pass
+                if not membership:
+                    raise HTTPException(status_code=403, detail="Bu tenant için aktif üyelik bulunamadı")
             return tenant_id_str, "header_membership", allowed_tenant_ids, membership
 
         if super_admin:
@@ -91,7 +110,7 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
             tenant_id_str = str(user_doc["tenant_id"])
             return tenant_id_str, "user_doc_membership", allowed_tenant_ids, membership_map.get(tenant_id_str)
 
-        if set(user_doc.get("roles") or []).intersection({"admin"}):
+        if set(user_doc.get("roles") or []).intersection({"admin", "agency_admin"}):
             org_tenants = await tenant_repo.list_for_org(org_id)
             if len(org_tenants) == 1:
                 tenant_id_str = str(org_tenants[0].get("_id"))
@@ -99,7 +118,8 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
             if len(org_tenants) == 0:
                 return str(org_id), "admin_org_id_fallback", allowed_tenant_ids, None
 
-        raise HTTPException(status_code=403, detail="Tenant bağlamı çözülemedi")
+        # Soft fallback: proceed without tenant context (endpoints handle missing tenant)
+        return "", "unresolved", allowed_tenant_ids, None
 
     async def dispatch(self, request: Request, call_next):  # type: ignore[override]
         # Avoid repeated DB lookups if already set (e.g. in tests)
@@ -124,7 +144,14 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
         # ------------------------------------------------------------------
         auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
         if not auth_header or not auth_header.lower().startswith("bearer "):
-            # No auth header: let route-level auth dependencies handle it
+            # No auth header: resolve X-Tenant-Key for public endpoints (storefront)
+            tenant_key = (request.headers.get("X-Tenant-Key") or "").strip()
+            if tenant_key:
+                tenant_doc = await db.tenants.find_one({"tenant_key": tenant_key})
+                if tenant_doc:
+                    request.state.tenant_id = str(tenant_doc["_id"])
+                    request.state.tenant_org_id = str(tenant_doc.get("organization_id", ""))
+                    request.state.tenant_key = tenant_key
             return await call_next(request)
 
         token = auth_header.split(" ", 1)[1].strip()
@@ -161,6 +188,15 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
         # 2) Tenant resolution (membership-bound, controlled super-admin override)
         # ------------------------------------------------------------------
         tenant_id_header = (request.headers.get("X-Tenant-Id") or "").strip()
+        if not tenant_id_header:
+            # Fallback: resolve X-Tenant-Key to tenant ObjectId
+            tenant_key_header = (request.headers.get("X-Tenant-Key") or "").strip()
+            if tenant_key_header:
+                tenant_by_key = await db.tenants.find_one(
+                    {"tenant_key": tenant_key_header, "organization_id": str(org_id)}
+                )
+                if tenant_by_key:
+                    tenant_id_header = str(tenant_by_key["_id"])
         try:
             tenant_id_str, tenant_source, allowed_tenant_ids, membership = await self._resolve_effective_tenant(
                 db=db,

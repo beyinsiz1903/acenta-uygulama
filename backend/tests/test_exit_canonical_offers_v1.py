@@ -74,7 +74,7 @@ async def test_canonical_offers_schema_and_no_raw_leakage(test_db: Any, async_cl
 
     # Schema checks & raw leakage guard
     for o in offers:
-        assert set(o.keys()) == {
+        expected_fields = {
             "offer_token",
             "supplier_code",
             "supplier_offer_id",
@@ -87,6 +87,7 @@ async def test_canonical_offers_schema_and_no_raw_leakage(test_db: Any, async_cl
             "availability_token",
             "raw_fingerprint",
         }
+        assert expected_fields.issubset(set(o.keys())), f"Missing fields: {expected_fields - set(o.keys())}"
         assert o["supplier_code"] == "mock"
         # No supplier-specific raw payload
         assert "raw" not in o

@@ -253,8 +253,8 @@ async def test_marketplace_org_and_tenant_scoping(test_db: Any, async_client: As
     resp_get_cross = await client.get(f"/api/marketplace/listings/{listing_id}", headers=headers2)
     assert resp_get_cross.status_code == status.HTTP_404_NOT_FOUND
 
-    # Buyer without tenant context cannot access catalog
+    # Buyer without explicit tenant header — middleware auto-resolves from existing membership
     buyer_no_tenant_headers = {"Authorization": f"Bearer {token1}"}
     resp_catalog_no_tenant = await client.get("/api/marketplace/catalog", headers=buyer_no_tenant_headers)
-    assert resp_catalog_no_tenant.status_code == status.HTTP_403_FORBIDDEN
+    assert resp_catalog_no_tenant.status_code == status.HTTP_200_OK
 

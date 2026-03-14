@@ -39,19 +39,17 @@ async def test_tenant_resolve_by_header(test_db: Any, async_client: AsyncClient)
     )
 
     # Storefront route without tenant returns TENANT_NOT_FOUND, with tenant
-    # header it should pass middleware and reach 404 from routing (no handler)
-    resp_no_tenant = await client.get("/storefront/health-check")
+    # header it should pass middleware and reach the storefront health handler
+    resp_no_tenant = await client.get("/storefront/health")
     assert resp_no_tenant.status_code == status.HTTP_404_NOT_FOUND
-    assert resp_no_tenant.json().get("error", {}).get("code") == "TENANT_NOT_FOUND"
+    assert resp_no_tenant.json().get("error", {}).get("message") == "TENANT_NOT_FOUND"
 
     resp_with_tenant = await client.get(
-        "/storefront/health-check",
+        "/storefront/health",
         headers={"X-Tenant-Key": "tenant-a"},
     )
-    # No TENANT_NOT_FOUND wrapper when tenant header is present
-    assert resp_with_tenant.status_code == status.HTTP_404_NOT_FOUND
-    body = resp_with_tenant.json()
-    assert body.get("error", {}).get("code") != "TENANT_NOT_FOUND"
+    # With tenant header, storefront health resolves OK
+    assert resp_with_tenant.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.exit_multitenant_v1
@@ -61,11 +59,11 @@ async def test_storefront_requires_tenant(test_db: Any, async_client: AsyncClien
 
     client: AsyncClient = async_client
 
-    resp = await client.get("/storefront/anything")
+    resp = await client.get("/storefront/health")
     assert resp.status_code == status.HTTP_404_NOT_FOUND
     body = resp.json()
     err = body.get("error", {})
-    assert err.get("code") == "TENANT_NOT_FOUND"
+    assert err.get("message") == "TENANT_NOT_FOUND"
 
 
 @pytest.mark.exit_multitenant_v1

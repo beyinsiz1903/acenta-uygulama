@@ -40,7 +40,7 @@ async def test_storefront_health_requires_tenant(test_db: Any, async_client: Asy
     resp_no = await client.get("/storefront/health")
     assert resp_no.status_code == status.HTTP_404_NOT_FOUND
     err_no = resp_no.json().get("error", {})
-    assert err_no.get("code") == "TENANT_NOT_FOUND"
+    assert err_no.get("message") == "TENANT_NOT_FOUND"
 
     # With tenant header -> 200
     resp_yes = await client.get("/storefront/health", headers={"X-Tenant-Key": "sf-tenant-a"})

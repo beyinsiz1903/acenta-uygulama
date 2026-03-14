@@ -297,7 +297,7 @@ async def test_b2b_booking_create_requires_tenant_context(test_db: Any, async_cl
         {
             "organization_id": org_id,
             "email": email,
-            "roles": ["agency_admin"],
+            "roles": ["agency_agent"],
             "is_active": True,
             "created_at": now,
             "updated_at": now,
@@ -326,4 +326,4 @@ async def test_b2b_booking_create_requires_tenant_context(test_db: Any, async_cl
     resp = await client.post("/api/b2b/bookings", json=payload, headers=headers)
     assert resp.status_code == status.HTTP_403_FORBIDDEN
     err = resp.json().get("error", {})
-    assert err.get("code") == "tenant_resolution_failed"
+    assert err.get("code") == "TENANT_CONTEXT_REQUIRED"

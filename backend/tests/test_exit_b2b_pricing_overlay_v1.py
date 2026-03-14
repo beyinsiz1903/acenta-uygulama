@@ -38,7 +38,7 @@ async def test_b2b_pricing_overlay_applied_on_canonical_offers(test_db: Any, asy
     )
     org_id = str(org.inserted_id)
 
-    await test_db.tenants.insert_one(
+    tenant_res = await test_db.tenants.insert_one(
         {
             "tenant_key": "tenant-pr18-1",
             "organization_id": org_id,
@@ -51,26 +51,32 @@ async def test_b2b_pricing_overlay_applied_on_canonical_offers(test_db: Any, asy
             "updated_at": now,
         }
     )
+    tenant_id = str(tenant_res.inserted_id)
 
     email = "pr18-1@example.com"
-    await test_db.users.insert_one(
+    user_res = await test_db.users.insert_one(
         {
             "organization_id": org_id,
             "email": email,
             "roles": ["agency_agent"],
+            "tenant_id": tenant_id,
             "is_active": True,
             "created_at": now,
             "updated_at": now,
         }
     )
+    user_id = str(user_res.inserted_id)
+    await test_db.memberships.insert_one(
+        {"user_id": user_id, "tenant_id": tenant_id, "role": "agency_agent", "status": "active", "created_at": now, "updated_at": now}
+    )
     token = jwt.encode({"sub": email, "org": org_id}, _jwt_secret(), algorithm="HS256")
 
-    # Seed pricing rule with 10% markup
-    await _seed_pricing_rule(test_db, organization_id=org_id, agency_id="tenant-pr18-1", markup_pct=10.0)
+    # Seed pricing rule with 10% markup (agency_id must match resolved tenant ObjectId)
+    await _seed_pricing_rule(test_db, organization_id=org_id, agency_id=tenant_id, markup_pct=10.0)
 
     headers = {
         "Authorization": f"Bearer {token}",
-        "X-Tenant-Key": "tenant-pr18-1",
+        "X-Tenant-Id": tenant_id,
     }
 
     payload = {
@@ -106,7 +112,7 @@ async def test_b2b_pricing_overlay_applied_on_canonical_offers(test_db: Any, asy
     # 10% markup applied
     expected_final = round(base_amount * 1.10, 2)
     assert final_amount == expected_final
-    assert float(b2b["applied_markup_pct"]) == 10.0
+    assert float(b2b["applied_markup_pct"]) == pytest.approx(10.0, abs=1e-6)
     assert isinstance(b2b.get("pricing_rule_id"), str) or b2b.get("pricing_rule_id") is None
 
 
@@ -123,7 +129,7 @@ async def test_b2b_pricing_default_when_no_rule(test_db: Any, async_client: Asyn
     )
     org_id = str(org.inserted_id)
 
-    await test_db.tenants.insert_one(
+    tenant_res = await test_db.tenants.insert_one(
         {
             "tenant_key": "tenant-pr18-2",
             "organization_id": org_id,
@@ -136,23 +142,29 @@ async def test_b2b_pricing_default_when_no_rule(test_db: Any, async_client: Asyn
             "updated_at": now,
         }
     )
+    tenant_id = str(tenant_res.inserted_id)
 
     email = "pr18-2@example.com"
-    await test_db.users.insert_one(
+    user_res = await test_db.users.insert_one(
         {
             "organization_id": org_id,
             "email": email,
             "roles": ["agency_agent"],
+            "tenant_id": tenant_id,
             "is_active": True,
             "created_at": now,
             "updated_at": now,
         }
     )
+    user_id = str(user_res.inserted_id)
+    await test_db.memberships.insert_one(
+        {"user_id": user_id, "tenant_id": tenant_id, "role": "agency_agent", "status": "active", "created_at": now, "updated_at": now}
+    )
     token = jwt.encode({"sub": email, "org": org_id}, _jwt_secret(), algorithm="HS256")
 
     headers = {
         "Authorization": f"Bearer {token}",
-        "X-Tenant-Key": "tenant-pr18-2",
+        "X-Tenant-Id": tenant_id,
     }
 
     payload = {
@@ -197,7 +209,7 @@ async def test_booking_repricing_consistency_with_canonical_offer(test_db: Any, 
     )
     org_id = str(org.inserted_id)
 
-    await test_db.tenants.insert_one(
+    tenant_res = await test_db.tenants.insert_one(
         {
             "tenant_key": "tenant-pr18-3",
             "organization_id": org_id,
@@ -210,26 +222,32 @@ async def test_booking_repricing_consistency_with_canonical_offer(test_db: Any, 
             "updated_at": now,
         }
     )
+    tenant_id = str(tenant_res.inserted_id)
 
     email = "pr18-3@example.com"
-    await test_db.users.insert_one(
+    user_res = await test_db.users.insert_one(
         {
             "organization_id": org_id,
             "email": email,
             "roles": ["agency_agent"],
+            "tenant_id": tenant_id,
             "is_active": True,
             "created_at": now,
             "updated_at": now,
         }
     )
+    user_id = str(user_res.inserted_id)
+    await test_db.memberships.insert_one(
+        {"user_id": user_id, "tenant_id": tenant_id, "role": "agency_agent", "status": "active", "created_at": now, "updated_at": now}
+    )
     token = jwt.encode({"sub": email, "org": org_id}, _jwt_secret(), algorithm="HS256")
 
-    # Seed pricing rule with 15% markup
-    await _seed_pricing_rule(test_db, organization_id=org_id, agency_id="tenant-pr18-3", markup_pct=15.0)
+    # Seed pricing rule with 15% markup (agency_id must match resolved tenant ObjectId)
+    await _seed_pricing_rule(test_db, organization_id=org_id, agency_id=tenant_id, markup_pct=15.0)
 
     headers = {
         "Authorization": f"Bearer {token}",
-        "X-Tenant-Key": "tenant-pr18-3",
+        "X-Tenant-Id": tenant_id,
     }
 
     # 1) Search canonical offers
@@ -258,7 +276,7 @@ async def test_booking_repricing_consistency_with_canonical_offer(test_db: Any, 
     create_payload = {
         "session_id": session_id,
         "offer_token": offer["offer_token"],
-        "buyer_tenant_id": "tenant-pr18-3",
+        "buyer_tenant_id": tenant_id,
         "customer": {
             "full_name": "PR18 Customer",
             "email": "pr18-3@example.com",

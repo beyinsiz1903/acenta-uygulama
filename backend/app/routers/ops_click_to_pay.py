@@ -24,6 +24,7 @@ from app.errors import AppError
 from app.services import stripe_adapter
 from app.services.booking_payments import BookingPaymentsService
 from app.services.click_to_pay import create_payment_link
+from app.utils_ids import build_id_filter
 
 
 router = APIRouter(prefix="/api/ops/payments/click-to-pay", tags=["ops_click_to_pay"])
@@ -65,7 +66,7 @@ async def _compute_remaining_cents(db, organization_id: str, booking_id: str) ->
         paid_cents = int(aggregate.get("amount_paid", 0))
     else:
         # Fallback: derive from booking amounts
-        booking = await db.bookings.find_one({"_id": ObjectId(booking_id), "organization_id": organization_id})
+        booking = await db.bookings.find_one({**build_id_filter(booking_id), "organization_id": organization_id})
         if not booking:
             raise AppError(404, "booking_not_found", "Booking not found for click-to-pay")
         currency = str(booking.get("currency") or "EUR").lower()
@@ -103,7 +104,7 @@ async def create_click_to_pay_link(
     booking_id = payload.booking_id
 
     # Ownership check: ensure booking belongs to this org
-    booking = await db.bookings.find_one({"_id": ObjectId(booking_id), "organization_id": org_id})
+    booking = await db.bookings.find_one({**build_id_filter(booking_id), "organization_id": org_id})
     if not booking:
         raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
 

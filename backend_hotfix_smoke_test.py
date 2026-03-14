@@ -9,7 +9,7 @@ import json
 import sys
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://travel-growth-engine.preview.emergentagent.com"
+BACKEND_URL = "https://cache-bug-fixed.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 def test_auth_login():

@@ -525,3 +525,31 @@ class UsageService:
       {"org_id": org_id, "metric": metric, "period": now.strftime("%Y-%m")},
     )
     return int(doc.get("value", 0)) if doc else 0
+
+  async def get_monthly_count(
+      self,
+      org_id: str,
+      metric: str,
+      month_start: datetime,
+      month_end: datetime,
+  ) -> int:
+    """Count usage events for a metric within a month window."""
+    pipeline = [
+        {
+            "$match": {
+                "org_id": org_id,
+                "metric": metric,
+                "ts": {"$gte": month_start, "$lt": month_end},
+            }
+        },
+        {"$group": {"_id": None, "total": {"$sum": "$value"}}},
+    ]
+    results = await self._db.usage_logs.aggregate(pipeline).to_list(1)
+    if results:
+        return int(results[0].get("total", 0))
+    # Fallback: check the usage_log collection (period-based)
+    period = month_start.strftime("%Y-%m")
+    doc = await self._db.usage_log.find_one(
+        {"org_id": org_id, "metric": metric, "period": period},
+    )
+    return int(doc.get("value", 0)) if doc else 0

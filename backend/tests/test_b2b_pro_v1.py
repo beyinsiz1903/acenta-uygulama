@@ -83,7 +83,9 @@ async def test_admin_agencies_create_and_cycle_guards(async_client, test_db, any
         json={"parent_agency_id": child_id},
     )
     assert resp_self.status_code == 422
-    assert resp_self.json()["detail"] == "SELF_PARENT_NOT_ALLOWED"
+    body = resp_self.json()
+    error_msg = body.get("detail") or body.get("error", {}).get("message", "")
+    assert error_msg == "SELF_PARENT_NOT_ALLOWED"
 
     # Create third agency C with parent B, then try to set A's parent to C to form A<-B<-C<-A
     resp_c = await async_client.post(
@@ -102,7 +104,9 @@ async def test_admin_agencies_create_and_cycle_guards(async_client, test_db, any
         json={"parent_agency_id": third_id},
     )
     assert resp_cycle.status_code == 422
-    assert resp_cycle.json()["detail"] == "PARENT_CYCLE_DETECTED"
+    cycle_body = resp_cycle.json()
+    cycle_msg = cycle_body.get("detail") or cycle_body.get("error", {}).get("message", "")
+    assert cycle_msg == "PARENT_CYCLE_DETECTED"
 
 
 @pytest.mark.anyio

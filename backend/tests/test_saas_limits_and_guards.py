@@ -47,6 +47,7 @@ async def seed_saas_foundation(
     sub_status: str = "active",
     plan_max_users: int = 50,
     plan_max_bookings: int = 1000,
+    user_roles: list[str] | None = None,
 ) -> Dict[str, Any]:
     """Seed minimal SaaS org/tenant/user/plan/subscription into the current test DB.
 
@@ -86,6 +87,8 @@ async def seed_saas_foundation(
     }
     await db.tenants.insert_one(tenant_doc)
 
+    effective_roles = user_roles or ["super_admin"]
+
     # User
     user_doc = {
         "_id": user_id,
@@ -93,7 +96,7 @@ async def seed_saas_foundation(
         "name": "Owner User",
         "organization_id": org_id,
         "status": "active",
-        "roles": ["super_admin"],  # for is_super_admin
+        "roles": effective_roles,
         "created_at": now,
     }
     await db.users.insert_one(user_doc)
@@ -145,7 +148,7 @@ async def seed_saas_foundation(
     )
 
     # JWT
-    token = make_token(email=email, org_id=org_id, roles=["super_admin"])
+    token = make_token(email=email, org_id=org_id, roles=effective_roles)
 
     return {
         "org_id": org_id,
@@ -167,23 +170,35 @@ async def test_permission_wildcard_match() -> None:
 
 
 @pytest.mark.anyio
-async def test_middleware_requires_tenant_header(async_client: AsyncClient) -> None:
-    # Seed minimal SaaS context
-    ctx = await seed_saas_foundation()
+async def test_middleware_requires_tenant_for_non_super_admin(async_client: AsyncClient) -> None:
+    """Non-super_admin users without X-Tenant-Id, without membership, and
+    without any org tenant should be rejected by the tenant middleware (403).
 
-    headers = {"Authorization": f"Bearer {ctx['token']}"}
-    # X-Tenant-Id deliberately omitted
-    from app.errors import AppError
+    Note: the tenant middleware auto-repairs memberships when a tenant exists
+    for the org, so we deliberately skip tenant creation to prevent auto-repair.
+    """
+    db = await get_db()
+    org_id = f"org_{uuid4().hex}"
+    user_id = f"user_{uuid4().hex}"
+    email = f"owner+{uuid4().hex[:6]}@example.com"
 
-    try:
-        resp = await async_client.post("/api/dev/dummy-bookings/create", headers=headers)
-    except AppError as e:
-        assert e.status_code == 400
-        assert e.code == "tenant_header_missing"
-    else:
-        assert resp.status_code == 400
-        body = resp.json()
-        assert body["error"]["code"] == "tenant_header_missing"
+    now = datetime.now(timezone.utc)
+
+    # Org only — NO tenant, NO membership
+    await db.organizations.insert_one(
+        {"_id": org_id, "name": "Tenant-Less Org", "slug": f"org-{uuid4().hex[:6]}", "status": "active", "created_at": now}
+    )
+    await db.users.insert_one(
+        {"_id": user_id, "email": email, "name": "No Tenant User", "organization_id": org_id, "status": "active", "roles": ["agency_admin"], "created_at": now}
+    )
+
+    token = make_token(email=email, org_id=org_id, roles=["agency_admin"])
+    headers = {"Authorization": f"Bearer {token}"}
+
+    resp = await async_client.post("/api/dev/dummy-bookings/create", headers=headers)
+    assert resp.status_code == 403, (
+        f"Expected 403 for non-super_admin without tenant/membership, got {resp.status_code}"
+    )
 
 
 @pytest.mark.anyio

@@ -11,7 +11,11 @@ from urllib.parse import urlparse
 import anyio
 import stripe
 from dotenv import load_dotenv
-from emergentintegrations.payments.stripe.checkout import StripeCheckout
+
+try:
+    from emergentintegrations.payments.stripe.checkout import StripeCheckout
+except ImportError:
+    StripeCheckout = None  # type: ignore[misc,assignment]
 
 from app.db import get_db
 from app.errors import AppError

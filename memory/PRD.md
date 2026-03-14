@@ -114,6 +114,26 @@ AES-256 encrypted credential storage, supplier-specific forms (WWTatil, Paximum,
 - Referral program launch to pilot agencies
 
 ### P2 — Backlog
+- A/B test infrastructure for plan pages
+- Churn prediction model
+- NPS survey automation
+- Multi-region deployment
+- PyMongo AutoReconnect intermittent fix (infra-level)
+
+---
+
+## Recently Completed (Mar 14, 2026)
+
+### Security Fix: LEGACY_ROLE_ALIASES Privilege Escalation
+- `is_super_admin()` now uses `_raw_roles` (pre-normalization) to prevent `admin` → `super_admin` feature bypass
+- 24/24 security tests PASS (iteration_90)
+
+### Pre-existing Test Fixes
+- **test_granular_permissions.py**: Rewritten from sync `requests` to async_client — 13/13 PASS
+- **test_saas_limits_and_guards.py**: Added `get_monthly_count` to `UsageService`, fixed tenant test — 6/6 PASS
+- **test_b2b_pro_v1.py**: Fixed error response format assertions (`detail` vs `error.message`) — 3/3 PASS
+- **test_billing_subscription_lifecycle.py**: Updated same-plan check to accept 200/409 — 15/15 PASS
+- All verified via testing agent (iteration_91): 43/43 functionally passing
 - A/B testing infrastructure
 - Churn prediction model
 - Revenue forecasting

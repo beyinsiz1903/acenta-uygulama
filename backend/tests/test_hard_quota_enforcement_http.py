@@ -8,13 +8,25 @@ Tests:
 - quota_exceeded error envelope structure validation
 - No regression: /api/usage endpoint still loads
 - No regression: /api/billing/subscription still responds
+
+NOTE: These are external HTTP tests that require a live server.
+They are skipped in CI where no preview server is available.
 """
 from __future__ import annotations
 
 import os
 import pytest
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://cache-bug-fixed.preview.emergentagent.com").rstrip("/")
+from tests.preview_auth_helper import resolve_preview_base_url
+
+try:
+    BASE_URL = resolve_preview_base_url(
+        os.environ.get("REACT_APP_BACKEND_URL", "")
+    )
+except Exception:
+    BASE_URL = ""
+
+pytestmark = pytest.mark.skipif(not BASE_URL, reason="No preview server available")
 
 
 class TestHardQuotaEnforcementHTTP:

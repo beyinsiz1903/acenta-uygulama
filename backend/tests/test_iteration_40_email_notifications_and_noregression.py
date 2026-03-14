@@ -14,6 +14,7 @@ MOCKED: Email provider credentials intentionally missing; only queue creation an
 
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 
 import pytest
@@ -29,7 +30,9 @@ from app.services.stripe_checkout_service import stripe_checkout_service
 from app.services.usage_service import track_usage_event
 
 # BASE_URL from frontend .env for HTTP tests
-BASE_URL = "https://cache-bug-fixed.preview.emergentagent.com"
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
+
+_skip_no_preview = pytest.mark.skipif(not BASE_URL, reason="No preview server available")
 
 
 # ========================================
@@ -485,6 +488,7 @@ async def test_mark_payment_failed_via_stripe_service_creates_outbox(test_db, mo
 # ========================================
 
 
+@_skip_no_preview
 class TestSearchNoRegression:
     """No-regression tests for GET /api/search endpoint."""
 
@@ -559,6 +563,7 @@ class TestSearchNoRegression:
             assert len(items) <= 2, f"Section {section_name} exceeds limit"
 
 
+@_skip_no_preview
 class TestReportsNoRegression:
     """No-regression tests for /api/reports endpoints."""
 
@@ -663,6 +668,7 @@ class TestReportsNoRegression:
 # ========================================
 
 
+@_skip_no_preview
 class TestAdminSearchNoRegression:
     """No-regression tests for admin user search."""
 

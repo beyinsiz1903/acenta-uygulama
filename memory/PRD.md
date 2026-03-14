@@ -184,5 +184,18 @@ AES-256 encrypted credential storage, supplier-specific forms (WWTatil, Paximum,
 **Problem**: `test_confirm_timeout_enforced_returns_upstream_timeout` expected 502 but got 200.
 **Root Cause**: Test monkeypatched `MockSupplierAdapter.confirm_booking` to set `ctx.timeout_ms=50` INSIDE the coroutine, but `run_with_deadline` computes the deadline BEFORE the coroutine starts (using default 8000ms). The 100ms sleep completed within the 8-second window → 200 OK.
 **Fix**: Replaced the `slow_confirm` monkeypatch with a direct `run_with_deadline` monkeypatch in the router module. This directly raises `SupplierAdapterError(upstream_timeout, retryable=True)` — properly testing the error handling path.
-**AutoReconnect Mitigation**: Added `_mongo_retry` helper and connection pool tuning to all test fixtures (motor_client, test_db, seeded_test_db, seed_default_org_and_users, minimal_search_seed, minimal_finance_seed, ensure_finance_indexes).
 **All 2/2 tests PASS**
+
+### External HTTP Test CI Skip Fix — Mar 14, 2026
+**Problem**: `test_hard_quota_enforcement_http.py` and 6+ other test files had hardcoded preview URL fallbacks (`https://cache-bug-fixed.preview.emergentagent.com`). In CI, `REACT_APP_BACKEND_URL` env var is not set, so tests tried to connect to stale preview URLs and failed.
+**Root Cause**: `pytest_collection_modifyitems` only skipped tests where `BASE_URL` was empty. Tests with hardcoded fallback URLs bypassed this check.
+**Fix**:
+1. Updated `pytest_collection_modifyitems` to skip sync tests in any module with `BASE_URL` when env var is not set (async tests still run)
+2. Removed hardcoded fallback URLs from 6 test files
+3. Added `pytestmark = skipif(not BASE_URL)` to files that only contain external HTTP tests
+4. Added `@_skip_no_preview` class-level markers for mixed files (unit + HTTP tests)
+**Files changed**: conftest.py, test_hard_quota_enforcement_http.py, test_platform_hardening_iter71.py, test_hardening_api_iter71.py, test_hardening_execution_tracker_iter72.py, test_stabilization_preview_http.py, test_ops_supplier_operations_iter67.py, test_iteration_40_email_notifications_and_noregression.py
+
+### AutoReconnect Mitigation — Mar 14, 2026
+Added retry logic to all test fixtures: `_mongo_retry` helper, connection pool tuning (maxPoolSize=10, retryWrites, serverSelectionTimeoutMS).
+**Files changed**: conftest.py

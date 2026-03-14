@@ -37,8 +37,13 @@ def pytest_collection_modifyitems(config, items):
 
     Many legacy test files use ``requests`` + ``BASE_URL`` derived from the env
     var.  In CI (unit-test job) the var is intentionally unset so these tests
-    would fail with ``MissingSchema``.  We detect them by inspecting the
+    would fail with connection errors.  We detect them by inspecting the
     module-level ``BASE_URL`` attribute and skip them gracefully.
+
+    When the env var is NOT set, we skip tests that:
+      - Belong to a module with a BASE_URL attribute, AND
+      - Are synchronous (use requests library for external HTTP calls)
+    Async tests in the same module are NOT skipped as they use the ASGI client.
     """
     preview_url = os.environ.get("REACT_APP_BACKEND_URL", "").strip()
     if preview_url:
@@ -52,7 +57,10 @@ def pytest_collection_modifyitems(config, items):
         if mod is None:
             continue
         base_url = getattr(mod, "BASE_URL", None)
-        if base_url is not None and not base_url:
+        if base_url is None:
+            continue
+        # Skip sync tests (external HTTP) but allow async tests (ASGI client)
+        if not item.get_closest_marker("anyio"):
             item.add_marker(skip_marker)
 
 from server import app

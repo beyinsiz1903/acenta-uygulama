@@ -17,7 +17,9 @@ import requests
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
-    BASE_URL = "https://cache-bug-fixed.preview.emergentagent.com"
+    BASE_URL = ""
+
+pytestmark = pytest.mark.skipif(not BASE_URL, reason="No preview server available")
 
 
 @pytest.fixture(scope="module")

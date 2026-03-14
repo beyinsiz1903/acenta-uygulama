@@ -22,7 +22,7 @@ async def _build_candidate_contexts(db, users: list[dict[str, Any]]) -> list[dic
     for user_doc in users:
         user_id = str(user_doc.get("_id"))
         memberships = await membership_repo.list_active_by_user_id(user_id)
-        if not memberships:
+        if not memberships and _is_admin_like(user_doc):
             repaired_membership = await ensure_user_membership(db, user_doc=user_doc)
             if repaired_membership:
                 memberships = [repaired_membership]

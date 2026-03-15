@@ -83,6 +83,19 @@ Syroce is a production-grade Turkish travel ERP platform that manages the full l
 - Super Admin: admin@acenta.test / admin123
 - Agency Admin: agency1@demo.test / agency123
 
+## Test Stabilization Status (Feb 2026)
+
+### Completed
+- **Fixture Conflict Fix (P1)**: Fixed wrong admin passwords (agent123→admin123) in iter95/96/97. Fixed assertion bugs in iter98 (error structure, credential masking, Redis graceful skip). Added accounting test files to conftest external test exclusion list.
+- **PyMongo AutoReconnect Fix (P1)**: Added `--reruns 2 --only-rerun AutoReconnect|ConnectionResetError|ServerSelectionTimeoutError` to pytest.ini. Improved Motor client pool (maxPoolSize=20, connectTimeoutMS=10000, serverSelectionTimeoutMS=15000). Added retry wrappers to b2b conftest.
+- **Mocked HTTP Tests (P1)**: Created 39 new async ASGI tests in `test_accounting_providers_async.py` covering: provider catalog, config CRUD, connection test, credential rotation, RBAC, credential encryption, failover logic (retry→queue→escalate), reconciliation, finance ops, financial alerts.
+
+### Test Suite Stats
+- Accounting tests: 139/139 passed, 1 skipped (Redis)
+- B2B integration tests: 15/15 passed
+- Core stabilization tests: 30/30 passed
+- AutoReconnect reruns: Working correctly (tested 1 successful rerun)
+
 ## Upcoming Tasks (P1 — MEGA PROMPT #35+)
 - Pilot agency integration with real traffic
 - Real supplier API credentials (activate Logo/Parasut/Mikro adapters)
@@ -96,6 +109,7 @@ Syroce is a production-grade Turkish travel ERP platform that manages the full l
 - CI/CD pipeline stability improvements
 - APScheduler → Celery Beat migration
 - Multi-provider fallback (e.g., Luca → Logo when needed)
+- Nested Button HTML warning fix (deferred to frontend polish round)
 
 ## Redis Status
 - **Fixed**: Redis installed and running on port 6379

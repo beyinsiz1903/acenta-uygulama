@@ -21,7 +21,7 @@ import sys
 import json
 import requests
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://platform-pivot-v2.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://sync-validation-2.preview.emergentagent.com").rstrip("/")
 
 # Test credentials
 ADMIN_CREDS = {"email": "admin@acenta.test", "password": "admin123"}

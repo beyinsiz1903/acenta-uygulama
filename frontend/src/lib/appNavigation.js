@@ -1,4 +1,5 @@
 import {
+  Activity,
   BarChart3,
   BedDouble,
   Building2,
@@ -9,6 +10,7 @@ import {
   FileText,
   LayoutGrid,
   Megaphone,
+  Server,
   Settings,
   ShieldCheck,
   Ticket,
@@ -679,6 +681,20 @@ export const ADMIN_MODULE_SECTIONS = [
         label: "Muhasebe Sync",
         icon: Settings,
         pathByScope: { admin: "/app/admin/accounting" },
+        isCore: true,
+      },
+      {
+        key: "admin-accounting-providers",
+        label: "Muhasebe Providerlar",
+        icon: Server,
+        pathByScope: { admin: "/app/admin/accounting-providers" },
+        isCore: true,
+      },
+      {
+        key: "admin-finance-ops",
+        label: "Finans Operasyonlari",
+        icon: Activity,
+        pathByScope: { admin: "/app/admin/finance-ops" },
         isCore: true,
       },
       {

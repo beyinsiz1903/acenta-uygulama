@@ -98,6 +98,7 @@ const AdminScheduledReportsPage = lazy(() => import("./pages/AdminScheduledRepor
 // Feature modules
 const AdminEFaturaPage = lazy(() => import("./pages/AdminEFaturaPage"));
 const AdminAccountingPage = lazy(() => import("./pages/AdminAccountingPage"));
+const AdminAccountingProvidersPage = lazy(() => import("./pages/AdminAccountingProvidersPage"));
 const AdminFinanceOpsPage = lazy(() => import("./pages/AdminFinanceOpsPage"));
 const AdminSMSPage = lazy(() => import("./pages/AdminSMSPage"));
 const AdminTicketsPage = lazy(() => import("./pages/AdminTicketsPage"));
@@ -395,6 +396,7 @@ function App() {
             {/* Feature modules */}
             <Route path="efatura" element={<AdminEFaturaPage />} />
             <Route path="accounting" element={<AdminAccountingPage />} />
+            <Route path="accounting-providers" element={<AdminAccountingProvidersPage />} />
             <Route path="finance-ops" element={<AdminFinanceOpsPage />} />
             <Route path="sms" element={<AdminSMSPage />} />
             <Route path="tickets" element={<AdminTicketsPage />} />

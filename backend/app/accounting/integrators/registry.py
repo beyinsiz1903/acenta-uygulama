@@ -71,19 +71,26 @@ def list_supported_providers() -> list[dict[str, Any]]:
 
 
 def list_accounting_providers() -> list[dict[str, Any]]:
-    """Return list of supported accounting integrator providers."""
-    return [
-        {
-            "code": "luca",
-            "name": "Luca",
-            "description": "Bulut tabanli muhasebe ve finans yonetim sistemi",
-            "category": "accounting",
-            "credential_fields": [
-                {"key": "username", "label": "Kullanici Adi", "type": "text", "required": True},
-                {"key": "password", "label": "Sifre", "type": "password", "required": True},
-                {"key": "company_id", "label": "Firma ID", "type": "text", "required": True},
-                {"key": "endpoint", "label": "API Endpoint", "type": "text", "required": False,
-                 "placeholder": "https://api.lfrcloud.com/api/v1"},
-            ],
-        },
-    ]
+    """Return list of supported accounting integrator providers.
+
+    Delegates to the new capability matrix (MEGA PROMPT #34).
+    """
+    try:
+        from app.accounting.providers.capability_matrix import list_all_providers
+        return list_all_providers()
+    except ImportError:
+        return [
+            {
+                "code": "luca",
+                "name": "Luca",
+                "description": "Bulut tabanli muhasebe ve finans yonetim sistemi",
+                "category": "accounting",
+                "credential_fields": [
+                    {"key": "username", "label": "Kullanici Adi", "type": "text", "required": True},
+                    {"key": "password", "label": "Sifre", "type": "password", "required": True},
+                    {"key": "company_id", "label": "Firma ID", "type": "text", "required": True},
+                    {"key": "endpoint", "label": "API Endpoint", "type": "text", "required": False,
+                     "placeholder": "https://api.lfrcloud.com/api/v1"},
+                ],
+            },
+        ]

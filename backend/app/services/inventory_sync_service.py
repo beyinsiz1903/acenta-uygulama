@@ -97,7 +97,7 @@ _SIMULATED_HOTELS = [
 
 async def _determine_sync_mode(supplier: str) -> tuple[str, dict | None]:
     """Determine sync mode for a supplier based on credential configuration.
-    
+
     Returns: (mode, config) where mode is 'sandbox', 'production', or 'simulation'
     Respects SUPPLIER_SIMULATION_ALLOWED config flag for production safety.
     """
@@ -119,7 +119,7 @@ async def _determine_sync_mode(supplier: str) -> tuple[str, dict | None]:
 
 async def trigger_supplier_sync(supplier: str) -> dict[str, Any]:
     """Trigger a full inventory sync for a given supplier.
-    
+
     Sync modes:
       - simulation: Generated data (no credentials configured)
       - sandbox/production: Real API calls via supplier adapter
@@ -483,7 +483,7 @@ async def search_inventory(
     limit: int = 20,
 ) -> dict[str, Any]:
     """Search inventory from cache (Redis → MongoDB fallback).
-    
+
     This is the core of the Inventory Platform architecture:
     search → cache, NOT search → supplier API.
     """
@@ -597,10 +597,10 @@ async def _filter_by_availability(results: list, checkin: str, checkout: str) ->
 
 async def revalidate_price(supplier: str, hotel_id: str, checkin: str, checkout: str) -> dict[str, Any]:
     """Revalidate price with supplier at booking time.
-    
+
     This is the only step that contacts the supplier API directly.
     cached_price → supplier_price → diff calculation.
-    
+
     Uses real API when credentials configured, simulation otherwise.
     """
     db = await get_db()

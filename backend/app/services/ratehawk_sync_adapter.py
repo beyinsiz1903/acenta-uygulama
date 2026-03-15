@@ -51,7 +51,7 @@ def _make_auth_header(key_id: str, api_key: str) -> dict[str, str]:
 
 async def validate_credentials(base_url: str, credentials: dict) -> dict[str, Any]:
     """Validate RateHawk credentials by calling a lightweight endpoint.
-    
+
     Returns: {success, latency_ms, error?, endpoints_available?}
     """
     key_id = credentials.get("key_id", "")
@@ -125,9 +125,9 @@ async def sync_inventory_from_ratehawk(
     base_url: str, credentials: dict
 ) -> dict[str, Any]:
     """Sync hotel inventory from RateHawk API.
-    
+
     Flow: region_search → collect hotel IDs → hotel_search for prices/availability
-    
+
     Returns sync result with hotels, metrics, and errors.
     """
     key_id = credentials.get("key_id", "")
@@ -273,7 +273,7 @@ async def revalidate_price_from_ratehawk(
     checkout: str,
 ) -> dict[str, Any]:
     """Revalidate price by calling RateHawk hotel page endpoint.
-    
+
     Returns the real supplier price for drift calculation.
     """
     key_id = credentials.get("key_id", "")

@@ -18,12 +18,11 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from app.auth import get_current_user, require_roles
+from app.auth import require_roles
 from app.accounting.providers.capability_matrix import (
     get_capability,
     list_all_providers,
     list_active_providers,
-    supports_operation,
 )
 from app.accounting.providers.provider_routing import (
     delete_tenant_provider,

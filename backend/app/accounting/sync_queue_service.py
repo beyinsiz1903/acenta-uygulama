@@ -197,7 +197,6 @@ async def process_sync_job(
 
     # Customer matching (get_or_create)
     customer_data = (serialize_doc(invoice)).get("customer") or {}
-    customer_match_ref = None
     if customer_data.get("name") or customer_data.get("tax_id"):
         try:
             from app.accounting.customer_matching_service import get_or_create_customer

@@ -15,7 +15,7 @@ from app.accounting.credential_encryption import (
     encrypt_credentials,
     mask_credentials,
 )
-from app.accounting.integrators.registry import get_integrator, list_supported_providers
+from app.accounting.integrators.registry import get_integrator
 from app.db import get_db
 from app.utils import now_utc, serialize_doc
 

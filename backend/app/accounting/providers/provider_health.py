@@ -14,7 +14,7 @@ import logging
 import time
 from typing import Any
 
-from app.accounting.providers.provider_registry import get_provider, list_provider_codes
+from app.accounting.providers.provider_registry import list_provider_codes
 from app.accounting.providers.provider_routing import (
     get_provider_health_summary,
     record_provider_request,

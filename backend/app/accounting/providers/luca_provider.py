@@ -26,7 +26,6 @@ from app.accounting.providers.base_provider import (
     ERR_AUTH,
     ERR_DUPLICATE,
     ERR_TRANSIENT,
-    ERR_UNREACHABLE,
     ERR_VALIDATION,
     ERR_NOT_FOUND,
     BaseAccountingProvider,

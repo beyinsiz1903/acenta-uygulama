@@ -184,7 +184,7 @@ async def sandbox_validate(
     user: dict = Depends(require_roles(_ADMIN_ROLES)),
 ) -> dict[str, Any]:
     """Run sandbox validation tests for a supplier.
-    
+
     Tests: credential validation, search, price retrieval, availability.
     Returns detailed validation report.
     """

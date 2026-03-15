@@ -470,7 +470,7 @@ async def list_items(
 async def get_aging_stats(tenant_id: str) -> dict[str, Any]:
     """Get unsynced invoice aging statistics (CTO KPI)."""
     db = await get_db()
-    now = now_utc()
+    now_utc()
 
     issued_invoices = await db.invoices.find({
         "tenant_id": tenant_id,

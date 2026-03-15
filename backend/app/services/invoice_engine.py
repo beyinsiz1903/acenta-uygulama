@@ -15,20 +15,18 @@ from __future__ import annotations
 
 import hashlib
 import uuid
-from typing import Any, Optional
+from typing import Any
 
 from app.db import get_db
 from app.domain.invoice.booking_transform import build_invoice_from_booking
 from app.domain.invoice.decision_engine import decide_document_type
 from app.domain.invoice.models import (
     InvoiceStatus,
-    InvoiceType,
     build_customer_billing_profile,
     build_tax_breakdown,
 )
 from app.domain.invoice.state_machine import (
     InvoiceStateError,
-    get_allowed_transitions,
     validate_invoice_transition,
 )
 from app.accounting.integrators.registry import get_integrator

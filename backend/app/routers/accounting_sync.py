@@ -17,9 +17,8 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from app.auth import get_current_user, require_roles
+from app.auth import require_roles
 from app.accounting.sync_queue_service import (
-    enqueue_sync_job,
     get_sync_queue_stats,
     list_sync_jobs,
     process_sync_job,
@@ -36,7 +35,6 @@ from app.accounting.customer_matching_service import (
 from app.accounting.auto_sync_rules_service import (
     create_rule,
     delete_rule,
-    evaluate_rules,
     list_rules,
     update_rule,
 )

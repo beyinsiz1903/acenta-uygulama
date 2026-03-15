@@ -21,7 +21,6 @@ import httpx
 from app.accounting.integrators.base_accounting_integrator import (
     ERR_AUTH_FAILED,
     ERR_DUPLICATE_RECORD,
-    ERR_PROVIDER_UNREACHABLE,
     ERR_TRANSIENT,
     ERR_VALIDATION_FAILED,
     AccountingSyncResult,

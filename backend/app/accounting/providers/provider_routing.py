@@ -21,7 +21,6 @@ from app.accounting.credential_encryption import (
 )
 from app.accounting.providers.capability_matrix import (
     get_capability,
-    list_all_providers,
 )
 from app.accounting.providers.provider_registry import get_provider
 from app.db import get_db

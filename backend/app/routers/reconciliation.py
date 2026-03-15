@@ -12,12 +12,12 @@ RBAC:
 """
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from app.auth import get_current_user, require_roles
+from app.auth import require_roles
 
 router = APIRouter(prefix="/api/reconciliation", tags=["reconciliation"])
 

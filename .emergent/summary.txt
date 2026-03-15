@@ -1,65 +1,90 @@
 <analysis>**original_problem_statement:**
-The user, acting as the CTO, has approved the sandbox-ready architecture and provided a detailed roadmap for the next phases. The immediate goal is to validate the system with a live sandbox environment, starting with Ratehawk, and then build out Key Performance Indicator (KPI) dashboards based on the real data.
+The user, acting as a CTO, has requested a comprehensive, 10-step frontend architecture analysis and redesign to transform the existing Syroce Travel SaaS platform into a world-class, enterprise-grade product comparable to Stripe Dashboard or Shopify Admin.
 
-**PRODUCT REQUIREMENTS (Based on MEGA PROMPT #38 and CTO's updated plan):**
-1.  **Ratehawk Sandbox Validation (P0):** Connect to the actual Ratehawk sandbox. Implement the inventory sync, search, price, and availability checks in . Measure the core metrics: , , , and .
-2.  **Supplier Health Endpoint (P1 - Completed):** Create a new  endpoint that returns key health metrics (, , , , etc.) for each supplier.
-3.  **KPI Dashboard (P2 - Completed):** Build a new dashboard section on the frontend to visualize critical KPIs once real data is available. This includes , , and a .
-4.  **Simulation Fallback Control:** Add a configuration flag () to enable/disable the simulation fallback mechanism, ensuring it can be turned off in production.
-5.  **Future Phases (P3+):**
-    *   Integrate the Paximum sandbox.
-    *   Implement the Supplier Reliability Engine (MEGA PROMPT #39) which includes features like a reliability score and automatic supplier failover.
+**PRODUCT REQUIREMENTS (New, Overriding Priority):**
+The agent was tasked with analyzing the entire frontend and producing a detailed report covering:
+1.  **Full Repository Analysis:** Folder structure, page architecture, components, state management, API patterns, UX inconsistencies, design system gaps, code duplication, performance bottlenecks, and technical debt.
+2.  **Frontend Architecture Redesign:** Propose a scalable, domain-driven frontend architecture.
+3.  **Design System Creation:** Plan for a full design system (primitives, rules, etc.).
+4.  **Component Governance:** Define rules for shared vs. local components.
+5.  **UX Standardization:** Define patterns for common UI/UX flows (dashboards, CRUD, tables).
+6.  **Data Fetching Architecture:** Standardize TanStack Query usage.
+7.  **Performance Optimization:** Propose improvements for code splitting, bundle size, etc.
+8.  **Enterprise UX Features:** Suggest advanced features like a command palette, global search, and keyboard shortcuts.
+9.  **Multi-Tenant UX:** Design patterns for tenant switching and role-based UI.
+10. **Frontend Roadmap:** Provide a realistic, phased refactoring plan.
+
+This new directive has superseded the previous tasks of fixing a CI/CD pipeline issue and verifying a KPI dashboard.
 
 **User's preferred language**: Turkish
 
 **what currently exists?**
-The agent has successfully implemented the backend services and frontend UI for the **Supplier Health Endpoint** and the **KPI Dashboard**. New backend endpoints (, ) have been created, and the  has been updated with logic to calculate the required metrics. The frontend  now features new Supplier Health and KPI Dashboard panels that display this data, powered by Recharts for visualization. A  flag has been added to the backend environment configuration. All new functionality has been thoroughly tested and passed. The system is currently running on **simulated data**, as the real Ratehawk adapter has not yet been implemented.
+The agent has completed the user's request for a comprehensive frontend analysis. A detailed 10-step report, , has been created, outlining the current state of the frontend and providing a complete redesign strategy and roadmap. The project's focus has entirely shifted from backend tasks and bug fixes to this large-scale frontend refactoring initiative.
 
 **Last working item**:
--   Last item agent was working: The agent just completed the full implementation and testing of the Supplier Health Endpoint and the KPI Dashboard, as per the CTO's re-prioritized plan. This involved significant backend and frontend changes. The work was validated by the testing agent, which passed all tests.
--   Status: USER VERIFICATION PENDING
--   Agent Testing Done: Y
--   Which testing method agent to use? NA (Testing is complete for this item)
+-   Last item agent was working: Generating the comprehensive 10-step frontend architecture analysis and redesign document as requested by the user. The agent completed this analysis and stored the output in .
+-   Status: FINISHED (The analysis and report generation is complete; awaiting user review).
+-   Agent Testing Done: N/A
+-   Which testing method agent to use? N/A (The task was analytical. The next step is to present the findings to the user).
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Save to Github Synchronization Issue (Priority: P4)**
-    -   Description: A platform-level issue where changes are not reliably synced to GitHub.
-    -   Status: BLOCKED (Platform-level issue, deferred by CTO).
--   **Issue 2: Nested Button HTML Warning (Priority: P4)**
-    -   Description: A minor HTML warning in the frontend.
-    -   Status: NOT STARTED (Explicitly de-prioritized by CTO).
+-   **Issue 1: Frontend Architecture Redesign Approval (Priority: P0)**
+    -   Description: The comprehensive frontend redesign plan, detailed in , needs to be presented to the user for review and approval before any implementation begins.
+    -   Status: NOT STARTED
+-   **Issue 2: CI/CD Pytest Failure (Priority: P3 - Deprioritized)**
+    -   Description: A test file, , fails in CI environments where  is not set.
+    -   Status: USER VERIFICATION PENDING (The fix was implemented but superseded by the new frontend task).
+
+**Issues Detail:**
+-   **Issue 1: Frontend Architecture Redesign Approval**
+    -   **Attempted fixes:** N/A
+    -   **Next debug checklist:**
+        1.  Present the summary of the findings from  to the user using the  tool.
+        2.  Request approval for the proposed roadmap and the first phase of the refactor.
+    -   **Why fix this issue and what will be achieved with the fix?** To get the user's buy-in on the strategic direction for the frontend, unlocking the multi-phase refactoring project.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** N/A
+    -   **Blocked on other issue:** None.
+-   **Issue 2: CI/CD Pytest Failure**
+    -   **Attempted fixes:** A fallback URL was added to . The agent concluded the fix was correct but needed to be committed to the user's Git repository.
+    -   **Status:** USER VERIFICATION PENDING (Effectively on hold).
+    -   **Is recurring issue?** Y
 
 **In progress Task List**:
 None.
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks (P0):**
-    -   **CTO Verification:** Present the newly created KPI Dashboard and Supplier Health panels for review. This is the final step for the last completed item.
-    -   **Real Ratehawk Sandbox Integration:** This is the next primary development task. Implement the live API calls within  to connect to the Ratehawk sandbox. The goal is to replace the current simulated data flow with real data from the sandbox and validate , , and  functionalities.
--   **Future Tasks (P1 & Beyond):**
-    -   **Paximum Sandbox Integration:** Replicate the Ratehawk integration pattern for the Paximum sandbox.
-    -   **Supplier Reliability Engine (MEGA PROMPT #39):** Begin development on the reliability engine, including a supplier score, drift monitoring, and failover logic.
-    -   **WWTatil Search Validation:** Connect to WWTatil for search validation.
-    -   **Redis for Search Cache:** Migrate the search cache from MongoDB to Redis for production performance.
+The primary upcoming task is to execute the phased frontend refactoring roadmap detailed in .
+
+-   **Upcoming Tasks (From New Roadmap):**
+    -   **(P0) Phase 1 - Architecture Cleanup:**
+        -   Restructure the frontend directory to a domain-driven model (, , , etc.).
+        -   Establish the foundational design system primitives.
+        -   Define and enforce component governance rules.
+    -   **(P1) Phase 2 - Design System Implementation:**
+        -   Build out the core components (Button, Input, Modal, Table, etc.) with variants and states.
+-   **Future Tasks (From New Roadmap):**
+    -   Phase 3 – UX Standardization
+    -   Phase 4 – Performance Optimization
+    -   Phase 5 – Advanced SaaS UX Features (Command Palette, Global Search, etc.)
+-   **Backlog (Previous Plan - Now Deprioritized):**
+    -   CTO Verification of the completed KPI Dashboard.
+    -   Real Ratehawk Sandbox Integration.
+    -   Paximum Sandbox Integration.
+    -   Supplier Reliability Engine development.
 
 **Completed work in this session**
--   **Backend - Health & KPI Endpoints (DONE):**
-    -   Created  endpoint in .
-    -   Created  endpoint in .
-    -   Added logic to  to calculate new metrics: , , , drift rates, and severity.
-    -   Added  to  and integrated its logic into the sync service.
-    -   Enhanced the sandbox validation endpoint to return .
-    -   Added new MongoDB indexes in  for efficient metric querying.
--   **Frontend - KPI Dashboard UI (DONE):**
-    -   Updated  to fetch data from the new health and KPI endpoints.
-    -   Added a Supplier Health panel displaying the status of each supplier.
-    -   Added a KPI Dashboard panel with visualizations for Drift Rate, Price Consistency, Drift Severity (Bar Chart), and Price Drift Timeline (Line Chart) using Recharts.
--   **End-to-End Testing (DONE):**
-    -   The  was used, which passed **25/25 backend tests** and verified **100% of frontend functionality** as per .
+-   **Frontend Architecture Analysis (DONE):**
+    -   Performed a deep analysis of the entire frontend codebase, including structure, components, state management, and API patterns.
+    -   Created a comprehensive 10-step redesign document: .
+-   **PRD Update (DONE):**
+    -   Updated  to reflect the new frontend architecture initiative.
 
 **Earlier issues found/mentioned but not fixed**
--   The  and  remain but have been explicitly de-prioritized by the CTO.
+-   **Save to Github Synchronization Issue:** Platform-level issue, deferred by CTO.
+-   **Nested Button HTML Warning:** Minor frontend warning, deprioritized.
 
 **Known issue recurrence from previous fork**
 -   None.
@@ -68,77 +93,71 @@ None.
 
 
 **Key Technical Concepts**
--   **Config-Driven Adapters:** The system's architecture uses configuration to switch between real and simulated supplier integrations.
--   **Supplier Health Monitoring:** A new concept introduced to calculate and expose the operational status (, , ) of suppliers based on real-time sync metrics.
--   **KPI Visualization:** The frontend now visualizes key business and operational metrics like price drift and consistency using chart libraries.
+-   **Domain-Driven Frontend Architecture:** The new proposed structure organizes code by business domain (e.g., , ) rather than by technical type (e.g., , ).
+-   **Design Systems:** Creating a centralized, reusable library of UI components and guidelines to ensure consistency and speed up development.
+-   **Enterprise SaaS UX:** Advanced user experience patterns tailored for complex, data-heavy business applications.
+-   **Component Governance:** A set of rules to manage the creation, usage, and lifecycle of UI components.
 
 **key DB schema**
--   **inventory_sync_jobs**: Added fields to support new metrics: , , , .
--   **supplier_configs**: 
+-   No changes.
 
 **changes in tech stack**
--   None.
+-   None implemented. A major architectural refactor of the React frontend is proposed.
 
 **All files of reference**
--   **Modified Files:**
+-   **Created/Updated Files:**
+    -   : The main deliverable of this session, containing the complete 10-step analysis and redesign plan.
+    -   : Updated to reflect the new frontend project.
+-   **Key Files Analyzed:**
     -   
     -   
     -   
     -   
     -   
--   **Key Unchanged File (Next Task):**
+    -    (various)
     -   
--   **Supporting Docs:**
-    -    (Updated in this session)
 
 **Areas that need refactoring**:
--   None. Refactoring is forbidden by the CTO until the pilot phase.
+-   The entire frontend is slated for a major architectural refactor as per the user's request and the agent's generated plan.
 
 **key api endpoints**
--   : **(NEW)** Get health status for all suppliers.
--   : **(NEW)** Get data for the KPI dashboard.
--   : Create/update supplier credentials.
--   : Trigger a validation test.
+-   No changes in this session.
 
 **Critical Info for New Agent**
 -   **İletişim diliniz Türkçe olmalıdır. (Your communication language must be Turkish).**
--   Your immediate priority is to get CTO verification for the new KPI dashboard. After that, you must implement the **real Ratehawk sandbox integration**. The entire framework and UI are ready, but the adapter in  is currently a stub. Your job is to fill it with actual API calls to Ratehawk's sandbox.
--   **DO NOT work on Paximum, WWTatil, or the Supplier Reliability Engine.** These tasks are explicitly scheduled for future sessions.
+-   The project's priority has completely shifted. Ignore the previous tasks (CI fix, KPI dashboard verification). Your sole focus is the **frontend architecture redesign**.
+-   Your first action is to present the comprehensive plan stored in  to the user for approval.
+-   Use the  tool to summarize the proposed roadmap (especially Phase 1) and get the user's go-ahead to start the implementation. Do not begin any coding until you have this approval.
 
 **documents and test reports created in this job**
 -   
--   
+-    (updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
--   **CTO (Approval & New Directive):** The CTO approved the sandbox-ready architecture and provided a detailed review with new requirements (MEGA PROMPT #39).
--   **CTO (Re-prioritization):** The CTO updated the plan, prioritizing the **Supplier Health Endpoint** and **KPI Dashboard** *before* the live Ratehawk sandbox validation. The new order is: 1. Health/KPI features, 2. Ratehawk sandbox validation, 3. Paximum, 4. Reliability Engine.
--   **CTO (Success Criteria):** Defined the success criteria for the session, which included implementing the new endpoints and metrics.
--   **CTO (Scope):** Explicitly forbade work on Paximum, WWTatil, Reliability Engine, and any refactoring in this session.
+-   The user sent a single, large, multi-step prompt requesting a complete analysis and redesign of the frontend architecture to meet enterprise SaaS quality standards, citing examples like Stripe and Linear. This message completely changed the direction of the project. The agent has now completed this analysis and is ready to present the plan.
 
 **Project Health Check:**
 -   **Broken:** None.
 -   **Mocked:**
-    -    is still a stub.
-    -   The entire system currently falls back to simulated data, as no real credentials or live adapters are in place. The new KPI dashboard is functional but displays metrics derived from this simulation.
--   **Incomplete:** The core task of integrating with a real supplier sandbox (Ratehawk) has not yet begun.
+    -    is still a stub using simulated data.
+-   **Incomplete:** The entire frontend is now considered incomplete pending the major refactoring project.
 
 **3rd Party Integrations**
 -   Stripe
--   Redis (Required for production, not yet implemented)
+-   Redis (Planned, not implemented)
 -   
--   Recharts (for frontend charts)
--   Ratehawk, TBO, Paximum, WWTatil (Adapters exist, but integration is simulated)
+-   Recharts
+-   Ratehawk, TBO, Paximum, WWTatil (Adapters exist, integration is simulated)
 
 **Testing status**
--   Testing agent used after significant changes: YES
+-   Testing agent used after significant changes: NO
 -   Troubleshoot agent used after agent stuck in loop: NO
--   Test reports:  (Result: 25/25 Backend PASS, 100% Frontend success).
--   Test files created: None.
--   Known regressions: None.
+-   Test files created: None
+-   Known regressions: None
 
 **Credentials to test flow:**
 -   **Super Admin:**  / 
 -   **Agency Admin:**  / 
 
 **What agent forgot to execute**
-Nothing. The agent correctly followed the CTO's updated and re-prioritized plan, completing the health/KPI features first before moving on to the live sandbox integration.</analysis>
+The agent correctly pivoted to the user's new, high-priority request. The previously planned tasks (CI fix, KPI dashboard verification) were not forgotten but were correctly deprioritized and placed on the backlog in response to the user's explicit directive.</analysis>

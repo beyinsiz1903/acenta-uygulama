@@ -9,7 +9,7 @@ supplier adapters -> aggregator -> unified search (cached) -> unified booking
 -> commission binding -> fallback -> reconciliation -> analytics -> intelligence
 -> revenue optimization -> scalability -> operations -> market launch
 -> per-agency credential governance -> growth engine
--> INVOICE ENGINE -> e-document provider (EDM) -> accounting sync
+-> INVOICE ENGINE -> e-document provider (EDM) -> accounting sync (Luca)
 ```
 
 ## Credentials
@@ -54,18 +54,42 @@ Invoice Domain Model, State Machine (10 states), Booking -> Invoice Transformati
 7. **PDF Download** -- Download invoice PDF from integrator or simulation placeholder.
 8. **Frontend Updates** -- Entegrator settings panel with save/test/delete. SAGLAYICI column in invoice table. e-Belge Bilgileri in detail modal. PDF Indir and Durum Kontrol buttons.
 
-**Backend:** 5 new API endpoints via `/api/integrators/*`, 1 new endpoint via `/api/invoices/{id}/status-check`
-**Frontend:** IntegratorSettings component, enhanced InvoiceDetail with PDF/status, Provider column
-**Testing:** 23/23 backend + all frontend tests PASS (iteration_94)
-**E-Document Provider:** EDM adapter in SIMULATION mode (real API requires production credentials)
+### Phase 12: Invoice Engine -- Phase 3 (MEGA PROMPT #32) -- Mar 15, 2026
+
+**Luca Muhasebe Senkronizasyon Katmani -- Faz 3 Complete:**
+
+1. **BaseAccountingIntegrator ABC** -- 4 methods: test_connection(), sync_invoice(), get_sync_status(), create_customer()
+2. **LucaIntegrator Adapter** -- Full Luca API adapter with simulation fallback. Builds Luca-compatible invoice/customer payloads.
+3. **Accounting Sync Service** -- Idempotent sync queue (invoice_id + provider unique). Execute sync with attempt tracking. Error classification (auth_failed, validation_failed, duplicate_record, provider_unreachable, transient_error). Manual retry support.
+4. **Credential Management** -- Reuses existing AES-256-GCM encrypted tenant_integrators system. Luca-specific fields: username, password, company_id, endpoint.
+5. **Accounting Dashboard API** -- Stats: total_syncs, success, failed, pending, last_sync_at, last_error, providers status.
+6. **Invoice Updates** -- accounting_status and accounting_ref fields on invoice documents. Muhasebe column in invoice table showing sync state.
+7. **Frontend: Muhasebe Senkronizasyon Page** -- Dashboard with 5 stat cards, sync logs table with filters, Luca credential settings panel.
+8. **Frontend: Luca Sync from Invoice Engine** -- "Luca" button on issued invoices to trigger sync directly.
+
+**Backend:** 8 new API endpoints via `/api/accounting/*`
+**Frontend:** AdminAccountingPage with dashboard + sync logs + settings. Modified AdminEFaturaPage with Muhasebe column and Luca sync button.
+**Testing:** 14/14 backend + all frontend tests PASS (iteration_95)
+**Luca Adapter:** SIMULATION mode (real API requires production credentials)
 
 ---
 
 ## Key API Endpoints
 
-### Integrator Management (Phase 11 -- NEW)
+### Accounting Sync (Phase 12 -- NEW)
+- `GET /api/accounting/providers` -- List accounting providers (Luca)
+- `POST /api/accounting/credentials` -- Save accounting credentials (AES-256-GCM)
+- `GET /api/accounting/credentials` -- List configured accounting integrators (masked)
+- `DELETE /api/accounting/credentials/{provider}` -- Delete credentials
+- `POST /api/accounting/test-connection` -- Test accounting system connection
+- `POST /api/accounting/sync/{invoice_id}` -- Sync issued invoice to accounting system
+- `POST /api/accounting/retry` -- Manual retry for failed syncs
+- `GET /api/accounting/sync-logs` -- List sync logs with filters
+- `GET /api/accounting/dashboard` -- Accounting sync dashboard stats
+
+### Integrator Management (Phase 11)
 - `GET /api/integrators/providers` -- List supported providers
-- `POST /api/integrators/credentials` -- Save integrator credentials (AES-256-GCM)
+- `POST /api/integrators/credentials` -- Save integrator credentials
 - `GET /api/integrators/credentials` -- List configured integrators (masked)
 - `DELETE /api/integrators/credentials/{provider}` -- Delete credentials
 - `POST /api/integrators/test-connection` -- Test integrator connection
@@ -74,35 +98,32 @@ Invoice Domain Model, State Machine (10 states), Booking -> Invoice Transformati
 ### Invoice Engine (Phase 10 + 11)
 - `POST /api/invoices/create-from-booking` -- Create invoice from booking (idempotent)
 - `POST /api/invoices/create-manual` -- Create manual invoice with lines
-- `GET /api/invoices` -- List invoices with status/source_type filters
+- `GET /api/invoices` -- List invoices with filters
 - `GET /api/invoices/dashboard` -- Dashboard stats
 - `GET /api/invoices/{id}` -- Invoice detail
 - `POST /api/invoices/{id}/issue` -- Issue via EDM adapter
 - `POST /api/invoices/{id}/cancel` -- Cancel invoice
 - `POST /api/invoices/{id}/transition` -- Manual state transition
-- `GET /api/invoices/booking/{booking_id}` -- Check booking invoice status
+- `GET /api/invoices/booking/{booking_id}` -- Check booking invoice
 - `GET /api/invoices/{id}/events` -- Event timeline
-- `GET /api/invoices/{id}/status-check` -- Check status from integrator (NEW)
+- `GET /api/invoices/{id}/status-check` -- Check status from integrator
 
 ---
 
 ## DB Collections
 
 ### Invoice Engine
-- `invoices` -- Invoice documents with state machine, booking linkage, customer profile, lines, totals
+- `invoices` -- Invoice documents with state machine, booking linkage, customer profile, lines, totals, accounting_status, accounting_ref
 - `invoice_events` -- Audit trail for invoice lifecycle events
-- `tenant_integrators` -- Per-tenant integrator credentials (AES-256-GCM encrypted) (NEW)
+- `tenant_integrators` -- Per-tenant integrator credentials (AES-256-GCM encrypted)
+- `accounting_sync_logs` -- Accounting sync tracking: sync_id, invoice_id, provider, external_accounting_ref, sync_status, sync_attempt_count, last_error, last_error_type (NEW)
 
 ---
 
 ## Prioritized Backlog
 
-### P0 -- Invoice Engine Phase 3 (Next)
-- Luca accounting sync adapter
-- Customer creation in accounting system
-- Invoice sync with retry
-- Accounting sync status tracking
-- Finance/accounting dashboard
+### P0 -- Completed
+All phases through Phase 12 are complete.
 
 ### P1 -- Invoice Engine Phase 4 & Backlog
 - Logo / Parasut / Mikro accounting adapters
@@ -111,6 +132,7 @@ Invoice Domain Model, State Machine (10 states), Booking -> Invoice Transformati
 - Invoice reconciliation (booking vs invoice vs accounting)
 - Customer billing profile reuse
 - Tax breakdown visibility enhancement
+- Background job for status polling (APScheduler/Celery)
 
 ### P2 -- Platform Backlog
 - Real supplier credential validation with live APIs
@@ -124,7 +146,7 @@ Invoice Domain Model, State Machine (10 states), Booking -> Invoice Transformati
 
 ---
 
-## Code Architecture (Invoice Engine + Integrators)
+## Code Architecture (Invoice Engine + Integrators + Accounting)
 
 ```
 backend/app/
@@ -132,26 +154,29 @@ backend/app/
     __init__.py
     credential_encryption.py        # AES-256-GCM encrypt/decrypt
     tenant_integrator_service.py    # Tenant credential CRUD
+    accounting_sync_service.py      # NEW: Accounting sync queue + execution
     integrators/
       __init__.py
-      base_integrator.py            # ABC interface (5 methods)
+      base_integrator.py            # ABC for e-document integrators (5 methods)
+      base_accounting_integrator.py # NEW: ABC for accounting integrators (4 methods)
       edm_integrator.py             # EDM adapter (real + simulation)
-      registry.py                   # Provider registry
+      luca_integrator.py            # NEW: Luca adapter (real + simulation)
+      registry.py                   # Provider registry (e-doc + accounting)
   domain/invoice/
     models.py                       # Domain entities, builders
     state_machine.py                # State transitions
     decision_engine.py              # e-Fatura/e-Arsiv decision
     booking_transform.py            # Booking -> Invoice mapping
   services/
-    invoice_engine.py               # Core service (updated for EDM)
-    efatura/                        # Legacy provider layer
+    invoice_engine.py               # Core service (EDM + accounting)
   routers/
     invoice_engine.py               # /api/invoices/*
-    integrator_management.py        # /api/integrators/* (NEW)
-    efatura.py                      # Legacy /api/efatura/*
+    integrator_management.py        # /api/integrators/*
+    accounting_sync.py              # NEW: /api/accounting/*
 frontend/src/
   pages/
-    AdminEFaturaPage.jsx            # Invoice Engine dashboard + wizard + integrator settings
+    AdminEFaturaPage.jsx            # Invoice Engine + Muhasebe column + Luca sync
+    AdminAccountingPage.jsx         # NEW: Muhasebe Senkronizasyon dashboard
   components/
     BookingDetailDrawer.jsx         # "Faturayi Kes" button
 ```

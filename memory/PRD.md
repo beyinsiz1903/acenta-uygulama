@@ -19,32 +19,39 @@ Credential Check → Has Credentials? → Real API (sandbox/production)
                  → Simulation Disabled? → Error (production guard)
 ```
 
-## Frontend Architecture Report (2026-02)
-Full analysis and redesign blueprint created at `/app/docs/FRONTEND_ARCHITECTURE_REPORT.md`
+## Frontend Architecture Redesign (2026-03-15)
+Full analysis at `/app/docs/FRONTEND_ARCHITECTURE_REPORT.md`
 
-### Key Findings
+### Architecture Changes Completed (Phase 1+2)
+- **App.js**: Reduced from 598 → 189 lines via domain route modules
+- **Route Modules**: 6 files under `/src/routes/` (admin, agency, b2b, core, hotel, public)
+- **Features Directory**: 9 domain modules under `/src/features/` with API + hooks
+  - auth, dashboard, bookings, inventory, finance, crm, operations, analytics, governance
+- **Design System (SDS)**: 7 pattern components under `/src/design-system/patterns/`
+  - DataTable, PageShell, FilterBar, StatusBadge, ConfirmDialog, Timeline, EmptyState
+- **Shared Layer**: Centralized query key registry at `/src/shared/queryKeys.js`
+- **TanStack React Table**: Installed for DataTable component
+
+### Key Findings (Pre-Refactor)
 - 101,864 lines of source code, 193 pages, 108 components
 - 12 files over 1000 lines (god pages)
 - TanStack Query installed but only 5% adopted
-- No DataTable component — 50+ pages build their own tables
-- Monolithic App.js (598 lines, all routes in one file)
-- No TypeScript
+- 50+ pages with hand-built tables (DataTable now available)
+- Monolithic App.js (598 lines → now 189)
 
-### Proposed Architecture
-- Domain-Driven Frontend: `/features/`, `/design-system/`, `/shared/`
-- Syroce Design System (SDS): DataTable, PageShell, FilterBar, StatusBadge, EmptyState, Timeline
-- TanStack Query 100% adoption with query key strategy
-- Route-based code splitting
-- Strangler Fig migration pattern
-
-### Roadmap
-| Phase | Scope | Effort |
-|-------|-------|--------|
-| Phase 1: Architecture Cleanup | Route splitting, features dir, TanStack Query hooks | 13 dev-days |
-| Phase 2: Design System | DataTable, PageShell, FilterBar, tokens | 13 dev-days |
-| Phase 3: UX Standardization | Migrate all pages to patterns | 14 dev-days |
-| Phase 4: Performance | Code splitting, virtualization, memoization | 7 dev-days |
-| Phase 5: Enterprise UX | Cmd+K, global search, shortcuts, timeline | 20 dev-days |
+### New Directory Structure
+```
+src/
+├── routes/          # Domain route modules (6 files)
+├── features/        # Domain modules with api.js + hooks.js (9 domains)
+├── design-system/   # SDS pattern components (7 components)
+├── shared/          # Cross-cutting: queryKeys.js
+├── components/      # Legacy shared components (being migrated)
+├── pages/           # Legacy page components (being migrated)
+├── hooks/           # Legacy hooks (backward-compatible re-exports)
+├── lib/             # Legacy utilities
+└── App.js           # Slim entry point (189 lines)
+```
 
 ## Implemented Features
 
@@ -68,30 +75,50 @@ Full analysis and redesign blueprint created at `/app/docs/FRONTEND_ARCHITECTURE
 - `POST /api/inventory/sandbox/validate`
 - `GET /api/inventory/supplier-metrics`
 
-### Phase: Supplier Health & KPI Dashboard (2026-03-15) — COMPLETED
+### Phase: Supplier Health & KPI Dashboard — COMPLETED
 - `GET /api/inventory/supplier-health`
 - `GET /api/inventory/kpi/drift`
 - Frontend KPI Dashboard with all visualizations
 - SUPPLIER_SIMULATION_ALLOWED config flag
 
+### Phase: Frontend Architecture (Phase 1+2) — COMPLETED
+- Route splitting into 6 domain modules
+- Features directory with 9 domain API + hook modules
+- Design System with 7 pattern components
+- All tests PASS (100% frontend success rate)
+
 ## Upcoming Tasks (Prioritized)
 
-### P0 — Frontend Architecture (Phase 1-2)
-- Split App.js, create features/ structure
-- Build DataTable, PageShell, FilterBar design system components
-- Migrate top 10 pages to TanStack Query + new patterns
+### P0 — Page Migration (Phase 3 - UX Standardization)
+- Migrate DashboardPage to use PageShell + DataTable
+- Migrate ReservationsPage to use DataTable + FilterBar + StatusBadge
+- Migrate AdminAgenciesPage to new patterns
+- Standardize loading/error/empty states across all pages
 
-### P1 — Real Ratehawk Sandbox Validation
-- CTO provides credentials → implement actual API calls in ratehawk_sync_adapter.py
-- Test: search, price, availability, revalidation against real sandbox
+### P1 — God Page Splitting
+- Split AdminFinanceRefundsPage (2150 lines)
+- Split PlatformHardeningPage (1912 lines)
+- Split B2BPortalPage (1734 lines)
+- Split AdminMetricsPage (1326 lines)
+- Split UnifiedSearchPage (1257 lines)
 
-### P2 — Paximum Sandbox & Reliability Engine
-- Paximum sandbox adapter
-- Supplier reliability score, drift monitoring, failover logic
+### P2 — Performance Optimization (Phase 4)
+- Route-based code splitting with named chunks
+- Virtualized tables for large datasets
+- React.memo on key components
+- Bundle analysis + tree-shaking audit
 
-### P3 — Pilot Phase
-- 3 pilot agencies with real traffic
-- 3 real bookings, 3 invoices, 3 accounting sync
+### P3 — Enterprise UX (Phase 5)
+- Command palette (Cmd+K) using cmdk
+- Global search with unified results
+- Keyboard shortcuts framework
+- Activity timeline on entity pages
+
+### Backlog
+- Real Ratehawk Sandbox Validation
+- Paximum Sandbox & Reliability Engine
+- TypeScript migration (incremental)
+- CI/CD pytest fix (test_inventory_sync_iter103.py)
 
 ## Known Issues
 - P3: GitHub sync issue (platform-level, deferred)

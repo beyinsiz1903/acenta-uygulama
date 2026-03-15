@@ -4,6 +4,9 @@ Background job that:
 1. Processes pending retry jobs (backoff: 5m, 15m, 1h, 6h, 24h)
 2. Polls status of recently synced invoices
 3. Auto-syncs invoices based on rules
+4. Runs hourly incremental reconciliation
+5. Runs daily full reconciliation
+6. Checks and generates financial alerts
 
 Designed to be added to the existing APScheduler infrastructure.
 """
@@ -91,3 +94,94 @@ async def poll_sync_status() -> dict:
             logger.debug("Status poll for %s failed: %s", job.get("job_id"), e)
 
     return {"polled": polled, "total": len(jobs)}
+
+
+async def run_incremental_reconciliation() -> dict:
+    """Run hourly incremental reconciliation for all tenants.
+
+    Called by scheduler every hour. Checks only recent data (last 2 hours).
+    """
+    from app.db import get_db
+    db = await get_db()
+
+    # Get all distinct tenant IDs that have invoices
+    tenant_ids = await db.invoices.distinct("tenant_id")
+    total_mismatches = 0
+
+    for tenant_id in tenant_ids:
+        if not tenant_id:
+            continue
+        try:
+            from app.accounting.reconciliation_service import run_reconciliation
+            result = await run_reconciliation(
+                tenant_id=tenant_id,
+                run_type="incremental",
+                triggered_by="scheduler_hourly",
+                lookback_hours=2,
+            )
+            total_mismatches += result.get("mismatch_count", 0)
+        except Exception as e:
+            logger.error("Incremental recon failed for tenant %s: %s", tenant_id, e)
+
+    if total_mismatches:
+        logger.info("Incremental reconciliation: %d mismatches across %d tenants",
+                     total_mismatches, len(tenant_ids))
+    return {"tenants": len(tenant_ids), "total_mismatches": total_mismatches}
+
+
+async def run_full_reconciliation() -> dict:
+    """Run daily full reconciliation for all tenants.
+
+    Called by scheduler once daily. Checks all data.
+    """
+    from app.db import get_db
+    db = await get_db()
+
+    tenant_ids = await db.invoices.distinct("tenant_id")
+    total_mismatches = 0
+
+    for tenant_id in tenant_ids:
+        if not tenant_id:
+            continue
+        try:
+            from app.accounting.reconciliation_service import run_reconciliation
+            result = await run_reconciliation(
+                tenant_id=tenant_id,
+                run_type="full",
+                triggered_by="scheduler_daily",
+                lookback_hours=None,
+            )
+            total_mismatches += result.get("mismatch_count", 0)
+        except Exception as e:
+            logger.error("Full recon failed for tenant %s: %s", tenant_id, e)
+
+    logger.info("Full reconciliation: %d mismatches across %d tenants",
+                total_mismatches, len(tenant_ids))
+    return {"tenants": len(tenant_ids), "total_mismatches": total_mismatches}
+
+
+async def check_financial_alerts() -> dict:
+    """Check and generate financial alerts for all tenants.
+
+    Called by scheduler every 30 minutes.
+    """
+    from app.db import get_db
+    db = await get_db()
+
+    tenant_ids = await db.invoices.distinct("tenant_id")
+    total_alerts = 0
+
+    for tenant_id in tenant_ids:
+        if not tenant_id:
+            continue
+        try:
+            from app.accounting.financial_alerts_service import check_and_generate_alerts
+            result = await check_and_generate_alerts(tenant_id)
+            total_alerts += result.get("alerts_generated", 0)
+        except Exception as e:
+            logger.error("Alert check failed for tenant %s: %s", tenant_id, e)
+
+    if total_alerts:
+        logger.info("Financial alerts: %d generated across %d tenants",
+                     total_alerts, len(tenant_ids))
+    return {"tenants": len(tenant_ids), "alerts_generated": total_alerts}

@@ -19,6 +19,8 @@ SCHEDULER_RESPONSIBILITIES = [
     "Operational integrity and uptime checks",
     "Google Sheets sync / write-back schedulers when enabled",
     "Accounting sync retry queue and status polling",
+    "Reconciliation: hourly incremental, daily full",
+    "Financial alerts generation",
 ]
 
 
@@ -152,6 +154,32 @@ async def _build_accounting_scheduler() -> AsyncIOScheduler:
 
     scheduler.add_job(_process_accounting_retries, "interval", minutes=2, id="accounting_retry")
     scheduler.add_job(_poll_accounting_status, "interval", minutes=10, id="accounting_poll")
+
+    async def _run_incremental_recon() -> None:
+        try:
+            from app.accounting.accounting_scheduler import run_incremental_reconciliation
+            await run_incremental_reconciliation()
+        except Exception as exc:
+            logging.getLogger("accounting_scheduler").error("Incremental recon failed: %s", exc)
+
+    async def _run_full_recon() -> None:
+        try:
+            from app.accounting.accounting_scheduler import run_full_reconciliation
+            await run_full_reconciliation()
+        except Exception as exc:
+            logging.getLogger("accounting_scheduler").error("Full recon failed: %s", exc)
+
+    async def _check_alerts() -> None:
+        try:
+            from app.accounting.accounting_scheduler import check_financial_alerts
+            await check_financial_alerts()
+        except Exception as exc:
+            logging.getLogger("accounting_scheduler").error("Alert check failed: %s", exc)
+
+    scheduler.add_job(_run_incremental_recon, "interval", hours=1, id="recon_incremental")
+    scheduler.add_job(_run_full_recon, "cron", hour=2, minute=0, id="recon_full_daily")
+    scheduler.add_job(_check_alerts, "interval", minutes=30, id="financial_alerts")
+
     return scheduler
 
 

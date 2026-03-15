@@ -28,6 +28,16 @@ MATCH_MANUAL = "manual"
 
 MATCH_ORDER = [MATCH_VKN, MATCH_TCKN, MATCH_EMAIL, MATCH_PHONE]
 
+# Match confidence scores per CTO directive
+MATCH_CONFIDENCE = {
+    MATCH_VKN: 1.0,
+    MATCH_TCKN: 0.95,
+    MATCH_EMAIL: 0.8,
+    MATCH_PHONE: 0.6,
+    MATCH_MANUAL: 1.0,
+    "auto": 0.7,
+}
+
 
 async def _try_cache_get(tenant_id: str, vkn: str) -> dict | None:
     """Try to get customer from Redis cache. Returns None if unavailable."""
@@ -96,6 +106,7 @@ async def match_customer(
         if doc:
             result = serialize_doc(doc)
             result["match_method"] = method
+            result["match_confidence"] = MATCH_CONFIDENCE.get(method, 0.5)
             if vkn:
                 await _try_cache_set(tenant_id, vkn, result)
             return result
@@ -148,6 +159,7 @@ async def create_customer(
         "city": customer_data.get("city", ""),
         "country": customer_data.get("country", "TR"),
         "match_method": match_method,
+        "match_confidence": MATCH_CONFIDENCE.get(match_method, 0.5),
         "created_at": now,
         "updated_at": now,
     }

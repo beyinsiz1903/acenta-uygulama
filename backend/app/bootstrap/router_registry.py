@@ -115,6 +115,7 @@ from app.routers.efatura import router as efatura_router
 from app.routers.invoice_engine import router as invoice_engine_router
 from app.routers.integrator_management import router as integrator_management_router
 from app.routers.accounting_sync import router as accounting_sync_router
+from app.routers.reconciliation import router as reconciliation_router
 from app.routers.enterprise_2fa import router as enterprise_2fa_router
 from app.routers.enterprise_approvals import router as enterprise_approvals_router
 from app.routers.enterprise_audit import router as enterprise_audit_router
@@ -367,6 +368,7 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(invoice_engine_router)
     app.include_router(integrator_management_router)
     app.include_router(accounting_sync_router)
+    app.include_router(reconciliation_router)
     app.include_router(sms_notifications_router)
     app.include_router(tickets_router)
     app.include_router(admin_system_backups_router)

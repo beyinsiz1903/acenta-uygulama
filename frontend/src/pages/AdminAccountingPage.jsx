@@ -207,7 +207,7 @@ function AutoSyncRulesPanel() {
     catch (e) { toast.error(e.response?.data?.detail || e.message); }
   };
 
-  const TRIGGER_LABELS = { invoice_issued: "Fatura Kesildiginde", invoice_approved: "Onay Sonrasi", manual_trigger: "Manuel" };
+  const TRIGGER_LABELS = { invoice_issued: "Fatura Kesildiginde", invoice_approved: "Onay Sonrasi", booking_confirmed: "Booking Onayinda", manual_trigger: "Manuel" };
 
   return (
     <div className="rounded-xl border shadow-sm" data-testid="auto-sync-rules-panel">
@@ -231,6 +231,7 @@ function AutoSyncRulesPanel() {
                 className="w-full rounded-lg border px-3 py-2 text-sm bg-background" data-testid="rule-trigger-select">
                 <option value="invoice_issued">Fatura Kesildiginde</option>
                 <option value="invoice_approved">Onay Sonrasi</option>
+                <option value="booking_confirmed">Booking Onayinda</option>
                 <option value="manual_trigger">Manuel</option>
               </select>
             </div>

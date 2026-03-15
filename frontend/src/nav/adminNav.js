@@ -74,6 +74,14 @@ export const adminNav = [
     ],
   },
   {
+    label: "PILOT OPERASYON",
+    children: [
+      { label: "Pilot Dashboard", path: "/app/admin/pilot-onboarding" },
+      { label: "Pilot Wizard", path: "/app/admin/pilot-wizard" },
+      { label: "Eski Pilot Dashboard", path: "/app/admin/pilot-dashboard" },
+    ],
+  },
+  {
     label: "VERİ AKTARIMI",
     children: [
       { label: "Veri Aktarma", path: "/app/admin/import" },

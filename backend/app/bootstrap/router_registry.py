@@ -475,3 +475,7 @@ def register_routers(app: FastAPI) -> None:
     # --- Growth Engine ---
     from app.routers.growth_engine_router import router as growth_engine_router
     app.include_router(growth_engine_router)
+
+    # --- Pilot Onboarding (MEGA PROMPT #35) ---
+    from app.routers.pilot_onboarding_router import router as pilot_onboarding_router
+    app.include_router(pilot_onboarding_router)

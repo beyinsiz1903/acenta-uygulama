@@ -1,21 +1,15 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Plus, Search, Trash2, Pencil, Users } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Label } from "../components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../components/ui/dialog";
-import EmptyState from "../components/EmptyState";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../components/ui/dialog";
+import { PageShell, DataTable, SortableHeader, FilterBar } from "../design-system";
+import { ConfirmDialog } from "../design-system";
 
+/* ───────── Customer Form Dialog ───────── */
 function CustomerForm({ open, onOpenChange, initial, onSaved }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -58,7 +52,6 @@ function CustomerForm({ open, onOpenChange, initial, onSaved }) {
         <DialogHeader>
           <DialogTitle>{initial?.id ? "Müşteri Düzenle" : "Yeni Müşteri"}</DialogTitle>
         </DialogHeader>
-
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Ad Soyad</Label>
@@ -78,18 +71,12 @@ function CustomerForm({ open, onOpenChange, initial, onSaved }) {
             <Label>Not</Label>
             <Input value={notes} onChange={(e) => setNotes(e.target.value)} data-testid="customer-notes" />
           </div>
-
-          {error ? (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700" data-testid="customer-error">
-              {error}
-            </div>
-          ) : null}
+          {error && (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700" data-testid="customer-error">{error}</div>
+          )}
         </div>
-
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Vazgeç
-          </Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Vazgeç</Button>
           <Button onClick={save} disabled={loading} data-testid="customer-save">
             {loading ? "Kaydediliyor..." : "Kaydet"}
           </Button>
@@ -99,6 +86,7 @@ function CustomerForm({ open, onOpenChange, initial, onSaved }) {
   );
 }
 
+/* ═══════════════════════ MAIN PAGE ═══════════════════════ */
 export default function CustomersPage() {
   const [rows, setRows] = useState([]);
   const [q, setQ] = useState("");
@@ -106,6 +94,8 @@ export default function CustomersPage() {
   const [error, setError] = useState("");
   const [openForm, setOpenForm] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -115,7 +105,6 @@ export default function CustomersPage() {
       setRows(resp.data || []);
     } catch (e) {
       const msg = apiErrorMessage(e);
-      // "Not Found" veya 404 durumunda liste boşmuş gibi davran, kırmızı hata gösterme.
       if (msg === "Not Found" || msg === "Request failed with status code 404") {
         setRows([]);
       } else {
@@ -126,149 +115,111 @@ export default function CustomersPage() {
     }
   }, [q]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
 
-  async function remove(id) {
-    if (!window.confirm("Müşteriyi silmek istiyor musun?")) return;
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await api.delete(`/customers/${id}`);
+      await api.delete(`/customers/${deleteTarget.id}`);
+      setDeleteTarget(null);
       await load();
     } catch (e) {
       alert(apiErrorMessage(e));
+    } finally {
+      setDeleting(false);
     }
   }
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold text-foreground">Müşteriler</h2>
-          <p className="text-sm text-muted-foreground">CRM altyapısı: müşteri kartları.</p>
+  const columns = useMemo(() => [
+    {
+      accessorKey: "name",
+      header: ({ column }) => <SortableHeader column={column}>Ad Soyad</SortableHeader>,
+      cell: ({ row }) => <span className="font-medium text-foreground">{row.original.name}</span>,
+    },
+    {
+      accessorKey: "email",
+      header: "Email",
+      cell: ({ row }) => <span className="text-muted-foreground">{row.original.email || "-"}</span>,
+    },
+    {
+      accessorKey: "phone",
+      header: "Telefon",
+      cell: ({ row }) => <span className="text-muted-foreground">{row.original.phone || "-"}</span>,
+    },
+    {
+      id: "actions",
+      header: () => <span className="sr-only">İşlem</span>,
+      cell: ({ row }) => (
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="outline" size="sm" className="gap-1.5 h-7 text-xs"
+            onClick={(e) => { e.stopPropagation(); setEditing(row.original); setOpenForm(true); }}
+            data-testid={`customer-edit-${row.original.id}`}
+          >
+            <Pencil className="h-3 w-3" />Düzenle
+          </Button>
+          <Button
+            variant="outline" size="sm" className="gap-1.5 h-7 text-xs text-destructive border-destructive/30 hover:bg-destructive/5"
+            onClick={(e) => { e.stopPropagation(); setDeleteTarget(row.original); }}
+            data-testid={`customer-delete-${row.original.id}`}
+          >
+            <Trash2 className="h-3 w-3" />Sil
+          </Button>
         </div>
-        <Button
-          onClick={() => {
-            setEditing(null);
-            setOpenForm(true);
-          }}
-          className="gap-2"
-          data-testid="customer-new"
-        >
-          <Plus className="h-4 w-4" />
-          Yeni Müşteri
+      ),
+      enableSorting: false,
+    },
+  ], []);
+
+  return (
+    <PageShell
+      title="Müşteriler"
+      description="CRM altyapısı: müşteri kartları"
+      actions={
+        <Button onClick={() => { setEditing(null); setOpenForm(true); }} className="gap-2" data-testid="customer-new">
+          <Plus className="h-4 w-4" />Yeni Müşteri
         </Button>
+      }
+    >
+      <div className="space-y-3">
+        <FilterBar
+          search={{ placeholder: "Ara (isim/email/telefon)", value: q, onChange: setQ }}
+          onReset={() => setQ("")}
+        />
+
+        {error && (
+          <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700" data-testid="customer-list-error">{error}</div>
+        )}
+
+        <DataTable
+          data={rows}
+          columns={columns}
+          loading={loading}
+          pageSize={20}
+          emptyState={
+            <div className="flex flex-col items-center gap-3 py-8">
+              <p className="text-sm font-medium text-muted-foreground">Henüz müşteri yok</p>
+              <p className="text-xs text-muted-foreground/70">İlk müşteri kaydını ekleyerek CRM akışını başlatabilirsiniz.</p>
+              <Button onClick={() => { setEditing(null); setOpenForm(true); }} size="sm" data-testid="customer-empty-create">İlk müşteriyi ekle</Button>
+            </div>
+          }
+        />
       </div>
 
-      <Card className="rounded-2xl shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            Liste
-          </CardTitle>
-          <div className="mt-3 flex gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Ara (isim/email/telefon)"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                className="pl-9"
-                data-testid="customer-search"
-              />
-            </div>
-            <Button variant="outline" onClick={load} data-testid="customer-search-btn">
-              Ara
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {error ? (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700" data-testid="customer-list-error">
-              {error}
-            </div>
-          ) : null}
-
-          <div className="overflow-x-auto">
-            <Table data-testid="customer-table">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Ad Soyad</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Telefon</TableHead>
-                  <TableHead className="text-right">İşlem</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="py-6 text-muted-foreground">
-                      Yükleniyor...
-                    </TableCell>
-                  </TableRow>
-                ) : rows.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="py-6">
-                      <EmptyState
-                        title="Henüz müşteri yok"
-                        description="İlk müşteri kaydını ekleyerek CRM akışını başlatabilirsiniz."
-                        action={
-                          <Button
-                            onClick={() => {
-                              setEditing(null);
-                              setOpenForm(true);
-                            }}
-                            size="sm"
-                          >
-                            İlk müşteriyi ekle
-                          </Button>
-                        }
-                      />
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  rows.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell className="font-medium text-foreground">{r.name}</TableCell>
-                      <TableCell className="text-muted-foreground">{r.email || "-"}</TableCell>
-                      <TableCell className="text-muted-foreground">{r.phone || "-"}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="inline-flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-2"
-                            onClick={() => {
-                              setEditing(r);
-                              setOpenForm(true);
-                            }}
-                            data-testid={`customer-edit-${r.id}`}
-                          >
-                            <Pencil className="h-4 w-4" />
-                            Düzenle
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            className="gap-2"
-                            onClick={() => remove(r.id)}
-                            data-testid={`customer-delete-${r.id}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            Sil
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
       <CustomerForm open={openForm} onOpenChange={setOpenForm} initial={editing} onSaved={load} />
-    </div>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title="Müşteriyi Sil"
+        description={`"${deleteTarget?.name}" müşterisini silmek istediğinizden emin misiniz?`}
+        variant="destructive"
+        confirmLabel="Sil"
+        cancelLabel="Vazgeç"
+        onConfirm={handleDelete}
+        loading={deleting}
+      />
+    </PageShell>
   );
 }

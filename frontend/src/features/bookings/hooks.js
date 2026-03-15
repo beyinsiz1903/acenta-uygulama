@@ -1,25 +1,61 @@
 /**
  * Bookings feature — TanStack Query hooks.
- * Re-exports existing hooks + adds new mutations.
  */
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { bookingsApi } from "./api";
 
-// Re-export existing hooks for backward compatibility
-export {
-  reservationKeys,
-  useReservations,
-  useReservationDetail,
-} from "../../hooks/useReservations";
+export const reservationKeys = {
+  all: ["reservations"],
+  list: (filters) => [...reservationKeys.all, "list", filters],
+  detail: (id) => [...reservationKeys.all, "detail", id],
+};
 
-// Import keys for cache invalidation
-import { reservationKeys } from "../../hooks/useReservations";
+export function useReservations(filters = {}, options = {}) {
+  return useQuery({
+    queryKey: reservationKeys.list(filters),
+    queryFn: () => bookingsApi.list(filters),
+    staleTime: 30_000,
+    ...options,
+  });
+}
 
-export function useCreateBooking() {
+export function useReservationDetail(id, options = {}) {
+  return useQuery({
+    queryKey: reservationKeys.detail(id),
+    queryFn: () => bookingsApi.detail(id),
+    enabled: !!id,
+    staleTime: 30_000,
+    ...options,
+  });
+}
+
+export function useCreateReservation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: bookingsApi.create,
+    mutationFn: bookingsApi.reserve,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: reservationKeys.all });
+    },
+  });
+}
+
+export function useConfirmBooking() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => bookingsApi.confirm(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: reservationKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: reservationKeys.all });
+    },
+  });
+}
+
+export function useRejectBooking() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }) => bookingsApi.reject(id, reason),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: reservationKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: reservationKeys.all });
     },
   });
@@ -28,32 +64,8 @@ export function useCreateBooking() {
 export function useCancelBooking() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, reason }) => bookingsApi.cancel(id, reason),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: reservationKeys.detail(id) });
-      queryClient.invalidateQueries({ queryKey: reservationKeys.all });
-    },
-  });
-}
-
-export function useUpdateBookingStatus() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, status }) => bookingsApi.updateStatus(id, status),
-    onMutate: async ({ id, status }) => {
-      await queryClient.cancelQueries({ queryKey: reservationKeys.detail(id) });
-      const previous = queryClient.getQueryData(reservationKeys.detail(id));
-      queryClient.setQueryData(reservationKeys.detail(id), (old) =>
-        old ? { ...old, status } : old
-      );
-      return { previous };
-    },
-    onError: (_, { id }, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(reservationKeys.detail(id), context.previous);
-      }
-    },
-    onSettled: (_, __, { id }) => {
+    mutationFn: (id) => bookingsApi.cancel(id),
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: reservationKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: reservationKeys.all });
     },

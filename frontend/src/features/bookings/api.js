@@ -6,12 +6,12 @@ import { api } from "../../lib/api";
 
 export const bookingsApi = {
   list: async (filters = {}) => {
-    const params = new URLSearchParams();
-    if (filters.status) params.set("status", filters.status);
-    if (filters.search) params.set("search", filters.search);
-    if (filters.page) params.set("page", String(filters.page));
-    if (filters.page_size) params.set("page_size", String(filters.page_size));
-    const { data } = await api.get(`/reservations?${params.toString()}`);
+    const params = {};
+    if (filters.status && filters.status !== "all") params.status = filters.status;
+    if (filters.q) params.q = filters.q;
+    if (filters.page) params.page = String(filters.page);
+    if (filters.page_size) params.page_size = String(filters.page_size);
+    const { data } = await api.get("/reservations", { params });
     return data;
   },
 
@@ -20,23 +20,41 @@ export const bookingsApi = {
     return data;
   },
 
-  create: async (payload) => {
-    const { data } = await api.post("/reservations", payload);
+  reserve: async (payload) => {
+    const { data } = await api.post("/reservations/reserve", payload);
     return data;
   },
 
-  update: async (id, payload) => {
-    const { data } = await api.put(`/reservations/${id}`, payload);
+  confirm: async (id) => {
+    const { data } = await api.post(`/reservations/${id}/confirm`);
     return data;
   },
 
-  updateStatus: async (id, status) => {
-    const { data } = await api.patch(`/reservations/${id}/status`, { status });
+  reject: async (id, reason) => {
+    const { data } = await api.post(`/reservations/${id}/reject`, { reason });
     return data;
   },
 
-  cancel: async (id, reason) => {
-    const { data } = await api.post(`/reservations/${id}/cancel`, { reason });
+  cancel: async (id) => {
+    const { data } = await api.post(`/reservations/${id}/cancel`);
     return data;
+  },
+
+  getProducts: async () => {
+    const { data } = await api.get("/products");
+    return data;
+  },
+
+  getCustomers: async () => {
+    const { data } = await api.get("/customers");
+    return data;
+  },
+
+  getVoucher: async (id) => {
+    const resp = await api.get(`/reservations/${id}/voucher`, {
+      responseType: "text",
+      headers: { Accept: "text/html" },
+    });
+    return typeof resp.data === "string" ? resp.data : String(resp.data);
   },
 };

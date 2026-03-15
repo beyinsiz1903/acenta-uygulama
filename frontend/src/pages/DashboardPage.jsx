@@ -15,6 +15,7 @@ import {
 import { api, getUser } from "../lib/api";
 import { safeName } from "../utils/formatters";
 import { Skeleton } from "../components/ui/skeleton";
+import { PageShell } from "../design-system";
 import DashboardFilterBar from "../components/DashboardFilterBar";
 import ActivationChecklist from "../components/ActivationChecklist";
 import DemoSeedButton from "../components/DemoSeedButton";
@@ -886,15 +887,10 @@ export default function DashboardPage() {
   /*  RENDER                                                           */
   /* ================================================================ */
   return (
-    <div className={`space-y-${isComfort ? '6' : '5'} pb-8`} data-testid="dashboard-page">
-      {/* ---------- HEADER ---------- */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-xl font-bold text-foreground">Genel Bakış</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Rezervasyon ve operasyon özetini buradan takip edebilirsin.
-          </p>
-        </div>
+    <PageShell
+      title="Genel Bakış"
+      description="Rezervasyon ve operasyon özetini buradan takip edebilirsin."
+      actions={
         <div className="flex gap-2">
           <DemoSeedButton />
           <Link
@@ -910,7 +906,8 @@ export default function DashboardPage() {
             Rezervasyonlar
           </Link>
         </div>
-      </div>
+      }
+    >
 
       {/* ---------- ACTIVATION CHECKLIST ---------- */}
       <ActivationChecklist />
@@ -1074,6 +1071,6 @@ export default function DashboardPage() {
         <AttentionList items={attentionItems} loading={loading} />
         <ActivityTimeline loading={loading} events={activityEvents} />
       </div>
-    </div>
+    </PageShell>
   );
 }

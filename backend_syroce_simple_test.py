@@ -9,7 +9,7 @@ import time
 
 def test_syroce_backend_regression():
     """Test specific backend flows from review request"""
-    base_url = "https://finance-verify-7.preview.emergentagent.com/api"
+    base_url = "https://redis-accounting-fix.preview.emergentagent.com/api"
     results = []
     
     print("🔍 SYROCE BACKEND REGRESSION CHECK - TURKISH REVIEW REQUEST")

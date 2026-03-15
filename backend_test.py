@@ -13,7 +13,7 @@ from typing import Dict, Any, Optional
 import uuid
 
 # Use the preview URL from frontend/.env
-BASE_URL = "https://finance-verify-7.preview.emergentagent.com"
+BASE_URL = "https://redis-accounting-fix.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials

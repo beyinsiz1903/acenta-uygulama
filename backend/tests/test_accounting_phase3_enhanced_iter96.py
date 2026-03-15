@@ -30,7 +30,7 @@ BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
 SUPER_ADMIN_EMAIL = "admin@acenta.test"
-SUPER_ADMIN_PASS = "agent123"
+SUPER_ADMIN_PASS = "admin123"
 
 
 @pytest.fixture(scope="module")
@@ -129,7 +129,6 @@ class TestCustomerCreate:
         assert data.get("vkn") == unique_vkn
         assert data.get("name") == payload["customer_data"]["name"]
         print(f"PASS: Created customer {data['customer_id']} with VKN {unique_vkn}")
-        return data["customer_id"], unique_vkn
 
     def test_create_customer_vkn_uniqueness(self, api_client):
         """Should reject duplicate VKN for same tenant."""
@@ -334,7 +333,6 @@ class TestAutoSyncRulesCreate:
         assert data.get("trigger_event") == "invoice_issued"
         assert data.get("enabled") == True
         print(f"PASS: Created rule {data['rule_id']} with trigger=invoice_issued")
-        return data["rule_id"]
 
     def test_create_rule_invalid_trigger(self, api_client):
         """Should reject invalid trigger event."""

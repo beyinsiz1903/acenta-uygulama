@@ -19,7 +19,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
 ADMIN_EMAIL = "admin@acenta.test"
-ADMIN_PASSWORD = "agent123"
+ADMIN_PASSWORD = "admin123"
 AGENCY_EMAIL = "agency1@demo.test"
 AGENCY_PASSWORD = "agency123"
 

@@ -4,11 +4,30 @@ from datetime import datetime, timezone
 from typing import AsyncGenerator
 
 import pytest
+import asyncio as _asyncio
 from bson import ObjectId
 from httpx import AsyncClient
+from pymongo.errors import AutoReconnect
 
 from app.repositories.membership_repository import MembershipRepository
 from app.security.deps_b2b import ALLOWED_B2B_ROLES
+
+
+async def _retry_op(coro_fn, *args, retries=3, **kwargs):
+    """Retry a MongoDB operation on AutoReconnect errors."""
+    for attempt in range(retries):
+        try:
+            return await coro_fn(*args, **kwargs)
+        except AutoReconnect:
+            if attempt < retries - 1:
+                await _asyncio.sleep(0.5 * (attempt + 1))
+            else:
+                raise
+
+
+async def _retry_insert(collection, doc, retries=3):
+    """Retry a MongoDB insert_one on AutoReconnect errors."""
+    return await _retry_op(collection.insert_one, doc, retries=retries)
 
 
 @pytest.fixture
@@ -43,7 +62,7 @@ async def provider_tenant(test_db, org) -> dict:
     "created_at": datetime.now(timezone.utc),
     "updated_at": datetime.now(timezone.utc),
   }
-  await test_db.tenants.insert_one(doc)
+  await _retry_insert(test_db.tenants, doc)
   return doc
 
 
@@ -59,7 +78,7 @@ async def seller_tenant(test_db, org) -> dict:
     "created_at": datetime.now(timezone.utc),
     "updated_at": datetime.now(timezone.utc),
   }
-  await test_db.tenants.insert_one(doc)
+  await _retry_insert(test_db.tenants, doc)
   return doc
 
 
@@ -86,7 +105,7 @@ async def provider_user(test_db, org) -> dict:
     "created_at": datetime.now(timezone.utc),
     "updated_at": datetime.now(timezone.utc),
   }
-  await test_db.users.insert_one(doc)
+  await _retry_insert(test_db.users, doc)
   return doc
 
 
@@ -106,7 +125,7 @@ async def seller_user(test_db, org) -> dict:
     "created_at": datetime.now(timezone.utc),
     "updated_at": datetime.now(timezone.utc),
   }
-  await test_db.users.insert_one(doc)
+  await _retry_insert(test_db.users, doc)
   return doc
 
 
@@ -191,7 +210,7 @@ async def other_org(test_db) -> dict:
     "created_at": now,
     "updated_at": now,
   }
-  await test_db.organizations.insert_one(doc)
+  await _retry_insert(test_db.organizations, doc)
   return doc
 
 
@@ -207,7 +226,7 @@ async def other_tenant(test_db, other_org) -> dict:
     "created_at": datetime.now(timezone.utc),
     "updated_at": datetime.now(timezone.utc),
   }
-  await test_db.tenants.insert_one(doc)
+  await _retry_insert(test_db.tenants, doc)
   return doc
 
 
@@ -227,7 +246,7 @@ async def other_user(test_db, other_org) -> dict:
     "created_at": datetime.now(timezone.utc),
     "updated_at": datetime.now(timezone.utc),
   }
-  await test_db.users.insert_one(doc)
+  await _retry_insert(test_db.users, doc)
   return doc
 
 
@@ -275,7 +294,7 @@ async def third_tenant(test_db, org) -> dict:
     "created_at": datetime.now(timezone.utc),
     "updated_at": datetime.now(timezone.utc),
   }
-  await test_db.tenants.insert_one(doc)
+  await _retry_insert(test_db.tenants, doc)
   return doc
 
 
@@ -295,7 +314,7 @@ async def third_user(test_db, org) -> dict:
     "created_at": datetime.now(timezone.utc),
     "updated_at": datetime.now(timezone.utc),
   }
-  await test_db.users.insert_one(doc)
+  await _retry_insert(test_db.users, doc)
   return doc
 
 
@@ -351,7 +370,7 @@ async def partner_relationship_active(test_db, org, provider_tenant, seller_tena
     "seller_org_id": str(org["_id"]),
     "buyer_org_id": str(org["_id"]),
   }
-  await test_db.partner_relationships.insert_one(doc)
+  await _retry_insert(test_db.partner_relationships, doc)
   return doc
 
 
@@ -361,7 +380,7 @@ async def clear_tenant_features(test_db, tenant_id: str) -> None:
   This removes any existing tenant_features document for the tenant,
   effectively disabling all features for that tenant.
   """
-  await test_db.tenant_features.delete_many({"tenant_id": tenant_id})
+  await _retry_op(test_db.tenant_features.delete_many, {"tenant_id": tenant_id})
 
 
 async def set_tenant_features_without_b2b(test_db, tenant_id: str) -> None:
@@ -378,7 +397,7 @@ async def set_tenant_features_without_b2b(test_db, tenant_id: str) -> None:
     "created_at": now,
     "updated_at": now,
   }
-  await test_db.tenant_features.replace_one(
+  await _retry_op(test_db.tenant_features.replace_one,
     {"tenant_id": tenant_id},
     doc,
     upsert=True
@@ -398,7 +417,7 @@ async def enable_b2b_feature_for_tenant(test_db, tenant_id: str) -> None:
     "created_at": now,
     "updated_at": now,
   }
-  await test_db.tenant_features.replace_one(
+  await _retry_op(test_db.tenant_features.replace_one,
     {"tenant_id": tenant_id},
     doc,
     upsert=True

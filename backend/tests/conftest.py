@@ -111,6 +111,10 @@ def _is_external_preview_http_test() -> bool:
             "test_admin_all_users_and_agency_nav.py",
             "test_agency_sheets_api.py",
             "test_ops_supplier_operations_iter67.py",
+            "test_accounting_phase3_iter95.py",
+            "test_accounting_phase3_enhanced_iter96.py",
+            "test_reconciliation_finance_ops_iter97.py",
+            "test_accounting_providers_iter98.py",
         )
     )
 
@@ -145,13 +149,15 @@ async def motor_client() -> AsyncGenerator[AsyncIOMotorClient, None]:
 
     client = AsyncIOMotorClient(
         MONGO_URL,
-        maxPoolSize=10,
-        minPoolSize=1,
-        maxIdleTimeMS=30000,
-        connectTimeoutMS=5000,
-        serverSelectionTimeoutMS=10000,
+        maxPoolSize=20,
+        minPoolSize=2,
+        maxIdleTimeMS=45000,
+        connectTimeoutMS=10000,
+        serverSelectionTimeoutMS=15000,
+        socketTimeoutMS=30000,
         retryWrites=True,
         retryReads=True,
+        waitQueueTimeoutMS=10000,
     )
     try:
         await client.admin.command("ping")

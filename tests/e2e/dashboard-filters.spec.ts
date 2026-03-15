@@ -1,7 +1,7 @@
 // tests/e2e/dashboard-filters.spec.ts
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "https://finance-verify-7.preview.emergentagent.com";
+const BASE_URL = "https://redis-accounting-fix.preview.emergentagent.com";
 
 async function login(page) {
   await page.goto(`${BASE_URL}/login`);

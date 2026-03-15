@@ -1,7 +1,7 @@
 // tests/e2e/login-test.spec.ts
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "https://finance-verify-7.preview.emergentagent.com";
+const BASE_URL = "https://redis-accounting-fix.preview.emergentagent.com";
 
 test.describe("Login Functionality Test", () => {
   test("login process with debug information", async ({ page }) => {

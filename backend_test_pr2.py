@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://finance-verify-7.preview.emergentagent.com"
+BASE_URL = "https://redis-accounting-fix.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials

@@ -1,84 +1,79 @@
-# Syroce Travel SaaS — PRD
+# Syroce Travel SaaS — Product Requirements Document
 
 ## Original Problem Statement
-CTO-requested comprehensive frontend architecture analysis and redesign to transform the existing "Syroce" Travel SaaS platform into an enterprise-grade product comparable to Stripe Dashboard or Shopify Admin.
+CTO requested a comprehensive frontend architecture analysis and redesign to transform the "Syroce" Travel SaaS platform into an enterprise-grade product comparable to Stripe Dashboard or Shopify Admin. The project involves multi-phase implementation.
 
-## Architecture Plan
-Detailed in `/app/docs/FRONTEND_ARCHITECTURE_REPORT.md`
-
-## Tech Stack
-- **Frontend:** React, TailwindCSS, Shadcn/UI, @tanstack/react-table, @tanstack/react-query, Recharts
-- **Backend:** FastAPI, MongoDB
-- **Design System:** `/src/design-system/patterns/` — DataTable, PageShell, FilterBar, StatusBadge, ConfirmDialog, Timeline, EmptyState
-
----
+## Architecture
+- **Frontend:** React + Vite, TanStack Query, Shadcn/UI, custom Design System (`/design-system/`)
+- **Backend:** FastAPI + MongoDB
+- **Design System Components:** PageShell, DataTable, FilterBar, StatusBadge, ConfirmDialog, Timeline, SdsEmptyState
+- **Feature-based Organization:** `/features/{domain}/api.js` + `/features/{domain}/hooks.js`
 
 ## Completed Phases
 
-### Phase 1 — Architecture Cleanup (DONE)
-- App.jsx refactored: 598 LOC → 189 LOC
-- Modular routing: `/src/routes/` (admin, agency, b2b, core, hotel, public)
-- Domain-driven features: `/src/features/` (auth, dashboard, bookings, inventory, finance, crm, operations, analytics, governance)
+### Phase 1: Architecture Cleanup (DONE)
+- Route reorganization (admin, agency, core, hotel, b2b, public)
+- Feature-based directory structure
+- Lazy loading for all routes
 
-### Phase 2 — Design System Foundation (DONE)
-- Created 7 reusable design system components
-- Installed @tanstack/react-table
-- 100% test pass (iteration_1.json)
+### Phase 2: Design System Foundation (DONE)
+- PageShell, DataTable, FilterBar, StatusBadge, ConfirmDialog, Timeline, SdsEmptyState
+- Consistent enterprise UI patterns
 
-### Phase 3 — UX Standardization (IN PROGRESS)
-**Migrated Pages:**
-- **ReservationsPage** → PageShell + DataTable + FilterBar + StatusBadge + TanStack Query hooks
-- **AdminAgenciesPage** → PageShell + DataTable + FilterBar + StatusBadge + KPI Cards
-- **CrmCustomersPage** → PageShell + DataTable + FilterBar + Server-side Pagination
-- **DashboardPage** → PageShell wrapper (preserving widgets/charts)
-- **CustomersPage** → PageShell + DataTable + FilterBar + ConfirmDialog (legacy route)
+### Phase 3 Batch 1: UX Standardization (DONE — 2026-03-15)
+- ReservationsPage → PageShell + DataTable + FilterBar
+- CrmCustomersPage → PageShell + DataTable (server-side pagination)
+- AdminAgenciesPage → PageShell + DataTable + KPI cards
+- DashboardPage → PageShell wrapper
+- Bookings feature hooks updated (useBookings, useCancelBooking)
 
-**Test Result:** 93.1% pass rate (iteration_107.json). All core flows verified working.
+### Phase 3 Batch 2: UX Standardization (DONE — 2026-03-15)
+- AgencyBookingsListPage → PageShell + DataTable + FilterBar + StatusBadge + useAgencyBookings hook
+- ProductsPage → PageShell + DataTable + FilterBar + useProducts/useDeleteProduct hooks
+- AdminAllUsersPage → PageShell + DataTable + FilterBar + StatusBadge + KPI cards + useAdminUsers/useAdminAgencies hooks
+- OpsTasksPage → PageShell + DataTable + FilterBar + StatusBadge + useOpsTasks hook
+- AdvancedReportsPage → PageShell wrapper (complex multi-card layout preserved)
+- InventoryPage → PageShell wrapper (specialized calendar/grid UI preserved)
+- AdminFinanceOpsPage → PageShell wrapper (tabbed reconciliation UI preserved)
+- AdminFinanceExposurePage → PageShell wrapper (exposure table preserved)
+- Test: 98.2% pass rate (56/57, 1 timeout = expected behavior)
 
----
+## Backlog (Prioritized)
 
-## Remaining Phase 3 Work (P0)
-Target pages still to migrate:
-- BookingsPage (hotel/agency variants)
-- FinanceLedgerPage
-- InventoryPage / ProductsPage
-- AdminUsersPage
-- OperationsPage (OpsCasesPage)
-- ReportsPage
+### P0 — Phase 3c: Remaining Page Migrations
+- AdminScheduledReportsPage
+- B2BPortalPage
+- AdminAccountingPage
+- Other legacy pages still using custom headers
 
-## God Page Splitting (P1)
-| Page | LOC |
-|------|-----|
-| AdminFinanceRefundsPage | 2150 |
-| PlatformHardeningPage | 1912 |
-| B2BPortalPage | 1734 |
+### P1 — Phase 3d: "God Page" Splitting
+- AdminFinanceRefundsPage (2150 LOC) → Split into components/hooks
+- PlatformHardeningPage (1912 LOC) → Split into components/hooks
+- B2BPortalPage (1734 LOC) → Split into components/hooks
 
-## Phase 4 — Performance (P2)
-- Route code splitting
-- Virtualized tables
-- Bundle optimization
+### P2 — TanStack Query Adoption (Target: 80%+)
+- Continue migrating useEffect + useState patterns to TanStack Query hooks
+- Current adoption: ~15% (up from 5%)
 
-## Phase 5 — Enterprise UX (P2)
-- Cmd+K command palette
-- Global search
+### P3 — Phase 4: Performance
+- Route-based code splitting
+- List virtualization for large tables
+- Bundle size optimization
+
+### P4 — Phase 5: Enterprise UX
+- Command Palette (Cmd+K)
+- Global Search
 - Keyboard shortcuts
+- Activity Timeline
 
-## TypeScript Migration (P3)
-- Incremental: API layer → hooks → design system
-
----
+### P5 — TypeScript Migration
+- API layer → hooks → design system components
 
 ## Known Issues
-- "Tenant context bulunamadı" for super_admin on CRM page (backend issue)
-- Ratehawk sync adapter uses simulated data (MOCKED)
 - React Router v7 future flag warnings (informational)
+- 400 API errors for tenant context (backend state issue for super_admin)
+- Ratehawk sync adapter uses MOCKED/simulated data
 
 ## Test Credentials
-- **Super Admin:** agent@acenta.test / agent123
-- **Agency Admin:** agency1@demo.test / agency123
-
-## Key Documents
-- `/app/docs/FRONTEND_ARCHITECTURE_REPORT.md` — Master architecture plan
-- `/app/docs/EXECUTIVE_SUMMARY.md` — CTO executive summary
-- `/app/test_reports/iteration_1.json` — Phase 1+2 test results
-- `/app/test_reports/iteration_107.json` — Phase 3 test results
+- Super Admin: agent@acenta.test / agent123
+- Agency Admin: agency1@demo.test / agency123

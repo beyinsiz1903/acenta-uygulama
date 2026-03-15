@@ -1,131 +1,84 @@
-# Syroce Travel Platform — Product Requirements Document
+# Syroce Travel SaaS — PRD
 
 ## Original Problem Statement
-CTO-driven Travel ERP platform (Syroce) with multi-supplier booking engine, revenue engine, invoice engine, accounting sync, finance ops, growth engine, pilot validation, and supplier drift monitoring. The platform is transitioning from a **Travel API Aggregator** to a **Travel Inventory Platform** (CTO decision — Option B).
+CTO-requested comprehensive frontend architecture analysis and redesign to transform the existing "Syroce" Travel SaaS platform into an enterprise-grade product comparable to Stripe Dashboard or Shopify Admin.
 
-## Core Architecture Decision (MEGA PROMPT #37)
-**Travel Inventory Platform** — Enterprise architecture pattern used by Booking.com, Expedia, Travelport:
-```
-Supplier API → Inventory Sync Engine → MongoDB → Redis Cache → Search Engine
-Search → Cache (NOT supplier API)
-Booking → Supplier API (revalidation with diff tracking)
-```
+## Architecture Plan
+Detailed in `/app/docs/FRONTEND_ARCHITECTURE_REPORT.md`
 
-## Sandbox Architecture (MEGA PROMPT #38)
-**Config-Driven Supplier Integration** — Sandbox-ready adapter pattern:
-```
-Credential Check → Has Credentials? → Real API (sandbox/production)
-                 → No Credentials?  → Simulation Mode (if allowed)
-                 → Simulation Disabled? → Error (production guard)
-```
+## Tech Stack
+- **Frontend:** React, TailwindCSS, Shadcn/UI, @tanstack/react-table, @tanstack/react-query, Recharts
+- **Backend:** FastAPI, MongoDB
+- **Design System:** `/src/design-system/patterns/` — DataTable, PageShell, FilterBar, StatusBadge, ConfirmDialog, Timeline, EmptyState
 
-## Frontend Architecture Redesign (2026-03-15)
-Full analysis at `/app/docs/FRONTEND_ARCHITECTURE_REPORT.md`
+---
 
-### Architecture Changes Completed (Phase 1+2)
-- **App.js**: Reduced from 598 → 189 lines via domain route modules
-- **Route Modules**: 6 files under `/src/routes/` (admin, agency, b2b, core, hotel, public)
-- **Features Directory**: 9 domain modules under `/src/features/` with API + hooks
-  - auth, dashboard, bookings, inventory, finance, crm, operations, analytics, governance
-- **Design System (SDS)**: 7 pattern components under `/src/design-system/patterns/`
-  - DataTable, PageShell, FilterBar, StatusBadge, ConfirmDialog, Timeline, EmptyState
-- **Shared Layer**: Centralized query key registry at `/src/shared/queryKeys.js`
-- **TanStack React Table**: Installed for DataTable component
+## Completed Phases
 
-### Key Findings (Pre-Refactor)
-- 101,864 lines of source code, 193 pages, 108 components
-- 12 files over 1000 lines (god pages)
-- TanStack Query installed but only 5% adopted
-- 50+ pages with hand-built tables (DataTable now available)
-- Monolithic App.js (598 lines → now 189)
+### Phase 1 — Architecture Cleanup (DONE)
+- App.jsx refactored: 598 LOC → 189 LOC
+- Modular routing: `/src/routes/` (admin, agency, b2b, core, hotel, public)
+- Domain-driven features: `/src/features/` (auth, dashboard, bookings, inventory, finance, crm, operations, analytics, governance)
 
-### New Directory Structure
-```
-src/
-├── routes/          # Domain route modules (6 files)
-├── features/        # Domain modules with api.js + hooks.js (9 domains)
-├── design-system/   # SDS pattern components (7 components)
-├── shared/          # Cross-cutting: queryKeys.js
-├── components/      # Legacy shared components (being migrated)
-├── pages/           # Legacy page components (being migrated)
-├── hooks/           # Legacy hooks (backward-compatible re-exports)
-├── lib/             # Legacy utilities
-└── App.js           # Slim entry point (189 lines)
-```
+### Phase 2 — Design System Foundation (DONE)
+- Created 7 reusable design system components
+- Installed @tanstack/react-table
+- 100% test pass (iteration_1.json)
 
-## Implemented Features
+### Phase 3 — UX Standardization (IN PROGRESS)
+**Migrated Pages:**
+- **ReservationsPage** → PageShell + DataTable + FilterBar + StatusBadge + TanStack Query hooks
+- **AdminAgenciesPage** → PageShell + DataTable + FilterBar + StatusBadge + KPI Cards
+- **CrmCustomersPage** → PageShell + DataTable + FilterBar + Server-side Pagination
+- **DashboardPage** → PageShell wrapper (preserving widgets/charts)
+- **CustomersPage** → PageShell + DataTable + FilterBar + ConfirmDialog (legacy route)
 
-### Phase: Simulation Complete
-- 10/10 successful simulation flows
-- `supplier_response_diff` metric
-- Pilot Dashboard with KPIs
+**Test Result:** 93.1% pass rate (iteration_107.json). All core flows verified working.
 
-### Phase: Inventory Sync Engine (MEGA PROMPT #37)
-- `POST /api/inventory/sync/trigger`
-- `GET /api/inventory/sync/status`
-- `GET /api/inventory/sync/jobs`
-- `GET /api/inventory/search`
-- `GET /api/inventory/stats`
-- `POST /api/inventory/revalidate`
+---
 
-### Phase: Sandbox Integration (MEGA PROMPT #38)
-- `GET /api/inventory/supplier-config`
-- `POST /api/inventory/supplier-config`
-- `DELETE /api/inventory/supplier-config/{supplier}`
-- `POST /api/inventory/sandbox/validate`
-- `GET /api/inventory/supplier-metrics`
+## Remaining Phase 3 Work (P0)
+Target pages still to migrate:
+- BookingsPage (hotel/agency variants)
+- FinanceLedgerPage
+- InventoryPage / ProductsPage
+- AdminUsersPage
+- OperationsPage (OpsCasesPage)
+- ReportsPage
 
-### Phase: Supplier Health & KPI Dashboard — COMPLETED
-- `GET /api/inventory/supplier-health`
-- `GET /api/inventory/kpi/drift`
-- Frontend KPI Dashboard with all visualizations
-- SUPPLIER_SIMULATION_ALLOWED config flag
+## God Page Splitting (P1)
+| Page | LOC |
+|------|-----|
+| AdminFinanceRefundsPage | 2150 |
+| PlatformHardeningPage | 1912 |
+| B2BPortalPage | 1734 |
 
-### Phase: Frontend Architecture (Phase 1+2) — COMPLETED
-- Route splitting into 6 domain modules
-- Features directory with 9 domain API + hook modules
-- Design System with 7 pattern components
-- All tests PASS (100% frontend success rate)
+## Phase 4 — Performance (P2)
+- Route code splitting
+- Virtualized tables
+- Bundle optimization
 
-## Upcoming Tasks (Prioritized)
+## Phase 5 — Enterprise UX (P2)
+- Cmd+K command palette
+- Global search
+- Keyboard shortcuts
 
-### P0 — Page Migration (Phase 3 - UX Standardization)
-- Migrate DashboardPage to use PageShell + DataTable
-- Migrate ReservationsPage to use DataTable + FilterBar + StatusBadge
-- Migrate AdminAgenciesPage to new patterns
-- Standardize loading/error/empty states across all pages
+## TypeScript Migration (P3)
+- Incremental: API layer → hooks → design system
 
-### P1 — God Page Splitting
-- Split AdminFinanceRefundsPage (2150 lines)
-- Split PlatformHardeningPage (1912 lines)
-- Split B2BPortalPage (1734 lines)
-- Split AdminMetricsPage (1326 lines)
-- Split UnifiedSearchPage (1257 lines)
-
-### P2 — Performance Optimization (Phase 4)
-- Route-based code splitting with named chunks
-- Virtualized tables for large datasets
-- React.memo on key components
-- Bundle analysis + tree-shaking audit
-
-### P3 — Enterprise UX (Phase 5)
-- Command palette (Cmd+K) using cmdk
-- Global search with unified results
-- Keyboard shortcuts framework
-- Activity timeline on entity pages
-
-### Backlog
-- Real Ratehawk Sandbox Validation
-- Paximum Sandbox & Reliability Engine
-- TypeScript migration (incremental)
-- CI/CD pytest fix (test_inventory_sync_iter103.py)
+---
 
 ## Known Issues
-- P3: GitHub sync issue (platform-level, deferred)
-- P4: Nested button HTML warning (de-prioritized)
-- Redis unavailable in preview (MongoDB fallback working)
-- Recharts width/height -1 console warning (cosmetic)
+- "Tenant context bulunamadı" for super_admin on CRM page (backend issue)
+- Ratehawk sync adapter uses simulated data (MOCKED)
+- React Router v7 future flag warnings (informational)
 
-## Credentials
-- **Super Admin:** `agent@acenta.test` / `agent123`
-- **Agency Admin:** `agency1@demo.test` / `agency123`
+## Test Credentials
+- **Super Admin:** agent@acenta.test / agent123
+- **Agency Admin:** agency1@demo.test / agency123
+
+## Key Documents
+- `/app/docs/FRONTEND_ARCHITECTURE_REPORT.md` — Master architecture plan
+- `/app/docs/EXECUTIVE_SUMMARY.md` — CTO executive summary
+- `/app/test_reports/iteration_1.json` — Phase 1+2 test results
+- `/app/test_reports/iteration_107.json` — Phase 3 test results

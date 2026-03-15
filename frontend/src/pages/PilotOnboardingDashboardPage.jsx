@@ -7,6 +7,7 @@ import { Button } from "../components/ui/button";
 import {
   Activity, AlertTriangle, CheckCircle2, Clock, Loader2, Search, ShoppingCart,
   FileText, RefreshCw, Users, TrendingUp, Zap, XCircle, BarChart3, Play, Timer,
+  ArrowUpDown, TrendingDown, ArrowUp, ArrowDown,
 } from "lucide-react";
 import { api } from "../lib/api";
 import { useNavigate } from "react-router-dom";
@@ -80,6 +81,7 @@ function IncidentsPanel({ incidents }) {
 
 function SimulationResultsTable({ results }) {
   if (!results) return null;
+  const diffSummary = results.supplier_response_diff_summary || {};
   return (
     <Card data-testid="simulation-results-card">
       <CardHeader>
@@ -89,7 +91,7 @@ function SimulationResultsTable({ results }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-3 grid-cols-2 md:grid-cols-4 text-sm">
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-5 text-sm">
           <div className="bg-emerald-500/10 rounded-md p-3 text-center">
             <div className="text-2xl font-bold text-emerald-600">{results.passed}</div>
             <div className="text-xs text-muted-foreground">PASS</div>
@@ -106,6 +108,12 @@ function SimulationResultsTable({ results }) {
             <div className="text-2xl font-bold">{results.avg_flow_duration_ms} ms</div>
             <div className="text-xs text-muted-foreground">Ort. Akis Suresi</div>
           </div>
+          <div className={`rounded-md p-3 text-center ${(diffSummary.alert_count ?? 0) > 0 ? "bg-red-500/10" : "bg-emerald-500/10"}`} data-testid="sim-diff-summary">
+            <div className={`text-2xl font-bold ${(diffSummary.alert_count ?? 0) > 0 ? "text-red-600" : "text-emerald-600"}`}>
+              {diffSummary.avg_diff_pct ?? 0}%
+            </div>
+            <div className="text-xs text-muted-foreground">Ort. Fiyat Farki</div>
+          </div>
         </div>
 
         <Table data-testid="simulation-flows-table">
@@ -116,25 +124,34 @@ function SimulationResultsTable({ results }) {
               <TableHead>Sonuc</TableHead>
               <TableHead>Sure (ms)</TableHead>
               <TableHead>Supplier</TableHead>
+              <TableHead>Fiyat Diff (%)</TableHead>
               <TableHead>Zaman</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {results.flows.map((f) => (
-              <TableRow key={f.flow_num}>
-                <TableCell className="font-mono font-bold">{f.flow_num}</TableCell>
-                <TableCell className="text-sm">{f.agency_name}</TableCell>
-                <TableCell>
-                  <Badge variant={f.result === "PASS" ? "default" : "destructive"} className="text-xs" data-testid={`flow-${f.flow_num}-result`}>
-                    {f.result === "PASS" ? <CheckCircle2 className="h-3 w-3 mr-1 inline" /> : <XCircle className="h-3 w-3 mr-1 inline" />}
-                    {f.result}
-                  </Badge>
-                </TableCell>
-                <TableCell className="font-mono text-sm">{f.duration_ms}</TableCell>
-                <TableCell className="text-sm">{f.supplier}</TableCell>
-                <TableCell className="text-xs">{new Date(f.timestamp).toLocaleTimeString("tr-TR")}</TableCell>
-              </TableRow>
-            ))}
+            {results.flows.map((f) => {
+              const fd = f.supplier_response_diff || {};
+              return (
+                <TableRow key={f.flow_num}>
+                  <TableCell className="font-mono font-bold">{f.flow_num}</TableCell>
+                  <TableCell className="text-sm">{f.agency_name}</TableCell>
+                  <TableCell>
+                    <Badge variant={f.result === "PASS" ? "default" : "destructive"} className="text-xs" data-testid={`flow-${f.flow_num}-result`}>
+                      {f.result === "PASS" ? <CheckCircle2 className="h-3 w-3 mr-1 inline" /> : <XCircle className="h-3 w-3 mr-1 inline" />}
+                      {f.result}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="font-mono text-sm">{f.duration_ms}</TableCell>
+                  <TableCell className="text-sm">{f.supplier}</TableCell>
+                  <TableCell>
+                    <span className={`font-mono text-sm ${Math.abs(fd.diff_pct ?? 0) > 5 ? "text-red-600 font-bold" : fd.diff_pct > 0 ? "text-amber-600" : "text-emerald-600"}`}>
+                      {(fd.diff_pct ?? 0) > 0 ? "+" : ""}{(fd.diff_pct ?? 0).toFixed(2)}%
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-xs">{new Date(f.timestamp).toLocaleTimeString("tr-TR")}</TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </CardContent>
@@ -214,6 +231,8 @@ export default function PilotOnboardingDashboardPage() {
   const ff = metrics?.financial_flow || {};
   const pu = metrics?.pilot_usage || {};
   const im = metrics?.incident_monitoring || {};
+  const srd = metrics?.supplier_response_diff || {};
+  const simDiffSummary = simResults?.supplier_response_diff_summary || {};
 
   return (
     <div className="space-y-6" data-testid="pilot-onboarding-dashboard">
@@ -304,6 +323,94 @@ export default function PilotOnboardingDashboardPage() {
             testId="supplier-success-rate-card"
           />
         </div>
+      </div>
+
+      {/* Supplier Response Diff - CTO kritik uyarisi: supplier dependency metrik */}
+      <div>
+        <h2 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
+          <ArrowUpDown className="h-4 w-4" /> Supplier Response Diff
+          {srd.alert_count > 0 && (
+            <Badge variant="destructive" className="text-xs ml-2" data-testid="diff-alert-badge">
+              {srd.alert_count} Alert
+            </Badge>
+          )}
+        </h2>
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-4" data-testid="supplier-response-diff-section">
+          <MetricCard
+            title="Ort. Fiyat Farki"
+            value={`${srd.avg_diff_pct ?? 0}%`}
+            subtitle={`${srd.avg_diff_amount ?? 0} TRY ort. fark`}
+            icon={ArrowUpDown}
+            variant={Math.abs(srd.avg_diff_pct ?? 0) <= 2 ? "success" : Math.abs(srd.avg_diff_pct ?? 0) <= 5 ? "warning" : "danger"}
+            testId="avg-diff-pct-card"
+          />
+          <MetricCard
+            title="Maks. Fiyat Farki"
+            value={`${srd.max_diff_pct ?? 0}%`}
+            subtitle={`${srd.max_diff_amount ?? 0} TRY maks. fark`}
+            icon={ArrowUp}
+            variant={(srd.max_diff_pct ?? 0) <= 3 ? "success" : (srd.max_diff_pct ?? 0) <= 5 ? "warning" : "danger"}
+            testId="max-diff-pct-card"
+          />
+          <MetricCard
+            title="Drift Dagilimi"
+            value={`${srd.drift_up_count ?? 0} / ${srd.drift_down_count ?? 0} / ${srd.drift_stable_count ?? 0}`}
+            subtitle="Yukari / Asagi / Sabit"
+            icon={TrendingDown}
+            testId="drift-distribution-card"
+          />
+          <MetricCard
+            title="Diff Alarmlar"
+            value={srd.alert_count ?? 0}
+            subtitle={`Esik: >${srd.alert_threshold_pct ?? 5}% | ${srd.total_checks ?? 0} kontrol`}
+            icon={AlertTriangle}
+            variant={(srd.alert_count ?? 0) === 0 ? "success" : "danger"}
+            testId="diff-alert-count-card"
+          />
+        </div>
+        {srd.recent_diffs && srd.recent_diffs.length > 0 && (
+          <Card className="mt-4" data-testid="recent-diffs-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Son Fiyat Farklari</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table data-testid="recent-diffs-table">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Supplier</TableHead>
+                    <TableHead>Ilk Fiyat</TableHead>
+                    <TableHead>Revalidation Fiyat</TableHead>
+                    <TableHead>Fark (TRY)</TableHead>
+                    <TableHead>Fark (%)</TableHead>
+                    <TableHead>Yon</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {srd.recent_diffs.map((d, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell className="text-sm font-medium">{d.supplier}</TableCell>
+                      <TableCell className="font-mono text-sm">{d.initial_price?.toFixed(2)} TRY</TableCell>
+                      <TableCell className="font-mono text-sm">{d.revalidation_price?.toFixed(2)} TRY</TableCell>
+                      <TableCell className={`font-mono text-sm ${d.diff_amount > 0 ? "text-red-600" : d.diff_amount < 0 ? "text-emerald-600" : ""}`}>
+                        {d.diff_amount > 0 ? "+" : ""}{d.diff_amount?.toFixed(2)}
+                      </TableCell>
+                      <TableCell className={`font-mono text-sm ${Math.abs(d.diff_pct) > 5 ? "text-red-600 font-bold" : ""}`}>
+                        {d.diff_pct > 0 ? "+" : ""}{d.diff_pct?.toFixed(2)}%
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={d.drift_direction === "up" ? "destructive" : d.drift_direction === "down" ? "default" : "secondary"} className="text-xs">
+                          {d.drift_direction === "up" && <ArrowUp className="h-3 w-3 mr-1 inline" />}
+                          {d.drift_direction === "down" && <ArrowDown className="h-3 w-3 mr-1 inline" />}
+                          {d.drift_direction}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Finance Metrics - CTO'nun istegi */}

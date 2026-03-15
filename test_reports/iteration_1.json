@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://pilot-agency-dash.preview.emergentagent.com/api",
-    "frontend_url": "https://pilot-agency-dash.preview.emergentagent.com",
+    "backend_url": "https://real-flow-sim.preview.emergentagent.com/api",
+    "frontend_url": "https://real-flow-sim.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

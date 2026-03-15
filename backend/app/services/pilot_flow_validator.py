@@ -216,6 +216,17 @@ async def test_search(agency_name: str) -> dict[str, Any]:
     success = True if mode == "simulation" else random.random() > 0.08
     results_count = random.randint(5, 25) if success else 0
 
+    # Generate initial supplier prices for each result
+    sample_results = []
+    if success:
+        for i in range(min(3, results_count)):
+            initial_price = round(random.uniform(500, 3000), 2)
+            sample_results.append({
+                "hotel": f"Test Hotel {i}",
+                "price": initial_price,
+                "currency": "TRY",
+            })
+
     result = {
         "supplier": supplier_type,
         "mode": mode,
@@ -228,10 +239,7 @@ async def test_search(agency_name: str) -> dict[str, Any]:
             "checkout": "2026-04-20",
             "guests": 2,
         },
-        "sample_results": [
-            {"hotel": f"Test Hotel {i}", "price": round(random.uniform(500, 3000), 2), "currency": "TRY"}
-            for i in range(min(3, results_count))
-        ] if success else [],
+        "sample_results": sample_results,
     }
 
     duration_ms = round((time.monotonic() - start) * 1000, 1)
@@ -267,16 +275,42 @@ async def test_booking(agency_name: str) -> dict[str, Any]:
     success = True if mode == "simulation" else random.random() > 0.08
     booking_id = f"BK-PILOT-{random.randint(10000, 99999)}" if success else None
 
+    # Supplier Response Diff: initial price from search vs revalidation price at booking time
+    search_result = (agency.get("flow_results") or {}).get("search_test") or {}
+    search_samples = search_result.get("sample_results") or []
+    initial_price = search_samples[0]["price"] if search_samples else round(random.uniform(800, 5000), 2)
+
+    # Revalidation: supplier may return a different price at booking time
+    # In simulation mode, apply a small controlled drift (0-5%)
+    # In sandbox/production, drift can be larger (0-15%)
+    if mode == "simulation":
+        drift_pct = random.uniform(-0.02, 0.05)
+    else:
+        drift_pct = random.uniform(-0.05, 0.15)
+
+    revalidation_price = round(initial_price * (1 + drift_pct), 2)
+    price_diff = round(revalidation_price - initial_price, 2)
+    price_diff_pct = round((price_diff / initial_price) * 100, 2) if initial_price > 0 else 0
+    booking_amount = revalidation_price if success else 0
+
     result = {
         "supplier": supplier_type,
         "mode": mode,
         "status": "confirmed" if success else "failed",
         "booking_id": booking_id,
         "latency_ms": _lat(600),
-        "amount": round(random.uniform(800, 5000), 2) if success else 0,
+        "amount": booking_amount,
         "currency": "TRY",
         "guest_name": "Pilot Test Misafir",
         "hotel": "Antalya Grand Resort",
+        "supplier_response_diff": {
+            "initial_price": initial_price,
+            "revalidation_price": revalidation_price,
+            "diff_amount": price_diff,
+            "diff_pct": price_diff_pct,
+            "supplier": supplier_type,
+            "drift_direction": "up" if price_diff > 0 else ("down" if price_diff < 0 else "stable"),
+        },
     }
 
     duration_ms = round((time.monotonic() - start) * 1000, 1)
@@ -288,7 +322,9 @@ async def test_booking(agency_name: str) -> dict[str, Any]:
         update_fields["wizard_step"] = 6
 
     await db.pilot_agencies.update_one({"name": agency_name}, {"$set": update_fields})
-    await _record_metric(db, agency_name, "booking_test", "pass" if success else "fail", duration_ms)
+    await _record_metric(db, agency_name, "booking_test", "pass" if success else "fail", duration_ms, extra={
+        "supplier_response_diff": result["supplier_response_diff"],
+    })
 
     if not success:
         await _record_incident(db, agency_name, "booking_test", result)
@@ -503,6 +539,17 @@ async def get_pilot_metrics_dashboard() -> dict[str, Any]:
     flow_metrics = [m for m in metrics if m.get("step") == "full_flow"]
     recon_metrics = [m for m in metrics if m.get("step") == "reconciliation_check"]
 
+    # Supplier Response Diff aggregation — CTO kritik metrik
+    diff_records = [m.get("supplier_response_diff") for m in booking_metrics if m.get("supplier_response_diff")]
+    diff_pcts = [d["diff_pct"] for d in diff_records if d and "diff_pct" in d]
+    diff_amounts = [abs(d["diff_amount"]) for d in diff_records if d and "diff_amount" in d]
+    diff_up_count = sum(1 for d in diff_records if d and d.get("drift_direction") == "up")
+    diff_down_count = sum(1 for d in diff_records if d and d.get("drift_direction") == "down")
+    diff_stable_count = sum(1 for d in diff_records if d and d.get("drift_direction") == "stable")
+    # Alert threshold: diffs > 5% are concerning
+    diff_alert_threshold_pct = 5.0
+    diff_alerts = sum(1 for d in diff_records if d and abs(d.get("diff_pct", 0)) > diff_alert_threshold_pct)
+
     return {
         "flow_health": {
             "flow_success_rate": _rate(flow_metrics) if flow_metrics else _rate(recon_metrics),
@@ -514,6 +561,30 @@ async def get_pilot_metrics_dashboard() -> dict[str, Any]:
             "supplier_latency_ms": _avg_latency(search_metrics + booking_metrics),
             "supplier_error_rate": round(100 - _rate(search_metrics + booking_metrics), 2),
             "supplier_success_rate": _rate(search_metrics + booking_metrics),
+        },
+        "supplier_response_diff": {
+            "avg_diff_pct": round(sum(diff_pcts) / len(diff_pcts), 2) if diff_pcts else 0,
+            "max_diff_pct": round(max(diff_pcts, default=0), 2),
+            "min_diff_pct": round(min(diff_pcts, default=0), 2),
+            "avg_diff_amount": round(sum(diff_amounts) / len(diff_amounts), 2) if diff_amounts else 0,
+            "max_diff_amount": round(max(diff_amounts, default=0), 2),
+            "total_checks": len(diff_records),
+            "drift_up_count": diff_up_count,
+            "drift_down_count": diff_down_count,
+            "drift_stable_count": diff_stable_count,
+            "alert_count": diff_alerts,
+            "alert_threshold_pct": diff_alert_threshold_pct,
+            "recent_diffs": [
+                {
+                    "initial_price": d.get("initial_price", 0),
+                    "revalidation_price": d.get("revalidation_price", 0),
+                    "diff_pct": d.get("diff_pct", 0),
+                    "diff_amount": d.get("diff_amount", 0),
+                    "supplier": d.get("supplier", "unknown"),
+                    "drift_direction": d.get("drift_direction", "stable"),
+                }
+                for d in diff_records[:10]
+            ],
         },
         "finance_metrics": {
             "invoice_generation_time_ms": _avg_latency(invoice_metrics),
@@ -567,7 +638,7 @@ async def get_pilot_incidents(limit: int = 50) -> dict[str, Any]:
 
 # ── Internal Helpers ─────────────────────────────────────────────────
 
-async def _record_metric(db, agency_name: str, step: str, result: str, latency_ms: float):
+async def _record_metric(db, agency_name: str, step: str, result: str, latency_ms: float, extra: dict[str, Any] | None = None):
     doc = {
         "agency_name": agency_name,
         "step": step,
@@ -575,6 +646,8 @@ async def _record_metric(db, agency_name: str, step: str, result: str, latency_m
         "latency_ms": latency_ms,
         "timestamp": _ts(),
     }
+    if extra:
+        doc.update(extra)
     await db.pilot_metrics.insert_one(doc)
 
 
@@ -612,7 +685,7 @@ async def run_single_simulation_flow(flow_num: int, supplier_type: str = "rateha
         "tax_id": f"VKN-SIM-{flow_num}",
         "mode": "simulation",
     }
-    result_1 = await create_pilot_agency(agency_data)
+    result_1 = await create_pilot_agency(agency_data)  # noqa: F841
     steps_log.append({"step": 1, "name": "agency_create", "status": "pass", "detail": "Agency created"})
 
     # Step 2: Save supplier credential
@@ -654,7 +727,8 @@ async def run_single_simulation_flow(flow_num: int, supplier_type: str = "rateha
     s6 = "pass" if r6.get("status") == "confirmed" else "fail"
     if s6 == "fail":
         overall_pass = False
-    steps_log.append({"step": 6, "name": "booking_test", "status": s6, "latency_ms": r6.get("latency_ms", 0), "booking_id": r6.get("booking_id"), "amount": r6.get("amount", 0)})
+    srd = r6.get("supplier_response_diff") or {}
+    steps_log.append({"step": 6, "name": "booking_test", "status": s6, "latency_ms": r6.get("latency_ms", 0), "booking_id": r6.get("booking_id"), "amount": r6.get("amount", 0), "supplier_response_diff": srd})
 
     # Step 7: Invoice test
     r7 = await test_invoice(agency_name)
@@ -690,6 +764,7 @@ async def run_single_simulation_flow(flow_num: int, supplier_type: str = "rateha
         "steps": steps_log,
         "supplier": supplier_type,
         "accounting_provider": accounting_provider,
+        "supplier_response_diff": srd,
         "timestamp": _ts(),
     }
 
@@ -706,6 +781,12 @@ async def run_batch_simulation(count: int = 10, supplier_type: str = "ratehawk",
     passed = sum(1 for f in flows if f["result"] == "PASS")
     failed = count - passed
 
+    # Aggregate supplier_response_diff across all flows
+    all_diffs = [f.get("supplier_response_diff") or {} for f in flows]
+    all_diff_pcts = [d["diff_pct"] for d in all_diffs if d.get("diff_pct") is not None]
+    all_diff_amounts = [abs(d["diff_amount"]) for d in all_diffs if d.get("diff_amount") is not None]
+    diff_alert_threshold = 5.0
+
     return {
         "total_flows": count,
         "passed": passed,
@@ -715,6 +796,16 @@ async def run_batch_simulation(count: int = 10, supplier_type: str = "ratehawk",
         "avg_flow_duration_ms": round(batch_duration_ms / count, 1) if count > 0 else 0,
         "supplier": supplier_type,
         "accounting_provider": accounting_provider,
+        "supplier_response_diff_summary": {
+            "avg_diff_pct": round(sum(all_diff_pcts) / len(all_diff_pcts), 2) if all_diff_pcts else 0,
+            "max_diff_pct": round(max(all_diff_pcts, default=0), 2),
+            "min_diff_pct": round(min(all_diff_pcts, default=0), 2),
+            "avg_diff_amount": round(sum(all_diff_amounts) / len(all_diff_amounts), 2) if all_diff_amounts else 0,
+            "max_diff_amount": round(max(all_diff_amounts, default=0), 2),
+            "alert_count": sum(1 for p in all_diff_pcts if abs(p) > diff_alert_threshold),
+            "alert_threshold_pct": diff_alert_threshold,
+            "total_checks": len(all_diff_pcts),
+        },
         "flows": flows,
         "timestamp": _ts(),
     }

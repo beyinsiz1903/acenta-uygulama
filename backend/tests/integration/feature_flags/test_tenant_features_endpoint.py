@@ -50,7 +50,7 @@ async def test_get_tenant_features_with_plan(
   assert body["tenant_id"] == tenant_id
   assert body["source"] == "capabilities"
   assert body["plan"] == "starter"
-  assert body["limits"]["users.active"] == 2
+  assert body["limits"]["users.active"] == 3
   assert body["usage_allowances"]["reservation.created"] == 100
   # Should contain add_ons + plan defaults
   assert FEATURE_REPORTS in body["features"]

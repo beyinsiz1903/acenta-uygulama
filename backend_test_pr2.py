@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://luca-sync-phase3.preview.emergentagent.com"
+BASE_URL = "https://finance-queue.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials

@@ -5,7 +5,7 @@ Syroce Backend Contract/Agreement Management Flow Test
 
 Test için backend kontrat/sözleşme yönetimi akışını test eder.
 
-Base URL: https://luca-sync-phase3.preview.emergentagent.com
+Base URL: https://finance-queue.preview.emergentagent.com
 Test credentials: admin@acenta.test / admin123
 
 Test cases:
@@ -25,7 +25,7 @@ from typing import Any, Dict, List, Optional
 import aiohttp
 
 
-BASE_URL = "https://luca-sync-phase3.preview.emergentagent.com"
+BASE_URL = "https://finance-queue.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

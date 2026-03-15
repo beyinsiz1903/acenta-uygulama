@@ -134,7 +134,7 @@ export const APP_NAV_SECTIONS = [
         label: "Faturalar",
         icon: FileText,
         pathByScope: {
-          agency: "/app/agency/pms/invoices",
+          agency: "/app/invoices",
         },
         isCore: true,
         modeKey: "faturalar",
@@ -669,7 +669,7 @@ export const ADMIN_MODULE_SECTIONS = [
       },
       {
         key: "admin-efatura",
-        label: "E-Fatura",
+        label: "Fatura Motoru",
         icon: Settings,
         pathByScope: { admin: "/app/admin/efatura" },
         isCore: true,

@@ -45,6 +45,9 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
   const [amendConfirmLoading, setAmendConfirmLoading] = useState(false);
   const [amendError, setAmendError] = useState("");
 
+  const [invoiceStatus, setInvoiceStatus] = useState(null);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
+
   const [activeTab, setActiveTab] = useState("details");
   const navigate = useNavigate();
 
@@ -536,6 +539,21 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
     loadLedger();
     loadPayment();
 
+    // Check if booking already has an invoice
+    async function checkInvoice() {
+      try {
+        const resp = await api.get(`/invoices/booking/${bookingId}`);
+        if (resp.data && resp.data.invoice_id) {
+          setInvoiceStatus(resp.data);
+        } else {
+          setInvoiceStatus(null);
+        }
+      } catch {
+        setInvoiceStatus(null);
+      }
+    }
+    checkInvoice();
+
     return () => {
       cancelled = true;
     };
@@ -553,6 +571,8 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
       setAmendMode(false);
       setAmendProposal(null);
       setAmendError("");
+      setInvoiceStatus(null);
+      setInvoiceLoading(false);
       stopPaymentPolling();
     }
     onOpenChange?.(next);
@@ -1320,6 +1340,33 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
             {booking?.code && <span>PNR: {booking.code}</span>}
           </div>
           <div className="flex gap-2">
+            {/* Faturay\u0131 Kes button */}
+            {bookingId && (
+              <Button
+                variant={invoiceStatus?.invoice_id ? "outline" : "default"}
+                size="sm"
+                disabled={invoiceLoading}
+                data-testid="fatura-kes-btn"
+                onClick={async () => {
+                  if (invoiceStatus?.invoice_id) {
+                    navigate(`/app/admin/efatura`);
+                    return;
+                  }
+                  setInvoiceLoading(true);
+                  try {
+                    const res = await api.post("/invoices/create-from-booking", { booking_id: bookingId });
+                    toast.success(`Fatura olu\u015fturuldu: ${res.data.invoice_id}`);
+                    setInvoiceStatus(res.data);
+                  } catch (e) {
+                    toast.error(apiErrorMessage(e) || "Fatura olu\u015fturulamad\u0131");
+                  } finally {
+                    setInvoiceLoading(false);
+                  }
+                }}
+              >
+                {invoiceLoading ? "Olu\u015fturuluyor..." : invoiceStatus?.invoice_id ? `Fatura: ${invoiceStatus.invoice_id}` : "Faturay\u0131 Kes"}
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={() => {

@@ -11,6 +11,17 @@ Search → Cache (NOT supplier API)
 Booking → Supplier API (revalidation with diff tracking)
 ```
 
+## Sandbox Architecture (MEGA PROMPT #38)
+**Config-Driven Supplier Integration** — Sandbox-ready adapter pattern:
+```
+Credential Check → Has Credentials? → Real API (sandbox/production)
+                 → No Credentials?  → Simulation Mode
+```
+- Credentials stored in `supplier_credentials` MongoDB collection
+- Each supplier independently configurable (mode, base_url, key_id, api_key)
+- Validation tests run against real sandbox when configured
+- Metrics tracked: latency, error_rate, response_diff
+
 ## User Personas
 - **Super Admin** (agent@acenta.test): Full platform control
 - **Agency Admin** (agency1@demo.test): Agency-level operations
@@ -22,7 +33,7 @@ Booking → Supplier API (revalidation with diff tracking)
 - **3rd Party**: Stripe, APScheduler, Supplier adapters (Ratehawk, Paximum, WWTatil, TBO)
 
 ## Collections (MongoDB)
-### Inventory Sync Engine (NEW — MEGA PROMPT #37)
+### Inventory Sync Engine (MEGA PROMPT #37)
 - `supplier_inventory`: Hotel/product records per supplier
 - `supplier_prices`: Cached prices per hotel per date per supplier
 - `supplier_availability`: Room availability per hotel per date
@@ -30,42 +41,66 @@ Booking → Supplier API (revalidation with diff tracking)
 - `inventory_index`: Flattened search-optimized documents
 - `inventory_revalidations`: Booking-time revalidation records with drift severity
 
+### Sandbox Config (MEGA PROMPT #38)
+- `supplier_credentials`: Supplier API credentials and config (mode, base_url, validation_status)
+- `supplier_sync_metrics`: Per-sync performance metrics (latency, error_rate, api_calls)
+
 ### Existing Collections
 - `pilot_agencies`, `pilot_metrics`, `pilot_incidents`
 
 ## Implemented Features
 
-### Phase: Simulation Complete ✅
+### Phase: Simulation Complete
 - 10/10 successful simulation flows
 - `supplier_response_diff` metric (search_price → revalidation_price → diff %)
-- Pilot Dashboard with KPIs (Flow Health, Supplier Metrics, Finance Metrics, Diff Metrics)
+- Pilot Dashboard with KPIs
 
-### Phase: Inventory Sync Engine ✅ (MEGA PROMPT #37)
+### Phase: Inventory Sync Engine (MEGA PROMPT #37)
 **Backend APIs:**
-- `POST /api/inventory/sync/trigger` — Trigger supplier sync (simulation mode)
+- `POST /api/inventory/sync/trigger` — Trigger supplier sync (simulation or real)
 - `GET /api/inventory/sync/status` — Sync status for all 4 suppliers
 - `GET /api/inventory/sync/jobs` — Sync job history
-- `GET /api/inventory/search` — Cached search (Redis → MongoDB fallback, ~1.7ms latency)
+- `GET /api/inventory/search` — Cached search (~1.7ms latency)
 - `GET /api/inventory/stats` — Comprehensive inventory statistics
 - `POST /api/inventory/revalidate` — Price revalidation with drift severity
 
+### Phase: Sandbox Integration (MEGA PROMPT #38) — COMPLETED 2026-03-15
+**Backend APIs:**
+- `GET /api/inventory/supplier-config` — Get all supplier sandbox configs
+- `POST /api/inventory/supplier-config` — Set supplier credentials
+- `DELETE /api/inventory/supplier-config/{supplier}` — Remove credentials
+- `POST /api/inventory/sandbox/validate` — Run sandbox validation tests
+- `GET /api/inventory/supplier-metrics` — Supplier performance metrics
+
 **Frontend:**
-- Inventory Sync Dashboard at `/app/admin/inventory-sync`
-- KPI cards (Hotels, Prices, Availability, Search Index, Sync Jobs, Redis Cache)
-- Supplier Sync Status table with per-supplier sync controls
-- Cached Search panel (confirms NO supplier API calls)
-- City breakdown, Revalidation history with severity badges
-- Sync job history
+- Sandbox Konfigurasyon panel with per-supplier mode/status display
+- Credential Ekle form (supplier, mode, base_url, key_id, api_key)
+- Test/Remove buttons per configured supplier
+- Sandbox validation result display with per-test pass/fail
+- Mod column added to Sync Status and Job History tables
+- Kaynak (Source) column added to Revalidations table
 
-**Supplier Sync Config:**
-| Supplier | Interval | Status |
-|----------|----------|--------|
-| Ratehawk | 5 min | active |
-| Paximum | 15 min | active |
-| WWTatil | 60 min | active |
-| TBO | 30 min | pending |
+**Ratehawk Sandbox Adapter:**
+- Real API adapter: region_search, hotel_search, price extraction
+- Credential validation against RateHawk overview endpoint
+- Sandbox URL: `https://api-sandbox.worldota.net`
+- Production URL: `https://api.worldota.net`
+- Auth: Basic (base64 of key_id:api_key)
 
-**Drift Severity Classification:**
+**Testing:**
+- Backend: 21/21 tests passed (100%)
+- Frontend: 100% UI verification passed
+- Previous: 38/38 original tests passed
+
+## Supplier Sync Config
+| Supplier | Interval | Status | Sandbox Ready |
+|----------|----------|--------|---------------|
+| Ratehawk | 5 min | active | YES |
+| Paximum | 15 min | active | NO (next phase) |
+| WWTatil | 60 min | active | NO (future) |
+| TBO | 30 min | pending | NO (future) |
+
+## Drift Severity Classification
 - 0-2%: Normal (green)
 - 2-5%: Warning (amber)
 - 5-10%: High (orange)
@@ -73,27 +108,26 @@ Booking → Supplier API (revalidation with diff tracking)
 
 ## Upcoming Tasks (Prioritized)
 
-### P0 — Ertelenmiş KPI Güncellemeleri
-- Supplier Drift Rate KPI (drift > 2% olan booking / toplam booking per supplier)
-- Drift Severity renkli gösterim
-- Price Drift Timeline Grafiği (x: zaman, y: diff%, group: supplier)
+### P0 — KPI Dashboard with Real Data
+- Supplier Drift Rate KPI (drift > 2% / total bookings per supplier)
+- Drift Severity colored display
+- Price Drift Timeline Graph (x: time, y: diff%, group: supplier)
 
-### P1 — Sandbox Phase
-- Ratehawk sandbox entegrasyonu (gerçek search, price, availability)
-- Paximum sandbox entegrasyonu
-- WWTatil sandbox test
-- Sandbox Success Criteria: Search Success > 95%, Latency < 2s, Error Rate < 3%, Price Drift < 5%
+### P1 — Paximum Sandbox
+- Paximum sandbox adapter (same pattern as Ratehawk)
+- Inventory sync, search, price, availability with real data
 
 ### P2 — Pilot Phase
-- 3 pilot agency gerçek trafik
+- 3 pilot agencies with real traffic
 - 3 real bookings, 3 invoices, 3 accounting sync PASS
 - 0 critical reconciliation mismatch
 
 ### P3+ — Future
-- Accounting provider entegrasyonları (Luca, Parasut, Logo, Mikro)
-- Core finance modules (Financial Analytics, Tax Reporting)
-- APScheduler → Celery Beat migrasyonu
-- Refactoring (pilot tamamlandıktan sonra)
+- WWTatil search validation
+- Accounting provider integrations (Luca, Parasut, Logo, Mikro)
+- Financial Analytics, Tax Reporting
+- APScheduler → Celery Beat migration
+- Refactoring (after pilot complete)
 
 ## Known Issues
 - P3: GitHub sync issue (platform-level, deferred)

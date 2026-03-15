@@ -32,16 +32,21 @@ Syroce is a production-grade Turkish travel ERP platform that manages the full l
   - Step 7: First Invoice Test
   - Step 8: First Accounting Sync Test
   - Step 9: Reconciliation Check (booking vs invoice vs accounting)
-- **3 Operating Modes**: sandbox (platform test), simulation (demo), production (real customer)
-- **Pilot Dashboard KPIs**:
+- **3 Operating Modes**: sandbox (platform test), simulation (demo/deterministic), production (real customer)
+- **Batch Simulation**: POST /api/pilot/onboarding/run-simulation runs N flows (default 10), 10/10 PASS verified
+- **Pilot Dashboard KPIs** (CTO Directive - All Implemented):
+  - **Flow Health**: flow_success_rate, avg_flow_duration_ms, failed_flows
+  - **Supplier Metrics**: supplier_latency_ms, supplier_error_rate, supplier_success_rate
+  - **Finance Metrics**: invoice_generation_time_ms, accounting_sync_latency_ms, reconciliation_mismatch_rate
   - Platform Health: search success rate, booking success rate, supplier latency, supplier error rate
   - Financial Flow: booking→invoice conversion, invoice→accounting sync latency, reconciliation mismatch rate
   - Pilot Usage: active agencies, daily searches, daily bookings, revenue generated
   - Incident Monitoring: failed bookings, failed invoices, failed accounting sync, critical alerts
+- **Enhanced Incidents Panel**: severity, flow_stage, supplier, retry_count fields
 - **Collections**: pilot_agencies, pilot_metrics, pilot_incidents
 - **Supplier Support**: RateHawk, Paximum, TBO, WWTatil
 - **Accounting Provider Support**: Luca, Logo, Parasut, Mikro
-- **Pilot Target**: 3 agencies (Agency A → Ratehawk+Luca, Agency B → Paximum+Parasut, Agency C → WWTatil+Luca)
+- **Pilot Success Criteria**: 10 simulated flows PASS ✅, 3 sandbox flows, 3 real bookings, 3 invoice, 3 accounting sync, 0 critical reconciliation error
 
 ### Multi Accounting Provider Architecture (MEGA PROMPT #34) - IMPLEMENTED
 - Base Provider Contract, Normalized Response, 4 Provider Adapters

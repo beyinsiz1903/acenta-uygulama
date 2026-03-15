@@ -479,3 +479,7 @@ def register_routers(app: FastAPI) -> None:
     # --- Pilot Onboarding (MEGA PROMPT #35) ---
     from app.routers.pilot_onboarding_router import router as pilot_onboarding_router
     app.include_router(pilot_onboarding_router)
+
+    # --- Inventory Sync Engine (MEGA PROMPT #37) ---
+    from app.routers.inventory_sync_router import router as inventory_sync_router
+    app.include_router(inventory_sync_router)

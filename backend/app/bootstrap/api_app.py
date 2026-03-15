@@ -105,6 +105,14 @@ def create_app() -> FastAPI:
             import logging
             logging.getLogger("startup").warning("Reliability indexes: %s", exc)
 
+        # Initialize Inventory Sync indexes
+        try:
+            from app.services.inventory_sync_service import ensure_inventory_indexes
+            await ensure_inventory_indexes()
+        except Exception as exc:
+            import logging
+            logging.getLogger("startup").warning("Inventory indexes setup: %s", exc)
+
         # Start Job Scheduler
         try:
             from app.services.job_scheduler_service import start_scheduler

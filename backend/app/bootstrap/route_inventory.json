@@ -7318,6 +7318,28 @@
     "compat_required": true,
     "current_namespace": "/api/inventory",
     "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "inventory",
+    "path": "/api/inventory/revalidate",
+    "risk_level": "medium",
+    "source": "app.routers.inventory_sync_router",
+    "target_namespace": "/api/v1/inventory"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/inventory",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "inventory",
+    "path": "/api/inventory/search",
+    "risk_level": "medium",
+    "source": "app.routers.inventory_sync_router",
+    "target_namespace": "/api/v1/inventory"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/inventory",
+    "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "inventory",
     "path": "/api/inventory/snapshots-summary",
@@ -7356,6 +7378,50 @@
     "path": "/api/inventory/snapshots/{hotel_id}",
     "risk_level": "medium",
     "source": "app.routers.inventory_snapshots_api",
+    "target_namespace": "/api/v1/inventory"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/inventory",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "inventory",
+    "path": "/api/inventory/stats",
+    "risk_level": "medium",
+    "source": "app.routers.inventory_sync_router",
+    "target_namespace": "/api/v1/inventory"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/inventory",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "inventory",
+    "path": "/api/inventory/sync/jobs",
+    "risk_level": "medium",
+    "source": "app.routers.inventory_sync_router",
+    "target_namespace": "/api/v1/inventory"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/inventory",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "inventory",
+    "path": "/api/inventory/sync/status",
+    "risk_level": "medium",
+    "source": "app.routers.inventory_sync_router",
+    "target_namespace": "/api/v1/inventory"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/inventory",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "inventory",
+    "path": "/api/inventory/sync/trigger",
+    "risk_level": "medium",
+    "source": "app.routers.inventory_sync_router",
     "target_namespace": "/api/v1/inventory"
   },
   {

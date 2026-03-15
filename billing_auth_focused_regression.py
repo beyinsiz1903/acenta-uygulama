@@ -4,7 +4,7 @@ Focused Backend Billing/Auth Regression Test
 ==========================================
 
 Review Request Context:
-- Base URL: https://real-flow-sim.preview.emergentagent.com
+- Base URL: https://pilot-price-diff.preview.emergentagent.com
 - Credentials: agent@acenta.test / agent123
 - Account State: pro / yearly / active (as verified manually)
 - Recent Change: Frontend-only fix to stop agency users from calling admin-only whitelabel endpoint
@@ -26,7 +26,7 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 # Configuration  
-BASE_URL = "https://real-flow-sim.preview.emergentagent.com"
+BASE_URL = "https://pilot-price-diff.preview.emergentagent.com"
 TEST_CREDENTIALS = {
     "email": "agent@acenta.test",
     "password": "agent123" 

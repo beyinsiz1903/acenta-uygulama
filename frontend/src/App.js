@@ -88,6 +88,7 @@ const AdminEmailLogsPage = lazy(() => import("./pages/AdminEmailLogsPage"));
 const AdminPilotDashboardPage = lazy(() => import("./pages/AdminPilotDashboardPage"));
 const PilotSetupWizardPage = lazy(() => import("./pages/PilotSetupWizardPage"));
 const PilotOnboardingDashboardPage = lazy(() => import("./pages/PilotOnboardingDashboardPage"));
+const InventorySyncDashboardPage = lazy(() => import("./pages/InventorySyncDashboardPage"));
 const AdminMetricsPage = lazy(() => import("./pages/AdminMetricsPage"));
 const AdminMatchAlertsPolicyPage = lazy(() => import("./pages/AdminMatchAlertsPolicyPage"));
 
@@ -347,6 +348,7 @@ function App() {
             <Route path="pilot-dashboard" element={<AdminPilotDashboardPage />} />
             <Route path="pilot-wizard" element={<PilotSetupWizardPage />} />
             <Route path="pilot-onboarding" element={<PilotOnboardingDashboardPage />} />
+            <Route path="inventory-sync" element={<InventorySyncDashboardPage />} />
             <Route path="metrics" element={<AdminMetricsPage />} />
             <Route path="matches" element={<AdminMatchesPage />} />
             <Route path="matches/:id" element={<AdminMatchDetailPage />} />

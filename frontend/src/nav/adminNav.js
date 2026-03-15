@@ -77,6 +77,7 @@ export const adminNav = [
     label: "PILOT OPERASYON",
     children: [
       { label: "Pilot Dashboard", path: "/app/admin/pilot-onboarding" },
+      { label: "Inventory Sync Engine", path: "/app/admin/inventory-sync" },
       { label: "Pilot Wizard", path: "/app/admin/pilot-wizard" },
       { label: "Eski Pilot Dashboard", path: "/app/admin/pilot-dashboard" },
     ],

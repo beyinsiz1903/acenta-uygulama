@@ -57,4 +57,24 @@ export const bookingsApi = {
     });
     return typeof resp.data === "string" ? resp.data : String(resp.data);
   },
+
+  // Agency bookings
+  agencyList: async () => {
+    const { data } = await api.get("/agency/bookings");
+    return data || [];
+  },
+
+  // Products
+  listProducts: async (filters = {}) => {
+    const params = {};
+    if (filters.q) params.q = filters.q;
+    if (filters.type && filters.type !== "all") params.type = filters.type;
+    const { data } = await api.get("/products", { params });
+    return data || [];
+  },
+
+  deleteProduct: async (id) => {
+    const { data } = await api.delete(`/products/${id}`);
+    return data;
+  },
 };

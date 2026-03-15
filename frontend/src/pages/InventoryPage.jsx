@@ -14,6 +14,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../components/ui/s
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { cn } from "../lib/utils";
+import { PageShell } from "../design-system";
 
 const InventoryCtx = React.createContext({ invMap: new Map() });
 
@@ -296,15 +297,11 @@ export default function InventoryPage() {
   }, [rows]);
 
   return (
+    <PageShell
+      title="Müsaitlik & Kontenjan"
+      description="Takvimden gün seçerek kapasite/fiyat düzenleyin veya tarih aralığına toplu uygulayın."
+    >
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold text-foreground">Müsaitlik & Kontenjan</h2>
-          <p className="text-sm text-muted-foreground">
-            Takvimden gün seçerek kapasite/fiyat düzenleyin veya tarih aralığına toplu uygulayın.
-          </p>
-        </div>
-      </div>
 
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-12 lg:col-span-8">
@@ -650,5 +647,6 @@ export default function InventoryPage() {
         </SheetContent>
       </Sheet>
     </div>
+    </PageShell>
   );
 }

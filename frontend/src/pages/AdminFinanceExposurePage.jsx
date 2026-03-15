@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import PageHeader from "../components/PageHeader";
 import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";
 import { api, apiErrorMessage } from "../lib/api";
@@ -9,6 +8,7 @@ import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "../components/ui/drawer";
 import { Button } from "../components/ui/button";
+import { PageShell } from "../design-system";
 
 function StatusBadge({ status }) {
   if (status === "over_limit") {
@@ -330,11 +330,11 @@ function AdminFinanceExposurePageInner() {
   }, []);
 
   return (
+    <PageShell
+      title="Acente Açık Bakiye Takibi"
+      description="Acentelerin toplam maruziyeti ve tahsilat yaşlandırmasını tek ekranda gör."
+    >
     <div className="space-y-4">
-      <PageHeader
-        title="Acente Açık Bakiye Takibi"
-        description="Acentelerin toplam maruziyeti ve tahsilat yaşlandırmasını tek ekranda gör."
-      />
 
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -411,6 +411,7 @@ function AdminFinanceExposurePageInner() {
         agency={selectedAgency}
       />
     </div>
+    </PageShell>
   );
 }
 

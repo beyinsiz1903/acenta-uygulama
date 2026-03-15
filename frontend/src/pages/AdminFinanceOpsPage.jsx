@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
+import { PageShell } from "../design-system";
 
 const SEVERITY_MAP = {
   critical: { label: "Kritik", color: "bg-red-100 text-red-800 border-red-200", icon: XCircle },
@@ -533,16 +534,11 @@ export default function AdminFinanceOpsPage() {
   ];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto" data-testid="finance-ops-page">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2" data-testid="finance-ops-title">
-            <Shield className="h-6 w-6 text-primary" /> Mutabakat ve Finans Operasyonlari
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">Booking, fatura ve muhasebe mutabakati, operasyon kuyrugu ve alertler</p>
-        </div>
-      </div>
-
+    <PageShell
+      title="Mutabakat ve Finans Operasyonları"
+      description="Booking, fatura ve muhasebe mutabakatı, operasyon kuyruğu ve alertler"
+    >
+    <div data-testid="finance-ops-page">
       <div className="flex gap-1 mb-4 border-b" data-testid="finance-ops-tabs">
         {tabs.map(tab => {
           const Icon = tab.icon;
@@ -561,5 +557,6 @@ export default function AdminFinanceOpsPage() {
       {activeTab === "ops" && <FinanceOpsTab />}
       {activeTab === "alerts" && <AlertsTab />}
     </div>
+    </PageShell>
   );
 }

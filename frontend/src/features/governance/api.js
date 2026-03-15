@@ -29,4 +29,15 @@ export const governanceApi = {
     const { data } = await api.get("/action-policies");
     return data;
   },
+
+  // Admin users management
+  getAllUsers: async () => {
+    const { data } = await api.get("/admin/all-users");
+    return data || [];
+  },
+
+  getAgenciesList: async () => {
+    const { data } = await api.get("/admin/agencies");
+    return data || [];
+  },
 };

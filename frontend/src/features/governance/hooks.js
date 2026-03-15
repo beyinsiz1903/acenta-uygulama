@@ -48,3 +48,28 @@ export function useRejectRequest() {
     },
   });
 }
+
+// ─── Admin Users ───
+export const adminUserKeys = {
+  all: ["admin-users"],
+  list: () => [...adminUserKeys.all, "list"],
+  agencies: () => [...adminUserKeys.all, "agencies"],
+};
+
+export function useAdminUsers(options = {}) {
+  return useQuery({
+    queryKey: adminUserKeys.list(),
+    queryFn: governanceApi.getAllUsers,
+    staleTime: 30_000,
+    ...options,
+  });
+}
+
+export function useAdminAgencies(options = {}) {
+  return useQuery({
+    queryKey: adminUserKeys.agencies(),
+    queryFn: governanceApi.getAgenciesList,
+    staleTime: 60_000,
+    ...options,
+  });
+}

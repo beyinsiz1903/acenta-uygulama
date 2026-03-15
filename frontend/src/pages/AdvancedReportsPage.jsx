@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Input } from "../components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import EmptyState from "../components/EmptyState";
+import { PageShell } from "../design-system";
 
 const REPORT_DAY_OPTIONS = [7, 30, 90];
 
@@ -167,12 +168,10 @@ export default function AdvancedReportsPage() {
   const maxRevenue = Math.max(...dailyRevenue.map((entry) => entry.revenue || 0), 1);
 
   return (
-    <div className="space-y-6 p-6" data-testid="reports-page">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground" data-testid="reports-title">Raporlar</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Operasyon içinde arama yapın, satış özetini indirin ve seçili dönem için tek ekranda yönetim özeti oluşturun.</p>
-        </div>
+    <PageShell
+      title="Raporlar"
+      description="Operasyon içinde arama yapın, satış özetini indirin ve seçili dönem için tek ekranda yönetim özeti oluşturun."
+      actions={
         <div className="flex flex-wrap items-center gap-2" data-testid="reports-day-filter-group">
           {REPORT_DAY_OPTIONS.map((option) => (
             <Button
@@ -180,16 +179,20 @@ export default function AdvancedReportsPage() {
               type="button"
               variant={days === option ? "default" : "outline"}
               onClick={() => setDays(option)}
+              size="sm"
+              className="text-xs"
               data-testid={`reports-day-filter-${option}`}
             >
               Son {option} gün
             </Button>
           ))}
-          <Button variant="outline" onClick={downloadCsv} className="gap-2" data-testid="export-csv">
-            <Download className="h-4 w-4" /> CSV
+          <Button variant="outline" onClick={downloadCsv} className="gap-2" size="sm" data-testid="export-csv">
+            <Download className="h-3.5 w-3.5" /> CSV
           </Button>
         </div>
-      </div>
+      }
+    >
+    <div className="space-y-6" data-testid="reports-page">
 
       {error ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" data-testid="reports-error">
@@ -468,5 +471,6 @@ export default function AdvancedReportsPage() {
         </CardContent>
       </Card>
     </div>
+    </PageShell>
   );
 }

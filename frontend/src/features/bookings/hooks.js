@@ -71,3 +71,43 @@ export function useCancelBooking() {
     },
   });
 }
+
+// ─── Agency Bookings ───
+export const agencyBookingKeys = {
+  all: ["agency-bookings"],
+  list: () => [...agencyBookingKeys.all, "list"],
+};
+
+export function useAgencyBookings(options = {}) {
+  return useQuery({
+    queryKey: agencyBookingKeys.list(),
+    queryFn: bookingsApi.agencyList,
+    staleTime: 30_000,
+    ...options,
+  });
+}
+
+// ─── Products ───
+export const productKeys = {
+  all: ["products"],
+  list: (filters) => [...productKeys.all, "list", filters],
+};
+
+export function useProducts(filters = {}, options = {}) {
+  return useQuery({
+    queryKey: productKeys.list(filters),
+    queryFn: () => bookingsApi.listProducts(filters),
+    staleTime: 30_000,
+    ...options,
+  });
+}
+
+export function useDeleteProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: bookingsApi.deleteProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: productKeys.all });
+    },
+  });
+}

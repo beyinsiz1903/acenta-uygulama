@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Input } from "../components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import EmptyState from "../components/EmptyState";
+import { PageShell } from "../design-system";
 
 const REPORT_DAY_OPTIONS = [7, 30, 90];
 
@@ -167,12 +168,10 @@ export default function ReportsPage() {
   const maxRevenue = Math.max(...dailyRevenue.map((entry) => entry.revenue || 0), 1);
 
   return (
-    <div className="space-y-6" data-testid="reports-page">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">Raporlar</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Operasyon içinde arama yapın, satış özetini indirin ve seçili dönem için tek ekranda yönetim özeti oluşturun.</p>
-        </div>
+    <PageShell
+      title="Raporlar"
+      description="Operasyon içinde arama yapın, satış özetini indirin ve seçili dönem için tek ekranda yönetim özeti oluşturun."
+      actions={
         <div className="flex flex-wrap items-center gap-2" data-testid="reports-day-filter-group">
           {REPORT_DAY_OPTIONS.map((option) => (
             <Button
@@ -180,13 +179,17 @@ export default function ReportsPage() {
               type="button"
               variant={days === option ? "default" : "outline"}
               onClick={() => setDays(option)}
+              size="sm"
+              className="text-xs"
               data-testid={`reports-day-filter-${option}`}
             >
               Son {option} gün
             </Button>
           ))}
         </div>
-      </div>
+      }
+    >
+    <div className="space-y-6" data-testid="reports-page">
 
       {error ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" data-testid="reports-error">
@@ -468,5 +471,6 @@ export default function ReportsPage() {
         </CardContent>
       </Card>
     </div>
+    </PageShell>
   );
 }

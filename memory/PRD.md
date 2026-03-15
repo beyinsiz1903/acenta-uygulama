@@ -5,11 +5,11 @@ Enterprise Travel Agency SaaS + Multi-Supplier Distribution Engine + Revenue Opt
 
 ## Core Architecture
 ```
-supplier adapters → aggregator → unified search (cached) → unified booking
-→ commission binding → fallback → reconciliation → analytics → intelligence
-→ revenue optimization → scalability → operations → market launch
-→ per-agency credential governance → growth engine
-→ INVOICE ENGINE → e-document provider → accounting sync
+supplier adapters -> aggregator -> unified search (cached) -> unified booking
+-> commission binding -> fallback -> reconciliation -> analytics -> intelligence
+-> revenue optimization -> scalability -> operations -> market launch
+-> per-agency credential governance -> growth engine
+-> INVOICE ENGINE -> e-document provider (EDM) -> accounting sync
 ```
 
 ## Credentials
@@ -32,105 +32,87 @@ Validation Framework, Capability Matrix, Cache/Fallback/Rate Limit Tests, Launch
 ### Phase 7: Market Launch (MEGA PROMPT #28)
 Pilot Agency Tracking, Usage Metrics, Feedback System, SaaS Pricing, Launch Dashboard
 
-### Phase 8: Per-Agency Supplier Credential Management — Mar 13, 2026
+### Phase 8: Per-Agency Supplier Credential Management -- Mar 13, 2026
 AES-256 encrypted credential storage, supplier-specific forms (WWTatil, Paximum, RateHawk, TBO), RBAC, audit logging, enable/disable toggle, token caching
 
-### Phase 9: Growth Engine (MEGA PROMPT #29) — Mar 13, 2026
+### Phase 9: Growth Engine (MEGA PROMPT #29) -- Mar 13, 2026
 10 Components: Agency Acquisition Funnel, Lead & Demo Management, Referral System, Activation Metrics, Customer Success Dashboard, Supplier Expansion, Growth KPIs, Onboarding Automation, Agency Segmentation, Full Growth Report. 22 API endpoints, 7-tab dashboard.
 
-### Phase 10: Invoice Engine — Phase 1 (MEGA PROMPT #30) — Mar 15, 2026
+### Phase 10: Invoice Engine -- Phase 1 (MEGA PROMPT #30) -- Mar 15, 2026
+Invoice Domain Model, State Machine (10 states), Booking -> Invoice Transformation, E-Document Decision Engine, Invoice API (10 endpoints), "Faturayi Kes" UI, Booking Integration. 32/32 backend tests PASS.
 
-**Invoice Engine Foundation — Faz 1 Complete:**
+### Phase 11: Invoice Engine -- Phase 2 (MEGA PROMPT #31) -- Mar 15, 2026
 
-1. **Invoice Domain Model** — Full entity model with tenant isolation, booking linkage, customer billing profile, tax breakdown, currency breakdown, line items, audit trail
-2. **Invoice State Machine** — 10 states: draft → ready_for_issue → issuing → issued → failed → cancelled → refunded → sync_pending → synced → sync_failed. Strict transition validation.
-3. **Booking → Invoice Transformation** — Hotel/Tour full support, Flight/Transfer/Activity placeholder. Idempotent creation (same booking = same invoice). Line item generation with tax calculation.
-4. **E-Document Decision Engine** — B2B+VKN → e-Fatura, B2C+TCKN → e-Arsiv, no integrator → draft_only. Agency policy override support.
-5. **Invoice API** — 10 endpoints: create-from-booking, create-manual, list, dashboard, detail, issue, cancel, transition, booking-check, events
-6. **"Faturayi Kes" UI** — Invoice Engine dashboard with stats (total, issued, failed, revenue), 3-step wizard (type select → customer info → lines/booking), filter buttons, invoice table with actions, detail modal with event timeline
-7. **Booking Integration** — "Faturayi Kes" button in BookingDetailDrawer, auto-checks existing invoice, idempotent creation
+**E-Document Provider Activation -- Faz 2 Complete:**
 
-**Backend:** 10 API endpoints via `/api/invoices/*`
-**Frontend:** AdminEFaturaPage (Invoice Engine) with dashboard, wizard, table, detail modal
-**Testing:** 32/32 backend + all frontend tests PASS (iteration_93)
-**E-Document Provider:** MOCKED (MockEFaturaProvider) — real integration in Faz 2
+1. **Base Integrator Interface** -- ABC with 5 methods: test_connection(), issue_invoice(), get_status(), download_pdf(), cancel_invoice()
+2. **EDM Adapter** -- Full implementation with real API support + simulation fallback. EDM-compatible UBL payload builder. Placeholder PDF generation.
+3. **AES-256-GCM Credential Encryption** -- Master key derived from JWT_SECRET. Encrypt/decrypt/mask functions.
+4. **Tenant Integrator Credential Management** -- Per-tenant credential CRUD in `tenant_integrators` collection. Encrypted storage. Masked display.
+5. **Updated Invoice Engine** -- Decision engine checks `has_active_integrator()`. Issue flow uses real integrator adapter. Provider info stored on invoice.
+6. **Status Check** -- On-demand status polling from integrator. Background sync job for bulk status updates.
+7. **PDF Download** -- Download invoice PDF from integrator or simulation placeholder.
+8. **Frontend Updates** -- Entegrator settings panel with save/test/delete. SAGLAYICI column in invoice table. e-Belge Bilgileri in detail modal. PDF Indir and Durum Kontrol buttons.
+
+**Backend:** 5 new API endpoints via `/api/integrators/*`, 1 new endpoint via `/api/invoices/{id}/status-check`
+**Frontend:** IntegratorSettings component, enhanced InvoiceDetail with PDF/status, Provider column
+**Testing:** 23/23 backend + all frontend tests PASS (iteration_94)
+**E-Document Provider:** EDM adapter in SIMULATION mode (real API requires production credentials)
 
 ---
 
 ## Key API Endpoints
 
-### Invoice Engine (Phase 10 — NEW)
-- `POST /api/invoices/create-from-booking` — Create invoice from booking (idempotent)
-- `POST /api/invoices/create-manual` — Create manual invoice with lines
-- `GET /api/invoices` — List invoices with status/source_type filters
-- `GET /api/invoices/dashboard` — Dashboard stats (total, issued, failed, financials)
-- `GET /api/invoices/{invoice_id}` — Invoice detail
-- `POST /api/invoices/{invoice_id}/issue` — Issue via e-document provider
-- `POST /api/invoices/{invoice_id}/cancel` — Cancel invoice
-- `POST /api/invoices/{invoice_id}/transition` — Manual state transition
-- `GET /api/invoices/booking/{booking_id}` — Check booking invoice status
-- `GET /api/invoices/{invoice_id}/events` — Event timeline
+### Integrator Management (Phase 11 -- NEW)
+- `GET /api/integrators/providers` -- List supported providers
+- `POST /api/integrators/credentials` -- Save integrator credentials (AES-256-GCM)
+- `GET /api/integrators/credentials` -- List configured integrators (masked)
+- `DELETE /api/integrators/credentials/{provider}` -- Delete credentials
+- `POST /api/integrators/test-connection` -- Test integrator connection
+- `GET /api/integrators/invoices/{id}/pdf` -- Download invoice PDF
 
-### Growth Engine (Phase 9)
-- `GET /api/growth/funnel` — Funnel stages with conversion rates
-- `GET/POST /api/growth/leads` — Lead CRUD
-- `PUT /api/growth/leads/{lead_id}/stage` — Stage progression
-- `GET/POST /api/growth/demos` — Demo management
-- `GET/POST /api/growth/referrals` — Referral system
-- `PUT /api/growth/referrals/{id}/status` — Referral status + rewards
-- `GET /api/growth/activation` — All activations
-- `GET /api/growth/activation/{agency_id}` — Agency activation score
-- `POST /api/growth/activation/{agency_id}/event` — Record event
-- `GET /api/growth/customer-success` — Success dashboard
-- `GET /api/growth/kpis` — Growth KPIs
-- `GET /api/growth/report` — Full growth report
-
-### Supplier Credentials (Phase 8)
-- `GET/POST/DELETE /api/supplier-credentials/*` — Agency CRUD
-- `GET/POST/PUT/DELETE /api/supplier-credentials/admin/*` — Super admin
-- `GET /api/supplier-credentials/admin/audit-log` — Audit trail
+### Invoice Engine (Phase 10 + 11)
+- `POST /api/invoices/create-from-booking` -- Create invoice from booking (idempotent)
+- `POST /api/invoices/create-manual` -- Create manual invoice with lines
+- `GET /api/invoices` -- List invoices with status/source_type filters
+- `GET /api/invoices/dashboard` -- Dashboard stats
+- `GET /api/invoices/{id}` -- Invoice detail
+- `POST /api/invoices/{id}/issue` -- Issue via EDM adapter
+- `POST /api/invoices/{id}/cancel` -- Cancel invoice
+- `POST /api/invoices/{id}/transition` -- Manual state transition
+- `GET /api/invoices/booking/{booking_id}` -- Check booking invoice status
+- `GET /api/invoices/{id}/events` -- Event timeline
+- `GET /api/invoices/{id}/status-check` -- Check status from integrator (NEW)
 
 ---
 
 ## DB Collections
 
-### Invoice Engine (NEW)
-- `invoices` — Invoice documents with state machine, booking linkage, customer profile, lines, totals
-- `invoice_events` — Audit trail for invoice lifecycle events
-
-### Growth Engine
-- `growth_leads`, `growth_demos`, `growth_referrals`, `growth_activation_events`, `growth_onboarding_tasks`, `growth_supplier_requests`
-
-### Credentials
-- `credential_audit_log`
+### Invoice Engine
+- `invoices` -- Invoice documents with state machine, booking linkage, customer profile, lines, totals
+- `invoice_events` -- Audit trail for invoice lifecycle events
+- `tenant_integrators` -- Per-tenant integrator credentials (AES-256-GCM encrypted) (NEW)
 
 ---
 
 ## Prioritized Backlog
 
-### P0 — Invoice Engine Phase 2 (Next)
-- EDM e-document integrator adapter (issue, status, PDF download, cancel)
-- Tenant-based integrator credential management (AES-256 encrypted)
-- Real e-Fatura / e-Arsiv issuing through EDM API
-- Integrator test connection
-- PDF generation and download
-
-### P1 — Invoice Engine Phase 3
+### P0 -- Invoice Engine Phase 3 (Next)
 - Luca accounting sync adapter
 - Customer creation in accounting system
 - Invoice sync with retry
 - Accounting sync status tracking
 - Finance/accounting dashboard
 
-### P2 — Invoice Engine Phase 4 & Backlog
+### P1 -- Invoice Engine Phase 4 & Backlog
 - Logo / Parasut / Mikro accounting adapters
 - Automation rules (auto-create invoice, auto-send PDF, auto-sync)
+- "Otomatik kes" checkbox on booking confirmation
 - Invoice reconciliation (booking vs invoice vs accounting)
 - Customer billing profile reuse
 - Tax breakdown visibility enhancement
-- Currency breakdown display
 
-### P3 — Platform Backlog
+### P2 -- Platform Backlog
 - Real supplier credential validation with live APIs
 - Onboard first 3 pilot agencies
 - Lead capture form for landing page
@@ -142,26 +124,34 @@ AES-256 encrypted credential storage, supplier-specific forms (WWTatil, Paximum,
 
 ---
 
-## Code Architecture (Invoice Engine)
+## Code Architecture (Invoice Engine + Integrators)
 
 ```
 backend/app/
-├── domain/invoice/
-│   ├── models.py           # Domain entities, builders
-│   ├── state_machine.py    # State transitions, validation
-│   ├── decision_engine.py  # e-Fatura/e-Arsiv decision
-│   └── booking_transform.py # Booking → Invoice mapping
-├── services/
-│   ├── invoice_engine.py   # Core service layer
-│   └── efatura/            # Existing provider layer (mock)
-│       ├── service.py
-│       └── provider.py
-├── routers/
-│   ├── invoice_engine.py   # New: /api/invoices/*
-│   └── efatura.py          # Legacy: /api/efatura/*
+  accounting/
+    __init__.py
+    credential_encryption.py        # AES-256-GCM encrypt/decrypt
+    tenant_integrator_service.py    # Tenant credential CRUD
+    integrators/
+      __init__.py
+      base_integrator.py            # ABC interface (5 methods)
+      edm_integrator.py             # EDM adapter (real + simulation)
+      registry.py                   # Provider registry
+  domain/invoice/
+    models.py                       # Domain entities, builders
+    state_machine.py                # State transitions
+    decision_engine.py              # e-Fatura/e-Arsiv decision
+    booking_transform.py            # Booking -> Invoice mapping
+  services/
+    invoice_engine.py               # Core service (updated for EDM)
+    efatura/                        # Legacy provider layer
+  routers/
+    invoice_engine.py               # /api/invoices/*
+    integrator_management.py        # /api/integrators/* (NEW)
+    efatura.py                      # Legacy /api/efatura/*
 frontend/src/
-├── pages/
-│   └── AdminEFaturaPage.jsx # Invoice Engine dashboard + wizard
-├── components/
-│   └── BookingDetailDrawer.jsx # "Faturayi Kes" button
+  pages/
+    AdminEFaturaPage.jsx            # Invoice Engine dashboard + wizard + integrator settings
+  components/
+    BookingDetailDrawer.jsx         # "Faturayi Kes" button
 ```

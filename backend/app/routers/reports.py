@@ -8,13 +8,17 @@ from fastapi import APIRouter, Depends, Request, Response
 from pydantic import BaseModel
 
 from app.auth import get_current_user
+from app.constants.features import FEATURE_REPORTS
 from app.constants.usage_metrics import UsageMetric
 from app.db import get_db
+from app.security.feature_flags import require_tenant_feature
 from app.services.quota_enforcement_service import enforce_quota_or_raise
 from app.services.usage_service import track_export_generated, track_report_generated
 from app.utils import get_or_create_correlation_id, parse_date_range, to_csv
 
 router = APIRouter(prefix="/api/reports", tags=["reports"])
+
+ReportsFeatureDep = Depends(require_tenant_feature(FEATURE_REPORTS))
 
 class ReportGenerateBody(BaseModel):
     start: str | None = None
@@ -310,7 +314,7 @@ async def _generate_report_payload(
     return payload
 
 
-@router.get("/reservations-summary", dependencies=[Depends(get_current_user)])
+@router.get("/reservations-summary", dependencies=[Depends(get_current_user), ReportsFeatureDep])
 async def reservations_summary(user=Depends(get_current_user)):
     db = await get_db()
     pipeline = [
@@ -322,7 +326,7 @@ async def reservations_summary(user=Depends(get_current_user)):
     return [{"status": r["_id"], "count": r["count"]} for r in rows]
 
 
-@router.get("/sales-summary", dependencies=[Depends(get_current_user)])
+@router.get("/sales-summary", dependencies=[Depends(get_current_user), ReportsFeatureDep])
 async def sales_summary(days: int = 14, user=Depends(get_current_user)):
     db = await get_db()
     days = max(1, min(int(days or 14), 180))
@@ -348,7 +352,7 @@ async def sales_summary(days: int = 14, user=Depends(get_current_user)):
     return [{"day": r["_id"], "revenue": round(float(r.get("revenue") or 0), 2), "count": r["count"]} for r in rows]
 
 
-@router.get("/generate", dependencies=[Depends(get_current_user)])
+@router.get("/generate", dependencies=[Depends(get_current_user), ReportsFeatureDep])
 async def generate_report_get(
     request: Request,
     start: str | None = None,
@@ -359,7 +363,7 @@ async def generate_report_get(
     return await _generate_report_payload(request, user=user, start=start, end=end, days=days)
 
 
-@router.post("/generate", dependencies=[Depends(get_current_user)])
+@router.post("/generate", dependencies=[Depends(get_current_user), ReportsFeatureDep])
 async def generate_report_post(
     body: ReportGenerateBody,
     request: Request,
@@ -368,7 +372,7 @@ async def generate_report_post(
     return await _generate_report_payload(request, user=user, start=body.start, end=body.end, days=body.days)
 
 
-@router.get("/sales-summary.csv", dependencies=[Depends(get_current_user)])
+@router.get("/sales-summary.csv", dependencies=[Depends(get_current_user), ReportsFeatureDep])
 async def sales_summary_csv(request: Request, days: int = 14, user=Depends(get_current_user)):
     await enforce_quota_or_raise(
         organization_id=user.get("organization_id"),

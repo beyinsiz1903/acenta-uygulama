@@ -18,6 +18,7 @@ SCHEDULER_RESPONSIBILITIES = [
     "Report schedule polling",
     "Operational integrity and uptime checks",
     "Google Sheets sync / write-back schedulers when enabled",
+    "Accounting sync retry queue and status polling",
 ]
 
 
@@ -53,6 +54,12 @@ def get_scheduler_runtime_components() -> list[dict[str, object]]:
             "env_flag": "GOOGLE_SHEETS_SYNC_ENABLED",
             "enabled": _is_enabled("GOOGLE_SHEETS_SYNC_ENABLED", default=True),
             "responsibility": "Run sheet sync, portfolio sync, and write-back processing",
+        },
+        {
+            "name": "accounting-sync-scheduler",
+            "env_flag": None,
+            "enabled": True,
+            "responsibility": "Process accounting sync retry queue and poll status",
         },
     ]
 
@@ -123,6 +130,30 @@ async def _build_ops_scheduler() -> AsyncIOScheduler:
     scheduler.add_job(_verify_ledger, "cron", hour=3, minute=30, id="ledger_integrity")
     scheduler.add_job(_cleanup_backups, "cron", hour=4, minute=0, id="backup_cleanup")
     return scheduler
+
+
+async def _build_accounting_scheduler() -> AsyncIOScheduler:
+    """Build scheduler for accounting sync retry queue and status polling."""
+    scheduler = AsyncIOScheduler()
+
+    async def _process_accounting_retries() -> None:
+        try:
+            from app.accounting.accounting_scheduler import process_retry_queue
+            await process_retry_queue()
+        except Exception as exc:
+            logging.getLogger("accounting_scheduler").error("Accounting retry failed: %s", exc)
+
+    async def _poll_accounting_status() -> None:
+        try:
+            from app.accounting.accounting_scheduler import poll_sync_status
+            await poll_sync_status()
+        except Exception as exc:
+            logging.getLogger("accounting_scheduler").error("Accounting poll failed: %s", exc)
+
+    scheduler.add_job(_process_accounting_retries, "interval", minutes=2, id="accounting_retry")
+    scheduler.add_job(_poll_accounting_status, "interval", minutes=10, id="accounting_poll")
+    return scheduler
+
 
 
 async def _build_sheets_scheduler() -> AsyncIOScheduler | None:
@@ -233,11 +264,15 @@ async def main() -> None:
             sheets_scheduler.start()
             schedulers.append(sheets_scheduler)
 
+        accounting_scheduler = await _build_accounting_scheduler()
+        accounting_scheduler.start()
+        schedulers.append(accounting_scheduler)
+
         active_scheduler_ids: list[str] = []
         if billing_scheduler_enabled:
             active_scheduler_ids.append("billing-finalize")
         active_scheduler_ids.extend(
-            [scheduler_id for scheduler_id, enabled in (("reports", True), ("ops", True), ("sheets", sheets_scheduler is not None)) if enabled]
+            [scheduler_id for scheduler_id, enabled in (("reports", True), ("ops", True), ("sheets", sheets_scheduler is not None), ("accounting", True)) if enabled]
         )
         heartbeat.mark_ready(details=_scheduler_snapshot(active_scheduler_ids))
         heartbeat_task = asyncio.create_task(

@@ -675,6 +675,13 @@ export const ADMIN_MODULE_SECTIONS = [
         isCore: true,
       },
       {
+        key: "admin-accounting",
+        label: "Muhasebe Sync",
+        icon: Settings,
+        pathByScope: { admin: "/app/admin/accounting" },
+        isCore: true,
+      },
+      {
         key: "admin-sms",
         label: "SMS",
         icon: Settings,

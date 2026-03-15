@@ -4,7 +4,7 @@ import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import {
   FileText, Send, Plus, X, Eye, RefreshCw, AlertTriangle,
-  CheckCircle, Clock, Ban, ArrowRight, Building2, User,
+  CheckCircle, Clock, Ban, ArrowRight, ArrowUpRight, Building2, User,
   Receipt, TrendingUp, ChevronDown, ChevronUp,
   Download, Settings, Shield, Wifi, WifiOff, Key, Trash2, Search
 } from "lucide-react";
@@ -659,6 +659,18 @@ export default function AdminEFaturaPage() {
     } catch (e) { toast.error(e.response?.data?.detail || e.message); }
   };
 
+  const handleLucaSync = async (invoiceId) => {
+    try {
+      const res = await api.post(`/accounting/sync/${invoiceId}`, { provider: "luca" });
+      if (res.data?.error === "duplicate") {
+        toast.info(res.data.message || "Zaten senkronize edilmis");
+      } else {
+        toast.success("Luca senkronizasyonu tamamlandi");
+      }
+      load();
+    } catch (e) { toast.error(e.response?.data?.detail || e.message); }
+  };
+
   const fmt = (v) => typeof v === "number" ? v.toLocaleString("tr-TR", { minimumFractionDigits: 2 }) : "0";
 
   return (
@@ -740,6 +752,7 @@ export default function AdminEFaturaPage() {
                 <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">Musteri</th>
                 <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">Durum</th>
                 <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">Saglayici</th>
+                <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">Muhasebe</th>
                 <th className="text-right px-4 py-3 font-medium text-xs uppercase tracking-wider">Tutar</th>
                 <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">Tarih</th>
                 <th className="text-right px-4 py-3 font-medium text-xs uppercase tracking-wider">Aksiyonlar</th>
@@ -763,6 +776,25 @@ export default function AdminEFaturaPage() {
                     <td className="px-4 py-3">
                       {inv.provider && inv.provider !== "none" ? (
                         <Badge variant="outline" className="text-xs bg-slate-50">{inv.provider.toUpperCase()}</Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {inv.accounting_status === "synced" ? (
+                        <Badge variant="outline" className="text-xs bg-teal-50 text-teal-700 border-teal-200 gap-1">
+                          <CheckCircle className="h-3 w-3" /> Luca
+                        </Badge>
+                      ) : inv.accounting_status === "sync_failed" ? (
+                        <Badge variant="outline" className="text-xs bg-red-50 text-red-600 border-red-200 gap-1">
+                          <AlertTriangle className="h-3 w-3" /> Hata
+                        </Badge>
+                      ) : inv.status === "issued" ? (
+                        <Button size="sm" variant="outline" className="h-6 text-xs gap-1 text-teal-700 border-teal-200 hover:bg-teal-50"
+                          onClick={(e) => { e.stopPropagation(); handleLucaSync(inv.invoice_id); }}
+                          data-testid={`luca-sync-btn-${inv.invoice_id}`}>
+                          <ArrowUpRight className="h-3 w-3" /> Luca
+                        </Button>
                       ) : (
                         <span className="text-xs text-muted-foreground">-</span>
                       )}

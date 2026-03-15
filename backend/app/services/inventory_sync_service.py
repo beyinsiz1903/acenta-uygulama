@@ -99,6 +99,7 @@ async def _determine_sync_mode(supplier: str) -> tuple[str, dict | None]:
     """Determine sync mode for a supplier based on credential configuration.
     
     Returns: (mode, config) where mode is 'sandbox', 'production', or 'simulation'
+    Respects SUPPLIER_SIMULATION_ALLOWED config flag for production safety.
     """
     try:
         from app.services.supplier_config_service import get_raw_credentials
@@ -107,6 +108,12 @@ async def _determine_sync_mode(supplier: str) -> tuple[str, dict | None]:
             return config.get("mode", "sandbox"), config
     except Exception as e:
         logger.warning("Could not check credentials for %s: %s", supplier, e)
+
+    # Check if simulation is allowed (production guard)
+    from app.config import SUPPLIER_SIMULATION_ALLOWED
+    if not SUPPLIER_SIMULATION_ALLOWED:
+        logger.error("Simulation not allowed for %s — SUPPLIER_SIMULATION_ALLOWED=false", supplier)
+        return "disabled", None
     return "simulation", None
 
 
@@ -121,6 +128,13 @@ async def trigger_supplier_sync(supplier: str) -> dict[str, Any]:
         return {"error": f"Unknown supplier: {supplier}", "available": list(SUPPLIER_SYNC_CONFIG.keys())}
 
     sync_mode, cred_config = await _determine_sync_mode(supplier)
+
+    # Handle disabled mode (production guard)
+    if sync_mode == "disabled":
+        return {
+            "error": f"Simulation disabled for {supplier} — credentials required (SUPPLIER_SIMULATION_ALLOWED=false)",
+            "sync_mode": "disabled",
+        }
 
     db = await get_db()
     sync_start = time.monotonic()
@@ -360,14 +374,26 @@ async def _record_supplier_metrics(
 ) -> None:
     """Record supplier-level performance metrics for the dashboard."""
     try:
+        api_calls = metrics.get("api_calls", 0)
+        errors_count = metrics.get("errors_count", 0)
+        hotels_count = metrics.get("hotels_count", 0)
+        avail_count = metrics.get("availability_count", 0)
+
+        success_rate = round(((api_calls - errors_count) / max(api_calls, 1)) * 100, 2)
+        availability_rate = round((avail_count / max(hotels_count, 1)) * 100, 2) if hotels_count > 0 else 0.0
+
         await db.supplier_sync_metrics.insert_one({
             "supplier": supplier,
             "timestamp": _ts(),
             "status": status,
-            "api_calls": metrics.get("api_calls", 0),
+            "api_calls": api_calls,
             "avg_latency_ms": metrics.get("avg_latency_ms", 0),
             "error_rate_pct": metrics.get("error_rate_pct", 0),
-            "hotels_synced": metrics.get("hotels_count", 0),
+            "success_rate_pct": success_rate,
+            "availability_rate_pct": availability_rate,
+            "hotels_synced": hotels_count,
+            "prices_synced": metrics.get("prices_count", 0),
+            "availability_synced": avail_count,
             "sync_duration_ms": metrics.get("sync_duration_ms", 0),
         })
     except Exception as e:
@@ -808,6 +834,161 @@ async def get_inventory_stats() -> dict[str, Any]:
     }
 
 
+# ── Supplier Health ───────────────────────────────────────────────────
+
+async def get_supplier_health(supplier: str | None = None) -> dict[str, Any]:
+    """Get supplier health status based on recent metrics.
+
+    Status logic:
+      healthy  — success_rate >= 95% AND avg_latency < 2000ms
+      degraded — success_rate >= 80% OR avg_latency < 5000ms
+      down     — success_rate < 80% OR no recent data
+    """
+    db = await get_db()
+    results = {}
+
+    suppliers_list = [supplier] if supplier else list(SUPPLIER_SYNC_CONFIG.keys())
+
+    for sup in suppliers_list:
+        # Get last 10 metrics for averaging
+        metrics_cursor = db.supplier_sync_metrics.find(
+            {"supplier": sup}, {"_id": 0}
+        ).sort("timestamp", -1).limit(10)
+        recent_metrics = []
+        async for doc in metrics_cursor:
+            recent_metrics.append(doc)
+
+        # Get last sync job
+        last_sync = await db.inventory_sync_jobs.find_one(
+            {"supplier": sup}, {"_id": 0},
+            sort=[("started_at", -1)],
+        )
+
+        # Get last validation
+        from app.services.supplier_config_service import get_supplier_config
+        config = await get_supplier_config(sup)
+        last_validation = config.get("last_validated") if config else None
+        validation_status = config.get("validation_status", "not_tested") if config else "not_configured"
+
+        if recent_metrics:
+            avg_latency = round(sum(m.get("avg_latency_ms", 0) for m in recent_metrics) / len(recent_metrics), 1)
+            avg_error_rate = round(sum(m.get("error_rate_pct", 0) for m in recent_metrics) / len(recent_metrics), 2)
+            avg_success_rate = round(sum(m.get("success_rate_pct", 100) for m in recent_metrics) / len(recent_metrics), 2)
+            avg_availability_rate = round(sum(m.get("availability_rate_pct", 0) for m in recent_metrics) / len(recent_metrics), 2)
+
+            if avg_success_rate >= 95 and avg_latency < 2000:
+                status = "healthy"
+            elif avg_success_rate >= 80 or avg_latency < 5000:
+                status = "degraded"
+            else:
+                status = "down"
+        else:
+            avg_latency = 0
+            avg_error_rate = 0
+            avg_success_rate = 0
+            avg_availability_rate = 0
+            status = "down" if not last_sync else "healthy"
+
+        results[sup] = {
+            "supplier": sup,
+            "latency_avg": avg_latency,
+            "error_rate": avg_error_rate,
+            "success_rate": avg_success_rate,
+            "availability_rate": avg_availability_rate,
+            "last_sync": last_sync.get("started_at") if last_sync else None,
+            "last_sync_status": last_sync.get("status") if last_sync else "never",
+            "last_sync_duration_ms": last_sync.get("duration_ms", 0) if last_sync else 0,
+            "last_validation": last_validation,
+            "validation_status": validation_status,
+            "status": status,
+            "metrics_count": len(recent_metrics),
+        }
+
+    return {"suppliers": results, "timestamp": _ts()}
+
+
+# ── KPI Data ─────────────────────────────────────────────────────────
+
+async def get_kpi_data(supplier: str | None = None) -> dict[str, Any]:
+    """Calculate KPI data for the dashboard.
+
+    Returns:
+      - drift_rate: drift > 2% / total revalidations per supplier
+      - severity_breakdown: count by severity per supplier
+      - price_drift_timeline: recent diffs with timestamps for charting
+      - price_consistency: 1 - drift_rate
+    """
+    db = await get_db()
+    query: dict[str, Any] = {}
+    if supplier:
+        query["supplier"] = supplier
+
+    # Get all revalidations
+    total_revals = await db.inventory_revalidations.count_documents(query)
+
+    # Count drifted (abs diff > 2%)
+    drift_query = {**query, "$expr": {"$gt": [{"$abs": "$diff_pct"}, 2]}}
+    drifted_count = await db.inventory_revalidations.count_documents(drift_query)
+
+    drift_rate = round((drifted_count / max(total_revals, 1)) * 100, 2)
+    price_consistency = round(1 - (drift_rate / 100), 4)
+
+    # Severity breakdown (aggregate per supplier)
+    severity_pipeline = [
+        {"$match": query} if query else {"$match": {}},
+        {"$group": {
+            "_id": {"supplier": "$supplier", "severity": "$drift_severity"},
+            "count": {"$sum": 1},
+        }},
+        {"$sort": {"_id.supplier": 1, "count": -1}},
+    ]
+    severity_breakdown = {}
+    async for doc in db.inventory_revalidations.aggregate(severity_pipeline):
+        sup = doc["_id"]["supplier"]
+        sev = doc["_id"]["severity"]
+        if sup not in severity_breakdown:
+            severity_breakdown[sup] = {"normal": 0, "warning": 0, "high": 0, "critical": 0, "total": 0}
+        severity_breakdown[sup][sev] = doc["count"]
+        severity_breakdown[sup]["total"] += doc["count"]
+
+    # Per-supplier drift rates
+    supplier_drift_rates = {}
+    for sup in severity_breakdown:
+        sup_total = severity_breakdown[sup]["total"]
+        sup_drifted = sup_total - severity_breakdown[sup].get("normal", 0)
+        supplier_drift_rates[sup] = {
+            "drift_rate": round((sup_drifted / max(sup_total, 1)) * 100, 2),
+            "price_consistency": round(1 - (sup_drifted / max(sup_total, 1)), 4),
+            "total_revalidations": sup_total,
+            "drifted_count": sup_drifted,
+        }
+
+    # Price drift timeline (last 50 revalidations)
+    timeline_cursor = db.inventory_revalidations.find(
+        query, {"_id": 0, "supplier": 1, "diff_pct": 1, "drift_severity": 1, "timestamp": 1, "recorded_at": 1}
+    ).sort("recorded_at", -1).limit(50)
+    timeline = []
+    async for doc in timeline_cursor:
+        timeline.append({
+            "supplier": doc.get("supplier"),
+            "diff_pct": doc.get("diff_pct", 0),
+            "severity": doc.get("drift_severity", "normal"),
+            "timestamp": doc.get("recorded_at", doc.get("timestamp")),
+        })
+    timeline.reverse()  # oldest first for chart
+
+    return {
+        "drift_rate": drift_rate,
+        "price_consistency": price_consistency,
+        "total_revalidations": total_revals,
+        "drifted_count": drifted_count,
+        "severity_breakdown": severity_breakdown,
+        "supplier_drift_rates": supplier_drift_rates,
+        "price_drift_timeline": timeline,
+        "timestamp": _ts(),
+    }
+
+
 # ── Ensure Indexes ───────────────────────────────────────────────────
 
 async def ensure_inventory_indexes():
@@ -841,5 +1022,9 @@ async def ensure_inventory_indexes():
     await db.inventory_revalidations.create_index([("supplier", 1), ("hotel_id", 1)])
     await db.inventory_revalidations.create_index([("recorded_at", -1)])
     await db.inventory_revalidations.create_index([("drift_severity", 1)])
+    await db.inventory_revalidations.create_index([("diff_pct", 1)])
+
+    # supplier_sync_metrics indexes
+    await db.supplier_sync_metrics.create_index([("supplier", 1), ("timestamp", -1)])
 
     logger.info("Inventory indexes created successfully")

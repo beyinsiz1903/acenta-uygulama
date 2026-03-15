@@ -8,8 +8,13 @@ import { Label } from "../components/ui/label";
 import {
   Database, RefreshCw, Search, Loader2, CheckCircle2, XCircle, Clock,
   HardDrive, Layers, ArrowUpDown, Zap, Server, Activity, AlertTriangle,
-  Settings, Shield, Play, Trash2, Eye, EyeOff,
+  Settings, Shield, Play, Trash2, Eye, EyeOff, Heart, TrendingUp,
+  BarChart3, Target,
 } from "lucide-react";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, BarChart, Bar, Cell,
+} from "recharts";
 import { api } from "../lib/api";
 
 function StatCard({ title, value, subtitle, icon: Icon, variant = "default", testId }) {
@@ -68,6 +73,13 @@ function ValidationStatusBadge({ status }) {
   return <Badge variant="secondary" data-testid="validation-none">Tanimlanmamis</Badge>;
 }
 
+function HealthStatusBadge({ status }) {
+  if (status === "healthy") return <Badge variant="outline" className="border-emerald-500 text-emerald-600 bg-emerald-500/10" data-testid="health-healthy">Healthy</Badge>;
+  if (status === "degraded") return <Badge variant="outline" className="border-amber-500 text-amber-600 bg-amber-500/10" data-testid="health-degraded">Degraded</Badge>;
+  if (status === "down") return <Badge variant="destructive" data-testid="health-down">Down</Badge>;
+  return <Badge variant="secondary" data-testid="health-unknown">{status || "Unknown"}</Badge>;
+}
+
 export default function InventorySyncDashboardPage() {
   const [syncStatus, setSyncStatus] = useState(null);
   const [stats, setStats] = useState(null);
@@ -75,6 +87,8 @@ export default function InventorySyncDashboardPage() {
   const [syncJobs, setSyncJobs] = useState(null);
   const [supplierConfigs, setSupplierConfigs] = useState({});
   const [validationResult, setValidationResult] = useState(null);
+  const [supplierHealth, setSupplierHealth] = useState(null);
+  const [kpiData, setKpiData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState({});
   const [searchDest, setSearchDest] = useState("Antalya");
@@ -93,16 +107,20 @@ export default function InventorySyncDashboardPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [statusRes, statsRes, jobsRes, configRes] = await Promise.all([
+      const [statusRes, statsRes, jobsRes, configRes, healthRes, kpiRes] = await Promise.all([
         api.get("/inventory/sync/status"),
         api.get("/inventory/stats"),
         api.get("/inventory/sync/jobs?limit=10"),
         api.get("/inventory/supplier-config"),
+        api.get("/inventory/supplier-health"),
+        api.get("/inventory/kpi/drift"),
       ]);
       setSyncStatus(statusRes.data);
       setStats(statsRes.data);
       setSyncJobs(jobsRes.data);
       setSupplierConfigs(configRes.data?.suppliers || {});
+      setSupplierHealth(healthRes.data?.suppliers || {});
+      setKpiData(kpiRes.data);
     } catch (err) {
       console.error("Inventory data fetch failed:", err);
     } finally {
@@ -445,6 +463,248 @@ export default function InventorySyncDashboardPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Supplier Health Panel */}
+      <Card data-testid="supplier-health-panel">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Heart className="h-5 w-5" /> Supplier Health
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Supplier</TableHead>
+                <TableHead>Durum</TableHead>
+                <TableHead>Avg Latency</TableHead>
+                <TableHead>Error Rate</TableHead>
+                <TableHead>Success Rate</TableHead>
+                <TableHead>Availability Rate</TableHead>
+                <TableHead>Son Sync</TableHead>
+                <TableHead>Son Validasyon</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {supplierHealth && Object.entries(supplierHealth).map(([sup, h]) => (
+                <TableRow key={sup} data-testid={`health-row-${sup}`}>
+                  <TableCell className="font-medium capitalize">{sup}</TableCell>
+                  <TableCell>
+                    <HealthStatusBadge status={h.status} />
+                  </TableCell>
+                  <TableCell className="font-mono text-sm">
+                    {h.latency_avg ? `${h.latency_avg}ms` : "-"}
+                  </TableCell>
+                  <TableCell className="font-mono text-sm">
+                    <span className={h.error_rate > 3 ? "text-red-500" : h.error_rate > 0 ? "text-amber-500" : "text-emerald-500"}>
+                      {h.error_rate}%
+                    </span>
+                  </TableCell>
+                  <TableCell className="font-mono text-sm">
+                    <span className={h.success_rate >= 95 ? "text-emerald-500" : h.success_rate >= 80 ? "text-amber-500" : "text-red-500"}>
+                      {h.success_rate}%
+                    </span>
+                  </TableCell>
+                  <TableCell className="font-mono text-sm">{h.availability_rate}%</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {h.last_sync ? new Date(h.last_sync).toLocaleString("tr-TR") : "-"}
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {h.last_validation ? new Date(h.last_validation).toLocaleString("tr-TR") : "-"}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {(!supplierHealth || Object.keys(supplierHealth).length === 0) && (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center text-muted-foreground">Supplier health verisi yok</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* KPI Dashboard */}
+      {kpiData && (
+        <div className="space-y-6" data-testid="kpi-dashboard">
+          {/* KPI Summary Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card data-testid="kpi-drift-rate">
+              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Drift Rate</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${kpiData.drift_rate > 5 ? "text-red-500" : kpiData.drift_rate > 2 ? "text-amber-500" : "text-emerald-500"}`}>
+                  {kpiData.drift_rate}%
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {kpiData.drifted_count} / {kpiData.total_revalidations} revalidation
+                </p>
+              </CardContent>
+            </Card>
+            <Card data-testid="kpi-price-consistency">
+              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Price Consistency</CardTitle>
+                <Target className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${kpiData.price_consistency >= 0.95 ? "text-emerald-500" : kpiData.price_consistency >= 0.9 ? "text-amber-500" : "text-red-500"}`}>
+                  {(kpiData.price_consistency * 100).toFixed(1)}%
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">1 - drift_rate</p>
+              </CardContent>
+            </Card>
+            <Card data-testid="kpi-total-revals">
+              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Revalidasyonlar</CardTitle>
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{kpiData.total_revalidations}</div>
+                <p className="text-xs text-muted-foreground mt-1">Toplam kontrol sayisi</p>
+              </CardContent>
+            </Card>
+            <Card data-testid="kpi-drifted-count">
+              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Sapma Sayisi</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${kpiData.drifted_count > 0 ? "text-amber-500" : "text-emerald-500"}`}>
+                  {kpiData.drifted_count}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">drift &gt; 2%</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Drift Severity Breakdown */}
+            <Card data-testid="kpi-severity-breakdown">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <BarChart3 className="h-5 w-5" /> Drift Severity Dagilimi
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {Object.keys(kpiData.severity_breakdown || {}).length > 0 ? (
+                  <>
+                    <div className="h-48 mb-4">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={Object.entries(kpiData.severity_breakdown).map(([sup, sev]) => ({
+                          supplier: sup,
+                          normal: sev.normal || 0,
+                          warning: sev.warning || 0,
+                          high: sev.high || 0,
+                          critical: sev.critical || 0,
+                        }))}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="supplier" tick={{ fontSize: 12 }} />
+                          <YAxis tick={{ fontSize: 12 }} />
+                          <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }} />
+                          <Legend wrapperStyle={{ fontSize: "12px" }} />
+                          <Bar dataKey="normal" name="Normal (0-2%)" fill="#10b981" stackId="a" />
+                          <Bar dataKey="warning" name="Warning (2-5%)" fill="#f59e0b" stackId="a" />
+                          <Bar dataKey="high" name="High (5-10%)" fill="#f97316" stackId="a" />
+                          <Bar dataKey="critical" name="Critical (10%+)" fill="#ef4444" stackId="a" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Supplier</TableHead>
+                          <TableHead>Normal</TableHead>
+                          <TableHead>Warning</TableHead>
+                          <TableHead>High</TableHead>
+                          <TableHead>Critical</TableHead>
+                          <TableHead>Drift Rate</TableHead>
+                          <TableHead>Consistency</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {Object.entries(kpiData.severity_breakdown).map(([sup, sev]) => {
+                          const dr = kpiData.supplier_drift_rates?.[sup] || {};
+                          return (
+                            <TableRow key={sup} data-testid={`severity-row-${sup}`}>
+                              <TableCell className="font-medium capitalize">{sup}</TableCell>
+                              <TableCell><span className="text-emerald-500 font-mono">{sev.normal || 0}</span></TableCell>
+                              <TableCell><span className="text-amber-500 font-mono">{sev.warning || 0}</span></TableCell>
+                              <TableCell><span className="text-orange-500 font-mono">{sev.high || 0}</span></TableCell>
+                              <TableCell><span className="text-red-500 font-mono">{sev.critical || 0}</span></TableCell>
+                              <TableCell className="font-mono">{dr.drift_rate || 0}%</TableCell>
+                              <TableCell className="font-mono">{dr.price_consistency ? (dr.price_consistency * 100).toFixed(1) + "%" : "-"}</TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-6">Severity verisi yok — once revalidation calistirin</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Price Drift Timeline */}
+            <Card data-testid="kpi-drift-timeline">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <TrendingUp className="h-5 w-5" /> Price Drift Timeline
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {(kpiData.price_drift_timeline || []).length > 0 ? (
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={(kpiData.price_drift_timeline || []).map((p, i) => ({
+                        idx: i + 1,
+                        diff_pct: p.diff_pct,
+                        supplier: p.supplier,
+                        severity: p.severity,
+                        time: p.timestamp ? new Date(p.timestamp).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : `${i}`,
+                      }))}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="time" tick={{ fontSize: 10 }} />
+                        <YAxis tick={{ fontSize: 11 }} label={{ value: "Diff %", angle: -90, position: "insideLeft", style: { fontSize: 11 } }} />
+                        <Tooltip
+                          contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
+                          formatter={(value, name) => [`${value}%`, name]}
+                          labelFormatter={(label) => `Zaman: ${label}`}
+                        />
+                        <Legend wrapperStyle={{ fontSize: "12px" }} />
+                        {/* Reference lines for severity thresholds */}
+                        <Line
+                          type="monotone"
+                          dataKey="diff_pct"
+                          name="Fiyat Farki"
+                          stroke="#3b82f6"
+                          strokeWidth={2}
+                          dot={(props) => {
+                            const { cx, cy, payload } = props;
+                            const colors = { normal: "#10b981", warning: "#f59e0b", high: "#f97316", critical: "#ef4444" };
+                            const color = colors[payload.severity] || "#3b82f6";
+                            return <circle cx={cx} cy={cy} r={4} fill={color} stroke={color} />;
+                          }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-6">Timeline verisi yok — once revalidation calistirin</p>
+                )}
+                <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> 0-2% Normal</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> 2-5% Warning</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-500 inline-block" /> 5-10% High</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500 inline-block" /> 10%+ Critical</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
 
       {/* Supplier Sync Status */}
       <Card data-testid="supplier-sync-panel">

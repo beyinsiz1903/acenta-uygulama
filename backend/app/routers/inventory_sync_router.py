@@ -12,6 +12,8 @@ Travel Inventory Platform endpoints:
   DELETE /api/inventory/supplier-config/{supplier} — Remove credentials
   POST /api/inventory/sandbox/validate  — Run sandbox validation tests
   GET  /api/inventory/supplier-metrics  — Get supplier performance metrics
+  GET  /api/inventory/supplier-health   — Supplier health status (latency, error_rate, success_rate)
+  GET  /api/inventory/kpi/drift         — KPI drift data (drift_rate, severity, timeline)
 """
 from __future__ import annotations
 
@@ -23,6 +25,8 @@ from pydantic import BaseModel
 from app.auth import require_roles
 from app.services.inventory_sync_service import (
     get_inventory_stats,
+    get_kpi_data,
+    get_supplier_health,
     get_sync_jobs,
     get_sync_status,
     revalidate_price,
@@ -271,11 +275,20 @@ async def sandbox_validate(
     total_count = len(tests)
     overall_status = "pass" if passed_count == total_count else ("partial" if passed_count > 0 else "fail")
 
+    # Calculate price_consistency from revalidation data
+    price_consistency = None
+    try:
+        kpi = await get_kpi_data(supplier)
+        price_consistency = kpi.get("price_consistency", None)
+    except Exception:
+        pass
+
     # Persist validation result
     await update_validation_status(supplier, overall_status, {
         "tests": tests,
         "passed": passed_count,
         "total": total_count,
+        "price_consistency": price_consistency,
     })
 
     return {
@@ -283,6 +296,7 @@ async def sandbox_validate(
         "status": overall_status,
         "tests_passed": passed_count,
         "tests_total": total_count,
+        "price_consistency": price_consistency,
         "tests": tests,
     }
 
@@ -311,3 +325,25 @@ async def supplier_metrics(
         metrics.append(doc)
 
     return {"metrics": metrics, "total": len(metrics)}
+
+
+# ── Supplier Health (CTO Directive) ──────────────────────────────────
+
+@router.get("/supplier-health")
+async def supplier_health_endpoint(
+    supplier: str | None = Query(None),
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Get supplier health status: latency, error_rate, success_rate, availability_rate, last_sync, last_validation, status."""
+    return await get_supplier_health(supplier)
+
+
+# ── KPI Drift Data ───────────────────────────────────────────────────
+
+@router.get("/kpi/drift")
+async def kpi_drift_data(
+    supplier: str | None = Query(None),
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Get KPI drift data: drift_rate, price_consistency, severity_breakdown, price_drift_timeline."""
+    return await get_kpi_data(supplier)

@@ -107,6 +107,9 @@ PAXIMUM_API_KEY = os.environ.get("PAXIMUM_API_KEY", "")
 PAXIMUM_TIMEOUT_SECONDS = float(os.environ.get("PAXIMUM_TIMEOUT_SECONDS", "10"))
 
 
+# Supplier simulation fallback — production: false, sandbox/dev: true
+SUPPLIER_SIMULATION_ALLOWED: bool = _env_flag("SUPPLIER_SIMULATION_ALLOWED", default=True)
+
 AUTH_ACCESS_COOKIE_NAME = os.environ.get("AUTH_ACCESS_COOKIE_NAME", "acenta_access")
 AUTH_REFRESH_COOKIE_NAME = os.environ.get("AUTH_REFRESH_COOKIE_NAME", "acenta_refresh")
 AUTH_COOKIE_DOMAIN = (os.environ.get("AUTH_COOKIE_DOMAIN") or "").strip() or None

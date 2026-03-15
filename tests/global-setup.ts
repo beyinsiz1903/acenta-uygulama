@@ -7,7 +7,7 @@ export default async function globalSetup(_config: FullConfig) {
   const baseURL =
     process.env.PLAYWRIGHT_BASE_URL ??
     process.env.E2E_BASE_URL ??
-    "https://ci-pipeline-fix-1.preview.emergentagent.com";
+    "https://fatura-motoru.preview.emergentagent.com";
 
   const email = process.env.PLAYWRIGHT_EMAIL ?? "admin@acenta.test";
   const password = process.env.PLAYWRIGHT_PASSWORD ?? "admin123";

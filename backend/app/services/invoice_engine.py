@@ -1,12 +1,15 @@
-"""Invoice Engine Service (Faz 1).
+"""Invoice Engine Service (Faz 1 + Faz 2).
 
-Replaces the basic efatura service with a full invoice engine.
+Full invoice engine with e-document provider integration.
 Handles:
 - Invoice CRUD with idempotency
 - State machine transitions
 - Booking → Invoice creation
-- Decision engine integration
+- Decision engine integration (with integrator_available check)
 - Dashboard stats
+- Real integrator dispatch (EDM adapter)
+- PDF download
+- Status polling
 """
 from __future__ import annotations
 
@@ -28,7 +31,11 @@ from app.domain.invoice.state_machine import (
     get_allowed_transitions,
     validate_invoice_transition,
 )
-from app.services.efatura.provider import get_efatura_provider
+from app.accounting.integrators.registry import get_integrator
+from app.accounting.tenant_integrator_service import (
+    get_integrator_credentials,
+    has_active_integrator,
+)
 from app.utils import now_utc, serialize_doc
 
 
@@ -105,11 +112,18 @@ async def create_invoice_from_booking(
     tax_id = (customer_profile or {}).get("tax_id", "")
     id_number = (customer_profile or {}).get("id_number", "")
 
+    # Check if tenant has an active integrator
+    integrator_available = await has_active_integrator(tenant_id)
+
     decision = decide_document_type(
         customer_type=customer_type,
         tax_id=tax_id,
         id_number=id_number,
+        integrator_available=integrator_available,
     )
+
+    # Determine which provider to use
+    provider_name = "edm" if integrator_available else "none"
 
     now = now_utc()
     invoice_id = f"INV-{uuid.uuid4().hex[:8].upper()}"
@@ -133,7 +147,7 @@ async def create_invoice_from_booking(
         "hotel_name": invoice_payload.get("hotel_name", ""),
         "guest_name": invoice_payload.get("guest_name", ""),
         "stay": invoice_payload.get("stay", {}),
-        "provider": "mock",
+        "provider": provider_name,
         "provider_invoice_id": None,
         "provider_status": None,
         "accounting_ref": None,
@@ -196,11 +210,16 @@ async def create_manual_invoice(
     tax_id = (customer_profile or {}).get("tax_id", "")
     id_number = (customer_profile or {}).get("id_number", "")
 
+    integrator_available = await has_active_integrator(tenant_id)
+
     decision = decide_document_type(
         customer_type=customer_type,
         tax_id=tax_id,
         id_number=id_number,
+        integrator_available=integrator_available,
     )
+
+    provider_name = "edm" if integrator_available else "none"
 
     now = now_utc()
     invoice_id = f"INV-{uuid.uuid4().hex[:8].upper()}"
@@ -224,7 +243,7 @@ async def create_manual_invoice(
         "hotel_name": "",
         "guest_name": (customer_profile or {}).get("name", ""),
         "stay": {},
-        "provider": "mock",
+        "provider": provider_name,
         "provider_invoice_id": None,
         "provider_status": None,
         "accounting_ref": None,
@@ -276,10 +295,15 @@ async def transition_invoice(
     return serialize_doc(updated)
 
 
-# ── Issue Invoice (via provider) ──────────────────────────────────────
+# ── Issue Invoice (via integrator adapter) ────────────────────────────
 
 async def issue_invoice(tenant_id: str, invoice_id: str, actor: str = "") -> dict[str, Any]:
-    """Issue invoice through the e-document provider."""
+    """Issue invoice through the e-document integrator (EDM).
+
+    Flow: draft → ready_for_issue → issuing → (issued | failed)
+    Uses the real integrator adapter. Falls back to simulation
+    if no credentials are configured.
+    """
     db = await get_db()
     doc = await db[COL].find_one({"tenant_id": tenant_id, "invoice_id": invoice_id})
     if not doc:
@@ -289,48 +313,93 @@ async def issue_invoice(tenant_id: str, invoice_id: str, actor: str = "") -> dic
     if current not in (InvoiceStatus.DRAFT, InvoiceStatus.READY_FOR_ISSUE, InvoiceStatus.FAILED):
         return {"error": f"Cannot issue invoice in status '{current}'"}
 
-    # Transition to issuing
+    # Transition: draft → ready_for_issue → issuing
     if current == InvoiceStatus.DRAFT:
         validate_invoice_transition(current, InvoiceStatus.READY_FOR_ISSUE)
         await db[COL].update_one({"_id": doc["_id"]}, {"$set": {"status": InvoiceStatus.READY_FOR_ISSUE, "updated_at": now_utc()}})
 
-    validate_invoice_transition(
-        InvoiceStatus.READY_FOR_ISSUE if current != InvoiceStatus.FAILED else InvoiceStatus.FAILED,
-        InvoiceStatus.ISSUING if current != InvoiceStatus.FAILED else InvoiceStatus.READY_FOR_ISSUE,
-    )
+    if current == InvoiceStatus.FAILED:
+        validate_invoice_transition(InvoiceStatus.FAILED, InvoiceStatus.READY_FOR_ISSUE)
+        await db[COL].update_one({"_id": doc["_id"]}, {"$set": {"status": InvoiceStatus.READY_FOR_ISSUE, "updated_at": now_utc()}})
 
+    validate_invoice_transition(InvoiceStatus.READY_FOR_ISSUE, InvoiceStatus.ISSUING)
     await db[COL].update_one({"_id": doc["_id"]}, {"$set": {"status": InvoiceStatus.ISSUING, "updated_at": now_utc()}})
     await _write_event(db, tenant_id, invoice_id, "invoice.issuing", actor)
 
-    provider = get_efatura_provider(doc.get("provider", "mock"))
+    # Get integrator and credentials
+    provider_name = doc.get("provider", "edm")
+    if provider_name == "none":
+        provider_name = "edm"
+
+    integrator = get_integrator(provider_name)
+    if not integrator:
+        integrator = get_integrator("edm")
+
+    creds = await get_integrator_credentials(tenant_id, provider_name) or {}
+    invoice_data = serialize_doc(doc)
+
     try:
+        # Check if already has a provider_invoice_id (retry scenario)
         pid = doc.get("provider_invoice_id")
-        if not pid:
-            pid = await provider.create_invoice(serialize_doc(doc))
+        if pid:
+            # Check status of existing submission
+            status_result = await integrator.get_status(pid, creds)
+        else:
+            # Issue via integrator
+            issue_result = await integrator.issue_invoice(invoice_data, creds)
 
-        status_result = await provider.send_invoice(pid)
+            if not issue_result.success:
+                await db[COL].update_one(
+                    {"_id": doc["_id"]},
+                    {"$set": {
+                        "status": InvoiceStatus.FAILED,
+                        "error_message": issue_result.message,
+                        "provider_status": issue_result.status,
+                        "updated_at": now_utc(),
+                    }},
+                )
+                await _write_event(db, tenant_id, invoice_id, "invoice.failed", actor, {"error": issue_result.message})
+                return {"error": issue_result.message}
+
+            pid = issue_result.provider_invoice_id
+            # Save provider_invoice_id immediately
+            await db[COL].update_one(
+                {"_id": doc["_id"]},
+                {"$set": {"provider_invoice_id": pid, "updated_at": now_utc()}},
+            )
+
+            status_result = issue_result
+
+        # Determine final status
         now = now_utc()
+        edoc_status = status_result.status
 
-        if status_result == "sent":
+        if edoc_status in ("submitted", "accepted", "sent"):
             final_status = InvoiceStatus.ISSUED
-        elif status_result == "rejected":
+        elif edoc_status == "rejected":
             final_status = InvoiceStatus.FAILED
         else:
             final_status = InvoiceStatus.ISSUED
 
         update = {
             "status": final_status,
+            "provider": provider_name,
             "provider_invoice_id": pid,
-            "provider_status": status_result,
+            "provider_status": edoc_status,
             "updated_at": now,
         }
         if final_status == InvoiceStatus.ISSUED:
             update["issued_at"] = now
+            update["error_message"] = None
         elif final_status == InvoiceStatus.FAILED:
-            update["error_message"] = f"Provider returned: {status_result}"
+            update["error_message"] = status_result.message
 
         await db[COL].update_one({"_id": doc["_id"]}, {"$set": update})
-        await _write_event(db, tenant_id, invoice_id, f"invoice.{final_status}", actor, {"provider_status": status_result})
+        await _write_event(db, tenant_id, invoice_id, f"invoice.{final_status}", actor, {
+            "provider": provider_name,
+            "provider_status": edoc_status,
+            "provider_invoice_id": pid,
+        })
 
         updated = await db[COL].find_one({"_id": doc["_id"]})
         return serialize_doc(updated)
@@ -347,7 +416,7 @@ async def issue_invoice(tenant_id: str, invoice_id: str, actor: str = "") -> dic
 # ── Cancel Invoice ────────────────────────────────────────────────────
 
 async def cancel_invoice(tenant_id: str, invoice_id: str, actor: str = "", reason: str = "") -> dict[str, Any]:
-    """Cancel an invoice."""
+    """Cancel an invoice. Also cancels via integrator if already issued."""
     db = await get_db()
     doc = await db[COL].find_one({"tenant_id": tenant_id, "invoice_id": invoice_id})
     if not doc:
@@ -361,11 +430,14 @@ async def cancel_invoice(tenant_id: str, invoice_id: str, actor: str = "", reaso
 
     pid = doc.get("provider_invoice_id")
     if pid:
-        provider = get_efatura_provider(doc.get("provider", "mock"))
-        try:
-            await provider.cancel_invoice(pid)
-        except Exception:
-            pass
+        provider_name = doc.get("provider", "edm")
+        integrator = get_integrator(provider_name)
+        if integrator:
+            creds = await get_integrator_credentials(tenant_id, provider_name) or {}
+            try:
+                await integrator.cancel_invoice(pid, creds)
+            except Exception:
+                pass
 
     now = now_utc()
     await db[COL].update_one(
@@ -465,4 +537,111 @@ async def get_invoice_dashboard_stats(tenant_id: str, org_id: str) -> dict[str, 
         "failed": failed_count,
         "cancelled": cancelled_count,
         "financials": financials,
+    }
+
+
+# ── Status Sync Job ───────────────────────────────────────────────────
+
+async def sync_invoice_statuses() -> dict[str, Any]:
+    """Poll integrator for status updates on issued invoices.
+
+    Called periodically by the job scheduler.
+    Checks invoices in 'issuing' or 'issued' state with a provider_invoice_id.
+    """
+    db = await get_db()
+    updated_count = 0
+
+    cursor = db[COL].find({
+        "status": {"$in": [InvoiceStatus.ISSUING, InvoiceStatus.ISSUED]},
+        "provider_invoice_id": {"$ne": None},
+    }).limit(50)
+
+    async for doc in cursor:
+        tenant_id = doc["tenant_id"]
+        provider_name = doc.get("provider", "edm")
+        pid = doc["provider_invoice_id"]
+
+        integrator = get_integrator(provider_name)
+        if not integrator:
+            continue
+
+        creds = await get_integrator_credentials(tenant_id, provider_name) or {}
+
+        try:
+            result = await integrator.get_status(pid, creds)
+            if result.success and result.status:
+                old_status = doc["status"]
+                new_provider_status = result.status
+
+                # Map integrator status to invoice status
+                if new_provider_status == "accepted" and old_status == InvoiceStatus.ISSUING:
+                    await db[COL].update_one(
+                        {"_id": doc["_id"]},
+                        {"$set": {
+                            "status": InvoiceStatus.ISSUED,
+                            "provider_status": new_provider_status,
+                            "issued_at": now_utc(),
+                            "updated_at": now_utc(),
+                        }},
+                    )
+                    updated_count += 1
+                elif new_provider_status == "rejected":
+                    await db[COL].update_one(
+                        {"_id": doc["_id"]},
+                        {"$set": {
+                            "status": InvoiceStatus.FAILED,
+                            "provider_status": new_provider_status,
+                            "error_message": result.message,
+                            "updated_at": now_utc(),
+                        }},
+                    )
+                    updated_count += 1
+                elif new_provider_status != doc.get("provider_status"):
+                    await db[COL].update_one(
+                        {"_id": doc["_id"]},
+                        {"$set": {
+                            "provider_status": new_provider_status,
+                            "updated_at": now_utc(),
+                        }},
+                    )
+                    updated_count += 1
+        except Exception:
+            continue
+
+    return {"synced": updated_count}
+
+
+# ── Check Invoice Status (on demand) ─────────────────────────────────
+
+async def check_invoice_status(tenant_id: str, invoice_id: str) -> dict[str, Any]:
+    """Check the current status of an invoice from the integrator."""
+    db = await get_db()
+    doc = await db[COL].find_one({"tenant_id": tenant_id, "invoice_id": invoice_id})
+    if not doc:
+        return {"error": "Invoice not found"}
+
+    pid = doc.get("provider_invoice_id")
+    if not pid:
+        return {"status": doc["status"], "provider_status": None, "message": "Entegratorde kayit yok"}
+
+    provider_name = doc.get("provider", "edm")
+    integrator = get_integrator(provider_name)
+    if not integrator:
+        return {"status": doc["status"], "provider_status": doc.get("provider_status"), "message": "Entegrator bulunamadi"}
+
+    creds = await get_integrator_credentials(tenant_id, provider_name) or {}
+    result = await integrator.get_status(pid, creds)
+
+    if result.success:
+        # Update provider_status in DB
+        await db[COL].update_one(
+            {"_id": doc["_id"]},
+            {"$set": {"provider_status": result.status, "updated_at": now_utc()}},
+        )
+
+    return {
+        "invoice_id": invoice_id,
+        "status": doc["status"],
+        "provider_status": result.status if result.success else doc.get("provider_status"),
+        "message": result.message,
     }

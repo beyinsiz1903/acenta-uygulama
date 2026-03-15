@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from app.auth import get_current_user, require_roles
 from app.services.invoice_engine import (
     cancel_invoice,
+    check_invoice_status,
     create_invoice_from_booking,
     create_manual_invoice,
     get_booking_invoice,
@@ -216,3 +217,16 @@ async def get_events_endpoint(
     tenant_id = user.get("tenant_id", user["organization_id"])
     events = await get_invoice_events(tenant_id, invoice_id)
     return {"events": events}
+
+
+@router.get("/{invoice_id}/status-check")
+async def check_status_endpoint(
+    invoice_id: str,
+    user=Depends(get_current_user),
+):
+    """Check invoice status from the e-document provider."""
+    tenant_id = user.get("tenant_id", user["organization_id"])
+    result = await check_invoice_status(tenant_id, invoice_id)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result

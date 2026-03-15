@@ -5,7 +5,8 @@ import { Badge } from "../components/ui/badge";
 import {
   FileText, Send, Plus, X, Eye, RefreshCw, AlertTriangle,
   CheckCircle, Clock, Ban, ArrowRight, Building2, User,
-  Receipt, TrendingUp, ChevronDown, ChevronUp
+  Receipt, TrendingUp, ChevronDown, ChevronUp,
+  Download, Settings, Shield, Wifi, WifiOff, Key, Trash2, Search
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
@@ -267,6 +268,8 @@ function InvoiceDetail({ invoice, onClose, onRefresh }) {
   const [events, setEvents] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [issuing, setIssuing] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     if (!invoice?.invoice_id) return;
@@ -293,6 +296,33 @@ function InvoiceDetail({ invoice, onClose, onRefresh }) {
     } catch (e) { toast.error(e.response?.data?.detail || e.message); }
   };
 
+  const handleStatusCheck = async () => {
+    setChecking(true);
+    try {
+      const res = await api.get(`/invoices/${invoice.invoice_id}/status-check`);
+      toast.success(`Durum: ${res.data.provider_status || res.data.status} - ${res.data.message || ''}`);
+      onRefresh?.();
+    } catch (e) { toast.error(e.response?.data?.detail || e.message); }
+    finally { setChecking(false); }
+  };
+
+  const handleDownloadPdf = async () => {
+    setDownloading(true);
+    try {
+      const res = await api.get(`/integrators/invoices/${invoice.invoice_id}/pdf`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `fatura_${invoice.invoice_id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("PDF indirildi");
+    } catch (e) { toast.error(e.response?.data?.detail || "PDF indirilemedi"); }
+    finally { setDownloading(false); }
+  };
+
   if (!invoice) return null;
   const typeInfo = TYPE_MAP[invoice.invoice_type] || { label: invoice.invoice_type, color: "" };
 
@@ -305,12 +335,26 @@ function InvoiceDetail({ invoice, onClose, onRefresh }) {
             <div className="flex gap-2 mt-1">
               <StatusBadge status={invoice.status} />
               <Badge variant="outline" className={cn("text-xs", typeInfo.color)}>{typeInfo.label}</Badge>
+              {invoice.provider && invoice.provider !== "none" && (
+                <Badge variant="outline" className="text-xs bg-slate-50 text-slate-600">{invoice.provider.toUpperCase()}</Badge>
+              )}
             </div>
           </div>
           <Button variant="ghost" size="sm" onClick={onClose}><X className="h-4 w-4" /></Button>
         </div>
 
         <div className="p-5 space-y-5">
+          {/* Provider Info */}
+          {invoice.provider_invoice_id && (
+            <div className="rounded-lg bg-blue-50/50 border border-blue-100 p-3">
+              <div className="text-xs font-medium text-blue-700 mb-1">e-Belge Bilgileri</div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div><span className="text-muted-foreground">ETTN:</span> <span className="font-mono">{invoice.provider_invoice_id}</span></div>
+                <div><span className="text-muted-foreground">Durum:</span> <span className="font-medium">{invoice.provider_status || '-'}</span></div>
+              </div>
+            </div>
+          )}
+
           {/* Customer */}
           {invoice.customer?.name && (
             <div className="rounded-lg bg-muted/30 p-3">
@@ -388,11 +432,21 @@ function InvoiceDetail({ invoice, onClose, onRefresh }) {
           )}
 
           {/* Actions */}
-          <div className="flex gap-2 pt-2 border-t">
+          <div className="flex gap-2 pt-2 border-t flex-wrap">
             {["draft", "ready_for_issue", "failed"].includes(invoice.status) && (
               <Button size="sm" onClick={handleIssue} disabled={issuing} className="gap-1" data-testid="issue-invoice-btn">
                 <Send className="h-3.5 w-3.5" /> {issuing ? "Kesiliyor..." : "Faturayi Kes"}
               </Button>
+            )}
+            {invoice.provider_invoice_id && (
+              <>
+                <Button size="sm" variant="outline" onClick={handleDownloadPdf} disabled={downloading} className="gap-1" data-testid="download-pdf-btn">
+                  <Download className="h-3.5 w-3.5" /> {downloading ? "Indiriliyor..." : "PDF Indir"}
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleStatusCheck} disabled={checking} className="gap-1" data-testid="check-status-btn">
+                  <Search className="h-3.5 w-3.5" /> {checking ? "Sorgulanıyor..." : "Durum Kontrol"}
+                </Button>
+              </>
             )}
             {["draft", "ready_for_issue", "issued"].includes(invoice.status) && (
               <Button size="sm" variant="destructive" onClick={handleCancel} className="gap-1" data-testid="cancel-invoice-btn">
@@ -406,11 +460,171 @@ function InvoiceDetail({ invoice, onClose, onRefresh }) {
   );
 }
 
+function IntegratorSettings({ onClose }) {
+  const [providers, setProviders] = useState([]);
+  const [configs, setConfigs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState(null);
+  const [credentials, setCredentials] = useState({});
+
+  const loadData = useCallback(async () => {
+    try {
+      const [pRes, cRes] = await Promise.all([
+        api.get("/integrators/providers"),
+        api.get("/integrators/credentials"),
+      ]);
+      setProviders(pRes.data?.providers || []);
+      setConfigs(cRes.data?.integrators || []);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const handleSave = async () => {
+    if (!selectedProvider) return;
+    setSaving(true);
+    try {
+      await api.post("/integrators/credentials", {
+        provider: selectedProvider.code,
+        credentials,
+      });
+      toast.success("Kimlik bilgileri kaydedildi");
+      setSelectedProvider(null);
+      setCredentials({});
+      loadData();
+    } catch (e) { toast.error(e.response?.data?.detail || e.message); }
+    finally { setSaving(false); }
+  };
+
+  const handleTest = async (provider) => {
+    setTesting(true);
+    try {
+      const res = await api.post("/integrators/test-connection", { provider });
+      if (res.data.success) {
+        toast.success(res.data.message || "Baglanti basarili");
+      } else {
+        toast.error(res.data.message || "Baglanti basarisiz");
+      }
+      loadData();
+    } catch (e) { toast.error(e.response?.data?.detail || e.message); }
+    finally { setTesting(false); }
+  };
+
+  const handleDelete = async (provider) => {
+    if (!window.confirm("Bu entegrator yapilandirmasini silmek istediginize emin misiniz?")) return;
+    try {
+      await api.delete(`/integrators/credentials/${provider}`);
+      toast.success("Yapilandirma silindi");
+      loadData();
+    } catch (e) { toast.error(e.response?.data?.detail || e.message); }
+  };
+
+  return (
+    <div className="rounded-xl border bg-card shadow-sm p-5 mb-6" data-testid="integrator-settings">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-semibold flex items-center gap-2"><Settings className="h-4 w-4" /> e-Belge Entegrator Ayarlari</h3>
+        <Button variant="ghost" size="sm" onClick={onClose}><X className="h-4 w-4" /></Button>
+      </div>
+
+      {loading ? (
+        <div className="animate-pulse h-20 bg-muted rounded-lg" />
+      ) : (
+        <div className="space-y-4">
+          {/* Configured Integrators */}
+          {configs.length > 0 && (
+            <div>
+              <div className="text-xs font-medium text-muted-foreground mb-2">Yapilandirilmis Entegratorler</div>
+              {configs.map(cfg => (
+                <div key={cfg.provider} className="rounded-lg border p-3 flex items-center justify-between mb-2" data-testid={`config-${cfg.provider}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold",
+                      cfg.status === "active" ? "bg-emerald-100 text-emerald-700" :
+                      cfg.status === "error" ? "bg-red-100 text-red-700" :
+                      "bg-amber-100 text-amber-700"
+                    )}>
+                      {cfg.status === "active" ? <Wifi className="h-4 w-4" /> : cfg.status === "error" ? <WifiOff className="h-4 w-4" /> : <Key className="h-4 w-4" />}
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm">{cfg.provider.toUpperCase()}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {cfg.masked_credentials?.username && `Kullanici: ${cfg.masked_credentials.username}`}
+                        {cfg.last_test && ` | Son test: ${new Date(cfg.last_test).toLocaleString("tr-TR")}`}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => handleTest(cfg.provider)} disabled={testing} data-testid={`test-btn-${cfg.provider}`}>
+                      <Wifi className="h-3 w-3" /> Test
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs text-destructive" onClick={() => handleDelete(cfg.provider)} data-testid={`delete-btn-${cfg.provider}`}>
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add New Integrator */}
+          {!selectedProvider ? (
+            <div>
+              <div className="text-xs font-medium text-muted-foreground mb-2">Yeni Entegrator Ekle</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {providers.filter(p => !configs.some(c => c.provider === p.code)).map(p => (
+                  <button key={p.code} onClick={() => { setSelectedProvider(p); setCredentials({}); }}
+                    className="rounded-lg border-2 border-dashed p-3 text-left hover:border-primary hover:bg-primary/5 transition-all"
+                    data-testid={`add-provider-${p.code}`}>
+                    <Shield className="h-5 w-5 mb-1 text-primary" />
+                    <div className="font-medium text-sm">{p.name}</div>
+                    <div className="text-xs text-muted-foreground">{p.description}</div>
+                  </button>
+                ))}
+              </div>
+              {providers.length === configs.length && configs.length > 0 && (
+                <div className="text-xs text-muted-foreground text-center py-3">Tum desteklenen entegratorler yapilandirilmis</div>
+              )}
+            </div>
+          ) : (
+            <div data-testid="credential-form">
+              <div className="text-xs font-medium text-muted-foreground mb-2">{selectedProvider.name} - Kimlik Bilgileri</div>
+              <div className="space-y-2">
+                {selectedProvider.credential_fields.map(field => (
+                  <div key={field.key}>
+                    <label className="text-xs font-medium block mb-1">{field.label} {field.required && <span className="text-destructive">*</span>}</label>
+                    <input
+                      type={field.type === "password" ? "password" : "text"}
+                      value={credentials[field.key] || ""}
+                      onChange={e => setCredentials(c => ({ ...c, [field.key]: e.target.value }))}
+                      className="w-full rounded-lg border px-3 py-2 text-sm bg-background"
+                      placeholder={field.placeholder || ""}
+                      data-testid={`field-${field.key}`}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-end gap-2 mt-3">
+                <Button variant="outline" size="sm" onClick={() => setSelectedProvider(null)}>Vazgec</Button>
+                <Button size="sm" onClick={handleSave} disabled={saving} data-testid="save-credentials-btn">
+                  {saving ? "Kaydediliyor..." : "Kaydet"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminEFaturaPage() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [filter, setFilter] = useState("");
 
@@ -458,6 +672,9 @@ export default function AdminEFaturaPage() {
           <p className="text-sm text-muted-foreground mt-1">Fatura olusturun, kesin, takip edin.</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowSettings(!showSettings)} data-testid="settings-btn">
+            <Settings className="h-4 w-4 mr-1" /> Entegrator
+          </Button>
           <Button variant="outline" size="sm" onClick={load} data-testid="refresh-btn"><RefreshCw className="h-4 w-4 mr-1" /> Yenile</Button>
           <Button size="sm" onClick={() => setShowCreate(!showCreate)} data-testid="new-invoice-btn">
             <Plus className="h-4 w-4 mr-1" /> Yeni Fatura
@@ -481,6 +698,11 @@ export default function AdminEFaturaPage() {
           onCreated={() => { setShowCreate(false); load(); }}
           onClose={() => setShowCreate(false)}
         />
+      )}
+
+      {/* Integrator Settings */}
+      {showSettings && (
+        <IntegratorSettings onClose={() => setShowSettings(false)} />
       )}
 
       {/* Filters */}
@@ -517,6 +739,7 @@ export default function AdminEFaturaPage() {
                 <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">Tip</th>
                 <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">Musteri</th>
                 <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">Durum</th>
+                <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">Saglayici</th>
                 <th className="text-right px-4 py-3 font-medium text-xs uppercase tracking-wider">Tutar</th>
                 <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">Tarih</th>
                 <th className="text-right px-4 py-3 font-medium text-xs uppercase tracking-wider">Aksiyonlar</th>
@@ -537,6 +760,13 @@ export default function AdminEFaturaPage() {
                       {inv.hotel_name && <div className="text-xs text-muted-foreground">{inv.hotel_name}</div>}
                     </td>
                     <td className="px-4 py-3"><StatusBadge status={inv.status} /></td>
+                    <td className="px-4 py-3">
+                      {inv.provider && inv.provider !== "none" ? (
+                        <Badge variant="outline" className="text-xs bg-slate-50">{inv.provider.toUpperCase()}</Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-right font-mono font-medium">{inv.totals?.grand_total?.toFixed(2)} {inv.totals?.currency}</td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">{inv.created_at ? new Date(inv.created_at).toLocaleDateString("tr-TR") : "-"}</td>
                     <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
@@ -544,6 +774,20 @@ export default function AdminEFaturaPage() {
                         {["draft", "ready_for_issue", "failed"].includes(inv.status) && (
                           <Button size="sm" className="h-7 text-xs gap-1" onClick={() => handleIssue(inv.invoice_id)} data-testid={`issue-btn-${inv.invoice_id}`}>
                             <Send className="h-3 w-3" /> Kes
+                          </Button>
+                        )}
+                        {inv.provider_invoice_id && (
+                          <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={async () => {
+                            try {
+                              const res = await api.get(`/integrators/invoices/${inv.invoice_id}/pdf`, { responseType: 'blob' });
+                              const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+                              const link = document.createElement('a');
+                              link.href = url; link.download = `fatura_${inv.invoice_id}.pdf`;
+                              document.body.appendChild(link); link.click(); link.remove();
+                              window.URL.revokeObjectURL(url);
+                            } catch (e) { toast.error("PDF indirilemedi"); }
+                          }} data-testid={`pdf-btn-${inv.invoice_id}`}>
+                            <Download className="h-3 w-3" />
                           </Button>
                         )}
                         <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setSelectedInvoice(inv)} data-testid={`detail-btn-${inv.invoice_id}`}>

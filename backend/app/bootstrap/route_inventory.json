@@ -6821,6 +6821,72 @@
   },
   {
     "compat_required": true,
+    "current_namespace": "/api/integrators",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "integrators",
+    "path": "/api/integrators/credentials",
+    "risk_level": "medium",
+    "source": "app.routers.integrator_management",
+    "target_namespace": "/api/v1/integrators"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/integrators",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "integrators",
+    "path": "/api/integrators/credentials",
+    "risk_level": "medium",
+    "source": "app.routers.integrator_management",
+    "target_namespace": "/api/v1/integrators"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/integrators",
+    "legacy_or_v1": "legacy",
+    "method": "DELETE",
+    "owner": "integrators",
+    "path": "/api/integrators/credentials/{provider}",
+    "risk_level": "medium",
+    "source": "app.routers.integrator_management",
+    "target_namespace": "/api/v1/integrators"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/integrators",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "integrators",
+    "path": "/api/integrators/invoices/{invoice_id}/pdf",
+    "risk_level": "medium",
+    "source": "app.routers.integrator_management",
+    "target_namespace": "/api/v1/integrators"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/integrators",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "integrators",
+    "path": "/api/integrators/providers",
+    "risk_level": "medium",
+    "source": "app.routers.integrator_management",
+    "target_namespace": "/api/v1/integrators"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/integrators",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "integrators",
+    "path": "/api/integrators/test-connection",
+    "risk_level": "medium",
+    "source": "app.routers.integrator_management",
+    "target_namespace": "/api/v1/integrators"
+  },
+  {
+    "compat_required": true,
     "current_namespace": "/api/intelligence",
     "legacy_or_v1": "legacy",
     "method": "GET",
@@ -7068,6 +7134,17 @@
     "method": "POST",
     "owner": "invoices",
     "path": "/api/invoices/{invoice_id}/issue",
+    "risk_level": "medium",
+    "source": "app.routers.invoice_engine",
+    "target_namespace": "/api/v1/invoices"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/invoices",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "invoices",
+    "path": "/api/invoices/{invoice_id}/status-check",
     "risk_level": "medium",
     "source": "app.routers.invoice_engine",
     "target_namespace": "/api/v1/invoices"

@@ -43,6 +43,13 @@ Syroce is a production-grade Turkish travel ERP platform that manages the full l
   - Pilot Usage: active agencies, daily searches, daily bookings, revenue generated
   - Incident Monitoring: failed bookings, failed invoices, failed accounting sync, critical alerts
 - **Enhanced Incidents Panel**: severity, flow_stage, supplier, retry_count fields
+- **Supplier Response Diff** (CTO Kritik Metrik - IMPLEMENTED 2026-03-15):
+  - Tracks initial supplier price vs revalidation price at booking time
+  - Dashboard KPIs: avg_diff_pct, max_diff_pct, drift distribution (up/down/stable), alert count
+  - Alert threshold: >5% price difference triggers alert
+  - Per-flow diff data in simulation results with color-coded display
+  - Recent diffs table: Supplier, Ilk Fiyat, Revalidation Fiyat, Fark (TRY), Fark (%), Yon
+  - Simulation mode: 0-5% controlled drift, Sandbox/Production: 0-15% realistic drift
 - **Collections**: pilot_agencies, pilot_metrics, pilot_incidents
 - **Supplier Support**: RateHawk, Paximum, TBO, WWTatil
 - **Accounting Provider Support**: Luca, Logo, Parasut, Mikro

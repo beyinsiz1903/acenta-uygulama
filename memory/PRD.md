@@ -13,6 +13,7 @@ Syroce is a production-grade Turkish travel ERP platform that manages the full l
 7. **Accounting Automation Layer** (Score: 9.7/10)
 8. **Reconciliation & Finance Ops Layer** (Score: 9.8/10) — MEGA PROMPT #33
 9. **Multi Accounting Provider Architecture** (Score: NEW) — MEGA PROMPT #34
+10. **Pilot Agency Real Flow Validation** (Score: NEW) — MEGA PROMPT #35
 
 ## Core Requirements
 
@@ -20,31 +21,38 @@ Syroce is a production-grade Turkish travel ERP platform that manages the full l
 - JWT-based auth with role-based access control
 - Roles: super_admin, admin, finance_admin, agency_admin
 
+### Pilot Agency Real Flow Validation (MEGA PROMPT #35) - IMPLEMENTED
+- **Pilot Setup Wizard**: 9-step enforced onboarding flow
+  - Step 1: Agency Create (name, email, phone, tax_id, mode)
+  - Step 2: Supplier Credential (supplier_type, api_key, api_secret, agency_code)
+  - Step 3: Accounting Provider Credential (provider_type, company_code, username, password)
+  - Step 4: Connection Test (supplier + accounting)
+  - Step 5: First Search Test
+  - Step 6: First Booking Test
+  - Step 7: First Invoice Test
+  - Step 8: First Accounting Sync Test
+  - Step 9: Reconciliation Check (booking vs invoice vs accounting)
+- **3 Operating Modes**: sandbox (platform test), simulation (demo), production (real customer)
+- **Pilot Dashboard KPIs**:
+  - Platform Health: search success rate, booking success rate, supplier latency, supplier error rate
+  - Financial Flow: booking→invoice conversion, invoice→accounting sync latency, reconciliation mismatch rate
+  - Pilot Usage: active agencies, daily searches, daily bookings, revenue generated
+  - Incident Monitoring: failed bookings, failed invoices, failed accounting sync, critical alerts
+- **Collections**: pilot_agencies, pilot_metrics, pilot_incidents
+- **Supplier Support**: RateHawk, Paximum, TBO, WWTatil
+- **Accounting Provider Support**: Luca, Logo, Parasut, Mikro
+- **Pilot Target**: 3 agencies (Agency A → Ratehawk+Luca, Agency B → Paximum+Parasut, Agency C → WWTatil+Luca)
+
 ### Multi Accounting Provider Architecture (MEGA PROMPT #34) - IMPLEMENTED
-- **Base Provider Contract**: Abstract class with 7 methods (test_connection, create_customer, get_customer, create_invoice, cancel_invoice, get_invoice_status, download_invoice_pdf)
-- **Normalized Response**: ProviderResponse with success, external_ref, status, error_code, error_message, raw_payload
-- **4 Provider Adapters**:
-  - Luca (ACTIVE): Full implementation with simulation fallback
-  - Logo (STUB): Contract + capability matrix defined
-  - Parasut (STUB): Contract + capability matrix defined
-  - Mikro (STUB): Contract + capability matrix defined
-- **Capability Matrix**: Per-provider feature support (customer_management, invoice_creation, invoice_cancel, status_polling, pdf_download, webhook_support, rate_limit)
-- **Provider Routing**: Tenant-level provider selection (one tenant = one active provider)
-- **Credential Management**: AES-256-GCM encrypted storage, rotation, validation, masking
-- **Provider Health Monitoring**: Per-request tracking (latency, error rate, success rate), aggregated metrics (1h/24h)
-- **Failover Strategy**: retry → queue → manual intervention (NOT cross-provider failover)
-- **Admin Frontend**: Provider selection cards, credential form, test connection, health dashboard
+- Base Provider Contract, Normalized Response, 4 Provider Adapters
+- Capability Matrix, Provider Routing, Credential Management (AES-256-GCM)
+- Provider Health Monitoring, Failover Strategy
 
 ### Reconciliation & Finance Operations Layer (MEGA PROMPT #33) - IMPLEMENTED
-- Reconciliation Engine: Booking vs Invoice vs Accounting comparison
-- Finance Operations Queue: Priority-based manual intervention with RBAC
-- Financial Alerts: Automated alerts for high fail rate, mismatches, aging
+- Reconciliation Engine, Finance Operations Queue, Financial Alerts
 
 ### Accounting Automation Layer (MEGA PROMPT #32) - IMPLEMENTED
-- Customer matching with VKN/TCKN/email/phone + match_confidence scores
-- Accounting sync queue with retry backoff
-- Auto-sync rule engine
-- Background scheduler (APScheduler)
+- Customer matching, Accounting sync queue, Auto-sync rule engine
 
 ## Technical Architecture
 
@@ -57,60 +65,55 @@ Syroce is a production-grade Turkish travel ERP platform that manages the full l
 ### Frontend
 - React + Shadcn UI
 - Page routing via React Router
-- Admin pages: Dashboard, Accounting, Accounting Providers, Finance Ops, E-Fatura, Settings
+- Admin pages: Dashboard, Pilot Wizard, Pilot Dashboard, Accounting Providers, Finance Ops, etc.
 
-### Key Collections (MEGA PROMPT #34)
-- `accounting_provider_configs` - Tenant→provider mapping with encrypted credentials and health metrics
-- `accounting_provider_health_events` - Per-request health events for analytics
+### Key Collections (MEGA PROMPT #35)
+- `pilot_agencies` — Agency setup + wizard completion state + flow results
+- `pilot_metrics` — Per-step metrics (latency, success rate, timestamps)
+- `pilot_incidents` — Failed flow steps and critical alerts
 
-### Key API Endpoints (MEGA PROMPT #34)
-- `GET /api/accounting/providers/catalog` - List all providers with capabilities
-- `GET /api/accounting/providers/catalog/active` - List active providers only
-- `GET /api/accounting/providers/catalog/{code}` - Provider detail
-- `POST /api/accounting/providers/config` - Configure tenant provider
-- `GET /api/accounting/providers/config` - Get current tenant config
-- `DELETE /api/accounting/providers/config` - Remove provider config
-- `POST /api/accounting/providers/test-connection` - Test provider connection
-- `POST /api/accounting/providers/rotate-credentials` - Rotate credentials
-- `GET /api/accounting/providers/health` - Health dashboard with metrics
+### Key API Endpoints (MEGA PROMPT #35)
+- `POST /api/pilot/onboarding/setup` — Create pilot agency (step 1)
+- `PUT /api/pilot/onboarding/setup/supplier` — Save supplier credential (step 2)
+- `PUT /api/pilot/onboarding/setup/accounting` — Save accounting credential (step 3)
+- `POST /api/pilot/onboarding/test-connection` — Test connections (step 4)
+- `POST /api/pilot/onboarding/test-search` — Test search (step 5)
+- `POST /api/pilot/onboarding/test-booking` — Test booking (step 6)
+- `POST /api/pilot/onboarding/test-invoice` — Test invoice (step 7)
+- `POST /api/pilot/onboarding/test-accounting` — Test accounting sync (step 8)
+- `POST /api/pilot/onboarding/test-reconciliation` — Reconciliation check (step 9)
+- `GET /api/pilot/onboarding/agencies` — List pilot agencies
+- `GET /api/pilot/onboarding/metrics` — Pilot metrics dashboard
+- `GET /api/pilot/onboarding/incidents` — Pilot incidents
 
 ## What's Mocked
+- **Pilot Flow Tests**: All flow tests (search, booking, invoice, accounting, reconciliation) use SIMULATED data in sandbox/simulation mode
 - **LucaProvider**: Simulation mode when real Luca API is unreachable
 - **Logo/Parasut/Mikro**: Stub providers returning ERR_UNSUPPORTED
-- **Redis**: Running (was FATAL, now fixed)
+- **Real Supplier APIs**: Not connected yet — pilot phase uses sandbox mode
 
 ## Credentials
 - Super Admin: admin@acenta.test / admin123
 - Agency Admin: agency1@demo.test / agency123
 
-## Test Stabilization Status (Feb 2026)
+## Test Stabilization Status (Feb 2026) - COMPLETED
+- Fixture conflicts fixed, PyMongo AutoReconnect fixed, 39 mocked HTTP tests added
+- 139/139 tests passed + 15/15 pilot onboarding tests
 
-### Completed
-- **Fixture Conflict Fix (P1)**: Fixed wrong admin passwords (agent123→admin123) in iter95/96/97. Fixed assertion bugs in iter98 (error structure, credential masking, Redis graceful skip). Added accounting test files to conftest external test exclusion list.
-- **PyMongo AutoReconnect Fix (P1)**: Added `--reruns 2 --only-rerun AutoReconnect|ConnectionResetError|ServerSelectionTimeoutError` to pytest.ini. Improved Motor client pool (maxPoolSize=20, connectTimeoutMS=10000, serverSelectionTimeoutMS=15000). Added retry wrappers to b2b conftest.
-- **Mocked HTTP Tests (P1)**: Created 39 new async ASGI tests in `test_accounting_providers_async.py` covering: provider catalog, config CRUD, connection test, credential rotation, RBAC, credential encryption, failover logic (retry→queue→escalate), reconciliation, finance ops, financial alerts.
-
-### Test Suite Stats
-- Accounting tests: 139/139 passed, 1 skipped (Redis)
-- B2B integration tests: 15/15 passed
-- Core stabilization tests: 30/30 passed
-- AutoReconnect reruns: Working correctly (tested 1 successful rerun)
-
-## Upcoming Tasks (P1 — MEGA PROMPT #35+)
-- Pilot agency integration with real traffic
-- Real supplier API credentials (activate Logo/Parasut/Mikro adapters)
-- Automated correction workflows for reconciliation mismatches
-- Accounting anomaly detection
+## Upcoming Tasks (P1)
+- Onboard 3 pilot agencies through the wizard with real credentials
+- Connect real supplier APIs (RateHawk, Paximum first)
+- Validate first real booking-to-invoice-to-accounting sync flow
+- Run the full chain at least 10 times with real data
 
 ## Future Tasks (P2+)
 - Full financial analytics dashboard
 - Tax reporting module
 - Payment/refund tracking integration
-- CI/CD pipeline stability improvements
 - APScheduler → Celery Beat migration
-- Multi-provider fallback (e.g., Luca → Logo when needed)
-- Nested Button HTML warning fix (deferred to frontend polish round)
+- CI/CD pipeline improvements
+- Multi-provider fallback
+- Nested Button HTML warning fix
 
 ## Redis Status
-- **Fixed**: Redis installed and running on port 6379
-- Used by: customer matching cache, rate limiting, search caching, sync queue
+- Running on port 6379 (used by customer matching, rate limiting, caching)

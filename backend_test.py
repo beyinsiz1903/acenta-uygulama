@@ -13,7 +13,7 @@ from typing import Dict, Any, Optional
 import uuid
 
 # Use the preview URL from frontend/.env
-BASE_URL = "https://drift-monitor-1.preview.emergentagent.com"
+BASE_URL = "https://drift-metrics.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials

@@ -8,7 +8,7 @@ Turkish Review Request:
 - Test POST /api/admin/all-users/repair-memberships endpoint; should return 200 with numerical result
 - Delete test user if possible
 
-Base URL: https://travel-billing-1.preview.emergentagent.com
+Base URL: https://luca-sync-phase3.preview.emergentagent.com
 Credentials: admin@acenta.test / admin123
 """
 
@@ -18,7 +18,7 @@ import json
 import time
 
 # Configuration
-BASE_URL = "https://travel-billing-1.preview.emergentagent.com"
+BASE_URL = "https://luca-sync-phase3.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

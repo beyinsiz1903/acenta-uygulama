@@ -4,9 +4,11 @@ import { Badge } from "../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 import {
   Database, RefreshCw, Search, Loader2, CheckCircle2, XCircle, Clock,
   HardDrive, Layers, ArrowUpDown, Zap, Server, Activity, AlertTriangle,
+  Settings, Shield, Play, Trash2, Eye, EyeOff,
 } from "lucide-react";
 import { api } from "../lib/api";
 
@@ -45,9 +47,25 @@ function SeverityBadge({ severity }) {
 
 function SyncStatusBadge({ status }) {
   if (status === "completed") return <Badge variant="outline" className="border-emerald-500 text-emerald-600" data-testid="sync-completed">Completed</Badge>;
+  if (status === "completed_with_errors") return <Badge variant="outline" className="border-amber-500 text-amber-600" data-testid="sync-partial">Partial</Badge>;
   if (status === "running") return <Badge variant="outline" className="border-sky-500 text-sky-600" data-testid="sync-running">Running</Badge>;
   if (status === "failed") return <Badge variant="destructive" data-testid="sync-failed">Failed</Badge>;
   return <Badge variant="secondary" data-testid="sync-never">Never</Badge>;
+}
+
+function SandboxModeBadge({ mode, configured }) {
+  if (!configured) return <Badge variant="secondary" data-testid="mode-simulation">Simulation</Badge>;
+  if (mode === "sandbox") return <Badge variant="outline" className="border-sky-500 text-sky-600 bg-sky-500/10" data-testid="mode-sandbox">Sandbox</Badge>;
+  if (mode === "production") return <Badge variant="outline" className="border-emerald-500 text-emerald-600 bg-emerald-500/10" data-testid="mode-production">Production</Badge>;
+  return <Badge variant="secondary" data-testid="mode-unknown">{mode}</Badge>;
+}
+
+function ValidationStatusBadge({ status }) {
+  if (status === "pass") return <Badge variant="outline" className="border-emerald-500 text-emerald-600" data-testid="validation-pass">PASS</Badge>;
+  if (status === "partial") return <Badge variant="outline" className="border-amber-500 text-amber-600" data-testid="validation-partial">Partial</Badge>;
+  if (status === "fail") return <Badge variant="destructive" data-testid="validation-fail">FAIL</Badge>;
+  if (status === "pending") return <Badge variant="outline" className="border-sky-500 text-sky-600" data-testid="validation-pending">Bekliyor</Badge>;
+  return <Badge variant="secondary" data-testid="validation-none">Tanimlanmamis</Badge>;
 }
 
 export default function InventorySyncDashboardPage() {
@@ -55,21 +73,36 @@ export default function InventorySyncDashboardPage() {
   const [stats, setStats] = useState(null);
   const [searchResults, setSearchResults] = useState(null);
   const [syncJobs, setSyncJobs] = useState(null);
+  const [supplierConfigs, setSupplierConfigs] = useState({});
+  const [validationResult, setValidationResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState({});
   const [searchDest, setSearchDest] = useState("Antalya");
   const [searching, setSearching] = useState(false);
+  const [validating, setValidating] = useState(false);
+  const [showConfigForm, setShowConfigForm] = useState(false);
+  const [configForm, setConfigForm] = useState({
+    supplier: "ratehawk",
+    base_url: "https://api-sandbox.worldota.net",
+    key_id: "",
+    api_key: "",
+    mode: "sandbox",
+  });
+  const [savingConfig, setSavingConfig] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
-      const [statusRes, statsRes, jobsRes] = await Promise.all([
+      const [statusRes, statsRes, jobsRes, configRes] = await Promise.all([
         api.get("/inventory/sync/status"),
         api.get("/inventory/stats"),
         api.get("/inventory/sync/jobs?limit=10"),
+        api.get("/inventory/supplier-config"),
       ]);
       setSyncStatus(statusRes.data);
       setStats(statsRes.data);
       setSyncJobs(jobsRes.data);
+      setSupplierConfigs(configRes.data?.suppliers || {});
     } catch (err) {
       console.error("Inventory data fetch failed:", err);
     } finally {
@@ -101,6 +134,44 @@ export default function InventorySyncDashboardPage() {
       console.error("Search failed:", err);
     } finally {
       setSearching(false);
+    }
+  };
+
+  const saveSupplierConfig = async () => {
+    if (!configForm.key_id || !configForm.api_key) return;
+    setSavingConfig(true);
+    try {
+      await api.post("/inventory/supplier-config", configForm);
+      setShowConfigForm(false);
+      setConfigForm((prev) => ({ ...prev, key_id: "", api_key: "" }));
+      await fetchData();
+    } catch (err) {
+      console.error("Config save failed:", err);
+    } finally {
+      setSavingConfig(false);
+    }
+  };
+
+  const removeConfig = async (supplier) => {
+    try {
+      await api.delete(`/inventory/supplier-config/${supplier}`);
+      await fetchData();
+    } catch (err) {
+      console.error("Config remove failed:", err);
+    }
+  };
+
+  const runValidation = async (supplier) => {
+    setValidating(true);
+    setValidationResult(null);
+    try {
+      const res = await api.post("/inventory/sandbox/validate", { supplier });
+      setValidationResult(res.data);
+      await fetchData();
+    } catch (err) {
+      console.error("Validation failed:", err);
+    } finally {
+      setValidating(false);
     }
   };
 
@@ -151,6 +222,230 @@ export default function InventorySyncDashboardPage() {
         />
       </div>
 
+      {/* Sandbox Configuration Panel */}
+      <Card data-testid="sandbox-config-panel">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Shield className="h-5 w-5" /> Sandbox Konfigurasyon
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowConfigForm(!showConfigForm)}
+              data-testid="toggle-config-form-btn"
+            >
+              <Settings className="h-4 w-4 mr-1" />
+              {showConfigForm ? "Kapat" : "Credential Ekle"}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Supplier Config Status Table */}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Supplier</TableHead>
+                <TableHead>Mod</TableHead>
+                <TableHead>Durum</TableHead>
+                <TableHead>Validasyon</TableHead>
+                <TableHead>Base URL</TableHead>
+                <TableHead></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Object.entries(supplierConfigs).map(([sup, cfg]) => (
+                <TableRow key={sup} data-testid={`config-row-${sup}`}>
+                  <TableCell className="font-medium capitalize">{sup}</TableCell>
+                  <TableCell>
+                    <SandboxModeBadge mode={cfg.mode} configured={cfg.configured} />
+                  </TableCell>
+                  <TableCell>
+                    {cfg.configured ? (
+                      <span className="flex items-center gap-1 text-emerald-600 text-sm">
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Tanimli
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-muted-foreground text-sm">
+                        <XCircle className="h-3.5 w-3.5" /> Tanimlanmamis
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <ValidationStatusBadge status={cfg.validation_status} />
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground font-mono">
+                    {cfg.base_url || "-"}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      {cfg.configured && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => runValidation(sup)}
+                            disabled={validating}
+                            data-testid={`validate-btn-${sup}`}
+                          >
+                            {validating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
+                            <span className="ml-1">Test</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-red-500 hover:text-red-700"
+                            onClick={() => removeConfig(sup)}
+                            data-testid={`remove-config-btn-${sup}`}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          {/* Config Form */}
+          {showConfigForm && (
+            <div className="border rounded-lg p-4 mt-4 space-y-4 bg-muted/30" data-testid="config-form">
+              <h3 className="text-sm font-semibold">Supplier Credential Tanimla</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="config-supplier">Supplier</Label>
+                  <select
+                    id="config-supplier"
+                    className="w-full rounded-md border px-3 py-2 text-sm bg-background"
+                    value={configForm.supplier}
+                    onChange={(e) => setConfigForm((p) => ({ ...p, supplier: e.target.value }))}
+                    data-testid="config-supplier-select"
+                  >
+                    <option value="ratehawk">Ratehawk</option>
+                    <option value="paximum">Paximum</option>
+                    <option value="wwtatil">WWTatil</option>
+                    <option value="tbo">TBO</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="config-mode">Mod</Label>
+                  <select
+                    id="config-mode"
+                    className="w-full rounded-md border px-3 py-2 text-sm bg-background"
+                    value={configForm.mode}
+                    onChange={(e) => setConfigForm((p) => ({ ...p, mode: e.target.value }))}
+                    data-testid="config-mode-select"
+                  >
+                    <option value="sandbox">Sandbox</option>
+                    <option value="production">Production</option>
+                  </select>
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="config-base-url">Base URL</Label>
+                  <Input
+                    id="config-base-url"
+                    value={configForm.base_url}
+                    onChange={(e) => setConfigForm((p) => ({ ...p, base_url: e.target.value }))}
+                    placeholder="https://api-sandbox.worldota.net"
+                    data-testid="config-base-url-input"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="config-key-id">Key ID</Label>
+                  <Input
+                    id="config-key-id"
+                    value={configForm.key_id}
+                    onChange={(e) => setConfigForm((p) => ({ ...p, key_id: e.target.value }))}
+                    placeholder="Supplier Key ID"
+                    data-testid="config-key-id-input"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="config-api-key">API Key</Label>
+                  <div className="relative">
+                    <Input
+                      id="config-api-key"
+                      type={showApiKey ? "text" : "password"}
+                      value={configForm.api_key}
+                      onChange={(e) => setConfigForm((p) => ({ ...p, api_key: e.target.value }))}
+                      placeholder="Supplier API Key"
+                      className="pr-10"
+                      data-testid="config-api-key-input"
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                    >
+                      {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button onClick={saveSupplierConfig} disabled={savingConfig || !configForm.key_id || !configForm.api_key} data-testid="save-config-btn">
+                  {savingConfig ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Shield className="h-4 w-4 mr-1" />}
+                  Kaydet
+                </Button>
+                <Button variant="ghost" onClick={() => setShowConfigForm(false)}>Iptal</Button>
+              </div>
+            </div>
+          )}
+
+          {/* Validation Result */}
+          {validationResult && (
+            <div className="border rounded-lg p-4 mt-4 space-y-3" data-testid="validation-result">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">
+                  Sandbox Validasyon Sonucu — <span className="capitalize">{validationResult.supplier}</span>
+                </h3>
+                <Badge
+                  variant={validationResult.status === "pass" ? "outline" : validationResult.status === "partial" ? "outline" : "destructive"}
+                  className={validationResult.status === "pass" ? "border-emerald-500 text-emerald-600" : validationResult.status === "partial" ? "border-amber-500 text-amber-600" : ""}
+                  data-testid="validation-overall-status"
+                >
+                  {validationResult.tests_passed}/{validationResult.tests_total} PASS
+                </Badge>
+              </div>
+              {validationResult.status === "not_configured" ? (
+                <p className="text-sm text-amber-600">{validationResult.message}</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Test</TableHead>
+                      <TableHead>Aciklama</TableHead>
+                      <TableHead>Sonuc</TableHead>
+                      <TableHead>Latency</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {validationResult.tests?.map((t, i) => (
+                      <TableRow key={i} data-testid={`validation-test-${i}`}>
+                        <TableCell className="font-mono text-xs">{t.test}</TableCell>
+                        <TableCell className="text-sm">{t.description}</TableCell>
+                        <TableCell>
+                          {t.passed ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-red-500" />
+                          )}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {t.latency_ms ? `${t.latency_ms}ms` : "-"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Supplier Sync Status */}
       <Card data-testid="supplier-sync-panel">
         <CardHeader>
@@ -163,6 +458,7 @@ export default function InventorySyncDashboardPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Supplier</TableHead>
+                <TableHead>Mod</TableHead>
                 <TableHead>Durum</TableHead>
                 <TableHead>Sync Araligi</TableHead>
                 <TableHead>Otel</TableHead>
@@ -174,36 +470,42 @@ export default function InventorySyncDashboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {Object.entries(suppliers).map(([sup, data]) => (
-                <TableRow key={sup} data-testid={`supplier-row-${sup}`}>
-                  <TableCell className="font-medium capitalize">{sup}</TableCell>
-                  <TableCell>
-                    <SyncStatusBadge status={data.last_sync?.status} />
-                  </TableCell>
-                  <TableCell>{data.config?.sync_interval_minutes} dk</TableCell>
-                  <TableCell>{data.inventory?.hotels || 0}</TableCell>
-                  <TableCell>{data.inventory?.prices || 0}</TableCell>
-                  <TableCell>{data.inventory?.search_index || 0}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {data.last_sync?.started_at
-                      ? new Date(data.last_sync.started_at).toLocaleString("tr-TR")
-                      : "-"}
-                  </TableCell>
-                  <TableCell>{data.last_sync?.duration_ms ? `${data.last_sync.duration_ms}ms` : "-"}</TableCell>
-                  <TableCell>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => triggerSync(sup)}
-                      disabled={syncing[sup] || data.config?.status === "pending"}
-                      data-testid={`sync-btn-${sup}`}
-                    >
-                      {syncing[sup] ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                      <span className="ml-1">Sync</span>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {Object.entries(suppliers).map(([sup, data]) => {
+                const cfg = supplierConfigs[sup] || {};
+                return (
+                  <TableRow key={sup} data-testid={`supplier-row-${sup}`}>
+                    <TableCell className="font-medium capitalize">{sup}</TableCell>
+                    <TableCell>
+                      <SandboxModeBadge mode={cfg.mode} configured={cfg.configured} />
+                    </TableCell>
+                    <TableCell>
+                      <SyncStatusBadge status={data.last_sync?.status} />
+                    </TableCell>
+                    <TableCell>{data.config?.sync_interval_minutes} dk</TableCell>
+                    <TableCell>{data.inventory?.hotels || 0}</TableCell>
+                    <TableCell>{data.inventory?.prices || 0}</TableCell>
+                    <TableCell>{data.inventory?.search_index || 0}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {data.last_sync?.started_at
+                        ? new Date(data.last_sync.started_at).toLocaleString("tr-TR")
+                        : "-"}
+                    </TableCell>
+                    <TableCell>{data.last_sync?.duration_ms ? `${data.last_sync.duration_ms}ms` : "-"}</TableCell>
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => triggerSync(sup)}
+                        disabled={syncing[sup] || data.config?.status === "pending"}
+                        data-testid={`sync-btn-${sup}`}
+                      >
+                        {syncing[sup] ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                        <span className="ml-1">Sync</span>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
@@ -326,6 +628,7 @@ export default function InventorySyncDashboardPage() {
                   <TableHead>Reval</TableHead>
                   <TableHead>Diff</TableHead>
                   <TableHead>Severity</TableHead>
+                  <TableHead>Kaynak</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -338,11 +641,14 @@ export default function InventorySyncDashboardPage() {
                       {rv.diff_pct > 0 ? "+" : ""}{rv.diff_pct}%
                     </TableCell>
                     <TableCell><SeverityBadge severity={rv.drift_severity} /></TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">{rv.source || "simulation"}</Badge>
+                    </TableCell>
                   </TableRow>
                 ))}
                 {recentRevals.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground">
                       Revalidasyon kaydi yok
                     </TableCell>
                   </TableRow>
@@ -365,6 +671,7 @@ export default function InventorySyncDashboardPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Supplier</TableHead>
+                <TableHead>Mod</TableHead>
                 <TableHead>Durum</TableHead>
                 <TableHead>Otel</TableHead>
                 <TableHead>Fiyat</TableHead>
@@ -377,6 +684,9 @@ export default function InventorySyncDashboardPage() {
               {jobs.map((job, idx) => (
                 <TableRow key={idx} data-testid={`job-row-${idx}`}>
                   <TableCell className="font-medium capitalize">{job.supplier}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="text-xs">{job.sync_mode || "simulation"}</Badge>
+                  </TableCell>
                   <TableCell><SyncStatusBadge status={job.status} /></TableCell>
                   <TableCell>{job.records_updated}</TableCell>
                   <TableCell>{job.prices_updated}</TableCell>
@@ -389,7 +699,7 @@ export default function InventorySyncDashboardPage() {
               ))}
               {jobs.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground">
                     Sync job gecmisi bos
                   </TableCell>
                 </TableRow>
@@ -407,7 +717,7 @@ export default function InventorySyncDashboardPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
             <div className="p-3 rounded-lg bg-muted/50">
               <p className="font-medium mb-1">Search Flow</p>
               <p className="text-muted-foreground">search &rarr; Redis/Mongo cache</p>
@@ -422,6 +732,11 @@ export default function InventorySyncDashboardPage() {
               <p className="font-medium mb-1">Sync Flow</p>
               <p className="text-muted-foreground">supplier &rarr; MongoDB &rarr; Redis</p>
               <p className="text-muted-foreground">Periyodik guncelleme</p>
+            </div>
+            <div className="p-3 rounded-lg bg-sky-500/10 border border-sky-500/30">
+              <p className="font-medium mb-1 text-sky-600">Sandbox Mode</p>
+              <p className="text-muted-foreground">Credential &rarr; real API</p>
+              <p className="text-muted-foreground">Config yoksa &rarr; simulation</p>
             </div>
           </div>
         </CardContent>

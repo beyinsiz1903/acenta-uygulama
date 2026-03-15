@@ -1,4 +1,4 @@
-"""Inventory Sync Engine — MEGA PROMPT #37.
+"""Inventory Sync Engine — MEGA PROMPT #37 + #38 Sandbox.
 
 Travel Inventory Platform core: Supplier → Inventory Cache → Search Engine.
 
@@ -12,6 +12,11 @@ Collections:
 Architecture:
   search → Redis/Mongo cache (NOT supplier API)
   booking → supplier API (revalidation with diff tracking)
+
+Sync modes:
+  - simulation: Generated data (no credentials)
+  - sandbox:    Real API calls to sandbox environment
+  - production: Real API calls to production environment
 """
 from __future__ import annotations
 
@@ -90,14 +95,32 @@ _SIMULATED_HOTELS = [
 
 # ── Inventory Sync Engine ────────────────────────────────────────────
 
+async def _determine_sync_mode(supplier: str) -> tuple[str, dict | None]:
+    """Determine sync mode for a supplier based on credential configuration.
+    
+    Returns: (mode, config) where mode is 'sandbox', 'production', or 'simulation'
+    """
+    try:
+        from app.services.supplier_config_service import get_raw_credentials
+        config = await get_raw_credentials(supplier)
+        if config and config.get("credentials"):
+            return config.get("mode", "sandbox"), config
+    except Exception as e:
+        logger.warning("Could not check credentials for %s: %s", supplier, e)
+    return "simulation", None
+
+
 async def trigger_supplier_sync(supplier: str) -> dict[str, Any]:
     """Trigger a full inventory sync for a given supplier.
     
-    In simulation mode: generates realistic hotel inventory, prices, and availability.
-    In sandbox/production mode: would call actual supplier APIs.
+    Sync modes:
+      - simulation: Generated data (no credentials configured)
+      - sandbox/production: Real API calls via supplier adapter
     """
     if supplier not in SUPPLIER_SYNC_CONFIG:
         return {"error": f"Unknown supplier: {supplier}", "available": list(SUPPLIER_SYNC_CONFIG.keys())}
+
+    sync_mode, cred_config = await _determine_sync_mode(supplier)
 
     db = await get_db()
     sync_start = time.monotonic()
@@ -113,10 +136,26 @@ async def trigger_supplier_sync(supplier: str) -> dict[str, Any]:
         "prices_updated": 0,
         "availability_updated": 0,
         "errors": [],
-        "sync_mode": "simulation",
+        "sync_mode": sync_mode,
     }
     job_result = await db.inventory_sync_jobs.insert_one(job_doc)
     job_id = str(job_result.inserted_id)
+
+    # Route to appropriate sync handler
+    if sync_mode in ("sandbox", "production") and supplier == "ratehawk" and cred_config:
+        result = await _sync_ratehawk_real(db, supplier, job_id, cred_config, sync_start, job_result.inserted_id)
+    else:
+        result = await _sync_simulation(db, supplier, job_id, sync_start, job_result.inserted_id)
+
+    result["sync_mode"] = sync_mode
+    return result
+
+
+async def _sync_ratehawk_real(
+    db, supplier: str, job_id: str, cred_config: dict, sync_start: float, job_oid
+) -> dict[str, Any]:
+    """Sync Ratehawk using real API adapter."""
+    from app.services.ratehawk_sync_adapter import sync_inventory_from_ratehawk
 
     inventory_count = 0
     price_count = 0
@@ -124,7 +163,101 @@ async def trigger_supplier_sync(supplier: str) -> dict[str, Any]:
     errors = []
 
     try:
-        # Phase 1: Sync inventory (hotels)
+        sync_result = await sync_inventory_from_ratehawk(
+            cred_config["base_url"], cred_config["credentials"]
+        )
+
+        # Persist hotels to MongoDB
+        for hotel in sync_result.get("hotels", []):
+            hotel["updated_at"] = _ts()
+            hotel["sync_job_id"] = job_id
+            await db.supplier_inventory.update_one(
+                {"supplier": supplier, "hotel_id": hotel["hotel_id"]},
+                {"$set": hotel},
+                upsert=True,
+            )
+            inventory_count += 1
+
+        # Persist prices
+        for price in sync_result.get("prices", []):
+            price["updated_at"] = _ts()
+            await db.supplier_prices.update_one(
+                {"supplier": supplier, "hotel_id": price["hotel_id"], "date": price["date"]},
+                {"$set": price},
+                upsert=True,
+            )
+            price_count += 1
+
+        # Persist availability
+        for avail in sync_result.get("availability", []):
+            avail["updated_at"] = _ts()
+            await db.supplier_availability.update_one(
+                {"supplier": supplier, "hotel_id": avail["hotel_id"], "date": avail["date"]},
+                {"$set": avail},
+                upsert=True,
+            )
+            avail_count += 1
+
+        # Build search index and Redis cache
+        await _build_search_index(db, supplier)
+        redis_status = await _populate_redis_cache(db, supplier)
+
+        errors = sync_result.get("errors", [])
+        status = "completed" if not errors else "completed_with_errors"
+        metrics = sync_result.get("metrics", {})
+
+    except Exception as e:
+        logger.error("Real sync error for %s: %s", supplier, e, exc_info=True)
+        errors.append({"error": str(e), "phase": "sync_execution"})
+        status = "failed"
+        metrics = {}
+        redis_status = "skipped"
+
+    sync_duration_ms = round((time.monotonic() - sync_start) * 1000, 1)
+
+    # Update job record with real metrics
+    await db.inventory_sync_jobs.update_one(
+        {"_id": job_oid},
+        {"$set": {
+            "status": status,
+            "finished_at": _ts(),
+            "records_updated": inventory_count,
+            "prices_updated": price_count,
+            "availability_updated": avail_count,
+            "duration_ms": sync_duration_ms,
+            "errors": [str(e) for e in errors] if errors else [],
+            "api_metrics": metrics,
+        }},
+    )
+
+    # Record supplier metrics for dashboard
+    await _record_supplier_metrics(db, supplier, metrics, status)
+
+    return {
+        "job_id": job_id,
+        "supplier": supplier,
+        "status": status,
+        "records_updated": inventory_count,
+        "prices_updated": price_count,
+        "availability_updated": avail_count,
+        "duration_ms": sync_duration_ms,
+        "redis_cache": redis_status if status != "failed" else "skipped",
+        "errors": errors,
+        "api_metrics": metrics,
+        "timestamp": _ts(),
+    }
+
+
+async def _sync_simulation(
+    db, supplier: str, job_id: str, sync_start: float, job_oid
+) -> dict[str, Any]:
+    """Original simulation sync (when no credentials configured)."""
+    inventory_count = 0
+    price_count = 0
+    avail_count = 0
+    errors = []
+
+    try:
         hotels_for_supplier = _SIMULATED_HOTELS[: random.randint(8, len(_SIMULATED_HOTELS))]
         for idx, hotel_template in enumerate(hotels_for_supplier):
             hotel_id = f"{supplier[:2]}_{idx + 1:06d}"
@@ -146,12 +279,10 @@ async def trigger_supplier_sync(supplier: str) -> dict[str, Any]:
             )
             inventory_count += 1
 
-            # Phase 2: Sync prices for next 30 days
             base_date = _now().date()
             for day_offset in range(30):
                 target_date = (base_date + timedelta(days=day_offset)).isoformat()
                 base_price = round(random.uniform(80, 600), 2)
-                # Weekend markup
                 if (base_date + timedelta(days=day_offset)).weekday() >= 5:
                     base_price = round(base_price * 1.15, 2)
 
@@ -170,7 +301,6 @@ async def trigger_supplier_sync(supplier: str) -> dict[str, Any]:
                 )
                 price_count += 1
 
-            # Phase 3: Sync availability
             for day_offset in range(30):
                 target_date = (base_date + timedelta(days=day_offset)).isoformat()
                 avail_doc = {
@@ -187,23 +317,19 @@ async def trigger_supplier_sync(supplier: str) -> dict[str, Any]:
                 )
                 avail_count += 1
 
-        # Phase 4: Build search index
         await _build_search_index(db, supplier)
-
-        # Phase 5: Populate Redis cache
         redis_status = await _populate_redis_cache(db, supplier)
-
         status = "completed"
     except Exception as e:
         logger.error("Sync error for %s: %s", supplier, e, exc_info=True)
         errors.append(str(e))
         status = "failed"
+        redis_status = "skipped"
 
     sync_duration_ms = round((time.monotonic() - sync_start) * 1000, 1)
 
-    # Update job record
     await db.inventory_sync_jobs.update_one(
-        {"_id": job_result.inserted_id},
+        {"_id": job_oid},
         {"$set": {
             "status": status,
             "finished_at": _ts(),
@@ -227,6 +353,25 @@ async def trigger_supplier_sync(supplier: str) -> dict[str, Any]:
         "errors": errors,
         "timestamp": _ts(),
     }
+
+
+async def _record_supplier_metrics(
+    db, supplier: str, metrics: dict, status: str
+) -> None:
+    """Record supplier-level performance metrics for the dashboard."""
+    try:
+        await db.supplier_sync_metrics.insert_one({
+            "supplier": supplier,
+            "timestamp": _ts(),
+            "status": status,
+            "api_calls": metrics.get("api_calls", 0),
+            "avg_latency_ms": metrics.get("avg_latency_ms", 0),
+            "error_rate_pct": metrics.get("error_rate_pct", 0),
+            "hotels_synced": metrics.get("hotels_count", 0),
+            "sync_duration_ms": metrics.get("sync_duration_ms", 0),
+        })
+    except Exception as e:
+        logger.warning("Failed to record supplier metrics: %s", e)
 
 
 async def _build_search_index(db, supplier: str) -> int:
@@ -429,6 +574,8 @@ async def revalidate_price(supplier: str, hotel_id: str, checkin: str, checkout:
     
     This is the only step that contacts the supplier API directly.
     cached_price → supplier_price → diff calculation.
+    
+    Uses real API when credentials configured, simulation otherwise.
     """
     db = await get_db()
     reval_start = time.monotonic()
@@ -440,17 +587,32 @@ async def revalidate_price(supplier: str, hotel_id: str, checkin: str, checkout:
     )
     cached_price = cached["price"] if cached else 0
 
-    # Simulate supplier revalidation (in production: actual API call)
-    # Price drift simulation based on supplier reliability
-    drift_ranges = {
-        "ratehawk": (-0.02, 0.05),
-        "paximum": (-0.03, 0.08),
-        "wwtatil": (-0.05, 0.12),
-        "tbo": (-0.02, 0.06),
-    }
-    drift_min, drift_max = drift_ranges.get(supplier, (-0.03, 0.08))
-    drift_pct = random.uniform(drift_min, drift_max)
-    revalidated_price = round(cached_price * (1 + drift_pct), 2) if cached_price > 0 else round(random.uniform(100, 500), 2)
+    # Determine if we use real API or simulation
+    sync_mode, cred_config = await _determine_sync_mode(supplier)
+    source = sync_mode
+
+    revalidated_price = 0
+    supplier_latency_ms = 0
+
+    if sync_mode in ("sandbox", "production") and supplier == "ratehawk" and cred_config:
+        # Real API revalidation
+        from app.services.ratehawk_sync_adapter import revalidate_price_from_ratehawk
+        reval_result = await revalidate_price_from_ratehawk(
+            cred_config["base_url"], cred_config["credentials"],
+            hotel_id, checkin, checkout,
+        )
+        if reval_result.get("success"):
+            revalidated_price = reval_result["price"]
+            supplier_latency_ms = reval_result.get("latency_ms", 0)
+            source = reval_result.get("source", "ratehawk_api")
+        else:
+            # Fallback to simulation if API fails
+            logger.warning("Ratehawk revalidation failed, using simulation: %s", reval_result.get("error"))
+            source = "simulation_fallback"
+            revalidated_price = _simulate_revalidation_price(supplier, cached_price)
+    else:
+        # Simulation revalidation
+        revalidated_price = _simulate_revalidation_price(supplier, cached_price)
 
     diff_amount = round(revalidated_price - cached_price, 2)
     diff_pct = round((diff_amount / cached_price) * 100, 2) if cached_price > 0 else 0
@@ -481,7 +643,8 @@ async def revalidate_price(supplier: str, hotel_id: str, checkin: str, checkout:
         "drift_severity": severity,
         "currency": cached.get("currency", "EUR") if cached else "EUR",
         "latency_ms": reval_duration_ms,
-        "source": "simulation",
+        "supplier_latency_ms": supplier_latency_ms,
+        "source": source,
         "timestamp": _ts(),
     }
 
@@ -492,6 +655,21 @@ async def revalidate_price(supplier: str, hotel_id: str, checkin: str, checkout:
     })
 
     return result
+
+
+def _simulate_revalidation_price(supplier: str, cached_price: float) -> float:
+    """Generate a simulated revalidation price with realistic drift."""
+    drift_ranges = {
+        "ratehawk": (-0.02, 0.05),
+        "paximum": (-0.03, 0.08),
+        "wwtatil": (-0.05, 0.12),
+        "tbo": (-0.02, 0.06),
+    }
+    drift_min, drift_max = drift_ranges.get(supplier, (-0.03, 0.08))
+    drift_pct = random.uniform(drift_min, drift_max)
+    if cached_price > 0:
+        return round(cached_price * (1 + drift_pct), 2)
+    return round(random.uniform(100, 500), 2)
 
 
 # ── Sync Job Management ──────────────────────────────────────────────

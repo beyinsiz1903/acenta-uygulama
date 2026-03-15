@@ -113,6 +113,14 @@ def create_app() -> FastAPI:
             import logging
             logging.getLogger("startup").warning("Inventory indexes setup: %s", exc)
 
+        # Initialize Supplier Config indexes
+        try:
+            from app.services.supplier_config_service import ensure_supplier_config_indexes
+            await ensure_supplier_config_indexes()
+        except Exception as exc:
+            import logging
+            logging.getLogger("startup").warning("Supplier config indexes: %s", exc)
+
         # Start Job Scheduler
         try:
             from app.services.job_scheduler_service import start_scheduler

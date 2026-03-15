@@ -7329,6 +7329,17 @@
     "compat_required": true,
     "current_namespace": "/api/inventory",
     "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "inventory",
+    "path": "/api/inventory/sandbox/validate",
+    "risk_level": "medium",
+    "source": "app.routers.inventory_sync_router",
+    "target_namespace": "/api/v1/inventory"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/inventory",
+    "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "inventory",
     "path": "/api/inventory/search",
@@ -7387,6 +7398,50 @@
     "method": "GET",
     "owner": "inventory",
     "path": "/api/inventory/stats",
+    "risk_level": "medium",
+    "source": "app.routers.inventory_sync_router",
+    "target_namespace": "/api/v1/inventory"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/inventory",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "inventory",
+    "path": "/api/inventory/supplier-config",
+    "risk_level": "medium",
+    "source": "app.routers.inventory_sync_router",
+    "target_namespace": "/api/v1/inventory"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/inventory",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "inventory",
+    "path": "/api/inventory/supplier-config",
+    "risk_level": "medium",
+    "source": "app.routers.inventory_sync_router",
+    "target_namespace": "/api/v1/inventory"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/inventory",
+    "legacy_or_v1": "legacy",
+    "method": "DELETE",
+    "owner": "inventory",
+    "path": "/api/inventory/supplier-config/{supplier}",
+    "risk_level": "medium",
+    "source": "app.routers.inventory_sync_router",
+    "target_namespace": "/api/v1/inventory"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/inventory",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "inventory",
+    "path": "/api/inventory/supplier-metrics",
     "risk_level": "medium",
     "source": "app.routers.inventory_sync_router",
     "target_namespace": "/api/v1/inventory"

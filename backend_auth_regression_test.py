@@ -10,7 +10,7 @@ import json
 import sys
 
 # Test configuration
-BACKEND_URL = "https://stupefied-hopper-3.preview.emergentagent.com"
+BACKEND_URL = "https://enterprise-dashboard-10.preview.emergentagent.com"
 TEST_CREDENTIALS = {
     "email": "agent@acenta.test",
     "password": "agent123"

@@ -28,6 +28,7 @@ from app.services.pilot_flow_validator import (
     get_pilot_incidents,
     get_pilot_metrics_dashboard,
     list_pilot_agencies,
+    run_batch_simulation,
     save_accounting_credential,
     save_supplier_credential,
     test_accounting_sync,
@@ -71,6 +72,12 @@ class AccountingCredentialPayload(BaseModel):
 
 class AgencyNamePayload(BaseModel):
     agency_name: str
+
+
+class SimulationPayload(BaseModel):
+    count: int = 10
+    supplier_type: str = "ratehawk"
+    accounting_provider: str = "luca"
 
 
 # ── Step 1: Create Agency ────────────────────────────────────────────
@@ -188,6 +195,17 @@ async def reconciliation_test(
     if not agency:
         raise HTTPException(status_code=404, detail="Pilot acenta bulunamadi")
     return await test_reconciliation(payload.agency_name)
+
+
+# ── Batch Simulation ──────────────────────────────────────────────────
+
+@router.post("/run-simulation")
+async def simulation_run(
+    payload: SimulationPayload,
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    count = min(payload.count, 20)  # Cap at 20
+    return await run_batch_simulation(count, payload.supplier_type, payload.accounting_provider)
 
 
 # ── Read Endpoints ───────────────────────────────────────────────────

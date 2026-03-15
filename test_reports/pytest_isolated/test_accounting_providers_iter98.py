@@ -7,7 +7,7 @@ import subprocess
 import requests
 import time
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://async-testing.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://pilot-agency-dash.preview.emergentagent.com").rstrip("/")
 
 # Global session caches
 _admin_session = None

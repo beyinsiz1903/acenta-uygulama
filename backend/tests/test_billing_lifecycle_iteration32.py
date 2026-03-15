@@ -198,7 +198,7 @@ class TestBillingSubscriptionLegacy:
             f"{BASE_URL}/api/billing/customer-portal",
             headers={"Authorization": f"Bearer {auth_token}"},
             json={
-                "origin_url": "https://async-testing.preview.emergentagent.com",
+                "origin_url": "https://pilot-agency-dash.preview.emergentagent.com",
                 "return_path": "/app/settings/billing"
             },
             timeout=30
@@ -221,7 +221,7 @@ class TestBillingSubscriptionLegacy:
             json={
                 "plan": "pro",
                 "interval": "monthly",
-                "origin_url": "https://async-testing.preview.emergentagent.com",
+                "origin_url": "https://pilot-agency-dash.preview.emergentagent.com",
                 "cancel_path": "/app/settings/billing"
             },
             timeout=30
@@ -247,7 +247,7 @@ class TestBillingSubscriptionLegacy:
             json={
                 "plan": "starter",
                 "interval": "yearly",
-                "origin_url": "https://async-testing.preview.emergentagent.com",
+                "origin_url": "https://pilot-agency-dash.preview.emergentagent.com",
                 "cancel_path": "/app/settings/billing"
             },
             timeout=30
@@ -273,7 +273,7 @@ class TestBillingSubscriptionLegacy:
             json={
                 "plan": "enterprise",
                 "interval": "monthly",
-                "origin_url": "https://async-testing.preview.emergentagent.com",
+                "origin_url": "https://pilot-agency-dash.preview.emergentagent.com",
                 "cancel_path": "/app/settings/billing"
             },
             timeout=30
@@ -319,7 +319,7 @@ class TestBillingCheckoutFlow:
             json={
                 "plan": "pro",
                 "interval": "monthly",
-                "origin_url": "https://async-testing.preview.emergentagent.com",
+                "origin_url": "https://pilot-agency-dash.preview.emergentagent.com",
                 "cancel_path": "/pricing"
             },
             timeout=30

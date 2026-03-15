@@ -9476,6 +9476,17 @@
     "legacy_or_v1": "legacy",
     "method": "POST",
     "owner": "pilot",
+    "path": "/api/pilot/onboarding/run-simulation",
+    "risk_level": "medium",
+    "source": "app.routers.pilot_onboarding_router",
+    "target_namespace": "/api/v1/pilot"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/pilot",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "pilot",
     "path": "/api/pilot/onboarding/setup",
     "risk_level": "medium",
     "source": "app.routers.pilot_onboarding_router",

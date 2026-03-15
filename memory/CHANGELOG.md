@@ -1,40 +1,22 @@
-# Syroce — CHANGELOG
+# Syroce Changelog
 
-## 13 Mar 2026 — Revenue & Supplier Optimization Engine (MEGA PROMPT #25)
+## 2026-03-15 — Inventory Sync Engine (MEGA PROMPT #37)
+- **Architecture Decision**: CTO approved Option B — Travel Inventory Platform (not API Aggregator)
+- **Backend**: Created `inventory_sync_service.py` with full sync engine, cached search, revalidation
+- **Backend**: Created `inventory_sync_router.py` with 6 API endpoints
+- **Frontend**: Created `InventorySyncDashboardPage.jsx` with KPIs, sync controls, cached search
+- **MongoDB**: 6 new collections (supplier_inventory, supplier_prices, supplier_availability, inventory_sync_jobs, inventory_index, inventory_revalidations)
+- **Testing**: 28/28 backend tests PASS, 100% frontend verified
+- **Key Metric**: Cached search latency ~1.7ms (vs 300ms+ from supplier API)
 
-### Backend (5 new service files + 1 new router)
-- **revenue_analytics.py** — Supplier revenue contribution, agency revenue, GMV summary, destination revenue
-- **profitability_scoring.py** — Weighted profitability formula (commission 30%, success 25%, fallback 15%, latency 15%, cancel 15%) with platinum/gold/silver/bronze tiers
-- **commission_engine.py** — Commission records, smart markup rules engine (by supplier/destination/season/agency tier), markup calculation
-- **revenue_forecasting.py** — Linear regression forecasting, supplier projections, agency growth trends
-- **revenue_router.py** — 13 API endpoints under /api/revenue/*
+## 2026-03-15 — Supplier Response Diff (Previous Session)
+- Implemented `supplier_response_diff` metric (search_price → revalidation_price → diff %)
+- Added to pilot dashboard KPIs and simulation results
+- 9/9 backend tests PASS, frontend 100% verified
+- 10/10 simulation flows PASS
 
-### Frontend (2 new pages + API helpers + navigation)
-- **SupplierEconomicsPage.jsx** — Commission summary, economics table, profitability scoring cards, markup rules panel
-- **RevenueOptimizationPage.jsx** — GMV dashboard, conversion funnel, forecasting, agency analytics, supplier revenue
-- **unifiedBooking.js** — 14 new API helper functions
-- **adminNav.js** — 2 new navigation items
-- **App.js** — 2 new routes
-
-### Testing
-- 38/38 backend tests passed (iteration_84)
-- 100% frontend tests passed
-- All 13 API endpoints verified with auth protection
-
----
-
-## 13 Mar 2026 — Smart Search & Supplier Intelligence Layer (MEGA PROMPT #24)
-- Search analytics engine with funnel tracking
-- Supplier performance scoring with weighted formula
-- Smart search suggestions UI
-- KPI Analytics Dashboard
-- 34/34 backend tests (iteration_83)
-
-## Earlier — Commercial Booking Experience Layer (MEGA PROMPT #23)
-- Unified Search Page with multi-step booking wizard
-- Reconciliation Dashboard
-- 32/32 backend tests
-
-## Earlier — Unified Booking & Fallback Layer
-- Supplier adapter pattern, aggregator, booking orchestrator
-- Price revalidation, fallback chains, reconciliation
+## Previous Sessions
+- Pilot flow simulation system
+- Pilot dashboard with Flow Health, Supplier Metrics, Finance Metrics
+- Supplier adapters (Ratehawk, Paximum, WWTatil, TBO)
+- Full travel ERP platform features

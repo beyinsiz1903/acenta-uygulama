@@ -1,131 +1,105 @@
-# Syroce — Travel ERP Platform — PRD
+# Syroce Travel Platform — Product Requirements Document
 
-## Product Overview
-Syroce is a production-grade Turkish travel ERP platform that manages the full lifecycle of travel agency operations: supplier management, booking engine, pricing engine, revenue/growth engine, invoice/e-document engine, accounting sync, financial operations, and multi-provider accounting architecture.
+## Original Problem Statement
+CTO-driven Travel ERP platform (Syroce) with multi-supplier booking engine, revenue engine, invoice engine, accounting sync, finance ops, growth engine, pilot validation, and supplier drift monitoring. The platform is transitioning from a **Travel API Aggregator** to a **Travel Inventory Platform** (CTO decision — Option B).
 
-## Current Platform Layers
-1. **Supplier Ecosystem** (Score: 10/10)
-2. **Booking Engine** (Score: 9.9/10)
-3. **Revenue Engine** (Score: 9.8/10)
-4. **Invoice Engine** (Score: 9.8/10)
-5. **E-Document Layer** (Score: 9.7/10)
-6. **Accounting Sync Layer** (Score: 9.6/10)
-7. **Accounting Automation Layer** (Score: 9.7/10)
-8. **Reconciliation & Finance Ops Layer** (Score: 9.8/10) — MEGA PROMPT #33
-9. **Multi Accounting Provider Architecture** (Score: NEW) — MEGA PROMPT #34
-10. **Pilot Agency Real Flow Validation** (Score: NEW) — MEGA PROMPT #35
+## Core Architecture Decision (MEGA PROMPT #37)
+**Travel Inventory Platform** — Enterprise architecture pattern used by Booking.com, Expedia, Travelport:
+```
+Supplier API → Inventory Sync Engine → MongoDB → Redis Cache → Search Engine
+Search → Cache (NOT supplier API)
+Booking → Supplier API (revalidation with diff tracking)
+```
 
-## Core Requirements
+## User Personas
+- **Super Admin** (agent@acenta.test): Full platform control
+- **Agency Admin** (agency1@demo.test): Agency-level operations
+- **CTO**: Strategic decisions, pilot validation oversight
 
-### Authentication
-- JWT-based auth with role-based access control
-- Roles: super_admin, admin, finance_admin, agency_admin
+## Tech Stack
+- **Backend**: FastAPI + MongoDB + Redis
+- **Frontend**: React + Tailwind + Shadcn/UI + Recharts
+- **3rd Party**: Stripe, APScheduler, Supplier adapters (Ratehawk, Paximum, WWTatil, TBO)
 
-### Pilot Agency Real Flow Validation (MEGA PROMPT #35) - IMPLEMENTED
-- **Pilot Setup Wizard**: 9-step enforced onboarding flow
-  - Step 1: Agency Create (name, email, phone, tax_id, mode)
-  - Step 2: Supplier Credential (supplier_type, api_key, api_secret, agency_code)
-  - Step 3: Accounting Provider Credential (provider_type, company_code, username, password)
-  - Step 4: Connection Test (supplier + accounting)
-  - Step 5: First Search Test
-  - Step 6: First Booking Test
-  - Step 7: First Invoice Test
-  - Step 8: First Accounting Sync Test
-  - Step 9: Reconciliation Check (booking vs invoice vs accounting)
-- **3 Operating Modes**: sandbox (platform test), simulation (demo/deterministic), production (real customer)
-- **Batch Simulation**: POST /api/pilot/onboarding/run-simulation runs N flows (default 10), 10/10 PASS verified
-- **Pilot Dashboard KPIs** (CTO Directive - All Implemented):
-  - **Flow Health**: flow_success_rate, avg_flow_duration_ms, failed_flows
-  - **Supplier Metrics**: supplier_latency_ms, supplier_error_rate, supplier_success_rate
-  - **Finance Metrics**: invoice_generation_time_ms, accounting_sync_latency_ms, reconciliation_mismatch_rate
-  - Platform Health: search success rate, booking success rate, supplier latency, supplier error rate
-  - Financial Flow: booking→invoice conversion, invoice→accounting sync latency, reconciliation mismatch rate
-  - Pilot Usage: active agencies, daily searches, daily bookings, revenue generated
-  - Incident Monitoring: failed bookings, failed invoices, failed accounting sync, critical alerts
-- **Enhanced Incidents Panel**: severity, flow_stage, supplier, retry_count fields
-- **Supplier Response Diff** (CTO Kritik Metrik - IMPLEMENTED 2026-03-15):
-  - Tracks initial supplier price vs revalidation price at booking time
-  - Dashboard KPIs: avg_diff_pct, max_diff_pct, drift distribution (up/down/stable), alert count
-  - Alert threshold: >5% price difference triggers alert
-  - Per-flow diff data in simulation results with color-coded display
-  - Recent diffs table: Supplier, Ilk Fiyat, Revalidation Fiyat, Fark (TRY), Fark (%), Yon
-  - Simulation mode: 0-5% controlled drift, Sandbox/Production: 0-15% realistic drift
-- **Collections**: pilot_agencies, pilot_metrics, pilot_incidents
-- **Supplier Support**: RateHawk, Paximum, TBO, WWTatil
-- **Accounting Provider Support**: Luca, Logo, Parasut, Mikro
-- **Pilot Success Criteria**: 10 simulated flows PASS ✅, 3 sandbox flows, 3 real bookings, 3 invoice, 3 accounting sync, 0 critical reconciliation error
+## Collections (MongoDB)
+### Inventory Sync Engine (NEW — MEGA PROMPT #37)
+- `supplier_inventory`: Hotel/product records per supplier
+- `supplier_prices`: Cached prices per hotel per date per supplier
+- `supplier_availability`: Room availability per hotel per date
+- `inventory_sync_jobs`: Sync job tracking (status, records, timing)
+- `inventory_index`: Flattened search-optimized documents
+- `inventory_revalidations`: Booking-time revalidation records with drift severity
 
-### Multi Accounting Provider Architecture (MEGA PROMPT #34) - IMPLEMENTED
-- Base Provider Contract, Normalized Response, 4 Provider Adapters
-- Capability Matrix, Provider Routing, Credential Management (AES-256-GCM)
-- Provider Health Monitoring, Failover Strategy
+### Existing Collections
+- `pilot_agencies`, `pilot_metrics`, `pilot_incidents`
 
-### Reconciliation & Finance Operations Layer (MEGA PROMPT #33) - IMPLEMENTED
-- Reconciliation Engine, Finance Operations Queue, Financial Alerts
+## Implemented Features
 
-### Accounting Automation Layer (MEGA PROMPT #32) - IMPLEMENTED
-- Customer matching, Accounting sync queue, Auto-sync rule engine
+### Phase: Simulation Complete ✅
+- 10/10 successful simulation flows
+- `supplier_response_diff` metric (search_price → revalidation_price → diff %)
+- Pilot Dashboard with KPIs (Flow Health, Supplier Metrics, Finance Metrics, Diff Metrics)
 
-## Technical Architecture
+### Phase: Inventory Sync Engine ✅ (MEGA PROMPT #37)
+**Backend APIs:**
+- `POST /api/inventory/sync/trigger` — Trigger supplier sync (simulation mode)
+- `GET /api/inventory/sync/status` — Sync status for all 4 suppliers
+- `GET /api/inventory/sync/jobs` — Sync job history
+- `GET /api/inventory/search` — Cached search (Redis → MongoDB fallback, ~1.7ms latency)
+- `GET /api/inventory/stats` — Comprehensive inventory statistics
+- `POST /api/inventory/revalidate` — Price revalidation with drift severity
 
-### Backend
-- FastAPI + MongoDB + Redis
-- APScheduler for background jobs
-- AES-256-GCM credential encryption
-- Collection prefix for tenant isolation
+**Frontend:**
+- Inventory Sync Dashboard at `/app/admin/inventory-sync`
+- KPI cards (Hotels, Prices, Availability, Search Index, Sync Jobs, Redis Cache)
+- Supplier Sync Status table with per-supplier sync controls
+- Cached Search panel (confirms NO supplier API calls)
+- City breakdown, Revalidation history with severity badges
+- Sync job history
 
-### Frontend
-- React + Shadcn UI
-- Page routing via React Router
-- Admin pages: Dashboard, Pilot Wizard, Pilot Dashboard, Accounting Providers, Finance Ops, etc.
+**Supplier Sync Config:**
+| Supplier | Interval | Status |
+|----------|----------|--------|
+| Ratehawk | 5 min | active |
+| Paximum | 15 min | active |
+| WWTatil | 60 min | active |
+| TBO | 30 min | pending |
 
-### Key Collections (MEGA PROMPT #35)
-- `pilot_agencies` — Agency setup + wizard completion state + flow results
-- `pilot_metrics` — Per-step metrics (latency, success rate, timestamps)
-- `pilot_incidents` — Failed flow steps and critical alerts
+**Drift Severity Classification:**
+- 0-2%: Normal (green)
+- 2-5%: Warning (amber)
+- 5-10%: High (orange)
+- 10%+: Critical (red)
 
-### Key API Endpoints (MEGA PROMPT #35)
-- `POST /api/pilot/onboarding/setup` — Create pilot agency (step 1)
-- `PUT /api/pilot/onboarding/setup/supplier` — Save supplier credential (step 2)
-- `PUT /api/pilot/onboarding/setup/accounting` — Save accounting credential (step 3)
-- `POST /api/pilot/onboarding/test-connection` — Test connections (step 4)
-- `POST /api/pilot/onboarding/test-search` — Test search (step 5)
-- `POST /api/pilot/onboarding/test-booking` — Test booking (step 6)
-- `POST /api/pilot/onboarding/test-invoice` — Test invoice (step 7)
-- `POST /api/pilot/onboarding/test-accounting` — Test accounting sync (step 8)
-- `POST /api/pilot/onboarding/test-reconciliation` — Reconciliation check (step 9)
-- `GET /api/pilot/onboarding/agencies` — List pilot agencies
-- `GET /api/pilot/onboarding/metrics` — Pilot metrics dashboard
-- `GET /api/pilot/onboarding/incidents` — Pilot incidents
+## Upcoming Tasks (Prioritized)
 
-## What's Mocked
-- **Pilot Flow Tests**: All flow tests (search, booking, invoice, accounting, reconciliation) use SIMULATED data in sandbox/simulation mode
-- **LucaProvider**: Simulation mode when real Luca API is unreachable
-- **Logo/Parasut/Mikro**: Stub providers returning ERR_UNSUPPORTED
-- **Real Supplier APIs**: Not connected yet — pilot phase uses sandbox mode
+### P0 — Ertelenmiş KPI Güncellemeleri
+- Supplier Drift Rate KPI (drift > 2% olan booking / toplam booking per supplier)
+- Drift Severity renkli gösterim
+- Price Drift Timeline Grafiği (x: zaman, y: diff%, group: supplier)
 
-## Credentials
-- Super Admin: admin@acenta.test / admin123
-- Agency Admin: agency1@demo.test / agency123
+### P1 — Sandbox Phase
+- Ratehawk sandbox entegrasyonu (gerçek search, price, availability)
+- Paximum sandbox entegrasyonu
+- WWTatil sandbox test
+- Sandbox Success Criteria: Search Success > 95%, Latency < 2s, Error Rate < 3%, Price Drift < 5%
 
-## Test Stabilization Status (Feb 2026) - COMPLETED
-- Fixture conflicts fixed, PyMongo AutoReconnect fixed, 39 mocked HTTP tests added
-- 139/139 tests passed + 15/15 pilot onboarding tests
+### P2 — Pilot Phase
+- 3 pilot agency gerçek trafik
+- 3 real bookings, 3 invoices, 3 accounting sync PASS
+- 0 critical reconciliation mismatch
 
-## Upcoming Tasks (P1)
-- Onboard 3 pilot agencies through the wizard with real credentials
-- Connect real supplier APIs (RateHawk, Paximum first)
-- Validate first real booking-to-invoice-to-accounting sync flow
-- Run the full chain at least 10 times with real data
+### P3+ — Future
+- Accounting provider entegrasyonları (Luca, Parasut, Logo, Mikro)
+- Core finance modules (Financial Analytics, Tax Reporting)
+- APScheduler → Celery Beat migrasyonu
+- Refactoring (pilot tamamlandıktan sonra)
 
-## Future Tasks (P2+)
-- Full financial analytics dashboard
-- Tax reporting module
-- Payment/refund tracking integration
-- APScheduler → Celery Beat migration
-- CI/CD pipeline improvements
-- Multi-provider fallback
-- Nested Button HTML warning fix
+## Known Issues
+- P3: GitHub sync issue (platform-level, deferred)
+- P4: Nested button HTML warning (de-prioritized)
+- Redis unavailable in preview (MongoDB fallback working)
 
-## Redis Status
-- Running on port 6379 (used by customer matching, rate limiting, caching)
+## Strictly Prohibited (CTO Directive)
+- No refactoring until pilot validation complete
+- No CI/CD work or scheduler migration until pilot phase done

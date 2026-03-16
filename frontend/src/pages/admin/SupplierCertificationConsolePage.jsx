@@ -302,6 +302,42 @@ function HistoryPanel({ history, onSelect }) {
   );
 }
 
+/* ─── Sandbox Readiness Indicator ─────────────────────── */
+function SandboxReadinessIndicator({ status }) {
+  if (!status) return null;
+  const isSandbox = status.mode === "sandbox";
+  const readiness = status.readiness || {};
+  const checks = [
+    { key: "credential_wiring", label: "Credentials" },
+    { key: "health_validated", label: "Health" },
+    { key: "search_tested", label: "Search" },
+    { key: "booking_tested", label: "Booking" },
+    { key: "cancel_tested", label: "Cancel" },
+  ];
+  const passed = checks.filter((c) => readiness[c.key]).length;
+
+  return (
+    <div data-testid="sandbox-readiness" className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
+        {checks.map((c) => (
+          <div key={c.key} title={`${c.label}: ${readiness[c.key] ? "OK" : "Pending"}`}
+            className={`w-2 h-2 rounded-full transition-all ${readiness[c.key] ? "bg-emerald-400" : "bg-zinc-600"}`} />
+        ))}
+      </div>
+      <span className="text-[10px] text-zinc-500">{passed}/{checks.length}</span>
+      {isSandbox && status.health?.status === "healthy" && (
+        <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[9px]">API OK</Badge>
+      )}
+      {isSandbox && status.health?.status === "unhealthy" && (
+        <Badge className="bg-red-500/15 text-red-400 border-red-500/30 text-[9px]">API Error</Badge>
+      )}
+      {!isSandbox && (
+        <Badge className="bg-zinc-700/50 text-zinc-500 border-zinc-700 text-[9px]">No Credentials</Badge>
+      )}
+    </div>
+  );
+}
+
 /* ─── Main Page ───────────────────────────────────────── */
 export default function SupplierCertificationConsolePage() {
   const [scenarios, setScenarios] = useState([]);
@@ -314,6 +350,7 @@ export default function SupplierCertificationConsolePage() {
   const [drawerStep, setDrawerStep] = useState(null);
   const [rerunning, setRerunning] = useState(false);
   const [historyFilter, setHistoryFilter] = useState(null);
+  const [sandboxStatus, setSandboxStatus] = useState(null);
 
   const suppliers = Object.entries(SUPPLIER_COLORS).map(([code, grad]) => ({
     code, gradient: grad,
@@ -335,8 +372,16 @@ export default function SupplierCertificationConsolePage() {
     } catch { /* ignore */ }
   }, [historyFilter]);
 
+  const loadSandboxStatus = useCallback(async () => {
+    try {
+      const { data } = await api.get(`/e2e-demo/sandbox-status?supplier=${selectedSupplier}`);
+      setSandboxStatus(data);
+    } catch { /* ignore */ }
+  }, [selectedSupplier]);
+
   useEffect(() => { loadScenarios(); }, [loadScenarios]);
   useEffect(() => { loadHistory(); }, [loadHistory, activeTab]);
+  useEffect(() => { loadSandboxStatus(); }, [loadSandboxStatus]);
 
   const runTest = async () => {
     setRunning(true);
@@ -387,21 +432,34 @@ export default function SupplierCertificationConsolePage() {
             <h1 data-testid="page-title" className="text-xl font-bold text-zinc-100 flex items-center gap-2">
               <Server className="w-5 h-5 text-blue-400" />
               Supplier Certification Console
+              {sandboxStatus && (
+                <Badge data-testid="mode-badge"
+                  className={sandboxStatus.mode === "sandbox"
+                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs ml-2"
+                    : "bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs ml-2"}>
+                  {sandboxStatus.mode === "sandbox" ? "SANDBOX" : "SIMULATION"}
+                </Badge>
+              )}
             </h1>
             <p className="text-sm text-zinc-500 mt-0.5">
               E2E lifecycle testi calistir, edge case senaryolarini dogrula, go-live eligibility kontrol et
             </p>
           </div>
-          <div className="flex gap-1 bg-zinc-800/50 rounded-lg p-0.5">
-            {tabs.map((t) => (
-              <button key={t.id} data-testid={`tab-${t.id}`}
-                onClick={() => setActiveTab(t.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                  activeTab === t.id ? "bg-zinc-700 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
-                }`}>
-                <t.icon className="w-3.5 h-3.5" /> {t.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-3">
+            {sandboxStatus && (
+              <SandboxReadinessIndicator status={sandboxStatus} />
+            )}
+            <div className="flex gap-1 bg-zinc-800/50 rounded-lg p-0.5">
+              {tabs.map((t) => (
+                <button key={t.id} data-testid={`tab-${t.id}`}
+                  onClick={() => setActiveTab(t.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    activeTab === t.id ? "bg-zinc-700 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
+                  }`}>
+                  <t.icon className="w-3.5 h-3.5" /> {t.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -461,6 +519,51 @@ export default function SupplierCertificationConsolePage() {
                 </CardContent>
               </Card>
 
+              {/* Sandbox Status Panel */}
+              {sandboxStatus && (
+                <Card data-testid="sandbox-status-card" className="bg-zinc-900/80 border-zinc-800">
+                  <CardHeader className="pb-2 pt-4 px-4">
+                    <CardTitle className="text-xs uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
+                      <Wifi className="w-3 h-3" /> Sandbox Durumu
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-4 pb-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-zinc-400">Mod</span>
+                      <Badge className={sandboxStatus.mode === "sandbox"
+                        ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]"
+                        : "bg-amber-500/20 text-amber-400 border-amber-500/30 text-[10px]"}>
+                        {sandboxStatus.mode === "sandbox" ? "Sandbox (Gercek API)" : "Simulation"}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-zinc-400">Credentials</span>
+                      <span className={`text-[11px] ${sandboxStatus.credentials_configured ? "text-emerald-400" : "text-zinc-600"}`}>
+                        {sandboxStatus.credentials_configured ? `Aktif (${sandboxStatus.credential_source})` : "Yapilandirilmamis"}
+                      </span>
+                    </div>
+                    {sandboxStatus.health && sandboxStatus.mode === "sandbox" && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-zinc-400">API Health</span>
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-1.5 h-1.5 rounded-full ${sandboxStatus.health.reachable ? "bg-emerald-400" : "bg-red-400"}`} />
+                          <span className={`text-[11px] ${sandboxStatus.health.reachable ? "text-emerald-400" : "text-red-400"}`}>
+                            {sandboxStatus.health.reachable ? `${sandboxStatus.health.latency_ms}ms` : sandboxStatus.health.error || "Unreachable"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {sandboxStatus.readiness?.go_live_ready && (
+                      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-2 mt-1">
+                        <p className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" /> Go-Live icin hazir
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Run Button */}
               <Button data-testid="run-test-btn" onClick={runTest} disabled={running}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white h-11 font-semibold" size="lg">
@@ -482,9 +585,18 @@ export default function SupplierCertificationConsolePage() {
                       <Server className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-zinc-200">{testResult.supplier_name} — {testResult.scenario_name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-zinc-200">{testResult.supplier_name} — {testResult.scenario_name}</p>
+                        <Badge data-testid="result-mode-badge"
+                          className={testResult.mode === "sandbox"
+                            ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]"
+                            : "bg-amber-500/20 text-amber-400 border-amber-500/30 text-[10px]"}>
+                          {testResult.mode === "sandbox" ? "SANDBOX (Real API)" : "SIMULATION"}
+                        </Badge>
+                      </div>
                       <p className="text-[10px] text-zinc-500 font-mono">
-                        Trace: {testResult.trace_id} | Mode: {testResult.mode} | {testResult.total_duration_ms}ms
+                        Trace: {testResult.trace_id} | {testResult.total_duration_ms}ms
+                        {testResult.test_params && ` | ${testResult.test_params.destination} | ${testResult.test_params.checkin} → ${testResult.test_params.checkout}`}
                       </p>
                     </div>
                     <Button variant="outline" size="sm" onClick={runTest} disabled={running}

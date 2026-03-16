@@ -1,7 +1,7 @@
 // tests/e2e/tenant-isolation.spec.ts
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "https://api-reorganize-3.preview.emergentagent.com";
+const BASE_URL = "https://cache-health-check.preview.emergentagent.com";
 const UNIQUE = Date.now().toString(36);
 
 test.describe("Tenant Isolation", () => {

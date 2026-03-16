@@ -12,7 +12,7 @@ from datetime import datetime
 def test_health_endpoints():
     """Test health endpoints for Emergent native deployment readiness"""
     
-    base_url = "https://api-reorganize-3.preview.emergentagent.com"
+    base_url = "https://cache-health-check.preview.emergentagent.com"
     
     results = {
         "test_time": datetime.now().isoformat(),

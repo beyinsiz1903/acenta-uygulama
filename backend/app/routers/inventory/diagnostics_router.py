@@ -316,6 +316,16 @@ async def list_scenarios(
     return await get_scenarios()
 
 
+@e2e_demo_router.get("/sandbox-status")
+async def sandbox_status(
+    supplier: str = Query("ratehawk"),
+    current_user=Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Get sandbox activation status for a supplier."""
+    from app.services.sandbox_activation_service import get_sandbox_status
+    return await get_sandbox_status(supplier)
+
+
 @e2e_demo_router.get("/suppliers")
 async def supplier_status(
     current_user=Depends(require_roles(_ADMIN_ROLES)),

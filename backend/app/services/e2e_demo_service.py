@@ -83,12 +83,27 @@ SUPPLIER_META = {
 }
 
 
+async def _resolve_supplier_mode(supplier: str) -> tuple[str, dict | None]:
+    """Resolve actual mode for a supplier (sandbox if credentials exist)."""
+    if supplier == "ratehawk":
+        from app.services.sandbox_activation_service import get_sandbox_credentials
+        creds = await get_sandbox_credentials("ratehawk")
+        if creds:
+            return "sandbox", creds
+    return "simulation", None
+
+
 async def get_scenarios() -> dict[str, Any]:
     return {"scenarios": [{"id": k, **v} for k, v in SCENARIOS.items()]}
 
 
 async def run_e2e_test(supplier: str, scenario: str = "success") -> dict[str, Any]:
-    """Run a full E2E lifecycle test with a specific scenario."""
+    """Run a full E2E lifecycle test with a specific scenario.
+
+    Mode resolution:
+      - If sandbox credentials exist → real API calls
+      - Otherwise → simulation (mock data)
+    """
     if supplier not in SUPPLIER_META:
         return {"error": f"Unknown supplier: {supplier}", "available": list(SUPPLIER_META.keys())}
     if scenario not in SCENARIOS:
@@ -103,12 +118,26 @@ async def run_e2e_test(supplier: str, scenario: str = "success") -> dict[str, An
     checkin = (datetime.now(timezone.utc) + timedelta(days=14)).strftime("%Y-%m-%d")
     checkout = (datetime.now(timezone.utc) + timedelta(days=17)).strftime("%Y-%m-%d")
 
+    # Resolve actual mode (sandbox vs simulation)
+    actual_mode, sandbox_creds = await _resolve_supplier_mode(supplier)
+    use_real_api = actual_mode == "sandbox" and sandbox_creds is not None and scenario == "success"
+
+    # Mode shown in results: "sandbox" only when actually using real API
+    effective_mode = "sandbox" if use_real_api else "simulation"
+
+    # Context for real steps (shared state across steps)
+    real_ctx = {"checkin": checkin, "checkout": checkout} if use_real_api else {}
+
     for step_def in LIFECYCLE_STEPS:
         step_id = step_def["id"]
         request_id = _req_id()
         step_start = time.monotonic()
 
-        result = await _execute_step(supplier, step_id, scenario, meta)
+        if use_real_api:
+            from app.services.sandbox_activation_service import execute_real_step
+            result = await execute_real_step(step_id, sandbox_creds, scenario, real_ctx)
+        else:
+            result = await _execute_step(supplier, step_id, scenario, meta)
 
         duration_ms = round((time.monotonic() - step_start) * 1000, 1)
         steps.append({
@@ -171,7 +200,7 @@ async def run_e2e_test(supplier: str, scenario: str = "success") -> dict[str, An
         "supplier_name": meta["name"],
         "scenario": scenario,
         "scenario_name": SCENARIOS[scenario]["name"],
-        "mode": meta["mode"],
+        "mode": effective_mode,
         "trace_id": trace_id,
         "steps": steps,
         "summary": {
@@ -429,16 +458,20 @@ async def get_supplier_status() -> dict[str, Any]:
         last_test = await db.e2e_demo_tests.find_one(
             {"supplier": code}, {"_id": 0}, sort=[("timestamp", -1)]
         )
+        # Resolve actual mode for display
+        actual_mode, _ = await _resolve_supplier_mode(code)
+
         suppliers.append({
             "code": code,
             "name": meta["name"],
-            "mode": meta["mode"],
+            "mode": actual_mode,
             "last_test": {
                 "run_id": last_test["run_id"],
                 "scenario": last_test["scenario"],
                 "score": last_test["certification"]["score"],
                 "status": "passed" if last_test["certification"]["go_live_eligible"] else "failed",
                 "timestamp": last_test["timestamp"],
+                "mode": last_test.get("mode", "simulation"),
             } if last_test else None,
         })
     return {"suppliers": suppliers, "timestamp": _ts()}

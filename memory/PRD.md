@@ -182,6 +182,15 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 - **Data Persistence Verification**: Confirmed all config data was already in MongoDB, not in-memory as previously reported
 - All 23 backend + all frontend tests passed (iteration_135)
 
+### Supplier Self-Serve Onboarding — COMPLETED (2026-03-16)
+**Full self-service supplier onboarding wizard with pricing configuration**
+- **6-Step Wizard**: Supplier Selection → Credential Entry → Validation (Health Check) → Sandbox Certification → Pricing Setup → Go-Live Activation
+- **Pricing Setup Step (NEW)**: Base markup configuration, channel rules (B2B/B2C/Corporate/Whitelabel with toggle + adjustment %), agency tier discounts (Starter/Standard/Premium/Enterprise), margin guardrails (min margin %, max discount %)
+- **Backend**: New endpoints GET/POST `/api/supplier-onboarding/pricing-setup/{supplier}`, new status `pricing_configured`
+- **Activity Timeline Integration**: Go-live and deactivation events logged to audit trail
+- **Frontend**: Enhanced wizard with progress bars on dashboard cards, pricing setup panel, pricing summary on go-live panel
+- All 21 backend + all frontend tests passed (iteration_136)
+
 ---
 
 ## Frontend Quality Score (Post P3+P4)
@@ -202,20 +211,18 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 ### P0 — Completed
 All P0 tasks completed.
 
-### P1 — Next Priority
-- **~~Activity Timeline~~**: ~~Entity-based audit history (who did what)~~ → **COMPLETED (2026-03-16)**
-- **~~Persist Configuration~~**: ~~Move Pricing Engine Configuration~~ → **Already in MongoDB** (verified in this session — was incorrectly reported as in-memory)
-- **Configuration Versioning**: Implemented as part of Activity Timeline (2026-03-16)
+### P1 — Completed
+- **~~Activity Timeline~~**: → **COMPLETED (2026-03-16)**
+- **~~Configuration Versioning~~**: → **COMPLETED (2026-03-16)**
+- **Supplier Self-Serve Onboarding**: Partner self-service onboarding portal → **COMPLETED (2026-03-16)** — 6-step wizard with pricing config step
 
-### P2
-- **TypeScript Migration**: API layer -> TanStack hooks -> design system (incremental)
-- **Supplier Self-Serve Onboarding**: Partner self-service onboarding portal
+### P2 — Next Priority
+- **Timeline Export (CSV → PDF)**: Export activity timeline for audit/compliance
 - **Real RateHawk Environment Execution**: Credential-ready, needs network access
 - **New Supplier Integrations**: Paximum, Hotelbeds, Juniper
 
 ### P3
-- **Paximum Integration**: Onboard using existing blueprint
-- **Hotelbeds & Juniper Integrations**
+- **TypeScript Migration**: API layer -> TanStack hooks -> design system (incremental)
 - **Legacy Code Cleanup**: Remaining ~17% useEffect files
 
 ---

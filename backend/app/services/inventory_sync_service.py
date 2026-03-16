@@ -316,6 +316,13 @@ async def _sync_ratehawk_real(
     # Record supplier metrics for dashboard
     await _record_supplier_metrics(db, supplier, metrics, status)
 
+    # Invalidate pricing cache after sync
+    try:
+        from app.services.cache_invalidation import invalidate_supplier_sync
+        await invalidate_supplier_sync(supplier)
+    except Exception as e:
+        logger.warning("Post-sync pricing cache invalidation failed for %s: %s", supplier, e)
+
     return {
         "job_id": job_id,
         "supplier": supplier,
@@ -474,6 +481,13 @@ async def _sync_simulation(
             "redis_cache": redis_status if failed_records == 0 else "partial",
         },
     )
+
+    # Invalidate pricing cache after sync
+    try:
+        from app.services.cache_invalidation import invalidate_supplier_sync
+        await invalidate_supplier_sync(supplier)
+    except Exception as e:
+        logger.warning("Post-sync pricing cache invalidation failed for %s: %s", supplier, e)
 
     return {
         "job_id": job_id,

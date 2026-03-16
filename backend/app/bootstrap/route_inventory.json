@@ -10156,9 +10156,31 @@
     "compat_required": true,
     "current_namespace": "/api/pricing-engine",
     "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "pricing-engine",
+    "path": "/api/pricing-engine/cache/invalidate/{supplier_code}",
+    "risk_level": "medium",
+    "source": "app.routers.pricing_engine_router",
+    "target_namespace": "/api/v1/pricing-engine"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/pricing-engine",
+    "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "pricing-engine",
     "path": "/api/pricing-engine/cache/stats",
+    "risk_level": "medium",
+    "source": "app.routers.pricing_engine_router",
+    "target_namespace": "/api/v1/pricing-engine"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/pricing-engine",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "pricing-engine",
+    "path": "/api/pricing-engine/cache/telemetry",
     "risk_level": "medium",
     "source": "app.routers.pricing_engine_router",
     "target_namespace": "/api/v1/pricing-engine"

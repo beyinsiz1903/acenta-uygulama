@@ -5,7 +5,7 @@ import {
   Globe, Building2, Store, Users, Shield, ShieldAlert,
   ShieldCheck, ChevronDown, ChevronUp, Trophy, XCircle,
   CheckCircle2, AlertTriangle, Info, Eye, Copy, Fingerprint,
-  Clock, Database,
+  Clock, Database, BarChart3, Activity,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -990,9 +990,15 @@ export default function PricingEnginePage() {
   const [metadata, setMetadata] = useState(null);
   const [activeTab, setActiveTab] = useState("simulator");
   const [cacheStats, setCacheStats] = useState(null);
+  const [telemetry, setTelemetry] = useState(null);
+  const [showTelemetry, setShowTelemetry] = useState(false);
 
   const loadCacheStats = useCallback(() => {
     api("/cache/stats").then(setCacheStats).catch(() => {});
+  }, []);
+
+  const loadTelemetry = useCallback(() => {
+    api("/cache/telemetry").then(setTelemetry).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -1005,6 +1011,24 @@ export default function PricingEnginePage() {
     await api("/cache/clear", { method: "POST" });
     toast.success("Pricing cache temizlendi");
     loadCacheStats();
+    if (showTelemetry) loadTelemetry();
+  };
+
+  const invalidateSupplier = async (supplier) => {
+    try {
+      const res = await api(`/cache/invalidate/${supplier}`, { method: "POST" });
+      toast.success(`${supplier} cache temizlendi (${res.cleared} entry)`);
+      loadCacheStats();
+      if (showTelemetry) loadTelemetry();
+    } catch {
+      toast.error("Invalidation basarisiz");
+    }
+  };
+
+  const toggleTelemetry = () => {
+    const next = !showTelemetry;
+    setShowTelemetry(next);
+    if (next) loadTelemetry();
   };
 
   return (
@@ -1021,26 +1045,106 @@ export default function PricingEnginePage() {
 
         {/* Cache Stats Bar */}
         {cacheStats && (
-          <div className="flex items-center gap-4 px-4 py-2.5 rounded-lg border bg-slate-50 text-xs" data-testid="cache-stats-bar">
-            <div className="flex items-center gap-1.5 text-slate-600">
-              <Database className="w-3.5 h-3.5 text-teal-600" />
-              <span className="font-medium">Pricing Cache</span>
+          <div className="rounded-lg border bg-slate-50 overflow-hidden" data-testid="cache-stats-bar">
+            <div className="flex items-center gap-4 px-4 py-2.5 text-xs">
+              <div className="flex items-center gap-1.5 text-slate-600">
+                <Database className="w-3.5 h-3.5 text-teal-600" />
+                <span className="font-medium">Pricing Cache</span>
+              </div>
+              <div className="flex items-center gap-3 text-slate-500 font-mono">
+                <span>Entries: <strong className="text-slate-700">{cacheStats.active_entries}</strong></span>
+                <span>Hits: <strong className="text-emerald-600">{cacheStats.hits}</strong></span>
+                <span>Misses: <strong className="text-amber-600">{cacheStats.misses}</strong></span>
+                <span>Hit Rate: <strong className={cacheStats.hit_rate_pct >= 50 ? "text-emerald-600" : "text-amber-600"}>{cacheStats.hit_rate_pct}%</strong></span>
+                <span>TTL: {cacheStats.ttl_seconds}s</span>
+              </div>
+              <div className="ml-auto flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={toggleTelemetry} className="h-6 px-2 text-xs" data-testid="toggle-telemetry-btn">
+                  <BarChart3 className="w-3 h-3 mr-1" /> {showTelemetry ? "Gizle" : "Telemetry"}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={loadCacheStats} className="h-6 px-2 text-xs" data-testid="refresh-cache-btn">
+                  <RefreshCw className="w-3 h-3 mr-1" /> Yenile
+                </Button>
+                <Button variant="ghost" size="sm" onClick={clearCache} className="h-6 px-2 text-xs text-red-500 hover:text-red-600" data-testid="clear-cache-btn">
+                  <Trash2 className="w-3 h-3 mr-1" /> Temizle
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-3 text-slate-500 font-mono">
-              <span>Entries: <strong className="text-slate-700">{cacheStats.active_entries}</strong></span>
-              <span>Hits: <strong className="text-emerald-600">{cacheStats.hits}</strong></span>
-              <span>Misses: <strong className="text-amber-600">{cacheStats.misses}</strong></span>
-              <span>Hit Rate: <strong className={cacheStats.hit_rate_pct >= 50 ? "text-emerald-600" : "text-amber-600"}>{cacheStats.hit_rate_pct}%</strong></span>
-              <span>TTL: {cacheStats.ttl_seconds}s</span>
-            </div>
-            <div className="ml-auto flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={loadCacheStats} className="h-6 px-2 text-xs" data-testid="refresh-cache-btn">
-                <RefreshCw className="w-3 h-3 mr-1" /> Yenile
-              </Button>
-              <Button variant="ghost" size="sm" onClick={clearCache} className="h-6 px-2 text-xs text-red-500 hover:text-red-600" data-testid="clear-cache-btn">
-                <Trash2 className="w-3 h-3 mr-1" /> Temizle
-              </Button>
-            </div>
+
+            {/* Telemetry Detail Panel */}
+            {showTelemetry && telemetry && (
+              <div className="border-t bg-white px-4 py-3 space-y-3" data-testid="telemetry-panel">
+                {/* Summary Row */}
+                <div className="flex items-center gap-6 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <Activity className="w-3.5 h-3.5 text-blue-500" />
+                    <span className="text-slate-500">Toplam Istek:</span>
+                    <strong className="text-slate-700">{telemetry.total_requests}</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">Ort. HIT Latency:</span>
+                    <strong className="text-emerald-600 ml-1">{telemetry.avg_hit_latency_ms}ms</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">Ort. MISS Latency:</span>
+                    <strong className="text-amber-600 ml-1">{telemetry.avg_miss_latency_ms}ms</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">Uptime:</span>
+                    <strong className="text-slate-700 ml-1">{Math.floor(telemetry.uptime_seconds / 60)}dk</strong>
+                  </div>
+                </div>
+
+                {/* Per-Supplier Breakdown */}
+                {telemetry.supplier_breakdown && Object.keys(telemetry.supplier_breakdown).length > 0 && (
+                  <div>
+                    <div className="text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1.5">Supplier Bazli</div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {Object.entries(telemetry.supplier_breakdown).map(([supplier, data]) => (
+                        <div key={supplier} className="flex items-center justify-between rounded-md border px-2.5 py-1.5 text-xs bg-slate-50" data-testid={`supplier-telemetry-${supplier}`}>
+                          <div>
+                            <div className="font-medium text-slate-700">{supplier}</div>
+                            <div className="text-[10px] text-slate-400 font-mono">
+                              {data.hits}H / {data.misses}M / {data.hit_rate_pct}%
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Badge variant="outline" className="text-[10px] h-4 px-1">
+                              {data.active_entries}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-5 w-5 p-0 text-red-400 hover:text-red-600"
+                              onClick={() => invalidateSupplier(supplier)}
+                              data-testid={`invalidate-${supplier}-btn`}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Recent Invalidations */}
+                {telemetry.recent_invalidations && telemetry.recent_invalidations.length > 0 && (
+                  <div>
+                    <div className="text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1.5">Son Invalidation'lar</div>
+                    <div className="space-y-1">
+                      {telemetry.recent_invalidations.slice(-5).reverse().map((inv, i) => (
+                        <div key={i} className="flex items-center gap-2 text-[11px] text-slate-500 font-mono" data-testid={`invalidation-log-${i}`}>
+                          <span className="text-slate-400">{inv.timestamp?.split("T")[1]?.split(".")[0]}</span>
+                          <Badge variant="outline" className="text-[10px] h-4 px-1.5">{inv.reason}</Badge>
+                          <span className="text-red-500">{inv.cleared} temizlendi</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -1064,7 +1168,7 @@ export default function PricingEnginePage() {
           </TabsList>
 
           <TabsContent value="simulator" className="mt-4">
-            <PriceSimulator metadata={metadata} onSimulated={loadCacheStats} />
+            <PriceSimulator metadata={metadata} onSimulated={() => { loadCacheStats(); if (showTelemetry) loadTelemetry(); }} />
           </TabsContent>
           <TabsContent value="rules" className="mt-4">
             <DistributionRulesTab />

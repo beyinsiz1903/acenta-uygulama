@@ -432,7 +432,20 @@ async def cache_stats(user=Depends(get_current_user)):
     return pricing_cache.stats()
 
 
+@router.get("/cache/telemetry")
+async def cache_telemetry(user=Depends(get_current_user)):
+    """Extended cache telemetry: per-supplier metrics, latencies, invalidation log."""
+    return pricing_cache.telemetry()
+
+
 @router.post("/cache/clear")
 async def cache_clear(user=Depends(get_current_user)):
     pricing_cache.clear()
     return {"ok": True, "message": "Pricing cache temizlendi"}
+
+
+@router.post("/cache/invalidate/{supplier_code}")
+async def cache_invalidate_supplier(supplier_code: str, user=Depends(get_current_user)):
+    """Invalidate all pricing cache entries for a specific supplier."""
+    cleared = pricing_cache.invalidate_by_supplier(supplier_code)
+    return {"ok": True, "supplier": supplier_code, "cleared": cleared}

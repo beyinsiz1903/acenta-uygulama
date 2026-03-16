@@ -31,14 +31,25 @@ logger = logging.getLogger("pricing_engine")
 # --- Pricing Cache ---
 
 class PricingCache:
-    """In-memory pricing cache with TTL. Key = normalized composite hash."""
+    """In-memory pricing cache with TTL, telemetry, and supplier-aware invalidation."""
 
     def __init__(self, ttl_seconds: int = 300, max_size: int = 5000):
-        self._store: dict[str, tuple[float, dict]] = {}  # key -> (expires_at, result_dict)
+        self._store: dict[str, tuple[float, dict, str]] = {}  # key -> (expires_at, result_dict, supplier_code)
         self.ttl = ttl_seconds
         self.max_size = max_size
         self.hits = 0
         self.misses = 0
+        # Telemetry: per-supplier metrics
+        self._supplier_hits: dict[str, int] = {}
+        self._supplier_misses: dict[str, int] = {}
+        # Telemetry: latency tracking
+        self._hit_latencies: list[float] = []
+        self._miss_latencies: list[float] = []
+        self._max_latency_samples = 500
+        # Telemetry: invalidation log
+        self._invalidations: list[dict] = []
+        self._max_invalidation_log = 50
+        self._created_at = time.time()
 
     def _make_key(self, ctx: "PricingContext") -> str:
         """Composite cache key: normalized_rate + channel + agency + supplier + destination + season + promo."""
@@ -46,30 +57,43 @@ class PricingCache:
         return hashlib.sha256(raw.encode()).hexdigest()[:16]
 
     def get(self, ctx: "PricingContext") -> Optional[dict]:
+        t0 = time.time()
         key = self._make_key(ctx)
         entry = self._store.get(key)
         if entry is None:
             self.misses += 1
+            self._supplier_misses[ctx.supplier_code] = self._supplier_misses.get(ctx.supplier_code, 0) + 1
+            elapsed = (time.time() - t0) * 1000
+            if len(self._miss_latencies) < self._max_latency_samples:
+                self._miss_latencies.append(elapsed)
             return None
-        expires_at, result = entry
+        expires_at, result, _supplier = entry
         if time.time() > expires_at:
             del self._store[key]
             self.misses += 1
+            self._supplier_misses[ctx.supplier_code] = self._supplier_misses.get(ctx.supplier_code, 0) + 1
+            elapsed = (time.time() - t0) * 1000
+            if len(self._miss_latencies) < self._max_latency_samples:
+                self._miss_latencies.append(elapsed)
             return None
         self.hits += 1
+        self._supplier_hits[ctx.supplier_code] = self._supplier_hits.get(ctx.supplier_code, 0) + 1
+        elapsed = (time.time() - t0) * 1000
+        if len(self._hit_latencies) < self._max_latency_samples:
+            self._hit_latencies.append(elapsed)
         return result
 
     def put(self, ctx: "PricingContext", result: dict) -> str:
         key = self._make_key(ctx)
         if len(self._store) >= self.max_size:
             self._evict()
-        self._store[key] = (time.time() + self.ttl, result)
+        self._store[key] = (time.time() + self.ttl, result, ctx.supplier_code)
         return key
 
     def _evict(self):
         """Remove expired entries first, then oldest 20%."""
         now = time.time()
-        expired = [k for k, (exp, _) in self._store.items() if now > exp]
+        expired = [k for k, (exp, _, _s) in self._store.items() if now > exp]
         for k in expired:
             del self._store[k]
         if len(self._store) >= self.max_size:
@@ -78,21 +102,92 @@ class PricingCache:
                 del self._store[k]
 
     def clear(self):
+        cleared = len(self._store)
         self._store.clear()
         self.hits = 0
         self.misses = 0
+        self._supplier_hits.clear()
+        self._supplier_misses.clear()
+        self._hit_latencies.clear()
+        self._miss_latencies.clear()
+        self._log_invalidation("manual_clear", cleared=cleared)
+
+    def invalidate_by_supplier(self, supplier_code: str) -> int:
+        """Remove all cache entries for a specific supplier. Called after supplier sync."""
+        keys_to_remove = [
+            k for k, (_exp, _res, sup) in self._store.items()
+            if sup == supplier_code
+        ]
+        for k in keys_to_remove:
+            del self._store[k]
+        if keys_to_remove:
+            logger.info("pricing_cache: invalidated %d entries for supplier=%s", len(keys_to_remove), supplier_code)
+            self._log_invalidation(f"supplier_sync:{supplier_code}", cleared=len(keys_to_remove))
+        return len(keys_to_remove)
+
+    def _log_invalidation(self, reason: str, cleared: int = 0):
+        entry = {
+            "reason": reason,
+            "cleared": cleared,
+            "timestamp": datetime.now().isoformat(),
+        }
+        self._invalidations.append(entry)
+        if len(self._invalidations) > self._max_invalidation_log:
+            self._invalidations = self._invalidations[-self._max_invalidation_log:]
 
     def stats(self) -> dict:
         now = time.time()
-        active = sum(1 for _, (exp, _) in self._store.items() if now <= exp)
+        active = sum(1 for _, (exp, _, _s) in self._store.items() if now <= exp)
+        total_requests = self.hits + self.misses
+        avg_hit_latency = round(sum(self._hit_latencies) / max(len(self._hit_latencies), 1), 3)
+        avg_miss_latency = round(sum(self._miss_latencies) / max(len(self._miss_latencies), 1), 3)
         return {
             "total_entries": len(self._store),
             "active_entries": active,
             "hits": self.hits,
             "misses": self.misses,
-            "hit_rate_pct": round(self.hits / max(self.hits + self.misses, 1) * 100, 1),
+            "hit_rate_pct": round(self.hits / max(total_requests, 1) * 100, 1),
             "ttl_seconds": self.ttl,
             "max_size": self.max_size,
+        }
+
+    def telemetry(self) -> dict:
+        """Extended telemetry: per-supplier metrics, latencies, invalidation log."""
+        now = time.time()
+        active = sum(1 for _, (exp, _, _s) in self._store.items() if now <= exp)
+        total_requests = self.hits + self.misses
+        avg_hit_latency = round(sum(self._hit_latencies) / max(len(self._hit_latencies), 1), 3)
+        avg_miss_latency = round(sum(self._miss_latencies) / max(len(self._miss_latencies), 1), 3)
+
+        # Per-supplier breakdown
+        all_suppliers = set(list(self._supplier_hits.keys()) + list(self._supplier_misses.keys()))
+        supplier_breakdown = {}
+        for s in sorted(all_suppliers):
+            s_hits = self._supplier_hits.get(s, 0)
+            s_misses = self._supplier_misses.get(s, 0)
+            s_total = s_hits + s_misses
+            s_entries = sum(1 for _, (_exp, _res, sup) in self._store.items() if sup == s and now <= _exp)
+            supplier_breakdown[s] = {
+                "hits": s_hits,
+                "misses": s_misses,
+                "hit_rate_pct": round(s_hits / max(s_total, 1) * 100, 1),
+                "active_entries": s_entries,
+            }
+
+        return {
+            "total_entries": len(self._store),
+            "active_entries": active,
+            "hits": self.hits,
+            "misses": self.misses,
+            "hit_rate_pct": round(self.hits / max(total_requests, 1) * 100, 1),
+            "total_requests": total_requests,
+            "avg_hit_latency_ms": avg_hit_latency,
+            "avg_miss_latency_ms": avg_miss_latency,
+            "ttl_seconds": self.ttl,
+            "max_size": self.max_size,
+            "uptime_seconds": round(now - self._created_at),
+            "supplier_breakdown": supplier_breakdown,
+            "recent_invalidations": self._invalidations[-10:],
         }
 
 

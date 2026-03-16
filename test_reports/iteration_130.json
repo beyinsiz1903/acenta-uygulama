@@ -1,0 +1,97 @@
+{
+  "summary": "Completed testing for Iteration 130: Cache Telemetry & Invalidation features. All 19 backend API tests passed. All 10 frontend UI tests passed. Features tested: 1) GET /api/pricing-engine/cache/telemetry - returns extended metrics (total_requests, avg_hit_latency_ms, avg_miss_latency_ms, uptime_seconds, supplier_breakdown, recent_invalidations). 2) POST /api/pricing-engine/cache/invalidate/{supplier_code} - removes only that supplier's cache entries and logs invalidation. 3) Frontend telemetry panel toggle with supplier cards and invalidation log.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "✅ GET /api/pricing-engine/cache/telemetry returns 200",
+    "✅ Telemetry includes total_requests (int)",
+    "✅ Telemetry includes avg_hit_latency_ms (numeric)",
+    "✅ Telemetry includes avg_miss_latency_ms (numeric)",
+    "✅ Telemetry includes uptime_seconds (numeric >= 0)",
+    "✅ Telemetry includes supplier_breakdown (dict)",
+    "✅ Telemetry includes recent_invalidations (list)",
+    "✅ Telemetry backward compat - includes all fields from cache/stats",
+    "✅ POST /api/pricing-engine/simulate populates supplier_breakdown",
+    "✅ Per-supplier breakdown includes hits, misses, hit_rate_pct, active_entries",
+    "✅ Cache hit increments supplier's hits counter in breakdown",
+    "✅ POST /api/pricing-engine/cache/invalidate/{supplier_code} returns 200",
+    "✅ Invalidate response includes ok=true, supplier, cleared count",
+    "✅ Invalidate removes only target supplier's cache entries",
+    "✅ Supplier invalidation logs to recent_invalidations",
+    "✅ POST /api/pricing-engine/cache/clear logs in recent_invalidations as manual_clear",
+    "✅ GET /api/pricing-engine/cache/stats still works (backward compat)",
+    "✅ POST /api/pricing-engine/simulate still returns expected fields",
+    "✅ Invalidation log entries have reason, cleared, timestamp fields",
+    "✅ Frontend: Pricing Engine page loads",
+    "✅ Frontend: Cache stats bar visible (data-testid=cache-stats-bar)",
+    "✅ Frontend: Telemetry toggle button exists (data-testid=toggle-telemetry-btn)",
+    "✅ Frontend: Telemetry panel expands on click (data-testid=telemetry-panel)",
+    "✅ Frontend: Supplier telemetry cards present (data-testid=supplier-telemetry-{supplier})",
+    "✅ Frontend: Invalidation log entries present (data-testid=invalidation-log-{n})",
+    "✅ Frontend: Refresh cache button exists (data-testid=refresh-cache-btn)",
+    "✅ Frontend: Clear cache button exists (data-testid=clear-cache-btn)",
+    "✅ Frontend: Trace bar shows after simulation",
+    "✅ Frontend: Supplier invalidation buttons present (data-testid=invalidate-{supplier}-btn)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_pricing_cache_telemetry_iter130.py",
+    "/app/test_reports/pytest/pytest_cache_telemetry_iter130.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "PricingCache.telemetry() method correctly returns extended metrics including supplier_breakdown and recent_invalidations",
+    "invalidate_by_supplier() correctly removes only entries where supplier matches and logs to _invalidations list",
+    "Per-supplier metrics (_supplier_hits, _supplier_misses) tracked separately from global counters",
+    "Latency samples capped at _max_latency_samples=500 to prevent memory bloat",
+    "Invalidation log capped at _max_invalidation_log=50 entries (FIFO)",
+    "cache_invalidation.py correctly calls pricing_cache.invalidate_by_supplier() after supplier sync",
+    "Frontend telemetry panel (PricingEnginePage.jsx) correctly toggles with showTelemetry state",
+    "Supplier breakdown cards include invalidate button that calls invalidateSupplier(supplier)",
+    "Recent invalidations displayed in reverse chronological order (most recent first)"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_pricing_cache_telemetry_iter130.py"
+  ],
+  "success_rate": {
+    "backend": "100% (19/19 tests passed)",
+    "frontend": "100% (10/10 UI checks passed)"
+  },
+  "test_credentials_used": {
+    "super_admin": "agent@acenta.test / agent123"
+  },
+  "seed_data_existing": {
+    "distribution_rules": ["Default Hotel Markup 15%"],
+    "channel_configs": ["B2B -5%", "B2C +3%", "Corporate -8%", "Whitelabel -3%"],
+    "promotions": ["Erken Rezervasyon 10%", "Flash Sale Antalya 15%"],
+    "guardrails": ["Min Marj Korumasi 5%"]
+  },
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 130 tested 2 NEW features: 1) Cache Telemetry - GET /api/pricing-engine/cache/telemetry returns extended metrics: total_requests (cumulative), avg_hit_latency_ms, avg_miss_latency_ms (sample averages), uptime_seconds (since cache init), supplier_breakdown (dict of per-supplier stats: hits/misses/hit_rate_pct/active_entries), recent_invalidations (list of last 10 with reason/cleared/timestamp). 2) Cache Invalidation - POST /api/pricing-engine/cache/invalidate/{supplier_code} removes only that supplier's cache entries and returns {ok, supplier, cleared}. Invalidation logs to recent_invalidations with reason='supplier_sync:{supplier}'. Frontend: toggle-telemetry-btn shows/hides telemetry-panel with supplier cards (supplier-telemetry-{code}) showing per-supplier metrics and invalidate button (invalidate-{supplier}-btn). Invalidation log (invalidation-log-{n}) shows recent invalidations with timestamps.",
+  "api_verification": {
+    "GET /api/pricing-engine/cache/telemetry": "✅ 200 - Returns {total_entries, active_entries, hits, misses, hit_rate_pct, total_requests, avg_hit_latency_ms, avg_miss_latency_ms, ttl_seconds, max_size, uptime_seconds, supplier_breakdown, recent_invalidations}",
+    "POST /api/pricing-engine/cache/invalidate/{supplier_code}": "✅ 200 - Returns {ok: true, supplier: string, cleared: int}",
+    "GET /api/pricing-engine/cache/stats": "✅ 200 - Still returns basic stats (backward compat)",
+    "POST /api/pricing-engine/cache/clear": "✅ 200 - Logs manual_clear in recent_invalidations"
+  },
+  "frontend_verification": {
+    "Page URL": "/app/admin/pricing-engine",
+    "Telemetry Toggle Button": "data-testid='toggle-telemetry-btn' - Shows 'Telemetry' or 'Gizle' based on state",
+    "Telemetry Panel": "data-testid='telemetry-panel' - Shows total requests, avg latencies, uptime",
+    "Supplier Breakdown": "Section titled 'SUPPLIER BAZLI' with cards per supplier (data-testid='supplier-telemetry-{supplier}')",
+    "Supplier Card Content": "Shows supplier name, H/M/% metrics, active_entries badge, invalidate button",
+    "Invalidation Button": "data-testid='invalidate-{supplier}-btn' - Red trash icon, triggers POST invalidate",
+    "Invalidation Log": "Section titled 'SON INVALIDATION'LAR' with entries (data-testid='invalidation-log-{n}')",
+    "Log Entry Format": "timestamp | reason badge | cleared count in red"
+  },
+  "mocked_apis": {
+    "note": "No APIs are mocked. All telemetry and invalidation features use in-memory PricingCache singleton."
+  }
+}

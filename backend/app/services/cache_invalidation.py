@@ -158,7 +158,7 @@ async def invalidate_supplier_sync(supplier: str, org_id: str = "") -> int:
     """Invalidate all cached inventory for a supplier after sync completes.
 
     Called after supplier sync job finishes to ensure stale
-    inventory/prices are purged.
+    inventory/prices are purged. Also clears pricing engine cache.
     """
     total = 0
     total += await _inv(f"inv:{supplier}")
@@ -167,6 +167,16 @@ async def invalidate_supplier_sync(supplier: str, org_id: str = "") -> int:
     total += await _inv("search", org_id)
     total += await _inv("b2b_htl_srch", org_id)
     total += await _inv("pricing_rules", org_id)
+
+    # Invalidate pricing engine in-memory cache for this supplier
+    try:
+        from app.services.pricing_distribution_engine import pricing_cache
+        pricing_cleared = pricing_cache.invalidate_by_supplier(supplier)
+        total += pricing_cleared
+        logger.info("Post-sync pricing cache invalidation for %s: %d entries cleared", supplier, pricing_cleared)
+    except Exception as e:
+        logger.warning("Failed to invalidate pricing cache for %s: %s", supplier, e)
+
     logger.info("Post-sync invalidation for %s: %d keys cleared", supplier, total)
     return total
 
@@ -203,5 +213,12 @@ async def invalidate_price_change(org_id: str, supplier: str = "") -> int:
     total += await _inv("b2b_htl_srch", org_id)
     if supplier:
         total += await _inv(f"supplier_cache:{org_id}:{supplier}")
+        # Invalidate pricing engine in-memory cache for this supplier
+        try:
+            from app.services.pricing_distribution_engine import pricing_cache
+            pricing_cleared = pricing_cache.invalidate_by_supplier(supplier)
+            total += pricing_cleared
+        except Exception as e:
+            logger.warning("Failed to invalidate pricing cache for %s: %s", supplier, e)
     logger.info("Price change invalidation for org=%s supplier=%s: %d keys", org_id, supplier, total)
     return total

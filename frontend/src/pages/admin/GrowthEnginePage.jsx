@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -14,11 +15,13 @@ import { api } from "../../lib/api";
 
 // ─── Funnel Tab ──────────────────────────────────────────────
 function FunnelTab() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    api.get("/growth/funnel").then(r => setData(r.data)).catch(() => {}).finally(() => setLoading(false));
-  }, []);
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["growth", "funnel"],
+    queryFn: async () => {
+      const r = await api.get("/growth/funnel");
+      return r.data;
+    },
+  });
   if (loading) return <p className="text-zinc-500 text-xs p-4">Yukleniyor...</p>;
   if (!data) return null;
 
@@ -72,27 +75,30 @@ function FunnelTab() {
 
 // ─── Leads Tab ───────────────────────────────────────────────
 function LeadsTab() {
-  const [leads, setLeads] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ company_name: "", contact_name: "", contact_email: "", contact_phone: "", source: "inbound" });
 
-  const fetch = useCallback(() => {
-    setLoading(true);
-    api.get("/growth/leads").then(r => setLeads(r.data.leads || [])).catch(() => {}).finally(() => setLoading(false));
-  }, []);
-  useEffect(() => { fetch(); }, [fetch]);
+  const { data: leads = [], isLoading: loading } = useQuery({
+    queryKey: ["growth", "leads"],
+    queryFn: async () => {
+      const r = await api.get("/growth/leads");
+      return r.data.leads || [];
+    },
+  });
+
+  const refetchLeads = () => queryClient.invalidateQueries({ queryKey: ["growth", "leads"] });
 
   const createLead = async () => {
     await api.post("/growth/leads", form);
     setShowForm(false);
     setForm({ company_name: "", contact_name: "", contact_email: "", contact_phone: "", source: "inbound" });
-    fetch();
+    refetchLeads();
   };
 
   const updateStage = async (leadId, stage) => {
     await api.put(`/growth/leads/${leadId}/stage`, { stage });
-    fetch();
+    refetchLeads();
   };
 
   const STAGE_COLORS = {
@@ -169,26 +175,31 @@ function LeadsTab() {
 
 // ─── Referrals Tab ───────────────────────────────────────────
 function ReferralsTab() {
-  const [data, setData] = useState({ referrals: [], stats: {}, reward_rules: {} });
+  const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ referrer_name: "", referred_company_name: "", referred_contact_name: "", referred_email: "" });
 
-  const fetch = useCallback(() => {
-    api.get("/growth/referrals").then(r => setData(r.data)).catch(() => {});
-  }, []);
-  useEffect(() => { fetch(); }, [fetch]);
+  const { data = { referrals: [], stats: {}, reward_rules: {} } } = useQuery({
+    queryKey: ["growth", "referrals"],
+    queryFn: async () => {
+      const r = await api.get("/growth/referrals");
+      return r.data;
+    },
+  });
+
+  const refetchReferrals = () => queryClient.invalidateQueries({ queryKey: ["growth", "referrals"] });
 
   const create = async () => {
     const res = await api.post("/growth/referrals", form);
     if (res.data?.error) { alert(res.data.error); return; }
     setShowForm(false);
     setForm({ referrer_name: "", referred_company_name: "", referred_contact_name: "", referred_email: "" });
-    fetch();
+    refetchReferrals();
   };
 
   const updateStatus = async (id, status) => {
     await api.put(`/growth/referrals/${id}/status`, { status });
-    fetch();
+    refetchReferrals();
   };
 
   return (
@@ -258,11 +269,13 @@ function ReferralsTab() {
 
 // ─── Customer Success Tab ────────────────────────────────────
 function CustomerSuccessTab() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    api.get("/growth/customer-success").then(r => setData(r.data)).catch(() => {}).finally(() => setLoading(false));
-  }, []);
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["growth", "customer-success"],
+    queryFn: async () => {
+      const r = await api.get("/growth/customer-success");
+      return r.data;
+    },
+  });
   if (loading) return <p className="text-zinc-500 text-xs p-4">Yukleniyor...</p>;
   if (!data) return null;
 
@@ -334,15 +347,23 @@ function CustomerSuccessTab() {
 
 // ─── Growth KPIs Tab ─────────────────────────────────────────
 function GrowthKPIsTab() {
-  const [data, setData] = useState(null);
-  const [segments, setSegments] = useState(null);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    Promise.all([
-      api.get("/growth/kpis").then(r => setData(r.data)),
-      api.get("/growth/segments").then(r => setSegments(r.data)),
-    ]).catch(() => {}).finally(() => setLoading(false));
-  }, []);
+  const { data: kpiData, isLoading: loadingKpis } = useQuery({
+    queryKey: ["growth", "kpis"],
+    queryFn: async () => {
+      const r = await api.get("/growth/kpis");
+      return r.data;
+    },
+  });
+  const { data: segmentsData, isLoading: loadingSegments } = useQuery({
+    queryKey: ["growth", "segments"],
+    queryFn: async () => {
+      const r = await api.get("/growth/segments");
+      return r.data;
+    },
+  });
+  const loading = loadingKpis || loadingSegments;
+  const data = kpiData;
+  const segments = segmentsData;
   if (loading) return <p className="text-zinc-500 text-xs p-4">Yukleniyor...</p>;
 
   const kpis = data?.kpis || {};
@@ -413,20 +434,25 @@ function GrowthKPIsTab() {
 
 // ─── Supplier Expansion Tab ──────────────────────────────────
 function SupplierExpansionTab() {
-  const [data, setData] = useState({ requests: [] });
+  const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ supplier_name: "", supplier_type: "hotel", region: "" });
 
-  const fetch = useCallback(() => {
-    api.get("/growth/supplier-requests").then(r => setData(r.data)).catch(() => {});
-  }, []);
-  useEffect(() => { fetch(); }, [fetch]);
+  const { data = { requests: [] } } = useQuery({
+    queryKey: ["growth", "supplier-requests"],
+    queryFn: async () => {
+      const r = await api.get("/growth/supplier-requests");
+      return r.data;
+    },
+  });
+
+  const refetchRequests = () => queryClient.invalidateQueries({ queryKey: ["growth", "supplier-requests"] });
 
   const create = async () => {
     await api.post("/growth/supplier-requests", form);
     setShowForm(false);
     setForm({ supplier_name: "", supplier_type: "hotel", region: "" });
-    fetch();
+    refetchRequests();
   };
 
   return (
@@ -475,11 +501,13 @@ function SupplierExpansionTab() {
 
 // ─── Growth Report Tab ───────────────────────────────────────
 function GrowthReportTab() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    api.get("/growth/report").then(r => setData(r.data)).catch(() => {}).finally(() => setLoading(false));
-  }, []);
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["growth", "report"],
+    queryFn: async () => {
+      const r = await api.get("/growth/report");
+      return r.data;
+    },
+  });
   if (loading) return <p className="text-zinc-500 text-xs p-4">Yukleniyor...</p>;
   if (!data) return null;
 

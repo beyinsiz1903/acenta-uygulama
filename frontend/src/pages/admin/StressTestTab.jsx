@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -98,20 +99,15 @@ function SLAChecks({ checks }) {
 
 /* ========== MAIN TAB ========== */
 export default function StressTestTab() {
-  const [dashboard, setDashboard] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [activePanel, setActivePanel] = useState("overview");
 
-  const fetchDashboard = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data: dashboard, isLoading: loading, refetch: fetchDashboard } = useQuery({
+    queryKey: ["stress-test", "dashboard"],
+    queryFn: async () => {
       const res = await api.get("/stress-test/dashboard");
-      setDashboard(res.data);
-    } catch {}
-    setLoading(false);
-  }, []);
-
-  useEffect(() => { fetchDashboard(); }, [fetchDashboard]);
+      return res.data;
+    },
+  });
 
   const panels = [
     { id: "overview", label: "Overview", icon: Target },
@@ -519,19 +515,13 @@ function TenantSafetyPanel() {
 
 /* ========== PART 9 — METRICS ========== */
 function MetricsPanel() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetch_ = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data, isLoading: loading, refetch: fetch_ } = useQuery({
+    queryKey: ["stress-test", "metrics"],
+    queryFn: async () => {
       const res = await api.get("/stress-test/metrics");
-      setData(res.data);
-    } catch {}
-    setLoading(false);
-  }, []);
-
-  useEffect(() => { fetch_(); }, [fetch_]);
+      return res.data;
+    },
+  });
 
   if (loading || !data) return <div className="animate-pulse h-48 bg-zinc-900 rounded-lg" />;
   const m = data.metrics;
@@ -605,19 +595,13 @@ function MetricsPanel() {
 
 /* ========== PART 10 — REPORT ========== */
 function ReportPanel() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetch_ = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data, isLoading: loading, refetch: fetch_ } = useQuery({
+    queryKey: ["stress-test", "report"],
+    queryFn: async () => {
       const res = await api.get("/stress-test/report");
-      setData(res.data);
-    } catch {}
-    setLoading(false);
-  }, []);
-
-  useEffect(() => { fetch_(); }, [fetch_]);
+      return res.data;
+    },
+  });
 
   if (loading || !data) return <div className="animate-pulse h-48 bg-zinc-900 rounded-lg" />;
 

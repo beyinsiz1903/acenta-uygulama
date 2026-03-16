@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Search, Save, RotateCcw, Building2, Shield, Loader2, Copy, Check, RefreshCw, AlertTriangle, CreditCard, Calendar } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -143,28 +144,17 @@ function formatTRDate(isoDate) {
 }
 
 function SubscriptionPanel({ tenantId }) {
-  const [sub, setSub] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [canceling, setCanceling] = useState(false);
 
-  const fetchSub = useCallback(async () => {
-    if (!tenantId) return;
-    setLoading(true);
-    setError(false);
-    try {
+  const { data: sub, isLoading: loading, error, refetch: fetchSub } = useQuery({
+    queryKey: ["admin", "billing", "subscription", tenantId],
+    queryFn: async () => {
       const res = await api.get(`/admin/billing/tenants/${tenantId}/subscription`);
-      setSub(res.data?.subscription || null);
-    } catch {
-      setError(true);
-      setSub(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId]);
-
-  useEffect(() => { fetchSub(); }, [fetchSub]);
+      return res.data?.subscription || null;
+    },
+    enabled: !!tenantId,
+  });
 
   if (loading) {
     return (
@@ -416,9 +406,7 @@ function FeatureCheckboxRow({ feature, checked, isFromPlan, onChange, disabled }
 }
 
 export default function AdminTenantFeaturesPage() {
-  const [tenants, setTenants] = useState([]);
-  const [tenantSummary, setTenantSummary] = useState(null);
-  const [loadingTenants, setLoadingTenants] = useState(true);
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedTenant, setSelectedTenant] = useState(null);
@@ -437,28 +425,27 @@ export default function AdminTenantFeaturesPage() {
   const [saving, setSaving] = useState(false);
   const [planConfirmOpen, setPlanConfirmOpen] = useState(false);
 
-  const syncTenantSnapshot = useCallback((tenantId, patch) => {
-    setTenants((prev) => prev.map((item) => (item.id === tenantId ? { ...item, ...patch } : item)));
-    setSelectedTenant((prev) => (prev?.id === tenantId ? { ...prev, ...patch } : prev));
-  }, []);
-
-  const loadTenantDirectory = useCallback(async () => {
-    setLoadingTenants(true);
-    try {
+  const { data: tenantData, isLoading: loadingTenants } = useQuery({
+    queryKey: ["admin", "tenant-directory"],
+    queryFn: async () => {
       const data = await fetchTenantList();
-      setTenants(data.items || []);
-      setTenantSummary(data.summary || null);
-    } catch {
-      setTenants([]);
-      setTenantSummary(null);
-    } finally {
-      setLoadingTenants(false);
-    }
-  }, []);
+      return { items: data.items || [], summary: data.summary || null };
+    },
+  });
 
-  useEffect(() => {
-    loadTenantDirectory();
-  }, [loadTenantDirectory]);
+  const tenants = tenantData?.items || [];
+  const tenantSummary = tenantData?.summary || null;
+
+  const syncTenantSnapshot = useCallback((tenantId, patch) => {
+    queryClient.setQueryData(["admin", "tenant-directory"], (old) => {
+      if (!old) return old;
+      return {
+        ...old,
+        items: old.items.map((item) => (item.id === tenantId ? { ...item, ...patch } : item)),
+      };
+    });
+    setSelectedTenant((prev) => (prev?.id === tenantId ? { ...prev, ...patch } : prev));
+  }, [queryClient]);
 
   const computedSummary = useMemo(() => {
     if (tenantSummary) return tenantSummary;

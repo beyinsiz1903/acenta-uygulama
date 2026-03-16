@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -231,19 +232,16 @@ function AdminCredentialCard({ code, config, savedCred, orgId, onRefresh }) {
 }
 
 function AgencyDetail({ orgId, companyName, onBack }) {
-  const [credentials, setCredentials] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetch = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data: credentials = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ["supplier-credentials", "agency", orgId],
+    queryFn: async () => {
       const r = await api.get(`/supplier-credentials/admin/agency/${orgId}`);
-      setCredentials(r.data.credentials || []);
-    } catch {}
-    setLoading(false);
-  }, [orgId]);
-
-  useEffect(() => { fetch(); }, [fetch]);
+      return r.data.credentials || [];
+    },
+    enabled: !!orgId,
+  });
 
   const getCredForSupplier = (code) => credentials.find(c => c.supplier === code);
 
@@ -257,14 +255,14 @@ function AgencyDetail({ orgId, companyName, onBack }) {
           <h3 className="text-sm font-semibold text-zinc-200">{companyName || orgId}</h3>
           <p className="text-[11px] text-zinc-500 font-mono">{orgId}</p>
         </div>
-        <Button size="sm" variant="outline" className="text-xs h-7 ml-auto" onClick={fetch}>
+        <Button size="sm" variant="outline" className="text-xs h-7 ml-auto" onClick={() => refetch()}>
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
         </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {Object.entries(SUPPLIER_CONFIG).map(([code, config]) => (
-          <AdminCredentialCard key={code} code={code} config={config} savedCred={getCredForSupplier(code)} orgId={orgId} onRefresh={fetch} />
+          <AdminCredentialCard key={code} code={code} config={config} savedCred={getCredForSupplier(code)} orgId={orgId} onRefresh={() => refetch()} />
         ))}
       </div>
     </div>
@@ -272,21 +270,16 @@ function AgencyDetail({ orgId, companyName, onBack }) {
 }
 
 function AuditLogTab() {
-  const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
 
-  const fetch = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data: logs = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ["supplier-credentials", "audit-log", filter],
+    queryFn: async () => {
       const params = filter ? `?organization_id=${filter}&limit=100` : "?limit=100";
       const r = await api.get(`/supplier-credentials/admin/audit-log${params}`);
-      setLogs(r.data.logs || []);
-    } catch {}
-    setLoading(false);
-  }, [filter]);
-
-  useEffect(() => { fetch(); }, [fetch]);
+      return r.data.logs || [];
+    },
+  });
 
   const ACTION_COLORS = {
     save: "text-blue-400",
@@ -300,7 +293,7 @@ function AuditLogTab() {
     <div data-testid="audit-log-tab" className="space-y-4">
       <div className="flex items-center gap-3">
         <Input data-testid="audit-filter-input" placeholder="Filter by Organization ID..." value={filter} onChange={e => setFilter(e.target.value)} className="h-8 text-xs bg-zinc-800/80 border-zinc-700 max-w-xs" />
-        <Button size="sm" variant="outline" className="text-xs h-8" onClick={fetch}>
+        <Button size="sm" variant="outline" className="text-xs h-8" onClick={() => refetch()}>
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
         </Button>
         <span className="text-[11px] text-zinc-500 ml-auto">{logs.length} kayit</span>
@@ -323,25 +316,24 @@ function AuditLogTab() {
 }
 
 export default function AdminSupplierCredentialsPage() {
-  const [agencies, setAgencies] = useState([]);
-  const [allOrgs, setAllOrgs] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [selectedAgency, setSelectedAgency] = useState(null);
 
-  const fetchAgencies = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data: agencyData, isLoading: loading, refetch: fetchAgencies } = useQuery({
+    queryKey: ["supplier-credentials", "agencies-all"],
+    queryFn: async () => {
       const [credsRes, orgsRes] = await Promise.all([
         api.get("/supplier-credentials/admin/agencies"),
         api.get("/admin/agencies").catch(() => ({ data: { agencies: [] } })),
       ]);
-      setAgencies(credsRes.data.agencies || []);
-      setAllOrgs(orgsRes.data?.agencies || orgsRes.data?.items || []);
-    } catch {}
-    setLoading(false);
-  }, []);
+      return {
+        agencies: credsRes.data.agencies || [],
+        allOrgs: orgsRes.data?.agencies || orgsRes.data?.items || [],
+      };
+    },
+  });
 
-  useEffect(() => { fetchAgencies(); }, [fetchAgencies]);
+  const agencies = agencyData?.agencies || [];
+  const allOrgs = agencyData?.allOrgs || [];
 
   if (selectedAgency) {
     return (

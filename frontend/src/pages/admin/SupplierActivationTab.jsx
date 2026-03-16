@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -11,18 +12,14 @@ import {
 import { api } from "../../lib/api";
 
 function useApi(path) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const fetch_ = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data, isLoading: loading, refetch } = useQuery({
+    queryKey: ["supplier-activation", path],
+    queryFn: async () => {
       const res = await api.get(path);
-      setData(res.data);
-    } catch {}
-    setLoading(false);
-  }, [path]);
-  useEffect(() => { fetch_(); }, [fetch_]);
-  return { data, loading, refetch: fetch_ };
+      return res.data;
+    },
+  });
+  return { data: data ?? null, loading, refetch };
 }
 
 function ScoreGauge({ score, max, label, size = "lg" }) {

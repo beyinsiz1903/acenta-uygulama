@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import { buildApiUrl } from "../../lib/backendUrl";
 import {
@@ -317,9 +318,7 @@ function ExcelUploadTab() {
 
 // ── Tab: Google Sheets (MOCKED) ────────────────────────
 function GoogleSheetsTab() {
-  const [config, setConfig] = useState(null);
   const [connection, setConnection] = useState(null);
-  const [status, setStatus] = useState(null);
   const [sheetId, setSheetId] = useState("");
   const [worksheet, setWorksheet] = useState("Sheet1");
   const [syncEnabled, setSyncEnabled] = useState(false);
@@ -329,11 +328,32 @@ function GoogleSheetsTab() {
   const [msgType, setMsgType] = useState("info");
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    api.get("/admin/import/sheet/config").then((r) => setConfig(r.data)).catch(() => {});
-    api.get("/admin/import/sheet/connection").then((r) => setConnection(r.data)).catch(() => {});
-    api.get("/admin/import/sheet/status").then((r) => setStatus(r.data)).catch(() => {});
-  }, []);
+  const { data: config } = useQuery({
+    queryKey: ["import", "sheet", "config"],
+    queryFn: async () => {
+      const r = await api.get("/admin/import/sheet/config");
+      return r.data;
+    },
+  });
+
+  const { data: connectionData } = useQuery({
+    queryKey: ["import", "sheet", "connection"],
+    queryFn: async () => {
+      const r = await api.get("/admin/import/sheet/connection");
+      return r.data;
+    },
+  });
+
+  const { data: status, refetch: refetchStatus } = useQuery({
+    queryKey: ["import", "sheet", "status"],
+    queryFn: async () => {
+      const r = await api.get("/admin/import/sheet/status");
+      return r.data;
+    },
+  });
+
+  // Use query data if local state not yet set
+  const effectiveConnection = connection || connectionData;
 
   const copyEmail = () => {
     const email = config?.service_account_email;
@@ -371,7 +391,7 @@ function GoogleSheetsTab() {
       } else {
         setMessage(`Sync: ${res.data.rows_fetched} satır, ${res.data.upserts} upsert`); setMsgType("info");
       }
-      api.get("/admin/import/sheet/status").then((r) => setStatus(r.data)).catch(() => {});
+      refetchStatus();
     } catch (err) {
       setMessage(err.response?.data?.error?.message || "Sync hatası"); setMsgType("error");
     }
@@ -478,7 +498,7 @@ function GoogleSheetsTab() {
 
       {/* Connect Form */}
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold">{connection?.connected ? "Yeni Bağlantı Ekle" : "Sheet Bağla"}</h3>
+        <h3 className="text-sm font-semibold">{effectiveConnection?.connected ? "Yeni Bağlantı Ekle" : "Sheet Bağla"}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="text-xs text-muted-foreground">Sheet ID</label>
@@ -516,12 +536,13 @@ function GoogleSheetsTab() {
 
 // ── Tab: Import History ────────────────────────────────
 function ImportHistoryTab() {
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.get("/admin/import/jobs").then((r) => { setJobs(r.data || []); setLoading(false); }).catch(() => setLoading(false));
-  }, []);
+  const { data: jobs = [], isLoading: loading } = useQuery({
+    queryKey: ["import", "jobs-history"],
+    queryFn: async () => {
+      const r = await api.get("/admin/import/jobs");
+      return r.data || [];
+    },
+  });
 
   const statusBadge = (status) => {
     const map = {

@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -114,39 +115,35 @@ function AgingBars({ aging }) {
 
 /* ── Reconciliation Tab ───────────────────────────────── */
 function ReconciliationTab() {
-  const [summary, setSummary] = useState(null);
-  const [runs, setRuns] = useState([]);
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [running, setRunning] = useState(false);
   const [selectedRun, setSelectedRun] = useState(null);
   const [mismatchFilter, setMismatchFilter] = useState("");
   const [severityFilter, setSeverityFilter] = useState("");
 
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
+  const { data: reconData, isLoading: loading, refetch: load } = useQuery({
+    queryKey: ["reconciliation", "summary-runs"],
+    queryFn: async () => {
       const [sumRes, runsRes] = await Promise.all([
         api.get("/reconciliation/summary"),
         api.get("/reconciliation/runs", { params: { limit: 10 } }),
       ]);
-      setSummary(sumRes.data);
-      setRuns(runsRes.data?.items || []);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
-  }, []);
+      return { summary: sumRes.data, runs: runsRes.data?.items || [] };
+    },
+  });
 
-  useEffect(() => { load(); }, [load]);
+  const summary = reconData?.summary || null;
+  const runs = reconData?.runs || [];
 
-  const loadItems = useCallback(async (runId) => {
-    try {
-      const params = { limit: 100, ...(runId ? { run_id: runId } : {}), ...(mismatchFilter ? { mismatch_type: mismatchFilter } : {}), ...(severityFilter ? { severity: severityFilter } : {}) };
+  const { data: items = [] } = useQuery({
+    queryKey: ["reconciliation", "items", selectedRun, mismatchFilter, severityFilter],
+    queryFn: async () => {
+      const params = { limit: 100, ...(selectedRun ? { run_id: selectedRun } : {}), ...(mismatchFilter ? { mismatch_type: mismatchFilter } : {}), ...(severityFilter ? { severity: severityFilter } : {}) };
       const res = await api.get("/reconciliation/items", { params });
-      setItems(res.data?.items || []);
-    } catch (e) { console.error(e); }
-  }, [mismatchFilter, severityFilter]);
-
-  useEffect(() => { if (selectedRun) loadItems(selectedRun); }, [selectedRun, loadItems]);
+      return res.data?.items || [];
+    },
+    enabled: !!selectedRun,
+  });
 
   const handleRunNow = async () => {
     setRunning(true);
@@ -275,27 +272,23 @@ function ReconciliationTab() {
 
 /* ── Finance Ops Queue Tab ────────────────────────────── */
 function FinanceOpsTab() {
-  const [opsItems, setOpsItems] = useState([]);
-  const [opsStats, setOpsStats] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
   const [noteModal, setNoteModal] = useState(null);
   const [noteText, setNoteText] = useState("");
 
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
+  const { data: opsData, isLoading: loading, refetch: load } = useQuery({
+    queryKey: ["reconciliation", "ops-combined", statusFilter],
+    queryFn: async () => {
       const [itemsRes, statsRes] = await Promise.all([
         api.get("/reconciliation/ops", { params: { limit: 100, ...(statusFilter ? { status: statusFilter } : {}) } }),
         api.get("/reconciliation/ops/stats"),
       ]);
-      setOpsItems(itemsRes.data?.items || []);
-      setOpsStats(statsRes.data);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
-  }, [statusFilter]);
+      return { items: itemsRes.data?.items || [], stats: statsRes.data };
+    },
+  });
 
-  useEffect(() => { load(); }, [load]);
+  const opsItems = opsData?.items || [];
+  const opsStats = opsData?.stats || null;
 
   const handleAction = async (action, opsId, extra = {}) => {
     try {
@@ -428,25 +421,21 @@ function FinanceOpsTab() {
 
 /* ── Alerts Tab ───────────────────────────────────────── */
 function AlertsTab() {
-  const [alerts, setAlerts] = useState([]);
-  const [alertStats, setAlertStats] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("active");
 
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
+  const { data: alertData, isLoading: loading, refetch: load } = useQuery({
+    queryKey: ["reconciliation", "alerts-combined", statusFilter],
+    queryFn: async () => {
       const [alertsRes, statsRes] = await Promise.all([
         api.get("/reconciliation/alerts", { params: { limit: 50, ...(statusFilter ? { status: statusFilter } : {}) } }),
         api.get("/reconciliation/alerts/stats"),
       ]);
-      setAlerts(alertsRes.data?.items || []);
-      setAlertStats(statsRes.data);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
-  }, [statusFilter]);
+      return { alerts: alertsRes.data?.items || [], stats: statsRes.data };
+    },
+  });
 
-  useEffect(() => { load(); }, [load]);
+  const alerts = alertData?.alerts || [];
+  const alertStats = alertData?.stats || null;
 
   const handleAcknowledge = async (alertId) => {
     try { await api.post("/reconciliation/alerts/acknowledge", { alert_id: alertId }); toast.success("Alert goruldu olarak isaretlendi"); load(); }

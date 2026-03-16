@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";
 import { api, apiErrorMessage } from "../lib/api";
@@ -299,35 +300,20 @@ function ExposureDrilldownDrawer({ open, onOpenChange, agency }) {
 }
 
 function AdminFinanceExposurePageInner() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedAgency, setSelectedAgency] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    const run = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const resp = await api.get("/ops/finance/exposure");
-        if (cancelled) return;
-        setItems(resp.data.items || []);
-      } catch (e) {
-        if (cancelled) return;
-        setError(apiErrorMessage(e));
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    run();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data: items = [], isLoading: loading, error: fetchError } = useQuery({
+    queryKey: ["ops", "finance", "exposure"],
+    queryFn: async () => {
+      const resp = await api.get("/ops/finance/exposure");
+      return resp.data.items || [];
+    },
+  });
+
+  const error = fetchError ? apiErrorMessage(fetchError) : "";
 
   return (
     <PageShell

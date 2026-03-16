@@ -231,3 +231,45 @@ Updated files:
 - `frontend/src/pages/admin/SupplierCertificationConsolePage.jsx` — MODE_CONFIG, updated UI components
 
 **Testing: Backend 100% (8/8), Frontend race condition fixed and verified**
+
+---
+
+## State Telemetry & Certification History Enrichment — COMPLETED (2026-03-16)
+**Onboarding Quality Metrics + Enriched Test History**
+
+Delivered:
+- **State Telemetry Service** (`sandbox_telemetry_service.py`):
+  - Atomic counter increments via MongoDB `sandbox_telemetry` collection
+  - 4 tracked metrics: `sandbox_connection_attempts`, `sandbox_blocked_events`, `simulation_runs`, `sandbox_success_runs`
+  - Derived metrics: `total_runs`, `sandbox_rate_pct`, `block_rate_pct`
+  - Supplier-filtered queries supported
+- **Telemetry API** (`diagnostics_router.py`):
+  - `GET /api/e2e-demo/telemetry` — Returns all counters + derived metrics
+  - Optional `?supplier=ratehawk` filter
+- **Backend Instrumentation**:
+  - `sandbox_activation_service.py`: Increments `sandbox_connection_attempts` and `sandbox_blocked_events` on health checks
+  - `e2e_demo_service.py`: Increments `simulation_runs` or `sandbox_success_runs` after each test
+- **History Enrichment** (`e2e_demo_service.py`):
+  - New top-level fields on test results: `environment`, `certification_score`, `latency_ms`
+  - Environment detection from `SENTRY_ENVIRONMENT` env var
+- **Frontend TelemetryCard** (`SupplierCertificationConsolePage.jsx`):
+  - 2x2 KPI grid: connection attempts, blocked events, simulation runs, sandbox successes
+  - Derived metrics row: sandbox rate %, block rate %
+- **Frontend EnrichedHistoryPanel** (`SupplierCertificationConsolePage.jsx`):
+  - Score circle (SVG ring) with percentage
+  - Environment badge (Globe icon)
+  - Mode badge (SANDBOX green / SIM orange)
+  - Latency display (tabular-nums)
+  - Trace ID with Hash icon
+  - GO-LIVE / NOT READY status badge
+
+New files:
+- `backend/app/services/sandbox_telemetry_service.py`
+
+Updated files:
+- `backend/app/routers/inventory/diagnostics_router.py` — telemetry endpoint
+- `backend/app/services/sandbox_activation_service.py` — telemetry counter integration
+- `backend/app/services/e2e_demo_service.py` — environment, certification_score, latency_ms, telemetry increment
+- `frontend/src/pages/admin/SupplierCertificationConsolePage.jsx` — TelemetryCard, EnrichedHistoryPanel
+
+**Testing: Backend 100% (12/12), Frontend 100% (8/8)**

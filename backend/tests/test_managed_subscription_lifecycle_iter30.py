@@ -79,7 +79,7 @@ class TestCreateCheckoutSubscriptionMode:
             json={
                 "plan": "starter",
                 "interval": "monthly",
-                "origin_url": "https://syroce-query.preview.emergentagent.com",
+                "origin_url": "https://data-fetch-upgrade.preview.emergentagent.com",
                 "cancel_path": "/pricing"
             }
         )
@@ -115,7 +115,7 @@ class TestCreateCheckoutSubscriptionMode:
             json={
                 "plan": "starter",
                 "interval": "monthly",
-                "origin_url": "https://syroce-query.preview.emergentagent.com"
+                "origin_url": "https://data-fetch-upgrade.preview.emergentagent.com"
             }
         )
 
@@ -138,7 +138,7 @@ class TestCreateCheckoutSubscriptionMode:
             json={
                 "plan": "pro",
                 "interval": "monthly",
-                "origin_url": "https://syroce-query.preview.emergentagent.com"
+                "origin_url": "https://data-fetch-upgrade.preview.emergentagent.com"
             }
         )
 
@@ -160,7 +160,7 @@ class TestCreateCheckoutSubscriptionMode:
             json={
                 "plan": "pro",
                 "interval": "yearly",
-                "origin_url": "https://syroce-query.preview.emergentagent.com"
+                "origin_url": "https://data-fetch-upgrade.preview.emergentagent.com"
             }
         )
 
@@ -353,7 +353,7 @@ class TestChangePlan:
             json={
                 "plan": target_plan,
                 "interval": "monthly",
-                "origin_url": "https://syroce-query.preview.emergentagent.com",
+                "origin_url": "https://data-fetch-upgrade.preview.emergentagent.com",
                 "cancel_path": "/app/settings/billing"
             }
         )
@@ -379,7 +379,7 @@ class TestChangePlan:
             json={
                 "plan": "enterprise",
                 "interval": "monthly",
-                "origin_url": "https://syroce-query.preview.emergentagent.com"
+                "origin_url": "https://data-fetch-upgrade.preview.emergentagent.com"
             }
         )
 
@@ -412,7 +412,7 @@ class TestChangePlan:
             json={
                 "plan": current_plan,
                 "interval": current_interval,
-                "origin_url": "https://syroce-query.preview.emergentagent.com"
+                "origin_url": "https://data-fetch-upgrade.preview.emergentagent.com"
             }
         )
 
@@ -436,7 +436,7 @@ class TestCustomerPortal:
             f"{BASE_URL}/api/billing/customer-portal",
             headers=auth,
             json={
-                "origin_url": "https://syroce-query.preview.emergentagent.com",
+                "origin_url": "https://data-fetch-upgrade.preview.emergentagent.com",
                 "return_path": "/app/settings/billing"
             }
         )
@@ -461,7 +461,7 @@ class TestCustomerPortal:
             f"{BASE_URL}/api/billing/customer-portal",
             headers=auth,
             json={
-                "origin_url": "https://syroce-query.preview.emergentagent.com",
+                "origin_url": "https://data-fetch-upgrade.preview.emergentagent.com",
                 "return_path": "/app/settings/billing"
             }
         )
@@ -504,7 +504,7 @@ class TestCheckoutStatus:
             json={
                 "plan": "starter",
                 "interval": "monthly",
-                "origin_url": "https://syroce-query.preview.emergentagent.com"
+                "origin_url": "https://data-fetch-upgrade.preview.emergentagent.com"
             }
         )
 

@@ -23,7 +23,7 @@ def test_cors_preflight():
     print("=" * 80)
     
     local_backend = "http://127.0.0.1:8001"
-    external_backend = "https://syroce-query.preview.emergentagent.com"
+    external_backend = "https://data-fetch-upgrade.preview.emergentagent.com"
     origin = "https://agency.syroce.com"
     
     results = {}

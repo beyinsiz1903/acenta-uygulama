@@ -96,6 +96,45 @@ Updated files:
 **Testing: 100% backend (15/15), 100% frontend pass rate**
 **Mode: SIMULATION (no real credentials configured)**
 
+### P0 Reprioritized: RateHawk Booking Flow Hardening — COMPLETED (2026-03-16)
+**ETG API v3 Compliant Booking Lifecycle — Precheck → Form → Finish → Status Poll → Cancel**
+
+Delivered:
+- **Booking Precheck / Price Revalidation** (`booking_precheck()`): Validates price drift before booking
+  - Decision matrix: drift <2% → proceed, 2-5% → proceed_with_warning, 5-10% → requires_approval, >10% → abort
+  - Returns book_hash for booking step
+- **Async Booking Creation** (`create_booking()`): ETG v3 flow (form → finish → poll)
+  - partner_order_id = syroce_booking_uuid (consistent across entire lifecycle)
+  - No optimistic confirmation — waits for confirmed status
+  - Booking cut-off: 60s timeout with graceful failure
+  - Status polling: max 15 attempts, 2s interval
+- **Booking Status Tracking**: Full status history with timestamped entries
+  - Statuses: initiated → booking_requested → awaiting_confirmation → confirmed/failed/timeout
+- **Booking Cancellation**: Proper cancellation flow for confirmed/awaiting bookings
+- **Sandbox Test Property Support**: `test_hotel` (booking OK) + `test_hotel_do_not_book` (reject)
+- **Booking Test Matrix**: 5 automated scenarios (success, precheck_validation, do_not_book, book_and_cancel, status_check)
+- **Frontend Booking Flow Panel**: Precheck UI with drift visualization, Test Matrix runner with scenario results table, Booking History with status badges
+
+New API endpoints:
+- `POST /api/inventory/booking/precheck` — Pre-booking price revalidation
+- `POST /api/inventory/booking/create` — ETG v3 booking flow
+- `GET /api/inventory/booking/{id}/status` — Status with history
+- `POST /api/inventory/booking/{id}/cancel` — Booking cancellation
+- `POST /api/inventory/booking/test-matrix` — Run 5-scenario test matrix
+- `GET /api/inventory/booking/history` — Booking history
+- `GET /api/inventory/booking/test-matrix/history` — Test matrix history
+
+New files:
+- `backend/app/services/ratehawk_booking_service.py` — Core booking flow service
+- `backend/app/models/ratehawk_booking.py` — Booking document schema
+
+Updated files:
+- `backend/app/routers/inventory_sync_router.py` — 7 new booking endpoints
+- `frontend/src/pages/InventorySyncDashboardPage.jsx` — Booking Flow panel
+
+**Testing: 100% backend (14/14), 100% frontend pass rate**
+**Mode: SIMULATION (RateHawk API mocked until real sandbox credentials provided)**
+
 ---
 
 ## Frontend Quality Score (Post P3+P4)
@@ -113,13 +152,13 @@ Updated files:
 
 ## Prioritized Backlog
 
-### P0 — Next Priority
+### P0 — Next Priority (REPRIORITIZED 2026-03-16)
+- **P1: Supplier Onboarding UX**: Credential form → Validation → Sandbox E2E test → Certification readiness → Go-Live gate
 - **P4.3 Caching Layer Validation**: Redis → Mongo fallback tests, invalidation correctness, TTL tuning, diagnostics API + UI
-- **P4.4 Real Sandbox Activation**: Credential validation, sandbox certification, go-live gating
 
 ### P1
+- **P4.4 Real Sandbox Activation**: Credential validation, sandbox certification, go-live gating
 - **Activity Timeline**: Entity-based audit history (who did what)
-- **Supplier Onboarding & Go-Live Workflow**: Self-serve supplier onboarding flow
 
 ### P2
 - **TypeScript Migration**: API layer → TanStack hooks → design system (incremental)

@@ -23,6 +23,7 @@ from app.services.pricing_distribution_engine import (
     PricingDistributionEngine,
     PricingContext,
     get_pricing_engine_stats,
+    pricing_cache,
     CHANNELS,
     SEASONS,
 )
@@ -177,8 +178,11 @@ async def simulate_price(payload: SimulateRequest, user=Depends(get_current_user
         organization_id=org_id,
     )
 
-    breakdown = await engine.calculate(ctx)
-    return breakdown.to_dict()
+    result = await engine.calculate(ctx)
+    # Cache hit returns dict directly, fresh calc returns PricingBreakdown
+    if isinstance(result, dict):
+        return result
+    return result.to_dict()
 
 
 # --- Distribution Rules CRUD ---
@@ -419,3 +423,16 @@ async def delete_guardrail(guardrail_id: str, user=Depends(get_current_user)):
     org_id = user["organization_id"]
     result = await db.pricing_guardrails.delete_one({"organization_id": org_id, "guardrail_id": guardrail_id})
     return {"ok": result.deleted_count > 0}
+
+
+# --- Cache Management ---
+
+@router.get("/cache/stats")
+async def cache_stats(user=Depends(get_current_user)):
+    return pricing_cache.stats()
+
+
+@router.post("/cache/clear")
+async def cache_clear(user=Depends(get_current_user)):
+    pricing_cache.clear()
+    return {"ok": True, "message": "Pricing cache temizlendi"}

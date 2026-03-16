@@ -12,7 +12,10 @@ It receives a normalized rate and applies the full pricing pipeline.
 """
 from __future__ import annotations
 
+import hashlib
 import logging
+import time
+import uuid
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal, ROUND_HALF_UP
@@ -23,6 +26,78 @@ from app.utils import now_utc
 from app.constants.currencies import convert_amount, DEFAULT_EXCHANGE_RATES
 
 logger = logging.getLogger("pricing_engine")
+
+
+# --- Pricing Cache ---
+
+class PricingCache:
+    """In-memory pricing cache with TTL. Key = normalized composite hash."""
+
+    def __init__(self, ttl_seconds: int = 300, max_size: int = 5000):
+        self._store: dict[str, tuple[float, dict]] = {}  # key -> (expires_at, result_dict)
+        self.ttl = ttl_seconds
+        self.max_size = max_size
+        self.hits = 0
+        self.misses = 0
+
+    def _make_key(self, ctx: "PricingContext") -> str:
+        """Composite cache key: normalized_rate + channel + agency + supplier + destination + season + promo."""
+        raw = f"{ctx.supplier_code}|{ctx.supplier_price}|{ctx.supplier_currency}|{ctx.destination}|{ctx.channel}|{ctx.agency_tier}|{ctx.season}|{ctx.product_type}|{ctx.nights}|{ctx.sell_currency}|{ctx.promo_code}|{ctx.organization_id}"
+        return hashlib.sha256(raw.encode()).hexdigest()[:16]
+
+    def get(self, ctx: "PricingContext") -> Optional[dict]:
+        key = self._make_key(ctx)
+        entry = self._store.get(key)
+        if entry is None:
+            self.misses += 1
+            return None
+        expires_at, result = entry
+        if time.time() > expires_at:
+            del self._store[key]
+            self.misses += 1
+            return None
+        self.hits += 1
+        return result
+
+    def put(self, ctx: "PricingContext", result: dict) -> str:
+        key = self._make_key(ctx)
+        if len(self._store) >= self.max_size:
+            self._evict()
+        self._store[key] = (time.time() + self.ttl, result)
+        return key
+
+    def _evict(self):
+        """Remove expired entries first, then oldest 20%."""
+        now = time.time()
+        expired = [k for k, (exp, _) in self._store.items() if now > exp]
+        for k in expired:
+            del self._store[k]
+        if len(self._store) >= self.max_size:
+            to_remove = sorted(self._store.items(), key=lambda x: x[1][0])[:self.max_size // 5]
+            for k, _ in to_remove:
+                del self._store[k]
+
+    def clear(self):
+        self._store.clear()
+        self.hits = 0
+        self.misses = 0
+
+    def stats(self) -> dict:
+        now = time.time()
+        active = sum(1 for _, (exp, _) in self._store.items() if now <= exp)
+        return {
+            "total_entries": len(self._store),
+            "active_entries": active,
+            "hits": self.hits,
+            "misses": self.misses,
+            "hit_rate_pct": round(self.hits / max(self.hits + self.misses, 1) * 100, 1),
+            "ttl_seconds": self.ttl,
+            "max_size": self.max_size,
+        }
+
+
+# Singleton cache instance
+pricing_cache = PricingCache(ttl_seconds=300, max_size=5000)
 
 
 # --- Data Models ---
@@ -153,9 +228,17 @@ class PricingBreakdown:
     evaluated_rules: list = field(default_factory=list)
     guardrail_warnings: list = field(default_factory=list)
     guardrails_passed: bool = True
+    pricing_trace_id: str = ""
+    cache_hit: bool = False
+    cache_key: str = ""
+    latency_ms: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
         return {
+            "pricing_trace_id": self.pricing_trace_id,
+            "cache_hit": self.cache_hit,
+            "cache_key": self.cache_key,
+            "latency_ms": self.latency_ms,
             "supplier_price": self.supplier_price,
             "supplier_currency": self.supplier_currency,
             "base_markup_pct": self.base_markup_pct,
@@ -199,10 +282,31 @@ class PricingDistributionEngine:
 
     async def calculate(self, ctx: PricingContext) -> PricingBreakdown:
         """Run the full pricing pipeline and return a breakdown."""
+        start_time = time.time()
+        trace_id = f"prc_{uuid.uuid4().hex[:8]}"
+        logger.info("pricing_trace_id: %s | supplier=%s price=%s channel=%s agency=%s",
+                     trace_id, ctx.supplier_code, ctx.supplier_price, ctx.channel, ctx.agency_tier)
+
+        # Check cache
+        cached = pricing_cache.get(ctx)
+        if cached is not None:
+            cached["pricing_trace_id"] = trace_id
+            cached["cache_hit"] = True
+            cached["latency_ms"] = round((time.time() - start_time) * 1000, 2)
+            logger.info("pricing_trace_id: %s | CACHE HIT | latency=%.2fms", trace_id, cached["latency_ms"])
+            # Return as PricingBreakdown for consistency
+            result = PricingBreakdown()
+            result.pricing_trace_id = trace_id
+            result.cache_hit = True
+            result.latency_ms = cached["latency_ms"]
+            # Return the dict directly from router; we'll handle this
+            return cached  # type: ignore
+
         result = PricingBreakdown(
             supplier_price=ctx.supplier_price,
             supplier_currency=ctx.supplier_currency,
             sell_currency=ctx.sell_currency,
+            pricing_trace_id=trace_id,
         )
 
         running = ctx.supplier_price
@@ -364,6 +468,17 @@ class PricingDistributionEngine:
         guardrail_warnings = await self._validate_guardrails(ctx, result)
         result.guardrail_warnings = guardrail_warnings
         result.guardrails_passed = not any(w.severity == "error" for w in guardrail_warnings)
+
+        # Finalize trace & cache
+        elapsed = round((time.time() - start_time) * 1000, 2)
+        result.latency_ms = elapsed
+        result_dict = result.to_dict()
+        cache_key = pricing_cache.put(ctx, result_dict)
+        result.cache_key = cache_key
+        result_dict["cache_key"] = cache_key
+
+        logger.info("pricing_trace_id: %s | CALCULATED | sell_price=%.2f margin_pct=%.2f latency=%.2fms cache_key=%s",
+                     trace_id, result.sell_price, result.margin_pct, elapsed, cache_key)
 
         return result
 

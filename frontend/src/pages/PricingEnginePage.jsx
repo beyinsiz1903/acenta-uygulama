@@ -4,7 +4,8 @@ import {
   ToggleRight, RefreshCw, Loader2, TrendingUp,
   Globe, Building2, Store, Users, Shield, ShieldAlert,
   ShieldCheck, ChevronDown, ChevronUp, Trophy, XCircle,
-  CheckCircle2, AlertTriangle, Info, Eye,
+  CheckCircle2, AlertTriangle, Info, Eye, Copy, Fingerprint,
+  Clock, Database,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -254,9 +255,60 @@ function GuardrailWarnings({ warnings, passed }) {
   );
 }
 
+// ============== TRACE & CACHE INFO BAR ==============
+
+function TraceBar({ result }) {
+  if (!result) return null;
+  const traceId = result.pricing_trace_id || "";
+  const cacheHit = result.cache_hit || false;
+  const latency = result.latency_ms || 0;
+  const cacheKey = result.cache_key || "";
+
+  const copyTrace = () => {
+    navigator.clipboard.writeText(traceId);
+    toast.success("Trace ID kopyalandi");
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-3 px-3 py-2 rounded-lg bg-slate-900 text-white text-xs font-mono" data-testid="pricing-trace-bar">
+      <div className="flex items-center gap-1.5">
+        <Fingerprint className="w-3.5 h-3.5 text-amber-400" />
+        <span className="text-slate-400">trace:</span>
+        <span className="text-amber-300 font-semibold" data-testid="trace-id-value">{traceId}</span>
+        <button onClick={copyTrace} className="hover:text-amber-200 transition-colors" data-testid="copy-trace-btn" title="Kopyala">
+          <Copy className="w-3 h-3" />
+        </button>
+      </div>
+      <div className="w-px h-4 bg-slate-700" />
+      <div className="flex items-center gap-1.5">
+        <Database className="w-3.5 h-3.5 text-teal-400" />
+        <span className="text-slate-400">cache:</span>
+        <span className={`font-semibold ${cacheHit ? "text-emerald-400" : "text-slate-500"}`} data-testid="cache-status">
+          {cacheHit ? "HIT" : "MISS"}
+        </span>
+      </div>
+      <div className="w-px h-4 bg-slate-700" />
+      <div className="flex items-center gap-1.5">
+        <Clock className="w-3.5 h-3.5 text-blue-400" />
+        <span className="text-slate-400">latency:</span>
+        <span className="text-blue-300" data-testid="latency-value">{latency}ms</span>
+      </div>
+      {cacheKey && (
+        <>
+          <div className="w-px h-4 bg-slate-700" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-500">key:</span>
+            <span className="text-slate-400">{cacheKey}</span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ============== PRICE SIMULATOR ==============
 
-function PriceSimulator({ metadata }) {
+function PriceSimulator({ metadata, onSimulated }) {
   const [form, setForm] = useState({
     supplier_code: "ratehawk",
     supplier_price: 100,
@@ -281,6 +333,7 @@ function PriceSimulator({ metadata }) {
         body: JSON.stringify({ ...form, supplier_price: parseFloat(form.supplier_price), nights: parseInt(form.nights) }),
       });
       setResult(data);
+      if (onSimulated) onSimulated();
     } catch {
       toast.error("Simulasyon hatasi");
     }
@@ -379,6 +432,9 @@ function PriceSimulator({ metadata }) {
           </Card>
         ) : (
           <>
+            {/* Trace & Cache Info */}
+            <TraceBar result={result} />
+
             {/* Guardrail Warnings */}
             <GuardrailWarnings warnings={result.guardrail_warnings} passed={result.guardrails_passed} />
 
@@ -933,11 +989,23 @@ export default function PricingEnginePage() {
   const [stats, setStats] = useState({});
   const [metadata, setMetadata] = useState(null);
   const [activeTab, setActiveTab] = useState("simulator");
+  const [cacheStats, setCacheStats] = useState(null);
+
+  const loadCacheStats = useCallback(() => {
+    api("/cache/stats").then(setCacheStats).catch(() => {});
+  }, []);
 
   useEffect(() => {
     api("/dashboard").then(setStats).catch(() => {});
     api("/metadata").then(setMetadata).catch(() => {});
-  }, []);
+    loadCacheStats();
+  }, [loadCacheStats]);
+
+  const clearCache = async () => {
+    await api("/cache/clear", { method: "POST" });
+    toast.success("Pricing cache temizlendi");
+    loadCacheStats();
+  };
 
   return (
     <TooltipProvider>
@@ -950,6 +1018,31 @@ export default function PricingEnginePage() {
         </div>
 
         <StatCards stats={stats} />
+
+        {/* Cache Stats Bar */}
+        {cacheStats && (
+          <div className="flex items-center gap-4 px-4 py-2.5 rounded-lg border bg-slate-50 text-xs" data-testid="cache-stats-bar">
+            <div className="flex items-center gap-1.5 text-slate-600">
+              <Database className="w-3.5 h-3.5 text-teal-600" />
+              <span className="font-medium">Pricing Cache</span>
+            </div>
+            <div className="flex items-center gap-3 text-slate-500 font-mono">
+              <span>Entries: <strong className="text-slate-700">{cacheStats.active_entries}</strong></span>
+              <span>Hits: <strong className="text-emerald-600">{cacheStats.hits}</strong></span>
+              <span>Misses: <strong className="text-amber-600">{cacheStats.misses}</strong></span>
+              <span>Hit Rate: <strong className={cacheStats.hit_rate_pct >= 50 ? "text-emerald-600" : "text-amber-600"}>{cacheStats.hit_rate_pct}%</strong></span>
+              <span>TTL: {cacheStats.ttl_seconds}s</span>
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={loadCacheStats} className="h-6 px-2 text-xs" data-testid="refresh-cache-btn">
+                <RefreshCw className="w-3 h-3 mr-1" /> Yenile
+              </Button>
+              <Button variant="ghost" size="sm" onClick={clearCache} className="h-6 px-2 text-xs text-red-500 hover:text-red-600" data-testid="clear-cache-btn">
+                <Trash2 className="w-3 h-3 mr-1" /> Temizle
+              </Button>
+            </div>
+          </div>
+        )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
@@ -971,7 +1064,7 @@ export default function PricingEnginePage() {
           </TabsList>
 
           <TabsContent value="simulator" className="mt-4">
-            <PriceSimulator metadata={metadata} />
+            <PriceSimulator metadata={metadata} onSimulated={loadCacheStats} />
           </TabsContent>
           <TabsContent value="rules" className="mt-4">
             <DistributionRulesTab />

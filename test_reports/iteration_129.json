@@ -1,0 +1,87 @@
+{
+  "summary": "Completed testing for Iteration 129: Pricing Cache & Trace ID features. All 21 backend API tests passed. All 15 frontend UI tests passed. Features tested: 1) Pricing Trace ID (prc_xxxxxxxx format, unique per simulation), 2) Pricing Cache (cache_hit, cache_key, latency_ms fields, cache stats endpoint, cache clear endpoint).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "✅ POST /api/pricing-engine/simulate returns pricing_trace_id field",
+    "✅ Trace ID format is prc_xxxxxxxx (8 hex chars after prc_ prefix)",
+    "✅ Each simulation gets a unique trace ID (5 unique IDs in test)",
+    "✅ POST /api/pricing-engine/simulate returns cache_hit field (boolean)",
+    "✅ POST /api/pricing-engine/simulate returns latency_ms field (numeric)",
+    "✅ POST /api/pricing-engine/simulate returns cache_key field (16 hex chars)",
+    "✅ First call with unique params is cache MISS (cache_hit=false)",
+    "✅ Second identical call is cache HIT (cache_hit=true)",
+    "✅ Cache HIT returns same sell_price as original calculation",
+    "✅ Cache HIT has lower latency than MISS",
+    "✅ Different parameters produce different cache keys",
+    "✅ GET /api/pricing-engine/cache/stats returns 200",
+    "✅ Cache stats includes hits, misses, active_entries, hit_rate_pct, ttl_seconds",
+    "✅ Cache stats ttl_seconds = 300",
+    "✅ POST /api/pricing-engine/cache/clear returns ok=true",
+    "✅ Cache clear resets hits/misses/active_entries to 0",
+    "✅ Cache misses count increments on new simulation",
+    "✅ Cache hits count increments on cached simulation",
+    "✅ Frontend: Trace bar (data-testid=pricing-trace-bar) shows trace_id, cache status, latency",
+    "✅ Frontend: Cache stats bar (data-testid=cache-stats-bar) shows Entries/Hits/Misses/Hit Rate/TTL",
+    "✅ Frontend: Copy trace ID button (data-testid=copy-trace-btn) is visible and clickable",
+    "✅ Frontend: Clear cache button (data-testid=clear-cache-btn) works",
+    "✅ Frontend: Refresh cache stats button (data-testid=refresh-cache-btn) works"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_pricing_cache_trace_iter129.py",
+    "/app/test_reports/pytest/pytest_pricing_cache_trace_iter129.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "PricingCache class correctly implements TTL-based caching with composite key from PricingContext",
+    "Cache key is SHA256 hash (first 16 chars) of normalized parameters including org_id, supplier, channel, agency_tier, season, promo_code",
+    "pricing_cache singleton with ttl_seconds=300 and max_size=5000",
+    "Trace ID generated with uuid.uuid4().hex[:8] prefixed with 'prc_'",
+    "Cache hit returns cached dict directly with updated trace_id and latency_ms",
+    "Cache stats endpoint returns correct metrics including hit_rate_pct calculation",
+    "Frontend TraceBar component displays trace_id, cache status (HIT/MISS), latency, and cache_key",
+    "Frontend CacheStatsBar positioned between stat cards and tabs with Yenile/Temizle buttons"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_pricing_cache_trace_iter129.py"
+  ],
+  "success_rate": {
+    "backend": "100% (21/21 tests passed)",
+    "frontend": "100% (15/15 UI checks passed)"
+  },
+  "test_credentials_used": {
+    "super_admin": "agent@acenta.test / agent123"
+  },
+  "seed_data_existing": {
+    "distribution_rules": ["Default Hotel Markup 15%", "RateHawk TR Peak 22%"],
+    "channel_configs": ["B2B -5%", "B2C +3%", "Corporate -8%", "Whitelabel -3%"],
+    "promotions": ["Erken Rezervasyon 10%", "Flash Sale Antalya 15%"],
+    "guardrails": ["Min Marj Korumasi 5%"]
+  },
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 129 tested 2 NEW features on Pricing Engine: 1) Pricing Trace ID - POST /api/pricing-engine/simulate returns pricing_trace_id (format prc_xxxxxxxx), unique per simulation for debugging. 2) Pricing Cache - in-memory cache with composite key (rate+rules+channel+agency), TTL 300s. Simulate returns cache_hit (bool), cache_key (16 hex chars), latency_ms. GET /api/pricing-engine/cache/stats returns {hits, misses, active_entries, hit_rate_pct, ttl_seconds, max_size, total_entries}. POST /api/pricing-engine/cache/clear resets all stats and entries. Frontend: TraceBar (data-testid='pricing-trace-bar') shows trace_id, cache status (HIT/MISS in green/gray), latency, cache_key. CacheStatsBar (data-testid='cache-stats-bar') shows Entries/Hits/Misses/Hit Rate/TTL with Yenile(refresh) and Temizle(clear) buttons.",
+  "api_verification": {
+    "POST /api/pricing-engine/simulate": "✅ 200 - Returns pricing_trace_id, cache_hit, cache_key, latency_ms",
+    "GET /api/pricing-engine/cache/stats": "✅ 200 - Returns {hits, misses, active_entries, hit_rate_pct, ttl_seconds, max_size, total_entries}",
+    "POST /api/pricing-engine/cache/clear": "✅ 200 - Returns {ok: true, message: 'Pricing cache temizlendi'}"
+  },
+  "frontend_verification": {
+    "Page URL": "/app/admin/pricing-engine",
+    "Trace Bar": "Dark slate bar at top of results: trace_id (prc_xxxxxxxx), cache status (HIT green / MISS gray), latency (Xms), cache_key",
+    "Cache Stats Bar": "Slate bar between stat cards and tabs: Entries, Hits, Misses, Hit Rate %, TTL 300s",
+    "Refresh Cache Button": "data-testid='refresh-cache-btn' - Yenile button in cache stats bar",
+    "Clear Cache Button": "data-testid='clear-cache-btn' - Temizle button (red text) in cache stats bar",
+    "Copy Trace Button": "data-testid='copy-trace-btn' - Clipboard icon next to trace_id, copies to clipboard"
+  },
+  "mocked_apis": {
+    "note": "No APIs are mocked. Cache is in-memory (Python dict) with TTL eviction. Pricing calculations use real MongoDB rules."
+  }
+}

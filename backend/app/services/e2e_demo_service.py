@@ -75,6 +75,15 @@ def _req_id() -> str:
     return f"req_{uuid.uuid4().hex[:12]}"
 
 
+def _detect_environment() -> str:
+    """Detect current runtime environment."""
+    import os
+    env = os.environ.get("SENTRY_ENVIRONMENT", "").lower().strip()
+    if env:
+        return env
+    return "unknown"
+
+
 SUPPLIER_META = {
     "ratehawk": {"name": "RateHawk", "mode": "simulation", "base_url": "api.worldota.net"},
     "paximum": {"name": "Paximum", "mode": "simulation", "base_url": "api.paximum.com"},
@@ -194,6 +203,9 @@ async def run_e2e_test(supplier: str, scenario: str = "success") -> dict[str, An
         "warning_steps": [s["name"] for s in steps if s["status"] == "warn"],
     }
 
+    # Detect environment
+    environment = _detect_environment()
+
     test_result = {
         "run_id": run_id,
         "supplier": supplier,
@@ -201,6 +213,7 @@ async def run_e2e_test(supplier: str, scenario: str = "success") -> dict[str, An
         "scenario": scenario,
         "scenario_name": SCENARIOS[scenario]["name"],
         "mode": effective_mode,
+        "environment": environment,
         "trace_id": trace_id,
         "steps": steps,
         "summary": {
@@ -211,7 +224,9 @@ async def run_e2e_test(supplier: str, scenario: str = "success") -> dict[str, An
             "total": total,
         },
         "certification": certification,
+        "certification_score": score,
         "total_duration_ms": total_ms,
+        "latency_ms": total_ms,
         "test_params": {
             "destination": "Antalya",
             "checkin": checkin,
@@ -223,6 +238,13 @@ async def run_e2e_test(supplier: str, scenario: str = "success") -> dict[str, An
 
     db = await get_db()
     await db.e2e_demo_tests.insert_one({**test_result, "_recorded_at": _ts()})
+
+    # Track telemetry
+    from app.services.sandbox_telemetry_service import increment_counter
+    if effective_mode == "sandbox":
+        await increment_counter("sandbox_success_runs", supplier)
+    else:
+        await increment_counter("simulation_runs", supplier)
 
     return test_result
 

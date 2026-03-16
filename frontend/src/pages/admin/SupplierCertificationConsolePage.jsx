@@ -5,7 +5,8 @@ import { Button } from "../../components/ui/button";
 import {
   CheckCircle2, XCircle, AlertTriangle, Clock, Play, RotateCcw,
   ChevronRight, ChevronDown, Activity, Wifi, WifiOff, Timer,
-  Zap, History, ArrowLeft, Server, Shield, TrendingUp, ShieldAlert, Lock
+  Zap, History, ArrowLeft, Server, Shield, TrendingUp, ShieldAlert, Lock,
+  BarChart3, Globe, Hash, Gauge
 } from "lucide-react";
 import { api } from "../../lib/api";
 
@@ -389,6 +390,125 @@ function SandboxReadinessIndicator({ status }) {
   );
 }
 
+/* ─── State Telemetry Card ─────────────────────────────── */
+function TelemetryCard({ telemetry }) {
+  if (!telemetry) return null;
+  const c = telemetry.counters || {};
+  const d = telemetry.derived || {};
+  const metrics = [
+    { key: "sandbox_connection_attempts", label: "Baglanti Denemeleri", value: c.sandbox_connection_attempts || 0, icon: Gauge, color: "text-blue-400", bg: "bg-blue-500/10" },
+    { key: "sandbox_blocked_events", label: "Engellenen Olaylar", value: c.sandbox_blocked_events || 0, icon: Lock, color: "text-red-400", bg: "bg-red-500/10" },
+    { key: "simulation_runs", label: "Simulasyon Calismalari", value: c.simulation_runs || 0, icon: Activity, color: "text-amber-400", bg: "bg-amber-500/10" },
+    { key: "sandbox_success_runs", label: "Sandbox Basarili", value: c.sandbox_success_runs || 0, icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+  ];
+  return (
+    <Card data-testid="telemetry-card" className="bg-zinc-900/80 border-zinc-800">
+      <CardHeader className="pb-2 pt-4 px-4">
+        <CardTitle className="text-xs uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
+          <BarChart3 className="w-3 h-3 text-zinc-400" /> State Telemetry
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="px-4 pb-4">
+        <div className="grid grid-cols-2 gap-2">
+          {metrics.map((m) => (
+            <div key={m.key} data-testid={`telemetry-${m.key}`}
+              className={`${m.bg} rounded-lg p-2.5 border border-zinc-800/50`}>
+              <div className="flex items-center gap-1.5 mb-1">
+                <m.icon className={`w-3 h-3 ${m.color}`} />
+                <span className="text-[9px] text-zinc-500 uppercase tracking-wider">{m.label}</span>
+              </div>
+              <p className={`text-lg font-bold ${m.color} tabular-nums`}>{m.value}</p>
+            </div>
+          ))}
+        </div>
+        {/* Derived Metrics */}
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="bg-zinc-800/40 rounded-lg p-2">
+            <span className="text-[9px] text-zinc-500 uppercase">Sandbox Orani</span>
+            <p className="text-sm font-semibold text-zinc-200 tabular-nums">{d.sandbox_rate_pct || 0}%</p>
+          </div>
+          <div className="bg-zinc-800/40 rounded-lg p-2">
+            <span className="text-[9px] text-zinc-500 uppercase">Engel Orani</span>
+            <p className="text-sm font-semibold text-zinc-200 tabular-nums">{d.block_rate_pct || 0}%</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ─── Enriched History Panel ──────────────────────────── */
+function EnrichedHistoryPanel({ history, onSelect }) {
+  if (!history?.length) return (
+    <div className="text-center py-8 text-zinc-500 text-sm">Henuz test gecmisi yok</div>
+  );
+  return (
+    <div data-testid="history-panel" className="space-y-2">
+      {history.map((t) => {
+        const eligible = t.certification?.go_live_eligible;
+        const score = t.certification_score ?? t.certification?.score ?? 0;
+        const mode = t.mode || "simulation";
+        const env = t.environment || "unknown";
+        const latency = t.latency_ms ?? t.total_duration_ms ?? 0;
+        const traceId = t.trace_id || "—";
+        const modeConf = MODE_CONFIG[mode === "sandbox" ? "sandbox_connected" : "simulation"] || MODE_CONFIG.simulation;
+        return (
+          <button key={t.run_id} data-testid={`history-${t.run_id}`}
+            onClick={() => onSelect(t)}
+            className="w-full flex items-center gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:border-zinc-700 transition-all text-left">
+            {/* Score Circle */}
+            <div className="relative w-10 h-10 shrink-0">
+              <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="15.9" fill="none" stroke="#27272a" strokeWidth="2.5" />
+                <circle cx="18" cy="18" r="15.9" fill="none"
+                  stroke={eligible ? "#10b981" : "#ef4444"}
+                  strokeWidth="2.5" strokeDasharray={`${score} ${100 - score}`}
+                  strokeLinecap="round" />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-[10px] font-bold text-zinc-100">{score}%</span>
+              </div>
+            </div>
+            {/* Main Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-sm font-medium text-zinc-200">{t.supplier_name}</span>
+                <Badge variant="outline" className="text-[9px] border-zinc-700 text-zinc-400">{t.scenario_name}</Badge>
+                <Badge className={`text-[9px] ${modeConf.badgeBg} ${modeConf.badgeText} ${modeConf.badgeBorder}`}>
+                  {mode === "sandbox" ? "SANDBOX" : "SIM"}
+                </Badge>
+                <Badge variant="outline" className="text-[9px] border-zinc-700/60 text-zinc-500">
+                  <Globe className="w-2.5 h-2.5 mr-0.5 inline" />{env}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-3 mt-1 text-[10px] text-zinc-500">
+                <span>{t.summary?.passed}/{t.summary?.total} passed</span>
+                <span className="text-zinc-700">|</span>
+                <span className="font-mono tabular-nums">{latency}ms</span>
+                <span className="text-zinc-700">|</span>
+                <span>{t.supplier}</span>
+              </div>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <Hash className="w-2.5 h-2.5 text-zinc-600" />
+                <span className="text-[9px] text-zinc-600 font-mono truncate">{traceId}</span>
+              </div>
+            </div>
+            {/* Right side */}
+            <div className="text-right shrink-0 space-y-1">
+              <p className="text-[10px] text-zinc-500">{new Date(t.timestamp).toLocaleString("tr-TR")}</p>
+              <Badge data-testid={`history-score-${t.run_id}`}
+                className={`text-[9px] ${eligible ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"}`}>
+                {eligible ? "GO-LIVE" : "NOT READY"}
+              </Badge>
+            </div>
+            <ChevronRight className="w-4 h-4 text-zinc-600 shrink-0" />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ─── Main Page ───────────────────────────────────────── */
 export default function SupplierCertificationConsolePage() {
   const [scenarios, setScenarios] = useState([]);
@@ -402,6 +522,7 @@ export default function SupplierCertificationConsolePage() {
   const [rerunning, setRerunning] = useState(false);
   const [historyFilter, setHistoryFilter] = useState(null);
   const [sandboxStatus, setSandboxStatus] = useState(null);
+  const [telemetry, setTelemetry] = useState(null);
 
   const suppliers = Object.entries(SUPPLIER_COLORS).map(([code, grad]) => ({
     code, gradient: grad,
@@ -430,8 +551,16 @@ export default function SupplierCertificationConsolePage() {
     } catch { return null; }
   }, [selectedSupplier]);
 
+  const loadTelemetry = useCallback(async () => {
+    try {
+      const { data } = await api.get(`/e2e-demo/telemetry?supplier=${selectedSupplier}`);
+      setTelemetry(data);
+    } catch { /* ignore */ }
+  }, [selectedSupplier]);
+
   useEffect(() => { loadScenarios(); }, [loadScenarios]);
   useEffect(() => { loadHistory(); }, [loadHistory, activeTab]);
+  useEffect(() => { loadTelemetry(); }, [loadTelemetry]);
   useEffect(() => {
     let stale = false;
     setSandboxStatus(null);
@@ -448,6 +577,7 @@ export default function SupplierCertificationConsolePage() {
       });
       setTestResult(data);
       loadHistory();
+      loadTelemetry();
     } catch (e) {
       console.error(e);
     }
@@ -676,6 +806,9 @@ export default function SupplierCertificationConsolePage() {
                 );
               })()}
 
+              {/* Telemetry Metrics */}
+              <TelemetryCard telemetry={telemetry} />
+
               {/* Run Button */}
               <Button data-testid="run-test-btn" onClick={runTest} disabled={running}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white h-11 font-semibold" size="lg">
@@ -705,9 +838,14 @@ export default function SupplierCertificationConsolePage() {
                             : "bg-amber-500/20 text-amber-400 border-amber-500/30 text-[10px]"}>
                           {testResult.mode === "sandbox" ? "SANDBOX (Real API)" : "SIMULATION"}
                         </Badge>
+                        {testResult.environment && (
+                          <Badge variant="outline" className="text-[10px] border-zinc-700/60 text-zinc-500">
+                            <Globe className="w-2.5 h-2.5 mr-0.5 inline" />{testResult.environment}
+                          </Badge>
+                        )}
                       </div>
                       <p className="text-[10px] text-zinc-500 font-mono">
-                        Trace: {testResult.trace_id} | {testResult.total_duration_ms}ms
+                        Trace: {testResult.trace_id} | {testResult.total_duration_ms}ms | Score: {testResult.certification_score ?? testResult.certification?.score ?? "—"}%
                         {testResult.test_params && ` | ${testResult.test_params.destination} | ${testResult.test_params.checkin} → ${testResult.test_params.checkout}`}
                       </p>
                     </div>
@@ -762,7 +900,7 @@ export default function SupplierCertificationConsolePage() {
                 </button>
               ))}
             </div>
-            <HistoryPanel history={history} onSelect={(t) => { setTestResult(t); setActiveTab("test"); }} />
+            <EnrichedHistoryPanel history={history} onSelect={(t) => { setTestResult(t); setActiveTab("test"); }} />
           </div>
         )}
       </div>

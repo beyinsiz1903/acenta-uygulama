@@ -94,6 +94,9 @@ async def get_sandbox_status(supplier: str = "ratehawk") -> dict[str, Any]:
         }
 
     # Credentials exist — check health
+    from app.services.sandbox_telemetry_service import increment_counter
+    await increment_counter("sandbox_connection_attempts", supplier)
+
     health = await _check_health(creds)
     api_reachable = health.get("reachable", False)
 
@@ -102,6 +105,7 @@ async def get_sandbox_status(supplier: str = "ratehawk") -> dict[str, Any]:
         mode = "sandbox_connected"
     elif health.get("error") and _is_env_blocked(health["error"]):
         mode = "sandbox_blocked"
+        await increment_counter("sandbox_blocked_events", supplier)
     else:
         mode = "sandbox_ready"
 

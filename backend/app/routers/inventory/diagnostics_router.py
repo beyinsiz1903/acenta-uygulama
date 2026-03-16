@@ -326,6 +326,16 @@ async def sandbox_status(
     return await get_sandbox_status(supplier)
 
 
+@e2e_demo_router.get("/telemetry")
+async def sandbox_telemetry(
+    supplier: str | None = Query(None),
+    current_user=Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Get sandbox state telemetry metrics."""
+    from app.services.sandbox_telemetry_service import get_telemetry
+    return await get_telemetry(supplier)
+
+
 @e2e_demo_router.get("/suppliers")
 async def supplier_status(
     current_user=Depends(require_roles(_ADMIN_ROLES)),

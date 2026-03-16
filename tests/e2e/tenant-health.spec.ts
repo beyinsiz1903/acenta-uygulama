@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const BASE = "https://telemetry-dash-9.preview.emergentagent.com";
+const BASE = "https://error-trends-dash.preview.emergentagent.com";
 const UID = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 test("tenant-health: loads data with filters", async ({ request }) => {

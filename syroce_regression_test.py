@@ -13,7 +13,7 @@ import json
 import sys
 
 # Backend URL
-BACKEND_URL = "https://telemetry-dash-9.preview.emergentagent.com/api"
+BACKEND_URL = "https://error-trends-dash.preview.emergentagent.com/api"
 
 # Test credentials from review request
 ADMIN_EMAIL = "admin@acenta.test"

@@ -10,7 +10,7 @@ import sys
 from datetime import datetime, timedelta
 
 # Base URL from frontend/.env
-BASE_URL = "https://telemetry-dash-9.preview.emergentagent.com/api"
+BASE_URL = "https://error-trends-dash.preview.emergentagent.com/api"
 
 # Test credentials
 ADMIN_CREDENTIALS = {

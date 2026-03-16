@@ -10,7 +10,7 @@ This test validates critical auth endpoints per Turkish review request:
 5. All /api/auth/me responses have non-empty tenant_id field
 
 Context: P0 validation for superadmin login redirect after handoff
-Environment: https://credential-ready.preview.emergentagent.com
+Environment: https://sandbox-status-ui.preview.emergentagent.com
 Credentials: admin@acenta.test/admin123, agent@acenta.test/agent123
 """
 
@@ -20,7 +20,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Base URL from frontend .env
-BASE_URL = "https://credential-ready.preview.emergentagent.com"
+BASE_URL = "https://sandbox-status-ui.preview.emergentagent.com"
 
 def print_test_step(step: str, description: str):
     """Print formatted test step."""

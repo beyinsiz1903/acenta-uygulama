@@ -73,6 +73,16 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 
 ### Supplier-Based Telemetry, Error Trend Chart & Certification Funnel — COMPLETED (2026-03-16)
 
+### Pricing & Distribution Engine — COMPLETED (2026-03-16)
+**Core pricing pipeline: supplier_price → base_markup → channel_rule → agency_rule → promotion_rule → currency_conversion → final_sell_price**
+- Backend: `pricing_distribution_engine.py` (7-step pipeline), `promotion_engine.py`, `pricing_engine_router.py` (13 API endpoints)
+- Frontend: `PricingEnginePage.jsx` with 4 tabs (Simulator, Rules, Channels, Promotions)
+- Channel pricing: B2B (-5%), B2C (+3%), Corporate (-8%), Whitelabel (-3%)
+- Rule engine: Multi-dimensional matching (supplier, destination, season, channel, agency_tier)
+- Promotion layer: early_booking, flash_sale, campaign_discount, fixed_price_override
+- Price Simulator with full pipeline visualization
+- All 23 backend + 9 frontend tests passed (iteration_127)
+
 ---
 
 ## Frontend Quality Score (Post P3+P4)
@@ -94,12 +104,13 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 All P0 tasks completed.
 
 ### P1 — Next Priority
+- **Financial Ledger & Settlement Dashboard**: Consolidated finance dashboard with ledger overview, revenue breakdown, agency balances, supplier payables, settlement reconciliation
 - **Activity Timeline**: Entity-based audit history (who did what)
-- **Real RateHawk Environment Execution**: Credential-ready, needs network access
 
 ### P2
 - **TypeScript Migration**: API layer -> TanStack hooks -> design system (incremental)
 - **Supplier Self-Serve Onboarding**: Partner self-service onboarding portal
+- **Real RateHawk Environment Execution**: Credential-ready, needs network access
 
 ### P3
 - **Paximum Integration**: Onboard using existing blueprint

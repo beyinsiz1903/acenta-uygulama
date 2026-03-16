@@ -1,0 +1,100 @@
+{
+  "summary": "Completed testing for Telemetry Persistence Window and Certification Trend Chart features (iter 125). All 11 backend API tests passed. All 8 frontend UI tests passed. The new GET /api/e2e-demo/telemetry/history endpoint correctly returns aggregated data with period filtering. The CertificationTrendChart component renders correctly with period toggle buttons and summary statistics.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/e2e-demo/telemetry/history",
+        "issue": "Uses deprecated 'regex' parameter in FastAPI Query - should use 'pattern' instead",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Certification Console - Trend Chart",
+        "issues": ["Recharts shows dimension warning (-1 height/width) when chart container is not visible - only cosmetic, doesn't affect functionality"]
+      }
+    ]
+  },
+  "passed_tests": [
+    "✅ GET /api/e2e-demo/telemetry/history returns default hourly period with correct structure",
+    "✅ GET /api/e2e-demo/telemetry/history?period=daily returns aggregated daily data",
+    "✅ GET /api/e2e-demo/telemetry/history?period=weekly returns aggregated weekly data",
+    "✅ GET /api/e2e-demo/telemetry/history?supplier=ratehawk correctly filters by supplier",
+    "✅ GET /api/e2e-demo/telemetry/history?period=invalid returns 422 validation error",
+    "✅ POST /api/e2e-demo/run creates a snapshot in sandbox_telemetry_snapshots collection",
+    "✅ Data points contain all expected fields: period, avg_score, avg_latency_ms, total_runs, sandbox_runs, simulation_runs, avg_success_rate, max_score, min_score, sandbox_rate_pct",
+    "✅ Existing GET /api/e2e-demo/telemetry endpoint still works correctly (no regression)",
+    "✅ Existing POST /api/e2e-demo/run returns all expected fields including certification_score, mode, environment",
+    "✅ GET /api/e2e-demo/telemetry/history requires authentication (401 without token)",
+    "✅ Limit parameter correctly controls max data points returned",
+    "✅ Frontend: Trend chart card renders with data-testid='trend-chart-card'",
+    "✅ Frontend: Period toggle buttons (Saatlik/Gunluk/Haftalik) render with data-testid='trend-period-hourly/daily/weekly'",
+    "✅ Frontend: Chart updates when switching periods",
+    "✅ Frontend: Trend chart summary row shows TOPLAM, ORT. SKOR, ORT. LATENCY",
+    "✅ Frontend: Period buttons apply active styling when clicked",
+    "✅ Frontend: AreaChart visualization displays with proper Y-axis (0-100 scale)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_telemetry_history_trend_iter125.py",
+    "/app/test_reports/pytest/pytest_telemetry_history_trend_iter125.xml"
+  ],
+  "action_items": [
+    "Optional: Update diagnostics_router.py line 341 to use 'pattern' instead of deprecated 'regex' parameter"
+  ],
+  "critical_code_review_comments": [
+    "sandbox_telemetry_service.py record_snapshot() correctly stores hour/day/week bucket fields for aggregation",
+    "get_telemetry_history() correctly uses MongoDB aggregation pipeline with $group by time bucket",
+    "Frontend CertificationTrendChart component correctly fetches data with period/supplier/limit parameters",
+    "Chart uses Recharts AreaChart with proper gradient fills and tooltip formatting",
+    "Summary row correctly calculates totals from trendData array using reduce()"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_telemetry_history_trend_iter125.py"
+  ],
+  "success_rate": {
+    "backend": "100% (11/11 tests passed)",
+    "frontend": "100% (8/8 UI checks passed)"
+  },
+  "test_credentials_used": {
+    "super_admin": "agent@acenta.test / agent123"
+  },
+  "seed_data_creation": "Snapshots are auto-created when running tests via POST /api/e2e-demo/run",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "New telemetry history features added in iteration 125: 1) GET /api/e2e-demo/telemetry/history returns aggregated snapshot data with period filtering (hourly/daily/weekly). 2) POST /api/e2e-demo/run now calls record_snapshot() to store per-test telemetry in sandbox_telemetry_snapshots collection. 3) Frontend CertificationTrendChart component (data-testid='trend-chart-card') displays trend visualization with period toggle buttons (data-testid='trend-period-hourly/daily/weekly'). 4) Summary row shows TOPLAM (total runs), ORT. SKOR (avg score %), ORT. LATENCY (avg latency ms). Page URL: /app/admin/certification-console",
+  "api_verification": {
+    "GET /api/e2e-demo/telemetry/history": "✅ 200 - Returns period, data array, total_points, supplier_filter, timestamp",
+    "GET /api/e2e-demo/telemetry/history?period=hourly": "✅ 200 - Default period, groups by hour bucket",
+    "GET /api/e2e-demo/telemetry/history?period=daily": "✅ 200 - Groups by day bucket",
+    "GET /api/e2e-demo/telemetry/history?period=weekly": "✅ 200 - Groups by week bucket (YYYY-Www format)",
+    "GET /api/e2e-demo/telemetry/history?supplier=ratehawk": "✅ 200 - Filters by supplier",
+    "GET /api/e2e-demo/telemetry/history?period=invalid": "✅ 422 - Validation error for invalid period",
+    "No regression: GET /api/e2e-demo/telemetry": "✅ 200 - Still returns counters object",
+    "No regression: POST /api/e2e-demo/run": "✅ 200 - Still returns all enriched fields"
+  },
+  "frontend_verification": {
+    "Page URL": "/app/admin/certification-console",
+    "CertificationTrendChart card": "data-testid='trend-chart-card' - renders with chart and summary",
+    "Period toggle buttons": "data-testid='trend-period-hourly/daily/weekly' - all three buttons render",
+    "Button labels (Turkish)": "Saatlik (Hourly), Gunluk (Daily), Haftalik (Weekly)",
+    "Summary row elements": "TOPLAM (Total), ORT. SKOR (Avg Score %), ORT. LATENCY (Avg Latency ms)",
+    "Chart visualization": "Recharts AreaChart with gradient fills, Y-axis 0-100, X-axis shows time periods"
+  },
+  "telemetry_data_structure": {
+    "period": "string - the time bucket identifier (e.g., '2026-03-16T14:00:00Z' for hourly)",
+    "avg_score": "number - average certification score across tests in this period",
+    "avg_latency_ms": "number - average total duration in ms",
+    "total_runs": "number - count of tests in this period",
+    "sandbox_runs": "number - count of sandbox mode tests",
+    "simulation_runs": "number - count of simulation mode tests",
+    "avg_success_rate": "number - average pass rate percentage",
+    "max_score": "number - highest certification score",
+    "min_score": "number - lowest certification score",
+    "sandbox_rate_pct": "number - percentage of tests using sandbox mode"
+  }
+}

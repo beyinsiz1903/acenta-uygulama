@@ -240,11 +240,22 @@ async def run_e2e_test(supplier: str, scenario: str = "success") -> dict[str, An
     await db.e2e_demo_tests.insert_one({**test_result, "_recorded_at": _ts()})
 
     # Track telemetry
-    from app.services.sandbox_telemetry_service import increment_counter
+    from app.services.sandbox_telemetry_service import increment_counter, record_snapshot
     if effective_mode == "sandbox":
         await increment_counter("sandbox_success_runs", supplier)
     else:
         await increment_counter("simulation_runs", supplier)
+
+    # Record snapshot for trend analysis
+    await record_snapshot(
+        supplier=supplier,
+        mode=effective_mode,
+        certification_score=score,
+        passed=passed,
+        total=total,
+        latency_ms=total_ms,
+        scenario=scenario,
+    )
 
     return test_result
 

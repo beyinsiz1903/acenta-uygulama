@@ -336,6 +336,18 @@ async def sandbox_telemetry(
     return await get_telemetry(supplier)
 
 
+@e2e_demo_router.get("/telemetry/history")
+async def sandbox_telemetry_history(
+    period: str = Query("hourly", regex="^(hourly|daily|weekly)$"),
+    supplier: str | None = Query(None),
+    limit: int = Query(24, ge=1, le=168),
+    current_user=Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Get aggregated telemetry history for trend analysis."""
+    from app.services.sandbox_telemetry_service import get_telemetry_history
+    return await get_telemetry_history(period, supplier, limit)
+
+
 @e2e_demo_router.get("/suppliers")
 async def supplier_status(
     current_user=Depends(require_roles(_ADMIN_ROLES)),

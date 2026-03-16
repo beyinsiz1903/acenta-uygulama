@@ -5688,6 +5688,17 @@
   },
   {
     "compat_required": true,
+    "current_namespace": "/api/e2e-demo",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "e2e-demo",
+    "path": "/api/e2e-demo/telemetry/history",
+    "risk_level": "medium",
+    "source": "app.routers.inventory.diagnostics_router",
+    "target_namespace": "/api/v1/e2e-demo"
+  },
+  {
+    "compat_required": true,
     "current_namespace": "/api/efatura",
     "legacy_or_v1": "legacy",
     "method": "GET",

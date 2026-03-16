@@ -9,6 +9,10 @@ import {
   BarChart3, Globe, Hash, Gauge
 } from "lucide-react";
 import { api } from "../../lib/api";
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, BarChart, Bar, Legend,
+} from "recharts";
 
 const STATUS_STYLES = {
   pass: { bg: "bg-emerald-500/15", text: "text-emerald-400", border: "border-emerald-500/30", icon: CheckCircle2, label: "PASS" },
@@ -437,6 +441,120 @@ function TelemetryCard({ telemetry }) {
   );
 }
 
+/* ─── Certification Trend Chart ───────────────────────── */
+function CertificationTrendChart({ trendData, period, onPeriodChange }) {
+  if (!trendData?.length) return (
+    <Card data-testid="trend-chart-card" className="bg-zinc-900/80 border-zinc-800">
+      <CardHeader className="pb-2 pt-4 px-4">
+        <CardTitle className="text-xs uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
+          <TrendingUp className="w-3 h-3 text-zinc-400" /> Certification Trend
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="px-4 pb-4">
+        <div className="text-center py-6 text-zinc-600 text-xs">
+          Henuz trend verisi yok — test calistirarak veri olusturun
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const formatLabel = (val) => {
+    if (!val) return "";
+    if (period === "hourly") return val.slice(11, 16);
+    if (period === "daily") return val.slice(5, 10);
+    return val;
+  };
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    const d = payload[0]?.payload;
+    return (
+      <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-2.5 shadow-xl text-xs">
+        <p className="text-zinc-400 font-medium mb-1">{label}</p>
+        <div className="space-y-0.5">
+          <p className="text-emerald-400">Skor: {d.avg_score}%</p>
+          <p className="text-blue-400">Basari: {d.avg_success_rate}%</p>
+          <p className="text-zinc-300">Calisma: {d.total_runs}</p>
+          <p className="text-amber-400">Latency: {d.avg_latency_ms}ms</p>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <Card data-testid="trend-chart-card" className="bg-zinc-900/80 border-zinc-800">
+      <CardHeader className="pb-2 pt-4 px-4">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xs uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
+            <TrendingUp className="w-3 h-3 text-zinc-400" /> Certification Trend
+          </CardTitle>
+          <div className="flex gap-0.5 bg-zinc-800/60 rounded-md p-0.5">
+            {["hourly", "daily", "weekly"].map((p) => (
+              <button key={p} data-testid={`trend-period-${p}`}
+                onClick={() => onPeriodChange(p)}
+                className={`px-2 py-0.5 rounded text-[9px] font-medium transition-all ${
+                  period === p ? "bg-zinc-700 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
+                }`}>
+                {p === "hourly" ? "Saatlik" : p === "daily" ? "Gunluk" : "Haftalik"}
+              </button>
+            ))}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="px-4 pb-4">
+        <div className="h-40">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={trendData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="rateGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+              <XAxis dataKey="period" tickFormatter={formatLabel}
+                tick={{ fontSize: 9, fill: "#71717a" }} axisLine={{ stroke: "#27272a" }} tickLine={false} />
+              <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: "#71717a" }}
+                axisLine={{ stroke: "#27272a" }} tickLine={false} />
+              <Tooltip content={<CustomTooltip />} />
+              <Area type="monotone" dataKey="avg_score" name="Skor"
+                stroke="#10b981" strokeWidth={2} fill="url(#scoreGradient)" dot={{ r: 3, fill: "#10b981" }} />
+              <Area type="monotone" dataKey="avg_success_rate" name="Basari Orani"
+                stroke="#3b82f6" strokeWidth={1.5} fill="url(#rateGradient)" dot={{ r: 2, fill: "#3b82f6" }} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+        {/* Summary row */}
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          <div className="bg-zinc-800/40 rounded p-1.5 text-center">
+            <p className="text-[9px] text-zinc-500 uppercase">Toplam</p>
+            <p className="text-xs font-semibold text-zinc-200 tabular-nums">
+              {trendData.reduce((s, d) => s + d.total_runs, 0)}
+            </p>
+          </div>
+          <div className="bg-zinc-800/40 rounded p-1.5 text-center">
+            <p className="text-[9px] text-zinc-500 uppercase">Ort. Skor</p>
+            <p className="text-xs font-semibold text-emerald-400 tabular-nums">
+              {(trendData.reduce((s, d) => s + d.avg_score, 0) / trendData.length).toFixed(1)}%
+            </p>
+          </div>
+          <div className="bg-zinc-800/40 rounded p-1.5 text-center">
+            <p className="text-[9px] text-zinc-500 uppercase">Ort. Latency</p>
+            <p className="text-xs font-semibold text-amber-400 tabular-nums">
+              {(trendData.reduce((s, d) => s + d.avg_latency_ms, 0) / trendData.length).toFixed(0)}ms
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+
 /* ─── Enriched History Panel ──────────────────────────── */
 function EnrichedHistoryPanel({ history, onSelect }) {
   if (!history?.length) return (
@@ -523,6 +641,8 @@ export default function SupplierCertificationConsolePage() {
   const [historyFilter, setHistoryFilter] = useState(null);
   const [sandboxStatus, setSandboxStatus] = useState(null);
   const [telemetry, setTelemetry] = useState(null);
+  const [trendData, setTrendData] = useState([]);
+  const [trendPeriod, setTrendPeriod] = useState("hourly");
 
   const suppliers = Object.entries(SUPPLIER_COLORS).map(([code, grad]) => ({
     code, gradient: grad,
@@ -558,9 +678,20 @@ export default function SupplierCertificationConsolePage() {
     } catch { /* ignore */ }
   }, [selectedSupplier]);
 
+  const loadTrendData = useCallback(async () => {
+    try {
+      const limitMap = { hourly: 24, daily: 30, weekly: 12 };
+      const { data } = await api.get(
+        `/e2e-demo/telemetry/history?period=${trendPeriod}&supplier=${selectedSupplier}&limit=${limitMap[trendPeriod] || 24}`
+      );
+      setTrendData(data.data || []);
+    } catch { /* ignore */ }
+  }, [selectedSupplier, trendPeriod]);
+
   useEffect(() => { loadScenarios(); }, [loadScenarios]);
   useEffect(() => { loadHistory(); }, [loadHistory, activeTab]);
   useEffect(() => { loadTelemetry(); }, [loadTelemetry]);
+  useEffect(() => { loadTrendData(); }, [loadTrendData]);
   useEffect(() => {
     let stale = false;
     setSandboxStatus(null);
@@ -578,6 +709,7 @@ export default function SupplierCertificationConsolePage() {
       setTestResult(data);
       loadHistory();
       loadTelemetry();
+      loadTrendData();
     } catch (e) {
       console.error(e);
     }
@@ -808,6 +940,13 @@ export default function SupplierCertificationConsolePage() {
 
               {/* Telemetry Metrics */}
               <TelemetryCard telemetry={telemetry} />
+
+              {/* Certification Trend Chart */}
+              <CertificationTrendChart
+                trendData={trendData}
+                period={trendPeriod}
+                onPeriodChange={setTrendPeriod}
+              />
 
               {/* Run Button */}
               <Button data-testid="run-test-btn" onClick={runTest} disabled={running}

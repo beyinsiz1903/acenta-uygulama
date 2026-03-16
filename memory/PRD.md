@@ -113,6 +113,35 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 - **Global Cache Diagnostics**: GET `/api/pricing-engine/cache/diagnostics` returns global_hit_rate, total_entries, memory_usage_mb, evictions, utilization_pct, warming_status, supplier_count. Frontend diagnostics panel with 6 metric cards
 - All 35 backend + 15 frontend tests passed (iteration_131)
 
+### PricingEnginePage.jsx Refactoring — COMPLETED (2026-03-16)
+**Monolithic 1385-line component broken into 16 modular files under /app/frontend/src/pages/pricing/**
+- StatCards, AlertBanner, CacheStatsBar, GlobalDiagnosticsPanel, CacheTelemetryPanel
+- PricingSimulatorTab, DistributionRulesTab, ChannelsTab, PromotionsTab, GuardrailsTab
+- TraceBar, PipelineExplainer, RulePrecedenceViewer, GuardrailWarnings
+- Shared: lib/pricingApi.js, lib/pricingConstants.js
+- Main orchestrator: 182 lines (from 1385). All 43 tests passed (iteration_132)
+
+### Phase 2A: Financial Ledger & Settlement Visibility — COMPLETED (2026-03-16)
+**Financial visibility layer with 13+ API endpoints and 5 frontend pages**
+- **Data Model**: LedgerEntry (immutable), SettlementRun, AgencyBalance, SupplierPayable, ReconciliationSnapshot. Strict separation of booking_status vs financial_settlement_status.
+- **Backend Services**: finance_ledger_service.py, settlement_run_service.py, reconciliation_summary_service.py, finance_seed_service.py
+- **Backend Router**: finance_ledger.py with 3 sub-routers (ledger, settlement, reconciliation)
+- **API Endpoints**:
+  - GET /api/finance/ledger/summary, /overview, /receivable-payable, /recent-postings
+  - GET /api/finance/ledger/entries, /entries/{id}
+  - GET /api/finance/ledger/agency-balances, /supplier-payables
+  - GET /api/finance/settlement-runs, /stats, /{id}
+  - GET /api/finance/reconciliation/summary, /snapshots, /margin-revenue
+  - POST /api/finance/ledger/seed
+- **Frontend Pages** (under /app/frontend/src/pages/finance/):
+  - FinanceOverviewPage: 6 KPIs (receivable, payable, margin, unsettled, open runs, mismatches), revenue/cost area chart, settlement bar chart, quick navigation cards, ledger summary, recent postings table
+  - SettlementRunsPage: Status summary cards, filters (status, type), runs table with detail navigation
+  - AgencyBalancesPage: Summary cards, status filter, agency table with credit utilization
+  - SupplierPayablesPage: Summary cards, status filter, payables table, payment progress bars
+  - ReconciliationPage: KPIs, margin/cost bar chart, reconciliation line chart, latest snapshot, period history table
+- **Demo Seed Data**: 56 ledger entries, 5 settlement runs (all statuses), 5 agencies (2 overdue, 1 negative balance), 4 suppliers (1 overdue), 3 reconciliation periods
+- All 18 backend + all frontend tests passed (iteration_133)
+
 ---
 
 ## Frontend Quality Score (Post P3+P4)
@@ -133,18 +162,10 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 ### P0 — Completed
 All P0 tasks completed.
 
-### PricingEnginePage.jsx Refactoring — COMPLETED (2026-03-16)
-**Monolithic 1385-line component broken into 16 modular files under /app/frontend/src/pages/pricing/**
-- StatCards, AlertBanner, CacheStatsBar, GlobalDiagnosticsPanel, CacheTelemetryPanel
-- PricingSimulatorTab, DistributionRulesTab, ChannelsTab, PromotionsTab, GuardrailsTab
-- TraceBar, PipelineExplainer, RulePrecedenceViewer, GuardrailWarnings
-- Shared: lib/pricingApi.js, lib/pricingConstants.js
-- Main orchestrator: 182 lines (from 1385). All 43 tests passed (iteration_132)
-
 ### P1 — Next Priority
-- **Phase 2A: Financial Ledger & Settlement Visibility**: Ledger summary, agency balances, supplier payables, settlement runs, reconciliation overview, margin/revenue summary
 - **Phase 2B: Settlement Workflow & Reconciliation**: Settlement draft creation, approve/reject, paid marking, supplier-based filtering, exception queue, mismatch panel
 - **Activity Timeline**: Entity-based audit history (who did what)
+- **Persist Configuration**: Move Pricing Engine Configuration (Rules, Channels, Guardrails) from in-memory storage to a database
 
 ### P2
 - **TypeScript Migration**: API layer -> TanStack hooks -> design system (incremental)
@@ -171,3 +192,4 @@ All P0 tasks completed.
 - Redis unavailable in preview (graceful MongoDB fallback — verified and tested)
 - RateHawk sandbox API unreachable from preview (system is credential-ready, will work with real network access)
 - Nested button HTML warning in legacy code (low priority)
+- Recharts responsive container console warnings (cosmetic, no functional impact)

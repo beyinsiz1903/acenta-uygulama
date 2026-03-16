@@ -65,6 +65,37 @@ Delivered:
 **Testing: 100% backend (14/14), 100% frontend pass rate**
 **Mode: SIMULATION (no real credentials configured)**
 
+### P4.2: Sync Job Stability Deep — COMPLETED (2026-03-16)
+**Partial Failure Handling + Retry + Circuit Breaker + Region Recovery + Stability Dashboard**
+
+Delivered:
+- **Job State Model** (`sync_job_state.py`): 8 statuses — pending, running, completed, completed_with_partial_errors, failed, retry_scheduled, stuck, cancelled
+- **Partial Failure Handling**: Successful records preserved on partial sync failure; per-hotel error tracking
+- **Retry Window + Scheduler Idempotency**: Exponential backoff (base 60s, multiplier 2x, max 600s, max 3 retries); duplicate sync prevention via ACTIVE status check
+- **Supplier Downtime + Circuit Breaker**: Per-supplier circuit breakers (supplier_ratehawk, supplier_paximum, etc.); auto-skip sync when circuit open; stale-while-revalidate pattern
+- **Partial Region Sync Recovery**: Region-level sync tracking; individual region retry via `POST /api/inventory/sync/retry-region/{supplier}/{region_id}`
+- **Stuck Job Detection**: Enhanced with auto-retry scheduling (not just marking as stuck)
+- **Stability Report API**: `GET /api/inventory/sync/stability-report` — job breakdown, success rate, retry effectiveness, per-supplier circuit state
+- **Region Status API**: `GET /api/inventory/sync/regions/{supplier}` — per-region hotel counts, sync status
+- **Downtime Check API**: `GET /api/inventory/sync/downtime/{supplier}` — circuit breaker state, consecutive failures, recommendation
+- **Job Retry API**: `POST /api/inventory/sync/retry/{job_id}` — schedule retry with backoff
+- **Job Cancel API**: `POST /api/inventory/sync/cancel/{job_id}` — cancel failed/stuck jobs
+- **Execute Retries API**: `POST /api/inventory/sync/execute-retries` — batch execute due retries
+- **Frontend Stability Dashboard**: KPI cards, circuit breaker table, region sync panels with retry buttons, job history with retry/cancel actions
+
+New files:
+- `backend/app/services/sync_job_state.py`
+- `backend/app/services/sync_stability_service.py`
+
+Updated files:
+- `backend/app/services/inventory_sync_service.py` — P4.2 circuit breaker, partial failure, region results
+- `backend/app/routers/inventory_sync_router.py` — 7 new endpoints
+- `backend/app/infrastructure/circuit_breaker.py` — supplier breaker configs
+- `frontend/src/pages/InventorySyncDashboardPage.jsx` — stability dashboard + retry/cancel
+
+**Testing: 100% backend (15/15), 100% frontend pass rate**
+**Mode: SIMULATION (no real credentials configured)**
+
 ---
 
 ## Frontend Quality Score (Post P3+P4)
@@ -83,18 +114,19 @@ Delivered:
 ## Prioritized Backlog
 
 ### P0 — Next Priority
-- **Platform Integrations Phase 2**: Sync job stability improvements, caching layer validation
-- **Activity Timeline**: Entity-based audit history (who did what)
+- **P4.3 Caching Layer Validation**: Redis → Mongo fallback tests, invalidation correctness, TTL tuning, diagnostics API + UI
+- **P4.4 Real Sandbox Activation**: Credential validation, sandbox certification, go-live gating
 
 ### P1
-- **TypeScript Migration**: API layer → TanStack hooks → design system (incremental)
+- **Activity Timeline**: Entity-based audit history (who did what)
+- **Supplier Onboarding & Go-Live Workflow**: Self-serve supplier onboarding flow
 
 ### P2
-- **Real Supplier Sandbox Integration**: Connect with actual RateHawk/Paximum sandbox credentials
+- **TypeScript Migration**: API layer → TanStack hooks → design system (incremental)
 
 ### P3
+- **Paximum Integration**: Onboard using existing blueprint
 - **Legacy Code Cleanup**: Remaining ~17% useEffect files
-- **Product Maturity Report**: Tech + UX + SaaS level analysis
 
 ---
 

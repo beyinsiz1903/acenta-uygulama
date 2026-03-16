@@ -504,12 +504,14 @@ def register_routers(app: FastAPI) -> None:
     # inventory_sync_router replaced by inventory/ package (see above)
 
 
-    # --- Finance Ledger & Settlement (Phase 2A) ---
+    # --- Finance Ledger & Settlement (Phase 2A + 2B) ---
     from app.routers.finance_ledger import (
         router as finance_ledger_router,
         settlement_router as finance_settlement_router,
         recon_router as finance_recon_router,
+        exception_router as finance_exception_router,
     )
     app.include_router(finance_ledger_router)
     app.include_router(finance_settlement_router)
     app.include_router(finance_recon_router)
+    app.include_router(finance_exception_router)

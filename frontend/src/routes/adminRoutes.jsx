@@ -104,9 +104,11 @@ const GrowthEnginePage = lazy(() => import("../pages/admin/GrowthEnginePage"));
 // Finance Ledger (Phase 2A)
 const FinanceOverviewPage = lazy(() => import("../pages/finance/FinanceOverviewPage"));
 const FinanceSettlementRunsPage = lazy(() => import("../pages/finance/SettlementRunsPage"));
+const FinanceSettlementRunDetailPage = lazy(() => import("../pages/finance/SettlementRunDetailPage"));
 const FinanceAgencyBalancesPage = lazy(() => import("../pages/finance/AgencyBalancesPage"));
 const FinanceSupplierPayablesPage = lazy(() => import("../pages/finance/SupplierPayablesPage"));
 const FinanceReconciliationPage = lazy(() => import("../pages/finance/ReconciliationPage"));
+const FinanceExceptionQueuePage = lazy(() => import("../pages/finance/ExceptionQueuePage"));
 
 /**
  * Admin route children — rendered inside AdminLayout.
@@ -164,12 +166,14 @@ export const adminRoutes = (
     <Route path="efatura" element={<AdminEFaturaPage />} />
     <Route path="accounting" element={<AdminAccountingPage />} />
     <Route path="accounting-providers" element={<AdminAccountingProvidersPage />} />
-    {/* Finance Ledger (Phase 2A) */}
+    {/* Finance Ledger (Phase 2A + 2B) */}
     <Route path="finance/overview-v2" element={<FinanceOverviewPage />} />
     <Route path="finance/settlement-runs-v2" element={<FinanceSettlementRunsPage />} />
+    <Route path="finance/settlement-runs-v2/:runId" element={<FinanceSettlementRunDetailPage />} />
     <Route path="finance/agency-balances-v2" element={<FinanceAgencyBalancesPage />} />
     <Route path="finance/supplier-payables-v2" element={<FinanceSupplierPayablesPage />} />
     <Route path="finance/reconciliation-v2" element={<FinanceReconciliationPage />} />
+    <Route path="finance/exceptions" element={<FinanceExceptionQueuePage />} />
     {/* Operations */}
     <Route path="ops/finance/supplier-accruals" element={<OpsSupplierAccrualsPage />} />
     <Route path="ops/b2b" element={<OpsB2BQueuesPage />} />

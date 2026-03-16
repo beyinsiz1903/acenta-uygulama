@@ -102,3 +102,137 @@ export async function seedFinanceData() {
   if (!res.ok) throw new Error("Seed finance data failed");
   return res.json();
 }
+
+// ── Phase 2B: Workflow & Ops ──
+
+export async function createSettlementDraft(data) {
+  const res = await fetch(`${API}/api/finance/settlement-runs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Create settlement draft failed");
+  return res.json();
+}
+
+export async function submitSettlement(runId, actor = "admin") {
+  const res = await fetch(`${API}/api/finance/settlement-runs/${runId}/submit`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ actor }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || "Submit failed");
+  }
+  return res.json();
+}
+
+export async function approveSettlement(runId, actor = "admin", reason = "") {
+  const res = await fetch(`${API}/api/finance/settlement-runs/${runId}/approve`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ actor, reason }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || "Approve failed");
+  }
+  return res.json();
+}
+
+export async function rejectSettlement(runId, actor = "admin", reason = "") {
+  const res = await fetch(`${API}/api/finance/settlement-runs/${runId}/reject`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ actor, reason }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || "Reject failed");
+  }
+  return res.json();
+}
+
+export async function markPaidSettlement(runId, actor = "admin") {
+  const res = await fetch(`${API}/api/finance/settlement-runs/${runId}/mark-paid`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ actor }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || "Mark paid failed");
+  }
+  return res.json();
+}
+
+export async function addEntriesToDraft(runId, entryIds) {
+  const res = await fetch(`${API}/api/finance/settlement-runs/${runId}/add-entries`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ entry_ids: entryIds }),
+  });
+  if (!res.ok) throw new Error("Add entries failed");
+  return res.json();
+}
+
+export async function removeEntryFromDraft(runId, entryId) {
+  const res = await fetch(`${API}/api/finance/settlement-runs/${runId}/remove-entry/${entryId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Remove entry failed");
+  return res.json();
+}
+
+export async function fetchUnassignedEntries({ entity_type, entity_id, limit = 100 } = {}) {
+  const params = new URLSearchParams();
+  if (entity_type) params.set("entity_type", entity_type);
+  if (entity_id) params.set("entity_id", entity_id);
+  if (limit) params.set("limit", limit);
+  const res = await fetch(`${API}/api/finance/settlement-runs/unassigned-entries?${params}`);
+  if (!res.ok) throw new Error("Unassigned entries fetch failed");
+  return res.json();
+}
+
+export async function fetchExceptions({ skip = 0, limit = 50, status, severity, exception_type } = {}) {
+  const params = new URLSearchParams({ skip, limit });
+  if (status) params.set("status", status);
+  if (severity) params.set("severity", severity);
+  if (exception_type) params.set("exception_type", exception_type);
+  const res = await fetch(`${API}/api/finance/exceptions?${params}`);
+  if (!res.ok) throw new Error("Exceptions fetch failed");
+  return res.json();
+}
+
+export async function fetchExceptionStats() {
+  const res = await fetch(`${API}/api/finance/exceptions/stats`);
+  if (!res.ok) throw new Error("Exception stats fetch failed");
+  return res.json();
+}
+
+export async function resolveException(exceptionId, data) {
+  const res = await fetch(`${API}/api/finance/exceptions/${exceptionId}/resolve`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || "Resolve failed");
+  }
+  return res.json();
+}
+
+export async function dismissException(exceptionId, reason = "") {
+  const res = await fetch(`${API}/api/finance/exceptions/${exceptionId}/dismiss`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reason }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || "Dismiss failed");
+  }
+  return res.json();
+}

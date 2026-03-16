@@ -126,6 +126,8 @@ export default function FinanceOverviewPage() {
     },
   ];
 
+  const excStats = overview?.exception_stats || {};
+
   // Chart data from reconciliation periods
   const reconPeriods = recon?.latest_snapshot
     ? [
@@ -223,12 +225,13 @@ export default function FinanceOverviewPage() {
       </div>
 
       {/* Quick Navigation */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { label: "Mutabakat Çalıştırmaları", icon: FileText, path: "/app/admin/finance/settlement-runs-v2", count: ss.total_runs || 0, desc: "Mutabakat dönemleri ve durumları" },
-          { label: "Acenta Bakiyeleri", icon: Building2, path: "/app/admin/finance/agency-balances-v2", count: 5, desc: "Acenta bazlı alacak takibi" },
-          { label: "Tedarikçi Borçları", icon: Truck, path: "/app/admin/finance/supplier-payables-v2", count: 4, desc: "Tedarikçi ödeme durumları" },
-          { label: "Uzlaştırma", icon: Landmark, path: "/app/admin/finance/reconciliation-v2", count: reconAgg.snapshot_count || 0, desc: "Marj ve uyumsuzluk analizi" },
+          { label: "Mutabakat Calistirmalari", icon: FileText, path: "/app/admin/finance/settlement-runs-v2", count: ss.total_runs || 0, desc: "Mutabakat donemleri ve durumlari" },
+          { label: "Acenta Bakiyeleri", icon: Building2, path: "/app/admin/finance/agency-balances-v2", count: 5, desc: "Acenta bazli alacak takibi" },
+          { label: "Tedarikci Borclari", icon: Truck, path: "/app/admin/finance/supplier-payables-v2", count: 4, desc: "Tedarikci odeme durumlari" },
+          { label: "Uzlastirma", icon: Landmark, path: "/app/admin/finance/reconciliation-v2", count: reconAgg.snapshot_count || 0, desc: "Marj ve uyumsuzluk analizi" },
+          { label: "Exception Kuyrugu", icon: AlertTriangle, path: "/app/admin/finance/exceptions", count: excStats.by_status?.open?.count || 0, desc: "Acik uyumsuzluk ve istisnalar" },
         ].map((item) => (
           <Card
             key={item.label}

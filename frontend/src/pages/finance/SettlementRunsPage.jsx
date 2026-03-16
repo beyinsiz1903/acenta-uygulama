@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
   FileText,
@@ -9,6 +9,7 @@ import {
   XCircle,
   AlertCircle,
   Filter,
+  Plus,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
@@ -28,7 +29,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
-import { fetchSettlementRuns, fetchSettlementRunStats } from "./lib/financeApi";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "../../components/ui/dialog";
+import { Input } from "../../components/ui/input";
+import { Textarea } from "../../components/ui/textarea";
+import { toast } from "sonner";
+import { fetchSettlementRuns, fetchSettlementRunStats, createSettlementDraft } from "./lib/financeApi";
 
 const fmt = (v) => new Intl.NumberFormat("tr-TR", { style: "currency", currency: "EUR" }).format(v || 0);
 
@@ -44,8 +51,11 @@ const STATUS_CONFIG = {
 
 export default function SettlementRunsPage() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [draft, setDraft] = useState({ run_type: "AGENCY", entity_id: "", entity_name: "", period_start: "", period_end: "", notes: "" });
 
   const { data: runsData, isLoading } = useQuery({
     queryKey: ["settlement-runs", statusFilter, typeFilter],
@@ -59,6 +69,19 @@ export default function SettlementRunsPage() {
   const { data: stats } = useQuery({
     queryKey: ["settlement-run-stats"],
     queryFn: fetchSettlementRunStats,
+  });
+
+  const createMut = useMutation({
+    mutationFn: (data) => createSettlementDraft(data),
+    onSuccess: (d) => {
+      toast.success(`Taslak ${d.run_id} olusturuldu`);
+      setCreateOpen(false);
+      setDraft({ run_type: "AGENCY", entity_id: "", entity_name: "", period_start: "", period_end: "", notes: "" });
+      qc.invalidateQueries({ queryKey: ["settlement-runs"] });
+      qc.invalidateQueries({ queryKey: ["settlement-run-stats"] });
+      navigate(`/app/admin/finance/settlement-runs-v2/${d.run_id}`);
+    },
+    onError: (e) => toast.error(e.message),
   });
 
   if (isLoading) {
@@ -77,12 +100,17 @@ export default function SettlementRunsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight" data-testid="settlement-runs-title">Mutabakat Çalıştırmaları</h1>
-          <p className="text-sm text-muted-foreground mt-1">Mutabakat dönemleri, onay ve ödeme durumları</p>
+          <h1 className="text-2xl font-bold tracking-tight" data-testid="settlement-runs-title">Mutabakat Calistirmalari</h1>
+          <p className="text-sm text-muted-foreground mt-1">Mutabakat donemleri, onay ve odeme durumlari</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => navigate("/app/admin/finance/overview-v2")} data-testid="back-to-overview-btn">
-          Genel Bakış
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" onClick={() => setCreateOpen(true)} data-testid="create-draft-btn">
+            <Plus className="h-4 w-4 mr-1.5" /> Yeni Taslak
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate("/app/admin/finance/overview-v2")} data-testid="back-to-overview-btn">
+            Genel Bakis
+          </Button>
+        </div>
       </div>
 
       {/* Status Summary Cards */}
@@ -159,7 +187,7 @@ export default function SettlementRunsPage() {
                     <TableRow
                       key={run.run_id}
                       className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => navigate(`/app/admin/finance/settlement-runs/${run.run_id}`)}
+                      onClick={() => navigate(`/app/admin/finance/settlement-runs-v2/${run.run_id}`)}
                       data-testid={`settlement-row-${run.run_id}`}
                     >
                       <TableCell className="font-mono text-sm font-medium">{run.run_id}</TableCell>
@@ -199,6 +227,61 @@ export default function SettlementRunsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Create Draft Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Yeni Settlement Taslagi</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium">Tur</label>
+              <Select value={draft.run_type} onValueChange={(v) => setDraft({ ...draft, run_type: v })}>
+                <SelectTrigger className="h-9" data-testid="draft-type-select"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="AGENCY">Acenta</SelectItem>
+                  <SelectItem value="SUPPLIER">Tedarikci</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium">Varlik ID</label>
+                <Input placeholder="AGN-001" value={draft.entity_id} onChange={(e) => setDraft({ ...draft, entity_id: e.target.value })} data-testid="draft-entity-id" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Varlik Adi</label>
+                <Input placeholder="Sunshine Travel" value={draft.entity_name} onChange={(e) => setDraft({ ...draft, entity_name: e.target.value })} data-testid="draft-entity-name" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium">Donem Baslangic</label>
+                <Input type="date" value={draft.period_start} onChange={(e) => setDraft({ ...draft, period_start: e.target.value })} data-testid="draft-period-start" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Donem Bitis</label>
+                <Input type="date" value={draft.period_end} onChange={(e) => setDraft({ ...draft, period_end: e.target.value })} data-testid="draft-period-end" />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Notlar</label>
+              <Textarea placeholder="Taslak notlari..." value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} data-testid="draft-notes" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>Iptal</Button>
+            <Button
+              onClick={() => createMut.mutate(draft)}
+              disabled={!draft.entity_id || !draft.entity_name || !draft.period_start || !draft.period_end || createMut.isPending}
+              data-testid="confirm-create-draft-btn"
+            >
+              Olustur
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

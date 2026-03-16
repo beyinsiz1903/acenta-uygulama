@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback, lazy, Suspense } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AlertTriangle, Bell, Inbox, LogOut, Menu } from "lucide-react";
 
@@ -13,15 +13,17 @@ import { ProductModeProvider, useProductMode } from "../contexts/ProductModeCont
 import { Badge as UIBadge } from "./ui/badge";
 import { fetchPartnerNotificationsSummary } from "../lib/partnerGraph";
 import { getActiveTenantKey, getActiveTenantId, setActiveTenantId, subscribeTenantChange } from "../lib/tenantContext";
-import NotificationDrawer from "./NotificationDrawer";
 import NotificationBell from "./NotificationBell";
 import TrialBanner from "./TrialBanner";
 import TrialExpiredGate from "./TrialExpiredGate";
 import AgencyContractBanner from "./AgencyContractBanner";
 import AgencyContractExpiredGate from "./AgencyContractExpiredGate";
 import { LanguageSwitcher, useI18n } from "../contexts/I18nContext";
-import AiAssistant from "./AiAssistant";
 import { NewSidebar } from "./NewSidebar";
+
+// ─── P2: Lazy-loaded non-critical components ───
+const NotificationDrawer = lazy(() => import("./NotificationDrawer"));
+const AiAssistant = lazy(() => import("./AiAssistant"));
 import { normalizeAgencyModuleKeys } from "../lib/agencyModules";
 import { hasAnyRole } from "../lib/roles";
 import {
@@ -519,8 +521,12 @@ function AppShellInner() {
         </div>
       </div>
 
-      {/* ========== NOTIFICATION DRAWER ========== */}
-      <NotificationDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />
+      {/* ========== NOTIFICATION DRAWER (lazy) ========== */}
+      {notifOpen && (
+        <Suspense fallback={null}>
+          <NotificationDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />
+        </Suspense>
+      )}
 
       {/* ========== MOBILE NAV DRAWER ========== */}
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
@@ -626,8 +632,10 @@ function AppShellInner() {
       {trialExpired ? <TrialExpiredGate /> : null}
       {!trialExpired && agencyContractExpired ? <AgencyContractExpiredGate contract={agencyContract} /> : null}
 
-      {/* AI Assistant floating panel */}
-      <AiAssistant />
+      {/* AI Assistant floating panel (lazy) */}
+      <Suspense fallback={null}>
+        <AiAssistant />
+      </Suspense>
     </div>
   );
 }

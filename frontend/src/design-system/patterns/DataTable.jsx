@@ -2,11 +2,15 @@
  * Syroce Design System (SDS) — DataTable
  *
  * Enterprise-grade table component with sorting, filtering, pagination,
- * row selection, and empty/loading states.
+ * row selection, empty/loading states, and automatic list virtualization.
  *
- * Built on @tanstack/react-table + shadcn Table primitives.
+ * Built on @tanstack/react-table + @tanstack/react-virtual + shadcn Table primitives.
+ *
+ * Virtualization: Automatically enabled when visible row count exceeds
+ * `virtualizeThreshold` (default 100). This keeps DOM node count low
+ * for large datasets while preserving the same API for consumers.
  */
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -15,6 +19,7 @@ import {
   getPaginationRowModel,
   flexRender,
 } from "@tanstack/react-table";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Table,
   TableBody,
@@ -215,6 +220,9 @@ export function DataTable({
   toolbar,
   // Styling
   className,
+  // Virtualization — auto-enabled when row count > threshold
+  virtualizeThreshold = 100,
+  rowHeight = 48,
 }) {
   const [sorting, setSorting] = useState(
     defaultSort ? [{ id: defaultSort.column, desc: defaultSort.direction === "desc" }] : []
@@ -264,6 +272,9 @@ export function DataTable({
     },
   });
 
+  const rows = table.getRowModel().rows;
+  const shouldVirtualize = !loading && rows.length >= virtualizeThreshold;
+
   return (
     <div className={cn("space-y-3", className)} data-testid="datatable-container">
       {/* Toolbar area */}
@@ -307,7 +318,7 @@ export function DataTable({
           <TableBody>
             {loading ? (
               <SkeletonRows columns={finalColumns} />
-            ) : table.getRowModel().rows.length === 0 ? (
+            ) : rows.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={finalColumns.length} className="h-24 text-center">
                   {emptyState || (
@@ -315,8 +326,14 @@ export function DataTable({
                   )}
                 </TableCell>
               </TableRow>
+            ) : shouldVirtualize ? (
+              <VirtualizedTableBody
+                rows={rows}
+                rowHeight={rowHeight}
+                onRowClick={onRowClick}
+              />
             ) : (
-              table.getRowModel().rows.map((row) => (
+              rows.map((row) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
@@ -341,6 +358,70 @@ export function DataTable({
         <DataTablePagination table={table} pageSizeOptions={pageSizeOptions} />
       )}
     </div>
+  );
+}
+
+// ─── Virtualized table body for large datasets ───
+function VirtualizedTableBody({ rows, rowHeight, onRowClick }) {
+  const parentRef = useRef(null);
+
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => rowHeight,
+    overscan: 10,
+  });
+
+  return (
+    <tr>
+      <td colSpan={999} className="p-0">
+        <div
+          ref={parentRef}
+          className="max-h-[600px] overflow-auto"
+          data-testid="datatable-virtual-scroll"
+        >
+          <div style={{ height: `${virtualizer.getTotalSize()}px`, position: "relative" }}>
+            {virtualizer.getVirtualItems().map((virtualRow) => {
+              const row = rows[virtualRow.index];
+              return (
+                <div
+                  key={row.id}
+                  data-index={virtualRow.index}
+                  ref={virtualizer.measureElement}
+                  className={cn(
+                    "flex items-center border-b",
+                    onRowClick && "cursor-pointer hover:bg-muted/50",
+                    row.getIsSelected() && "bg-muted"
+                  )}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                  onClick={() => onRowClick?.(row.original)}
+                  data-testid={`datatable-row-${row.index}`}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <div
+                      key={cell.id}
+                      className="px-4 py-3 text-sm"
+                      style={{
+                        width: cell.column.getSize() !== 150 ? cell.column.getSize() : undefined,
+                        flex: cell.column.getSize() === 150 ? "1 1 0%" : undefined,
+                      }}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </td>
+    </tr>
   );
 }
 

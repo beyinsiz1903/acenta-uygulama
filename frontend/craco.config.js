@@ -45,6 +45,51 @@ const webpackConfig = {
         eslintPlugin.options.failOnWarning = false;
       }
 
+      // ─── P2 Performance: Vendor chunk splitting (production only) ───
+      const isProduction = webpackConfig.mode === 'production';
+      if (isProduction) {
+        webpackConfig.optimization = {
+          ...webpackConfig.optimization,
+          splitChunks: {
+            chunks: 'all',
+            maxInitialRequests: 10,
+            minSize: 20000,
+            cacheGroups: {
+              reactVendor: {
+                test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+                name: 'react-vendor',
+                priority: 40,
+                reuseExistingChunk: true,
+              },
+              uiVendor: {
+                test: /[\\/]node_modules[\\/]@radix-ui[\\/]/,
+                name: 'ui-vendor',
+                priority: 30,
+                reuseExistingChunk: true,
+              },
+              queryVendor: {
+                test: /[\\/]node_modules[\\/]@tanstack[\\/]/,
+                name: 'query-vendor',
+                priority: 30,
+                reuseExistingChunk: true,
+              },
+              chartsVendor: {
+                test: /[\\/]node_modules[\\/](recharts|d3-[^/]+|victory-[^/]+)[\\/]/,
+                name: 'charts-vendor',
+                priority: 25,
+                reuseExistingChunk: true,
+              },
+              defaultVendors: {
+                test: /[\\/]node_modules[\\/]/,
+                name: 'vendors',
+                priority: 10,
+                reuseExistingChunk: true,
+              },
+            },
+          },
+        };
+      }
+
       // Disable hot reload completely if environment variable is set
       if (config.disableHotReload) {
         // Remove hot reload related plugins

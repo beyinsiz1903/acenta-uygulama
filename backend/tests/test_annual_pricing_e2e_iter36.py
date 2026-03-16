@@ -88,7 +88,7 @@ class TestYearlyCheckoutCreation:
             json={
                 "plan": "starter",
                 "interval": "yearly",
-                "origin_url": "https://travel-infra-1.preview.emergentagent.com",
+                "origin_url": "https://travel-pricing-v2.preview.emergentagent.com",
                 "cancel_path": "/pricing",
             },
         )
@@ -115,7 +115,7 @@ class TestYearlyCheckoutCreation:
             json={
                 "plan": "pro",
                 "interval": "yearly",
-                "origin_url": "https://travel-infra-1.preview.emergentagent.com",
+                "origin_url": "https://travel-pricing-v2.preview.emergentagent.com",
                 "cancel_path": "/pricing",
             },
         )
@@ -140,7 +140,7 @@ class TestYearlyCheckoutCreation:
             json={
                 "plan": "starter",
                 "interval": "biannual",
-                "origin_url": "https://travel-infra-1.preview.emergentagent.com",
+                "origin_url": "https://travel-pricing-v2.preview.emergentagent.com",
             },
         )
         assert response.status_code == 422, (
@@ -164,7 +164,7 @@ class TestCheckoutStatusYearly:
             json={
                 "plan": "starter",
                 "interval": "yearly",
-                "origin_url": "https://travel-infra-1.preview.emergentagent.com",
+                "origin_url": "https://travel-pricing-v2.preview.emergentagent.com",
                 "cancel_path": "/pricing",
             },
         )
@@ -230,7 +230,7 @@ class TestPlanChangeYearly:
             json={
                 "plan": "pro",
                 "interval": "yearly",
-                "origin_url": "https://travel-infra-1.preview.emergentagent.com",
+                "origin_url": "https://travel-pricing-v2.preview.emergentagent.com",
                 "cancel_path": "/app/settings/billing",
             },
         )
@@ -263,7 +263,7 @@ class TestUnauthenticatedAccess:
             json={
                 "plan": "starter",
                 "interval": "yearly",
-                "origin_url": "https://travel-infra-1.preview.emergentagent.com",
+                "origin_url": "https://travel-pricing-v2.preview.emergentagent.com",
             },
         )
         assert response.status_code == 401, (

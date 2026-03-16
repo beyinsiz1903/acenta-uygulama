@@ -119,6 +119,7 @@ async def run_e2e_test(supplier: str, scenario: str = "success") -> dict[str, An
             "latency_ms": result.get("latency_ms", duration_ms),
             "request_id": request_id,
             "trace_id": trace_id,
+            "supplier_request": result.get("supplier_request", {}),
             "supplier_response": result.get("supplier_response", {}),
             "message": result.get("message", ""),
             "error": result.get("error"),
@@ -135,6 +136,7 @@ async def run_e2e_test(supplier: str, scenario: str = "success") -> dict[str, An
                     "latency_ms": 0,
                     "request_id": _req_id(),
                     "trace_id": trace_id,
+                    "supplier_request": {},
                     "supplier_response": {},
                     "message": "Skipped — previous step failed",
                     "error": None,
@@ -206,6 +208,12 @@ async def _execute_step(supplier: str, step_id: str, scenario: str, meta: dict) 
             "latency_ms": 3200,
             "message": f"Supplier API unreachable — HTTP 503 from {meta['base_url']}",
             "error": f"ConnectionError: {meta['base_url']} returned 503 Service Unavailable",
+            "supplier_request": {
+                "method": "POST",
+                "url": f"https://{meta['base_url']}/v1/search/availability",
+                "headers": {"Authorization": "Bearer ***", "Content-Type": "application/json", "X-Request-ID": _req_id()},
+                "body": {"destination": "Antalya", "checkin": "2026-03-30", "checkout": "2026-04-02", "guests": [{"adults": 2}]},
+            },
             "supplier_response": {"http_status": 503, "body": "Service Unavailable"},
         }
 
@@ -215,6 +223,12 @@ async def _execute_step(supplier: str, step_id: str, scenario: str, meta: dict) 
             "status": "warn",
             "latency_ms": 890,
             "message": "Price drift detected — search: EUR 142.50, revalidation: EUR 159.60 (+12.0%)",
+            "supplier_request": {
+                "method": "POST",
+                "url": f"https://{meta['base_url']}/v1/revalidate",
+                "headers": {"Authorization": "Bearer ***", "Content-Type": "application/json"},
+                "body": {"offer_id": f"OFR-{uuid.uuid4().hex[:8].upper()}", "original_price": 142.50, "currency": "EUR"},
+            },
             "supplier_response": {
                 "original_price": 142.50,
                 "revalidated_price": 159.60,
@@ -231,7 +245,12 @@ async def _execute_step(supplier: str, step_id: str, scenario: str, meta: dict) 
             "status": "fail",
             "latency_ms": 30100,
             "message": "Booking creation timed out after 30s",
-            "error": "TimeoutError: Supplier did not respond within 30000ms deadline",
+            "supplier_request": {
+                "method": "POST",
+                "url": f"https://{meta['base_url']}/v1/bookings",
+                "headers": {"Authorization": "Bearer ***", "Content-Type": "application/json", "X-Timeout": "30000"},
+                "body": {"offer_id": f"OFR-{uuid.uuid4().hex[:8].upper()}", "guest": {"name": "Test Guest"}, "payment": {"type": "credit"}},
+            },
             "supplier_response": {"http_status": 504, "body": "Gateway Timeout"},
         }
 
@@ -241,6 +260,12 @@ async def _execute_step(supplier: str, step_id: str, scenario: str, meta: dict) 
             "status": "warn",
             "latency_ms": 8200,
             "message": "Booking confirmed after extended polling — 5 rounds, 8.2s total",
+            "supplier_request": {
+                "method": "GET",
+                "url": f"https://{meta['base_url']}/v1/bookings/SBX-POLL/status",
+                "headers": {"Authorization": "Bearer ***"},
+                "body": None,
+            },
             "supplier_response": {
                 "polling_rounds": 5,
                 "final_status": "confirmed",
@@ -259,12 +284,19 @@ async def _execute_step(supplier: str, step_id: str, scenario: str, meta: dict) 
 def _simulate_success_step(supplier: str, step_id: str, meta: dict) -> dict[str, Any]:
     """Generate realistic success data for each step."""
     booking_id = f"SBX-{uuid.uuid4().hex[:6].upper()}"
+    base_url = meta["base_url"]
 
     data = {
         "search": {
             "status": "pass",
             "latency_ms": 680,
             "message": "Search completed — 47 properties found (Antalya, 2 adults, 3 nights)",
+            "supplier_request": {
+                "method": "POST",
+                "url": f"https://{base_url}/v1/search/availability",
+                "headers": {"Authorization": "Bearer ***", "Content-Type": "application/json", "X-Request-ID": _req_id()},
+                "body": {"destination": "Antalya", "checkin": "2026-03-30", "checkout": "2026-04-02", "guests": [{"adults": 2}], "currency": "EUR"},
+            },
             "supplier_response": {
                 "total_results": 47,
                 "destination": "Antalya",
@@ -277,6 +309,12 @@ def _simulate_success_step(supplier: str, step_id: str, meta: dict) -> dict[str,
             "status": "pass",
             "latency_ms": 420,
             "message": "Hotel detail fetched — Grand Resort & Spa (5-star, 312 reviews)",
+            "supplier_request": {
+                "method": "GET",
+                "url": f"https://{base_url}/v1/hotels/HTL-GRS-001/details",
+                "headers": {"Authorization": "Bearer ***", "Accept-Language": "tr"},
+                "body": None,
+            },
             "supplier_response": {
                 "hotel_name": "Grand Resort & Spa",
                 "star_rating": 5,
@@ -292,6 +330,12 @@ def _simulate_success_step(supplier: str, step_id: str, meta: dict) -> dict[str,
             "status": "pass",
             "latency_ms": 510,
             "message": "Price revalidation OK — EUR 142.50/night confirmed (drift: 0.0%)",
+            "supplier_request": {
+                "method": "POST",
+                "url": f"https://{base_url}/v1/revalidate",
+                "headers": {"Authorization": "Bearer ***", "Content-Type": "application/json"},
+                "body": {"offer_id": f"OFR-{uuid.uuid4().hex[:8].upper()}", "original_price": 142.50, "currency": "EUR"},
+            },
             "supplier_response": {
                 "original_price": 142.50,
                 "revalidated_price": 142.50,
@@ -304,6 +348,12 @@ def _simulate_success_step(supplier: str, step_id: str, meta: dict) -> dict[str,
             "status": "pass",
             "latency_ms": 1200,
             "message": f"Booking created — {booking_id} (confirmed)",
+            "supplier_request": {
+                "method": "POST",
+                "url": f"https://{base_url}/v1/bookings",
+                "headers": {"Authorization": "Bearer ***", "Content-Type": "application/json", "X-Idempotency-Key": uuid.uuid4().hex[:12]},
+                "body": {"offer_id": f"OFR-{uuid.uuid4().hex[:8].upper()}", "guest": {"first_name": "Test", "last_name": "Guest", "email": "test@demo.com"}, "payment": {"type": "credit", "amount": 427.50, "currency": "EUR"}},
+            },
             "supplier_response": {
                 "booking_id": booking_id,
                 "status": "confirmed",
@@ -318,6 +368,12 @@ def _simulate_success_step(supplier: str, step_id: str, meta: dict) -> dict[str,
             "status": "pass",
             "latency_ms": 340,
             "message": f"Booking {booking_id} confirmed — 1 poll round, 340ms",
+            "supplier_request": {
+                "method": "GET",
+                "url": f"https://{base_url}/v1/bookings/{booking_id}/status",
+                "headers": {"Authorization": "Bearer ***"},
+                "body": None,
+            },
             "supplier_response": {
                 "booking_id": booking_id,
                 "status": "confirmed",
@@ -329,6 +385,12 @@ def _simulate_success_step(supplier: str, step_id: str, meta: dict) -> dict[str,
             "status": "pass",
             "latency_ms": 780,
             "message": f"Cancellation successful — {booking_id} refunded in full",
+            "supplier_request": {
+                "method": "DELETE",
+                "url": f"https://{base_url}/v1/bookings/{booking_id}",
+                "headers": {"Authorization": "Bearer ***", "X-Cancel-Reason": "test_cancellation"},
+                "body": {"reason": "test_cancellation", "refund_requested": True},
+            },
             "supplier_response": {
                 "booking_id": booking_id,
                 "cancel_status": "cancelled",
@@ -413,6 +475,7 @@ async def rerun_failed_step(run_id: str, step_id: str) -> dict[str, Any]:
             "latency_ms": result.get("latency_ms", duration_ms),
             "request_id": request_id,
             "trace_id": test.get("trace_id", ""),
+            "supplier_request": result.get("supplier_request", {}),
             "supplier_response": result.get("supplier_response", {}),
             "message": result.get("message", ""),
             "error": result.get("error"),

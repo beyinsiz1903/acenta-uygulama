@@ -17,7 +17,7 @@ import uuid
 from typing import Dict, Any, Optional
 
 # Use the preview URL from frontend/.env
-BASE_URL = "https://cert-wizard-5.preview.emergentagent.com"
+BASE_URL = "https://cert-console.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials from review request

@@ -31,9 +31,13 @@ const SUPPLIER_COLORS = {
 
 /* ─── Step Detail Drawer ──────────────────────────────── */
 function StepDrawer({ step, onClose, onRerun, rerunning }) {
+  const [apiTab, setApiTab] = useState("request");
   if (!step) return null;
   const st = STATUS_STYLES[step.status] || STATUS_STYLES.skipped;
   const Icon = st.icon;
+  const hasRequest = step.supplier_request && Object.keys(step.supplier_request).length > 0;
+  const hasResponse = step.supplier_response && Object.keys(step.supplier_response).length > 0;
+  const hasRawApi = hasRequest || hasResponse;
   return (
     <div data-testid="step-drawer" className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
@@ -70,12 +74,68 @@ function StepDrawer({ step, onClose, onRerun, rerunning }) {
           <InfoCard label="Trace ID" value={step.trace_id} mono />
           <InfoCard label="Status" value={st.label} />
         </div>
-        {step.supplier_response && Object.keys(step.supplier_response).length > 0 && (
-          <div>
-            <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Supplier Response</h4>
-            <pre className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-[11px] text-zinc-300 font-mono overflow-x-auto max-h-60">
-              {JSON.stringify(step.supplier_response, null, 2)}
-            </pre>
+        {/* Raw API Viewer */}
+        {hasRawApi && (
+          <div data-testid="raw-api-viewer">
+            <div className="flex items-center gap-2 mb-2">
+              <Server className="w-3.5 h-3.5 text-zinc-400" />
+              <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Raw API</h4>
+            </div>
+            <div className="flex gap-1 bg-zinc-800/50 rounded-lg p-0.5 mb-2">
+              <button data-testid="api-tab-request"
+                onClick={() => setApiTab("request")}
+                className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  apiTab === "request" ? "bg-zinc-700 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
+                }`}>
+                Request
+              </button>
+              <button data-testid="api-tab-response"
+                onClick={() => setApiTab("response")}
+                className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  apiTab === "response" ? "bg-zinc-700 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
+                }`}>
+                Response
+              </button>
+            </div>
+            {apiTab === "request" && hasRequest && (
+              <div data-testid="raw-api-request">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Badge className="bg-blue-500/15 text-blue-400 border-blue-500/30 text-[9px]">
+                    {step.supplier_request.method}
+                  </Badge>
+                  <span className="text-[10px] text-zinc-500 font-mono truncate">{step.supplier_request.url}</span>
+                </div>
+                {step.supplier_request.headers && (
+                  <div className="mb-1.5">
+                    <p className="text-[10px] text-zinc-600 uppercase mb-0.5">Headers</p>
+                    <pre className="bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-[10px] text-zinc-400 font-mono overflow-x-auto max-h-28">
+{JSON.stringify(step.supplier_request.headers, null, 2)}</pre>
+                  </div>
+                )}
+                {step.supplier_request.body && (
+                  <div>
+                    <p className="text-[10px] text-zinc-600 uppercase mb-0.5">Body</p>
+                    <pre className="bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-[10px] text-zinc-300 font-mono overflow-x-auto max-h-48">
+{JSON.stringify(step.supplier_request.body, null, 2)}</pre>
+                  </div>
+                )}
+                {!step.supplier_request.body && (
+                  <p className="text-[10px] text-zinc-600 italic">No request body</p>
+                )}
+              </div>
+            )}
+            {apiTab === "request" && !hasRequest && (
+              <p className="text-[10px] text-zinc-600 italic py-4 text-center">No request data available</p>
+            )}
+            {apiTab === "response" && hasResponse && (
+              <div data-testid="raw-api-response">
+                <pre className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-[11px] text-zinc-300 font-mono overflow-x-auto max-h-60">
+{JSON.stringify(step.supplier_response, null, 2)}</pre>
+              </div>
+            )}
+            {apiTab === "response" && !hasResponse && (
+              <p className="text-[10px] text-zinc-600 italic py-4 text-center">No response data available</p>
+            )}
           </div>
         )}
         {(step.status === "fail" || step.status === "warn") && (
@@ -226,6 +286,7 @@ function HistoryPanel({ history, onSelect }) {
               <p className="text-[11px] text-zinc-500 mt-0.5">
                 {t.summary?.passed}/{t.summary?.total} passed | {t.certification?.score}% | {t.total_duration_ms}ms
               </p>
+              <p className="text-[10px] text-zinc-600 font-mono mt-0.5 truncate">trace: {t.trace_id}</p>
             </div>
             <div className="text-right shrink-0">
               <p className="text-[10px] text-zinc-500">{new Date(t.timestamp).toLocaleString("tr-TR")}</p>

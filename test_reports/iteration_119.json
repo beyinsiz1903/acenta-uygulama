@@ -1,0 +1,77 @@
+{
+  "summary": "Supplier Certification Console - NEW FEATURES VERIFIED: Raw API Viewer and supplier_request data. All 24 backend tests passed. Frontend UI testing confirms Raw API viewer with Request/Response tabs working correctly for all lifecycle steps.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_e2e_demo_certification_console_iter118.py",
+    "/app/test_reports/pytest/pytest_e2e_demo_raw_api_iter119.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (24/24 tests passed)",
+    "frontend": "100% (all UI features working)"
+  },
+  "test_credentials": {
+    "super_admin": "agent@acenta.test / agent123"
+  },
+  "seed_data_creation": "Test runs persisted to MongoDB e2e_demo_tests collection",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All features verified: Raw API Viewer, supplier_request data, trace_id in History, Retry failed step. All APIs are SIMULATED/MOCKED.",
+  "new_features_tested": {
+    "Raw API Viewer": {
+      "status": "PASS",
+      "data-testid": "raw-api-viewer",
+      "details": "Step drawer has Raw API section with Request/Response tabs. Request tab shows HTTP method, URL, headers, body. Response tab shows supplier_response JSON."
+    },
+    "Request Tab": {
+      "status": "PASS",
+      "data-testid": "api-tab-request, raw-api-request",
+      "details": "Shows method badge (POST/GET/DELETE), URL, headers JSON, body JSON for each lifecycle step"
+    },
+    "Response Tab": {
+      "status": "PASS",
+      "data-testid": "api-tab-response, raw-api-response",
+      "details": "Shows supplier_response JSON formatted with syntax highlighting"
+    },
+    "supplier_request in backend": {
+      "status": "PASS",
+      "details": "All lifecycle steps return supplier_request with method, url, headers, body fields. Verified via curl and pytest"
+    },
+    "trace_id in History panel": {
+      "status": "PASS",
+      "details": "Each history item shows 'trace: trace_xxx' identifier"
+    },
+    "Retry failed step": {
+      "status": "PASS",
+      "data-testid": "rerun-step-btn",
+      "details": "Retry button visible for FAIL and WARN steps. Calls POST /api/e2e-demo/rerun-step and updates UI"
+    }
+  },
+  "features_already_tested_in_iter118": {
+    "Lifecycle Stepper": "6 steps with PASS/FAIL/WARN/SKIP badges",
+    "Certification Card": "Score circle, go-live eligibility, passed/failed/warned/skipped counts",
+    "All 6 scenarios": "success, price_mismatch, delayed_confirmation, booking_timeout, cancel_success, supplier_unavailable",
+    "All 4 suppliers": "ratehawk, paximum, tbo, wtatil",
+    "History panel": "Test run list with filters"
+  },
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": [
+      "RateHawk API - simulation mode",
+      "Paximum API - simulation mode",
+      "TBO API - simulation mode",
+      "WTatil API - simulation mode"
+    ],
+    "note": "All supplier APIs are in SIMULATION mode - this is expected and by design for the E2E Demo Console"
+  }
+}

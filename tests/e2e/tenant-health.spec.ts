@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const BASE = "https://cert-wizard-5.preview.emergentagent.com";
+const BASE = "https://cert-console.preview.emergentagent.com";
 const UID = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 test("tenant-health: loads data with filters", async ({ request }) => {

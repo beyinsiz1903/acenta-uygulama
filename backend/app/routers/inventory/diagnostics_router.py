@@ -338,7 +338,7 @@ async def sandbox_telemetry(
 
 @e2e_demo_router.get("/telemetry/history")
 async def sandbox_telemetry_history(
-    period: str = Query("hourly", regex="^(hourly|daily|weekly)$"),
+    period: str = Query("hourly", pattern="^(hourly|daily|weekly)$"),
     supplier: str | None = Query(None),
     limit: int = Query(24, ge=1, le=168),
     current_user=Depends(require_roles(_ADMIN_ROLES)),

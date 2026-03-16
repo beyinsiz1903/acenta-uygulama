@@ -273,3 +273,39 @@ Updated files:
 - `frontend/src/pages/admin/SupplierCertificationConsolePage.jsx` — TelemetryCard, EnrichedHistoryPanel
 
 **Testing: Backend 100% (12/12), Frontend 100% (8/8)**
+
+---
+
+## Telemetry Persistence Window & Certification Trend Chart — COMPLETED (2026-03-16)
+**Hourly/Daily/Weekly Trend Analysis + Recharts Visualization**
+
+Delivered:
+- **Telemetry Snapshot Recording** (`sandbox_telemetry_service.py`):
+  - `record_snapshot()`: Stores per-test telemetry with time bucket fields (hour, day, week)
+  - MongoDB collection `sandbox_telemetry_snapshots` for append-only trend data
+  - Fields: supplier, mode, certification_score, passed, total, success_rate, latency_ms, scenario
+- **Telemetry History Aggregation** (`sandbox_telemetry_service.py`):
+  - `get_telemetry_history(period, supplier, limit)`: MongoDB aggregation pipeline
+  - Groups by hourly/daily/weekly buckets
+  - Returns avg_score, avg_latency_ms, total_runs, sandbox_runs, simulation_runs, avg_success_rate, min/max_score, sandbox_rate_pct
+- **Telemetry History API** (`diagnostics_router.py`):
+  - `GET /api/e2e-demo/telemetry/history?period=hourly&supplier=ratehawk&limit=24`
+  - Period validation: hourly | daily | weekly
+  - Optional supplier filter and configurable limit (1-168)
+- **E2E Demo Instrumentation** (`e2e_demo_service.py`):
+  - Calls `record_snapshot()` after each test run for trend data collection
+- **CertificationTrendChart** (`SupplierCertificationConsolePage.jsx`):
+  - Recharts AreaChart with dual area layers (score + success rate)
+  - Gradient fills (emerald for score, blue for success rate)
+  - Period toggle: Saatlik (hourly), Gunluk (daily), Haftalik (weekly)
+  - Custom tooltip with Turkish labels
+  - Summary row: Toplam (total runs), Ort. Skor (avg score), Ort. Latency (avg latency)
+  - Auto-refreshes after each test run
+
+Updated files:
+- `backend/app/services/sandbox_telemetry_service.py` — record_snapshot(), get_telemetry_history()
+- `backend/app/routers/inventory/diagnostics_router.py` — telemetry/history endpoint
+- `backend/app/services/e2e_demo_service.py` — record_snapshot() call after tests
+- `frontend/src/pages/admin/SupplierCertificationConsolePage.jsx` — CertificationTrendChart, Recharts import
+
+**Testing: Backend 100% (11/11), Frontend 100% (8/8) — iteration_125**

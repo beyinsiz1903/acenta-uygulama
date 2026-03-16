@@ -155,7 +155,14 @@ New files:
 
 ### P0 — Next Priority
 - **E2E Demo Panel (Supplier Certification Console)**: COMPLETED (2026-03-16)
-- **Backend Router Refactoring**: Split inventory_sync_router.py → booking_router.py, sync_router.py, diagnostics_router.py
+- **Backend Router Refactoring**: COMPLETED (2026-02-17)
+  - Monolith `inventory_sync_router.py` (593 lines) → 4 domain-specific files under `inventory/` package
+  - `inventory/sync_router.py` — Sync engine (trigger, status, jobs, retry, cancel, search, stats, revalidate)
+  - `inventory/booking_router.py` — Booking flow (precheck, create, status, cancel, test-matrix)
+  - `inventory/diagnostics_router.py` — Stability, supplier health/config/metrics, E2E certification
+  - `inventory/onboarding_router.py` — Supplier onboarding wizard (6-step)
+  - Old files kept as thin re-exports for backward compat
+  - All 42+ endpoints verified, 50/50 tests passed, no URL changes
 
 ### P1
 - **P2: Caching Layer Validation**: Redis → Mongo fallback tests, invalidation correctness, TTL tuning, diagnostics API + UI

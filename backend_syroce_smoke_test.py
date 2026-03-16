@@ -25,7 +25,7 @@ import sys
 from typing import Dict, Any, Optional, List
 
 # Use the preview URL from frontend/.env
-BASE_URL = "https://travel-saas-optimize.preview.emergentagent.com"
+BASE_URL = "https://enterprise-ux-p3.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials from review request

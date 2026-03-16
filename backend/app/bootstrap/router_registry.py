@@ -515,3 +515,10 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(finance_settlement_router)
     app.include_router(finance_recon_router)
     app.include_router(finance_exception_router)
+
+    # --- Activity Timeline & Config Versions ---
+    from app.routers.activity_timeline_router import router as activity_timeline_router
+    from app.routers.config_versions_router import router as config_versions_router
+    app.include_router(activity_timeline_router)
+    app.include_router(config_versions_router)
+

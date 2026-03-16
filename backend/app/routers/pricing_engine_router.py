@@ -19,6 +19,8 @@ from pydantic import BaseModel, Field
 from app.auth import get_current_user
 from app.db import get_db
 from app.utils import now_utc, serialize_doc
+from app.services.activity_timeline_service import record_event
+from app.services.config_versioning_service import stamp_create, stamp_update, stamp_delete
 from app.services.pricing_distribution_engine import (
     PricingDistributionEngine,
     PricingContext,
@@ -64,6 +66,7 @@ class DistributionRuleCreate(BaseModel):
     scope: dict = Field(default_factory=dict)
     priority: int = 0
     active: bool = True
+    change_reason: str = ""
 
 
 class DistributionRuleUpdate(BaseModel):
@@ -72,6 +75,7 @@ class DistributionRuleUpdate(BaseModel):
     scope: Optional[dict] = None
     priority: Optional[int] = None
     active: Optional[bool] = None
+    change_reason: str = ""
 
 
 class ChannelConfigCreate(BaseModel):
@@ -81,6 +85,7 @@ class ChannelConfigCreate(BaseModel):
     agency_tier: str = ""
     commission_pct: float = 0.0
     active: bool = True
+    change_reason: str = ""
 
 
 class ChannelConfigUpdate(BaseModel):
@@ -89,6 +94,7 @@ class ChannelConfigUpdate(BaseModel):
     agency_tier: Optional[str] = None
     commission_pct: Optional[float] = None
     active: Optional[bool] = None
+    change_reason: str = ""
 
 
 class PromotionCreate(BaseModel):
@@ -102,6 +108,7 @@ class PromotionCreate(BaseModel):
     valid_to: Optional[str] = None
     min_days_before: int = 0
     max_uses: int = 0
+    change_reason: str = ""
 
 
 class PromotionUpdate(BaseModel):
@@ -115,6 +122,7 @@ class PromotionUpdate(BaseModel):
     min_days_before: Optional[int] = None
     max_uses: Optional[int] = None
     active: Optional[bool] = None
+    change_reason: str = ""
 
 
 class GuardrailCreate(BaseModel):
@@ -123,6 +131,7 @@ class GuardrailCreate(BaseModel):
     value: float = 0.0
     scope: dict = Field(default_factory=dict)
     active: bool = True
+    change_reason: str = ""
 
 
 class GuardrailUpdate(BaseModel):
@@ -131,6 +140,7 @@ class GuardrailUpdate(BaseModel):
     value: Optional[float] = None
     scope: Optional[dict] = None
     active: Optional[bool] = None
+    change_reason: str = ""
 
 
 # --- Dashboard ---
@@ -210,6 +220,7 @@ async def list_distribution_rules(
 async def create_distribution_rule(payload: DistributionRuleCreate, user=Depends(get_current_user)):
     db = await get_db()
     org_id = user["organization_id"]
+    actor = user.get("email", "system")
     now = now_utc()
     rule_id = f"rule_{uuid.uuid4().hex[:8]}"
 
@@ -225,24 +236,34 @@ async def create_distribution_rule(payload: DistributionRuleCreate, user=Depends
         "created_at": now,
         "updated_at": now,
     }
+    await stamp_create(doc, actor)
     await db.distribution_rules.insert_one(doc)
-    return serialize_doc(doc)
+    result = serialize_doc(doc)
+    await record_event(
+        actor=actor, action="created", entity_type="distribution_rule",
+        entity_id=rule_id, org_id=org_id, after=result,
+        metadata={"rule_category": payload.rule_category, "change_reason": payload.change_reason},
+    )
+    return result
 
 
 @router.patch("/distribution-rules/{rule_id}")
 async def update_distribution_rule(rule_id: str, payload: DistributionRuleUpdate, user=Depends(get_current_user)):
-    db = await get_db()
     org_id = user["organization_id"]
-    updates = {k: v for k, v in payload.dict(exclude_unset=True).items() if v is not None}
-    updates["updated_at"] = now_utc()
+    actor = user.get("email", "system")
+    updates = {k: v for k, v in payload.dict(exclude_unset=True).items() if v is not None and k != "change_reason"}
 
-    result = await db.distribution_rules.find_one_and_update(
-        {"organization_id": org_id, "rule_id": rule_id},
-        {"$set": updates},
-        return_document=True,
+    result = await stamp_update(
+        entity_type="distribution_rule", entity_id=rule_id, org_id=org_id,
+        updates=updates, actor=actor, change_reason=payload.change_reason,
     )
-    if not result:
-        return {"error": "Rule not found"}
+    if isinstance(result, dict) and result.get("error"):
+        return result
+    await record_event(
+        actor=actor, action="updated", entity_type="distribution_rule",
+        entity_id=rule_id, org_id=org_id, after=result,
+        metadata={"change_reason": payload.change_reason},
+    )
     return serialize_doc(result)
 
 
@@ -250,7 +271,14 @@ async def update_distribution_rule(rule_id: str, payload: DistributionRuleUpdate
 async def delete_distribution_rule(rule_id: str, user=Depends(get_current_user)):
     db = await get_db()
     org_id = user["organization_id"]
+    actor = user.get("email", "system")
+    await stamp_delete("distribution_rule", rule_id, org_id, actor)
     result = await db.distribution_rules.delete_one({"organization_id": org_id, "rule_id": rule_id})
+    if result.deleted_count > 0:
+        await record_event(
+            actor=actor, action="deleted", entity_type="distribution_rule",
+            entity_id=rule_id, org_id=org_id,
+        )
     return {"ok": result.deleted_count > 0}
 
 
@@ -268,6 +296,7 @@ async def list_channels(user=Depends(get_current_user)):
 async def create_channel(payload: ChannelConfigCreate, user=Depends(get_current_user)):
     db = await get_db()
     org_id = user["organization_id"]
+    actor = user.get("email", "system")
     now = now_utc()
     rule_id = f"ch_{uuid.uuid4().hex[:8]}"
 
@@ -283,24 +312,34 @@ async def create_channel(payload: ChannelConfigCreate, user=Depends(get_current_
         "created_at": now,
         "updated_at": now,
     }
+    await stamp_create(doc, actor)
     await db.channel_configs.insert_one(doc)
-    return serialize_doc(doc)
+    result = serialize_doc(doc)
+    await record_event(
+        actor=actor, action="created", entity_type="channel_config",
+        entity_id=rule_id, org_id=org_id, after=result,
+        metadata={"channel": payload.channel, "change_reason": payload.change_reason},
+    )
+    return result
 
 
 @router.patch("/channels/{rule_id}")
 async def update_channel(rule_id: str, payload: ChannelConfigUpdate, user=Depends(get_current_user)):
-    db = await get_db()
     org_id = user["organization_id"]
-    updates = {k: v for k, v in payload.dict(exclude_unset=True).items() if v is not None}
-    updates["updated_at"] = now_utc()
+    actor = user.get("email", "system")
+    updates = {k: v for k, v in payload.dict(exclude_unset=True).items() if v is not None and k != "change_reason"}
 
-    result = await db.channel_configs.find_one_and_update(
-        {"organization_id": org_id, "rule_id": rule_id},
-        {"$set": updates},
-        return_document=True,
+    result = await stamp_update(
+        entity_type="channel_config", entity_id=rule_id, org_id=org_id,
+        updates=updates, actor=actor, change_reason=payload.change_reason,
     )
-    if not result:
-        return {"error": "Channel config not found"}
+    if isinstance(result, dict) and result.get("error"):
+        return result
+    await record_event(
+        actor=actor, action="updated", entity_type="channel_config",
+        entity_id=rule_id, org_id=org_id, after=result,
+        metadata={"change_reason": payload.change_reason},
+    )
     return serialize_doc(result)
 
 
@@ -308,7 +347,14 @@ async def update_channel(rule_id: str, payload: ChannelConfigUpdate, user=Depend
 async def delete_channel(rule_id: str, user=Depends(get_current_user)):
     db = await get_db()
     org_id = user["organization_id"]
+    actor = user.get("email", "system")
+    await stamp_delete("channel_config", rule_id, org_id, actor)
     result = await db.channel_configs.delete_one({"organization_id": org_id, "rule_id": rule_id})
+    if result.deleted_count > 0:
+        await record_event(
+            actor=actor, action="deleted", entity_type="channel_config",
+            entity_id=rule_id, org_id=org_id,
+        )
     return {"ok": result.deleted_count > 0}
 
 
@@ -327,7 +373,8 @@ async def list_promotions_endpoint(
 @router.post("/promotions", status_code=201)
 async def create_promotion_endpoint(payload: PromotionCreate, user=Depends(get_current_user)):
     org_id = user["organization_id"]
-    return await create_promotion(
+    actor = user.get("email", "")
+    result = await create_promotion(
         organization_id=org_id,
         name=payload.name,
         promo_type=payload.promo_type,
@@ -339,33 +386,62 @@ async def create_promotion_endpoint(payload: PromotionCreate, user=Depends(get_c
         valid_to=payload.valid_to,
         min_days_before=payload.min_days_before,
         max_uses=payload.max_uses,
-        created_by=user.get("email", ""),
+        created_by=actor,
     )
+    await record_event(
+        actor=actor, action="created", entity_type="promotion",
+        entity_id=result.get("rule_id", ""), org_id=org_id, after=result,
+        metadata={"promo_type": payload.promo_type, "change_reason": payload.change_reason},
+    )
+    return result
 
 
 @router.patch("/promotions/{rule_id}")
 async def update_promotion_endpoint(rule_id: str, payload: PromotionUpdate, user=Depends(get_current_user)):
     org_id = user["organization_id"]
-    updates = {k: v for k, v in payload.dict(exclude_unset=True).items() if v is not None}
-    result = await update_promotion(org_id, rule_id, updates)
-    if not result:
-        return {"error": "Promotion not found"}
+    actor = user.get("email", "system")
+    updates = {k: v for k, v in payload.dict(exclude_unset=True).items() if v is not None and k != "change_reason"}
+
+    result = await stamp_update(
+        entity_type="promotion", entity_id=rule_id, org_id=org_id,
+        updates=updates, actor=actor, change_reason=payload.change_reason,
+    )
+    if isinstance(result, dict) and result.get("error"):
+        return result
+    await record_event(
+        actor=actor, action="updated", entity_type="promotion",
+        entity_id=rule_id, org_id=org_id, after=result,
+        metadata={"change_reason": payload.change_reason},
+    )
     return result
 
 
 @router.delete("/promotions/{rule_id}")
 async def delete_promotion_endpoint(rule_id: str, user=Depends(get_current_user)):
     org_id = user["organization_id"]
+    actor = user.get("email", "system")
+    await stamp_delete("promotion", rule_id, org_id, actor)
     ok = await delete_promotion(org_id, rule_id)
+    if ok:
+        await record_event(
+            actor=actor, action="deleted", entity_type="promotion",
+            entity_id=rule_id, org_id=org_id,
+        )
     return {"ok": ok}
 
 
 @router.post("/promotions/{rule_id}/toggle")
 async def toggle_promotion_endpoint(rule_id: str, active: bool = Query(True), user=Depends(get_current_user)):
     org_id = user["organization_id"]
+    actor = user.get("email", "system")
     result = await toggle_promotion(org_id, rule_id, active)
     if not result:
         return {"error": "Promotion not found"}
+    await record_event(
+        actor=actor, action="updated", entity_type="promotion",
+        entity_id=rule_id, org_id=org_id,
+        metadata={"toggle_active": active},
+    )
     return result
 
 
@@ -383,6 +459,7 @@ async def list_guardrails(user=Depends(get_current_user)):
 async def create_guardrail(payload: GuardrailCreate, user=Depends(get_current_user)):
     db = await get_db()
     org_id = user["organization_id"]
+    actor = user.get("email", "system")
     now = now_utc()
     guardrail_id = f"guard_{uuid.uuid4().hex[:8]}"
 
@@ -397,24 +474,34 @@ async def create_guardrail(payload: GuardrailCreate, user=Depends(get_current_us
         "created_at": now,
         "updated_at": now,
     }
+    await stamp_create(doc, actor)
     await db.pricing_guardrails.insert_one(doc)
-    return serialize_doc(doc)
+    result = serialize_doc(doc)
+    await record_event(
+        actor=actor, action="created", entity_type="guardrail",
+        entity_id=guardrail_id, org_id=org_id, after=result,
+        metadata={"guardrail_type": payload.guardrail_type, "change_reason": payload.change_reason},
+    )
+    return result
 
 
 @router.patch("/guardrails/{guardrail_id}")
 async def update_guardrail(guardrail_id: str, payload: GuardrailUpdate, user=Depends(get_current_user)):
-    db = await get_db()
     org_id = user["organization_id"]
-    updates = {k: v for k, v in payload.dict(exclude_unset=True).items() if v is not None}
-    updates["updated_at"] = now_utc()
+    actor = user.get("email", "system")
+    updates = {k: v for k, v in payload.dict(exclude_unset=True).items() if v is not None and k != "change_reason"}
 
-    result = await db.pricing_guardrails.find_one_and_update(
-        {"organization_id": org_id, "guardrail_id": guardrail_id},
-        {"$set": updates},
-        return_document=True,
+    result = await stamp_update(
+        entity_type="guardrail", entity_id=guardrail_id, org_id=org_id,
+        updates=updates, actor=actor, change_reason=payload.change_reason,
     )
-    if not result:
-        return {"error": "Guardrail not found"}
+    if isinstance(result, dict) and result.get("error"):
+        return result
+    await record_event(
+        actor=actor, action="updated", entity_type="guardrail",
+        entity_id=guardrail_id, org_id=org_id, after=result,
+        metadata={"change_reason": payload.change_reason},
+    )
     return serialize_doc(result)
 
 
@@ -422,7 +509,14 @@ async def update_guardrail(guardrail_id: str, payload: GuardrailUpdate, user=Dep
 async def delete_guardrail(guardrail_id: str, user=Depends(get_current_user)):
     db = await get_db()
     org_id = user["organization_id"]
+    actor = user.get("email", "system")
+    await stamp_delete("guardrail", guardrail_id, org_id, actor)
     result = await db.pricing_guardrails.delete_one({"organization_id": org_id, "guardrail_id": guardrail_id})
+    if result.deleted_count > 0:
+        await record_event(
+            actor=actor, action="deleted", entity_type="guardrail",
+            entity_id=guardrail_id, org_id=org_id,
+        )
     return {"ok": result.deleted_count > 0}
 
 

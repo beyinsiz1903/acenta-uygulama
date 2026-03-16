@@ -109,6 +109,7 @@ const FinanceAgencyBalancesPage = lazy(() => import("../pages/finance/AgencyBala
 const FinanceSupplierPayablesPage = lazy(() => import("../pages/finance/SupplierPayablesPage"));
 const FinanceReconciliationPage = lazy(() => import("../pages/finance/ReconciliationPage"));
 const FinanceExceptionQueuePage = lazy(() => import("../pages/finance/ExceptionQueuePage"));
+const ActivityTimelinePage = lazy(() => import("../pages/finance/ActivityTimelinePage"));
 
 /**
  * Admin route children — rendered inside AdminLayout.
@@ -174,6 +175,7 @@ export const adminRoutes = (
     <Route path="finance/supplier-payables-v2" element={<FinanceSupplierPayablesPage />} />
     <Route path="finance/reconciliation-v2" element={<FinanceReconciliationPage />} />
     <Route path="finance/exceptions" element={<FinanceExceptionQueuePage />} />
+    <Route path="activity-timeline" element={<ActivityTimelinePage />} />
     {/* Operations */}
     <Route path="ops/finance/supplier-accruals" element={<OpsSupplierAccrualsPage />} />
     <Route path="ops/b2b" element={<OpsB2BQueuesPage />} />

@@ -41,6 +41,7 @@ from app.services.finance_exception_service import (
     resolve_exception,
     dismiss_exception,
 )
+from app.services.activity_timeline_service import record_event
 
 router = APIRouter(prefix="/api/finance/ledger", tags=["Finance Ledger"])
 settlement_router = APIRouter(prefix="/api/finance/settlement-runs", tags=["Settlement Runs"])
@@ -194,6 +195,11 @@ async def api_create_settlement_draft(body: CreateDraftRequest):
         currency=body.currency,
         notes=body.notes,
     )
+    await record_event(
+        actor="admin", action="created", entity_type="settlement_run",
+        entity_id=result.get("run_id", ""), org_id=ORG_ID, after=result,
+        metadata={"run_type": body.run_type, "entity_name": body.entity_name},
+    )
     return result
 
 
@@ -203,6 +209,10 @@ async def api_submit_settlement(run_id: str, body: TransitionRequest):
     if "error" in result:
         from fastapi.responses import JSONResponse
         return JSONResponse(status_code=result.get("status_code", 400), content={"error": result["error"]})
+    await record_event(
+        actor=body.actor, action="submitted", entity_type="settlement_run",
+        entity_id=run_id, org_id=ORG_ID, metadata={"target_status": "pending_approval"},
+    )
     return result
 
 
@@ -212,6 +222,10 @@ async def api_approve_settlement(run_id: str, body: TransitionRequest):
     if "error" in result:
         from fastapi.responses import JSONResponse
         return JSONResponse(status_code=result.get("status_code", 400), content={"error": result["error"]})
+    await record_event(
+        actor=body.actor, action="approved", entity_type="settlement_run",
+        entity_id=run_id, org_id=ORG_ID, metadata={"reason": body.reason or ""},
+    )
     return result
 
 
@@ -221,6 +235,10 @@ async def api_reject_settlement(run_id: str, body: TransitionRequest):
     if "error" in result:
         from fastapi.responses import JSONResponse
         return JSONResponse(status_code=result.get("status_code", 400), content={"error": result["error"]})
+    await record_event(
+        actor=body.actor, action="rejected", entity_type="settlement_run",
+        entity_id=run_id, org_id=ORG_ID, metadata={"reason": body.reason or ""},
+    )
     return result
 
 
@@ -230,6 +248,10 @@ async def api_mark_paid_settlement(run_id: str, body: TransitionRequest):
     if "error" in result:
         from fastapi.responses import JSONResponse
         return JSONResponse(status_code=result.get("status_code", 400), content={"error": result["error"]})
+    await record_event(
+        actor=body.actor, action="paid", entity_type="settlement_run",
+        entity_id=run_id, org_id=ORG_ID,
+    )
     return result
 
 
@@ -327,6 +349,11 @@ async def api_resolve_exception(exception_id: str, body: ResolveExceptionRequest
     if "error" in result:
         from fastapi.responses import JSONResponse
         return JSONResponse(status_code=result.get("status_code", 400), content={"error": result["error"]})
+    await record_event(
+        actor=body.resolved_by, action="resolved", entity_type="finance_exception",
+        entity_id=exception_id, org_id=ORG_ID,
+        metadata={"resolution": body.resolution},
+    )
     return result
 
 
@@ -336,6 +363,11 @@ async def api_dismiss_exception(exception_id: str, body: DismissExceptionRequest
     if "error" in result:
         from fastapi.responses import JSONResponse
         return JSONResponse(status_code=result.get("status_code", 400), content={"error": result["error"]})
+    await record_event(
+        actor="admin", action="dismissed", entity_type="finance_exception",
+        entity_id=exception_id, org_id=ORG_ID,
+        metadata={"reason": body.reason},
+    )
     return result
 
 

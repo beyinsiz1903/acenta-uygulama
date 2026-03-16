@@ -353,6 +353,39 @@
   },
   {
     "compat_required": true,
+    "current_namespace": "/api/activity-timeline",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "activity-timeline",
+    "path": "/api/activity-timeline",
+    "risk_level": "medium",
+    "source": "app.routers.activity_timeline_router",
+    "target_namespace": "/api/v1/activity-timeline"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/activity-timeline",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "activity-timeline",
+    "path": "/api/activity-timeline/entity/{entity_type}/{entity_id}",
+    "risk_level": "medium",
+    "source": "app.routers.activity_timeline_router",
+    "target_namespace": "/api/v1/activity-timeline"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/activity-timeline",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "activity-timeline",
+    "path": "/api/activity-timeline/stats",
+    "risk_level": "medium",
+    "source": "app.routers.activity_timeline_router",
+    "target_namespace": "/api/v1/activity-timeline"
+  },
+  {
+    "compat_required": true,
     "current_namespace": "/api/admin",
     "legacy_or_v1": "legacy",
     "method": "GET",
@@ -5256,6 +5289,17 @@
     "risk_level": "medium",
     "source": "app.routers.commission_rules",
     "target_namespace": "/api/v1/commission-rules"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/config-versions",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "config-versions",
+    "path": "/api/config-versions/{entity_type}/{entity_id}",
+    "risk_level": "medium",
+    "source": "app.routers.config_versions_router",
+    "target_namespace": "/api/v1/config-versions"
   },
   {
     "compat_required": true,

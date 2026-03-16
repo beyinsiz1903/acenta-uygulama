@@ -133,10 +133,18 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 ### P0 — Completed
 All P0 tasks completed.
 
+### PricingEnginePage.jsx Refactoring — COMPLETED (2026-03-16)
+**Monolithic 1385-line component broken into 16 modular files under /app/frontend/src/pages/pricing/**
+- StatCards, AlertBanner, CacheStatsBar, GlobalDiagnosticsPanel, CacheTelemetryPanel
+- PricingSimulatorTab, DistributionRulesTab, ChannelsTab, PromotionsTab, GuardrailsTab
+- TraceBar, PipelineExplainer, RulePrecedenceViewer, GuardrailWarnings
+- Shared: lib/pricingApi.js, lib/pricingConstants.js
+- Main orchestrator: 182 lines (from 1385). All 43 tests passed (iteration_132)
+
 ### P1 — Next Priority
-- **Financial Ledger & Settlement Dashboard**: Consolidated finance dashboard with ledger overview, revenue breakdown, agency balances, supplier payables, settlement reconciliation
+- **Phase 2A: Financial Ledger & Settlement Visibility**: Ledger summary, agency balances, supplier payables, settlement runs, reconciliation overview, margin/revenue summary
+- **Phase 2B: Settlement Workflow & Reconciliation**: Settlement draft creation, approve/reject, paid marking, supplier-based filtering, exception queue, mismatch panel
 - **Activity Timeline**: Entity-based audit history (who did what)
-- **PricingEnginePage.jsx Refactoring**: Break monolithic component into smaller sub-components
 
 ### P2
 - **TypeScript Migration**: API layer -> TanStack hooks -> design system (incremental)

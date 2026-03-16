@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { api } from "../lib/api";
+import React, { useState, useCallback, useMemo } from "react";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import {
@@ -7,32 +6,27 @@ import {
   Settings, Shield, Wifi, WifiOff, Key, Trash2,
   RotateCcw, Database, Activity,
   ChevronDown, ChevronUp, Users, Zap, Search,
-  Plus, Edit2, Power, PowerOff
+  Plus, Power, PowerOff
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
+import { api } from "../lib/api";
+import { PageShell, DataTable, StatusBadge } from "../design-system";
+import { useAccountingDashboard, useSyncJobs, useRetryJob, useAccountingRules, useAccountingCustomers } from "../features/accounting/hooks";
+
+const MAX_ATTEMPTS = 5;
 
 const JOB_STATUS_MAP = {
-  pending: { label: "Bekliyor", icon: Clock, color: "bg-amber-50 text-amber-700 border-amber-200" },
-  processing: { label: "Isleniyor", icon: RefreshCw, color: "bg-blue-50 text-blue-700 border-blue-200" },
-  synced: { label: "Senkronize", icon: CheckCircle, color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  failed: { label: "Basarisiz", icon: AlertTriangle, color: "bg-red-50 text-red-700 border-red-200" },
-  retrying: { label: "Yeniden Deniyor", icon: RotateCcw, color: "bg-orange-50 text-orange-700 border-orange-200" },
+  pending: { label: "Bekliyor", color: "warning" },
+  processing: { label: "Isleniyor", color: "info" },
+  synced: { label: "Senkronize", color: "success" },
+  failed: { label: "Basarisiz", color: "danger" },
+  retrying: { label: "Yeniden Deniyor", color: "warning" },
 };
-
-function JobStatusBadge({ status }) {
-  const s = JOB_STATUS_MAP[status] || { label: status, icon: Clock, color: "" };
-  const Icon = s.icon;
-  return (
-    <Badge variant="outline" className={cn("gap-1 font-medium", s.color)} data-testid={`job-status-${status}`}>
-      <Icon className="h-3 w-3" /> {s.label}
-    </Badge>
-  );
-}
 
 function DashboardCard({ label, value, icon: Icon, color, sub, testId }) {
   return (
-    <div className={cn("rounded-xl border p-4 flex items-start gap-3 transition-all", color)} data-testid={testId || `dashboard-stat-${label.toLowerCase().replace(/\s/g, '-')}`}>
+    <div className={cn("rounded-xl border p-4 flex items-start gap-3 transition-all", color)} data-testid={testId}>
       <div className="rounded-lg bg-background/80 p-2.5 shadow-sm">
         <Icon className="h-5 w-5" />
       </div>
@@ -68,7 +62,7 @@ function CredentialSettings({ onClose, onSaved }) {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useState(() => { loadData(); });
 
   const handleSave = async () => {
     if (!selectedProvider) return;
@@ -178,33 +172,36 @@ function CredentialSettings({ onClose, onSaved }) {
 
 /* ── Auto Sync Rules Panel ───────────────────────────────── */
 function AutoSyncRulesPanel() {
-  const [rules, setRules] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: rules = [], isLoading: loading, refetch: load } = useAccountingRules();
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ rule_name: "", trigger_event: "invoice_issued", provider: "luca", requires_approval: false, enabled: true });
 
-  const load = useCallback(async () => {
-    try { setLoading(true); const res = await api.get("/accounting/rules"); setRules(res.data?.rules || []); }
-    catch (e) { console.error(e); } finally { setLoading(false); }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
   const handleCreate = async () => {
     if (!form.rule_name.trim()) { toast.error("Kural adi gerekli"); return; }
-    try { await api.post("/accounting/rules", form); toast.success("Kural olusturuldu"); setShowCreate(false); setForm({ rule_name: "", trigger_event: "invoice_issued", provider: "luca", requires_approval: false, enabled: true }); load(); }
-    catch (e) { toast.error(e.response?.data?.detail || e.message); }
+    try {
+      await api.post("/accounting/rules", form);
+      toast.success("Kural olusturuldu");
+      setShowCreate(false);
+      setForm({ rule_name: "", trigger_event: "invoice_issued", provider: "luca", requires_approval: false, enabled: true });
+      load();
+    } catch (e) { toast.error(e.response?.data?.detail || e.message); }
   };
 
   const toggleRule = async (rule) => {
-    try { await api.put(`/accounting/rules/${rule.rule_id}`, { enabled: !rule.enabled }); toast.success(rule.enabled ? "Kural devre disi" : "Kural aktif"); load(); }
-    catch (e) { toast.error(e.response?.data?.detail || e.message); }
+    try {
+      await api.put(`/accounting/rules/${rule.rule_id}`, { enabled: !rule.enabled });
+      toast.success(rule.enabled ? "Kural devre disi" : "Kural aktif");
+      load();
+    } catch (e) { toast.error(e.response?.data?.detail || e.message); }
   };
 
   const deleteRule = async (ruleId) => {
     if (!window.confirm("Bu kurali silmek istediginize emin misiniz?")) return;
-    try { await api.delete(`/accounting/rules/${ruleId}`); toast.success("Kural silindi"); load(); }
-    catch (e) { toast.error(e.response?.data?.detail || e.message); }
+    try {
+      await api.delete(`/accounting/rules/${ruleId}`);
+      toast.success("Kural silindi");
+      load();
+    } catch (e) { toast.error(e.response?.data?.detail || e.message); }
   };
 
   const TRIGGER_LABELS = { invoice_issued: "Fatura Kesildiginde", invoice_approved: "Onay Sonrasi", booking_confirmed: "Booking Onayinda", manual_trigger: "Manuel" };
@@ -288,24 +285,11 @@ function AutoSyncRulesPanel() {
 
 /* ── Customer List Panel ─────────────────────────────────── */
 function CustomerPanel() {
-  const [customers, setCustomers] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState(true);
-
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const params = { limit: 50, ...(search ? { search } : {}) };
-      const res = await api.get("/accounting/customers", { params });
-      setCustomers(res.data?.items || []);
-      setTotal(res.data?.total || 0);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
-  }, [search]);
-
-  useEffect(() => { load(); }, [load]);
+  const { data: customerData, isLoading: loading } = useAccountingCustomers(search ? { search } : {});
+  const customers = customerData?.items || [];
+  const total = customerData?.total || 0;
 
   return (
     <div className="rounded-xl border shadow-sm" data-testid="customer-panel">
@@ -364,201 +348,194 @@ function CustomerPanel() {
 
 /* ── Main Page ────────────────────────────────────────────── */
 export default function AdminAccountingPage() {
-  const [dashboard, setDashboard] = useState(null);
-  const [syncJobs, setSyncJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [statusFilter, setStatusFilter] = useState("");
-  const [retrying, setRetrying] = useState(null);
-  const [logsExpanded, setLogsExpanded] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
 
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [dashRes, jobsRes] = await Promise.all([
-        api.get("/accounting/dashboard"),
-        api.get("/accounting/sync-jobs", { params: { limit: 100, ...(statusFilter ? { status: statusFilter } : {}) } }),
-      ]);
-      setDashboard(dashRes.data);
-      setSyncJobs(jobsRes.data?.items || []);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
-  }, [statusFilter]);
+  const { data: dashboard, refetch: refetchDashboard } = useAccountingDashboard();
+  const { data: syncJobs = [], isLoading, isError, refetch: refetchJobs } = useSyncJobs(statusFilter ? { status: statusFilter } : {});
+  const retryMutation = useRetryJob();
 
-  useEffect(() => { load(); }, [load]);
+  const refetch = useCallback(() => {
+    refetchDashboard();
+    refetchJobs();
+  }, [refetchDashboard, refetchJobs]);
 
   const handleRetry = async (jobId) => {
-    setRetrying(jobId);
-    try { await api.post("/accounting/retry", { job_id: jobId }); toast.success("Yeniden deneme basarili"); load(); }
-    catch (e) { toast.error(e.response?.data?.detail || e.message); }
-    finally { setRetrying(null); }
+    try {
+      await retryMutation.mutateAsync(jobId);
+      toast.success("Yeniden deneme basarili");
+    } catch (e) {
+      toast.error(e.response?.data?.detail || e.message);
+    }
   };
 
   const lucaStatus = dashboard?.providers?.find(p => p.provider === "luca");
 
+  const syncColumns = useMemo(() => [
+    {
+      accessorKey: "job_id",
+      header: "Job ID",
+      cell: ({ row }) => <span className="font-mono text-xs font-medium">{row.original.job_id}</span>,
+      size: 120,
+    },
+    {
+      accessorKey: "invoice_id",
+      header: "Fatura",
+      cell: ({ row }) => <span className="font-mono text-xs">{row.original.invoice_id}</span>,
+      size: 120,
+    },
+    {
+      accessorKey: "status",
+      header: "Durum",
+      cell: ({ row }) => {
+        const s = JOB_STATUS_MAP[row.original.status];
+        return s ? <StatusBadge status={row.original.status} color={s.color} label={s.label} /> : <Badge variant="outline">{row.original.status}</Badge>;
+      },
+      size: 120,
+    },
+    {
+      accessorKey: "external_ref",
+      header: "Ref",
+      cell: ({ row }) => <span className="font-mono text-xs text-muted-foreground">{row.original.external_ref || "-"}</span>,
+    },
+    {
+      accessorKey: "attempt_count",
+      header: "Deneme",
+      cell: ({ row }) => <span className="text-xs text-center">{row.original.attempt_count || 0}/{MAX_ATTEMPTS}</span>,
+      size: 80,
+    },
+    {
+      accessorKey: "error_message",
+      header: "Hata",
+      cell: ({ row }) => (
+        <span className="text-xs text-muted-foreground max-w-[180px] truncate block" title={row.original.error_message || ""}>
+          {row.original.error_message ? <span className="text-red-600">{row.original.error_message}</span> : "-"}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      header: () => <span className="sr-only">Aksiyon</span>,
+      cell: ({ row }) => {
+        const job = row.original;
+        if (job.status === "synced") {
+          return <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200"><CheckCircle className="h-3 w-3 mr-1" /> Tamam</Badge>;
+        }
+        if (job.status === "failed" || job.status === "retrying") {
+          return (
+            <Button size="sm" variant="outline" className="h-7 text-xs gap-1"
+              onClick={(e) => { e.stopPropagation(); handleRetry(job.job_id); }}
+              disabled={retryMutation.isPending}
+              data-testid={`retry-btn-${job.job_id}`}>
+              <RotateCcw className="h-3 w-3" /> Tekrarla
+            </Button>
+          );
+        }
+        return null;
+      },
+      enableSorting: false,
+      size: 100,
+    },
+  ], [retryMutation.isPending]);
+
   const tabs = [
-    { id: "overview", label: "Genel Bakis", icon: Activity },
-    { id: "rules", label: "Otomasyon", icon: Zap },
-    { id: "customers", label: "Cariler", icon: Users },
+    { value: "overview", label: "Genel Bakis", icon: <Activity className="h-4 w-4" /> },
+    { value: "rules", label: "Otomasyon", icon: <Zap className="h-4 w-4" /> },
+    { value: "customers", label: "Cariler", icon: <Users className="h-4 w-4" /> },
   ];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto" data-testid="accounting-page">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2" data-testid="accounting-page-title">
-            <Database className="h-6 w-6 text-primary" /> Muhasebe Operasyonlari
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">Senkronizasyon, cari eslestirme ve otomasyon yonetimi</p>
-        </div>
-        <div className="flex gap-2">
+    <PageShell
+      title="Muhasebe Operasyonlari"
+      description="Senkronizasyon, cari eslestirme ve otomasyon yonetimi"
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      actions={
+        <>
           <Button variant="outline" size="sm" onClick={() => setShowSettings(!showSettings)} data-testid="acct-settings-btn">
             <Settings className="h-4 w-4 mr-1" /> Ayarlar
           </Button>
-          <Button variant="outline" size="sm" onClick={load} data-testid="acct-refresh-btn">
+          <Button variant="outline" size="sm" onClick={refetch} data-testid="acct-refresh-btn">
             <RefreshCw className="h-4 w-4 mr-1" /> Yenile
           </Button>
-        </div>
-      </div>
+        </>
+      }
+    >
+      <div data-testid="accounting-page">
+        {showSettings && <CredentialSettings onClose={() => setShowSettings(false)} onSaved={refetch} />}
 
-      {showSettings && <CredentialSettings onClose={() => setShowSettings(false)} onSaved={load} />}
-
-      {/* Dashboard Stats */}
-      {dashboard && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6" data-testid="accounting-dashboard">
-          <DashboardCard label="Basarili Sync" value={dashboard.synced || 0} icon={CheckCircle} color="bg-emerald-50/50" testId="stat-synced" />
-          <DashboardCard label="Basarisiz" value={dashboard.failed || 0} icon={AlertTriangle} color="bg-red-50/50" testId="stat-failed" />
-          <DashboardCard label="Bekleyen" value={(dashboard.pending || 0) + (dashboard.processing || 0)} icon={Clock} color="bg-amber-50/50" testId="stat-pending" />
-          <DashboardCard label="Yeniden Deneme" value={dashboard.retry_queue || 0} icon={RotateCcw} color="bg-orange-50/50" testId="stat-retry" />
-          <DashboardCard label="Cariler" value={dashboard.customer_stats?.total_customers || 0} icon={Users} color="bg-blue-50/50" testId="stat-customers"
-            sub={`${dashboard.customer_stats?.unmatched_count || 0} eslesmeyen`} />
-          <DashboardCard label="Luca" value={lucaStatus?.configured ? "Aktif" : "Yok"} icon={lucaStatus?.configured ? Wifi : WifiOff}
-            color={lucaStatus?.configured ? "bg-teal-50/50" : "bg-slate-50/50"} testId="stat-luca"
-            sub={dashboard.last_sync_at ? `Son: ${new Date(dashboard.last_sync_at).toLocaleString("tr-TR")}` : "Henuz sync yok"} />
-        </div>
-      )}
-
-      {/* Last Error */}
-      {dashboard?.last_error && (
-        <div className="rounded-xl border border-red-200 bg-red-50/50 p-4 mb-6 flex items-start gap-3" data-testid="last-error-banner">
-          <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
-          <div>
-            <div className="text-sm font-medium text-red-700">Son Hata</div>
-            <div className="text-xs text-red-600 mt-0.5">{dashboard.last_error}</div>
-            {dashboard.last_error_type && <Badge variant="outline" className="mt-1 text-xs bg-red-100 text-red-700 border-red-200">{dashboard.last_error_type}</Badge>}
+        {/* Dashboard Stats */}
+        {dashboard && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6" data-testid="accounting-dashboard">
+            <DashboardCard label="Basarili Sync" value={dashboard.synced || 0} icon={CheckCircle} color="bg-emerald-50/50" testId="stat-synced" />
+            <DashboardCard label="Basarisiz" value={dashboard.failed || 0} icon={AlertTriangle} color="bg-red-50/50" testId="stat-failed" />
+            <DashboardCard label="Bekleyen" value={(dashboard.pending || 0) + (dashboard.processing || 0)} icon={Clock} color="bg-amber-50/50" testId="stat-pending" />
+            <DashboardCard label="Yeniden Deneme" value={dashboard.retry_queue || 0} icon={RotateCcw} color="bg-orange-50/50" testId="stat-retry" />
+            <DashboardCard label="Cariler" value={dashboard.customer_stats?.total_customers || 0} icon={Users} color="bg-blue-50/50" testId="stat-customers"
+              sub={`${dashboard.customer_stats?.unmatched_count || 0} eslesmeyen`} />
+            <DashboardCard label="Luca" value={lucaStatus?.configured ? "Aktif" : "Yok"} icon={lucaStatus?.configured ? Wifi : WifiOff}
+              color={lucaStatus?.configured ? "bg-teal-50/50" : "bg-slate-50/50"} testId="stat-luca"
+              sub={dashboard.last_sync_at ? `Son: ${new Date(dashboard.last_sync_at).toLocaleString("tr-TR")}` : "Henuz sync yok"} />
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Tab Navigation */}
-      <div className="flex gap-1 mb-4 border-b" data-testid="accounting-tabs">
-        {tabs.map(tab => {
-          const Icon = tab.icon;
-          return (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={cn("flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors",
-                activeTab === tab.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
-              )} data-testid={`tab-${tab.id}`}>
-              <Icon className="h-4 w-4" /> {tab.label}
-            </button>
-          );
-        })}
-      </div>
+        {/* Last Error */}
+        {dashboard?.last_error && (
+          <div className="rounded-xl border border-red-200 bg-red-50/50 p-4 mb-6 flex items-start gap-3" data-testid="last-error-banner">
+            <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
+            <div>
+              <div className="text-sm font-medium text-red-700">Son Hata</div>
+              <div className="text-xs text-red-600 mt-0.5">{dashboard.last_error}</div>
+              {dashboard.last_error_type && <Badge variant="outline" className="mt-1 text-xs bg-red-100 text-red-700 border-red-200">{dashboard.last_error_type}</Badge>}
+            </div>
+          </div>
+        )}
 
-      {/* Tab Content */}
-      {activeTab === "overview" && (
-        <div className="space-y-4">
-          {/* Sync Jobs Table */}
-          <div className="rounded-xl border shadow-sm" data-testid="sync-jobs-section">
-            <button className="w-full flex items-center justify-between px-5 py-3 hover:bg-muted/30 transition-colors"
-              onClick={() => setLogsExpanded(!logsExpanded)} data-testid="toggle-sync-jobs">
-              <h2 className="font-semibold text-sm flex items-center gap-2">
-                <Activity className="h-4 w-4" /> Senkronizasyon Isleri
-                <Badge variant="outline" className="text-xs">{syncJobs.length}</Badge>
-              </h2>
-              {logsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </button>
-            {logsExpanded && (
-              <>
-                <div className="flex gap-2 px-5 pb-3 flex-wrap" data-testid="sync-filters">
-                  {[
-                    { value: "", label: "Tumu" },
-                    { value: "synced", label: "Basarili" },
-                    { value: "failed", label: "Basarisiz" },
-                    { value: "pending", label: "Bekleyen" },
-                    { value: "retrying", label: "Yeniden Deniyor" },
-                  ].map(f => (
-                    <Button key={f.value} variant={statusFilter === f.value ? "default" : "outline"} size="sm"
-                      onClick={() => setStatusFilter(f.value)} className="text-xs h-7" data-testid={`sync-filter-${f.value || 'all'}`}>
-                      {f.label}
-                    </Button>
-                  ))}
-                </div>
-                {loading ? (
-                  <div className="p-5 space-y-3">{[1,2,3].map(i => <div key={i} className="animate-pulse h-14 bg-muted rounded-lg" />)}</div>
-                ) : syncJobs.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground" data-testid="no-sync-jobs">
-                    <Database className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                    <p className="text-sm font-medium">Henuz senkronizasyon isi yok</p>
-                  </div>
-                ) : (
-                  <div className="overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead><tr className="bg-muted/40 border-t border-b">
-                        <th className="text-left px-5 py-2.5 font-medium text-xs uppercase tracking-wider">Job ID</th>
-                        <th className="text-left px-4 py-2.5 font-medium text-xs uppercase tracking-wider">Fatura</th>
-                        <th className="text-left px-4 py-2.5 font-medium text-xs uppercase tracking-wider">Durum</th>
-                        <th className="text-left px-4 py-2.5 font-medium text-xs uppercase tracking-wider">Ref</th>
-                        <th className="text-left px-4 py-2.5 font-medium text-xs uppercase tracking-wider">Deneme</th>
-                        <th className="text-left px-4 py-2.5 font-medium text-xs uppercase tracking-wider">Sonraki</th>
-                        <th className="text-left px-4 py-2.5 font-medium text-xs uppercase tracking-wider">Hata</th>
-                        <th className="text-right px-5 py-2.5 font-medium text-xs uppercase tracking-wider">Aksiyon</th>
-                      </tr></thead>
-                      <tbody>
-                        {syncJobs.map(job => (
-                          <tr key={job.job_id} className="border-b last:border-0 hover:bg-muted/20 transition-colors" data-testid={`job-row-${job.job_id}`}>
-                            <td className="px-5 py-3 font-mono text-xs font-medium">{job.job_id}</td>
-                            <td className="px-4 py-3 font-mono text-xs">{job.invoice_id}</td>
-                            <td className="px-4 py-3"><JobStatusBadge status={job.status} /></td>
-                            <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{job.external_ref || "-"}</td>
-                            <td className="px-4 py-3 text-xs text-center">{job.attempt_count || 0}/{MAX_ATTEMPTS}</td>
-                            <td className="px-4 py-3 text-xs text-muted-foreground">
-                              {job.next_retry ? new Date(job.next_retry).toLocaleString("tr-TR") : "-"}
-                            </td>
-                            <td className="px-4 py-3 text-xs text-muted-foreground max-w-[180px] truncate" title={job.error_message || ""}>
-                              {job.error_message ? <span className="text-red-600">{job.error_message}</span> : "-"}
-                            </td>
-                            <td className="px-4 py-3 text-right">
-                              {(job.status === "failed" || job.status === "retrying") && (
-                                <Button size="sm" variant="outline" className="h-7 text-xs gap-1"
-                                  onClick={() => handleRetry(job.job_id)} disabled={retrying === job.job_id} data-testid={`retry-btn-${job.job_id}`}>
-                                  <RotateCcw className="h-3 w-3" /> {retrying === job.job_id ? "..." : "Tekrarla"}
-                                </Button>
-                              )}
-                              {job.status === "synced" && (
-                                <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">
-                                  <CheckCircle className="h-3 w-3 mr-1" /> Tamam
-                                </Badge>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </>
+        {/* Tab Content */}
+        {activeTab === "overview" && (
+          <div className="space-y-4">
+            <div className="flex gap-2 flex-wrap" data-testid="sync-filters">
+              {[
+                { value: "", label: "Tumu" },
+                { value: "synced", label: "Basarili" },
+                { value: "failed", label: "Basarisiz" },
+                { value: "pending", label: "Bekleyen" },
+                { value: "retrying", label: "Yeniden Deniyor" },
+              ].map(f => (
+                <Button key={f.value} variant={statusFilter === f.value ? "default" : "outline"} size="sm"
+                  onClick={() => setStatusFilter(f.value)} className="text-xs h-7" data-testid={`sync-filter-${f.value || 'all'}`}>
+                  {f.label}
+                </Button>
+              ))}
+            </div>
+
+            {isError && (
+              <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-600">
+                Veriler yuklenemedi
+                <Button variant="ghost" size="sm" className="ml-2 h-6 text-xs" onClick={() => refetchJobs()}>Tekrar Dene</Button>
+              </div>
             )}
-          </div>
-        </div>
-      )}
 
-      {activeTab === "rules" && <AutoSyncRulesPanel />}
-      {activeTab === "customers" && <CustomerPanel />}
-    </div>
+            <DataTable
+              data={syncJobs}
+              columns={syncColumns}
+              loading={isLoading}
+              pageSize={20}
+              emptyState={
+                <div className="flex flex-col items-center gap-2 py-8" data-testid="no-sync-jobs">
+                  <Database className="h-12 w-12 opacity-20 text-muted-foreground" />
+                  <p className="text-sm font-medium text-muted-foreground">Henuz senkronizasyon isi yok</p>
+                </div>
+              }
+            />
+          </div>
+        )}
+
+        {activeTab === "rules" && <AutoSyncRulesPanel />}
+        {activeTab === "customers" && <CustomerPanel />}
+      </div>
+    </PageShell>
   );
 }
-
-const MAX_ATTEMPTS = 5;

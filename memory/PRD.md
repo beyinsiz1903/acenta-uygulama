@@ -104,6 +104,38 @@ Updated files:
 **Testing: 100% backend (25/25), 100% frontend pass rate**
 **Mode: SIMULATION (all health checks and certifications simulated until real credentials)**
 
+### P0 Reprioritized: Supplier Certification Console — COMPLETED (2026-03-16)
+**E2E Demo Panel — Full Booking Lifecycle Visualization with Edge Cases**
+
+Delivered:
+- **Lifecycle View**: 6-step stepper (Search → Detail → Revalidation → Booking → Status Polling → Cancel)
+  - Per-step: status badge, latency, request_id, trace_id, supplier response summary
+- **Edge Case Scenarios**: 6 configurable scenarios
+  - Success Flow, Price Mismatch (+12% drift), Delayed Confirmation (5 rounds), Booking Timeout (30s), Cancel Success, Supplier Unavailable (HTTP 503)
+- **Certification View**: Score circle, go-live eligible badge, passed/failed/warned/skipped counts, failed steps list, warning steps list
+- **History Panel**: Past test runs with supplier filter, scenario/mode badges, score, timestamp
+- **Operational UX**: Step detail drawer, retry button, rerun failed step, dark operational UI
+
+New API endpoints:
+- `GET /api/e2e-demo/scenarios` — List 6 available test scenarios
+- `GET /api/e2e-demo/suppliers` — Supplier health summary with last test
+- `POST /api/e2e-demo/run` — Run E2E lifecycle test with scenario
+- `GET /api/e2e-demo/history` — Test run history with filters
+- `POST /api/e2e-demo/rerun-step` — Rerun single failed step
+
+New files:
+- `backend/app/services/e2e_demo_service.py` — E2E demo service with 6 scenarios
+- `backend/app/routers/e2e_demo_router.py` — 5 API endpoints
+- `frontend/src/pages/admin/SupplierCertificationConsolePage.jsx` — Full console UI
+
+**Testing: 100% backend (24/24), 100% frontend pass rate**
+**Mode: SIMULATION (all test responses simulated)**
+
+### Misc: WWTatil → WTatil Rename — COMPLETED (2026-03-16)
+- All 31 source files updated: `wwtatil` → `wtatil`, `WWTatil` → `WTatil`, `Wwtatil` → `Wtatil`
+- File renamed: `wwtatil_adapter.py` → `wtatil_adapter.py`
+- Database: No stale references
+
 ---
 
 ## Frontend Quality Score (Post P3+P4)
@@ -122,19 +154,21 @@ Updated files:
 ## Prioritized Backlog
 
 ### P0 — Next Priority
-- **P2: Caching Layer Validation**: Redis → Mongo fallback tests, invalidation correctness, TTL tuning, diagnostics API + UI
+- **E2E Demo Panel (Supplier Certification Console)**: COMPLETED (2026-03-16)
+- **Backend Router Refactoring**: Split inventory_sync_router.py → booking_router.py, sync_router.py, diagnostics_router.py
 
 ### P1
+- **P2: Caching Layer Validation**: Redis → Mongo fallback tests, invalidation correctness, TTL tuning, diagnostics API + UI
 - **P4.4 Real Sandbox Activation**: Credential validation with real APIs, sandbox certification with live data, go-live gating
 - **Activity Timeline**: Entity-based audit history (who did what)
 
 ### P2
 - **TypeScript Migration**: API layer → TanStack hooks → design system (incremental)
+- **Supplier Self-Serve Onboarding**: Partner self-service onboarding portal
 
 ### P3
 - **Paximum Integration**: Onboard using existing blueprint
 - **Legacy Code Cleanup**: Remaining ~17% useEffect files
-- **Router Refactoring**: Split inventory_sync_router.py into booking_router.py, sync_router.py, onboarding_router.py
 
 ---
 

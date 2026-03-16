@@ -18,6 +18,8 @@ from app.services.order_service import (
     update_order_item,
     get_financial_summary,
     seed_demo_orders,
+    search_orders,
+    VersionConflictError,
 )
 from app.services.order_transition_service import (
     confirm_order,
@@ -72,6 +74,7 @@ class OrderUpdate(BaseModel):
     agency_id: Optional[str] = None
     channel: Optional[str] = None
     metadata: Optional[dict] = None
+    version: Optional[int] = None  # For optimistic locking
 
 
 class StatusAction(BaseModel):
@@ -115,6 +118,37 @@ async def api_list_orders(
     return await get_orders(skip=skip, limit=limit, status=status, channel=channel, agency_id=agency_id)
 
 
+@router.get("/search")
+async def api_search_orders(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+    status: Optional[str] = None,
+    channel: Optional[str] = None,
+    agency_id: Optional[str] = None,
+    customer_id: Optional[str] = None,
+    supplier_code: Optional[str] = None,
+    order_number: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    settlement_status: Optional[str] = None,
+    q: Optional[str] = None,
+):
+    return await search_orders(
+        skip=skip,
+        limit=limit,
+        status=status,
+        channel=channel,
+        agency_id=agency_id,
+        customer_id=customer_id,
+        supplier_code=supplier_code,
+        order_number=order_number,
+        date_from=date_from,
+        date_to=date_to,
+        settlement_status=settlement_status,
+        q=q,
+    )
+
+
 @router.get("/{order_id}")
 async def api_get_order(order_id: str):
     order = await get_order_by_id(order_id)
@@ -126,7 +160,11 @@ async def api_get_order(order_id: str):
 @router.patch("/{order_id}")
 async def api_update_order(order_id: str, body: OrderUpdate):
     updates = body.model_dump(exclude_none=True)
-    result = await update_order(order_id, updates)
+    expected_version = updates.pop("version", None)
+    try:
+        result = await update_order(order_id, updates, expected_version=expected_version)
+    except VersionConflictError as e:
+        raise HTTPException(status_code=409, detail=str(e))
     if not result:
         raise HTTPException(status_code=404, detail="Order not found")
     return result

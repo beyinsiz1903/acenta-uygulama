@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   FileText,
   ArrowUpRight,
+  Calendar,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
@@ -41,7 +42,7 @@ import {
 } from "../../components/ui/dialog";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import { fetchOrders, createOrder, seedDemoOrders } from "./lib/ordersApi";
+import { fetchOrders, createOrder, seedDemoOrders, searchOrders } from "./lib/ordersApi";
 import { toast } from "sonner";
 
 const fmt = (v) =>
@@ -71,6 +72,10 @@ export default function OrdersPage() {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState("");
   const [channelFilter, setChannelFilter] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [settlementFilter, setSettlementFilter] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newOrder, setNewOrder] = useState({
@@ -86,9 +91,21 @@ export default function OrdersPage() {
     supplier_amount: "",
   });
 
+  const hasAdvancedFilters = searchQuery || dateFrom || dateTo || settlementFilter;
+
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["orders", statusFilter, channelFilter],
-    queryFn: () => fetchOrders({ status: statusFilter || undefined, channel: channelFilter || undefined }),
+    queryKey: ["orders", statusFilter, channelFilter, searchQuery, dateFrom, dateTo, settlementFilter],
+    queryFn: () =>
+      hasAdvancedFilters
+        ? searchOrders({
+            status: statusFilter || undefined,
+            channel: channelFilter || undefined,
+            q: searchQuery || undefined,
+            date_from: dateFrom || undefined,
+            date_to: dateTo || undefined,
+            settlement_status: settlementFilter || undefined,
+          })
+        : fetchOrders({ status: statusFilter || undefined, channel: channelFilter || undefined }),
   });
 
   const handleSeed = async () => {
@@ -229,36 +246,94 @@ export default function OrdersPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-3 items-center">
-        <Filter className="h-4 w-4 text-muted-foreground" />
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v === "all" ? "" : v)}>
-          <SelectTrigger data-testid="filter-status" className="w-[180px]">
-            <SelectValue placeholder="Status Filtre" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tümü</SelectItem>
-            <SelectItem value="draft">Taslak</SelectItem>
-            <SelectItem value="pending_confirmation">Onay Bekliyor</SelectItem>
-            <SelectItem value="confirmed">Onaylanmış</SelectItem>
-            <SelectItem value="cancel_requested">İptal Talebi</SelectItem>
-            <SelectItem value="cancelled">İptal Edildi</SelectItem>
-            <SelectItem value="closed">Kapatıldı</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={channelFilter} onValueChange={(v) => setChannelFilter(v === "all" ? "" : v)}>
-          <SelectTrigger data-testid="filter-channel" className="w-[160px]">
-            <SelectValue placeholder="Kanal Filtre" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tümü</SelectItem>
-            <SelectItem value="B2B">B2B</SelectItem>
-            <SelectItem value="B2C">B2C</SelectItem>
-            <SelectItem value="Corporate">Corporate</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button variant="ghost" size="sm" onClick={refetch}>
-          <RefreshCw className="h-4 w-4" />
-        </Button>
+      <div className="space-y-3">
+        <div className="flex gap-3 items-center flex-wrap">
+          <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Input
+            data-testid="search-orders-input"
+            placeholder="Sipariş no, müşteri, acenta ara..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-[240px]"
+          />
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v === "all" ? "" : v)}>
+            <SelectTrigger data-testid="filter-status" className="w-[180px]">
+              <SelectValue placeholder="Status Filtre" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tümü</SelectItem>
+              <SelectItem value="draft">Taslak</SelectItem>
+              <SelectItem value="pending_confirmation">Onay Bekliyor</SelectItem>
+              <SelectItem value="confirmed">Onaylanmış</SelectItem>
+              <SelectItem value="cancel_requested">İptal Talebi</SelectItem>
+              <SelectItem value="cancelled">İptal Edildi</SelectItem>
+              <SelectItem value="closed">Kapatıldı</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={channelFilter} onValueChange={(v) => setChannelFilter(v === "all" ? "" : v)}>
+            <SelectTrigger data-testid="filter-channel" className="w-[160px]">
+              <SelectValue placeholder="Kanal Filtre" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tümü</SelectItem>
+              <SelectItem value="B2B">B2B</SelectItem>
+              <SelectItem value="B2C">B2C</SelectItem>
+              <SelectItem value="Corporate">Corporate</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={settlementFilter} onValueChange={(v) => setSettlementFilter(v === "all" ? "" : v)}>
+            <SelectTrigger data-testid="filter-settlement" className="w-[180px]">
+              <SelectValue placeholder="Ödeme Durumu" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tümü</SelectItem>
+              <SelectItem value="not_settled">Ödenmedi</SelectItem>
+              <SelectItem value="partially_settled">Kısmi Ödendi</SelectItem>
+              <SelectItem value="settled">Ödendi</SelectItem>
+              <SelectItem value="reversed">İade</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="ghost" size="sm" onClick={refetch}>
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="flex gap-3 items-center">
+          <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Input
+            data-testid="filter-date-from"
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="w-[160px]"
+            placeholder="Başlangıç"
+          />
+          <span className="text-muted-foreground text-sm">—</span>
+          <Input
+            data-testid="filter-date-to"
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="w-[160px]"
+            placeholder="Bitiş"
+          />
+          {(searchQuery || dateFrom || dateTo || settlementFilter) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              data-testid="clear-filters-btn"
+              onClick={() => {
+                setSearchQuery("");
+                setDateFrom("");
+                setDateTo("");
+                setSettlementFilter("");
+                setStatusFilter("");
+                setChannelFilter("");
+              }}
+            >
+              Filtreleri Temizle
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Orders Table */}

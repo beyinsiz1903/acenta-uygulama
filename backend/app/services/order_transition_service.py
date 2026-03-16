@@ -87,6 +87,7 @@ async def transition_order_status(
 
     from datetime import datetime, timezone
     now = datetime.now(timezone.utc).isoformat()
+    current_version = order.get("version", 1)
 
     await db.orders.update_one(
         {"order_id": order_id},
@@ -96,6 +97,7 @@ async def transition_order_status(
             "status_updated_at": now,
             "updated_at": now,
             "updated_by": actor_name,
+            "version": current_version + 1,
         }},
     )
 

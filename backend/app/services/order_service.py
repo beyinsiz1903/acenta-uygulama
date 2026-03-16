@@ -15,20 +15,26 @@ from app.services.order_event_service import append_event
 from app.services.order_mapping_service import map_booking_to_order_item
 
 
+class VersionConflictError(Exception):
+    """Raised when optimistic locking detects a version mismatch."""
+    pass
+
+
 # ── Order Number Generation ──
 
 async def generate_order_number() -> str:
-    """Generate a human-friendly order number: ORD-XXXXXX."""
+    """Generate a human-friendly order number: ORD-YYYY-NNNNNN."""
     db = await get_db()
-    # Get next sequence value
+    year = datetime.now(timezone.utc).year
+    counter_id = f"order_number_{year}"
     result = await db.counters.find_one_and_update(
-        {"_id": "order_number"},
+        {"_id": counter_id},
         {"$inc": {"seq": 1}},
         upsert=True,
         return_document=True,
     )
     seq = result["seq"]
-    return f"ORD-{seq:06d}"
+    return f"ORD-{year}-{seq:06d}"
 
 
 # ── Create Order ──
@@ -77,6 +83,7 @@ async def create_order(
         "settlement_status": "not_settled",
         "metadata": metadata or {},
         "org_id": org_id,
+        "version": 1,
     }
     await db.orders.insert_one(order)
     order.pop("_id", None)
@@ -180,21 +187,102 @@ async def get_order_by_id(order_id: str) -> Optional[dict]:
     return order
 
 
+# ── Search Orders ──
+
+async def search_orders(
+    org_id: str = "default_org",
+    skip: int = 0,
+    limit: int = 50,
+    status: Optional[str] = None,
+    channel: Optional[str] = None,
+    agency_id: Optional[str] = None,
+    customer_id: Optional[str] = None,
+    supplier_code: Optional[str] = None,
+    order_number: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    settlement_status: Optional[str] = None,
+    q: Optional[str] = None,
+) -> dict:
+    """Advanced search with multiple filters."""
+    db = await get_db()
+    query: dict = {"org_id": org_id}
+
+    if status:
+        query["status"] = status
+    if channel:
+        query["channel"] = channel
+    if agency_id:
+        query["agency_id"] = {"$regex": agency_id, "$options": "i"}
+    if customer_id:
+        query["customer_id"] = {"$regex": customer_id, "$options": "i"}
+    if settlement_status:
+        query["settlement_status"] = settlement_status
+    if order_number:
+        query["order_number"] = {"$regex": order_number, "$options": "i"}
+    if date_from or date_to:
+        date_filter = {}
+        if date_from:
+            date_filter["$gte"] = date_from
+        if date_to:
+            date_filter["$lte"] = date_to + "T23:59:59"
+        query["created_at"] = date_filter
+
+    # Free-text search across key fields
+    if q:
+        query["$or"] = [
+            {"order_number": {"$regex": q, "$options": "i"}},
+            {"customer_id": {"$regex": q, "$options": "i"}},
+            {"agency_id": {"$regex": q, "$options": "i"}},
+        ]
+
+    # If supplier_code is specified, find matching order_ids from order_items
+    if supplier_code:
+        item_cursor = db.order_items.find(
+            {"supplier_code": supplier_code, "org_id": org_id},
+            {"order_id": 1, "_id": 0},
+        )
+        matching_items = await item_cursor.to_list(length=10000)
+        matching_order_ids = list({i["order_id"] for i in matching_items})
+        if matching_order_ids:
+            query["order_id"] = {"$in": matching_order_ids}
+        else:
+            return {"orders": [], "total": 0, "skip": skip, "limit": limit}
+
+    total = await db.orders.count_documents(query)
+    cursor = (
+        db.orders.find(query, {"_id": 0})
+        .sort("created_at", -1)
+        .skip(skip)
+        .limit(limit)
+    )
+    orders = await cursor.to_list(length=limit)
+    return {"orders": orders, "total": total, "skip": skip, "limit": limit}
+
+
 # ── Update Order ──
 
 async def update_order(
     order_id: str,
     updates: dict,
     actor_name: str = "system",
+    expected_version: Optional[int] = None,
 ) -> Optional[dict]:
-    """Update non-status fields of an order (PATCH)."""
+    """Update non-status fields of an order (PATCH) with optimistic locking."""
     db = await get_db()
     order = await db.orders.find_one({"order_id": order_id})
     if not order:
         return None
 
+    # Optimistic locking check
+    current_version = order.get("version", 1)
+    if expected_version is not None and expected_version != current_version:
+        raise VersionConflictError(
+            f"Version conflict: expected {expected_version}, current {current_version}"
+        )
+
     # Prevent status updates through this method
-    forbidden = {"status", "status_reason", "status_updated_at", "order_id", "order_number", "created_at", "created_by", "_id", "org_id"}
+    forbidden = {"status", "status_reason", "status_updated_at", "order_id", "order_number", "created_at", "created_by", "_id", "org_id", "version"}
     safe_updates = {k: v for k, v in updates.items() if k not in forbidden}
 
     if not safe_updates:
@@ -204,8 +292,16 @@ async def update_order(
     now = datetime.now(timezone.utc).isoformat()
     safe_updates["updated_at"] = now
     safe_updates["updated_by"] = actor_name
+    safe_updates["version"] = current_version + 1
 
-    await db.orders.update_one({"order_id": order_id}, {"$set": safe_updates})
+    # Atomic update with version check
+    result = await db.orders.update_one(
+        {"order_id": order_id, "version": current_version},
+        {"$set": safe_updates},
+    )
+    if result.modified_count == 0:
+        raise VersionConflictError("Concurrent modification detected")
+
     updated = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
     return updated
 

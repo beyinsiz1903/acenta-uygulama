@@ -12,6 +12,26 @@ export async function fetchOrders({ skip = 0, limit = 50, status, channel, agenc
   return res.json();
 }
 
+export async function searchOrders({
+  skip = 0, limit = 50, status, channel, agency_id, customer_id,
+  supplier_code, order_number, date_from, date_to, settlement_status, q,
+} = {}) {
+  const params = new URLSearchParams({ skip, limit });
+  if (status) params.set("status", status);
+  if (channel) params.set("channel", channel);
+  if (agency_id) params.set("agency_id", agency_id);
+  if (customer_id) params.set("customer_id", customer_id);
+  if (supplier_code) params.set("supplier_code", supplier_code);
+  if (order_number) params.set("order_number", order_number);
+  if (date_from) params.set("date_from", date_from);
+  if (date_to) params.set("date_to", date_to);
+  if (settlement_status) params.set("settlement_status", settlement_status);
+  if (q) params.set("q", q);
+  const res = await fetch(`${API}/api/orders/search?${params}`);
+  if (!res.ok) throw new Error("Search orders failed");
+  return res.json();
+}
+
 export async function fetchOrderDetail(orderId) {
   const res = await fetch(`${API}/api/orders/${orderId}`);
   if (!res.ok) throw new Error("Order detail fetch failed");

@@ -1,28 +1,31 @@
 <analysis>**original_problem_statement:**
-The user's goal is to build a Travel Distribution Infrastructure platform named Syroce. The project is delivered in phases. Phases 1 (Inventory/Pricing) and 2 (Financial Ledger/Settlement) are complete, along with foundational features like Configuration Versioning and an Activity Timeline.
+The user's initial goal was to build a Travel Distribution Infrastructure platform named Syroce. However, during this session, the user introduced a major architectural shift, re-prioritizing the development of an **Order Management System (OMS)** as the platform's new core. The user provided a detailed, multi-phase blueprint for this system.
 
-The current user request was to implement a **Supplier Self-Serve Onboarding** flow. This feature is critical for increasing the platform's commercial capacity by allowing partners to add, certify, and activate new suppliers without developer intervention.
+The immediate goal was to implement **OMS Phase 1 - Order Core Layer**, establishing the foundational data models, services, APIs, and UI to shift the platform from a booking-centric to an order-centric architecture.
 
 **PRODUCT REQUIREMENTS:**
--   **Supplier Self-Serve Onboarding (P0 - Just Completed):**
-    -   A multi-step wizard on the frontend to guide partners through the onboarding process.
-    -   The flow must include: Supplier Selection, Credential Setup, Credential Validation, Sandbox Certification, Pricing Configuration, and Go-Live Activation.
-    -   The backend must support each step with dedicated services and endpoints, tracking the supplier's state throughout the process.
-    -   Key events, such as a supplier going live, must be logged in the Activity Timeline.
--   **Upcoming Priority (from user):**
-    -   **Timeline Export (P1):** Add CSV and PDF export functionality to the Activity Timeline page for audit and reporting.
-    -   **Real RateHawk Environment Execution (P1).**
-    -   **New Supplier Integrations (P2):** Paximum, Hotelbeds, Juniper.
+-   **Order Management System (OMS) (New P0 Priority):**
+    -   **Phase 1: Order Core Layer (Just Completed):**
+        -   Backend services for creating, managing, and transitioning orders (, , ).
+        -   New data models for , , and  in MongoDB.
+        -   A secure state machine to manage order statuses (, , , etc.).
+        -   REST APIs for order CRUD, status transitions, and fetching order details/events.
+        -   A new frontend section with an Orders list page and a detailed Order Details page showing items, financial summaries, and an event timeline.
+    -   **Phase 2: Financial Linkage (Upcoming):** Link the OMS to the existing Financial Ledger.
+    -   **Phase 3+: Multi-product & Post-booking (Future):** Support for various product types (flights, tours) and complex post-booking operations.
+-   **Timeline Export (Pushed back):** Add CSV/PDF export to the Activity Timeline. This is now a lower priority than the OMS.
+-   **Real RateHawk Environment Execution (Pushed back).**
 
 **User's preferred language**: Turkish
 
 **what currently exists?**
-The platform is a full-stack application with a React frontend, FastAPI backend, and MongoDB database. Key features include a pricing engine, a financial ledger, configuration versioning, an activity timeline, and now a complete Supplier Self-Serve Onboarding wizard.
-
-The new onboarding flow allows a user to select a supplier type, enter and validate credentials, run sandbox certification tests, configure pricing rules, and activate the supplier for live use. The entire process is tracked with status updates on a central supplier dashboard.
+The application is a full-stack React/FastAPI/MongoDB platform. The agent has just successfully implemented and tested **Phase 1 of the Order Management System (OMS)**. This new Order Core Layer includes:
+-   **Backend**: New services, routers, and data models for , , and .
+-   **Frontend**: A new section under Management for Orders, which includes a comprehensive list page with filters and an order detail page displaying order summary, items, financial info, and an event timeline.
+This new system sits on top of the previously built infrastructure (pricing engine, financial ledger, supplier onboarding, etc.).
 
 **Last working item**:
--   Last item agent was working: The agent just completed the implementation of the **Supplier Self-Serve Onboarding** feature. This included building the backend services, API endpoints, and a new 6-step frontend wizard. The agent performed manual tests, took screenshots for verification, and successfully ran the testing agent to validate the entire flow. The final steps were updating the PRD and completing the job.
+-   Last item agent was working: The agent completed the entire implementation of **OMS Phase 1 - Order Core Layer**, based on a detailed blueprint provided by the user. This involved creating all backend services, API endpoints, frontend pages, and integrating them into the existing application.
 -   Status: USER VERIFICATION PENDING
 -   Agent Testing Done: Y
 -   Which testing method agent to use? NA
@@ -30,12 +33,12 @@ The new onboarding flow allows a user to select a supplier type, enter and valid
 
 **All Pending/In progress Issue list**:
 -   **Issue 1: Frontend Dependency Lockfile Inconsistency (DEFERRED)**
-    -   **Description (P2):** The command yarn install v1.22.22
+    -   **Description (P2):** The yarn install v1.22.22
 [1/4] Resolving packages...
 success Already up-to-date.
-Done in 0.50s. fails, indicating a mismatch between  and . This seems to be an environment issue.
-    -   **Attempted fixes:** The previous agent tried regenerating the lockfile.
-    -   **Why fix this issue and what will be achieved with the fix?** Resolving this ensures dependency consistency, which is important for CI/CD and stable builds.
+Done in 0.57s. command fails, indicating a mismatch between  and .
+    -   **Attempted fixes:** Regenerating the lockfile in a previous session did not resolve it.
+    -   **Why fix this issue and what will be achieved with the fix?** Ensures dependency consistency for CI/CD and stable builds.
     -   **Status:** BLOCKED. The user explicitly instructed the agent to ignore this issue as it does not block development.
 
 **In progress Task List**:
@@ -43,29 +46,31 @@ Done in 0.50s. fails, indicating a mismatch between  and . This seems to be an e
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **P0: Timeline Export (CSV first):** The user has strongly supported adding an export feature to the Activity Timeline for compliance and auditing. This was prioritized after the onboarding feature.
-    *   **P1: Real RateHawk Environment Execution:** As per the user's priority list.
-    *   **P2: New Supplier Integrations:** Integrate Paximum, Hotelbeds, and Juniper.
+    *   **P0: OMS Phase 2 — Financial Linkage:** As per the user's plan, this involves linking the new order system with the existing financial ledger.
+    *   **P1: Real RateHawk Environment Execution:** Previously a higher priority, now sits after OMS Phase 2.
+    *   **P2: Timeline Export:** Implement CSV/PDF export for the Activity Timeline page.
+    *   **P3: New Supplier Integrations:** Paximum, Hotelbeds, and Juniper.
 *   **Future Tasks (Backlog):**
-    *   **TypeScript Migration:** A long-term goal to improve code quality.
-    *   **Order Management System (OMS):** The user mentioned this as the next major system for the platform, which is a significant piece of future work.
-    -   **Legacy Code Cleanup.**
+    *   **OMS Phase 3+:** Multi-product support, modifications, cancellations, refunds, etc.
+    *   **TypeScript Migration.**
+    *   **Legacy Code Cleanup.**
 
 **Completed work in this session**
--   **Task: Implemented Supplier Self-Serve Onboarding (DONE)**
+-   **Task: Implemented OMS Phase 1 - Order Core Layer (DONE)**
     -   **Backend:**
-        -   Created  to manage the logic for validation, certification, pricing setup, and activation.
-        -   Created  with endpoints for each step of the onboarding flow.
-        -   Updated  to reflect new supplier statuses like .
-        -   Integrated  to log the  event.
+        -   Created services for core logic: , , , .
+        -   Created API endpoints:  with routes for CRUD, status transitions, and data fetching.
+        -   Updated  to include the new order router.
     -   **Frontend:**
-        -   Rewrote  to be a comprehensive 6-step wizard (Supplier Selection → Credentials → Validation → Certification → Pricing → Go-Live).
+        -   Created new pages:  and .
+        -   Created a new API client: .
+        -   Updated navigation and routing in  and  to add the Orders section.
     -   **Testing:**
-        -   Manually tested all new endpoints via .
-        -   Verified the frontend wizard flow and UI with screenshots.
-        -   Ran , which passed all 21 backend and frontend tests.
+        -   Manually tested all new backend endpoints via , including successful validation of the state machine logic.
+        -   Verified frontend pages with screenshots.
+        -   Ran , which passed **23/23 backend and frontend tests** with 100% success.
 -   **Documentation:**
-    -   Updated  to mark the onboarding feature as complete.
+    -   Updated  to reflect the completion of OMS Phase 1.
 
 **Earlier issues found/mentioned but not fixed**
 -   The yarn install v1.22.22
@@ -80,23 +85,33 @@ Done in 0.05s. issue, as detailed in the All Pending/In progress Issue list. It 
 
 
 **Key Technical Concepts**
--   **Multi-Step Wizard UI:** A stateful React component guides the user through the complex onboarding workflow, providing clear progress indicators and contextual forms for each step.
--   **Stateful Backend Onboarding:** The backend tracks the supplier's progress through a series of statuses (e.g., , , , ) within the supplier's document in MongoDB.
--   **Service Orchestration:** The  acts as an orchestrator, invoking other services like the  to perform tasks like logging significant events.
+-   **Order-Centric Architecture:** A fundamental shift from a booking-centric to an order-centric model, where the  is the new aggregate root for all related transactions (bookings, payments, refunds).
+-   **Explicit State Machine:** A dedicated service () enforces valid state transitions (e.g.,  -> ), preventing direct, uncontrolled status updates and ensuring data integrity.
+-   **Event Sourcing (Lite):** An append-only  collection acts as an immutable log, recording every change to an order. This provides a complete audit trail for each order's lifecycle.
 
 **key DB schema**
--   **suppliers (in inventory_db collection, updated implicitly):**
-    -   The existing supplier document now contains fields to track onboarding state, such as  (e.g., 'certified', 'pricing_configured', 'active') and a nested  object.
+-   **orders:** (New collection)
+    -   , , , , , etc.
+-   **order_items:** (New collection)
+    -   ,  (e.g., 'hotel'), , , , etc.
+-   **order_events:** (New collection)
+    -   , , , , , , , .
 
 **changes in tech stack**
--   No new dependencies or technologies were added.
+-   None.
 
 **All files of reference**
 -   **Created:**
     -   
     -   
+    -   
+    -   
+    -   
+    -   
+    -   
+    -   
 -   **Updated:**
-    -    (Rewritten)
+    -   
     -   
     -   
     -   
@@ -107,40 +122,44 @@ Done in 0.05s. issue, as detailed in the All Pending/In progress Issue list. It 
 -   None identified.
 
 **key api endpoints**
--   : Saves the pricing configuration for a supplier.
--   : Activates or deactivates a supplier and logs the event.
--   (Other onboarding endpoints for validation, certification, etc. also exist under )
+-   : Creates a new order.
+-   : Lists all orders.
+-   : Retrieves a single order's details.
+-   : Gets the event timeline for an order.
+-   : Confirms an order (example of a state transition endpoint).
+-   : Requests cancellation for an order.
 
 **Critical Info for New Agent**
 -   **İletişim diliniz Türkçe olmalıdır. (Your communication language must be Turkish).**
--   The Supplier Self-Serve Onboarding feature is fully implemented and tested. Your first action should be to present this to the user for verification. The UI is accessible from the Suppliers dashboard.
--   The user has provided a new, clear priority list. The next task is **Timeline Export (CSV first)**, followed by **Real RateHawk Environment Execution**.
--   The  file issue is a known, low-priority problem that the user has explicitly asked to defer. Do not work on it.
--   The user has mentioned a future major system: **Order Management System (OMS)**. This should be kept in mind for long-term roadmap discussions.
+-   The highest priority has shifted to building the **Order Management System (OMS)**. **Phase 1 (Order Core Layer) is fully implemented and tested.** Your first action should be to present this major new feature to the user for verification. The UI is accessible via Management -> Orders.
+-   The user provided a detailed **OMS Blueprint**, which is the absolute source of truth for this architecture. You must refer to it for all subsequent OMS work.
+-   The next task, after user verification, is **OMS Phase 2 - Financial Linkage**.
+-   Priorities have been reshuffled. Tasks like Timeline Export and Real RateHawk Execution are now scheduled after OMS phases.
+-   The  file issue remains a known, low-priority problem that the user has explicitly asked to defer. Do not work on it.
 
 **documents and test reports created in this job**
 -   
 -    (Updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Approved the idea of a Timeline Export feature, prioritizing CSV over PDF. (PENDING IMPLEMENTATION)
-2.  **User:** Provided a new, clear priority list for upcoming work: 1. Supplier Self-Serve Onboarding, 2. Real RateHawk Environment Execution, 3. Timeline Export. (ONBOARDING IS NOW COMPLETE)
-3.  **User:** Argued that Onboarding is a growth feature and more strategic than the compliance feature of exporting, justifying its top priority. (ACKNOWLEDGED)
-4.  **User:** Gave a detailed breakdown of the 6 steps required for the Supplier Self-Serve Onboarding wizard, including backend and frontend requirements. (IMPLEMENTED)
-5.  **User:** Hinted at a future major system to be built: an Order Management System (OMS). (FUTURE TASK)
+1.  **User:** Provided a detailed **Syroce OMS Blueprint**, outlining the exact architecture, data models, state machine, APIs, and phases for the new Order Management System. (IMPLEMENTED - PHASE 1)
+2.  **User:** Confirmed that the agent should wait for the blueprint before starting any coding on the OMS. (ACKNOWLEDGED)
+3.  **User:** Confirmed the priority shift to OMS, agreeing to start with Phase 1 - Order Core Layer and deferring Timeline Export. (ACKNOWLEDGED)
+4.  **User:** Introduced the concept of building an **Order Management System (OMS)** as the new central operating system for the platform, explaining its strategic importance and high-level architecture. (ACKNOWLEDGED)
 
 **Project Health Check:**
 -   **Broken:** None
--   **Mocked:** Core financial and pricing data logic uses mock/seed data by design.
+-   **Mocked:** Core financial and pricing data logic uses mock/seed data by design. The new OMS was seeded with test data for verification.
 -   **Known Issues:** A deferred frontend dependency lockfile issue ( mismatch) exists but does not prevent the app from running.
 
 **3rd Party Integrations**
--   No changes. Existing integrations (Ratehawk, Stripe placeholder) remain.
+-   No changes.
 
 **Testing status**
 -   Testing agent used after significant changes: YES.
+-   Troubleshoot agent used after agent stuck in loop: NO.
 -   Test files created: None.
--   Test Report:  (21/21 tests passed, 100% success).
+-   Test Report:  (23/23 tests passed, 100% success).
 -   Known regressions: None.
 
 **Credentials to test flow:**
@@ -148,4 +167,4 @@ Done in 0.05s. issue, as detailed in the All Pending/In progress Issue list. It 
 -   **Agency Admin:**  / 
 
 **What agent forgot to execute**
--   Nothing. The agent successfully followed the user's detailed specifications and implemented the Supplier Self-Serve Onboarding feature.</analysis>
+-   Nothing. The agent perfectly followed the user's detailed instructions and blueprint to implement the first phase of the OMS.</analysis>

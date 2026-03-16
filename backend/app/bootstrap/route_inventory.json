@@ -9991,6 +9991,17 @@
     "compat_required": true,
     "current_namespace": "/api/orders",
     "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "orders",
+    "path": "/api/orders/search",
+    "risk_level": "medium",
+    "source": "app.routers.order_router",
+    "target_namespace": "/api/v1/orders"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/orders",
+    "legacy_or_v1": "legacy",
     "method": "POST",
     "owner": "orders",
     "path": "/api/orders/seed",

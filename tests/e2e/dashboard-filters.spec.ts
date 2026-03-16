@@ -1,7 +1,7 @@
 // tests/e2e/dashboard-filters.spec.ts
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "https://cert-telemetry.preview.emergentagent.com";
+const BASE_URL = "https://telemetry-dash-9.preview.emergentagent.com";
 
 async function login(page) {
   await page.goto(`${BASE_URL}/login`);

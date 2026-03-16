@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://pricing-trace.preview.emergentagent.com/api",
-    "frontend_url": "https://pricing-trace.preview.emergentagent.com",
+    "backend_url": "https://financial-backbone-1.preview.emergentagent.com/api",
+    "frontend_url": "https://financial-backbone-1.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

@@ -22,7 +22,7 @@ import os
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
-    BASE_URL = "https://pricing-trace.preview.emergentagent.com"
+    BASE_URL = "https://financial-backbone-1.preview.emergentagent.com"
 
 
 class TestAuth:

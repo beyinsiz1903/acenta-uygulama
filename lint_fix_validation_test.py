@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 # Use the public URL from frontend/.env
-BACKEND_URL = "https://financial-backbone-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://cache-engine-prod.preview.emergentagent.com/api"
 ADMIN_CREDENTIALS = {"email": "admin@acenta.test", "password": "admin123"}
 
 class LintFixValidationSuite:

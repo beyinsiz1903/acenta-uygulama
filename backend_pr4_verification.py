@@ -2,7 +2,7 @@
 """
 PR-4 Web Auth Cookie Compat Backend Verification Test
 Test PR-4 web auth compatibility layer on deployed preview environment
-Base URL: https://financial-backbone-1.preview.emergentagent.com
+Base URL: https://cache-engine-prod.preview.emergentagent.com
 
 Verification Requirements:
 1. POST /api/auth/login with X-Client-Platform:web sets cookie-based auth and returns auth_transport=cookie_compat
@@ -19,7 +19,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Test Configuration
-BASE_URL = "https://financial-backbone-1.preview.emergentagent.com"
+BASE_URL = "https://cache-engine-prod.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 WEB_PLATFORM_HEADER = "X-Client-Platform"

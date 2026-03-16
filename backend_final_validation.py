@@ -6,7 +6,7 @@ Final comprehensive Syroce backend validation
 import requests
 import json
 
-BASE_URL = "https://financial-backbone-1.preview.emergentagent.com/api"
+BASE_URL = "https://cache-engine-prod.preview.emergentagent.com/api"
 ADMIN_CREDENTIALS = {"email": "admin@acenta.test", "password": "admin123"}
 AGENCY_CREDENTIALS = {"email": "agent@acenta.test", "password": "agent123"}
 

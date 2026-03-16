@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="23" time="38.824" timestamp="2026-03-16T18:43:49.476870+00:00" hostname="agent-env-10d71951-64ff-4b2c-a621-19bed39b6723"><testcase classname="tests.test_pricing_engine_refactor_iter132.TestPricingEngineDashboard" name="test_dashboard_returns_200" time="1.949" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestPricingEngineDashboard" name="test_dashboard_has_expected_fields" time="1.145"><failure message="requests.exceptions.ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))">/root/.venv/lib/python3.11/site-packages/urllib3/connectionpool.py:787: in urlopen
+    response = self._make_request(
+/root/.venv/lib/python3.11/site-packages/urllib3/connectionpool.py:534: in _make_request
+    response = conn.getresponse()
+               ^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/urllib3/connection.py:571: in getresponse
+    httplib_response = super().getresponse()
+                       ^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/http/client.py:1395: in getresponse
+    response.begin()
+/usr/local/lib/python3.11/http/client.py:325: in begin
+    version, status, reason = self._read_status()
+                              ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/http/client.py:294: in _read_status
+    raise RemoteDisconnected("Remote end closed connection without"
+E   http.client.RemoteDisconnected: Remote end closed connection without response
+
+During handling of the above exception, another exception occurred:
+/root/.venv/lib/python3.11/site-packages/requests/adapters.py:644: in send
+    resp = conn.urlopen(
+/root/.venv/lib/python3.11/site-packages/urllib3/connectionpool.py:841: in urlopen
+    retries = retries.increment(
+/root/.venv/lib/python3.11/site-packages/urllib3/util/retry.py:474: in increment
+    raise reraise(type(error), error, _stacktrace)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/urllib3/util/util.py:38: in reraise
+    raise value.with_traceback(tb)
+/root/.venv/lib/python3.11/site-packages/urllib3/connectionpool.py:787: in urlopen
+    response = self._make_request(
+/root/.venv/lib/python3.11/site-packages/urllib3/connectionpool.py:534: in _make_request
+    response = conn.getresponse()
+               ^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/urllib3/connection.py:571: in getresponse
+    httplib_response = super().getresponse()
+                       ^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/http/client.py:1395: in getresponse
+    response.begin()
+/usr/local/lib/python3.11/http/client.py:325: in begin
+    version, status, reason = self._read_status()
+                              ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/http/client.py:294: in _read_status
+    raise RemoteDisconnected("Remote end closed connection without"
+E   urllib3.exceptions.ProtocolError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+
+During handling of the above exception, another exception occurred:
+backend/tests/test_pricing_engine_refactor_iter132.py:66: in test_dashboard_has_expected_fields
+    response = auth_session.get(f"{BASE_URL}/api/pricing-engine/dashboard")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:602: in get
+    return self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:589: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:703: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/adapters.py:659: in send
+    raise ConnectionError(err, request=request)
+E   requests.exceptions.ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))</failure></testcase><testcase classname="tests.test_pricing_engine_refactor_iter132.TestPricingSimulator" name="test_simulate_returns_200" time="1.341" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestPricingSimulator" name="test_simulate_returns_expected_fields" time="1.304" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestCacheStats" name="test_cache_stats_returns_200" time="1.283" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestCacheStats" name="test_cache_stats_has_expected_fields" time="1.213" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestCacheTelemetry" name="test_telemetry_returns_200" time="1.270" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestCacheTelemetry" name="test_telemetry_has_supplier_breakdown" time="1.264" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestCacheDiagnostics" name="test_diagnostics_returns_200" time="1.384" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestCacheDiagnostics" name="test_diagnostics_has_expected_fields" time="1.224" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestCacheAlerts" name="test_alerts_returns_200" time="5.382" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestCacheAlerts" name="test_alerts_has_expected_fields" time="1.292" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestDistributionRules" name="test_distribution_rules_returns_200" time="1.391" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestDistributionRules" name="test_distribution_rules_is_list" time="1.288" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestChannels" name="test_channels_returns_200" time="1.280" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestChannels" name="test_channels_is_list" time="1.357" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestPromotions" name="test_promotions_returns_200" time="1.351" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestPromotions" name="test_promotions_is_list" time="1.250" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestGuardrails" name="test_guardrails_returns_200" time="1.231" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestGuardrails" name="test_guardrails_is_list" time="1.246" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestCacheClear" name="test_cache_clear_returns_200" time="1.293" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestMetadata" name="test_metadata_returns_200" time="1.243" /><testcase classname="tests.test_pricing_engine_refactor_iter132.TestMetadata" name="test_metadata_has_expected_fields" time="5.604" /></testsuite></testsuites>

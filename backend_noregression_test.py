@@ -10,7 +10,7 @@ import sys
 from datetime import datetime, timedelta
 
 # Base URL from frontend/.env
-BASE_URL = "https://cache-health-check.preview.emergentagent.com/api"
+BASE_URL = "https://credential-ready.preview.emergentagent.com/api"
 
 # Test credentials
 ADMIN_CREDENTIALS = {

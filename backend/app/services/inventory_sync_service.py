@@ -124,40 +124,43 @@ async def trigger_supplier_sync(supplier: str) -> dict[str, Any]:
       - simulation: Generated data (no credentials configured)
       - sandbox/production: Real API calls via supplier adapter
 
-    Guards:
+    Guards (P4.2):
+      - Circuit breaker check (skip if supplier is down)
+      - Stuck job detection with auto-retry scheduling
       - Duplicate sync prevention (skip if a job is already running)
-      - Stuck job detection (mark jobs running > 5 min as stuck)
+      - Idempotency via distributed lock
     """
+    from app.services.sync_job_state import SyncJobStatus
+
     if supplier not in SUPPLIER_SYNC_CONFIG:
         return {"error": f"Unknown supplier: {supplier}", "available": list(SUPPLIER_SYNC_CONFIG.keys())}
 
     db = await get_db()
 
-    # ── Guard: Detect and clean stuck jobs (running > 5 min) ──
-    stuck_threshold = (_now() - timedelta(minutes=5)).isoformat()
-    stuck_result = await db.inventory_sync_jobs.update_many(
-        {
-            "supplier": supplier,
-            "status": "running",
-            "started_at": {"$lt": stuck_threshold},
-        },
-        {"$set": {"status": "stuck", "finished_at": _ts(), "error_note": "Marked as stuck by guard"}},
-    )
-    if stuck_result.modified_count > 0:
-        logger.warning("Marked %d stuck sync jobs for %s", stuck_result.modified_count, supplier)
+    # ── Guard: Circuit breaker check (P4.2) ──
+    from app.services.sync_stability_service import should_skip_sync_due_to_downtime
+    skip, reason = await should_skip_sync_due_to_downtime(supplier)
+    if skip:
+        logger.warning("Sync skipped for %s: %s", supplier, reason)
+        return {"status": "skipped_downtime", "message": reason, "supplier": supplier}
 
-    # ── Guard: Duplicate sync prevention ──
+    # ── Guard: Detect and handle stuck jobs (P4.2 enhanced) ──
+    from app.services.sync_stability_service import detect_and_handle_stuck_jobs
+    stuck_result = await detect_and_handle_stuck_jobs()
+
+    # ── Guard: Duplicate sync prevention (idempotency) ──
     running_job = await db.inventory_sync_jobs.find_one(
-        {"supplier": supplier, "status": "running"},
+        {"supplier": supplier, "status": {"$in": SyncJobStatus.ACTIVE}},
         {"_id": 0},
     )
     if running_job:
         return {
             "status": "already_running",
-            "message": f"A sync job for {supplier} is already running",
+            "message": f"A sync job for {supplier} is already active",
             "existing_job": {
                 "started_at": running_job.get("started_at"),
                 "sync_mode": running_job.get("sync_mode"),
+                "job_status": running_job.get("status"),
             },
         }
 
@@ -173,18 +176,25 @@ async def trigger_supplier_sync(supplier: str) -> dict[str, Any]:
     db = await get_db()
     sync_start = time.monotonic()
 
-    # Create sync job record
+    # Create sync job record with enhanced state model (P4.2)
     job_doc = {
         "supplier": supplier,
         "job_type": "full_sync",
-        "status": "running",
+        "status": SyncJobStatus.RUNNING,
         "started_at": _ts(),
         "finished_at": None,
         "records_updated": 0,
+        "records_total": 0,
+        "records_succeeded": 0,
+        "records_failed": 0,
         "prices_updated": 0,
         "availability_updated": 0,
         "errors": [],
+        "error_count": 0,
         "sync_mode": sync_mode,
+        "retry_count": 0,
+        "retry_eligible": False,
+        "region_results": [],
     }
     job_result = await db.inventory_sync_jobs.insert_one(job_doc)
     job_id = str(job_result.inserted_id)
@@ -195,6 +205,11 @@ async def trigger_supplier_sync(supplier: str) -> dict[str, Any]:
     else:
         result = await _sync_simulation(db, supplier, job_id, sync_start, job_result.inserted_id)
 
+    # Record outcome to circuit breaker (P4.2)
+    from app.services.sync_stability_service import record_sync_outcome_to_breaker
+    is_success = result.get("status") in [SyncJobStatus.COMPLETED, SyncJobStatus.COMPLETED_WITH_PARTIAL_ERRORS, "completed"]
+    await record_sync_outcome_to_breaker(supplier, is_success)
+
     result["sync_mode"] = sync_mode
     return result
 
@@ -202,80 +217,100 @@ async def trigger_supplier_sync(supplier: str) -> dict[str, Any]:
 async def _sync_ratehawk_real(
     db, supplier: str, job_id: str, cred_config: dict, sync_start: float, job_oid
 ) -> dict[str, Any]:
-    """Sync Ratehawk using real API adapter."""
+    """Sync Ratehawk using real API adapter with partial failure handling (P4.2)."""
     from app.services.ratehawk_sync_adapter import sync_inventory_from_ratehawk
+    from app.services.sync_stability_service import finalize_sync_job
+    from app.services.sync_job_state import SyncJobStatus, REGION_SYNC_CONFIG
 
     inventory_count = 0
     price_count = 0
     avail_count = 0
     errors = []
+    failed_records = 0
+    region_results = []
 
     try:
         sync_result = await sync_inventory_from_ratehawk(
             cred_config["base_url"], cred_config["credentials"]
         )
 
-        # Persist hotels to MongoDB
+        # Persist hotels to MongoDB with per-record error handling (P4.2)
         for hotel in sync_result.get("hotels", []):
-            hotel["updated_at"] = _ts()
-            hotel["sync_job_id"] = job_id
-            await db.supplier_inventory.update_one(
-                {"supplier": supplier, "hotel_id": hotel["hotel_id"]},
-                {"$set": hotel},
-                upsert=True,
-            )
-            inventory_count += 1
+            try:
+                hotel["updated_at"] = _ts()
+                hotel["sync_job_id"] = job_id
+                await db.supplier_inventory.update_one(
+                    {"supplier": supplier, "hotel_id": hotel["hotel_id"]},
+                    {"$set": hotel},
+                    upsert=True,
+                )
+                inventory_count += 1
+            except Exception as e:
+                failed_records += 1
+                errors.append({"hotel_id": hotel.get("hotel_id"), "phase": "inventory", "error": str(e)})
 
-        # Persist prices
+        # Persist prices with per-record error handling
         for price in sync_result.get("prices", []):
-            price["updated_at"] = _ts()
-            await db.supplier_prices.update_one(
-                {"supplier": supplier, "hotel_id": price["hotel_id"], "date": price["date"]},
-                {"$set": price},
-                upsert=True,
-            )
-            price_count += 1
+            try:
+                price["updated_at"] = _ts()
+                await db.supplier_prices.update_one(
+                    {"supplier": supplier, "hotel_id": price["hotel_id"], "date": price["date"]},
+                    {"$set": price},
+                    upsert=True,
+                )
+                price_count += 1
+            except Exception as e:
+                errors.append({"hotel_id": price.get("hotel_id"), "phase": "price", "error": str(e)})
 
-        # Persist availability
+        # Persist availability with per-record error handling
         for avail in sync_result.get("availability", []):
-            avail["updated_at"] = _ts()
-            await db.supplier_availability.update_one(
-                {"supplier": supplier, "hotel_id": avail["hotel_id"], "date": avail["date"]},
-                {"$set": avail},
-                upsert=True,
-            )
-            avail_count += 1
+            try:
+                avail["updated_at"] = _ts()
+                await db.supplier_availability.update_one(
+                    {"supplier": supplier, "hotel_id": avail["hotel_id"], "date": avail["date"]},
+                    {"$set": avail},
+                    upsert=True,
+                )
+                avail_count += 1
+            except Exception as e:
+                errors.append({"hotel_id": avail.get("hotel_id"), "phase": "availability", "error": str(e)})
 
         # Build search index and Redis cache
         await _build_search_index(db, supplier)
         redis_status = await _populate_redis_cache(db, supplier)
 
-        errors = sync_result.get("errors", [])
-        status = "completed" if not errors else "completed_with_errors"
+        api_errors = sync_result.get("errors", [])
+        if api_errors:
+            errors.extend([{"phase": "api", "error": str(e)} for e in api_errors])
+
         metrics = sync_result.get("metrics", {})
 
     except Exception as e:
         logger.error("Real sync error for %s: %s", supplier, e, exc_info=True)
         errors.append({"error": str(e), "phase": "sync_execution"})
-        status = "failed"
         metrics = {}
         redis_status = "skipped"
+        failed_records = max(failed_records, 1)
 
     sync_duration_ms = round((time.monotonic() - sync_start) * 1000, 1)
+    total_records = inventory_count + failed_records
 
-    # Update job record with real metrics
-    await db.inventory_sync_jobs.update_one(
-        {"_id": job_oid},
-        {"$set": {
-            "status": status,
-            "finished_at": _ts(),
+    # Use stability service for finalization (P4.2)
+    status = await finalize_sync_job(
+        job_oid,
+        total_records=total_records,
+        successful_records=inventory_count,
+        failed_records=failed_records + len([e for e in errors if e.get("phase") != "api"]),
+        errors=errors,
+        region_results=region_results,
+        sync_duration_ms=sync_duration_ms,
+        extra_fields={
             "records_updated": inventory_count,
             "prices_updated": price_count,
             "availability_updated": avail_count,
-            "duration_ms": sync_duration_ms,
-            "errors": [str(e) for e in errors] if errors else [],
             "api_metrics": metrics,
-        }},
+            "redis_cache": redis_status if failed_records == 0 else "partial",
+        },
     )
 
     # Record supplier metrics for dashboard
@@ -286,11 +321,14 @@ async def _sync_ratehawk_real(
         "supplier": supplier,
         "status": status,
         "records_updated": inventory_count,
+        "records_total": total_records,
+        "records_failed": failed_records,
         "prices_updated": price_count,
         "availability_updated": avail_count,
         "duration_ms": sync_duration_ms,
-        "redis_cache": redis_status if status != "failed" else "skipped",
-        "errors": errors,
+        "redis_cache": redis_status if status != SyncJobStatus.FAILED else "skipped",
+        "errors": errors[:20],
+        "error_count": len(errors),
         "api_metrics": metrics,
         "timestamp": _ts(),
     }
@@ -299,33 +337,55 @@ async def _sync_ratehawk_real(
 async def _sync_simulation(
     db, supplier: str, job_id: str, sync_start: float, job_oid
 ) -> dict[str, Any]:
-    """Original simulation sync (when no credentials configured)."""
+    """Simulation sync with partial failure handling (P4.2).
+
+    Preserves successful records even if some fail.
+    Tracks per-region results for region-level retry.
+    """
+    from app.services.sync_stability_service import finalize_sync_job
+    from app.services.sync_job_state import SyncJobStatus, REGION_SYNC_CONFIG
+
     inventory_count = 0
     price_count = 0
     avail_count = 0
     errors = []
+    failed_records = 0
+    region_results = []
 
     try:
         hotels_for_supplier = _SIMULATED_HOTELS[: random.randint(8, len(_SIMULATED_HOTELS))]
+
+        # Group hotels by city/region for region-level tracking (P4.2)
+        regions = REGION_SYNC_CONFIG.get(supplier, [])
+        region_hotel_map: dict[str, list] = {}
+        for hotel in hotels_for_supplier:
+            city = hotel["city"]
+            region_hotel_map.setdefault(city, []).append(hotel)
+
         for idx, hotel_template in enumerate(hotels_for_supplier):
             hotel_id = f"{supplier[:2]}_{idx + 1:06d}"
-            inventory_doc = {
-                "supplier": supplier,
-                "hotel_id": hotel_id,
-                "name": hotel_template["name"],
-                "city": hotel_template["city"],
-                "country": hotel_template["country"],
-                "stars": hotel_template["stars"],
-                "rooms": hotel_template["rooms"],
-                "updated_at": _ts(),
-                "sync_job_id": job_id,
-            }
-            await db.supplier_inventory.update_one(
-                {"supplier": supplier, "hotel_id": hotel_id},
-                {"$set": inventory_doc},
-                upsert=True,
-            )
-            inventory_count += 1
+            try:
+                inventory_doc = {
+                    "supplier": supplier,
+                    "hotel_id": hotel_id,
+                    "name": hotel_template["name"],
+                    "city": hotel_template["city"],
+                    "country": hotel_template["country"],
+                    "stars": hotel_template["stars"],
+                    "rooms": hotel_template["rooms"],
+                    "updated_at": _ts(),
+                    "sync_job_id": job_id,
+                }
+                await db.supplier_inventory.update_one(
+                    {"supplier": supplier, "hotel_id": hotel_id},
+                    {"$set": inventory_doc},
+                    upsert=True,
+                )
+                inventory_count += 1
+            except Exception as e:
+                failed_records += 1
+                errors.append({"hotel_id": hotel_id, "phase": "inventory", "error": str(e), "region": hotel_template["city"]})
+                continue
 
             base_date = _now().date()
             for day_offset in range(30):
@@ -334,59 +394,85 @@ async def _sync_simulation(
                 if (base_date + timedelta(days=day_offset)).weekday() >= 5:
                     base_price = round(base_price * 1.15, 2)
 
-                price_doc = {
-                    "supplier": supplier,
-                    "hotel_id": hotel_id,
-                    "date": target_date,
-                    "price": base_price,
-                    "currency": "EUR",
-                    "updated_at": _ts(),
-                }
-                await db.supplier_prices.update_one(
-                    {"supplier": supplier, "hotel_id": hotel_id, "date": target_date},
-                    {"$set": price_doc},
-                    upsert=True,
-                )
-                price_count += 1
+                try:
+                    price_doc = {
+                        "supplier": supplier,
+                        "hotel_id": hotel_id,
+                        "date": target_date,
+                        "price": base_price,
+                        "currency": "EUR",
+                        "updated_at": _ts(),
+                    }
+                    await db.supplier_prices.update_one(
+                        {"supplier": supplier, "hotel_id": hotel_id, "date": target_date},
+                        {"$set": price_doc},
+                        upsert=True,
+                    )
+                    price_count += 1
+                except Exception as e:
+                    errors.append({"hotel_id": hotel_id, "phase": "price", "error": str(e)})
 
             for day_offset in range(30):
                 target_date = (base_date + timedelta(days=day_offset)).isoformat()
-                avail_doc = {
-                    "supplier": supplier,
-                    "hotel_id": hotel_id,
-                    "date": target_date,
-                    "rooms_available": random.randint(0, 12),
-                    "updated_at": _ts(),
-                }
-                await db.supplier_availability.update_one(
-                    {"supplier": supplier, "hotel_id": hotel_id, "date": target_date},
-                    {"$set": avail_doc},
-                    upsert=True,
-                )
-                avail_count += 1
+                try:
+                    avail_doc = {
+                        "supplier": supplier,
+                        "hotel_id": hotel_id,
+                        "date": target_date,
+                        "rooms_available": random.randint(0, 12),
+                        "updated_at": _ts(),
+                    }
+                    await db.supplier_availability.update_one(
+                        {"supplier": supplier, "hotel_id": hotel_id, "date": target_date},
+                        {"$set": avail_doc},
+                        upsert=True,
+                    )
+                    avail_count += 1
+                except Exception as e:
+                    errors.append({"hotel_id": hotel_id, "phase": "availability", "error": str(e)})
+
+        # Build region results (P4.2)
+        for region in regions:
+            region_city = region["name"]
+            region_hotel_count = len([h for h in hotels_for_supplier if h["city"] == region_city])
+            region_errors = [e for e in errors if e.get("region") == region_city]
+            region_results.append({
+                "region_id": region["id"],
+                "region_name": region_city,
+                "hotels_synced": region_hotel_count - len(region_errors),
+                "hotels_failed": len(region_errors),
+                "status": "failed" if len(region_errors) == region_hotel_count and region_hotel_count > 0
+                    else "partial" if region_errors
+                    else "completed",
+            })
 
         await _build_search_index(db, supplier)
         redis_status = await _populate_redis_cache(db, supplier)
-        status = "completed"
+
     except Exception as e:
         logger.error("Sync error for %s: %s", supplier, e, exc_info=True)
-        errors.append(str(e))
-        status = "failed"
+        errors.append({"error": str(e), "phase": "sync_execution"})
         redis_status = "skipped"
+        failed_records = max(failed_records, 1)
 
     sync_duration_ms = round((time.monotonic() - sync_start) * 1000, 1)
+    total_records = inventory_count + failed_records
 
-    await db.inventory_sync_jobs.update_one(
-        {"_id": job_oid},
-        {"$set": {
-            "status": status,
-            "finished_at": _ts(),
+    # Use stability service for finalization (P4.2)
+    status = await finalize_sync_job(
+        job_oid,
+        total_records=total_records,
+        successful_records=inventory_count,
+        failed_records=failed_records,
+        errors=errors,
+        region_results=region_results,
+        sync_duration_ms=sync_duration_ms,
+        extra_fields={
             "records_updated": inventory_count,
             "prices_updated": price_count,
             "availability_updated": avail_count,
-            "duration_ms": sync_duration_ms,
-            "errors": errors,
-        }},
+            "redis_cache": redis_status if failed_records == 0 else "partial",
+        },
     )
 
     return {
@@ -394,11 +480,15 @@ async def _sync_simulation(
         "supplier": supplier,
         "status": status,
         "records_updated": inventory_count,
+        "records_total": total_records,
+        "records_failed": failed_records,
         "prices_updated": price_count,
         "availability_updated": avail_count,
         "duration_ms": sync_duration_ms,
-        "redis_cache": redis_status if status == "completed" else "skipped",
-        "errors": errors,
+        "redis_cache": redis_status if status == SyncJobStatus.COMPLETED else "partial",
+        "errors": errors[:20],
+        "error_count": len(errors),
+        "region_results": region_results,
         "timestamp": _ts(),
     }
 

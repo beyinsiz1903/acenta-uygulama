@@ -53,9 +53,14 @@ function SeverityBadge({ severity }) {
 
 function SyncStatusBadge({ status }) {
   if (status === "completed") return <Badge variant="outline" className="border-emerald-500 text-emerald-600" data-testid="sync-completed">Completed</Badge>;
+  if (status === "completed_with_partial_errors") return <Badge variant="outline" className="border-amber-500 text-amber-600" data-testid="sync-partial">Partial Errors</Badge>;
   if (status === "completed_with_errors") return <Badge variant="outline" className="border-amber-500 text-amber-600" data-testid="sync-partial">Partial</Badge>;
   if (status === "running") return <Badge variant="outline" className="border-sky-500 text-sky-600" data-testid="sync-running">Running</Badge>;
+  if (status === "pending") return <Badge variant="outline" className="border-slate-400 text-slate-500" data-testid="sync-pending">Pending</Badge>;
   if (status === "failed") return <Badge variant="destructive" data-testid="sync-failed">Failed</Badge>;
+  if (status === "retry_scheduled") return <Badge variant="outline" className="border-violet-500 text-violet-600" data-testid="sync-retry">Retry</Badge>;
+  if (status === "stuck") return <Badge variant="outline" className="border-red-400 text-red-500 bg-red-500/10" data-testid="sync-stuck">Stuck</Badge>;
+  if (status === "cancelled") return <Badge variant="secondary" data-testid="sync-cancelled">Cancelled</Badge>;
   return <Badge variant="secondary" data-testid="sync-never">Never</Badge>;
 }
 
@@ -108,16 +113,22 @@ export default function InventorySyncDashboardPage() {
   const [bookingTestResult, setBookingTestResult] = useState(null);
   const [bookingTestRunning, setBookingTestRunning] = useState({});
   const [bookingTestHistory, setBookingTestHistory] = useState(null);
+  const [stabilityReport, setStabilityReport] = useState(null);
+  const [regionStatus, setRegionStatus] = useState({});
+  const [retryingJob, setRetryingJob] = useState({});
+  const [retryingRegion, setRetryingRegion] = useState({});
+  const [cancellingJob, setCancellingJob] = useState({});
 
   const fetchData = useCallback(async () => {
     try {
-      const [statusRes, statsRes, jobsRes, configRes, healthRes, kpiRes] = await Promise.all([
+      const [statusRes, statsRes, jobsRes, configRes, healthRes, kpiRes, stabilityRes] = await Promise.all([
         api.get("/inventory/sync/status"),
         api.get("/inventory/stats"),
         api.get("/inventory/sync/jobs?limit=10"),
         api.get("/inventory/supplier-config"),
         api.get("/inventory/supplier-health"),
         api.get("/inventory/kpi/drift"),
+        api.get("/inventory/sync/stability-report"),
       ]);
       setSyncStatus(statusRes.data);
       setStats(statsRes.data);
@@ -125,6 +136,19 @@ export default function InventorySyncDashboardPage() {
       setSupplierConfigs(configRes.data?.suppliers || {});
       setSupplierHealth(healthRes.data?.suppliers || {});
       setKpiData(kpiRes.data);
+      setStabilityReport(stabilityRes.data);
+
+      // Fetch region status for all suppliers
+      const regionPromises = ["ratehawk", "paximum", "wwtatil", "tbo"].map(async (sup) => {
+        try {
+          const res = await api.get(`/inventory/sync/regions/${sup}`);
+          return [sup, res.data];
+        } catch { return [sup, null]; }
+      });
+      const regionResults = await Promise.all(regionPromises);
+      const regionMap = {};
+      regionResults.forEach(([sup, data]) => { if (data) regionMap[sup] = data; });
+      setRegionStatus(regionMap);
     } catch (err) {
       console.error("Inventory data fetch failed:", err);
     } finally {
@@ -216,6 +240,43 @@ export default function InventorySyncDashboardPage() {
       setBookingTestHistory(res.data);
     } catch (err) {
       console.error("Test history fetch failed:", err);
+    }
+  };
+
+  const retryJob = async (jobId) => {
+    setRetryingJob((prev) => ({ ...prev, [jobId]: true }));
+    try {
+      await api.post(`/inventory/sync/retry/${jobId}`);
+      await fetchData();
+    } catch (err) {
+      console.error("Job retry failed:", err);
+    } finally {
+      setRetryingJob((prev) => ({ ...prev, [jobId]: false }));
+    }
+  };
+
+  const retryRegion = async (supplier, regionId) => {
+    const key = `${supplier}_${regionId}`;
+    setRetryingRegion((prev) => ({ ...prev, [key]: true }));
+    try {
+      await api.post(`/inventory/sync/retry-region/${supplier}/${regionId}`);
+      await fetchData();
+    } catch (err) {
+      console.error("Region retry failed:", err);
+    } finally {
+      setRetryingRegion((prev) => ({ ...prev, [key]: false }));
+    }
+  };
+
+  const cancelJob = async (jobId) => {
+    setCancellingJob((prev) => ({ ...prev, [jobId]: true }));
+    try {
+      await api.post(`/inventory/sync/cancel/${jobId}`);
+      await fetchData();
+    } catch (err) {
+      console.error("Job cancel failed:", err);
+    } finally {
+      setCancellingJob((prev) => ({ ...prev, [jobId]: false }));
     }
   };
 
@@ -549,6 +610,174 @@ export default function InventorySyncDashboardPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Sync Stability Dashboard — P4.2 */}
+      {stabilityReport && (
+        <Card data-testid="stability-dashboard-panel">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Shield className="h-5 w-5" /> Sync Stability
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">{stabilityReport.period}</Badge>
+                <span className={`text-lg font-bold ${stabilityReport.success_rate >= 95 ? "text-emerald-500" : stabilityReport.success_rate >= 80 ? "text-amber-500" : "text-red-500"}`}>
+                  {stabilityReport.success_rate}%
+                </span>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Stability KPI Row */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3" data-testid="stability-kpis">
+              <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                <div className="text-xs text-muted-foreground">Completed</div>
+                <div className="text-xl font-bold text-emerald-600">{stabilityReport.job_breakdown?.completed || 0}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <div className="text-xs text-muted-foreground">Partial Errors</div>
+                <div className="text-xl font-bold text-amber-600">{stabilityReport.job_breakdown?.partial_errors || 0}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                <div className="text-xs text-muted-foreground">Failed</div>
+                <div className="text-xl font-bold text-red-600">{stabilityReport.job_breakdown?.failed || 0}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-violet-500/10 border border-violet-500/20">
+                <div className="text-xs text-muted-foreground">Retry Scheduled</div>
+                <div className="text-xl font-bold text-violet-600">{stabilityReport.job_breakdown?.retry_scheduled || 0}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-slate-500/10 border border-slate-500/20">
+                <div className="text-xs text-muted-foreground">Stuck</div>
+                <div className="text-xl font-bold text-slate-600">{stabilityReport.job_breakdown?.stuck || 0}</div>
+              </div>
+            </div>
+
+            {/* Avg / Max Duration */}
+            <div className="flex items-center gap-6 text-sm">
+              <span className="text-muted-foreground">Toplam Jobs: <strong className="text-foreground">{stabilityReport.total_jobs}</strong></span>
+              <span className="text-muted-foreground">Avg Duration: <strong className="text-foreground font-mono">{stabilityReport.avg_duration_ms}ms</strong></span>
+              <span className="text-muted-foreground">Max Duration: <strong className="text-foreground font-mono">{stabilityReport.max_duration_ms}ms</strong></span>
+              {stabilityReport.retry_effectiveness && (
+                <span className="text-muted-foreground">
+                  Retry Success: <strong className={`font-mono ${stabilityReport.retry_effectiveness.retry_success_rate >= 80 ? "text-emerald-500" : "text-amber-500"}`}>
+                    {stabilityReport.retry_effectiveness.retry_success_rate}%
+                  </strong>
+                  <span className="text-xs ml-1">({stabilityReport.retry_effectiveness.retries_succeeded}/{stabilityReport.retry_effectiveness.total_retries})</span>
+                </span>
+              )}
+            </div>
+
+            {/* Per-Supplier Circuit Breaker Status */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3">Supplier Durumu & Circuit Breaker</h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Supplier</TableHead>
+                    <TableHead>Jobs (24h)</TableHead>
+                    <TableHead>Success Rate</TableHead>
+                    <TableHead>Circuit</TableHead>
+                    <TableHead>Downtime</TableHead>
+                    <TableHead>Cache</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {Object.entries(stabilityReport.supplier_breakdown || {}).map(([sup, data]) => (
+                    <TableRow key={sup} data-testid={`stability-supplier-${sup}`}>
+                      <TableCell className="font-medium capitalize">{sup}</TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {data.total_jobs_24h}
+                        {data.partial_errors > 0 && <span className="text-amber-500 ml-1">({data.partial_errors} partial)</span>}
+                        {data.failed > 0 && <span className="text-red-500 ml-1">({data.failed} fail)</span>}
+                      </TableCell>
+                      <TableCell>
+                        <span className={`font-mono text-sm ${data.success_rate >= 95 ? "text-emerald-500" : data.success_rate >= 80 ? "text-amber-500" : "text-red-500"}`}>
+                          {data.success_rate}%
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={
+                            data.circuit_state === "closed" ? "border-emerald-500 text-emerald-600" :
+                            data.circuit_state === "half_open" ? "border-amber-500 text-amber-600" :
+                            "border-red-500 text-red-600"
+                          }
+                          data-testid={`circuit-${sup}`}
+                        >
+                          {data.circuit_state}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {data.is_down ? (
+                          <span className="flex items-center gap-1 text-red-500 text-sm">
+                            <XCircle className="h-3.5 w-3.5" /> Down
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-emerald-500 text-sm">
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Up
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">{data.stale_cache_entries} entries</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Region Sync Status (per supplier) */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3">Region Sync Durumu</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {Object.entries(regionStatus).map(([sup, data]) => (
+                  <div key={sup} className="border rounded-lg p-4" data-testid={`region-panel-${sup}`}>
+                    <h4 className="text-sm font-medium capitalize mb-2">{sup} — {data.total_regions} Region</h4>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Region</TableHead>
+                          <TableHead>Otel</TableHead>
+                          <TableHead>Durum</TableHead>
+                          <TableHead></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(data.regions || []).map((r) => {
+                          const retryKey = `${sup}_${r.region_id}`;
+                          return (
+                            <TableRow key={r.region_id} data-testid={`region-row-${sup}-${r.region_id}`}>
+                              <TableCell className="text-sm">{r.name} <span className="text-xs text-muted-foreground">({r.country})</span></TableCell>
+                              <TableCell className="font-mono text-sm">{r.hotel_count}</TableCell>
+                              <TableCell>
+                                <SyncStatusBadge status={r.last_sync_status} />
+                              </TableCell>
+                              <TableCell>
+                                {(r.last_sync_status === "failed" || r.last_sync_status === "never" || r.errors > 0) && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => retryRegion(sup, r.region_id)}
+                                    disabled={retryingRegion[retryKey]}
+                                    data-testid={`retry-region-${sup}-${r.region_id}`}
+                                  >
+                                    {retryingRegion[retryKey] ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                                    <span className="ml-1 text-xs">Retry</span>
+                                  </Button>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* E2E Booking Test Panel */}
       <Card data-testid="booking-test-panel">
@@ -1105,11 +1334,13 @@ export default function InventorySyncDashboardPage() {
                 <TableHead>Supplier</TableHead>
                 <TableHead>Mod</TableHead>
                 <TableHead>Durum</TableHead>
-                <TableHead>Otel</TableHead>
+                <TableHead>Basarili</TableHead>
+                <TableHead>Basarisiz</TableHead>
                 <TableHead>Fiyat</TableHead>
-                <TableHead>Musaitlik</TableHead>
                 <TableHead>Sure</TableHead>
-                <TableHead>Baslangiц</TableHead>
+                <TableHead>Retry</TableHead>
+                <TableHead>Baslangic</TableHead>
+                <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -1120,18 +1351,50 @@ export default function InventorySyncDashboardPage() {
                     <Badge variant="outline" className="text-xs">{job.sync_mode || "simulation"}</Badge>
                   </TableCell>
                   <TableCell><SyncStatusBadge status={job.status} /></TableCell>
-                  <TableCell>{job.records_updated}</TableCell>
-                  <TableCell>{job.prices_updated}</TableCell>
-                  <TableCell>{job.availability_updated}</TableCell>
-                  <TableCell className="font-mono">{job.duration_ms}ms</TableCell>
+                  <TableCell className="font-mono text-sm">{job.records_succeeded ?? job.records_updated ?? 0}</TableCell>
+                  <TableCell className="font-mono text-sm">
+                    {(job.records_failed || 0) > 0 ? (
+                      <span className="text-red-500">{job.records_failed}</span>
+                    ) : "0"}
+                  </TableCell>
+                  <TableCell className="font-mono text-sm">{job.prices_updated || 0}</TableCell>
+                  <TableCell className="font-mono text-sm">{job.duration_ms}ms</TableCell>
+                  <TableCell className="font-mono text-xs">{job.retry_count || 0}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {job.started_at ? new Date(job.started_at).toLocaleString("tr-TR") : "-"}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      {["failed", "completed_with_partial_errors", "stuck"].includes(job.status) && job._id && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => retryJob(job._id || job.job_id)}
+                          disabled={retryingJob[job._id || job.job_id]}
+                          data-testid={`retry-job-${idx}`}
+                        >
+                          {retryingJob[job._id || job.job_id] ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                        </Button>
+                      )}
+                      {["failed", "retry_scheduled", "stuck", "pending"].includes(job.status) && job._id && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-red-500 hover:text-red-700"
+                          onClick={() => cancelJob(job._id || job.job_id)}
+                          disabled={cancellingJob[job._id || job.job_id]}
+                          data-testid={`cancel-job-${idx}`}
+                        >
+                          <XCircle className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
               {jobs.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
+                  <TableCell colSpan={10} className="text-center text-muted-foreground">
                     Sync job gecmisi bos
                   </TableCell>
                 </TableRow>

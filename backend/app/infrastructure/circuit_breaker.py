@@ -176,6 +176,31 @@ BREAKER_CONFIGS = {
         recovery_timeout=60.0,
         half_open_max_calls=3,
     ),
+    # Supplier-specific circuit breakers (P4.2)
+    "supplier_ratehawk": CircuitBreakerConfig(
+        failure_threshold=3,
+        recovery_timeout=120.0,
+        half_open_max_calls=2,
+        success_threshold=2,
+    ),
+    "supplier_paximum": CircuitBreakerConfig(
+        failure_threshold=3,
+        recovery_timeout=120.0,
+        half_open_max_calls=2,
+        success_threshold=2,
+    ),
+    "supplier_tbo": CircuitBreakerConfig(
+        failure_threshold=3,
+        recovery_timeout=120.0,
+        half_open_max_calls=2,
+        success_threshold=2,
+    ),
+    "supplier_wwtatil": CircuitBreakerConfig(
+        failure_threshold=3,
+        recovery_timeout=120.0,
+        half_open_max_calls=2,
+        success_threshold=2,
+    ),
 }
 
 

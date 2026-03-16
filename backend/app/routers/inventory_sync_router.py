@@ -1,9 +1,16 @@
-"""Inventory Sync Engine API — Hardened.
+"""Inventory Sync Engine API — Hardened + Stability (P4.2).
 
 Travel Inventory Platform endpoints:
   POST /api/inventory/sync/trigger      — Trigger supplier sync
   GET  /api/inventory/sync/status       — Overall sync status
   GET  /api/inventory/sync/jobs         — List sync jobs
+  POST /api/inventory/sync/retry/{job_id}     — Retry a failed job (P4.2)
+  POST /api/inventory/sync/retry-region/{supplier}/{region_id} — Region retry (P4.2)
+  POST /api/inventory/sync/cancel/{job_id}    — Cancel a job (P4.2)
+  GET  /api/inventory/sync/stability-report   — Stability report (P4.2)
+  GET  /api/inventory/sync/regions/{supplier} — Region status (P4.2)
+  GET  /api/inventory/sync/downtime/{supplier} — Downtime check (P4.2)
+  POST /api/inventory/sync/execute-retries    — Execute due retries (P4.2)
   GET  /api/inventory/search            — Cached search (NO supplier API)
   GET  /api/inventory/stats             — Inventory statistics
   POST /api/inventory/revalidate        — Price revalidation at booking time
@@ -119,6 +126,78 @@ async def price_revalidation(
 ) -> dict[str, Any]:
     """Revalidate price with supplier (booking-time only)."""
     return await revalidate_price(payload.supplier, payload.hotel_id, payload.checkin, payload.checkout)
+
+
+# ── Stability & Retry endpoints (P4.2) ───────────────────────────────
+
+@router.post("/sync/retry/{job_id}")
+async def retry_sync_job(
+    job_id: str,
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Retry a failed or partial-error sync job."""
+    from app.services.sync_stability_service import schedule_retry
+    return await schedule_retry(job_id)
+
+
+@router.post("/sync/retry-region/{supplier}/{region_id}")
+async def retry_region_sync(
+    supplier: str,
+    region_id: str,
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Retry sync for a specific region that failed."""
+    from app.services.sync_stability_service import retry_failed_region
+    return await retry_failed_region(supplier, region_id)
+
+
+@router.post("/sync/cancel/{job_id}")
+async def cancel_job(
+    job_id: str,
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Cancel a sync job."""
+    from app.services.sync_stability_service import cancel_sync_job
+    return await cancel_sync_job(job_id)
+
+
+@router.get("/sync/stability-report")
+async def stability_report(
+    supplier: str | None = Query(None),
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Get comprehensive sync stability report (last 24h)."""
+    from app.services.sync_stability_service import get_stability_report
+    return await get_stability_report(supplier)
+
+
+@router.get("/sync/regions/{supplier}")
+async def region_status(
+    supplier: str,
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Get per-region sync status for a supplier."""
+    from app.services.sync_stability_service import get_region_sync_status
+    return await get_region_sync_status(supplier)
+
+
+@router.get("/sync/downtime/{supplier}")
+async def supplier_downtime(
+    supplier: str,
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Check supplier downtime status and circuit breaker state."""
+    from app.services.sync_stability_service import check_supplier_downtime
+    return await check_supplier_downtime(supplier)
+
+
+@router.post("/sync/execute-retries")
+async def execute_retries(
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Execute all sync jobs that are due for retry."""
+    from app.services.sync_stability_service import execute_scheduled_retries
+    return await execute_scheduled_retries()
 
 
 # ── Supplier Config endpoints (MEGA PROMPT #38) ──────────────────────

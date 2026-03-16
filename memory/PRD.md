@@ -63,63 +63,15 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 ### P1: Caching Layer Validation — COMPLETED (2026-03-16)
 **Redis -> MongoDB Fallback + Cache Health Dashboard**
 
-Delivered:
-- **Cache Metrics Collector** (`cache_metrics.py`): Centralized in-memory metrics tracking
-  - Hit/miss/fallback/stale serve counters
-  - Per-layer latency tracking (Redis, Mongo, Compute)
-  - Event history (fallback, redis_down, timeout, invalidation failures)
-  - Historical persistence to MongoDB
-- **TTL Configuration** (`cache_ttl_config.py`): Domain-driven centralized TTL management
-  - 20 cache categories with separate Redis/Mongo TTLs
-  - 6 supplier-specific TTL overrides (RateHawk, Paximum, TBO, WTatil, Hotelbeds, Juniper)
-  - Search results: 60s/180s, Hotel details: 300s/900s, Static metadata: 1800s/3600s
-  - Booking status: 15s/60s (very short for consistency)
-- **Enhanced Redis -> Mongo Fallback**: 
-  - `multilayer_cached()` now tracks latency per layer and reports metrics
-  - `redis_get/set` detect and report timeout/down events
-  - `search_inventory()` tracks fallback events during search
-- **Cache Invalidation Enhancement** (`cache_invalidation.py`):
-  - `invalidate_supplier_sync()` — Post-sync inventory/price cache purge
-  - `invalidate_booking_lifecycle()` — Post-booking/cancel availability refresh
-  - `invalidate_price_change()` — Post-price-update search cache purge
-  - All invalidation operations tracked with success/failure metrics
-- **Stale Data Detection**: MongoDB L2 cache entries track `cached_at` and `ttl_seconds`
-  - `cache_stats()` reports stale entry count
-- **Cache Health API** (`cache_health_router.py`): 8 endpoints
-  - `GET /api/admin/cache-health/overview` — Comprehensive health overview
-  - `GET /api/admin/cache-health/metrics` — Detailed metrics snapshot
-  - `GET /api/admin/cache-health/ttl-config` — Full TTL configuration
-  - `GET /api/admin/cache-health/redis/health` — Redis detailed health
-  - `GET /api/admin/cache-health/mongo/health` — MongoDB L2 health
-  - `POST /api/admin/cache-health/test-fallback` — Fallback behavior test (normal + Redis Down simulation)
-  - `POST /api/admin/cache-health/reset-metrics` — Reset counters
-  - `GET /api/admin/cache-health/history` — Historical snapshots
-- **Cache Health Dashboard** (`CacheHealthDashboardPage.jsx`):
-  - KPI cards: hit rate, miss rate, fallback count, stale serve, invalidation OK/fail
-  - Redis L1 health card (status, memory, clients, ops/sec)
-  - MongoDB L2 health card (entries, stale data, categories)
-  - Latency table (avg, min, max, p95 per layer)
-  - Fallback Test (Normal + Redis Down simulation with step-by-step results)
-  - TTL Configuration viewer (expandable, with supplier overrides)
-  - Recent Events log
-  - Metrics Reset
+### P1 Real RateHawk Sandbox Activation — COMPLETED (2026-03-16)
 
-New files:
-- `backend/app/services/cache_metrics.py`
-- `backend/app/services/cache_ttl_config.py`
-- `backend/app/routers/cache_health_router.py`
-- `frontend/src/pages/admin/CacheHealthDashboardPage.jsx`
+### Certification Console 4-Mode State System — COMPLETED (2026-03-16)
 
-Updated files:
-- `backend/app/services/redis_cache.py` — Metrics integration in multilayer_cached, redis_get/set
-- `backend/app/services/cache_invalidation.py` — Metrics tracking + supplier sync/booking invalidation
-- `backend/app/services/mongo_cache_service.py` — Stale data detection, cached_at tracking
-- `backend/app/services/inventory_sync_service.py` — Fallback metrics in search_inventory
-- `backend/app/bootstrap/router_registry.py` — Registered cache_health_router
-- `frontend/src/routes/adminRoutes.jsx` — Added cache-health route
-- `frontend/src/nav/adminNav.js` — Added Cache Health navigation entry
+### State Telemetry & Certification History Enrichment — COMPLETED (2026-03-16)
 
-**Testing: 100% backend (33/33 pytest), 100% frontend pass rate**
+### Telemetry Persistence Window & Certification Trend Chart — COMPLETED (2026-03-16)
+
+### Supplier-Based Telemetry, Error Trend Chart & Certification Funnel — COMPLETED (2026-03-16)
 
 ---
 
@@ -142,9 +94,8 @@ Updated files:
 All P0 tasks completed.
 
 ### P1 — Next Priority
-- **Caching Layer Validation**: COMPLETED (2026-03-16)
-- **P1 Real RateHawk Sandbox Activation**: COMPLETED (2026-03-16)
 - **Activity Timeline**: Entity-based audit history (who did what)
+- **Real RateHawk Environment Execution**: Credential-ready, needs network access
 
 ### P2
 - **TypeScript Migration**: API layer -> TanStack hooks -> design system (incremental)
@@ -152,6 +103,7 @@ All P0 tasks completed.
 
 ### P3
 - **Paximum Integration**: Onboard using existing blueprint
+- **New Supplier Integrations**: Hotelbeds, Juniper
 - **Legacy Code Cleanup**: Remaining ~17% useEffect files
 
 ---
@@ -169,143 +121,3 @@ All P0 tasks completed.
 - Redis unavailable in preview (graceful MongoDB fallback — verified and tested)
 - RateHawk sandbox API unreachable from preview (system is credential-ready, will work with real network access)
 - Nested button HTML warning in legacy code (low priority)
-
----
-
-## P1 Real RateHawk Sandbox Activation — COMPLETED (2026-03-16)
-**Credential Wiring + Health Validation + Sandbox Mode Toggle + Certification Proof**
-
-Delivered:
-- **Sandbox Activation Service** (`sandbox_activation_service.py`): Centralized sandbox lifecycle management
-  - Credential resolution: DB config (priority 1) → env vars (priority 2)
-  - Health check with API reachability and auth validation
-  - Real step execution: search, detail, revalidation, booking, status_check, cancel
-  - Error classification into supplier taxonomy (timeout, connection, auth, rate_limit, server, client)
-  - Readiness tracking per supplier (credential_wiring, health, search, booking, cancel, go_live_ready)
-- **E2E Demo Service Enhancement** (`e2e_demo_service.py`):
-  - `_resolve_supplier_mode()`: Detects sandbox credentials and resolves actual mode
-  - `effective_mode`: Shows "sandbox" only when real API is used, "simulation" otherwise
-  - Non-success scenarios always use simulation regardless of credentials
-  - `get_supplier_status()` resolves actual mode per supplier
-- **New API Endpoint** (`diagnostics_router.py`):
-  - `GET /api/e2e-demo/sandbox-status?supplier=ratehawk`: Returns credential status, health, readiness
-- **Env Credential Slots** (`.env`):
-  - `RATEHAWK_SANDBOX_KEY_ID`, `RATEHAWK_SANDBOX_API_KEY`, `RATEHAWK_SANDBOX_URL`
-- **Frontend Enhancements** (`SupplierCertificationConsolePage.jsx`):
-  - SANDBOX/SIMULATION mode badge in page header
-  - SandboxReadinessIndicator (5-dot readiness tracker + API status)
-  - Sandbox Status Card: mode, credentials source, API health, go-live readiness
-  - Test result info bar: mode badge (SANDBOX Real API / SIMULATION)
-  - History entries: mode badge per test result
-
-New files:
-- `backend/app/services/sandbox_activation_service.py`
-
-Updated files:
-- `backend/app/services/e2e_demo_service.py` — Mode resolution, effective_mode, real API path
-- `backend/app/routers/inventory/diagnostics_router.py` — sandbox-status endpoint
-- `backend/.env` — RATEHAWK_SANDBOX_* env var slots
-- `frontend/src/pages/admin/SupplierCertificationConsolePage.jsx` — Sandbox UI components
-
-**Testing: 100% backend (18/18), 100% frontend pass rate**
-
----
-
-## Certification Console 4-Mode State System — COMPLETED (2026-03-16)
-**SIMULATION / SANDBOX_READY / SANDBOX_CONNECTED / SANDBOX_BLOCKED**
-
-Delivered:
-- **Backend** (`sandbox_activation_service.py`):
-  - `get_sandbox_status()` now returns one of 4 granular modes
-  - `_is_env_blocked()` helper detects network-level blocks (DNS, connection, timeout errors)
-  - Mode logic: no creds → simulation; creds + API OK → sandbox_connected; creds + env blocked → sandbox_blocked; creds + pending → sandbox_ready
-- **Frontend** (`SupplierCertificationConsolePage.jsx`):
-  - `MODE_CONFIG` object: per-mode styling (colors, icons, labels, descriptions)
-  - Header badge dynamically shows mode with icon (Lock for blocked, Wifi for connected, etc.)
-  - Sandbox Status Card: mode description box, environment-blocked warning with ShieldAlert icon
-  - SandboxReadinessIndicator: mode-specific badges (API OK, Blocked, Pending, No Credentials)
-  - Race condition fix: stale closure in useEffect resolved with stale flag + state reset on supplier switch
-
-Updated files:
-- `backend/app/services/sandbox_activation_service.py` — 4-mode logic, _is_env_blocked()
-- `frontend/src/pages/admin/SupplierCertificationConsolePage.jsx` — MODE_CONFIG, updated UI components
-
-**Testing: Backend 100% (8/8), Frontend race condition fixed and verified**
-
----
-
-## State Telemetry & Certification History Enrichment — COMPLETED (2026-03-16)
-**Onboarding Quality Metrics + Enriched Test History**
-
-Delivered:
-- **State Telemetry Service** (`sandbox_telemetry_service.py`):
-  - Atomic counter increments via MongoDB `sandbox_telemetry` collection
-  - 4 tracked metrics: `sandbox_connection_attempts`, `sandbox_blocked_events`, `simulation_runs`, `sandbox_success_runs`
-  - Derived metrics: `total_runs`, `sandbox_rate_pct`, `block_rate_pct`
-  - Supplier-filtered queries supported
-- **Telemetry API** (`diagnostics_router.py`):
-  - `GET /api/e2e-demo/telemetry` — Returns all counters + derived metrics
-  - Optional `?supplier=ratehawk` filter
-- **Backend Instrumentation**:
-  - `sandbox_activation_service.py`: Increments `sandbox_connection_attempts` and `sandbox_blocked_events` on health checks
-  - `e2e_demo_service.py`: Increments `simulation_runs` or `sandbox_success_runs` after each test
-- **History Enrichment** (`e2e_demo_service.py`):
-  - New top-level fields on test results: `environment`, `certification_score`, `latency_ms`
-  - Environment detection from `SENTRY_ENVIRONMENT` env var
-- **Frontend TelemetryCard** (`SupplierCertificationConsolePage.jsx`):
-  - 2x2 KPI grid: connection attempts, blocked events, simulation runs, sandbox successes
-  - Derived metrics row: sandbox rate %, block rate %
-- **Frontend EnrichedHistoryPanel** (`SupplierCertificationConsolePage.jsx`):
-  - Score circle (SVG ring) with percentage
-  - Environment badge (Globe icon)
-  - Mode badge (SANDBOX green / SIM orange)
-  - Latency display (tabular-nums)
-  - Trace ID with Hash icon
-  - GO-LIVE / NOT READY status badge
-
-New files:
-- `backend/app/services/sandbox_telemetry_service.py`
-
-Updated files:
-- `backend/app/routers/inventory/diagnostics_router.py` — telemetry endpoint
-- `backend/app/services/sandbox_activation_service.py` — telemetry counter integration
-- `backend/app/services/e2e_demo_service.py` — environment, certification_score, latency_ms, telemetry increment
-- `frontend/src/pages/admin/SupplierCertificationConsolePage.jsx` — TelemetryCard, EnrichedHistoryPanel
-
-**Testing: Backend 100% (12/12), Frontend 100% (8/8)**
-
----
-
-## Telemetry Persistence Window & Certification Trend Chart — COMPLETED (2026-03-16)
-**Hourly/Daily/Weekly Trend Analysis + Recharts Visualization**
-
-Delivered:
-- **Telemetry Snapshot Recording** (`sandbox_telemetry_service.py`):
-  - `record_snapshot()`: Stores per-test telemetry with time bucket fields (hour, day, week)
-  - MongoDB collection `sandbox_telemetry_snapshots` for append-only trend data
-  - Fields: supplier, mode, certification_score, passed, total, success_rate, latency_ms, scenario
-- **Telemetry History Aggregation** (`sandbox_telemetry_service.py`):
-  - `get_telemetry_history(period, supplier, limit)`: MongoDB aggregation pipeline
-  - Groups by hourly/daily/weekly buckets
-  - Returns avg_score, avg_latency_ms, total_runs, sandbox_runs, simulation_runs, avg_success_rate, min/max_score, sandbox_rate_pct
-- **Telemetry History API** (`diagnostics_router.py`):
-  - `GET /api/e2e-demo/telemetry/history?period=hourly&supplier=ratehawk&limit=24`
-  - Period validation: hourly | daily | weekly
-  - Optional supplier filter and configurable limit (1-168)
-- **E2E Demo Instrumentation** (`e2e_demo_service.py`):
-  - Calls `record_snapshot()` after each test run for trend data collection
-- **CertificationTrendChart** (`SupplierCertificationConsolePage.jsx`):
-  - Recharts AreaChart with dual area layers (score + success rate)
-  - Gradient fills (emerald for score, blue for success rate)
-  - Period toggle: Saatlik (hourly), Gunluk (daily), Haftalik (weekly)
-  - Custom tooltip with Turkish labels
-  - Summary row: Toplam (total runs), Ort. Skor (avg score), Ort. Latency (avg latency)
-  - Auto-refreshes after each test run
-
-Updated files:
-- `backend/app/services/sandbox_telemetry_service.py` — record_snapshot(), get_telemetry_history()
-- `backend/app/routers/inventory/diagnostics_router.py` — telemetry/history endpoint
-- `backend/app/services/e2e_demo_service.py` — record_snapshot() call after tests
-- `frontend/src/pages/admin/SupplierCertificationConsolePage.jsx` — CertificationTrendChart, Recharts import
-
-**Testing: Backend 100% (11/11), Frontend 100% (8/8) — iteration_125**

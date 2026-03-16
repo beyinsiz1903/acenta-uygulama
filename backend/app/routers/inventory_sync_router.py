@@ -1,4 +1,4 @@
-"""Inventory Sync Engine API — MEGA PROMPT #37 + #38 Sandbox.
+"""Inventory Sync Engine API — Hardened.
 
 Travel Inventory Platform endpoints:
   POST /api/inventory/sync/trigger      — Trigger supplier sync
@@ -12,8 +12,10 @@ Travel Inventory Platform endpoints:
   DELETE /api/inventory/supplier-config/{supplier} — Remove credentials
   POST /api/inventory/sandbox/validate  — Run sandbox validation tests
   GET  /api/inventory/supplier-metrics  — Get supplier performance metrics
-  GET  /api/inventory/supplier-health   — Supplier health status (latency, error_rate, success_rate)
-  GET  /api/inventory/kpi/drift         — KPI drift data (drift_rate, severity, timeline)
+  GET  /api/inventory/supplier-health   — Supplier health status
+  GET  /api/inventory/kpi/drift         — KPI drift data
+  POST /api/inventory/booking/test      — E2E booking lifecycle test
+  GET  /api/inventory/booking/test/history — Test history
 """
 from __future__ import annotations
 
@@ -347,3 +349,30 @@ async def kpi_drift_data(
 ) -> dict[str, Any]:
     """Get KPI drift data: drift_rate, price_consistency, severity_breakdown, price_drift_timeline."""
     return await get_kpi_data(supplier)
+
+
+# ── E2E Booking Test (Sandbox Hardening) ─────────────────────────────
+
+@router.post("/booking/test")
+async def booking_e2e_test(
+    payload: SyncTriggerPayload,
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Run E2E booking lifecycle test for a supplier.
+
+    Steps: search → detail → revalidation → booking → status_check → cancel
+    Returns step-by-step results with timing and error details.
+    """
+    from app.services.supplier_booking_test_service import run_booking_e2e_test
+    return await run_booking_e2e_test(payload.supplier)
+
+
+@router.get("/booking/test/history")
+async def booking_test_history(
+    supplier: str | None = Query(None),
+    limit: int = Query(20, ge=1, le=100),
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Get history of E2E booking tests."""
+    from app.services.supplier_booking_test_service import get_booking_test_history
+    return await get_booking_test_history(supplier, limit)

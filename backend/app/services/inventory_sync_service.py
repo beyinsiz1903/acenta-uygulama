@@ -123,9 +123,43 @@ async def trigger_supplier_sync(supplier: str) -> dict[str, Any]:
     Sync modes:
       - simulation: Generated data (no credentials configured)
       - sandbox/production: Real API calls via supplier adapter
+
+    Guards:
+      - Duplicate sync prevention (skip if a job is already running)
+      - Stuck job detection (mark jobs running > 5 min as stuck)
     """
     if supplier not in SUPPLIER_SYNC_CONFIG:
         return {"error": f"Unknown supplier: {supplier}", "available": list(SUPPLIER_SYNC_CONFIG.keys())}
+
+    db = await get_db()
+
+    # ── Guard: Detect and clean stuck jobs (running > 5 min) ──
+    stuck_threshold = (_now() - timedelta(minutes=5)).isoformat()
+    stuck_result = await db.inventory_sync_jobs.update_many(
+        {
+            "supplier": supplier,
+            "status": "running",
+            "started_at": {"$lt": stuck_threshold},
+        },
+        {"$set": {"status": "stuck", "finished_at": _ts(), "error_note": "Marked as stuck by guard"}},
+    )
+    if stuck_result.modified_count > 0:
+        logger.warning("Marked %d stuck sync jobs for %s", stuck_result.modified_count, supplier)
+
+    # ── Guard: Duplicate sync prevention ──
+    running_job = await db.inventory_sync_jobs.find_one(
+        {"supplier": supplier, "status": "running"},
+        {"_id": 0},
+    )
+    if running_job:
+        return {
+            "status": "already_running",
+            "message": f"A sync job for {supplier} is already running",
+            "existing_job": {
+                "started_at": running_job.get("started_at"),
+                "sync_mode": running_job.get("sync_mode"),
+            },
+        }
 
     sync_mode, cred_config = await _determine_sync_mode(supplier)
 

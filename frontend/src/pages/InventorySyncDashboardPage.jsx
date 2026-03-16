@@ -105,6 +105,9 @@ export default function InventorySyncDashboardPage() {
   });
   const [savingConfig, setSavingConfig] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [bookingTestResult, setBookingTestResult] = useState(null);
+  const [bookingTestRunning, setBookingTestRunning] = useState({});
+  const [bookingTestHistory, setBookingTestHistory] = useState(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -191,6 +194,28 @@ export default function InventorySyncDashboardPage() {
       console.error("Validation failed:", err);
     } finally {
       setValidating(false);
+    }
+  };
+
+  const runBookingTest = async (supplier) => {
+    setBookingTestRunning((prev) => ({ ...prev, [supplier]: true }));
+    setBookingTestResult(null);
+    try {
+      const res = await api.post("/inventory/booking/test", { supplier });
+      setBookingTestResult(res.data);
+    } catch (err) {
+      console.error("Booking test failed:", err);
+    } finally {
+      setBookingTestRunning((prev) => ({ ...prev, [supplier]: false }));
+    }
+  };
+
+  const fetchTestHistory = async () => {
+    try {
+      const res = await api.get("/inventory/booking/test/history?limit=10");
+      setBookingTestHistory(res.data);
+    } catch (err) {
+      console.error("Test history fetch failed:", err);
     }
   };
 
@@ -522,6 +547,152 @@ export default function InventorySyncDashboardPage() {
               )}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      {/* E2E Booking Test Panel */}
+      <Card data-testid="booking-test-panel">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Play className="h-5 w-5" /> E2E Booking Test
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchTestHistory}
+              data-testid="fetch-test-history-btn"
+            >
+              <Clock className="h-4 w-4 mr-1" /> Gecmis
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Search &rarr; Detail &rarr; Revalidation &rarr; Booking &rarr; Status Check &rarr; Cancel
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2" data-testid="booking-test-triggers">
+            {["ratehawk", "paximum", "tbo", "wwtatil"].map((sup) => (
+              <Button
+                key={sup}
+                size="sm"
+                variant={bookingTestRunning[sup] ? "secondary" : "outline"}
+                onClick={() => runBookingTest(sup)}
+                disabled={bookingTestRunning[sup]}
+                data-testid={`booking-test-btn-${sup}`}
+              >
+                {bookingTestRunning[sup] ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                ) : (
+                  <Play className="h-3.5 w-3.5 mr-1.5" />
+                )}
+                <span className="capitalize">{sup}</span>
+              </Button>
+            ))}
+          </div>
+
+          {/* Active Test Result */}
+          {bookingTestResult && (
+            <div className="border rounded-lg p-4 space-y-3" data-testid="booking-test-result">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">
+                  E2E Test — <span className="capitalize">{bookingTestResult.supplier}</span>
+                  <Badge variant="outline" className="ml-2 text-xs">
+                    {bookingTestResult.mode}
+                  </Badge>
+                </h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {bookingTestResult.duration_ms}ms
+                  </span>
+                  <Badge
+                    variant={bookingTestResult.status === "passed" ? "outline" : "destructive"}
+                    className={bookingTestResult.status === "passed" ? "border-emerald-500 text-emerald-600" : ""}
+                    data-testid="booking-test-overall-status"
+                  >
+                    {bookingTestResult.summary?.passed}/{bookingTestResult.summary?.total} PASS
+                  </Badge>
+                </div>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Adim</TableHead>
+                    <TableHead>Durum</TableHead>
+                    <TableHead>Sure</TableHead>
+                    <TableHead>Detay</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {bookingTestResult.steps?.map((step, i) => (
+                    <TableRow key={i} data-testid={`booking-step-${step.name}`}>
+                      <TableCell className="font-mono text-xs capitalize">{step.name}</TableCell>
+                      <TableCell>
+                        {step.status === "passed" ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        ) : step.status === "skipped" ? (
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-red-500" />
+                        )}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">{step.duration_ms}ms</TableCell>
+                      <TableCell className="text-xs text-muted-foreground max-w-xs truncate">
+                        {step.error || (step.details ? Object.entries(step.details).filter(([, v]) => v !== null).map(([k, v]) => `${k}: ${v}`).join(", ") : "-")}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <div className="text-xs text-muted-foreground flex items-center gap-4">
+                <span>trace: <code className="font-mono">{bookingTestResult.trace_id?.slice(0, 12)}...</code></span>
+                <span>test params: {bookingTestResult.test_params?.destination} ({bookingTestResult.test_params?.checkin} ~ {bookingTestResult.test_params?.checkout})</span>
+              </div>
+            </div>
+          )}
+
+          {/* Test History */}
+          {bookingTestHistory && (
+            <div className="border rounded-lg p-4 space-y-3" data-testid="booking-test-history">
+              <h3 className="text-sm font-semibold">Test Gecmisi ({bookingTestHistory.total})</h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Supplier</TableHead>
+                    <TableHead>Mod</TableHead>
+                    <TableHead>Sonuc</TableHead>
+                    <TableHead>Adimlar</TableHead>
+                    <TableHead>Sure</TableHead>
+                    <TableHead>Tarih</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {bookingTestHistory.tests?.map((test, i) => (
+                    <TableRow key={i} data-testid={`test-history-row-${i}`}>
+                      <TableCell className="font-medium capitalize">{test.supplier}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs">{test.mode}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {test.status === "passed" ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-red-500" />
+                        )}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {test.summary?.passed}/{test.summary?.total}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">{test.duration_ms}ms</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {test.timestamp ? new Date(test.timestamp).toLocaleString("tr-TR") : "-"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
 

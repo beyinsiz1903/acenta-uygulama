@@ -1,0 +1,101 @@
+{
+  "summary": "Completed testing for Iteration 127: Syroce Travel SaaS Pricing & Distribution Engine. All 23 backend API tests passed. Fixed frontend API integration issue (wrong URL path /api/api/pricing-engine). Frontend now correctly displays all stats, tabs, and pricing simulation. Full pricing pipeline verified: supplier_price → base_markup → channel_adjustment → promotion_discount → tax → currency_conversion → final_sell_price.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "✅ GET /api/pricing-engine/metadata returns channels (b2b, b2c, corporate, whitelabel)",
+    "✅ GET /api/pricing-engine/metadata returns seasons (peak, high, mid, low, off)",
+    "✅ GET /api/pricing-engine/metadata returns promotion_types (early_booking, flash_sale, campaign_discount, fixed_price_override)",
+    "✅ GET /api/pricing-engine/metadata returns rule_categories (base_markup, agency_tier, commission, tax)",
+    "✅ GET /api/pricing-engine/metadata returns agency_tiers (starter, standard, premium, enterprise)",
+    "✅ GET /api/pricing-engine/dashboard returns stats (total_rules=2, active_rules=2, channel_count=4, active_promotions=2)",
+    "✅ GET /api/pricing-engine/dashboard returns rules_by_category",
+    "✅ GET /api/pricing-engine/dashboard returns active_channels list",
+    "✅ POST /api/pricing-engine/simulate calculates full pricing breakdown with all fields",
+    "✅ POST /api/pricing-engine/simulate returns different prices for different channels",
+    "✅ POST /api/pricing-engine/simulate handles EUR to TRY currency conversion",
+    "✅ POST /api/pricing-engine/distribution-rules creates new rule",
+    "✅ GET /api/pricing-engine/distribution-rules lists rules",
+    "✅ GET /api/pricing-engine/distribution-rules?category=base_markup filters by category",
+    "✅ DELETE /api/pricing-engine/distribution-rules/{rule_id} deletes rule and verifies removal",
+    "✅ POST /api/pricing-engine/channels creates channel config",
+    "✅ GET /api/pricing-engine/channels lists channel configs",
+    "✅ DELETE /api/pricing-engine/channels/{rule_id} deletes channel",
+    "✅ POST /api/pricing-engine/promotions creates promotion",
+    "✅ GET /api/pricing-engine/promotions lists promotions",
+    "✅ POST /api/pricing-engine/promotions/{rule_id}/toggle toggles active status",
+    "✅ DELETE /api/pricing-engine/promotions/{rule_id} deletes promotion",
+    "✅ Full pipeline test with seeded data verified margin calculation",
+    "✅ Frontend: Page renders at /app/admin/pricing-engine with 4 tabs",
+    "✅ Frontend: Stat cards show correct values (2 rules, 4 channels, 2 promotions)",
+    "✅ Frontend: Price Simulator calculates and displays full pipeline visualization",
+    "✅ Frontend: Distribution Rules tab shows table with rules, add/delete buttons",
+    "✅ Frontend: Channels tab shows 4 channel cards with adjustments",
+    "✅ Frontend: Promotions tab shows table with toggle and delete actions"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_pricing_engine_iter127.py",
+    "/app/test_reports/pytest/pytest_pricing_engine_iter127.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Fixed: PricingEnginePage.jsx was using custom fetch with localStorage token which is not set in cookie-based auth system",
+    "Fixed: URL path issue - removed /api prefix since axios baseURL already includes /api",
+    "PricingDistributionEngine.calculate() correctly implements 7-step pipeline",
+    "Rule matching uses scoring system for specificity (supplier +10, destination +8, season +6, channel +4)",
+    "Promotion matching considers promo_code with highest score (+10) for exact match",
+    "Dashboard aggregation correctly uses MongoDB aggregation pipeline for rules_by_category"
+  ],
+  "updated_files": [
+    "/app/frontend/src/pages/PricingEnginePage.jsx",
+    "/app/backend/tests/test_pricing_engine_iter127.py"
+  ],
+  "success_rate": {
+    "backend": "100% (23/23 tests passed)",
+    "frontend": "100% (9/9 UI checks passed)"
+  },
+  "test_credentials_used": {
+    "super_admin": "agent@acenta.test / agent123"
+  },
+  "seed_data_existing": {
+    "distribution_rules": ["Default Hotel Markup 15%", "RateHawk TR Peak 22%"],
+    "channel_configs": ["b2b -5%", "b2c +3%", "corporate -8%", "whitelabel -3%"],
+    "promotions": ["Erken Rezervasyon 10%", "Flash Sale - Antalya 15%"]
+  },
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 127 tested Pricing & Distribution Engine feature. All APIs at /api/pricing-engine/* work correctly. Frontend page at /app/admin/pricing-engine renders 4 tabs: Simulasyon (Price Simulator), Kurallar (Distribution Rules), Kanallar (Channels), Promosyonlar (Promotions). The frontend was fixed to use axios api client with cookie auth instead of custom fetch with localStorage token. Key data-testid attributes: pricing-engine-page, pricing-stat-cards, price-simulator, tab-simulator, tab-rules, tab-channels, tab-promotions, sim-calculate-btn, sim-result, sim-sell-price, distribution-rules-tab, channels-tab, promotions-tab, add-rule-btn, add-channel-btn, add-promo-btn.",
+  "api_verification": {
+    "GET /api/pricing-engine/metadata": "✅ 200 - Returns channels, seasons, promotion_types, rule_categories, agency_tiers",
+    "GET /api/pricing-engine/dashboard": "✅ 200 - Returns total_rules, active_rules, channel_count, active_promotions, rules_by_category, active_channels",
+    "POST /api/pricing-engine/simulate": "✅ 200 - Returns full breakdown: supplier_price, base_markup, channel_adjustment, promotion_discount, tax, sell_price, margin, per_night, applied_rules",
+    "POST /api/pricing-engine/distribution-rules": "✅ 201 - Creates rule with rule_id, name, rule_category, value, scope, priority",
+    "GET /api/pricing-engine/distribution-rules": "✅ 200 - Lists rules, supports ?category= filter",
+    "DELETE /api/pricing-engine/distribution-rules/{rule_id}": "✅ 200 - Returns {ok: true}",
+    "POST /api/pricing-engine/channels": "✅ 201 - Creates channel config",
+    "GET /api/pricing-engine/channels": "✅ 200 - Lists channel configs",
+    "DELETE /api/pricing-engine/channels/{rule_id}": "✅ 200 - Returns {ok: true}",
+    "POST /api/pricing-engine/promotions": "✅ 201 - Creates promotion",
+    "GET /api/pricing-engine/promotions": "✅ 200 - Lists promotions",
+    "POST /api/pricing-engine/promotions/{rule_id}/toggle": "✅ 200 - Toggles active status",
+    "DELETE /api/pricing-engine/promotions/{rule_id}": "✅ 200 - Returns {ok: true}"
+  },
+  "frontend_verification": {
+    "Page URL": "/app/admin/pricing-engine",
+    "Stat Cards": "Toplam Kural=2, Aktif Kural=2, Kanal=4, Aktif Promosyon=2",
+    "Simulasyon Tab": "Input form + pipeline visualization + sell price result €98.32",
+    "Kurallar Tab": "Table with 2 rules, Yenile/Kural Ekle buttons",
+    "Kanallar Tab": "4 channel cards (B2B, B2C, Corporate, Whitelabel)",
+    "Promosyonlar Tab": "Table with 2 promotions, toggle/delete actions"
+  },
+  "mocked_apis": {
+    "note": "No APIs are mocked. All pricing calculations are real using MongoDB collections."
+  }
+}

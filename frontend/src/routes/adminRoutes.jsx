@@ -54,6 +54,7 @@ const AdminApprovalsPage = lazy(() => import("../pages/AdminApprovalsPage"));
 const AdminCatalogPage = lazy(() => import("../pages/AdminCatalogPage"));
 const AdminCatalogHotelsPage = lazy(() => import("../pages/AdminCatalogHotelsPage"));
 const AdminPricingPage = lazy(() => import("../pages/AdminPricingPage"));
+const PricingEnginePage = lazy(() => import("../pages/PricingEnginePage"));
 const AdminPricingRulesPage = lazy(() => import("../pages/AdminPricingRulesPage"));
 const AdminFunnelPage = lazy(() => import("../pages/AdminFunnelPage"));
 const AdminB2BFunnelPage = lazy(() => import("../pages/AdminB2BFunnelPage"));
@@ -138,6 +139,7 @@ export const adminRoutes = (
     {/* Catalog & Pricing */}
     <Route path="catalog" element={<AdminCatalogPage />} />
     <Route path="catalog/hotels" element={<AdminCatalogHotelsPage />} />
+    <Route path="pricing-engine" element={<PricingEnginePage />} />
     <Route path="pricing" element={<AdminPricingPage />} />
     <Route path="pricing/rules" element={<AdminPricingRulesPage />} />
     <Route path="pricing/funnel" element={<AdminFunnelPage />} />

@@ -496,4 +496,9 @@ def register_routers(app: FastAPI) -> None:
     from app.routers.pilot_onboarding_router import router as pilot_onboarding_router
     app.include_router(pilot_onboarding_router)
 
+
+    # --- Pricing & Distribution Engine ---
+    from app.routers.pricing_engine_router import router as pricing_engine_router
+    app.include_router(pricing_engine_router)
+
     # inventory_sync_router replaced by inventory/ package (see above)

@@ -18,6 +18,7 @@ export const adminNav = [
       { label: "Katalog", path: "/app/admin/catalog" },
       { label: "Otel Kataloğu", path: "/app/admin/catalog/hotels" },
       { label: "Fiyatlandırma", path: "/app/admin/pricing" },
+      { label: "Pricing Engine", path: "/app/admin/pricing-engine" },
       { label: "Kuponlar", path: "/app/admin/coupons" },
       { label: "Onay Görevleri", path: "/app/admin/approvals" },
       { label: "WebPOS", path: "/app/finance/webpos", requiredFeature: "webpos" },

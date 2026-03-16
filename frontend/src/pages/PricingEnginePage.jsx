@@ -1,8 +1,10 @@
 import React, { useState, useCallback, useEffect } from "react";
 import {
   Calculator, Layers, Tag, Zap, Plus, Trash2, ToggleLeft,
-  ToggleRight, RefreshCw, Loader2, ArrowRight, TrendingUp,
-  DollarSign, Percent, Globe, Building2, Store, Users,
+  ToggleRight, RefreshCw, Loader2, TrendingUp,
+  Globe, Building2, Store, Users, Shield, ShieldAlert,
+  ShieldCheck, ChevronDown, ChevronUp, Trophy, XCircle,
+  CheckCircle2, AlertTriangle, Info, Eye,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -16,6 +18,7 @@ import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "../components/ui/table";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/ui/tooltip";
 import { toast } from "sonner";
 
 import { api as axiosApi } from "../lib/api";
@@ -41,13 +44,7 @@ function fmtCurrency(amt, cur = "EUR") {
   return new Intl.NumberFormat("tr-TR", { style: "currency", currency: cur }).format(amt);
 }
 
-const CHANNEL_ICONS = {
-  b2b: Building2,
-  b2c: Store,
-  corporate: Globe,
-  whitelabel: Users,
-};
-
+const CHANNEL_ICONS = { b2b: Building2, b2c: Store, corporate: Globe, whitelabel: Users };
 const CHANNEL_COLORS = {
   b2b: "bg-blue-50 text-blue-700 border-blue-200",
   b2c: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -55,7 +52,21 @@ const CHANNEL_COLORS = {
   whitelabel: "bg-amber-50 text-amber-700 border-amber-200",
 };
 
-// ═══════════════════ STAT CARDS ═══════════════════
+const GUARDRAIL_LABELS = {
+  min_margin_pct: "Minimum Marj %",
+  max_discount_pct: "Maksimum Indirim %",
+  channel_floor_price: "Kanal Taban Fiyat",
+  supplier_max_markup_pct: "Supplier Maks Markup %",
+};
+
+const GUARDRAIL_ICONS = {
+  min_margin_pct: TrendingUp,
+  max_discount_pct: Tag,
+  channel_floor_price: Shield,
+  supplier_max_markup_pct: Layers,
+};
+
+// ============== STAT CARDS ==============
 
 function StatCards({ stats }) {
   const cards = [
@@ -63,9 +74,10 @@ function StatCards({ stats }) {
     { label: "Aktif Kural", value: stats.active_rules || 0, icon: Zap, color: "text-emerald-600", bg: "bg-emerald-50" },
     { label: "Kanal", value: stats.channel_count || 0, icon: Globe, color: "text-violet-600", bg: "bg-violet-50" },
     { label: "Aktif Promosyon", value: stats.active_promotions || 0, icon: Tag, color: "text-amber-600", bg: "bg-amber-50" },
+    { label: "Guardrail", value: stats.active_guardrails || 0, icon: Shield, color: "text-rose-600", bg: "bg-rose-50" },
   ];
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" data-testid="pricing-stat-cards">
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4" data-testid="pricing-stat-cards">
       {cards.map((c, i) => {
         const Icon = c.icon;
         return (
@@ -84,7 +96,165 @@ function StatCards({ stats }) {
   );
 }
 
-// ═══════════════════ PRICE SIMULATOR ═══════════════════
+// ============== PIPELINE EXPLAINER ==============
+
+const STEP_COLORS = {
+  supplier_price: { bg: "bg-slate-100", border: "border-slate-300", text: "text-slate-700", accent: "bg-slate-600" },
+  base_markup: { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", accent: "bg-blue-600" },
+  channel_rule: { bg: "bg-violet-50", border: "border-violet-200", text: "text-violet-700", accent: "bg-violet-600" },
+  agency_rule: { bg: "bg-indigo-50", border: "border-indigo-200", text: "text-indigo-700", accent: "bg-indigo-600" },
+  promotion: { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", accent: "bg-amber-600" },
+  tax: { bg: "bg-gray-50", border: "border-gray-200", text: "text-gray-600", accent: "bg-gray-500" },
+  currency_conversion: { bg: "bg-teal-50", border: "border-teal-200", text: "text-teal-700", accent: "bg-teal-600" },
+};
+
+function PipelineExplainer({ steps, sellPrice, sellCurrency, supplierPrice }) {
+  if (!steps?.length) return null;
+  return (
+    <div className="space-y-1" data-testid="pipeline-explainer">
+      {steps.map((s, i) => {
+        const colors = STEP_COLORS[s.step] || STEP_COLORS.supplier_price;
+        const isLast = i === steps.length - 1;
+        const showAdjustment = s.step !== "supplier_price" && s.step !== "currency_conversion";
+        return (
+          <React.Fragment key={i}>
+            <div className={`rounded-lg border ${colors.border} ${colors.bg} p-3 transition-all duration-200 hover:shadow-sm`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`w-1.5 h-8 rounded-full ${colors.accent}`} />
+                  <div>
+                    <p className={`text-sm font-medium ${colors.text}`}>{s.label}</p>
+                    {s.rule_name && <p className="text-[10px] text-muted-foreground">Kural: {s.rule_name} ({s.rule_id})</p>}
+                    {!s.rule_name && s.detail && <p className="text-[10px] text-muted-foreground">{s.detail}</p>}
+                  </div>
+                </div>
+                <div className="text-right">
+                  {showAdjustment && s.adjustment_amount !== 0 && (
+                    <p className={`text-xs font-mono ${s.adjustment_amount > 0 ? "text-emerald-600" : s.adjustment_amount < 0 ? "text-red-500" : "text-muted-foreground"}`}>
+                      {s.adjustment_amount > 0 ? "+" : ""}{s.adjustment_amount.toFixed(2)}
+                      {s.adjustment_pct !== 0 && ` (%${s.adjustment_pct > 0 ? "+" : ""}${s.adjustment_pct})`}
+                    </p>
+                  )}
+                  <p className={`text-sm font-bold font-mono ${colors.text}`}>{s.output_price.toFixed(2)}</p>
+                </div>
+              </div>
+            </div>
+            {!isLast && (
+              <div className="flex justify-center">
+                <div className="w-px h-3 bg-slate-300" />
+              </div>
+            )}
+          </React.Fragment>
+        );
+      })}
+      {/* Final sell price */}
+      <div className="bg-slate-900 text-white rounded-lg p-4 flex justify-between items-center mt-2">
+        <div>
+          <span className="font-semibold text-sm">Satis Fiyati</span>
+          <p className="text-[10px] text-slate-400">supplier_price: {supplierPrice} -&gt; final: {sellPrice}</p>
+        </div>
+        <span className="text-xl font-bold font-mono" data-testid="sim-sell-price">{fmtCurrency(sellPrice, sellCurrency)}</span>
+      </div>
+    </div>
+  );
+}
+
+// ============== EVALUATED RULES PANEL ==============
+
+function EvaluatedRulesPanel({ evaluatedRules }) {
+  const [expanded, setExpanded] = useState(false);
+  if (!evaluatedRules?.length) return null;
+
+  const winners = evaluatedRules.filter(r => r.won);
+  const losers = evaluatedRules.filter(r => !r.won);
+
+  return (
+    <div className="border rounded-lg overflow-hidden" data-testid="evaluated-rules-panel">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 transition-colors duration-150"
+        data-testid="toggle-evaluated-rules"
+      >
+        <div className="flex items-center gap-2">
+          <Eye className="w-4 h-4 text-slate-500" />
+          <span className="text-sm font-medium">Kural Precedence ({evaluatedRules.length} kural degerlendirildi)</span>
+        </div>
+        {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+      </button>
+      {expanded && (
+        <div className="p-3 space-y-3">
+          {/* Winners */}
+          {winners.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-emerald-700 mb-1.5 flex items-center gap-1"><Trophy className="w-3 h-3" /> Kazanan Kurallar</p>
+              <div className="space-y-1.5">
+                {winners.map((r, i) => (
+                  <div key={i} className="flex items-center gap-2 p-2 rounded-md bg-emerald-50 border border-emerald-200">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-emerald-800 truncate">{r.name || r.rule_id}</p>
+                      <p className="text-[10px] text-emerald-600">{r.category} | Skor: {r.match_score} | Oncelik: {r.priority} | Deger: %{r.value}</p>
+                    </div>
+                    <Badge variant="outline" className="text-[9px] border-emerald-300 text-emerald-700 shrink-0">KAZANDI</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* Losers */}
+          {losers.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-slate-500 mb-1.5 flex items-center gap-1"><XCircle className="w-3 h-3" /> Diger Kurallar</p>
+              <div className="space-y-1">
+                {losers.map((r, i) => (
+                  <div key={i} className="flex items-center gap-2 p-2 rounded-md bg-slate-50 border border-slate-200">
+                    <XCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-slate-600 truncate">{r.name || r.rule_id}</p>
+                      <p className="text-[10px] text-slate-400">{r.category} | Skor: {r.match_score} | Deger: %{r.value}</p>
+                    </div>
+                    {r.reject_reason && <Badge variant="secondary" className="text-[9px] shrink-0">{r.reject_reason}</Badge>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============== GUARDRAIL WARNINGS ==============
+
+function GuardrailWarnings({ warnings, passed }) {
+  if (!warnings?.length) return null;
+  return (
+    <div className={`rounded-lg border p-3 space-y-2 ${passed ? "border-emerald-200 bg-emerald-50" : "border-red-200 bg-red-50"}`} data-testid="guardrail-warnings">
+      <div className="flex items-center gap-2">
+        {passed
+          ? <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          : <ShieldAlert className="w-4 h-4 text-red-600" />
+        }
+        <span className={`text-sm font-semibold ${passed ? "text-emerald-700" : "text-red-700"}`}>
+          {passed ? "Tum guardrail'lar gecti" : "Guardrail ihlali tespit edildi"}
+        </span>
+      </div>
+      {warnings.map((w, i) => (
+        <div key={i} className={`flex items-start gap-2 text-xs p-2 rounded ${w.severity === "error" ? "bg-red-100 text-red-800" : "bg-amber-100 text-amber-800"}`}>
+          {w.severity === "error" ? <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" /> : <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />}
+          <div>
+            <p className="font-medium">{GUARDRAIL_LABELS[w.guardrail] || w.guardrail}</p>
+            <p>{w.message}</p>
+            <p className="text-[10px] opacity-75">Beklenen: {w.expected} | Gercek: {w.actual}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ============== PRICE SIMULATOR ==============
 
 function PriceSimulator({ metadata }) {
   const [form, setForm] = useState({
@@ -111,8 +281,8 @@ function PriceSimulator({ metadata }) {
         body: JSON.stringify({ ...form, supplier_price: parseFloat(form.supplier_price), nights: parseInt(form.nights) }),
       });
       setResult(data);
-    } catch (e) {
-      toast.error("Simülasyon hatası");
+    } catch {
+      toast.error("Simulasyon hatasi");
     }
     setLoading(false);
   };
@@ -120,13 +290,13 @@ function PriceSimulator({ metadata }) {
   const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
 
   return (
-    <div className="grid lg:grid-cols-2 gap-6" data-testid="price-simulator">
+    <div className="grid lg:grid-cols-[380px_1fr] gap-6" data-testid="price-simulator">
       {/* Input */}
-      <Card>
+      <Card className="h-fit">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2"><Calculator className="w-4 h-4" /> Fiyat Girdileri</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-xs">Supplier</Label>
@@ -198,105 +368,67 @@ function PriceSimulator({ metadata }) {
       </Card>
 
       {/* Result */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2"><TrendingUp className="w-4 h-4" /> Fiyat Sonucu</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!result ? (
-            <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
-              <Calculator className="w-10 h-10 mb-2 opacity-30" />
-              <p className="text-sm">Simülasyon için parametreleri girin</p>
-            </div>
-          ) : (
-            <div className="space-y-3" data-testid="sim-result">
-              {/* Pipeline visualization */}
-              <div className="space-y-2">
-                <PipelineRow label="Supplier Fiyat" amount={result.supplier_price} currency={result.supplier_currency} type="base" />
-                <PipelineArrow />
-                <PipelineRow label={`Baz Markup (%${result.base_markup_pct})`} amount={result.base_markup_amount} sign="+" type="markup" />
-                <PipelineArrow />
-                <PipelineRow label={`Kanal (${form.channel.toUpperCase()}) %${result.channel_adjustment_pct}`} amount={result.channel_adjustment_amount} sign={result.channel_adjustment_pct >= 0 ? "+" : ""} type="channel" />
-                <PipelineArrow />
-                {result.promotion_discount_pct > 0 && (
-                  <>
-                    <PipelineRow label={`Promosyon (-%${result.promotion_discount_pct})`} amount={-result.promotion_discount_amount} sign="-" type="promo" />
-                    <PipelineArrow />
-                  </>
-                )}
-                <PipelineRow label={`Vergi (%${result.tax_rate})`} amount={result.tax_amount} sign="+" type="tax" />
-                <PipelineArrow />
-                {result.fx_rate !== 1 && (
-                  <>
-                    <PipelineRow label={`Kur (${result.fx_rate})`} amount={null} type="fx" />
-                    <PipelineArrow />
-                  </>
-                )}
-                <div className="bg-slate-900 text-white rounded-lg p-3 flex justify-between items-center">
-                  <span className="font-semibold">Satis Fiyati</span>
-                  <span className="text-lg font-bold" data-testid="sim-sell-price">{fmtCurrency(result.sell_price, result.sell_currency)}</span>
-                </div>
+      <div className="space-y-4">
+        {!result ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+              <Calculator className="w-12 h-12 mb-3 opacity-20" />
+              <p className="text-sm">Simulasyon icin parametreleri girin ve hesaplayin</p>
+              <p className="text-xs mt-1 text-muted-foreground">Pipeline her adimi detayli gosterecektir</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Guardrail Warnings */}
+            <GuardrailWarnings warnings={result.guardrail_warnings} passed={result.guardrails_passed} />
+
+            {/* Pipeline Explainer */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" /> Fiyat Pipeline
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PipelineExplainer
+                  steps={result.pipeline_steps}
+                  sellPrice={result.sell_price}
+                  sellCurrency={result.sell_currency}
+                  supplierPrice={result.supplier_price}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Metrics */}
+            <div className="grid grid-cols-4 gap-3" data-testid="sim-metrics">
+              <div className={`text-center p-3 rounded-lg border ${result.margin >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
+                <p className="text-[10px] font-medium text-muted-foreground">Marj</p>
+                <p className={`text-lg font-bold font-mono ${result.margin >= 0 ? "text-emerald-700" : "text-red-600"}`}>{fmtCurrency(result.margin, result.sell_currency)}</p>
               </div>
-              {/* Margin */}
-              <div className="grid grid-cols-3 gap-2 pt-2">
-                <div className="text-center p-2 bg-emerald-50 rounded-lg">
-                  <p className="text-xs text-emerald-600">Marj</p>
-                  <p className="font-bold text-emerald-700">{fmtCurrency(result.margin, result.sell_currency)}</p>
-                </div>
-                <div className="text-center p-2 bg-blue-50 rounded-lg">
-                  <p className="text-xs text-blue-600">Marj %</p>
-                  <p className="font-bold text-blue-700">%{result.margin_pct}</p>
-                </div>
-                <div className="text-center p-2 bg-violet-50 rounded-lg">
-                  <p className="text-xs text-violet-600">Gece Basina</p>
-                  <p className="font-bold text-violet-700">{fmtCurrency(result.per_night, result.sell_currency)}</p>
-                </div>
+              <div className={`text-center p-3 rounded-lg border ${result.margin_pct >= 0 ? "bg-blue-50 border-blue-200" : "bg-red-50 border-red-200"}`}>
+                <p className="text-[10px] font-medium text-muted-foreground">Marj %</p>
+                <p className={`text-lg font-bold font-mono ${result.margin_pct >= 0 ? "text-blue-700" : "text-red-600"}`}>%{result.margin_pct}</p>
               </div>
-              {/* Applied rules */}
-              {result.applied_rules?.length > 0 && (
-                <div className="pt-2">
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Uygulanan Kurallar</p>
-                  <div className="space-y-1">
-                    {result.applied_rules.map((r, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs">
-                        <Badge variant="outline" className="text-[10px]">{r.stage}</Badge>
-                        <span className="text-muted-foreground">{r.rule_id}</span>
-                        <span className="ml-auto font-mono">%{r.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <div className="text-center p-3 bg-violet-50 rounded-lg border border-violet-200">
+                <p className="text-[10px] font-medium text-muted-foreground">Gece Basina</p>
+                <p className="text-lg font-bold font-mono text-violet-700">{fmtCurrency(result.per_night, result.sell_currency)}</p>
+              </div>
+              <div className="text-center p-3 bg-teal-50 rounded-lg border border-teal-200">
+                <p className="text-[10px] font-medium text-muted-foreground">Komisyon</p>
+                <p className="text-lg font-bold font-mono text-teal-700">{fmtCurrency(result.commission, result.sell_currency)}</p>
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            {/* Evaluated Rules Panel */}
+            <EvaluatedRulesPanel evaluatedRules={result.evaluated_rules} />
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
-function PipelineRow({ label, amount, sign = "", type }) {
-  const colors = {
-    base: "bg-slate-50 border-slate-200",
-    markup: "bg-blue-50 border-blue-200",
-    channel: "bg-violet-50 border-violet-200",
-    promo: "bg-amber-50 border-amber-200",
-    tax: "bg-gray-50 border-gray-200",
-    fx: "bg-teal-50 border-teal-200",
-  };
-  return (
-    <div className={`rounded-lg border p-2.5 flex justify-between items-center ${colors[type] || ""}`}>
-      <span className="text-sm">{label}</span>
-      {amount != null && <span className="font-mono text-sm font-medium">{sign}{amount >= 0 ? "+" : ""}{amount?.toFixed?.(2)}</span>}
-    </div>
-  );
-}
-
-function PipelineArrow() {
-  return <div className="flex justify-center"><ArrowRight className="w-3 h-3 text-muted-foreground rotate-90" /></div>;
-}
-
-// ═══════════════════ DISTRIBUTION RULES ═══════════════════
+// ============== DISTRIBUTION RULES ==============
 
 function DistributionRulesTab() {
   const [rules, setRules] = useState([]);
@@ -419,7 +551,7 @@ function DistributionRulesTab() {
   );
 }
 
-// ═══════════════════ CHANNEL CONFIGS ═══════════════════
+// ============== CHANNEL CONFIGS ==============
 
 function ChannelsTab() {
   const [channels, setChannels] = useState([]);
@@ -527,7 +659,7 @@ function ChannelsTab() {
   );
 }
 
-// ═══════════════════ PROMOTIONS ═══════════════════
+// ============== PROMOTIONS ==============
 
 function PromotionsTab() {
   const [promos, setPromos] = useState([]);
@@ -663,7 +795,139 @@ function PromotionsTab() {
   );
 }
 
-// ═══════════════════ MAIN PAGE ═══════════════════
+// ============== GUARDRAILS ==============
+
+function GuardrailsTab() {
+  const [guardrails, setGuardrails] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState({ name: "", guardrail_type: "min_margin_pct", value: 5, scope: {} });
+  const [scopeStr, setScopeStr] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await api("/guardrails");
+      setGuardrails(Array.isArray(data) ? data : []);
+    } catch {
+      setGuardrails([]);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const create = async () => {
+    let scope = {};
+    try { scope = scopeStr ? JSON.parse(scopeStr) : {}; } catch { toast.error("Scope JSON hatali"); return; }
+    await api("/guardrails", { method: "POST", body: JSON.stringify({ ...form, value: parseFloat(form.value), scope }) });
+    toast.success("Guardrail eklendi");
+    setShowAdd(false);
+    setScopeStr("");
+    load();
+  };
+
+  const remove = async (guardrailId) => {
+    await api(`/guardrails/${guardrailId}`, { method: "DELETE" });
+    toast.success("Guardrail silindi");
+    load();
+  };
+
+  return (
+    <div className="space-y-4" data-testid="guardrails-tab">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-sm font-medium">Marj Guardrail'lari</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Yanlis kampanya veya kural yuzunden zarar yazmayi onleyin</p>
+        </div>
+        <Button size="sm" onClick={() => setShowAdd(!showAdd)} data-testid="add-guardrail-btn">
+          <Plus className="w-3 h-3 mr-1" /> Guardrail Ekle
+        </Button>
+      </div>
+
+      {showAdd && (
+        <Card className="border-dashed border-rose-200">
+          <CardContent className="p-4 space-y-3">
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label className="text-xs">Guardrail Adi</Label>
+                <Input data-testid="guard-name" value={form.name} onChange={e => setForm(p => ({...p, name: e.target.value}))} placeholder="Min Marj Korumasi" />
+              </div>
+              <div>
+                <Label className="text-xs">Tip</Label>
+                <Select value={form.guardrail_type} onValueChange={v => setForm(p => ({...p, guardrail_type: v}))}>
+                  <SelectTrigger data-testid="guard-type"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(GUARDRAIL_LABELS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Deger</Label>
+                <Input data-testid="guard-value" type="number" value={form.value} onChange={e => setForm(p => ({...p, value: e.target.value}))} />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Scope (JSON) - Opsiyonel</Label>
+              <Input data-testid="guard-scope" value={scopeStr} onChange={e => setScopeStr(e.target.value)} placeholder='{"supplier":"ratehawk","channel":"b2b"}' />
+            </div>
+            <Button data-testid="save-guardrail-btn" onClick={create} size="sm">Kaydet</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {loading ? (
+        <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+      ) : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {guardrails.map((g) => {
+            const Icon = GUARDRAIL_ICONS[g.guardrail_type] || Shield;
+            return (
+              <Card key={g.guardrail_id} className="border border-rose-100" data-testid={`guardrail-card-${g.guardrail_id}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="bg-rose-50 p-2 rounded-lg">
+                      <Icon className="w-5 h-5 text-rose-600" />
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => remove(g.guardrail_id)} data-testid={`delete-guardrail-${g.guardrail_id}`}>
+                      <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                    </Button>
+                  </div>
+                  <h4 className="font-semibold text-sm">{g.name}</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">{GUARDRAIL_LABELS[g.guardrail_type] || g.guardrail_type}</p>
+                  <div className="mt-3">
+                    <p className="text-[10px] text-muted-foreground">Deger</p>
+                    <p className="font-mono text-lg font-bold text-rose-700">
+                      {g.guardrail_type.includes("price") ? fmtCurrency(g.value) : `%${g.value}`}
+                    </p>
+                  </div>
+                  {Object.keys(g.scope || {}).length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-[10px] text-muted-foreground">Scope</p>
+                      <p className="text-xs font-mono bg-slate-50 rounded p-1 mt-0.5">{JSON.stringify(g.scope)}</p>
+                    </div>
+                  )}
+                  <Badge variant={g.active ? "default" : "secondary"} className="mt-2 text-[10px]">
+                    {g.active ? "Aktif" : "Pasif"}
+                  </Badge>
+                </CardContent>
+              </Card>
+            );
+          })}
+          {guardrails.length === 0 && (
+            <div className="col-span-3 text-center py-12">
+              <Shield className="w-10 h-10 mx-auto mb-2 text-slate-200" />
+              <p className="text-sm text-muted-foreground">Henuz guardrail yok</p>
+              <p className="text-xs text-muted-foreground mt-1">Minimum marj, maksimum indirim gibi korumalar ekleyin</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============== MAIN PAGE ==============
 
 export default function PricingEnginePage() {
   const [stats, setStats] = useState({});
@@ -676,45 +940,53 @@ export default function PricingEnginePage() {
   }, []);
 
   return (
-    <div className="space-y-6" data-testid="pricing-engine-page">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Pricing & Distribution Engine</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Supplier fiyatlarini kanal, acente ve promosyon kurallariyla donusturun
-        </p>
+    <TooltipProvider>
+      <div className="space-y-6" data-testid="pricing-engine-page">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Pricing & Distribution Engine</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Supplier fiyatlarini kanal, acente ve promosyon kurallariyla donusturun
+          </p>
+        </div>
+
+        <StatCards stats={stats} />
+
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="simulator" data-testid="tab-simulator">
+              <Calculator className="w-3.5 h-3.5 mr-1.5" /> Simulasyon
+            </TabsTrigger>
+            <TabsTrigger value="rules" data-testid="tab-rules">
+              <Layers className="w-3.5 h-3.5 mr-1.5" /> Kurallar
+            </TabsTrigger>
+            <TabsTrigger value="channels" data-testid="tab-channels">
+              <Globe className="w-3.5 h-3.5 mr-1.5" /> Kanallar
+            </TabsTrigger>
+            <TabsTrigger value="promotions" data-testid="tab-promotions">
+              <Tag className="w-3.5 h-3.5 mr-1.5" /> Promosyonlar
+            </TabsTrigger>
+            <TabsTrigger value="guardrails" data-testid="tab-guardrails">
+              <Shield className="w-3.5 h-3.5 mr-1.5" /> Guardrails
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="simulator" className="mt-4">
+            <PriceSimulator metadata={metadata} />
+          </TabsContent>
+          <TabsContent value="rules" className="mt-4">
+            <DistributionRulesTab />
+          </TabsContent>
+          <TabsContent value="channels" className="mt-4">
+            <ChannelsTab />
+          </TabsContent>
+          <TabsContent value="promotions" className="mt-4">
+            <PromotionsTab />
+          </TabsContent>
+          <TabsContent value="guardrails" className="mt-4">
+            <GuardrailsTab />
+          </TabsContent>
+        </Tabs>
       </div>
-
-      <StatCards stats={stats} />
-
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="simulator" data-testid="tab-simulator">
-            <Calculator className="w-3.5 h-3.5 mr-1.5" /> Simulasyon
-          </TabsTrigger>
-          <TabsTrigger value="rules" data-testid="tab-rules">
-            <Layers className="w-3.5 h-3.5 mr-1.5" /> Kurallar
-          </TabsTrigger>
-          <TabsTrigger value="channels" data-testid="tab-channels">
-            <Globe className="w-3.5 h-3.5 mr-1.5" /> Kanallar
-          </TabsTrigger>
-          <TabsTrigger value="promotions" data-testid="tab-promotions">
-            <Tag className="w-3.5 h-3.5 mr-1.5" /> Promosyonlar
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="simulator" className="mt-4">
-          <PriceSimulator metadata={metadata} />
-        </TabsContent>
-        <TabsContent value="rules" className="mt-4">
-          <DistributionRulesTab />
-        </TabsContent>
-        <TabsContent value="channels" className="mt-4">
-          <ChannelsTab />
-        </TabsContent>
-        <TabsContent value="promotions" className="mt-4">
-          <PromotionsTab />
-        </TabsContent>
-      </Tabs>
-    </div>
+    </TooltipProvider>
   );
 }

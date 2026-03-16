@@ -1,0 +1,93 @@
+{
+  "summary": "Completed testing for Iteration 128: Pricing Engine 3 NEW features. All 17 backend API tests passed. All 12 frontend UI tests passed. Features tested: 1) Pipeline Steps Explainability (7 steps: supplier_price, base_markup, channel_rule, agency_rule, promotion, tax, currency_conversion), 2) Rule Precedence Viewer (evaluated_rules array with won/reject_reason/match_score), 3) Margin Guardrails System (CRUD + guardrail_warnings + guardrails_passed validation).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "✅ POST /api/pricing-engine/simulate returns pipeline_steps array",
+    "✅ Pipeline has exactly 7 steps in correct order",
+    "✅ Each pipeline step has required fields (step, label, input_price, adjustment_pct, adjustment_amount, output_price, rule_id, rule_name, detail)",
+    "✅ Pipeline step prices chain correctly (output -> next input)",
+    "✅ POST /api/pricing-engine/simulate returns evaluated_rules array",
+    "✅ Each evaluated rule has required fields (rule_id, name, category, match_score, priority, value, scope, won, reject_reason)",
+    "✅ Winning rules marked with won=True",
+    "✅ GET /api/pricing-engine/guardrails returns list of guardrails",
+    "✅ POST /api/pricing-engine/guardrails creates guardrail (all 4 types tested)",
+    "✅ DELETE /api/pricing-engine/guardrails/{guardrail_id} deletes guardrail",
+    "✅ GET /api/pricing-engine/metadata returns guardrail_types",
+    "✅ POST /api/pricing-engine/simulate returns guardrails_passed boolean",
+    "✅ POST /api/pricing-engine/simulate returns guardrail_warnings array",
+    "✅ Guardrail violation creates warning with correct structure (guardrail, message, severity, expected, actual)",
+    "✅ GET /api/pricing-engine/dashboard returns active_guardrails count",
+    "✅ Frontend: 5 stat cards visible (Toplam Kural, Aktif Kural, Kanal, Aktif Promosyon, Guardrail)",
+    "✅ Frontend: 5 tabs visible (Simulasyon, Kurallar, Kanallar, Promosyonlar, Guardrails)",
+    "✅ Frontend: Pipeline Explainer shows 7 colored steps with rule names and amounts",
+    "✅ Frontend: Guardrail warning banner appears when min_margin_pct violated",
+    "✅ Frontend: Margin metrics show negative margin in red (-€1.68, %-1.71)",
+    "✅ Frontend: Evaluated Rules panel expands/collapses with KAZANDI badge for winners",
+    "✅ Frontend: Guardrails tab shows guardrail cards with type icons",
+    "✅ Frontend: Add Guardrail button opens form with name/type/value/scope fields",
+    "✅ Frontend: New guardrail created successfully via UI"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_pricing_engine_new_features_iter128.py",
+    "/app/test_reports/pytest/pytest_pricing_engine_new_features_iter128.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "PricingDistributionEngine.calculate() correctly builds pipeline_steps array with 7 sequential steps",
+    "_best_match_with_trace() correctly scores rules and marks winner in evaluated_rules",
+    "_validate_guardrails() correctly validates 4 guardrail types (min_margin_pct, max_discount_pct, channel_floor_price, supplier_max_markup_pct)",
+    "GuardrailWarning dataclass has correct structure for frontend consumption",
+    "Frontend PipelineExplainer uses STEP_COLORS for visual differentiation per step type",
+    "Frontend EvaluatedRulesPanel correctly shows winners with KAZANDI badge and losers with reject reasons",
+    "Frontend GuardrailWarnings shows red banner when guardrails_passed=False with severity icons",
+    "Frontend GuardrailsTab correctly handles CRUD operations with form validation"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_pricing_engine_new_features_iter128.py"
+  ],
+  "success_rate": {
+    "backend": "100% (17/17 tests passed)",
+    "frontend": "100% (12/12 UI checks passed)"
+  },
+  "test_credentials_used": {
+    "super_admin": "agent@acenta.test / agent123"
+  },
+  "seed_data_existing": {
+    "distribution_rules": ["Default Hotel Markup 15%", "RateHawk TR Peak 22%"],
+    "channel_configs": ["B2B -5%", "B2C +3%", "Corporate -8%", "Whitelabel -3%"],
+    "promotions": ["Erken Rezervasyon 10%", "Flash Sale Antalya 15%"],
+    "guardrails": ["Min Marj Korumasi 5%"]
+  },
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 128 tested 3 NEW features on Pricing Engine: 1) pipeline_steps in simulate response - array of 7 steps each with step/label/input_price/adjustment_pct/adjustment_amount/output_price/rule_id/rule_name/detail. 2) evaluated_rules in simulate response - array showing all rules evaluated with match_score/priority/value/scope/won/reject_reason. 3) Guardrails system - GET/POST/DELETE /api/pricing-engine/guardrails with guardrail_id, and simulate returns guardrail_warnings array + guardrails_passed boolean. Frontend has new Guardrails tab (data-testid='tab-guardrails', 'guardrails-tab', 'guardrail-card-*', 'add-guardrail-btn'). Existing min_margin_pct=5 guardrail triggers warning on default simulation. PipelineExplainer (data-testid='pipeline-explainer'), EvaluatedRulesPanel (data-testid='evaluated-rules-panel'), GuardrailWarnings (data-testid='guardrail-warnings') components all working.",
+  "api_verification": {
+    "POST /api/pricing-engine/simulate": "✅ 200 - Returns pipeline_steps (7), evaluated_rules, guardrail_warnings, guardrails_passed",
+    "GET /api/pricing-engine/guardrails": "✅ 200 - Returns array of guardrails",
+    "POST /api/pricing-engine/guardrails": "✅ 201 - Creates guardrail with guardrail_id",
+    "DELETE /api/pricing-engine/guardrails/{guardrail_id}": "✅ 200 - Returns {ok: true}",
+    "GET /api/pricing-engine/metadata": "✅ 200 - Includes guardrail_types array",
+    "GET /api/pricing-engine/dashboard": "✅ 200 - Includes active_guardrails count"
+  },
+  "frontend_verification": {
+    "Page URL": "/app/admin/pricing-engine",
+    "Stat Cards": "5 cards: Toplam Kural=2, Aktif Kural=2, Kanal=4, Aktif Promosyon=2, Guardrail=1",
+    "Tabs": "5 tabs: Simulasyon, Kurallar, Kanallar, Promosyonlar, Guardrails",
+    "Pipeline Explainer": "7 steps with colored borders: Supplier Fiyat(gray) → Baz Markup(blue) → Kanal(violet) → Acente(indigo) → Promosyon(amber) → Vergi(gray) → Kur Donusumu(teal)",
+    "Guardrail Warnings": "Red banner with 'Guardrail ihlali tespit edildi' when margin < 5%",
+    "Evaluated Rules Panel": "Expandable panel showing 'Kazanan Kurallar' with KAZANDI badge and 'Diger Kurallar' with reject reasons",
+    "Margin Metrics": "4 metrics: Marj (red if negative), Marj %, Gece Basina, Komisyon",
+    "Guardrails Tab": "Cards for each guardrail with type icon, value in %/currency, scope JSON, Aktif/Pasif badge"
+  },
+  "mocked_apis": {
+    "note": "No APIs are mocked. All pricing calculations and guardrail validations are real using MongoDB collections."
+  }
+}

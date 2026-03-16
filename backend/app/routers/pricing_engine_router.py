@@ -6,6 +6,7 @@ Endpoints:
   - CRUD /api/pricing-engine/distribution-rules
   - CRUD /api/pricing-engine/channels
   - CRUD /api/pricing-engine/promotions
+  - CRUD /api/pricing-engine/guardrails
 """
 from __future__ import annotations
 
@@ -37,7 +38,7 @@ from app.services.promotion_engine import (
 router = APIRouter(prefix="/api/pricing-engine", tags=["pricing_engine"])
 
 
-# ─── Schemas ─────────────────────────────────────────────────────────
+# --- Schemas ---
 
 class SimulateRequest(BaseModel):
     supplier_code: str = "ratehawk"
@@ -114,7 +115,23 @@ class PromotionUpdate(BaseModel):
     active: Optional[bool] = None
 
 
-# ─── Dashboard ───────────────────────────────────────────────────────
+class GuardrailCreate(BaseModel):
+    name: str
+    guardrail_type: str  # min_margin_pct, max_discount_pct, channel_floor_price, supplier_max_markup_pct
+    value: float = 0.0
+    scope: dict = Field(default_factory=dict)
+    active: bool = True
+
+
+class GuardrailUpdate(BaseModel):
+    name: Optional[str] = None
+    guardrail_type: Optional[str] = None
+    value: Optional[float] = None
+    scope: Optional[dict] = None
+    active: Optional[bool] = None
+
+
+# --- Dashboard ---
 
 @router.get("/dashboard")
 async def pricing_dashboard(user=Depends(get_current_user)):
@@ -132,10 +149,11 @@ async def pricing_metadata(user=Depends(get_current_user)):
         "promotion_types": list(PROMO_TYPES),
         "rule_categories": ["base_markup", "agency_tier", "commission", "tax"],
         "agency_tiers": ["starter", "standard", "premium", "enterprise"],
+        "guardrail_types": ["min_margin_pct", "max_discount_pct", "channel_floor_price", "supplier_max_markup_pct"],
     }
 
 
-# ─── Price Simulation ───────────────────────────────────────────────
+# --- Price Simulation ---
 
 @router.post("/simulate")
 async def simulate_price(payload: SimulateRequest, user=Depends(get_current_user)):
@@ -163,7 +181,7 @@ async def simulate_price(payload: SimulateRequest, user=Depends(get_current_user
     return breakdown.to_dict()
 
 
-# ─── Distribution Rules CRUD ────────────────────────────────────────
+# --- Distribution Rules CRUD ---
 
 @router.get("/distribution-rules")
 async def list_distribution_rules(
@@ -231,7 +249,7 @@ async def delete_distribution_rule(rule_id: str, user=Depends(get_current_user))
     return {"ok": result.deleted_count > 0}
 
 
-# ─── Channel Configs CRUD ───────────────────────────────────────────
+# --- Channel Configs CRUD ---
 
 @router.get("/channels")
 async def list_channels(user=Depends(get_current_user)):
@@ -289,7 +307,7 @@ async def delete_channel(rule_id: str, user=Depends(get_current_user)):
     return {"ok": result.deleted_count > 0}
 
 
-# ─── Promotions CRUD ────────────────────────────────────────────────
+# --- Promotions CRUD ---
 
 @router.get("/promotions")
 async def list_promotions_endpoint(
@@ -344,3 +362,60 @@ async def toggle_promotion_endpoint(rule_id: str, active: bool = Query(True), us
     if not result:
         return {"error": "Promotion not found"}
     return result
+
+
+# --- Guardrails CRUD ---
+
+@router.get("/guardrails")
+async def list_guardrails(user=Depends(get_current_user)):
+    db = await get_db()
+    org_id = user["organization_id"]
+    docs = await db.pricing_guardrails.find({"organization_id": org_id}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return [serialize_doc(d) for d in docs]
+
+
+@router.post("/guardrails", status_code=201)
+async def create_guardrail(payload: GuardrailCreate, user=Depends(get_current_user)):
+    db = await get_db()
+    org_id = user["organization_id"]
+    now = now_utc()
+    guardrail_id = f"guard_{uuid.uuid4().hex[:8]}"
+
+    doc = {
+        "guardrail_id": guardrail_id,
+        "organization_id": org_id,
+        "name": payload.name,
+        "guardrail_type": payload.guardrail_type,
+        "value": payload.value,
+        "scope": payload.scope,
+        "active": payload.active,
+        "created_at": now,
+        "updated_at": now,
+    }
+    await db.pricing_guardrails.insert_one(doc)
+    return serialize_doc(doc)
+
+
+@router.patch("/guardrails/{guardrail_id}")
+async def update_guardrail(guardrail_id: str, payload: GuardrailUpdate, user=Depends(get_current_user)):
+    db = await get_db()
+    org_id = user["organization_id"]
+    updates = {k: v for k, v in payload.dict(exclude_unset=True).items() if v is not None}
+    updates["updated_at"] = now_utc()
+
+    result = await db.pricing_guardrails.find_one_and_update(
+        {"organization_id": org_id, "guardrail_id": guardrail_id},
+        {"$set": updates},
+        return_document=True,
+    )
+    if not result:
+        return {"error": "Guardrail not found"}
+    return serialize_doc(result)
+
+
+@router.delete("/guardrails/{guardrail_id}")
+async def delete_guardrail(guardrail_id: str, user=Depends(get_current_user)):
+    db = await get_db()
+    org_id = user["organization_id"]
+    result = await db.pricing_guardrails.delete_one({"organization_id": org_id, "guardrail_id": guardrail_id})
+    return {"ok": result.deleted_count > 0}

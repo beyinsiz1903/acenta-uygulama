@@ -23,7 +23,7 @@ const SUPPLIERS = [
   { value: "ratehawk", label: "RateHawk" },
   { value: "paximum", label: "Paximum" },
   { value: "tbo", label: "TBO" },
-  { value: "wwtatil", label: "WWTatil" },
+  { value: "wtatil", label: "WTatil" },
 ];
 
 const ACCOUNTING_PROVIDERS = [

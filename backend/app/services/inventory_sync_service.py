@@ -54,7 +54,7 @@ SUPPLIER_SYNC_CONFIG = {
         "priority": 2,
         "status": "active",
     },
-    "wwtatil": {
+    "wtatil": {
         "sync_interval_minutes": 60,
         "product_types": ["hotel"],
         "priority": 3,
@@ -812,7 +812,7 @@ def _simulate_revalidation_price(supplier: str, cached_price: float) -> float:
     drift_ranges = {
         "ratehawk": (-0.02, 0.05),
         "paximum": (-0.03, 0.08),
-        "wwtatil": (-0.05, 0.12),
+        "wtatil": (-0.05, 0.12),
         "tbo": (-0.02, 0.06),
     }
     drift_min, drift_max = drift_ranges.get(supplier, (-0.03, 0.08))

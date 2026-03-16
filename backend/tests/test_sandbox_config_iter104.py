@@ -47,7 +47,7 @@ class TestSupplierConfigEndpoints:
         suppliers = data["suppliers"]
         
         # All 4 suppliers should be present
-        for sup in ["ratehawk", "paximum", "wwtatil", "tbo"]:
+        for sup in ["ratehawk", "paximum", "wtatil", "tbo"]:
             assert sup in suppliers, f"Missing supplier: {sup}"
             cfg = suppliers[sup]
             # Each supplier config should have required fields
@@ -65,7 +65,7 @@ class TestSupplierConfigEndpoints:
         suppliers = data["suppliers"]
         
         # Check that unconfigured suppliers show simulation mode
-        for sup in ["paximum", "wwtatil", "tbo"]:
+        for sup in ["paximum", "wtatil", "tbo"]:
             cfg = suppliers.get(sup, {})
             if not cfg.get("configured", False):
                 assert cfg.get("mode") == "simulation", f"{sup} should be in simulation mode when unconfigured"
@@ -320,7 +320,7 @@ class TestSyncStatusWithConfig:
         assert "suppliers" in data
         suppliers = data["suppliers"]
         
-        for sup in ["ratehawk", "paximum", "wwtatil", "tbo"]:
+        for sup in ["ratehawk", "paximum", "wtatil", "tbo"]:
             assert sup in suppliers, f"Missing {sup} in sync status"
             supplier_data = suppliers[sup]
             assert "config" in supplier_data, f"{sup} missing config"
@@ -338,14 +338,14 @@ class TestRevalidateWithSource:
         requests.post(
             f"{BASE_URL}/api/inventory/sync/trigger",
             headers=auth_headers,
-            json={"supplier": "wwtatil"},
+            json={"supplier": "wtatil"},
         )
         
         resp = requests.post(
             f"{BASE_URL}/api/inventory/revalidate",
             headers=auth_headers,
             json={
-                "supplier": "wwtatil",
+                "supplier": "wtatil",
                 "hotel_id": "ww_000001",
                 "checkin": "2026-02-01",
                 "checkout": "2026-02-05",
@@ -431,7 +431,7 @@ class TestCleanup:
     
     def test_cleanup_test_credentials(self, auth_headers):
         """Remove any test credentials that were set."""
-        for supplier in ["ratehawk", "paximum", "wwtatil", "tbo"]:
+        for supplier in ["ratehawk", "paximum", "wtatil", "tbo"]:
             requests.delete(
                 f"{BASE_URL}/api/inventory/supplier-config/{supplier}",
                 headers=auth_headers,

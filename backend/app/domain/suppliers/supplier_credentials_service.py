@@ -1,7 +1,7 @@
 """Multi-tenant Supplier Credentials Service.
 
 Stores per-agency supplier credentials with AES encryption.
-Each agency can connect their own supplier accounts (wwtatil, paximum, etc.).
+Each agency can connect their own supplier accounts (wtatil, paximum, etc.).
 Supports: RBAC (super_admin sees all, agency_admin sees own), audit logging,
 enable/disable, and supplier-specific validation.
 """
@@ -74,8 +74,8 @@ SUPPORTED_SUPPLIERS = {
         "fields": ["base_url", "username", "password", "agency_code"],
         "auth_endpoint": "/api/authenticationservice/login",
     },
-    "wwtatil": {
-        "name": "WWTatil Tour API",
+    "wtatil": {
+        "name": "WTatil Tour API",
         "type": "tour",
         "product_types": ["tour"],
         "fields": ["base_url", "application_secret_key", "username", "password", "agency_id"],
@@ -214,8 +214,8 @@ async def test_connection(db, organization_id: str, supplier: str, *, actor: str
     if not creds:
         return {"verdict": "FAIL", "error": "No credentials found for this supplier"}
 
-    if supplier == "wwtatil":
-        result = await _test_wwtatil(db, organization_id, creds)
+    if supplier == "wtatil":
+        result = await _test_wtatil(db, organization_id, creds)
     elif supplier == "paximum":
         result = await _test_paximum(db, organization_id, creds)
     elif supplier == "ratehawk":
@@ -235,8 +235,8 @@ async def test_connection(db, organization_id: str, supplier: str, *, actor: str
     return result
 
 
-async def _test_wwtatil(db, organization_id: str, creds: dict) -> dict[str, Any]:
-    """Test wwtatil connection by calling auth endpoint."""
+async def _test_wtatil(db, organization_id: str, creds: dict) -> dict[str, Any]:
+    """Test wtatil connection by calling auth endpoint."""
     import httpx
     import time
 
@@ -265,7 +265,7 @@ async def _test_wwtatil(db, organization_id: str, creds: dict) -> dict[str, Any]
             if token:
                 # Cache token
                 await db["supplier_tokens"].update_one(
-                    {"organization_id": organization_id, "supplier": "wwtatil"},
+                    {"organization_id": organization_id, "supplier": "wtatil"},
                     {"$set": {
                         "token": token,
                         "obtained_at": _ts(),
@@ -275,12 +275,12 @@ async def _test_wwtatil(db, organization_id: str, creds: dict) -> dict[str, Any]
                 )
                 # Update credential status
                 await db["supplier_credentials"].update_one(
-                    {"organization_id": organization_id, "supplier": "wwtatil"},
+                    {"organization_id": organization_id, "supplier": "wtatil"},
                     {"$set": {"status": "connected", "connected_at": _ts(), "last_tested": _ts()}},
                 )
                 return {
                     "verdict": "PASS",
-                    "supplier": "wwtatil",
+                    "supplier": "wtatil",
                     "status": "connected",
                     "latency_ms": latency_ms,
                     "token_preview": token[:20] + "..." if len(token) > 20 else token,
@@ -289,7 +289,7 @@ async def _test_wwtatil(db, organization_id: str, creds: dict) -> dict[str, Any]
             else:
                 return {
                     "verdict": "FAIL",
-                    "supplier": "wwtatil",
+                    "supplier": "wtatil",
                     "status": "auth_failed",
                     "latency_ms": latency_ms,
                     "response": str(data)[:200],
@@ -297,23 +297,23 @@ async def _test_wwtatil(db, organization_id: str, creds: dict) -> dict[str, Any]
                 }
         else:
             await db["supplier_credentials"].update_one(
-                {"organization_id": organization_id, "supplier": "wwtatil"},
+                {"organization_id": organization_id, "supplier": "wtatil"},
                 {"$set": {"status": "auth_failed", "last_tested": _ts()}},
             )
             return {
                 "verdict": "FAIL",
-                "supplier": "wwtatil",
+                "supplier": "wtatil",
                 "status": "auth_failed",
                 "http_status": resp.status_code,
                 "latency_ms": latency_ms,
                 "response": resp.text[:200],
             }
     except httpx.ConnectError as e:
-        return {"verdict": "FAIL", "supplier": "wwtatil", "status": "connection_error", "error": str(e)}
+        return {"verdict": "FAIL", "supplier": "wtatil", "status": "connection_error", "error": str(e)}
     except httpx.TimeoutException:
-        return {"verdict": "FAIL", "supplier": "wwtatil", "status": "timeout", "error": "Connection timed out (15s)"}
+        return {"verdict": "FAIL", "supplier": "wtatil", "status": "timeout", "error": "Connection timed out (15s)"}
     except Exception as e:
-        return {"verdict": "FAIL", "supplier": "wwtatil", "status": "error", "error": str(e)}
+        return {"verdict": "FAIL", "supplier": "wtatil", "status": "error", "error": str(e)}
 
 
 async def _test_paximum(db, organization_id: str, creds: dict) -> dict[str, Any]:
@@ -471,7 +471,7 @@ async def get_cached_token(db, organization_id: str, supplier: str) -> str | Non
     )
     if not doc:
         return None
-    # Simple expiry check — wwtatil tokens are 24h
+    # Simple expiry check — wtatil tokens are 24h
     return doc.get("token")
 
 

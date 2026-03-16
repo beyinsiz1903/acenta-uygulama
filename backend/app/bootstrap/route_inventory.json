@@ -12116,7 +12116,7 @@
     "legacy_or_v1": "legacy",
     "method": "POST",
     "owner": "supplier-credentials",
-    "path": "/api/supplier-credentials/wwtatil/basket/add",
+    "path": "/api/supplier-credentials/wtatil/basket/add",
     "risk_level": "medium",
     "source": "app.routers.supplier_credentials_router",
     "target_namespace": "/api/v1/supplier-credentials"
@@ -12127,7 +12127,7 @@
     "legacy_or_v1": "legacy",
     "method": "POST",
     "owner": "supplier-credentials",
-    "path": "/api/supplier-credentials/wwtatil/booking/create",
+    "path": "/api/supplier-credentials/wtatil/booking/create",
     "risk_level": "medium",
     "source": "app.routers.supplier_credentials_router",
     "target_namespace": "/api/v1/supplier-credentials"
@@ -12138,7 +12138,7 @@
     "legacy_or_v1": "legacy",
     "method": "POST",
     "owner": "supplier-credentials",
-    "path": "/api/supplier-credentials/wwtatil/search",
+    "path": "/api/supplier-credentials/wtatil/search",
     "risk_level": "medium",
     "source": "app.routers.supplier_credentials_router",
     "target_namespace": "/api/v1/supplier-credentials"
@@ -12149,7 +12149,7 @@
     "legacy_or_v1": "legacy",
     "method": "POST",
     "owner": "supplier-credentials",
-    "path": "/api/supplier-credentials/wwtatil/tours",
+    "path": "/api/supplier-credentials/wtatil/tours",
     "risk_level": "medium",
     "source": "app.routers.supplier_credentials_router",
     "target_namespace": "/api/v1/supplier-credentials"

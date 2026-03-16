@@ -89,7 +89,7 @@ REGION_SYNC_CONFIG = {
         {"id": "istanbul", "name": "Istanbul", "country": "TR"},
         {"id": "bodrum", "name": "Bodrum", "country": "TR"},
     ],
-    "wwtatil": [
+    "wtatil": [
         {"id": "antalya", "name": "Antalya", "country": "TR"},
     ],
     "tbo": [

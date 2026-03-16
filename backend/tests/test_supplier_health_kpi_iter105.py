@@ -63,7 +63,7 @@ class TestSupplierHealth:
         suppliers = data["suppliers"]
         assert "ratehawk" in suppliers
         assert "paximum" in suppliers
-        assert "wwtatil" in suppliers
+        assert "wtatil" in suppliers
         assert "tbo" in suppliers
     
     def test_supplier_health_has_required_fields(self, authenticated_client):
@@ -252,7 +252,7 @@ class TestSyncTriggerSimulation:
         """Test that sync/trigger returns sync_mode field."""
         response = authenticated_client.post(
             f"{BASE_URL}/api/inventory/sync/trigger",
-            json={"supplier": "wwtatil"}
+            json={"supplier": "wtatil"}
         )
         assert response.status_code == 200
         
@@ -334,7 +334,7 @@ class TestSupplierConfig:
         suppliers = data["suppliers"]
         assert "ratehawk" in suppliers
         assert "paximum" in suppliers
-        assert "wwtatil" in suppliers
+        assert "wtatil" in suppliers
         assert "tbo" in suppliers
     
     def test_supplier_config_has_required_fields(self, authenticated_client):

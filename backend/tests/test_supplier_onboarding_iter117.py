@@ -26,7 +26,7 @@ TEST_EMAIL = "agent@acenta.test"
 TEST_PASSWORD = "agent123"
 
 # Expected suppliers
-EXPECTED_SUPPLIERS = ["ratehawk", "paximum", "tbo", "wwtatil", "hotelbeds", "juniper"]
+EXPECTED_SUPPLIERS = ["ratehawk", "paximum", "tbo", "wtatil", "hotelbeds", "juniper"]
 
 # Test supplier for full flow
 TEST_SUPPLIER = "paximum"
@@ -358,7 +358,7 @@ class TestSupplierOnboardingReset:
     
     def test_reset_onboarding_state(self, api_client):
         """Reset should clear all onboarding state"""
-        resp = api_client.post(f"{BASE_URL}/api/supplier-onboarding/reset/wwtatil")
+        resp = api_client.post(f"{BASE_URL}/api/supplier-onboarding/reset/wtatil")
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
         data = resp.json()

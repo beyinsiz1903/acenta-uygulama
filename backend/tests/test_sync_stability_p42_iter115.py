@@ -15,7 +15,7 @@ import pytest
 import requests
 import time
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://booking-hardening-1.preview.emergentagent.com")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://cert-wizard-5.preview.emergentagent.com")
 
 @pytest.fixture(scope="module")
 def auth_token():
@@ -376,7 +376,7 @@ class TestSyncStatusBadgeStatuses:
         suppliers = data["suppliers"]
         
         # Check for expected suppliers
-        expected_suppliers = ["ratehawk", "paximum", "wwtatil", "tbo"]
+        expected_suppliers = ["ratehawk", "paximum", "wtatil", "tbo"]
         for sup in expected_suppliers:
             assert sup in suppliers, f"Missing supplier: {sup}"
             sup_data = suppliers[sup]

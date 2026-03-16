@@ -46,14 +46,14 @@ SUPPLIER_CAPABILITIES = {
         "auth_type": "token_based",
         "base_url_pattern": "https://api-dev.paximum.com",
     },
-    "wwtatil": {
-        "display_name": "WWTatil",
+    "wtatil": {
+        "display_name": "WTatil",
         "product_types": ["tour"],
         "search": True, "price_check": True, "hold": False,
         "booking": True, "cancel": False,
         "sandbox_available": False,
         "auth_type": "api_key",
-        "base_url_pattern": "https://api.wwtatil.com",
+        "base_url_pattern": "https://api.wtatil.com",
     },
 }
 

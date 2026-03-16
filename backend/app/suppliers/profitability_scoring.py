@@ -183,7 +183,7 @@ def _default_profitability() -> list[dict[str, Any]]:
         ("real_ratehawk", 72.0, "gold"),
         ("real_tbo", 68.5, "gold"),
         ("real_paximum", 65.0, "gold"),
-        ("real_wwtatil", 55.0, "silver"),
+        ("real_wtatil", 55.0, "silver"),
     ]
     return [
         {

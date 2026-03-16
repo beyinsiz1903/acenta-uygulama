@@ -561,7 +561,7 @@ async def get_registry_info(
 def _get_fallback_chains() -> dict:
     from app.suppliers.failover import failover_engine
     chains = {}
-    for code in ["ratehawk", "tbo", "paximum", "wwtatil"]:
+    for code in ["ratehawk", "tbo", "paximum", "wtatil"]:
         chains[code] = failover_engine.get_fallback_chain(code)
     return chains
 

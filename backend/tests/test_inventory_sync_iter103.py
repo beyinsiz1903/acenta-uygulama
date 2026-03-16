@@ -3,7 +3,7 @@ Test suite for Inventory Sync Engine - MEGA PROMPT #37
 Tests: Supplier sync, cached search, revalidation, sync jobs, stats
 
 Endpoints tested:
-- POST /api/inventory/sync/trigger - Trigger supplier sync (ratehawk, paximum, wwtatil)
+- POST /api/inventory/sync/trigger - Trigger supplier sync (ratehawk, paximum, wtatil)
 - GET /api/inventory/sync/status - Get sync status for all 4 suppliers
 - GET /api/inventory/sync/jobs - List sync job history
 - GET /api/inventory/search - Cached search (MongoDB fallback since Redis unavailable)
@@ -40,7 +40,7 @@ class TestInventorySyncStatus:
     """Tests for GET /api/inventory/sync/status"""
 
     def test_sync_status_returns_all_suppliers(self, auth_headers):
-        """Verify sync status returns all 4 suppliers (ratehawk, paximum, wwtatil, tbo)"""
+        """Verify sync status returns all 4 suppliers (ratehawk, paximum, wtatil, tbo)"""
         response = requests.get(f"{BASE_URL}/api/inventory/sync/status", headers=auth_headers)
         assert response.status_code == 200, f"Failed: {response.text}"
         
@@ -49,7 +49,7 @@ class TestInventorySyncStatus:
         assert "timestamp" in data
         
         suppliers = data["suppliers"]
-        expected_suppliers = ["ratehawk", "paximum", "wwtatil", "tbo"]
+        expected_suppliers = ["ratehawk", "paximum", "wtatil", "tbo"]
         for sup in expected_suppliers:
             assert sup in suppliers, f"Missing supplier: {sup}"
             
@@ -86,12 +86,12 @@ class TestInventorySyncStatus:
         assert data["suppliers"]["tbo"]["config"]["status"] == "pending"
 
     def test_active_suppliers_have_data(self, auth_headers):
-        """Verify active suppliers (ratehawk, paximum, wwtatil) have synced data"""
+        """Verify active suppliers (ratehawk, paximum, wtatil) have synced data"""
         response = requests.get(f"{BASE_URL}/api/inventory/sync/status", headers=auth_headers)
         assert response.status_code == 200
         
         data = response.json()
-        active_suppliers = ["ratehawk", "paximum", "wwtatil"]
+        active_suppliers = ["ratehawk", "paximum", "wtatil"]
         for sup in active_suppliers:
             status = data["suppliers"][sup]
             assert status["config"]["status"] == "active"
@@ -137,17 +137,17 @@ class TestInventorySyncTrigger:
         assert data["supplier"] == "paximum"
         assert data["status"] == "completed"
 
-    def test_trigger_sync_wwtatil(self, auth_headers):
-        """Trigger sync for wwtatil supplier"""
+    def test_trigger_sync_wtatil(self, auth_headers):
+        """Trigger sync for wtatil supplier"""
         response = requests.post(
             f"{BASE_URL}/api/inventory/sync/trigger",
             headers=auth_headers,
-            json={"supplier": "wwtatil"}
+            json={"supplier": "wtatil"}
         )
         assert response.status_code == 200, f"Failed: {response.text}"
         
         data = response.json()
-        assert data["supplier"] == "wwtatil"
+        assert data["supplier"] == "wtatil"
         assert data["status"] == "completed"
 
     def test_trigger_sync_unknown_supplier(self, auth_headers):
@@ -328,7 +328,7 @@ class TestInventoryStats:
         data = response.json()
         assert "by_supplier" in data
         suppliers = data["by_supplier"]
-        for sup in ["ratehawk", "paximum", "wwtatil", "tbo"]:
+        for sup in ["ratehawk", "paximum", "wtatil", "tbo"]:
             assert sup in suppliers
             assert "hotels" in suppliers[sup]
             assert "prices" in suppliers[sup]
@@ -365,7 +365,7 @@ class TestInventoryStats:
         
         data = response.json()
         assert "sync_config" in data
-        for sup in ["ratehawk", "paximum", "wwtatil", "tbo"]:
+        for sup in ["ratehawk", "paximum", "wtatil", "tbo"]:
             assert sup in data["sync_config"]
 
 
@@ -423,7 +423,7 @@ class TestPriceRevalidation:
             f"{BASE_URL}/api/inventory/revalidate",
             headers=auth_headers,
             json={
-                "supplier": "wwtatil",
+                "supplier": "wtatil",
                 "hotel_id": "ww_000001",
                 "checkin": "2026-03-21",
                 "checkout": "2026-03-26"

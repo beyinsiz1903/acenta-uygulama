@@ -57,7 +57,7 @@ SUPPLIER_TIMEOUT_OVERRIDES: dict[str, dict[str, float]] = {
     "ratehawk": {"search": 8.0, "confirm_booking": 15.0, "cancel_booking": 10.0},
     "paximum": {"search": 12.0, "confirm_booking": 20.0, "cancel_booking": 15.0},
     "tbo": {"search": 10.0, "confirm_booking": 15.0, "cancel_booking": 10.0},
-    "wwtatil": {"search": 15.0, "confirm_booking": 25.0, "cancel_booking": 15.0},
+    "wtatil": {"search": 15.0, "confirm_booking": 25.0, "cancel_booking": 15.0},
 }
 
 # Rate limit configuration per supplier (requests per minute)
@@ -65,7 +65,7 @@ RATE_LIMITS: dict[str, dict[str, int]] = {
     "ratehawk": {"rpm": 300, "burst": 20},
     "paximum": {"rpm": 150, "burst": 10},
     "tbo": {"rpm": 240, "burst": 15},
-    "wwtatil": {"rpm": 90, "burst": 5},
+    "wtatil": {"rpm": 90, "burst": 5},
 }
 
 # Non-retryable error types

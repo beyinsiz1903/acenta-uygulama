@@ -144,7 +144,7 @@ export default function InventorySyncDashboardPage() {
       setStabilityReport(stabilityRes.data);
 
       // Fetch region status for all suppliers
-      const regionPromises = ["ratehawk", "paximum", "wwtatil", "tbo"].map(async (sup) => {
+      const regionPromises = ["ratehawk", "paximum", "wtatil", "tbo"].map(async (sup) => {
         try {
           const res = await api.get(`/inventory/sync/regions/${sup}`);
           return [sup, res.data];
@@ -475,7 +475,7 @@ export default function InventorySyncDashboardPage() {
                   >
                     <option value="ratehawk">Ratehawk</option>
                     <option value="paximum">Paximum</option>
-                    <option value="wwtatil">WWTatil</option>
+                    <option value="wtatil">WTatil</option>
                     <option value="tbo">TBO</option>
                   </select>
                 </div>
@@ -846,7 +846,7 @@ export default function InventorySyncDashboardPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2" data-testid="booking-test-triggers">
-            {["ratehawk", "paximum", "tbo", "wwtatil"].map((sup) => (
+            {["ratehawk", "paximum", "tbo", "wtatil"].map((sup) => (
               <Button
                 key={sup}
                 size="sm"

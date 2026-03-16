@@ -5,7 +5,7 @@ normalizes results into a unified product model, and returns
 combined results sorted by price.
 
 Architecture:
-  Search Request -> Aggregator -> [RateHawk, TBO, Paximum, WWTatil]
+  Search Request -> Aggregator -> [RateHawk, TBO, Paximum, WTatil]
                                          |
                                   Unified Product List
                                   (price comparison, fallback, inventory merge)
@@ -24,7 +24,7 @@ ADAPTER_MAP = {
     "ratehawk": ("app.suppliers.adapters.ratehawk_adapter", "RateHawkAdapter"),
     "tbo": ("app.suppliers.adapters.tbo_adapter", "TBOAdapter"),
     "paximum": ("app.suppliers.adapters.paximum_adapter", "PaximumAdapter"),
-    "wwtatil": ("app.suppliers.adapters.wwtatil_adapter", "WWTatilAdapter"),
+    "wtatil": ("app.suppliers.adapters.wtatil_adapter", "WTatilAdapter"),
 }
 
 # Supplier capability matrix
@@ -32,7 +32,7 @@ SUPPLIER_CAPABILITIES = {
     "ratehawk": {"hotel"},
     "tbo": {"hotel", "flight", "tour"},
     "paximum": {"hotel", "transfer", "activity"},
-    "wwtatil": {"tour"},
+    "wtatil": {"tour"},
 }
 
 

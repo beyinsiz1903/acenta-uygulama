@@ -45,12 +45,12 @@ const SUPPLIER_CONFIG = {
       { key: "agency_code", label: "Agency Code", icon: Building2, placeholder: "Agency code", sensitive: false },
     ],
   },
-  wwtatil: {
-    name: "WWTatil",
+  wtatil: {
+    name: "WTatil",
     description: "Tour packages with booking & post-sale management",
     color: "from-blue-600 to-indigo-700",
     fields: [
-      { key: "base_url", label: "API Base URL", icon: Globe, placeholder: "https://b2b-api.wwtatil.com", sensitive: false },
+      { key: "base_url", label: "API Base URL", icon: Globe, placeholder: "https://b2b-api.wtatil.com", sensitive: false },
       { key: "application_secret_key", label: "Secret Key", icon: Key, placeholder: "Application secret key", sensitive: true },
       { key: "username", label: "Username", icon: User, placeholder: "API username", sensitive: false },
       { key: "password", label: "Password", icon: Lock, placeholder: "API password", sensitive: true },

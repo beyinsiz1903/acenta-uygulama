@@ -1,6 +1,6 @@
 """Real Supplier Adapter Bridges.
 
-Wraps the HTTP-based adapters (RateHawk, TBO, Paximum, WWTatil)
+Wraps the HTTP-based adapters (RateHawk, TBO, Paximum, WTatil)
 into the canonical SupplierAdapter contract interface used by
 the orchestrator, registry, and failover engine.
 
@@ -425,13 +425,13 @@ class RealPaximumBridge(SupplierAdapter):
 
 
 # ---------------------------------------------------------------------------
-# WWTatil Bridge (Tour)
+# WTatil Bridge (Tour)
 # ---------------------------------------------------------------------------
 
-class RealWWTatilBridge(SupplierAdapter):
-    supplier_code = "wwtatil"
+class RealWTatilBridge(SupplierAdapter):
+    supplier_code = "wtatil"
     supplier_type = SupplierType.TOUR
-    display_name = "WWTatil Tour API"
+    display_name = "WTatil Tour API"
     supported_methods = {
         LifecycleMethod.HEALTHCHECK,
         LifecycleMethod.SEARCH,
@@ -440,7 +440,7 @@ class RealWWTatilBridge(SupplierAdapter):
     }
 
     capability = SupplierCapabilityInfo(
-        supplier_code="wwtatil",
+        supplier_code="wtatil",
         product_types=["tour"],
         supports_hold=True,  # basket = hold
         supports_direct_confirm=False,
@@ -453,21 +453,21 @@ class RealWWTatilBridge(SupplierAdapter):
         self.db = db
 
     async def _get_adapter(self, ctx: SupplierContext):
-        from app.suppliers.adapters.wwtatil_adapter import WWTatilAdapter
+        from app.suppliers.adapters.wtatil_adapter import WTatilAdapter
         from app.domain.suppliers.supplier_credentials_service import get_decrypted_credentials, get_cached_token
         db = self.db
         if db is None:
             from app.db import get_db_sync
             db = get_db_sync()
-        creds = await get_decrypted_credentials(db, ctx.organization_id, "wwtatil")
+        creds = await get_decrypted_credentials(db, ctx.organization_id, "wtatil")
         if not creds:
-            raise SupplierAuthError("No WWTatil credentials configured", supplier_code="wwtatil")
-        token = await get_cached_token(db, ctx.organization_id, "wwtatil")
-        adapter = WWTatilAdapter(creds.get("base_url", ""), token)
+            raise SupplierAuthError("No WTatil credentials configured", supplier_code="wtatil")
+        token = await get_cached_token(db, ctx.organization_id, "wtatil")
+        adapter = WTatilAdapter(creds.get("base_url", ""), token)
         if not token:
             auth = await adapter.authenticate(creds)
             if not auth.get("success"):
-                raise SupplierAuthError(f"WWTatil auth failed: {auth.get('error')}", supplier_code="wwtatil")
+                raise SupplierAuthError(f"WTatil auth failed: {auth.get('error')}", supplier_code="wtatil")
             adapter.token = auth.get("token", "")
         return adapter, creds
 
@@ -484,7 +484,7 @@ class RealWWTatilBridge(SupplierAdapter):
         if raw.get("success") and raw.get("products"):
             for p in raw["products"]:
                 items.append(TourSearchItem(
-                    item_id=str(uuid.uuid4()), supplier_code="wwtatil",
+                    item_id=str(uuid.uuid4()), supplier_code="wtatil",
                     supplier_item_id=str(p.get("external_id", "")),
                     name=p.get("name", ""),
                     currency=p.get("currency", "TRY"),
@@ -496,14 +496,14 @@ class RealWWTatilBridge(SupplierAdapter):
         return SearchResult(
             request_id=ctx.request_id,
             product_type=SupplierProductType.TOUR,
-            total_items=len(items), items=items, suppliers_queried=["wwtatil"],
+            total_items=len(items), items=items, suppliers_queried=["wtatil"],
         )
 
     async def create_hold(self, ctx: SupplierContext, request: HoldRequest) -> HoldResult:
-        """WWTatil uses basket as hold mechanism."""
+        """WTatil uses basket as hold mechanism."""
         adapter, creds = await self._get_adapter(ctx)
         agency_id = int(creds.get("agency_id", 0))
-        # The hold_id in wwtatil = basket_id returned after add_basket_item
+        # The hold_id in wtatil = basket_id returned after add_basket_item
         # For the bridge, we create a basket with minimal info
         raw = await adapter.add_basket_item(
             agency_id=agency_id, reference_number=str(uuid.uuid4())[:8],
@@ -516,10 +516,10 @@ class RealWWTatilBridge(SupplierAdapter):
             basket_data = raw.get("data", {})
             basket_id = str(basket_data.get("BasketId", basket_data.get("Id", "")))
             return HoldResult(
-                supplier_code="wwtatil", hold_id=basket_id,
+                supplier_code="wtatil", hold_id=basket_id,
                 status="held", supplier_metadata=basket_data,
             )
-        raise SupplierError(raw.get("error", "WWTatil basket creation failed"), supplier_code="wwtatil")
+        raise SupplierError(raw.get("error", "WTatil basket creation failed"), supplier_code="wtatil")
 
     async def confirm_booking(self, ctx: SupplierContext, request: ConfirmRequest) -> ConfirmResult:
         adapter, creds = await self._get_adapter(ctx)
@@ -533,11 +533,11 @@ class RealWWTatilBridge(SupplierAdapter):
         if raw.get("success"):
             bk = raw.get("booking", raw.get("data", {}))
             return ConfirmResult(
-                supplier_code="wwtatil",
+                supplier_code="wtatil",
                 supplier_booking_id=str(bk.get("external_booking_id", bk.get("BookingId", ""))),
                 status="confirmed", confirmed_at=_now(), supplier_metadata=bk,
             )
-        raise SupplierError(raw.get("error", "WWTatil booking failed"), supplier_code="wwtatil")
+        raise SupplierError(raw.get("error", "WTatil booking failed"), supplier_code="wtatil")
 
     async def cancel_booking(self, ctx: SupplierContext, request: CancelRequest) -> CancelResult:
         adapter, _ = await self._get_adapter(ctx)
@@ -546,7 +546,7 @@ class RealWWTatilBridge(SupplierAdapter):
             "CancelTypeId": 1,
         })
         return CancelResult(
-            supplier_code="wwtatil", supplier_booking_id=request.supplier_booking_id,
+            supplier_code="wtatil", supplier_booking_id=request.supplier_booking_id,
             status="cancelled" if raw.get("success") else "failed",
             cancelled_at=_now() if raw.get("success") else None,
         )

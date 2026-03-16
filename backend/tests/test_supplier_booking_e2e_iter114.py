@@ -72,7 +72,7 @@ class TestSupplierHealth:
         assert "timestamp" in data
         
         suppliers = data["suppliers"]
-        expected_suppliers = ["ratehawk", "paximum", "tbo", "wwtatil"]
+        expected_suppliers = ["ratehawk", "paximum", "tbo", "wtatil"]
         
         for sup in expected_suppliers:
             assert sup in suppliers, f"Missing supplier '{sup}' in health response"
@@ -113,7 +113,7 @@ class TestSyncStatus:
         assert "timestamp" in data
         
         suppliers = data["suppliers"]
-        expected_suppliers = ["ratehawk", "paximum", "tbo", "wwtatil"]
+        expected_suppliers = ["ratehawk", "paximum", "tbo", "wtatil"]
         
         for sup in expected_suppliers:
             assert sup in suppliers, f"Missing supplier '{sup}'"
@@ -288,20 +288,20 @@ class TestBookingE2ETest:
         assert len(data["steps"]) == 6
         print(f"✓ TBO E2E test: {data['summary']['passed']}/{data['summary']['total']} passed")
     
-    def test_booking_e2e_test_wwtatil(self, auth_headers):
-        """POST /api/inventory/booking/test for wwtatil runs 6-step E2E test"""
+    def test_booking_e2e_test_wtatil(self, auth_headers):
+        """POST /api/inventory/booking/test for wtatil runs 6-step E2E test"""
         response = requests.post(
             f"{BASE_URL}/api/inventory/booking/test",
             headers=auth_headers,
-            json={"supplier": "wwtatil"},
+            json={"supplier": "wtatil"},
             timeout=60
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
         data = response.json()
         
-        assert data["supplier"] == "wwtatil"
+        assert data["supplier"] == "wtatil"
         assert len(data["steps"]) == 6
-        print(f"✓ WWTatil E2E test: {data['summary']['passed']}/{data['summary']['total']} passed")
+        print(f"✓ WTatil E2E test: {data['summary']['passed']}/{data['summary']['total']} passed")
     
     def test_booking_e2e_test_unknown_supplier(self, auth_headers):
         """POST /api/inventory/booking/test with unknown supplier returns error"""

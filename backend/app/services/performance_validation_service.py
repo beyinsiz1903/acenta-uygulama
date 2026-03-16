@@ -151,7 +151,7 @@ async def run_fallback_validation(db) -> dict[str, Any]:
         {"primary": "ratehawk", "product": "hotel", "expected_fallbacks": ["tbo", "paximum"]},
         {"primary": "tbo", "product": "hotel", "expected_fallbacks": ["ratehawk", "paximum"]},
         {"primary": "paximum", "product": "hotel", "expected_fallbacks": ["ratehawk", "tbo"]},
-        {"primary": "wwtatil", "product": "tour", "expected_fallbacks": ["tbo"]},
+        {"primary": "wtatil", "product": "tour", "expected_fallbacks": ["tbo"]},
     ]
 
     results = []

@@ -99,12 +99,12 @@ def register_default_adapters():
 
     # Register real supplier bridges
     from app.suppliers.adapters.real_bridges import (
-        RealRateHawkBridge, RealTBOBridge, RealPaximumBridge, RealWWTatilBridge,
+        RealRateHawkBridge, RealTBOBridge, RealPaximumBridge, RealWTatilBridge,
     )
     supplier_registry.register(RealRateHawkBridge())
     supplier_registry.register(RealTBOBridge())
     supplier_registry.register(RealPaximumBridge())
-    supplier_registry.register(RealWWTatilBridge())
+    supplier_registry.register(RealWTatilBridge())
 
     # Register failover chains
     from app.suppliers.failover import failover_engine
@@ -114,7 +114,7 @@ def register_default_adapters():
     failover_engine.register_fallback_chain("ratehawk", ["tbo", "paximum"])
     failover_engine.register_fallback_chain("tbo", ["ratehawk", "paximum"])
     failover_engine.register_fallback_chain("paximum", ["ratehawk", "tbo"])
-    # Tour fallback: wwtatil → tbo
-    failover_engine.register_fallback_chain("wwtatil", ["tbo"])
+    # Tour fallback: wtatil → tbo
+    failover_engine.register_fallback_chain("wtatil", ["tbo"])
 
     logger.info("Registered %d supplier adapters (mock + real)", len(supplier_registry.get_all()))

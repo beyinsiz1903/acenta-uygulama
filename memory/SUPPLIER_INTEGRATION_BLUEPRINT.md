@@ -28,7 +28,7 @@ Supplier Bridge (canonical contract → supplier-specific)
     |
 Supplier HTTP Adapter (raw API calls with retry/backoff)
     |
-External Supplier API (RateHawk, Paximum, TBO, WWTatil)
+External Supplier API (RateHawk, Paximum, TBO, WTatil)
 ```
 
 ### Contract Interface (contracts/base.py)
@@ -120,7 +120,7 @@ delay(attempt) = min(base_delay * 2^attempt + random_jitter, max_delay)
 | RateHawk | 8s | 15s | 10s | Fast API |
 | Paximum | 12s | 20s | 15s | Slower, XML-based |
 | TBO | 10s | 15s | 10s | |
-| WWTatil | 15s | 25s | 15s | Basket model = slower |
+| WTatil | 15s | 25s | 15s | Basket model = slower |
 
 ---
 
@@ -133,7 +133,7 @@ delay(attempt) = min(base_delay * 2^attempt + random_jitter, max_delay)
 | RateHawk | 10 | 300 | 20 | B2B standard |
 | Paximum | 5 | 150 | 10 | Agency tier dependent |
 | TBO | 8 | 240 | 15 | |
-| WWTatil | 3 | 90 | 5 | Conservative |
+| WTatil | 3 | 90 | 5 | Conservative |
 
 ### Implementation
 
@@ -306,7 +306,7 @@ To add a new supplier:
 | RateHawk | `ratehawk` | Hotel | Basic (key_id:api_key) | Sandbox Ready |
 | Paximum | `paximum` | Hotel, Transfer, Activity | Token (user/pass/agency) | Adapter Ready |
 | TBO | `tbo` | Hotel, Flight, Tour | Token (client_id/secret) | Adapter Ready |
-| WWTatil | `wwtatil` | Tour | Token (user/pass/agency) | Adapter Ready |
+| WTatil | `wtatil` | Tour | Token (user/pass/agency) | Adapter Ready |
 
 ---
 

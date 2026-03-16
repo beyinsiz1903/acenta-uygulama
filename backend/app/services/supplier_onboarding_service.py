@@ -64,20 +64,20 @@ SUPPLIER_REGISTRY = {
         "sandbox_url": "https://api-test.tbotechnology.in",
         "docs_url": "https://developer.tbo.com/",
     },
-    "wwtatil": {
-        "code": "wwtatil",
-        "name": "WWTatil",
+    "wtatil": {
+        "code": "wtatil",
+        "name": "WTatil",
         "description": "Tour packages with booking & post-sale management",
         "product_types": ["tour"],
         "credential_fields": [
-            {"key": "base_url", "label": "API Base URL", "placeholder": "https://b2b-api.wwtatil.com", "sensitive": False, "required": True},
+            {"key": "base_url", "label": "API Base URL", "placeholder": "https://b2b-api.wtatil.com", "sensitive": False, "required": True},
             {"key": "application_secret_key", "label": "Secret Key", "placeholder": "Application secret key", "sensitive": True, "required": True},
             {"key": "username", "label": "Username", "placeholder": "API username", "sensitive": False, "required": True},
             {"key": "password", "label": "Password", "placeholder": "API password", "sensitive": True, "required": True},
             {"key": "agency_id", "label": "Agency ID", "placeholder": "12345", "sensitive": False, "required": True},
         ],
-        "sandbox_url": "https://b2b-api-test.wwtatil.com",
-        "docs_url": "https://developer.wwtatil.com/",
+        "sandbox_url": "https://b2b-api-test.wtatil.com",
+        "docs_url": "https://developer.wtatil.com/",
     },
     "hotelbeds": {
         "code": "hotelbeds",

@@ -1,7 +1,7 @@
 """Supplier Credentials Management Router.
 
 Multi-tenant supplier credential CRUD + connection testing.
-Agencies manage their own supplier connections (wwtatil, paximum, ratehawk, tbo).
+Agencies manage their own supplier connections (wtatil, paximum, ratehawk, tbo).
 Super admins can manage credentials for ANY agency.
 """
 from __future__ import annotations
@@ -166,61 +166,61 @@ async def admin_audit_log(
     return await get_audit_log(db, organization_id=organization_id, limit=limit)
 
 
-# ─── WWTatil-specific endpoints ────────────────────────────────────────────
+# ─── WTatil-specific endpoints ────────────────────────────────────────────
 
-@router.post("/wwtatil/tours")
-async def wwtatil_get_tours(
+@router.post("/wtatil/tours")
+async def wtatil_get_tours(
     current_user=Depends(require_roles(["admin", "super_admin", "agency_admin"])),
     db=Depends(get_db),
 ) -> dict[str, Any]:
-    """Get all tours from wwtatil using agency credentials."""
+    """Get all tours from wtatil using agency credentials."""
     from app.domain.suppliers.supplier_credentials_service import get_decrypted_credentials, get_cached_token
-    from app.suppliers.adapters.wwtatil_adapter import WWTatilAdapter
+    from app.suppliers.adapters.wtatil_adapter import WTatilAdapter
 
     org_id = _org_id(current_user)
-    creds = await get_decrypted_credentials(db, org_id, "wwtatil")
+    creds = await get_decrypted_credentials(db, org_id, "wtatil")
     if not creds:
-        return {"error": "No wwtatil credentials found. Please configure in Supplier Settings."}
+        return {"error": "No wtatil credentials found. Please configure in Supplier Settings."}
 
-    token = await get_cached_token(db, org_id, "wwtatil")
+    token = await get_cached_token(db, org_id, "wtatil")
     if not token:
-        auth = await WWTatilAdapter.authenticate(
+        auth = await WTatilAdapter.authenticate(
             creds["base_url"], creds["application_secret_key"], creds["username"], creds["password"]
         )
         if not auth["success"]:
             return {"error": "Auth failed", "details": auth}
         token = auth["token"]
 
-    adapter = WWTatilAdapter(creds["base_url"], token)
+    adapter = WTatilAdapter(creds["base_url"], token)
     agency_id = int(creds.get("agency_id", 0))
     return await adapter.get_all_tours(agency_id)
 
 
-@router.post("/wwtatil/search")
-async def wwtatil_search_tours(
+@router.post("/wtatil/search")
+async def wtatil_search_tours(
     payload: dict = Body(...),
     current_user=Depends(require_roles(["admin", "super_admin", "agency_admin"])),
     db=Depends(get_db),
 ) -> dict[str, Any]:
-    """Search tours from wwtatil."""
+    """Search tours from wtatil."""
     from app.domain.suppliers.supplier_credentials_service import get_decrypted_credentials, get_cached_token
-    from app.suppliers.adapters.wwtatil_adapter import WWTatilAdapter
+    from app.suppliers.adapters.wtatil_adapter import WTatilAdapter
 
     org_id = _org_id(current_user)
-    creds = await get_decrypted_credentials(db, org_id, "wwtatil")
+    creds = await get_decrypted_credentials(db, org_id, "wtatil")
     if not creds:
-        return {"error": "No wwtatil credentials found."}
+        return {"error": "No wtatil credentials found."}
 
-    token = await get_cached_token(db, org_id, "wwtatil")
+    token = await get_cached_token(db, org_id, "wtatil")
     if not token:
-        auth = await WWTatilAdapter.authenticate(
+        auth = await WTatilAdapter.authenticate(
             creds["base_url"], creds["application_secret_key"], creds["username"], creds["password"]
         )
         if not auth["success"]:
             return {"error": "Auth failed", "details": auth}
         token = auth["token"]
 
-    adapter = WWTatilAdapter(creds["base_url"], token)
+    adapter = WTatilAdapter(creds["base_url"], token)
     agency_id = int(creds.get("agency_id", 0))
 
     return await adapter.search_tours(
@@ -236,31 +236,31 @@ async def wwtatil_search_tours(
     )
 
 
-@router.post("/wwtatil/basket/add")
-async def wwtatil_add_basket(
+@router.post("/wtatil/basket/add")
+async def wtatil_add_basket(
     payload: dict = Body(...),
     current_user=Depends(require_roles(["admin", "super_admin", "agency_admin"])),
     db=Depends(get_db),
 ) -> dict[str, Any]:
-    """Add item to wwtatil basket."""
+    """Add item to wtatil basket."""
     from app.domain.suppliers.supplier_credentials_service import get_decrypted_credentials, get_cached_token
-    from app.suppliers.adapters.wwtatil_adapter import WWTatilAdapter
+    from app.suppliers.adapters.wtatil_adapter import WTatilAdapter
 
     org_id = _org_id(current_user)
-    creds = await get_decrypted_credentials(db, org_id, "wwtatil")
+    creds = await get_decrypted_credentials(db, org_id, "wtatil")
     if not creds:
-        return {"error": "No wwtatil credentials found."}
+        return {"error": "No wtatil credentials found."}
 
-    token = await get_cached_token(db, org_id, "wwtatil")
+    token = await get_cached_token(db, org_id, "wtatil")
     if not token:
-        auth = await WWTatilAdapter.authenticate(
+        auth = await WTatilAdapter.authenticate(
             creds["base_url"], creds["application_secret_key"], creds["username"], creds["password"]
         )
         if not auth["success"]:
             return {"error": "Auth failed"}
         token = auth["token"]
 
-    adapter = WWTatilAdapter(creds["base_url"], token)
+    adapter = WTatilAdapter(creds["base_url"], token)
     agency_id = int(creds.get("agency_id", 0))
 
     return await adapter.add_basket_item(
@@ -276,31 +276,31 @@ async def wwtatil_add_basket(
     )
 
 
-@router.post("/wwtatil/booking/create")
-async def wwtatil_create_booking(
+@router.post("/wtatil/booking/create")
+async def wtatil_create_booking(
     payload: dict = Body(...),
     current_user=Depends(require_roles(["admin", "super_admin", "agency_admin"])),
     db=Depends(get_db),
 ) -> dict[str, Any]:
-    """Create booking from wwtatil basket."""
+    """Create booking from wtatil basket."""
     from app.domain.suppliers.supplier_credentials_service import get_decrypted_credentials, get_cached_token
-    from app.suppliers.adapters.wwtatil_adapter import WWTatilAdapter
+    from app.suppliers.adapters.wtatil_adapter import WTatilAdapter
 
     org_id = _org_id(current_user)
-    creds = await get_decrypted_credentials(db, org_id, "wwtatil")
+    creds = await get_decrypted_credentials(db, org_id, "wtatil")
     if not creds:
-        return {"error": "No wwtatil credentials found."}
+        return {"error": "No wtatil credentials found."}
 
-    token = await get_cached_token(db, org_id, "wwtatil")
+    token = await get_cached_token(db, org_id, "wtatil")
     if not token:
-        auth = await WWTatilAdapter.authenticate(
+        auth = await WTatilAdapter.authenticate(
             creds["base_url"], creds["application_secret_key"], creds["username"], creds["password"]
         )
         if not auth["success"]:
             return {"error": "Auth failed"}
         token = auth["token"]
 
-    adapter = WWTatilAdapter(creds["base_url"], token)
+    adapter = WTatilAdapter(creds["base_url"], token)
     agency_id = int(creds.get("agency_id", 0))
 
     return await adapter.create_booking(

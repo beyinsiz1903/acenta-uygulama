@@ -36,5 +36,5 @@
 ## Previous Sessions
 - Pilot flow simulation system
 - Pilot dashboard with Flow Health, Supplier Metrics, Finance Metrics
-- Supplier adapters (Ratehawk, Paximum, WWTatil, TBO)
+- Supplier adapters (Ratehawk, Paximum, WTatil, TBO)
 - Full travel ERP platform features

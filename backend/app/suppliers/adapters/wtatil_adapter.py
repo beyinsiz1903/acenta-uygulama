@@ -1,9 +1,9 @@
-"""WWTatil Tour API Adapter — Production-grade B2B integration.
+"""WTatil Tour API Adapter — Production-grade B2B integration.
 
-Implements the full wwtatil.com Tour API flow:
+Implements the full wtatil.com Tour API flow:
   Auth -> GetAll Tours -> Search Tour -> Add Basket -> Create Booking
 
-Per-agency credentials model: each agency provides their own wwtatil credentials.
+Per-agency credentials model: each agency provides their own wtatil credentials.
 Token caching per agency (24h validity).
 
 Now extends base SupplierAdapter for unified interface.
@@ -18,13 +18,13 @@ import httpx
 
 from .base_adapter import SupplierAdapter
 
-logger = logging.getLogger("suppliers.wwtatil")
+logger = logging.getLogger("suppliers.wtatil")
 
 
-class WWTatilAdapter(SupplierAdapter):
-    """HTTP client for WWTatil Tour API."""
+class WTatilAdapter(SupplierAdapter):
+    """HTTP client for WTatil Tour API."""
 
-    SUPPLIER_CODE = "wwtatil"
+    SUPPLIER_CODE = "wtatil"
     PRODUCT_TYPES = ["tour"]
 
     def __init__(self, base_url: str, token: str | None = None, timeout: float = 15.0):
@@ -59,7 +59,7 @@ class WWTatilAdapter(SupplierAdapter):
         except httpx.ConnectError as e:
             return {"success": False, "error": f"connection_error: {e}", "endpoint": endpoint, "supplier": self.SUPPLIER_CODE}
         except Exception as e:
-            logger.error(f"WWTatil API error: {e}", exc_info=True)
+            logger.error(f"WTatil API error: {e}", exc_info=True)
             return {"success": False, "error": str(e), "endpoint": endpoint, "supplier": self.SUPPLIER_CODE}
 
     # ─── Auth (unified interface) ──────────────────────────────────────

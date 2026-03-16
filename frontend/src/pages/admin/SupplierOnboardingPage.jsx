@@ -35,7 +35,7 @@ const SUPPLIER_COLORS = {
   ratehawk: "from-orange-600 to-red-600",
   paximum: "from-emerald-600 to-teal-700",
   tbo: "from-sky-600 to-blue-700",
-  wwtatil: "from-blue-600 to-indigo-700",
+  wtatil: "from-blue-600 to-indigo-700",
   hotelbeds: "from-rose-600 to-pink-700",
   juniper: "from-violet-600 to-purple-700",
 };

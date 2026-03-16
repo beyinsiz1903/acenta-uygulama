@@ -32,7 +32,7 @@ SUPPLIER_TAX_MODES = {
     "ratehawk": "tax_included",
     "tbo": "tax_excluded",
     "paximum": "tax_included",
-    "wwtatil": "tax_included",
+    "wtatil": "tax_included",
 }
 
 

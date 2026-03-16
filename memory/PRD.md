@@ -67,7 +67,7 @@ Delivered:
 **Generic Supplier Onboarding Engine — 6-Step Wizard**
 
 Delivered:
-- **Supplier Registry**: 6 suppliers supported (RateHawk, Paximum, TBO, WWTatil, Hotelbeds, Juniper)
+- **Supplier Registry**: 6 suppliers supported (RateHawk, Paximum, TBO, WTatil, Hotelbeds, Juniper)
 - **6-Step Onboarding Wizard**:
   1. Supplier Selection (card grid dashboard)
   2. Credential Entry (dynamic form per supplier, encrypted storage via Fernet)
@@ -141,7 +141,7 @@ Updated files:
 ## Tech Stack
 - **Frontend**: React, TanStack Query/Table/Virtual, Shadcn UI, Recharts, cmdk
 - **Backend**: FastAPI, MongoDB, APScheduler
-- **Integrations**: Stripe, Ratehawk/Paximum/TBO/WWTatil/Hotelbeds/Juniper (simulation mode)
+- **Integrations**: Stripe, Ratehawk/Paximum/TBO/WTatil/Hotelbeds/Juniper (simulation mode)
 
 ## Credentials
 - Super Admin: `agent@acenta.test` / `agent123`

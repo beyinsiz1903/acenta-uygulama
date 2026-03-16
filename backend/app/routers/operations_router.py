@@ -36,7 +36,7 @@ async def validate_supplier(
 ) -> dict[str, Any]:
     """Validate credentials for a specific supplier.
 
-    Body: { "supplier_code": "ratehawk" | "tbo" | "paximum" | "wwtatil" }
+    Body: { "supplier_code": "ratehawk" | "tbo" | "paximum" | "wtatil" }
     """
     from app.services.supplier_validation_service import validate_supplier_credentials
     org_id = current_user.get("organization_id", current_user.get("org_id", ""))
@@ -176,7 +176,7 @@ async def onboarding_checklist(
             {
                 "step": 2,
                 "title": "Supplier Credential Girisi",
-                "description": "Acente icin supplier API credential'larini yapilandirin (RateHawk, TBO, Paximum, WWTatil)",
+                "description": "Acente icin supplier API credential'larini yapilandirin (RateHawk, TBO, Paximum, WTatil)",
                 "endpoint": "POST /api/suppliers/credentials",
                 "status": "available",
             },

@@ -1,21 +1,25 @@
 <analysis>**original_problem_statement:**
-The user, acting as the CTO for the Syroce Travel SaaS platform, provided a detailed analysis of the RateHawk supplier API documentation. Based on this, the user re-prioritized the development roadmap to focus on aligning the system with real-world supplier behaviors before tackling other backlog items.
+The user, acting as the CTO, has defined a clear roadmap. The previous task (P0 - RateHawk Booking Flow Hardening) was completed. The current task was to implement **P1 - Supplier Onboarding UX**.
 
-The user-approved priority list is:
-1.  **🔴 P0 — RateHawk Booking Flow Hardening:** Harden the booking flow to handle price revalidation, asynchronous status checks, and booking timeouts. (This task was just completed).
-2.  **🟠 P1 — Supplier Onboarding UX:** Create a comprehensive workflow for partners to add credentials, run automated sandbox tests, and prepare for go-live.
-3.  **🟡 P2 — Caching Layer Validation:** Validate the caching layer's correctness (demoted from its previous priority).
-4.  **⚪ P3+ — Other Backlog:** Includes Activity Timeline, TypeScript Migration, etc.
+The user provided detailed specifications for P1, requiring a **generic, multi-step onboarding workflow** applicable to all suppliers (not just RateHawk). This workflow must include:
+1.  **Supplier Selection:** Choose a supplier to onboard.
+2.  **Credential Entry:** Securely input supplier API credentials.
+3.  **Supplier Health Check:** A validation step that checks not just authentication but also API reachability and basic endpoint functionality.
+4.  **Sandbox Certification:** An automated test suite that runs a series of E2E tests (Search, Detail, Revalidation, Booking, etc.).
+5.  **Certification Score:** A scoring mechanism (e.g., 80%+) to determine if a supplier is Go-Live eligible.
+6.  **Go-Live Activation:** A toggle to activate the certified supplier.
+
+The user also requested that credential storage be secure (encrypted, masked) and that credentials should never be logged. A backend router refactor was also approved but deferred until after P1 is complete.
 
 **User's preferred language**: Turkish
 
 **what currently exists?**
-The agent has successfully implemented and tested the **P0 - RateHawk Booking Flow Hardening** feature.
--   **Backend:** A new  has been created to orchestrate a mock booking lifecycle, including pre-flight price checks (), booking creation, asynchronous status polling, and cancellation. The  was updated to simulate various real-world scenarios like successful bookings, delayed confirmations, and failures. New endpoints were added to  to expose this functionality (, , , , and ).
--   **Frontend:** A new **RateHawk Booking Flow** panel has been added to the Admin Dashboard at . This UI allows the user to trigger the precheck flow and run a full Test Matrix that executes five different booking scenarios (success, delayed confirmation, price mismatch, failure, cancellation). The panel displays the real-time status and outcome of these tests.
+The agent has fully implemented the **P1 - Generic Supplier Onboarding UX**.
+-   **Backend:** New services, models, and a dedicated router () were created to handle the entire 6-step onboarding flow. This includes endpoints for fetching suppliers, saving credentials (mocked securely), running health checks, executing certification tests, and toggling the go-live status. The logic is generic and driven by the existing supplier adapter pattern.
+-   **Frontend:** A new page, **Supplier Onboarding** (), has been created. It features a main dashboard showing the certification status and score of all suppliers. Clicking a supplier launches a multi-step wizard that guides the user through the entire onboarding process, from credential entry to viewing the final certification report.
 
 **Last working item**:
--   Last item agent was working: The agent completed the full implementation of **P0 — RateHawk Booking Flow Hardening**, covering both backend logic and the new frontend dashboard panel.
+-   Last item agent was working: The complete implementation of the **P1 - Generic Supplier Onboarding UX**, including the backend logic and the multi-step frontend wizard, as per the user's detailed requirements.
 -   Status: USER VERIFICATION PENDING
 -   Agent Testing Done: Y
 -   Which testing method agent to use? NA
@@ -29,34 +33,33 @@ The agent has successfully implemented and tested the **P0 - RateHawk Booking Fl
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **(P0) P1 - Supplier Onboarding UX:** This is the next immediate task as explicitly prioritized by the user. The goal is to build an operational onboarding engine with the following flow:
-        1.  UI for entering supplier credentials.
-        2.  Backend logic for credential validation.
-        3.  Orchestration to run sandbox E2E tests automatically.
-        4.  UI to display test results and certification readiness status.
-        5.  A Go Live gate to activate the supplier.
+    *   **(P0) P0 - E2E Demo Panel:** The user requested a non-blocking task to create a simple E2E demo panel for the previously completed P0 Booking Flow Hardening work. This would allow them to visualize the full Search-to-Cancel lifecycle and edge cases. (Priority: HIGH)
+    *   **(P1) Backend Router Refactoring:** As approved by the user, refactor the monolithic  into smaller, domain-specific routers (, , ). This should be done after the user verifies and approves the P1 work. (Priority: MEDIUM)
 
 *   **Future Tasks (Backlog):**
-    *   **(P1) P2 - Caching Layer Validation:** The original P4.3, now correctly sequenced after the booking flow hardening.
-    *   **(P2) P4.4 - Real Sandbox Activation:** Activate the Ratehawk sandbox once real credentials are provided.
-    *   **(P3) Activity Timeline:** Create a system-wide audit trail.
-    *   **(P4) TypeScript Migration:** Incrementally migrate the codebase to TypeScript.
-    *   **(P5) Paximum Integration:** Onboard the next supplier.
-    *   **(P6) Legacy Code Cleanup:** Refactor legacy files using  for data fetching.
+    *   **Supplier Self-Serve Onboarding:** The next major feature milestone suggested by the user, allowing partners to onboard themselves.
+    *   **Caching Layer Validation (P2):** Validate the correctness of the caching layer.
+    *   **Real Sandbox Activation:** Activate the Ratehawk sandbox once real credentials are provided.
+    *   **Activity Timeline:** Create a system-wide audit trail.
+    *   **TypeScript Migration:** Incrementally migrate the codebase to TypeScript.
+    *   **New Supplier Integrations:** Onboard Paximum, Hotelbeds, Juniper, and TBO.
+    *   **Legacy Code Cleanup:** Refactor legacy files using  for data fetching.
+    *   **Syroce Supplier Lifecycle Diagram:** The user offered to draw a diagram illustrating the platform's vision.
 
 **Completed work in this session**
--   **Backend - Booking Flow Hardening (P0 DONE):**
-    -   Created  to manage the booking test lifecycle.
-    -   Created  to define schemas for the new flow.
-    -   Updated  with mock logic for various booking scenarios.
-    -   Updated  with new booking endpoints.
--   **Frontend - Booking Flow Panel (P0 DONE):**
-    -   Updated  to add the RateHawk Booking Flow test panel, including state management and API handlers.
+-   **Backend - P1 Supplier Onboarding UX (DONE):**
+    -   Created  with all necessary endpoints for the flow.
+    -   Created  containing the business logic for health checks, certification tests, and scoring.
+    -   Created  with Pydantic schemas for the API.
+    -   Registered the new router in .
+-   **Frontend - P1 Supplier Onboarding UX (DONE):**
+    -   Created , a comprehensive page with a dashboard and a multi-step wizard.
+    -   Updated  and  to add the new page to the admin navigation.
 -   **Testing (DONE):**
     -   All new backend endpoints were validated with .
-    -   The entire P0 feature was comprehensively validated via , which passed with a 100% success rate across 14 backend and all frontend tests.
+    -   The entire P1 feature was validated with , which passed with a 100% success rate (25/25 backend tests, all frontend tests). A new test file was created: .
 -   **Documentation (DONE):**
-    -   Updated  to reflect the completion of P0 and outline the next steps for P1.
+    -   Updated  to reflect the completion of P1 and the updated roadmap.
 
 **Earlier issues found/mentioned but not fixed**
 -   **Save to Github Synchronization Issue:** A known platform-level issue, deferred by the CTO.
@@ -70,54 +73,61 @@ The agent has successfully implemented and tested the **P0 - RateHawk Booking Fl
 
 
 **Key Technical Concepts**
--   **Booking Flow Hardening:** Proactively building resilience into the booking process to handle real-world supplier API behaviors like delays, price changes, and timeouts.
--   **Price Revalidation (Precheck):** A mandatory step before booking to confirm the rate has not changed since the search, preventing  errors.
--   **Asynchronous Booking Status Polling:** A pattern to handle non-instant booking confirmations by creating a booking and then periodically querying a status endpoint until a final state (, ) is reached.
--   **Automated Test Matrix:** A UI-driven feature that runs a predefined set of integration tests against critical workflows (e.g., different booking scenarios) to ensure system reliability.
+-   **Generic Supplier Onboarding:** An extensible framework to add and certify any new hotel supplier via a standardized process.
+-   **Multi-Step Wizard UI:** A user-friendly interface that guides administrators through complex workflows, improving usability and reducing errors.
+-   **Supplier Health Check:** Proactive validation of API connectivity and basic functionality beyond simple authentication, ensuring a supplier is ready for integration testing.
+-   **Automated Certification Score:** A quantitative measure of integration quality, providing a clear Go-Live gate and improving partner onboarding confidence.
+-   **Secure Credential Handling:** The design principle of isolating and protecting sensitive supplier credentials, including in-memory storage, masking in UI, and avoiding logs.
 
 **key DB schema**
--   No new persistent database collections were added. The state for the booking test matrix is managed transiently.
+-   No new persistent database collections were added. Onboarding state and credentials are managed transiently/mocked for this implementation.
 
 **changes in tech stack**
 -   None.
 
 **All files of reference**
 -   **Created Files:**
-    -   : Orchestrates the entire booking test flow.
-    -   : Defines Pydantic models for the booking flow API.
+    -   : API endpoints for the onboarding flow.
+    -   : Business logic for the onboarding process.
+    -   : Pydantic models for the onboarding API.
+    -   : The main frontend component for the feature.
+    -   : Pytest file for the new backend endpoints.
 -   **Updated Files:**
-    -   : Added the new booking flow endpoints.
-    -   : Integrated the hardening service and mock logic.
-    -   : Added the new RateHawk Booking Flow panel and its associated logic.
-    -   : Updated to reflect P0 completion and the new P1 task.
+    -   : To register the new .
+    -   : To add the route for the new page.
+    -   : To add the new page to the admin sidebar menu.
+    -   : To reflect task completion and roadmap updates.
 
 **Areas that need refactoring**:
--   The ~17% of legacy files using  for data management remains a low-priority backlog item.
+-   **Backend Routers:** The user has approved a plan to refactor  into smaller, more focused files after P1 is verified.
+-   **Legacy Data Fetching:** ~17% of legacy frontend files still use  for data management and could be migrated to TanStack Query.
 
 **key api endpoints**
--   : Simulates a pre-booking price revalidation check.
--   : Initiates a new booking test.
--   : Polls for the status of an in-progress booking.
--   : Cancels a booking.
--   : Triggers all five automated booking scenarios.
+-   : Lists all available suppliers and their certification status.
+-   : Saves (mocks) the credentials for a supplier.
+-   : Runs an API health check for a supplier.
+-   : Runs the full certification test suite for a supplier.
+-   : Toggles the go-live status for a supplier.
 
 **Critical Info for New Agent**
 -   **İletişim diliniz Türkçe olmalıdır. (Your communication language must be Turkish).**
--   **P0 (RateHawk Booking Flow Hardening)** is fully **COMPLETE** and has been successfully tested. The immediate next action is to present this completed work to the user and then proceed with their next priority.
--   The user has explicitly defined the next task: **P1 - Supplier Onboarding UX**. You should start planning for this task.
--   Real RateHawk credentials are not yet available. The next task (P1) should be designed to create a credential-ready system that can be activated once keys are provided.
+-   **P1 (Generic Supplier Onboarding)** is fully **COMPLETE** and has been successfully tested. The immediate next action is to present this work to the user for verification.
+-   After user verification of P1, the two approved follow-up tasks are:
+    1.  Create the non-blocking **P0 E2E Demo Panel**.
+    2.  Perform the **Backend Router Refactoring**.
+-   The entire onboarding flow is currently mocked, as real credentials are not yet available. This is the correct and expected state.
 
 **documents and test reports created in this job**
+-   
 -   
 -    (updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
--   **User (Message 8):** Provided explicit approval for a priority change. Confirmed the new work order: 1. , 2. , 3. . The user clearly stated to start with P0 immediately and defined the expected deliverables for it.
--   **User (Message 5):** Provided a detailed analysis of RateHawk API documentation, which validated the agent's architectural direction and triggered the reprioritization. The user highlighted critical concepts like async booking status, price revalidation, and the sandbox-to-production lifecycle.
+-   **User (Message 7):** The user provided a comprehensive and detailed plan for the **P1 Supplier Onboarding UX**. They approved the agent's initial proposal and added critical new requirements, including the Supplier Health Check and Certification Score. They explicitly stated that the solution must be generic for all suppliers, not just RateHawk, and provided a clear 6-step architectural flow. They also approved a future router refactoring task and emphasized the need for secure credential storage. The user gave the final green light to start P1 with these new specifications. (Status: COMPLETED).
 
 **Project Health Check:**
 -   **Broken:** None.
--   **Mocked:** The  intentionally uses mock logic to simulate various booking outcomes (success, delay, failure). This is the correct and expected state for the completed P0 task.
+-   **Mocked:** The  uses mock logic for health checks, certification tests, and credential storage. The  continues to use mock logic for its booking flow. This is the correct and expected state.
 
 **3rd Party Integrations**
 -   Stripe
@@ -127,9 +137,10 @@ The agent has successfully implemented and tested the **P0 - RateHawk Booking Fl
 -   Ratehawk, TBO, Paximum, WWTatil (Adapters exist, integration is simulated but hardened)
 
 **Testing status**
--   Testing agent used after significant changes: YES.  was run after completing P0 and all tests passed (100%).
+-   Testing agent used after significant changes: YES.  was run after completing P1 and all tests passed (100%).
 -   Troubleshoot agent used after agent stuck in loop: NO
--   Test files created: None.
+-   Test files created:
+    -   
 -   Known regressions: None.
 
 **Credentials to test flow:**
@@ -137,4 +148,4 @@ The agent has successfully implemented and tested the **P0 - RateHawk Booking Fl
 -   **Agency Admin:**  / 
 
 **What agent forgot to execute**
--   Nothing. The agent successfully executed the user's approved plan for P0 in its entirety.</analysis>
+-   Nothing. The agent successfully implemented the user's detailed plan for P1 in its entirety.</analysis>

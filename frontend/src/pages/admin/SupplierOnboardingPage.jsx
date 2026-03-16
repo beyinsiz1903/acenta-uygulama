@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
@@ -8,27 +8,28 @@ import {
   CheckCircle2, XCircle, ArrowLeft, ArrowRight, Eye, EyeOff,
   Globe, Key, Lock, User, Building2, Shield, Zap, Play, RotateCcw,
   ChevronRight, Activity, FileText, Clock, AlertTriangle, Power,
-  Loader2
+  Loader2, DollarSign, Settings2, Percent, Layers
 } from "lucide-react";
 import { api } from "../../lib/api";
 
 const STATUS_CONFIG = {
-  not_started: { label: "Baslanmadi", color: "bg-zinc-700/40 text-zinc-400 border-zinc-600/40" },
-  credentials_saved: { label: "Credential Kaydedildi", color: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
-  health_check_passed: { label: "Saglik Kontrolu OK", color: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
-  health_check_failed: { label: "Saglik Kontrolu Basarisiz", color: "bg-red-500/20 text-red-300 border-red-500/30" },
-  certified: { label: "Sertifika OK", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
-  certification_failed: { label: "Sertifika Basarisiz", color: "bg-red-500/20 text-red-300 border-red-500/30" },
-  live: { label: "CANLI", color: "bg-emerald-500/30 text-emerald-200 border-emerald-400/50" },
+  not_started: { label: "Baslanmadi", color: "bg-zinc-700/40 text-zinc-400 border-zinc-600/40", order: 0 },
+  credentials_saved: { label: "Credential Kaydedildi", color: "bg-amber-500/20 text-amber-300 border-amber-500/30", order: 1 },
+  health_check_passed: { label: "Saglik Kontrolu OK", color: "bg-blue-500/20 text-blue-300 border-blue-500/30", order: 2 },
+  health_check_failed: { label: "Saglik Kontrolu Basarisiz", color: "bg-red-500/20 text-red-300 border-red-500/30", order: 2 },
+  certified: { label: "Sertifika OK", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30", order: 3 },
+  certification_failed: { label: "Sertifika Basarisiz", color: "bg-red-500/20 text-red-300 border-red-500/30", order: 3 },
+  pricing_configured: { label: "Fiyat Ayarlandi", color: "bg-violet-500/20 text-violet-300 border-violet-500/30", order: 4 },
+  live: { label: "CANLI", color: "bg-emerald-500/30 text-emerald-200 border-emerald-400/50", order: 5 },
 };
 
 const STEP_LABELS = [
   "Supplier Sec",
   "Credential Gir",
-  "Dogrulama + Saglik",
+  "Dogrulama",
   "Sertifikasyon",
-  "Rapor",
-  "Go Live",
+  "Fiyat Ayarlari",
+  "Go-Live",
 ];
 
 const SUPPLIER_COLORS = {
@@ -42,16 +43,12 @@ const SUPPLIER_COLORS = {
 
 const FIELD_ICONS = { base_url: Globe, key_id: Key, api_key: Lock, username: User, password: Lock, client_id: Building2, agency_code: Building2, application_secret_key: Key, secret: Lock, agency_id: Building2 };
 
-function StepIndicator({ current, supplierStatus }) {
-  const getStepState = (idx) => {
-    if (idx < current) return "done";
-    if (idx === current) return "active";
-    return "pending";
-  };
+/* ── Step Indicator ── */
+function StepIndicator({ current }) {
   return (
     <div data-testid="step-indicator" className="flex items-center gap-1 mb-6">
       {STEP_LABELS.map((label, i) => {
-        const state = getStepState(i);
+        const state = i < current ? "done" : i === current ? "active" : "pending";
         return (
           <React.Fragment key={i}>
             <div className="flex items-center gap-1.5">
@@ -68,6 +65,7 @@ function StepIndicator({ current, supplierStatus }) {
   );
 }
 
+/* ── Credential Form ── */
 function CredentialForm({ supplier, onSave, saving }) {
   const [fields, setFields] = useState(() => {
     const init = {};
@@ -75,7 +73,6 @@ function CredentialForm({ supplier, onSave, saving }) {
     return init;
   });
   const [showSensitive, setShowSensitive] = useState({});
-
   const filled = supplier.credential_fields.filter(f => f.required).every(f => fields[f.key]?.trim());
 
   return (
@@ -90,14 +87,7 @@ function CredentialForm({ supplier, onSave, saving }) {
                 <Icon className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
                 <label className="text-zinc-400 w-28 shrink-0 text-[11px]">{f.label}{f.required && <span className="text-red-400 ml-0.5">*</span>}</label>
                 <div className="flex-1 relative">
-                  <Input
-                    data-testid={`cred-input-${f.key}`}
-                    type={f.sensitive && !showSensitive[f.key] ? "password" : "text"}
-                    value={fields[f.key] || ""}
-                    onChange={e => setFields(p => ({ ...p, [f.key]: e.target.value }))}
-                    placeholder={f.placeholder}
-                    className="h-8 text-xs bg-zinc-900/80 border-zinc-700 focus:border-sky-600"
-                  />
+                  <Input data-testid={`cred-input-${f.key}`} type={f.sensitive && !showSensitive[f.key] ? "password" : "text"} value={fields[f.key] || ""} onChange={e => setFields(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} className="h-8 text-xs bg-zinc-900/80 border-zinc-700 focus:border-sky-600" />
                   {f.sensitive && (
                     <button className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300" onClick={() => setShowSensitive(p => ({ ...p, [f.key]: !p[f.key] }))}>
                       {showSensitive[f.key] ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
@@ -123,6 +113,7 @@ function CredentialForm({ supplier, onSave, saving }) {
   );
 }
 
+/* ── Health Check Panel ── */
 function HealthCheckPanel({ result, running, onRun }) {
   return (
     <div data-testid="health-check-panel" className="space-y-3">
@@ -130,7 +121,7 @@ function HealthCheckPanel({ result, running, onRun }) {
         <div className="text-center py-6">
           <Activity className="w-8 h-8 text-zinc-600 mx-auto mb-3" />
           <p className="text-xs text-zinc-500 mb-4">Credential dogrulamasi ve API saglik kontrolu calistirilmadi.</p>
-          <Button data-testid="run-health-check-btn" className="h-9 text-xs" onClick={onRun}><Zap className="w-3.5 h-3.5 mr-1.5" />Dogrulama + Saglik Kontrolu Calistir</Button>
+          <Button data-testid="run-health-check-btn" className="h-9 text-xs" onClick={onRun}><Zap className="w-3.5 h-3.5 mr-1.5" />Dogrulama Calistir</Button>
         </div>
       )}
       {running && (
@@ -162,7 +153,7 @@ function HealthCheckPanel({ result, running, onRun }) {
           </div>
           <div className="flex justify-between items-center pt-1">
             <span className="text-[10px] text-zinc-600">Toplam sure: {result.total_duration_ms}ms</span>
-            <Button data-testid="rerun-health-btn" size="sm" variant="outline" className="text-xs h-7" onClick={onRun}><RotateCcw className="w-3 h-3 mr-1" />Tekrar Calistir</Button>
+            <Button data-testid="rerun-health-btn" size="sm" variant="outline" className="text-xs h-7" onClick={onRun}><RotateCcw className="w-3 h-3 mr-1" />Tekrar</Button>
           </div>
         </div>
       )}
@@ -170,6 +161,7 @@ function HealthCheckPanel({ result, running, onRun }) {
   );
 }
 
+/* ── Certification Panel ── */
 function CertificationPanel({ result, running, onRun }) {
   return (
     <div data-testid="certification-panel" className="space-y-3">
@@ -185,29 +177,23 @@ function CertificationPanel({ result, running, onRun }) {
         <div className="flex flex-col items-center py-8">
           <Loader2 className="w-8 h-8 text-sky-400 animate-spin mb-3" />
           <p className="text-xs text-zinc-400">Sertifikasyon testleri calisiyor...</p>
-          <p className="text-[10px] text-zinc-600 mt-1">6 adimlik E2E test akisi</p>
         </div>
       )}
       {result && !running && (
         <div className="space-y-4">
-          {/* Score header */}
           <div className="bg-zinc-800/40 rounded-xl p-4 border border-zinc-700/50">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs text-zinc-400 font-medium">Certification Score</span>
               <Badge variant="outline" className={`text-sm font-mono font-bold px-3 ${result.go_live_eligible ? "text-emerald-300 border-emerald-500/50 bg-emerald-500/10" : "text-red-300 border-red-500/50 bg-red-500/10"}`}>{result.score}%</Badge>
             </div>
             <div className="w-full bg-zinc-800 rounded-full h-2.5 overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-1000 ${result.score >= 80 ? "bg-emerald-500" : result.score >= 50 ? "bg-amber-500" : "bg-red-500"}`}
-                style={{ width: `${result.score}%` }}
-              />
+              <div className={`h-full rounded-full transition-all duration-1000 ${result.score >= 80 ? "bg-emerald-500" : result.score >= 50 ? "bg-amber-500" : "bg-red-500"}`} style={{ width: `${result.score}%` }} />
             </div>
             <div className="flex justify-between mt-1.5">
               <span className="text-[10px] text-zinc-600">{result.passed}/{result.total} test gecti</span>
-              <span className={`text-[10px] font-medium ${result.go_live_eligible ? "text-emerald-400" : "text-red-400"}`}>{result.go_live_eligible ? "Go-Live Uygun" : `Minimum %${result.go_live_threshold} gerekli`}</span>
+              <span className={`text-[10px] font-medium ${result.go_live_eligible ? "text-emerald-400" : "text-red-400"}`}>{result.go_live_eligible ? "Go-Live Uygun" : `Min %${result.go_live_threshold}`}</span>
             </div>
           </div>
-          {/* Test results */}
           <div className="space-y-2">
             {result.results.map(r => (
               <div key={r.id} data-testid={`cert-${r.id}`} className={`flex items-start gap-3 p-3 rounded-lg border ${r.status === "pass" ? "bg-emerald-950/20 border-emerald-800/30" : "bg-red-950/20 border-red-800/30"}`}>
@@ -224,8 +210,8 @@ function CertificationPanel({ result, running, onRun }) {
             ))}
           </div>
           <div className="flex justify-between items-center pt-1">
-            <span className="text-[10px] text-zinc-600">Toplam: {result.total_duration_ms}ms | Run: {result.test_run_id}</span>
-            <Button data-testid="rerun-cert-btn" size="sm" variant="outline" className="text-xs h-7" onClick={onRun}><RotateCcw className="w-3 h-3 mr-1" />Tekrar Calistir</Button>
+            <span className="text-[10px] text-zinc-600">Run: {result.test_run_id}</span>
+            <Button data-testid="rerun-cert-btn" size="sm" variant="outline" className="text-xs h-7" onClick={onRun}><RotateCcw className="w-3 h-3 mr-1" />Tekrar</Button>
           </div>
         </div>
       )}
@@ -233,6 +219,124 @@ function CertificationPanel({ result, running, onRun }) {
   );
 }
 
+/* ── Pricing Setup Panel ── */
+function PricingSetupPanel({ supplierCode, existingConfig, onSave, saving }) {
+  const [markup, setMarkup] = useState(existingConfig?.base_markup_pct ?? 10);
+  const [channels, setChannels] = useState(existingConfig?.channels ?? {
+    b2b: { adjustment_pct: -5, active: true },
+    b2c: { adjustment_pct: 3, active: true },
+    corporate: { adjustment_pct: -8, active: true },
+    whitelabel: { adjustment_pct: -3, active: true },
+  });
+  const [tiers, setTiers] = useState(existingConfig?.agency_tiers ?? {
+    starter: { discount_pct: 0 },
+    standard: { discount_pct: 2 },
+    premium: { discount_pct: 5 },
+    enterprise: { discount_pct: 8 },
+  });
+  const [minMargin, setMinMargin] = useState(existingConfig?.guardrails?.min_margin_pct ?? 5);
+  const [maxDiscount, setMaxDiscount] = useState(existingConfig?.guardrails?.max_discount_pct ?? 25);
+
+  const channelLabels = { b2b: "B2B", b2c: "B2C", corporate: "Corporate", whitelabel: "Whitelabel" };
+  const tierLabels = { starter: "Starter", standard: "Standard", premium: "Premium", enterprise: "Enterprise" };
+
+  const handleSave = () => {
+    onSave({
+      base_markup_pct: markup,
+      channels,
+      agency_tiers: tiers,
+      min_margin_pct: minMargin,
+      max_discount_pct: maxDiscount,
+    });
+  };
+
+  return (
+    <div data-testid="pricing-setup-panel" className="space-y-4">
+      {/* Base Markup */}
+      <div className="bg-zinc-800/40 rounded-lg p-4 border border-zinc-700/50">
+        <h4 className="text-xs font-medium text-zinc-300 mb-3 flex items-center gap-2">
+          <DollarSign className="w-3.5 h-3.5 text-emerald-400" />Base Markup
+        </h4>
+        <div className="flex items-center gap-3">
+          <Input data-testid="base-markup-input" type="number" value={markup} onChange={e => setMarkup(Number(e.target.value))} className="w-24 h-8 text-xs bg-zinc-900/80 border-zinc-700 text-center" />
+          <Percent className="w-3.5 h-3.5 text-zinc-500" />
+          <span className="text-[11px] text-zinc-500">Supplier fiyatina uygulanacak temel kar marji</span>
+        </div>
+      </div>
+
+      {/* Channel Rules */}
+      <div className="bg-zinc-800/40 rounded-lg p-4 border border-zinc-700/50">
+        <h4 className="text-xs font-medium text-zinc-300 mb-3 flex items-center gap-2">
+          <Layers className="w-3.5 h-3.5 text-sky-400" />Kanal Fiyat Ayarlari
+        </h4>
+        <div className="grid grid-cols-2 gap-2.5">
+          {Object.entries(channels).map(([ch, cfg]) => (
+            <div key={ch} data-testid={`channel-${ch}`} className={`flex items-center justify-between p-2.5 rounded-lg border ${cfg.active ? "bg-zinc-900/60 border-zinc-700/50" : "bg-zinc-900/30 border-zinc-800/40 opacity-50"}`}>
+              <div className="flex items-center gap-2">
+                <button data-testid={`toggle-channel-${ch}`} className={`w-4 h-4 rounded border flex items-center justify-center text-[8px] ${cfg.active ? "bg-sky-500/30 border-sky-500/50 text-sky-300" : "bg-zinc-800 border-zinc-700 text-zinc-600"}`} onClick={() => setChannels(p => ({ ...p, [ch]: { ...p[ch], active: !p[ch].active } }))}>
+                  {cfg.active && <CheckCircle2 className="w-3 h-3" />}
+                </button>
+                <span className="text-[11px] font-medium text-zinc-300">{channelLabels[ch]}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Input type="number" value={cfg.adjustment_pct} onChange={e => setChannels(p => ({ ...p, [ch]: { ...p[ch], adjustment_pct: Number(e.target.value) } }))} className="w-16 h-6 text-[10px] bg-zinc-900 border-zinc-700 text-center" />
+                <span className="text-[10px] text-zinc-600">%</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="text-[10px] text-zinc-600 mt-2">Pozitif = fiyat artisi, Negatif = indirim</p>
+      </div>
+
+      {/* Agency Tiers */}
+      <div className="bg-zinc-800/40 rounded-lg p-4 border border-zinc-700/50">
+        <h4 className="text-xs font-medium text-zinc-300 mb-3 flex items-center gap-2">
+          <Building2 className="w-3.5 h-3.5 text-amber-400" />Acenta Tier Indirimleri
+        </h4>
+        <div className="grid grid-cols-2 gap-2.5">
+          {Object.entries(tiers).map(([tier, cfg]) => (
+            <div key={tier} data-testid={`tier-${tier}`} className="flex items-center justify-between p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-700/50">
+              <span className="text-[11px] font-medium text-zinc-300">{tierLabels[tier]}</span>
+              <div className="flex items-center gap-1">
+                <Input type="number" value={cfg.discount_pct} onChange={e => setTiers(p => ({ ...p, [tier]: { discount_pct: Number(e.target.value) } }))} className="w-16 h-6 text-[10px] bg-zinc-900 border-zinc-700 text-center" />
+                <span className="text-[10px] text-zinc-600">%</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Guardrails */}
+      <div className="bg-zinc-800/40 rounded-lg p-4 border border-zinc-700/50">
+        <h4 className="text-xs font-medium text-zinc-300 mb-3 flex items-center gap-2">
+          <Shield className="w-3.5 h-3.5 text-red-400" />Koruma Kurallari (Guardrails)
+        </h4>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-[10px] text-zinc-500 mb-1 block">Min Kar Marji</label>
+            <div className="flex items-center gap-1">
+              <Input data-testid="min-margin-input" type="number" value={minMargin} onChange={e => setMinMargin(Number(e.target.value))} className="w-full h-7 text-[11px] bg-zinc-900 border-zinc-700 text-center" />
+              <span className="text-[10px] text-zinc-600">%</span>
+            </div>
+          </div>
+          <div>
+            <label className="text-[10px] text-zinc-500 mb-1 block">Max Indirim</label>
+            <div className="flex items-center gap-1">
+              <Input data-testid="max-discount-input" type="number" value={maxDiscount} onChange={e => setMaxDiscount(Number(e.target.value))} className="w-full h-7 text-[11px] bg-zinc-900 border-zinc-700 text-center" />
+              <span className="text-[10px] text-zinc-600">%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Button data-testid="save-pricing-btn" className="w-full h-9 text-xs" disabled={saving} onClick={handleSave}>
+        {saving ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />Kaydediliyor...</> : <><Settings2 className="w-3.5 h-3.5 mr-1.5" />Fiyat Ayarlarini Kaydet</>}
+      </Button>
+    </div>
+  );
+}
+
+/* ── Go-Live Panel ── */
 function GoLivePanel({ supplier, onToggle, toggling }) {
   const cert = supplier.certification;
   const isLive = supplier.status === "live";
@@ -244,23 +348,33 @@ function GoLivePanel({ supplier, onToggle, toggling }) {
         <div className="flex items-center gap-3 mb-4">
           <Power className={`w-6 h-6 ${isLive ? "text-emerald-400" : eligible ? "text-amber-400" : "text-zinc-600"}`} />
           <div>
-            <h4 className="text-sm font-semibold text-zinc-200">{isLive ? "Supplier CANLI" : eligible ? "Go-Live Hazir" : "Go-Live Icin Sertifika Gerekli"}</h4>
-            <p className="text-[11px] text-zinc-500 mt-0.5">{isLive ? "Bu supplier uretim trafigine acik." : eligible ? "Sertifikasyon tamamlandi. Go-Live aktif edilebilir." : `Minimum %80 sertifikasyon puani gerekli. Mevcut: %${cert?.score || 0}`}</p>
+            <h4 className="text-sm font-semibold text-zinc-200">{isLive ? "Supplier CANLI" : eligible ? "Go-Live Hazir" : "Sertifika Gerekli"}</h4>
+            <p className="text-[11px] text-zinc-500 mt-0.5">{isLive ? "Bu supplier uretim trafigine acik." : eligible ? "Tum adimlar tamamlandi. Go-Live aktif edilebilir." : `Min %80 sertifikasyon gerekli. Mevcut: %${cert?.score || 0}`}</p>
           </div>
         </div>
         {cert && (
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="bg-zinc-900/60 rounded-lg p-3 text-center border border-zinc-800/50">
               <div className="text-lg font-bold text-zinc-200 font-mono">{cert.score}%</div>
-              <div className="text-[10px] text-zinc-500">Sertifika Puani</div>
+              <div className="text-[10px] text-zinc-500">Sertifika</div>
             </div>
             <div className="bg-zinc-900/60 rounded-lg p-3 text-center border border-zinc-800/50">
               <div className="text-lg font-bold text-zinc-200 font-mono">{cert.passed}/{cert.total}</div>
-              <div className="text-[10px] text-zinc-500">Gecen Testler</div>
+              <div className="text-[10px] text-zinc-500">Testler</div>
             </div>
             <div className="bg-zinc-900/60 rounded-lg p-3 text-center border border-zinc-800/50">
               <div className={`text-lg font-bold font-mono ${eligible ? "text-emerald-400" : "text-red-400"}`}>{eligible ? "EVET" : "HAYIR"}</div>
-              <div className="text-[10px] text-zinc-500">Go-Live Uygun</div>
+              <div className="text-[10px] text-zinc-500">Uygun</div>
+            </div>
+          </div>
+        )}
+        {supplier.pricing_config && (
+          <div className="bg-zinc-900/40 rounded-lg p-3 border border-zinc-800/40 mb-4">
+            <div className="text-[10px] text-zinc-500 mb-2 font-medium">Fiyat Ozeti</div>
+            <div className="grid grid-cols-3 gap-2 text-[11px]">
+              <div><span className="text-zinc-500">Base Markup:</span> <span className="text-zinc-300 font-mono">{supplier.pricing_config.base_markup_pct}%</span></div>
+              <div><span className="text-zinc-500">Min Marj:</span> <span className="text-zinc-300 font-mono">{supplier.pricing_config.guardrails?.min_margin_pct}%</span></div>
+              <div><span className="text-zinc-500">Max Indirim:</span> <span className="text-zinc-300 font-mono">{supplier.pricing_config.guardrails?.max_discount_pct}%</span></div>
             </div>
           </div>
         )}
@@ -276,14 +390,14 @@ function GoLivePanel({ supplier, onToggle, toggling }) {
       </div>
       {supplier.go_live_at && (
         <div className="flex items-center gap-2 text-[10px] text-zinc-600 px-1">
-          <Clock className="w-3 h-3" />
-          <span>Son Go-Live: {new Date(supplier.go_live_at).toLocaleString("tr-TR")}</span>
+          <Clock className="w-3 h-3" /><span>Son Go-Live: {new Date(supplier.go_live_at).toLocaleString("tr-TR")}</span>
         </div>
       )}
     </div>
   );
 }
 
+/* ── Supplier Wizard (Main Flow) ── */
 function SupplierWizard({ supplierCode, onBack }) {
   const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
@@ -291,29 +405,28 @@ function SupplierWizard({ supplierCode, onBack }) {
   const [healthRunning, setHealthRunning] = useState(false);
   const [certRunning, setCertRunning] = useState(false);
   const [toggling, setToggling] = useState(false);
+  const [pricingSaving, setPricingSaving] = useState(false);
   const [healthResult, setHealthResult] = useState(null);
   const [certResult, setCertResult] = useState(null);
 
   const { data: supplier, refetch } = useQuery({
     queryKey: ["supplier-onboarding", "detail", supplierCode],
-    queryFn: async () => {
-      const r = await api.get(`/supplier-onboarding/detail/${supplierCode}`);
-      return r.data;
-    },
+    queryFn: async () => (await api.get(`/supplier-onboarding/detail/${supplierCode}`)).data,
     enabled: !!supplierCode,
   });
 
   // Determine step from status
-  React.useEffect(() => {
+  useEffect(() => {
     if (!supplier) return;
     const s = supplier.status;
     if (s === "not_started") setStep(1);
     else if (s === "credentials_saved") setStep(2);
     else if (s === "health_check_passed") setStep(3);
     else if (s === "health_check_failed") setStep(2);
-    else if (s === "certified" || s === "certification_failed") setStep(4);
+    else if (s === "certified") setStep(4);
+    else if (s === "certification_failed") setStep(3);
+    else if (s === "pricing_configured") setStep(5);
     else if (s === "live") setStep(5);
-    // Load existing results
     if (supplier.health_check) setHealthResult(supplier.health_check);
     if (supplier.certification) setCertResult(supplier.certification);
   }, [supplier]);
@@ -352,13 +465,22 @@ function SupplierWizard({ supplierCode, onBack }) {
     setCertRunning(false);
   }, [supplierCode, refetch]);
 
+  const savePricing = useCallback(async (config) => {
+    setPricingSaving(true);
+    try {
+      await api.post(`/supplier-onboarding/pricing-setup/${supplierCode}`, config);
+      await refetch();
+      setStep(5);
+    } catch (e) { console.error(e); }
+    setPricingSaving(false);
+  }, [supplierCode, refetch]);
+
   const toggleGoLive = useCallback(async (enabled) => {
     setToggling(true);
     try {
       await api.post(`/supplier-onboarding/go-live/${supplierCode}`, { enabled });
       await refetch();
       queryClient.invalidateQueries({ queryKey: ["supplier-onboarding"] });
-      if (enabled) setStep(5);
     } catch (e) { console.error(e); }
     setToggling(false);
   }, [supplierCode, refetch, queryClient]);
@@ -367,6 +489,12 @@ function SupplierWizard({ supplierCode, onBack }) {
 
   const sc = STATUS_CONFIG[supplier.status] || STATUS_CONFIG.not_started;
   const gradColor = SUPPLIER_COLORS[supplierCode] || "from-zinc-600 to-zinc-700";
+
+  const stepIcons = [null, Key, Activity, Shield, DollarSign, Power];
+  const stepTitles = [null, "Adim 1: Credential Girisi", "Adim 2: Dogrulama + Saglik Kontrolu", "Adim 3: Sandbox Sertifikasyon", "Adim 4: Fiyat Ayarlari", "Adim 5: Go-Live"];
+  const stepColors = [null, "text-amber-400", "text-sky-400", "text-violet-400", "text-emerald-400", "text-emerald-400"];
+
+  const StepIcon = stepIcons[step] || Key;
 
   return (
     <div data-testid="supplier-wizard" className="space-y-5">
@@ -383,17 +511,13 @@ function SupplierWizard({ supplierCode, onBack }) {
         </div>
       </div>
 
-      <StepIndicator current={step} supplierStatus={supplier.status} />
+      <StepIndicator current={step} />
 
       {/* Step Content */}
       <Card className="bg-zinc-900/70 border-zinc-800">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
-            {step === 1 && <><Key className="w-4 h-4 text-amber-400" />Adim 2: Credential Girisi</>}
-            {step === 2 && <><Activity className="w-4 h-4 text-sky-400" />Adim 3: Dogrulama + API Saglik Kontrolu</>}
-            {step === 3 && <><Shield className="w-4 h-4 text-violet-400" />Adim 4: Sandbox Sertifikasyon</>}
-            {step === 4 && <><FileText className="w-4 h-4 text-emerald-400" />Adim 5: Sertifika Raporu + Go Live</>}
-            {step === 5 && <><Power className="w-4 h-4 text-emerald-400" />Adim 6: Go Live Durumu</>}
+            {step >= 1 && step <= 5 && <><StepIcon className={`w-4 h-4 ${stepColors[step]}`} />{stepTitles[step]}</>}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -405,10 +529,7 @@ function SupplierWizard({ supplierCode, onBack }) {
                   <h5 className="text-[10px] text-zinc-500 mb-2 font-medium">Kayitli Credential</h5>
                   <div className="grid grid-cols-2 gap-1.5">
                     {Object.entries(supplier.credentials_preview).map(([k, v]) => (
-                      <div key={k} className="flex items-center gap-1.5 text-[11px]">
-                        <span className="text-zinc-500">{k}:</span>
-                        <span className="text-zinc-300 font-mono">{v}</span>
-                      </div>
+                      <div key={k} className="flex items-center gap-1.5 text-[11px]"><span className="text-zinc-500">{k}:</span><span className="text-zinc-300 font-mono">{v}</span></div>
                     ))}
                   </div>
                 </div>
@@ -417,31 +538,35 @@ function SupplierWizard({ supplierCode, onBack }) {
             </div>
           )}
           {step === 3 && <CertificationPanel result={certResult} running={certRunning} onRun={runCertification} />}
-          {(step === 4 || step === 5) && <GoLivePanel supplier={supplier} onToggle={toggleGoLive} toggling={toggling} />}
+          {step === 4 && <PricingSetupPanel supplierCode={supplierCode} existingConfig={supplier.pricing_config} onSave={savePricing} saving={pricingSaving} />}
+          {step === 5 && <GoLivePanel supplier={supplier} onToggle={toggleGoLive} toggling={toggling} />}
         </CardContent>
       </Card>
 
       {/* Navigation */}
       {step > 1 && step < 5 && (
         <div className="flex justify-between">
-          <Button size="sm" variant="outline" className="text-xs h-8 border-zinc-700" onClick={() => setStep(s => Math.max(1, s - 1))}><ArrowLeft className="w-3 h-3 mr-1" />Onceki Adim</Button>
+          <Button size="sm" variant="outline" className="text-xs h-8 border-zinc-700" onClick={() => setStep(s => Math.max(1, s - 1))}><ArrowLeft className="w-3 h-3 mr-1" />Onceki</Button>
           {step === 2 && healthResult?.overall === "pass" && <Button size="sm" className="text-xs h-8" onClick={() => setStep(3)}>Sertifikasyona Gec<ArrowRight className="w-3 h-3 ml-1" /></Button>}
-          {step === 3 && certResult?.go_live_eligible && <Button size="sm" className="text-xs h-8" onClick={() => setStep(4)}>Go Live Adimina Gec<ArrowRight className="w-3 h-3 ml-1" /></Button>}
+          {step === 3 && certResult?.go_live_eligible && <Button size="sm" className="text-xs h-8" onClick={() => setStep(4)}>Fiyat Ayarlarina Gec<ArrowRight className="w-3 h-3 ml-1" /></Button>}
+        </div>
+      )}
+      {step === 5 && supplier.status !== "live" && (
+        <div className="flex justify-start">
+          <Button size="sm" variant="outline" className="text-xs h-8 border-zinc-700" onClick={() => setStep(4)}><ArrowLeft className="w-3 h-3 mr-1" />Fiyat Ayarlari</Button>
         </div>
       )}
     </div>
   );
 }
 
+/* ── Main Page ── */
 export default function SupplierOnboardingPage() {
   const [selectedSupplier, setSelectedSupplier] = useState(null);
 
   const { data: dashboard, isLoading } = useQuery({
     queryKey: ["supplier-onboarding", "dashboard"],
-    queryFn: async () => {
-      const r = await api.get("/supplier-onboarding/dashboard");
-      return r.data;
-    },
+    queryFn: async () => (await api.get("/supplier-onboarding/dashboard")).data,
   });
 
   if (selectedSupplier) {
@@ -454,23 +579,21 @@ export default function SupplierOnboardingPage() {
 
   const suppliers = dashboard?.suppliers || [];
   const liveCount = suppliers.filter(s => s.status === "live").length;
-  const certifiedCount = suppliers.filter(s => s.status === "certified").length;
+  const certifiedCount = suppliers.filter(s => ["certified", "pricing_configured"].includes(s.status)).length;
   const inProgress = suppliers.filter(s => !["not_started", "live"].includes(s.status)).length;
 
   return (
     <div data-testid="supplier-onboarding-page" className="p-6 max-w-5xl mx-auto space-y-6">
-      {/* Header */}
       <div>
-        <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2"><Shield className="w-5 h-5 text-sky-400" />Supplier Onboarding</h2>
-        <p className="text-xs text-zinc-500 mt-1">Supplier ekle, credential gir, test calistir ve go-live aktif et</p>
+        <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2"><Shield className="w-5 h-5 text-sky-400" />Supplier Self-Serve Onboarding</h2>
+        <p className="text-xs text-zinc-500 mt-1">Supplier ekle, test et, fiyat ayarla ve go-live aktif et — developer gerektirmez</p>
       </div>
 
-      {/* KPI cards */}
       <div className="grid grid-cols-4 gap-3">
         {[
           { label: "Toplam Supplier", value: suppliers.length, icon: Globe, color: "text-zinc-300" },
           { label: "Canli (Live)", value: liveCount, icon: Zap, color: "text-emerald-400" },
-          { label: "Sertifika OK", value: certifiedCount, icon: Shield, color: "text-sky-400" },
+          { label: "Sertifika / Fiyat OK", value: certifiedCount, icon: Shield, color: "text-sky-400" },
           { label: "Devam Ediyor", value: inProgress, icon: Activity, color: "text-amber-400" },
         ].map(kpi => (
           <Card key={kpi.label} className="bg-zinc-900/70 border-zinc-800">
@@ -485,7 +608,6 @@ export default function SupplierOnboardingPage() {
         ))}
       </div>
 
-      {/* Supplier grid */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 text-zinc-600 animate-spin" /></div>
       ) : (
@@ -494,13 +616,9 @@ export default function SupplierOnboardingPage() {
             const sc = STATUS_CONFIG[s.status] || STATUS_CONFIG.not_started;
             const gradColor = SUPPLIER_COLORS[s.supplier_code] || "from-zinc-600 to-zinc-700";
             const certScore = s.certification?.score;
+            const completedSteps = (STATUS_CONFIG[s.status]?.order || 0);
             return (
-              <Card
-                key={s.supplier_code}
-                data-testid={`supplier-card-${s.supplier_code}`}
-                className="bg-zinc-900/70 border-zinc-800 hover:border-zinc-600 cursor-pointer transition-all group"
-                onClick={() => setSelectedSupplier(s.supplier_code)}
-              >
+              <Card key={s.supplier_code} data-testid={`supplier-card-${s.supplier_code}`} className="bg-zinc-900/70 border-zinc-800 hover:border-zinc-600 cursor-pointer transition-all group" onClick={() => setSelectedSupplier(s.supplier_code)}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2.5">
@@ -512,19 +630,25 @@ export default function SupplierOnboardingPage() {
                     </div>
                     <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:text-zinc-400 transition-colors mt-1" />
                   </div>
+                  {/* Progress bar */}
+                  <div className="mt-2">
+                    <div className="flex justify-between text-[10px] text-zinc-500 mb-1">
+                      <span>Ilerleme</span>
+                      <span className="font-mono">{completedSteps}/5</span>
+                    </div>
+                    <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                      <div className={`h-full rounded-full transition-all ${completedSteps >= 5 ? "bg-emerald-500" : completedSteps >= 3 ? "bg-sky-500" : completedSteps >= 1 ? "bg-amber-500" : "bg-zinc-700"}`} style={{ width: `${(completedSteps / 5) * 100}%` }} />
+                    </div>
+                  </div>
                   {certScore != null && (
-                    <div className="mt-2">
-                      <div className="flex justify-between text-[10px] text-zinc-500 mb-1">
-                        <span>Sertifika Puani</span>
-                        <span className={`font-mono font-medium ${certScore >= 80 ? "text-emerald-400" : "text-red-400"}`}>{certScore}%</span>
-                      </div>
-                      <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
-                        <div className={`h-full rounded-full ${certScore >= 80 ? "bg-emerald-500" : certScore >= 50 ? "bg-amber-500" : "bg-red-500"}`} style={{ width: `${certScore}%` }} />
-                      </div>
+                    <div className="flex items-center gap-2 mt-2 text-[10px]">
+                      <Shield className="w-3 h-3 text-zinc-500" />
+                      <span className="text-zinc-500">Sertifika:</span>
+                      <span className={`font-mono font-medium ${certScore >= 80 ? "text-emerald-400" : "text-red-400"}`}>{certScore}%</span>
                     </div>
                   )}
                   {s.status === "not_started" && (
-                    <div className="flex items-center gap-1.5 text-[10px] text-zinc-600 mt-3"><AlertTriangle className="w-3 h-3" />Onboarding baslatilmadi</div>
+                    <div className="flex items-center gap-1.5 text-[10px] text-zinc-600 mt-2"><AlertTriangle className="w-3 h-3" />Onboarding baslatilmadi</div>
                   )}
                 </CardContent>
               </Card>

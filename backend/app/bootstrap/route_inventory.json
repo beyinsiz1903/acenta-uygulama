@@ -13106,6 +13106,28 @@
     "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "supplier-onboarding",
+    "path": "/api/supplier-onboarding/pricing-setup/{supplier_code}",
+    "risk_level": "medium",
+    "source": "app.routers.inventory.onboarding_router",
+    "target_namespace": "/api/v1/supplier-onboarding"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/supplier-onboarding",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "supplier-onboarding",
+    "path": "/api/supplier-onboarding/pricing-setup/{supplier_code}",
+    "risk_level": "medium",
+    "source": "app.routers.inventory.onboarding_router",
+    "target_namespace": "/api/v1/supplier-onboarding"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/supplier-onboarding",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "supplier-onboarding",
     "path": "/api/supplier-onboarding/registry",
     "risk_level": "medium",
     "source": "app.routers.inventory.onboarding_router",

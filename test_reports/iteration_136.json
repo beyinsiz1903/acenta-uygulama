@@ -1,0 +1,83 @@
+{
+  "summary": "Completed testing for Supplier Self-Serve Onboarding - Pricing Setup & Go-Live features. All 21 backend API tests passed. Frontend UI tests passed - Dashboard shows 6 suppliers with status badges and progress bars, Wizard with 6 steps, PricingSetupPanel with all components (base markup, channel rules, agency tiers, guardrails), GoLivePanel with certification stats and toggle button.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Dashboard/Reports",
+        "issues": ["Console 400 errors on /api/reports/sales-summary and /api/reports/reservations-summary - tenant_context_missing errors (not related to supplier onboarding)"]
+      }
+    ]
+  },
+  "passed_tests": [
+    "✅ GET /api/supplier-onboarding/dashboard - returns 6 suppliers with status (200 OK)",
+    "✅ GET /api/supplier-onboarding/dashboard - has go_live_threshold of 80",
+    "✅ GET /api/supplier-onboarding/detail/{supplier} - includes pricing_config field",
+    "✅ GET /api/supplier-onboarding/detail/{supplier} - has all required fields (code, name, status, credential_fields, go_live)",
+    "✅ GET /api/supplier-onboarding/pricing-setup/{supplier} - returns defaults for unconfigured (is_default=True)",
+    "✅ GET /api/supplier-onboarding/pricing-setup/{supplier} - has channel rules (B2B, B2C, Corporate, Whitelabel)",
+    "✅ GET /api/supplier-onboarding/pricing-setup/{supplier} - has agency tier discounts (starter, standard, premium, enterprise)",
+    "✅ GET /api/supplier-onboarding/pricing-setup/{supplier} - has guardrails (min_margin_pct, max_discount_pct)",
+    "✅ POST /api/supplier-onboarding/pricing-setup/{supplier} - saves config and updates status to pricing_configured",
+    "✅ POST /api/supplier-onboarding/pricing-setup/{supplier} - config persists (is_default=False after save)",
+    "✅ GET /api/supplier-onboarding/detail/{supplier} - shows pricing_config after save",
+    "✅ POST /api/supplier-onboarding/go-live/{supplier} - enables go-live (status=live, go_live=True)",
+    "✅ POST /api/supplier-onboarding/go-live/{supplier} - disables go-live (status=pricing_configured)",
+    "✅ POST /api/supplier-onboarding/go-live/{supplier} - requires certification (returns error without cert)",
+    "✅ Activity Timeline: go-live logs supplier_go_live event",
+    "✅ Activity Timeline: deactivate logs supplier_deactivated event",
+    "✅ Full workflow: credentials → validate → certify → pricing → go-live for Juniper",
+    "✅ Frontend: Dashboard shows 6 supplier cards with data-testid",
+    "✅ Frontend: Wizard step indicator shows 6 steps (Supplier Sec, Credential Gir, Dogrulama, Sertifikasyon, Fiyat Ayarlari, Go-Live)",
+    "✅ Frontend: PricingSetupPanel with base markup, channel rules, agency tiers, guardrails, save button",
+    "✅ Frontend: GoLivePanel shows certification stats, pricing summary, toggle button"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_supplier_onboarding_pricing_golive_iter136.py",
+    "/app/test_reports/pytest/pytest_supplier_pricing_golive_iter136.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_supplier_onboarding_pricing_golive_iter136.py"
+  ],
+  "success_rate": {
+    "backend": "100% (21/21 tests passed)",
+    "frontend": "100% (All UI elements verified)"
+  },
+  "test_credentials_used": {
+    "super_admin": "agent@acenta.test / agent123"
+  },
+  "seed_data_creation": "Backend tests created and used hotelbeds and juniper suppliers for full onboarding flow (credentials, health check, certification, pricing, go-live)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Supplier Self-Serve Onboarding Pricing & Go-Live fully tested. All 6 suppliers visible on dashboard with status badges and progress bars. Pricing Setup (step 4) includes base markup, channel rules (B2B/B2C/Corporate/Whitelabel with toggle + adjustment %), agency tier discounts (starter/standard/premium/enterprise), and guardrails (min margin, max discount). Go-Live (step 5) shows certification score, tests passed, eligibility, pricing summary, and toggle button. Activity timeline logs go-live and deactivation events. Health check and certification use SIMULATED/MOCKED results (always pass in sandbox mode).",
+  "api_verification": {
+    "GET /api/supplier-onboarding/dashboard": "✅ 200 - Returns 6 suppliers with status",
+    "GET /api/supplier-onboarding/detail/{supplier}": "✅ 200 - Returns supplier detail with pricing_config",
+    "GET /api/supplier-onboarding/pricing-setup/{supplier}": "✅ 200 - Returns pricing config (defaults or configured)",
+    "POST /api/supplier-onboarding/pricing-setup/{supplier}": "✅ 200 - Saves pricing config, status=pricing_configured",
+    "POST /api/supplier-onboarding/go-live/{supplier}": "✅ 200 - Toggles go-live, logs timeline event",
+    "POST /api/supplier-onboarding/credentials": "✅ 200 - Saves credentials",
+    "POST /api/supplier-onboarding/validate/{supplier}": "✅ 200 - Runs 4 health checks (SIMULATED)",
+    "POST /api/supplier-onboarding/certify/{supplier}": "✅ 200 - Runs 6 certification steps (SIMULATED)",
+    "GET /api/activity-timeline": "✅ 200 - Returns go-live and deactivation events"
+  },
+  "ui_verification": {
+    "Dashboard Page": "✅ Shows 6 supplier cards with status badges and progress bars",
+    "KPI Cards": "✅ Shows Toplam Supplier (6), Canli (1), Sertifika/Fiyat OK (3), Devam Ediyor (4)",
+    "Step Indicator": "✅ Shows 6 steps: Supplier Sec, Credential Gir, Dogrulama, Sertifikasyon, Fiyat Ayarlari, Go-Live",
+    "PricingSetupPanel": "✅ Base markup input, channel rules (B2B/B2C/Corporate/Whitelabel), agency tiers, guardrails",
+    "GoLivePanel": "✅ Certification stats (100%, 6/6, EVET), pricing summary, toggle button",
+    "Navigation": "✅ Back button returns to dashboard"
+  },
+  "mocked_apis": {
+    "health_check": "Always returns pass for all 4 checks (credential_valid, api_reachable, rate_limit_ok, search_endpoint)",
+    "certification": "Always returns pass for all 6 steps (search, detail, revalidation, booking, status, cancel)"
+  }
+}

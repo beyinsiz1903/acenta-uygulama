@@ -422,7 +422,7 @@ async def get_certification_history(db, supplier_code: str) -> dict[str, Any]:
     return {"supplier_code": supplier_code, "history": history}
 
 
-async def toggle_go_live(db, supplier_code: str, enabled: bool) -> dict[str, Any]:
+async def toggle_go_live(db, supplier_code: str, enabled: bool, actor: str = "system") -> dict[str, Any]:
     """Enable or disable go-live for a supplier. Requires 80%+ certification score."""
     if supplier_code not in SUPPLIER_REGISTRY:
         return {"error": f"Unknown supplier: {supplier_code}"}
@@ -440,7 +440,7 @@ async def toggle_go_live(db, supplier_code: str, enabled: bool) -> dict[str, Any
         if cert.get("score", 0) < GO_LIVE_THRESHOLD:
             return {"error": f"Cannot go live — certification score {cert['score']}% is below {GO_LIVE_THRESHOLD}% threshold."}
 
-    new_status = "live" if enabled else "certified"
+    new_status = "live" if enabled else "pricing_configured" if doc.get("pricing_config") else "certified"
     update = {
         "status": new_status,
         "go_live": enabled,
@@ -455,13 +455,30 @@ async def toggle_go_live(db, supplier_code: str, enabled: bool) -> dict[str, Any
     )
 
     config = SUPPLIER_REGISTRY[supplier_code]
-    action = "activated" if enabled else "deactivated"
+    action_label = "activated" if enabled else "deactivated"
+
+    # Log to activity timeline
+    try:
+        from app.services.activity_timeline_service import record_event
+        await record_event(
+            actor=actor,
+            action="supplier_go_live" if enabled else "supplier_deactivated",
+            entity_type="supplier",
+            entity_id=supplier_code,
+            org_id="default_org",
+            before={"status": doc.get("status"), "go_live": doc.get("go_live", False)},
+            after={"status": new_status, "go_live": enabled},
+            metadata={"supplier_name": config["name"], "cert_score": doc.get("certification", {}).get("score")},
+        )
+    except Exception as e:
+        logger.warning("Failed to log go-live event: %s", e)
+
     return {
         "supplier_code": supplier_code,
         "name": config["name"],
         "status": new_status,
         "go_live": enabled,
-        "message": f"{config['name']} has been {action} for production traffic.",
+        "message": f"{config['name']} has been {action_label} for production traffic.",
     }
 
 
@@ -490,6 +507,7 @@ async def get_supplier_detail(db, supplier_code: str) -> dict[str, Any]:
         base["credentials_preview"] = doc.get("credentials_preview", {})
         base["health_check"] = doc.get("health_check")
         base["certification"] = doc.get("certification")
+        base["pricing_config"] = doc.get("pricing_config")
         base["go_live"] = doc.get("go_live", False)
         base["go_live_at"] = doc.get("go_live_at")
         base["env"] = doc.get("env", "sandbox")
@@ -499,12 +517,105 @@ async def get_supplier_detail(db, supplier_code: str) -> dict[str, Any]:
         base["credentials_preview"] = {}
         base["health_check"] = None
         base["certification"] = None
+        base["pricing_config"] = None
         base["go_live"] = False
         base["go_live_at"] = None
         base["env"] = "sandbox"
         base["updated_at"] = None
 
     return base
+
+
+async def save_pricing_setup(db, supplier_code: str, pricing: dict[str, Any]) -> dict[str, Any]:
+    """Save pricing configuration for a supplier during onboarding."""
+    if supplier_code not in SUPPLIER_REGISTRY:
+        return {"error": f"Unknown supplier: {supplier_code}"}
+
+    doc = await db["supplier_onboarding"].find_one(
+        {"supplier_code": supplier_code}, {"_id": 0}
+    )
+    if not doc:
+        return {"error": "No onboarding record found. Start from Step 1."}
+
+    pricing_config = {
+        "base_markup_pct": float(pricing.get("base_markup_pct", 10)),
+        "channels": pricing.get("channels", {
+            "b2b": {"adjustment_pct": -5, "active": True},
+            "b2c": {"adjustment_pct": 3, "active": True},
+            "corporate": {"adjustment_pct": -8, "active": True},
+            "whitelabel": {"adjustment_pct": -3, "active": True},
+        }),
+        "agency_tiers": pricing.get("agency_tiers", {
+            "starter": {"discount_pct": 0},
+            "standard": {"discount_pct": 2},
+            "premium": {"discount_pct": 5},
+            "enterprise": {"discount_pct": 8},
+        }),
+        "guardrails": {
+            "min_margin_pct": float(pricing.get("min_margin_pct", 5)),
+            "max_discount_pct": float(pricing.get("max_discount_pct", 25)),
+        },
+        "configured_at": _ts(),
+    }
+
+    await db["supplier_onboarding"].update_one(
+        {"supplier_code": supplier_code},
+        {"$set": {
+            "pricing_config": pricing_config,
+            "status": "pricing_configured" if doc.get("status") in ("certified", "pricing_configured") else doc.get("status"),
+            "updated_at": _ts(),
+        }},
+    )
+
+    config = SUPPLIER_REGISTRY[supplier_code]
+    return {
+        "supplier_code": supplier_code,
+        "name": config["name"],
+        "pricing_config": pricing_config,
+        "status": "pricing_configured",
+        "message": f"Pricing configured for {config['name']}.",
+    }
+
+
+async def get_pricing_setup(db, supplier_code: str) -> dict[str, Any]:
+    """Get pricing configuration for a supplier."""
+    if supplier_code not in SUPPLIER_REGISTRY:
+        return {"error": f"Unknown supplier: {supplier_code}"}
+
+    doc = await db["supplier_onboarding"].find_one(
+        {"supplier_code": supplier_code}, {"_id": 0}
+    )
+    if not doc or not doc.get("pricing_config"):
+        # Return defaults
+        return {
+            "supplier_code": supplier_code,
+            "pricing_config": {
+                "base_markup_pct": 10,
+                "channels": {
+                    "b2b": {"adjustment_pct": -5, "active": True},
+                    "b2c": {"adjustment_pct": 3, "active": True},
+                    "corporate": {"adjustment_pct": -8, "active": True},
+                    "whitelabel": {"adjustment_pct": -3, "active": True},
+                },
+                "agency_tiers": {
+                    "starter": {"discount_pct": 0},
+                    "standard": {"discount_pct": 2},
+                    "premium": {"discount_pct": 5},
+                    "enterprise": {"discount_pct": 8},
+                },
+                "guardrails": {
+                    "min_margin_pct": 5,
+                    "max_discount_pct": 25,
+                },
+                "configured_at": None,
+            },
+            "is_default": True,
+        }
+    return {
+        "supplier_code": supplier_code,
+        "pricing_config": doc["pricing_config"],
+        "is_default": False,
+    }
 
 
 async def reset_onboarding(db, supplier_code: str) -> dict[str, Any]:

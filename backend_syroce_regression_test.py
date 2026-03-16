@@ -10,7 +10,7 @@ from typing import Dict, Tuple, Optional
 
 class SyroceBackendRegressionTest:
     def __init__(self):
-        self.base_url = "https://settlement-workflow-1.preview.emergentagent.com/api"
+        self.base_url = "https://versioning-hub-2.preview.emergentagent.com/api"
         self.results = []
         self.session = requests.Session()
         

@@ -13,7 +13,7 @@ import json
 import sys
 
 # Backend URL
-BACKEND_URL = "https://settlement-workflow-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://versioning-hub-2.preview.emergentagent.com/api"
 
 # Test credentials from review request
 ADMIN_EMAIL = "admin@acenta.test"

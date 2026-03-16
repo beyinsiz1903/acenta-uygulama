@@ -112,7 +112,29 @@ async def toggle_go_live(
     db=Depends(get_db),
 ) -> dict[str, Any]:
     from app.services.supplier_onboarding_service import toggle_go_live as _toggle
-    return await _toggle(db, supplier_code, payload.get("enabled", False))
+    actor = current_user.get("email", "system")
+    return await _toggle(db, supplier_code, payload.get("enabled", False), actor=actor)
+
+
+@router.get("/pricing-setup/{supplier_code}")
+async def get_pricing_setup(
+    supplier_code: str,
+    current_user=Depends(require_roles(_ADMIN_ROLES)),
+    db=Depends(get_db),
+) -> dict[str, Any]:
+    from app.services.supplier_onboarding_service import get_pricing_setup as _get
+    return await _get(db, supplier_code)
+
+
+@router.post("/pricing-setup/{supplier_code}")
+async def save_pricing_setup(
+    supplier_code: str,
+    payload: dict = Body(...),
+    current_user=Depends(require_roles(_ADMIN_ROLES)),
+    db=Depends(get_db),
+) -> dict[str, Any]:
+    from app.services.supplier_onboarding_service import save_pricing_setup as _save
+    return await _save(db, supplier_code, payload)
 
 
 @router.post("/reset/{supplier_code}")

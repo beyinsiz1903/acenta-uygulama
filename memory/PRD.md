@@ -142,6 +142,28 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 - **Demo Seed Data**: 56 ledger entries, 5 settlement runs (all statuses), 5 agencies (2 overdue, 1 negative balance), 4 suppliers (1 overdue), 3 reconciliation periods
 - All 18 backend + all frontend tests passed (iteration_133)
 
+### Phase 2B: Financial Ledger & Settlement Workflow & Ops — COMPLETED (2026-03-16)
+**Settlement workflow state machine + Exception queue management**
+- **Settlement Workflow**: Full state machine: draft -> pending_approval -> approved -> paid / rejected -> draft
+  - POST /api/finance/settlement-runs - Create draft
+  - PATCH /{run_id}/submit, /approve, /reject, /mark-paid - State transitions
+  - POST /{run_id}/add-entries, DELETE /{run_id}/remove-entry/{entry_id} - Entry management for drafts
+  - GET /unassigned-entries - Available entries for assignment
+  - Invalid transitions return 400 with clear error messages
+- **Exception Queue**: Financial anomaly tracking and resolution
+  - GET /api/finance/exceptions (with filters: status, severity, exception_type)
+  - GET /api/finance/exceptions/stats - Stats by status and severity
+  - PATCH /{id}/resolve, /{id}/dismiss - Resolution workflows
+  - Types: amount_mismatch, duplicate_entry, currency_mismatch, missing_invoice, booking_status_conflict
+- **Backend Services**: settlement_workflow_service.py, finance_exception_service.py
+- **Frontend Pages**:
+  - SettlementRunDetailPage: Full detail view with status-aware action buttons (Submit, Approve, Reject, Mark Paid), entry table with add/remove, history timeline
+  - ExceptionQueuePage: Stats cards, triple filters (status/severity/type), exception table with view/resolve/dismiss actions, detail/resolve/dismiss dialogs
+  - Updated SettlementRunsPage: "Yeni Taslak" create button with form dialog
+  - Updated FinanceOverviewPage: Exception Kuyrugu nav card with open count
+- **Seed Data**: 6 finance exceptions (5 open, 1 resolved) covering various scenarios
+- All 24 backend + all frontend tests passed (iteration_134)
+
 ---
 
 ## Frontend Quality Score (Post P3+P4)
@@ -163,9 +185,8 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 All P0 tasks completed.
 
 ### P1 — Next Priority
-- **Phase 2B: Settlement Workflow & Reconciliation**: Settlement draft creation, approve/reject, paid marking, supplier-based filtering, exception queue, mismatch panel
 - **Activity Timeline**: Entity-based audit history (who did what)
-- **Persist Configuration**: Move Pricing Engine Configuration (Rules, Channels, Guardrails) from in-memory storage to a database
+- **Persist Configuration**: Move Pricing Engine Configuration (Rules, Channels, Guardrails) and Financial Ledger data from in-memory storage to a database
 
 ### P2
 - **TypeScript Migration**: API layer -> TanStack hooks -> design system (incremental)

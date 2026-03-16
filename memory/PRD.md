@@ -46,95 +46,80 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 ### P4: Platform Integrations — Phase 1 COMPLETED (2026-03-16)
 **Supplier Integration Blueprint + Hardening + E2E Test Flow**
 
-Delivered:
-- Supplier Integration Blueprint document
-- RateHawk sync adapter hardened with exponential backoff, jitter, retry logic
-- E2E Booking Test orchestrator
-- Sync job stability: duplicate sync prevention + stuck job detection
-- Frontend E2E Booking Test panel
-
 ### P4.2: Sync Job Stability Deep — COMPLETED (2026-03-16)
-- Job State Model, Partial Failure Handling, Retry, Circuit Breaker, Region Recovery, Stability Dashboard
 
 ### P0 Reprioritized: RateHawk Booking Flow Hardening — COMPLETED (2026-03-16)
-- ETG API v3 Compliant Booking Lifecycle — Precheck → Form → Finish → Status Poll → Cancel
-- Price revalidation with drift decision matrix
-- Async booking with 60s timeout, status polling
-- 5-scenario automated test matrix
-- Frontend Booking Flow Panel
 
 ### P1 Reprioritized: Supplier Onboarding UX — COMPLETED (2026-03-16)
-**Generic Supplier Onboarding Engine — 6-Step Wizard**
-
-Delivered:
-- **Supplier Registry**: 6 suppliers supported (RateHawk, Paximum, TBO, WTatil, Hotelbeds, Juniper)
-- **6-Step Onboarding Wizard**:
-  1. Supplier Selection (card grid dashboard)
-  2. Credential Entry (dynamic form per supplier, encrypted storage via Fernet)
-  3. Credential Validation + API Health Check (4 checks: credential valid, API reachable, rate limit OK, search endpoint working)
-  4. Sandbox Certification Tests (6-step E2E: Search → Detail → Revalidation → Booking → Status → Cancel)
-  5. Certification Report (score-based: 80%+ = Go-Live eligible)
-  6. Go-Live Gate (production traffic activation toggle)
-- **Security**: AES-encrypted credential storage, masked UI display, never logs raw credentials
-- **KPI Dashboard**: Total suppliers, live count, certified count, in-progress count
-- **Certification History**: Stored per supplier for audit trail
-
-New API endpoints:
-- `GET /api/supplier-onboarding/registry` — List available suppliers
-- `GET /api/supplier-onboarding/dashboard` — All suppliers' onboarding status
-- `GET /api/supplier-onboarding/detail/{supplier}` — Single supplier onboarding detail
-- `POST /api/supplier-onboarding/credentials` — Save encrypted credentials
-- `POST /api/supplier-onboarding/validate/{supplier}` — Validate + health check (4 checks)
-- `POST /api/supplier-onboarding/certify/{supplier}` — Run 6-step certification suite
-- `GET /api/supplier-onboarding/certification/{supplier}` — Certification report
-- `GET /api/supplier-onboarding/certification/{supplier}/history` — Certification history
-- `POST /api/supplier-onboarding/go-live/{supplier}` — Toggle go-live
-- `POST /api/supplier-onboarding/reset/{supplier}` — Reset onboarding
-
-New files:
-- `backend/app/services/supplier_onboarding_service.py` — Core onboarding service
-- `backend/app/routers/supplier_onboarding_router.py` — 10 API endpoints
-- `frontend/src/pages/admin/SupplierOnboardingPage.jsx` — Full wizard UI
-
-Updated files:
-- `backend/app/bootstrap/router_registry.py` — Registered new router
-- `frontend/src/routes/adminRoutes.jsx` — Added route and lazy import
-- `frontend/src/nav/adminNav.js` — Added navigation entry
-
-**Testing: 100% backend (25/25), 100% frontend pass rate**
-**Mode: SIMULATION (all health checks and certifications simulated until real credentials)**
 
 ### P0 Reprioritized: Supplier Certification Console — COMPLETED (2026-03-16)
-**E2E Demo Panel — Full Booking Lifecycle Visualization with Edge Cases**
+
+### Misc: WWTatil -> WTatil Rename — COMPLETED (2026-03-16)
+
+### Backend Router Refactoring — COMPLETED (2026-02-17)
+- Monolith `inventory_sync_router.py` -> 4 domain-specific files under `inventory/`
+- All 42+ endpoints verified, 50/50 tests passed
+
+### P1: Caching Layer Validation — COMPLETED (2026-03-16)
+**Redis -> MongoDB Fallback + Cache Health Dashboard**
 
 Delivered:
-- **Lifecycle View**: 6-step stepper (Search → Detail → Revalidation → Booking → Status Polling → Cancel)
-  - Per-step: status badge, latency, request_id, trace_id, supplier response summary
-- **Edge Case Scenarios**: 6 configurable scenarios
-  - Success Flow, Price Mismatch (+12% drift), Delayed Confirmation (5 rounds), Booking Timeout (30s), Cancel Success, Supplier Unavailable (HTTP 503)
-- **Certification View**: Score circle, go-live eligible badge, passed/failed/warned/skipped counts, failed steps list, warning steps list
-- **History Panel**: Past test runs with supplier filter, scenario/mode badges, score, timestamp
-- **Operational UX**: Step detail drawer, retry button, rerun failed step, dark operational UI
-
-New API endpoints:
-- `GET /api/e2e-demo/scenarios` — List 6 available test scenarios
-- `GET /api/e2e-demo/suppliers` — Supplier health summary with last test
-- `POST /api/e2e-demo/run` — Run E2E lifecycle test with scenario
-- `GET /api/e2e-demo/history` — Test run history with filters
-- `POST /api/e2e-demo/rerun-step` — Rerun single failed step
+- **Cache Metrics Collector** (`cache_metrics.py`): Centralized in-memory metrics tracking
+  - Hit/miss/fallback/stale serve counters
+  - Per-layer latency tracking (Redis, Mongo, Compute)
+  - Event history (fallback, redis_down, timeout, invalidation failures)
+  - Historical persistence to MongoDB
+- **TTL Configuration** (`cache_ttl_config.py`): Domain-driven centralized TTL management
+  - 20 cache categories with separate Redis/Mongo TTLs
+  - 6 supplier-specific TTL overrides (RateHawk, Paximum, TBO, WTatil, Hotelbeds, Juniper)
+  - Search results: 60s/180s, Hotel details: 300s/900s, Static metadata: 1800s/3600s
+  - Booking status: 15s/60s (very short for consistency)
+- **Enhanced Redis -> Mongo Fallback**: 
+  - `multilayer_cached()` now tracks latency per layer and reports metrics
+  - `redis_get/set` detect and report timeout/down events
+  - `search_inventory()` tracks fallback events during search
+- **Cache Invalidation Enhancement** (`cache_invalidation.py`):
+  - `invalidate_supplier_sync()` — Post-sync inventory/price cache purge
+  - `invalidate_booking_lifecycle()` — Post-booking/cancel availability refresh
+  - `invalidate_price_change()` — Post-price-update search cache purge
+  - All invalidation operations tracked with success/failure metrics
+- **Stale Data Detection**: MongoDB L2 cache entries track `cached_at` and `ttl_seconds`
+  - `cache_stats()` reports stale entry count
+- **Cache Health API** (`cache_health_router.py`): 8 endpoints
+  - `GET /api/admin/cache-health/overview` — Comprehensive health overview
+  - `GET /api/admin/cache-health/metrics` — Detailed metrics snapshot
+  - `GET /api/admin/cache-health/ttl-config` — Full TTL configuration
+  - `GET /api/admin/cache-health/redis/health` — Redis detailed health
+  - `GET /api/admin/cache-health/mongo/health` — MongoDB L2 health
+  - `POST /api/admin/cache-health/test-fallback` — Fallback behavior test (normal + Redis Down simulation)
+  - `POST /api/admin/cache-health/reset-metrics` — Reset counters
+  - `GET /api/admin/cache-health/history` — Historical snapshots
+- **Cache Health Dashboard** (`CacheHealthDashboardPage.jsx`):
+  - KPI cards: hit rate, miss rate, fallback count, stale serve, invalidation OK/fail
+  - Redis L1 health card (status, memory, clients, ops/sec)
+  - MongoDB L2 health card (entries, stale data, categories)
+  - Latency table (avg, min, max, p95 per layer)
+  - Fallback Test (Normal + Redis Down simulation with step-by-step results)
+  - TTL Configuration viewer (expandable, with supplier overrides)
+  - Recent Events log
+  - Metrics Reset
 
 New files:
-- `backend/app/services/e2e_demo_service.py` — E2E demo service with 6 scenarios
-- `backend/app/routers/e2e_demo_router.py` — 5 API endpoints
-- `frontend/src/pages/admin/SupplierCertificationConsolePage.jsx` — Full console UI
+- `backend/app/services/cache_metrics.py`
+- `backend/app/services/cache_ttl_config.py`
+- `backend/app/routers/cache_health_router.py`
+- `frontend/src/pages/admin/CacheHealthDashboardPage.jsx`
 
-**Testing: 100% backend (24/24), 100% frontend pass rate**
-**Mode: SIMULATION (all test responses simulated)**
+Updated files:
+- `backend/app/services/redis_cache.py` — Metrics integration in multilayer_cached, redis_get/set
+- `backend/app/services/cache_invalidation.py` — Metrics tracking + supplier sync/booking invalidation
+- `backend/app/services/mongo_cache_service.py` — Stale data detection, cached_at tracking
+- `backend/app/services/inventory_sync_service.py` — Fallback metrics in search_inventory
+- `backend/app/bootstrap/router_registry.py` — Registered cache_health_router
+- `frontend/src/routes/adminRoutes.jsx` — Added cache-health route
+- `frontend/src/nav/adminNav.js` — Added Cache Health navigation entry
 
-### Misc: WWTatil → WTatil Rename — COMPLETED (2026-03-16)
-- All 31 source files updated: `wwtatil` → `wtatil`, `WWTatil` → `WTatil`, `Wwtatil` → `Wtatil`
-- File renamed: `wwtatil_adapter.py` → `wtatil_adapter.py`
-- Database: No stale references
+**Testing: 100% backend (33/33 pytest), 100% frontend pass rate**
 
 ---
 
@@ -153,24 +138,16 @@ New files:
 
 ## Prioritized Backlog
 
-### P0 — Next Priority
-- **E2E Demo Panel (Supplier Certification Console)**: COMPLETED (2026-03-16)
-- **Backend Router Refactoring**: COMPLETED (2026-02-17)
-  - Monolith `inventory_sync_router.py` (593 lines) → 4 domain-specific files under `inventory/` package
-  - `inventory/sync_router.py` — Sync engine (trigger, status, jobs, retry, cancel, search, stats, revalidate)
-  - `inventory/booking_router.py` — Booking flow (precheck, create, status, cancel, test-matrix)
-  - `inventory/diagnostics_router.py` — Stability, supplier health/config/metrics, E2E certification
-  - `inventory/onboarding_router.py` — Supplier onboarding wizard (6-step)
-  - Old files kept as thin re-exports for backward compat
-  - All 42+ endpoints verified, 50/50 tests passed, no URL changes
+### P0 — Completed
+All P0 tasks completed.
 
-### P1
-- **P2: Caching Layer Validation**: Redis → Mongo fallback tests, invalidation correctness, TTL tuning, diagnostics API + UI
+### P1 — Next Priority
+- **Caching Layer Validation**: COMPLETED (2026-03-16)
 - **P4.4 Real Sandbox Activation**: Credential validation with real APIs, sandbox certification with live data, go-live gating
 - **Activity Timeline**: Entity-based audit history (who did what)
 
 ### P2
-- **TypeScript Migration**: API layer → TanStack hooks → design system (incremental)
+- **TypeScript Migration**: API layer -> TanStack hooks -> design system (incremental)
 - **Supplier Self-Serve Onboarding**: Partner self-service onboarding portal
 
 ### P3
@@ -189,6 +166,6 @@ New files:
 - Agency Admin: `agency1@demo.test` / `agency123`
 
 ## Known Issues
-- Redis unavailable in preview (graceful MongoDB fallback)
+- Redis unavailable in preview (graceful MongoDB fallback — verified and tested)
 - Supplier APIs in simulation mode (awaiting real credentials)
 - Nested button HTML warning in legacy code (low priority)

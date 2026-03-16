@@ -13,7 +13,7 @@ CTO-requested comprehensive frontend architecture analysis and redesign to trans
 | 3b | UX Standardization (Batch 2) | DONE | 9.0/10 |
 | 3c | UX Standardization (Batch 3) | DONE | 9.0/10 |
 | 4 | God Page Splitting (P0) | DONE | - |
-| 5 | TanStack Query Adoption (P1) | Planned | - |
+| 5 | TanStack Query Adoption (P1) | DONE | 83.3% |
 | 6 | Performance Optimization (P2) | Planned | - |
 | 7 | Enterprise UX Features (P3) | Planned | - |
 | 8 | TypeScript Migration | Backlog | - |
@@ -66,10 +66,12 @@ features/platform-hardening/
 
 ## Upcoming Tasks
 
-### P1 — TanStack Query Adoption
-- Current: ~20% adoption
-- Target: 80%+
-- Migrate useEffect+useState patterns to TanStack Query hooks
+### P1 — TanStack Query Adoption (COMPLETED 2026-03-16)
+- Target: 80%+ adoption — Achieved: **83.3%** (120/144 data-fetching files)
+- ~108 files migrated across pages, components, and contexts
+- Patterns: useQuery for data fetching, useMutation for mutations, useQueryClient for cache invalidation
+- 24 remaining legacy files (contexts, complex booking flows) — not blocking
+- Regression tested: All migrated pages verified working (test_reports/iteration_111.json)
 
 ### P2 — Performance (Phase 6)
 - Route-based code splitting
@@ -94,7 +96,7 @@ features/platform-hardening/
 | Routing | Monolithic | Domain-based |
 | Tables | 50+ custom | Unified DataTable |
 | UX Patterns | Inconsistent | Standardized (15+ pages) |
-| TanStack Query | ~5% | ~20% |
+| TanStack Query | ~5% | ~83.3% |
 | God Pages (>1000 LOC) | 3 files | 0 files |
 
 ## Test Credentials

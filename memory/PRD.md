@@ -191,6 +191,31 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 - **Frontend**: Enhanced wizard with progress bars on dashboard cards, pricing setup panel, pricing summary on go-live panel
 - All 21 backend + all frontend tests passed (iteration_136)
 
+### OMS Phase 1: Order Core Layer — COMPLETED (2026-03-16)
+**Full Order Management System foundation — booking-centric to order-centric transition**
+- **Architecture**: Order as aggregate root. Three separate status domains: Order status, Supplier booking status, Financial settlement status
+- **Data Model**: `orders`, `order_items`, `order_events` MongoDB collections
+- **State Machine**: draft → pending_confirmation → confirmed → cancel_requested → cancelled → closed (with guarded transitions)
+- **Supplier Booking Statuses**: not_started, pending, confirmed, failed, cancel_requested, cancelled
+- **Settlement Statuses**: not_settled, partially_settled, settled, reversed
+- **Event-First Model**: Append-only immutable event log with actor, before/after state, trace_id, correlation_id
+- **Backend Services**: order_service.py (CRUD, seed), order_transition_service.py (state machine), order_event_service.py (event log), order_mapping_service.py (booking→order mapping)
+- **Backend Router**: order_router.py — 15+ API endpoints under `/api/orders`
+- **API Endpoints**:
+  - POST /api/orders - Create order with items
+  - GET /api/orders - List with filters (status, channel, agency_id)
+  - GET /api/orders/{id} - Detail with items, financial_summary
+  - PATCH /api/orders/{id} - Update non-status fields
+  - POST /api/orders/{id}/confirm, /request-cancel, /cancel, /close - Explicit command endpoints
+  - POST /api/orders/{id}/items - Add item
+  - GET /api/orders/{id}/items, /events, /timeline, /financial-summary
+  - POST /api/orders/{id}/items/{item_id}/link-supplier
+  - POST /api/orders/seed
+- **Frontend**: OrdersPage (list with stats, filters, create dialog), OrderDetailPage (items table, financial summary, timeline, action buttons)
+- **Activity Timeline Integration**: All order events automatically logged to centralized audit trail
+- **Pricing Trace**: pricing_trace_id tracked on order and order_item level
+- All 23 backend + all frontend tests passed (iteration_137)
+
 ---
 
 ## Frontend Quality Score (Post P3+P4)
@@ -209,16 +234,15 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 ## Prioritized Backlog
 
 ### P0 — Completed
-All P0 tasks completed.
+All P0 tasks completed. OMS Phase 1 (Order Core Layer) completed.
 
-### P1 — Completed
-- **~~Activity Timeline~~**: → **COMPLETED (2026-03-16)**
-- **~~Configuration Versioning~~**: → **COMPLETED (2026-03-16)**
-- **Supplier Self-Serve Onboarding**: Partner self-service onboarding portal → **COMPLETED (2026-03-16)** — 6-step wizard with pricing config step
-
-### P2 — Next Priority
-- **Timeline Export (CSV → PDF)**: Export activity timeline for audit/compliance
+### P1 — Next Priority
+- **OMS Phase 2: Financial Linkage + Order Items**: Order ↔ ledger relation, financial summary, margin/commission summary, settlement reference
 - **Real RateHawk Environment Execution**: Credential-ready, needs network access
+
+### P2
+- **OMS Phase 3: Multi-product & Post-booking**: Transfer/tour/insurance items, modification, partial cancel, refund, split/merge
+- **Timeline Export (CSV → PDF)**: Export activity timeline for audit/compliance
 - **New Supplier Integrations**: Paximum, Hotelbeds, Juniper
 
 ### P3

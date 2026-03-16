@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
@@ -19,6 +20,15 @@ import {
 } from "../components/ui/dialog";
 
 function StatusBadge({ status }) {
+  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["ops", "finance", "settlements"],
+    queryFn: async () => {
+      const resp = await api.get("/ops/finance/settlements");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
   if (!status) return null;
   const tone = String(status).toLowerCase();
   if (tone === "draft") {
@@ -67,8 +77,6 @@ function CreateSettlementDialog({ open, onOpenChange, onCreated }) {
   const [supplierId, setSupplierId] = useState("");
   const [currency, setCurrency] = useState("EUR");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-
   const handleSubmit = async () => {
     if (!supplierId || !currency) {
       setError("Tedarikçi ve para birimi zorunlu.");
@@ -140,17 +148,13 @@ function CreateSettlementDialog({ open, onOpenChange, onCreated }) {
 }
 
 export default function AdminSettlementRunsPage() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const [supplierId, setSupplierId] = useState("");
+    const [supplierId, setSupplierId] = useState("");
   const [currency, setCurrency] = useState("");
   const [status, setStatus] = useState("");
 
   const [createOpen, setCreateOpen] = useState(false);
 
-  async function load() {
+  async function refetch() {
     setLoading(true);
     setError("");
     try {
@@ -169,10 +173,6 @@ export default function AdminSettlementRunsPage() {
     }
   }
 
-  useEffect(() => {
-    load();
-     
-  }, []);
 
   const totals = useMemo(() => {
     let totalNet = 0;
@@ -197,7 +197,7 @@ export default function AdminSettlementRunsPage() {
         <ErrorState
           title="Settlement run listesi yüklenemedi"
           description={error}
-          onRetry={load}
+          onRetry={() => refetch()}
           className="max-w-xl"
         />
       )}
@@ -213,7 +213,7 @@ export default function AdminSettlementRunsPage() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+                <Button variant="outline" size="sm" onClick={() => refetch()} disabled={loading}>
                   <RefreshCw className="h-3 w-3 mr-1" /> Yenile
                 </Button>
                 <Button size="sm" onClick={() => setCreateOpen(true)}>

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -276,32 +277,33 @@ function InvoiceDialog({ reservationId, guestName, onSave, onClose }) {
 }
 
 function FolioDetailPanel({ reservationId, onClose }) {
-  const [folio, setFolio] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [showCharge, setShowCharge] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
 
-  const loadFolio = useCallback(async () => {
-    try {
+  const { data: folio, isLoading: loading, refetch: loadFolio } = useQuery({
+    queryKey: ["pms", "folio", reservationId],
+    queryFn: async () => {
       const res = await api.get(`/agency/pms/accounting/folios/${reservationId}`);
-      setFolio(res.data);
-    } catch {
-      toast.error("Folio yuklenemedi");
-    } finally { setLoading(false); }
-  }, [reservationId]);
+      return res.data;
+    },
+    staleTime: 15_000,
+    onError: () => toast.error("Folio yuklenemedi"),
+  });
 
-  useEffect(() => { loadFolio(); }, [loadFolio]);
-
-  const handleDeleteTx = async (txId) => {
-    if (!window.confirm("Bu islem silinsin mi?")) return;
-    try {
-      await api.delete(`/agency/pms/accounting/transactions/${txId}`);
+  const deleteTxMutation = useMutation({
+    mutationFn: (txId) => api.delete(`/agency/pms/accounting/transactions/${txId}`),
+    onSuccess: () => {
       toast.success("Islem silindi");
       loadFolio();
-    } catch {
-      toast.error("Silme basarisiz");
-    }
+    },
+    onError: () => toast.error("Silme basarisiz"),
+  });
+
+  const handleDeleteTx = (txId) => {
+    if (!window.confirm("Bu islem silinsin mi?")) return;
+    deleteTxMutation.mutate(txId);
   };
 
   if (loading) {
@@ -433,32 +435,28 @@ function FolioDetailPanel({ reservationId, onClose }) {
 }
 
 export default function PMSAccountingPage() {
-  const [summary, setSummary] = useState({});
-  const [folios, setFolios] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedFolio, setSelectedFolio] = useState(null);
 
-  const loadData = useCallback(async () => {
-    try {
+  const { data: accountingData, isLoading: loading, refetch } = useQuery({
+    queryKey: ["pms", "accounting", searchQuery, statusFilter],
+    queryFn: async () => {
       const params = [];
       if (searchQuery) params.push(`search=${encodeURIComponent(searchQuery)}`);
       if (statusFilter !== "all") params.push(`status=${statusFilter}`);
       const qs = params.length ? `?${params.join("&")}` : "";
-
       const [summaryRes, foliosRes] = await Promise.all([
         api.get("/agency/pms/accounting/summary"),
         api.get(`/agency/pms/accounting/folios${qs}`),
       ]);
-      setSummary(summaryRes.data);
-      setFolios(foliosRes.data.items || []);
-    } catch {
-      toast.error("Muhasebe verisi yuklenemedi");
-    } finally { setLoading(false); }
-  }, [searchQuery, statusFilter]);
-
-  useEffect(() => { loadData(); }, [loadData]);
+      return { summary: summaryRes.data, folios: foliosRes.data.items || [] };
+    },
+    staleTime: 30_000,
+    onError: () => toast.error("Muhasebe verisi yuklenemedi"),
+  });
+  const summary = accountingData?.summary || {};
+  const folios = accountingData?.folios || [];
 
   if (loading) {
     return (
@@ -555,7 +553,7 @@ export default function PMSAccountingPage() {
       {selectedFolio && (
         <FolioDetailPanel
           reservationId={selectedFolio}
-          onClose={() => { setSelectedFolio(null); loadData(); }}
+          onClose={() => { setSelectedFolio(null); refetch(); }}
         />
       )}
     </div>

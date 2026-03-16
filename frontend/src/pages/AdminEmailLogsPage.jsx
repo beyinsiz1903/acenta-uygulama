@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, RefreshCw, Search } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
 
@@ -56,42 +57,29 @@ function formatDate(iso) {
 }
 
 export default function AdminEmailLogsPage() {
+  const queryClient = useQueryClient();
   const [status, setStatus] = useState("");
   const [eventType, setEventType] = useState("");
   const [query, setQuery] = useState("");
 
-  const [items, setItems] = useState([]);
-  const [nextCursor, setNextCursor] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
   const [retryingId, setRetryingId] = useState(null);
 
-  async function load(cursor) {
-    setLoading(true);
-    setError("");
-    try {
+  const { data: emailData, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "email-outbox", status, eventType, query],
+    queryFn: async () => {
       const params = { limit: 50 };
       if (status) params.status = status;
       if (eventType) params.event_type = eventType;
       if (query) params.q = query;
-      if (cursor) params.cursor = cursor;
-
       const resp = await api.get("/admin/email-outbox", { params });
       const data = resp.data || { items: [], next_cursor: null };
-      setItems(data.items || []);
-      setNextCursor(data.next_cursor || null);
-    } catch (e) {
-      setError(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    load();
-     
-  }, []);
+      return data;
+    },
+    staleTime: 15_000,
+  });
+  const items = emailData?.items || [];
+  const nextCursor = emailData?.next_cursor || null;
+  const error = fetchError ? apiErrorMessage(fetchError) : "";
 
   const sorted = useMemo(() => {
     return [...(items || [])].sort(
@@ -99,18 +87,16 @@ export default function AdminEmailLogsPage() {
     );
   }, [items]);
 
+  const retryMutation = useMutation({
+    mutationFn: (jobId) => api.post(`/admin/email-outbox/${jobId}/retry`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "email-outbox"] }),
+    onError: (e) => alert(apiErrorMessage(e)),
+  });
+
   async function handleRetry(job) {
     if (!job || job.status === "sent") return;
     setRetryingId(job.id);
-    try {
-      await api.post(`/admin/email-outbox/${job.id}/retry`);
-      // optimistic: reload list
-      await load();
-    } catch (e) {
-      setError(apiErrorMessage(e));
-    } finally {
-      setRetryingId(null);
-    }
+    retryMutation.mutate(job.id, { onSettled: () => setRetryingId(null) });
   }
 
   return (
@@ -124,7 +110,7 @@ export default function AdminEmailLogsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => load()} disabled={loading}>
+          <Button variant="outline" onClick={() => refetch()} disabled={loading}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Yenile
           </Button>
@@ -173,7 +159,7 @@ export default function AdminEmailLogsPage() {
           <div className="grid gap-1 md:col-span-1">
             <div className="text-xs text-muted-foreground">&nbsp;</div>
             <div className="flex gap-2">
-              <Button onClick={() => load()} disabled={loading}>
+              <Button onClick={() => refetch()} disabled={loading}>
                 <Search className="h-4 w-4 mr-2" />
                 Filtrele
               </Button>
@@ -183,7 +169,7 @@ export default function AdminEmailLogsPage() {
                   setStatus("");
                   setEventType("");
                   setQuery("");
-                  setTimeout(() => load(), 0);
+                  refetch();
                 }}
                 disabled={loading}
               >
@@ -287,7 +273,7 @@ export default function AdminEmailLogsPage() {
 
       {nextCursor && (
         <div className="flex justify-center">
-          <Button variant="outline" onClick={() => load(nextCursor)} disabled={loading}>
+          <Button variant="outline" onClick={() => refetch()} disabled={loading}>
             Daha fazla yükle
           </Button>
         </div>

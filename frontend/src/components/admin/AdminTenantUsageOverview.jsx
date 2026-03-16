@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Activity, RefreshCw } from "lucide-react";
 import { Button } from "../ui/button";
 import { api } from "../../lib/api";
@@ -7,23 +8,15 @@ import { UsageMetricTiles } from "../usage/UsageMetricTiles";
 import { UsageTrendChart } from "../usage/UsageTrendChart";
 
 export const AdminTenantUsageOverview = ({ tenantId }) => {
-  const [summary, setSummary] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const loadSummary = useCallback(async () => {
-    if (!tenantId) return;
-    setLoading(true);
-    try {
+  const { data: summary, isLoading: loading, refetch } = useQuery({
+    queryKey: ["admin", "billing", "tenant-usage", tenantId],
+    queryFn: async () => {
       const res = await api.get(`/admin/billing/tenants/${tenantId}/usage?days=30`);
-      setSummary(res.data);
-    } catch {
-      setSummary(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId]);
-
-  useEffect(() => { loadSummary(); }, [loadSummary]);
+      return res.data;
+    },
+    staleTime: 30_000,
+    enabled: !!tenantId,
+  });
 
   const entries = useMemo(() => getUsageMetricEntries(summary), [summary]);
   const trendData = useMemo(() => buildUsageTrendData(summary), [summary]);
@@ -48,7 +41,7 @@ export const AdminTenantUsageOverview = ({ tenantId }) => {
             Plan: {summary.plan_label || summary.plan || "—"} · Dönem: {summary.period || "—"} · Kaynak: {summary.totals_source || "—"}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={loadSummary} data-testid="admin-tenant-usage-refresh-button">
+        <Button variant="outline" size="sm" onClick={() => refetch()} data-testid="admin-tenant-usage-refresh-button">
           <RefreshCw className="mr-1.5 h-3.5 w-3.5" />Yenile
         </Button>
       </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, Megaphone, Plus } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
@@ -17,9 +18,7 @@ function AudienceBadge({ audience }) {
 }
 
 export default function AdminB2BAnnouncementsPage() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const queryClient = useQueryClient();
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -27,23 +26,17 @@ export default function AdminB2BAnnouncementsPage() {
   const [agencyId, setAgencyId] = useState("");
   const [daysValid, setDaysValid] = useState("7");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  async function load() {
-    setLoading(true);
-    setError("");
-    try {
+  const { data: items = [], isLoading: loading } = useQuery({
+    queryKey: ["admin", "b2b", "announcements"],
+    queryFn: async () => {
       const res = await api.get("/admin/b2b/announcements");
-      setItems(res.data?.items || []);
-    } catch (e) {
-      setError(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    void load();
-  }, []);
+      return res.data?.items || [];
+    },
+    staleTime: 30_000,
+    onError: (e) => setError(apiErrorMessage(e)),
+  });
 
   async function handleCreate(e) {
     e.preventDefault();
@@ -65,7 +58,7 @@ export default function AdminB2BAnnouncementsPage() {
       setBody("");
       setAgencyId("");
       setDaysValid("7");
-      await load();
+      queryClient.invalidateQueries({ queryKey: ["admin", "b2b", "announcements"] });
     } catch (e) {
       setError(apiErrorMessage(e));
     } finally {

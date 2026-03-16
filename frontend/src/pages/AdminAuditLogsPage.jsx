@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, ClipboardCopy, RefreshCw, Search } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
 
@@ -69,37 +70,24 @@ export default function AdminAuditLogsPage() {
   const [range, setRange] = useState("24h");
   const [limit, setLimit] = useState(200);
 
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
   const [selected, setSelected] = useState(null);
   const [open, setOpen] = useState(false);
 
-  async function load() {
-    setLoading(true);
-    setError("");
-    try {
+  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["audit", "logs", action, targetType, targetId, actorEmail, range, limit],
+    queryFn: async () => {
       const params = { limit: Number(limit || 200) };
       if (action) params.action = action;
       if (targetType) params.target_type = targetType;
       if (targetId) params.target_id = targetId;
       if (actorEmail) params.actor_email = actorEmail;
       if (range) params.range = range;
-
       const resp = await api.get("/audit/logs", { params });
-      setItems(resp.data || []);
-    } catch (e) {
-      setError(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    load();
-     
-  }, []);
+      return resp.data || [];
+    },
+    staleTime: 15_000,
+  });
+  const error = fetchError ? apiErrorMessage(fetchError) : "";
 
   const diffCount = (it) => {
     const diff = it?.diff || {};
@@ -142,7 +130,7 @@ export default function AdminAuditLogsPage() {
         />
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={load} disabled={loading}>
+          <Button variant="outline" onClick={() => refetch()} disabled={loading}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Yenile
           </Button>
@@ -204,7 +192,7 @@ export default function AdminAuditLogsPage() {
         </div>
 
         <div className="mt-3 flex items-center gap-2">
-          <Button onClick={load} disabled={loading}>
+          <Button onClick={() => refetch()} disabled={loading}>
             <Search className="h-4 w-4 mr-2" />
             Filtrele
           </Button>
@@ -217,7 +205,7 @@ export default function AdminAuditLogsPage() {
               setActorEmail("");
               setRange("24h");
               setLimit(200);
-              setTimeout(load, 0);
+              refetch();
             }}
             disabled={loading}
           >
@@ -242,7 +230,7 @@ export default function AdminAuditLogsPage() {
             <ErrorState
               title="Audit log listesi yrklenemedi"
               description={error}
-              onRetry={load}
+              onRetry={() => refetch()}
               compact
             />
           </div>

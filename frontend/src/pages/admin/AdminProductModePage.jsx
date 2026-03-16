@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, getUser } from "../../lib/api";
 import { useProductMode } from "../../contexts/ProductModeContext";
 import { getActiveTenantId } from "../../lib/tenantContext";
@@ -31,11 +32,19 @@ const MODE_META = {
 const MODES_LIST = ["lite", "pro", "enterprise"];
 
 export default function AdminProductModePage() {
+  const { data: preview = null, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["system", "product-mode"],
+    queryFn: async () => {
+      const resp = await api.get("/system/product-mode");
+      return resp.data || null;
+    },
+    staleTime: 30_000,
+  });
+  const fetchErrorMsg = fetchError ? (typeof apiErrorMessage === 'function' ? apiErrorMessage(fetchError) : fetchError.message) : "";
+
   const { refresh: refreshMode } = useProductMode();
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [tenantMode, setTenantMode] = useState("enterprise");
-  const [preview, setPreview] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingMode, setPendingMode] = useState(null);
   const [error, setError] = useState(null);
@@ -51,7 +60,6 @@ export default function AdminProductModePage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetchCurrentMode(); }, [fetchCurrentMode]);
 
   const loadPreview = useCallback(async (targetMode) => {
     if (!tenantId) return;

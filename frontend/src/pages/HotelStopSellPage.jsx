@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, Calendar, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
 
@@ -29,10 +30,7 @@ const ROOM_TYPES = [
 ];
 
 export default function HotelStopSellPage() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -42,22 +40,15 @@ export default function HotelStopSellPage() {
   const [reason, setReason] = useState("");
   const [isActive, setIsActive] = useState(true);
 
-  async function load() {
-    setLoading(true);
-    setError("");
-    try {
+  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["hotel", "stop-sell"],
+    queryFn: async () => {
       const resp = await api.get("/hotel/stop-sell");
-      setItems(resp.data || []);
-    } catch (e) {
-      setError(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    load();
-  }, []);
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+  const error = fetchError ? apiErrorMessage(fetchError) : "";
 
   const sorted = useMemo(() => {
     return [...(items || [])].sort(
@@ -83,7 +74,7 @@ export default function HotelStopSellPage() {
       setReason("");
       setIsActive(true);
       setRoomType("standard");
-      await load();
+      queryClient.invalidateQueries({ queryKey: ["hotel"] });
     } catch (e) {
       setError(apiErrorMessage(e));
     } finally {
@@ -100,7 +91,7 @@ export default function HotelStopSellPage() {
         reason: item.reason,
         is_active: !item.is_active,
       });
-      await load();
+      queryClient.invalidateQueries({ queryKey: ["hotel"] });
     } catch (e) {
       setError(apiErrorMessage(e));
     }
@@ -114,10 +105,10 @@ export default function HotelStopSellPage() {
 
     try {
       await api.delete(`/hotel/stop-sell/${item.id}`);
-      await load();
+      queryClient.invalidateQueries({ queryKey: ["hotel"] });
     } catch (e) {
       setError(apiErrorMessage(e));
-      await load();
+      queryClient.invalidateQueries({ queryKey: ["hotel"] });
     }
   }
 
@@ -132,7 +123,7 @@ export default function HotelStopSellPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={load} disabled={loading}>
+          <Button variant="outline" onClick={() => refetch()} disabled={loading}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Yenile
           </Button>

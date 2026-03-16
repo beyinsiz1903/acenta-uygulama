@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Hotel, AlertCircle, Loader2, Plus, X } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiErrorMessage } from "../lib/api";
 import { formatDateTime, getActiveStatus, safeName } from "../utils/formatters";
 import {
@@ -18,11 +19,8 @@ import { Checkbox } from "../components/ui/checkbox";
 import { toast } from "sonner";
 
 export default function AdminHotelsPage() {
-  const [hotels, setHotels] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
-  const [createLoading, setCreateLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     city: "",
@@ -31,101 +29,73 @@ export default function AdminHotelsPage() {
   });
   const [formError, setFormError] = useState("");
 
-  async function handleToggleForceSales(hotel) {
-    const current = Boolean(hotel.force_sales_open);
-    try {
-      let payload;
-      if (!current) {
-        const reason = window.prompt(
-          "Geçici satış açma sebebi (kısa not):",
-          hotel.force_sales_open_reason || ""
-        );
-        if (reason === null) {
-          return; // kullanıcı iptal etti
-        }
-        const trimmed = reason.trim();
-        if (!trimmed) {
-          toast.error("Override açmak için kısa bir sebep yazmalısınız.");
-          return;
-        }
-        payload = { force_sales_open: true, ttl_hours: 6, reason: trimmed };
-      } else {
-        payload = { force_sales_open: false };
-      }
+  const { data: hotels = [], isLoading: loading, error: fetchError } = useQuery({
+    queryKey: ["admin", "hotels"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/hotels/");
+      return (resp.data || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    },
+    staleTime: 30_000,
+  });
+  const error = fetchError ? apiErrorMessage(fetchError) : "";
 
-      await api.patch(`/admin/hotels/${hotel.id}/force-sales`, payload);
+  const toggleForceSalesMutation = useMutation({
+    mutationFn: ({ hotelId, payload }) => api.patch(`/admin/hotels/${hotelId}/force-sales`, payload),
+    onSuccess: (_, { payload }) => {
       toast.success(
-        !current
+        payload.force_sales_open
           ? "Otel geçici olarak full satışa açıldı (stop-sell & allotment yok sayılacak, 6 saat sonra otomatik kapanır)."
           : "Otel satış override ayarı kapatıldı. Stop-sell ve allotment kuralları tekrar devrede."
       );
-      await loadHotels();
-    } catch (err) {
-      console.error("[AdminHotels] Force sales toggle error:", err);
-      toast.error(apiErrorMessage(err));
-    }
-  }
+      queryClient.invalidateQueries({ queryKey: ["admin", "hotels"] });
+    },
+    onError: (e) => toast.error(apiErrorMessage(e)),
+  });
 
-  useEffect(() => {
-    loadHotels();
-  }, []);
-
-  async function loadHotels() {
-    setLoading(true);
-    setError("");
-    try {
-      const resp = await api.get("/admin/hotels/");
-      console.log("[AdminHotels] Loaded:", resp.data?.length || 0);
-      const sorted = (resp.data || []).sort(
-        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+  async function handleToggleForceSales(hotel) {
+    const current = Boolean(hotel.force_sales_open);
+    let payload;
+    if (!current) {
+      const reason = window.prompt(
+        "Geçici satış açma sebebi (kısa not):",
+        hotel.force_sales_open_reason || ""
       );
-      setHotels(sorted);
-    } catch (err) {
-      console.error("[AdminHotels] Load error:", err);
-      setError(apiErrorMessage(err));
-    } finally {
-      setLoading(false);
+      if (reason === null) return;
+      const trimmed = reason.trim();
+      if (!trimmed) {
+        toast.error("Override açmak için kısa bir sebep yazmalısınız.");
+        return;
+      }
+      payload = { force_sales_open: true, ttl_hours: 6, reason: trimmed };
+    } else {
+      payload = { force_sales_open: false };
     }
+    toggleForceSalesMutation.mutate({ hotelId: hotel.id, payload });
   }
 
-  async function handleCreate(e) {
-    e.preventDefault();
-    setFormError("");
-
-    // Validation
-    const name = formData.name.trim();
-    if (!name) {
-      setFormError("Otel adı boş olamaz");
-      return;
-    }
-    if (name.length < 2) {
-      setFormError("Otel adı en az 2 karakter olmalı");
-      return;
-    }
-
-    setCreateLoading(true);
-    try {
-      // Explicit defaults
-      const payload = {
-        name,
-        city: formData.city.trim() || undefined,
-        country: formData.country.trim() || "TR",
-        active: formData.active ?? true,
-      };
-
-      await api.post("/admin/hotels", payload);
-      console.log("[AdminHotels] Created:", name);
+  const createMutation = useMutation({
+    mutationFn: (payload) => api.post("/admin/hotels", payload),
+    onSuccess: () => {
       toast.success("Otel oluşturuldu");
       setFormData({ name: "", city: "", country: "TR", active: true });
       setShowForm(false);
-      // Refresh list
-      await loadHotels();
-    } catch (err) {
-      console.error("[AdminHotels] Create error:", err);
-      setFormError(apiErrorMessage(err));
-    } finally {
-      setCreateLoading(false);
-    }
+      queryClient.invalidateQueries({ queryKey: ["admin", "hotels"] });
+    },
+    onError: (e) => setFormError(apiErrorMessage(e)),
+  });
+
+  function handleCreate(e) {
+    e.preventDefault();
+    setFormError("");
+    const name = formData.name.trim();
+    if (!name) { setFormError("Otel adı boş olamaz"); return; }
+    if (name.length < 2) { setFormError("Otel adı en az 2 karakter olmalı"); return; }
+    createMutation.mutate({
+      name,
+      city: formData.city.trim() || undefined,
+      country: formData.country.trim() || "TR",
+      active: formData.active ?? true,
+    });
   }
 
   // Loading state
@@ -165,7 +135,7 @@ export default function AdminHotelsPage() {
             <p className="text-sm text-muted-foreground mt-1">{error}</p>
           </div>
           <button
-            onClick={loadHotels}
+            onClick={() => queryClient.invalidateQueries({ queryKey: ["admin", "hotels"] })}
             className="mt-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
           >
             Tekrar Dene
@@ -203,7 +173,7 @@ export default function AdminHotelsPage() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Örn: Grand Hotel Istanbul"
-                disabled={createLoading}
+                disabled={createMutation.isPending}
               />
             </div>
 
@@ -215,7 +185,7 @@ export default function AdminHotelsPage() {
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                   placeholder="Örn: İstanbul"
-                  disabled={createLoading}
+                  disabled={createMutation.isPending}
                 />
               </div>
 
@@ -226,7 +196,7 @@ export default function AdminHotelsPage() {
                   value={formData.country}
                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                   placeholder="TR"
-                  disabled={createLoading}
+                  disabled={createMutation.isPending}
                 />
               </div>
             </div>
@@ -236,7 +206,7 @@ export default function AdminHotelsPage() {
                 id="hotel-active"
                 checked={formData.active}
                 onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
-                disabled={createLoading}
+                disabled={createMutation.isPending}
               />
               <Label htmlFor="hotel-active" className="cursor-pointer">
                 Aktif
@@ -248,9 +218,9 @@ export default function AdminHotelsPage() {
             )}
 
             <div className="flex gap-2">
-              <Button type="submit" disabled={createLoading} className="gap-2">
-                {createLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {createLoading ? "Oluşturuluyor..." : "Oluştur"}
+              <Button type="submit" disabled={createMutation.isPending} className="gap-2">
+                {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                {createMutation.isPending ? "Oluşturuluyor..." : "Oluştur"}
               </Button>
             </div>
           </form>

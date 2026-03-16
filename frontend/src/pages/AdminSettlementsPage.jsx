@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Save, Download, RefreshCw, AlertCircle, Filter } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 import { api, apiErrorMessage } from "../lib/api";
 import PageHeader from "../components/PageHeader";
@@ -158,57 +159,52 @@ function Filters({ dateFrom, dateTo, agencyId, onChange, loading, onSubmit, onDo
 }
 
 export default function AdminSettlementsPage() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [agencyId, setAgencyId] = useState("");
 
-  async function load(format = "json") {
-    setLoading(true);
-    setError("");
+  const { data: settlementData, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "settlements", dateFrom, dateTo, agencyId],
+    queryFn: async () => {
+      const params = {};
+      if (dateFrom) params.date_from = dateFrom;
+      if (dateTo) params.date_to = dateTo;
+      if (agencyId) params.agency_id = agencyId;
+      const resp = await api.get("/admin/settlements", { params });
+      return resp.data || {};
+    },
+    staleTime: 30_000,
+    onSuccess: (data) => {
+      if (!dateFrom && data.date_from) setDateFrom(data.date_from.slice(0, 10));
+      if (!dateTo && data.date_to) setDateTo(data.date_to.slice(0, 10));
+    },
+  });
+  const items = settlementData?.items || [];
+  const error = fetchError ? apiErrorMessage(fetchError) : "";
+
+  async function onDownloadCsv() {
     try {
       const params = {};
       if (dateFrom) params.date_from = dateFrom;
       if (dateTo) params.date_to = dateTo;
       if (agencyId) params.agency_id = agencyId;
-
-      if (format === "csv") {
-        const resp = await api.get("/admin/settlements", {
-          params: { ...params, format: "csv" },
-          responseType: "blob",
-        });
-        const blob = new Blob([resp.data], { type: "text/csv;charset=utf-8" });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "settlements.csv";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-        return;
-      }
-
-      const resp = await api.get("/admin/settlements", { params });
-      const data = resp.data || {};
-      setItems(data.items || []);
-      if (!dateFrom && data.date_from) setDateFrom(data.date_from.slice(0, 10));
-      if (!dateTo && data.date_to) setDateTo(data.date_to.slice(0, 10));
+      const resp = await api.get("/admin/settlements", {
+        params: { ...params, format: "csv" },
+        responseType: "blob",
+      });
+      const blob = new Blob([resp.data], { type: "text/csv;charset=utf-8" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "settlements.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
     } catch (e) {
-      setError(apiErrorMessage(e));
-      setItems([]);
-    } finally {
-      setLoading(false);
+      alert(apiErrorMessage(e));
     }
   }
-
-  useEffect(() => {
-    load("json");
-     
-  }, []);
 
   const onFilterChange = (patch) => {
     if (Object.prototype.hasOwnProperty.call(patch, "dateFrom")) setDateFrom(patch.dateFrom);
@@ -217,11 +213,7 @@ export default function AdminSettlementsPage() {
   };
 
   const onSubmitFilters = () => {
-    load("json");
-  };
-
-  const onDownloadCsv = () => {
-    load("csv");
+    refetch();
   };
 
   return (

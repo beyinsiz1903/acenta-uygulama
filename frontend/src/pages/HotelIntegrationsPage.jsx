@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, AlertCircle } from "lucide-react";
 
 import { api, apiErrorMessage, getUser } from "../lib/api";
@@ -41,7 +42,6 @@ function statusVariant(status) {
 }
 
 export default function HotelIntegrationsPage() {
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -54,19 +54,12 @@ export default function HotelIntegrationsPage() {
   const [integration, setIntegration] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  useEffect(() => {
-    load();
-     
-  }, []);
-
-  async function load() {
-    setLoading(true);
-    setError("");
-    try {
+  const { isLoading: loading, refetch } = useQuery({
+    queryKey: ["hotel", "integrations"],
+    queryFn: async () => {
       const resp = await api.get("/hotel/integrations");
       const items = resp.data?.items || [];
       const cm = items[0] || null;
-
       if (cm) {
         setIntegration(cm);
         setProvider(cm.provider || "");
@@ -74,12 +67,11 @@ export default function HotelIntegrationsPage() {
         setLastSyncAt(cm.last_sync_at || null);
         setLastError(cm.last_error || null);
       }
-    } catch (e) {
-      setError(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  }
+      return items;
+    },
+    staleTime: 30_000,
+    onError: (e) => setError(apiErrorMessage(e)),
+  });
 
   async function handleSave() {
     setError("");
@@ -99,7 +91,7 @@ export default function HotelIntegrationsPage() {
           channels: [],
         },
       });
-      await load();
+      refetch();
     } catch (e) {
       setError(apiErrorMessage(e));
     } finally {

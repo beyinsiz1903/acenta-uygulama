@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { api, apiErrorMessage } from "../lib/api";
 import PageHeader from "../components/PageHeader";
@@ -20,35 +21,23 @@ export default function AdminSupplierSettlementBridgePage() {
   const [currency, setCurrency] = useState("EUR");
   const [supplierFilter, setSupplierFilter] = useState("");
 
-  const [payableSummary, setPayableSummary] = useState(null);
-  const [settlementRuns, setSettlementRuns] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  async function load() {
-    setLoading(true);
-    setError("");
-    try {
+  const { data: bridgeData, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["ops", "finance", "supplier-bridge", currency],
+    queryFn: async () => {
       const [payableRes, runsRes] = await Promise.all([
         api.get("/ops/finance/suppliers/payable-summary", { params: { currency } }),
         api.get("/ops/finance/settlements", { params: { currency } }),
       ]);
-
-      setPayableSummary(payableRes.data || null);
-      setSettlementRuns(runsRes.data?.items || []);
-    } catch (e) {
-      setError(apiErrorMessage(e));
-      setPayableSummary(null);
-      setSettlementRuns([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    load();
-     
-  }, []);
+      return {
+        payableSummary: payableRes.data || null,
+        settlementRuns: runsRes.data?.items || [],
+      };
+    },
+    staleTime: 30_000,
+  });
+  const payableSummary = bridgeData?.payableSummary || null;
+  const settlementRuns = bridgeData?.settlementRuns || [];
+  const error = fetchError ? apiErrorMessage(fetchError) : "";
 
   const merged = useMemo(() => {
     if (!payableSummary) return [];
@@ -105,7 +94,7 @@ export default function AdminSupplierSettlementBridgePage() {
         <ErrorState
           title="Veriler yüklenemedi"
           description={error}
-          onRetry={load}
+          onRetry={() => refetch()}
           className="max-w-xl"
         />
       )}
@@ -124,7 +113,7 @@ export default function AdminSupplierSettlementBridgePage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={load}
+                  onClick={() => refetch()}
                   disabled={loading}
                 >
                   <RefreshCw className="h-3 w-3 mr-1" /> Yenile

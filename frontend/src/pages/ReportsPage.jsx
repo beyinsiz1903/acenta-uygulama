@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { BarChart3, Download, Loader2, Search, Sparkles, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -19,6 +20,15 @@ const formatTRY = (amount) => new Intl.NumberFormat("tr-TR", {
 }).format(Number(amount || 0));
 
 function ReportKpiCard({ title, value, subtitle, testId }) {
+  const { data: resSummary = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["reports", "reservations-summary"],
+    queryFn: async () => {
+      const resp = await api.get("/reports/reservations-summary");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
   return (
     <div className="rounded-[1.5rem] border bg-card/90 p-4 shadow-sm" data-testid={testId}>
       <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{title}</div>
@@ -61,11 +71,8 @@ function SearchResultGroup({ title, items, onOpen, testId }) {
 
 export default function ReportsPage() {
   const navigate = useNavigate();
-  const [resSummary, setResSummary] = useState([]);
-  const [sales, setSales] = useState([]);
-  const [overview, setOverview] = useState(null);
-  const [error, setError] = useState("");
-  const [overviewError, setOverviewError] = useState("");
+    const [sales, setSales] = useState([]);
+  const [overview, setOverview] = useState(null);  const [overviewError, setOverviewError] = useState("");
   const [days, setDays] = useState(30);
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -93,12 +100,6 @@ export default function ReportsPage() {
     }
   }, [days]);
 
-  useEffect(() => {
-    const t = setTimeout(() => {
-      load();
-    }, 0);
-    return () => clearTimeout(t);
-  }, [load]);
 
   const generateOverview = useCallback(async () => {
     setOverviewLoading(true);

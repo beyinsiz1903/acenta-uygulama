@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Activity, RefreshCw } from "lucide-react";
 import { Button } from "../ui/button";
@@ -8,22 +9,14 @@ import { UsageMetricTiles } from "./UsageMetricTiles";
 import { UsageTrialRecommendation } from "./UsageTrialRecommendation";
 
 export const DashboardUsageSummaryCard = () => {
-  const [summary, setSummary] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const loadSummary = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data: summary, isLoading: loading, refetch } = useQuery({
+    queryKey: ["tenant", "usage-summary"],
+    queryFn: async () => {
       const res = await api.get("/tenant/usage-summary?days=30");
-      setSummary(res.data);
-    } catch {
-      setSummary(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { loadSummary(); }, [loadSummary]);
+      return res.data;
+    },
+    staleTime: 60_000,
+  });
 
   const entries = useMemo(() => getUsageMetricEntries(summary), [summary]);
   const trendData = useMemo(() => buildUsageTrendData(summary), [summary]);
@@ -56,7 +49,7 @@ export const DashboardUsageSummaryCard = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={loadSummary} data-testid="dashboard-usage-refresh-button">
+          <Button variant="outline" size="sm" onClick={() => refetch()} data-testid="dashboard-usage-refresh-button">
             <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
             Yenile
           </Button>

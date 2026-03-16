@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -18,10 +19,7 @@ function FieldError({ text }) {
 }
 
 export default function AdminCouponsPage() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
-
+  const queryClient = useQueryClient();
   const [code, setCode] = useState("");
   const [discountType, setDiscountType] = useState("PERCENT");
   const [value, setValue] = useState("10");
@@ -31,24 +29,16 @@ export default function AdminCouponsPage() {
   const [perCustomerLimit, setPerCustomerLimit] = useState("");
   const [validFrom, setValidFrom] = useState("");
   const [validTo, setValidTo] = useState("");
-  const [creating, setCreating] = useState(false);
+  const [err, setErr] = useState("");
 
-  const load = async () => {
-    setLoading(true);
-    setErr("");
-    try {
+  const { data: items = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ["admin", "coupons"],
+    queryFn: async () => {
       const res = await api.get("/admin/coupons");
-      setItems(res.data || []);
-    } catch (e) {
-      setErr(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void load();
-  }, []);
+      return res.data || [];
+    },
+    staleTime: 30_000,
+  });
 
   const resetForm = () => {
     setCode("");
@@ -70,48 +60,47 @@ export default function AdminCouponsPage() {
     return d.toISOString();
   };
 
-  const create = async () => {
-    setErr("");
-    setCreating(true);
-    try {
-      const payload = {
-        code: code.trim().toUpperCase(),
-        discount_type: discountType,
-        value: Number(value) || 0,
-        scope,
-        min_total: Number(minTotal) || 0,
-        usage_limit: usageLimit ? Number(usageLimit) : null,
-        per_customer_limit: perCustomerLimit ? Number(perCustomerLimit) : null,
-        valid_from: toISO(validFrom),
-        valid_to: toISO(validTo),
-        active: true,
-      };
-
-      if (!payload.valid_from || !payload.valid_to) {
-        setErr("Geçerlilik başlangıç ve bitiş tarihleri zorunludur.");
-        setCreating(false);
-        return;
-      }
-
-      await api.post("/admin/coupons", payload);
+  const createMutation = useMutation({
+    mutationFn: (payload) => api.post("/admin/coupons", payload),
+    onSuccess: () => {
       resetForm();
-      await load();
-    } catch (e) {
-      setErr(apiErrorMessage(e));
-    } finally {
-      setCreating(false);
+      queryClient.invalidateQueries({ queryKey: ["admin", "coupons"] });
+    },
+    onError: (e) => setErr(apiErrorMessage(e)),
+  });
+
+  const create = () => {
+    setErr("");
+    const payload = {
+      code: code.trim().toUpperCase(),
+      discount_type: discountType,
+      value: Number(value) || 0,
+      scope,
+      min_total: Number(minTotal) || 0,
+      usage_limit: usageLimit ? Number(usageLimit) : null,
+      per_customer_limit: perCustomerLimit ? Number(perCustomerLimit) : null,
+      valid_from: toISO(validFrom),
+      valid_to: toISO(validTo),
+      active: true,
+    };
+
+    if (!payload.valid_from || !payload.valid_to) {
+      setErr("Geçerlilik başlangıç ve bitiş tarihleri zorunludur.");
+      return;
     }
+
+    createMutation.mutate(payload);
   };
 
-  const toggleActive = async (coupon) => {
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, active }) => api.patch(`/admin/coupons/${id}`, { active }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "coupons"] }),
+    onError: (e) => setErr(apiErrorMessage(e)),
+  });
+
+  const toggleActive = (coupon) => {
     setErr("");
-    const next = !coupon.active;
-    try {
-      await api.patch(`/admin/coupons/${coupon.id}`, { active: next });
-      await load();
-    } catch (e) {
-      setErr(apiErrorMessage(e));
-    }
+    toggleMutation.mutate({ id: coupon.id, active: !coupon.active });
   };
 
   return (
@@ -234,8 +223,8 @@ export default function AdminCouponsPage() {
         </div>
 
         <div className="flex justify-end">
-          <Button size="sm" className="h-8 text-xs" onClick={create} disabled={creating}>
-            {creating && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+          <Button size="sm" className="h-8 text-xs" onClick={create} disabled={createMutation.isPending}>
+            {createMutation.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
             Kupon Oluştur
           </Button>
         </div>
@@ -244,7 +233,7 @@ export default function AdminCouponsPage() {
       <Card className="p-3 space-y-2 text-xs">
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold">Mevcut Kuponlar</div>
-          <Button size="sm" variant="outline" onClick={load} disabled={loading}>
+          <Button size="sm" variant="outline" onClick={() => refetch()} disabled={loading}>
             {loading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
             Yenile
           </Button>

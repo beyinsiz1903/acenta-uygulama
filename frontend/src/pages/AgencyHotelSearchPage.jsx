@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { CalendarDays, Users, Loader2, AlertCircle, Search, Check } from "lucide-react";
 
@@ -39,6 +40,15 @@ const roomTypeKeyOf = (rt) =>
 // Eski /app/agency/search sayfası fallback/debug amaçlı korunur.
 
 export default function AgencyHotelSearchPage() {
+  const { data: searchResult = null, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["agency", "hotels"],
+    queryFn: async () => {
+      const resp = await api.get("/agency/hotels");
+      return resp.data || null;
+    },
+    staleTime: 30_000,
+  });
+
   const { hotelId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,13 +56,10 @@ export default function AgencyHotelSearchPage() {
   const initialHotelFromState = location.state?.hotel || null;
 
   const [hotel, setHotel] = useState(initialHotelFromState);
-  const [loading, setLoading] = useState(!initialHotelFromState);
-  const [error, setError] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
 
   // Search & selection state
-  const [searchResult, setSearchResult] = useState(null);
-  const [searchError, setSearchError] = useState("");
+    const [searchError, setSearchError] = useState("");
   const [selected, setSelected] = useState(null); // { room_type_id, rate_plan_id }
   const [lastSearchKey, setLastSearchKey] = useState(null);
   const [cacheLikely, setCacheLikely] = useState(false);
@@ -85,12 +92,6 @@ export default function AgencyHotelSearchPage() {
   const [priceSort, setPriceSort] = useState("none"); // none | asc | desc
   const [onlyAvailable, setOnlyAvailable] = useState(true);
 
-  useEffect(() => {
-    if (!initialHotelFromState) {
-      loadHotel();
-    }
-     
-  }, [hotelId]);
 
   async function loadHotel() {
     setLoading(true);

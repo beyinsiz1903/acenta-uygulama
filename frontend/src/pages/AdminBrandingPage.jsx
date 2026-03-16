@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Palette, Image, Building2, Save, RefreshCw } from "lucide-react";
@@ -70,21 +71,22 @@ export default function AdminBrandingPage() {
     support_email: "",
   });
   const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [canEditName, setCanEditName] = useState(false);
 
-  const loadSettings = useCallback(async () => {
-    try {
-      setLoading(true);
-      // Try the enterprise endpoint first, fallback to existing whitelabel
+  const { isLoading: loading } = useQuery({
+    queryKey: ["admin", "whitelabel-settings"],
+    queryFn: async () => {
       let res;
       try {
         res = await api.get("/admin/whitelabel-settings");
       } catch {
         res = await api.get("/admin/whitelabel");
       }
-      const data = res.data || {};
+      return res.data || {};
+    },
+    staleTime: 60_000,
+    onSuccess: (data) => {
       setSettings({
         company_name: data.company_name || data.brand_name || "",
         logo_url: data.logo_url || "",
@@ -93,14 +95,8 @@ export default function AdminBrandingPage() {
         support_email: data.support_email || "",
       });
       setCanEditName(data.can_edit_name !== false);
-    } catch (e) {
-      console.error("Failed to load branding settings:", e);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { loadSettings(); }, [loadSettings]);
+    },
+  });
 
   // Live preview: apply color immediately when user picks a color
   useEffect(() => {

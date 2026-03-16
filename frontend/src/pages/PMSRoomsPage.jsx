@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -150,16 +151,15 @@ function RoomFormDialog({ room, hotels, onSave, onClose }) {
 }
 
 export default function PMSRoomsPage() {
-  const [rooms, setRooms] = useState([]);
-  const [hotels, setHotels] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [selectedHotel, setSelectedHotel] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
 
-  const loadData = useCallback(async () => {
-    try {
+  const { data: roomsData, isLoading: loading, refetch } = useQuery({
+    queryKey: ["pms", "rooms", selectedHotel, selectedStatus],
+    queryFn: async () => {
       const params = [];
       if (selectedHotel !== "all") params.push(`hotel_id=${selectedHotel}`);
       if (selectedStatus !== "all") params.push(`status=${selectedStatus}`);
@@ -168,26 +168,26 @@ export default function PMSRoomsPage() {
         api.get(`/agency/pms/rooms${qs}`),
         api.get("/agency/pms/dashboard"),
       ]);
-      setRooms(roomsRes.data.items || []);
-      setHotels(dashRes.data.hotels || []);
-    } catch {
-      toast.error("Veri yuklenemedi");
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedHotel, selectedStatus]);
+      return { rooms: roomsRes.data.items || [], hotels: dashRes.data.hotels || [] };
+    },
+    staleTime: 30_000,
+    onError: () => toast.error("Veri yuklenemedi"),
+  });
+  const rooms = roomsData?.rooms || [];
+  const hotels = roomsData?.hotels || [];
 
-  useEffect(() => { loadData(); }, [loadData]);
-
-  const handleDelete = async (room) => {
-    if (!window.confirm(`${room.room_number} nolu oda silinsin mi?`)) return;
-    try {
-      await api.delete(`/agency/pms/rooms/${room.id}`);
+  const deleteMutation = useMutation({
+    mutationFn: (roomId) => api.delete(`/agency/pms/rooms/${roomId}`),
+    onSuccess: () => {
       toast.success("Oda silindi");
-      loadData();
-    } catch (err) {
-      toast.error(err.response?.data?.detail || "Silme basarisiz");
-    }
+      queryClient.invalidateQueries({ queryKey: ["pms", "rooms"] });
+    },
+    onError: (err) => toast.error(err.response?.data?.detail || "Silme basarisiz"),
+  });
+
+  const handleDelete = (room) => {
+    if (!window.confirm(`${room.room_number} nolu oda silinsin mi?`)) return;
+    deleteMutation.mutate(room.id);
   };
 
   // Group rooms by floor
@@ -330,7 +330,7 @@ export default function PMSRoomsPage() {
         <RoomFormDialog
           room={editingRoom}
           hotels={hotels}
-          onSave={() => { setShowForm(false); setEditingRoom(null); loadData(); }}
+          onSave={() => { setShowForm(false); setEditingRoom(null); refetch(); }}
           onClose={() => { setShowForm(false); setEditingRoom(null); }}
         />
       )}

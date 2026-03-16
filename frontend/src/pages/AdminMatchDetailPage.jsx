@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { api, apiErrorMessage } from "../lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -7,6 +8,15 @@ import { Badge } from "../components/ui/badge";
 import { Loader2, AlertCircle } from "lucide-react";
 
 function StatusBadge({ status }) {
+  const { data: data = null, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "matches", "_"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/matches/${id}");
+      return resp.data || null;
+    },
+    staleTime: 30_000,
+  });
+
   const s = (status || "").toLowerCase();
   if (s === "confirmed") return <Badge className="bg-emerald-600 text-white">Onaylı</Badge>;
   if (s === "cancelled") return <Badge variant="destructive">İptal</Badge>;
@@ -15,11 +25,7 @@ function StatusBadge({ status }) {
 }
 
 export default function AdminMatchDetailPage() {
-  const { id } = useParams();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [data, setData] = useState(null);
-  const [action, setAction] = useState({ status: "none", reason_code: "", note: "" });
+  const { id } = useParams();    const [action, setAction] = useState({ status: "none", reason_code: "", note: "" });
 
   useEffect(() => {
     if (!id) return;

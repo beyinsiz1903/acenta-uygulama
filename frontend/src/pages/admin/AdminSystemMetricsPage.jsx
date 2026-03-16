@@ -1,12 +1,21 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import { Button } from "../../components/ui/button";
 import { Activity, RefreshCw, Users, FileText, MessageSquare, Ticket, Clock, HardDrive, AlertTriangle } from "lucide-react";
 
 export default function AdminSystemMetricsPage() {
-  const [metrics, setMetrics] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { data: metrics = null, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["system", "metrics"],
+    queryFn: async () => {
+      const resp = await api.get("/system/metrics");
+      return resp.data || null;
+    },
+    staleTime: 30_000,
+  });
+  const error = fetchError ? (typeof apiErrorMessage === 'function' ? apiErrorMessage(fetchError) : fetchError.message) : "";
 
+    
   const load = useCallback(async () => {
     try {
       setLoading(true);
@@ -15,7 +24,6 @@ export default function AdminSystemMetricsPage() {
     } catch (e) { console.error(e); } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
 
   const MetricCard = ({ icon: Icon, label, value, suffix, color = "text-foreground" }) => (
     <div className="bg-white border rounded-lg p-4 flex items-start gap-3">
@@ -36,7 +44,7 @@ export default function AdminSystemMetricsPage() {
           <Activity className="h-6 w-6 text-blue-600" />
           <h1 className="text-2xl font-bold text-foreground">Sistem Metrikleri</h1>
         </div>
-        <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
           Yenile
         </Button>

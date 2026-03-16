@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useSearchParams } from "react-router-dom";
 
 import { Card } from "../../components/ui/card";
@@ -6,15 +7,19 @@ import { api, apiErrorMessage } from "../../lib/api";
 import { useSeo } from "../../hooks/useSeo";
 
 export default function PublicCMSPage() {
+  const { data: page = null, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["public", "cms", "pages"],
+    queryFn: async () => {
+      const resp = await api.get("/public/cms/pages/${slug}");
+      return resp.data || null;
+    },
+    staleTime: 30_000,
+  });
+
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
 
-  const org = searchParams.get("org") || "";
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [page, setPage] = useState(null);
-
+  const org = searchParams.get("org") || "";  
   useSeo({
     title: page?.seo_title || page?.title || "Sayfa",
     description: page?.seo_description || "",
@@ -27,7 +32,7 @@ export default function PublicCMSPage() {
 
     let cancelled = false;
 
-    async function load() {
+    async function refetch() {
       setLoading(true);
       setError("");
       try {
@@ -42,7 +47,7 @@ export default function PublicCMSPage() {
       }
     }
 
-    load();
+    refetch();
     return () => {
       cancelled = true;
     };

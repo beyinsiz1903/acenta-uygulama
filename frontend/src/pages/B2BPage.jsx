@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Building2, Plus, UserPlus } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
@@ -16,12 +17,18 @@ import {
 } from "../components/ui/dialog";
 
 function AgencyForm({ open, onOpenChange, onSaved }) {
+  const { data: agencies = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["b2b", "agencies"],
+    queryFn: async () => {
+      const resp = await api.get("/b2b/agencies");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
   const [name, setName] = useState("");
   const [discount, setDiscount] = useState(5);
   const [commission, setCommission] = useState(10);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
   useEffect(() => {
     if (open) {
       setName("");
@@ -97,9 +104,6 @@ function AgentForm({ open, onOpenChange, agencies, onSaved }) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("agent123");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
   useEffect(() => {
     if (open) {
       setAgencyId(agencies[0]?.id || "");
@@ -189,9 +193,7 @@ function AgentForm({ open, onOpenChange, agencies, onSaved }) {
 }
 
 export default function B2BPage() {
-  const [agencies, setAgencies] = useState([]);
-  const [error, setError] = useState("");
-  const [openAgency, setOpenAgency] = useState(false);
+    const [openAgency, setOpenAgency] = useState(false);
   const [openAgent, setOpenAgent] = useState(false);
 
   const load = useCallback(async () => {
@@ -210,12 +212,6 @@ export default function B2BPage() {
     }
   }, []);
 
-  useEffect(() => {
-    const t = setTimeout(() => {
-      load();
-    }, 0);
-    return () => clearTimeout(t);
-  }, [load]);
 
   return (
     <div className="space-y-4">

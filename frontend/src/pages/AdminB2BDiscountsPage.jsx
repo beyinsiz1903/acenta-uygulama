@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";
@@ -25,9 +26,7 @@ function validityBadge(validity) {
 
 function AdminB2BDiscountsPage() {
   const navigate = useNavigate();
-  const [groups, setGroups] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const queryClient = useQueryClient();
 
   const [name, setName] = useState("");
   const [priority, setPriority] = useState(100);
@@ -38,112 +37,81 @@ function AdminB2BDiscountsPage() {
   const [validTo, setValidTo] = useState("");
   const [percent, setPercent] = useState(5);
   const [notes, setNotes] = useState("");
+  const [error, setError] = useState("");
 
   const [expandedId, setExpandedId] = useState(null);
 
-  const loadGroups = async () => {
-    try {
-      setLoading(true);
+  const { data: groups = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ["admin", "b2b", "discount-groups"],
+    queryFn: async () => {
       const res = await api.get("/admin/b2b/discount-groups");
-      setGroups(res.data.items || []);
-      setError("");
-    } catch (e) {
-      setError(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  };
+      return res.data.items || [];
+    },
+    staleTime: 30_000,
+  });
 
-  useEffect(() => {
-    loadGroups();
-  }, []);
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["admin", "b2b", "discount-groups"] });
 
-  const onCreate = async (e) => {
+  const createMutation = useMutation({
+    mutationFn: (payload) => api.post("/admin/b2b/discount-groups", payload),
+    onSuccess: () => {
+      setName(""); setPriority(100); setAgencyId(""); setProductId("");
+      setProductType("hotel"); setValidFrom(""); setValidTo(""); setPercent(5); setNotes("");
+      invalidate();
+    },
+    onError: (e) => setError(apiErrorMessage(e)),
+  });
+
+  const onCreate = (e) => {
     e.preventDefault();
-    try {
-      setLoading(true);
-      const payload = {
-        name,
-        priority: Number(priority) || 0,
-        scope: {
-          agency_id: agencyId || null,
-          product_id: productId || null,
-          product_type: productType || null,
-        },
-        validity:
-          validFrom || validTo
-            ? {
-                from: validFrom || null,
-                to: validTo || null,
-              }
-            : null,
-        rules: [
-          {
-            type: "percent",
-            value: Number(percent) || 0,
-            applies_to: "markup_only",
-          },
-        ],
-        notes: notes || null,
-      };
-      await api.post("/admin/b2b/discount-groups", payload);
-      setName("");
-      setPriority(100);
-      setAgencyId("");
-      setProductId("");
-      setProductType("hotel");
-      setValidFrom("");
-      setValidTo("");
-      setPercent(5);
-      setNotes("");
-      await loadGroups();
-    } catch (e) {
-      setError(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
+    const payload = {
+      name,
+      priority: Number(priority) || 0,
+      scope: {
+        agency_id: agencyId || null,
+        product_id: productId || null,
+        product_type: productType || null,
+      },
+      validity:
+        validFrom || validTo
+          ? { from: validFrom || null, to: validTo || null }
+          : null,
+      rules: [
+        { type: "percent", value: Number(percent) || 0, applies_to: "markup_only" },
+      ],
+      notes: notes || null,
+    };
+    createMutation.mutate(payload);
   };
 
-  const toggleStatus = async (group) => {
-    try {
-      setLoading(true);
-      const nextStatus = group.status === "active" ? "inactive" : "active";
-      await api.put(`/admin/b2b/discount-groups/${group.id}`, { status: nextStatus });
-      await loadGroups();
-    } catch (e) {
-      setError(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, status }) => api.put(`/admin/b2b/discount-groups/${id}`, { status }),
+    onSuccess: invalidate,
+    onError: (e) => setError(apiErrorMessage(e)),
+  });
+
+  const toggleStatus = (group) => {
+    const nextStatus = group.status === "active" ? "inactive" : "active";
+    toggleMutation.mutate({ id: group.id, status: nextStatus });
   };
 
-  const onAddRule = async (group, value) => {
-    try {
-      setLoading(true);
-      await api.post(`/admin/b2b/discount-groups/${group.id}/rules`, {
-        type: "percent",
-        value: Number(value) || 0,
-        applies_to: "markup_only",
-      });
-      await loadGroups();
-    } catch (e) {
-      setError(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const addRuleMutation = useMutation({
+    mutationFn: ({ groupId, value }) => api.post(`/admin/b2b/discount-groups/${groupId}/rules`, {
+      type: "percent", value: Number(value) || 0, applies_to: "markup_only",
+    }),
+    onSuccess: invalidate,
+    onError: (e) => setError(apiErrorMessage(e)),
+  });
 
-  const onDeleteRule = async (group, idx) => {
-    try {
-      setLoading(true);
-      await api.delete(`/admin/b2b/discount-groups/${group.id}/rules/${idx}`);
-      await loadGroups();
-    } catch (e) {
-      setError(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const onAddRule = (group, value) => addRuleMutation.mutate({ groupId: group.id, value });
+
+  const deleteRuleMutation = useMutation({
+    mutationFn: ({ groupId, idx }) => api.delete(`/admin/b2b/discount-groups/${groupId}/rules/${idx}`),
+    onSuccess: invalidate,
+    onError: (e) => setError(apiErrorMessage(e)),
+  });
+
+  const onDeleteRule = (group, idx) => deleteRuleMutation.mutate({ groupId: group.id, idx });
 
   return (
     <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-4">

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Megaphone, AlertCircle } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
@@ -6,33 +7,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 
 export function B2BAnnouncementsCard() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["b2b", "announcements"],
+    queryFn: async () => {
+      const resp = await api.get("/b2b/announcements");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      setError("");
-      try {
-        const res = await api.get("/b2b/announcements");
-        if (cancelled) return;
-        setItems(res.data?.items || []);
-      } catch (e) {
-        if (cancelled) return;
-        setError(apiErrorMessage(e));
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  
 
   if (loading && items.length === 0 && !error) {
     return (

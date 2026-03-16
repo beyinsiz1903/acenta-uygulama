@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link2, AlertCircle, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiErrorMessage } from "../lib/api";
 import { formatDateTime } from "../utils/formatters";
 import {
@@ -13,62 +14,13 @@ import {
 import { Switch } from "../components/ui/switch";
 import { toast } from "sonner";
 
-// Hook: Load all 3 endpoints + create Maps
-function useAdminLinksData() {
-  const [links, setLinks] = useState([]);
-  const [agencies, setAgencies] = useState([]);
-  const [hotels, setHotels] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  async function loadAll() {
-    setLoading(true);
-    setError("");
-    try {
-      const [linksResp, agenciesResp, hotelsResp] = await Promise.all([
-        api.get("/admin/agency-hotel-links/"),
-        api.get("/admin/agencies/"),
-        api.get("/admin/hotels/"),
-      ]);
-
-      console.log("[AdminLinks] Loaded data:", {
-        links: linksResp.data?.length || 0,
-        agencies: agenciesResp.data?.length || 0,
-        hotels: hotelsResp.data?.length || 0,
-      });
-
-      setLinks(linksResp.data || []);
-      setAgencies(agenciesResp.data || []);
-      setHotels(hotelsResp.data || []);
-    } catch (err) {
-      console.error("[AdminLinks] Load error:", err);
-      setError(apiErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return { links, agencies, hotels, loading, error, reload: loadAll };
-}
-
 // Enrich links with names (frontend join)
 function enrichLinks(links, agencies, hotels) {
-  // Create Maps for O(1) lookup
   const agencyById = new Map(agencies.map((a) => [a.id, a]));
   const hotelById = new Map(hotels.map((h) => [h.id, h]));
-
   return links.map((link) => {
     const agency = agencyById.get(link.agency_id);
     const hotel = hotelById.get(link.hotel_id);
-
-    // Fallback logging
-    if (!agency) {
-      console.warn(`[AdminLinks] Missing agency for id: ${link.agency_id}`);
-    }
-    if (!hotel) {
-      console.warn(`[AdminLinks] Missing hotel for id: ${link.hotel_id}`);
-    }
-
     return {
       ...link,
       agency_name: agency?.name || "Bilinmiyor",
@@ -80,29 +32,45 @@ function enrichLinks(links, agencies, hotels) {
 }
 
 export default function AdminLinksPage() {
-  const { links, agencies, hotels, loading, error, reload } = useAdminLinksData();
+  const queryClient = useQueryClient();
+
+  const { data: linksData, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "links", "all"],
+    queryFn: async () => {
+      const [linksResp, agenciesResp, hotelsResp] = await Promise.all([
+        api.get("/admin/agency-hotel-links/"),
+        api.get("/admin/agencies/"),
+        api.get("/admin/hotels/"),
+      ]);
+      return {
+        links: linksResp.data || [],
+        agencies: agenciesResp.data || [],
+        hotels: hotelsResp.data || [],
+      };
+    },
+    staleTime: 30_000,
+  });
+
+  const links = linksData?.links || [];
+  const agencies = linksData?.agencies || [];
+  const hotels = linksData?.hotels || [];
+  const error = fetchError ? apiErrorMessage(fetchError) : "";
+
   const [toggleLoading, setToggleLoading] = useState(null);
 
-  useEffect(() => {
-    reload();
-  }, []);
-
-  async function toggleLinkActive(linkId, currentActive) {
-    setToggleLoading(linkId);
-    try {
-      await api.patch(`/admin/agency-hotel-links/${linkId}`, {
-        active: !currentActive,
-      });
-      console.log(`[AdminLinks] Toggle success: ${linkId} → ${!currentActive}`);
+  const toggleMutation = useMutation({
+    mutationFn: ({ linkId, active }) => api.patch(`/admin/agency-hotel-links/${linkId}`, { active }),
+    onSuccess: () => {
       toast.success("Link durumu güncellendi");
-      // Refresh after successful PATCH
-      await reload();
-    } catch (err) {
-      console.error(`[AdminLinks] Toggle error:`, err);
-      toast.error(apiErrorMessage(err));
-    } finally {
-      setToggleLoading(null);
-    }
+      queryClient.invalidateQueries({ queryKey: ["admin", "links"] });
+    },
+    onError: (err) => toast.error(apiErrorMessage(err)),
+    onSettled: () => setToggleLoading(null),
+  });
+
+  function toggleLinkActive(linkId, currentActive) {
+    setToggleLoading(linkId);
+    toggleMutation.mutate({ linkId, active: !currentActive });
   }
 
   // Loading state
@@ -142,7 +110,7 @@ export default function AdminLinksPage() {
             <p className="text-sm text-muted-foreground mt-1">{error}</p>
           </div>
           <button
-            onClick={reload}
+            onClick={() => refetch()}
             className="mt-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
           >
             Tekrar Dene

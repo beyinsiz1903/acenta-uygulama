@@ -1,40 +1,42 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { MessageSquare, Send, RefreshCw, Phone } from "lucide-react";
 
 export default function AdminSMSPage() {
-  const [logs, setLogs] = useState([]);
-  const [templates, setTemplates] = useState({});
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [showSend, setShowSend] = useState(false);
-  const [sending, setSending] = useState(false);
   const [form, setForm] = useState({ to: "", template_key: "custom", variables: { message: "" } });
 
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
+  const { data: smsData, isLoading: loading, refetch } = useQuery({
+    queryKey: ["sms", "all"],
+    queryFn: async () => {
       const [logsRes, tmplRes] = await Promise.all([
         api.get("/sms/logs"),
         api.get("/sms/templates"),
       ]);
-      setLogs(logsRes.data?.items || []);
-      setTemplates(tmplRes.data?.templates || {});
-    } catch (e) { console.error(e); } finally { setLoading(false); }
-  }, []);
+      return { logs: logsRes.data?.items || [], templates: tmplRes.data?.templates || {} };
+    },
+    staleTime: 30_000,
+  });
+  const logs = smsData?.logs || [];
+  const templates = smsData?.templates || {};
 
-  useEffect(() => { load(); }, [load]);
-
-  const handleSend = async () => {
-    if (!form.to) return;
-    try {
-      setSending(true);
-      await api.post("/sms/send", form);
+  const sendMutation = useMutation({
+    mutationFn: (payload) => api.post("/sms/send", payload),
+    onSuccess: () => {
       setShowSend(false);
       setForm({ to: "", template_key: "custom", variables: { message: "" } });
-      await load();
-    } catch (e) { alert(e.response?.data?.error?.message || e.message); } finally { setSending(false); }
+      queryClient.invalidateQueries({ queryKey: ["sms"] });
+    },
+    onError: (e) => alert(e.response?.data?.error?.message || e.message),
+  });
+
+  const handleSend = () => {
+    if (!form.to) return;
+    sendMutation.mutate(form);
   };
 
   return (
@@ -45,7 +47,7 @@ export default function AdminSMSPage() {
           <p className="text-sm text-muted-foreground mt-1">SMS gonderimi ve loglar. Provider: Mock (sandbox)</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={load}><RefreshCw className="h-4 w-4 mr-1" /> Yenile</Button>
+          <Button variant="outline" size="sm" onClick={() => refetch()}><RefreshCw className="h-4 w-4 mr-1" /> Yenile</Button>
           <Button size="sm" onClick={() => setShowSend(!showSend)} data-testid="send-sms-btn"><Send className="h-4 w-4 mr-1" /> SMS Gonder</Button>
         </div>
       </div>
@@ -71,7 +73,7 @@ export default function AdminSMSPage() {
           </div>
           <div className="flex justify-end gap-2 mt-3">
             <Button variant="outline" size="sm" onClick={() => setShowSend(false)}>Iptal</Button>
-            <Button size="sm" onClick={handleSend} disabled={sending || !form.to} data-testid="submit-sms-btn">{sending ? "Gonderiliyor..." : "Gonder"}</Button>
+            <Button size="sm" onClick={handleSend} disabled={sendMutation.isPending || !form.to} data-testid="submit-sms-btn">{sendMutation.isPending ? "Gonderiliyor..." : "Gonder"}</Button>
           </div>
         </div>
       )}

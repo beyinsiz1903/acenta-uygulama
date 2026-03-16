@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { BarChart3, Download, Loader2, Search, Sparkles, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation } from "@tanstack/react-query";
 
 import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";
@@ -61,44 +62,30 @@ function SearchResultGroup({ title, items, onOpen, testId }) {
 
 export default function AdvancedReportsPage() {
   const navigate = useNavigate();
-  const [resSummary, setResSummary] = useState([]);
-  const [sales, setSales] = useState([]);
-  const [overview, setOverview] = useState(null);
-  const [error, setError] = useState("");
-  const [overviewError, setOverviewError] = useState("");
   const [days, setDays] = useState(30);
+  const [overview, setOverview] = useState(null);
+  const [overviewError, setOverviewError] = useState("");
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
 
-  const load = useCallback(async () => {
-    setError("");
-    try {
+  const { data: reportData, error: fetchError } = useQuery({
+    queryKey: ["reports", "summary", days],
+    queryFn: async () => {
       const [a, b] = await Promise.all([
         api.get("/reports/reservations-summary"),
         api.get("/reports/sales-summary", { params: { days } }),
       ]);
-      setResSummary(a.data || []);
-      setSales(b.data || []);
-    } catch (e) {
-      const msg = apiErrorMessage(e);
-      if (msg === "Not Found") {
-        setResSummary([]);
-        setSales([]);
-      } else {
-        setError(msg);
-      }
-    }
-  }, [days]);
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      load();
-    }, 0);
-    return () => clearTimeout(t);
-  }, [load]);
+      return { resSummary: a.data || [], sales: b.data || [] };
+    },
+    staleTime: 60_000,
+    retry: (count, err) => err?.response?.status === 404 ? false : count < 2,
+  });
+  const resSummary = reportData?.resSummary || [];
+  const sales = reportData?.sales || [];
+  const error = fetchError ? (fetchError?.response?.status === 404 ? "" : apiErrorMessage(fetchError)) : "";
 
   const generateOverview = useCallback(async () => {
     setOverviewLoading(true);

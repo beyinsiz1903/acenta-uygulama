@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -13,55 +14,49 @@ const STATUS_TABS = [
 ];
 
 export default function AdminApprovalInboxPage() {
-  const [approvals, setApprovals] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("all");
   const [actionLoading, setActionLoading] = useState(null);
   const [rejectModal, setRejectModal] = useState(null);
   const [rejectNote, setRejectNote] = useState("");
 
-  const loadApprovals = useCallback(async () => {
-    try {
-      setLoading(true);
+  const { data: approvals = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ["approvals", activeTab],
+    queryFn: async () => {
       const params = activeTab !== "all" ? { status: activeTab } : {};
       const res = await api.get("/approvals", { params });
-      setApprovals(res.data?.items || []);
-    } catch (e) {
-      console.error("Failed to load approvals:", e);
-    } finally {
-      setLoading(false);
-    }
-  }, [activeTab]);
+      return res.data?.items || [];
+    },
+    staleTime: 15_000,
+  });
 
-  useEffect(() => { loadApprovals(); }, [loadApprovals]);
+  const approveMutation = useMutation({
+    mutationFn: (id) => api.post(`/approvals/${id}/approve`, {}),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["approvals"] }),
+    onError: (e) => alert(e.response?.data?.error?.message || e.message),
+    onSettled: () => setActionLoading(null),
+  });
 
-  const handleApprove = async (id) => {
-    try {
-      setActionLoading(id);
-      await api.post(`/approvals/${id}/approve`, {});
-      await loadApprovals();
-    } catch (e) {
-      const msg = e.response?.data?.error?.message || e.message;
-      alert("Onaylama hatası: " + msg);
-    } finally {
-      setActionLoading(null);
-    }
+  const handleApprove = (id) => {
+    setActionLoading(id);
+    approveMutation.mutate(id);
   };
 
-  const handleReject = async () => {
-    if (!rejectModal) return;
-    try {
-      setActionLoading(rejectModal);
-      await api.post(`/approvals/${rejectModal}/reject`, { note: rejectNote });
+  const rejectMutation = useMutation({
+    mutationFn: ({ id, note }) => api.post(`/approvals/${id}/reject`, { note }),
+    onSuccess: () => {
       setRejectModal(null);
       setRejectNote("");
-      await loadApprovals();
-    } catch (e) {
-      const msg = e.response?.data?.error?.message || e.message;
-      alert("Reddetme hatası: " + msg);
-    } finally {
-      setActionLoading(null);
-    }
+      queryClient.invalidateQueries({ queryKey: ["approvals"] });
+    },
+    onError: (e) => alert(e.response?.data?.error?.message || e.message),
+    onSettled: () => setActionLoading(null),
+  });
+
+  const handleReject = () => {
+    if (!rejectModal) return;
+    setActionLoading(rejectModal);
+    rejectMutation.mutate({ id: rejectModal, note: rejectNote });
   };
 
   const getStatusBadge = (status) => {

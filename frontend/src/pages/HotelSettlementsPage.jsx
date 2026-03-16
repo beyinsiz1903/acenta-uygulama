@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Download, RefreshCw, AlertCircle } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
 import { formatMoney } from "../lib/format";
@@ -24,30 +25,18 @@ export default function HotelSettlementsPage() {
   const [status, setStatus] = useState("");
   const [agencyId, setAgencyId] = useState("");
 
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  async function load() {
-    setLoading(true);
-    setError("");
-    try {
+  const { data, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["hotel", "settlements", month, status, agencyId],
+    queryFn: async () => {
       const params = { month };
       if (status) params.status = status;
       if (agencyId) params.agency_id = agencyId;
       const resp = await api.get("/hotel/settlements", { params });
-      setData(resp.data);
-    } catch (e) {
-      setError(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    load();
-     
-  }, []);
+      return resp.data;
+    },
+    staleTime: 30_000,
+  });
+  const error = fetchError ? apiErrorMessage(fetchError) : "";
 
   const rows = useMemo(() => data?.totals || [], [data]);
 
@@ -120,7 +109,7 @@ export default function HotelSettlementsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={load} disabled={loading}>
+          <Button variant="outline" onClick={() => refetch()} disabled={loading}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Yenile
           </Button>
@@ -166,7 +155,7 @@ export default function HotelSettlementsPage() {
         </div>
 
         <div className="mt-3 flex items-center gap-2">
-          <Button onClick={load} disabled={loading}>
+          <Button onClick={() => refetch()} disabled={loading}>
             Filtrele
           </Button>
         </div>

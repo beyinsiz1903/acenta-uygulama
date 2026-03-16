@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { Card } from "../../components/ui/card";
@@ -8,17 +9,22 @@ import { createTourPublicQuote } from "../../lib/publicBooking";
 import { useSeo } from "../../hooks/useSeo";
 
 export default function BookTourProductPage() {
+  const { data: tour = null, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["public", "tours", "_"],
+    queryFn: async () => {
+      const resp = await api.get("/public/tours/${tourId}");
+      return resp.data || null;
+    },
+    staleTime: 30_000,
+  });
+
   const { tourId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const org = searchParams.get("org") || "";
   const partner = searchParams.get("partner") || "";
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [tour, setTour] = useState(null);
-
+  
   const [date, setDate] = useState("");
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);

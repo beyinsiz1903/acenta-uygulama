@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
@@ -19,6 +20,15 @@ const STRIPE_PUBLISHABLE_KEY = window.STRIPE_PUBLISHABLE_KEY || "";
 const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : Promise.resolve(null);
 
 function formatAmount(amountCents, currency) {
+  const { data: tokenData = null, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["public", "pay", "_"],
+    queryFn: async () => {
+      const resp = await api.get("/public/pay/${token}");
+      return resp.data || null;
+    },
+    staleTime: 30_000,
+  });
+
   const amount = (amountCents || 0) / 100;
   try {
     return new Intl.NumberFormat("tr-TR", {
@@ -36,7 +46,6 @@ function ClickToPayForm({ token, tokenData }) {
   const elements = useElements();
 
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -110,30 +119,7 @@ function ClickToPayForm({ token, tokenData }) {
 
 export default function PublicClickToPayPage() {
   const { token } = useParams();
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [tokenData, setTokenData] = useState(null);
-
-  useEffect(() => {
-    if (!token) return;
-
-    async function loadToken() {
-      setLoading(true);
-      setError("");
-      try {
-        const res = await api.get(`/public/pay/${token}`);
-        setTokenData(res.data || null);
-      } catch (e) {
-        setError(apiErrorMessage(e));
-        setTokenData(null);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadToken();
-  }, [token]);
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">

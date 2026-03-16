@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -12,9 +13,16 @@ const SEVERITY_MAP = {
 };
 
 export default function AdminSystemErrorsPage() {
-  const [errors, setErrors] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("");
+  const { data: errors = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "system", "errors_"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/system/errors${params}");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
+    const [filter, setFilter] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -25,7 +33,6 @@ export default function AdminSystemErrorsPage() {
     } catch (e) { console.error(e); } finally { setLoading(false); }
   }, [filter]);
 
-  useEffect(() => { load(); }, [load]);
 
   return (
     <div className="space-y-6" data-testid="system-errors-page">
@@ -45,7 +52,7 @@ export default function AdminSystemErrorsPage() {
             <option value="error">Hata</option>
             <option value="warning">Uyarı</option>
           </select>
-          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
             Yenile
           </Button>

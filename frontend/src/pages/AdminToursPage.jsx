@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { resolveAssetUrl } from "../lib/backendUrl";
 import { Card } from "../components/ui/card";
@@ -25,9 +26,7 @@ const EMPTY_TOUR = {
 };
 
 export default function AdminToursPage() {
-  const [tours, setTours] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const queryClient = useQueryClient();
   const [view, setView] = useState("list");
   const [selectedTour, setSelectedTour] = useState(null);
   const [form, setForm] = useState({ ...EMPTY_TOUR });
@@ -35,14 +34,15 @@ export default function AdminToursPage() {
   const [saveError, setSaveError] = useState("");
   const [uploading, setUploading] = useState(false);
 
-  const loadTours = useCallback(async () => {
-    setLoading(true);
-    try { const res = await api.get("/admin/tours"); setTours(res.data || []); }
-    catch(e) { setError("Turlar yuklenirken hata olustu."); }
-    finally { setLoading(false); }
-  }, []);
-
-  useEffect(() => { loadTours(); }, [loadTours]);
+  const { data: tours = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "tours"],
+    queryFn: async () => {
+      const res = await api.get("/admin/tours");
+      return res.data || [];
+    },
+    staleTime: 30_000,
+  });
+  const error = fetchError ? "Turlar yuklenirken hata olustu." : "";
 
   const handleCreate = () => { setForm({ ...EMPTY_TOUR }); setSelectedTour(null); setView("create"); setSaveError(""); };
 
@@ -62,7 +62,7 @@ export default function AdminToursPage() {
 
   const handleDelete = async (tourId) => {
     if (!window.confirm("Bu turu silmek istediginizden emin misiniz?")) return;
-    try { await api.delete("/admin/tours/" + tourId); await loadTours(); }
+    try { await api.delete("/admin/tours/" + tourId); queryClient.invalidateQueries({ queryKey: ["admin", "tours"] }); }
     catch(e) { alert("Tur silinirken hata olustu."); }
   };
 
@@ -73,7 +73,7 @@ export default function AdminToursPage() {
     try {
       if (view === "edit" && selectedTour) { await api.put("/admin/tours/" + selectedTour.id, form); }
       else { await api.post("/admin/tours", form); }
-      await loadTours(); setView("list");
+      queryClient.invalidateQueries({ queryKey: ["admin", "tours"] }); setView("list");
     } catch (err) { setSaveError(err?.response?.data?.message || "Kaydetme hatasi."); }
     finally { setSaving(false); }
   };

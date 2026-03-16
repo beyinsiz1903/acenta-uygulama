@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -17,11 +18,19 @@ const errorColor = (pct) => {
 };
 
 export default function AdminPerfDashboardPage() {
-  const [topEndpoints, setTopEndpoints] = useState([]);
-  const [slowEndpoints, setSlowEndpoints] = useState([]);
+  const { data: topEndpoints = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "system", "perf"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/system/perf/cache-stats");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+  const error = fetchError ? (typeof apiErrorMessage === 'function' ? apiErrorMessage(fetchError) : fetchError.message) : "";
+
+    const [slowEndpoints, setSlowEndpoints] = useState([]);
   const [cacheStats, setCacheStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [window, setWindow] = useState(24);
+    const [window, setWindow] = useState(24);
 
   const load = useCallback(async () => {
     try {
@@ -37,7 +46,6 @@ export default function AdminPerfDashboardPage() {
     } catch (e) { console.error(e); } finally { setLoading(false); }
   }, [window]);
 
-  useEffect(() => { load(); }, [load]);
 
   return (
     <div className="space-y-6" data-testid="perf-dashboard-page">
@@ -57,7 +65,7 @@ export default function AdminPerfDashboardPage() {
             <option value={24}>Son 24 saat</option>
             <option value={72}>Son 3 gün</option>
           </select>
-          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
             Yenile
           </Button>

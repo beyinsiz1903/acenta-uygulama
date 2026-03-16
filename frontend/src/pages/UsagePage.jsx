@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Activity, RefreshCw } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { api } from "../lib/api";
@@ -8,22 +9,14 @@ import { UsageTrendChart } from "../components/usage/UsageTrendChart";
 import { UsageTrialRecommendation } from "../components/usage/UsageTrialRecommendation";
 
 export default function UsagePage() {
-  const [summary, setSummary] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const loadSummary = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data: summary, isLoading: loading, refetch } = useQuery({
+    queryKey: ["tenant", "usage-summary"],
+    queryFn: async () => {
       const res = await api.get("/tenant/usage-summary?days=30");
-      setSummary(res.data);
-    } catch {
-      setSummary(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { loadSummary(); }, [loadSummary]);
+      return res.data;
+    },
+    staleTime: 60_000,
+  });
 
   const entries = useMemo(() => getUsageMetricEntries(summary), [summary]);
   const trendData = useMemo(() => buildUsageTrendData(summary), [summary]);
@@ -54,7 +47,7 @@ export default function UsagePage() {
           </p>
         </div>
 
-        <Button variant="outline" onClick={loadSummary} data-testid="usage-page-refresh-button">
+        <Button variant="outline" onClick={() => refetch()} data-testid="usage-page-refresh-button">
           <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           Yenile
         </Button>

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, Building2 } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -11,6 +12,15 @@ import { Label } from "../components/ui/label";
 import { getBackendOrigin } from "../lib/backendUrl";
 
 function RiskBadge({ status }) {
+  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "b2b", "agencies"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/b2b/agencies/summary");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
   if (status === "over_limit") {
     return <Badge variant="destructive">Limit aşıldı</Badge>;
   }
@@ -35,10 +45,7 @@ function formatAmount(value, currency) {
 }
 
 export default function AdminB2BAgenciesSummaryPage() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [filter, setFilter] = useState("");
+    const [filter, setFilter] = useState("");
   const [riskFilter, setRiskFilter] = useState("all");
 
   const [selected, setSelected] = useState(null); // { id, name, ... }

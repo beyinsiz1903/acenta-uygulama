@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -31,9 +32,17 @@ const VERDICT_STYLE = {
 };
 
 export default function AdminPreflightPage() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { data: data = null, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "system", "preflight"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/system/preflight");
+      return resp.data || null;
+    },
+    staleTime: 30_000,
+  });
+  const error = fetchError ? (typeof apiErrorMessage === 'function' ? apiErrorMessage(fetchError) : fetchError.message) : "";
 
+    
   const load = useCallback(async () => {
     try {
       setLoading(true);
@@ -42,7 +51,6 @@ export default function AdminPreflightPage() {
     } catch (e) { console.error(e); } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
 
   const vs = data ? VERDICT_STYLE[data.verdict] || VERDICT_STYLE["NO-GO"] : null;
 
@@ -53,7 +61,7 @@ export default function AdminPreflightPage() {
           <Rocket className="h-6 w-6 text-indigo-600" />
           <h1 className="text-2xl font-bold text-foreground">Production Go-Live Kontrolü</h1>
         </div>
-        <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
           Yeniden Çalıştır
         </Button>

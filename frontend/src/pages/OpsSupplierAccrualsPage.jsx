@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { RefreshCw, AlertCircle, Filter, Link as LinkIcon } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
@@ -44,47 +45,33 @@ function StatusBadge({ status }) {
 export default function OpsSupplierAccrualsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
   const [supplierId, setSupplierId] = useState(searchParams.get("supplier_id") || "");
   const [status, setStatus] = useState(searchParams.get("status") || "");
+
+  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["ops", "supplier-accruals", supplierId, status],
+    queryFn: async () => {
+      const params = {};
+      if (supplierId) params.supplier_id = supplierId;
+      if (status) params.status = status;
+      const resp = await api.get("/ops/finance/supplier-accruals", { params });
+      return resp.data?.items || [];
+    },
+    staleTime: 30_000,
+  });
+  const error = fetchError ? apiErrorMessage(fetchError) : "";
 
   const totalNet = useMemo(
     () => items.reduce((sum, it) => sum + Number(it.net_payable || 0), 0),
     [items],
   );
 
-  async function load() {
-    setLoading(true);
-    setError("");
-    try {
-      const params = {};
-      if (supplierId) params.supplier_id = supplierId;
-      if (status) params.status = status;
-
-      const resp = await api.get("/ops/finance/supplier-accruals", { params });
-      setItems(resp.data?.items || []);
-    } catch (e) {
-      setError(apiErrorMessage(e));
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    load();
-     
-  }, []);
-
   const handleApplyFilters = () => {
     const next = {};
     if (supplierId) next.supplier_id = supplierId;
     if (status) next.status = status;
     setSearchParams(next);
-    load();
+    refetch();
   };
 
   return (
@@ -98,7 +85,7 @@ export default function OpsSupplierAccrualsPage() {
         <ErrorState
           title="Accrual listesi yüklenemedi"
           description={error}
-          onRetry={load}
+          onRetry={() => refetch()}
           className="max-w-xl"
         />
       )}
@@ -117,7 +104,7 @@ export default function OpsSupplierAccrualsPage() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+                <Button variant="outline" size="sm" onClick={() => refetch()} disabled={loading}>
                   <RefreshCw className="h-3 w-3 mr-1" /> Yenile
                 </Button>
                 <Button size="sm" onClick={handleApplyFilters} disabled={loading}>

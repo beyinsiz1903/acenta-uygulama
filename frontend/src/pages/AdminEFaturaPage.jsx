@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -32,6 +33,15 @@ const TYPE_MAP = {
 };
 
 function StatusBadge({ status }) {
+  const { data: events = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["integrators", "providers"],
+    queryFn: async () => {
+      const resp = await api.get("/integrators/providers");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
   const s = STATUS_MAP[status] || { label: status, icon: Clock, color: "" };
   const Icon = s.icon;
   return (
@@ -265,17 +275,11 @@ function CreateInvoiceWizard({ onCreated, onClose }) {
 }
 
 function InvoiceDetail({ invoice, onClose, onRefresh }) {
-  const [events, setEvents] = useState([]);
-  const [loadingEvents, setLoadingEvents] = useState(false);
+    const [loadingEvents, setLoadingEvents] = useState(false);
   const [issuing, setIssuing] = useState(false);
   const [checking, setChecking] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
-  useEffect(() => {
-    if (!invoice?.invoice_id) return;
-    setLoadingEvents(true);
-    api.get(`/invoices/${invoice.invoice_id}/events`).then(r => setEvents(r.data?.events || [])).catch(() => {}).finally(() => setLoadingEvents(false));
-  }, [invoice?.invoice_id]);
 
   const handleIssue = async () => {
     setIssuing(true);
@@ -462,9 +466,7 @@ function InvoiceDetail({ invoice, onClose, onRefresh }) {
 
 function IntegratorSettings({ onClose }) {
   const [providers, setProviders] = useState([]);
-  const [configs, setConfigs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [configs, setConfigs] = useState([]);  const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [credentials, setCredentials] = useState({});
@@ -481,7 +483,6 @@ function IntegratorSettings({ onClose }) {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
 
   const handleSave = async () => {
     if (!selectedProvider) return;
@@ -494,7 +495,7 @@ function IntegratorSettings({ onClose }) {
       toast.success("Kimlik bilgileri kaydedildi");
       setSelectedProvider(null);
       setCredentials({});
-      loadData();
+      refetch();
     } catch (e) { toast.error(e.response?.data?.detail || e.message); }
     finally { setSaving(false); }
   };
@@ -508,7 +509,7 @@ function IntegratorSettings({ onClose }) {
       } else {
         toast.error(res.data.message || "Baglanti basarisiz");
       }
-      loadData();
+      refetch();
     } catch (e) { toast.error(e.response?.data?.detail || e.message); }
     finally { setTesting(false); }
   };
@@ -518,7 +519,7 @@ function IntegratorSettings({ onClose }) {
     try {
       await api.delete(`/integrators/credentials/${provider}`);
       toast.success("Yapilandirma silindi");
-      loadData();
+      refetch();
     } catch (e) { toast.error(e.response?.data?.detail || e.message); }
   };
 
@@ -620,9 +621,7 @@ function IntegratorSettings({ onClose }) {
 }
 
 export default function AdminEFaturaPage() {
-  const [invoices, setInvoices] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState(null);
+  const [invoices, setInvoices] = useState([]);  const [stats, setStats] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -640,13 +639,12 @@ export default function AdminEFaturaPage() {
     } catch (e) { console.error(e); } finally { setLoading(false); }
   }, [filter]);
 
-  useEffect(() => { load(); }, [load]);
 
   const handleIssue = async (invoiceId) => {
     try {
       await api.post(`/invoices/${invoiceId}/issue`);
       toast.success("Fatura kesildi");
-      load();
+      refetch();
     } catch (e) { toast.error(e.response?.data?.detail || e.message); }
   };
 
@@ -655,7 +653,7 @@ export default function AdminEFaturaPage() {
     try {
       await api.post(`/invoices/${invoiceId}/cancel`);
       toast.success("Fatura iptal edildi");
-      load();
+      refetch();
     } catch (e) { toast.error(e.response?.data?.detail || e.message); }
   };
 
@@ -667,7 +665,7 @@ export default function AdminEFaturaPage() {
       } else {
         toast.success("Luca senkronizasyonu tamamlandi");
       }
-      load();
+      refetch();
     } catch (e) { toast.error(e.response?.data?.detail || e.message); }
   };
 
@@ -687,7 +685,7 @@ export default function AdminEFaturaPage() {
           <Button variant="outline" size="sm" onClick={() => setShowSettings(!showSettings)} data-testid="settings-btn">
             <Settings className="h-4 w-4 mr-1" /> Entegrator
           </Button>
-          <Button variant="outline" size="sm" onClick={load} data-testid="refresh-btn"><RefreshCw className="h-4 w-4 mr-1" /> Yenile</Button>
+          <Button variant="outline" size="sm" onClick={() => refetch()} data-testid="refresh-btn"><RefreshCw className="h-4 w-4 mr-1" /> Yenile</Button>
           <Button size="sm" onClick={() => setShowCreate(!showCreate)} data-testid="new-invoice-btn">
             <Plus className="h-4 w-4 mr-1" /> Yeni Fatura
           </Button>
@@ -707,7 +705,7 @@ export default function AdminEFaturaPage() {
       {/* Create Wizard */}
       {showCreate && (
         <CreateInvoiceWizard
-          onCreated={() => { setShowCreate(false); load(); }}
+          onCreated={() => { setShowCreate(false); refetch(); }}
           onClose={() => setShowCreate(false)}
         />
       )}
@@ -845,7 +843,7 @@ export default function AdminEFaturaPage() {
         <InvoiceDetail
           invoice={selectedInvoice}
           onClose={() => setSelectedInvoice(null)}
-          onRefresh={() => { load(); setSelectedInvoice(null); }}
+          onRefresh={() => { refetch(); setSelectedInvoice(null); }}
         />
       )}
     </div>

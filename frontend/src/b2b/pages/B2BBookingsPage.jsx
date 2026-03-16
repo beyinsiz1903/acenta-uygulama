@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Calendar, Loader2, Search } from "lucide-react";
 
 import { api, apiErrorMessage } from "../../lib/api";
@@ -13,15 +14,21 @@ import {
 import { Badge } from "../../components/ui/badge";
 
 function todayIso() {
+  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["b2b", "bookings"],
+    queryFn: async () => {
+      const resp = await api.get("/b2b/bookings");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
   const d = new Date();
   return d.toISOString().slice(0, 10);
 }
 
 export default function B2BBookingsPage() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
+  
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [status, setStatus] = useState("");
@@ -37,11 +44,6 @@ export default function B2BBookingsPage() {
     setToDate(today);
   }, []);
 
-  useEffect(() => {
-    if (!fromDate || !toDate) return;
-    load();
-     
-  }, [fromDate, toDate, status]);
 
   async function load(paramsOverride) {
     setLoading(true);

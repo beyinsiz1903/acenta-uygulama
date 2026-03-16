@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { api, apiErrorMessage } from "../lib/api";
 import { toast } from "../components/ui/sonner";
@@ -18,6 +19,15 @@ import { Loader2, AlertCircle, Copy } from "lucide-react";
 import { safeCopyText } from "../utils/copyText";
 
 function RiskBadge({ cancelRate }) {
+  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "matches"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/matches");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
   if (!cancelRate || cancelRate <= 0.05) {
     return <Badge variant="outline">Düşük</Badge>;
   }
@@ -27,11 +37,7 @@ function RiskBadge({ cancelRate }) {
   return <Badge variant="destructive">Yüksek</Badge>;
 }
 
-export default function AdminMatchesPage() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [items, setItems] = useState([]);
-  const [range, setRange] = useState(null);
+export default function AdminMatchesPage() {    const [range, setRange] = useState(null);
   const [onlyHighRisk, setOnlyHighRisk] = useState(false);
   const [hideBlocked, setHideBlocked] = useState(false);
   const [sort, setSort] = useState("high_risk_first");
@@ -124,10 +130,6 @@ export default function AdminMatchesPage() {
     loadEvents(found);
   }, [items, deeplinkMatchId, deeplinkOpenDrawer]);
 
-  useEffect(() => {
-    loadMatches();
-     
-  }, [onlyHighRisk, sort]);
 
   if (loading) {
     return (

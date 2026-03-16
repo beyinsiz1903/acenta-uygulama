@@ -1,68 +1,68 @@
 <analysis>**original_problem_statement:**
-The user, acting as a CTO, has requested a comprehensive frontend architecture analysis and redesign to transform the existing Syroce Travel SaaS platform into an enterprise-grade product comparable to Stripe Dashboard or Shopify Admin. The project involves a multi-phase implementation based on a detailed report approved by the user.
+The user, acting as a CTO, has requested a comprehensive frontend architecture analysis and redesign to transform the existing Syroce Travel SaaS platform into an enterprise-grade product comparable to a Stripe Dashboard or Shopify Admin. The project involves a multi-phase implementation based on a detailed report approved by the user.
 
 **PRODUCT REQUIREMENTS:**
-1.  **Full Repository Analysis & Report:** Analyze the frontend and produce a detailed report. (Completed, located at ).
-2.  **Phased Implementation:** Execute the multi-phase roadmap outlined in the approved executive summary ( and subsequent user updates).
+1.  **Full Repository Analysis & Report:** Analyze the frontend and produce a detailed report. (Completed).
+2.  **Phased Implementation:** Execute the multi-phase roadmap defined by the user.
     -   **Phase 1: Architecture Cleanup** (Completed)
     -   **Phase 2: Design System Foundation** (Completed)
-    -   **Phase 3: UX Standardization** (In Progress)
-        -   Batch 1: 4 high-traffic pages (Completed)
-        -   Batch 2: 6 core admin pages (Completed)
-        -   Batch 3 (Phase 3c): 3 remaining complex pages (Completed in this session)
-    -   **Future Phases:** God Page Splitting, Performance Optimization, Enterprise UX Features, TypeScript Migration.
+    -   **Phase 3: UX Standardization** (Completed)
+    -   **Phase P0 (God Page Splitting):** Refactor monolithic pages. (Completed in this session)
+    -   **Upcoming Phases:** TanStack Query Adoption, Performance Optimization, Enterprise UX, TypeScript Migration.
 
 **User's preferred language**: Turkish
 
 **what currently exists?**
-The agent has successfully completed Phase 3c of the UX Standardization, migrating the final three complex pages (, , ) to use the new  design pattern. For , a full migration to  and a new TanStack Query hook was also completed. This work was validated by a comprehensive regression test, which passed with a 100% success rate (40/40 tests). The project's progress has been documented in the updated  file. The frontend standardization phase is now approximately 85% complete.
+The agent has successfully completed the God Page Splitting task. The two largest and most complex pages,  (2150 LOC) and  (1912 LOC), have been refactored. Their logic and UI were extracted into new, domain-driven feature modules ( and ). The original page components are now slim orchestrators, with reductions of 86% and 95% in their line counts, respectively. The changes were validated through linting, a successful build, and a focused regression test suite via the testing agent, which passed with a 100% success rate.
 
 **Last working item**:
--   Last item agent was working: Concluding the job with the  tool after successfully migrating three pages, running a full regression test, and updating the  file.
--   Status: NONE
+-   Last item agent was working: Concluding the God Page Splitting task by updating the  file and preparing to call the  tool after receiving a successful regression test report.
+-   Status: USER VERIFICATION PENDING
 -   Agent Testing Done: Y
 -   Which testing method agent to use? N/A
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
-None. The last test run passed with a 100% success rate.
+None.
 
 **In progress Task List**:
 None.
 
 **Upcoming and Future Tasks**
-The roadmap is defined by the CTO's latest report (from the previous session's user message).
+The roadmap is defined by the CTO's report from the start of the session.
 
 *   **Upcoming Tasks:**
-    -   **(P0) God Page Splitting:** This is the immediate next priority. The task is to refactor large, monolithic page components into smaller, more manageable sub-components, each with its own dedicated hooks and logic.
-        -   **Target Pages:**  (2150 LOC),  (1912 LOC),  (1734 LOC).
-        -   **Goal:** Improve readability, testability, and enable component reuse by creating  structures.
-    -   **(P1) TanStack Query Adoption:** Continue the migration of data-fetching logic from  +  to standardized TanStack Query hooks, aiming to increase adoption from ~15% to over 80%.
+    -   **(P1) TanStack Query Adoption:** This is the immediate next priority. The goal is to migrate data-fetching logic from the legacy  +  +  pattern to standardized TanStack Query hooks.
+        -   **Current Adoption:** ~20%
+        -   **Target Adoption:** 80%+
+        -   **Action:** Systematically identify and refactor data-fetching across the application.
+    -   **(P2) Phase 4 – Performance:** Implement route-based code splitting, list virtualization for large tables, and bundle size optimization.
 
 *   **Future Tasks (Backlog):**
-    -   **Phase 4 – Performance:** Implement route-based code splitting, list virtualization for large tables, and bundle size optimization.
     -   **Phase 5 – Enterprise UX:** Implement a Command Palette (Cmd+K), Global Search, and keyboard shortcuts.
-    -   **Platform Integrations:** Implement real sandbox integrations for supplier adapters (e.g., Ratehawk).
+    -   **Platform Integrations:** Implement real sandbox integrations for supplier adapters (e.g., Ratehawk, Paximum).
     -   **TypeScript Migration:** Incrementally migrate the codebase to TypeScript, starting with the API layer, then hooks, then the design system.
-    -   **Enhancement:** Create a Design System Migration Guide for the internal wiki to speed up developer onboarding and standardize refactoring efforts.
+    -   **Enhancement:** Create a Design System Migration Guide for the internal wiki.
 
 **Completed work in this session**
--   **Phase 3c UX Standardization (DONE):**
-    -   Migrated  to  +  using a new  hook.
-    -   Migrated  to , preserving its internal tab structure.
-    -   Migrated  to , preserving its internal components and creating a new  structure.
--   **New Feature Hooks and API Layers (DONE):**
-    -   Created  with  and .
-    -   Created  with  and .
+-   **God Page Splitting (DONE):**
+    -   **Refactored  (2150 LOC → 297 LOC):**
+        -   Created new feature module at .
+        -   Extracted logic into  and .
+        -   Extracted UI into multiple components under .
+    -   **Refactored  (1912 LOC → 90 LOC):**
+        -   Created new feature module at .
+        -   Extracted logic into  and .
+        -   Extracted UI for each tab into components under .
 -   **Full Regression Testing (DONE):**
-    -   Executed a comprehensive test suite via .
-    -   Result: 100% success rate (40/40 tests passed), confirming application stability post-migration.
+    -   Executed a focused test suite for the refactored pages via .
+    -   Result: 100% success rate (12/12 tests passed).
 -   **PRD Update (DONE):**
-    -   Updated  to reflect the completion of Phase 3c and update the project status.
+    -   Updated  to reflect the completion of the God Page Splitting task.
 
 **Earlier issues found/mentioned but not fixed**
 -   **Save to Github Synchronization Issue:** A known platform-level issue, deferred by the CTO.
--   **Nested Button HTML Warning:** A minor frontend warning in legacy code, which will be resolved as pages are refactored.
+-   **Nested Button HTML Warning:** A minor frontend warning in legacy code, to be resolved as pages are refactored.
 
 **Known issue recurrence from previous fork**
 -   None.
@@ -71,63 +71,69 @@ The roadmap is defined by the CTO's latest report (from the previous session's u
 
 
 **Key Technical Concepts**
--   **Domain-Driven Frontend Architecture:** Code organized by business domain ().
--   **Design Systems:** A central library of reusable UI patterns () to enforce consistency.
--   **Strangler Fig Pattern:** Incrementally refactoring old pages into the new architecture.
+-   **Domain-Driven Frontend Architecture:** Code organized by business domain (). This session heavily reinforced this by creating  and  modules.
+-   **Component Decomposition:** Breaking large God components into smaller, single-responsibility components.
+-   **Strangler Fig Pattern:** Incrementally replacing parts of the legacy system with new components and logic.
 -   **Standardized Data Fetching:** Using TanStack Query via custom hooks ().
 
 **key DB schema**
 -   No changes in this session.
 
 **changes in tech stack**
--   No new dependencies were added in this session.
+-   No new dependencies were added.
 
 **All files of reference**
--   **Created/Updated Files:**
+-   **Created Files:**
     -   
     -   
     -   
     -   
     -   
     -   
+    -   
+    -   
+    -   
+    -   
+    -   
+    -   
+    -   
+-   **Updated Files:**
     -   
     -   
     -   
 -   **Key Files for Next Phase:**
-    -   : The master plan.
-    -    (Next refactoring target)
-    -    (Next refactoring target)
-    -    (Next refactoring target)
+    -   Any file containing  with  calls. The agent will need to  for these patterns to begin the next phase.
 
 **Areas that need refactoring**:
--   The God Pages (, , ) are the highest priority for refactoring. They must be broken down into smaller components with dedicated hooks.
+-   The major structural refactoring of God Pages is complete. The next refactoring effort is focused on behavior: migrating data-fetching logic from  to  hooks across the entire application.
 
 **key api endpoints**
 -   No new backend endpoints were created. Frontend API client layers were added to call existing endpoints.
 
 **Critical Info for New Agent**
 -   **İletişim diliniz Türkçe olmalıdır. (Your communication language must be Turkish).**
--   Your next task is **(P0) God Page Splitting**. This is the highest priority.
--   Start by analyzing  and planning how to break its logic and UI into smaller, reusable components and hooks within a new  directory.
--   The application is stable and the last regression test passed with 100% success.
+-   Your previous task, **(P0) God Page Splitting**, is **DONE**.
+-   Your next task is **(P1) TanStack Query Adoption**.
+-   The goal is to increase TanStack Query adoption from ~20% to over 80%.
+-   Start by using  to find instances of  that contain  or  calls to plan the migration. Prioritize high-traffic pages or pages with complex data-fetching logic first.
+-   The application is stable, and the latest regression test confirmed the health of the refactored pages.
 
 **documents and test reports created in this job**
 -   
--    (updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
--   The user (CTO) provided a single, comprehensive report-style message that confirmed the success of the previous batch of migrations and set the priorities for the work done in this session and for the work to come.
--   **Priorities defined by user:**
-    1.  **Phase 3c Remaining Pages (DONE in this session):** , , .
-    2.  **God Page Splitting (NEXT TASK):** , , .
-    3.  **TanStack Query Adoption (FUTURE):** Increase adoption across the app.
--   The user's message is the primary source of truth for the project roadmap.
+-   The user (CTO) provided a single, comprehensive report-style message confirming the completion of Phase 3 and approving the proposed roadmap.
+-   **Key priorities defined by user:**
+    1.  **(P0) God Page Splitting (DONE in this session):** Refactor  and .
+    2.  **(P1) TanStack Query Adoption (NEXT TASK):** Increase adoption to 80%+.
+    3.  **(P2) Phase 4 Performance (Future):** Code splitting, virtualization.
+-   The CTO's message serves as the master plan for the upcoming work.
 
 **Project Health Check:**
 -   **Broken:** None.
 -   **Mocked:**
     -    still uses simulated data.
--   **Incomplete:** The frontend refactoring is ongoing. The next major task is splitting the large, monolithic God Pages.
+-   **Incomplete:** The frontend refactoring is ongoing. The next major task is migrating data-fetching logic to TanStack Query.
 
 **3rd Party Integrations**
 -   Stripe
@@ -137,7 +143,7 @@ The roadmap is defined by the CTO's latest report (from the previous session's u
 -   Ratehawk, TBO, Paximum, WWTatil (Adapters exist, integration is simulated)
 
 **Testing status**
--   Testing agent used after significant changes: YES. A full regression test was performed with 100% success.
+-   Testing agent used after significant changes: YES. A focused regression test was performed with 100% success.
 -   Troubleshoot agent used after agent stuck in loop: NO
 -   Test files created: None.
 -   Known regressions: None.
@@ -147,4 +153,4 @@ The roadmap is defined by the CTO's latest report (from the previous session's u
 -   **Agency Admin:**  / 
 
 **What agent forgot to execute**
--   Nothing. The agent successfully completed the planned task, followed the user's updated priorities, and thoroughly validated the work.</analysis>
+-   Nothing. The agent successfully completed the planned task, following the CTO's priorities and validating the work thoroughly.</analysis>

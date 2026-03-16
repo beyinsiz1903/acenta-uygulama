@@ -1,13 +1,19 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiErrorMessage } from "../lib/api";
 
 export default function WebBookingPage() {
-  const [hotels, setHotels] = useState([]);
-  const [rooms, setRooms] = useState([]);
-  const [packages, setPackages] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const { data: hotels = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["web", "hotels"],
+    queryFn: async () => {
+      const resp = await api.get("/web/hotels");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
+    const [rooms, setRooms] = useState([]);
+  const [packages, setPackages] = useState([]);  const [success, setSuccess] = useState("");
 
   const [form, setForm] = useState({
     hotel_id: "",
@@ -24,43 +30,7 @@ export default function WebBookingPage() {
     currency: "TRY",
   });
 
-  useEffect(() => {
-    async function loadHotels() {
-      try {
-        const res = await api.get("/web/hotels");
-        setHotels(res.data || []);
-      } catch (e) {
-        console.error("[WebBooking] hotels load error", e);
-      }
-    }
-    void loadHotels();
-  }, []);
 
-  useEffect(() => {
-    async function loadHotelDeps() {
-      if (!form.hotel_id) {
-        setRooms([]);
-        setPackages([]);
-        setForm((prev) => ({ ...prev, room_type_id: "", package_id: "" }));
-        return;
-      }
-      try {
-        const [roomsRes, packagesRes] = await Promise.all([
-          api.get(`/web/hotels/${form.hotel_id}/rooms`),
-          api.get(`/web/hotels/${form.hotel_id}/packages`),
-        ]);
-        setRooms(roomsRes.data || []);
-        setPackages(packagesRes.data || []);
-        setForm((prev) => ({ ...prev, room_type_id: "", package_id: "" }));
-      } catch (e) {
-        console.error("[WebBooking] hotel deps load error", e);
-        setRooms([]);
-        setPackages([]);
-      }
-    }
-    void loadHotelDeps();
-     
-  }, [form.hotel_id]);
 
   function handleChange(e) {
     const { name, value } = e.target;

@@ -12,7 +12,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Use the preview URL from frontend/.env
-BASE_URL = "https://syroce-godpage-split.preview.emergentagent.com"
+BASE_URL = "https://syroce-query.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials from review request

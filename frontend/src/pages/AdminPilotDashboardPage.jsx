@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
@@ -66,33 +67,15 @@ function EmptyState({ title, subtitle }) {
 }
 
 export default function AdminPilotDashboardPage() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-    const run = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const resp = await api.get("/admin/pilot/summary?days=7");
-
-        setData(resp.data);
-      } catch (e) {
-        console.error("Pilot summary fetch failed:", e);
-        const msg =
-          e?.response?.data?.detail ||
-          e?.message ||
-          "Veri yüklenemedi";
-        setError(String(msg));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    run();
-  }, []);
+  const { data, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "pilot", "summary"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/pilot/summary?days=7");
+      return resp.data;
+    },
+    staleTime: 30_000,
+  });
+  const error = fetchError ? apiErrorMessage(fetchError) : "";
 
   const kpis = data?.kpis || {};
   const meta = data?.meta || {};

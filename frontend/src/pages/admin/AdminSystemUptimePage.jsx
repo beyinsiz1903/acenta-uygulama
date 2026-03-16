@@ -1,12 +1,20 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import { Button } from "../../components/ui/button";
 import { Signal, RefreshCw, ArrowUp, ArrowDown } from "lucide-react";
 
 export default function AdminSystemUptimePage() {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [days, setDays] = useState(30);
+  const { data: stats = null, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "system", "uptime?days=_"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/system/uptime?days=${days}");
+      return resp.data || null;
+    },
+    staleTime: 30_000,
+  });
+
+    const [days, setDays] = useState(30);
 
   const load = useCallback(async () => {
     try {
@@ -16,7 +24,6 @@ export default function AdminSystemUptimePage() {
     } catch (e) { console.error(e); } finally { setLoading(false); }
   }, [days]);
 
-  useEffect(() => { load(); }, [load]);
 
   const uptimeColor = (pct) => {
     if (pct >= 99.9) return "text-green-600";
@@ -41,7 +48,7 @@ export default function AdminSystemUptimePage() {
             <option value={30}>Son 30 gün</option>
             <option value={90}>Son 90 gün</option>
           </select>
-          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
             Yenile
           </Button>

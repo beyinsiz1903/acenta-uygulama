@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, ActivityIcon } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
@@ -21,33 +22,15 @@ function formatAmountCents(amountCents, currency = "EUR") {
 }
 
 export default function AdminB2BFunnelPage() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      setError("");
-      try {
-        const res = await api.get("/admin/b2b/funnel/summary");
-        if (cancelled) return;
-        setItems(res.data?.items || []);
-      } catch (e) {
-        if (cancelled) return;
-        setError(apiErrorMessage(e));
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data: items = [], isLoading: loading, error: fetchError } = useQuery({
+    queryKey: ["admin", "b2b", "funnel", "summary"],
+    queryFn: async () => {
+      const res = await api.get("/admin/b2b/funnel/summary");
+      return res.data?.items || [];
+    },
+    staleTime: 30_000,
+  });
+  const error = fetchError ? apiErrorMessage(fetchError) : "";
 
   const hasData = items && items.length > 0;
 

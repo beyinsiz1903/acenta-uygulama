@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -8,9 +9,17 @@ import {
 } from "lucide-react";
 
 export default function AdminDemoGuidePage() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [currentStep, setCurrentStep] = useState(0);
+  const { data: data = null, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "system", "demo-guide"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/system/demo-guide");
+      return resp.data || null;
+    },
+    staleTime: 30_000,
+  });
+  const error = fetchError ? (typeof apiErrorMessage === 'function' ? apiErrorMessage(fetchError) : fetchError.message) : "";
+
+      const [currentStep, setCurrentStep] = useState(0);
 
   const load = useCallback(async () => {
     try {
@@ -20,7 +29,6 @@ export default function AdminDemoGuidePage() {
     } catch (e) { console.error(e); } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
 
   const steps = data?.steps || [];
   const step = steps[currentStep];
@@ -38,7 +46,7 @@ export default function AdminDemoGuidePage() {
           <h1 className="text-2xl font-bold text-foreground">Demo Rehberi</h1>
           {data && <Badge variant="outline">{data.total_time}</Badge>}
         </div>
-        <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
         </Button>
       </div>

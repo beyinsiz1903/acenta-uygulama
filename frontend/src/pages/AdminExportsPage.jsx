@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiErrorMessage } from "../lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -8,12 +9,17 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs"
 import { Loader2, AlertCircle } from "lucide-react";
 
 export default function AdminExportsPage() {
-  const [tab, setTab] = useState("policies");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { data: policies = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "exports", "policies"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/exports/policies");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
 
-  const [policies, setPolicies] = useState([]);
-  const [selectedKey, setSelectedKey] = useState("");
+  const [tab, setTab] = useState("policies");
+    const [selectedKey, setSelectedKey] = useState("");
   const [form, setForm] = useState({
     key: "",
     enabled: true,
@@ -72,9 +78,6 @@ export default function AdminExportsPage() {
     });
   };
 
-  useEffect(() => {
-    loadPolicies();
-  }, []);
 
   const loadRuns = async (key) => {
     if (!key) {

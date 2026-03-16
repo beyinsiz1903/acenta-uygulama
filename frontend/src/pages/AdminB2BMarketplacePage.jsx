@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, Info, Loader2, Search, Store, Users } from "lucide-react";
 
 import { api, apiErrorMessage, parseErrorDetails } from "../lib/api";
@@ -14,6 +15,15 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "../com
 import PricingPreviewDialog from "../components/b2b/PricingPreviewDialog";
 
 function StatusBadge({ status }) {
+  const { data: partners = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "partners"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/partners");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
   const s = (status || "").toLowerCase();
   if (s === "approved") {
     return (
@@ -37,8 +47,7 @@ function ProductTypeBadge({ type }) {
 }
 
 export default function AdminB2BMarketplacePage() {
-  const [partners, setPartners] = useState([]);
-  const [partnersLoading, setPartnersLoading] = useState(false);
+    const [partnersLoading, setPartnersLoading] = useState(false);
   const [partnersError, setPartnersError] = useState("");
   const [partnerSearch, setPartnerSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -70,9 +79,6 @@ export default function AdminB2BMarketplacePage() {
 
   const [savingKey, setSavingKey] = useState("");
 
-  useEffect(() => {
-    void loadPartners();
-  }, []);
 
   async function loadPartners() {
     setPartnersLoading(true);

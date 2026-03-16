@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { AGENCY_MODULE_GROUPS, normalizeAgencyModuleKeys } from "../lib/agencyModules";
 import { safeName } from "../utils/formatters";
@@ -9,10 +10,17 @@ import {
 import { toast } from "sonner";
 
 function AgencyModuleCard({ agency, onSaved }) {
+  const { data: modules = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "agencies"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/agencies");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
   const [expanded, setExpanded] = useState(false);
-  const [modules, setModules] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
+    const [saving, setSaving] = useState(false);
 
   const loadModules = useCallback(async () => {
     setLoading(true);
@@ -23,9 +31,6 @@ function AgencyModuleCard({ agency, onSaved }) {
     setLoading(false);
   }, [agency]);
 
-  useEffect(() => {
-    if (expanded) loadModules();
-  }, [expanded, loadModules]);
 
   const toggle = (key) => {
     setModules((prev) =>
@@ -131,8 +136,6 @@ function AgencyModuleCard({ agency, onSaved }) {
 
 export default function AdminAgencyModulesPage() {
   const [agencies, setAgencies] = useState([]);
-  const [loading, setLoading] = useState(true);
-
   const loadAgencies = useCallback(async () => {
     setLoading(true);
     try {
@@ -142,7 +145,6 @@ export default function AdminAgencyModulesPage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadAgencies(); }, [loadAgencies]);
 
   if (loading) {
     return (

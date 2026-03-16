@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -14,12 +15,9 @@ const STATUS_MAP = {
 };
 
 export default function AdminTicketsPage() {
-  const [tickets, setTickets] = useState([]);
-  const [stats, setStats] = useState({});
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [showCheckin, setShowCheckin] = useState(false);
-  const [creating, setCreating] = useState(false);
   const [checkinCode, setCheckinCode] = useState("");
   const [checkinResult, setCheckinResult] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -28,47 +26,62 @@ export default function AdminTicketsPage() {
     customer_email: "", customer_phone: "", event_date: "", seat_info: "",
   });
 
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
+  const { data: ticketData, isLoading: loading, refetch } = useQuery({
+    queryKey: ["tickets", "all"],
+    queryFn: async () => {
       const [tkRes, stRes] = await Promise.all([
         api.get("/tickets"),
         api.get("/tickets/stats"),
       ]);
-      setTickets(tkRes.data?.items || []);
-      setStats(stRes.data || {});
-    } catch (e) { console.error(e); } finally { setLoading(false); }
-  }, []);
+      return { tickets: tkRes.data?.items || [], stats: stRes.data || {} };
+    },
+    staleTime: 30_000,
+  });
+  const tickets = ticketData?.tickets || [];
+  const stats = ticketData?.stats || {};
 
-  useEffect(() => { load(); }, [load]);
-
-  const handleCreate = async () => {
-    if (!form.reservation_id || !form.product_name || !form.customer_name) return;
-    try {
-      setCreating(true);
-      await api.post("/tickets", form);
+  const createMutation = useMutation({
+    mutationFn: (payload) => api.post("/tickets", payload),
+    onSuccess: () => {
       setShowCreate(false);
       setForm({ reservation_id: "", product_name: "", customer_name: "", customer_email: "", customer_phone: "", event_date: "", seat_info: "" });
-      await load();
-    } catch (e) { alert(e.response?.data?.error?.message || e.message); } finally { setCreating(false); }
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+    },
+    onError: (e) => alert(e.response?.data?.error?.message || e.message),
+  });
+
+  const handleCreate = () => {
+    if (!form.reservation_id || !form.product_name || !form.customer_name) return;
+    createMutation.mutate(form);
   };
 
-  const handleCheckin = async () => {
-    if (!checkinCode.trim()) return;
-    try {
-      setCheckinResult(null);
-      const res = await api.post("/tickets/check-in", { ticket_code: checkinCode.trim() });
+  const checkinMutation = useMutation({
+    mutationFn: (code) => api.post("/tickets/check-in", { ticket_code: code.trim() }),
+    onSuccess: (res) => {
       setCheckinResult({ success: true, data: res.data });
       setCheckinCode("");
-      await load();
-    } catch (e) {
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+    },
+    onError: (e) => {
       setCheckinResult({ success: false, error: e.response?.data?.detail || e.response?.data?.error?.message || e.message });
-    }
+    },
+  });
+
+  const handleCheckin = () => {
+    if (!checkinCode.trim()) return;
+    setCheckinResult(null);
+    checkinMutation.mutate(checkinCode);
   };
 
-  const handleCancel = async (code) => {
+  const cancelMutation = useMutation({
+    mutationFn: (code) => api.post(`/tickets/${code}/cancel`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tickets"] }),
+    onError: (e) => alert(e.response?.data?.detail || e.message),
+  });
+
+  const handleCancel = (code) => {
     if (!window.confirm("Bilet iptal edilsin mi?")) return;
-    try { await api.post(`/tickets/${code}/cancel`); await load(); } catch (e) { alert(e.response?.data?.detail || e.message); }
+    cancelMutation.mutate(code);
   };
 
   const getStatus = (s) => STATUS_MAP[s] || { label: s, className: "" };
@@ -81,7 +94,7 @@ export default function AdminTicketsPage() {
           <p className="text-sm text-muted-foreground mt-1">Bilet olusturun, QR kodu ile check-in yapin.</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={load}><RefreshCw className="h-4 w-4 mr-1" /> Yenile</Button>
+          <Button variant="outline" size="sm" onClick={() => refetch()}><RefreshCw className="h-4 w-4 mr-1" /> Yenile</Button>
           <Button variant="outline" size="sm" onClick={() => { setShowCheckin(!showCheckin); setShowCreate(false); }} data-testid="checkin-toggle-btn"><Search className="h-4 w-4 mr-1" /> Check-in</Button>
           <Button size="sm" onClick={() => { setShowCreate(!showCreate); setShowCheckin(false); }} data-testid="create-ticket-btn"><Plus className="h-4 w-4 mr-1" /> Yeni Bilet</Button>
         </div>
@@ -125,7 +138,7 @@ export default function AdminTicketsPage() {
           </div>
           <div className="flex justify-end gap-2 mt-3">
             <Button variant="outline" size="sm" onClick={() => setShowCreate(false)}>Iptal</Button>
-            <Button size="sm" onClick={handleCreate} disabled={creating || !form.reservation_id} data-testid="submit-ticket-btn">{creating ? "Olusturuluyor..." : "Olustur"}</Button>
+            <Button size="sm" onClick={handleCreate} disabled={createMutation.isPending || !form.reservation_id} data-testid="submit-ticket-btn">{createMutation.isPending ? "Olusturuluyor..." : "Olustur"}</Button>
           </div>
         </div>
       )}

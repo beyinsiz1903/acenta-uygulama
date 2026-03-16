@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -16,7 +17,6 @@ function FieldError({ text }) {
 }
 
 export default function AdminThemePage() {
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
 
@@ -34,16 +34,17 @@ export default function AdminThemePage() {
     "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
   );
 
-  const load = async () => {
-    setLoading(true);
-    setErr("");
-    try {
+  const { isLoading: loading, refetch } = useQuery({
+    queryKey: ["admin", "theme"],
+    queryFn: async () => {
       const res = await api.get("/admin/theme");
-      const t = res.data || {};
+      return res.data || {};
+    },
+    staleTime: 60_000,
+    onSuccess: (t) => {
       const brand = t.brand || {};
       const colors = t.colors || {};
       const typo = t.typography || {};
-
       setCompanyName(brand.company_name || "Syroce");
       setLogoUrl(brand.logo_url || "");
       setFaviconUrl(brand.favicon_url || "");
@@ -55,17 +56,9 @@ export default function AdminThemePage() {
       setMutedFg(colors.muted_foreground || "#475569");
       setBorder(colors.border || "#e2e8f0");
       setFontFamily(typo.font_family || fontFamily);
-    } catch (e) {
-      setErr(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void load();
-     
-  }, []);
+    },
+    onError: (e) => setErr(apiErrorMessage(e)),
+  });
 
   const save = async () => {
     setErr("");

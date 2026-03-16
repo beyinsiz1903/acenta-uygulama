@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Download, RefreshCw, AlertCircle } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { api, apiErrorMessage } from "../lib/api";
 import { formatMoney } from "../lib/format";
 import {
@@ -50,37 +51,19 @@ export default function AgencySettlementsPage() {
   const [status, setStatus] = useState("");
   const [hotelId, setHotelId] = useState("");
 
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  async function load() {
-    setLoading(true);
-    setError("");
-    try {
+  const { data, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["agency", "settlements", month, status, hotelId],
+    queryFn: async () => {
       const params = { month };
       if (status) params.status = status;
       if (hotelId) params.hotel_id = hotelId;
       const resp = await api.get("/agency/settlements", { params });
-      setData(resp.data);
-    } catch (e) {
-      const msg = apiErrorMessage(e) || "";
-      // 404 / Not Found durumunda bof veri gibi davran, kdrmdz hata gstermeyelim
-      if (msg.toLowerCase().includes("not found")) {
-        setData({ totals: [], entries: [] });
-        setError("");
-      } else {
-        setError(msg);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    load();
-     
-  }, []);
+      return resp.data || { totals: [], entries: [] };
+    },
+    staleTime: 30_000,
+    retry: (count, err) => err?.response?.status === 404 ? false : count < 2,
+  });
+  const error = fetchError ? (fetchError?.response?.status === 404 ? "" : apiErrorMessage(fetchError)) : "";
 
   const rows = useMemo(() => data?.totals || [], [data]);
 
@@ -154,7 +137,7 @@ export default function AgencySettlementsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={load} disabled={loading} data-testid="agency-settlements-refresh-button">
+          <Button variant="outline" onClick={() => refetch()} disabled={loading} data-testid="agency-settlements-refresh-button">
             <RefreshCw className="h-4 w-4 mr-2" />
             Yenile
           </Button>
@@ -203,7 +186,7 @@ export default function AgencySettlementsPage() {
         </div>
 
         <div className="mt-3">
-          <Button onClick={load} disabled={loading} data-testid="agency-settlements-filter-button">
+          <Button onClick={() => refetch()} disabled={loading} data-testid="agency-settlements-filter-button">
             Filtrele
           </Button>
         </div>

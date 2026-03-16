@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, Loader2 } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
@@ -9,9 +10,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
 export default function AdminCMSPagesPage() {
-  const [pages, setPages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const queryClient = useQueryClient();
 
   const [slug, setSlug] = useState("");
   const [title, setTitle] = useState("");
@@ -20,22 +19,15 @@ export default function AdminCMSPagesPage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
 
-  useEffect(() => {
-    void loadPages();
-  }, []);
-
-  async function loadPages() {
-    setLoading(true);
-    setError("");
-    try {
+  const { data: pages = [], isLoading: loading, error: fetchError } = useQuery({
+    queryKey: ["admin", "cms", "pages"],
+    queryFn: async () => {
       const res = await api.get("/admin/cms/pages");
-      setPages(res.data?.items || []);
-    } catch (e) {
-      setError(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  }
+      return res.data?.items || [];
+    },
+    staleTime: 30_000,
+  });
+  const error = fetchError ? apiErrorMessage(fetchError) : "";
 
   async function handleCreate(e) {
     e.preventDefault();
@@ -58,7 +50,7 @@ export default function AdminCMSPagesPage() {
       setTitle("");
       setBody("");
       setLinkedCampaignSlug("");
-      await loadPages();
+      queryClient.invalidateQueries({ queryKey: ["admin", "cms", "pages"] });
     } catch (e) {
       setFormError(apiErrorMessage(e));
     } finally {

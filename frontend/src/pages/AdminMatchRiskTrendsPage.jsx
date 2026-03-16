@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiErrorMessage } from "../lib/api";
 import { useToast } from "../hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -192,43 +193,28 @@ function TrendLineChart({ points }) {
 
 export default function AdminMatchRiskTrendsPage() {
   const { toast } = useToast();
-  const [points, setPoints] = useState([]);
-  const [delta, setDelta] = useState(null);
   const [limit, setLimit] = useState(30);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  async function load(nextLimit) {
-    const effectiveLimit = nextLimit || limit;
-    setLoading(true);
-    setError("");
-    try {
+  const { data: trendData, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "risk-snapshots", "trend", limit],
+    queryFn: async () => {
       const res = await api.get(
-        `/admin/risk-snapshots/trend?snapshot_key=match_risk_daily&limit=${effectiveLimit}`
+        `/admin/risk-snapshots/trend?snapshot_key=match_risk_daily&limit=${limit}`
       );
-      setPoints(res.data?.points || []);
-      setDelta(res.data?.delta || null);
-    } catch (e) {
-      const msg = apiErrorMessage ? apiErrorMessage(e) : e?.message || "Bir hata oluştu";
-      // 404/"Not Found" durumunda veri yok olarak kabul ediyoruz; bu durumda kırmızı hata göstermek yerine
-      // aşağıdaki boş state mesajlarına güveniyoruz.
+      return { points: res.data?.points || [], delta: res.data?.delta || null };
+    },
+    staleTime: 60_000,
+    retry: (count, err) => err?.response?.status === 404 ? false : count < 2,
+    onError: (e) => {
+      const msg = apiErrorMessage ? apiErrorMessage(e) : e?.message || "Bir hata olustu";
       if (msg !== "Not Found") {
-        setError(msg);
-        toast({
-          title: "Trendler yüklenemedi",
-          description: msg,
-          variant: "destructive",
-        });
+        toast({ title: "Trendler yuklenemedi", description: msg, variant: "destructive" });
       }
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    void load(limit);
-     
-  }, []);
+    },
+  });
+  const points = trendData?.points || [];
+  const delta = trendData?.delta || null;
+  const error = fetchError && fetchError?.response?.status !== 404 ? (apiErrorMessage ? apiErrorMessage(fetchError) : "") : "";
 
   const kpiHighRisk = useMemo(
     () => (delta ? computeKpi(delta.high_risk_rate) : null),
@@ -265,7 +251,7 @@ export default function AdminMatchRiskTrendsPage() {
             onChange={(e) => {
               const next = Number(e.target.value) || 30;
               setLimit(next);
-              void load(next);
+              refetch();
             }}
             disabled={loading}
           >
@@ -398,7 +384,7 @@ export default function AdminMatchRiskTrendsPage() {
             disabled={loading}
             data-testid="match-risk-trends-run-snapshot"
             onClick={() => {
-              void load(limit);
+              refetch();
             }}
           >
             Snapshot çalıştır

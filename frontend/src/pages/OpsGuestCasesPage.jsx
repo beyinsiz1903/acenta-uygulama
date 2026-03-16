@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Filter, RefreshCw, CheckSquare } from "lucide-react";
 
 import PageHeader from "../components/PageHeader";
@@ -120,13 +121,10 @@ function WaitingBadge({ waitingOn }) {
 function OpsGuestCasesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const [items, setItems] = useState([]);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(Number(searchParams.get("page") || "1") || 1);
   const [pageSize, setPageSize] = useState(20);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const [status, setStatus] = useState(searchParams.get("status") || "open");
   const [type, setType] = useState(searchParams.get("type") || "");
@@ -138,16 +136,13 @@ function OpsGuestCasesPage() {
   const [bulkStatus, setBulkStatus] = useState("no_change");
   const [bulkWaitingOn, setBulkWaitingOn] = useState("no_change");
   const [bulkNote, setBulkNote] = useState("");
-  const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkResult, setBulkResult] = useState(null);
   const [bulkError, setBulkError] = useState(null);
-  const [bulkApplying, setBulkApplying] = useState(false);
   const [slaFilter, setSlaFilter] = useState("all");
 
-  const loadCases = async (opts = {}) => {
-    setLoading(true);
-    setError("");
-    try {
+  const { data: casesData, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["ops", "guest-cases", status, type, source, q, page, pageSize],
+    queryFn: async () => {
       const params = {
         status: status === "all" ? undefined : status,
         type: type || undefined,
@@ -155,15 +150,10 @@ function OpsGuestCasesPage() {
         q: q || undefined,
         page,
         page_size: pageSize,
-        ...opts,
       };
       const res = await listOpsCases(params);
-      setItems(res.items || []);
-      setPage(res.page || 1);
-      setPageSize(res.page_size || 20);
-      setTotal(res.total || 0);
 
-      // URL'yi filtrelerle güncelle (UX için güzel olur)
+      // URL'yi filtrelerle güncelle (UX)
       const next = new URLSearchParams();
       if (status && status !== "open") next.set("status", status);
       if (type) next.set("type", type);
@@ -171,31 +161,18 @@ function OpsGuestCasesPage() {
       if (q) next.set("q", q);
       if (page !== 1) next.set("page", String(page));
       setSearchParams(next);
-    } catch (e) {
-      setError(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  useEffect(() => {
-    // page param'ını URL'den oku (ilk yüklemede)
-    const pageFromUrl = Number(searchParams.get("page") || "1");
-    if (!Number.isNaN(pageFromUrl) && pageFromUrl > 0) {
-      setPage(pageFromUrl);
-    }
-     
-  }, []);
+      return res;
+    },
+    staleTime: 15_000,
+    keepPreviousData: true,
+  });
 
-  useEffect(() => {
-    loadCases();
-     
-  }, [status, type, source, page, pageSize]);
+  const items = casesData?.items || [];
+  const total = casesData?.total || 0;
+  const error = fetchError ? apiErrorMessage(fetchError) : "";
 
-  const onRefetch = () => {
-    // Özellikle close sonrası listeyi tazelemek için
-    loadCases();
-  };
+  const onRefetch = () => refetch();
 
   const hasAny = items.length > 0;
 
@@ -254,14 +231,38 @@ function OpsGuestCasesPage() {
     bulkWaitingOn === "no_change" ? null : bulkWaitingOn,
   );
 
+  const bulkMutation = useMutation({
+    mutationFn: ({ targetIds, patch }) => bulkUpdateOpsCases({ case_ids: targetIds, patch }),
+    onSuccess: (res) => {
+      setBulkResult(res || null);
+      const failedIds = Array.isArray(res?.results)
+        ? res.results.filter((r) => r && r.ok === false).map((r) => r.case_id)
+        : [];
+
+      if (!failedIds.length) {
+        setSelectedIds([]);
+        setBulkStatus("no_change");
+        setBulkWaitingOn("no_change");
+        setBulkNote("");
+        if (typeof window !== "undefined") {
+          window.setTimeout(() => setBulkResult(null), 5000);
+        }
+      } else {
+        setSelectedIds(failedIds);
+      }
+      queryClient.invalidateQueries({ queryKey: ["ops", "guest-cases"] });
+    },
+    onError: (e) => setBulkError(apiErrorMessage(e)),
+  });
+
   const canApplyBulk =
-    !bulkApplying &&
+    !bulkMutation.isPending &&
     anySelected &&
     ((bulkStatus && bulkStatus !== "no_change") ||
       (bulkWaitingOn && bulkWaitingOn !== "no_change") ||
       String(bulkNote || "").trim().length > 0);
 
-  const applyBulk = async (caseIdsOverride) => {
+  const applyBulk = (caseIdsOverride) => {
     const targetIds = (caseIdsOverride && caseIdsOverride.length
       ? caseIdsOverride
       : effectiveSelectedIds);
@@ -280,47 +281,10 @@ function OpsGuestCasesPage() {
 
     if (String(bulkNote || "").trim().length > 0) patch.note = bulkNote.trim();
 
-    if (!Object.keys(patch).length) {
-      return;
-    }
+    if (!Object.keys(patch).length) return;
 
-    try {
-      setBulkApplying(true);
-      setBulkError(null);
-      const res = await bulkUpdateOpsCases({
-        case_ids: targetIds,
-        patch,
-      });
-
-      setBulkResult(res || null);
-
-      const failedIds = Array.isArray(res?.results)
-        ? res.results.filter((r) => r && r.ok === false).map((r) => r.case_id)
-        : [];
-
-      if (!failedIds.length) {
-        // Tam başarı: seçimi ve inputları sıfırla
-        setSelectedIds([]);
-        setBulkStatus("no_change");
-        setBulkWaitingOn("no_change");
-        setBulkNote("");
-        // Banner bir süre kalsın, sonra temizlenebilir (opsiyonel)
-        if (typeof window !== "undefined") {
-          window.setTimeout(() => {
-            setBulkResult(null);
-          }, 5000);
-        }
-      } else {
-        // Partial success: sadece failed case'ler seçili kalsın
-        setSelectedIds(failedIds);
-      }
-
-      loadCases();
-    } catch (e) {
-      setBulkError(apiErrorMessage(e));
-    } finally {
-      setBulkApplying(false);
-    }
+    setBulkError(null);
+    bulkMutation.mutate({ targetIds, patch });
   };
 
   return (
@@ -743,7 +707,7 @@ function OpsGuestCasesPage() {
               <Select
                 value={bulkStatus}
                 onValueChange={setBulkStatus}
-                disabled={bulkApplying}
+                disabled={bulkMutation.isPending}
               >
                 <SelectTrigger className="h-8 text-sm" data-testid="cases-bulk-status">
                   <SelectValue placeholder="Durum seç" />
@@ -763,7 +727,7 @@ function OpsGuestCasesPage() {
               <Select
                 value={bulkWaitingOn}
                 onValueChange={setBulkWaitingOn}
-                disabled={bulkApplying}
+                disabled={bulkMutation.isPending}
               >
                 <SelectTrigger className="h-8 text-sm" data-testid="cases-bulk-waiting-on">
                   <SelectValue placeholder="Bekleme durumu seç" />
@@ -785,7 +749,7 @@ function OpsGuestCasesPage() {
                 placeholder="Toplu not ekle"
                 value={bulkNote}
                 onChange={(e) => setBulkNote(e.target.value)}
-                disabled={bulkApplying}
+                disabled={bulkMutation.isPending}
                 data-testid="cases-bulk-note"
               />
             </div>
@@ -829,7 +793,7 @@ function OpsGuestCasesPage() {
 
           <div
             className="mt-3 flex flex-wrap items-center gap-2"
-            aria-busy={bulkApplying ? "true" : "false"}
+            aria-busy={bulkMutation.isPending ? "true" : "false"}
           >
             <Button
               onClick={() => applyBulk()}
@@ -837,7 +801,7 @@ function OpsGuestCasesPage() {
               size="sm"
               data-testid="cases-bulk-apply"
             >
-              {bulkApplying ? (
+              {bulkMutation.isPending ? (
                 <span data-testid="cases-bulk-applying">Uygulanıyor...</span>
               ) : (
                 "Değişiklikleri Uygula"
@@ -854,7 +818,7 @@ function OpsGuestCasesPage() {
                     .map((r) => r.case_id);
                   applyBulk(failedIds);
                 }}
-                disabled={bulkApplying}
+                disabled={bulkMutation.isPending}
                 data-testid="cases-bulk-retry-failed"
               >
                 Retry failed

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Settings, UserPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,6 +35,15 @@ const AVAILABLE_ROLES = [
 ];
 
 function UserForm({ open, onOpenChange, onSaved }) {
+  const { data: users = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["settings", "users"],
+    queryFn: async () => {
+      const resp = await api.get("/settings/users");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
   const [serverError, setServerError] = useState("");
 
   const {
@@ -182,9 +192,7 @@ export default function SettingsPage() {
   const canManageUsers = (currentUser?.roles || []).some((role) => ["super_admin", "admin"].includes(role));
   const canAccessBilling = (currentUser?.roles || []).some((role) => ["super_admin", "admin"].includes(role));
   const isAgencyUser = (currentUser?.roles || []).some((role) => ["agency_admin", "agency_agent"].includes(role));
-  const [users, setUsers] = useState([]);
-  const [error, setError] = useState("");
-  const [openUser, setOpenUser] = useState(false);
+    const [openUser, setOpenUser] = useState(false);
   const [agencyName, setAgencyName] = useState("");
 
   const load = useCallback(async () => {
@@ -209,12 +217,6 @@ export default function SettingsPage() {
     }
   }, [canManageUsers]);
 
-  useEffect(() => {
-    const t = setTimeout(() => {
-      load();
-    }, 0);
-    return () => clearTimeout(t);
-  }, [load]);
 
   useEffect(() => {
     if (!isAgencyUser) {

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { AlertCircle, Building2, Loader2, ShieldOff } from "lucide-react";
 
@@ -18,53 +19,40 @@ function ProductTypeBadge({ type }) {
 }
 
 export default function AdminB2BAgencyProductsPage() {
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const agencyId = searchParams.get("agency_id") || "";
   const agencyName = searchParams.get("agency_name") || "";
 
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [q, setQ] = useState("");
   const [savingId, setSavingId] = useState("");
 
-  useEffect(() => {
-    if (!agencyId) return;
-    void loadProducts();
-     
-  }, [agencyId]);
-
-  async function loadProducts() {
-    if (!agencyId) return;
-    setLoading(true);
-    setError("");
-    try {
+  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "b2b", "agency-products", agencyId, q],
+    queryFn: async () => {
+      if (!agencyId) return [];
       const params = new URLSearchParams();
       params.set("limit", "100");
       if (q) params.set("q", q);
       const resp = await api.get(`/admin/b2b/visibility/agencies/${agencyId}/products?${params.toString()}`);
-      setItems(resp.data?.items || []);
-    } catch (err) {
-      setError(apiErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  }
+      return resp.data?.items || [];
+    },
+    staleTime: 30_000,
+    enabled: !!agencyId,
+  });
+  const error = fetchError ? apiErrorMessage(fetchError) : "";
 
-  async function toggleBlocked(productId, currentBlocked) {
+  const toggleMutation = useMutation({
+    mutationFn: ({ productId, blocked }) => api.put(`/admin/b2b/visibility/agencies/${agencyId}/products/${productId}`, { blocked }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "b2b", "agency-products"] }),
+    onError: (e) => alert(apiErrorMessage(e)),
+    onSettled: () => setSavingId(""),
+  });
+
+  function toggleBlocked(productId, currentBlocked) {
     if (!agencyId) return;
     setSavingId(productId);
-    try {
-      await api.put(`/admin/b2b/visibility/agencies/${agencyId}/products/${productId}`, {
-        blocked: !currentBlocked,
-      });
-      await loadProducts();
-    } catch (err) {
-      // Hata üst düzeyde gösterilsin
-      setError(apiErrorMessage(err));
-    } finally {
-      setSavingId("");
-    }
+    toggleMutation.mutate({ productId, blocked: !currentBlocked });
   }
 
   const headerTitle = agencyName ? `${agencyName} – Ürün Erişimi` : "B2B Ürün Erişimi";
@@ -115,7 +103,7 @@ export default function AdminB2BAgencyProductsPage() {
                 size="sm"
                 variant="outline"
                 className="text-xs"
-                onClick={loadProducts}
+                onClick={() => refetch()}
                 disabled={loading}
               >
                 {loading ? "Yükleniyor..." : "Yenile"}

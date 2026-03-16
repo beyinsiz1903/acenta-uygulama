@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { resolveAssetUrl } from "../lib/backendUrl";
 import { Card } from "../components/ui/card";
@@ -36,48 +37,40 @@ function formatPrice(price, currency) {
 
 export default function ToursListPage() {
   const navigate = useNavigate();
-  const [tours, setTours] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDestination, setSelectedDestination] = useState("");
-  const [categories, setCategories] = useState([]);
-  const [destinations, setDestinations] = useState([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
 
-  const loadTours = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
+  const { data: toursData, isLoading: loading, error: fetchError } = useQuery({
+    queryKey: ["tours", "list", page, search, selectedCategory, selectedDestination],
+    queryFn: async () => {
       const params = { page, page_size: 12 };
       if (search) params.q = search;
       if (selectedCategory) params.category = selectedCategory;
       if (selectedDestination) params.destination = selectedDestination;
       const res = await api.get("/tours", { params });
-      setTours(res.data?.items || []);
-      setTotal(res.data?.total || 0);
-      if (res.data?.filters) {
-        setCategories(res.data.filters.categories || []);
-        setDestinations(res.data.filters.destinations || []);
-      }
-    } catch (e) {
-      setError("Turlar yuklenirken hata olustu.");
-    } finally {
-      setLoading(false);
-    }
-  }, [page, search, selectedCategory, selectedDestination]);
+      return {
+        tours: res.data?.items || [],
+        total: res.data?.total || 0,
+        categories: res.data?.filters?.categories || [],
+        destinations: res.data?.filters?.destinations || [],
+      };
+    },
+    staleTime: 30_000,
+    keepPreviousData: true,
+  });
 
-  useEffect(() => {
-    loadTours();
-  }, [loadTours]);
+  const tours = toursData?.tours || [];
+  const total = toursData?.total || 0;
+  const categories = toursData?.categories || [];
+  const destinations = toursData?.destinations || [];
+  const error = fetchError ? "Turlar yuklenirken hata olustu." : "";
 
   const handleSearch = (e) => {
     e.preventDefault();
     setPage(1);
-    loadTours();
   };
 
   const clearFilters = () => {

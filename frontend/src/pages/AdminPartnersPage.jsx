@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, Loader2, Users } from "lucide-react";
 
 import { api, apiErrorMessage, parseErrorDetails } from "../lib/api";
@@ -18,6 +19,15 @@ import {
 } from "../components/ui/dialog";
 
 function StatusBadge({ status }) {
+  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "partners"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/partners");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
   const s = (status || "").toLowerCase();
   if (s === "approved") {
     return (
@@ -33,10 +43,7 @@ function StatusBadge({ status }) {
 }
 
 export default function AdminPartnersPage() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [errorDetails, setErrorDetails] = useState(null);
+    const [errorDetails, setErrorDetails] = useState(null);
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -89,10 +96,6 @@ export default function AdminPartnersPage() {
     }
   };
 
-  useEffect(() => {
-    void load();
-     
-  }, [page, limit, statusFilter, debouncedSearch]);
 
   const resetForm = () => {
     setName("");
@@ -121,7 +124,7 @@ export default function AdminPartnersPage() {
       };
       await api.post("/admin/partners", payload);
       resetForm();
-      await load();
+      refetch();
     } catch (e2) {
       setError(apiErrorMessage(e2));
     } finally {
@@ -133,7 +136,7 @@ export default function AdminPartnersPage() {
     setError("");
     try {
       await api.patch(`/admin/partners/${id}`, { status });
-      await load();
+      refetch();
     } catch (e) {
       setError(apiErrorMessage(e));
     }
@@ -168,7 +171,7 @@ export default function AdminPartnersPage() {
 
       {errorDetails?.isRetryable ? (
         <div className="mb-2">
-          <ErrorCard details={errorDetails} onRetry={load} />
+          <ErrorCard details={errorDetails} onRetry={() => refetch()} />
         </div>
       ) : error ? (
         <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
@@ -226,7 +229,7 @@ export default function AdminPartnersPage() {
                 <option value={100}>100</option>
               </select>
             </div>
-            <Button type="button" size="xs" variant="outline" onClick={load} disabled={loading}>
+            <Button type="button" size="xs" variant="outline" onClick={() => refetch()} disabled={loading}>
               {loading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
               Yenile
             </Button>

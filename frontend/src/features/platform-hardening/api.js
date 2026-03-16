@@ -1,22 +1,19 @@
 /**
  * Platform Hardening — API layer + reusable data hook.
  */
-import { useState, useEffect, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 
 export function useHardeningApi(path) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const fetch_ = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data = null, isLoading: loading, refetch } = useQuery({
+    queryKey: ["hardening", path],
+    queryFn: async () => {
       const res = await api.get(path);
-      setData(res.data);
-    } catch { /* silent */ }
-    setLoading(false);
-  }, [path]);
-  useEffect(() => { fetch_(); }, [fetch_]);
-  return { data, loading, refetch: fetch_ };
+      return res.data;
+    },
+    staleTime: 30_000,
+  });
+  return { data, loading, refetch };
 }
 
 export const hardeningApi = {

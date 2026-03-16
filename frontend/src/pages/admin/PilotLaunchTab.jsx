@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -33,9 +34,7 @@ function ScoreGauge({ score, max, label, size = "lg" }) {
 }
 
 function ActionCard({ testId, icon: Icon, title, desc, endpoint, method = "post", children }) {
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const run = async () => {
+      const run = async () => {
     setLoading(true);
     try {
       const res = method === "post" ? await api.post(endpoint) : await api.get(endpoint);
@@ -81,16 +80,16 @@ function SLARow({ checks }) {
 }
 
 export default function PilotLaunchTab() {
-  const [dashboard, setDashboard] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [panel, setPanel] = useState("overview");
+  const { data: dashboard, isLoading: loading, refetch } = useQuery({
+    queryKey: ["pilot", "dashboard"],
+    queryFn: async () => {
+      const resp = await api.get("/pilot/dashboard");
+      return resp.data || null;
+    },
+    staleTime: 30_000,
+  });
 
-  const fetch_ = useCallback(async () => {
-    setLoading(true);
-    try { const r = await api.get("/pilot/dashboard"); setDashboard(r.data); } catch {}
-    setLoading(false);
-  }, []);
-  useEffect(() => { fetch_(); }, [fetch_]);
+  const [panel, setPanel] = useState("overview");
 
   const panels = [
     { id: "overview", label: "Overview", icon: Target },
@@ -130,7 +129,7 @@ export default function PilotLaunchTab() {
             <Badge data-testid="pilot-risk" className={dashboard?.risk_level === "low" ? "bg-emerald-700 text-white" : dashboard?.risk_level === "medium" ? "bg-amber-700 text-white" : "bg-red-700 text-white"}>{dashboard?.risk_level || "---"}</Badge>
           </div>
         </div>
-        <Button data-testid="refresh-pilot" size="sm" variant="outline" onClick={fetch_}><RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /></Button>
+        <Button data-testid="refresh-pilot" size="sm" variant="outline" onClick={() => refetch()}><RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /></Button>
       </div>
 
       {/* Nav */}
@@ -210,7 +209,6 @@ function EnvironmentPanel() {
   const [env, setEnv] = useState(null);
   const [loading, setLoading] = useState(true);
   const fetch_ = useCallback(async () => { setLoading(true); try { const r = await api.get("/pilot/environment"); setEnv(r.data); } catch {} setLoading(false); }, []);
-  useEffect(() => { fetch_(); }, [fetch_]);
 
   if (loading || !env) return <div className="animate-pulse h-48 bg-zinc-900 rounded-lg" />;
   const e = env.pilot_environment;
@@ -254,7 +252,6 @@ function SupplierPanel() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const fetch_ = useCallback(async () => { setLoading(true); try { const r = await api.get("/pilot/supplier-traffic"); setData(r.data); } catch {} setLoading(false); }, []);
-  useEffect(() => { fetch_(); }, [fetch_]);
 
   const [activating, setActivating] = useState({});
   const activate = async (code, mode) => {
@@ -297,7 +294,6 @@ function MonitoringPanel() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const fetch_ = useCallback(async () => { setLoading(true); try { const r = await api.get("/pilot/monitoring"); setData(r.data); } catch {} setLoading(false); }, []);
-  useEffect(() => { fetch_(); }, [fetch_]);
   if (loading || !data) return <div className="animate-pulse h-48 bg-zinc-900 rounded-lg" />;
   const m = data.tracked_metrics;
   return (
@@ -343,7 +339,6 @@ function IncidentPanel() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const fetch_ = useCallback(async () => { setLoading(true); try { const r = await api.get("/pilot/incidents"); setData(r.data); } catch {} setLoading(false); }, []);
-  useEffect(() => { fetch_(); }, [fetch_]);
 
   const [simType, setSimType] = useState("supplier_outage");
   const types = ["supplier_outage", "queue_backlog", "payment_failure"];
@@ -392,7 +387,6 @@ function AgencyPanel() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const fetch_ = useCallback(async () => { setLoading(true); try { const r = await api.get("/pilot/agencies"); setData(r.data); } catch {} setLoading(false); }, []);
-  useEffect(() => { fetch_(); }, [fetch_]);
   if (loading || !data) return <div className="animate-pulse h-48 bg-zinc-900 rounded-lg" />;
   return (
     <div data-testid="agency-panel" className="space-y-4">
@@ -512,7 +506,6 @@ function PerformancePanel() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const fetch_ = useCallback(async () => { setLoading(true); try { const r = await api.get("/pilot/performance"); setData(r.data); } catch {} setLoading(false); }, []);
-  useEffect(() => { fetch_(); }, [fetch_]);
   if (loading || !data) return <div className="animate-pulse h-48 bg-zinc-900 rounded-lg" />;
   const p = data.performance;
   return (
@@ -562,7 +555,6 @@ function ReportPanel() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const fetch_ = useCallback(async () => { setLoading(true); try { const r = await api.get("/pilot/report"); setData(r.data); } catch {} setLoading(false); }, []);
-  useEffect(() => { fetch_(); }, [fetch_]);
   if (loading || !data) return <div className="animate-pulse h-48 bg-zinc-900 rounded-lg" />;
   return (
     <div data-testid="report-panel" className="space-y-4">
@@ -610,7 +602,6 @@ function GoLivePanel() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const fetch_ = useCallback(async () => { setLoading(true); try { const r = await api.get("/pilot/go-live"); setData(r.data); } catch {} setLoading(false); }, []);
-  useEffect(() => { fetch_(); }, [fetch_]);
   if (loading || !data) return <div className="animate-pulse h-48 bg-zinc-900 rounded-lg" />;
   const dc = { GO: "bg-emerald-950/20 border-emerald-900/40", CONDITIONAL_GO: "bg-amber-950/20 border-amber-900/40", NO_GO: "bg-red-950/20 border-red-900/40" };
   const dtc = { GO: "text-emerald-400", CONDITIONAL_GO: "text-amber-400", NO_GO: "text-red-400" };

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -12,9 +13,17 @@ const SEVERITY_STYLE = {
 };
 
 export default function AdminRunbookPage() {
-  const [entries, setEntries] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState({});
+  const { data: entries = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "system", "runbook"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/system/runbook");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+  const error = fetchError ? (typeof apiErrorMessage === 'function' ? apiErrorMessage(fetchError) : fetchError.message) : "";
+
+      const [expanded, setExpanded] = useState({});
 
   const load = useCallback(async () => {
     try {
@@ -28,7 +37,6 @@ export default function AdminRunbookPage() {
     } catch (e) { console.error(e); } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
 
   const toggle = (id) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
@@ -39,7 +47,7 @@ export default function AdminRunbookPage() {
           <BookOpen className="h-6 w-6 text-orange-600" />
           <h1 className="text-2xl font-bold text-foreground">Ops Runbook</h1>
         </div>
-        <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
           Yenile
         </Button>

@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { Plus, FileText, ArrowRight, RefreshCw, GripVertical } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import {
   DndContext,
@@ -404,10 +405,36 @@ function QuoteForm({ open, onOpenChange, onSaved }) {
 }
 
 export default function CrmPage() {
+  const queryClient = useQueryClient();
   const [leads, setLeads] = useState([]);
   const [quotes, setQuotes] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [error, setError] = useState("");
+
+  const { data: crmData, refetch } = useQuery({
+    queryKey: ["crm", "all"],
+    queryFn: async () => {
+      const [a, b, c] = await Promise.all([api.get("/leads"), api.get("/quotes"), api.get("/customers")]);
+      const custList = c.data || [];
+      const custMap = new Map(custList.map((x) => [x.id, x]));
+      const enrichedLeads = (a.data || []).map((l) => ({
+        ...l,
+        customer_name: custMap.get(l.customer_id)?.name,
+      }));
+      return { leads: enrichedLeads, quotes: b.data || [], customers: custList };
+    },
+    staleTime: 30_000,
+    onError: (e) => setError(apiErrorMessage(e)),
+  });
+
+  // Sync query data to local state (allows optimistic DnD updates)
+  useEffect(() => {
+    if (crmData) {
+      setLeads(crmData.leads);
+      setQuotes(crmData.quotes);
+      setCustomers(crmData.customers);
+    }
+  }, [crmData]);
 
   const leadById = useMemo(() => {
     const map = new Map();
@@ -418,43 +445,17 @@ export default function CrmPage() {
   const [openLeadForm, setOpenLeadForm] = useState(false);
   const [openQuoteForm, setOpenQuoteForm] = useState(false);
 
-  const load = useCallback(async () => {
-    setError("");
-    try {
-      const [a, b, c] = await Promise.all([api.get("/leads"), api.get("/quotes"), api.get("/customers")]);
-      const custList = c.data || [];
-      const custMap = new Map(custList.map((x) => [x.id, x]));
-
-      setCustomers(custList);
-
-      // Lead kartında müşteri adını göstermek için zenginleştir.
-      const enrichedLeads = (a.data || []).map((l) => ({
-        ...l,
-        customer_name: custMap.get(l.customer_id)?.name,
-      }));
-
-      setLeads(enrichedLeads);
-      setQuotes(b.data || []);
-    } catch (e) {
-      setError(apiErrorMessage(e));
-    }
-  }, []);
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      load();
-    }, 0);
-    return () => clearTimeout(t);
-  }, [load]);
-
-  async function convertQuote(id) {
-    try {
-      const resp = await api.post("/quotes/convert", { quote_id: id });
+  const convertMutation = useMutation({
+    mutationFn: (id) => api.post("/quotes/convert", { quote_id: id }),
+    onSuccess: (resp) => {
       alert(`Teklif rezervasyona çevrildi. PNR: ${resp.data.pnr}`);
-      await load();
-    } catch (e) {
-      alert(apiErrorMessage(e));
-    }
+      queryClient.invalidateQueries({ queryKey: ["crm"] });
+    },
+    onError: (e) => alert(apiErrorMessage(e)),
+  });
+
+  function convertQuote(id) {
+    convertMutation.mutate(id);
   }
 
   const leadBuckets = useMemo(() => {
@@ -513,10 +514,10 @@ export default function CrmPage() {
         status: toStatus,
         sort_index: nextSort,
       });
-      await load();
+      await refetch();
     } catch (e) {
       alert(apiErrorMessage(e));
-      await load();
+      await refetch();
     }
   }
 
@@ -569,7 +570,7 @@ export default function CrmPage() {
           <p className="text-sm text-muted-foreground">Lead → Teklif → Rezervasyon</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={load} className="gap-2" data-testid="crm-refresh">
+          <Button variant="outline" onClick={() => refetch()} className="gap-2" data-testid="crm-refresh">
             <RefreshCw className="h-4 w-4" />
             Yenile
           </Button>
@@ -654,8 +655,8 @@ export default function CrmPage() {
         </CardContent>
       </Card>
 
-      <LeadForm open={openLeadForm} onOpenChange={setOpenLeadForm} onSaved={load} />
-      <QuoteForm open={openQuoteForm} onOpenChange={setOpenQuoteForm} onSaved={load} />
+      <LeadForm open={openLeadForm} onOpenChange={setOpenLeadForm} onSaved={() => refetch()} />
+      <QuoteForm open={openQuoteForm} onOpenChange={setOpenQuoteForm} onSaved={() => refetch()} />
     </div>
   );
 }

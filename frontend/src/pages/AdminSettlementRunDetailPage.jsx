@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import { AlertCircle, CheckCircle2, XCircle, ArrowLeft, Loader2 } from "lucide-react";
 
@@ -13,6 +14,15 @@ import { Textarea } from "../components/ui/textarea";
 import { Badge } from "../components/ui/badge";
 
 function StatusBadge({ status }) {
+  const { data: run = null, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["ops", "finance", "settlements"],
+    queryFn: async () => {
+      const resp = await api.get("/ops/finance/settlements/${settlementId}");
+      return resp.data || null;
+    },
+    staleTime: 30_000,
+  });
+
   if (!status) return null;
   const tone = String(status).toLowerCase();
   if (tone === "draft") return <Badge variant="outline">Taslak</Badge>;
@@ -59,11 +69,7 @@ export default function AdminSettlementRunDetailPage() {
   const { settlementId } = useParams();
   const navigate = useNavigate();
 
-  const [run, setRun] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const [cancelReason, setCancelReason] = useState("");
+    const [cancelReason, setCancelReason] = useState("");
   const [paymentRef, setPaymentRef] = useState("");
   const [accrualToAdd, setAccrualToAdd] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
@@ -77,7 +83,7 @@ export default function AdminSettlementRunDetailPage() {
     };
   }, [run]);
 
-  async function load() {
+  async function refetch() {
     if (!settlementId) return;
     setLoading(true);
     setError("");
@@ -92,17 +98,13 @@ export default function AdminSettlementRunDetailPage() {
     }
   }
 
-  useEffect(() => {
-    load();
-     
-  }, [settlementId]);
 
   async function handleApprove() {
     if (!run) return;
     setActionLoading(true);
     try {
       await api.post(`/ops/finance/settlements/${run.settlement_id}/approve`, {});
-      await load();
+      refetch();
     } catch (e) {
       alert(apiErrorMessage(e));
     } finally {
@@ -121,7 +123,7 @@ export default function AdminSettlementRunDetailPage() {
     try {
       await api.post(`/ops/finance/settlements/${run.settlement_id}/items:add`, [id]);
       setAccrualToAdd("");
-      await load();
+      refetch();
     } catch (e) {
       alert(apiErrorMessage(e));
     } finally {
@@ -140,7 +142,7 @@ export default function AdminSettlementRunDetailPage() {
       await api.post(`/ops/finance/settlements/${run.settlement_id}/cancel`, {
         reason: cancelReason,
       });
-      await load();
+      refetch();
     } catch (e) {
       alert(apiErrorMessage(e));
     } finally {
@@ -155,7 +157,7 @@ export default function AdminSettlementRunDetailPage() {
       await api.post(`/ops/finance/settlements/${run.settlement_id}/mark-paid`, {
         payment_reference: paymentRef || null,
       });
-      await load();
+      refetch();
     } catch (e) {
       alert(apiErrorMessage(e));
     } finally {
@@ -179,7 +181,7 @@ export default function AdminSettlementRunDetailPage() {
         <ErrorState
           title="Settlement run yüklenemedi"
           description={error}
-          onRetry={load}
+          onRetry={() => refetch()}
         />
       </div>
     );
@@ -191,7 +193,7 @@ export default function AdminSettlementRunDetailPage() {
         <ErrorState
           title="Settlement run bulunamadı"
           description="Belirtilen settlement_id için sonuç alınamadı."
-          onRetry={load}
+          onRetry={() => refetch()}
         />
       </div>
     );

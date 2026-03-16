@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -14,6 +15,15 @@ const StatusBadge = ({ s }) => {
 };
 
 function ProductForm({ value, onChange, onSave, saving, error }) {
+  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "catalog", "products"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/catalog/products");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
   const v = value || {};
   return (
     <div className="space-y-3">
@@ -101,10 +111,7 @@ function ProductForm({ value, onChange, onSave, saving, error }) {
 }
 
 function VersionsPanel({ productId, productStatus }) {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [roomTypes, setRoomTypes] = useState([]);
+    const [roomTypes, setRoomTypes] = useState([]);
   const [ratePlans, setRatePlans] = useState([]);
   const [selectedRoomTypeIds, setSelectedRoomTypeIds] = useState([]);
   const [selectedRatePlanIds, setSelectedRatePlanIds] = useState([]);
@@ -133,10 +140,6 @@ function VersionsPanel({ productId, productStatus }) {
     }
   };
 
-  useEffect(() => {
-    void load();
-     
-  }, [productId]);
 
   const toggleRoomType = (id) => {
     setSelectedRoomTypeIds((prev) =>
@@ -157,7 +160,7 @@ function VersionsPanel({ productId, productStatus }) {
       content.room_type_ids = selectedRoomTypeIds;
       content.rate_plan_ids = selectedRatePlanIds;
       await api.post(`/admin/catalog/products/${productId}/versions`, { content });
-      await load();
+      refetch();
     } catch (err) {
       if (err instanceof SyntaxError) {
         setError("Content JSON geçerli değil.");
@@ -171,7 +174,7 @@ function VersionsPanel({ productId, productStatus }) {
     setError("");
     try {
       await api.post(`/admin/catalog/products/${productId}/versions/${versionId}/publish`);
-      await load();
+      refetch();
     } catch (err) {
       setError(apiErrorMessage(err));
     }
@@ -181,7 +184,7 @@ function VersionsPanel({ productId, productStatus }) {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div className="font-semibold text-sm">Versiyonlar</div>
-        <Button size="sm" variant="outline" onClick={load} disabled={loading}>
+        <Button size="sm" variant="outline" onClick={() => refetch()} disabled={loading}>
           {loading ? "Yükleniyor..." : "Yenile"}
         </Button>
       </div>
@@ -315,15 +318,11 @@ function VersionsPanel({ productId, productStatus }) {
 }
 
 export default function AdminCatalogPage() {
-  const [items, setItems] = useState([]);
-  const [selected, setSelected] = useState(null);
+    const [selected, setSelected] = useState(null);
 
   const [q, setQ] = useState("");
   const [type, setType] = useState("");
   const [status, setStatus] = useState("");
-
-  const [loading, setLoading] = useState(false);
-
   const [draft, setDraft] = useState({
     type: "hotel",
     code: "",
@@ -354,10 +353,6 @@ export default function AdminCatalogPage() {
     }
   };
 
-  useEffect(() => {
-    void load();
-     
-  }, []);
 
   const select = async (productId) => {
     setFormError("");
@@ -388,7 +383,7 @@ export default function AdminCatalogPage() {
     try {
       if (!selected?.product_id) {
         const r = await api.post("/admin/catalog/products", draft);
-        await load();
+        refetch();
         await select(r.data.product_id);
       } else {
         await api.put(`/admin/catalog/products/${selected.product_id}`, {
@@ -398,7 +393,7 @@ export default function AdminCatalogPage() {
           status: draft.status,
           default_currency: draft.default_currency,
         });
-        await load();
+        refetch();
         await select(selected.product_id);
       }
     } catch (err) {
@@ -458,7 +453,7 @@ export default function AdminCatalogPage() {
             <Button
               size="sm"
               variant="outline"
-              onClick={load}
+              onClick={() => refetch()}
               disabled={loading}
             >
               {loading ? "Yükleniyor..." : "Uygula"}

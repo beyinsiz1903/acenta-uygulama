@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import { resolveAssetUrl } from "../lib/backendUrl";
@@ -19,6 +20,15 @@ const DEFAULT_IMAGES = [
 ];
 
 function formatPrice(price, currency) {
+  const { data: tour = null, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["tours", "_"],
+    queryFn: async () => {
+      const resp = await api.get("/tours/${tourId}");
+      return resp.data || null;
+    },
+    staleTime: 30_000,
+  });
+
   if (!price) return "";
   return new Intl.NumberFormat("tr-TR", {
     style: "currency",
@@ -36,10 +46,7 @@ function resolveImage(src) {
 export default function TourDetailPage() {
   const { tourId } = useParams();
   const navigate = useNavigate();
-  const [tour, setTour] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [activeImageIdx, setActiveImageIdx] = useState(0);
+    const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [activeTab, setActiveTab] = useState("details");
 
   // Reservation form
@@ -57,23 +64,6 @@ export default function TourDetailPage() {
   const [resError, setResError] = useState("");
   const [resSuccess, setResSuccess] = useState(null);
 
-  useEffect(() => {
-    if (!tourId) return;
-    let cancelled = false;
-    async function load() {
-      setLoading(true);
-      try {
-        const res = await api.get(`/tours/${tourId}`);
-        if (!cancelled) setTour(res.data);
-      } catch (e) {
-        if (!cancelled) setError("Tur bilgileri yuklenemedi.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, [tourId]);
 
   const handleReservation = async (e) => {
     e.preventDefault();

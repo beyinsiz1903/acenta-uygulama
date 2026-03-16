@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, Loader2, Tag } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
@@ -19,8 +20,7 @@ function FieldError({ text }) {
 }
 
 export default function AdminCampaignsPage() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
   const [err, setErr] = useState("");
 
   const [name, setName] = useState("");
@@ -30,24 +30,15 @@ export default function AdminCampaignsPage() {
   const [validFrom, setValidFrom] = useState("");
   const [validTo, setValidTo] = useState("");
   const [couponCodes, setCouponCodes] = useState("");
-  const [creating, setCreating] = useState(false);
 
-  const load = async () => {
-    setLoading(true);
-    setErr("");
-    try {
+  const { data: items = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ["admin", "campaigns"],
+    queryFn: async () => {
       const res = await api.get("/admin/campaigns");
-      setItems(res.data || []);
-    } catch (e) {
-      setErr(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void load();
-  }, []);
+      return res.data || [];
+    },
+    staleTime: 30_000,
+  });
 
   const resetForm = () => {
     setName("");
@@ -75,47 +66,47 @@ export default function AdminCampaignsPage() {
     });
   };
 
-  const create = async () => {
+  const createMutation = useMutation({
+    mutationFn: (payload) => api.post("/admin/campaigns", payload),
+    onSuccess: () => {
+      resetForm();
+      queryClient.invalidateQueries({ queryKey: ["admin", "campaigns"] });
+    },
+    onError: (e) => setErr(apiErrorMessage(e)),
+  });
+
+  const create = () => {
     setErr("");
     if (!name.trim() || !slug.trim()) {
       setErr("Kampanya adı ve slug alanları zorunludur.");
       return;
     }
 
-    setCreating(true);
-    try {
-      const payload = {
-        name: name.trim(),
-        slug: slug.trim(),
-        description,
-        channels: channels.length ? channels : ["B2C"],
-        valid_from: toISO(validFrom),
-        valid_to: toISO(validTo),
-        coupon_codes: couponCodes
-          .split(",")
-          .map((c) => c.trim().toUpperCase())
-          .filter(Boolean),
-      };
+    const payload = {
+      name: name.trim(),
+      slug: slug.trim(),
+      description,
+      channels: channels.length ? channels : ["B2C"],
+      valid_from: toISO(validFrom),
+      valid_to: toISO(validTo),
+      coupon_codes: couponCodes
+        .split(",")
+        .map((c) => c.trim().toUpperCase())
+        .filter(Boolean),
+    };
 
-      await api.post("/admin/campaigns", payload);
-      resetForm();
-      await load();
-    } catch (e) {
-      setErr(apiErrorMessage(e));
-    } finally {
-      setCreating(false);
-    }
+    createMutation.mutate(payload);
   };
 
-  const toggleActive = async (campaign) => {
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, active }) => api.patch(`/admin/campaigns/${id}`, { active }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "campaigns"] }),
+    onError: (e) => setErr(apiErrorMessage(e)),
+  });
+
+  const toggleActive = (campaign) => {
     setErr("");
-    const next = !campaign.active;
-    try {
-      await api.patch(`/admin/campaigns/${campaign.id}`, { active: next });
-      await load();
-    } catch (e) {
-      setErr(apiErrorMessage(e));
-    }
+    toggleMutation.mutate({ id: campaign.id, active: !campaign.active });
   };
 
   return (
@@ -227,8 +218,8 @@ export default function AdminCampaignsPage() {
         </div>
 
         <div className="flex justify-end">
-          <Button size="sm" className="h-8 text-xs" onClick={create} disabled={creating}>
-            {creating && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+          <Button size="sm" className="h-8 text-xs" onClick={create} disabled={createMutation.isPending}>
+            {createMutation.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
             Kampanya Oluştur
           </Button>
         </div>

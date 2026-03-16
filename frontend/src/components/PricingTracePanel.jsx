@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiErrorMessage } from "../lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -6,6 +7,15 @@ import { Button } from "./ui/button";
 import { AlertCircle, Loader2 } from "lucide-react";
 
 function ErrorBanner({ message, onRetry }) {
+  const { data: data = null, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["bookings", "_", "pricing-trace"],
+    queryFn: async () => {
+      const resp = await api.get("/bookings/${bookingId}/pricing-trace");
+      return resp.data || null;
+    },
+    staleTime: 30_000,
+  });
+
   if (!message) return null;
   return (
     <div className="mb-3 flex items-center justify-between gap-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
@@ -23,10 +33,7 @@ function ErrorBanner({ message, onRetry }) {
 }
 
 export default function PricingTracePanel({ bookingId }) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [data, setData] = useState(null);
-
+  
   const load = async () => {
     if (!bookingId) return;
     setLoading(true);
@@ -43,10 +50,6 @@ export default function PricingTracePanel({ bookingId }) {
     }
   };
 
-  useEffect(() => {
-    void load();
-     
-  }, [bookingId]);
 
   const pricing = data?.pricing || null;
   const audit = data?.pricing_audit || null;
@@ -60,7 +63,7 @@ export default function PricingTracePanel({ bookingId }) {
           size="xs"
           variant="outline"
           className="h-7 text-xs"
-          onClick={load}
+          onClick={() => refetch()}
           disabled={loading}
         >
           {loading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
@@ -68,7 +71,7 @@ export default function PricingTracePanel({ bookingId }) {
         </Button>
       </div>
 
-      <ErrorBanner message={error} onRetry={load} />
+      <ErrorBanner message={error} onRetry={() => refetch()} />
 
       {!loading && !pricing && !audit && (
         <p className="text-xs text-muted-foreground">

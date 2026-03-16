@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -6,15 +7,21 @@ import { Label } from "../components/ui/label";
 import { DollarSign, ArrowDownLeft, ArrowUpRight, Calendar, RefreshCcw, Plus, X, Loader2 } from "lucide-react";
 
 function formatMoney(amount) {
+  const { data: payments = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["webpos", "payments?limit=50"],
+    queryFn: async () => {
+      const resp = await api.get("/webpos/payments?limit=50");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
   return new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(amount || 0);
 }
 
 /* ─── Payment Modal ───────────────────────────────────────────── */
 function PaymentModal({ open, onClose, onSuccess }) {
-  const [form, setForm] = useState({ amount: "", method: "cash", description: "", customer_id: "", reservation_id: "" });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState({ amount: "", method: "cash", description: "", customer_id: "", reservation_id: "" });  const [submitted, setSubmitted] = useState(false);
 
   if (!open) return null;
 
@@ -75,9 +82,6 @@ function PaymentModal({ open, onClose, onSuccess }) {
 function RefundModal({ open, onClose, onSuccess, payment }) {
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
   useEffect(() => { if (payment) setAmount(String(payment.amount)); }, [payment]);
 
   if (!open || !payment) return null;
@@ -121,11 +125,8 @@ function RefundModal({ open, onClose, onSuccess, payment }) {
 
 /* ═══ MAIN PAGE ═══════════════════════════════════════════════ */
 export default function WebPOSPage() {
-  const [payments, setPayments] = useState([]);
-  const [ledger, setLedger] = useState([]);
-  const [balance, setBalance] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [showPayment, setShowPayment] = useState(false);
+    const [ledger, setLedger] = useState([]);
+  const [balance, setBalance] = useState(0);  const [showPayment, setShowPayment] = useState(false);
   const [showRefund, setShowRefund] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [dailySummary, setDailySummary] = useState(null);
@@ -153,7 +154,6 @@ export default function WebPOSPage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
 
   const handleRefundClick = (p) => { setSelectedPayment(p); setShowRefund(true); };
 
@@ -168,7 +168,7 @@ export default function WebPOSPage() {
           <p className="text-sm text-muted-foreground">Ödeme kayıtları ve mali defter</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={load}><RefreshCcw className="h-4 w-4 mr-1" /> Yenile</Button>
+          <Button variant="outline" size="sm" onClick={() => refetch()}><RefreshCcw className="h-4 w-4 mr-1" /> Yenile</Button>
           <Button size="sm" onClick={() => setShowPayment(true)} data-testid="new-payment-btn"><Plus className="h-4 w-4 mr-1" /> Ödeme Kaydet</Button>
         </div>
       </div>

@@ -1,28 +1,20 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 
 import { api, apiErrorMessage } from "../../lib/api";
 
 export default function B2BAccountPage() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { data: data = null, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["b2b", "account", "summary"],
+    queryFn: async () => {
+      const resp = await api.get("/b2b/account/summary");
+      return resp.data || null;
+    },
+    staleTime: 30_000,
+  });
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      setError("");
-      try {
-        const resp = await api.get("/b2b/account/summary");
-        setData(resp.data);
-      } catch (err) {
-        setError(apiErrorMessage(err));
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, []);
+  
 
   if (loading) {
     return (

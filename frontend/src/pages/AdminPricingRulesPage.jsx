@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -60,42 +61,21 @@ function StackableBadge({ stackable }) {
   return <Badge variant="secondary">Evet</Badge>;
 }
 
-function usePricingRules(initialFilters) {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [filters, setFilters] = useState(initialFilters);
-
-  const load = async () => {
-    setLoading(true);
-    setError("");
-    try {
+function usePricingRules(filters) {
+  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["pricing", "rules", filters.active_only, filters.supplier, filters.rule_type],
+    queryFn: async () => {
       const params = {};
       if (filters.active_only) params.active_only = true;
       if (filters.supplier) params.supplier = filters.supplier.trim();
       if (filters.rule_type) params.rule_type = filters.rule_type;
       const res = await api.get("/pricing/rules", { params });
-      setItems(res.data || []);
-    } catch (err) {
-      setError(apiErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void load();
-     
-  }, [filters.active_only, filters.supplier, filters.rule_type]);
-
-  return {
-    items,
-    loading,
-    error,
-    filters,
-    setFilters,
-    reload: load,
-  };
+      return res.data || [];
+    },
+    staleTime: 30_000,
+  });
+  const error = fetchError ? apiErrorMessage(fetchError) : "";
+  return { items, loading, error, reload: refetch };
 }
 
 function RuleFormDialog({ open, onOpenChange, mode, initial, onSaved }) {
@@ -264,36 +244,29 @@ function RuleFormDialog({ open, onOpenChange, mode, initial, onSaved }) {
 }
 
 export default function AdminPricingRulesPage() {
+  const queryClient = useQueryClient();
   const [activeOnly, setActiveOnly] = useState(true);
   const [supplierFilter, setSupplierFilter] = useState("");
   const [ruleTypeFilter, setRuleTypeFilter] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selectedRule, setSelectedRule] = useState(null);
-  const [deleteLoadingId, setDeleteLoadingId] = useState(null);
 
-  const { items, loading, error, filters, setFilters, reload } = usePricingRules({
+  const { items, loading, error, reload } = usePricingRules({
     active_only: activeOnly,
     supplier: supplierFilter,
     rule_type: ruleTypeFilter,
   });
 
-  useEffect(() => {
-    setFilters({ active_only: activeOnly, supplier: supplierFilter, rule_type: ruleTypeFilter });
-  }, [activeOnly, supplierFilter, ruleTypeFilter, setFilters]);
+  const deleteMutation = useMutation({
+    mutationFn: (id) => api.delete(`/pricing/rules/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["pricing", "rules"] }),
+    onError: (err) => alert(apiErrorMessage(err)),
+  });
 
-  const handleDelete = async (rule) => {
+  const handleDelete = (rule) => {
     if (!window.confirm("Kural silinsin mi? Bu işlem geri alınamaz.")) return;
-    setDeleteLoadingId(rule.id);
-    try {
-      await api.delete(`/pricing/rules/${rule.id}`);
-      await reload();
-    } catch (err) {
-      // Not: v1 için basit alert yeterli, ileride FriendlyError bileşeni ile değiştirilebilir.
-      alert(apiErrorMessage(err));
-    } finally {
-      setDeleteLoadingId(null);
-    }
+    deleteMutation.mutate(rule.id);
   };
 
   const ruleTypeOptions = useMemo(() => [{ value: "", label: "Hepsi" }, ...RULE_TYPES], []);
@@ -444,9 +417,9 @@ export default function AdminPricingRulesPage() {
                         size="icon"
                         className="h-7 w-7 text-destructive border-destructive/40"
                         onClick={() => handleDelete(r)}
-                        disabled={deleteLoadingId === r.id}
+                        disabled={deleteMutation.isPending}
                       >
-                        {deleteLoadingId === r.id ? (
+                        {deleteMutation.isPending ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
                         ) : (
                           <Trash2 className="h-3 w-3" />

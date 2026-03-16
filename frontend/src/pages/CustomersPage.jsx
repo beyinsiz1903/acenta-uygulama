@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";
@@ -88,47 +89,35 @@ function CustomerForm({ open, onOpenChange, initial, onSaved }) {
 
 /* ═══════════════════════ MAIN PAGE ═══════════════════════ */
 export default function CustomersPage() {
-  const [rows, setRows] = useState([]);
   const [q, setQ] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [openForm, setOpenForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [deleting, setDeleting] = useState(false);
+  const queryClient = useQueryClient();
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const resp = await api.get("/customers", { params: { q: q || undefined } });
-      setRows(resp.data || []);
-    } catch (e) {
-      const msg = apiErrorMessage(e);
-      if (msg === "Not Found" || msg === "Request failed with status code 404") {
-        setRows([]);
-      } else {
-        setError(msg);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [q]);
+  const { data: rows = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["customers", "list", q],
+    queryFn: async () => {
+      const { data } = await api.get("/customers", { params: { q: q || undefined } });
+      return data || [];
+    },
+    staleTime: 30_000,
+    retry: (count, err) => err?.response?.status === 404 ? false : count < 2,
+  });
+  const error = fetchError ? (fetchError?.response?.status === 404 ? "" : apiErrorMessage(fetchError)) : "";
 
-  useEffect(() => { load(); }, [load]);
-
-  async function handleDelete() {
-    if (!deleteTarget) return;
-    setDeleting(true);
-    try {
-      await api.delete(`/customers/${deleteTarget.id}`);
+  const deleteMutation = useMutation({
+    mutationFn: (id) => api.delete(`/customers/${id}`),
+    onSuccess: () => {
       setDeleteTarget(null);
-      await load();
-    } catch (e) {
-      alert(apiErrorMessage(e));
-    } finally {
-      setDeleting(false);
-    }
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+    },
+    onError: (e) => alert(apiErrorMessage(e)),
+  });
+
+  function handleDelete() {
+    if (!deleteTarget) return;
+    deleteMutation.mutate(deleteTarget.id);
   }
 
   const columns = useMemo(() => [
@@ -207,7 +196,7 @@ export default function CustomersPage() {
         />
       </div>
 
-      <CustomerForm open={openForm} onOpenChange={setOpenForm} initial={editing} onSaved={load} />
+      <CustomerForm open={openForm} onOpenChange={setOpenForm} initial={editing} onSaved={() => refetch()} />
 
       <ConfirmDialog
         open={!!deleteTarget}
@@ -218,7 +207,7 @@ export default function CustomersPage() {
         confirmLabel="Sil"
         cancelLabel="Vazgeç"
         onConfirm={handleDelete}
-        loading={deleting}
+        loading={deleteMutation.isPending}
       />
     </PageShell>
   );

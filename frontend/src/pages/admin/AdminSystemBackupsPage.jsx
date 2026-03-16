@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -11,9 +12,17 @@ const STATUS_MAP = {
 };
 
 export default function AdminSystemBackupsPage() {
-  const [backups, setBackups] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [running, setRunning] = useState(false);
+  const { data: backups = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "system", "backups"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/system/backups");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+  const error = fetchError ? (typeof apiErrorMessage === 'function' ? apiErrorMessage(fetchError) : fetchError.message) : "";
+
+      const [running, setRunning] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -23,13 +32,12 @@ export default function AdminSystemBackupsPage() {
     } catch (e) { console.error(e); } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
 
   const runBackup = async () => {
     try {
       setRunning(true);
       await api.post("/admin/system/backups/run");
-      await load();
+      refetch();
     } catch (e) { console.error(e); } finally { setRunning(false); }
   };
 
@@ -37,7 +45,7 @@ export default function AdminSystemBackupsPage() {
     if (!window.confirm("Bu yedeği silmek istediğinize emin misiniz?")) return;
     try {
       await api.delete(`/admin/system/backups/${id}`);
-      await load();
+      refetch();
     } catch (e) { console.error(e); }
   };
 
@@ -57,7 +65,7 @@ export default function AdminSystemBackupsPage() {
           <h1 className="text-2xl font-bold text-foreground">Sistem Yedekleri</h1>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
             Yenile
           </Button>

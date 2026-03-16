@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { X, Bell, Activity, AlertTriangle, Clock, ExternalLink } from 'lucide-react';
 import { api } from '../lib/api';
 import { Skeleton } from './ui/skeleton';
@@ -36,27 +37,16 @@ function EventRow({ item }) {
 /* ================================================================== */
 export default function NotificationDrawer({ open, onClose }) {
   const [tab, setTab] = useState('activities');
-  const [loading, setLoading] = useState(false);
-  const [events, setEvents] = useState([]);
 
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-    const load = async () => {
-      setLoading(true);
-      try {
-        const res = await api.get('/audit/logs', { params: { range: '7d', limit: 30 } });
-        if (!cancelled) setEvents(res.data || []);
-      } catch {
-        // audit endpoint may require super_admin; graceful
-        if (!cancelled) setEvents([]);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    load();
-    return () => { cancelled = true; };
-  }, [open]);
+  const { data: events = [], isLoading: loading } = useQuery({
+    queryKey: ['notifications', 'audit-logs'],
+    queryFn: async () => {
+      const res = await api.get('/audit/logs', { params: { range: '7d', limit: 30 } });
+      return res.data || [];
+    },
+    staleTime: 30_000,
+    enabled: open,
+  });
 
   if (!open) return null;
 

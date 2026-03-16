@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -7,6 +8,15 @@ import { Label } from "../components/ui/label";
 import { Card } from "../components/ui/card";
 
 function FieldError({ text }) {
+  const { data: events = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "funnel", "summary"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/funnel/summary");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
   if (!text) return null;
   return (
     <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
@@ -19,10 +29,7 @@ export default function AdminFunnelPage() {
   const [correlationId, setCorrelationId] = useState("");
   const [entityId, setEntityId] = useState("");
   const [channel, setChannel] = useState("");
-  const [events, setEvents] = useState([]);
-  const [selected, setSelected] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
+    const [selected, setSelected] = useState(null);  const [err, setErr] = useState("");
 
   const [days, setDays] = useState(7);
   const emptySummary = {
@@ -89,11 +96,6 @@ export default function AdminFunnelPage() {
     }
   };
 
-  useEffect(() => {
-    void loadSummary(days);
-    void loadAlerts(days);
-    // Initial empty load (no filters) is noisy; wait for user input
-  }, [days]);
 
   const formatPercent = (v) => {
     if (!v || Number.isNaN(v)) return "0.0%";
@@ -268,7 +270,7 @@ export default function AdminFunnelPage() {
             </select>
           </div>
           <div className="flex items-end justify-end">
-            <Button size="sm" className="h-8 text-xs" onClick={load} disabled={loading}>
+            <Button size="sm" className="h-8 text-xs" onClick={() => refetch()} disabled={loading}>
               Yükle
             </Button>
           </div>

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -16,30 +17,29 @@ const INVOICE_STATUS_MAP = {
 };
 
 function InvoiceDetailPanel({ invoiceId, onClose, onUpdate }) {
-  const [invoice, setInvoice] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: invoice, isLoading: loading } = useQuery({
+    queryKey: ["pms", "invoice", invoiceId],
+    queryFn: async () => {
+      const res = await api.get(`/agency/pms/accounting/invoices/${invoiceId}`);
+      return res.data;
+    },
+    staleTime: 30_000,
+    onError: () => toast.error("Fatura yuklenemedi"),
+  });
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await api.get(`/agency/pms/accounting/invoices/${invoiceId}`);
-        setInvoice(res.data);
-      } catch {
-        toast.error("Fatura yuklenemedi");
-      } finally { setLoading(false); }
-    })();
-  }, [invoiceId]);
-
-  const handleStatusChange = async (newStatus) => {
-    try {
-      await api.put(`/agency/pms/accounting/invoices/${invoiceId}`, { status: newStatus });
+  const statusMutation = useMutation({
+    mutationFn: (newStatus) => api.put(`/agency/pms/accounting/invoices/${invoiceId}`, { status: newStatus }),
+    onSuccess: (_, newStatus) => {
       toast.success(`Fatura durumu guncellendi: ${INVOICE_STATUS_MAP[newStatus]?.label}`);
+      queryClient.invalidateQueries({ queryKey: ["pms", "invoices"] });
       onUpdate();
       onClose();
-    } catch (err) {
-      toast.error(err.response?.data?.detail || "Guncelleme basarisiz");
-    }
-  };
+    },
+    onError: (err) => toast.error(err.response?.data?.detail || "Guncelleme basarisiz"),
+  });
+
+  const handleStatusChange = (newStatus) => statusMutation.mutate(newStatus);
 
   if (loading) {
     return (
@@ -181,26 +181,23 @@ function InvoiceDetailPanel({ invoiceId, onClose, onUpdate }) {
 }
 
 export default function PMSInvoicesPage() {
-  const [invoices, setInvoices] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedInvoice, setSelectedInvoice] = useState(null);
 
-  const loadInvoices = useCallback(async () => {
-    try {
+  const { data: invoices = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ["pms", "invoices", searchQuery, statusFilter],
+    queryFn: async () => {
       const params = [];
       if (searchQuery) params.push(`search=${encodeURIComponent(searchQuery)}`);
       if (statusFilter !== "all") params.push(`status=${statusFilter}`);
       const qs = params.length ? `?${params.join("&")}` : "";
       const res = await api.get(`/agency/pms/accounting/invoices${qs}`);
-      setInvoices(res.data.items || []);
-    } catch {
-      toast.error("Faturalar yuklenemedi");
-    } finally { setLoading(false); }
-  }, [searchQuery, statusFilter]);
-
-  useEffect(() => { loadInvoices(); }, [loadInvoices]);
+      return res.data.items || [];
+    },
+    staleTime: 30_000,
+    onError: () => toast.error("Faturalar yuklenemedi"),
+  });
 
   if (loading) {
     return (
@@ -280,7 +277,7 @@ export default function PMSInvoicesPage() {
         <InvoiceDetailPanel
           invoiceId={selectedInvoice}
           onClose={() => setSelectedInvoice(null)}
-          onUpdate={loadInvoices}
+          onUpdate={() => refetch()}
         />
       )}
     </div>

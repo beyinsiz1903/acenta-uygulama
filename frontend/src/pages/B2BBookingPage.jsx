@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Ticket, Plus } from "lucide-react";
 
 import { api, apiErrorMessage, getUser } from "../lib/api";
@@ -10,9 +11,17 @@ import { Label } from "../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 
 export default function B2BBookingPage() {
+  const { data: products = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["products"],
+    queryFn: async () => {
+      const resp = await api.get("/products");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
   const user = getUser();
-  const [products, setProducts] = useState([]);
-  const [customers, setCustomers] = useState([]);
+    const [customers, setCustomers] = useState([]);
 
   const [productId, setProductId] = useState("");
   const [customerId, setCustomerId] = useState("");
@@ -21,24 +30,6 @@ export default function B2BBookingPage() {
   const [pax, setPax] = useState(1);
 
   const [lastReservation, setLastReservation] = useState(null);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      setError("");
-      try {
-        const [p, c] = await Promise.all([api.get("/products"), api.get("/customers")]);
-        setProducts(p.data || []);
-        setCustomers(c.data || []);
-        setProductId((p.data || [])[0]?.id || "");
-        setCustomerId((c.data || [])[0]?.id || "");
-      } catch (e) {
-        setError(apiErrorMessage(e));
-      }
-    })();
-  }, []);
-
   async function book() {
     setLoading(true);
     setError("");

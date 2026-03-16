@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -13,6 +14,15 @@ const StatusBadge = ({ s }) => {
 };
 
 function HotelForm({ value, onChange, onSave, saving, error }) {
+  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "catalog", "products"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/catalog/products");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
   const v = value || {};
   const loc = v.location || {};
   return (
@@ -122,10 +132,7 @@ function HotelForm({ value, onChange, onSave, saving, error }) {
 }
 
 function RatePlansPanel({ productId }) {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [draft, setDraft] = useState({
+    const [draft, setDraft] = useState({
     code: "",
     name: { tr: "", en: "" },
     board: "BB",
@@ -152,10 +159,6 @@ function RatePlansPanel({ productId }) {
     }
   };
 
-  useEffect(() => {
-    void load();
-     
-  }, [productId]);
 
   const save = async () => {
     if (!productId) return;
@@ -175,7 +178,7 @@ function RatePlansPanel({ productId }) {
         status: "active",
         payment_type: "postpay",
       });
-      await load();
+      refetch();
     } catch (err) {
       setError(apiErrorMessage(err));
     } finally {
@@ -187,7 +190,7 @@ function RatePlansPanel({ productId }) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="text-sm font-semibold">Rate planlar</div>
-        <Button size="sm" variant="outline" onClick={load} disabled={loading}>
+        <Button size="sm" variant="outline" onClick={() => refetch()} disabled={loading}>
           {loading ? "Yükleniyor..." : "Yenile"}
         </Button>
       </div>
@@ -286,12 +289,9 @@ function RatePlansPanel({ productId }) {
 }
 
 export default function AdminCatalogHotelsPage() {
-  const [items, setItems] = useState([]);
-  const [selected, setSelected] = useState(null);
+    const [selected, setSelected] = useState(null);
   const [q, setQ] = useState("");
-  const [status, setStatus] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [formError, setFormError] = useState("");
+  const [status, setStatus] = useState("");  const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
 
   const [draft, setDraft] = useState({
@@ -323,10 +323,6 @@ export default function AdminCatalogHotelsPage() {
     }
   };
 
-  useEffect(() => {
-    void load();
-     
-  }, []);
 
   const select = async (productId) => {
     setFormError("");
@@ -370,7 +366,7 @@ export default function AdminCatalogHotelsPage() {
 
       if (!selected?.product_id) {
         const r = await api.post("/admin/catalog/products", draft);
-        await load();
+        refetch();
         await select(r.data.product_id);
       } else {
         await api.put(`/admin/catalog/products/${selected.product_id}`, {
@@ -381,7 +377,7 @@ export default function AdminCatalogHotelsPage() {
           default_currency: draft.default_currency,
           location: draft.location,
         });
-        await load();
+        refetch();
         await select(selected.product_id);
       }
     } catch (err) {
@@ -426,7 +422,7 @@ export default function AdminCatalogHotelsPage() {
             <Button
               size="sm"
               variant="outline"
-              onClick={load}
+              onClick={() => refetch()}
               disabled={loading}
             >
               {loading ? "Loading..." : "Apply"}

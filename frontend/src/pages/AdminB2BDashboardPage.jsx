@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, Activity, ShieldAlert, Users } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
@@ -7,6 +8,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Badge } from "../components/ui/badge";
 
 function formatAmount(value, currency = "EUR") {
+  const { data: agencies = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "b2b", "agencies"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/b2b/agencies/summary");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
   if (value == null) return "-";
   const num = Number(value);
   if (Number.isNaN(num)) return "-";
@@ -24,41 +34,8 @@ function RiskBadge({ status }) {
 }
 
 export default function AdminB2BDashboardPage() {
-  const [agencies, setAgencies] = useState([]);
-  const [funnelItems, setFunnelItems] = useState([]);
+    const [funnelItems, setFunnelItems] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      setError("");
-      try {
-        const [agRes, fnRes, annRes] = await Promise.all([
-          api.get("/admin/b2b/agencies/summary"),
-          api.get("/admin/b2b/funnel/summary"),
-          api.get("/admin/b2b/announcements"),
-        ]);
-        if (cancelled) return;
-        setAgencies(agRes.data?.items || []);
-        setFunnelItems(fnRes.data?.items || []);
-        setAnnouncements(annRes.data?.items || []);
-      } catch (e) {
-        if (cancelled) return;
-        setError(apiErrorMessage(e));
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const funnelByPartner = useMemo(() => {
     const map = {};

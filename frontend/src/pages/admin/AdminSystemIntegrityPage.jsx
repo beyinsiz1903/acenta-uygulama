@@ -1,13 +1,22 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { ShieldCheck, RefreshCw, AlertTriangle, CheckCircle } from "lucide-react";
 
 export default function AdminSystemIntegrityPage() {
-  const [report, setReport] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { data: report = null, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "system", "integrity-report"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/system/integrity-report");
+      return resp.data || null;
+    },
+    staleTime: 30_000,
+  });
+  const error = fetchError ? (typeof apiErrorMessage === 'function' ? apiErrorMessage(fetchError) : fetchError.message) : "";
 
+    
   const load = useCallback(async () => {
     try {
       setLoading(true);
@@ -16,7 +25,6 @@ export default function AdminSystemIntegrityPage() {
     } catch (e) { console.error(e); } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
 
   const OrphansSection = ({ title, items }) => (
     <div className="border rounded-lg p-4">
@@ -50,7 +58,7 @@ export default function AdminSystemIntegrityPage() {
           <ShieldCheck className="h-6 w-6 text-emerald-600" />
           <h1 className="text-2xl font-bold text-foreground">Veri Bütünlüğü Raporu</h1>
         </div>
-        <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
           Yenile
         </Button>

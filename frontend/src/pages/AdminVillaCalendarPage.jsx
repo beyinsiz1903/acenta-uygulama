@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
 import { api, apiErrorMessage } from "../lib/api";
 import { Card } from "../components/ui/card";
@@ -8,6 +9,15 @@ import { Label } from "../components/ui/label";
 import { Badge } from "../components/ui/badge";
 
 function FieldError({ text }) {
+  const { data: feeds = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "ical", "feeds"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/ical/feeds");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+
   if (!text) return null;
   return (
     <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
@@ -70,8 +80,7 @@ export default function AdminVillaCalendarPage() {
 
   const { year, month, days, goPrev, goNext } = useMonth();
 
-  const [feeds, setFeeds] = useState([]);
-  const [feedsLoading, setFeedsLoading] = useState(false);
+    const [feedsLoading, setFeedsLoading] = useState(false);
   const [feedsError, setFeedsError] = useState("");
   const [newFeedUrl, setNewFeedUrl] = useState("");
   const [savingFeed, setSavingFeed] = useState(false);
@@ -117,15 +126,7 @@ export default function AdminVillaCalendarPage() {
     }
   };
 
-  useEffect(() => {
-    void loadFeeds();
-     
-  }, [productId]);
 
-  useEffect(() => {
-    void loadCalendar();
-     
-  }, [productId, year, month]);
 
   const addFeed = async () => {
     if (!productId || !newFeedUrl) return;

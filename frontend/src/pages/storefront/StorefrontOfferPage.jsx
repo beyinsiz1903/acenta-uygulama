@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api, apiErrorMessage } from "../../lib/api";
 import { Card } from "../../components/ui/card";
@@ -6,48 +7,21 @@ import { Button } from "../../components/ui/button";
 import EmptyState from "../../components/EmptyState";
 
 export default function StorefrontOfferPage() {
+  const { data: offer = null, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["storefront", "offers", "_?search_id=_"],
+    queryFn: async () => {
+      const resp = await api.get("/storefront/offers/${encodeURIComponent(offerId)}?search_id=${encodeURIComponent(searchId)}");
+      return resp.data || null;
+    },
+    staleTime: 30_000,
+  });
+
   const { tenantKey, offerId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const searchId = searchParams.get("search_id") || "";
 
-  const [offer, setOffer] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (!tenantKey || !offerId || !searchId) return;
-
-    async function load() {
-      setLoading(true);
-      setError("");
-      try {
-        const res = await api.get(`/storefront/offers/${encodeURIComponent(offerId)}?search_id=${encodeURIComponent(searchId)}`, {
-          headers: { "X-Tenant-Key": tenantKey },
-        });
-        setOffer(res.data || null);
-      } catch (err) {
-        const resp = err?.response?.data;
-        const code = resp?.error?.code;
-        if (code === "SESSION_EXPIRED") {
-          setError("Arama oturumu süresi doldu, lütfen yeniden arama yapın.");
-          const qp = new URLSearchParams();
-          if (searchId) qp.set("search_id", searchId);
-          navigate(`/s/${encodeURIComponent(tenantKey)}/search?${qp.toString()}`);
-          return;
-        } else if (code === "OFFER_NOT_FOUND") {
-          setError("Bu teklif oturumda bulunamadı. Lütfen yeniden arayın.");
-        } else {
-          setError(apiErrorMessage(err));
-        }
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    void load();
-  }, [tenantKey, offerId, searchId]);
-
+  
   const handleBack = () => {
     navigate(`/s/${encodeURIComponent(tenantKey)}`);
   };

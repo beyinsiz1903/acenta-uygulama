@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery as useTanstackQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { getUser } from "../lib/api";
 import { listInboxThreads, listInboxMessages, createInboxMessage, updateInboxThreadStatus } from "../lib/inbox";
@@ -8,7 +9,7 @@ import ErrorState from "../components/ErrorState";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-function useQuery() {
+function useURLQuery() {
   const { search } = useLocation();
   return React.useMemo(() => new URLSearchParams(search), [search]);
 }
@@ -25,7 +26,7 @@ function formatDate(value) {
 
 function InboxPage() {
   const user = getUser();
-  const query = useQuery();
+  const query = useURLQuery();
   const initialBookingId = query.get("booking_id") || "";
   const initialThreadId = query.get("thread") || "";
 

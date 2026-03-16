@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -12,9 +13,17 @@ const SEVERITY_MAP = {
 };
 
 export default function AdminSystemIncidentsPage() {
-  const [incidents, setIncidents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showCreate, setShowCreate] = useState(false);
+  const { data: incidents = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "system", "incidents"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/system/incidents");
+      return resp.data || [];
+    },
+    staleTime: 30_000,
+  });
+  const error = fetchError ? (typeof apiErrorMessage === 'function' ? apiErrorMessage(fetchError) : fetchError.message) : "";
+
+      const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [resolveId, setResolveId] = useState(null);
   const [resolveNotes, setResolveNotes] = useState("");
@@ -33,7 +42,6 @@ export default function AdminSystemIncidentsPage() {
     } catch (e) { console.error(e); } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
 
   const handleCreate = async () => {
     try {
@@ -41,7 +49,7 @@ export default function AdminSystemIncidentsPage() {
       await api.post("/admin/system/incidents", form);
       setShowCreate(false);
       setForm({ severity: "medium", title: "", affected_tenants: [], root_cause: "" });
-      await load();
+      refetch();
     } catch (e) { console.error(e); } finally { setCreating(false); }
   };
 
@@ -53,7 +61,7 @@ export default function AdminSystemIncidentsPage() {
       });
       setResolveId(null);
       setResolveNotes("");
-      await load();
+      refetch();
     } catch (e) { console.error(e); }
   };
 
@@ -65,7 +73,7 @@ export default function AdminSystemIncidentsPage() {
           <h1 className="text-2xl font-bold text-foreground">Olay Yönetimi</h1>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
             Yenile
           </Button>

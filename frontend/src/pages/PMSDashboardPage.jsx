@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -19,6 +20,15 @@ const PMS_STATUS_MAP = {
 };
 
 function StatCard({ icon: Icon, label, value, subtitle, color = "text-primary" }) {
+  const { data: lookupResult = null, isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["agency", "pms", "dashboard_"],
+    queryFn: async () => {
+      const resp = await api.get("/agency/pms/dashboard${params}");
+      return resp.data || null;
+    },
+    staleTime: 30_000,
+  });
+
   return (
     <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
       <CardContent className="p-5">
@@ -141,8 +151,7 @@ function ReservationDetailPanel({ item, onClose, onUpdate }) {
   });
   const [saving, setSaving] = useState(false);
   const [lookupLoading, setLookupLoading] = useState({ arrival: false, departure: false });
-  const [lookupResult, setLookupResult] = useState(null);
-
+  
   const handleFlightLookup = async (type) => {
     const flightNo = type === "arrival" ? form.arrival_flight_no : form.departure_flight_no;
     if (!flightNo || flightNo.trim().length < 3) {
@@ -459,9 +468,7 @@ export default function PMSDashboardPage() {
   const [dashboard, setDashboard] = useState(null);
   const [selectedHotel, setSelectedHotel] = useState("all");
   const [activeTab, setActiveTab] = useState("arrivals");
-  const [list, setList] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [listLoading, setListLoading] = useState(false);
+  const [list, setList] = useState([]);  const [listLoading, setListLoading] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -497,15 +504,13 @@ export default function PMSDashboardPage() {
     }
   }, [activeTab, selectedHotel, searchQuery]);
 
-  useEffect(() => { loadDashboard(); }, [loadDashboard]);
-  useEffect(() => { loadList(); }, [loadList]);
 
   const handleCheckIn = async (item) => {
     try {
       await api.post(`/agency/pms/reservations/${item.id}/check-in`);
       toast.success(`${item.guest_name} giris yapti`);
       loadDashboard();
-      loadList();
+      refetch();
     } catch (err) {
       toast.error(err.response?.data?.detail || "Giris basarisiz");
     }
@@ -516,7 +521,7 @@ export default function PMSDashboardPage() {
       await api.post(`/agency/pms/reservations/${item.id}/check-out`);
       toast.success(`${item.guest_name} cikis yapti`);
       loadDashboard();
-      loadList();
+      refetch();
     } catch (err) {
       toast.error(err.response?.data?.detail || "Cikis basarisiz");
     }
@@ -645,7 +650,7 @@ export default function PMSDashboardPage() {
           onClose={() => setSelectedReservation(null)}
           onUpdate={() => {
             setSelectedReservation(null);
-            loadList();
+            refetch();
             loadDashboard();
           }}
         />

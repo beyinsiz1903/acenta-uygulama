@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiErrorMessage } from "../lib/api";
 import { useToast } from "../hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -101,38 +102,33 @@ function RuleRow({ rule, index, onChange, onRemove }) {
 
 export default function AdminActionPoliciesPage() {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [enabled, setEnabled] = useState(true);
   const [defaultAction, setDefaultAction] = useState("watchlist");
   const [rules, setRules] = useState([]);
 
-  async function load() {
-    setLoading(true);
-    setError("");
-    try {
+  const { isLoading: loading } = useQuery({
+    queryKey: ["admin", "action-policies", "match-risk"],
+    queryFn: async () => {
       const res = await api.get("/admin/action-policies/match-risk");
-      const policy = res.data?.policy || {};
+      return res.data;
+    },
+    staleTime: 30_000,
+    onSuccess: (d) => {
+      const policy = d?.policy || {};
       setEnabled(Boolean(policy.enabled ?? true));
       setDefaultAction(policy.default_action || "watchlist");
       setRules(policy.rules || []);
-    } catch (e) {
+    },
+    onError: (e) => {
       const msg = apiErrorMessage(e);
-      // "Not Found" durumunda politikalar hen tanmlanmam sayyoruz ve bof state gfsteriyoruz.
       if (msg !== "Not Found") {
         setError(msg);
         toast({ title: "Aksiyon politikaları yüklenemedi", description: msg, variant: "destructive" });
       }
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    void load();
-     
-  }, []);
+    },
+  });
 
   const handleRuleChange = (index, nextRule) => {
     setRules((prev) => prev.map((r, i) => (i === index ? nextRule : r)));

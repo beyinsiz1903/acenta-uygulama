@@ -10,7 +10,7 @@ import json
 import sys
 
 # Test configuration
-BACKEND_URL = "https://finance-ledger-demo.preview.emergentagent.com"
+BACKEND_URL = "https://settlement-workflow-1.preview.emergentagent.com"
 TEST_CREDENTIALS = {
     "email": "agent@acenta.test",
     "password": "agent123"

@@ -5,7 +5,7 @@ and exception management.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Query, Body
+from fastapi import APIRouter, Query
 from typing import Optional
 from pydantic import BaseModel
 

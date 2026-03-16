@@ -164,6 +164,24 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 - **Seed Data**: 6 finance exceptions (5 open, 1 resolved) covering various scenarios
 - All 24 backend + all frontend tests passed (iteration_134)
 
+### P1: Configuration Versioning & Activity Timeline — COMPLETED (2026-03-16)
+**Config versioning + centralized audit trail across all platform operations**
+- **Configuration Versioning**: Every config CRUD (pricing rules, channels, guardrails, promotions) now tracks:
+  - `version` (auto-incrementing), `created_by`, `updated_by`, `updated_at`, `change_reason`
+  - Previous versions saved to `config_versions` MongoDB collection as snapshots
+  - GET /api/config-versions/{entity_type}/{entity_id} - Version history API
+- **Activity Timeline**: Centralized audit trail recording all significant actions:
+  - Pricing rule/channel/guardrail/promotion CRUD events
+  - Settlement workflow transitions (create, submit, approve, reject, mark-paid)
+  - Exception resolution/dismissal events
+  - Each event: actor, action, entity_type, entity_id, before/after summary, metadata, timestamp
+  - GET /api/activity-timeline - Paginated events with filters (entity_type, action, actor)
+  - GET /api/activity-timeline/stats - Aggregate stats by entity_type and action
+  - GET /api/activity-timeline/entity/{type}/{id} - Entity-specific history
+- **Frontend**: ActivityTimelinePage with stats cards, dual filters, events table, event detail dialog, pagination
+- **Data Persistence Verification**: Confirmed all config data was already in MongoDB, not in-memory as previously reported
+- All 23 backend + all frontend tests passed (iteration_135)
+
 ---
 
 ## Frontend Quality Score (Post P3+P4)
@@ -185,17 +203,19 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 All P0 tasks completed.
 
 ### P1 — Next Priority
-- **Activity Timeline**: Entity-based audit history (who did what)
-- **Persist Configuration**: Move Pricing Engine Configuration (Rules, Channels, Guardrails) and Financial Ledger data from in-memory storage to a database
+- **~~Activity Timeline~~**: ~~Entity-based audit history (who did what)~~ → **COMPLETED (2026-03-16)**
+- **~~Persist Configuration~~**: ~~Move Pricing Engine Configuration~~ → **Already in MongoDB** (verified in this session — was incorrectly reported as in-memory)
+- **Configuration Versioning**: Implemented as part of Activity Timeline (2026-03-16)
 
 ### P2
 - **TypeScript Migration**: API layer -> TanStack hooks -> design system (incremental)
 - **Supplier Self-Serve Onboarding**: Partner self-service onboarding portal
 - **Real RateHawk Environment Execution**: Credential-ready, needs network access
+- **New Supplier Integrations**: Paximum, Hotelbeds, Juniper
 
 ### P3
 - **Paximum Integration**: Onboard using existing blueprint
-- **New Supplier Integrations**: Hotelbeds, Juniper
+- **Hotelbeds & Juniper Integrations**
 - **Legacy Code Cleanup**: Remaining ~17% useEffect files
 
 ---

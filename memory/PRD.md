@@ -99,6 +99,13 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 - Frontend: TraceBar (dark bar with trace ID, cache status, latency), CacheStatsBar (entries/hits/misses/hit rate with refresh/clear buttons)
 - All 21 backend + 15 frontend tests passed (iteration_129)
 
+### Cache Telemetry & Cache Invalidation — COMPLETED (2026-03-16)
+**2 features: Extended cache metrics, Supplier-aware cache invalidation**
+- **Cache Telemetry**: GET `/api/pricing-engine/cache/telemetry` returns total_requests, avg_hit_latency_ms, avg_miss_latency_ms, uptime_seconds, per-supplier breakdown (hits/misses/hit_rate_pct/active_entries), recent_invalidations log
+- **Cache Invalidation**: POST `/api/pricing-engine/cache/invalidate/{supplier_code}` removes only that supplier's entries. Supplier sync (`invalidate_supplier_sync`) and price changes (`invalidate_price_change`) auto-clear pricing cache
+- Frontend: Telemetry toggle panel with supplier cards, per-supplier invalidate buttons, invalidation log with timestamps
+- All 19 backend + 10 frontend tests passed (iteration_130)
+
 ---
 
 ## Frontend Quality Score (Post P3+P4)

@@ -24,6 +24,7 @@ from app.services.pricing_distribution_engine import (
     PricingContext,
     get_pricing_engine_stats,
     pricing_cache,
+    warm_cache_for_supplier,
     CHANNELS,
     SEASONS,
 )
@@ -449,3 +450,72 @@ async def cache_invalidate_supplier(supplier_code: str, user=Depends(get_current
     """Invalidate all pricing cache entries for a specific supplier."""
     cleared = pricing_cache.invalidate_by_supplier(supplier_code)
     return {"ok": True, "supplier": supplier_code, "cleared": cleared}
+
+
+# --- Cache Alerts ---
+
+@router.get("/cache/alerts")
+async def cache_alerts(user=Depends(get_current_user)):
+    """Get cache performance alerts (active + history)."""
+    return {
+        "active_alerts": pricing_cache.get_active_alerts(),
+        "alert_history": pricing_cache.get_alerts(20),
+        "threshold_pct": pricing_cache.HIT_RATE_ALERT_THRESHOLD,
+        "min_requests": pricing_cache.MIN_REQUESTS_FOR_ALERT,
+    }
+
+
+@router.post("/cache/alerts/clear")
+async def clear_cache_alerts(user=Depends(get_current_user)):
+    """Clear all cache alert history."""
+    pricing_cache.clear_alerts()
+    return {"ok": True, "message": "Alert gecmisi temizlendi"}
+
+
+# --- Cache Warming ---
+
+@router.post("/cache/warm/{supplier_code}")
+async def warm_cache(supplier_code: str, limit: int = Query(10, ge=1, le=50), user=Depends(get_current_user)):
+    """Precompute pricing for popular routes of a supplier."""
+    result = await warm_cache_for_supplier(supplier_code, limit=limit)
+    return result
+
+
+@router.get("/cache/popular-routes")
+async def get_popular_routes(
+    supplier_code: str = Query(""),
+    limit: int = Query(10, ge=1, le=50),
+    user=Depends(get_current_user),
+):
+    """Get most frequently queried pricing routes."""
+    routes = pricing_cache.get_popular_routes(supplier_code=supplier_code, limit=limit)
+    return {"routes": routes, "total_tracked": len(pricing_cache._query_frequency)}
+
+
+# --- Global Diagnostics ---
+
+@router.get("/cache/diagnostics")
+async def cache_diagnostics(user=Depends(get_current_user)):
+    """Comprehensive cache diagnostics for scaling decisions."""
+    stats = pricing_cache.stats()
+    telemetry_data = pricing_cache.telemetry()
+    return {
+        "global_hit_rate": stats["hit_rate_pct"],
+        "total_entries": stats["total_entries"],
+        "active_entries": stats["active_entries"],
+        "memory_usage_mb": stats["memory_usage_mb"],
+        "memory_usage_bytes": stats["memory_usage_bytes"],
+        "evictions": stats["evictions"],
+        "max_size": stats["max_size"],
+        "utilization_pct": round(stats["total_entries"] / max(stats["max_size"], 1) * 100, 1),
+        "ttl_seconds": stats["ttl_seconds"],
+        "total_requests": telemetry_data["total_requests"],
+        "hits": stats["hits"],
+        "misses": stats["misses"],
+        "avg_hit_latency_ms": telemetry_data["avg_hit_latency_ms"],
+        "avg_miss_latency_ms": telemetry_data["avg_miss_latency_ms"],
+        "uptime_seconds": telemetry_data["uptime_seconds"],
+        "active_alerts": telemetry_data["active_alerts"],
+        "warming_status": telemetry_data["warming_status"],
+        "supplier_count": len(telemetry_data["supplier_breakdown"]),
+    }

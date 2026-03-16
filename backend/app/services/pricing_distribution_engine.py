@@ -31,7 +31,10 @@ logger = logging.getLogger("pricing_engine")
 # --- Pricing Cache ---
 
 class PricingCache:
-    """In-memory pricing cache with TTL, telemetry, and supplier-aware invalidation."""
+    """In-memory pricing cache with TTL, telemetry, alerts, warming, and supplier-aware invalidation."""
+
+    HIT_RATE_ALERT_THRESHOLD = 70.0  # Alert when hit_rate < 70%
+    MIN_REQUESTS_FOR_ALERT = 10  # Need at least N requests before alerting
 
     def __init__(self, ttl_seconds: int = 300, max_size: int = 5000):
         self._store: dict[str, tuple[float, dict, str]] = {}  # key -> (expires_at, result_dict, supplier_code)
@@ -50,6 +53,17 @@ class PricingCache:
         self._invalidations: list[dict] = []
         self._max_invalidation_log = 50
         self._created_at = time.time()
+        # Global diagnostics: eviction tracking
+        self._evictions: int = 0
+        # Alerts
+        self._alerts: list[dict] = []
+        self._max_alerts = 50
+        self._last_alert_time: float = 0
+        self._alert_cooldown = 60  # seconds between same-type alerts
+        # Cache warming: track popular query patterns
+        self._query_frequency: dict[str, int] = {}  # cache_key -> count
+        self._query_contexts: dict[str, dict] = {}  # cache_key -> last context params
+        self._max_tracked_queries = 200
 
     def _make_key(self, ctx: "PricingContext") -> str:
         """Composite cache key: normalized_rate + channel + agency + supplier + destination + season + promo."""
@@ -59,6 +73,8 @@ class PricingCache:
     def get(self, ctx: "PricingContext") -> Optional[dict]:
         t0 = time.time()
         key = self._make_key(ctx)
+        # Track query frequency for warming
+        self._track_query(key, ctx)
         entry = self._store.get(key)
         if entry is None:
             self.misses += 1
@@ -66,6 +82,7 @@ class PricingCache:
             elapsed = (time.time() - t0) * 1000
             if len(self._miss_latencies) < self._max_latency_samples:
                 self._miss_latencies.append(elapsed)
+            self._check_hit_rate_alert()
             return None
         expires_at, result, _supplier = entry
         if time.time() > expires_at:
@@ -75,6 +92,7 @@ class PricingCache:
             elapsed = (time.time() - t0) * 1000
             if len(self._miss_latencies) < self._max_latency_samples:
                 self._miss_latencies.append(elapsed)
+            self._check_hit_rate_alert()
             return None
         self.hits += 1
         self._supplier_hits[ctx.supplier_code] = self._supplier_hits.get(ctx.supplier_code, 0) + 1
@@ -96,10 +114,12 @@ class PricingCache:
         expired = [k for k, (exp, _, _s) in self._store.items() if now > exp]
         for k in expired:
             del self._store[k]
+        self._evictions += len(expired)
         if len(self._store) >= self.max_size:
             to_remove = sorted(self._store.items(), key=lambda x: x[1][0])[:self.max_size // 5]
             for k, _ in to_remove:
                 del self._store[k]
+            self._evictions += len(to_remove)
 
     def clear(self):
         cleared = len(self._store)
@@ -110,6 +130,7 @@ class PricingCache:
         self._supplier_misses.clear()
         self._hit_latencies.clear()
         self._miss_latencies.clear()
+        self._evictions = 0
         self._log_invalidation("manual_clear", cleared=cleared)
 
     def invalidate_by_supplier(self, supplier_code: str) -> int:
@@ -135,29 +156,139 @@ class PricingCache:
         if len(self._invalidations) > self._max_invalidation_log:
             self._invalidations = self._invalidations[-self._max_invalidation_log:]
 
+    # --- Alert System ---
+
+    def _check_hit_rate_alert(self):
+        """Check and generate alert if hit_rate drops below threshold."""
+        total = self.hits + self.misses
+        if total < self.MIN_REQUESTS_FOR_ALERT:
+            return
+        hit_rate = self.hits / total * 100
+        now = time.time()
+        if hit_rate < self.HIT_RATE_ALERT_THRESHOLD and (now - self._last_alert_time) > self._alert_cooldown:
+            self._last_alert_time = now
+            alert = {
+                "type": "low_hit_rate",
+                "severity": "warning",
+                "message": f"Cache hit rate %{round(hit_rate, 1)} threshold %{self.HIT_RATE_ALERT_THRESHOLD} altinda",
+                "hit_rate_pct": round(hit_rate, 1),
+                "threshold_pct": self.HIT_RATE_ALERT_THRESHOLD,
+                "total_requests": total,
+                "timestamp": datetime.now().isoformat(),
+            }
+            self._alerts.append(alert)
+            if len(self._alerts) > self._max_alerts:
+                self._alerts = self._alerts[-self._max_alerts:]
+            logger.warning("CACHE ALERT: hit_rate=%.1f%% < threshold=%.1f%% (total=%d)",
+                           hit_rate, self.HIT_RATE_ALERT_THRESHOLD, total)
+
+    def get_alerts(self, limit: int = 20) -> list[dict]:
+        """Return recent cache alerts."""
+        return self._alerts[-limit:]
+
+    def get_active_alerts(self) -> list[dict]:
+        """Return currently active alerts (conditions still met)."""
+        total = self.hits + self.misses
+        active = []
+        if total >= self.MIN_REQUESTS_FOR_ALERT:
+            hit_rate = self.hits / total * 100
+            if hit_rate < self.HIT_RATE_ALERT_THRESHOLD:
+                active.append({
+                    "type": "low_hit_rate",
+                    "severity": "warning",
+                    "message": f"Cache hit rate %{round(hit_rate, 1)} threshold %{self.HIT_RATE_ALERT_THRESHOLD} altinda",
+                    "hit_rate_pct": round(hit_rate, 1),
+                    "threshold_pct": self.HIT_RATE_ALERT_THRESHOLD,
+                })
+        return active
+
+    def clear_alerts(self):
+        self._alerts.clear()
+
+    # --- Query Tracking for Warming ---
+
+    def _track_query(self, key: str, ctx: "PricingContext"):
+        """Track query frequency for cache warming decisions."""
+        self._query_frequency[key] = self._query_frequency.get(key, 0) + 1
+        self._query_contexts[key] = {
+            "supplier_code": ctx.supplier_code,
+            "supplier_price": ctx.supplier_price,
+            "supplier_currency": ctx.supplier_currency,
+            "destination": ctx.destination,
+            "channel": ctx.channel,
+            "agency_tier": ctx.agency_tier,
+            "season": ctx.season,
+            "product_type": ctx.product_type,
+            "nights": ctx.nights,
+            "sell_currency": ctx.sell_currency,
+            "promo_code": ctx.promo_code,
+            "organization_id": ctx.organization_id,
+        }
+        # Trim to max tracked
+        if len(self._query_frequency) > self._max_tracked_queries:
+            sorted_keys = sorted(self._query_frequency.items(), key=lambda x: x[1])
+            for k, _ in sorted_keys[:len(sorted_keys) // 4]:
+                self._query_frequency.pop(k, None)
+                self._query_contexts.pop(k, None)
+
+    def get_popular_routes(self, supplier_code: str = "", limit: int = 10) -> list[dict]:
+        """Get most queried pricing contexts, optionally filtered by supplier."""
+        items = []
+        for key, count in self._query_frequency.items():
+            ctx_data = self._query_contexts.get(key)
+            if not ctx_data:
+                continue
+            if supplier_code and ctx_data.get("supplier_code") != supplier_code:
+                continue
+            items.append({"cache_key": key, "query_count": count, **ctx_data})
+        items.sort(key=lambda x: x["query_count"], reverse=True)
+        return items[:limit]
+
+    def get_warming_status(self) -> dict:
+        """Return warming status: tracked queries, popular routes."""
+        return {
+            "tracked_queries": len(self._query_frequency),
+            "max_tracked": self._max_tracked_queries,
+        }
+
+    # --- Global Diagnostics ---
+
+    def _estimate_memory_bytes(self) -> int:
+        """Rough memory estimation for the cache store."""
+        import sys
+        base = sys.getsizeof(self._store)
+        # Average entry: key(~80B) + tuple(expires_at+dict+supplier ~2KB)
+        per_entry = 2100
+        return base + len(self._store) * per_entry
+
     def stats(self) -> dict:
         now = time.time()
         active = sum(1 for _, (exp, _, _s) in self._store.items() if now <= exp)
         total_requests = self.hits + self.misses
-        avg_hit_latency = round(sum(self._hit_latencies) / max(len(self._hit_latencies), 1), 3)
-        avg_miss_latency = round(sum(self._miss_latencies) / max(len(self._miss_latencies), 1), 3)
+        hit_rate = round(self.hits / max(total_requests, 1) * 100, 1)
+        memory_bytes = self._estimate_memory_bytes()
         return {
             "total_entries": len(self._store),
             "active_entries": active,
             "hits": self.hits,
             "misses": self.misses,
-            "hit_rate_pct": round(self.hits / max(total_requests, 1) * 100, 1),
+            "hit_rate_pct": hit_rate,
             "ttl_seconds": self.ttl,
             "max_size": self.max_size,
+            "evictions": self._evictions,
+            "memory_usage_bytes": memory_bytes,
+            "memory_usage_mb": round(memory_bytes / (1024 * 1024), 2),
+            "active_alerts": len(self.get_active_alerts()),
         }
 
     def telemetry(self) -> dict:
-        """Extended telemetry: per-supplier metrics, latencies, invalidation log."""
+        """Extended telemetry: per-supplier metrics, latencies, invalidation log, alerts, warming."""
         now = time.time()
         active = sum(1 for _, (exp, _, _s) in self._store.items() if now <= exp)
         total_requests = self.hits + self.misses
         avg_hit_latency = round(sum(self._hit_latencies) / max(len(self._hit_latencies), 1), 3)
         avg_miss_latency = round(sum(self._miss_latencies) / max(len(self._miss_latencies), 1), 3)
+        memory_bytes = self._estimate_memory_bytes()
 
         # Per-supplier breakdown
         all_suppliers = set(list(self._supplier_hits.keys()) + list(self._supplier_misses.keys()))
@@ -186,13 +317,68 @@ class PricingCache:
             "ttl_seconds": self.ttl,
             "max_size": self.max_size,
             "uptime_seconds": round(now - self._created_at),
+            "evictions": self._evictions,
+            "memory_usage_bytes": memory_bytes,
+            "memory_usage_mb": round(memory_bytes / (1024 * 1024), 2),
             "supplier_breakdown": supplier_breakdown,
             "recent_invalidations": self._invalidations[-10:],
+            "active_alerts": self.get_active_alerts(),
+            "alert_history": self._alerts[-10:],
+            "warming_status": self.get_warming_status(),
         }
 
 
 # Singleton cache instance
 pricing_cache = PricingCache(ttl_seconds=300, max_size=5000)
+
+
+# --- Cache Warming ---
+
+async def warm_cache_for_supplier(supplier_code: str, limit: int = 10) -> dict:
+    """Precompute pricing for popular routes of a given supplier.
+
+    Called after supplier sync to reduce first-user latency.
+    Uses tracked query frequency to determine which routes to warm.
+    """
+    popular = pricing_cache.get_popular_routes(supplier_code=supplier_code, limit=limit)
+    if not popular:
+        logger.info("cache_warming: no popular routes for %s, skipping", supplier_code)
+        return {"supplier": supplier_code, "warmed": 0, "skipped": 0, "message": "Populer rota bulunamadi"}
+
+    db = await get_db()
+    engine = PricingDistributionEngine(db)
+    warmed = 0
+    skipped = 0
+
+    for route in popular:
+        try:
+            ctx = PricingContext(
+                supplier_code=route["supplier_code"],
+                supplier_price=route["supplier_price"],
+                supplier_currency=route["supplier_currency"],
+                destination=route.get("destination", ""),
+                channel=route.get("channel", "b2c"),
+                agency_tier=route.get("agency_tier", "standard"),
+                season=route.get("season", "mid"),
+                product_type=route.get("product_type", "hotel"),
+                nights=route.get("nights", 1),
+                sell_currency=route.get("sell_currency", "EUR"),
+                promo_code=route.get("promo_code", ""),
+                organization_id=route.get("organization_id", ""),
+            )
+            # Check if already in cache
+            existing = pricing_cache.get(ctx)
+            if existing:
+                skipped += 1
+                continue
+            await engine.calculate(ctx)
+            warmed += 1
+        except Exception as e:
+            logger.warning("cache_warming: failed for route %s: %s", route.get("cache_key"), e)
+            skipped += 1
+
+    logger.info("cache_warming: supplier=%s warmed=%d skipped=%d", supplier_code, warmed, skipped)
+    return {"supplier": supplier_code, "warmed": warmed, "skipped": skipped}
 
 
 # --- Data Models ---

@@ -5,7 +5,8 @@ import {
   Globe, Building2, Store, Users, Shield, ShieldAlert,
   ShieldCheck, ChevronDown, ChevronUp, Trophy, XCircle,
   CheckCircle2, AlertTriangle, Info, Eye, Copy, Fingerprint,
-  Clock, Database, BarChart3, Activity,
+  Clock, Database, BarChart3, Activity, Flame, HardDrive,
+  Bell, BellOff, Cpu,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -992,6 +993,10 @@ export default function PricingEnginePage() {
   const [cacheStats, setCacheStats] = useState(null);
   const [telemetry, setTelemetry] = useState(null);
   const [showTelemetry, setShowTelemetry] = useState(false);
+  const [diagnostics, setDiagnostics] = useState(null);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [alerts, setAlerts] = useState(null);
+  const [warmingLoading, setWarmingLoading] = useState({});
 
   const loadCacheStats = useCallback(() => {
     api("/cache/stats").then(setCacheStats).catch(() => {});
@@ -1001,17 +1006,28 @@ export default function PricingEnginePage() {
     api("/cache/telemetry").then(setTelemetry).catch(() => {});
   }, []);
 
+  const loadDiagnostics = useCallback(() => {
+    api("/cache/diagnostics").then(setDiagnostics).catch(() => {});
+  }, []);
+
+  const loadAlerts = useCallback(() => {
+    api("/cache/alerts").then(setAlerts).catch(() => {});
+  }, []);
+
   useEffect(() => {
     api("/dashboard").then(setStats).catch(() => {});
     api("/metadata").then(setMetadata).catch(() => {});
     loadCacheStats();
-  }, [loadCacheStats]);
+    loadAlerts();
+  }, [loadCacheStats, loadAlerts]);
 
   const clearCache = async () => {
     await api("/cache/clear", { method: "POST" });
     toast.success("Pricing cache temizlendi");
     loadCacheStats();
+    loadAlerts();
     if (showTelemetry) loadTelemetry();
+    if (showDiagnostics) loadDiagnostics();
   };
 
   const invalidateSupplier = async (supplier) => {
@@ -1019,10 +1035,30 @@ export default function PricingEnginePage() {
       const res = await api(`/cache/invalidate/${supplier}`, { method: "POST" });
       toast.success(`${supplier} cache temizlendi (${res.cleared} entry)`);
       loadCacheStats();
+      loadAlerts();
       if (showTelemetry) loadTelemetry();
     } catch {
       toast.error("Invalidation basarisiz");
     }
+  };
+
+  const warmSupplier = async (supplier) => {
+    setWarmingLoading(prev => ({ ...prev, [supplier]: true }));
+    try {
+      const res = await api(`/cache/warm/${supplier}`, { method: "POST" });
+      toast.success(`${supplier}: ${res.warmed} rota onbelleklendi`);
+      loadCacheStats();
+      if (showTelemetry) loadTelemetry();
+    } catch {
+      toast.error("Cache warming basarisiz");
+    }
+    setWarmingLoading(prev => ({ ...prev, [supplier]: false }));
+  };
+
+  const clearAlerts = async () => {
+    await api("/cache/alerts/clear", { method: "POST" });
+    toast.success("Alert gecmisi temizlendi");
+    loadAlerts();
   };
 
   const toggleTelemetry = () => {
@@ -1030,6 +1066,14 @@ export default function PricingEnginePage() {
     setShowTelemetry(next);
     if (next) loadTelemetry();
   };
+
+  const toggleDiagnostics = () => {
+    const next = !showDiagnostics;
+    setShowDiagnostics(next);
+    if (next) loadDiagnostics();
+  };
+
+  const hasActiveAlerts = alerts?.active_alerts?.length > 0;
 
   return (
     <TooltipProvider>
@@ -1043,6 +1087,34 @@ export default function PricingEnginePage() {
 
         <StatCards stats={stats} />
 
+        {/* Hit Rate Alert Banner */}
+        {hasActiveAlerts && (
+          <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 flex items-center gap-3" data-testid="hit-rate-alert-banner">
+            <div className="bg-amber-100 p-2 rounded-lg">
+              <Bell className="w-4 h-4 text-amber-600" />
+            </div>
+            <div className="flex-1">
+              {alerts.active_alerts.map((a, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span className="text-sm text-amber-800 font-medium">{a.message}</span>
+                  <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-700 ml-1">
+                    {a.type}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={clearAlerts} className="h-7 px-2 text-amber-600 hover:text-amber-700" data-testid="clear-alerts-btn">
+                  <BellOff className="w-3.5 h-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Alert gecmisini temizle</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
+
         {/* Cache Stats Bar */}
         {cacheStats && (
           <div className="rounded-lg border bg-slate-50 overflow-hidden" data-testid="cache-stats-bar">
@@ -1055,14 +1127,23 @@ export default function PricingEnginePage() {
                 <span>Entries: <strong className="text-slate-700">{cacheStats.active_entries}</strong></span>
                 <span>Hits: <strong className="text-emerald-600">{cacheStats.hits}</strong></span>
                 <span>Misses: <strong className="text-amber-600">{cacheStats.misses}</strong></span>
-                <span>Hit Rate: <strong className={cacheStats.hit_rate_pct >= 50 ? "text-emerald-600" : "text-amber-600"}>{cacheStats.hit_rate_pct}%</strong></span>
-                <span>TTL: {cacheStats.ttl_seconds}s</span>
+                <span>Hit Rate: <strong className={cacheStats.hit_rate_pct >= 70 ? "text-emerald-600" : cacheStats.hit_rate_pct >= 50 ? "text-amber-600" : "text-red-600"}>{cacheStats.hit_rate_pct}%</strong></span>
+                <span>Evictions: <strong className="text-slate-600">{cacheStats.evictions || 0}</strong></span>
+                <span>Mem: <strong className="text-slate-600">{cacheStats.memory_usage_mb || 0}MB</strong></span>
               </div>
+              {hasActiveAlerts && (
+                <Badge variant="destructive" className="text-[10px] h-4 px-1.5 animate-pulse" data-testid="alert-badge">
+                  ALERT
+                </Badge>
+              )}
               <div className="ml-auto flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={toggleDiagnostics} className="h-6 px-2 text-xs" data-testid="toggle-diagnostics-btn">
+                  <Cpu className="w-3 h-3 mr-1" /> {showDiagnostics ? "Gizle" : "Diagnostics"}
+                </Button>
                 <Button variant="ghost" size="sm" onClick={toggleTelemetry} className="h-6 px-2 text-xs" data-testid="toggle-telemetry-btn">
                   <BarChart3 className="w-3 h-3 mr-1" /> {showTelemetry ? "Gizle" : "Telemetry"}
                 </Button>
-                <Button variant="ghost" size="sm" onClick={loadCacheStats} className="h-6 px-2 text-xs" data-testid="refresh-cache-btn">
+                <Button variant="ghost" size="sm" onClick={() => { loadCacheStats(); loadAlerts(); }} className="h-6 px-2 text-xs" data-testid="refresh-cache-btn">
                   <RefreshCw className="w-3 h-3 mr-1" /> Yenile
                 </Button>
                 <Button variant="ghost" size="sm" onClick={clearCache} className="h-6 px-2 text-xs text-red-500 hover:text-red-600" data-testid="clear-cache-btn">
@@ -1070,6 +1151,70 @@ export default function PricingEnginePage() {
                 </Button>
               </div>
             </div>
+
+            {/* Global Diagnostics Panel */}
+            {showDiagnostics && diagnostics && (
+              <div className="border-t bg-white px-4 py-3 space-y-3" data-testid="diagnostics-panel">
+                <div className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Global Cache Diagnostics</div>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  <div className="rounded-md border p-2.5 text-center bg-slate-50" data-testid="diag-hit-rate">
+                    <div className="text-[10px] text-slate-500 font-medium">Global Hit Rate</div>
+                    <div className={`text-lg font-bold font-mono ${diagnostics.global_hit_rate >= 70 ? "text-emerald-600" : diagnostics.global_hit_rate >= 50 ? "text-amber-600" : "text-red-600"}`}>
+                      %{diagnostics.global_hit_rate}
+                    </div>
+                  </div>
+                  <div className="rounded-md border p-2.5 text-center bg-slate-50" data-testid="diag-entries">
+                    <div className="text-[10px] text-slate-500 font-medium">Total Entries</div>
+                    <div className="text-lg font-bold font-mono text-slate-700">{diagnostics.total_entries}</div>
+                    <div className="text-[9px] text-slate-400">/ {diagnostics.max_size} (%{diagnostics.utilization_pct})</div>
+                  </div>
+                  <div className="rounded-md border p-2.5 text-center bg-slate-50" data-testid="diag-memory">
+                    <div className="text-[10px] text-slate-500 font-medium">Memory Usage</div>
+                    <div className="text-lg font-bold font-mono text-blue-600">{diagnostics.memory_usage_mb}MB</div>
+                  </div>
+                  <div className="rounded-md border p-2.5 text-center bg-slate-50" data-testid="diag-evictions">
+                    <div className="text-[10px] text-slate-500 font-medium">Evictions</div>
+                    <div className="text-lg font-bold font-mono text-amber-600">{diagnostics.evictions}</div>
+                  </div>
+                  <div className="rounded-md border p-2.5 text-center bg-slate-50" data-testid="diag-uptime">
+                    <div className="text-[10px] text-slate-500 font-medium">Uptime</div>
+                    <div className="text-lg font-bold font-mono text-slate-700">{Math.floor(diagnostics.uptime_seconds / 60)}dk</div>
+                  </div>
+                  <div className="rounded-md border p-2.5 text-center bg-slate-50" data-testid="diag-suppliers">
+                    <div className="text-[10px] text-slate-500 font-medium">Suppliers</div>
+                    <div className="text-lg font-bold font-mono text-violet-600">{diagnostics.supplier_count}</div>
+                  </div>
+                </div>
+                {/* Latency comparison */}
+                <div className="flex items-center gap-4 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3 h-3 text-emerald-500" />
+                    <span className="text-slate-500">HIT Latency:</span>
+                    <strong className="text-emerald-600">{diagnostics.avg_hit_latency_ms}ms</strong>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3 h-3 text-amber-500" />
+                    <span className="text-slate-500">MISS Latency:</span>
+                    <strong className="text-amber-600">{diagnostics.avg_miss_latency_ms}ms</strong>
+                  </div>
+                  {diagnostics.warming_status && (
+                    <div className="flex items-center gap-1.5">
+                      <Flame className="w-3 h-3 text-orange-500" />
+                      <span className="text-slate-500">Tracked Routes:</span>
+                      <strong className="text-orange-600">{diagnostics.warming_status.tracked_queries}</strong>
+                    </div>
+                  )}
+                  {diagnostics.active_alerts?.length > 0 && (
+                    <Badge variant="destructive" className="text-[10px] h-4 px-1.5">
+                      {diagnostics.active_alerts.length} aktif alert
+                    </Badge>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={loadDiagnostics} className="h-5 px-1.5 text-[10px] ml-auto">
+                    <RefreshCw className="w-2.5 h-2.5 mr-0.5" /> Yenile
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Telemetry Detail Panel */}
             {showTelemetry && telemetry && (
@@ -1093,6 +1238,14 @@ export default function PricingEnginePage() {
                     <span className="text-slate-500">Uptime:</span>
                     <strong className="text-slate-700 ml-1">{Math.floor(telemetry.uptime_seconds / 60)}dk</strong>
                   </div>
+                  <div>
+                    <span className="text-slate-500">Evictions:</span>
+                    <strong className="text-amber-600 ml-1">{telemetry.evictions || 0}</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">Mem:</span>
+                    <strong className="text-blue-600 ml-1">{telemetry.memory_usage_mb || 0}MB</strong>
+                  </div>
                 </div>
 
                 {/* Per-Supplier Breakdown */}
@@ -1108,20 +1261,62 @@ export default function PricingEnginePage() {
                               {data.hits}H / {data.misses}M / {data.hit_rate_pct}%
                             </div>
                           </div>
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1">
                             <Badge variant="outline" className="text-[10px] h-4 px-1">
                               {data.active_entries}
                             </Badge>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-5 w-5 p-0 text-red-400 hover:text-red-600"
-                              onClick={() => invalidateSupplier(supplier)}
-                              data-testid={`invalidate-${supplier}-btn`}
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-5 w-5 p-0 text-orange-400 hover:text-orange-600"
+                                  onClick={() => warmSupplier(supplier)}
+                                  disabled={warmingLoading[supplier]}
+                                  data-testid={`warm-${supplier}-btn`}
+                                >
+                                  {warmingLoading[supplier]
+                                    ? <Loader2 className="w-3 h-3 animate-spin" />
+                                    : <Flame className="w-3 h-3" />
+                                  }
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Cache Warming: Populer rotalari onbellekle</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-5 w-5 p-0 text-red-400 hover:text-red-600"
+                                  onClick={() => invalidateSupplier(supplier)}
+                                  data-testid={`invalidate-${supplier}-btn`}
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Supplier cache temizle</TooltipContent>
+                            </Tooltip>
                           </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Alert History */}
+                {telemetry.alert_history && telemetry.alert_history.length > 0 && (
+                  <div>
+                    <div className="text-[11px] font-medium text-amber-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                      <Bell className="w-3 h-3" /> Alert Gecmisi
+                    </div>
+                    <div className="space-y-1">
+                      {telemetry.alert_history.slice(-5).reverse().map((alert, i) => (
+                        <div key={i} className="flex items-center gap-2 text-[11px] text-amber-700 font-mono bg-amber-50 rounded px-2 py-1" data-testid={`alert-history-${i}`}>
+                          <AlertTriangle className="w-3 h-3 shrink-0" />
+                          <span className="text-amber-500">{alert.timestamp?.split("T")[1]?.split(".")[0]}</span>
+                          <span>hit_rate: %{alert.hit_rate_pct}</span>
+                          <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-amber-300">{alert.type}</Badge>
                         </div>
                       ))}
                     </div>
@@ -1168,7 +1363,7 @@ export default function PricingEnginePage() {
           </TabsList>
 
           <TabsContent value="simulator" className="mt-4">
-            <PriceSimulator metadata={metadata} onSimulated={() => { loadCacheStats(); if (showTelemetry) loadTelemetry(); }} />
+            <PriceSimulator metadata={metadata} onSimulated={() => { loadCacheStats(); loadAlerts(); if (showTelemetry) loadTelemetry(); if (showDiagnostics) loadDiagnostics(); }} />
           </TabsContent>
           <TabsContent value="rules" className="mt-4">
             <DistributionRulesTab />

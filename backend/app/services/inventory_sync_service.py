@@ -323,6 +323,15 @@ async def _sync_ratehawk_real(
     except Exception as e:
         logger.warning("Post-sync pricing cache invalidation failed for %s: %s", supplier, e)
 
+    # Warm pricing cache for popular routes after invalidation
+    try:
+        from app.services.pricing_distribution_engine import warm_cache_for_supplier
+        warm_result = await warm_cache_for_supplier(supplier, limit=10)
+        logger.info("Post-sync cache warming for %s: warmed=%d skipped=%d",
+                     supplier, warm_result.get("warmed", 0), warm_result.get("skipped", 0))
+    except Exception as e:
+        logger.warning("Post-sync cache warming failed for %s: %s", supplier, e)
+
     return {
         "job_id": job_id,
         "supplier": supplier,
@@ -488,6 +497,15 @@ async def _sync_simulation(
         await invalidate_supplier_sync(supplier)
     except Exception as e:
         logger.warning("Post-sync pricing cache invalidation failed for %s: %s", supplier, e)
+
+    # Warm pricing cache for popular routes after invalidation
+    try:
+        from app.services.pricing_distribution_engine import warm_cache_for_supplier
+        warm_result = await warm_cache_for_supplier(supplier, limit=10)
+        logger.info("Post-sync cache warming for %s: warmed=%d skipped=%d",
+                     supplier, warm_result.get("warmed", 0), warm_result.get("skipped", 0))
+    except Exception as e:
+        logger.warning("Post-sync cache warming failed for %s: %s", supplier, e)
 
     return {
         "job_id": job_id,

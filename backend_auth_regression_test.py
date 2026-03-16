@@ -10,7 +10,7 @@ import json
 import sys
 
 # Test configuration
-BACKEND_URL = "https://enterprise-ux-p3.preview.emergentagent.com"
+BACKEND_URL = "https://ratehawk-sandbox.preview.emergentagent.com"
 TEST_CREDENTIALS = {
     "email": "agent@acenta.test",
     "password": "agent123"

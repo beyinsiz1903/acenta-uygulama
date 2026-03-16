@@ -13,7 +13,7 @@ import json
 import sys
 
 # Backend URL
-BACKEND_URL = "https://enterprise-ux-p3.preview.emergentagent.com/api"
+BACKEND_URL = "https://ratehawk-sandbox.preview.emergentagent.com/api"
 
 # Test credentials from review request
 ADMIN_EMAIL = "admin@acenta.test"

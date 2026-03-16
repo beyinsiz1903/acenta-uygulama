@@ -11,7 +11,7 @@ import time
 from typing import Dict, Any
 
 # Configuration
-BASE_URL = "https://enterprise-ux-p3.preview.emergentagent.com"
+BASE_URL = "https://ratehawk-sandbox.preview.emergentagent.com"
 ADMIN_CREDENTIALS = {"email": "admin@acenta.test", "password": "admin123"}
 AGENT_CREDENTIALS = {"email": "agent@acenta.test", "password": "agent123"}
 

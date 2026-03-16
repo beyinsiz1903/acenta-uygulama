@@ -1,7 +1,7 @@
 // tests/e2e/login-test.spec.ts
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "https://enterprise-ux-p3.preview.emergentagent.com";
+const BASE_URL = "https://ratehawk-sandbox.preview.emergentagent.com";
 
 test.describe("Login Functionality Test", () => {
   test("login process with debug information", async ({ page }) => {

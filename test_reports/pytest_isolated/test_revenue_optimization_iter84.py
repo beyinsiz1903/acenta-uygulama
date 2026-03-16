@@ -20,7 +20,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://data-fetch-upgrade.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://travel-saas-optimize.preview.emergentagent.com").rstrip("/")
 
 # Test credentials
 SUPER_ADMIN_EMAIL = "agent@acenta.test"

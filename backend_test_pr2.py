@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://settlement-hub-10.preview.emergentagent.com"
+BASE_URL = "https://finance-ledger-demo.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials

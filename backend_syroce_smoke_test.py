@@ -25,7 +25,7 @@ import sys
 from typing import Dict, Any, Optional, List
 
 # Use the preview URL from frontend/.env
-BASE_URL = "https://settlement-hub-10.preview.emergentagent.com"
+BASE_URL = "https://finance-ledger-demo.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials from review request

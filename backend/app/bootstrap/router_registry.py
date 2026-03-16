@@ -444,6 +444,10 @@ def register_routers(app: FastAPI) -> None:
     from app.routers.supplier_credentials_router import router as supplier_credentials_router
     app.include_router(supplier_credentials_router)
 
+    # --- Supplier Onboarding Layer ---
+    from app.routers.supplier_onboarding_router import router as supplier_onboarding_router
+    app.include_router(supplier_onboarding_router)
+
     # --- Supplier Aggregator Layer ---
     from app.routers.supplier_aggregator_router import router as supplier_aggregator_router
     app.include_router(supplier_aggregator_router)

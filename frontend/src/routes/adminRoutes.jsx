@@ -95,6 +95,7 @@ const PlatformMonitoringPage = lazy(() => import("../pages/admin/PlatformMonitor
 const OperationsReadinessPage = lazy(() => import("../pages/admin/OperationsReadinessPage"));
 const MarketLaunchPage = lazy(() => import("../pages/admin/MarketLaunchPage"));
 const AdminSupplierCredentialsPage = lazy(() => import("../pages/admin/AdminSupplierCredentialsPage"));
+const SupplierOnboardingPage = lazy(() => import("../pages/admin/SupplierOnboardingPage"));
 const GrowthEnginePage = lazy(() => import("../pages/admin/GrowthEnginePage"));
 
 /**
@@ -187,6 +188,7 @@ export const adminRoutes = (
     {/* Inventory & Supplier */}
     <Route path="inventory-sync" element={<InventorySyncDashboardPage />} />
     <Route path="supplier-credentials" element={<AdminSupplierCredentialsPage />} />
+    <Route path="supplier-onboarding" element={<SupplierOnboardingPage />} />
     <Route path="villas/:productId/calendar" element={<AdminVillaCalendarPage />} />
     {/* Pilot & Onboarding */}
     <Route path="pilot-dashboard" element={<AdminPilotDashboardPage />} />

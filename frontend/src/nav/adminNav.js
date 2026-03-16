@@ -70,6 +70,7 @@ export const adminNav = [
       { label: "Operasyon & Launch", path: "/app/admin/operations-readiness" },
       { label: "Market Launch", path: "/app/admin/market-launch" },
       { label: "Supplier Credentials", path: "/app/admin/supplier-credentials" },
+      { label: "Supplier Onboarding", path: "/app/admin/supplier-onboarding" },
       { label: "Growth Engine", path: "/app/admin/growth-engine" },
     ],
   },

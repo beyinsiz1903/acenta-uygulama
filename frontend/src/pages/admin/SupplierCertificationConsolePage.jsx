@@ -426,13 +426,18 @@ export default function SupplierCertificationConsolePage() {
   const loadSandboxStatus = useCallback(async () => {
     try {
       const { data } = await api.get(`/e2e-demo/sandbox-status?supplier=${selectedSupplier}`);
-      setSandboxStatus(data);
-    } catch { /* ignore */ }
+      return data;
+    } catch { return null; }
   }, [selectedSupplier]);
 
   useEffect(() => { loadScenarios(); }, [loadScenarios]);
   useEffect(() => { loadHistory(); }, [loadHistory, activeTab]);
-  useEffect(() => { loadSandboxStatus(); }, [loadSandboxStatus]);
+  useEffect(() => {
+    let stale = false;
+    setSandboxStatus(null);
+    loadSandboxStatus().then((data) => { if (!stale) setSandboxStatus(data); });
+    return () => { stale = true; };
+  }, [loadSandboxStatus]);
 
   const runTest = async () => {
     setRunning(true);

@@ -208,3 +208,26 @@ Updated files:
 - `frontend/src/pages/admin/SupplierCertificationConsolePage.jsx` — Sandbox UI components
 
 **Testing: 100% backend (18/18), 100% frontend pass rate**
+
+---
+
+## Certification Console 4-Mode State System — COMPLETED (2026-03-16)
+**SIMULATION / SANDBOX_READY / SANDBOX_CONNECTED / SANDBOX_BLOCKED**
+
+Delivered:
+- **Backend** (`sandbox_activation_service.py`):
+  - `get_sandbox_status()` now returns one of 4 granular modes
+  - `_is_env_blocked()` helper detects network-level blocks (DNS, connection, timeout errors)
+  - Mode logic: no creds → simulation; creds + API OK → sandbox_connected; creds + env blocked → sandbox_blocked; creds + pending → sandbox_ready
+- **Frontend** (`SupplierCertificationConsolePage.jsx`):
+  - `MODE_CONFIG` object: per-mode styling (colors, icons, labels, descriptions)
+  - Header badge dynamically shows mode with icon (Lock for blocked, Wifi for connected, etc.)
+  - Sandbox Status Card: mode description box, environment-blocked warning with ShieldAlert icon
+  - SandboxReadinessIndicator: mode-specific badges (API OK, Blocked, Pending, No Credentials)
+  - Race condition fix: stale closure in useEffect resolved with stale flag + state reset on supplier switch
+
+Updated files:
+- `backend/app/services/sandbox_activation_service.py` — 4-mode logic, _is_env_blocked()
+- `frontend/src/pages/admin/SupplierCertificationConsolePage.jsx` — MODE_CONFIG, updated UI components
+
+**Testing: Backend 100% (8/8), Frontend race condition fixed and verified**

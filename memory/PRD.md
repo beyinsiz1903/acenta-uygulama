@@ -91,6 +91,14 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 - Frontend: PipelineExplainer (color-coded waterfall), EvaluatedRulesPanel (expandable with KAZANDI badges), GuardrailWarnings (severity-based alerts), GuardrailsTab (CRUD cards)
 - All 17 backend + 12 frontend tests passed (iteration_128)
 
+### Pricing Trace ID & Pricing Cache — COMPLETED (2026-03-16)
+**2 features: Trace ID for debugging, In-memory pricing cache for latency reduction**
+- **Pricing Trace ID**: Every simulation returns `pricing_trace_id` (format: `prc_xxxxxxxx`), logged for support team debugging
+- **Pricing Cache**: In-memory TTL cache (300s, 5000 max entries) with composite key (supplier+price+channel+agency+season+promo+org). Cache HIT latency: ~0.03ms vs MISS: ~13ms (400x+ faster)
+- Cache management: `/api/pricing-engine/cache/stats` (hit rate, entries) and `/api/pricing-engine/cache/clear`
+- Frontend: TraceBar (dark bar with trace ID, cache status, latency), CacheStatsBar (entries/hits/misses/hit rate with refresh/clear buttons)
+- All 21 backend + 15 frontend tests passed (iteration_129)
+
 ---
 
 ## Frontend Quality Score (Post P3+P4)

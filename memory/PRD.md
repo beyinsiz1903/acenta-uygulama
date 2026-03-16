@@ -38,35 +38,42 @@ CTO requested a comprehensive frontend architecture analysis and redesign to tra
 - AdminFinanceExposurePage → PageShell wrapper (exposure table preserved)
 - Test: 98.2% pass rate (56/57, 1 timeout = expected behavior)
 
+### Phase 3c: Remaining Page Migrations (DONE — 2026-03-16)
+- AdminScheduledReportsPage → PageShell + DataTable + TanStack Query (useScheduledReports, useCreateSchedule, useDeleteSchedule, useExecuteDueReports)
+- AdminAccountingPage → PageShell + tabs (overview/rules/customers) + DataTable for sync jobs + TanStack Query (useAccountingDashboard, useSyncJobs, useRetryJob, useAccountingRules, useAccountingCustomers)
+- B2BPortalPage → PageShell + tabs (flow/list) + component extraction (AccountSummaryCard, B2BDashboardKpiRow, QuoteBookCancelFlow, BookingListTab, PricePreviewDialog)
+- New feature directories: features/reporting/, features/accounting/
+- Test: 100% pass rate (40/40 tests passed + regression verified)
+
+## Current Design System Adoption
+- **15+ pages** using PageShell pattern
+- **Unified DataTable** replacing 50+ custom table implementations
+- **TanStack Query adoption:** ~20% (up from 15%)
+- **Feature hook directories:** reporting, accounting, bookings, users, reports, products, operations, crm, finance, analytics, dashboard, governance
+
 ## Backlog (Prioritized)
 
-### P0 — Phase 3c: Remaining Page Migrations
-- AdminScheduledReportsPage
-- B2BPortalPage
-- AdminAccountingPage
-- Other legacy pages still using custom headers
-
-### P1 — Phase 3d: "God Page" Splitting
+### P0 — Phase 3d: "God Page" Splitting
 - AdminFinanceRefundsPage (2150 LOC) → Split into components/hooks
-- PlatformHardeningPage (1912 LOC) → Split into components/hooks
-- B2BPortalPage (1734 LOC) → Split into components/hooks
+- PlatformHardeningPage (1912 LOC, /pages/admin/) → Split into components/hooks
+- B2BPortalPage (1734 LOC → already partially componentized in Phase 3c)
 
-### P2 — TanStack Query Adoption (Target: 80%+)
+### P1 — TanStack Query Adoption (Target: 80%+)
 - Continue migrating useEffect + useState patterns to TanStack Query hooks
-- Current adoption: ~15% (up from 5%)
+- Current adoption: ~20%
 
-### P3 — Phase 4: Performance
+### P2 — Phase 4: Performance
 - Route-based code splitting
 - List virtualization for large tables
 - Bundle size optimization
 
-### P4 — Phase 5: Enterprise UX
+### P3 — Phase 5: Enterprise UX
 - Command Palette (Cmd+K)
 - Global Search
 - Keyboard shortcuts
 - Activity Timeline
 
-### P5 — TypeScript Migration
+### P4 — TypeScript Migration
 - API layer → hooks → design system components
 
 ## Known Issues

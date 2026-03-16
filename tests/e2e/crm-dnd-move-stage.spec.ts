@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const BASE = "https://cache-engine-prod.preview.emergentagent.com";
+const BASE = "https://settlement-hub-10.preview.emergentagent.com";
 const UID = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 test("dnd-stage-move: move deal via API + verify persistence", async ({ request }) => {

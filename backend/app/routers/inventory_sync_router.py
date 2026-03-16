@@ -1,4 +1,4 @@
-"""Inventory Sync Engine API — Hardened + Stability (P4.2).
+"""Inventory Sync Engine API — Hardened + Stability (P4.2) + Booking Flow (P0).
 
 Travel Inventory Platform endpoints:
   POST /api/inventory/sync/trigger      — Trigger supplier sync
@@ -23,6 +23,15 @@ Travel Inventory Platform endpoints:
   GET  /api/inventory/kpi/drift         — KPI drift data
   POST /api/inventory/booking/test      — E2E booking lifecycle test
   GET  /api/inventory/booking/test/history — Test history
+
+  RateHawk Booking Flow (P0):
+  POST /api/inventory/booking/precheck    — Pre-booking price revalidation
+  POST /api/inventory/booking/create      — Create booking (ETG v3 flow)
+  GET  /api/inventory/booking/{id}/status — Poll booking status
+  POST /api/inventory/booking/{id}/cancel — Cancel booking
+  POST /api/inventory/booking/test-matrix — Run booking test matrix
+  GET  /api/inventory/booking/history     — Booking history
+  GET  /api/inventory/booking/test-matrix/history — Test matrix history
 """
 from __future__ import annotations
 
@@ -65,6 +74,29 @@ class SupplierConfigPayload(BaseModel):
     key_id: str
     api_key: str
     mode: str = "sandbox"
+
+
+class BookingPrecheckPayload(BaseModel):
+    supplier: str
+    hotel_id: str
+    book_hash: str | None = None
+    checkin: str
+    checkout: str
+    guests: int = 2
+    currency: str = "EUR"
+
+
+class BookingCreatePayload(BaseModel):
+    supplier: str
+    hotel_id: str
+    book_hash: str
+    checkin: str
+    checkout: str
+    guests: list[dict] = []
+    contact: dict = {}
+    user_ip: str = "127.0.0.1"
+    currency: str = "EUR"
+    precheck_id: str | None = None
 
 
 # ── Existing endpoints ────────────────────────────────────────────────
@@ -455,3 +487,106 @@ async def booking_test_history(
     """Get history of E2E booking tests."""
     from app.services.supplier_booking_test_service import get_booking_test_history
     return await get_booking_test_history(supplier, limit)
+
+
+# ── RateHawk Booking Flow (P0) ───────────────────────────────────────
+
+@router.post("/booking/precheck")
+async def booking_precheck_endpoint(
+    payload: BookingPrecheckPayload,
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Pre-booking price revalidation (ETG prebook equivalent).
+
+    Validates price drift before booking and returns book_hash.
+    Decision: proceed / proceed_with_warning / requires_approval / abort
+    """
+    from app.services.ratehawk_booking_service import booking_precheck
+    return await booking_precheck(
+        supplier=payload.supplier,
+        hotel_id=payload.hotel_id,
+        book_hash=payload.book_hash,
+        checkin=payload.checkin,
+        checkout=payload.checkout,
+        guests=payload.guests,
+        currency=payload.currency,
+    )
+
+
+@router.post("/booking/create")
+async def booking_create_endpoint(
+    payload: BookingCreatePayload,
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Create booking following ETG v3 flow.
+
+    Flow: booking_form → booking_finish → status_poll
+    partner_order_id = syroce_booking_uuid (auto-generated)
+    """
+    from app.services.ratehawk_booking_service import create_booking
+    return await create_booking(
+        supplier=payload.supplier,
+        hotel_id=payload.hotel_id,
+        book_hash=payload.book_hash,
+        checkin=payload.checkin,
+        checkout=payload.checkout,
+        guests=payload.guests,
+        contact=payload.contact,
+        user_ip=payload.user_ip,
+        currency=payload.currency,
+        precheck_id=payload.precheck_id,
+    )
+
+
+@router.get("/booking/{booking_id}/status")
+async def booking_status_endpoint(
+    booking_id: str,
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Get booking status with full history."""
+    from app.services.ratehawk_booking_service import get_booking_status
+    return await get_booking_status(booking_id)
+
+
+@router.post("/booking/{booking_id}/cancel")
+async def booking_cancel_endpoint(
+    booking_id: str,
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Cancel a booking through proper cancellation flow."""
+    from app.services.ratehawk_booking_service import cancel_booking
+    return await cancel_booking(booking_id)
+
+
+@router.post("/booking/test-matrix")
+async def booking_test_matrix_endpoint(
+    payload: SyncTriggerPayload,
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Run comprehensive booking test matrix.
+
+    Scenarios: success, precheck_validation, do_not_book, book_and_cancel, status_check
+    """
+    from app.services.ratehawk_booking_service import run_booking_test_matrix
+    return await run_booking_test_matrix(payload.supplier)
+
+
+@router.get("/booking/history")
+async def booking_history_endpoint(
+    supplier: str | None = Query(None),
+    limit: int = Query(20, ge=1, le=100),
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Get booking flow history."""
+    from app.services.ratehawk_booking_service import get_booking_history
+    return await get_booking_history(supplier, limit)
+
+
+@router.get("/booking/test-matrix/history")
+async def test_matrix_history_endpoint(
+    limit: int = Query(10, ge=1, le=50),
+    user: dict = Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Get history of booking test matrix runs."""
+    from app.services.ratehawk_booking_service import get_test_matrix_history
+    return await get_test_matrix_history(limit)

@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const BASE = "https://ratehawk-sandbox.preview.emergentagent.com";
+const BASE = "https://cache-validation-v1.preview.emergentagent.com";
 const UID = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 test("deal-drawer: open, switch tabs, add note, close", async ({ request }) => {

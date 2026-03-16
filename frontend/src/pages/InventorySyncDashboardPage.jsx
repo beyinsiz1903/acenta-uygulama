@@ -118,6 +118,11 @@ export default function InventorySyncDashboardPage() {
   const [retryingJob, setRetryingJob] = useState({});
   const [retryingRegion, setRetryingRegion] = useState({});
   const [cancellingJob, setCancellingJob] = useState({});
+  const [bookingFlowMatrix, setBookingFlowMatrix] = useState(null);
+  const [bookingFlowRunning, setBookingFlowRunning] = useState(false);
+  const [bookingHistory, setBookingHistory] = useState(null);
+  const [precheckResult, setPrecheckResult] = useState(null);
+  const [precheckRunning, setPrecheckRunning] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -277,6 +282,46 @@ export default function InventorySyncDashboardPage() {
       console.error("Job cancel failed:", err);
     } finally {
       setCancellingJob((prev) => ({ ...prev, [jobId]: false }));
+    }
+  };
+
+  const runBookingFlowMatrix = async (supplier) => {
+    setBookingFlowRunning(true);
+    setBookingFlowMatrix(null);
+    try {
+      const res = await api.post("/inventory/booking/test-matrix", { supplier });
+      setBookingFlowMatrix(res.data);
+    } catch (err) {
+      console.error("Booking flow matrix failed:", err);
+    } finally {
+      setBookingFlowRunning(false);
+    }
+  };
+
+  const fetchBookingHistory = async () => {
+    try {
+      const res = await api.get("/inventory/booking/history?limit=15");
+      setBookingHistory(res.data);
+    } catch (err) {
+      console.error("Booking history fetch failed:", err);
+    }
+  };
+
+  const runPrecheck = async (supplier, hotelId) => {
+    setPrecheckRunning(true);
+    setPrecheckResult(null);
+    try {
+      const checkin = new Date(Date.now() + 14 * 86400000).toISOString().split("T")[0];
+      const checkout = new Date(Date.now() + 17 * 86400000).toISOString().split("T")[0];
+      const res = await api.post("/inventory/booking/precheck", {
+        supplier, hotel_id: hotelId || "rh_test_hotel_001",
+        checkin, checkout, guests: 2, currency: "EUR",
+      });
+      setPrecheckResult(res.data);
+    } catch (err) {
+      console.error("Precheck failed:", err);
+    } finally {
+      setPrecheckRunning(false);
     }
   };
 
@@ -924,6 +969,218 @@ export default function InventorySyncDashboardPage() {
           )}
         </CardContent>
       </Card>
+
+
+      {/* RateHawk Booking Flow Panel (P0) */}
+      <Card data-testid="booking-flow-panel">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Zap className="h-5 w-5 text-sky-500" /> RateHawk Booking Flow
+            </CardTitle>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={fetchBookingHistory} data-testid="fetch-booking-history-btn">
+                <Clock className="h-4 w-4 mr-1" /> Gecmis
+              </Button>
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            ETG API v3 uyumlu: Precheck &rarr; Booking Form &rarr; Booking Finish &rarr; Status Poll &rarr; Cancel
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {/* Precheck Section */}
+          <div className="border rounded-lg p-4 space-y-3" data-testid="precheck-section">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <Shield className="h-4 w-4 text-amber-500" /> Booking Precheck (Price Revalidation)
+              </h3>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => runPrecheck("ratehawk", "rh_test_hotel_001")}
+                  disabled={precheckRunning} data-testid="run-precheck-btn">
+                  {precheckRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Play className="h-3.5 w-3.5 mr-1.5" />}
+                  Precheck Calistir
+                </Button>
+              </div>
+            </div>
+            {precheckResult && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm" data-testid="precheck-result">
+                <div className="p-3 rounded-lg bg-muted/50">
+                  <p className="text-xs text-muted-foreground mb-1">Decision</p>
+                  <Badge variant="outline" className={
+                    precheckResult.decision === "proceed" ? "border-emerald-500 text-emerald-600" :
+                    precheckResult.decision === "proceed_with_warning" ? "border-amber-500 text-amber-600" :
+                    precheckResult.decision === "requires_approval" ? "border-orange-500 text-orange-600" :
+                    "border-red-500 text-red-600"
+                  } data-testid="precheck-decision">
+                    {precheckResult.decision}
+                  </Badge>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/50">
+                  <p className="text-xs text-muted-foreground mb-1">Cached Price</p>
+                  <p className="font-mono font-medium">{precheckResult.pricing?.cached_price} {precheckResult.pricing?.currency}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/50">
+                  <p className="text-xs text-muted-foreground mb-1">Revalidated Price</p>
+                  <p className="font-mono font-medium">{precheckResult.pricing?.revalidated_price} {precheckResult.pricing?.currency}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/50">
+                  <p className="text-xs text-muted-foreground mb-1">Price Drift</p>
+                  <p className={`font-mono font-medium ${Math.abs(precheckResult.pricing?.drift_pct || 0) > 5 ? "text-red-500" : Math.abs(precheckResult.pricing?.drift_pct || 0) > 2 ? "text-amber-500" : "text-emerald-500"}`}>
+                    {precheckResult.pricing?.drift_pct}%
+                  </p>
+                </div>
+              </div>
+            )}
+            {precheckResult && (
+              <div className="flex gap-4 text-xs text-muted-foreground">
+                <span>book_hash: <code className="font-mono">{precheckResult.book_hash?.slice(0, 20)}...</code></span>
+                <span>mode: {precheckResult.mode}</span>
+                <span>latency: {precheckResult.total_latency_ms}ms</span>
+              </div>
+            )}
+          </div>
+
+          {/* Test Matrix Section */}
+          <div className="border rounded-lg p-4 space-y-3" data-testid="test-matrix-section">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <Target className="h-4 w-4 text-sky-500" /> Booking Test Matrix
+              </h3>
+              <Button size="sm" variant={bookingFlowRunning ? "secondary" : "default"}
+                onClick={() => runBookingFlowMatrix("ratehawk")}
+                disabled={bookingFlowRunning} data-testid="run-test-matrix-btn">
+                {bookingFlowRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Play className="h-3.5 w-3.5 mr-1.5" />}
+                {bookingFlowRunning ? "Calisiyor..." : "Tum Senaryolari Calistir"}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              success | precheck_validation | do_not_book | book_and_cancel | status_check
+            </p>
+
+            {bookingFlowMatrix && (
+              <>
+                <div className="flex items-center gap-3 mb-2">
+                  <Badge variant={bookingFlowMatrix.overall_status === "passed" ? "outline" : "destructive"}
+                    className={bookingFlowMatrix.overall_status === "passed" ? "border-emerald-500 text-emerald-600 bg-emerald-500/10" : ""}
+                    data-testid="matrix-overall-status">
+                    {bookingFlowMatrix.summary?.passed}/{bookingFlowMatrix.summary?.total} PASS
+                  </Badge>
+                  <span className="text-xs text-muted-foreground font-mono">{bookingFlowMatrix.duration_ms}ms toplam</span>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Senaryo</TableHead>
+                      <TableHead>Durum</TableHead>
+                      <TableHead>Sure</TableHead>
+                      <TableHead>Detay</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {bookingFlowMatrix.scenarios?.map((sc, i) => (
+                      <TableRow key={i} data-testid={`matrix-scenario-${sc.scenario}`}>
+                        <TableCell>
+                          <div>
+                            <span className="font-mono text-xs font-medium">{sc.scenario}</span>
+                            <p className="text-xs text-muted-foreground">{sc.description}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {sc.status === "passed" ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                          ) : sc.status === "skipped" ? (
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                          ) : sc.status === "partial" ? (
+                            <AlertTriangle className="h-4 w-4 text-amber-500" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-red-500" />
+                          )}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">{sc.duration_ms}ms</TableCell>
+                        <TableCell className="text-xs text-muted-foreground max-w-xs">
+                          {sc.error ? (
+                            <span className="text-red-500">{sc.error}</span>
+                          ) : sc.details ? (
+                            Object.entries(sc.details).filter(([, v]) => v !== null && v !== undefined).map(([k, v]) => `${k}: ${String(v)}`).join(" | ")
+                          ) : "-"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </>
+            )}
+          </div>
+
+          {/* Booking History */}
+          {bookingHistory && (
+            <div className="border rounded-lg p-4 space-y-3" data-testid="booking-history-section">
+              <h3 className="text-sm font-semibold">Booking Gecmisi ({bookingHistory.total})</h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Booking ID</TableHead>
+                    <TableHead>partner_order_id</TableHead>
+                    <TableHead>Hotel</TableHead>
+                    <TableHead>Durum</TableHead>
+                    <TableHead>Confirmation</TableHead>
+                    <TableHead>Mod</TableHead>
+                    <TableHead>Tarih</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {bookingHistory.bookings?.map((bk, i) => (
+                    <TableRow key={i} data-testid={`booking-row-${i}`}>
+                      <TableCell className="font-mono text-xs">{bk.booking_id?.slice(0, 8)}...</TableCell>
+                      <TableCell className="font-mono text-xs">{bk.partner_order_id?.slice(0, 8)}...</TableCell>
+                      <TableCell className="text-xs">{bk.hotel_id}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={
+                          bk.status === "confirmed" ? "border-emerald-500 text-emerald-600" :
+                          bk.status === "cancelled" ? "border-slate-400 text-slate-500" :
+                          bk.status === "failed" ? "border-red-500 text-red-600" :
+                          bk.status === "timeout" ? "border-orange-500 text-orange-600" :
+                          "border-sky-500 text-sky-600"
+                        } data-testid={`booking-status-${i}`}>
+                          {bk.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">{bk.confirmation_code || "-"}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="text-xs">{bk.mode}</Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {bk.created_at ? new Date(bk.created_at).toLocaleString("tr-TR") : "-"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {/* Architecture Info */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs" data-testid="booking-flow-arch">
+            <div className="p-3 rounded-lg bg-sky-500/10 border border-sky-500/30">
+              <p className="font-medium mb-1 text-sky-600">partner_order_id</p>
+              <p className="text-muted-foreground">= syroce_booking_uuid</p>
+              <p className="text-muted-foreground">Tum lifecycle boyunca ayni</p>
+            </div>
+            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+              <p className="font-medium mb-1 text-amber-600">Async Booking</p>
+              <p className="text-muted-foreground">Status poll (max {"{15}"} deneme)</p>
+              <p className="text-muted-foreground">Cut-off: 60s timeout</p>
+            </div>
+            <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+              <p className="font-medium mb-1 text-emerald-600">Test Properties</p>
+              <p className="text-muted-foreground">test_hotel: booking OK</p>
+              <p className="text-muted-foreground">test_hotel_do_not_book: reject</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
 
       {/* KPI Dashboard */}
       {kpiData && (

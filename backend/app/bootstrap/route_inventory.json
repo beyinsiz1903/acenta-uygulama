@@ -7320,7 +7320,62 @@
     "legacy_or_v1": "legacy",
     "method": "POST",
     "owner": "inventory",
+    "path": "/api/inventory/booking/create",
+    "risk_level": "medium",
+    "source": "app.routers.inventory_sync_router",
+    "target_namespace": "/api/v1/inventory"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/inventory",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "inventory",
+    "path": "/api/inventory/booking/history",
+    "risk_level": "medium",
+    "source": "app.routers.inventory_sync_router",
+    "target_namespace": "/api/v1/inventory"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/inventory",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "inventory",
+    "path": "/api/inventory/booking/precheck",
+    "risk_level": "medium",
+    "source": "app.routers.inventory_sync_router",
+    "target_namespace": "/api/v1/inventory"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/inventory",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "inventory",
     "path": "/api/inventory/booking/test",
+    "risk_level": "medium",
+    "source": "app.routers.inventory_sync_router",
+    "target_namespace": "/api/v1/inventory"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/inventory",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "inventory",
+    "path": "/api/inventory/booking/test-matrix",
+    "risk_level": "medium",
+    "source": "app.routers.inventory_sync_router",
+    "target_namespace": "/api/v1/inventory"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/inventory",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "inventory",
+    "path": "/api/inventory/booking/test-matrix/history",
     "risk_level": "medium",
     "source": "app.routers.inventory_sync_router",
     "target_namespace": "/api/v1/inventory"
@@ -7332,6 +7387,28 @@
     "method": "GET",
     "owner": "inventory",
     "path": "/api/inventory/booking/test/history",
+    "risk_level": "medium",
+    "source": "app.routers.inventory_sync_router",
+    "target_namespace": "/api/v1/inventory"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/inventory",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "inventory",
+    "path": "/api/inventory/booking/{booking_id}/cancel",
+    "risk_level": "medium",
+    "source": "app.routers.inventory_sync_router",
+    "target_namespace": "/api/v1/inventory"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/inventory",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "inventory",
+    "path": "/api/inventory/booking/{booking_id}/status",
     "risk_level": "medium",
     "source": "app.routers.inventory_sync_router",
     "target_namespace": "/api/v1/inventory"

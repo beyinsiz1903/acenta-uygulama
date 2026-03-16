@@ -12,7 +12,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Use the preview URL from frontend/.env
-BASE_URL = "https://supplier-e2e-demo.preview.emergentagent.com"
+BASE_URL = "https://api-reorganize-3.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials from review request

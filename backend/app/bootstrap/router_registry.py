@@ -97,6 +97,7 @@ from app.routers.billing_lifecycle import router as billing_lifecycle_router
 from app.routers.booking_outcomes import router as booking_outcomes_router
 from app.routers.bookings import router as bookings_router
 from app.routers.cache_management import router as cache_management_router
+from app.routers.cache_health_router import router as cache_health_router
 from app.routers.cancel_reasons import router as cancel_reasons_router
 from app.routers.commission_rules import router as commission_rules_router
 from app.routers.crm_activities import router as crm_activities_router
@@ -406,6 +407,7 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(multicurrency_router)
     app.include_router(cancel_reasons_router)
     app.include_router(cache_management_router)
+    app.include_router(cache_health_router)
     app.include_router(inventory_snapshots_api_router)
     app.include_router(distributed_locks_router)
     app.include_router(health_dashboard_router)

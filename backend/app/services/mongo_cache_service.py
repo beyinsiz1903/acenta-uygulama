@@ -42,7 +42,7 @@ async def cache_get(key: str) -> Optional[Any]:
 
 
 async def cache_set(key: str, value: Any, category: str = "default", ttl_seconds: Optional[int] = None) -> None:
-    """Set a cached value with TTL."""
+    """Set a cached value with TTL. Also stores cached_at for freshness tracking."""
     db = await get_db()
     now = datetime.now(timezone.utc)
     ttl = ttl_seconds or CACHE_TTLS.get(category, CACHE_TTLS["default"])
@@ -55,6 +55,8 @@ async def cache_set(key: str, value: Any, category: str = "default", ttl_seconds
             "category": category,
             "updated_at": now,
             "expires_at": expires_at,
+            "cached_at": now,
+            "ttl_seconds": ttl,
         }},
         upsert=True,
     )
@@ -76,7 +78,7 @@ async def cache_invalidate_pattern(pattern: str) -> int:
 
 
 async def cache_stats() -> dict[str, Any]:
-    """Get cache statistics."""
+    """Get cache statistics including freshness data."""
     db = await get_db()
     now = datetime.now(timezone.utc)
 
@@ -90,10 +92,23 @@ async def cache_stats() -> dict[str, Any]:
     ]
     cats = await db[COLLECTION].aggregate(pipeline).to_list(50)
 
+    # Freshness: entries with cached_at older than their TTL
+    stale_pipeline = [
+        {"$match": {"cached_at": {"$exists": True}, "ttl_seconds": {"$exists": True}}},
+        {"$addFields": {
+            "age_seconds": {"$divide": [{"$subtract": [now, "$cached_at"]}, 1000]},
+        }},
+        {"$match": {"$expr": {"$gt": ["$age_seconds", "$ttl_seconds"]}}},
+        {"$count": "stale_count"},
+    ]
+    stale_result = await db[COLLECTION].aggregate(stale_pipeline).to_list(1)
+    stale_count = stale_result[0]["stale_count"] if stale_result else 0
+
     return {
         "total_entries": total,
         "active_entries": active,
         "expired_entries": expired,
+        "stale_entries": stale_count,
         "by_category": {c["_id"]: c["count"] for c in cats if c["_id"]},
     }
 

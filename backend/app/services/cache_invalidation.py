@@ -13,6 +13,7 @@ import logging
 
 from app.services.redis_cache import redis_invalidate_pattern
 from app.services.mongo_cache_service import cache_invalidate_pattern as mongo_invalidate
+from app.services import cache_metrics as cm
 
 logger = logging.getLogger("cache_invalidation")
 
@@ -36,10 +37,12 @@ async def _inv(prefix: str, scope: str = "") -> int:
         a_count = await _inv_app_cache(prefix)
         total = r_count + m_count + a_count
         if total > 0:
-            logger.debug("Invalidated %s:%s → %d keys", prefix, scope, total)
+            logger.debug("Invalidated %s:%s -> %d keys", prefix, scope, total)
+            cm.invalidation_ok(f"{prefix}:{scope}", total)
         return total
     except Exception as e:
-        logger.warning("Invalidation error %s:%s → %s", prefix, scope, e)
+        logger.warning("Invalidation error %s:%s -> %s", prefix, scope, e)
+        cm.invalidation_fail(f"{prefix}:{scope}", str(e))
         return 0
 
 
@@ -146,3 +149,59 @@ async def invalidate_all_for_org(org_id: str) -> None:
     await invalidate_dashboard(org_id)
     await invalidate_b2b_announcements(org_id)
     logger.info("Full cache invalidation for org %s", org_id)
+
+
+
+# ─── Supplier Sync Invalidation ───────────────────────────────
+
+async def invalidate_supplier_sync(supplier: str, org_id: str = "") -> int:
+    """Invalidate all cached inventory for a supplier after sync completes.
+
+    Called after supplier sync job finishes to ensure stale
+    inventory/prices are purged.
+    """
+    total = 0
+    total += await _inv(f"inv:{supplier}")
+    total += await _inv(f"inv_city:{supplier}")
+    total += await _inv(f"supplier_cache:{org_id}:{supplier}" if org_id else "supplier_cache")
+    total += await _inv("search", org_id)
+    total += await _inv("b2b_htl_srch", org_id)
+    total += await _inv("pricing_rules", org_id)
+    logger.info("Post-sync invalidation for %s: %d keys cleared", supplier, total)
+    return total
+
+
+async def invalidate_booking_lifecycle(org_id: str, booking_id: str = "") -> int:
+    """Invalidate caches affected by booking creation, update, or cancellation.
+
+    Ensures:
+    - Availability caches refreshed
+    - Dashboard stats updated
+    - Booking status not stale
+    """
+    total = 0
+    total += await _inv("booking_status", org_id)
+    total += await _inv("availability", org_id)
+    total += await _inv("dash_kpi", org_id)
+    total += await _inv("dash_weekly", org_id)
+    total += await _inv("reservation_summary", org_id)
+    total += await _inv("b2b_bkgs", org_id)
+    if booking_id:
+        total += await _inv(f"booking:{booking_id}")
+    logger.info("Post-booking invalidation for org=%s booking=%s: %d keys", org_id, booking_id, total)
+    return total
+
+
+async def invalidate_price_change(org_id: str, supplier: str = "") -> int:
+    """Invalidate caches when price data changes.
+
+    Ensures stale rates are never served after a price update.
+    """
+    total = 0
+    total += await _inv("search", org_id)
+    total += await _inv("price_revalidation", org_id)
+    total += await _inv("b2b_htl_srch", org_id)
+    if supplier:
+        total += await _inv(f"supplier_cache:{org_id}:{supplier}")
+    logger.info("Price change invalidation for org=%s supplier=%s: %d keys", org_id, supplier, total)
+    return total

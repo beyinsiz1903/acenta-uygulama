@@ -72,6 +72,7 @@ export const adminNav = [
       { label: "Supplier Credentials", path: "/app/admin/supplier-credentials" },
       { label: "Supplier Onboarding", path: "/app/admin/supplier-onboarding" },
       { label: "Certification Console", path: "/app/admin/certification-console" },
+      { label: "Cache Health", path: "/app/admin/cache-health" },
       { label: "Growth Engine", path: "/app/admin/growth-engine" },
     ],
   },

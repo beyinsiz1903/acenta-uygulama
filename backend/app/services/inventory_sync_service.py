@@ -611,6 +611,8 @@ async def search_inventory(
     This is the core of the Inventory Platform architecture:
     search → cache, NOT search → supplier API.
     """
+    from app.services import cache_metrics as cm
+
     search_start = time.monotonic()
     source = "unknown"
     results = []
@@ -620,13 +622,29 @@ async def search_inventory(
         from app.infrastructure.redis_client import get_async_redis
         r = await get_async_redis()
         if r:
+            t0 = time.monotonic()
             results, source = await _search_redis(r, destination, supplier, min_stars, limit)
+            redis_ms = round((time.monotonic() - t0) * 1000, 1)
+            cm.record_latency("redis_search", redis_ms)
+            if results:
+                cm.hit("redis")
+            else:
+                cm.miss("redis")
+        else:
+            cm.redis_down()
     except Exception as e:
         logger.warning("Redis search failed, falling back to MongoDB: %s", e)
+        cm.redis_down()
 
     # Fallback to MongoDB
     if not results:
+        t1 = time.monotonic()
         results, source = await _search_mongo(destination, supplier, min_stars, limit)
+        mongo_ms = round((time.monotonic() - t1) * 1000, 1)
+        cm.record_latency("mongo_search", mongo_ms)
+        if source == "mongodb":
+            cm.fallback("redis", "mongo")
+            cm.hit("mongo")
 
     # Filter by availability if dates provided
     if checkin and checkout:

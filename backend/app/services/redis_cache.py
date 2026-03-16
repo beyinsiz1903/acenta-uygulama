@@ -162,6 +162,8 @@ async def redis_get(key: str, tenant_id: str = "") -> Optional[Any]:
     try:
         r = _client()
         if r is None:
+            from app.services import cache_metrics as cm
+            cm.redis_down()
             return None
         rk = _make_key(key, tenant_id)
         raw = r.get(rk)
@@ -169,6 +171,9 @@ async def redis_get(key: str, tenant_id: str = "") -> Optional[Any]:
             return None
         return json.loads(raw)
     except Exception as e:
+        if "timeout" in str(e).lower() or "timed out" in str(e).lower():
+            from app.services import cache_metrics as cm
+            cm.redis_timeout()
         logger.debug("redis_get error [%s]: %s", key, e)
         return None
 
@@ -183,12 +188,17 @@ async def redis_set(
     try:
         r = _client()
         if r is None:
+            from app.services import cache_metrics as cm
+            cm.redis_down()
             return False
         rk = _make_key(key, tenant_id)
         serialized = json.dumps(value, default=str)
         r.setex(rk, ttl_seconds, serialized)
         return True
     except Exception as e:
+        if "timeout" in str(e).lower() or "timed out" in str(e).lower():
+            from app.services import cache_metrics as cm
+            cm.redis_timeout()
         logger.debug("redis_set error [%s]: %s", key, e)
         return False
 
@@ -258,30 +268,54 @@ async def multilayer_cached(
     redis_ttl: int = 60,
     mongo_ttl: int = 300,
     tenant_id: str = "",
+    category: str = "",
 ) -> Any:
     """L1 Redis → L2 MongoDB → Compute.
 
     Redis has shorter TTL (hot, in-memory).
     MongoDB has longer TTL (warm, persistent).
+    Tracks metrics for all operations.
     """
-    # L1: Redis
-    hit = await redis_get(key, tenant_id)
-    if hit is not None:
-        return hit
+    import time as _time
+    from app.services import cache_metrics as cm
 
-    # L2: MongoDB
+    # L1: Redis
+    t0 = _time.monotonic()
+    redis_hit = await redis_get(key, tenant_id)
+    l1_ms = round((_time.monotonic() - t0) * 1000, 2)
+    cm.record_latency("redis", l1_ms)
+
+    if redis_hit is not None:
+        cm.hit("redis")
+        return redis_hit
+
+    cm.miss("redis")
+
+    # L2: MongoDB fallback
+    mongo_hit = None
     try:
         from app.services.cache_service import cache_get as mongo_get, cache_set as mongo_set
+        t1 = _time.monotonic()
         mongo_hit = await mongo_get(key, tenant_id)
+        l2_ms = round((_time.monotonic() - t1) * 1000, 2)
+        cm.record_latency("mongo", l2_ms)
+
         if mongo_hit is not None:
+            cm.hit("mongo")
+            cm.fallback("redis", "mongo")
             # Promote to L1
             await redis_set(key, mongo_hit, redis_ttl, tenant_id)
             return mongo_hit
-    except Exception:
-        pass
+        cm.miss("mongo")
+    except Exception as e:
+        logger.warning("Mongo L2 read failed for key=%s: %s", key, e)
+        cm.miss("mongo")
 
     # Compute
+    t2 = _time.monotonic()
     result = await compute_fn()
+    compute_ms = round((_time.monotonic() - t2) * 1000, 2)
+    cm.record_latency("compute", compute_ms)
 
     # Store in both layers
     await redis_set(key, result, redis_ttl, tenant_id)
@@ -294,14 +328,26 @@ async def multilayer_cached(
     return result
 
 
-async def multilayer_invalidate(key: str, tenant_id: str = "") -> None:
-    """Invalidate from both Redis and MongoDB."""
-    await redis_delete(key, tenant_id)
+async def multilayer_invalidate(key: str, tenant_id: str = "") -> dict[str, Any]:
+    """Invalidate from both Redis and MongoDB. Returns invalidation summary."""
+    from app.services import cache_metrics as cm
+
+    redis_ok = await redis_delete(key, tenant_id)
+    mongo_ok = False
     try:
         from app.services.cache_service import cache_invalidate as mongo_inv
         await mongo_inv(key, tenant_id)
+        mongo_ok = True
     except Exception:
         pass
+
+    total = int(redis_ok) + int(mongo_ok)
+    if total > 0:
+        cm.invalidation_ok(key, total)
+    else:
+        cm.invalidation_fail(key, "both_layers_failed")
+
+    return {"redis": redis_ok, "mongo": mongo_ok}
 
 
 # ─── Health & Stats ───────────────────────────────────────────

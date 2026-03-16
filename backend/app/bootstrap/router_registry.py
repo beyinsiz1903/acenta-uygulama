@@ -444,12 +444,19 @@ def register_routers(app: FastAPI) -> None:
     from app.routers.supplier_credentials_router import router as supplier_credentials_router
     app.include_router(supplier_credentials_router)
 
-    # --- Supplier Onboarding Layer ---
-    from app.routers.supplier_onboarding_router import router as supplier_onboarding_router
-    app.include_router(supplier_onboarding_router)
-
-    from app.routers.e2e_demo_router import router as e2e_demo_router
-    app.include_router(e2e_demo_router)
+    # --- Inventory Domain (refactored from monolith) ---
+    from app.routers.inventory import (
+        sync_router as inv_sync_router,
+        booking_router as inv_booking_router,
+        diagnostics_router as inv_diagnostics_router,
+        e2e_demo_router as inv_e2e_demo_router,
+        onboarding_router as inv_onboarding_router,
+    )
+    app.include_router(inv_sync_router)
+    app.include_router(inv_booking_router)
+    app.include_router(inv_diagnostics_router)
+    app.include_router(inv_e2e_demo_router)
+    app.include_router(inv_onboarding_router)
 
     # --- Supplier Aggregator Layer ---
     from app.routers.supplier_aggregator_router import router as supplier_aggregator_router
@@ -487,6 +494,4 @@ def register_routers(app: FastAPI) -> None:
     from app.routers.pilot_onboarding_router import router as pilot_onboarding_router
     app.include_router(pilot_onboarding_router)
 
-    # --- Inventory Sync Engine (MEGA PROMPT #37) ---
-    from app.routers.inventory_sync_router import router as inventory_sync_router
-    app.include_router(inventory_sync_router)
+    # inventory_sync_router replaced by inventory/ package (see above)

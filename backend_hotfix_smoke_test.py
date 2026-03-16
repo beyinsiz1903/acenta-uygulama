@@ -9,7 +9,7 @@ import json
 import sys
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://cert-console.preview.emergentagent.com"
+BACKEND_URL = "https://supplier-e2e-demo.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 def test_auth_login():

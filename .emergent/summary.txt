@@ -1,25 +1,29 @@
 <analysis>**original_problem_statement:**
-The user, acting as the CTO, has defined a clear roadmap. The previous task (P0 - RateHawk Booking Flow Hardening) was completed. The current task was to implement **P1 - Supplier Onboarding UX**.
+The user, acting as the CTO, has defined a clear roadmap. The immediate priority was the verification of the **P0 - E2E Demo Panel (Supplier Certification Console)**.
 
-The user provided detailed specifications for P1, requiring a **generic, multi-step onboarding workflow** applicable to all suppliers (not just RateHawk). This workflow must include:
-1.  **Supplier Selection:** Choose a supplier to onboard.
-2.  **Credential Entry:** Securely input supplier API credentials.
-3.  **Supplier Health Check:** A validation step that checks not just authentication but also API reachability and basic endpoint functionality.
-4.  **Sandbox Certification:** An automated test suite that runs a series of E2E tests (Search, Detail, Revalidation, Booking, etc.).
-5.  **Certification Score:** A scoring mechanism (e.g., 80%+) to determine if a supplier is Go-Live eligible.
-6.  **Go-Live Activation:** A toggle to activate the certified supplier.
-
-The user also requested that credential storage be secure (encrypted, masked) and that credentials should never be logged. A backend router refactor was also approved but deferred until after P1 is complete.
+1.  **Detailed Verification:** The user requested a comprehensive verification of the E2E Demo Panel, specifying checks for the lifecycle flow, edge case testing capabilities, the certification result card, and the test history panel.
+2.  **New Feature Requests:** The user requested two new features to be added to the Certification Console before verification:
+    *   **Retry failed step:** The ability to re-run only a single failed step instead of the entire lifecycle.
+    *   **Raw API viewer:** A drawer or modal to inspect the raw supplier request and response for each step, to aid in debugging.
+3.  **Task Prioritization:** The user confirmed the development sequence:
+    1.  Verify the enhanced E2E Demo Panel.
+    2.  Perform Backend Router Refactoring.
+    3.  Implement Caching Layer Validation.
+    4.  Activate the Real RateHawk Sandbox.
+4.  **Router Refactoring Plan:** The user provided a target structure for the router refactoring, aiming to break down the monolithic  into smaller, domain-specific files under an  directory.
 
 **User's preferred language**: Turkish
 
 **what currently exists?**
-The agent has fully implemented the **P1 - Generic Supplier Onboarding UX**.
--   **Backend:** New services, models, and a dedicated router () were created to handle the entire 6-step onboarding flow. This includes endpoints for fetching suppliers, saving credentials (mocked securely), running health checks, executing certification tests, and toggling the go-live status. The logic is generic and driven by the existing supplier adapter pattern.
--   **Frontend:** A new page, **Supplier Onboarding** (), has been created. It features a main dashboard showing the certification status and score of all suppliers. Clicking a supplier launches a multi-step wizard that guides the user through the entire onboarding process, from credential entry to viewing the final certification report.
+- The **P1 - Supplier Onboarding UX** is complete and was accepted by the user in a previous session.
+- The **P0 - E2E Demo Panel (Supplier Certification Console)** is fully implemented at .
+- As per the user's latest request, the console has been enhanced with two new features:
+    1.  **Raw API Viewer:** A tabbed view within the step details drawer now shows the raw JSON for the  and . The backend service was updated to provide this mock data.
+    2.  **Retry Failed Step:** This functionality has been confirmed to be present.
+- The entire feature, including the new enhancements, has been successfully tested.
 
 **Last working item**:
--   Last item agent was working: The complete implementation of the **P1 - Generic Supplier Onboarding UX**, including the backend logic and the multi-step frontend wizard, as per the user's detailed requirements.
+-   Last item agent was working: The agent finished implementing the user's two new feature requests (Raw API Viewer and Retry Failed Step) for the E2E Demo Panel. After implementation, the agent ran a full test suite and then presented a comprehensive verification report to the user, fulfilling all the points in their request.
 -   Status: USER VERIFICATION PENDING
 -   Agent Testing Done: Y
 -   Which testing method agent to use? NA
@@ -33,38 +37,32 @@ The agent has fully implemented the **P1 - Generic Supplier Onboarding UX**.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **(P0) P0 - E2E Demo Panel:** The user requested a non-blocking task to create a simple E2E demo panel for the previously completed P0 Booking Flow Hardening work. This would allow them to visualize the full Search-to-Cancel lifecycle and edge cases. (Priority: HIGH)
-    *   **(P1) Backend Router Refactoring:** As approved by the user, refactor the monolithic  into smaller, domain-specific routers (, , ). This should be done after the user verifies and approves the P1 work. (Priority: MEDIUM)
+    *   **(P0) Await User Approval:** Wait for the user to review and approve the verification report for the enhanced E2E Demo Panel. (Priority: HIGHEST)
+    *   **(P1) Backend Router Refactoring:** Once the user approves the E2E panel, begin refactoring the . The user has suggested a target structure of , , etc.
 
 *   **Future Tasks (Backlog):**
-    *   **Supplier Self-Serve Onboarding:** The next major feature milestone suggested by the user, allowing partners to onboard themselves.
-    *   **Caching Layer Validation (P2):** Validate the correctness of the caching layer.
-    *   **Real Sandbox Activation:** Activate the Ratehawk sandbox once real credentials are provided.
-    *   **Activity Timeline:** Create a system-wide audit trail.
-    *   **TypeScript Migration:** Incrementally migrate the codebase to TypeScript.
-    *   **New Supplier Integrations:** Onboard Paximum, Hotelbeds, Juniper, and TBO.
-    *   **Legacy Code Cleanup:** Refactor legacy files using  for data fetching.
-    *   **Syroce Supplier Lifecycle Diagram:** The user offered to draw a diagram illustrating the platform's vision.
+    *   Caching Layer Validation (P2)
+    *   Real RateHawk Sandbox Activation (P3)
+    *   Supplier Self-Serve Onboarding
+    *   Activity Timeline (system-wide audit trail)
+    *   TypeScript Migration
+    *   New Supplier Integrations (Paximum, Hotelbeds, Juniper)
+    *   Legacy Code Cleanup (Refactor  for data fetching)
 
 **Completed work in this session**
--   **Backend - P1 Supplier Onboarding UX (DONE):**
-    -   Created  with all necessary endpoints for the flow.
-    -   Created  containing the business logic for health checks, certification tests, and scoring.
-    -   Created  with Pydantic schemas for the API.
-    -   Registered the new router in .
--   **Frontend - P1 Supplier Onboarding UX (DONE):**
-    -   Created , a comprehensive page with a dashboard and a multi-step wizard.
-    -   Updated  and  to add the new page to the admin navigation.
--   **Testing (DONE):**
-    -   All new backend endpoints were validated with .
-    -   The entire P1 feature was validated with , which passed with a 100% success rate (25/25 backend tests, all frontend tests). A new test file was created: .
--   **Documentation (DONE):**
-    -   Updated  to reflect the completion of P1 and the updated roadmap.
+-   **Feature: Raw API Viewer (DONE):**
+    -   Updated  to include mock  data in the simulation logic.
+    -   Enhanced  to include a tabbed interface for viewing raw API request/response data.
+-   **Feature: Trace ID Link (DONE):**
+    -   Updated  to make the  a clickable link (functionality to be defined later).
+-   **Verification & Testing (DONE):**
+    -   Ran , which completed with a 100% success rate (28/28 backend tests passed, all frontend tests passed), confirming the stability of the new features.
+    -   Presented a comprehensive verification report to the user, addressing all their specific criteria for the E2E Demo Panel.
 
 **Earlier issues found/mentioned but not fixed**
--   **Save to Github Synchronization Issue:** A known platform-level issue, deferred by the CTO.
--   **Nested Button HTML Warning:** A minor frontend warning in legacy code.
--   **Tenant Features API Error:** A pre-existing API error noted during testing, confirmed to be unrelated to current work.
+-   **Save to Github Synchronization Issue:** A known platform-level issue, previously deferred by the user.
+-   **Nested Button HTML Warning:** A minor frontend warning in legacy code, unrelated to current tasks.
+-   **Tenant Features API Error:** A pre-existing API error noted during testing, unrelated to current work.
 
 **Known issue recurrence from previous fork**
 -   None.
@@ -73,74 +71,62 @@ The agent has fully implemented the **P1 - Generic Supplier Onboarding UX**.
 
 
 **Key Technical Concepts**
--   **Generic Supplier Onboarding:** An extensible framework to add and certify any new hotel supplier via a standardized process.
--   **Multi-Step Wizard UI:** A user-friendly interface that guides administrators through complex workflows, improving usability and reducing errors.
--   **Supplier Health Check:** Proactive validation of API connectivity and basic functionality beyond simple authentication, ensuring a supplier is ready for integration testing.
--   **Automated Certification Score:** A quantitative measure of integration quality, providing a clear Go-Live gate and improving partner onboarding confidence.
--   **Secure Credential Handling:** The design principle of isolating and protecting sensitive supplier credentials, including in-memory storage, masking in UI, and avoiding logs.
+-   **E2E Lifecycle Simulation:** A backend service that simulates the full booking lifecycle (Search, Detail, Revalidation, Booking, Cancel) and can inject failures for edge-case testing.
+-   **Supplier Certification Console:** A dedicated UI for operations and engineering teams to run E2E tests, view detailed results, and track supplier certification.
+-   **Raw API Viewer:** An enhancement that provides visibility into the mock API calls being made during a simulation, significantly speeding up debugging.
 
 **key DB schema**
--   No new persistent database collections were added. Onboarding state and credentials are managed transiently/mocked for this implementation.
+-   No new persistent database collections were added. Diagnostics history remains in-memory within the .
 
 **changes in tech stack**
 -   None.
 
 **All files of reference**
--   **Created Files:**
-    -   : API endpoints for the onboarding flow.
-    -   : Business logic for the onboarding process.
-    -   : Pydantic models for the onboarding API.
-    -   : The main frontend component for the feature.
-    -   : Pytest file for the new backend endpoints.
--   **Updated Files:**
-    -   : To register the new .
-    -   : To add the route for the new page.
-    -   : To add the new page to the admin sidebar menu.
-    -   : To reflect task completion and roadmap updates.
+-   **Updated in this session:**
+    -   : Added mock  data.
+    -   : Implemented the Raw API Viewer UI.
+    -   : Added placeholder for trace ID link.
+-   **Key Existing Files:**
+    -   
+    -   
+    -   
 
 **Areas that need refactoring**:
--   **Backend Routers:** The user has approved a plan to refactor  into smaller, more focused files after P1 is verified.
--   **Legacy Data Fetching:** ~17% of legacy frontend files still use  for data management and could be migrated to TanStack Query.
+-   **Backend Routers:** The  is the next approved refactoring target.
+-   **Legacy Data Fetching:** A number of legacy frontend files still use  for data management.
 
 **key api endpoints**
--   : Lists all available suppliers and their certification status.
--   : Saves (mocks) the credentials for a supplier.
--   : Runs an API health check for a supplier.
--   : Runs the full certification test suite for a supplier.
--   : Toggles the go-live status for a supplier.
+-   : Triggers an E2E test run.
+-   : Fetches the history of all test runs.
+-   : Lists suppliers compatible with the diagnostics tool.
 
 **Critical Info for New Agent**
 -   **İletişim diliniz Türkçe olmalıdır. (Your communication language must be Turkish).**
--   **P1 (Generic Supplier Onboarding)** is fully **COMPLETE** and has been successfully tested. The immediate next action is to present this work to the user for verification.
--   After user verification of P1, the two approved follow-up tasks are:
-    1.  Create the non-blocking **P0 E2E Demo Panel**.
-    2.  Perform the **Backend Router Refactoring**.
--   The entire onboarding flow is currently mocked, as real credentials are not yet available. This is the correct and expected state.
+-   Your immediate task is to wait for the user's feedback on the verification report you just submitted. **Do not proceed to the next task until the user gives explicit approval.**
+-   The next approved task is the **Backend Router Refactoring**. The user has already provided guidance on the desired structure.
 
 **documents and test reports created in this job**
 -   
--   
--    (updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
--   **User (Message 7):** The user provided a comprehensive and detailed plan for the **P1 Supplier Onboarding UX**. They approved the agent's initial proposal and added critical new requirements, including the Supplier Health Check and Certification Score. They explicitly stated that the solution must be generic for all suppliers, not just RateHawk, and provided a clear 6-step architectural flow. They also approved a future router refactoring task and emphasized the need for secure credential storage. The user gave the final green light to start P1 with these new specifications. (Status: COMPLETED).
+-   **User (last message):** Provided detailed acceptance criteria for the E2E Demo Panel, confirmed the task priority list, and crucially requested two new features (Retry failed step, Raw API viewer) be added *before* the final verification. The user's final instruction was to submit the verification for the enhanced panel, and then proceed to router refactoring upon approval.
+-   **Status:** All directives in the user's message have been executed. The agent has implemented the new features, tested everything, and submitted the verification report. The process is now blocked, pending user review and approval.
 
 **Project Health Check:**
 -   **Broken:** None.
--   **Mocked:** The  uses mock logic for health checks, certification tests, and credential storage. The  continues to use mock logic for its booking flow. This is the correct and expected state.
+-   **Mocked:** The  uses mock logic to simulate E2E tests, which is the correct and expected state for this feature.
 
 **3rd Party Integrations**
 -   Stripe
 -   
 -   Recharts
 -   , , 
--   Ratehawk, TBO, Paximum, WWTatil (Adapters exist, integration is simulated but hardened)
+-   Ratehawk, TBO, Paximum, WTatil (Adapters exist, integration is simulated)
 
 **Testing status**
--   Testing agent used after significant changes: YES.  was run after completing P1 and all tests passed (100%).
+-   Testing agent used after significant changes: YES.  was run after implementing the new console features, and all tests passed (100%).
 -   Troubleshoot agent used after agent stuck in loop: NO
--   Test files created:
-    -   
+-   Test files created: None in this session.
 -   Known regressions: None.
 
 **Credentials to test flow:**
@@ -148,4 +134,4 @@ The agent has fully implemented the **P1 - Generic Supplier Onboarding UX**.
 -   **Agency Admin:**  / 
 
 **What agent forgot to execute**
--   Nothing. The agent successfully implemented the user's detailed plan for P1 in its entirety.</analysis>
+-   Nothing. The agent correctly identified the user's new requirements, implemented them, and then proceeded with the requested verification step.</analysis>

@@ -5529,7 +5529,7 @@
     "owner": "e2e-demo",
     "path": "/api/e2e-demo/history",
     "risk_level": "medium",
-    "source": "app.routers.e2e_demo_router",
+    "source": "app.routers.inventory.diagnostics_router",
     "target_namespace": "/api/v1/e2e-demo"
   },
   {
@@ -5540,7 +5540,7 @@
     "owner": "e2e-demo",
     "path": "/api/e2e-demo/rerun-step",
     "risk_level": "medium",
-    "source": "app.routers.e2e_demo_router",
+    "source": "app.routers.inventory.diagnostics_router",
     "target_namespace": "/api/v1/e2e-demo"
   },
   {
@@ -5551,7 +5551,7 @@
     "owner": "e2e-demo",
     "path": "/api/e2e-demo/run",
     "risk_level": "medium",
-    "source": "app.routers.e2e_demo_router",
+    "source": "app.routers.inventory.diagnostics_router",
     "target_namespace": "/api/v1/e2e-demo"
   },
   {
@@ -5562,7 +5562,7 @@
     "owner": "e2e-demo",
     "path": "/api/e2e-demo/scenarios",
     "risk_level": "medium",
-    "source": "app.routers.e2e_demo_router",
+    "source": "app.routers.inventory.diagnostics_router",
     "target_namespace": "/api/v1/e2e-demo"
   },
   {
@@ -5573,7 +5573,7 @@
     "owner": "e2e-demo",
     "path": "/api/e2e-demo/suppliers",
     "risk_level": "medium",
-    "source": "app.routers.e2e_demo_router",
+    "source": "app.routers.inventory.diagnostics_router",
     "target_namespace": "/api/v1/e2e-demo"
   },
   {
@@ -7377,7 +7377,7 @@
     "owner": "inventory",
     "path": "/api/inventory/booking/create",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.booking_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7388,7 +7388,7 @@
     "owner": "inventory",
     "path": "/api/inventory/booking/history",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.booking_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7399,7 +7399,7 @@
     "owner": "inventory",
     "path": "/api/inventory/booking/precheck",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.booking_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7410,7 +7410,7 @@
     "owner": "inventory",
     "path": "/api/inventory/booking/test",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.booking_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7421,7 +7421,7 @@
     "owner": "inventory",
     "path": "/api/inventory/booking/test-matrix",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.booking_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7432,7 +7432,7 @@
     "owner": "inventory",
     "path": "/api/inventory/booking/test-matrix/history",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.booking_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7443,7 +7443,7 @@
     "owner": "inventory",
     "path": "/api/inventory/booking/test/history",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.booking_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7454,7 +7454,7 @@
     "owner": "inventory",
     "path": "/api/inventory/booking/{booking_id}/cancel",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.booking_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7465,7 +7465,7 @@
     "owner": "inventory",
     "path": "/api/inventory/booking/{booking_id}/status",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.booking_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7476,7 +7476,7 @@
     "owner": "inventory",
     "path": "/api/inventory/kpi/drift",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.diagnostics_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7487,7 +7487,7 @@
     "owner": "inventory",
     "path": "/api/inventory/revalidate",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.sync_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7498,7 +7498,7 @@
     "owner": "inventory",
     "path": "/api/inventory/sandbox/validate",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.diagnostics_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7509,7 +7509,7 @@
     "owner": "inventory",
     "path": "/api/inventory/search",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.sync_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7564,7 +7564,7 @@
     "owner": "inventory",
     "path": "/api/inventory/stats",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.sync_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7575,7 +7575,7 @@
     "owner": "inventory",
     "path": "/api/inventory/supplier-config",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.diagnostics_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7586,7 +7586,7 @@
     "owner": "inventory",
     "path": "/api/inventory/supplier-config",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.diagnostics_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7597,7 +7597,7 @@
     "owner": "inventory",
     "path": "/api/inventory/supplier-config/{supplier}",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.diagnostics_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7608,7 +7608,7 @@
     "owner": "inventory",
     "path": "/api/inventory/supplier-health",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.diagnostics_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7619,7 +7619,7 @@
     "owner": "inventory",
     "path": "/api/inventory/supplier-metrics",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.diagnostics_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7630,7 +7630,7 @@
     "owner": "inventory",
     "path": "/api/inventory/sync/cancel/{job_id}",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.sync_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7641,7 +7641,7 @@
     "owner": "inventory",
     "path": "/api/inventory/sync/downtime/{supplier}",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.diagnostics_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7652,7 +7652,7 @@
     "owner": "inventory",
     "path": "/api/inventory/sync/execute-retries",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.sync_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7663,7 +7663,7 @@
     "owner": "inventory",
     "path": "/api/inventory/sync/jobs",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.sync_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7674,7 +7674,7 @@
     "owner": "inventory",
     "path": "/api/inventory/sync/regions/{supplier}",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.diagnostics_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7685,7 +7685,7 @@
     "owner": "inventory",
     "path": "/api/inventory/sync/retry-region/{supplier}/{region_id}",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.sync_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7696,7 +7696,7 @@
     "owner": "inventory",
     "path": "/api/inventory/sync/retry/{job_id}",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.sync_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7707,7 +7707,7 @@
     "owner": "inventory",
     "path": "/api/inventory/sync/stability-report",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.diagnostics_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7718,7 +7718,7 @@
     "owner": "inventory",
     "path": "/api/inventory/sync/status",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.sync_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -7729,7 +7729,7 @@
     "owner": "inventory",
     "path": "/api/inventory/sync/trigger",
     "risk_level": "medium",
-    "source": "app.routers.inventory_sync_router",
+    "source": "app.routers.inventory.sync_router",
     "target_namespace": "/api/v1/inventory"
   },
   {
@@ -12228,7 +12228,7 @@
     "owner": "supplier-onboarding",
     "path": "/api/supplier-onboarding/certification/{supplier_code}",
     "risk_level": "medium",
-    "source": "app.routers.supplier_onboarding_router",
+    "source": "app.routers.inventory.onboarding_router",
     "target_namespace": "/api/v1/supplier-onboarding"
   },
   {
@@ -12239,7 +12239,7 @@
     "owner": "supplier-onboarding",
     "path": "/api/supplier-onboarding/certification/{supplier_code}/history",
     "risk_level": "medium",
-    "source": "app.routers.supplier_onboarding_router",
+    "source": "app.routers.inventory.onboarding_router",
     "target_namespace": "/api/v1/supplier-onboarding"
   },
   {
@@ -12250,7 +12250,7 @@
     "owner": "supplier-onboarding",
     "path": "/api/supplier-onboarding/certify/{supplier_code}",
     "risk_level": "medium",
-    "source": "app.routers.supplier_onboarding_router",
+    "source": "app.routers.inventory.onboarding_router",
     "target_namespace": "/api/v1/supplier-onboarding"
   },
   {
@@ -12261,7 +12261,7 @@
     "owner": "supplier-onboarding",
     "path": "/api/supplier-onboarding/credentials",
     "risk_level": "medium",
-    "source": "app.routers.supplier_onboarding_router",
+    "source": "app.routers.inventory.onboarding_router",
     "target_namespace": "/api/v1/supplier-onboarding"
   },
   {
@@ -12272,7 +12272,7 @@
     "owner": "supplier-onboarding",
     "path": "/api/supplier-onboarding/dashboard",
     "risk_level": "medium",
-    "source": "app.routers.supplier_onboarding_router",
+    "source": "app.routers.inventory.onboarding_router",
     "target_namespace": "/api/v1/supplier-onboarding"
   },
   {
@@ -12283,7 +12283,7 @@
     "owner": "supplier-onboarding",
     "path": "/api/supplier-onboarding/detail/{supplier_code}",
     "risk_level": "medium",
-    "source": "app.routers.supplier_onboarding_router",
+    "source": "app.routers.inventory.onboarding_router",
     "target_namespace": "/api/v1/supplier-onboarding"
   },
   {
@@ -12294,7 +12294,7 @@
     "owner": "supplier-onboarding",
     "path": "/api/supplier-onboarding/go-live/{supplier_code}",
     "risk_level": "medium",
-    "source": "app.routers.supplier_onboarding_router",
+    "source": "app.routers.inventory.onboarding_router",
     "target_namespace": "/api/v1/supplier-onboarding"
   },
   {
@@ -12305,7 +12305,7 @@
     "owner": "supplier-onboarding",
     "path": "/api/supplier-onboarding/registry",
     "risk_level": "medium",
-    "source": "app.routers.supplier_onboarding_router",
+    "source": "app.routers.inventory.onboarding_router",
     "target_namespace": "/api/v1/supplier-onboarding"
   },
   {
@@ -12316,7 +12316,7 @@
     "owner": "supplier-onboarding",
     "path": "/api/supplier-onboarding/reset/{supplier_code}",
     "risk_level": "medium",
-    "source": "app.routers.supplier_onboarding_router",
+    "source": "app.routers.inventory.onboarding_router",
     "target_namespace": "/api/v1/supplier-onboarding"
   },
   {
@@ -12327,7 +12327,7 @@
     "owner": "supplier-onboarding",
     "path": "/api/supplier-onboarding/validate/{supplier_code}",
     "risk_level": "medium",
-    "source": "app.routers.supplier_onboarding_router",
+    "source": "app.routers.inventory.onboarding_router",
     "target_namespace": "/api/v1/supplier-onboarding"
   },
   {

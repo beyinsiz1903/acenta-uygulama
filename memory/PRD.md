@@ -106,6 +106,13 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 - Frontend: Telemetry toggle panel with supplier cards, per-supplier invalidate buttons, invalidation log with timestamps
 - All 19 backend + 10 frontend tests passed (iteration_130)
 
+### Cache Alert, Warming & Global Diagnostics — COMPLETED (2026-03-16)
+**3 features: Hit Rate Alert, Pricing Cache Warming, Global Cache Diagnostics**
+- **Cache Hit Rate Alert**: Auto-alert when hit_rate < 70% (threshold) after 10+ requests. GET `/api/pricing-engine/cache/alerts` returns active alerts + history. Frontend shows amber alert banner with dismiss option
+- **Pricing Cache Warming**: POST `/api/pricing-engine/cache/warm/{supplier}` precomputes pricing for popular routes using tracked query frequency. Auto-warms after supplier sync completion
+- **Global Cache Diagnostics**: GET `/api/pricing-engine/cache/diagnostics` returns global_hit_rate, total_entries, memory_usage_mb, evictions, utilization_pct, warming_status, supplier_count. Frontend diagnostics panel with 6 metric cards
+- All 35 backend + 15 frontend tests passed (iteration_131)
+
 ---
 
 ## Frontend Quality Score (Post P3+P4)
@@ -129,6 +136,7 @@ All P0 tasks completed.
 ### P1 — Next Priority
 - **Financial Ledger & Settlement Dashboard**: Consolidated finance dashboard with ledger overview, revenue breakdown, agency balances, supplier payables, settlement reconciliation
 - **Activity Timeline**: Entity-based audit history (who did what)
+- **PricingEnginePage.jsx Refactoring**: Break monolithic component into smaller sub-components
 
 ### P2
 - **TypeScript Migration**: API layer -> TanStack hooks -> design system (incremental)

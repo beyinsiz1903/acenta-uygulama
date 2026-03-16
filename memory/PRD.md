@@ -74,7 +74,7 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 ### Supplier-Based Telemetry, Error Trend Chart & Certification Funnel — COMPLETED (2026-03-16)
 
 ### Pricing & Distribution Engine — COMPLETED (2026-03-16)
-**Core pricing pipeline: supplier_price → base_markup → channel_rule → agency_rule → promotion_rule → currency_conversion → final_sell_price**
+**Core pricing pipeline: supplier_price -> base_markup -> channel_rule -> agency_rule -> promotion_rule -> currency_conversion -> final_sell_price**
 - Backend: `pricing_distribution_engine.py` (7-step pipeline), `promotion_engine.py`, `pricing_engine_router.py` (13 API endpoints)
 - Frontend: `PricingEnginePage.jsx` with 4 tabs (Simulator, Rules, Channels, Promotions)
 - Channel pricing: B2B (-5%), B2C (+3%), Corporate (-8%), Whitelabel (-3%)
@@ -82,6 +82,14 @@ Multi-phase implementation covering architecture cleanup, design system, UX stan
 - Promotion layer: early_booking, flash_sale, campaign_discount, fixed_price_override
 - Price Simulator with full pipeline visualization
 - All 23 backend + 9 frontend tests passed (iteration_127)
+
+### Pricing Engine Enhancements — COMPLETED (2026-03-16)
+**3 major features: Explainability, Rule Precedence, Margin Guardrails**
+- **Pricing Explainability**: Full pipeline_steps array (7 steps) with input_price, adjustment_pct, adjustment_amount, output_price, rule_id, rule_name at each stage
+- **Rule Priority/Precedence Viewer**: evaluated_rules array showing all rules evaluated with match_score, priority, won status, reject_reason
+- **Margin Guardrails**: 4 guardrail types (min_margin_pct, max_discount_pct, channel_floor_price, supplier_max_markup_pct) with CRUD API and real-time validation
+- Frontend: PipelineExplainer (color-coded waterfall), EvaluatedRulesPanel (expandable with KAZANDI badges), GuardrailWarnings (severity-based alerts), GuardrailsTab (CRUD cards)
+- All 17 backend + 12 frontend tests passed (iteration_128)
 
 ---
 

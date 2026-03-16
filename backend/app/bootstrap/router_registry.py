@@ -448,6 +448,9 @@ def register_routers(app: FastAPI) -> None:
     from app.routers.supplier_onboarding_router import router as supplier_onboarding_router
     app.include_router(supplier_onboarding_router)
 
+    from app.routers.e2e_demo_router import router as e2e_demo_router
+    app.include_router(e2e_demo_router)
+
     # --- Supplier Aggregator Layer ---
     from app.routers.supplier_aggregator_router import router as supplier_aggregator_router
     app.include_router(supplier_aggregator_router)

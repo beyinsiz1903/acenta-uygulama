@@ -71,6 +71,7 @@ export const adminNav = [
       { label: "Market Launch", path: "/app/admin/market-launch" },
       { label: "Supplier Credentials", path: "/app/admin/supplier-credentials" },
       { label: "Supplier Onboarding", path: "/app/admin/supplier-onboarding" },
+      { label: "Certification Console", path: "/app/admin/certification-console" },
       { label: "Growth Engine", path: "/app/admin/growth-engine" },
     ],
   },

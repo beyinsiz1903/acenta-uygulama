@@ -5523,6 +5523,61 @@
   },
   {
     "compat_required": true,
+    "current_namespace": "/api/e2e-demo",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "e2e-demo",
+    "path": "/api/e2e-demo/history",
+    "risk_level": "medium",
+    "source": "app.routers.e2e_demo_router",
+    "target_namespace": "/api/v1/e2e-demo"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/e2e-demo",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "e2e-demo",
+    "path": "/api/e2e-demo/rerun-step",
+    "risk_level": "medium",
+    "source": "app.routers.e2e_demo_router",
+    "target_namespace": "/api/v1/e2e-demo"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/e2e-demo",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "e2e-demo",
+    "path": "/api/e2e-demo/run",
+    "risk_level": "medium",
+    "source": "app.routers.e2e_demo_router",
+    "target_namespace": "/api/v1/e2e-demo"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/e2e-demo",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "e2e-demo",
+    "path": "/api/e2e-demo/scenarios",
+    "risk_level": "medium",
+    "source": "app.routers.e2e_demo_router",
+    "target_namespace": "/api/v1/e2e-demo"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/e2e-demo",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "e2e-demo",
+    "path": "/api/e2e-demo/suppliers",
+    "risk_level": "medium",
+    "source": "app.routers.e2e_demo_router",
+    "target_namespace": "/api/v1/e2e-demo"
+  },
+  {
+    "compat_required": true,
     "current_namespace": "/api/efatura",
     "legacy_or_v1": "legacy",
     "method": "GET",

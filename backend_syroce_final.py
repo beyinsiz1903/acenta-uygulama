@@ -6,7 +6,7 @@ Final comprehensive Syroce backend validation - Fixed version
 import requests
 import json
 
-BASE_URL = "https://versioning-hub-2.preview.emergentagent.com/api"
+BASE_URL = "https://supplier-activate.preview.emergentagent.com/api"
 ADMIN_CREDENTIALS = {"email": "admin@acenta.test", "password": "admin123"}
 AGENCY_CREDENTIALS = {"email": "agent@acenta.test", "password": "agent123"}
 

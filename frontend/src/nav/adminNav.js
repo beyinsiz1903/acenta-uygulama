@@ -39,6 +39,12 @@ export const adminNav = [
     ],
   },
   {
+    label: "ORDER MANAGEMENT",
+    children: [
+      { label: "Siparişler", path: "/app/admin/orders" },
+    ],
+  },
+  {
     label: "RİSK TAKİBİ",
     children: [
       { label: "Eşleşme Listesi", path: "/app/admin/matches" },

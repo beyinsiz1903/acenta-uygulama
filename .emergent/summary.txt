@@ -1,31 +1,31 @@
 <analysis>**original_problem_statement:**
-The user's primary goal is to build a Travel Distribution Infrastructure platform. The project is structured in phases. Phase 1 (Inventory and Pricing Engine) and Phase 2 (Financial Ledger & Settlement System) are functionally complete.
+The user's goal is to build a Travel Distribution Infrastructure platform named Syroce. The project is delivered in phases. Phases 1 (Inventory/Pricing) and 2 (Financial Ledger/Settlement) are complete, along with foundational features like Configuration Versioning and an Activity Timeline.
 
-The user has now requested the implementation of two key P1 features:
-1.  **Configuration Versioning:** Key configuration objects (pricing rules, promotions, guardrails, channel configs) must have a version history. Any change should create a new version, and the system must track , , , and .
-2.  **Activity Timeline (Audit Trail):** A system-wide audit trail is required to log all major actions, including configuration changes and significant financial events (e.g., settlement approval). Each event must log the actor, action, entity, context, and a timestamp.
+The current user request was to implement a **Supplier Self-Serve Onboarding** flow. This feature is critical for increasing the platform's commercial capacity by allowing partners to add, certify, and activate new suppliers without developer intervention.
 
 **PRODUCT REQUIREMENTS:**
--   **Phase 2B (Completed & Approved):** The Financial Ledger & Settlement Workflow & Ops layer is complete and was approved by the user.
--   **Current Task (P1):** Implement Configuration Versioning and an Activity Timeline.
-    -   **Backend:** Create new services and database collections to store version history and timeline events. Update all relevant CRUD endpoints (for pricing, promotions, etc.) and workflow services (for settlements) to automatically create version snapshots and log activities.
-    -   **Frontend:** Create a new page to display the Activity Timeline, allowing users to view a chronological log of all tracked system events.
+-   **Supplier Self-Serve Onboarding (P0 - Just Completed):**
+    -   A multi-step wizard on the frontend to guide partners through the onboarding process.
+    -   The flow must include: Supplier Selection, Credential Setup, Credential Validation, Sandbox Certification, Pricing Configuration, and Go-Live Activation.
+    -   The backend must support each step with dedicated services and endpoints, tracking the supplier's state throughout the process.
+    -   Key events, such as a supplier going live, must be logged in the Activity Timeline.
+-   **Upcoming Priority (from user):**
+    -   **Timeline Export (P1):** Add CSV and PDF export functionality to the Activity Timeline page for audit and reporting.
+    -   **Real RateHawk Environment Execution (P1).**
+    -   **New Supplier Integrations (P2):** Paximum, Hotelbeds, Juniper.
 
 **User's preferred language**: Turkish
 
 **what currently exists?**
-The agent has successfully implemented both **Configuration Versioning** and the **Activity Timeline**.
+The platform is a full-stack application with a React frontend, FastAPI backend, and MongoDB database. Key features include a pricing engine, a financial ledger, configuration versioning, an activity timeline, and now a complete Supplier Self-Serve Onboarding wizard.
 
--   **Backend:** New services (, ) and a new router () have been created. The corresponding MongoDB collections (, ) are now in use. All relevant CRUD endpoints in  (for rules, channels, guardrails, promotions) and workflow actions in the finance services have been updated to log events and create version snapshots. A bug related to multi-organization data visibility in the timeline has been fixed.
--   **Frontend:** A new page, , has been created to display the audit trail. It is accessible via a new card on the .
-
-The entire implementation has been successfully validated by the testing agent.
+The new onboarding flow allows a user to select a supplier type, enter and validate credentials, run sandbox certification tests, configure pricing rules, and activate the supplier for live use. The entire process is tracked with status updates on a central supplier dashboard.
 
 **Last working item**:
--   Last item agent was working: The agent just completed the full implementation and testing of **Configuration Versioning and the Activity Timeline**. The final steps were running the  (which passed all tests), updating the  file, and preparing the  summary.
+-   Last item agent was working: The agent just completed the implementation of the **Supplier Self-Serve Onboarding** feature. This included building the backend services, API endpoints, and a new 6-step frontend wizard. The agent performed manual tests, took screenshots for verification, and successfully ran the testing agent to validate the entire flow. The final steps were updating the PRD and completing the job.
 -   Status: USER VERIFICATION PENDING
 -   Agent Testing Done: Y
--   Which testing method agent to use? NA (Work is complete and tested).
+-   Which testing method agent to use? NA
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
@@ -33,48 +33,45 @@ The entire implementation has been successfully validated by the testing agent.
     -   **Description (P2):** The command yarn install v1.22.22
 [1/4] Resolving packages...
 success Already up-to-date.
-Done in 0.55s. consistently fails, indicating a mismatch between  and . The agent attempted to resolve this by regenerating the lockfile, but the issue appears to be related to the environment setup, possibly reverting the file between steps.
-    -   **Status:** BLOCKED (By user decision). The user explicitly instructed the agent to ignore this issue and proceed with feature development. This does not block the application from running but may affect CI/CD pipelines.
-    -   **Next debug checklist:** If prioritized, re-investigate if the environment is overwriting . Check workspace caching or setup scripts.
+Done in 0.50s. fails, indicating a mismatch between  and . This seems to be an environment issue.
+    -   **Attempted fixes:** The previous agent tried regenerating the lockfile.
+    -   **Why fix this issue and what will be achieved with the fix?** Resolving this ensures dependency consistency, which is important for CI/CD and stable builds.
+    -   **Status:** BLOCKED. The user explicitly instructed the agent to ignore this issue as it does not block development.
 
 **In progress Task List**:
 -   None.
 
 **Upcoming and Future Tasks**
-*   **Upcoming Tasks (P2):**
-    *   Real RateHawk Environment Execution.
-    *   Supplier Self-Serve Onboarding.
-    *   New Supplier Integrations (Paximum, Hotelbeds, Juniper).
-*   **Future Tasks (P3 - Backlog):**
-    *   TypeScript Migration.
-    *   Legacy Code Cleanup.
+*   **Upcoming Tasks:**
+    *   **P0: Timeline Export (CSV first):** The user has strongly supported adding an export feature to the Activity Timeline for compliance and auditing. This was prioritized after the onboarding feature.
+    *   **P1: Real RateHawk Environment Execution:** As per the user's priority list.
+    *   **P2: New Supplier Integrations:** Integrate Paximum, Hotelbeds, and Juniper.
+*   **Future Tasks (Backlog):**
+    *   **TypeScript Migration:** A long-term goal to improve code quality.
+    *   **Order Management System (OMS):** The user mentioned this as the next major system for the platform, which is a significant piece of future work.
+    -   **Legacy Code Cleanup.**
 
 **Completed work in this session**
--   **Task: Implemented Configuration Versioning (DONE)**
-    -   Created  to handle snapshotting of documents into a  collection.
-    -   Updated Pydantic schemas for pricing rules, channels, guardrails, and promotions to include .
-    -   Modified all associated CRUD endpoints in  to create a version snapshot upon creation, update, or deletion.
--   **Task: Implemented Activity Timeline (DONE)**
-    -   Created  and  to manage and expose audit trail events from the  collection.
-    -   Integrated timeline logging into all versioned configuration changes.
-    -   Added timeline logging for key financial events: settlement run creation, approval, rejection, payment, and exception resolution.
--   **Task: Created Frontend for Activity Timeline (DONE)**
-    -   Created  for API communication.
-    -   Created the  to display events.
-    -   Added a route in  and a navigation card in .
--   **Bugfix: Multi-Organization Timeline Visibility (DONE)**
-    -   Fixed a bug where financial events (logged under ) were not visible to users in the timeline (which queried by the user's specific ). The service layer was updated to fetch events from both organization contexts.
--   **Testing: Full-Stack Verification (DONE)**
-    -   Used  to validate the new features. All 23 backend tests and all frontend UI/interaction tests passed.
+-   **Task: Implemented Supplier Self-Serve Onboarding (DONE)**
+    -   **Backend:**
+        -   Created  to manage the logic for validation, certification, pricing setup, and activation.
+        -   Created  with endpoints for each step of the onboarding flow.
+        -   Updated  to reflect new supplier statuses like .
+        -   Integrated  to log the  event.
+    -   **Frontend:**
+        -   Rewrote  to be a comprehensive 6-step wizard (Supplier Selection → Credentials → Validation → Certification → Pricing → Go-Live).
+    -   **Testing:**
+        -   Manually tested all new endpoints via .
+        -   Verified the frontend wizard flow and UI with screenshots.
+        -   Ran , which passed all 21 backend and frontend tests.
+-   **Documentation:**
+    -   Updated  to mark the onboarding feature as complete.
 
 **Earlier issues found/mentioned but not fixed**
 -   The yarn install v1.22.22
-info No lockfile found.
 [1/4] Resolving packages...
-[2/4] Fetching packages...
-[3/4] Linking dependencies...
-[4/4] Building fresh packages...
-Done in 2.27s. issue, as detailed in the All Pending/In progress Issue list. It was discovered and deferred during this session.
+success Already up-to-date.
+Done in 0.05s. issue, as detailed in the All Pending/In progress Issue list. It was deferred by user instruction.
 
 **Known issue recurrence from previous fork**
 -   None.
@@ -83,30 +80,23 @@ Done in 2.27s. issue, as detailed in the All Pending/In progress Issue list. It 
 
 
 **Key Technical Concepts**
--   **Configuration Versioning:** Implemented by creating a snapshot of the document's state before any change and storing it in a dedicated  collection, linking it back to the original entity.
--   **Centralized Audit Trail:** A dedicated service and MongoDB collection () were created to act as a single source of truth for all key business events across different modules.
--   **Pragmatic Multi-Tenancy Fix:** Resolved a data visibility issue by modifying the data access layer () to query for data belonging to both the user's specific organization and a shared default organization, ensuring all relevant events are displayed.
+-   **Multi-Step Wizard UI:** A stateful React component guides the user through the complex onboarding workflow, providing clear progress indicators and contextual forms for each step.
+-   **Stateful Backend Onboarding:** The backend tracks the supplier's progress through a series of statuses (e.g., , , , ) within the supplier's document in MongoDB.
+-   **Service Orchestration:** The  acts as an orchestrator, invoking other services like the  to perform tasks like logging significant events.
 
 **key DB schema**
--   **activity_timeline:** 
--   **config_versions:** 
+-   **suppliers (in inventory_db collection, updated implicitly):**
+    -   The existing supplier document now contains fields to track onboarding state, such as  (e.g., 'certified', 'pricing_configured', 'active') and a nested  object.
 
 **changes in tech stack**
--   No new dependencies were installed.
+-   No new dependencies or technologies were added.
 
 **All files of reference**
 -   **Created:**
     -   
     -   
-    -   
-    -   
-    -   
 -   **Updated:**
-    -   
-    -   
-    -   
-    -   
-    -   
+    -    (Rewritten)
     -   
     -   
     -   
@@ -114,55 +104,48 @@ Done in 2.27s. issue, as detailed in the All Pending/In progress Issue list. It 
     -   
 
 **Areas that need refactoring**:
--   None identified in this session.
+-   None identified.
 
 **key api endpoints**
--   : Fetches all activity timeline events.
--   : Gets statistics about timeline events.
--   : Gets the version history for a specific configuration entity.
--   All , ,  endpoints for pricing rules, channels, guardrails, and promotions were updated to trigger versioning and timeline events.
--   Settlement workflow endpoints (, , etc.) were updated to trigger timeline events.
+-   : Saves the pricing configuration for a supplier.
+-   : Activates or deactivates a supplier and logs the event.
+-   (Other onboarding endpoints for validation, certification, etc. also exist under )
 
 **Critical Info for New Agent**
 -   **İletişim diliniz Türkçe olmalıdır. (Your communication language must be Turkish).**
--   **The primary discovery of this session was that the handoff summary was incorrect: pricing/financial configuration was already persistent in MongoDB.** The agent correctly pivoted from a data migration task to implementing the user's next priorities: **Configuration Versioning** and **Activity Timeline**.
--   These two features are fully implemented, tested, and ready for user verification. Your first action should be to present this completed work to the user. Start by showing the new Activity Timeline page.
--   A yarn install v1.22.22
-info No lockfile found.
-[1/4] Resolving packages...
-[2/4] Fetching packages...
-[3/4] Linking dependencies...
-[4/4] Building fresh packages...
-success Saved lockfile.
-Done in 2.15s. issue exists but was **explicitly deferred by the user**. Do not spend time on it unless the user reprioritizes it.
--   Be aware of the multi-organization data model. A pragmatic fix was implemented in  to show data from both the user's  and a hardcoded . This context is crucial for debugging data visibility issues.
+-   The Supplier Self-Serve Onboarding feature is fully implemented and tested. Your first action should be to present this to the user for verification. The UI is accessible from the Suppliers dashboard.
+-   The user has provided a new, clear priority list. The next task is **Timeline Export (CSV first)**, followed by **Real RateHawk Environment Execution**.
+-   The  file issue is a known, low-priority problem that the user has explicitly asked to defer. Do not work on it.
+-   The user has mentioned a future major system: **Order Management System (OMS)**. This should be kept in mind for long-term roadmap discussions.
 
 **documents and test reports created in this job**
 -   
 -    (Updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** leave this problem aside and move on to the main tasks - User instruction to ignore the  file issue. (COMPLETED)
-2.  **User:** Provided a detailed plan: Approve Phase 2B, prioritize Database Persistence then Activity Timeline, and add a new requirement for Configuration Versioning. (COMPLETED - Agent discovered DB persistence was already done and implemented Versioning/Timeline).
+1.  **User:** Approved the idea of a Timeline Export feature, prioritizing CSV over PDF. (PENDING IMPLEMENTATION)
+2.  **User:** Provided a new, clear priority list for upcoming work: 1. Supplier Self-Serve Onboarding, 2. Real RateHawk Environment Execution, 3. Timeline Export. (ONBOARDING IS NOW COMPLETE)
+3.  **User:** Argued that Onboarding is a growth feature and more strategic than the compliance feature of exporting, justifying its top priority. (ACKNOWLEDGED)
+4.  **User:** Gave a detailed breakdown of the 6 steps required for the Supplier Self-Serve Onboarding wizard, including backend and frontend requirements. (IMPLEMENTED)
+5.  **User:** Hinted at a future major system to be built: an Order Management System (OMS). (FUTURE TASK)
 
 **Project Health Check:**
--   **Broken:** None.
+-   **Broken:** None
 -   **Mocked:** Core financial and pricing data logic uses mock/seed data by design.
--   **Known Issues:** A deferred frontend dependency lockfile issue exists but does not prevent the app from running.
+-   **Known Issues:** A deferred frontend dependency lockfile issue ( mismatch) exists but does not prevent the app from running.
 
 **3rd Party Integrations**
--   No new integrations were added. The existing stack (Ratehawk, Stripe placeholder, etc.) remains.
+-   No changes. Existing integrations (Ratehawk, Stripe placeholder) remain.
 
 **Testing status**
--   Testing agent used after significant changes: YES.  was used at the end of the session.
--   Troubleshoot agent used after agent stuck in loop: NO.
+-   Testing agent used after significant changes: YES.
 -   Test files created: None.
+-   Test Report:  (21/21 tests passed, 100% success).
 -   Known regressions: None.
--   Test Report:  (23/23 backend tests passed, all frontend pages/workflows verified).
 
 **Credentials to test flow:**
 -   **Super Admin:**  / 
 -   **Agency Admin:**  / 
 
 **What agent forgot to execute**
--   Nothing. The agent correctly adapted to the discovery that the planned task (database migration) was already complete and successfully implemented the user's subsequent priorities (Versioning and Timeline).</analysis>
+-   Nothing. The agent successfully followed the user's detailed specifications and implemented the Supplier Self-Serve Onboarding feature.</analysis>

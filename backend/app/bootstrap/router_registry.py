@@ -522,3 +522,7 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(activity_timeline_router)
     app.include_router(config_versions_router)
 
+    # --- OMS: Order Management System (Phase 1) ---
+    from app.routers.order_router import router as order_router
+    app.include_router(order_router)
+

@@ -111,6 +111,10 @@ const FinanceReconciliationPage = lazy(() => import("../pages/finance/Reconcilia
 const FinanceExceptionQueuePage = lazy(() => import("../pages/finance/ExceptionQueuePage"));
 const ActivityTimelinePage = lazy(() => import("../pages/finance/ActivityTimelinePage"));
 
+// OMS — Order Management System
+const OrdersPage = lazy(() => import("../pages/orders/OrdersPage"));
+const OrderDetailPage = lazy(() => import("../pages/orders/OrderDetailPage"));
+
 /**
  * Admin route children — rendered inside AdminLayout.
  * Parent: /app/admin/*
@@ -176,6 +180,9 @@ export const adminRoutes = (
     <Route path="finance/reconciliation-v2" element={<FinanceReconciliationPage />} />
     <Route path="finance/exceptions" element={<FinanceExceptionQueuePage />} />
     <Route path="activity-timeline" element={<ActivityTimelinePage />} />
+    {/* OMS — Order Management System */}
+    <Route path="orders" element={<OrdersPage />} />
+    <Route path="orders/:orderId" element={<OrderDetailPage />} />
     {/* Operations */}
     <Route path="ops/finance/supplier-accruals" element={<OpsSupplierAccrualsPage />} />
     <Route path="ops/b2b" element={<OpsB2BQueuesPage />} />

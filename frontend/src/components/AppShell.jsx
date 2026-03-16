@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback, lazy, Suspense } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { AlertTriangle, Bell, Inbox, LogOut, Menu } from "lucide-react";
+import { AlertTriangle, Bell, Inbox, LogOut, Menu, Search } from "lucide-react";
 
 import { Button } from "./ui/button";
 import { Sheet, SheetContent } from "./ui/sheet";
@@ -24,6 +24,10 @@ import { NewSidebar } from "./NewSidebar";
 // ─── P2: Lazy-loaded non-critical components ───
 const NotificationDrawer = lazy(() => import("./NotificationDrawer"));
 const AiAssistant = lazy(() => import("./AiAssistant"));
+
+// ─── P3: Enterprise UX ───
+import { CommandPalette } from "./CommandPalette";
+import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { normalizeAgencyModuleKeys } from "../lib/agencyModules";
 import { hasAnyRole } from "../lib/roles";
 import {
@@ -74,12 +78,18 @@ function AppShellInner() {
   const [activeTenantKey, setActiveTenantKeyState] = useState(() => getActiveTenantKey());
   const [collapsed, setCollapsed] = useState(() => loadCollapsed());
   const [notifOpen, setNotifOpen] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [agencyAllowedModules, setAgencyAllowedModules] = useState(null); // null = not loaded, [] = no restrictions
   const [agencyContract, setAgencyContract] = useState(null);
   const [userAllowedScreens, setUserAllowedScreens] = useState(null); // null = not loaded, [] = full access
   const [trialStatus, setTrialStatus] = useState(null);
   const canLoadAdminBranding = hasAnyRole(user, ["super_admin", "admin"]);
+
+  // ─── P3: Keyboard shortcuts ───
+  useKeyboardShortcuts({
+    onOpenPalette: useCallback(() => setCommandOpen(true), []),
+  });
 
   // Enterprise White-Label branding
   const [branding, setBranding] = useState(null);
@@ -462,6 +472,19 @@ function AppShellInner() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* P3: Command Palette trigger */}
+            <button
+              onClick={() => setCommandOpen(true)}
+              className="hidden sm:inline-flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground transition hover:bg-accent hover:text-foreground"
+              data-testid="command-palette-trigger"
+            >
+              <Search className="h-3.5 w-3.5" />
+              <span>Ara...</span>
+              <kbd className="pointer-events-none ml-2 inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background px-1.5 font-mono text-[10px] font-medium text-muted-foreground/70">
+                ⌘K
+              </kbd>
+            </button>
+
             <LanguageSwitcher />
             {showPartnerEntry ? (
               <NavLink
@@ -631,6 +654,9 @@ function AppShellInner() {
 
       {trialExpired ? <TrialExpiredGate /> : null}
       {!trialExpired && agencyContractExpired ? <AgencyContractExpiredGate contract={agencyContract} /> : null}
+
+      {/* P3: Command Palette (Cmd+K) */}
+      <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
 
       {/* AI Assistant floating panel (lazy) */}
       <Suspense fallback={null}>

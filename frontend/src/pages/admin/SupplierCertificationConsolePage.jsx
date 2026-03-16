@@ -6,7 +6,7 @@ import {
   CheckCircle2, XCircle, AlertTriangle, Clock, Play, RotateCcw,
   ChevronRight, ChevronDown, Activity, Wifi, WifiOff, Timer,
   Zap, History, ArrowLeft, Server, Shield, TrendingUp, ShieldAlert, Lock,
-  BarChart3, Globe, Hash, Gauge
+  BarChart3, Globe, Hash, Gauge, Filter, GitBranch
 } from "lucide-react";
 import { api } from "../../lib/api";
 import {
@@ -395,47 +395,114 @@ function SandboxReadinessIndicator({ status }) {
 }
 
 /* ─── State Telemetry Card ─────────────────────────────── */
-function TelemetryCard({ telemetry }) {
-  if (!telemetry) return null;
-  const c = telemetry.counters || {};
-  const d = telemetry.derived || {};
+function TelemetryCard({ telemetry, allSuppliersTelemetry, selectedSupplier, onSupplierFilter }) {
+  const [viewMode, setViewMode] = useState("single");
+  const c = telemetry?.counters || {};
+  const d = telemetry?.derived || {};
+
+  const supplierNames = { ratehawk: "RateHawk", paximum: "Paximum", tbo: "TBO", wtatil: "WTatil" };
   const metrics = [
     { key: "sandbox_connection_attempts", label: "Baglanti Denemeleri", value: c.sandbox_connection_attempts || 0, icon: Gauge, color: "text-blue-400", bg: "bg-blue-500/10" },
     { key: "sandbox_blocked_events", label: "Engellenen Olaylar", value: c.sandbox_blocked_events || 0, icon: Lock, color: "text-red-400", bg: "bg-red-500/10" },
     { key: "simulation_runs", label: "Simulasyon Calismalari", value: c.simulation_runs || 0, icon: Activity, color: "text-amber-400", bg: "bg-amber-500/10" },
     { key: "sandbox_success_runs", label: "Sandbox Basarili", value: c.sandbox_success_runs || 0, icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/10" },
   ];
+
+  const suppData = allSuppliersTelemetry?.suppliers || {};
+
   return (
     <Card data-testid="telemetry-card" className="bg-zinc-900/80 border-zinc-800">
       <CardHeader className="pb-2 pt-4 px-4">
-        <CardTitle className="text-xs uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
-          <BarChart3 className="w-3 h-3 text-zinc-400" /> State Telemetry
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xs uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
+            <BarChart3 className="w-3 h-3 text-zinc-400" /> State Telemetry
+          </CardTitle>
+          <div className="flex gap-0.5 bg-zinc-800/60 rounded-md p-0.5">
+            <button data-testid="telemetry-view-single" onClick={() => setViewMode("single")}
+              className={`px-2 py-0.5 rounded text-[9px] font-medium transition-all ${viewMode === "single" ? "bg-zinc-700 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"}`}>
+              Tekil
+            </button>
+            <button data-testid="telemetry-view-compare" onClick={() => setViewMode("compare")}
+              className={`px-2 py-0.5 rounded text-[9px] font-medium transition-all ${viewMode === "compare" ? "bg-zinc-700 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"}`}>
+              Karsilastir
+            </button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="px-4 pb-4">
-        <div className="grid grid-cols-2 gap-2">
-          {metrics.map((m) => (
-            <div key={m.key} data-testid={`telemetry-${m.key}`}
-              className={`${m.bg} rounded-lg p-2.5 border border-zinc-800/50`}>
-              <div className="flex items-center gap-1.5 mb-1">
-                <m.icon className={`w-3 h-3 ${m.color}`} />
-                <span className="text-[9px] text-zinc-500 uppercase tracking-wider">{m.label}</span>
-              </div>
-              <p className={`text-lg font-bold ${m.color} tabular-nums`}>{m.value}</p>
+        {viewMode === "single" ? (
+          <>
+            {/* Supplier filter tabs */}
+            <div className="flex gap-1 mb-3 bg-zinc-800/40 rounded-lg p-0.5">
+              {Object.entries(supplierNames).map(([code, name]) => (
+                <button key={code} data-testid={`telemetry-filter-${code}`}
+                  onClick={() => onSupplierFilter(code)}
+                  className={`flex-1 px-1.5 py-1 rounded text-[9px] font-medium transition-all ${
+                    selectedSupplier === code ? "bg-zinc-700 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
+                  }`}>
+                  {name}
+                </button>
+              ))}
             </div>
-          ))}
-        </div>
-        {/* Derived Metrics */}
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          <div className="bg-zinc-800/40 rounded-lg p-2">
-            <span className="text-[9px] text-zinc-500 uppercase">Sandbox Orani</span>
-            <p className="text-sm font-semibold text-zinc-200 tabular-nums">{d.sandbox_rate_pct || 0}%</p>
+            <div className="grid grid-cols-2 gap-2">
+              {metrics.map((m) => (
+                <div key={m.key} data-testid={`telemetry-${m.key}`}
+                  className={`${m.bg} rounded-lg p-2.5 border border-zinc-800/50`}>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <m.icon className={`w-3 h-3 ${m.color}`} />
+                    <span className="text-[9px] text-zinc-500 uppercase tracking-wider">{m.label}</span>
+                  </div>
+                  <p className={`text-lg font-bold ${m.color} tabular-nums`}>{m.value}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <div className="bg-zinc-800/40 rounded-lg p-2">
+                <span className="text-[9px] text-zinc-500 uppercase">Sandbox Orani</span>
+                <p className="text-sm font-semibold text-zinc-200 tabular-nums">{d.sandbox_rate_pct || 0}%</p>
+              </div>
+              <div className="bg-zinc-800/40 rounded-lg p-2">
+                <span className="text-[9px] text-zinc-500 uppercase">Engel Orani</span>
+                <p className="text-sm font-semibold text-zinc-200 tabular-nums">{d.block_rate_pct || 0}%</p>
+              </div>
+            </div>
+          </>
+        ) : (
+          /* Compare view */
+          <div className="space-y-2" data-testid="telemetry-compare-view">
+            {Object.entries(supplierNames).map(([code, name]) => {
+              const s = suppData[code] || { counters: {}, derived: {} };
+              const sc = s.counters || {};
+              const sd = s.derived || {};
+              return (
+                <div key={code} className="bg-zinc-800/30 rounded-lg p-2.5 border border-zinc-800/50">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-semibold text-zinc-300">{name}</span>
+                    <span className="text-[9px] text-zinc-500">{sd.total_runs || 0} calisma</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    <div className="text-center">
+                      <p className="text-xs font-bold text-blue-400 tabular-nums">{sc.sandbox_connection_attempts || 0}</p>
+                      <p className="text-[8px] text-zinc-600">Bag.</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs font-bold text-red-400 tabular-nums">{sc.sandbox_blocked_events || 0}</p>
+                      <p className="text-[8px] text-zinc-600">Eng.</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs font-bold text-amber-400 tabular-nums">{sc.simulation_runs || 0}</p>
+                      <p className="text-[8px] text-zinc-600">Sim.</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs font-bold text-emerald-400 tabular-nums">{sc.sandbox_success_runs || 0}</p>
+                      <p className="text-[8px] text-zinc-600">Sbx.</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <div className="bg-zinc-800/40 rounded-lg p-2">
-            <span className="text-[9px] text-zinc-500 uppercase">Engel Orani</span>
-            <p className="text-sm font-semibold text-zinc-200 tabular-nums">{d.block_rate_pct || 0}%</p>
-          </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -443,6 +510,8 @@ function TelemetryCard({ telemetry }) {
 
 /* ─── Certification Trend Chart ───────────────────────── */
 function CertificationTrendChart({ trendData, period, onPeriodChange }) {
+  const [chartMode, setChartMode] = useState("score");
+
   if (!trendData?.length) return (
     <Card data-testid="trend-chart-card" className="bg-zinc-900/80 border-zinc-800">
       <CardHeader className="pb-2 pt-4 px-4">
@@ -465,7 +534,7 @@ function CertificationTrendChart({ trendData, period, onPeriodChange }) {
     return val;
   };
 
-  const CustomTooltip = ({ active, payload, label }) => {
+  const ScoreTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null;
     const d = payload[0]?.payload;
     return (
@@ -481,6 +550,27 @@ function CertificationTrendChart({ trendData, period, onPeriodChange }) {
     );
   };
 
+  const ErrorTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    const d = payload[0]?.payload;
+    return (
+      <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-2.5 shadow-xl text-xs">
+        <p className="text-zinc-400 font-medium mb-1">{label}</p>
+        <div className="space-y-0.5">
+          <p className="text-red-400">Hata Orani: {d.error_rate_pct || 0}%</p>
+          <p className="text-orange-400">Price Mismatch: {d.price_mismatch || 0}</p>
+          <p className="text-rose-400">Supplier Unavailable: {d.supplier_unavailable || 0}</p>
+          <p className="text-amber-400">Booking Timeout: {d.booking_timeout || 0}</p>
+          <p className="text-zinc-300">Toplam Hata: {d.error_count || 0} / {d.total_runs}</p>
+        </div>
+      </div>
+    );
+  };
+
+  const totalErrors = trendData.reduce((s, d) => s + (d.error_count || 0), 0);
+  const totalRuns = trendData.reduce((s, d) => s + d.total_runs, 0);
+  const avgErrorRate = totalRuns > 0 ? (totalErrors / totalRuns * 100).toFixed(1) : "0.0";
+
   return (
     <Card data-testid="trend-chart-card" className="bg-zinc-900/80 border-zinc-800">
       <CardHeader className="pb-2 pt-4 px-4">
@@ -488,67 +578,187 @@ function CertificationTrendChart({ trendData, period, onPeriodChange }) {
           <CardTitle className="text-xs uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
             <TrendingUp className="w-3 h-3 text-zinc-400" /> Certification Trend
           </CardTitle>
-          <div className="flex gap-0.5 bg-zinc-800/60 rounded-md p-0.5">
-            {["hourly", "daily", "weekly"].map((p) => (
-              <button key={p} data-testid={`trend-period-${p}`}
-                onClick={() => onPeriodChange(p)}
-                className={`px-2 py-0.5 rounded text-[9px] font-medium transition-all ${
-                  period === p ? "bg-zinc-700 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
-                }`}>
-                {p === "hourly" ? "Saatlik" : p === "daily" ? "Gunluk" : "Haftalik"}
+          <div className="flex gap-2">
+            {/* Chart mode toggle */}
+            <div className="flex gap-0.5 bg-zinc-800/60 rounded-md p-0.5">
+              <button data-testid="trend-mode-score" onClick={() => setChartMode("score")}
+                className={`px-2 py-0.5 rounded text-[9px] font-medium transition-all ${chartMode === "score" ? "bg-zinc-700 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"}`}>
+                Skor
               </button>
-            ))}
+              <button data-testid="trend-mode-errors" onClick={() => setChartMode("errors")}
+                className={`px-2 py-0.5 rounded text-[9px] font-medium transition-all ${chartMode === "errors" ? "bg-red-900/60 text-red-300" : "text-zinc-500 hover:text-zinc-300"}`}>
+                Hatalar
+              </button>
+            </div>
+            {/* Period toggle */}
+            <div className="flex gap-0.5 bg-zinc-800/60 rounded-md p-0.5">
+              {["hourly", "daily", "weekly"].map((p) => (
+                <button key={p} data-testid={`trend-period-${p}`}
+                  onClick={() => onPeriodChange(p)}
+                  className={`px-2 py-0.5 rounded text-[9px] font-medium transition-all ${
+                    period === p ? "bg-zinc-700 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
+                  }`}>
+                  {p === "hourly" ? "Saatlik" : p === "daily" ? "Gunluk" : "Haftalik"}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </CardHeader>
       <CardContent className="px-4 pb-4">
         <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={trendData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="rateGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-              <XAxis dataKey="period" tickFormatter={formatLabel}
-                tick={{ fontSize: 9, fill: "#71717a" }} axisLine={{ stroke: "#27272a" }} tickLine={false} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: "#71717a" }}
-                axisLine={{ stroke: "#27272a" }} tickLine={false} />
-              <Tooltip content={<CustomTooltip />} />
-              <Area type="monotone" dataKey="avg_score" name="Skor"
-                stroke="#10b981" strokeWidth={2} fill="url(#scoreGradient)" dot={{ r: 3, fill: "#10b981" }} />
-              <Area type="monotone" dataKey="avg_success_rate" name="Basari Orani"
-                stroke="#3b82f6" strokeWidth={1.5} fill="url(#rateGradient)" dot={{ r: 2, fill: "#3b82f6" }} />
-            </AreaChart>
+            {chartMode === "score" ? (
+              <AreaChart data={trendData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="rateGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                <XAxis dataKey="period" tickFormatter={formatLabel}
+                  tick={{ fontSize: 9, fill: "#71717a" }} axisLine={{ stroke: "#27272a" }} tickLine={false} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: "#71717a" }}
+                  axisLine={{ stroke: "#27272a" }} tickLine={false} />
+                <Tooltip content={<ScoreTooltip />} />
+                <Area type="monotone" dataKey="avg_score" name="Skor"
+                  stroke="#10b981" strokeWidth={2} fill="url(#scoreGradient)" dot={{ r: 3, fill: "#10b981" }} />
+                <Area type="monotone" dataKey="avg_success_rate" name="Basari Orani"
+                  stroke="#3b82f6" strokeWidth={1.5} fill="url(#rateGradient)" dot={{ r: 2, fill: "#3b82f6" }} />
+              </AreaChart>
+            ) : (
+              <BarChart data={trendData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                <XAxis dataKey="period" tickFormatter={formatLabel}
+                  tick={{ fontSize: 9, fill: "#71717a" }} axisLine={{ stroke: "#27272a" }} tickLine={false} />
+                <YAxis tick={{ fontSize: 9, fill: "#71717a" }}
+                  axisLine={{ stroke: "#27272a" }} tickLine={false} />
+                <Tooltip content={<ErrorTooltip />} />
+                <Legend wrapperStyle={{ fontSize: 9 }} />
+                <Bar dataKey="price_mismatch" name="Price Mismatch" fill="#f97316" stackId="errors" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="supplier_unavailable" name="Unavailable" fill="#e11d48" stackId="errors" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="booking_timeout" name="Timeout" fill="#eab308" stackId="errors" radius={[2, 2, 0, 0]} />
+              </BarChart>
+            )}
           </ResponsiveContainer>
         </div>
         {/* Summary row */}
         <div className="mt-2 grid grid-cols-3 gap-2">
-          <div className="bg-zinc-800/40 rounded p-1.5 text-center">
-            <p className="text-[9px] text-zinc-500 uppercase">Toplam</p>
-            <p className="text-xs font-semibold text-zinc-200 tabular-nums">
-              {trendData.reduce((s, d) => s + d.total_runs, 0)}
-            </p>
-          </div>
-          <div className="bg-zinc-800/40 rounded p-1.5 text-center">
-            <p className="text-[9px] text-zinc-500 uppercase">Ort. Skor</p>
-            <p className="text-xs font-semibold text-emerald-400 tabular-nums">
-              {(trendData.reduce((s, d) => s + d.avg_score, 0) / trendData.length).toFixed(1)}%
-            </p>
-          </div>
-          <div className="bg-zinc-800/40 rounded p-1.5 text-center">
-            <p className="text-[9px] text-zinc-500 uppercase">Ort. Latency</p>
-            <p className="text-xs font-semibold text-amber-400 tabular-nums">
-              {(trendData.reduce((s, d) => s + d.avg_latency_ms, 0) / trendData.length).toFixed(0)}ms
-            </p>
-          </div>
+          {chartMode === "score" ? (
+            <>
+              <div className="bg-zinc-800/40 rounded p-1.5 text-center">
+                <p className="text-[9px] text-zinc-500 uppercase">Toplam</p>
+                <p className="text-xs font-semibold text-zinc-200 tabular-nums">
+                  {trendData.reduce((s, d) => s + d.total_runs, 0)}
+                </p>
+              </div>
+              <div className="bg-zinc-800/40 rounded p-1.5 text-center">
+                <p className="text-[9px] text-zinc-500 uppercase">Ort. Skor</p>
+                <p className="text-xs font-semibold text-emerald-400 tabular-nums">
+                  {(trendData.reduce((s, d) => s + d.avg_score, 0) / trendData.length).toFixed(1)}%
+                </p>
+              </div>
+              <div className="bg-zinc-800/40 rounded p-1.5 text-center">
+                <p className="text-[9px] text-zinc-500 uppercase">Ort. Latency</p>
+                <p className="text-xs font-semibold text-amber-400 tabular-nums">
+                  {(trendData.reduce((s, d) => s + d.avg_latency_ms, 0) / trendData.length).toFixed(0)}ms
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="bg-zinc-800/40 rounded p-1.5 text-center">
+                <p className="text-[9px] text-zinc-500 uppercase">Toplam Hata</p>
+                <p className="text-xs font-semibold text-red-400 tabular-nums">{totalErrors}</p>
+              </div>
+              <div className="bg-zinc-800/40 rounded p-1.5 text-center">
+                <p className="text-[9px] text-zinc-500 uppercase">Hata Orani</p>
+                <p className="text-xs font-semibold text-red-400 tabular-nums">{avgErrorRate}%</p>
+              </div>
+              <div className="bg-zinc-800/40 rounded p-1.5 text-center">
+                <p className="text-[9px] text-zinc-500 uppercase">Toplam Calisma</p>
+                <p className="text-xs font-semibold text-zinc-200 tabular-nums">{totalRuns}</p>
+              </div>
+            </>
+          )}
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+
+/* ─── Certification Funnel ─────────────────────────────── */
+function CertificationFunnel({ funnelData }) {
+  if (!funnelData || !Object.keys(funnelData).length) return null;
+
+  const supplierNames = { ratehawk: "RateHawk", paximum: "Paximum", tbo: "TBO", wtatil: "WTatil" };
+  const stageColors = [
+    { bg: "bg-blue-500", fill: "#3b82f6", width: "100%" },
+    { bg: "bg-cyan-500", fill: "#06b6d4", width: "80%" },
+    { bg: "bg-emerald-500", fill: "#10b981", width: "60%" },
+    { bg: "bg-green-400", fill: "#4ade80", width: "40%" },
+  ];
+
+  return (
+    <Card data-testid="certification-funnel" className="bg-zinc-900/80 border-zinc-800">
+      <CardHeader className="pb-2 pt-4 px-4">
+        <CardTitle className="text-xs uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
+          <GitBranch className="w-3 h-3 text-zinc-400" /> Certification Funnel
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="px-4 pb-4 space-y-3">
+        {Object.entries(funnelData).map(([supCode, data]) => {
+          const stages = data.stages || [];
+          const completedCount = stages.filter(s => s.completed).length;
+          return (
+            <div key={supCode} data-testid={`funnel-${supCode}`} className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-semibold text-zinc-300">{supplierNames[supCode] || supCode}</span>
+                <span className="text-[9px] text-zinc-500">{data.completion_pct}% tamamlandi</span>
+              </div>
+              <div className="space-y-1">
+                {stages.map((stage, idx) => {
+                  const sc = stageColors[idx] || stageColors[0];
+                  return (
+                    <div key={stage.key} data-testid={`funnel-stage-${supCode}-${stage.key}`}
+                      className="flex items-center gap-2">
+                      <div className="flex-1" style={{ maxWidth: sc.width }}>
+                        <div className={`rounded-sm h-5 flex items-center px-2 transition-all ${
+                          stage.completed
+                            ? `${sc.bg} bg-opacity-20 border border-opacity-30`
+                            : "bg-zinc-800/60 border border-zinc-800"
+                        }`}
+                        style={stage.completed ? { borderColor: sc.fill + "4D", backgroundColor: sc.fill + "1A" } : {}}>
+                          <span className={`text-[9px] font-medium truncate ${stage.completed ? "text-zinc-200" : "text-zinc-600"}`}>
+                            {stage.label}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="w-4 shrink-0">
+                        {stage.completed ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        ) : (
+                          <div className="w-3.5 h-3.5 rounded-full border border-zinc-700" />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Progress bar */}
+              <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 transition-all duration-500 rounded-full"
+                  style={{ width: `${data.completion_pct}%` }} />
+              </div>
+            </div>
+          );
+        })}
       </CardContent>
     </Card>
   );
@@ -641,8 +851,10 @@ export default function SupplierCertificationConsolePage() {
   const [historyFilter, setHistoryFilter] = useState(null);
   const [sandboxStatus, setSandboxStatus] = useState(null);
   const [telemetry, setTelemetry] = useState(null);
+  const [allSuppliersTelemetry, setAllSuppliersTelemetry] = useState(null);
   const [trendData, setTrendData] = useState([]);
   const [trendPeriod, setTrendPeriod] = useState("hourly");
+  const [funnelData, setFunnelData] = useState(null);
 
   const suppliers = Object.entries(SUPPLIER_COLORS).map(([code, grad]) => ({
     code, gradient: grad,
@@ -678,6 +890,13 @@ export default function SupplierCertificationConsolePage() {
     } catch { /* ignore */ }
   }, [selectedSupplier]);
 
+  const loadAllSuppliersTelemetry = useCallback(async () => {
+    try {
+      const { data } = await api.get("/e2e-demo/telemetry/suppliers");
+      setAllSuppliersTelemetry(data);
+    } catch { /* ignore */ }
+  }, []);
+
   const loadTrendData = useCallback(async () => {
     try {
       const limitMap = { hourly: 24, daily: 30, weekly: 12 };
@@ -688,10 +907,19 @@ export default function SupplierCertificationConsolePage() {
     } catch { /* ignore */ }
   }, [selectedSupplier, trendPeriod]);
 
+  const loadFunnelData = useCallback(async () => {
+    try {
+      const { data } = await api.get("/e2e-demo/certification-funnel");
+      setFunnelData(data.funnels || {});
+    } catch { /* ignore */ }
+  }, []);
+
   useEffect(() => { loadScenarios(); }, [loadScenarios]);
   useEffect(() => { loadHistory(); }, [loadHistory, activeTab]);
   useEffect(() => { loadTelemetry(); }, [loadTelemetry]);
+  useEffect(() => { loadAllSuppliersTelemetry(); }, [loadAllSuppliersTelemetry]);
   useEffect(() => { loadTrendData(); }, [loadTrendData]);
+  useEffect(() => { loadFunnelData(); }, [loadFunnelData]);
   useEffect(() => {
     let stale = false;
     setSandboxStatus(null);
@@ -709,7 +937,9 @@ export default function SupplierCertificationConsolePage() {
       setTestResult(data);
       loadHistory();
       loadTelemetry();
+      loadAllSuppliersTelemetry();
       loadTrendData();
+      loadFunnelData();
     } catch (e) {
       console.error(e);
     }
@@ -939,7 +1169,12 @@ export default function SupplierCertificationConsolePage() {
               })()}
 
               {/* Telemetry Metrics */}
-              <TelemetryCard telemetry={telemetry} />
+              <TelemetryCard
+                telemetry={telemetry}
+                allSuppliersTelemetry={allSuppliersTelemetry}
+                selectedSupplier={selectedSupplier}
+                onSupplierFilter={setSelectedSupplier}
+              />
 
               {/* Certification Trend Chart */}
               <CertificationTrendChart
@@ -947,6 +1182,9 @@ export default function SupplierCertificationConsolePage() {
                 period={trendPeriod}
                 onPeriodChange={setTrendPeriod}
               />
+
+              {/* Certification Funnel */}
+              <CertificationFunnel funnelData={funnelData} />
 
               {/* Run Button */}
               <Button data-testid="run-test-btn" onClick={runTest} disabled={running}

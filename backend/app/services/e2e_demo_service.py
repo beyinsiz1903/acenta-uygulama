@@ -246,6 +246,15 @@ async def run_e2e_test(supplier: str, scenario: str = "success") -> dict[str, An
     else:
         await increment_counter("simulation_runs", supplier)
 
+    # Determine error type from scenario
+    error_type = None
+    error_categories = []
+    if scenario in ("price_mismatch", "supplier_unavailable", "booking_timeout"):
+        error_type = scenario
+        error_categories = [scenario]
+    elif failed > 0:
+        error_categories = [s["name"].lower().replace(" ", "_") for s in steps if s["status"] == "fail"]
+
     # Record snapshot for trend analysis
     await record_snapshot(
         supplier=supplier,
@@ -255,6 +264,8 @@ async def run_e2e_test(supplier: str, scenario: str = "success") -> dict[str, An
         total=total,
         latency_ms=total_ms,
         scenario=scenario,
+        error_type=error_type,
+        error_categories=error_categories,
     )
 
     return test_result

@@ -336,6 +336,15 @@ async def sandbox_telemetry(
     return await get_telemetry(supplier)
 
 
+@e2e_demo_router.get("/telemetry/suppliers")
+async def sandbox_telemetry_all_suppliers(
+    current_user=Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Get telemetry counters for all suppliers (comparison view)."""
+    from app.services.sandbox_telemetry_service import get_telemetry_all_suppliers
+    return await get_telemetry_all_suppliers()
+
+
 @e2e_demo_router.get("/telemetry/history")
 async def sandbox_telemetry_history(
     period: str = Query("hourly", pattern="^(hourly|daily|weekly)$"),
@@ -346,6 +355,16 @@ async def sandbox_telemetry_history(
     """Get aggregated telemetry history for trend analysis."""
     from app.services.sandbox_telemetry_service import get_telemetry_history
     return await get_telemetry_history(period, supplier, limit)
+
+
+@e2e_demo_router.get("/certification-funnel")
+async def certification_funnel(
+    supplier: str | None = Query(None),
+    current_user=Depends(require_roles(_ADMIN_ROLES)),
+) -> dict[str, Any]:
+    """Get certification funnel data per supplier."""
+    from app.services.sandbox_telemetry_service import get_certification_funnel
+    return await get_certification_funnel(supplier)
 
 
 @e2e_demo_router.get("/suppliers")

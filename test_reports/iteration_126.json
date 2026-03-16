@@ -1,0 +1,88 @@
+{
+  "summary": "Completed testing for Iteration 126: Supplier-based Telemetry, Certification Funnel, and Error Tracking features. All 14 backend API tests passed. All 12 frontend UI tests passed. New endpoints GET /api/e2e-demo/telemetry/suppliers and GET /api/e2e-demo/certification-funnel work correctly. Error tracking fields (error_count, error_rate_pct, price_mismatch, supplier_unavailable, booking_timeout) are present in telemetry history. POST /api/e2e-demo/run correctly records error_type and error_categories for error scenarios.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "✅ GET /api/e2e-demo/telemetry/suppliers returns all 4 suppliers (ratehawk, paximum, tbo, wtatil)",
+    "✅ Each supplier in telemetry/suppliers has counters and derived fields",
+    "✅ GET /api/e2e-demo/telemetry/suppliers requires authentication",
+    "✅ GET /api/e2e-demo/certification-funnel returns all 4 suppliers",
+    "✅ Certification funnel has correct 4-stage structure per supplier (credential_added, sandbox_test_started, sandbox_test_passed, go_live_activated)",
+    "✅ GET /api/e2e-demo/certification-funnel?supplier=ratehawk correctly filters",
+    "✅ GET /api/e2e-demo/certification-funnel requires authentication",
+    "✅ GET /api/e2e-demo/telemetry/history includes error tracking fields",
+    "✅ POST /api/e2e-demo/run price_mismatch scenario completed successfully",
+    "✅ POST /api/e2e-demo/run supplier_unavailable scenario recorded with failures",
+    "✅ POST /api/e2e-demo/run booking_timeout scenario recorded with failures",
+    "✅ Telemetry history correctly aggregates error counts",
+    "✅ Existing GET /api/e2e-demo/telemetry endpoint works (no regression)",
+    "✅ POST /api/e2e-demo/run returns full data structure (no regression)",
+    "✅ Frontend: TelemetryCard with Tekil/Karsilastir toggle visible and working",
+    "✅ Frontend: All 4 supplier filter tabs (RateHawk, Paximum, TBO, WTatil) visible and clickable",
+    "✅ Frontend: Compare view shows all suppliers in TelemetryCard",
+    "✅ Frontend: CertificationTrendChart with Skor/Hatalar toggle visible",
+    "✅ Frontend: Error bar chart shows Price Mismatch, Timeout, Unavailable categories",
+    "✅ Frontend: Period toggles (Saatlik/Gunluk/Haftalik) visible and working",
+    "✅ Frontend: CertificationFunnel card visible with all 4 suppliers",
+    "✅ Frontend: Each supplier funnel shows 4 stages with completion progress bars",
+    "✅ Frontend: Run test button triggers test execution and displays results"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_telemetry_supplier_funnel_error_iter126.py",
+    "/app/test_reports/pytest/pytest_telemetry_supplier_funnel_error_iter126.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "sandbox_telemetry_service.py get_telemetry_all_suppliers() correctly iterates KNOWN_SUPPLIERS and aggregates counters per supplier",
+    "get_certification_funnel() correctly checks 4 stages: credential_added (from supplier_credentials), sandbox_test_started (test count > 0), sandbox_test_passed (go_live_eligible tests), go_live_activated (latest test eligible)",
+    "record_snapshot() correctly stores error_type and error_categories for error scenarios",
+    "get_telemetry_history() aggregation pipeline correctly sums error counts by type (price_mismatch_count, supplier_unavailable_count, booking_timeout_count)",
+    "Frontend TelemetryCard correctly toggles between single/compare views using useState",
+    "Frontend CertificationTrendChart correctly switches between AreaChart (score mode) and BarChart (errors mode)",
+    "Frontend CertificationFunnel renders stages with completion checkmarks and progress bars"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_telemetry_supplier_funnel_error_iter126.py"
+  ],
+  "success_rate": {
+    "backend": "100% (14/14 tests passed)",
+    "frontend": "100% (12/12 UI checks passed)"
+  },
+  "test_credentials_used": {
+    "super_admin": "agent@acenta.test / agent123"
+  },
+  "seed_data_creation": "Error scenario tests created snapshots with error_type values (price_mismatch, supplier_unavailable, booking_timeout)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 126 added 3 new features to Certification Console: 1) GET /api/e2e-demo/telemetry/suppliers returns telemetry broken down by each of 4 suppliers (ratehawk, paximum, tbo, wtatil). 2) GET /api/e2e-demo/certification-funnel returns funnel data per supplier with 4 stages (credential_added, sandbox_test_started, sandbox_test_passed, go_live_activated). 3) Error tracking in telemetry/history with fields: error_count, error_rate_pct, price_mismatch, supplier_unavailable, booking_timeout. Frontend components: TelemetryCard (data-testid='telemetry-card') with Tekil/Karsilastir toggle, CertificationTrendChart (data-testid='trend-chart-card') with Skor/Hatalar toggle showing error bar chart, CertificationFunnel (data-testid='certification-funnel') with per-supplier stage progress. Page URL: /app/admin/certification-console",
+  "api_verification": {
+    "GET /api/e2e-demo/telemetry/suppliers": "✅ 200 - Returns suppliers object with ratehawk, paximum, tbo, wtatil keys, each with counters and derived fields",
+    "GET /api/e2e-demo/certification-funnel": "✅ 200 - Returns funnels object with 4 stages per supplier",
+    "GET /api/e2e-demo/certification-funnel?supplier=ratehawk": "✅ 200 - Filters to single supplier",
+    "GET /api/e2e-demo/telemetry/history (error fields)": "✅ 200 - Data points include error_count, error_rate_pct, price_mismatch, supplier_unavailable, booking_timeout",
+    "POST /api/e2e-demo/run (price_mismatch)": "✅ 200 - Creates snapshot with error_type='price_mismatch'",
+    "POST /api/e2e-demo/run (supplier_unavailable)": "✅ 200 - Creates snapshot with error_type='supplier_unavailable', fail at search step",
+    "POST /api/e2e-demo/run (booking_timeout)": "✅ 200 - Creates snapshot with error_type='booking_timeout', fail at booking step"
+  },
+  "frontend_verification": {
+    "Page URL": "/app/admin/certification-console",
+    "TelemetryCard": "data-testid='telemetry-card' - Tekil/Karsilastir toggle, 4 supplier filter tabs",
+    "Telemetry Single View": "Shows 4 metrics: Baglanti Denemeleri, Engellenen Olaylar, Simulasyon Calismalari, Sandbox Basarili",
+    "Telemetry Compare View": "data-testid='telemetry-compare-view' - Shows all 4 suppliers side by side",
+    "CertificationTrendChart": "data-testid='trend-chart-card' - Skor (AreaChart) / Hatalar (BarChart) toggle",
+    "Error Bar Chart": "Shows stacked bars: Price Mismatch (orange), Unavailable (rose), Timeout (yellow)",
+    "Period Toggles": "data-testid='trend-period-hourly/daily/weekly' - Saatlik, Gunluk, Haftalik",
+    "CertificationFunnel": "data-testid='certification-funnel' - Shows all 4 suppliers with stage completion",
+    "Funnel Stages": "4 stages per supplier: Credential Eklendi, Sandbox Test Basladi, Sandbox Test Gecti, Go-Live Aktif"
+  },
+  "mocked_apis": {
+    "note": "Supplier API calls are MOCKED/SIMULATED in e2e_demo_service.py - no real RateHawk/Paximum/TBO/WTatil API calls are made"
+  }
+}

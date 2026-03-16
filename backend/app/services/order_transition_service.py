@@ -123,6 +123,19 @@ async def transition_order_status(
         org_id=org_id or order.get("org_id", ""),
     )
 
+    # Phase 2: Trigger financial linkage on status transitions
+    try:
+        from app.services.oms.order_financial_linkage_service import (
+            post_order_to_ledger,
+            reverse_order_ledger,
+        )
+        if target_status == "confirmed":
+            await post_order_to_ledger(order_id, actor_name=actor_name)
+        elif target_status == "cancelled":
+            await reverse_order_ledger(order_id, actor_name=actor_name)
+    except Exception:
+        pass  # Financial linkage errors should not block status transitions
+
     return {
         "success": True,
         "order_id": order_id,

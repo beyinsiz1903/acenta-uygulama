@@ -19,6 +19,10 @@ import {
   Activity,
   ChevronDown,
   ChevronUp,
+  BookOpen,
+  Landmark,
+  RefreshCw,
+  Banknote,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
@@ -48,6 +52,9 @@ import {
   requestCancelOrder,
   cancelOrder,
   closeOrder,
+  fetchOrderLedgerEntries,
+  fetchOrderSettlements,
+  rebuildFinancialSummary,
 } from "./lib/ordersApi";
 import { toast } from "sonner";
 
@@ -77,6 +84,15 @@ const SETTLEMENT_STATUS_CONFIG = {
   partially_settled: { label: "Kısmi Ödendi", className: "bg-amber-100 text-amber-700" },
   settled: { label: "Ödendi", className: "bg-emerald-100 text-emerald-700" },
   reversed: { label: "İade Edildi", className: "bg-red-100 text-red-700" },
+};
+
+const FINANCIAL_STATUS_CONFIG = {
+  not_posted: { label: "Kayıt Yok", className: "bg-zinc-100 text-zinc-600" },
+  partially_posted: { label: "Kısmi Kayıt", className: "bg-amber-100 text-amber-700" },
+  posted: { label: "Kayıtlı", className: "bg-blue-100 text-blue-700" },
+  partially_settled: { label: "Kısmi Ödendi", className: "bg-amber-100 text-amber-700" },
+  settled: { label: "Ödendi", className: "bg-emerald-100 text-emerald-700" },
+  reversed: { label: "Ters Kayıt", className: "bg-red-100 text-red-700" },
 };
 
 const StatusBadge = ({ status, config = STATUS_CONFIG }) => {
@@ -128,6 +144,18 @@ export default function OrderDetailPage() {
     enabled: !!orderId,
   });
 
+  const { data: ledgerData } = useQuery({
+    queryKey: ["order-ledger", orderId],
+    queryFn: () => fetchOrderLedgerEntries(orderId),
+    enabled: !!orderId,
+  });
+
+  const { data: settlementData } = useQuery({
+    queryKey: ["order-settlements", orderId],
+    queryFn: () => fetchOrderSettlements(orderId),
+    enabled: !!orderId,
+  });
+
   const handleAction = async () => {
     setProcessing(true);
     try {
@@ -139,10 +167,23 @@ export default function OrderDetailPage() {
       setReason("");
       queryClient.invalidateQueries({ queryKey: ["order-detail", orderId] });
       queryClient.invalidateQueries({ queryKey: ["order-timeline", orderId] });
+      queryClient.invalidateQueries({ queryKey: ["order-ledger", orderId] });
+      queryClient.invalidateQueries({ queryKey: ["order-settlements", orderId] });
     } catch (err) {
       toast.error(err.message || "İşlem başarısız");
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const handleRebuildSummary = async () => {
+    try {
+      await rebuildFinancialSummary(orderId);
+      toast.success("Finansal özet yeniden oluşturuldu");
+      queryClient.invalidateQueries({ queryKey: ["order-detail", orderId] });
+      queryClient.invalidateQueries({ queryKey: ["order-ledger", orderId] });
+    } catch {
+      toast.error("Rebuild başarısız");
     }
   };
 
@@ -158,6 +199,10 @@ export default function OrderDetailPage() {
   const items = order.items || [];
   const fin = order.financial_summary || {};
   const timelineEvents = timeline || [];
+  const ledgerEntries = ledgerData?.entries || [];
+  const ledgerTotals = ledgerData?.totals || {};
+  const settlementStatus = settlementData?.status || {};
+  const settlementRuns = settlementData?.runs || [];
 
   return (
     <div data-testid="order-detail-page" className="space-y-6 p-6">
@@ -170,6 +215,7 @@ export default function OrderDetailPage() {
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold tracking-tight font-mono">{order.order_number}</h1>
             <StatusBadge status={order.status} />
+            <StatusBadge status={order.financial_status || "not_posted"} config={FINANCIAL_STATUS_CONFIG} />
             <StatusBadge status={order.settlement_status || "not_settled"} config={SETTLEMENT_STATUS_CONFIG} />
           </div>
           <p className="text-sm text-muted-foreground mt-0.5">
@@ -257,15 +303,25 @@ export default function OrderDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Financial Summary */}
+          {/* Financial Summary (Phase 2 Enhanced) */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <DollarSign className="h-4 w-4" /> Finansal Özet
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="ml-auto h-7 w-7"
+                  data-testid="rebuild-summary-btn"
+                  onClick={handleRebuildSummary}
+                  title="Özeti yeniden oluştur"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="text-center p-3 rounded-lg bg-muted/50">
                   <p className="text-xs text-muted-foreground">Toplam Satış</p>
                   <p data-testid="fin-sell-total" className="text-lg font-bold font-mono">{fmt(fin.sell_total, fin.currency)}</p>
@@ -279,12 +335,130 @@ export default function OrderDetailPage() {
                   <p data-testid="fin-margin-total" className="text-lg font-bold font-mono text-emerald-600">{fmt(fin.margin_total, fin.currency)}</p>
                 </div>
                 <div className="text-center p-3 rounded-lg bg-muted/50">
+                  <p className="text-xs text-muted-foreground">Finansal Durum</p>
+                  <div className="mt-1">
+                    <StatusBadge status={fin.financial_status || "not_posted"} config={FINANCIAL_STATUS_CONFIG} />
+                  </div>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-muted/50">
                   <p className="text-xs text-muted-foreground">Ödeme Durumu</p>
                   <div className="mt-1">
                     <StatusBadge status={fin.settlement_status || "not_settled"} config={SETTLEMENT_STATUS_CONFIG} />
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Ledger Link Card (Phase 2) */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BookOpen className="h-4 w-4" /> Ledger Kayıtları
+                <Badge variant="outline" className="ml-auto text-xs">
+                  {ledgerEntries.length} kayıt
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {ledgerEntries.length === 0 ? (
+                <p className="text-muted-foreground text-sm text-center py-4">
+                  Henüz ledger kaydı yok — Sipariş onaylandığında otomatik oluşturulur
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-3 gap-3 mb-3">
+                    <div className="text-center p-2 rounded bg-muted/50">
+                      <p className="text-xs text-muted-foreground">Toplam Borç</p>
+                      <p data-testid="ledger-total-debit" className="text-sm font-bold font-mono">{fmt(ledgerTotals.total_debit)}</p>
+                    </div>
+                    <div className="text-center p-2 rounded bg-muted/50">
+                      <p className="text-xs text-muted-foreground">Toplam Alacak</p>
+                      <p data-testid="ledger-total-credit" className="text-sm font-bold font-mono">{fmt(ledgerTotals.total_credit)}</p>
+                    </div>
+                    <div className="text-center p-2 rounded bg-muted/50">
+                      <p className="text-xs text-muted-foreground">Net</p>
+                      <p className="text-sm font-bold font-mono">{fmt(ledgerTotals.net)}</p>
+                    </div>
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Hesap</TableHead>
+                        <TableHead>Yön</TableHead>
+                        <TableHead className="text-right">Tutar</TableHead>
+                        <TableHead>Olay</TableHead>
+                        <TableHead>Tarih</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {ledgerEntries.map((entry, idx) => (
+                        <TableRow key={idx} data-testid={`ledger-entry-${idx}`}>
+                          <TableCell className="font-mono text-xs">{entry.account_id}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={`text-xs ${entry.direction === "debit" ? "bg-blue-50 text-blue-700" : "bg-amber-50 text-amber-700"}`}>
+                              {entry.direction === "debit" ? "Borç" : "Alacak"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-sm">{fmt(entry.amount, entry.currency)}</TableCell>
+                          <TableCell className="text-xs">{entry.event}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {entry.posted_at ? new Date(entry.posted_at).toLocaleString("tr-TR") : "—"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  {fin.ledger_posting_count > 0 && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {fin.ledger_posting_count} posting ref • Son kayıt: {fin.last_posted_at ? new Date(fin.last_posted_at).toLocaleString("tr-TR") : "—"}
+                    </p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Settlement Card (Phase 2) */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Banknote className="h-4 w-4" /> Ödeme / Settlement
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="text-center p-3 rounded-lg bg-muted/50">
+                  <p className="text-xs text-muted-foreground">Ödeme Durumu</p>
+                  <div className="mt-1">
+                    <StatusBadge status={settlementStatus.settlement_status || "not_settled"} config={SETTLEMENT_STATUS_CONFIG} />
+                  </div>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-muted/50">
+                  <p className="text-xs text-muted-foreground">Settlement Run</p>
+                  <p data-testid="settlement-run-count" className="text-lg font-bold">{settlementStatus.settlement_run_count || 0}</p>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-muted/50">
+                  <p className="text-xs text-muted-foreground">Son Run ID</p>
+                  <p className="text-xs font-mono truncate">{settlementStatus.last_settlement_run_id || "—"}</p>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-muted/50">
+                  <p className="text-xs text-muted-foreground">Son Ödeme</p>
+                  <p className="text-xs">{settlementStatus.last_settlement_at ? new Date(settlementStatus.last_settlement_at).toLocaleString("tr-TR") : "—"}</p>
+                </div>
+              </div>
+              {settlementRuns.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-sm font-medium mb-2">Bağlı Settlement Run'lar</p>
+                  {settlementRuns.map((run, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 rounded bg-muted/30 mb-1 text-sm">
+                      <span className="font-mono text-xs">{run.run_id}</span>
+                      <Badge variant="outline">{run.status}</Badge>
+                      <span className="font-mono">{fmt(run.total_amount, run.currency)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -1,6 +1,7 @@
-"""Order Router — OMS Phase 1 API endpoints.
+"""Order Router — OMS Phase 1 & 2 API endpoints.
 
-All order CRUD, status transitions, items, events, and financial summary.
+All order CRUD, status transitions, items, events, financial summary,
+ledger linkage, and settlement linkage.
 """
 from __future__ import annotations
 
@@ -31,6 +32,22 @@ from app.services.order_event_service import get_order_events, get_order_timelin
 from app.services.order_mapping_service import (
     map_booking_to_order_item,
     link_supplier_booking,
+)
+from app.services.oms.order_financial_linkage_service import (
+    build_order_financial_summary,
+    post_order_to_ledger,
+    reverse_order_ledger,
+    attach_settlement_run,
+    mark_order_settled,
+)
+from app.services.oms.order_ledger_query_service import (
+    get_order_ledger_entries,
+    get_order_posting_totals,
+    get_order_ledger_postings,
+)
+from app.services.oms.order_settlement_query_service import (
+    get_order_settlements,
+    get_order_settlement_status,
 )
 
 
@@ -283,14 +300,82 @@ async def api_get_timeline(order_id: str, limit: int = Query(50, ge=1, le=200)):
     return await get_order_timeline(order_id, limit=limit)
 
 
-# ── Financial Summary ──
+# ── Financial Summary (Phase 2: Enhanced) ──
 
 @router.get("/{order_id}/financial-summary")
 async def api_financial_summary(order_id: str):
-    summary = await get_financial_summary(order_id)
-    if not summary:
-        raise HTTPException(status_code=404, detail="Order not found")
+    """Get the full financial summary for an order (Phase 2 enhanced)."""
+    summary = await build_order_financial_summary(order_id)
+    if summary.get("error"):
+        raise HTTPException(status_code=404, detail=summary["error"])
     return summary
+
+
+@router.post("/{order_id}/financial-summary/rebuild")
+async def api_rebuild_financial_summary(order_id: str):
+    """Rebuild financial summary from scratch (ops/debug)."""
+    summary = await build_order_financial_summary(order_id)
+    if summary.get("error"):
+        raise HTTPException(status_code=404, detail=summary["error"])
+    return {"message": "Summary rebuilt", "summary": summary}
+
+
+# ── Ledger Linkage (Phase 2) ──
+
+@router.get("/{order_id}/ledger-entries")
+async def api_order_ledger_entries(order_id: str):
+    """Get all ledger entries linked to this order."""
+    entries = await get_order_ledger_entries(order_id)
+    totals = await get_order_posting_totals(order_id)
+    return {"entries": entries, "totals": totals}
+
+
+@router.get("/{order_id}/ledger-postings")
+async def api_order_ledger_postings(order_id: str):
+    """Get all ledger posting documents for this order."""
+    return await get_order_ledger_postings(order_id)
+
+
+@router.post("/{order_id}/post-to-ledger")
+async def api_post_to_ledger(order_id: str, body: StatusAction):
+    """Manually post an order to the ledger."""
+    result = await post_order_to_ledger(order_id, actor_name=body.actor)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error", "Posting failed"))
+    return result
+
+
+# ── Settlement Linkage (Phase 2) ──
+
+@router.get("/{order_id}/settlements")
+async def api_order_settlements(order_id: str):
+    """Get all settlement runs linked to this order."""
+    runs = await get_order_settlements(order_id)
+    status = await get_order_settlement_status(order_id)
+    return {"runs": runs, "status": status}
+
+
+class AttachSettlement(BaseModel):
+    run_id: str
+    actor: str = "system"
+
+
+@router.post("/{order_id}/settlements/link")
+async def api_link_settlement(order_id: str, body: AttachSettlement):
+    """Link a settlement run to this order."""
+    result = await attach_settlement_run(order_id, body.run_id, actor_name=body.actor)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error", "Link failed"))
+    return result
+
+
+@router.post("/{order_id}/mark-settled")
+async def api_mark_settled(order_id: str, body: StatusAction):
+    """Mark an order as fully settled."""
+    result = await mark_order_settled(order_id, actor_name=body.actor)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error", "Failed"))
+    return result
 
 
 # ── Seed Demo Data ──

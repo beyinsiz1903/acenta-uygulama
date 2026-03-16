@@ -1,0 +1,84 @@
+{
+  "summary": "OMS Phase 2 Financial Linkage Testing Complete - 20/20 backend tests passed (100%), 16/16 frontend checks passed. All Phase 2 features working: ledger posting on confirm, reversal on cancel, settlement linkage, financial summary with 5 metrics, ledger entries table with balanced totals.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "✅ POST /api/orders creates order with financial_status=not_posted, ledger_posting_refs=[], settlement_run_refs=[]",
+    "✅ POST /api/orders/{id}/confirm triggers ledger posting (3 entries: debit agency, credit supplier, credit platform revenue)",
+    "✅ Ledger entries are balanced: total_debit = total_credit = sell_total",
+    "✅ GET /api/orders/{id}/financial-summary returns enhanced summary with all required fields",
+    "✅ GET /api/orders/{id}/ledger-entries returns entries with balanced totals",
+    "✅ GET /api/orders/{id}/ledger-postings returns posting documents",
+    "✅ POST /api/orders/{id}/financial-summary/rebuild rebuilds summary correctly",
+    "✅ GET /api/orders/{id}/settlements returns runs and status",
+    "✅ POST /api/orders/{id}/settlements/link links settlement run, changes status to partially_settled",
+    "✅ POST /api/orders/{id}/mark-settled marks order as fully settled (requires confirm first)",
+    "✅ POST /api/orders/{id}/cancel after confirm creates reversal entries, financial_status=reversed",
+    "✅ POST /api/orders/{id}/post-to-ledger manual posting endpoint works",
+    "✅ Timeline includes financial events (order_ledger_linked, order_financial_summary_built, order_settlement_linked)",
+    "✅ Version field increments on status transitions",
+    "✅ Order number format still ORD-YYYY-NNNNNN",
+    "✅ Search endpoint still works",
+    "✅ Frontend: Order detail page shows Financial Summary Card with 5 metrics",
+    "✅ Frontend: Ledger Kayıtları card shows debit/credit entries table with totals",
+    "✅ Frontend: Ödeme/Settlement card shows settlement status, run count, run ID, last date",
+    "✅ Frontend: Order header shows 3 status badges (order, financial, settlement)",
+    "✅ Frontend: Rebuild summary button works and calls API"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_oms_phase2_financial_linkage_iter139.py",
+    "/app/test_reports/pytest/pytest_oms_phase2_financial_iter139.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_oms_phase2_financial_linkage_iter139.py"
+  ],
+  "success_rate": {
+    "backend": "100% (20/20 tests passed)",
+    "frontend": "100% (16/16 UI checks passed)"
+  },
+  "test_credentials_used": {
+    "super_admin": "agent@acenta.test / agent123"
+  },
+  "seed_data_creation": "Backend tests created TEST_* prefixed orders for testing ledger posting, reversal, settlement linkage, etc. 86 total orders exist in DB.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "OMS Phase 2 Financial Linkage fully tested. Key features: (1) Orders auto-post to ledger on confirm with 3 entries (agency receivable debit, supplier payable credit, platform revenue credit). (2) Cancellation creates reversal entries. (3) Settlement runs can be linked to orders. (4) Financial summary has 5 metrics: sell_total, supplier_total, margin_total, financial_status, settlement_status. (5) Ledger entries show balanced debit/credit. (6) Timeline shows financial events. (7) Order detail has 3 cards: Financial Summary, Ledger Entries, Settlement. Existing confirmed order ord_301c98478a77 has ledger entries.",
+  "features_tested": {
+    "ledger_posting_on_confirm": {
+      "description": "Order confirmation triggers double-entry ledger posting",
+      "accounts": ["AGENCY_AR_{agency_id}_{currency}", "SUPPLIER_AP_{currency}", "PLATFORM_REVENUE_{currency}"],
+      "status": "PASS"
+    },
+    "ledger_reversal_on_cancel": {
+      "description": "Cancelling confirmed order creates reversal entries",
+      "result": "financial_status becomes 'reversed'",
+      "status": "PASS"
+    },
+    "settlement_linkage": {
+      "endpoint": "POST /api/orders/{id}/settlements/link",
+      "result": "Attaches settlement run, status becomes 'partially_settled'",
+      "status": "PASS"
+    },
+    "financial_summary_enhanced": {
+      "fields": ["sell_total", "supplier_total", "margin_total", "financial_status", "ledger_posting_refs", "settlement_run_refs", "settlement_status", "supplier_codes"],
+      "status": "PASS"
+    },
+    "frontend_phase2_cards": {
+      "cards": ["Financial Summary (5 metrics)", "Ledger Entries (table + totals)", "Settlement (4 metrics)"],
+      "status": "PASS"
+    }
+  },
+  "mocked_apis": {
+    "has_mocked_apis": false,
+    "mocked_apis_list": []
+  }
+}

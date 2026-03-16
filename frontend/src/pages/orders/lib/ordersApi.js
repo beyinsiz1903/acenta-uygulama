@@ -117,11 +117,63 @@ export async function fetchOrderTimeline(orderId, limit = 50) {
   return res.json();
 }
 
-// ── Financial Summary ──
+// ── Financial Summary (Phase 2 Enhanced) ──
 
 export async function fetchFinancialSummary(orderId) {
   const res = await fetch(`${API}/api/orders/${orderId}/financial-summary`);
   if (!res.ok) throw new Error("Financial summary fetch failed");
+  return res.json();
+}
+
+export async function rebuildFinancialSummary(orderId) {
+  const res = await fetch(`${API}/api/orders/${orderId}/financial-summary/rebuild`, { method: "POST" });
+  if (!res.ok) throw new Error("Rebuild failed");
+  return res.json();
+}
+
+// ── Ledger Linkage (Phase 2) ──
+
+export async function fetchOrderLedgerEntries(orderId) {
+  const res = await fetch(`${API}/api/orders/${orderId}/ledger-entries`);
+  if (!res.ok) throw new Error("Ledger entries fetch failed");
+  return res.json();
+}
+
+export async function postOrderToLedger(orderId, actor = "admin") {
+  const res = await fetch(`${API}/api/orders/${orderId}/post-to-ledger`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ actor }),
+  });
+  if (!res.ok) throw new Error("Post to ledger failed");
+  return res.json();
+}
+
+// ── Settlement Linkage (Phase 2) ──
+
+export async function fetchOrderSettlements(orderId) {
+  const res = await fetch(`${API}/api/orders/${orderId}/settlements`);
+  if (!res.ok) throw new Error("Settlements fetch failed");
+  return res.json();
+}
+
+export async function linkSettlementRun(orderId, runId, actor = "admin") {
+  const res = await fetch(`${API}/api/orders/${orderId}/settlements/link`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ run_id: runId, actor }),
+  });
+  if (!res.ok) throw new Error("Link settlement failed");
+  return res.json();
+}
+
+export async function markOrderSettled(orderId, actor = "admin") {
+  const res = await fetch(`${API}/api/orders/${orderId}/mark-settled`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ actor }),
+  });
+  if (!res.ok) throw new Error("Mark settled failed");
   return res.json();
 }
 

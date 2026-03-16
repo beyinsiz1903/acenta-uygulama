@@ -1,7 +1,7 @@
 // tests/e2e/tenant-isolation.spec.ts
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "https://syroce-refactor.preview.emergentagent.com";
+const BASE_URL = "https://syroce-godpage-split.preview.emergentagent.com";
 const UNIQUE = Date.now().toString(36);
 
 test.describe("Tenant Isolation", () => {

@@ -3,58 +3,62 @@ The user, acting as a CTO, has requested a comprehensive frontend architecture a
 
 **PRODUCT REQUIREMENTS:**
 1.  **Full Repository Analysis & Report:** Analyze the frontend and produce a detailed report. (Completed, located at ).
-2.  **Phased Implementation:** Execute the multi-phase roadmap outlined in the approved executive summary ().
+2.  **Phased Implementation:** Execute the multi-phase roadmap outlined in the approved executive summary ( and subsequent user updates).
     -   **Phase 1: Architecture Cleanup** (Completed)
     -   **Phase 2: Design System Foundation** (Completed)
     -   **Phase 3: UX Standardization** (In Progress)
         -   Batch 1: 4 high-traffic pages (Completed)
-        -   Batch 2: 6 core admin pages (Completed in this session)
-    -   **Future Phases:** Performance Optimization, Enterprise UX Features, TypeScript Migration.
+        -   Batch 2: 6 core admin pages (Completed)
+        -   Batch 3 (Phase 3c): 3 remaining complex pages (Completed in this session)
+    -   **Future Phases:** God Page Splitting, Performance Optimization, Enterprise UX Features, TypeScript Migration.
 
 **User's preferred language**: Turkish
 
 **what currently exists?**
-The agent has successfully completed Batch 2 of the Phase 3 UX Standardization. This involved migrating 6 more core admin pages to the new design system patterns (, , ). The migrated pages include , , , , , , and . This brings the total number of migrated pages to 10. A comprehensive regression test was run by the testing agent, which passed with a 98.2% success rate, confirming the stability of the application.
+The agent has successfully completed Phase 3c of the UX Standardization, migrating the final three complex pages (, , ) to use the new  design pattern. For , a full migration to  and a new TanStack Query hook was also completed. This work was validated by a comprehensive regression test, which passed with a 100% success rate (40/40 tests). The project's progress has been documented in the updated  file. The frontend standardization phase is now approximately 85% complete.
 
 **Last working item**:
--   Last item agent was working: Updating the  file to reflect the completion of the Phase 3 Batch 2 migrations, just before concluding the session.
+-   Last item agent was working: Concluding the job with the  tool after successfully migrating three pages, running a full regression test, and updating the  file.
 -   Status: NONE
 -   Agent Testing Done: Y
 -   Which testing method agent to use? N/A
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
-None. The single failed test in the last run was due to a non-critical session timeout and not considered a bug.
+None. The last test run passed with a 100% success rate.
 
 **In progress Task List**:
 None.
 
 **Upcoming and Future Tasks**
-The roadmap is defined in .
+The roadmap is defined by the CTO's latest report (from the previous session's user message).
 
 *   **Upcoming Tasks:**
-    -   **(P0) Phase 3 - God Page Splitting:** Break down monolithic page components into smaller, manageable sub-components with their own hooks and logic. This is the immediate next priority.
+    -   **(P0) God Page Splitting:** This is the immediate next priority. The task is to refactor large, monolithic page components into smaller, more manageable sub-components, each with its own dedicated hooks and logic.
         -   **Target Pages:**  (2150 LOC),  (1912 LOC),  (1734 LOC).
-    -   **(P1) TanStack Query Adoption:** Continue migrating data-fetching logic from  +  to the new standardized TanStack Query hooks in the  directory.
+        -   **Goal:** Improve readability, testability, and enable component reuse by creating  structures.
+    -   **(P1) TanStack Query Adoption:** Continue the migration of data-fetching logic from  +  to standardized TanStack Query hooks, aiming to increase adoption from ~15% to over 80%.
 
 *   **Future Tasks (Backlog):**
-    -   **Phase 4 – Performance:** Route-based code splitting, list virtualization for large tables, and bundle size optimization.
-    -   **Phase 5 – Enterprise UX:** Implement Command Palette (Cmd+K), Global Search, keyboard shortcuts, and a global activity timeline.
-    -   **Platform Integrations:** Implement real sandbox integrations for suppliers.
-    -   **TypeScript Migration:** Incrementally migrate the codebase to TypeScript.
+    -   **Phase 4 – Performance:** Implement route-based code splitting, list virtualization for large tables, and bundle size optimization.
+    -   **Phase 5 – Enterprise UX:** Implement a Command Palette (Cmd+K), Global Search, and keyboard shortcuts.
+    -   **Platform Integrations:** Implement real sandbox integrations for supplier adapters (e.g., Ratehawk).
+    -   **TypeScript Migration:** Incrementally migrate the codebase to TypeScript, starting with the API layer, then hooks, then the design system.
+    -   **Enhancement:** Create a Design System Migration Guide for the internal wiki to speed up developer onboarding and standardize refactoring efforts.
 
 **Completed work in this session**
--   **Phase 3 UX Standardization (Batch 2) (DONE):**
-    -   Migrated 6 core admin pages to the  and  patterns.
-    -   Targeted Pages: , , , .
-    -   Adapted to codebase realities by migrating  (instead of the un-routed ) and / (instead of the non-existent ).
--   **Data Fetching Hooks Updated (DONE):**
-    -   Updated , , ,  to support the page migrations.
+-   **Phase 3c UX Standardization (DONE):**
+    -   Migrated  to  +  using a new  hook.
+    -   Migrated  to , preserving its internal tab structure.
+    -   Migrated  to , preserving its internal components and creating a new  structure.
+-   **New Feature Hooks and API Layers (DONE):**
+    -   Created  with  and .
+    -   Created  with  and .
 -   **Full Regression Testing (DONE):**
-    -   Executed a comprehensive test suite via  after the migrations.
-    -   Result: 98.2% success rate (56/57 tests passed), confirming application stability.
+    -   Executed a comprehensive test suite via .
+    -   Result: 100% success rate (40/40 tests passed), confirming application stability post-migration.
 -   **PRD Update (DONE):**
-    -   Updated  to reflect the completion of Phase 3, Batch 2.
+    -   Updated  to reflect the completion of Phase 3c and update the project status.
 
 **Earlier issues found/mentioned but not fixed**
 -   **Save to Github Synchronization Issue:** A known platform-level issue, deferred by the CTO.
@@ -68,7 +72,7 @@ The roadmap is defined in .
 
 **Key Technical Concepts**
 -   **Domain-Driven Frontend Architecture:** Code organized by business domain ().
--   **Design Systems:** A central library of reusable UI components () enforces consistency.
+-   **Design Systems:** A central library of reusable UI patterns () to enforce consistency.
 -   **Strangler Fig Pattern:** Incrementally refactoring old pages into the new architecture.
 -   **Standardized Data Fetching:** Using TanStack Query via custom hooks ().
 
@@ -89,33 +93,35 @@ The roadmap is defined in .
     -   
     -   
     -   
-    -   
-    -   
-    -   
 -   **Key Files for Next Phase:**
-    -   : The master plan for all upcoming work.
+    -   : The master plan.
     -    (Next refactoring target)
     -    (Next refactoring target)
     -    (Next refactoring target)
 
 **Areas that need refactoring**:
--   The God Pages (, , ) are the highest priority for refactoring. They need to be broken down into smaller components with dedicated hooks and logic.
+-   The God Pages (, , ) are the highest priority for refactoring. They must be broken down into smaller components with dedicated hooks.
 
 **key api endpoints**
--   No new endpoints were created.
+-   No new backend endpoints were created. Frontend API client layers were added to call existing endpoints.
 
 **Critical Info for New Agent**
 -   **İletişim diliniz Türkçe olmalıdır. (Your communication language must be Turkish).**
--   The primary roadmap is . Refer to it for all upcoming tasks.
--   Phase 3, Batch 2 of the UX Standardization is complete and tested.
--   Your next task is **(P0) Phase 3 - God Page Splitting**. Start by analyzing  and planning how to break it into smaller components.
+-   Your next task is **(P0) God Page Splitting**. This is the highest priority.
+-   Start by analyzing  and planning how to break its logic and UI into smaller, reusable components and hooks within a new  directory.
+-   The application is stable and the last regression test passed with 100% success.
 
 **documents and test reports created in this job**
 -   
 -    (updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
--   The user (CTO) provided a single, comprehensive message in a professional report format. They confirmed the success of the first batch of migrations, approved the agent's summary, and provided a detailed, metric-driven roadmap for the entire project. This roadmap, which the agent saved as , is now the primary source of truth. The CTO explicitly defined the next priorities as migrating the remaining Phase 3 pages, splitting God Pages, and then moving on to performance and enterprise UX features.
+-   The user (CTO) provided a single, comprehensive report-style message that confirmed the success of the previous batch of migrations and set the priorities for the work done in this session and for the work to come.
+-   **Priorities defined by user:**
+    1.  **Phase 3c Remaining Pages (DONE in this session):** , , .
+    2.  **God Page Splitting (NEXT TASK):** , , .
+    3.  **TanStack Query Adoption (FUTURE):** Increase adoption across the app.
+-   The user's message is the primary source of truth for the project roadmap.
 
 **Project Health Check:**
 -   **Broken:** None.
@@ -131,7 +137,7 @@ The roadmap is defined in .
 -   Ratehawk, TBO, Paximum, WWTatil (Adapters exist, integration is simulated)
 
 **Testing status**
--   Testing agent used after significant changes: YES. A full regression test was performed.
+-   Testing agent used after significant changes: YES. A full regression test was performed with 100% success.
 -   Troubleshoot agent used after agent stuck in loop: NO
 -   Test files created: None.
 -   Known regressions: None.
@@ -141,4 +147,4 @@ The roadmap is defined in .
 -   **Agency Admin:**  / 
 
 **What agent forgot to execute**
--   Nothing. The agent successfully completed the planned task, correctly adapted to discrepancies between the plan and the actual codebase, and thoroughly validated the work.</analysis>
+-   Nothing. The agent successfully completed the planned task, followed the user's updated priorities, and thoroughly validated the work.</analysis>

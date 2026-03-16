@@ -22,7 +22,7 @@ import os
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
-    BASE_URL = "https://syroce-refactor.preview.emergentagent.com"
+    BASE_URL = "https://syroce-godpage-split.preview.emergentagent.com"
 
 
 class TestAuth:

@@ -5,7 +5,7 @@ import { Button } from "../../components/ui/button";
 import {
   CheckCircle2, XCircle, AlertTriangle, Clock, Play, RotateCcw,
   ChevronRight, ChevronDown, Activity, Wifi, WifiOff, Timer,
-  Zap, History, ArrowLeft, Server, Shield, TrendingUp
+  Zap, History, ArrowLeft, Server, Shield, TrendingUp, ShieldAlert, Lock
 } from "lucide-react";
 import { api } from "../../lib/api";
 
@@ -302,10 +302,56 @@ function HistoryPanel({ history, onSelect }) {
   );
 }
 
+/* ─── Environment Mode Config ─────────────────────────── */
+const MODE_CONFIG = {
+  simulation: {
+    label: "SIMULATION",
+    description: "Sandbox kimlik bilgileri yapilandirilmamis — tum testler simulasyon verisi kullanir",
+    badgeBg: "bg-amber-500/20",
+    badgeText: "text-amber-400",
+    badgeBorder: "border-amber-500/30",
+    icon: Activity,
+    cardBg: "bg-amber-500/5",
+    cardBorder: "border-amber-500/20",
+  },
+  sandbox_ready: {
+    label: "SANDBOX READY",
+    description: "Kimlik bilgileri yapilandirildi — API baglanti kontrolu bekleniyor",
+    badgeBg: "bg-blue-500/20",
+    badgeText: "text-blue-400",
+    badgeBorder: "border-blue-500/30",
+    icon: Shield,
+    cardBg: "bg-blue-500/5",
+    cardBorder: "border-blue-500/20",
+  },
+  sandbox_connected: {
+    label: "SANDBOX CONNECTED",
+    description: "Gercek sandbox API'ye basariyla baglandi — canli testler calistirabilirsiniz",
+    badgeBg: "bg-emerald-500/20",
+    badgeText: "text-emerald-400",
+    badgeBorder: "border-emerald-500/30",
+    icon: Wifi,
+    cardBg: "bg-emerald-500/5",
+    cardBorder: "border-emerald-500/20",
+  },
+  sandbox_blocked: {
+    label: "SANDBOX BLOCKED",
+    description: "Kimlik bilgileri gecerli ancak ortam erisimi engelleniyor — preview/staging gibi kisitli ortamlarda gercek API'ye erisilemiyor",
+    badgeBg: "bg-red-500/20",
+    badgeText: "text-red-400",
+    badgeBorder: "border-red-500/30",
+    icon: Lock,
+    cardBg: "bg-red-500/5",
+    cardBorder: "border-red-500/20",
+  },
+};
+
 /* ─── Sandbox Readiness Indicator ─────────────────────── */
 function SandboxReadinessIndicator({ status }) {
   if (!status) return null;
-  const isSandbox = status.mode === "sandbox";
+  const mode = status.mode || "simulation";
+  const modeConf = MODE_CONFIG[mode] || MODE_CONFIG.simulation;
+  const ModeIcon = modeConf.icon;
   const readiness = status.readiness || {};
   const checks = [
     { key: "credential_wiring", label: "Credentials" },
@@ -325,13 +371,18 @@ function SandboxReadinessIndicator({ status }) {
         ))}
       </div>
       <span className="text-[10px] text-zinc-500">{passed}/{checks.length}</span>
-      {isSandbox && status.health?.status === "healthy" && (
+      {mode === "sandbox_connected" && (
         <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[9px]">API OK</Badge>
       )}
-      {isSandbox && status.health?.status === "unhealthy" && (
-        <Badge className="bg-red-500/15 text-red-400 border-red-500/30 text-[9px]">API Error</Badge>
+      {mode === "sandbox_blocked" && (
+        <Badge className="bg-red-500/15 text-red-400 border-red-500/30 text-[9px]">
+          <Lock className="w-2.5 h-2.5 mr-0.5 inline" />Blocked
+        </Badge>
       )}
-      {!isSandbox && (
+      {mode === "sandbox_ready" && (
+        <Badge className="bg-blue-500/15 text-blue-400 border-blue-500/30 text-[9px]">Pending</Badge>
+      )}
+      {mode === "simulation" && (
         <Badge className="bg-zinc-700/50 text-zinc-500 border-zinc-700 text-[9px]">No Credentials</Badge>
       )}
     </div>
@@ -432,14 +483,18 @@ export default function SupplierCertificationConsolePage() {
             <h1 data-testid="page-title" className="text-xl font-bold text-zinc-100 flex items-center gap-2">
               <Server className="w-5 h-5 text-blue-400" />
               Supplier Certification Console
-              {sandboxStatus && (
-                <Badge data-testid="mode-badge"
-                  className={sandboxStatus.mode === "sandbox"
-                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs ml-2"
-                    : "bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs ml-2"}>
-                  {sandboxStatus.mode === "sandbox" ? "SANDBOX" : "SIMULATION"}
-                </Badge>
-              )}
+              {sandboxStatus && (() => {
+                const mode = sandboxStatus.mode || "simulation";
+                const mc = MODE_CONFIG[mode] || MODE_CONFIG.simulation;
+                const MIcon = mc.icon;
+                return (
+                  <Badge data-testid="mode-badge"
+                    className={`${mc.badgeBg} ${mc.badgeText} ${mc.badgeBorder} text-xs ml-2 inline-flex items-center gap-1`}>
+                    <MIcon className="w-3 h-3" />
+                    {mc.label}
+                  </Badge>
+                );
+              })()}
             </h1>
             <p className="text-sm text-zinc-500 mt-0.5">
               E2E lifecycle testi calistir, edge case senaryolarini dogrula, go-live eligibility kontrol et
@@ -520,39 +575,90 @@ export default function SupplierCertificationConsolePage() {
               </Card>
 
               {/* Sandbox Status Panel */}
-              {sandboxStatus && (
-                <Card data-testid="sandbox-status-card" className="bg-zinc-900/80 border-zinc-800">
+              {sandboxStatus && (() => {
+                const mode = sandboxStatus.mode || "simulation";
+                const mc = MODE_CONFIG[mode] || MODE_CONFIG.simulation;
+                const MIcon = mc.icon;
+                return (
+                <Card data-testid="sandbox-status-card" className={`bg-zinc-900/80 border-zinc-800 ${mc.cardBorder}`}>
                   <CardHeader className="pb-2 pt-4 px-4">
                     <CardTitle className="text-xs uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
-                      <Wifi className="w-3 h-3" /> Sandbox Durumu
+                      <MIcon className={`w-3 h-3 ${mc.badgeText}`} /> Sandbox Durumu
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="px-4 pb-4 space-y-2">
+                    {/* Mode Badge */}
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] text-zinc-400">Mod</span>
-                      <Badge className={sandboxStatus.mode === "sandbox"
-                        ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]"
-                        : "bg-amber-500/20 text-amber-400 border-amber-500/30 text-[10px]"}>
-                        {sandboxStatus.mode === "sandbox" ? "Sandbox (Gercek API)" : "Simulation"}
+                      <Badge data-testid="sandbox-mode-value" className={`${mc.badgeBg} ${mc.badgeText} ${mc.badgeBorder} text-[10px] inline-flex items-center gap-1`}>
+                        <MIcon className="w-2.5 h-2.5" />
+                        {mc.label}
                       </Badge>
                     </div>
+
+                    {/* Mode Description */}
+                    <div className={`rounded-lg p-2.5 ${mc.cardBg} border ${mc.cardBorder}`}>
+                      <p data-testid="sandbox-mode-desc" className={`text-[10px] ${mc.badgeText} leading-relaxed`}>
+                        {mc.description}
+                      </p>
+                    </div>
+
+                    {/* Credentials Row */}
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] text-zinc-400">Credentials</span>
                       <span className={`text-[11px] ${sandboxStatus.credentials_configured ? "text-emerald-400" : "text-zinc-600"}`}>
                         {sandboxStatus.credentials_configured ? `Aktif (${sandboxStatus.credential_source})` : "Yapilandirilmamis"}
                       </span>
                     </div>
-                    {sandboxStatus.health && sandboxStatus.mode === "sandbox" && (
+
+                    {/* API Health Row — only for modes with credentials */}
+                    {sandboxStatus.credentials_configured && sandboxStatus.health && (
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] text-zinc-400">API Health</span>
                         <div className="flex items-center gap-1.5">
-                          <div className={`w-1.5 h-1.5 rounded-full ${sandboxStatus.health.reachable ? "bg-emerald-400" : "bg-red-400"}`} />
-                          <span className={`text-[11px] ${sandboxStatus.health.reachable ? "text-emerald-400" : "text-red-400"}`}>
-                            {sandboxStatus.health.reachable ? `${sandboxStatus.health.latency_ms}ms` : sandboxStatus.health.error || "Unreachable"}
-                          </span>
+                          {mode === "sandbox_connected" && (
+                            <>
+                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              <span className="text-[11px] text-emerald-400">{sandboxStatus.health.latency_ms}ms</span>
+                            </>
+                          )}
+                          {mode === "sandbox_blocked" && (
+                            <>
+                              <Lock className="w-3 h-3 text-red-400" />
+                              <span className="text-[11px] text-red-400">Ortam Erisimi Engellendi</span>
+                            </>
+                          )}
+                          {mode === "sandbox_ready" && (
+                            <>
+                              <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                              <span className="text-[11px] text-blue-400">Dogrulama bekleniyor</span>
+                            </>
+                          )}
                         </div>
                       </div>
                     )}
+
+                    {/* Blocked Environment Warning */}
+                    {mode === "sandbox_blocked" && (
+                      <div data-testid="env-blocked-warning" className="bg-red-500/10 border border-red-500/20 rounded-lg p-2.5 mt-1">
+                        <div className="flex items-start gap-2">
+                          <ShieldAlert className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-[11px] text-red-400 font-semibold">Ortam Erisimi Engellendi</p>
+                            <p className="text-[10px] text-red-400/80 mt-0.5 leading-relaxed">
+                              Bu ortam (preview/staging) dis API'lere erisimi engelliyor. Gercek sandbox testleri icin production ortamina deploy edin veya ag erisimini acin.
+                            </p>
+                            {sandboxStatus.health?.error && (
+                              <p className="text-[9px] text-red-500/60 font-mono mt-1 truncate">
+                                {sandboxStatus.health.error}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Go-Live Ready */}
                     {sandboxStatus.readiness?.go_live_ready && (
                       <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-2 mt-1">
                         <p className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
@@ -562,7 +668,8 @@ export default function SupplierCertificationConsolePage() {
                     )}
                   </CardContent>
                 </Card>
-              )}
+                );
+              })()}
 
               {/* Run Button */}
               <Button data-testid="run-test-btn" onClick={runTest} disabled={running}

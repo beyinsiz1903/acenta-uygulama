@@ -66,7 +66,14 @@ async def get_sandbox_credentials(supplier: str = "ratehawk") -> dict[str, Any] 
 
 
 async def get_sandbox_status(supplier: str = "ratehawk") -> dict[str, Any]:
-    """Get comprehensive sandbox activation status."""
+    """Get comprehensive sandbox activation status.
+
+    Resolves one of 4 modes:
+      - simulation:        No credentials configured
+      - sandbox_ready:     Credentials exist, health not yet validated
+      - sandbox_connected: Credentials exist AND API health check passed
+      - sandbox_blocked:   Credentials exist but API is unreachable (env restriction)
+    """
     creds = await get_sandbox_credentials(supplier)
 
     if not creds:
@@ -88,6 +95,15 @@ async def get_sandbox_status(supplier: str = "ratehawk") -> dict[str, Any]:
 
     # Credentials exist — check health
     health = await _check_health(creds)
+    api_reachable = health.get("reachable", False)
+
+    # Determine granular mode
+    if api_reachable:
+        mode = "sandbox_connected"
+    elif health.get("error") and _is_env_blocked(health["error"]):
+        mode = "sandbox_blocked"
+    else:
+        mode = "sandbox_ready"
 
     # Check test history for readiness
     db = await get_db()
@@ -99,7 +115,7 @@ async def get_sandbox_status(supplier: str = "ratehawk") -> dict[str, Any]:
 
     readiness = {
         "credential_wiring": True,
-        "health_validated": health.get("reachable", False),
+        "health_validated": api_reachable,
         "search_tested": False,
         "booking_tested": False,
         "cancel_tested": False,
@@ -115,7 +131,7 @@ async def get_sandbox_status(supplier: str = "ratehawk") -> dict[str, Any]:
 
     return {
         "supplier": supplier,
-        "mode": "sandbox",
+        "mode": mode,
         "credentials_configured": True,
         "credential_source": creds["source"],
         "base_url": _mask_url(creds["base_url"]),
@@ -562,6 +578,17 @@ def _classify_error(exc: Exception) -> dict[str, Any]:
         return {"category": "client_error", "retryable": False, "severity": "medium"}
 
     return {"category": "unknown", "retryable": False, "severity": "medium", "exception_type": exc_type}
+
+
+def _is_env_blocked(error_str: str) -> bool:
+    """Detect if the error indicates an environment-level network block."""
+    blocked_indicators = [
+        "connect", "timeout", "refused", "unreachable", "resolve",
+        "dns", "network", "ssl", "certificate", "eof", "reset",
+        "no route", "host", "connection",
+    ]
+    err_lower = (error_str or "").lower()
+    return any(ind in err_lower for ind in blocked_indicators)
 
 
 def _mask_url(url: str) -> str:

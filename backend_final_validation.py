@@ -6,7 +6,7 @@ Final comprehensive Syroce backend validation
 import requests
 import json
 
-BASE_URL = "https://sandbox-status-ui.preview.emergentagent.com/api"
+BASE_URL = "https://cert-telemetry.preview.emergentagent.com/api"
 ADMIN_CREDENTIALS = {"email": "admin@acenta.test", "password": "admin123"}
 AGENCY_CREDENTIALS = {"email": "agent@acenta.test", "password": "agent123"}
 

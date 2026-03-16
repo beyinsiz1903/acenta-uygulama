@@ -380,12 +380,12 @@ async def run_certification(db, supplier_code: str) -> dict[str, Any]:
 def _get_cert_message(supplier_code: str, step_id: str, passed: bool) -> str:
     """Generate realistic certification step messages."""
     messages = {
-        "search": f"Availability search OK — 47 properties found (Istanbul, 2 adults, 3 nights)",
-        "detail": f"Hotel detail fetched — Room types: 3, Images: 12, Amenities: 24",
-        "revalidation": f"Price revalidation OK — Rate confirmed at EUR 142.50/night (drift: 0.0%)",
+        "search": "Availability search OK — 47 properties found (Istanbul, 2 adults, 3 nights)",
+        "detail": "Hotel detail fetched — Room types: 3, Images: 12, Amenities: 24",
+        "revalidation": "Price revalidation OK — Rate confirmed at EUR 142.50/night (drift: 0.0%)",
         "booking": f"Sandbox booking created — Confirmation #SBX-{uuid.uuid4().hex[:6].upper()}",
-        "status": f"Booking status polled — Status: confirmed (2 polls, 1.2s total)",
-        "cancel": f"Cancellation successful — Refund: full, Penalty: none",
+        "status": "Booking status polled — Status: confirmed (2 polls, 1.2s total)",
+        "cancel": "Cancellation successful — Refund: full, Penalty: none",
     }
     if not passed:
         messages = {

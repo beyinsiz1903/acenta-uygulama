@@ -146,7 +146,7 @@ async def trigger_supplier_sync(supplier: str) -> dict[str, Any]:
 
     # ── Guard: Detect and handle stuck jobs (P4.2 enhanced) ──
     from app.services.sync_stability_service import detect_and_handle_stuck_jobs
-    stuck_result = await detect_and_handle_stuck_jobs()
+    await detect_and_handle_stuck_jobs()
 
     # ── Guard: Duplicate sync prevention (idempotency) ──
     running_job = await db.inventory_sync_jobs.find_one(
@@ -220,7 +220,7 @@ async def _sync_ratehawk_real(
     """Sync Ratehawk using real API adapter with partial failure handling (P4.2)."""
     from app.services.ratehawk_sync_adapter import sync_inventory_from_ratehawk
     from app.services.sync_stability_service import finalize_sync_job
-    from app.services.sync_job_state import SyncJobStatus, REGION_SYNC_CONFIG
+    from app.services.sync_job_state import SyncJobStatus
 
     inventory_count = 0
     price_count = 0

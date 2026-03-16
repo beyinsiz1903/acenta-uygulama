@@ -23,7 +23,7 @@ from typing import Any, Optional
 
 from app.db import get_db
 from app.utils import now_utc
-from app.constants.currencies import convert_amount, DEFAULT_EXCHANGE_RATES
+from app.constants.currencies import DEFAULT_EXCHANGE_RATES
 
 logger = logging.getLogger("pricing_engine")
 

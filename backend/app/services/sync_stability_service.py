@@ -361,7 +361,6 @@ async def retry_failed_region(supplier: str, region_id: str) -> dict[str, Any]:
     try:
         # Sync only hotels in the target region/city
         from app.services.inventory_sync_service import _SIMULATED_HOTELS
-        import random
 
         region_hotels = [h for h in _SIMULATED_HOTELS if h["city"].lower() == target_region["name"].lower()]
         if not region_hotels:

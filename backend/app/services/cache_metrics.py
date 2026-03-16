@@ -11,7 +11,6 @@ Thread-safe in-memory counters with periodic MongoDB persistence.
 from __future__ import annotations
 
 import logging
-import time
 from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any

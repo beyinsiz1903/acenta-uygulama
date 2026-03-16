@@ -117,7 +117,7 @@ async def booking_precheck(
         cached_price = min(prices) if prices else 0.0
 
     # Get revalidated price from supplier
-    from app.services.inventory_sync_service import _determine_sync_mode, SUPPLIER_SYNC_CONFIG
+    from app.services.inventory_sync_service import _determine_sync_mode
     sync_mode, cred_config = await _determine_sync_mode(supplier)
 
     revalidated_price = cached_price

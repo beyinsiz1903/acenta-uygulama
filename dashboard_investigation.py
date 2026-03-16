@@ -6,7 +6,7 @@ Detailed investigation of /dashboard/popular-products 500 error
 import requests
 import json
 
-BASE_URL = "https://frontend-standardize.preview.emergentagent.com/api"
+BASE_URL = "https://syroce-refactor.preview.emergentagent.com/api"
 
 def test_dashboard_endpoints_detailed():
     """Test various dashboard endpoints to identify the scope of issues."""

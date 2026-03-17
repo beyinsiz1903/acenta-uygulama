@@ -19,15 +19,6 @@ import {
 } from "../components/ui/dialog";
 
 function StatusBadge({ status }) {
-  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["admin", "partners"],
-    queryFn: async () => {
-      const resp = await api.get("/admin/partners");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
-
   const s = (status || "").toLowerCase();
   if (s === "approved") {
     return (
@@ -43,6 +34,9 @@ function StatusBadge({ status }) {
 }
 
 export default function AdminPartnersPage() {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
     const [errorDetails, setErrorDetails] = useState(null);
 
   const [page, setPage] = useState(1);
@@ -67,7 +61,7 @@ export default function AdminPartnersPage() {
     return () => clearTimeout(t);
   }, [searchInput]);
 
-
+  useEffect(() => { load(); }, [page, limit, statusFilter, debouncedSearch]);
 
   const seqRef = useRef(0);
 

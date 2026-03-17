@@ -111,6 +111,9 @@ function ProductForm({ value, onChange, onSave, saving, error }) {
 }
 
 function VersionsPanel({ productId, productStatus }) {
+    const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [items, setItems] = useState([]);
     const [roomTypes, setRoomTypes] = useState([]);
   const [ratePlans, setRatePlans] = useState([]);
   const [selectedRoomTypeIds, setSelectedRoomTypeIds] = useState([]);
@@ -140,6 +143,7 @@ function VersionsPanel({ productId, productStatus }) {
     }
   };
 
+  useEffect(() => { load(); }, [productId]);
 
   const toggleRoomType = (id) => {
     setSelectedRoomTypeIds((prev) =>
@@ -160,7 +164,7 @@ function VersionsPanel({ productId, productStatus }) {
       content.room_type_ids = selectedRoomTypeIds;
       content.rate_plan_ids = selectedRatePlanIds;
       await api.post(`/admin/catalog/products/${productId}/versions`, { content });
-      refetch();
+      load();
     } catch (err) {
       if (err instanceof SyntaxError) {
         setError("Content JSON geçerli değil.");
@@ -174,7 +178,7 @@ function VersionsPanel({ productId, productStatus }) {
     setError("");
     try {
       await api.post(`/admin/catalog/products/${productId}/versions/${versionId}/publish`);
-      refetch();
+      load();
     } catch (err) {
       setError(apiErrorMessage(err));
     }
@@ -184,7 +188,7 @@ function VersionsPanel({ productId, productStatus }) {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div className="font-semibold text-sm">Versiyonlar</div>
-        <Button size="sm" variant="outline" onClick={() => refetch()} disabled={loading}>
+        <Button size="sm" variant="outline" onClick={() => load()} disabled={loading}>
           {loading ? "Yükleniyor..." : "Yenile"}
         </Button>
       </div>
@@ -318,8 +322,7 @@ function VersionsPanel({ productId, productStatus }) {
 }
 
 export default function AdminCatalogPage() {
-    const [selected, setSelected] = useState(null);
-
+  const [selected, setSelected] = useState(null);
   const [q, setQ] = useState("");
   const [type, setType] = useState("");
   const [status, setStatus] = useState("");
@@ -333,10 +336,10 @@ export default function AdminCatalogPage() {
   const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const load = async () => {
-    setLoading(true);
-    setFormError("");
-    try {
+  // Use react-query for product list with proper state management
+  const { data: items = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ["admin", "catalog", "products", q, type, status],
+    queryFn: async () => {
       const r = await api.get("/admin/catalog/products", {
         params: {
           q: q || undefined,
@@ -345,13 +348,10 @@ export default function AdminCatalogPage() {
           limit: 50,
         },
       });
-      setItems(r.data.items || []);
-    } catch (err) {
-      setFormError(apiErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  };
+      return r.data.items || [];
+    },
+    staleTime: 30_000,
+  });
 
 
   const select = async (productId) => {

@@ -10,17 +10,10 @@ import {
 import { toast } from "sonner";
 
 function AgencyModuleCard({ agency, onSaved }) {
-  const { data: modules = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["admin", "agencies"],
-    queryFn: async () => {
-      const resp = await api.get("/admin/agencies");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
-
   const [expanded, setExpanded] = useState(false);
-    const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [modules, setModules] = useState([]);
 
   const loadModules = useCallback(async () => {
     setLoading(true);
@@ -31,6 +24,9 @@ function AgencyModuleCard({ agency, onSaved }) {
     setLoading(false);
   }, [agency]);
 
+  useEffect(() => {
+    if (expanded) loadModules();
+  }, [expanded, loadModules]);
 
   const toggle = (key) => {
     setModules((prev) =>
@@ -135,16 +131,14 @@ function AgencyModuleCard({ agency, onSaved }) {
 }
 
 export default function AdminAgencyModulesPage() {
-  const [agencies, setAgencies] = useState([]);
-  const loadAgencies = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data: agencies = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ["admin", "agencies-modules"],
+    queryFn: async () => {
       const res = await api.get("/admin/agencies");
-      setAgencies(res.data || []);
-    } catch { /* silent */ }
-    setLoading(false);
-  }, []);
-
+      return res.data || [];
+    },
+    staleTime: 30_000,
+  });
 
   if (loading) {
     return (
@@ -167,7 +161,7 @@ export default function AdminAgencyModulesPage() {
           </p>
         </div>
         <button
-          onClick={loadAgencies}
+          onClick={() => refetch()}
           className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm"
           data-testid="refresh-agencies"
         >
@@ -183,7 +177,7 @@ export default function AdminAgencyModulesPage() {
       ) : (
         <div className="space-y-3">
           {agencies.map((ag) => (
-            <AgencyModuleCard key={ag._id || ag.id} agency={ag} onSaved={loadAgencies} />
+            <AgencyModuleCard key={ag._id || ag.id} agency={ag} onSaved={() => refetch()} />
           ))}
         </div>
       )}

@@ -9,14 +9,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs"
 import { Loader2, AlertCircle } from "lucide-react";
 
 export default function AdminExportsPage() {
-  const { data: policies = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["admin", "exports", "policies"],
-    queryFn: async () => {
-      const resp = await api.get("/admin/exports/policies");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
+  const [policies, setPolicies] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const [tab, setTab] = useState("policies");
     const [selectedKey, setSelectedKey] = useState("");
@@ -77,6 +72,8 @@ export default function AdminExportsPage() {
       recipients: (p.recipients || []).join(", "),
     });
   };
+
+  useEffect(() => { loadPolicies(); }, []);
 
 
   const loadRuns = async (key) => {

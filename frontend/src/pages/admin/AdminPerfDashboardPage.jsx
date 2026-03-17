@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -18,33 +17,28 @@ const errorColor = (pct) => {
 };
 
 export default function AdminPerfDashboardPage() {
-  const { data: topEndpoints = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["admin", "system", "perf"],
-    queryFn: async () => {
-      const resp = await api.get("/admin/system/perf/cache-stats");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
-  const error = fetchError ? (typeof apiErrorMessage === 'function' ? apiErrorMessage(fetchError) : fetchError.message) : "";
-
-    const [slowEndpoints, setSlowEndpoints] = useState([]);
+  const [topEndpoints, setTopEndpoints] = useState([]);
+  const [slowEndpoints, setSlowEndpoints] = useState([]);
   const [cacheStats, setCacheStats] = useState(null);
-    const [window, setWindow] = useState(24);
+  const [perfWindow, setPerfWindow] = useState(24);
+  const [loading, setLoading] = useState(false);
+  const error = "";
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
       const [topRes, slowRes, cacheRes] = await Promise.all([
-        api.get(`/admin/system/perf/top-endpoints?window=${window}`),
-        api.get(`/admin/system/perf/slow-endpoints?window=${window}&threshold=200`),
+        api.get(`/admin/system/perf/top-endpoints?window=${perfWindow}`),
+        api.get(`/admin/system/perf/slow-endpoints?window=${perfWindow}&threshold=200`),
         api.get("/admin/system/perf/cache-stats"),
       ]);
       setTopEndpoints(topRes.data?.endpoints || []);
       setSlowEndpoints(slowRes.data?.endpoints || []);
       setCacheStats(cacheRes.data);
     } catch (e) { console.error(e); } finally { setLoading(false); }
-  }, [window]);
+  }, [perfWindow]);
+
+  useEffect(() => { load(); }, [load]);
 
 
   return (
@@ -57,15 +51,15 @@ export default function AdminPerfDashboardPage() {
         <div className="flex gap-2">
           <select
             className="border rounded px-3 py-1.5 text-sm bg-white"
-            value={window}
-            onChange={(e) => setWindow(Number(e.target.value))}
+            value={perfWindow}
+            onChange={(e) => setPerfWindow(Number(e.target.value))}
           >
             <option value={1}>Son 1 saat</option>
             <option value={6}>Son 6 saat</option>
             <option value={24}>Son 24 saat</option>
             <option value={72}>Son 3 gün</option>
           </select>
-          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={loading}>
+          <Button variant="outline" size="sm" onClick={() => load()} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
             Yenile
           </Button>

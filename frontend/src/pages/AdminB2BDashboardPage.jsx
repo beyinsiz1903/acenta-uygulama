@@ -8,15 +8,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Badge } from "../components/ui/badge";
 
 function formatAmount(value, currency = "EUR") {
-  const { data: agencies = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["admin", "b2b", "agencies"],
-    queryFn: async () => {
-      const resp = await api.get("/admin/b2b/agencies/summary");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
-
   if (value == null) return "-";
   const num = Number(value);
   if (Number.isNaN(num)) return "-";
@@ -34,6 +25,14 @@ function RiskBadge({ status }) {
 }
 
 export default function AdminB2BDashboardPage() {
+  const { data: agencies = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+    queryKey: ["admin", "b2b", "agencies"],
+    queryFn: async () => {
+      const resp = await api.get("/admin/b2b/agencies/summary");
+      return resp.data?.items || [];
+    },
+    staleTime: 30_000,
+  });
     const [funnelItems, setFunnelItems] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
 
@@ -111,10 +110,10 @@ export default function AdminB2BDashboardPage() {
         </p>
       </div>
 
-      {error && (
+      {fetchError && (
         <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
           <AlertCircle className="h-4 w-4 mt-0.5" />
-          <div>{error}</div>
+          <div>{fetchError.message}</div>
         </div>
       )}
 

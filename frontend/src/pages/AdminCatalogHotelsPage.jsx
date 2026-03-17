@@ -132,6 +132,9 @@ function HotelForm({ value, onChange, onSave, saving, error }) {
 }
 
 function RatePlansPanel({ productId }) {
+    const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [items, setItems] = useState([]);
     const [draft, setDraft] = useState({
     code: "",
     name: { tr: "", en: "" },
@@ -178,7 +181,7 @@ function RatePlansPanel({ productId }) {
         status: "active",
         payment_type: "postpay",
       });
-      refetch();
+      load();
     } catch (err) {
       setError(apiErrorMessage(err));
     } finally {
@@ -186,11 +189,13 @@ function RatePlansPanel({ productId }) {
     }
   };
 
+  useEffect(() => { load(); }, [productId]);
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="text-sm font-semibold">Rate planlar</div>
-        <Button size="sm" variant="outline" onClick={() => refetch()} disabled={loading}>
+        <Button size="sm" variant="outline" onClick={() => load()} disabled={loading}>
           {loading ? "Yükleniyor..." : "Yenile"}
         </Button>
       </div>
@@ -289,9 +294,10 @@ function RatePlansPanel({ productId }) {
 }
 
 export default function AdminCatalogHotelsPage() {
-    const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(null);
   const [q, setQ] = useState("");
-  const [status, setStatus] = useState("");  const [formError, setFormError] = useState("");
+  const [status, setStatus] = useState("");
+  const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
 
   const [draft, setDraft] = useState({
@@ -303,10 +309,10 @@ export default function AdminCatalogHotelsPage() {
     location: { city: "", country: "" },
   });
 
-  const load = async () => {
-    setLoading(true);
-    setFormError("");
-    try {
+  // Use react-query for hotel product list with proper state management
+  const { data: items = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ["admin", "catalog", "hotels", q, status],
+    queryFn: async () => {
       const res = await api.get("/admin/catalog/products", {
         params: {
           q: q || undefined,
@@ -315,13 +321,10 @@ export default function AdminCatalogHotelsPage() {
           limit: 50,
         },
       });
-      setItems(res.data.items || []);
-    } catch (err) {
-      setFormError(apiErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  };
+      return res.data.items || [];
+    },
+    staleTime: 30_000,
+  });
 
 
   const select = async (productId) => {

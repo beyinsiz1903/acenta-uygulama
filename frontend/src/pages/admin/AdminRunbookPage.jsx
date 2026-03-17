@@ -17,25 +17,13 @@ export default function AdminRunbookPage() {
     queryKey: ["admin", "system", "runbook"],
     queryFn: async () => {
       const resp = await api.get("/admin/system/runbook");
-      return resp.data || [];
+      return resp.data?.entries || [];
     },
     staleTime: 30_000,
   });
-  const error = fetchError ? (typeof apiErrorMessage === 'function' ? apiErrorMessage(fetchError) : fetchError.message) : "";
+  const error = fetchError ? fetchError.message : "";
 
       const [expanded, setExpanded] = useState({});
-
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await api.get("/admin/system/runbook");
-      setEntries(res.data?.entries || []);
-      // Auto-expand all
-      const exp = {};
-      (res.data?.entries || []).forEach((e) => { exp[e.id] = true; });
-      setExpanded(exp);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
-  }, []);
 
 
   const toggle = (id) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));

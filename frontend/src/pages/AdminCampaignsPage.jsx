@@ -228,7 +228,7 @@ export default function AdminCampaignsPage() {
       <Card className="p-3 space-y-2 text-xs">
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold">Mevcut Kampanyalar</div>
-          <Button size="sm" variant="outline" onClick={load} disabled={loading}>
+          <Button size="sm" variant="outline" onClick={() => refetch()} disabled={loading}>
             {loading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
             Yenile
           </Button>

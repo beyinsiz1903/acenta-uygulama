@@ -19,15 +19,6 @@ import { Loader2, AlertCircle, Copy } from "lucide-react";
 import { safeCopyText } from "../utils/copyText";
 
 function RiskBadge({ cancelRate }) {
-  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["admin", "matches"],
-    queryFn: async () => {
-      const resp = await api.get("/admin/matches");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
-
   if (!cancelRate || cancelRate <= 0.05) {
     return <Badge variant="outline">Düşük</Badge>;
   }
@@ -37,7 +28,11 @@ function RiskBadge({ cancelRate }) {
   return <Badge variant="destructive">Yüksek</Badge>;
 }
 
-export default function AdminMatchesPage() {    const [range, setRange] = useState(null);
+export default function AdminMatchesPage() {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+    const [range, setRange] = useState(null);
   const [onlyHighRisk, setOnlyHighRisk] = useState(false);
   const [hideBlocked, setHideBlocked] = useState(false);
   const [sort, setSort] = useState("high_risk_first");
@@ -109,6 +104,8 @@ export default function AdminMatchesPage() {    const [range, setRange] = useSta
       setEventsLoading(false);
     }
   };
+
+  useEffect(() => { loadMatches(); }, [sort, onlyHighRisk]);
 
   useEffect(() => {
     // Export deep-link: try to auto-open drawer for given match_id

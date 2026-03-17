@@ -17,11 +17,11 @@ export default function AdminSystemIncidentsPage() {
     queryKey: ["admin", "system", "incidents"],
     queryFn: async () => {
       const resp = await api.get("/admin/system/incidents");
-      return resp.data || [];
+      return resp.data?.items || [];
     },
     staleTime: 30_000,
   });
-  const error = fetchError ? (typeof apiErrorMessage === 'function' ? apiErrorMessage(fetchError) : fetchError.message) : "";
+  const error = fetchError ? fetchError.message : "";
 
       const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -33,14 +33,6 @@ export default function AdminSystemIncidentsPage() {
     affected_tenants: [],
     root_cause: "",
   });
-
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await api.get("/admin/system/incidents");
-      setIncidents(res.data?.items || []);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
-  }, []);
 
 
   const handleCreate = async () => {

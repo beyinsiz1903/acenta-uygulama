@@ -16,21 +16,13 @@ export default function AdminSystemBackupsPage() {
     queryKey: ["admin", "system", "backups"],
     queryFn: async () => {
       const resp = await api.get("/admin/system/backups");
-      return resp.data || [];
+      return resp.data?.items || [];
     },
     staleTime: 30_000,
   });
-  const error = fetchError ? (typeof apiErrorMessage === 'function' ? apiErrorMessage(fetchError) : fetchError.message) : "";
+  const error = fetchError ? fetchError.message : "";
 
       const [running, setRunning] = useState(false);
-
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await api.get("/admin/system/backups");
-      setBackups(res.data?.items || []);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
-  }, []);
 
 
   const runBackup = async () => {

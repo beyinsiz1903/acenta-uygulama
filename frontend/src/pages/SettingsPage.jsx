@@ -194,6 +194,8 @@ export default function SettingsPage() {
   const isAgencyUser = (currentUser?.roles || []).some((role) => ["agency_admin", "agency_agent"].includes(role));
     const [openUser, setOpenUser] = useState(false);
   const [agencyName, setAgencyName] = useState("");
+  const [users, setUsers] = useState([]);
+  const [error, setError] = useState("");
 
   const load = useCallback(async () => {
     if (!canManageUsers) {
@@ -217,6 +219,7 @@ export default function SettingsPage() {
     }
   }, [canManageUsers]);
 
+  useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
     if (!isAgencyUser) {

@@ -425,7 +425,7 @@ export default function AdminTenantFeaturesPage() {
   const [saving, setSaving] = useState(false);
   const [planConfirmOpen, setPlanConfirmOpen] = useState(false);
 
-  const { data: tenantData, isLoading: loadingTenants } = useQuery({
+  const { data: tenantData, isLoading: loadingTenants, refetch: loadTenantDirectory } = useQuery({
     queryKey: ["admin", "tenant-directory"],
     queryFn: async () => {
       const data = await fetchTenantList();

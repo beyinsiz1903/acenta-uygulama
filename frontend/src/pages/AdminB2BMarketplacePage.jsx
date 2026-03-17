@@ -15,15 +15,6 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "../com
 import PricingPreviewDialog from "../components/b2b/PricingPreviewDialog";
 
 function StatusBadge({ status }) {
-  const { data: partners = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["admin", "partners"],
-    queryFn: async () => {
-      const resp = await api.get("/admin/partners");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
-
   const s = (status || "").toLowerCase();
   if (s === "approved") {
     return (
@@ -47,6 +38,7 @@ function ProductTypeBadge({ type }) {
 }
 
 export default function AdminB2BMarketplacePage() {
+  const [partners, setPartners] = useState([]);
     const [partnersLoading, setPartnersLoading] = useState(false);
   const [partnersError, setPartnersError] = useState("");
   const [partnerSearch, setPartnerSearch] = useState("");
@@ -101,6 +93,8 @@ export default function AdminB2BMarketplacePage() {
       setPartnersLoading(false);
     }
   }
+
+  useEffect(() => { loadPartners(); }, [statusFilter]);
 
   useEffect(() => {
     if (!selectedPartnerId) {

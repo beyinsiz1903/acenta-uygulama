@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "../../lib/api";
+import { api, apiErrorMessage } from "../../lib/api";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import {
@@ -44,12 +44,8 @@ export default function AdminPreflightPage() {
 
     
   const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await api.get("/admin/system/preflight");
-      setData(res.data);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
-  }, []);
+    refetch();
+  }, [refetch]);
 
 
   const vs = data ? VERDICT_STYLE[data.verdict] || VERDICT_STYLE["NO-GO"] : null;

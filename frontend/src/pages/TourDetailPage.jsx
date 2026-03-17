@@ -20,15 +20,6 @@ const DEFAULT_IMAGES = [
 ];
 
 function formatPrice(price, currency) {
-  const { data: tour = null, isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["tours", "_"],
-    queryFn: async () => {
-      const resp = await api.get("/tours/${tourId}");
-      return resp.data || null;
-    },
-    staleTime: 30_000,
-  });
-
   if (!price) return "";
   return new Intl.NumberFormat("tr-TR", {
     style: "currency",
@@ -46,7 +37,10 @@ function resolveImage(src) {
 export default function TourDetailPage() {
   const { tourId } = useParams();
   const navigate = useNavigate();
-    const [activeImageIdx, setActiveImageIdx] = useState(0);
+  const [tour, setTour] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [activeTab, setActiveTab] = useState("details");
 
   // Reservation form
@@ -64,6 +58,15 @@ export default function TourDetailPage() {
   const [resError, setResError] = useState("");
   const [resSuccess, setResSuccess] = useState(null);
 
+  useEffect(() => {
+    if (!tourId) return;
+    setLoading(true);
+    setError("");
+    api.get(`/tours/${tourId}`)
+      .then((res) => setTour(res.data || null))
+      .catch((e) => setError(e?.response?.data?.message || "Tur yüklenemedi."))
+      .finally(() => setLoading(false));
+  }, [tourId]);
 
   const handleReservation = async (e) => {
     e.preventDefault();

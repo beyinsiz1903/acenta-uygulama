@@ -8,15 +8,6 @@ import { Label } from "../components/ui/label";
 import { Card } from "../components/ui/card";
 
 function FieldError({ text }) {
-  const { data: events = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["admin", "funnel", "summary"],
-    queryFn: async () => {
-      const resp = await api.get("/admin/funnel/summary");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
-
   if (!text) return null;
   return (
     <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
@@ -26,6 +17,8 @@ function FieldError({ text }) {
 }
 
 export default function AdminFunnelPage() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [correlationId, setCorrelationId] = useState("");
   const [entityId, setEntityId] = useState("");
   const [channel, setChannel] = useState("");
@@ -96,6 +89,12 @@ export default function AdminFunnelPage() {
     }
   };
 
+  const refetch = load;
+
+  useEffect(() => {
+    loadSummary();
+    loadAlerts();
+  }, []);
 
   const formatPercent = (v) => {
     if (!v || Number.isNaN(v)) return "0.0%";

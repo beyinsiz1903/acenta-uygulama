@@ -63,6 +63,8 @@ export default function AdminPartnersPage() {
 
   useEffect(() => { load(); }, [page, limit, statusFilter, debouncedSearch]);
 
+  const refetch = () => load();
+
   const seqRef = useRef(0);
 
   const load = async () => {

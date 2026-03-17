@@ -5,18 +5,10 @@ import { api } from "../lib/api";
 import { useNavigate } from "react-router-dom";
 
 export default function NotificationBell() {
-  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["notifications?limit=15"],
-    queryFn: async () => {
-      const resp = await api.get("/notifications?limit=15");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
-
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-    const [unread, setUnread] = useState(0);
+  const [items, setItems] = useState([]);
+  const [unread, setUnread] = useState(0);
   const ref = useRef(null);
 
   const loadNotifications = useCallback(async () => {
@@ -34,7 +26,9 @@ export default function NotificationBell() {
     } catch {}
   }, []);
 
-
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
 
   // Click outside
   useEffect(() => {

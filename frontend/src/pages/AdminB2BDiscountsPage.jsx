@@ -241,7 +241,7 @@ function AdminB2BDiscountsPage() {
       <div className="rounded-2xl border bg-card p-4 space-y-2">
         <div className="flex items-center justify-between mb-2">
           <div className="font-semibold text-sm">İndirim Grupları</div>
-          <Button variant="outline" size="xs" onClick={loadGroups} disabled={loading}>
+          <Button variant="outline" size="xs" onClick={() => refetch()} disabled={loading}>
             Yenile
           </Button>
         </div>

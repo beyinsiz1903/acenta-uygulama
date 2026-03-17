@@ -1,8 +1,20 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "../../lib/api";
+import { api, apiErrorMessage } from "../../lib/api";
 import { Button } from "../../components/ui/button";
 import { Activity, RefreshCw, Users, FileText, MessageSquare, Ticket, Clock, HardDrive, AlertTriangle } from "lucide-react";
+
+const MetricCard = ({ icon: Icon, label, value, suffix, color = "text-foreground" }) => (
+  <div className="bg-white border rounded-lg p-4 flex items-start gap-3">
+    <div className="p-2 bg-gray-50 rounded-lg">
+      <Icon className="h-5 w-5 text-muted-foreground" />
+    </div>
+    <div>
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className={`text-2xl font-bold ${color}`}>{value !== undefined && value !== null ? value : "-"}{suffix && <span className="text-sm font-normal text-muted-foreground/60 ml-1">{suffix}</span>}</p>
+    </div>
+  </div>
+);
 
 export default function AdminSystemMetricsPage() {
   const { data: metrics = null, isLoading: loading, error: fetchError, refetch } = useQuery({
@@ -17,25 +29,8 @@ export default function AdminSystemMetricsPage() {
 
     
   const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await api.get("/system/metrics");
-      setMetrics(res.data);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
-  }, []);
-
-
-  const MetricCard = ({ icon: Icon, label, value, suffix, color = "text-foreground" }) => (
-    <div className="bg-white border rounded-lg p-4 flex items-start gap-3">
-      <div className="p-2 bg-gray-50 rounded-lg">
-        <Icon className="h-5 w-5 text-muted-foreground" />
-      </div>
-      <div>
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <p className={`text-2xl font-bold ${color}`}>{value !== undefined && value !== null ? value : "-"}{suffix && <span className="text-sm font-normal text-muted-foreground/60 ml-1">{suffix}</span>}</p>
-      </div>
-    </div>
-  );
+    refetch();
+  }, [refetch]);
 
   return (
     <div className="space-y-6" data-testid="system-metrics-page">

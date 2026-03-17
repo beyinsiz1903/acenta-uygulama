@@ -20,15 +20,6 @@ import {
 } from "../components/ui/dialog";
 
 function StatusBadge({ status }) {
-  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["ops", "finance", "settlements"],
-    queryFn: async () => {
-      const resp = await api.get("/ops/finance/settlements");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
-
   if (!status) return null;
   const tone = String(status).toLowerCase();
   if (tone === "draft") {
@@ -76,6 +67,7 @@ function formatMoney(value, currency) {
 function CreateSettlementDialog({ open, onOpenChange, onCreated }) {
   const [supplierId, setSupplierId] = useState("");
   const [currency, setCurrency] = useState("EUR");
+  const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const handleSubmit = async () => {
     if (!supplierId || !currency) {
@@ -148,7 +140,10 @@ function CreateSettlementDialog({ open, onOpenChange, onCreated }) {
 }
 
 export default function AdminSettlementRunsPage() {
-    const [supplierId, setSupplierId] = useState("");
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [supplierId, setSupplierId] = useState("");
   const [currency, setCurrency] = useState("");
   const [status, setStatus] = useState("");
 
@@ -173,6 +168,11 @@ export default function AdminSettlementRunsPage() {
     }
   }
 
+  const load = refetch;
+
+  useEffect(() => {
+    refetch();
+  }, []);
 
   const totals = useMemo(() => {
     let totalNet = 0;

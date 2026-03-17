@@ -437,7 +437,7 @@ export default function AdminAccountingPage() {
       enableSorting: false,
       size: 100,
     },
-  ], [retryMutation.isPending]);
+  ], [retryMutation.isPending, handleRetry]);
 
   const tabs = [
     { value: "overview", label: "Genel Bakis", icon: <Activity className="h-4 w-4" /> },

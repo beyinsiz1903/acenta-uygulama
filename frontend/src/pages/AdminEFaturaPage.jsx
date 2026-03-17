@@ -33,15 +33,6 @@ const TYPE_MAP = {
 };
 
 function StatusBadge({ status }) {
-  const { data: events = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["integrators", "providers"],
-    queryFn: async () => {
-      const resp = await api.get("/integrators/providers");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
-
   const s = STATUS_MAP[status] || { label: status, icon: Clock, color: "" };
   const Icon = s.icon;
   return (
@@ -275,7 +266,8 @@ function CreateInvoiceWizard({ onCreated, onClose }) {
 }
 
 function InvoiceDetail({ invoice, onClose, onRefresh }) {
-    const [loadingEvents, setLoadingEvents] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
   const [issuing, setIssuing] = useState(false);
   const [checking, setChecking] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -466,7 +458,9 @@ function InvoiceDetail({ invoice, onClose, onRefresh }) {
 
 function IntegratorSettings({ onClose }) {
   const [providers, setProviders] = useState([]);
-  const [configs, setConfigs] = useState([]);  const [saving, setSaving] = useState(false);
+  const [configs, setConfigs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [credentials, setCredentials] = useState({});
@@ -483,7 +477,11 @@ function IntegratorSettings({ onClose }) {
     finally { setLoading(false); }
   }, []);
 
+  const refetch = loadData;
 
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
   const handleSave = async () => {
     if (!selectedProvider) return;
     setSaving(true);
@@ -621,7 +619,9 @@ function IntegratorSettings({ onClose }) {
 }
 
 export default function AdminEFaturaPage() {
-  const [invoices, setInvoices] = useState([]);  const [stats, setStats] = useState(null);
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -639,7 +639,11 @@ export default function AdminEFaturaPage() {
     } catch (e) { console.error(e); } finally { setLoading(false); }
   }, [filter]);
 
+  const refetch = load;
 
+  useEffect(() => {
+    load();
+  }, [load]);
   const handleIssue = async (invoiceId) => {
     try {
       await api.post(`/invoices/${invoiceId}/issue`);

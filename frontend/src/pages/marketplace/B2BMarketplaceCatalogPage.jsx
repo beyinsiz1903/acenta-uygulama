@@ -8,15 +8,6 @@ import { Card } from "../../components/ui/card";
 import { AlertCircle, Loader2 } from "lucide-react";
 
 function useTenantKey() {
-  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["marketplace", "catalog"],
-    queryFn: async () => {
-      const resp = await api.get("/marketplace/catalog");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
-
   const STORAGE_KEY = "marketplace:tenantKey";
   const [tenantKey, setTenantKey] = useState(() => {
     if (typeof window === "undefined") return "";
@@ -36,6 +27,9 @@ function useTenantKey() {
 export default function B2BMarketplaceCatalogPage() {
   const { tenantKey, saveTenantKey } = useTenantKey();
 
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("");
   const [tag, setTag] = useState("");

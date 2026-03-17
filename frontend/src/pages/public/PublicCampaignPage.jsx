@@ -9,18 +9,13 @@ import { api, apiErrorMessage } from "../../lib/api";
 import { useSeo } from "../../hooks/useSeo";
 
 export default function PublicCampaignPage() {
-  const { data: campaign = null, isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["public", "campaigns", "_"],
-    queryFn: async () => {
-      const resp = await api.get("/public/campaigns/${slug}");
-      return resp.data || null;
-    },
-    staleTime: 30_000,
-  });
-
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  const [campaign, setCampaign] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const org = searchParams.get("org") || "";  
   useSeo({

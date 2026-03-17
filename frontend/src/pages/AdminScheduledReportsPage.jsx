@@ -187,7 +187,7 @@ export default function AdminScheduledReportsPage() {
       enableSorting: false,
       size: 60,
     },
-  ], []);
+  ], [handleDelete]);
 
   return (
     <PageShell

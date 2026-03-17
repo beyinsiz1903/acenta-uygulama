@@ -12,15 +12,6 @@ import { Label } from "../components/ui/label";
 import { getBackendOrigin } from "../lib/backendUrl";
 
 function RiskBadge({ status }) {
-  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["admin", "b2b", "agencies"],
-    queryFn: async () => {
-      const resp = await api.get("/admin/b2b/agencies/summary");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
-
   if (status === "over_limit") {
     return <Badge variant="destructive">Limit aşıldı</Badge>;
   }
@@ -45,7 +36,10 @@ function formatAmount(value, currency) {
 }
 
 export default function AdminB2BAgenciesSummaryPage() {
-    const [filter, setFilter] = useState("");
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [filter, setFilter] = useState("");
   const [riskFilter, setRiskFilter] = useState("all");
 
   const [selected, setSelected] = useState(null); // { id, name, ... }

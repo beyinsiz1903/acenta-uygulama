@@ -9,18 +9,13 @@ import { createTourPublicQuote } from "../../lib/publicBooking";
 import { useSeo } from "../../hooks/useSeo";
 
 export default function BookTourProductPage() {
-  const { data: tour = null, isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["public", "tours", "_"],
-    queryFn: async () => {
-      const resp = await api.get("/public/tours/${tourId}");
-      return resp.data || null;
-    },
-    staleTime: 30_000,
-  });
-
   const { tourId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  const [tour, setTour] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const org = searchParams.get("org") || "";
   const partner = searchParams.get("partner") || "";

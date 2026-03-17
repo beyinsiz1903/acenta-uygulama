@@ -69,7 +69,7 @@ export default function AdminB2BAnnouncementsPage() {
   async function handleToggle(id) {
     try {
       await api.post(`/admin/b2b/announcements/${id}/toggle`);
-      await load();
+      queryClient.invalidateQueries({ queryKey: ["admin", "b2b", "announcements"] });
     } catch (e) {
       setError(apiErrorMessage(e));
     }

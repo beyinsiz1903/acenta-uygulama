@@ -32,18 +32,11 @@ const MODE_META = {
 const MODES_LIST = ["lite", "pro", "enterprise"];
 
 export default function AdminProductModePage() {
-  const { data: preview = null, isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["system", "product-mode"],
-    queryFn: async () => {
-      const resp = await api.get("/system/product-mode");
-      return resp.data || null;
-    },
-    staleTime: 30_000,
-  });
-  const fetchErrorMsg = fetchError ? (typeof apiErrorMessage === 'function' ? apiErrorMessage(fetchError) : fetchError.message) : "";
+  const fetchErrorMsg = "";
 
   const { refresh: refreshMode } = useProductMode();
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [tenantMode, setTenantMode] = useState("enterprise");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingMode, setPendingMode] = useState(null);
@@ -57,9 +50,10 @@ export default function AdminProductModePage() {
       const res = await api.get("/system/product-mode");
       setTenantMode(res.data.product_mode || "enterprise");
     } catch { setTenantMode("enterprise"); }
-    setLoading(false);
+    finally { setLoading(false); }
   }, []);
 
+  const [preview, setPreview] = useState(null);
 
   const loadPreview = useCallback(async (targetMode) => {
     if (!tenantId) return;

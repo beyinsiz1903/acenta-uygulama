@@ -7,20 +7,13 @@ import { Label } from "../components/ui/label";
 import { DollarSign, ArrowDownLeft, ArrowUpRight, Calendar, RefreshCcw, Plus, X, Loader2 } from "lucide-react";
 
 function formatMoney(amount) {
-  const { data: payments = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["webpos", "payments?limit=50"],
-    queryFn: async () => {
-      const resp = await api.get("/webpos/payments?limit=50");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
-
   return new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(amount || 0);
 }
 
 /* ─── Payment Modal ───────────────────────────────────────────── */
 function PaymentModal({ open, onClose, onSuccess }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({ amount: "", method: "cash", description: "", customer_id: "", reservation_id: "" });  const [submitted, setSubmitted] = useState(false);
 
   if (!open) return null;
@@ -80,6 +73,8 @@ function PaymentModal({ open, onClose, onSuccess }) {
 
 /* ─── Refund Modal ────────────────────────────────────────────── */
 function RefundModal({ open, onClose, onSuccess, payment }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   useEffect(() => { if (payment) setAmount(String(payment.amount)); }, [payment]);
@@ -125,7 +120,9 @@ function RefundModal({ open, onClose, onSuccess, payment }) {
 
 /* ═══ MAIN PAGE ═══════════════════════════════════════════════ */
 export default function WebPOSPage() {
-    const [ledger, setLedger] = useState([]);
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [ledger, setLedger] = useState([]);
   const [balance, setBalance] = useState(0);  const [showPayment, setShowPayment] = useState(false);
   const [showRefund, setShowRefund] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
@@ -154,6 +151,11 @@ export default function WebPOSPage() {
     setLoading(false);
   }, []);
 
+  const refetch = load;
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const handleRefundClick = (p) => { setSelectedPayment(p); setShowRefund(true); };
 

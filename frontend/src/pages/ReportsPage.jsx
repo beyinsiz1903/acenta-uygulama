@@ -20,15 +20,6 @@ const formatTRY = (amount) => new Intl.NumberFormat("tr-TR", {
 }).format(Number(amount || 0));
 
 function ReportKpiCard({ title, value, subtitle, testId }) {
-  const { data: resSummary = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["reports", "reservations-summary"],
-    queryFn: async () => {
-      const resp = await api.get("/reports/reservations-summary");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
-
   return (
     <div className="rounded-[1.5rem] border bg-card/90 p-4 shadow-sm" data-testid={testId}>
       <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{title}</div>
@@ -71,7 +62,9 @@ function SearchResultGroup({ title, items, onOpen, testId }) {
 
 export default function ReportsPage() {
   const navigate = useNavigate();
-    const [sales, setSales] = useState([]);
+  const [resSummary, setResSummary] = useState([]);
+  const [error, setError] = useState("");
+  const [sales, setSales] = useState([]);
   const [overview, setOverview] = useState(null);  const [overviewError, setOverviewError] = useState("");
   const [days, setDays] = useState(30);
   const [overviewLoading, setOverviewLoading] = useState(false);

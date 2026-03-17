@@ -48,6 +48,7 @@ function currentMonth() {
 
 export default function AgencySettlementsPage() {
   const [month, setMonth] = useState(currentMonth());
+  const [downloadError, setDownloadError] = useState("");
   const [status, setStatus] = useState("");
   const [hotelId, setHotelId] = useState("");
 
@@ -122,7 +123,7 @@ export default function AgencySettlementsPage() {
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (e) {
-      setError(apiErrorMessage(e));
+      setDownloadError(apiErrorMessage(e));
     }
   }
 

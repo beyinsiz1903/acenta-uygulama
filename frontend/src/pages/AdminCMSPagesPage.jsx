@@ -87,7 +87,7 @@ export default function AdminCMSPagesPage() {
             <p className="text-sm text-muted-foreground mt-1">{error}</p>
           </div>
           <button
-            onClick={loadPages}
+            onClick={() => queryClient.invalidateQueries({ queryKey: ["admin", "cms", "pages"] })}
             className="mt-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
           >
             Tekrar Dene

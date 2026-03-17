@@ -14,21 +14,14 @@ import {
 import { Badge } from "../../components/ui/badge";
 
 function todayIso() {
-  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["b2b", "bookings"],
-    queryFn: async () => {
-      const resp = await api.get("/b2b/bookings");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
-
   const d = new Date();
   return d.toISOString().slice(0, 10);
 }
 
 export default function B2BBookingsPage() {
-  
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [status, setStatus] = useState("");

@@ -1,9 +1,34 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "../../lib/api";
+import { api, apiErrorMessage } from "../../lib/api";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { ShieldCheck, RefreshCw, AlertTriangle, CheckCircle } from "lucide-react";
+
+const OrphansSection = ({ title, items }) => (
+  <div className="border rounded-lg p-4">
+    <h3 className="font-medium text-foreground mb-2 flex items-center gap-2">
+      {items && items.length > 0 ? (
+        <AlertTriangle className="h-4 w-4 text-amber-500" />
+      ) : (
+        <CheckCircle className="h-4 w-4 text-green-500" />
+      )}
+      {title}
+      <Badge variant="outline" className="ml-auto">{items ? items.length : 0}</Badge>
+    </h3>
+    {items && items.length > 0 ? (
+      <div className="space-y-1 max-h-48 overflow-y-auto">
+        {items.map((item, i) => (
+          <div key={i} className="text-xs bg-amber-50 text-amber-800 p-2 rounded font-mono">
+            {JSON.stringify(item)}
+          </div>
+        ))}
+      </div>
+    ) : (
+      <p className="text-sm text-muted-foreground/60">Sorun bulunamadı</p>
+    )}
+  </div>
+);
 
 export default function AdminSystemIntegrityPage() {
   const { data: report = null, isLoading: loading, error: fetchError, refetch } = useQuery({
@@ -18,38 +43,8 @@ export default function AdminSystemIntegrityPage() {
 
     
   const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await api.get("/admin/system/integrity-report");
-      setReport(res.data);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
-  }, []);
-
-
-  const OrphansSection = ({ title, items }) => (
-    <div className="border rounded-lg p-4">
-      <h3 className="font-medium text-foreground mb-2 flex items-center gap-2">
-        {items && items.length > 0 ? (
-          <AlertTriangle className="h-4 w-4 text-amber-500" />
-        ) : (
-          <CheckCircle className="h-4 w-4 text-green-500" />
-        )}
-        {title}
-        <Badge variant="outline" className="ml-auto">{items ? items.length : 0}</Badge>
-      </h3>
-      {items && items.length > 0 ? (
-        <div className="space-y-1 max-h-48 overflow-y-auto">
-          {items.map((item, i) => (
-            <div key={i} className="text-xs bg-amber-50 text-amber-800 p-2 rounded font-mono">
-              {JSON.stringify(item)}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-sm text-muted-foreground/60">Sorun bulunamadı</p>
-      )}
-    </div>
-  );
+    refetch();
+  }, [refetch]);
 
   return (
     <div className="space-y-6" data-testid="system-integrity-page">

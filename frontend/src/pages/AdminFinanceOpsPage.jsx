@@ -198,7 +198,7 @@ function ReconciliationTab() {
                 </tr></thead>
                 <tbody>
                   {runs.map(run => (
-                    <tr key={run.run_id} className={cn("border-b last:border-0 hover:bg-muted/20 cursor-pointer", selectedRun === run.run_id && "bg-primary/5")} onClick={() => { setSelectedRun(run.run_id); loadItems(run.run_id); }} data-testid={`run-row-${run.run_id}`}>
+                    <tr key={run.run_id} className={cn("border-b last:border-0 hover:bg-muted/20 cursor-pointer", selectedRun === run.run_id && "bg-primary/5")} onClick={() => { setSelectedRun(run.run_id); }} data-testid={`run-row-${run.run_id}`}>
                       <td className="px-5 py-3 font-mono text-xs font-medium">{run.run_id}</td>
                       <td className="px-4 py-3"><Badge variant="outline" className="text-[10px]">{run.run_type}</Badge></td>
                       <td className="px-4 py-3"><Badge variant="outline" className={cn("text-[10px]", run.status === "completed" ? "bg-emerald-50 text-emerald-700" : run.status === "failed" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700")}>{run.status}</Badge></td>

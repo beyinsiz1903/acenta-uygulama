@@ -508,6 +508,40 @@ function TelemetryCard({ telemetry, allSuppliersTelemetry, selectedSupplier, onS
   );
 }
 
+/* ─── Tooltip Components (declared outside render) ──── */
+const ScoreTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  const d = payload[0]?.payload;
+  return (
+    <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-2.5 shadow-xl text-xs">
+      <p className="text-zinc-400 font-medium mb-1">{label}</p>
+      <div className="space-y-0.5">
+        <p className="text-emerald-400">Skor: {d.avg_score}%</p>
+        <p className="text-blue-400">Basari: {d.avg_success_rate}%</p>
+        <p className="text-zinc-300">Calisma: {d.total_runs}</p>
+        <p className="text-amber-400">Latency: {d.avg_latency_ms}ms</p>
+      </div>
+    </div>
+  );
+};
+
+const ErrorTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  const d = payload[0]?.payload;
+  return (
+    <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-2.5 shadow-xl text-xs">
+      <p className="text-zinc-400 font-medium mb-1">{label}</p>
+      <div className="space-y-0.5">
+        <p className="text-red-400">Hata Orani: {d.error_rate_pct || 0}%</p>
+        <p className="text-orange-400">Price Mismatch: {d.price_mismatch || 0}</p>
+        <p className="text-rose-400">Supplier Unavailable: {d.supplier_unavailable || 0}</p>
+        <p className="text-amber-400">Booking Timeout: {d.booking_timeout || 0}</p>
+        <p className="text-zinc-300">Toplam Hata: {d.error_count || 0} / {d.total_runs}</p>
+      </div>
+    </div>
+  );
+};
+
 /* ─── Certification Trend Chart ───────────────────────── */
 function CertificationTrendChart({ trendData, period, onPeriodChange }) {
   const [chartMode, setChartMode] = useState("score");
@@ -532,39 +566,6 @@ function CertificationTrendChart({ trendData, period, onPeriodChange }) {
     if (period === "hourly") return val.slice(11, 16);
     if (period === "daily") return val.slice(5, 10);
     return val;
-  };
-
-  const ScoreTooltip = ({ active, payload, label }) => {
-    if (!active || !payload?.length) return null;
-    const d = payload[0]?.payload;
-    return (
-      <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-2.5 shadow-xl text-xs">
-        <p className="text-zinc-400 font-medium mb-1">{label}</p>
-        <div className="space-y-0.5">
-          <p className="text-emerald-400">Skor: {d.avg_score}%</p>
-          <p className="text-blue-400">Basari: {d.avg_success_rate}%</p>
-          <p className="text-zinc-300">Calisma: {d.total_runs}</p>
-          <p className="text-amber-400">Latency: {d.avg_latency_ms}ms</p>
-        </div>
-      </div>
-    );
-  };
-
-  const ErrorTooltip = ({ active, payload, label }) => {
-    if (!active || !payload?.length) return null;
-    const d = payload[0]?.payload;
-    return (
-      <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-2.5 shadow-xl text-xs">
-        <p className="text-zinc-400 font-medium mb-1">{label}</p>
-        <div className="space-y-0.5">
-          <p className="text-red-400">Hata Orani: {d.error_rate_pct || 0}%</p>
-          <p className="text-orange-400">Price Mismatch: {d.price_mismatch || 0}</p>
-          <p className="text-rose-400">Supplier Unavailable: {d.supplier_unavailable || 0}</p>
-          <p className="text-amber-400">Booking Timeout: {d.booking_timeout || 0}</p>
-          <p className="text-zinc-300">Toplam Hata: {d.error_count || 0} / {d.total_runs}</p>
-        </div>
-      </div>
-    );
   };
 
   const totalErrors = trendData.reduce((s, d) => s + (d.error_count || 0), 0);

@@ -454,7 +454,7 @@ export default function AdminAllUsersPage() {
       },
       enableSorting: false,
     },
-  ], [navigate, agencies]);
+  ], [navigate, agencies, handleRoleChange, handleStatusToggle]);
 
   return (
     <PageShell

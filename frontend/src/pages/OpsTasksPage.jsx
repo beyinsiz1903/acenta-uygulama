@@ -261,7 +261,7 @@ export default function OpsTasksPage() {
       },
       enableSorting: false,
     },
-  ], [navigate]);
+  ], [navigate, onUpdateStatus]);
 
   return (
     <PageShell

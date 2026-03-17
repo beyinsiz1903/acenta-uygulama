@@ -7,19 +7,24 @@ import { Button } from "../../components/ui/button";
 import EmptyState from "../../components/EmptyState";
 
 export default function StorefrontOfferPage() {
-  const { data: offer = null, isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["storefront", "offers", "_?search_id=_"],
-    queryFn: async () => {
-      const resp = await api.get("/storefront/offers/${encodeURIComponent(offerId)}?search_id=${encodeURIComponent(searchId)}");
-      return resp.data || null;
-    },
-    staleTime: 30_000,
-  });
-
   const { tenantKey, offerId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const searchId = searchParams.get("search_id") || "";
+
+  const [offer, setOffer] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!tenantKey || !offerId || !searchId) return;
+    setLoading(true);
+    setError("");
+    api.get(`/storefront/offers/${encodeURIComponent(offerId)}?search_id=${encodeURIComponent(searchId)}`)
+      .then((res) => setOffer(res.data || null))
+      .catch((e) => setError(apiErrorMessage(e) || "Teklif yüklenemedi."))
+      .finally(() => setLoading(false));
+  }, [tenantKey, offerId, searchId]);
 
   
   const handleBack = () => {

@@ -34,7 +34,9 @@ function ScoreGauge({ score, max, label, size = "lg" }) {
 }
 
 function ActionCard({ testId, icon: Icon, title, desc, endpoint, method = "post", children }) {
-      const run = async () => {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const run = async () => {
     setLoading(true);
     try {
       const res = method === "post" ? await api.post(endpoint) : await api.get(endpoint);

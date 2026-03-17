@@ -17,14 +17,8 @@ import {
 } from "../components/ui/dialog";
 
 function AgencyForm({ open, onOpenChange, onSaved }) {
-  const { data: agencies = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["b2b", "agencies"],
-    queryFn: async () => {
-      const resp = await api.get("/b2b/agencies");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const [name, setName] = useState("");
   const [discount, setDiscount] = useState(5);
@@ -100,6 +94,8 @@ function AgencyForm({ open, onOpenChange, onSaved }) {
 }
 
 function AgentForm({ open, onOpenChange, agencies, onSaved }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [agencyId, setAgencyId] = useState("");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -193,7 +189,10 @@ function AgentForm({ open, onOpenChange, agencies, onSaved }) {
 }
 
 export default function B2BPage() {
-    const [openAgency, setOpenAgency] = useState(false);
+  const [agencies, setAgencies] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [openAgency, setOpenAgency] = useState(false);
   const [openAgent, setOpenAgent] = useState(false);
 
   const load = useCallback(async () => {
@@ -212,6 +211,9 @@ export default function B2BPage() {
     }
   }, []);
 
+  useEffect(() => {
+    load();
+  }, [load]);
 
   return (
     <div className="space-y-4">

@@ -7,17 +7,12 @@ import { api, apiErrorMessage } from "../../lib/api";
 import { useSeo } from "../../hooks/useSeo";
 
 export default function PublicCMSPage() {
-  const { data: page = null, isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["public", "cms", "pages"],
-    queryFn: async () => {
-      const resp = await api.get("/public/cms/pages/${slug}");
-      return resp.data || null;
-    },
-    staleTime: 30_000,
-  });
-
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
+
+  const [page, setPage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const org = searchParams.get("org") || "";  
   useSeo({

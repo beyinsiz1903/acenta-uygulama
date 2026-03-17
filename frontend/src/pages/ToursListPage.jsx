@@ -43,7 +43,7 @@ export default function ToursListPage() {
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data: toursData, isLoading: loading, error: fetchError } = useQuery({
+  const { data: toursData, isLoading: loading, error: fetchError, refetch: loadTours } = useQuery({
     queryKey: ["tours", "list", page, search, selectedCategory, selectedDestination],
     queryFn: async () => {
       const params = { page, page_size: 12 };

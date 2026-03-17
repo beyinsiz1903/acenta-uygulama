@@ -74,7 +74,7 @@ export default function AdminBrandingPage() {
   const [saved, setSaved] = useState(false);
   const [canEditName, setCanEditName] = useState(false);
 
-  const { isLoading: loading } = useQuery({
+  const { isLoading: loading, refetch: loadSettings } = useQuery({
     queryKey: ["admin", "whitelabel-settings"],
     queryFn: async () => {
       let res;

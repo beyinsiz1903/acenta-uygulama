@@ -17,12 +17,8 @@ export default function AdminSystemUptimePage() {
     const [days, setDays] = useState(30);
 
   const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await api.get(`/admin/system/uptime?days=${days}`);
-      setStats(res.data);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
-  }, [days]);
+    refetch();
+  }, [refetch]);
 
 
   const uptimeColor = (pct) => {

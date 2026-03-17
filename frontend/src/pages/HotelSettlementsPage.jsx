@@ -36,7 +36,8 @@ export default function HotelSettlementsPage() {
     },
     staleTime: 30_000,
   });
-  const error = fetchError ? apiErrorMessage(fetchError) : "";
+  const [downloadError, setError] = useState("");
+  const error = downloadError || (fetchError ? apiErrorMessage(fetchError) : "");
 
   const rows = useMemo(() => data?.totals || [], [data]);
 

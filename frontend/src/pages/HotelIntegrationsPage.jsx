@@ -216,7 +216,7 @@ export default function HotelIntegrationsPage() {
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         integration={integration}
-        onRefresh={load}
+        onRefresh={refetch}
       />
 
               </Button>

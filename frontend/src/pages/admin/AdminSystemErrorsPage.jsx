@@ -13,24 +13,17 @@ const SEVERITY_MAP = {
 };
 
 export default function AdminSystemErrorsPage() {
-  const { data: errors = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["admin", "system", "errors_"],
-    queryFn: async () => {
-      const resp = await api.get("/admin/system/errors${params}");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
-
-    const [filter, setFilter] = useState("");
+  const [errors, setErrors] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [filter, setFilter] = useState("");
 
   const load = useCallback(async () => {
     try {
-      setLoading(true);
+      setErrors([]);
       const params = filter ? `?severity=${filter}` : "";
       const res = await api.get(`/admin/system/errors${params}`);
       setErrors(res.data?.items || []);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
+    } catch (e) { console.error(e); }
   }, [filter]);
 
 
@@ -52,7 +45,7 @@ export default function AdminSystemErrorsPage() {
             <option value="error">Hata</option>
             <option value="warning">Uyarı</option>
           </select>
-          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={loading}>
+          <Button variant="outline" size="sm" onClick={() => load()} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
             Yenile
           </Button>

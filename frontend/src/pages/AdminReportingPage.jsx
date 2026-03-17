@@ -7,15 +7,6 @@ import { Label } from "../components/ui/label";
 import { Badge } from "../components/ui/badge";
 
 function FieldError({ text }) {
-  const { data: summary = null, isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["admin", "reporting", "summary"],
-    queryFn: async () => {
-      const resp = await api.get("/admin/reporting/summary");
-      return resp.data || null;
-    },
-    staleTime: 30_000,
-  });
-
   if (!text) return null;
   return (
     <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
@@ -26,8 +17,8 @@ function FieldError({ text }) {
 
 export default function AdminReportingPage() {
   const [days, setDays] = useState(7);
-
-    const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summary, setSummary] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState("");
 
   const [topProducts, setTopProducts] = useState([]);

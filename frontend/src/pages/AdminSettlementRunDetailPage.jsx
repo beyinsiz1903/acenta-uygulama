@@ -14,15 +14,6 @@ import { Textarea } from "../components/ui/textarea";
 import { Badge } from "../components/ui/badge";
 
 function StatusBadge({ status }) {
-  const { data: run = null, isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["ops", "finance", "settlements"],
-    queryFn: async () => {
-      const resp = await api.get("/ops/finance/settlements/${settlementId}");
-      return resp.data || null;
-    },
-    staleTime: 30_000,
-  });
-
   if (!status) return null;
   const tone = String(status).toLowerCase();
   if (tone === "draft") return <Badge variant="outline">Taslak</Badge>;
@@ -69,7 +60,10 @@ export default function AdminSettlementRunDetailPage() {
   const { settlementId } = useParams();
   const navigate = useNavigate();
 
-    const [cancelReason, setCancelReason] = useState("");
+  const [run, setRun] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [cancelReason, setCancelReason] = useState("");
   const [paymentRef, setPaymentRef] = useState("");
   const [accrualToAdd, setAccrualToAdd] = useState("");
   const [actionLoading, setActionLoading] = useState(false);

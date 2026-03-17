@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import { api, apiErrorMessage } from "../../lib/api";
 
 export default function B2BAccountPage() {
-  const { data: data = null, isLoading: loading, error: fetchError, refetch } = useQuery({
+  const { data: data = null, isLoading: loading, error, refetch } = useQuery({
     queryKey: ["b2b", "account", "summary"],
     queryFn: async () => {
       const resp = await api.get("/b2b/account/summary");

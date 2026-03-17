@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "../../lib/api";
+import { api, apiErrorMessage } from "../../lib/api";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import {
@@ -22,12 +22,8 @@ export default function AdminDemoGuidePage() {
       const [currentStep, setCurrentStep] = useState(0);
 
   const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await api.get("/admin/system/demo-guide");
-      setData(res.data);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
-  }, []);
+    refetch();
+  }, [refetch]);
 
 
   const steps = data?.steps || [];

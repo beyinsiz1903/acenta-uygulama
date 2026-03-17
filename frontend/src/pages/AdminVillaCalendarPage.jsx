@@ -9,15 +9,6 @@ import { Label } from "../components/ui/label";
 import { Badge } from "../components/ui/badge";
 
 function FieldError({ text }) {
-  const { data: feeds = [], isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["admin", "ical", "feeds"],
-    queryFn: async () => {
-      const resp = await api.get("/admin/ical/feeds");
-      return resp.data || [];
-    },
-    staleTime: 30_000,
-  });
-
   if (!text) return null;
   return (
     <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
@@ -80,7 +71,8 @@ export default function AdminVillaCalendarPage() {
 
   const { year, month, days, goPrev, goNext } = useMonth();
 
-    const [feedsLoading, setFeedsLoading] = useState(false);
+  const [feeds, setFeeds] = useState([]);
+  const [feedsLoading, setFeedsLoading] = useState(false);
   const [feedsError, setFeedsError] = useState("");
   const [newFeedUrl, setNewFeedUrl] = useState("");
   const [savingFeed, setSavingFeed] = useState(false);

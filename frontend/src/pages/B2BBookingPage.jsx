@@ -11,7 +11,10 @@ import { Label } from "../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 
 export default function B2BBookingPage() {
-  const { data: products = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const { data: products = [] } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
       const resp = await api.get("/products");

@@ -86,7 +86,7 @@ export default function AdminThemePage() {
       };
 
       await api.put("/admin/theme", payload);
-      await load();
+      await refetch();
     } catch (e) {
       setErr(apiErrorMessage(e));
     } finally {

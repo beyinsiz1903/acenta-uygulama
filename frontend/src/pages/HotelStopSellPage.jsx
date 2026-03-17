@@ -48,7 +48,8 @@ export default function HotelStopSellPage() {
     },
     staleTime: 30_000,
   });
-  const error = fetchError ? apiErrorMessage(fetchError) : "";
+  const [localError, setError] = useState("");
+  const error = localError || (fetchError ? apiErrorMessage(fetchError) : "");
 
   const sorted = useMemo(() => {
     return [...(items || [])].sort(
@@ -101,7 +102,7 @@ export default function HotelStopSellPage() {
     if (!window.confirm("Bu stop-sell kaydını silmek istiyor musunuz?")) return;
 
     // Optimistic remove to avoid “silindi ama listede kaldı” hissi
-    setItems((prev) => (prev || []).filter((x) => x.id !== item.id));
+    queryClient.setQueryData(["hotel", "stop-sell"], (prev) => (prev || []).filter((x) => x.id !== item.id));
 
     try {
       await api.delete(`/hotel/stop-sell/${item.id}`);

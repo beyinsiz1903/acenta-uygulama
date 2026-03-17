@@ -79,17 +79,10 @@ const SUPPLIER_CONFIG = {
 };
 
 function SupplierCard({ code, config, savedCred, onRefresh }) {
-  const { data: fields = {}, isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["supplier-credentials", "my"],
-    queryFn: async () => {
-      const resp = await api.get("/supplier-credentials/my");
-      return resp.data || {};
-    },
-    staleTime: 30_000,
-  });
-
+  const [fields, setFields] = useState({});
   const [editing, setEditing] = useState(false);
-    const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -344,6 +337,7 @@ function CapabilityMatrix({ capabilities }) {
 
 export default function SupplierSettingsTab() {
   const [credentials, setCredentials] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [capabilities, setCapabilities] = useState(null);
 
   const fetchCreds = useCallback(async () => {

@@ -40,14 +40,9 @@ const roomTypeKeyOf = (rt) =>
 // Eski /app/agency/search sayfası fallback/debug amaçlı korunur.
 
 export default function AgencyHotelSearchPage() {
-  const { data: searchResult = null, isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["agency", "hotels"],
-    queryFn: async () => {
-      const resp = await api.get("/agency/hotels");
-      return resp.data || null;
-    },
-    staleTime: 30_000,
-  });
+  const [searchResult, setSearchResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const { hotelId } = useParams();
   const navigate = useNavigate();

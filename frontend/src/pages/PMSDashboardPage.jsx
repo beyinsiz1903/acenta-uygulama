@@ -20,15 +20,6 @@ const PMS_STATUS_MAP = {
 };
 
 function StatCard({ icon: Icon, label, value, subtitle, color = "text-primary" }) {
-  const { data: lookupResult = null, isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["agency", "pms", "dashboard_"],
-    queryFn: async () => {
-      const resp = await api.get("/agency/pms/dashboard${params}");
-      return resp.data || null;
-    },
-    staleTime: 30_000,
-  });
-
   return (
     <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
       <CardContent className="p-5">
@@ -130,6 +121,7 @@ function ReservationRow({ item, onCheckIn, onCheckOut, onViewDetail }) {
 
 function ReservationDetailPanel({ item, onClose, onUpdate }) {
   const [editing, setEditing] = useState(false);
+  const [lookupResult, setLookupResult] = useState(null);
   const [form, setForm] = useState({
     guest_name: item.guest_name || "",
     guest_phone: item.guest_phone || "",
@@ -465,6 +457,7 @@ function ReservationDetailPanel({ item, onClose, onUpdate }) {
 }
 
 export default function PMSDashboardPage() {
+  const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState(null);
   const [selectedHotel, setSelectedHotel] = useState("all");
   const [activeTab, setActiveTab] = useState("arrivals");
@@ -504,6 +497,15 @@ export default function PMSDashboardPage() {
     }
   }, [activeTab, selectedHotel, searchQuery]);
 
+  const refetch = loadList;
+
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
+
+  useEffect(() => {
+    loadList();
+  }, [loadList]);
 
   const handleCheckIn = async (item) => {
     try {

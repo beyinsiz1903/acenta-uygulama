@@ -48,7 +48,8 @@ export default function HotelAllocationsPage() {
     },
     staleTime: 30_000,
   });
-  const error = fetchError ? apiErrorMessage(fetchError) : "";
+  const [localError, setError] = useState("");
+  const error = localError || (fetchError ? apiErrorMessage(fetchError) : "");
 
   const sorted = useMemo(() => {
     return [...(items || [])].sort(
@@ -102,7 +103,7 @@ export default function HotelAllocationsPage() {
   async function onDelete(item) {
     if (!window.confirm("Bu allocation kaydını silmek istiyor musunuz?")) return;
 
-    setItems((prev) => (prev || []).filter((x) => x.id !== item.id));
+    queryClient.setQueryData(["hotel", "allocations"], (prev) => (prev || []).filter((x) => x.id !== item.id));
 
     try {
       await api.delete(`/hotel/allocations/${item.id}`);

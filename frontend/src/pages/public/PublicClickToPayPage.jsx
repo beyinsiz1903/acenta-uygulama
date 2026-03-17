@@ -20,15 +20,6 @@ const STRIPE_PUBLISHABLE_KEY = window.STRIPE_PUBLISHABLE_KEY || "";
 const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : Promise.resolve(null);
 
 function formatAmount(amountCents, currency) {
-  const { data: tokenData = null, isLoading: loading, error: fetchError, refetch } = useQuery({
-    queryKey: ["public", "pay", "_"],
-    queryFn: async () => {
-      const resp = await api.get("/public/pay/${token}");
-      return resp.data || null;
-    },
-    staleTime: 30_000,
-  });
-
   const amount = (amountCents || 0) / 100;
   try {
     return new Intl.NumberFormat("tr-TR", {
@@ -46,6 +37,7 @@ function ClickToPayForm({ token, tokenData }) {
   const elements = useElements();
 
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -119,7 +111,19 @@ function ClickToPayForm({ token, tokenData }) {
 
 export default function PublicClickToPayPage() {
   const { token } = useParams();
-  
+  const [tokenData, setTokenData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!token) return;
+    setLoading(true);
+    setError("");
+    api.get(`/public/pay/${token}`)
+      .then((res) => setTokenData(res.data || null))
+      .catch((e) => setError(apiErrorMessage(e) || "Ödeme linki yüklenemedi."))
+      .finally(() => setLoading(false));
+  }, [token]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">

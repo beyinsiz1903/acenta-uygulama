@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 
 export function B2BAnnouncementsCard() {
-  const { data: items = [], isLoading: loading, error: fetchError, refetch } = useQuery({
+  const { data: items = [], isLoading: loading, error, refetch } = useQuery({
     queryKey: ["b2b", "announcements"],
     queryFn: async () => {
       const resp = await api.get("/b2b/announcements");

@@ -15,7 +15,7 @@ import pytest
 import requests
 import time
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://ledger-integration-2.preview.emergentagent.com")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://admin-bug-fixes-2.preview.emergentagent.com")
 
 @pytest.fixture(scope="module")
 def auth_token():

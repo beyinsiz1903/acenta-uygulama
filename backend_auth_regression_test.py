@@ -10,7 +10,7 @@ import json
 import sys
 
 # Test configuration
-BACKEND_URL = "https://ledger-integration-2.preview.emergentagent.com"
+BACKEND_URL = "https://admin-bug-fixes-2.preview.emergentagent.com"
 TEST_CREDENTIALS = {
     "email": "agent@acenta.test",
     "password": "agent123"

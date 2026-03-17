@@ -6,7 +6,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ledger-integration-2.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://admin-bug-fixes-2.preview.emergentagent.com').rstrip('/')
 
 class TestOMSOrderCRUD:
     """Order CRUD operations tests"""

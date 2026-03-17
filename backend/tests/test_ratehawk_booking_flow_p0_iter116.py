@@ -15,7 +15,8 @@ import requests
 from datetime import datetime, timedelta
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
-assert BASE_URL, "REACT_APP_BACKEND_URL environment variable is required"
+if not BASE_URL:
+    pytest.skip("REACT_APP_BACKEND_URL environment variable is required", allow_module_level=True)
 
 
 @pytest.fixture(scope="module")

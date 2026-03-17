@@ -10,7 +10,6 @@ Three separate status domains:
 """
 from __future__ import annotations
 
-from typing import Optional
 
 from app.db import get_db
 from app.services.order_event_service import append_event

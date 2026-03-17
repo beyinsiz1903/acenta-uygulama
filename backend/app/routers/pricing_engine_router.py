@@ -33,7 +33,6 @@ from app.services.pricing_distribution_engine import (
 from app.services.promotion_engine import (
     create_promotion,
     list_promotions,
-    update_promotion,
     delete_promotion,
     toggle_promotion,
     PROMO_TYPES,

@@ -12,9 +12,7 @@ Responsibilities:
 """
 from __future__ import annotations
 
-import uuid
 from datetime import datetime, timezone
-from typing import Optional
 
 from app.db import get_db
 from app.services.order_event_service import append_event

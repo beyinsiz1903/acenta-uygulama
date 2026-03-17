@@ -4,7 +4,6 @@ Read-only service for querying settlement data associated with orders.
 """
 from __future__ import annotations
 
-from typing import Optional
 
 from app.db import get_db
 

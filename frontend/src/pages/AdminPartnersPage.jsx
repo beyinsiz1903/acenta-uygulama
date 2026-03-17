@@ -389,6 +389,9 @@ export default function AdminPartnersPage() {
                       </TableCell>
                     </TableRow>
                   ))}
+
+                </TableBody>
+              </Table>
               <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
                 <span>
                   Sayfa {page}
@@ -414,9 +417,6 @@ export default function AdminPartnersPage() {
                   </Button>
                 </div>
               </div>
-
-                </TableBody>
-              </Table>
               </div>
             </>
           )}

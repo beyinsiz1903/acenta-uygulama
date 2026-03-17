@@ -1,83 +1,69 @@
-# Syroce — Travel Distribution Infrastructure PRD
+# Travel Distribution Infrastructure - PRD
 
-## Problem Statement
-Build a "Travel Distribution Infrastructure" platform named Syroce — an order-centric travel operating platform that manages the full lifecycle of travel orders including supplier integrations, pricing, financial ledger, settlement, and order management.
+## Original Problem Statement
+Build a "Travel Distribution Infrastructure" platform, pivoted to a multi-phase **Order Management System (OMS)**.
+
+## Core Requirements
+- Multi-tenant SaaS platform (React + FastAPI + MongoDB)
+- OMS Phase 1: Order lifecycle, state machine, event logging
+- OMS Phase 2: Financial Linkage (Ledger + Settlement integration)
+- Admin panel with full CRUD for agencies, hotels, tours, contracts, etc.
+- CRM, Finance, Operations, Risk Management modules
+- B2B marketplace and partner management
+
+## User Personas
+- **Super Admin**: Full system access, manages tenants, monitors operations
+- **Agency Admin**: Manages agency-specific operations, orders, reservations
+- **Agency Agent**: Day-to-day booking and order management
+
+## What's Been Implemented
+
+### OMS Phase 1 (DONE)
+- Order lifecycle management with state machine
+- Event logging and activity timeline
+- Order Number Strategy (ORD-YYYY-######)
+- Optimistic Locking (version field)
+- Search Endpoint with comprehensive filtering
+
+### OMS Phase 2 - Financial Linkage (DONE)
+- Order-Ledger-Settlement integration
+- Financial summary, ledger posting refs, settlement run refs
+- Financial status tracking (not_posted, posted, settled)
+- New API endpoints for financial data
+
+### Bug Fix: 16 White Screen Pages (DONE - 2026-03-17)
+- Fixed 16+ pages that crashed due to misplaced useQuery hooks and undefined state variables
+- Fixed pages: AdminAgencyModulesPage, SettingsPage, AdminTenantFeaturesPage, AdminPerfDashboardPage, AdminB2BDashboardPage, AdminCampaignsPage, AdminPartnersPage, AdminB2BMarketplacePage, AdminCatalogPage, AdminCatalogHotelsPage, AdminMatchesPage, AdminExportsPage, AdminSystemBackupsPage, AdminSystemIncidentsPage, AdminRunbookPage
+- Fixed API response parsing (.data vs .data.items)
+- Fixed HTML nesting issue in AdminPartnersPage
+- 42+ routes tested with 100% pass rate
 
 ## Architecture
-- **Frontend**: React + TailwindCSS + Shadcn/UI + React Query
-- **Backend**: FastAPI (Python) + MongoDB
-- **Authentication**: JWT-based custom auth
+- Frontend: React + Shadcn UI + TanStack Query
+- Backend: FastAPI + MongoDB
+- Auth: JWT-based with role-based access
 
-## Core Modules
-
-### 1. Supplier Integration Layer ✅
-- RateHawk integration
-- Supplier onboarding service
-- Inventory sync
-
-### 2. Pricing Engine ✅
-- Rate pricing
-- Commission engine
-- Pricing distribution
-
-### 3. Booking Orchestration ✅
-- Booking lifecycle management
-- Booking events & amendments
-
-### 4. Financial Ledger ✅
-- Double-entry ledger (LedgerPostingService)
-- Agency balances
-- Supplier payables
-
-### 5. Settlement Engine ✅
-- Settlement runs
-- Statement generation
-
-### 6. Activity Timeline ✅
-- Audit trail
-- Cross-system event tracking
-
-### 7. Order Management System (OMS)
-
-#### Phase 1: Order Core Layer ✅ (Completed)
-- **Services**: order_service, order_transition_service, order_event_service, order_mapping_service
-- **State Machine**: draft → pending_confirmation → confirmed → cancel_requested → cancelled → closed
-- **Event Sourcing**: Append-only order_events collection
-- **Frontend**: Orders list page + Order detail page
-
-#### Phase 1 Improvements ✅ (Completed 2026-03-16)
-- **Order Number Strategy**: ORD-YYYY-NNNNNN format (e.g., ORD-2026-000001)
-- **Order Search Endpoint**: GET /api/orders/search with 10+ filters (status, channel, agency_id, customer_id, supplier_code, order_number, date_from, date_to, settlement_status, q)
-- **Order Locking**: version field with optimistic locking (409 Conflict on mismatch)
-
-#### Phase 2: Financial Linkage ✅ (Completed 2026-03-16)
-- **Order → Ledger**: Auto-post to ledger on confirm (3 entries: agency receivable, supplier payable, platform revenue)
-- **Ledger Reversal**: Auto-reverse on cancel
-- **Settlement Linkage**: Link settlement runs to orders
-- **Financial Status**: not_posted → posted → partially_settled → settled → reversed
-- **Services**: order_financial_linkage_service, order_ledger_query_service, order_settlement_query_service
-- **API Endpoints**: financial-summary, rebuild, ledger-entries, ledger-postings, settlements, settlements/link, mark-settled, post-to-ledger
-- **Frontend**: Enhanced Financial Summary (5 metrics), Ledger Entries table with debit/credit, Settlement card, 3 status badges
-
-## Key Data Models
-
-### orders
-- order_id, order_number (ORD-YYYY-NNNNNN), status, currency, version
-- total_sell_amount, total_supplier_amount, total_margin_amount
-- financial_status, ledger_posting_refs[], settlement_run_refs[], settlement_status
-- last_posted_at, last_settled_at
-
-### order_items
-- item_id, order_id, item_type, supplier_code, sell_amount, supplier_amount, margin_amount
-
-### order_events
-- event_id, order_id, event_type, actor_type, actor_name, before_state, after_state
-
-### order_financial_summaries
-- order_id, sell_total, supplier_total, margin_total, financial_status, settlement_status
-
-## Test Credentials
+## Credentials
 - Super Admin: agent@acenta.test / agent123
 - Agency Admin: agency1@demo.test / agency123
 
-## Status: Platform Score ≈ 9.85/10
+## Prioritized Backlog
+
+### P0
+- Real RateHawk Environment Execution
+
+### P1
+- Timeline Export (CSV/PDF)
+
+### P2
+- New Supplier Integrations (Paximum, Hotelbeds, Juniper)
+
+### Future
+- OMS Phase 3+ (multi-product, modifications, cancellations, refunds)
+- OMS Dashboard (operational control panel)
+- TypeScript Migration
+- Legacy Code Cleanup
+
+## Known Issues
+- yarn.lock mismatch (DEFERRED - does not block development)
+- Some API endpoints return 400/404 (expected - no seeded data)

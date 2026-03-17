@@ -241,7 +241,7 @@ export function DataTable({
     return columns;
   }, [columns, selectable]);
 
-  // eslint-disable-next-line react-hooks/incompatible-library
+  // eslint-disable-next-line
   const table = useReactTable({
     data,
     columns: finalColumns,
@@ -366,7 +366,7 @@ export function DataTable({
 function VirtualizedTableBody({ rows, rowHeight, onRowClick }) {
   const parentRef = useRef(null);
 
-  // eslint-disable-next-line react-hooks/incompatible-library
+  // eslint-disable-next-line
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => parentRef.current,

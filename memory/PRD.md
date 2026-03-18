@@ -36,23 +36,33 @@ Full end-to-end test of the entire application, including all buttons and intera
 
 ## Prioritized Backlog
 
-### P0
-- Real RateHawk Environment Execution (connect to live supplier environment)
+### P0 (COMPLETED)
+- ~~Redis Offer Cache + Paximum Status Mapping~~ (DONE - Session 15)
+- ~~Paximum Supplier Integration~~ (DONE - Session 14)
+
+### P0 (ACTIVE — Strategic Analysis)
+- Full strategic analysis delivered (Session 16, 2026-03-19)
+- See `/app/memory/STRATEGIC_ANALYSIS.md` for complete 90-day roadmap
 
 ### P1
-- Timeline Export (CSV/PDF for Activity Timeline page)
-- Paximum offer cache implementation (Redis)
-- Paximum status mapping (Confirmed/OnRequest/Rejected/Cancelled/Pending → OMS states)
+- Booking State Machine Unification (3 separate → 1 unified)
+- Router Consolidation (236 → ~20)
+- API Response Standardization
+- Real RateHawk Environment Execution
+- Timeline Export (CSV/PDF)
 
 ### P2
+- Celery + Redis async job queue
+- Event Bus → Outbox Pattern
+- API Versioning (/api/v1/)
+- Webhook System
 - New Supplier Integrations: Hotelbeds, Juniper
-- OMS Phase 3+: Multi-product support, modifications, cancellations, refunds
-- OMS Dashboard: Operational control panel
+- OMS Phase 3+
 - TypeScript Migration
-- Legacy Code Cleanup
 
 ### Deferred
 - `yarn.lock` mismatch — RESOLVED in session 13
+- WebPOS, Storefront, Tour Management, Campaign Engine, CMS Pages — deferred per strategic analysis
 
 ## Key API Endpoints — Paximum
 

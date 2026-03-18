@@ -13645,9 +13645,86 @@
     "legacy_or_v1": "legacy",
     "method": "POST",
     "owner": "suppliers",
+    "path": "/api/suppliers/paximum/book",
+    "risk_level": "medium",
+    "source": "app.routers.paximum_router",
+    "target_namespace": "/api/v1/suppliers"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/suppliers",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "suppliers",
+    "path": "/api/suppliers/paximum/booking-details",
+    "risk_level": "medium",
+    "source": "app.routers.paximum_router",
+    "target_namespace": "/api/v1/suppliers"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/suppliers",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "suppliers",
+    "path": "/api/suppliers/paximum/bookings",
+    "risk_level": "medium",
+    "source": "app.routers.paximum_router",
+    "target_namespace": "/api/v1/suppliers"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/suppliers",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "suppliers",
+    "path": "/api/suppliers/paximum/cancel",
+    "risk_level": "medium",
+    "source": "app.routers.paximum_router",
+    "target_namespace": "/api/v1/suppliers"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/suppliers",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "suppliers",
+    "path": "/api/suppliers/paximum/cancel-fee",
+    "risk_level": "medium",
+    "source": "app.routers.paximum_router",
+    "target_namespace": "/api/v1/suppliers"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/suppliers",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "suppliers",
+    "path": "/api/suppliers/paximum/check-availability",
+    "risk_level": "medium",
+    "source": "app.routers.paximum_router",
+    "target_namespace": "/api/v1/suppliers"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/suppliers",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "suppliers",
+    "path": "/api/suppliers/paximum/hotel-details",
+    "risk_level": "medium",
+    "source": "app.routers.paximum_router",
+    "target_namespace": "/api/v1/suppliers"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/suppliers",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "suppliers",
     "path": "/api/suppliers/paximum/search",
     "risk_level": "medium",
-    "source": "app.routers.suppliers",
+    "source": "app.routers.paximum_router",
     "target_namespace": "/api/v1/suppliers"
   },
   {

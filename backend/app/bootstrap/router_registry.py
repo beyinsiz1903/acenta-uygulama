@@ -196,7 +196,7 @@ from app.routers.settings import router as settings_router
 from app.routers.sms_notifications import router as sms_notifications_router
 from app.routers.storefront import router as storefront_router
 from app.routers.suppliers import router as suppliers_router
-from app.routers.suppliers import router_paximum as suppliers_paximum_router
+from app.routers.paximum_router import router as paximum_full_router
 from app.routers.system_product_mode import router as system_product_mode_router
 from app.routers.tenant_features import router as tenant_features_router
 from app.routers.tenant_health import router as tenant_health_router
@@ -322,7 +322,7 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(search_router, prefix=API_PREFIX)
     app.include_router(suppliers_router, prefix=API_PREFIX)
     app.include_router(storefront_router)
-    app.include_router(suppliers_paximum_router, prefix=API_PREFIX)
+    app.include_router(paximum_full_router, prefix=API_PREFIX)
     app.include_router(vouchers_router, prefix=API_PREFIX)
     app.include_router(web_booking_router, prefix=API_PREFIX)
     app.include_router(web_catalog_router, prefix=API_PREFIX)

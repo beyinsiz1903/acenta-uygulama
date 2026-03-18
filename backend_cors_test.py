@@ -23,7 +23,7 @@ def test_cors_preflight():
     print("=" * 80)
     
     local_backend = "http://127.0.0.1:8001"
-    external_backend = "https://admin-bug-fixes-2.preview.emergentagent.com"
+    external_backend = "https://eslint-490-fixes.preview.emergentagent.com"
     origin = "https://agency.syroce.com"
     
     results = {}

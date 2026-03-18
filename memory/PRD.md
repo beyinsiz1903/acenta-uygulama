@@ -18,14 +18,17 @@ Full end-to-end test of the entire application, including all buttons and intera
 - **Backend lint cleanup:** 10 unused imports (F401) removed via `ruff --fix`
 - **Frontend dependency lockfile:** `yarn.lock` regenerated from scratch. Root `package.json` got `"private": true` to fix workspace warnings. `yarn install --frozen-lockfile` now passes.
 - **Backend test fix:** `test_ratehawk_booking_flow_p0_iter116.py` module-level `assert` → `pytest.skip(allow_module_level=True)` for graceful CI skip.
-- **Frontend ESLint: 493 errors → 0 errors, 0 warnings.** Fixed 56+ files:
-  - Removed misplaced `useQuery` calls from helper/utility functions (FieldError, StatusBadge, formatPrice, etc.)
-  - Added missing `useState` declarations (`loading`, `error`, `items`, etc.)
-  - Added missing `refetch` / `load` function aliases
-  - Fixed wrong error alias (`error: fetchError` → `error`)
-  - Moved inline components (ScoreTooltip, ErrorTooltip, OrphansSection, MetricCard) outside render
-  - Fixed `useMemo` dependency arrays (AdminAccountingPage, AdminAllUsersPage, AdminScheduledReportsPage, OpsTasksPage)
-  - Suppressed TanStack incompatible-library warnings in DataTable.jsx
+- **Frontend ESLint: 493 errors → 0 errors, 0 warnings.** Fixed 56+ files.
+- **Frontend Build:** `yarn build` verified successful.
+
+### Session 14 (2026-03-18) — Paximum Supplier Integration
+- **Paximum Models** (`paximum_models.py`): Complete dataclass models — Money, Offer, Hotel, SearchResult, PaximumBooking, CancellationPolicy, Room, Traveller with TTL support
+- **Paximum Mapping** (`paximum_mapping.py`): Canonical mapping from raw API responses to typed models
+- **Paximum Adapter** (`paximum_adapter.py`): Production-grade HTTP client with Bearer token auth, timeout + retry + exponential backoff, 8 API operations (search, hotel details, check availability, check hotel availability, place order, get bookings, booking details, cancel fee, cancel, poll confirmation)
+- **Paximum Service** (`paximum_service.py`): Business logic layer with offer caching, OMS/ledger/timeline hooks, pricing pipeline integration
+- **Paximum Router** (`paximum_router.py`): FastAPI router with 8 endpoints — search, hotel-details, check-availability, book, bookings, booking-details, cancel-fee, cancel
+- **Updated supplier_search_service.py**: Migrated from raw httpx.Response to typed SearchResult objects
+- **Unit Tests**: 15 tests covering models, mapping, parsing, validation — all passing
 
 ## Credentials
 - **Super Admin:** `agent@acenta.test` / `agent123`
@@ -38,14 +41,28 @@ Full end-to-end test of the entire application, including all buttons and intera
 
 ### P1
 - Timeline Export (CSV/PDF for Activity Timeline page)
+- Paximum offer cache implementation (Redis)
+- Paximum status mapping (Confirmed/OnRequest/Rejected/Cancelled/Pending → OMS states)
 
 ### P2
-- New Supplier Integrations: Paximum, Hotelbeds, Juniper
+- New Supplier Integrations: Hotelbeds, Juniper
 - OMS Phase 3+: Multi-product support, modifications, cancellations, refunds
 - OMS Dashboard: Operational control panel
 - TypeScript Migration
 - Legacy Code Cleanup
 
 ### Deferred
-- `yarn.lock` mismatch — RESOLVED in this session
-- Admin page react-query standardization audit
+- `yarn.lock` mismatch — RESOLVED in session 13
+
+## Key API Endpoints — Paximum
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/suppliers/paximum/search` | Hotel search |
+| POST | `/api/suppliers/paximum/hotel-details` | Hotel detail |
+| POST | `/api/suppliers/paximum/check-availability` | Offer availability check |
+| POST | `/api/suppliers/paximum/book` | Place order |
+| POST | `/api/suppliers/paximum/bookings` | List bookings |
+| POST | `/api/suppliers/paximum/booking-details` | Booking detail |
+| POST | `/api/suppliers/paximum/cancel-fee` | Cancellation fee |
+| POST | `/api/suppliers/paximum/cancel` | Cancel booking |

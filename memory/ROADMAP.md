@@ -8,9 +8,7 @@
 - [x] Outbox Consumer Hardening (EventPublisher, Idempotency, DLQ Visibility)
 - [x] API Response Standardization (Envelope Middleware)
 - [x] API Versioning (/api/v1/ Path Rewrite)
-
-## P0.5 — Immediate Next
-- [ ] Webhook System Productization (subscription API, HMAC secret, delivery log, retry visibility)
+- [x] P0.5: Webhook System Productization (Subscription CRUD, HMAC, Retry, Circuit Breaker, Admin)
 
 ## P1 — Next Sprint
 - [ ] Router Consolidation Phase 2 (physical merge into domain modules)

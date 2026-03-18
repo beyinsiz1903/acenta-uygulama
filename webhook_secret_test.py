@@ -12,7 +12,7 @@ def test_stripe_webhook_secret_configuration():
     by checking if the webhook endpoint rejects unsigned requests correctly
     """
     
-    base_url = "https://migration-safe.preview.emergentagent.com"
+    base_url = "https://async-queue-preview.preview.emergentagent.com"
     webhook_url = f"{base_url}/api/webhook/stripe"
     
     print("🔍 Testing Stripe Webhook Secret Configuration...")

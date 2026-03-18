@@ -1,24 +1,42 @@
 # Changelog
 
+## 2026-03-18 — Outbox Consumer Hardening + API Response Standard + API Versioning
+
+### Outbox Consumer Hardening (3 improvements)
+- **EventPublisher abstraction:** Created `infrastructure/event_publisher.py` with `DomainEvent` dataclass and `EventTransport` protocol. Outbox consumer now uses `get_transport()` instead of raw Redis push. Transport is swappable (Redis → Kafka) without touching any service code.
+- **Idempotency hardening:** Two-layer dedup — Redis fast-path check (O(1), 7-day TTL) + MongoDB unique index on `(event_id, handler)`. Handles `DuplicateKeyError` gracefully.
+- **Dead-letter visibility:** New endpoints:
+  - `GET /api/admin/outbox/dead-letter` — full DLQ with breakdown by event type
+  - `POST /api/admin/outbox/dead-letter/retry-all` — bulk retry with optional event_type filter
+  - `GET /api/admin/outbox/stats-by-type` — event stats grouped by type and status
+
+### API Response Standardization
+- **Middleware:** `middleware/response_envelope.py` — wraps ALL JSON API responses in standard envelope
+- **Success:** `{ok: true, data: {...}, meta: {trace_id, timestamp, latency_ms, api_version}}`
+- **Error:** `{ok: false, error: {code, message, details}, meta: {...}}`
+- **Exclusions:** Health, OpenAPI, static files, root endpoint
+- **Pagination helper:** `response.py` with `paginated()` function for standardized list responses
+
+### API Versioning (/api/v1/)
+- **Middleware:** `middleware/api_versioning.py` — transparent path-rewrite (`/api/v1/x` → `/api/x`)
+- **Zero router changes** — all existing endpoints instantly accessible at `/api/v1/...`
+- **Deprecation headers:** `X-API-Deprecated`, `X-API-Sunset`, `X-API-Upgrade` on legacy `/api/` paths
+- **CORS:** Versioning headers exposed in CORS config
+
+### Testing: 22/22 tests passed (iteration_146.json)
+
 ## 2026-03-18 — Celery + Redis + Outbox Consumer (P0 #4)
 - **Infrastructure:** Set up Redis server (supervisor-managed), Celery worker (2 concurrency, 3 queues), Celery beat (5s poll interval)
-- **Outbox Consumer:** Implemented poll-and-dispatch logic that reads `outbox_events`, fans out to registered handlers via dispatch table, handles retries and dead-lettering
-- **Event Dispatch Table:** 10 event types (booking.confirmed/cancelled/quoted/completed/amended/refunded, payment.completed/failed, booking.ticketed/vouchered) with 35+ handler registrations
-- **First-Wave Consumers:** 5 idempotent consumer handlers:
-  - `send_booking_notification` → `booking_notifications` collection
-  - `send_booking_email` → `email_outbox` collection
-  - `update_billing_projection` → `billing_projections` collection
-  - `update_reporting_projection` → `reporting_daily_events` + `reporting_funnel`
-  - `dispatch_webhook` → `webhook_deliveries` collection
-- **Admin API:** 8 endpoints under `/api/admin/outbox/` (health, stats, pending, failed, dispatch-table, trigger, retry, consumer-log)
-- **Key Fix:** Celery's `send_task` doesn't work from async FastAPI context (kombu connection pool issue) — solved by pushing tasks directly to Redis via `redis.asyncio` with proper base64-encoded kombu message format
-- **Testing:** 25/26 tests passed (1 skipped — no dead letter data to test)
+- **Outbox Consumer:** Implemented poll-and-dispatch logic
+- **Event Dispatch Table:** 10 event types, 35+ handler registrations
+- **First-Wave Consumers:** 5 idempotent consumer handlers
+- **Admin API:** 8 endpoints under `/api/admin/outbox/`
+- **Testing:** 25/26 tests passed (iteration_145.json)
 
 ## 2026-03-17 — Orphan Order Recovery
 - Evidence-based migration script for 86 orphaned orders
-- 8 high-confidence migrated, 78 quarantined for manual review
-- Admin API for quarantine management (approve/reject/re-analyze/rollback)
-- 12 unit tests, 38/38 API tests passed
+- Admin API for quarantine management
+- 38/38 API tests passed
 
 ## Previous — Tenant Isolation Hardening
 - Enforced organization_id on all collections

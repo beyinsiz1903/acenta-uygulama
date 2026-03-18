@@ -1,28 +1,23 @@
-<analysis>**original_problem_statement:**
-The user provided a complete, production-ready Paximum supplier integration layer, consisting of four Python files for models, data mapping, an HTTP adapter, and a service layer. The user requested this new layer to be integrated into the existing FastAPI backend. The integration includes features like bearer token authentication, request retries with exponential backoff, a full booking and cancellation workflow, and offer lifecycle management.
+<analysis>**original_problem_statement:** The user requested the integration of a production-ready Paximum supplier layer into the FastAPI backend. Following the successful integration, the user provided explicit instructions to implement a new P0 milestone: a Redis-based offer cache to handle offer TTLs and a status mapping layer to translate Paximum's booking statuses into the application's internal OMS states.
 
 **PRODUCT REQUIREMENTS:**
--   Integrate the user-provided, production-ready Paximum service layer into the backend.
--   The new layer must handle search, hotel details, availability checks, booking, and cancellation.
--   The integration should be robust, including error handling, retries, and offer TTL checks.
--   Expose the new Paximum service functionality via FastAPI endpoints.
+-   **P0:** Implement a Redis-based cache for Paximum offers, respecting the  time to prevent stale bookings. The system must degrade gracefully if Redis is unavailable.
+-   **P0:** Implement a mapping service to translate Paximum's supplier statuses (e.g., , ) into the internal OMS statuses (e.g., , ).
+-   **P1:** Connect to the live RateHawk supplier environment.
+-   **P1:** Implement CSV/PDF export for the Activity Timeline page.
 
 **User's preferred language**: Turkish
 
 **what currently exists?**
-The agent successfully integrated a comprehensive, production-ready Paximum supplier service layer provided by the user. The session began by verifying the previous session's fix for a frontend build failure, which was successful.
+The agent successfully completed the user's high-priority P0 milestone. A Redis-based offer cache and a Paximum-to-OMS status mapping mechanism have been implemented.
 
-The agent then proceeded to:
-1.  Create four new files for the Paximum integration in : , ,  (overwriting an old version), and .
-2.  Create a new FastAPI router () to expose the service's functionality via API endpoints.
-3.  Register the new router in the application's bootstrap logic () and remove a conflicting, older Paximum router to resolve an  generation error.
-4.  Refactor an existing service () to work with the new adapter's API contract.
-5.  Create a comprehensive unit test suite () for the new components, with all 15 tests passing.
-6.  Perform  tests on the new endpoints, confirming they are correctly wired and fail gracefully with authentication errors, as no  is configured.
-7.  The application is running without errors, and the new integration is in place, awaiting configuration and final user verification.
+-   **Offer Cache ():** A new service was created to store and retrieve Paximum offers from Redis. It correctly uses the  field to set a TTL. The implementation features graceful degradation, meaning the application continues to function without error if the Redis connection fails, simply bypassing the cache.
+-   **Status Mapping ():** A new mapping layer was created to translate supplier-specific statuses into canonical OMS statuses.
+-   **Integration:** These new services have been integrated into the  and . The  endpoint now populates the cache,  attempts to read from the cache first, and booking endpoints use the status mapping.
+-   **Testing:** The new logic is covered by an expanded unit test suite in  (33 tests passing). Manual  tests confirmed that endpoints work as expected (failing gracefully on auth due to missing keys) and that the application handles the absence of a Redis server in the preview environment correctly.
 
 **Last working item**:
--   Last item agent was working: The agent completed the full integration of the user-provided Paximum service layer. The final steps included creating a unit test file, running the tests successfully, and updating the project's PRD.md file before calling the  tool.
+-   Last item agent was working: The agent completed the implementation of the P0 — Redis Offer Cache + Paximum Status Mapping milestone. This involved creating new services for caching and status mapping, integrating them into the existing Paximum router and service, adding unit tests, and performing manual verification.
 -   Status: USER VERIFICATION PENDING
 -   Agent Testing Done: Y
 -   Which testing method agent to use? NA
@@ -30,59 +25,52 @@ The agent then proceeded to:
 
 **All Pending/In progress Issue list**:
 -   **Issue 1: Recurring Frontend Dependency Mismatch (P1)**
-    -   **Description:** The yarn install v1.22.22
+    -   **Description:** A known issue where yarn install v1.22.22
 [1/4] Resolving packages...
 success Already up-to-date.
-Done in 0.53s. command has failed in past sessions, indicating a mismatch between  and . This was not addressed in the current session as the agent's focus was on the backend integration.
-    -   **Attempted fixes:** In a previous session, the agent regenerated .
+Done in 0.08s. fails due to a mismatch between  and . This was not addressed as the focus was on the backend P0 task.
     -   **Next debug checklist:**
         1.  Run yarn install v1.22.22
-[1/4] Resolving packages...
-success Already up-to-date.
-Done in 0.32s. to see if the issue persists.
-        2.  If it fails, run yarn install v1.22.22
 info No lockfile found.
 [1/4] Resolving packages...
 [2/4] Fetching packages...
-info Visit https://yarnpkg.com/en/docs/cli/install for documentation about this command..
-        3.  Ensure the user is guided to save the updated  to version control.
-    -   **Why fix this issue and what will be achieved with the fix?** Ensures reliable and reproducible builds for the frontend application.
+info Visit https://yarnpkg.com/en/docs/cli/install for documentation about this command. to confirm the issue.
+        2.  If it fails, run  to regenerate the lockfile.
+    -   **Why fix this issue and what will be achieved with the fix?** Ensures reliable, reproducible frontend builds.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** Frontend
 
 **In progress Task List**:
 -   **Task 1: Full-Stack Codebase Health Check (P1)**
-    -   **Where to resume:** While the yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. passed, a full regression test using the  was recommended in the previous handoff due to a massive ESLint refactor. This was skipped to prioritize the user's immediate request. It should be run to ensure no regressions were introduced.
-    -   **What will be achieved with this?** Confirmation that the large-scale frontend refactoring from the previous session did not introduce any runtime bugs.
+    -   **Where to resume:** A full regression test using  is still pending from a previous session's large ESLint refactor. This was postponed to prioritize user-directed backend work.
+    -   **What will be achieved with this?** Ensures no regressions were introduced during the major frontend refactor.
     -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** Frontend
+    -   **Should Test frontend/backend/both after fix?** Both
     -   **Blocked on something:** None.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **P0: Implement Offer Cache:** As requested by the user, implement a Redis-based cache for Paximum offers to improve performance and respect offer TTLs.
-    *   **P1: Map Paximum Statuses:** As requested by the user, create a mapping between Paximum's booking statuses (, , etc.) and the internal OMS states.
-    *   **P1: Real RateHawk Environment Execution:** Connect to the live RateHawk supplier environment.
-    *   **P2: Timeline Export:** Implement CSV/PDF export for the Activity Timeline page.
+    *   **P1: Real RateHawk Environment Execution:** Connect to and execute against the live RateHawk supplier environment.
+    *   **P1: Timeline Export:** Implement CSV/PDF export for the Activity Timeline page.
     *   **P2: New Supplier Integrations:** Hotelbeds and Juniper.
 *   **Future Tasks (Backlog):**
+    *   **Supplier Quote Comparator Service:** A backend service to compare prices for the same hotel/room/dates across different suppliers (e.g., Paximum vs. RateHawk) and select the best source.
     *   **OMS Phase 3+:** Multi-product support, modifications, cancellations, refunds, etc.
     *   **OMS Dashboard:** A high-level operational control panel.
+    *   **Price Comparison Dashboard:** A frontend dashboard to visualize the data from the quote comparator service.
     *   **TypeScript Migration.**
     *   **Legacy Code Cleanup.**
 
 **Completed work in this session**
--   **Paximum Supplier Integration (DONE):** Successfully integrated a production-ready Paximum service layer, including models, mapping, adapter, and service logic.
--   **Paximum API Router (DONE):** Created and registered a new FastAPI router at  with endpoints for search, booking, and cancellation.
--   **Unit Tests (DONE):** Created  with 15 passing tests for the new Paximum components.
--   **System Health Check (DONE):** Verified the frontend yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. command completes successfully, resolving the main blocker from the previous session.
--   **Code Refactoring (DONE):** Cleaned up conflicting routes by removing an obsolete Paximum router and updated dependent services.
+-   **Redis Offer Cache (DONE):** Created  and integrated it into . The implementation includes graceful degradation for when Redis is unavailable.
+-   **Paximum Status Mapping (DONE):** Created  and integrated it into  and .
+-   **Expanded Unit Tests (DONE):** Added new tests for the cache and status mapping logic to , bringing the total to 33 passing tests.
+-   **Integration Verification (DONE):** Confirmed via  that the new logic is active and endpoints behave as expected, including graceful failure when Redis is not present.
+-   **PRD Update (DONE):** Updated  to reflect the completion of the P0 milestone.
 
 **Earlier issues found/mentioned but not fixed**
--   The  issue was carried over but not addressed in this session.
+-   The  issue was carried over but not addressed in this session, as per user prioritization of backend features.
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork:** Frontend Dependency Lockfile Inconsistency ( mismatch).
@@ -93,860 +81,65 @@ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this comm
 
 
 **Key Technical Concepts**
--   **Layered Architecture:** The integration follows a clean architecture: Models -> Mapping -> Adapter (HTTP) -> Service (Business Logic) -> Router (API).
--   **FastAPI Dependency Injection:** The new router uses  to inject the service layer and its dependencies.
--   **Resiliency Patterns:** The HTTP adapter () implements request retries with exponential backoff to handle transient upstream errors.
--   **Asynchronous Programming:** The entire backend stack is built on , using  and  for non-blocking I/O.
--   **Data Modeling:** Python's  are used to create structured and strongly-typed models for the Paximum API entities.
+-   **Redis Caching:** A high-performance, in-memory cache (L1) was implemented for temporary offer data, with TTLs managed by the application.
+-   **Graceful Degradation:** The cache implementation is designed to handle connection failures without crashing the application, ensuring high availability.
+-   **Status Mapping:** A decoupling pattern to translate external system statuses into a canonical internal representation, making the core application independent of supplier-specific details.
+-   **Layered Architecture:** The new components fit cleanly into the existing architecture: Cache & Mapping (Services) -> Business Logic (Service) -> API (Router).
 
 **key DB schema**
 -   No changes were made to the database schema.
 
 **changes in tech stack**
--   No new technologies were added. Existing stack (, , ============================= test session starts ==============================
-platform linux -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0
-rootdir: /app
-plugins: Faker-40.8.0, timeout-2.4.0, respx-0.22.0, anyio-4.12.0, rerunfailures-16.1
-collected 2757 items / 7 errors / 2 skipped
-
-==================================== ERRORS ====================================
-_ ERROR collecting test_reports/pytest_isolated/test_accounting_providers_iter98.py _
-import file mismatch:
-imported module 'test_accounting_providers_iter98' has this __file__ attribute:
-  /app/backend/tests/test_accounting_providers_iter98.py
-which is not the same as the test file we want to collect:
-  /app/test_reports/pytest_isolated/test_accounting_providers_iter98.py
-HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules
-_ ERROR collecting test_reports/pytest_isolated/test_intelligence_layer_iter83.py _
-import file mismatch:
-imported module 'test_intelligence_layer_iter83' has this __file__ attribute:
-  /app/backend/tests/test_intelligence_layer_iter83.py
-which is not the same as the test file we want to collect:
-  /app/test_reports/pytest_isolated/test_intelligence_layer_iter83.py
-HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules
-_ ERROR collecting test_reports/pytest_isolated/test_production_activation_iter73.py _
-import file mismatch:
-imported module 'test_production_activation_iter73' has this __file__ attribute:
-  /app/backend/tests/test_production_activation_iter73.py
-which is not the same as the test file we want to collect:
-  /app/test_reports/pytest_isolated/test_production_activation_iter73.py
-HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules
-_ ERROR collecting test_reports/pytest_isolated/test_reliability_layer_iter69.py _
-import file mismatch:
-imported module 'test_reliability_layer_iter69' has this __file__ attribute:
-  /app/backend/tests/test_reliability_layer_iter69.py
-which is not the same as the test file we want to collect:
-  /app/test_reports/pytest_isolated/test_reliability_layer_iter69.py
-HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules
-_ ERROR collecting test_reports/pytest_isolated/test_worker_infrastructure_iter75.py _
-import file mismatch:
-imported module 'test_worker_infrastructure_iter75' has this __file__ attribute:
-  /app/backend/tests/test_worker_infrastructure_iter75.py
-which is not the same as the test file we want to collect:
-  /app/test_reports/pytest_isolated/test_worker_infrastructure_iter75.py
-HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules
-__________ ERROR collecting test_reports/test_mobile_bff_contracts.py __________
-import file mismatch:
-imported module 'test_mobile_bff_contracts' has this __file__ attribute:
-  /app/backend/tests/test_mobile_bff_contracts.py
-which is not the same as the test file we want to collect:
-  /app/test_reports/test_mobile_bff_contracts.py
-HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules
-___________ ERROR collecting tests/test_admin_all_users_crud_api.py ____________
-ImportError while importing test module '/app/tests/test_admin_all_users_crud_api.py'.
-Hint: make sure your test modules/packages have valid Python names.
-Traceback:
-/usr/local/lib/python3.11/importlib/__init__.py:126: in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E   ModuleNotFoundError: No module named 'tests.test_admin_all_users_crud_api'
-=============================== warnings summary ===============================
-../root/.venv/lib/python3.11/site-packages/starlette/formparsers.py:12
-  /root/.venv/lib/python3.11/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
-    import multipart
-
-../root/.venv/lib/python3.11/site-packages/passlib/utils/__init__.py:854
-  /root/.venv/lib/python3.11/site-packages/passlib/utils/__init__.py:854: DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13
-    from crypt import crypt as _crypt
-
-../root/.venv/lib/python3.11/site-packages/emergentintegrations/payments/stripe/checkout.py:24
-  /root/.venv/lib/python3.11/site-packages/emergentintegrations/payments/stripe/checkout.py:24: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
-    @validator('amount')
-
-../root/.venv/lib/python3.11/site-packages/emergentintegrations/payments/stripe/checkout.py:30
-  /root/.venv/lib/python3.11/site-packages/emergentintegrations/payments/stripe/checkout.py:30: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
-    @validator('quantity')
-
-../root/.venv/lib/python3.11/site-packages/emergentintegrations/payments/stripe/checkout.py:36
-  /root/.venv/lib/python3.11/site-packages/emergentintegrations/payments/stripe/checkout.py:36: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
-    @validator('stripe_price_id')
-
-../root/.venv/lib/python3.11/site-packages/emergentintegrations/payments/stripe/checkout.py:44
-  /root/.venv/lib/python3.11/site-packages/emergentintegrations/payments/stripe/checkout.py:44: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
-    @validator('payment_methods')
-
-backend/tests/test_api_org_isolation_bookings.py:17
-  /app/backend/tests/test_api_org_isolation_bookings.py:17: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint1
-
-backend/tests/test_audit_events_org_init.py:12
-  /app/backend/tests/test_audit_events_org_init.py:12: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint1
-
-backend/tests/test_b2b_ids_phase1.py:10
-  /app/backend/tests/test_b2b_ids_phase1.py:10: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_booking_audit_entries.py:28
-  /app/backend/tests/test_booking_audit_entries.py:28: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint1
-
-backend/tests/test_booking_invalid_transition.py:14
-  /app/backend/tests/test_booking_invalid_transition.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint1
-
-backend/tests/test_booking_lifecycle_v1.py:29
-  /app/backend/tests/test_booking_lifecycle_v1.py:29: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint1
-
-backend/tests/test_commission_effective_phase21c.py:70
-  /app/backend/tests/test_commission_effective_phase21c.py:70: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_commission_effective_phase21c.py:153
-  /app/backend/tests/test_commission_effective_phase21c.py:153: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_commission_effective_phase21c.py:198
-  /app/backend/tests/test_commission_effective_phase21c.py:198: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_commission_effective_phase21c.py:259
-  /app/backend/tests/test_commission_effective_phase21c.py:259: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_commission_effective_phase21c.py:321
-  /app/backend/tests/test_commission_effective_phase21c.py:321: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_commission_effective_phase21c.py:358
-  /app/backend/tests/test_commission_effective_phase21c.py:358: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_commission_effective_phase21c.py:390
-  /app/backend/tests/test_commission_effective_phase21c.py:390: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_exit_b2b_booking_create_v1.py:18
-  /app/backend/tests/test_exit_b2b_booking_create_v1.py:18: PytestUnknownMarkWarning: Unknown pytest.mark.exit_b2b_booking_create_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_b2b_booking_create_v1
-
-backend/tests/test_exit_b2b_booking_create_v1.py:185
-  /app/backend/tests/test_exit_b2b_booking_create_v1.py:185: PytestUnknownMarkWarning: Unknown pytest.mark.exit_b2b_booking_create_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_b2b_booking_create_v1
-
-backend/tests/test_exit_b2b_booking_create_v1.py:281
-  /app/backend/tests/test_exit_b2b_booking_create_v1.py:281: PytestUnknownMarkWarning: Unknown pytest.mark.exit_b2b_booking_create_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_b2b_booking_create_v1
-
-backend/tests/test_exit_b2b_pricing_overlay_v1.py:28
-  /app/backend/tests/test_exit_b2b_pricing_overlay_v1.py:28: PytestUnknownMarkWarning: Unknown pytest.mark.exit_b2b_pricing_overlay_applied - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_b2b_pricing_overlay_applied
-
-backend/tests/test_exit_b2b_pricing_overlay_v1.py:119
-  /app/backend/tests/test_exit_b2b_pricing_overlay_v1.py:119: PytestUnknownMarkWarning: Unknown pytest.mark.exit_b2b_pricing_no_rule - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_b2b_pricing_no_rule
-
-backend/tests/test_exit_b2b_pricing_overlay_v1.py:199
-  /app/backend/tests/test_exit_b2b_pricing_overlay_v1.py:199: PytestUnknownMarkWarning: Unknown pytest.mark.exit_booking_repricing_consistency - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_booking_repricing_consistency
-
-backend/tests/test_exit_canonical_offers_v1.py:14
-  /app/backend/tests/test_exit_canonical_offers_v1.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.exit_canonical_schema_enforced - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_canonical_schema_enforced
-
-backend/tests/test_exit_canonical_offers_v1.py:98
-  /app/backend/tests/test_exit_canonical_offers_v1.py:98: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_response_no_leak - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_response_no_leak
-
-backend/tests/test_exit_canonical_offers_v1.py:166
-  /app/backend/tests/test_exit_canonical_offers_v1.py:166: PytestUnknownMarkWarning: Unknown pytest.mark.exit_search_cache_ttl - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_search_cache_ttl
-
-backend/tests/test_exit_canonical_offers_v1.py:261
-  /app/backend/tests/test_exit_canonical_offers_v1.py:261: PytestUnknownMarkWarning: Unknown pytest.mark.exit_offer_token_booking_draft - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_offer_token_booking_draft
-
-backend/tests/test_exit_marketplace_bridge_v1.py:15
-  /app/backend/tests/test_exit_marketplace_bridge_v1.py:15: PytestUnknownMarkWarning: Unknown pytest.mark.exit_marketplace_bridge_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_marketplace_bridge_v1
-
-backend/tests/test_exit_marketplace_supplier_mapping_v1.py:14
-  /app/backend/tests/test_exit_marketplace_supplier_mapping_v1.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.exit_marketplace_supplier_mapping_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_marketplace_supplier_mapping_v1
-
-backend/tests/test_exit_marketplace_supplier_mapping_v1.py:179
-  /app/backend/tests/test_exit_marketplace_supplier_mapping_v1.py:179: PytestUnknownMarkWarning: Unknown pytest.mark.exit_marketplace_supplier_mapping_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_marketplace_supplier_mapping_v1
-
-backend/tests/test_exit_marketplace_v1.py:14
-  /app/backend/tests/test_exit_marketplace_v1.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.exit_marketplace_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_marketplace_v1
-
-backend/tests/test_exit_marketplace_v1.py:156
-  /app/backend/tests/test_exit_marketplace_v1.py:156: PytestUnknownMarkWarning: Unknown pytest.mark.exit_marketplace_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_marketplace_v1
-
-backend/tests/test_exit_multitenant_v1.py:14
-  /app/backend/tests/test_exit_multitenant_v1.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.exit_multitenant_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_multitenant_v1
-
-backend/tests/test_exit_multitenant_v1.py:55
-  /app/backend/tests/test_exit_multitenant_v1.py:55: PytestUnknownMarkWarning: Unknown pytest.mark.exit_multitenant_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_multitenant_v1
-
-backend/tests/test_exit_multitenant_v1.py:69
-  /app/backend/tests/test_exit_multitenant_v1.py:69: PytestUnknownMarkWarning: Unknown pytest.mark.exit_multitenant_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_multitenant_v1
-
-backend/tests/test_exit_multitenant_v1.py:108
-  /app/backend/tests/test_exit_multitenant_v1.py:108: PytestUnknownMarkWarning: Unknown pytest.mark.exit_multitenant_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_multitenant_v1
-
-backend/tests/test_exit_ops_incidents_supplier_health_enrichment_v1.py:23
-  /app/backend/tests/test_exit_ops_incidents_supplier_health_enrichment_v1.py:23: PytestUnknownMarkWarning: Unknown pytest.mark.exit_ops_incidents_list_no_enrichment_by_default - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_ops_incidents_list_no_enrichment_by_default
-
-backend/tests/test_exit_ops_incidents_supplier_health_enrichment_v1.py:108
-  /app/backend/tests/test_exit_ops_incidents_supplier_health_enrichment_v1.py:108: PytestUnknownMarkWarning: Unknown pytest.mark.exit_ops_incidents_list_enrichment_attaches_badge - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_ops_incidents_list_enrichment_attaches_badge
-
-backend/tests/test_exit_ops_incidents_supplier_health_enrichment_v1.py:195
-  /app/backend/tests/test_exit_ops_incidents_supplier_health_enrichment_v1.py:195: PytestUnknownMarkWarning: Unknown pytest.mark.exit_ops_incidents_detail_enrichment_default_true - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_ops_incidents_detail_enrichment_default_true
-
-backend/tests/test_exit_ops_incidents_supplier_health_enrichment_v1.py:276
-  /app/backend/tests/test_exit_ops_incidents_supplier_health_enrichment_v1.py:276: PytestUnknownMarkWarning: Unknown pytest.mark.exit_ops_incidents_enrichment_health_not_found_fail_open - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_ops_incidents_enrichment_health_not_found_fail_open
-
-backend/tests/test_exit_ops_incidents_supplier_health_enrichment_v1.py:332
-  /app/backend/tests/test_exit_ops_incidents_supplier_health_enrichment_v1.py:332: PytestUnknownMarkWarning: Unknown pytest.mark.exit_ops_incidents_enrichment_supplier_code_resolution_deterministic - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_ops_incidents_enrichment_supplier_code_resolution_deterministic
-
-backend/tests/test_exit_ops_incidents_supplier_health_enrichment_v1.py:410
-  /app/backend/tests/test_exit_ops_incidents_supplier_health_enrichment_v1.py:410: PytestUnknownMarkWarning: Unknown pytest.mark.exit_ops_incidents_enrichment_rbac_denied - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_ops_incidents_enrichment_rbac_denied
-
-backend/tests/test_exit_ops_incidents_v1.py:61
-  /app/backend/tests/test_exit_ops_incidents_v1.py:61: PytestUnknownMarkWarning: Unknown pytest.mark.exit_ops_incident_created_for_risk_review - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_ops_incident_created_for_risk_review
-
-backend/tests/test_exit_ops_incidents_v1.py:153
-  /app/backend/tests/test_exit_ops_incidents_v1.py:153: PytestUnknownMarkWarning: Unknown pytest.mark.exit_ops_incident_created_for_supplier_all_failed - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_ops_incident_created_for_supplier_all_failed
-
-backend/tests/test_exit_ops_incidents_v1.py:216
-  /app/backend/tests/test_exit_ops_incidents_v1.py:216: PytestUnknownMarkWarning: Unknown pytest.mark.exit_ops_incident_list_filtering - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_ops_incident_list_filtering
-
-backend/tests/test_exit_ops_incidents_v1.py:277
-  /app/backend/tests/test_exit_ops_incidents_v1.py:277: PytestUnknownMarkWarning: Unknown pytest.mark.exit_ops_incident_resolve_flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_ops_incident_resolve_flow
-
-backend/tests/test_exit_ops_incidents_v1.py:317
-  /app/backend/tests/test_exit_ops_incidents_v1.py:317: PytestUnknownMarkWarning: Unknown pytest.mark.exit_ops_incident_deduplication - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_ops_incident_deduplication
-
-backend/tests/test_exit_ops_incidents_v1.py:352
-  /app/backend/tests/test_exit_ops_incidents_v1.py:352: PytestUnknownMarkWarning: Unknown pytest.mark.exit_ops_incident_rbac_denied - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_ops_incident_rbac_denied
-
-backend/tests/test_exit_pricing_audit_v1.py:16
-  /app/backend/tests/test_exit_pricing_audit_v1.py:16: PytestUnknownMarkWarning: Unknown pytest.mark.exit_pricing_audit_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_pricing_audit_v1
-
-backend/tests/test_exit_pricing_audit_v1.py:120
-  /app/backend/tests/test_exit_pricing_audit_v1.py:120: PytestUnknownMarkWarning: Unknown pytest.mark.exit_pricing_audit_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_pricing_audit_v1
-
-backend/tests/test_exit_pricing_engine_v1.py:16
-  /app/backend/tests/test_exit_pricing_engine_v1.py:16: PytestUnknownMarkWarning: Unknown pytest.mark.exit_pricing_engine_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_pricing_engine_v1
-
-backend/tests/test_exit_pricing_engine_v1.py:74
-  /app/backend/tests/test_exit_pricing_engine_v1.py:74: PytestUnknownMarkWarning: Unknown pytest.mark.exit_pricing_engine_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_pricing_engine_v1
-
-backend/tests/test_exit_pricing_engine_v1.py:137
-  /app/backend/tests/test_exit_pricing_engine_v1.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.exit_pricing_engine_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_pricing_engine_v1
-
-backend/tests/test_exit_pricing_engine_v1.py:193
-  /app/backend/tests/test_exit_pricing_engine_v1.py:193: PytestUnknownMarkWarning: Unknown pytest.mark.exit_pricing_engine_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_pricing_engine_v1
-
-backend/tests/test_exit_pricing_graph_trace_inspection_v1.py:57
-  /app/backend/tests/test_exit_pricing_graph_trace_inspection_v1.py:57: PytestUnknownMarkWarning: Unknown pytest.mark.exit_pricing_trace_by_booking - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_pricing_trace_by_booking
-
-backend/tests/test_exit_pricing_graph_trace_inspection_v1.py:144
-  /app/backend/tests/test_exit_pricing_graph_trace_inspection_v1.py:144: PytestUnknownMarkWarning: Unknown pytest.mark.exit_pricing_trace_by_session_offer - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_pricing_trace_by_session_offer
-
-backend/tests/test_exit_pricing_graph_trace_inspection_v1.py:212
-  /app/backend/tests/test_exit_pricing_graph_trace_inspection_v1.py:212: PytestUnknownMarkWarning: Unknown pytest.mark.exit_pricing_trace_rbac_denied - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_pricing_trace_rbac_denied
-
-backend/tests/test_exit_pricing_graph_trace_inspection_v1.py:243
-  /app/backend/tests/test_exit_pricing_graph_trace_inspection_v1.py:243: PytestUnknownMarkWarning: Unknown pytest.mark.exit_pricing_trace_offer_token_not_found - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_pricing_trace_offer_token_not_found
-
-backend/tests/test_exit_pricing_graph_trace_inspection_v1.py:278
-  /app/backend/tests/test_exit_pricing_graph_trace_inspection_v1.py:278: PytestUnknownMarkWarning: Unknown pytest.mark.exit_pricing_trace_view_audit_written - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_pricing_trace_view_audit_written
-
-backend/tests/test_exit_pricing_graph_v1.py:51
-  /app/backend/tests/test_exit_pricing_graph_v1.py:51: PytestUnknownMarkWarning: Unknown pytest.mark.exit_pricing_graph_multi_level_applied - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_pricing_graph_multi_level_applied
-
-backend/tests/test_exit_pricing_graph_v1.py:185
-  /app/backend/tests/test_exit_pricing_graph_v1.py:185: PytestUnknownMarkWarning: Unknown pytest.mark.exit_pricing_graph_no_parent_fallback - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_pricing_graph_no_parent_fallback
-
-backend/tests/test_exit_pricing_graph_v1.py:233
-  /app/backend/tests/test_exit_pricing_graph_v1.py:233: PytestUnknownMarkWarning: Unknown pytest.mark.exit_booking_uses_graph_pricing - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_booking_uses_graph_pricing
-
-backend/tests/test_exit_pricing_graph_v1.py:298
-  /app/backend/tests/test_exit_pricing_graph_v1.py:298: PytestUnknownMarkWarning: Unknown pytest.mark.exit_graph_deterministic - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_graph_deterministic
-
-backend/tests/test_exit_pricing_graph_v1.py:347
-  /app/backend/tests/test_exit_pricing_graph_v1.py:347: PytestUnknownMarkWarning: Unknown pytest.mark.exit_graph_currency_mismatch_skips_rule - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_graph_currency_mismatch_skips_rule
-
-backend/tests/test_exit_pricing_observability_v1.py:14
-  /app/backend/tests/test_exit_pricing_observability_v1.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.exit_pricing_overlay_audit_written - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_pricing_overlay_audit_written
-
-backend/tests/test_exit_pricing_observability_v1.py:92
-  /app/backend/tests/test_exit_pricing_observability_v1.py:92: PytestUnknownMarkWarning: Unknown pytest.mark.exit_booking_repriced_audit_written - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_booking_repriced_audit_written
-
-backend/tests/test_exit_pricing_observability_v1.py:181
-  /app/backend/tests/test_exit_pricing_observability_v1.py:181: PytestUnknownMarkWarning: Unknown pytest.mark.exit_pricing_mismatch_audit_written - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_pricing_mismatch_audit_written
-
-backend/tests/test_exit_pricing_rules_admin_v1.py:25
-  /app/backend/tests/test_exit_pricing_rules_admin_v1.py:25: PytestUnknownMarkWarning: Unknown pytest.mark.exit_pricing_rules_admin_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_pricing_rules_admin_v1
-
-backend/tests/test_exit_pricing_rules_admin_v1.py:171
-  /app/backend/tests/test_exit_pricing_rules_admin_v1.py:171: PytestUnknownMarkWarning: Unknown pytest.mark.exit_pricing_rules_admin_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_pricing_rules_admin_v1
-
-backend/tests/test_exit_pricing_rules_admin_v1.py:242
-  /app/backend/tests/test_exit_pricing_rules_admin_v1.py:242: PytestUnknownMarkWarning: Unknown pytest.mark.exit_pricing_rules_admin_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_pricing_rules_admin_v1
-
-backend/tests/test_exit_risk_engine_v1.py:86
-  /app/backend/tests/test_exit_risk_engine_v1.py:86: PytestUnknownMarkWarning: Unknown pytest.mark.exit_risk_blocked - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_risk_blocked
-
-backend/tests/test_exit_risk_engine_v1.py:159
-  /app/backend/tests/test_exit_risk_engine_v1.py:159: PytestUnknownMarkWarning: Unknown pytest.mark.exit_risk_review - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_risk_review
-
-backend/tests/test_exit_risk_engine_v1.py:223
-  /app/backend/tests/test_exit_risk_engine_v1.py:223: PytestUnknownMarkWarning: Unknown pytest.mark.exit_risk_allow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_risk_allow
-
-backend/tests/test_exit_risk_engine_v1.py:253
-  /app/backend/tests/test_exit_risk_engine_v1.py:253: PytestUnknownMarkWarning: Unknown pytest.mark.exit_risk_score_deterministic - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_risk_score_deterministic
-
-backend/tests/test_exit_risk_review_workflow_v1.py:99
-  /app/backend/tests/test_exit_risk_review_workflow_v1.py:99: PytestUnknownMarkWarning: Unknown pytest.mark.exit_risk_review_approve - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_risk_review_approve
-
-backend/tests/test_exit_risk_review_workflow_v1.py:144
-  /app/backend/tests/test_exit_risk_review_workflow_v1.py:144: PytestUnknownMarkWarning: Unknown pytest.mark.exit_risk_review_reject - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_risk_review_reject
-
-backend/tests/test_exit_risk_review_workflow_v1.py:188
-  /app/backend/tests/test_exit_risk_review_workflow_v1.py:188: PytestUnknownMarkWarning: Unknown pytest.mark.exit_risk_review_wrong_state - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_risk_review_wrong_state
-
-backend/tests/test_exit_risk_review_workflow_v1.py:221
-  /app/backend/tests/test_exit_risk_review_workflow_v1.py:221: PytestUnknownMarkWarning: Unknown pytest.mark.exit_confirm_blocked_when_risk_review_or_rejected - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_confirm_blocked_when_risk_review_or_rejected
-
-backend/tests/test_exit_sprint2_b2b_portal_contracts.py:15
-  /app/backend/tests/test_exit_sprint2_b2b_portal_contracts.py:15: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint2 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint2
-
-backend/tests/test_exit_sprint2_booking_lifecycle_v2.py:16
-  /app/backend/tests/test_exit_sprint2_booking_lifecycle_v2.py:16: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint2 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint2
-
-backend/tests/test_exit_sprint2_booking_lifecycle_v2.py:48
-  /app/backend/tests/test_exit_sprint2_booking_lifecycle_v2.py:48: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint2 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint2
-
-backend/tests/test_exit_sprint2_booking_lifecycle_v2.py:143
-  /app/backend/tests/test_exit_sprint2_booking_lifecycle_v2.py:143: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint2 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint2
-
-backend/tests/test_exit_sprint2_credit_exposure_v1.py:16
-  /app/backend/tests/test_exit_sprint2_credit_exposure_v1.py:16: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint2 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint2
-
-backend/tests/test_exit_sprint2_refund_workflow_v1.py:74
-  /app/backend/tests/test_exit_sprint2_refund_workflow_v1.py:74: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint2 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint2
-
-backend/tests/test_exit_sprint2_risk_rules_v1.py:45
-  /app/backend/tests/test_exit_sprint2_risk_rules_v1.py:45: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint2 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint2
-
-backend/tests/test_exit_sprint3_finance_views_v1.py:15
-  /app/backend/tests/test_exit_sprint3_finance_views_v1.py:15: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint3
-
-backend/tests/test_exit_sprint3_multicurrency_hardening_v1.py:16
-  /app/backend/tests/test_exit_sprint3_multicurrency_hardening_v1.py:16: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint3
-
-backend/tests/test_exit_sprint3_multicurrency_hardening_v1.py:69
-  /app/backend/tests/test_exit_sprint3_multicurrency_hardening_v1.py:69: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint3
-
-backend/tests/test_exit_sprint3_multicurrency_hardening_v1.py:125
-  /app/backend/tests/test_exit_sprint3_multicurrency_hardening_v1.py:125: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint3
-
-backend/tests/test_exit_sprint3_multicurrency_hardening_v1.py:206
-  /app/backend/tests/test_exit_sprint3_multicurrency_hardening_v1.py:206: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint3
-
-backend/tests/test_exit_sprint3_paximum_draft_to_booked_v1.py:16
-  /app/backend/tests/test_exit_sprint3_paximum_draft_to_booked_v1.py:16: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint3
-
-backend/tests/test_exit_sprint3_paximum_draft_to_booked_v1.py:170
-  /app/backend/tests/test_exit_sprint3_paximum_draft_to_booked_v1.py:170: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint3
-
-backend/tests/test_exit_sprint3_paximum_draft_to_booked_v1.py:228
-  /app/backend/tests/test_exit_sprint3_paximum_draft_to_booked_v1.py:228: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint3
-
-backend/tests/test_exit_sprint3_paximum_offer_to_booking_v1.py:14
-  /app/backend/tests/test_exit_sprint3_paximum_offer_to_booking_v1.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint3
-
-backend/tests/test_exit_sprint3_paximum_offer_to_booking_v1.py:126
-  /app/backend/tests/test_exit_sprint3_paximum_offer_to_booking_v1.py:126: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint3
-
-backend/tests/test_exit_sprint3_paximum_offer_to_booking_v1.py:176
-  /app/backend/tests/test_exit_sprint3_paximum_offer_to_booking_v1.py:176: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint3
-
-backend/tests/test_exit_sprint3_supplier_connector_v1.py:14
-  /app/backend/tests/test_exit_sprint3_supplier_connector_v1.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint3
-
-backend/tests/test_exit_sprint3_supplier_to_booking_v1.py:14
-  /app/backend/tests/test_exit_sprint3_supplier_to_booking_v1.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint3
-
-backend/tests/test_exit_sprint3_xml_supplier_search_v1.py:17
-  /app/backend/tests/test_exit_sprint3_xml_supplier_search_v1.py:17: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint3
-
-backend/tests/test_exit_sprint3_xml_supplier_search_v1.py:125
-  /app/backend/tests/test_exit_sprint3_xml_supplier_search_v1.py:125: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint3
-
-backend/tests/test_exit_sprint3_xml_supplier_search_v1.py:185
-  /app/backend/tests/test_exit_sprint3_xml_supplier_search_v1.py:185: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint3
-
-backend/tests/test_exit_storefront_v1.py:13
-  /app/backend/tests/test_exit_storefront_v1.py:13: PytestUnknownMarkWarning: Unknown pytest.mark.exit_storefront_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_storefront_v1
-
-backend/tests/test_exit_storefront_v1.py:54
-  /app/backend/tests/test_exit_storefront_v1.py:54: PytestUnknownMarkWarning: Unknown pytest.mark.exit_storefront_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_storefront_v1
-
-backend/tests/test_exit_storefront_v1.py:126
-  /app/backend/tests/test_exit_storefront_v1.py:126: PytestUnknownMarkWarning: Unknown pytest.mark.exit_storefront_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_storefront_v1
-
-backend/tests/test_exit_storefront_v1.py:192
-  /app/backend/tests/test_exit_storefront_v1.py:192: PytestUnknownMarkWarning: Unknown pytest.mark.exit_storefront_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_storefront_v1
-
-backend/tests/test_exit_supplier_adapter_v1.py:17
-  /app/backend/tests/test_exit_supplier_adapter_v1.py:17: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_adapter_registry - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_adapter_registry
-
-backend/tests/test_exit_supplier_adapter_v1.py:30
-  /app/backend/tests/test_exit_supplier_adapter_v1.py:30: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_confirm_flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_confirm_flow
-
-backend/tests/test_exit_supplier_adapter_v1.py:114
-  /app/backend/tests/test_exit_supplier_adapter_v1.py:114: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_unresolved - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_unresolved
-
-backend/tests/test_exit_supplier_adapter_v1.py:185
-  /app/backend/tests/test_exit_supplier_adapter_v1.py:185: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_not_supported - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_not_supported
-
-backend/tests/test_exit_supplier_adapter_v1.py:256
-  /app/backend/tests/test_exit_supplier_adapter_v1.py:256: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_error_propagation - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_error_propagation
-
-backend/tests/test_exit_supplier_confirm_hardening_v1.py:16
-  /app/backend/tests/test_exit_supplier_confirm_hardening_v1.py:16: PytestUnknownMarkWarning: Unknown pytest.mark.exit_confirm_timeout_enforced - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_confirm_timeout_enforced
-
-backend/tests/test_exit_supplier_confirm_hardening_v1.py:109
-  /app/backend/tests/test_exit_supplier_confirm_hardening_v1.py:109: PytestUnknownMarkWarning: Unknown pytest.mark.exit_confirm_snapshot_redacted - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_confirm_snapshot_redacted
-
-backend/tests/test_exit_supplier_fulfilment_v1.py:15
-  /app/backend/tests/test_exit_supplier_fulfilment_v1.py:15: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_fulfilment_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_fulfilment_v1
-
-backend/tests/test_exit_supplier_fulfilment_v1.py:194
-  /app/backend/tests/test_exit_supplier_fulfilment_v1.py:194: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_fulfilment_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_fulfilment_v1
-
-backend/tests/test_exit_supplier_fulfilment_v1.py:270
-  /app/backend/tests/test_exit_supplier_fulfilment_v1.py:270: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_fulfilment_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_fulfilment_v1
-
-backend/tests/test_exit_supplier_fulfilment_v1.py:360
-  /app/backend/tests/test_exit_supplier_fulfilment_v1.py:360: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_fulfilment_v1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_fulfilment_v1
-
-backend/tests/test_exit_supplier_health_and_circuit_v1.py:28
-  /app/backend/tests/test_exit_supplier_health_and_circuit_v1.py:28: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_health_snapshot_updates_on_calls - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_health_snapshot_updates_on_calls
-
-backend/tests/test_exit_supplier_health_and_circuit_v1.py:105
-  /app/backend/tests/test_exit_supplier_health_and_circuit_v1.py:105: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_circuit_opens_after_consecutive_failures - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_circuit_opens_after_consecutive_failures
-
-backend/tests/test_exit_supplier_health_and_circuit_v1.py:161
-  /app/backend/tests/test_exit_supplier_health_and_circuit_v1.py:161: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_circuit_open_skips_supplier_and_emits_warning - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_circuit_open_skips_supplier_and_emits_warning
-
-backend/tests/test_exit_supplier_health_and_circuit_v1.py:249
-  /app/backend/tests/test_exit_supplier_health_and_circuit_v1.py:249: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_circuit_closes_after_until - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_circuit_closes_after_until
-
-backend/tests/test_exit_supplier_health_and_circuit_v1.py:334
-  /app/backend/tests/test_exit_supplier_health_and_circuit_v1.py:334: PytestUnknownMarkWarning: Unknown pytest.mark.exit_admin_supplier_health_endpoint_rbac_and_shape - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_admin_supplier_health_endpoint_rbac_and_shape
-
-backend/tests/test_exit_supplier_health_and_circuit_v1.py:419
-  /app/backend/tests/test_exit_supplier_health_and_circuit_v1.py:419: PytestUnknownMarkWarning: Unknown pytest.mark.exit_admin_supplier_health_filtering_deterministic_order - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_admin_supplier_health_filtering_deterministic_order
-
-backend/tests/test_exit_supplier_partial_results_v1.py:28
-  /app/backend/tests/test_exit_supplier_partial_results_v1.py:28: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_partial_results_returns_200_with_warnings - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_partial_results_returns_200_with_warnings
-
-backend/tests/test_exit_supplier_partial_results_v1.py:89
-  /app/backend/tests/test_exit_supplier_partial_results_v1.py:89: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_partial_results_audit_written - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_partial_results_audit_written
-
-backend/tests/test_exit_supplier_partial_results_v1.py:149
-  /app/backend/tests/test_exit_supplier_partial_results_v1.py:149: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_all_failed_returns_503 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_all_failed_returns_503
-
-backend/tests/test_exit_supplier_partial_results_v1.py:205
-  /app/backend/tests/test_exit_supplier_partial_results_v1.py:205: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_partial_results_offers_empty_but_successful_supplier - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_partial_results_offers_empty_but_successful_supplier
-
-backend/tests/test_exit_supplier_partial_results_v1.py:261
-  /app/backend/tests/test_exit_supplier_partial_results_v1.py:261: PytestUnknownMarkWarning: Unknown pytest.mark.exit_supplier_warnings_ordering_deterministic - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_supplier_warnings_ordering_deterministic
-
-backend/tests/test_inbox_guardrails.py:364
-  /app/backend/tests/test_inbox_guardrails.py:364: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_inbox_guardrails.py:375
-  /app/backend/tests/test_inbox_guardrails.py:375: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_inbox_guardrails.py:386
-  /app/backend/tests/test_inbox_guardrails.py:386: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_inbox_guardrails.py:397
-  /app/backend/tests/test_inbox_guardrails.py:397: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_integration_hub_mock_provider.py:13
-  /app/backend/tests/test_integration_hub_mock_provider.py:13: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_jobs_platform.py:16
-  /app/backend/tests/test_jobs_platform.py:16: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_jobs_platform.py:53
-  /app/backend/tests/test_jobs_platform.py:53: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_ops_cases_api.py:11
-  /app/backend/tests/test_ops_cases_api.py:11: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_ops_cases_api.py:89
-  /app/backend/tests/test_ops_cases_api.py:89: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_ops_cases_api.py:148
-  /app/backend/tests/test_ops_cases_api.py:148: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_ops_cases_api.py:191
-  /app/backend/tests/test_ops_cases_api.py:191: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_ops_cases_api.py:251
-  /app/backend/tests/test_ops_cases_api.py:251: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_org_initialization.py:12
-  /app/backend/tests/test_org_initialization.py:12: PytestUnknownMarkWarning: Unknown pytest.mark.exit_sprint1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.exit_sprint1
-
-backend/tests/test_partner_graph_phase2.py:59
-  /app/backend/tests/test_partner_graph_phase2.py:59: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_partner_graph_phase2.py:109
-  /app/backend/tests/test_partner_graph_phase2.py:109: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_partner_graph_phase2.py:140
-  /app/backend/tests/test_partner_graph_phase2.py:140: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_partner_graph_phase2.py:229
-  /app/backend/tests/test_partner_graph_phase2.py:229: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_partner_graph_phase2.py:311
-  /app/backend/tests/test_partner_graph_phase2.py:311: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_partner_graph_phase2_hardening.py:96
-  /app/backend/tests/test_partner_graph_phase2_hardening.py:96: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_partner_graph_phase2_hardening.py:162
-  /app/backend/tests/test_partner_graph_phase2_hardening.py:162: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_partner_inbox_phase21d.py:70
-  /app/backend/tests/test_partner_inbox_phase21d.py:70: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_partner_inbox_phase21d.py:110
-  /app/backend/tests/test_partner_inbox_phase21d.py:110: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_partner_inbox_phase21d.py:161
-  /app/backend/tests/test_partner_inbox_phase21d.py:161: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_partner_relationships_list_phase23.py:59
-  /app/backend/tests/test_partner_relationships_list_phase23.py:59: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_partner_relationships_list_phase23.py:146
-  /app/backend/tests/test_partner_relationships_list_phase23.py:146: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_partner_relationships_list_phase23.py:203
-  /app/backend/tests/test_partner_relationships_list_phase23.py:203: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_partner_relationships_list_phase23.py:270
-  /app/backend/tests/test_partner_relationships_list_phase23.py:270: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_partner_relationships_list_phase23.py:295
-  /app/backend/tests/test_partner_relationships_list_phase23.py:295: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_phase22_statement_pagination_and_inbox.py:70
-  /app/backend/tests/test_phase22_statement_pagination_and_inbox.py:70: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_phase22_statement_pagination_and_inbox.py:114
-  /app/backend/tests/test_phase22_statement_pagination_and_inbox.py:114: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_phase22_statement_pagination_and_inbox.py:169
-  /app/backend/tests/test_phase22_statement_pagination_and_inbox.py:169: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_phase22_statement_pagination_and_inbox.py:185
-  /app/backend/tests/test_phase22_statement_pagination_and_inbox.py:185: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_public_my_booking_phase1.py:11
-  /app/backend/tests/test_public_my_booking_phase1.py:11: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_public_my_booking_phase1.py:36
-  /app/backend/tests/test_public_my_booking_phase1.py:36: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_public_my_booking_phase1.py:68
-  /app/backend/tests/test_public_my_booking_phase1.py:68: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_public_my_booking_phase1.py:102
-  /app/backend/tests/test_public_my_booking_phase1.py:102: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_settlement_statement_phase21b.py:71
-  /app/backend/tests/test_settlement_statement_phase21b.py:71: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_settlement_statement_phase21b.py:131
-  /app/backend/tests/test_settlement_statement_phase21b.py:131: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_settlement_statement_phase21b.py:187
-  /app/backend/tests/test_settlement_statement_phase21b.py:187: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_settlement_statement_phase21b.py:225
-  /app/backend/tests/test_settlement_statement_phase21b.py:225: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_settlement_statement_phase21b.py:279
-  /app/backend/tests/test_settlement_statement_phase21b.py:279: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend/tests/test_settlement_statement_phase21b.py:295
-  /app/backend/tests/test_settlement_statement_phase21b.py:295: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
-    @pytest.mark.asyncio
-
-backend_sheets_regression_test.py:30
-  /app/backend_sheets_regression_test.py:30: PytestCollectionWarning: cannot collect test class 'TestSession' because it has a __init__ constructor (from: backend_sheets_regression_test.py)
-    class TestSession:
-
-backend_syroce_smoke_test.py:40
-  /app/backend_syroce_smoke_test.py:40: PytestCollectionWarning: cannot collect test class 'TestSession' because it has a __init__ constructor (from: backend_syroce_smoke_test.py)
-    class TestSession:
-
-backend_test.py:25
-  /app/backend_test.py:25: PytestCollectionWarning: cannot collect test class 'TestSession' because it has a __init__ constructor (from: backend_test.py)
-    class TestSession:
-
-backend_turkish_review_comprehensive_test.py:25
-  /app/backend_turkish_review_comprehensive_test.py:25: PytestCollectionWarning: cannot collect test class 'TestSession' because it has a __init__ constructor (from: backend_turkish_review_comprehensive_test.py)
-    class TestSession:
-
-backend_turkish_review_final_test.py:24
-  /app/backend_turkish_review_final_test.py:24: PytestCollectionWarning: cannot collect test class 'TestSession' because it has a __init__ constructor (from: backend_turkish_review_final_test.py)
-    class TestSession:
-
-backend_turkish_review_test.py:29
-  /app/backend_turkish_review_test.py:29: PytestCollectionWarning: cannot collect test class 'TestSession' because it has a __init__ constructor (from: backend_turkish_review_test.py)
-    class TestSession:
-
-syroce_backend_test.py:36
-  /app/syroce_backend_test.py:36: PytestCollectionWarning: cannot collect test class 'TestSession' because it has a __init__ constructor (from: syroce_backend_test.py)
-    class TestSession:
-
-syroce_contract_management_test.py:32
-  /app/syroce_contract_management_test.py:32: PytestCollectionWarning: cannot collect test class 'TestResults' because it has a __init__ constructor (from: syroce_contract_management_test.py)
-    class TestResults:
-
--- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-=========================== short test summary info ============================
-ERROR test_reports/pytest_isolated/test_accounting_providers_iter98.py
-ERROR test_reports/pytest_isolated/test_intelligence_layer_iter83.py
-ERROR test_reports/pytest_isolated/test_production_activation_iter73.py
-ERROR test_reports/pytest_isolated/test_reliability_layer_iter69.py
-ERROR test_reports/pytest_isolated/test_worker_infrastructure_iter75.py
-ERROR test_reports/test_mobile_bff_contracts.py
-ERROR tests/test_admin_all_users_crud_api.py
-!!!!!!!!!!!!!!!!!!! Interrupted: 7 errors during collection !!!!!!!!!!!!!!!!!!!!
-================== 2 skipped, 179 warnings, 7 errors in 4.43s ==================) was utilized.
+-   **Redis** is now an expected part of the production infrastructure for the offer caching feature.
 
 **All files of reference**
 -   **Created:**
-    -   : Dataclasses for Paximum API objects.
-    -   : Functions to map raw API responses to typed models.
-    -   : Business logic layer connecting to OMS, pricing, etc.
-    -   : FastAPI router exposing the service endpoints.
-    -   : Pytest unit tests for the new modules.
-    -   : Makes the  directory a package.
+    -   : Redis-based caching logic for Paximum offers.
+    -   : Logic to map supplier statuses to OMS statuses.
 -   **Updated:**
-    -   : Overwritten with a new production-ready version.
-    -   : Added the new Paximum router, removed the old one.
-    -   : Refactored to use the new adapter.
-    -   : Updated with the completed work.
+    -   : Integrated status mapping logic.
+    -   : Integrated offer cache and status mapping logic into API endpoints.
+    -   : Added unit tests for new functionality.
+    -   : Documented completion of the P0 milestone.
 
 **Areas that need refactoring**:
--   The  dataclass in  uses  for its dependencies. In the future, these could be replaced with specific  or base class types for improved static analysis.
+-   The  dataclass in  still uses  for some dependencies. These could be typed with  for better static analysis.
 
 **key api endpoints**
--   **** (POST)
--   **** (POST)
--   **** (POST)
--   **** (POST)
--   **** (POST)
--   **** (POST)
--   **** (POST)
--   **** (POST)
+-   **** (POST): Behavior updated to cache offers in Redis.
+-   **** (POST): Behavior updated to check the Redis cache before calling the supplier.
+-   **** (POST): Behavior updated to use the new status mapping service.
 
 **Critical Info for New Agent**
 -   **İletişim diliniz Türkçe olmalıdır. (Your communication language must be Turkish).**
--   The main task of this session, integrating a new Paximum supplier layer, is complete and unit-tested.
--   The new API endpoints are live but require  and  environment variables to function. The current behavior of returning authentication/gateway errors is expected.
--   The user's next explicit requests are to implement a Redis-based offer cache and map Paximum's statuses to the internal OMS statuses. These should be the highest priority.
--   A recurring frontend dependency issue () and a pending full-stack regression test were not addressed. These should be tackled after completing the user's explicit requests.
+-   The user's top-priority P0 task (Redis Cache + Status Mapping) is complete and tested within the preview environment's limitations (i.e., Redis was not available, but graceful degradation was confirmed). This work is now pending user review.
+-   The user has provided a clear, prioritized roadmap. The next items to tackle are **P1: Real RateHawk Environment Execution** and **P1: Timeline Export**.
+-   Do not proceed with the pending frontend maintenance tasks ( fix, full regression test) until the user explicitly approves or after the P1 tasks are completed.
 
 **documents and test reports created in this job**
--   
--   
+-    (updated)
+-    (updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
--   The user provided a complete, 4-file, production-ready implementation for a Paximum service layer and asked for it to be integrated. This was the sole instruction and focus of the session.
+The user provided a detailed and strategic response, approving the previous session's Paximum integration. They clearly defined the next priorities, grouping Redis Offer Cache and Paximum Status Mapping into a single P0 milestone. They explicitly instructed the agent to start this milestone immediately. The user also gave positive feedback on a future enhancement idea (Supplier Quote Comparator), refining its scope. This message served as the complete plan for the current session's work.
 
 **Project Health Check:**
--   **Broken:** None. The backend is stable and running. The new Paximum endpoints fail gracefully due to missing configuration, which is correct behavior.
--   **Mocked:** Core financial and pricing data logic still uses mock/seed data. The new Paximum adapter is designed for a live environment, replacing a simpler implementation.
+-   **Broken:** None.
+-   **Mocked:** Core financial/pricing data remains mocked. The Redis connection is effectively mocked in the preview environment, with the application gracefully degrading to function without it.
 
 **3rd Party Integrations**
--   **Paximum:** Upgraded from a basic adapter to a full-featured, production-ready service layer.
+-   **Paximum:** Integration enhanced with caching and status mapping.
+-   **Redis:** Now a required dependency for full functionality (offer caching).
 
 **Testing status**
 -   Testing agent used after significant changes: NO
 -   Troubleshoot agent used after agent stuck in loop: NO
--   Test files created: []
--   Known regressions: None identified, but a full frontend regression test is still pending from a previous session's large refactor.
+-   Test files created: [tests were added to ]
+-   Known regressions: None identified.
 
 **Credentials to test flow:**
 -   **Super Admin:**  / 
 -   **Agency Admin:**  / 
--   **Note:** To test the new Paximum flow,  and  environment variables must be set.
 
 **What agent forgot to execute**
--   The agent correctly prioritized the user's immediate and large request over pending tasks from the previous session's handoff (e.g., the  issue and running the frontend testing agent). This was an appropriate decision given the circumstances.</analysis>
+The agent correctly prioritized the user's explicit P0 task over the pending maintenance items from the previous handoff (the  issue and the full frontend regression test). This was not an oversight but a correct adherence to the user's CTO decision.</analysis>

@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 # Use the public URL from frontend/.env
-BACKEND_URL = "https://paximum-integration.preview.emergentagent.com/api"
+BACKEND_URL = "https://offer-ttl-engine.preview.emergentagent.com/api"
 ADMIN_CREDENTIALS = {"email": "admin@acenta.test", "password": "admin123"}
 
 class LintFixValidationSuite:

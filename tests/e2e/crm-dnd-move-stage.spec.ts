@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const BASE = "https://paximum-integration.preview.emergentagent.com";
+const BASE = "https://offer-ttl-engine.preview.emergentagent.com";
 const UID = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 test("dnd-stage-move: move deal via API + verify persistence", async ({ request }) => {

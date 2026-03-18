@@ -21,7 +21,7 @@ import os
 import pytest
 import requests
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://paximum-integration.preview.emergentagent.com")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://offer-ttl-engine.preview.emergentagent.com")
 
 @pytest.fixture(scope="module")
 def auth_token():

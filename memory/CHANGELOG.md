@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-03-18
+
+### Tenant Isolation Hardening (P0 #3) — COMPLETE
+- Created `app/modules/tenant/` module with full enforcement layer
+- `TenantScopedRepository`: base class enforcing organization_id in all queries (find/update/delete/aggregate/insert)
+- `TenantContext`: FastAPI dependency for strict tenant context injection
+- Cross-tenant access detection: `TenantFilterBypassAttempt` exception (logged as CRITICAL)
+- Admin bypass whitelist: 14 global collections, 32 tenant-scoped collections
+- Admin API: health check, violation viewer, index enforcer, orphan finder, scope summary
+- Exception handlers: TenantIsolationError → 403 responses
+- Hardened `base_repository.py`: `with_org_filter` now rejects cross-tenant override, `with_tenant_filter` defaults strict
+- `organization_id` indexes created on 11 previously unindexed collections
+- Health score: 96.9% (only `orders` collection has orphaned documents)
+- 41 unit tests + 13 API tests = 54 total, 100% pass rate
+
 ## 2026-02-25
 
 ### Unified Booking State Machine (P0 #1) — COMPLETE

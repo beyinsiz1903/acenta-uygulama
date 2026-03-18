@@ -5,16 +5,17 @@
 ### Hafta 1-2 (DONE)
 - [x] Booking State Machine Unification
 - [x] Router Domain Consolidation Phase 1
+- [x] Tenant Isolation Hardening
 
 ### Hafta 3
 - [ ] Celery + Redis async queue setup
-- [ ] Tenant isolation hardening (query-level guard)
-- [ ] Router Consolidation Phase 2 (admin, inventory, public modules)
+- [ ] Outbox consumer workers (email, billing, notification)
+- [ ] Event dispatch table + retry/dead-letter
 
 ### Hafta 4
-- [ ] Event-driven core (outbox consumer workers)
 - [ ] API Response standardization
-- [ ] Transactional outbox full implementation
+- [ ] Router Consolidation Phase 2 (admin, inventory, public)
+- [ ] /api/v1/ versioning plan
 
 ## 60-Day Plan (Ay 2)
 - [ ] Cache strategy (L0 memory, L1 Redis, L2 DB)

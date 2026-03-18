@@ -41,6 +41,23 @@ class DispatchEntry:
 
 DISPATCH_TABLE: dict[str, list[DispatchEntry]] = {
     # ── Booking Events ───────────────────────────────────────
+    "booking.created": [
+        DispatchEntry(
+            handler="app.tasks.outbox_consumers.send_booking_notification",
+            queue="notification_queue",
+            description="Send booking creation notification",
+        ),
+        DispatchEntry(
+            handler="app.tasks.outbox_consumers.update_reporting_projection",
+            queue="reports",
+            description="Update reporting for new booking",
+        ),
+        DispatchEntry(
+            handler="app.tasks.outbox_consumers.dispatch_webhook",
+            queue="notification_queue",
+            description="Dispatch booking.created webhook",
+        ),
+    ],
     "booking.confirmed": [
         DispatchEntry(
             handler="app.tasks.outbox_consumers.send_booking_notification",
@@ -110,6 +127,23 @@ DISPATCH_TABLE: dict[str, list[DispatchEntry]] = {
             handler="app.tasks.outbox_consumers.dispatch_webhook",
             queue="notification_queue",
             description="Dispatch booking.quoted webhook",
+        ),
+    ],
+    "booking.optioned": [
+        DispatchEntry(
+            handler="app.tasks.outbox_consumers.send_booking_notification",
+            queue="notification_queue",
+            description="Send option-hold notification",
+        ),
+        DispatchEntry(
+            handler="app.tasks.outbox_consumers.update_reporting_projection",
+            queue="reports",
+            description="Update funnel metrics for optioned booking",
+        ),
+        DispatchEntry(
+            handler="app.tasks.outbox_consumers.dispatch_webhook",
+            queue="notification_queue",
+            description="Dispatch booking.optioned webhook",
         ),
     ],
     "booking.completed": [
@@ -211,6 +245,52 @@ DISPATCH_TABLE: dict[str, list[DispatchEntry]] = {
             handler="app.tasks.outbox_consumers.dispatch_webhook",
             queue="notification_queue",
             description="Dispatch payment.failed webhook",
+        ),
+    ],
+    "payment.received": [
+        DispatchEntry(
+            handler="app.tasks.outbox_consumers.send_booking_notification",
+            queue="notification_queue",
+            description="Send payment received notification",
+        ),
+        DispatchEntry(
+            handler="app.tasks.outbox_consumers.update_billing_projection",
+            queue="reports",
+            description="Update billing with payment received",
+        ),
+        DispatchEntry(
+            handler="app.tasks.outbox_consumers.dispatch_webhook",
+            queue="notification_queue",
+            description="Dispatch payment.received webhook",
+        ),
+    ],
+    "payment.refunded": [
+        DispatchEntry(
+            handler="app.tasks.outbox_consumers.send_booking_notification",
+            queue="notification_queue",
+            description="Send payment refund notification",
+        ),
+        DispatchEntry(
+            handler="app.tasks.outbox_consumers.update_billing_projection",
+            queue="reports",
+            description="Update billing for refunded payment",
+        ),
+        DispatchEntry(
+            handler="app.tasks.outbox_consumers.dispatch_webhook",
+            queue="notification_queue",
+            description="Dispatch payment.refunded webhook",
+        ),
+    ],
+    "invoice.created": [
+        DispatchEntry(
+            handler="app.tasks.outbox_consumers.send_booking_notification",
+            queue="notification_queue",
+            description="Send invoice creation notification",
+        ),
+        DispatchEntry(
+            handler="app.tasks.outbox_consumers.dispatch_webhook",
+            queue="notification_queue",
+            description="Dispatch invoice.created webhook",
         ),
     ],
     # ── Fulfillment Events ───────────────────────────────────

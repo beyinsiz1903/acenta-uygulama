@@ -89,6 +89,9 @@ async def ensure_api_runtime_indexes(db) -> None:
         await ensure_marketplace_indexes(db)
         await ensure_offers_indexes(db)
         await ensure_seed_indexes(db)
+        # Webhook system indexes
+        from app.services.webhook_service import ensure_webhook_indexes
+        await ensure_webhook_indexes(db)
     except Exception as exc:
         logger.warning("Index creation failed (non-fatal, may lack permissions): %s", str(exc)[:200])
 

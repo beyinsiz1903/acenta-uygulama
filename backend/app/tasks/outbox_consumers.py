@@ -455,14 +455,14 @@ async def _async_update_reporting_projection(
 
 
 # ── 5. Webhook Dispatcher Consumer ───────────────────────────
+# Delegates to the productized webhook system (app.tasks.webhook_tasks)
 
 @celery_app.task(
     name="app.tasks.outbox_consumers.dispatch_webhook",
     bind=True,
-    max_retries=5,
+    max_retries=3,
     default_retry_delay=30,
     retry_backoff=True,
-    retry_backoff_max=600,
     queue="notification_queue",
 )
 def dispatch_webhook(
@@ -474,14 +474,19 @@ def dispatch_webhook(
     aggregate_id: str,
     aggregate_type: str,
 ):
-    """Dispatch event to registered webhook endpoints for the organization."""
+    """Dispatch event to productized webhook system.
+
+    This consumer acts as a bridge — it delegates to the new webhook_tasks
+    which handle subscription lookup, HMAC signing, retry, idempotency,
+    and circuit breakers.
+    """
     handler = "dispatch_webhook"
-    logger.info("[%s] Processing %s for %s", handler, event_type, aggregate_id)
+    logger.info("[%s] Delegating %s to webhook system for %s", handler, event_type, aggregate_id)
 
     try:
         result = _run_async(
             _async_dispatch_webhook(
-                event_id, event_type, payload, organization_id, aggregate_id
+                event_id, event_type, payload, organization_id, aggregate_id, aggregate_type
             )
         )
         return result
@@ -492,7 +497,7 @@ def dispatch_webhook(
 
 async def _async_dispatch_webhook(
     event_id: str, event_type: str, payload: dict,
-    organization_id: str, aggregate_id: str,
+    organization_id: str, aggregate_id: str, aggregate_type: str,
 ) -> dict:
     from app.db import get_db
     db = await get_db()
@@ -500,67 +505,23 @@ async def _async_dispatch_webhook(
     if await _is_already_processed(db, event_id, "dispatch_webhook"):
         return {"status": "skipped", "reason": "idempotent_duplicate"}
 
-    now = datetime.now(timezone.utc)
-
-    # Find registered webhook endpoints for this org + event type
-    webhooks = await db.webhook_subscriptions.find({
-        "organization_id": organization_id,
-        "event_types": event_type,
-        "active": True,
-    }).to_list(50)
-
-    delivery_results = []
-    for wh in webhooks:
-        url = wh.get("url", "")
-        if not url:
-            continue
-
-        delivery_record = {
-            "webhook_id": str(wh.get("_id", "")),
-            "url": url,
+    # Delegate to productized webhook task
+    from app.tasks.webhook_tasks import dispatch_webhook_event
+    dispatch_webhook_event.apply_async(
+        kwargs={
             "event_id": event_id,
             "event_type": event_type,
-            "organization_id": organization_id,
             "payload": payload,
-            "status": "pending",
-            "created_at": now,
-        }
-
-        try:
-            import httpx
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.post(
-                    url,
-                    json={
-                        "event_id": event_id,
-                        "event_type": event_type,
-                        "payload": payload,
-                        "organization_id": organization_id,
-                        "timestamp": now.isoformat(),
-                    },
-                    headers={"X-Webhook-Event": event_type},
-                )
-                delivery_record["status"] = "delivered" if response.status_code < 400 else "failed"
-                delivery_record["http_status"] = response.status_code
-        except Exception as e:
-            delivery_record["status"] = "failed"
-            delivery_record["error"] = str(e)
-
-        await db.webhook_deliveries.insert_one(delivery_record)
-        delivery_results.append({
-            "url": url,
-            "status": delivery_record["status"],
-        })
+            "organization_id": organization_id,
+            "aggregate_id": aggregate_id,
+            "aggregate_type": aggregate_type,
+        },
+        queue="webhook_queue",
+    )
 
     await _mark_processed(db, event_id, "dispatch_webhook", {
-        "status": "dispatched",
-        "webhooks_found": len(webhooks),
-        "deliveries": len(delivery_results),
+        "status": "delegated_to_webhook_system",
     })
 
-    logger.info("[webhook] Dispatched %d webhooks for event %s", len(delivery_results), event_id)
-    return {
-        "status": "dispatched",
-        "webhooks_found": len(webhooks),
-        "deliveries": delivery_results,
-    }
+    logger.info("[webhook] Delegated %s to webhook system for event %s", event_type, event_id)
+    return {"status": "delegated", "event_type": event_type}

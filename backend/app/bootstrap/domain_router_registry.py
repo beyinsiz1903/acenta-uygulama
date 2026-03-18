@@ -49,6 +49,13 @@ def register_routers(app: FastAPI) -> None:
     from app.routers.admin_outbox import router as outbox_admin_router
     app.include_router(outbox_admin_router, prefix="/api")
 
+    # Webhook System (Organization-scoped + Admin)
+    from app.routers.webhooks import router as webhooks_router
+    app.include_router(webhooks_router, prefix="/api")
+
+    from app.routers.admin_webhooks import router as admin_webhooks_router
+    app.include_router(admin_webhooks_router, prefix="/api")
+
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # DOMAIN 1: BOOKING (Unified State Machine)
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

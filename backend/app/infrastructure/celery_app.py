@@ -59,6 +59,7 @@ TASK_QUEUES = (
     Queue("notification_queue", default_exchange, routing_key="notification_queue"),
     Queue("incident_queue", default_exchange, routing_key="incident_queue"),
     Queue("cleanup_queue", default_exchange, routing_key="cleanup_queue"),
+    Queue("webhook_queue", default_exchange, routing_key="webhook_queue"),
     # Dead Letter Queues
     Queue("dlq.default", dlx_exchange, routing_key="dlq.default"),
     Queue("dlq.critical", dlx_exchange, routing_key="dlq.critical"),
@@ -68,6 +69,7 @@ TASK_QUEUES = (
     Queue("dlq.notification", dlx_exchange, routing_key="dlq.notification"),
     Queue("dlq.incident", dlx_exchange, routing_key="dlq.incident"),
     Queue("dlq.cleanup", dlx_exchange, routing_key="dlq.cleanup"),
+    Queue("dlq.webhook", dlx_exchange, routing_key="dlq.webhook"),
 )
 
 # Route tasks to queues by name pattern
@@ -80,6 +82,10 @@ TASK_ROUTES = {
     "app.tasks.outbox_consumers.update_billing_projection": {"queue": "reports"},
     "app.tasks.outbox_consumers.update_reporting_projection": {"queue": "reports"},
     "app.tasks.outbox_consumers.dispatch_webhook": {"queue": "notification_queue"},
+    # Webhook system tasks
+    "app.tasks.webhook_tasks.dispatch_webhook_event": {"queue": "webhook_queue"},
+    "app.tasks.webhook_tasks.execute_webhook_delivery": {"queue": "webhook_queue"},
+    "app.tasks.webhook_tasks.replay_webhook_delivery": {"queue": "webhook_queue"},
     # Production pool routes
     "app.tasks.booking.*": {"queue": "booking_queue"},
     "app.tasks.payment.*": {"queue": "booking_queue"},
@@ -174,6 +180,7 @@ def create_celery_app() -> Celery:
         "app.tasks.report_tasks",
         "app.tasks.supplier_tasks",
         "app.tasks.outbox_consumers",
+        "app.tasks.webhook_tasks",
         "app.infrastructure.outbox_consumer",
     ]
 

@@ -11,7 +11,7 @@ exec /root/.venv/bin/celery \
     -A app.infrastructure.celery_app:celery_app \
     worker \
     --hostname=syroce-unified@%h \
-    --queues=booking_queue,voucher_queue,notification_queue,incident_queue,cleanup_queue,default,critical,supplier,notifications,reports,maintenance,email,alerts,incidents \
+    --queues=booking_queue,voucher_queue,notification_queue,incident_queue,cleanup_queue,webhook_queue,default,critical,supplier,notifications,reports,maintenance,email,alerts,incidents \
     --concurrency=4 \
     --prefetch-multiplier=2 \
     --max-tasks-per-child=500 \

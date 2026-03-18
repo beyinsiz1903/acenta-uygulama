@@ -41,6 +41,10 @@ def register_routers(app: FastAPI) -> None:
     from app.modules.tenant.router import router as tenant_isolation_router
     app.include_router(tenant_isolation_router)
 
+    # ADMIN: Orphan Order Migration
+    from app.routers.admin_orphan_migration import router as orphan_migration_router
+    app.include_router(orphan_migration_router)
+
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # DOMAIN 1: BOOKING (Unified State Machine)
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

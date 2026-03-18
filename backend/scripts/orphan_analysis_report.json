@@ -1,0 +1,2241 @@
+{
+  "generated_at": "2026-03-18T19:37:05.661470+00:00",
+  "total_orphans": 77,
+  "resolutions": {
+    "manual_review": 77
+  },
+  "strategies": {
+    "legacy_org_id_single_org": 41,
+    "test_artifact_single_org": 36
+  },
+  "confidence_distribution": {
+    "1.0 (exact)": 0,
+    "0.9-0.99 (high)": 0,
+    "0.7-0.89 (medium)": 36,
+    "0.0-0.69 (low/none)": 41
+  },
+  "auto_apply_at_0_9": 0,
+  "manual_review": 77,
+  "proposals": [
+    {
+      "order_id": "ord_7760bd1006a6",
+      "mongo_id": "69b870909970dcb45007d978",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_8e7b53284269",
+      "mongo_id": "69b871460f385cdbeed754af",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_a9119b02e035",
+      "mongo_id": "69b871480f385cdbeed754b2",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_8b5832a820a5",
+      "mongo_id": "69b871490f385cdbeed754b8",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_e80f5a3ad132",
+      "mongo_id": "69b8714c0f385cdbeed754bb",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_285f6af4e8fe",
+      "mongo_id": "69b8714d0f385cdbeed754be",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_5e89946e7a1c",
+      "mongo_id": "69b8714f0f385cdbeed754c3",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_3d4e1f3a1ad6",
+      "mongo_id": "69b871510f385cdbeed754ca",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_1aa0dc502f85",
+      "mongo_id": "69b871520f385cdbeed754d3",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_6bbcf42ac5e6",
+      "mongo_id": "69b871540f385cdbeed754da",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_73e817f0f5fc",
+      "mongo_id": "69b871550f385cdbeed754dd",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_74b7078330c0",
+      "mongo_id": "69b871570f385cdbeed754e4",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_c2680096ebb6",
+      "mongo_id": "69b871590f385cdbeed754ea",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_1a5da790954d",
+      "mongo_id": "69b8715e0f385cdbeed754f0",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_615eda266628",
+      "mongo_id": "69b871600f385cdbeed754f8",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_34af0a94ca04",
+      "mongo_id": "69b871620f385cdbeed754fd",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_9a672cf7bc66",
+      "mongo_id": "69b871630f385cdbeed75502",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_5fe246d1251f",
+      "mongo_id": "69b871650f385cdbeed75508",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_2cd9befe27fc",
+      "mongo_id": "69b871670f385cdbeed75511",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_747cac8551fa",
+      "mongo_id": "69b87af3a272fca40c426091",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_ca29ba6fea89",
+      "mongo_id": "69b87b8f0054b0c4b1d31caa",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_d39ac3776be3",
+      "mongo_id": "69b87b910054b0c4b1d31cad",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_774ab41bf9a6",
+      "mongo_id": "69b87b910054b0c4b1d31cb0",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_e2acf4fcdf17",
+      "mongo_id": "69b87b980054b0c4b1d31cb3",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_d5917ee65021",
+      "mongo_id": "69b87b990054b0c4b1d31cb6",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_ecbe22b3d0c2",
+      "mongo_id": "69b87b9b0054b0c4b1d31cb9",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_f8dc47e47579",
+      "mongo_id": "69b87ba00054b0c4b1d31cbc",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_dcdc35a3f289",
+      "mongo_id": "69b87ba40054b0c4b1d31cbf",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_1aaf5faf5f25",
+      "mongo_id": "69b87ba50054b0c4b1d31cc2",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_fa038a00556c",
+      "mongo_id": "69b87ba70054b0c4b1d31cc5",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_f24bf263e34a",
+      "mongo_id": "69b87ba80054b0c4b1d31cc8",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_fa1cd969eebe",
+      "mongo_id": "69b87baa0054b0c4b1d31ccb",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_d3c8367a457d",
+      "mongo_id": "69b87bab0054b0c4b1d31cce",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_09e24bdc3042",
+      "mongo_id": "69b87bad0054b0c4b1d31cd3",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_e8a3e6258a22",
+      "mongo_id": "69b87baf0054b0c4b1d31cdc",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_cf42a7e93531",
+      "mongo_id": "69b87bb60054b0c4b1d31ce3",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_d1a73e2aebe3",
+      "mongo_id": "69b87bb70054b0c4b1d31ce6",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_3154642b5359",
+      "mongo_id": "69b87bba0054b0c4b1d31ce9",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_81cab9b76830",
+      "mongo_id": "69b87bbb0054b0c4b1d31cec",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_5c715b0c0c21",
+      "mongo_id": "69b87d58173056eb25c6baf2",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_63cc32ba9f65",
+      "mongo_id": "69b87df6f064ae989e83ada7",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_d4303c27e704",
+      "mongo_id": "69b87ea20b8fbfc8ca2718e6",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_64da65759a7f",
+      "mongo_id": "69b87ea30b8fbfc8ca2718ec",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_fe5ed50dbc87",
+      "mongo_id": "69b87ea50b8fbfc8ca2718f8",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_cfedec84356a",
+      "mongo_id": "69b87ea60b8fbfc8ca2718fe",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_200ca077d47f",
+      "mongo_id": "69b87ea80b8fbfc8ca27190a",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_8134f6c9a33f",
+      "mongo_id": "69b87ea90b8fbfc8ca271916",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_e946f6569eca",
+      "mongo_id": "69b87eab0b8fbfc8ca27191c",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_e94f9cd20f26",
+      "mongo_id": "69b87eac0b8fbfc8ca271922",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_e10fb5b27103",
+      "mongo_id": "69b87eae0b8fbfc8ca27192a",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_0ae2c1df61d1",
+      "mongo_id": "69b87eb60b8fbfc8ca271932",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_7bac30a7f51a",
+      "mongo_id": "69b87eb70b8fbfc8ca271942",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_f82250ed1d00",
+      "mongo_id": "69b87eb90b8fbfc8ca27194c",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_43d92209727c",
+      "mongo_id": "69b87eba0b8fbfc8ca27195a",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_e9c59b8a0dfe",
+      "mongo_id": "69b87ebc0b8fbfc8ca271966",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_f09056531d48",
+      "mongo_id": "69b87ebf0b8fbfc8ca27196c",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_474306bd7962",
+      "mongo_id": "69b87ec00b8fbfc8ca271978",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_e4edd0e554f9",
+      "mongo_id": "69b87ec20b8fbfc8ca271984",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_ccbab6037be5",
+      "mongo_id": "69b87ec30b8fbfc8ca27198a",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_eb1847e18cf0",
+      "mongo_id": "69b87ee7ad69730d08e1ed24",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_000fea896840",
+      "mongo_id": "69b87ef0ad69730d08e1ed32",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_815ce05942c8",
+      "mongo_id": "69b87ef1ad69730d08e1ed38",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_ffaf4b85b987",
+      "mongo_id": "69b87ef3ad69730d08e1ed44",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_a19e9e6b4cf4",
+      "mongo_id": "69b87ef4ad69730d08e1ed4a",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_c26daa143a4a",
+      "mongo_id": "69b87ef6ad69730d08e1ed56",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_28b0008d063b",
+      "mongo_id": "69b87ef7ad69730d08e1ed62",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_077e34e3ae23",
+      "mongo_id": "69b87ef9ad69730d08e1ed68",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_ab901c134e39",
+      "mongo_id": "69b87efaad69730d08e1ed6e",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_4ee61548c5c0",
+      "mongo_id": "69b87efcad69730d08e1ed76",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_59b19c9a9cda",
+      "mongo_id": "69b87efdad69730d08e1ed84",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_74ef271267ea",
+      "mongo_id": "69b87f03ad69730d08e1ed94",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_224ec2fe9777",
+      "mongo_id": "69b87f05ad69730d08e1ed9e",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_a145acac9e37",
+      "mongo_id": "69b87f06ad69730d08e1edac",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_52597cdaac5b",
+      "mongo_id": "69b87f08ad69730d08e1edb8",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_3e5ab9355a38",
+      "mongo_id": "69b87f0bad69730d08e1edbe",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_301c98478a77",
+      "mongo_id": "69b87f0cad69730d08e1edca",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_37e5167dbba7",
+      "mongo_id": "69b87f0fad69730d08e1eddc",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    }
+  ],
+  "detailed_proposals": [
+    {
+      "order_id": "ord_7760bd1006a6",
+      "mongo_id": "69b870909970dcb45007d978",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_8e7b53284269",
+      "mongo_id": "69b871460f385cdbeed754af",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_a9119b02e035",
+      "mongo_id": "69b871480f385cdbeed754b2",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_8b5832a820a5",
+      "mongo_id": "69b871490f385cdbeed754b8",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_e80f5a3ad132",
+      "mongo_id": "69b8714c0f385cdbeed754bb",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_285f6af4e8fe",
+      "mongo_id": "69b8714d0f385cdbeed754be",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_5e89946e7a1c",
+      "mongo_id": "69b8714f0f385cdbeed754c3",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_3d4e1f3a1ad6",
+      "mongo_id": "69b871510f385cdbeed754ca",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_1aa0dc502f85",
+      "mongo_id": "69b871520f385cdbeed754d3",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_6bbcf42ac5e6",
+      "mongo_id": "69b871540f385cdbeed754da",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_73e817f0f5fc",
+      "mongo_id": "69b871550f385cdbeed754dd",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_74b7078330c0",
+      "mongo_id": "69b871570f385cdbeed754e4",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_c2680096ebb6",
+      "mongo_id": "69b871590f385cdbeed754ea",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_1a5da790954d",
+      "mongo_id": "69b8715e0f385cdbeed754f0",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_615eda266628",
+      "mongo_id": "69b871600f385cdbeed754f8",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_34af0a94ca04",
+      "mongo_id": "69b871620f385cdbeed754fd",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_9a672cf7bc66",
+      "mongo_id": "69b871630f385cdbeed75502",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_5fe246d1251f",
+      "mongo_id": "69b871650f385cdbeed75508",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_2cd9befe27fc",
+      "mongo_id": "69b871670f385cdbeed75511",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_747cac8551fa",
+      "mongo_id": "69b87af3a272fca40c426091",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_ca29ba6fea89",
+      "mongo_id": "69b87b8f0054b0c4b1d31caa",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_d39ac3776be3",
+      "mongo_id": "69b87b910054b0c4b1d31cad",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_774ab41bf9a6",
+      "mongo_id": "69b87b910054b0c4b1d31cb0",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_e2acf4fcdf17",
+      "mongo_id": "69b87b980054b0c4b1d31cb3",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_d5917ee65021",
+      "mongo_id": "69b87b990054b0c4b1d31cb6",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_ecbe22b3d0c2",
+      "mongo_id": "69b87b9b0054b0c4b1d31cb9",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_f8dc47e47579",
+      "mongo_id": "69b87ba00054b0c4b1d31cbc",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_dcdc35a3f289",
+      "mongo_id": "69b87ba40054b0c4b1d31cbf",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_1aaf5faf5f25",
+      "mongo_id": "69b87ba50054b0c4b1d31cc2",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_fa038a00556c",
+      "mongo_id": "69b87ba70054b0c4b1d31cc5",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_f24bf263e34a",
+      "mongo_id": "69b87ba80054b0c4b1d31cc8",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_fa1cd969eebe",
+      "mongo_id": "69b87baa0054b0c4b1d31ccb",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_d3c8367a457d",
+      "mongo_id": "69b87bab0054b0c4b1d31cce",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_09e24bdc3042",
+      "mongo_id": "69b87bad0054b0c4b1d31cd3",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_e8a3e6258a22",
+      "mongo_id": "69b87baf0054b0c4b1d31cdc",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_cf42a7e93531",
+      "mongo_id": "69b87bb60054b0c4b1d31ce3",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_d1a73e2aebe3",
+      "mongo_id": "69b87bb70054b0c4b1d31ce6",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_3154642b5359",
+      "mongo_id": "69b87bba0054b0c4b1d31ce9",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_81cab9b76830",
+      "mongo_id": "69b87bbb0054b0c4b1d31cec",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_5c715b0c0c21",
+      "mongo_id": "69b87d58173056eb25c6baf2",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_63cc32ba9f65",
+      "mongo_id": "69b87df6f064ae989e83ada7",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "legacy_org_id_single_org",
+      "confidence_score": 0.4,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        }
+      ],
+      "reason": "All 1 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_d4303c27e704",
+      "mongo_id": "69b87ea20b8fbfc8ca2718e6",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_INIT_FIN_tenant_c319ebdd in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_64da65759a7f",
+      "mongo_id": "69b87ea30b8fbfc8ca2718ec",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_CONFIRM_LEDGER_tenant_82c9ce83 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_fe5ed50dbc87",
+      "mongo_id": "69b87ea50b8fbfc8ca2718f8",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_FIN_SUMMARY_tenant_abfd3dc9 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_cfedec84356a",
+      "mongo_id": "69b87ea60b8fbfc8ca2718fe",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_LEDGER_BALANCE_tenant_80587df2 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_200ca077d47f",
+      "mongo_id": "69b87ea80b8fbfc8ca27190a",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_LEDGER_POSTINGS_tenant_e1798c62 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_8134f6c9a33f",
+      "mongo_id": "69b87ea90b8fbfc8ca271916",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_REBUILD_SUMMARY_tenant_556e669b in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_e946f6569eca",
+      "mongo_id": "69b87eab0b8fbfc8ca27191c",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_GET_SETTLEMENTS_tenant_3da45eb6 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_e94f9cd20f26",
+      "mongo_id": "69b87eac0b8fbfc8ca271922",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_LINK_SETTLEMENT_tenant_4773133d in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_e10fb5b27103",
+      "mongo_id": "69b87eae0b8fbfc8ca27192a",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_MARK_SETTLED_tenant_47eaf0e3 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_0ae2c1df61d1",
+      "mongo_id": "69b87eb60b8fbfc8ca271932",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_CANCEL_REVERSAL_tenant_8ebc09bc in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_7bac30a7f51a",
+      "mongo_id": "69b87eb70b8fbfc8ca271942",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_MANUAL_POST_tenant_2b37efa1 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_f82250ed1d00",
+      "mongo_id": "69b87eb90b8fbfc8ca27194c",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_TIMELINE_FIN_tenant_c3183aff in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_43d92209727c",
+      "mongo_id": "69b87eba0b8fbfc8ca27195a",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_VERSION_INC_tenant_e083e002 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_e9c59b8a0dfe",
+      "mongo_id": "69b87ebc0b8fbfc8ca271966",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_ORDER_NUM_FORMAT_tenant_4e83dc60 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_f09056531d48",
+      "mongo_id": "69b87ebf0b8fbfc8ca27196c",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_POSTED_STATUS_tenant_056bfdd1 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_474306bd7962",
+      "mongo_id": "69b87ec00b8fbfc8ca271978",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_ACCOUNT_PATTERNS_tenant_9f04792a in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_e4edd0e554f9",
+      "mongo_id": "69b87ec20b8fbfc8ca271984",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_SUPPLIER_CODES_tenant_5373d913 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_ccbab6037be5",
+      "mongo_id": "69b87ec30b8fbfc8ca27198a",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_ALREADY_LINKED_tenant_91b453a3 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_eb1847e18cf0",
+      "mongo_id": "69b87ee7ad69730d08e1ed24",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_MARK_SETTLED_tenant_93f22eec in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_000fea896840",
+      "mongo_id": "69b87ef0ad69730d08e1ed32",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_INIT_FIN_tenant_9c164293 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_815ce05942c8",
+      "mongo_id": "69b87ef1ad69730d08e1ed38",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_CONFIRM_LEDGER_tenant_8524b9b5 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_ffaf4b85b987",
+      "mongo_id": "69b87ef3ad69730d08e1ed44",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_FIN_SUMMARY_tenant_1d1cb4d6 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_a19e9e6b4cf4",
+      "mongo_id": "69b87ef4ad69730d08e1ed4a",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_LEDGER_BALANCE_tenant_cb8dcf4f in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_c26daa143a4a",
+      "mongo_id": "69b87ef6ad69730d08e1ed56",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_LEDGER_POSTINGS_tenant_d508fbc1 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_28b0008d063b",
+      "mongo_id": "69b87ef7ad69730d08e1ed62",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_REBUILD_SUMMARY_tenant_5b7d3592 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_077e34e3ae23",
+      "mongo_id": "69b87ef9ad69730d08e1ed68",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_GET_SETTLEMENTS_tenant_6c1dfb56 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_ab901c134e39",
+      "mongo_id": "69b87efaad69730d08e1ed6e",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_LINK_SETTLEMENT_tenant_d54f88cb in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_4ee61548c5c0",
+      "mongo_id": "69b87efcad69730d08e1ed76",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_MARK_SETTLED_tenant_784583b8 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_59b19c9a9cda",
+      "mongo_id": "69b87efdad69730d08e1ed84",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_CANCEL_REVERSAL_tenant_a7b273d9 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_74ef271267ea",
+      "mongo_id": "69b87f03ad69730d08e1ed94",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_MANUAL_POST_tenant_01f5725b in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_224ec2fe9777",
+      "mongo_id": "69b87f05ad69730d08e1ed9e",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_TIMELINE_FIN_tenant_1c044dc4 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_a145acac9e37",
+      "mongo_id": "69b87f06ad69730d08e1edac",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_VERSION_INC_tenant_e311a8b9 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_52597cdaac5b",
+      "mongo_id": "69b87f08ad69730d08e1edb8",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_ORDER_NUM_FORMAT_tenant_70282f16 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_3e5ab9355a38",
+      "mongo_id": "69b87f0bad69730d08e1edbe",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_POSTED_STATUS_tenant_eedb2d08 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_301c98478a77",
+      "mongo_id": "69b87f0cad69730d08e1edca",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_ACCOUNT_PATTERNS_tenant_42b56039 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    },
+    {
+      "order_id": "ord_37e5167dbba7",
+      "mongo_id": "69b87f0fad69730d08e1eddc",
+      "resolution": "manual_review",
+      "proposed_organization_id": "69b5905cb169d94c891a136d",
+      "match_strategy": "test_artifact_single_org",
+      "confidence_score": 0.7,
+      "candidates": [
+        {
+          "strategy": "legacy_org_id_single_org",
+          "confidence": 0.4,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "legacy org_id=default_org in single-org environment"
+        },
+        {
+          "strategy": "test_artifact_single_org",
+          "confidence": 0.7,
+          "organization_id": "69b5905cb169d94c891a136d",
+          "evidence": "test artifact tenant_id=TEST_ALREADY_LINKED_tenant_4cc3e9e8 in single-org env"
+        }
+      ],
+      "reason": "All 2 evidence(s) agree but only weak signals"
+    }
+  ]
+}

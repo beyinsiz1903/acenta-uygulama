@@ -157,3 +157,106 @@ async def outbox_consumer_log(
         logs.append(doc)
 
     return {"count": len(logs), "logs": logs}
+
+
+@router.get("/dead-letter", summary="Dead letter queue with full details")
+async def outbox_dead_letter(
+    user=Depends(get_current_user),
+    limit: int = Query(default=50, le=200),
+    event_type: str = Query(default=None),
+    org_id: str = Query(default=None),
+):
+    """Dedicated dead-letter visibility endpoint.
+
+    Shows events that exhausted all retries — critical for ops monitoring.
+    """
+    db = await get_db()
+
+    query: dict = {}
+    if event_type:
+        query["event_type"] = event_type
+    if org_id:
+        query["organization_id"] = org_id
+
+    # Primary: outbox_dead_letters collection (full details)
+    cursor = db.outbox_dead_letters.find(
+        query, {"_id": 0}
+    ).sort("dead_lettered_at", -1).limit(limit)
+
+    events = []
+    async for doc in cursor:
+        for field in ("dead_lettered_at", "created_at"):
+            if field in doc and hasattr(doc[field], "isoformat"):
+                doc[field] = doc[field].isoformat()
+        events.append(doc)
+
+    # Stats
+    total_dlq = await db.outbox_dead_letters.count_documents(query)
+
+    # Breakdown by event_type
+    pipeline = [
+        {"$match": query} if query else {"$match": {}},
+        {"$group": {"_id": "$event_type", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+    ]
+    type_breakdown = {}
+    async for doc in db.outbox_dead_letters.aggregate(pipeline):
+        type_breakdown[doc["_id"]] = doc["count"]
+
+    return {
+        "total": total_dlq,
+        "showing": len(events),
+        "breakdown_by_type": type_breakdown,
+        "events": events,
+    }
+
+
+@router.post("/dead-letter/retry-all", summary="Retry all dead-lettered events")
+async def outbox_retry_all_dead_letters(
+    user=Depends(get_current_user),
+    event_type: str = Query(default=None),
+):
+    """Bulk retry all dead-lettered events (optionally filtered by event_type)."""
+    db = await get_db()
+
+    query = {"status": "dead_letter"}
+    if event_type:
+        query["event_type"] = event_type
+
+    result = await db.outbox_events.update_many(
+        query,
+        {
+            "$set": {"status": "pending", "retry_count": 0},
+            "$unset": {"dead_lettered_at": 1, "last_error": 1},
+        },
+    )
+
+    return {
+        "status": "retried",
+        "events_reset": result.modified_count,
+        "filter": {"event_type": event_type} if event_type else "all",
+    }
+
+
+@router.get("/stats-by-type", summary="Event statistics grouped by type")
+async def outbox_stats_by_type(user=Depends(get_current_user)):
+    """Breakdown of outbox events by event_type and status."""
+    db = await get_db()
+
+    pipeline = [
+        {"$group": {
+            "_id": {"event_type": "$event_type", "status": "$status"},
+            "count": {"$sum": 1},
+        }},
+        {"$sort": {"_id.event_type": 1, "_id.status": 1}},
+    ]
+
+    result = {}
+    async for doc in db.outbox_events.aggregate(pipeline):
+        et = doc["_id"]["event_type"]
+        st = doc["_id"]["status"]
+        if et not in result:
+            result[et] = {}
+        result[et][st] = doc["count"]
+
+    return {"stats_by_type": result}

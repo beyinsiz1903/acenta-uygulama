@@ -202,60 +202,14 @@ async def _async_poll_and_dispatch() -> dict[str, Any]:
 
 
 async def _enqueue_task(task_name: str, kwargs: dict, queue: str) -> None:
-    """Enqueue a Celery task using Redis directly (async-safe).
+    """Enqueue a Celery task via EventPublisher's transport adapter.
 
-    This bypasses kombu's connection pool which doesn't work reliably
-    from within an async event loop (FastAPI). We construct the Celery
-    task message in kombu-compatible format and push directly to Redis.
+    Domain/service code never touches Celery directly — the transport
+    layer is swappable (Redis today, Kafka tomorrow).
     """
-    import base64
-    import json as _json
-
-    task_id = str(uuid.uuid4())
-
-    # Body must be base64-encoded JSON (kombu default encoding)
-    body_raw = _json.dumps([
-        [],       # args
-        kwargs,   # kwargs
-        {"callbacks": None, "errbacks": None, "chain": None, "chord": None},
-    ])
-    body_b64 = base64.b64encode(body_raw.encode("utf-8")).decode("utf-8")
-
-    message = {
-        "body": body_b64,
-        "content-encoding": "utf-8",
-        "content-type": "application/json",
-        "headers": {
-            "lang": "py",
-            "task": task_name,
-            "id": task_id,
-            "root_id": task_id,
-            "parent_id": None,
-            "group": None,
-            "retries": 0,
-            "origin": "outbox-consumer",
-        },
-        "properties": {
-            "correlation_id": task_id,
-            "reply_to": "",
-            "delivery_mode": 2,
-            "delivery_info": {
-                "exchange": "",
-                "routing_key": queue,
-            },
-            "priority": 0,
-            "body_encoding": "base64",
-            "delivery_tag": task_id,
-        },
-    }
-
-    # Use async Redis to push the task (Celery broker is on DB 1)
-    import redis.asyncio as aioredis
-    broker_r = aioredis.from_url("redis://localhost:6379/1", decode_responses=True)
-    try:
-        await broker_r.lpush(queue, _json.dumps(message))
-    finally:
-        await broker_r.aclose()
+    from app.infrastructure.event_publisher import get_transport
+    transport = get_transport()
+    await transport.send(task_name, kwargs, queue)
 
 
 def _serialize_payload(payload: Any) -> dict:

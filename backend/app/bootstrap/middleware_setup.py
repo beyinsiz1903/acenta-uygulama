@@ -7,12 +7,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import CORS_ORIGINS
+from app.middleware.api_versioning import APIVersioningMiddleware
 from app.middleware.correlation_id import CorrelationIdMiddleware
 from app.middleware.csrf_middleware import CSRFProtectionMiddleware
 from app.middleware.error_tracking_middleware import ErrorTrackingMiddleware
 from app.middleware.ip_whitelist_middleware import IPWhitelistMiddleware
 from app.middleware.prometheus_middleware import PrometheusMiddleware
 from app.middleware.rate_limit_middleware import RateLimitMiddleware
+from app.middleware.response_envelope import ResponseEnvelopeMiddleware
 from app.middleware.security_headers_middleware import SecurityHeadersMiddleware
 from app.middleware.structured_logging_middleware import StructuredLoggingMiddleware
 from app.middleware.tenant_middleware import TenantResolutionMiddleware
@@ -20,6 +22,7 @@ from app.middleware.rbac_middleware import RBACMiddleware
 
 
 def configure_middlewares(app: FastAPI) -> None:
+    app.add_middleware(ResponseEnvelopeMiddleware)  # innermost — wraps response body
     app.add_middleware(CorrelationIdMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(CSRFProtectionMiddleware)
@@ -30,6 +33,7 @@ def configure_middlewares(app: FastAPI) -> None:
     app.add_middleware(IPWhitelistMiddleware)
     app.add_middleware(TenantResolutionMiddleware)
     app.add_middleware(RBACMiddleware)
+    app.add_middleware(APIVersioningMiddleware)  # outermost — rewrites /api/v1/ paths
 
     cors_logger = logging.getLogger("cors")
     if CORS_ORIGINS == ["*"]:
@@ -42,7 +46,7 @@ def configure_middlewares(app: FastAPI) -> None:
             allow_credentials=True,
             allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
             allow_headers=["*"],
-            expose_headers=["X-Request-ID", "X-RateLimit-Policy"],
+            expose_headers=["X-Request-ID", "X-RateLimit-Policy", "X-API-Version", "X-API-Deprecated", "X-API-Upgrade", "X-Correlation-Id"],
         )
         return
 
@@ -54,5 +58,5 @@ def configure_middlewares(app: FastAPI) -> None:
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
         allow_headers=["*"],
-        expose_headers=["X-Request-ID", "X-RateLimit-Policy"],
+        expose_headers=["X-Request-ID", "X-RateLimit-Policy", "X-API-Version", "X-API-Deprecated", "X-API-Upgrade", "X-Correlation-Id"],
     )

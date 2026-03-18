@@ -53,7 +53,23 @@ def _run_async(coro):
 
 
 async def _is_already_processed(db, event_id: str, handler: str) -> bool:
-    """Check idempotency — has this (event_id, handler) already been processed?"""
+    """Check idempotency — two-layer: Redis fast-path + MongoDB unique constraint.
+
+    Layer 1 (Redis): O(1) check via SET key — covers 99% of duplicate attempts
+    Layer 2 (MongoDB): unique index on (event_id, handler) — catches race conditions
+    """
+    # Layer 1: Redis fast-path
+    try:
+        from app.infrastructure.redis_client import get_async_redis
+        r = await get_async_redis()
+        if r:
+            key = f"idempotent:{event_id}:{handler}"
+            if await r.exists(key):
+                return True
+    except Exception:
+        pass  # Fall through to DB check
+
+    # Layer 2: MongoDB (authoritative source)
     existing = await db.outbox_consumer_results.find_one({
         "event_id": event_id,
         "handler": handler,
@@ -64,13 +80,34 @@ async def _is_already_processed(db, event_id: str, handler: str) -> bool:
 async def _mark_processed(
     db, event_id: str, handler: str, result: dict
 ) -> None:
-    """Record that this handler has processed this event."""
-    await db.outbox_consumer_results.insert_one({
-        "event_id": event_id,
-        "handler": handler,
-        "result": result,
-        "processed_at": datetime.now(timezone.utc),
-    })
+    """Record that this handler has processed this event.
+
+    Uses MongoDB upsert with unique index as the authoritative lock.
+    Also sets a Redis key for fast-path dedup on subsequent attempts.
+    TTL: 7 days (events older than this won't be replayed).
+    """
+    from pymongo.errors import DuplicateKeyError
+
+    try:
+        await db.outbox_consumer_results.insert_one({
+            "event_id": event_id,
+            "handler": handler,
+            "result": result,
+            "processed_at": datetime.now(timezone.utc),
+        })
+    except DuplicateKeyError:
+        logger.warning("Duplicate processing attempt: event=%s handler=%s", event_id, handler)
+        return
+
+    # Set Redis fast-path key (TTL 7 days)
+    try:
+        from app.infrastructure.redis_client import get_async_redis
+        r = await get_async_redis()
+        if r:
+            key = f"idempotent:{event_id}:{handler}"
+            await r.set(key, "1", ex=7 * 24 * 3600)
+    except Exception:
+        pass  # Non-critical — DB is the authority
 
 
 # ── 1. Notification Consumer ─────────────────────────────────

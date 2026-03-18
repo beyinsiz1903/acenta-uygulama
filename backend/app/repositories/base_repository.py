@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict
 
 from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection
+
+logger = logging.getLogger("repositories.base")
 
 
 def get_collection(db: AsyncIOMotorDatabase, name: str) -> AsyncIOMotorCollection:
@@ -18,14 +21,20 @@ def with_org_filter(filter_dict: Dict[str, Any], organization_id: str) -> Dict[s
     """Inject organization_id into a Mongo filter dict.
 
     Ensures that all multi-tenant queries are scoped by organization_id.
+    Raises ValueError if organization_id is empty — this is a hard security boundary.
     """
 
     if not organization_id:
         raise ValueError("organization_id is required for org-scoped queries")
 
     f = dict(filter_dict or {})
-    # Do not overwrite if explicitly set, but normally it should not be
-    f.setdefault("organization_id", organization_id)
+    if "organization_id" in f and f["organization_id"] != organization_id:
+        logger.warning(
+            "TENANT_BYPASS_ATTEMPT: query has org=%s but context has org=%s",
+            f["organization_id"], organization_id,
+        )
+        raise ValueError("Cross-tenant access attempt detected")
+    f["organization_id"] = organization_id
     return f
 
 
@@ -33,13 +42,13 @@ def with_tenant_filter(
     filter_dict: Dict[str, Any],
     tenant_id: str,
     *,
-    include_legacy_without_tenant: bool = True,
+    include_legacy_without_tenant: bool = False,
 ) -> Dict[str, Any]:
     """Inject tenant-aware guardrails into a Mongo filter.
 
-    For legacy collections/documents that do not yet have tenant_id, callers can
-    temporarily opt into `include_legacy_without_tenant=True` so reads remain
-    backward compatible during migration.
+    HARDENED: include_legacy_without_tenant defaults to False.
+    The legacy fallback ($or with null/missing tenant_id) is DEPRECATED
+    and will be removed. New code MUST NOT use it.
     """
 
     if not tenant_id:
@@ -48,6 +57,10 @@ def with_tenant_filter(
     base = dict(filter_dict or {})
     tenant_clause: Dict[str, Any]
     if include_legacy_without_tenant:
+        logger.warning(
+            "DEPRECATED: include_legacy_without_tenant=True used. "
+            "This fallback will be removed. Migrate data to have tenant_id."
+        )
         tenant_clause = {
             "$or": [
                 {"tenant_id": tenant_id},

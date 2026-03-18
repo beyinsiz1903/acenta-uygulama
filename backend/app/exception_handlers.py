@@ -10,11 +10,44 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.errors import AppError, ErrorCode, error_response
+from app.modules.tenant.errors import (
+    TenantContextMissing,
+    TenantFilterBypassAttempt,
+    TenantIsolationError,
+)
 
 logger = logging.getLogger("exception_handlers")
 
 
 def register_exception_handlers(app: FastAPI) -> None:
+    # ── Tenant Isolation Errors (Security-Critical) ──────────
+    @app.exception_handler(TenantFilterBypassAttempt)
+    async def tenant_bypass_handler(request: Request, exc: TenantFilterBypassAttempt) -> JSONResponse:
+        logger.critical(
+            "SECURITY: Tenant filter bypass attempt: path=%s error=%s",
+            request.url.path, str(exc),
+        )
+        return JSONResponse(
+            status_code=403,
+            content=error_response("tenant_isolation_violation", "Erişim reddedildi", {"path": str(request.url.path)}),
+        )
+
+    @app.exception_handler(TenantContextMissing)
+    async def tenant_context_missing_handler(request: Request, exc: TenantContextMissing) -> JSONResponse:
+        logger.warning("Tenant context missing: path=%s error=%s", request.url.path, str(exc))
+        return JSONResponse(
+            status_code=403,
+            content=error_response("tenant_context_required", "Tenant bağlamı gerekli", {"path": str(request.url.path)}),
+        )
+
+    @app.exception_handler(TenantIsolationError)
+    async def tenant_isolation_handler(request: Request, exc: TenantIsolationError) -> JSONResponse:
+        logger.error("Tenant isolation error: path=%s error=%s", request.url.path, str(exc))
+        return JSONResponse(
+            status_code=403,
+            content=error_response("tenant_isolation_error", "Tenant izolasyon hatası", {"path": str(request.url.path)}),
+        )
+
     @app.exception_handler(AppError)
     async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:  # type: ignore[override]
         details = exc.details.copy() if isinstance(exc.details, dict) else {}

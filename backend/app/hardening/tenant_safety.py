@@ -1,41 +1,32 @@
 """PART 5 — Multi-Tenant Safety.
 
-Tenant isolation testing: prevents cross-tenant data leaks.
-Enforces data boundaries across all collections and operations.
+DEPRECATED: This module is a backward-compatible shim.
+Use app.modules.tenant instead for all new code.
+
+- Admin bypass rules: app.modules.tenant.admin_bypass
+- Repository base: app.modules.tenant.repository
+- Context injection: app.modules.tenant.context
+- Guard/audit: app.modules.tenant.guard
 """
 from __future__ import annotations
 
 import logging
+import warnings
 from datetime import datetime, timezone
+
+# Re-export from new canonical location
+from app.modules.tenant.admin_bypass import TENANT_SCOPED_COLLECTIONS as _NEW_COLLECTIONS
 
 logger = logging.getLogger("hardening.tenant_safety")
 
+warnings.warn(
+    "app.hardening.tenant_safety is deprecated. Use app.modules.tenant instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
-# Collections that MUST be tenant-isolated
-TENANT_ISOLATED_COLLECTIONS = [
-    "bookings",
-    "customers",
-    "payments",
-    "vouchers",
-    "invoices",
-    "hotels",
-    "rateplans",
-    "inventory",
-    "crm_contacts",
-    "crm_deals",
-    "crm_activities",
-    "crm_notes",
-    "pricing_rules",
-    "commission_rules",
-    "settlements",
-    "refund_cases",
-    "notification_deliveries",
-    "audit_log",
-    "ops_cases",
-    "ops_incidents",
-]
-
-# Tenant isolation field (the field name in each document)
+# Legacy constants — kept for backward compatibility
+TENANT_ISOLATED_COLLECTIONS = list(_NEW_COLLECTIONS)
 TENANT_FIELD = "organization_id"
 
 # Cross-tenant test scenarios

@@ -36,6 +36,12 @@ def register_routers(app: FastAPI) -> None:
     app.mount("/api/uploads/tours", StaticFiles(directory=str(uploads_dir)), name="tour_uploads")
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # DOMAIN 0: TENANT ISOLATION (Security Boundary)
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    from app.modules.tenant.router import router as tenant_isolation_router
+    app.include_router(tenant_isolation_router)
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # DOMAIN 1: BOOKING (Unified State Machine)
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     from app.modules.booking.router import router as booking_commands_router

@@ -17,7 +17,7 @@ import uuid
 from typing import Dict, Any, Optional
 
 # Use the preview URL from frontend/.env
-BASE_URL = "https://scale-ready-platform.preview.emergentagent.com"
+BASE_URL = "https://migration-safe.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials from review request

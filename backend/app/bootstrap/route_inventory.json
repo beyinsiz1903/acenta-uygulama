@@ -1697,6 +1697,17 @@
     "compat_required": true,
     "current_namespace": "/api/admin",
     "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "admin",
+    "path": "/api/admin/demo/seed-bookings",
+    "risk_level": "medium",
+    "source": "app.routers.admin_demo_seed",
+    "target_namespace": "/api/v1/admin"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/admin",
+    "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "admin",
     "path": "/api/admin/demo/seed-targets",
@@ -2095,6 +2106,28 @@
     "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "admin",
+    "path": "/api/admin/insights/funnel",
+    "risk_level": "medium",
+    "source": "app.routers.admin_insights",
+    "target_namespace": "/api/v1/admin"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/admin",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "admin",
+    "path": "/api/admin/insights/queues",
+    "risk_level": "medium",
+    "source": "app.routers.admin_insights",
+    "target_namespace": "/api/v1/admin"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/admin",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "admin",
     "path": "/api/admin/integrations/credentials",
     "risk_level": "medium",
     "source": "app.routers.admin_integrations",
@@ -2384,6 +2417,17 @@
     "path": "/api/admin/matches/{match_id}/events",
     "risk_level": "medium",
     "source": "app.routers.matches",
+    "target_namespace": "/api/v1/admin"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/admin",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "admin",
+    "path": "/api/admin/matches/{match_id}/request-unblock",
+    "risk_level": "medium",
+    "source": "app.routers.match_unblock",
     "target_namespace": "/api/v1/admin"
   },
   {
@@ -3800,17 +3844,6 @@
     "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "agency",
-    "path": "/api/agency/hotels",
-    "risk_level": "medium",
-    "source": "app.routers.agency",
-    "target_namespace": "/api/v1/agency"
-  },
-  {
-    "compat_required": true,
-    "current_namespace": "/api/agency",
-    "legacy_or_v1": "legacy",
-    "method": "GET",
-    "owner": "agency",
     "path": "/api/agency/pms/accounting/folios",
     "risk_level": "medium",
     "source": "app.routers.agency_pms_accounting",
@@ -4727,6 +4760,17 @@
     "path": "/api/b2b/bookings/{booking_id}/cancel",
     "risk_level": "medium",
     "source": "app.routers.b2b_bookings",
+    "target_namespace": "/api/v1/b2b"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/b2b",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "b2b",
+    "path": "/api/b2b/bookings/{booking_id}/cancel-requests",
+    "risk_level": "medium",
+    "source": "app.routers.b2b_cancel",
     "target_namespace": "/api/v1/b2b"
   },
   {
@@ -5718,6 +5762,61 @@
     "risk_level": "medium",
     "source": "app.routers.crm_tasks",
     "target_namespace": "/api/v1/crm"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/customers",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "customers",
+    "path": "/api/customers",
+    "risk_level": "medium",
+    "source": "app.routers.customers",
+    "target_namespace": "/api/v1/customers"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/customers",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "customers",
+    "path": "/api/customers",
+    "risk_level": "medium",
+    "source": "app.routers.customers",
+    "target_namespace": "/api/v1/customers"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/customers",
+    "legacy_or_v1": "legacy",
+    "method": "DELETE",
+    "owner": "customers",
+    "path": "/api/customers/{customer_id}",
+    "risk_level": "medium",
+    "source": "app.routers.customers",
+    "target_namespace": "/api/v1/customers"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/customers",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "customers",
+    "path": "/api/customers/{customer_id}",
+    "risk_level": "medium",
+    "source": "app.routers.customers",
+    "target_namespace": "/api/v1/customers"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/customers",
+    "legacy_or_v1": "legacy",
+    "method": "PUT",
+    "owner": "customers",
+    "path": "/api/customers/{customer_id}",
+    "risk_level": "medium",
+    "source": "app.routers.customers",
+    "target_namespace": "/api/v1/customers"
   },
   {
     "compat_required": true,
@@ -7661,9 +7760,207 @@
     "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "hotel",
+    "path": "/api/hotel/allocations",
+    "risk_level": "medium",
+    "source": "app.routers.hotel",
+    "target_namespace": "/api/v1/hotel"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "hotel",
+    "path": "/api/hotel/allocations",
+    "risk_level": "medium",
+    "source": "app.routers.hotel",
+    "target_namespace": "/api/v1/hotel"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "DELETE",
+    "owner": "hotel",
+    "path": "/api/hotel/allocations/{allocation_id}",
+    "risk_level": "medium",
+    "source": "app.routers.hotel",
+    "target_namespace": "/api/v1/hotel"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "PUT",
+    "owner": "hotel",
+    "path": "/api/hotel/allocations/{allocation_id}",
+    "risk_level": "medium",
+    "source": "app.routers.hotel",
+    "target_namespace": "/api/v1/hotel"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "hotel",
+    "path": "/api/hotel/bookings",
+    "risk_level": "medium",
+    "source": "app.routers.hotel",
+    "target_namespace": "/api/v1/hotel"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "hotel",
+    "path": "/api/hotel/bookings/{booking_id}",
+    "risk_level": "medium",
+    "source": "app.routers.hotel",
+    "target_namespace": "/api/v1/hotel"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "hotel",
+    "path": "/api/hotel/bookings/{booking_id}/approve",
+    "risk_level": "medium",
+    "source": "app.routers.hotel",
+    "target_namespace": "/api/v1/hotel"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "hotel",
+    "path": "/api/hotel/bookings/{booking_id}/cancel-request",
+    "risk_level": "medium",
+    "source": "app.routers.hotel",
+    "target_namespace": "/api/v1/hotel"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "hotel",
+    "path": "/api/hotel/bookings/{booking_id}/guest-note",
+    "risk_level": "medium",
+    "source": "app.routers.hotel",
+    "target_namespace": "/api/v1/hotel"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "hotel",
+    "path": "/api/hotel/bookings/{booking_id}/note",
+    "risk_level": "medium",
+    "source": "app.routers.hotel",
+    "target_namespace": "/api/v1/hotel"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "hotel",
+    "path": "/api/hotel/bookings/{booking_id}/reject",
+    "risk_level": "medium",
+    "source": "app.routers.hotel",
+    "target_namespace": "/api/v1/hotel"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "hotel",
+    "path": "/api/hotel/integrations",
+    "risk_level": "medium",
+    "source": "app.routers.hotel_integrations",
+    "target_namespace": "/api/v1/hotel"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "PUT",
+    "owner": "hotel",
+    "path": "/api/hotel/integrations/channel-manager",
+    "risk_level": "medium",
+    "source": "app.routers.hotel_integrations",
+    "target_namespace": "/api/v1/hotel"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "hotel",
+    "path": "/api/hotel/integrations/channel-manager/sync",
+    "risk_level": "medium",
+    "source": "app.routers.hotel_integrations",
+    "target_namespace": "/api/v1/hotel"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "hotel",
     "path": "/api/hotel/settlements",
     "risk_level": "medium",
     "source": "app.routers.settlements",
+    "target_namespace": "/api/v1/hotel"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "hotel",
+    "path": "/api/hotel/stop-sell",
+    "risk_level": "medium",
+    "source": "app.routers.hotel",
+    "target_namespace": "/api/v1/hotel"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "hotel",
+    "path": "/api/hotel/stop-sell",
+    "risk_level": "medium",
+    "source": "app.routers.hotel",
+    "target_namespace": "/api/v1/hotel"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "DELETE",
+    "owner": "hotel",
+    "path": "/api/hotel/stop-sell/{rule_id}",
+    "risk_level": "medium",
+    "source": "app.routers.hotel",
+    "target_namespace": "/api/v1/hotel"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/hotel",
+    "legacy_or_v1": "legacy",
+    "method": "PUT",
+    "owner": "hotel",
+    "path": "/api/hotel/stop-sell/{rule_id}",
+    "risk_level": "medium",
+    "source": "app.routers.hotel",
     "target_namespace": "/api/v1/hotel"
   },
   {
@@ -8479,6 +8776,50 @@
     "risk_level": "medium",
     "source": "app.routers.invoice_engine",
     "target_namespace": "/api/v1/invoices"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/leads",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "leads",
+    "path": "/api/leads",
+    "risk_level": "medium",
+    "source": "app.routers.leads",
+    "target_namespace": "/api/v1/leads"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/leads",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "leads",
+    "path": "/api/leads",
+    "risk_level": "medium",
+    "source": "app.routers.leads",
+    "target_namespace": "/api/v1/leads"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/leads",
+    "legacy_or_v1": "legacy",
+    "method": "PUT",
+    "owner": "leads",
+    "path": "/api/leads/{lead_id}",
+    "risk_level": "medium",
+    "source": "app.routers.leads",
+    "target_namespace": "/api/v1/leads"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/leads",
+    "legacy_or_v1": "legacy",
+    "method": "PATCH",
+    "owner": "leads",
+    "path": "/api/leads/{lead_id}/status",
+    "risk_level": "medium",
+    "source": "app.routers.leads",
+    "target_namespace": "/api/v1/leads"
   },
   {
     "compat_required": true,
@@ -11738,6 +12079,83 @@
   },
   {
     "compat_required": true,
+    "current_namespace": "/api/quotes",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "quotes",
+    "path": "/api/quotes",
+    "risk_level": "medium",
+    "source": "app.routers.quotes",
+    "target_namespace": "/api/v1/quotes"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/quotes",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "quotes",
+    "path": "/api/quotes",
+    "risk_level": "medium",
+    "source": "app.routers.quotes",
+    "target_namespace": "/api/v1/quotes"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/quotes",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "quotes",
+    "path": "/api/quotes/convert",
+    "risk_level": "medium",
+    "source": "app.routers.quotes",
+    "target_namespace": "/api/v1/quotes"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/rateplans",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "rateplans",
+    "path": "/api/rateplans",
+    "risk_level": "medium",
+    "source": "app.routers.rateplans",
+    "target_namespace": "/api/v1/rateplans"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/rateplans",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "rateplans",
+    "path": "/api/rateplans",
+    "risk_level": "medium",
+    "source": "app.routers.rateplans",
+    "target_namespace": "/api/v1/rateplans"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/rateplans",
+    "legacy_or_v1": "legacy",
+    "method": "DELETE",
+    "owner": "rateplans",
+    "path": "/api/rateplans/{rateplan_id}",
+    "risk_level": "medium",
+    "source": "app.routers.rateplans",
+    "target_namespace": "/api/v1/rateplans"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/rateplans",
+    "legacy_or_v1": "legacy",
+    "method": "PUT",
+    "owner": "rateplans",
+    "path": "/api/rateplans/{rateplan_id}",
+    "risk_level": "medium",
+    "source": "app.routers.rateplans",
+    "target_namespace": "/api/v1/rateplans"
+  },
+  {
+    "compat_required": true,
     "current_namespace": "/api/reconciliation",
     "legacy_or_v1": "legacy",
     "method": "GET",
@@ -14510,6 +14928,39 @@
   },
   {
     "compat_required": true,
+    "current_namespace": "/api/voucher",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "voucher",
+    "path": "/api/voucher/public/{token}",
+    "risk_level": "high",
+    "source": "app.routers.voucher",
+    "target_namespace": "/api/v1/voucher"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/voucher",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "voucher",
+    "path": "/api/voucher/{booking_id}/email",
+    "risk_level": "medium",
+    "source": "app.routers.voucher",
+    "target_namespace": "/api/v1/voucher"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/voucher",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "voucher",
+    "path": "/api/voucher/{booking_id}/generate",
+    "risk_level": "medium",
+    "source": "app.routers.voucher",
+    "target_namespace": "/api/v1/voucher"
+  },
+  {
+    "compat_required": true,
     "current_namespace": "/api/web",
     "legacy_or_v1": "legacy",
     "method": "POST",
@@ -14803,6 +15254,50 @@
     "path": "/health",
     "risk_level": "medium",
     "source": "app.bootstrap.api_app",
+    "target_namespace": "/api/v1"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/inbox/threads",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "core",
+    "path": "/inbox/threads",
+    "risk_level": "medium",
+    "source": "app.routers.inbox",
+    "target_namespace": "/api/v1"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/inbox/threads",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "core",
+    "path": "/inbox/threads",
+    "risk_level": "medium",
+    "source": "app.routers.inbox",
+    "target_namespace": "/api/v1"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/inbox/threads",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "core",
+    "path": "/inbox/threads/{thread_id}",
+    "risk_level": "medium",
+    "source": "app.routers.inbox",
+    "target_namespace": "/api/v1"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/inbox/threads",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "core",
+    "path": "/inbox/threads/{thread_id}/messages",
+    "risk_level": "medium",
+    "source": "app.routers.inbox",
     "target_namespace": "/api/v1"
   },
   {

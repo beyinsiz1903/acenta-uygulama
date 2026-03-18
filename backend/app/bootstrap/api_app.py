@@ -13,7 +13,7 @@ def create_app() -> FastAPI:
 
     from app.bootstrap.middleware_setup import configure_middlewares
     from app.bootstrap.route_inventory import export_route_inventory_snapshot
-    from app.bootstrap.router_registry import register_routers
+    from app.bootstrap.domain_router_registry import register_routers
     from app.bootstrap.runtime_init import (
         ensure_api_runtime_indexes,
         ensure_service_runtime_indexes,

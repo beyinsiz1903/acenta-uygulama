@@ -1,0 +1,57 @@
+"""Finance domain — billing, payments, settlements, invoicing, accounting."""
+from fastapi import APIRouter
+
+from app.config import API_PREFIX
+
+from app.routers.finance import router as finance_router
+from app.routers.admin_billing import router as admin_billing_router
+from app.routers.admin_settlements import router as admin_settlements_router
+from app.routers.admin_statements import router as admin_statements_router
+from app.routers.admin_parasut import router as admin_parasut_router
+from app.routers.billing_checkout import router as billing_checkout_router
+from app.routers.billing_lifecycle import router as billing_lifecycle_router
+from app.routers.billing_webhooks import router as billing_webhooks_router
+from app.routers.payments import router as payments_router
+from app.routers.payments_stripe import router as payments_stripe_router
+from app.routers.efatura import router as efatura_router
+from app.routers.invoice_engine import router as invoice_engine_router
+from app.routers.reconciliation import router as reconciliation_router
+from app.routers.multicurrency import router as multicurrency_router
+from app.routers.accounting_sync import router as accounting_sync_router
+from app.routers.accounting_providers import router as accounting_providers_router
+from app.routers.commission_rules import router as commission_rules_router
+from app.routers.ops_finance import router as ops_finance_router
+from app.routers.ops_finance_accounts import router as ops_finance_accounts_router
+from app.routers.ops_finance_refunds import router as ops_finance_refunds_router
+from app.routers.ops_finance_settlements import router as ops_finance_settlements_router
+from app.routers.ops_finance_documents import router as ops_finance_documents_router
+from app.routers.ops_finance_suppliers import router as ops_finance_suppliers_router
+from app.routers.ops_click_to_pay import router as ops_click_to_pay_router
+from app.routers.public_click_to_pay import router as public_click_to_pay_router
+
+domain_router = APIRouter()
+domain_router.include_router(finance_router, prefix=API_PREFIX)
+domain_router.include_router(admin_billing_router)
+domain_router.include_router(admin_settlements_router)
+domain_router.include_router(admin_statements_router)
+domain_router.include_router(admin_parasut_router)
+domain_router.include_router(billing_checkout_router)
+domain_router.include_router(billing_lifecycle_router)
+domain_router.include_router(billing_webhooks_router)
+domain_router.include_router(payments_router, prefix=API_PREFIX)
+domain_router.include_router(payments_stripe_router, prefix=API_PREFIX)
+domain_router.include_router(efatura_router)
+domain_router.include_router(invoice_engine_router)
+domain_router.include_router(reconciliation_router)
+domain_router.include_router(multicurrency_router)
+domain_router.include_router(accounting_sync_router)
+domain_router.include_router(accounting_providers_router)
+domain_router.include_router(commission_rules_router)
+domain_router.include_router(ops_finance_router)
+domain_router.include_router(ops_finance_accounts_router)
+domain_router.include_router(ops_finance_refunds_router)
+domain_router.include_router(ops_finance_settlements_router)
+domain_router.include_router(ops_finance_documents_router)
+domain_router.include_router(ops_finance_suppliers_router)
+domain_router.include_router(ops_click_to_pay_router)
+domain_router.include_router(public_click_to_pay_router)

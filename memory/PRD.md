@@ -1,78 +1,117 @@
-# Travel Distribution OMS — PRD
+# Travel Distribution SaaS — PRD
 
-## Original Problem Statement
-Full end-to-end test of the entire application, including all buttons and interactions within demo data. Identify and fix any broken, missing, faulty, or white-screen-causing elements.
+## Product Vision
+B2B otel dağıtım platformu: acentalar, tedarikçiler ve operasyon ekipleri için.
 
-## Architecture
-- **Frontend:** React + Shadcn UI + react-query + craco
-- **Backend:** FastAPI + MongoDB
-- **Auth:** JWT-based
+## Core Architecture
+- **Backend**: FastAPI + MongoDB (Motor async)
+- **Frontend**: React + Shadcn/UI
+- **Multi-tenant**: Organization-based isolation
+- **Suppliers**: Paximum (active), Hotelbeds/Juniper (planned)
 
-## What's Been Implemented
+## Domain Modules (NEW — Modular Monolith)
 
-### Session 1-12 (Previous)
-- Full OMS platform: orders, pricing, B2B, settlements, reporting, hotel management, etc.
-- 16 admin pages fixed (white screen bugs from incomplete useEffect→useQuery migration)
+### Active Modules
+| Module | Path | Status |
+|--------|------|--------|
+| **Booking** | `modules/booking/` | Production-ready (unified state machine) |
+| **Auth** | `modules/auth/` | Domain aggregate |
+| **Identity** | `modules/identity/` | Domain aggregate |
+| **B2B** | `modules/b2b/` | Domain aggregate |
+| **Supplier** | `modules/supplier/` | Domain aggregate |
+| **Finance** | `modules/finance/` | Domain aggregate |
+| **CRM** | `modules/crm/` | Domain aggregate |
+| **Operations** | `modules/operations/` | Domain aggregate |
+| **Enterprise** | `modules/enterprise/` | Domain aggregate |
+| **System** | `modules/system/` | Domain aggregate |
 
-### Session 13 (2026-03-17)
-- **Backend lint cleanup:** 10 unused imports (F401) removed via `ruff --fix`
-- **Frontend dependency lockfile:** `yarn.lock` regenerated from scratch. Root `package.json` got `"private": true` to fix workspace warnings. `yarn install --frozen-lockfile` now passes.
-- **Backend test fix:** `test_ratehawk_booking_flow_p0_iter116.py` module-level `assert` → `pytest.skip(allow_module_level=True)` for graceful CI skip.
-- **Frontend ESLint: 493 errors → 0 errors, 0 warnings.** Fixed 56+ files.
-- **Frontend Build:** `yarn build` verified successful.
+### Booking State Machine (Canonical)
+**Single source of truth**: `app/modules/booking/models.py`
 
-### Session 14 (2026-03-18) — Paximum Supplier Integration
-- **Paximum Models** (`paximum_models.py`): Complete dataclass models — Money, Offer, Hotel, SearchResult, PaximumBooking, CancellationPolicy, Room, Traveller with TTL support
-- **Paximum Mapping** (`paximum_mapping.py`): Canonical mapping from raw API responses to typed models
-- **Paximum Adapter** (`paximum_adapter.py`): Production-grade HTTP client with Bearer token auth, timeout + retry + exponential backoff, 8 API operations (search, hotel details, check availability, check hotel availability, place order, get bookings, booking details, cancel fee, cancel, poll confirmation)
-- **Paximum Service** (`paximum_service.py`): Business logic layer with offer caching, OMS/ledger/timeline hooks, pricing pipeline integration
-- **Paximum Router** (`paximum_router.py`): FastAPI router with 8 endpoints — search, hotel-details, check-availability, book, bookings, booking-details, cancel-fee, cancel
-- **Updated supplier_search_service.py**: Migrated from raw httpx.Response to typed SearchResult objects
-- **Unit Tests**: 15 tests covering models, mapping, parsing, validation — all passing
+States: DRAFT → QUOTED → OPTIONED → CONFIRMED → COMPLETED → CANCELLED → REFUNDED
 
-## Credentials
-- **Super Admin:** `agent@acenta.test` / `agent123`
-- **Agency Admin:** `agency1@demo.test` / `agency123`
+Separate tracks:
+- `fulfillment_status`: NONE, TICKETED, VOUCHERED, BOTH
+- `payment_status`: UNPAID, PARTIAL, PAID, REFUND_PENDING, REFUNDED
 
-## Prioritized Backlog
+Key features:
+- Command-based transitions (not direct status set)
+- Optimistic locking (version field)
+- Full history tracking (booking_history collection)
+- Event outbox (outbox_events collection)
+- Policy validation layer
+- Legacy state migration
 
-### P0 (COMPLETED)
-- ~~Redis Offer Cache + Paximum Status Mapping~~ (DONE - Session 15)
-- ~~Paximum Supplier Integration~~ (DONE - Session 14)
+### Router Architecture
+**Registry**: `app/bootstrap/domain_router_registry.py`
+- 10 domain aggregates consolidating 115+ routers
+- ~119 remaining routers in organized sections
+- See `ROUTER_DOMAIN_MANIFEST.md` for details
 
-### P0 (ACTIVE — Strategic Analysis)
-- Full strategic analysis delivered (Session 16, 2026-03-19)
-- See `/app/memory/STRATEGIC_ANALYSIS.md` for complete 90-day roadmap
+## Key API Endpoints
 
-### P1
-- Booking State Machine Unification (3 separate → 1 unified)
-- Router Consolidation (236 → ~20)
-- API Response Standardization
-- Real RateHawk Environment Execution
-- Timeline Export (CSV/PDF)
-
-### P2
-- Celery + Redis async job queue
-- Event Bus → Outbox Pattern
-- API Versioning (/api/v1/)
-- Webhook System
-- New Supplier Integrations: Hotelbeds, Juniper
-- OMS Phase 3+
-- TypeScript Migration
-
-### Deferred
-- `yarn.lock` mismatch — RESOLVED in session 13
-- WebPOS, Storefront, Tour Management, Campaign Engine, CMS Pages — deferred per strategic analysis
-
-## Key API Endpoints — Paximum
-
+### Booking Command Endpoints (NEW)
 | Method | Path | Description |
 |--------|------|-------------|
+| POST | `/api/bookings/{id}/quote` | Create quote |
+| POST | `/api/bookings/{id}/option` | Place option |
+| POST | `/api/bookings/{id}/confirm` | Confirm booking |
+| POST | `/api/bookings/{id}/cancel` | Cancel booking |
+| POST | `/api/bookings/{id}/complete` | Complete booking |
+| POST | `/api/bookings/{id}/mark-ticketed` | Mark as ticketed |
+| POST | `/api/bookings/{id}/mark-vouchered` | Mark as vouchered |
+| POST | `/api/bookings/{id}/mark-refunded` | Mark as refunded |
+| GET | `/api/bookings/{id}/history` | Transition history |
+| GET | `/api/bookings/{id}/status` | Status summary |
+| GET | `/api/bookings-statuses/transitions` | Transition matrix |
+
+### Migration Endpoints
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/admin/booking-migration/run` | Run migration |
+| GET | `/api/admin/booking-migration/status` | Migration status |
+
+### Existing Endpoints
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/auth/login` | Login |
+| GET | `/api/auth/me` | Current user |
+| GET | `/api/health` | Health check |
 | POST | `/api/suppliers/paximum/search` | Hotel search |
-| POST | `/api/suppliers/paximum/hotel-details` | Hotel detail |
-| POST | `/api/suppliers/paximum/check-availability` | Offer availability check |
-| POST | `/api/suppliers/paximum/book` | Place order |
-| POST | `/api/suppliers/paximum/bookings` | List bookings |
-| POST | `/api/suppliers/paximum/booking-details` | Booking detail |
-| POST | `/api/suppliers/paximum/cancel-fee` | Cancellation fee |
-| POST | `/api/suppliers/paximum/cancel` | Cancel booking |
+| POST | `/api/suppliers/paximum/book` | Book hotel |
+
+## Test Credentials
+- **Super Admin**: agent@acenta.test / agent123
+- **Agency Admin**: agency1@demo.test / agency123
+
+## Completed Milestones
+1. Paximum Supplier Integration
+2. Strategic Analysis & Growth Plan
+3. **Unified Booking State Machine** (P0 #1)
+4. **Router Domain Consolidation Phase 1** (P0 #2)
+
+## Active Roadmap
+
+### P0 — In Progress
+- [x] Booking State Machine Unification
+- [x] Router Consolidation Phase 1 (domain aggregates)
+- [ ] Unified Domain Boundaries (interface-based communication)
+- [ ] Async Queue (Celery + Redis)
+- [ ] Tenant Isolation Hardening
+
+### P1 — Next
+- [ ] Event-Driven Core (outbox consumer workers)
+- [ ] Transactional Outbox Pattern (full implementation)
+- [ ] API Response Standardization
+- [ ] Router Consolidation Phase 2 (admin, inventory, public)
+- [ ] Router Consolidation Phase 3 (merge files per domain)
+
+### P2 — Backlog
+- [ ] Cache Strategy (L0/L1/L2)
+- [ ] API Versioning (/api/v1/)
+- [ ] Webhook System
+- [ ] New Supplier Adapters (Hotelbeds, Juniper)
+- [ ] Frontend persona-based separation
+
+### Deferred (Out of Scope)
+- WebPOS, Storefront, Tour Management, Campaign Engine, CMS, AI Assistant

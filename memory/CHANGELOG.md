@@ -1,25 +1,26 @@
-# Syroce Changelog
+# Changelog
 
-## 2026-03-16 — OMS Phase 2: Financial Linkage
-- Implemented Order → Ledger → Settlement chain
-- Auto-post to ledger on order confirm (double-entry: agency receivable, supplier payable, platform revenue)
-- Auto-reverse ledger entries on order cancel
-- Settlement run linkage endpoint
-- Financial status tracking: not_posted → posted → partially_settled → settled → reversed
-- Enhanced financial summary with 5 metrics
-- 3 new backend services (financial_linkage, ledger_query, settlement_query)
-- 8 new API endpoints
-- Frontend: Ledger Entries table, Settlement card, Financial Status badges
-- **Test**: 36/36 passed (iteration 138-139)
+## 2026-02-25
 
-## 2026-03-16 — OMS Phase 1 Improvements
-- Order Number Strategy: ORD-YYYY-NNNNNN format
-- Order Search Endpoint: GET /api/orders/search with 10+ filters
-- Optimistic Locking: version field, 409 Conflict on mismatch
-- **Test**: 25/25 passed (iteration 138)
+### Unified Booking State Machine (P0 #1) — COMPLETE
+- Created `app/modules/booking/` module with canonical state model
+- States: DRAFT → QUOTED → OPTIONED → CONFIRMED → COMPLETED → CANCELLED → REFUNDED
+- Separate fulfillment_status (NONE/TICKETED/VOUCHERED/BOTH) and payment_status tracks
+- Command-based transitions: quote, option, confirm, cancel, complete, mark-ticketed, mark-vouchered, mark-refunded
+- Optimistic locking with version field (409 Conflict on concurrent writes)
+- Full history tracking in booking_history collection
+- Event outbox in outbox_events collection (pending → for future consumers)
+- Policy validation layer (business rules separate from state machine)
+- Legacy state migration script (7 bookings migrated successfully)
+- Backward-compatible shims for old imports (with deprecation warnings)
+- 25 unit tests passing + 29 API integration tests (54 total, 100% pass rate)
 
-## Previous — OMS Phase 1: Order Core Layer
-- Order CRUD, state machine, event sourcing
-- 4 core services: order_service, order_transition_service, order_event_service, order_mapping_service
-- Orders list and detail pages
-- **Test**: 23/23 passed (iteration 137)
+### Router Domain Consolidation Phase 1 (P0 #2) — COMPLETE
+- Created 10 domain aggregate modules under `app/modules/`
+  - auth, identity, b2b, supplier, finance, crm, operations, enterprise, system, booking
+- New domain-based registry: `app/bootstrap/domain_router_registry.py`
+- 115 routers consolidated into domain aggregates
+- 119 remaining routers organized into clear sections
+- Old registry preserved as reference (app/bootstrap/router_registry.py)
+- All endpoints verified working — zero breaking changes
+- Router Domain Manifest created at `/app/backend/ROUTER_DOMAIN_MANIFEST.md`

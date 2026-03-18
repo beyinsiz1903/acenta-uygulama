@@ -1,0 +1,49 @@
+"""System domain — health, infrastructure, monitoring, cache, admin system ops."""
+from fastapi import APIRouter
+
+from app.routers.health import router as health_router
+from app.routers.health_dashboard import router as health_dashboard_router
+from app.routers.cache_health_router import router as cache_health_router
+from app.routers.cache_management import router as cache_management_router
+from app.routers.infrastructure import router as infrastructure_router
+from app.routers.distributed_locks import router as distributed_locks_router
+from app.routers.metrics import router as metrics_router
+from app.routers.admin_system_backups import router as admin_system_backups_router
+from app.routers.admin_system_integrity import router as admin_system_integrity_router
+from app.routers.admin_system_metrics import router as admin_system_metrics_router
+from app.routers.admin_system_errors import router as admin_system_errors_router
+from app.routers.admin_system_uptime import router as admin_system_uptime_router
+from app.routers.admin_system_incidents import router as admin_system_incidents_router
+from app.routers.admin_maintenance import router as admin_maintenance_router
+from app.routers.admin_system_preflight import router as admin_system_preflight_router
+from app.routers.admin_system_runbook import router as admin_system_runbook_router
+from app.routers.admin_system_perf import router as admin_system_perf_router
+from app.routers.system_product_mode import router as system_product_mode_router
+from app.routers.admin_product_mode import router as admin_product_mode_router
+from app.routers.notifications import router as notifications_router
+from app.routers.sms_notifications import router as sms_notifications_router
+from app.routers.reliability import router as reliability_router
+
+domain_router = APIRouter()
+domain_router.include_router(health_router)
+domain_router.include_router(health_dashboard_router)
+domain_router.include_router(cache_health_router)
+domain_router.include_router(cache_management_router)
+domain_router.include_router(infrastructure_router)
+domain_router.include_router(distributed_locks_router)
+domain_router.include_router(metrics_router)
+domain_router.include_router(admin_system_backups_router)
+domain_router.include_router(admin_system_integrity_router)
+domain_router.include_router(admin_system_metrics_router)
+domain_router.include_router(admin_system_errors_router)
+domain_router.include_router(admin_system_uptime_router)
+domain_router.include_router(admin_system_incidents_router)
+domain_router.include_router(admin_maintenance_router)
+domain_router.include_router(admin_system_preflight_router)
+domain_router.include_router(admin_system_runbook_router)
+domain_router.include_router(admin_system_perf_router)
+domain_router.include_router(system_product_mode_router)
+domain_router.include_router(admin_product_mode_router)
+domain_router.include_router(notifications_router)
+domain_router.include_router(sms_notifications_router)
+domain_router.include_router(reliability_router)

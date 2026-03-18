@@ -45,6 +45,10 @@ def register_routers(app: FastAPI) -> None:
     from app.routers.admin_orphan_migration import router as orphan_migration_router
     app.include_router(orphan_migration_router)
 
+    # ADMIN: Outbox Consumer Monitoring
+    from app.routers.admin_outbox import router as outbox_admin_router
+    app.include_router(outbox_admin_router, prefix="/api")
+
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # DOMAIN 1: BOOKING (Unified State Machine)
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

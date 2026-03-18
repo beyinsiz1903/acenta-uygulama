@@ -72,6 +72,14 @@ TASK_QUEUES = (
 
 # Route tasks to queues by name pattern
 TASK_ROUTES = {
+    # Outbox consumer (runs on default queue)
+    "app.tasks.outbox_consumer.*": {"queue": "default"},
+    # Outbox consumer handlers (routed to their specific queues)
+    "app.tasks.outbox_consumers.send_booking_notification": {"queue": "notification_queue"},
+    "app.tasks.outbox_consumers.send_booking_email": {"queue": "notification_queue"},
+    "app.tasks.outbox_consumers.update_billing_projection": {"queue": "reports"},
+    "app.tasks.outbox_consumers.update_reporting_projection": {"queue": "reports"},
+    "app.tasks.outbox_consumers.dispatch_webhook": {"queue": "notification_queue"},
     # Production pool routes
     "app.tasks.booking.*": {"queue": "booking_queue"},
     "app.tasks.payment.*": {"queue": "booking_queue"},
@@ -136,6 +144,10 @@ def create_celery_app() -> Celery:
 
         # Beat schedule for periodic tasks
         beat_schedule={
+            "outbox-consumer-poll": {
+                "task": "app.tasks.outbox_consumer.poll_and_dispatch",
+                "schedule": 5.0,  # every 5 seconds — primary outbox consumer
+            },
             "cleanup-expired-cache": {
                 "task": "app.tasks.maintenance.cleanup_expired_cache",
                 "schedule": 300.0,  # every 5 minutes
@@ -152,7 +164,18 @@ def create_celery_app() -> Celery:
     )
 
     # Auto-discover tasks
-    app.autodiscover_tasks(["app.tasks"])
+    app.autodiscover_tasks(["app.tasks", "app.infrastructure"])
+
+    # Explicitly register task modules (autodiscover expects `tasks.py` naming)
+    app.conf.include = [
+        "app.tasks.booking_tasks",
+        "app.tasks.notification_tasks",
+        "app.tasks.maintenance_tasks",
+        "app.tasks.report_tasks",
+        "app.tasks.supplier_tasks",
+        "app.tasks.outbox_consumers",
+        "app.infrastructure.outbox_consumer",
+    ]
 
     return app
 

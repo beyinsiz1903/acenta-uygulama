@@ -129,6 +129,19 @@ def create_app() -> FastAPI:
             import logging
             logging.getLogger("startup").warning("Job scheduler start: %s", exc)
 
+        # Ensure Outbox Consumer indexes
+        try:
+            await db.outbox_events.create_index([("status", 1), ("created_at", 1)])
+            await db.outbox_events.create_index("organization_id")
+            await db.outbox_consumer_results.create_index(
+                [("event_id", 1), ("handler", 1)], unique=True
+            )
+            await db.outbox_consumer_log.create_index([("processed_at", -1)])
+            await db.outbox_dead_letters.create_index([("dead_lettered_at", -1)])
+        except Exception as exc:
+            import logging
+            logging.getLogger("startup").warning("Outbox indexes: %s", exc)
+
         yield
         shutdown_runtime_resources()
         # Shutdown Redis

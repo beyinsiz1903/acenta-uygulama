@@ -1,33 +1,36 @@
+"""Booking state machine — DEPRECATED, delegates to modules.booking.models.
+
+This file exists for backward compatibility only.
+All new code should import from app.modules.booking.models directly.
+"""
 from __future__ import annotations
 
+import warnings
 from typing import Literal
 
+from app.modules.booking.models import (
+    ALLOWED_TRANSITIONS,
+    BookingStatus,
+    is_valid_transition,
+)
 
+warnings.warn(
+    "app.domain.booking_state_machine is deprecated. "
+    "Use app.modules.booking.models instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+# Backward-compatible type alias
 BookingState = Literal[
     "draft",
     "quoted",
-    "booked",
-    "cancel_requested",
-    "modified",
-    "refund_in_progress",
+    "optioned",
+    "confirmed",
+    "completed",
+    "cancelled",
     "refunded",
-    "hold",
 ]
-
-
-_ALLOWED_TRANSITIONS = {
-    # Existing core lifecycle
-    "draft": {"quoted"},
-    "quoted": {"booked"},
-    # Sprint 2: extended lifecycle
-    "booked": {"cancel_requested", "modified", "refund_in_progress", "hold"},
-    "modified": {"quoted"},
-    # Refund workflow v1: allow both approve and reject from refund_in_progress
-    "refund_in_progress": {"refunded", "booked"},
-    "refunded": set(),
-    "hold": {"booked"},
-    "cancel_requested": set(),
-}
 
 
 class BookingStateTransitionError(ValueError):
@@ -44,7 +47,5 @@ def validate_transition(current: str, target: str) -> None:
 
     Raises BookingStateTransitionError if not allowed.
     """
-
-    allowed = _ALLOWED_TRANSITIONS.get(current, set())
-    if target not in allowed:
+    if not is_valid_transition(current, target):
         raise BookingStateTransitionError(current=current, target=target)

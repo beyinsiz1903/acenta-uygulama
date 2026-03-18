@@ -1,53 +1,59 @@
-"""Booking status machine: draft -> pending -> confirmed/rejected.
+"""Booking status machine — DEPRECATED, delegates to modules.booking.models.
 
-Defines valid status transitions for the booking lifecycle.
+This file exists for backward compatibility only.
+All new code should import from app.modules.booking.models directly.
 """
 from __future__ import annotations
 
+import warnings
 from enum import Enum
+
+from app.modules.booking.models import (
+    ALLOWED_TRANSITIONS,
+    BookingStatus as CanonicalBookingStatus,
+    get_status_label,
+    is_valid_transition,
+)
+
+warnings.warn(
+    "app.constants.booking_statuses is deprecated. "
+    "Use app.modules.booking.models instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class BookingStatus(str, Enum):
     DRAFT = "draft"
-    PENDING = "pending"
+    PENDING = "quoted"  # legacy PENDING maps to QUOTED
     CONFIRMED = "confirmed"
-    REJECTED = "rejected"
+    REJECTED = "cancelled"  # legacy REJECTED maps to CANCELLED
     CANCELLED = "cancelled"
-    AMENDED = "amended"
-    REFUND_IN_PROGRESS = "refund_in_progress"
+    AMENDED = "confirmed"  # legacy AMENDED maps to CONFIRMED
+    REFUND_IN_PROGRESS = "cancelled"  # maps to CANCELLED + payment_status
     REFUNDED = "refunded"
 
 
-# Valid transitions: from_status -> [allowed_to_statuses]
+# Backward-compatible transition dict
 VALID_TRANSITIONS: dict[str, list[str]] = {
-    "draft": ["pending", "cancelled"],
-    "pending": ["confirmed", "rejected", "cancelled"],
-    "confirmed": ["cancelled", "amended", "refund_in_progress"],
-    "rejected": ["draft", "cancelled"],  # Can re-draft after rejection
-    "amended": ["confirmed", "cancelled", "refund_in_progress"],
-    "refund_in_progress": ["refunded", "confirmed"],
-    "refunded": [],  # Terminal state
-    "cancelled": [],  # Terminal state
+    k: list(v) for k, v in ALLOWED_TRANSITIONS.items()
 }
 
 
 def can_transition(from_status: str, to_status: str) -> bool:
-    """Check if a status transition is valid."""
+    """Check if a status transition is valid (backward compatible)."""
     from_lower = (from_status or "draft").lower()
     to_lower = (to_status or "").lower()
-    allowed = VALID_TRANSITIONS.get(from_lower, [])
-    return to_lower in allowed
 
-
-def get_status_label(status: str, lang: str = "tr") -> str:
-    labels = {
-        "draft": {"tr": "Taslak", "en": "Draft"},
-        "pending": {"tr": "Onay Bekliyor", "en": "Pending Approval"},
-        "confirmed": {"tr": "Onaylandı", "en": "Confirmed"},
-        "rejected": {"tr": "Reddedildi", "en": "Rejected"},
-        "cancelled": {"tr": "İptal Edildi", "en": "Cancelled"},
-        "amended": {"tr": "Değiştirildi", "en": "Amended"},
-        "refund_in_progress": {"tr": "İade İşleniyor", "en": "Refund In Progress"},
-        "refunded": {"tr": "İade Edildi", "en": "Refunded"},
+    # Map legacy statuses to new ones
+    legacy_map = {
+        "pending": "quoted",
+        "rejected": "cancelled",
+        "amended": "confirmed",
+        "refund_in_progress": "cancelled",
+        "booked": "confirmed",
     }
-    return labels.get(status.lower(), {}).get(lang, status)
+    from_lower = legacy_map.get(from_lower, from_lower)
+    to_lower = legacy_map.get(to_lower, to_lower)
+
+    return is_valid_transition(from_lower, to_lower)

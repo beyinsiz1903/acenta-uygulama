@@ -1191,6 +1191,28 @@
     "compat_required": true,
     "current_namespace": "/api/admin",
     "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "admin",
+    "path": "/api/admin/booking-migration/run",
+    "risk_level": "medium",
+    "source": "app.modules.booking.migration_router",
+    "target_namespace": "/api/v1/admin"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/admin",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "admin",
+    "path": "/api/admin/booking-migration/status",
+    "risk_level": "medium",
+    "source": "app.modules.booking.migration_router",
+    "target_namespace": "/api/v1/admin"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/admin",
+    "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "admin",
     "path": "/api/admin/booking-outcomes",
@@ -5127,6 +5149,17 @@
   },
   {
     "compat_required": true,
+    "current_namespace": "/api/bookings-statuses",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "bookings-statuses",
+    "path": "/api/bookings-statuses/transitions",
+    "risk_level": "medium",
+    "source": "app.modules.booking.router",
+    "target_namespace": "/api/v1/bookings-statuses"
+  },
+  {
+    "compat_required": true,
     "current_namespace": "/api/bookings",
     "legacy_or_v1": "legacy",
     "method": "POST",
@@ -5177,6 +5210,17 @@
     "owner": "bookings",
     "path": "/api/bookings/{booking_id}/cancel",
     "risk_level": "medium",
+    "source": "app.modules.booking.router",
+    "target_namespace": "/api/v1/bookings"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/bookings",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "bookings",
+    "path": "/api/bookings/{booking_id}/cancel",
+    "risk_level": "medium",
     "source": "app.routers.bookings",
     "target_namespace": "/api/v1/bookings"
   },
@@ -5197,9 +5241,86 @@
     "legacy_or_v1": "legacy",
     "method": "POST",
     "owner": "bookings",
+    "path": "/api/bookings/{booking_id}/complete",
+    "risk_level": "medium",
+    "source": "app.modules.booking.router",
+    "target_namespace": "/api/v1/bookings"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/bookings",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "bookings",
+    "path": "/api/bookings/{booking_id}/confirm",
+    "risk_level": "medium",
+    "source": "app.modules.booking.router",
+    "target_namespace": "/api/v1/bookings"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/bookings",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "bookings",
+    "path": "/api/bookings/{booking_id}/history",
+    "risk_level": "medium",
+    "source": "app.modules.booking.router",
+    "target_namespace": "/api/v1/bookings"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/bookings",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "bookings",
+    "path": "/api/bookings/{booking_id}/mark-refunded",
+    "risk_level": "medium",
+    "source": "app.modules.booking.router",
+    "target_namespace": "/api/v1/bookings"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/bookings",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "bookings",
+    "path": "/api/bookings/{booking_id}/mark-ticketed",
+    "risk_level": "medium",
+    "source": "app.modules.booking.router",
+    "target_namespace": "/api/v1/bookings"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/bookings",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "bookings",
+    "path": "/api/bookings/{booking_id}/mark-vouchered",
+    "risk_level": "medium",
+    "source": "app.modules.booking.router",
+    "target_namespace": "/api/v1/bookings"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/bookings",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "bookings",
     "path": "/api/bookings/{booking_id}/modify",
     "risk_level": "medium",
     "source": "app.routers.bookings",
+    "target_namespace": "/api/v1/bookings"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/bookings",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "bookings",
+    "path": "/api/bookings/{booking_id}/option",
+    "risk_level": "medium",
+    "source": "app.modules.booking.router",
     "target_namespace": "/api/v1/bookings"
   },
   {
@@ -5211,6 +5332,17 @@
     "path": "/api/bookings/{booking_id}/pricing-trace",
     "risk_level": "medium",
     "source": "app.routers.bookings",
+    "target_namespace": "/api/v1/bookings"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/bookings",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "bookings",
+    "path": "/api/bookings/{booking_id}/quote",
+    "risk_level": "medium",
+    "source": "app.modules.booking.router",
     "target_namespace": "/api/v1/bookings"
   },
   {
@@ -5255,6 +5387,17 @@
     "path": "/api/bookings/{booking_id}/refund-request",
     "risk_level": "medium",
     "source": "app.routers.bookings",
+    "target_namespace": "/api/v1/bookings"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/bookings",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "bookings",
+    "path": "/api/bookings/{booking_id}/status",
+    "risk_level": "medium",
+    "source": "app.modules.booking.router",
     "target_namespace": "/api/v1/bookings"
   },
   {

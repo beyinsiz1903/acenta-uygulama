@@ -209,6 +209,10 @@ from app.routers.web_booking import router as web_booking_router
 from app.routers.web_catalog import router as web_catalog_router
 from app.routers.webpos import router as webpos_router
 
+# ── Unified Booking Module (new canonical state machine) ──
+from app.modules.booking.router import router as booking_commands_router
+from app.modules.booking.migration_router import router as booking_migration_router
+
 
 def register_routers(app: FastAPI) -> None:
     register_exception_handlers(app)
@@ -216,6 +220,10 @@ def register_routers(app: FastAPI) -> None:
     uploads_dir = Path(__file__).resolve().parents[1] / "uploads" / "tours"
     uploads_dir.mkdir(parents=True, exist_ok=True)
     app.mount("/api/uploads/tours", StaticFiles(directory=str(uploads_dir)), name="tour_uploads")
+
+    # ── Unified Booking Commands (canonical state machine) ──
+    app.include_router(booking_commands_router, prefix="/api")
+    app.include_router(booking_migration_router, prefix="/api")
 
     app.include_router(auth_router)
     app.include_router(auth_password_reset_router)

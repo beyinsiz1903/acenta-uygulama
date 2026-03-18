@@ -1,0 +1,98 @@
+{
+  "summary": "Comprehensive testing of Unified Booking State Machine API endpoints. All 25 unit tests and 29 API tests pass. Tested: transition matrix endpoint (no auth), all command-based transitions (quote, option, confirm, cancel, complete, mark-refunded), fulfillment commands (mark-ticketed, mark-vouchered), invalid transition rejection (422), version increment tracking, booking status endpoint with allowed_transitions, booking history endpoint, admin migration endpoints, auth requirements, and outbox event creation.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "Deprecation Warnings", "issue": "3 deprecation warnings from legacy imports (app.domain.booking_state_machine, app.constants.booking_statuses) - working as intended for backward compatibility"}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "✅ GET /api/bookings-statuses/transitions - returns statuses, commands, transition matrix (no auth required)",
+    "✅ POST /api/bookings/{id}/quote - DRAFT → QUOTED transition",
+    "✅ POST /api/bookings/{id}/option - QUOTED → OPTIONED transition",
+    "✅ POST /api/bookings/{id}/confirm - OPTIONED → CONFIRMED transition",
+    "✅ POST /api/bookings/{id}/confirm - QUOTED → CONFIRMED (direct path)",
+    "✅ POST /api/bookings/{id}/cancel - DRAFT → CANCELLED transition",
+    "✅ POST /api/bookings/{id}/cancel - CONFIRMED → CANCELLED transition",
+    "✅ POST /api/bookings/{id}/complete - CONFIRMED → COMPLETED transition",
+    "✅ POST /api/bookings/{id}/mark-refunded - CANCELLED → REFUNDED transition",
+    "✅ POST /api/bookings/{id}/mark-ticketed - fulfillment_status=ticketed, main status unchanged",
+    "✅ POST /api/bookings/{id}/mark-vouchered - fulfillment_status=vouchered, main status unchanged",
+    "✅ Ticketed + Vouchered → fulfillment_status='both'",
+    "✅ Invalid transition DRAFT → COMPLETED returns 422 with INVALID_TRANSITION",
+    "✅ Invalid transition DRAFT → CONFIRM returns 422",
+    "✅ Terminal state REFUNDED blocks all transitions (422)",
+    "✅ Terminal state COMPLETED blocks cancel (422)",
+    "✅ Version field increments on each transition (0 → 1 → 2 → ...)",
+    "✅ GET /api/bookings/{id}/status - returns current status with allowed_transitions list",
+    "✅ GET /api/bookings/{id}/history - returns ordered transition history with from_status, to_status, command, actor",
+    "✅ GET /api/admin/booking-migration/status - shows migration_complete=true (7 bookings migrated)",
+    "✅ POST /api/admin/booking-migration/run?dry_run=true - dry run returns stats",
+    "✅ Auth required for transition endpoints (401/403 without token)",
+    "✅ Booking history records created for each transition",
+    "✅ Outbox events created for each transition with status='pending'",
+    "✅ Non-existent booking returns 404",
+    "✅ All 25 unit tests pass (transition matrix, command resolution, legacy mapping, policies, errors, labels)",
+    "✅ All 29 API tests pass"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_booking_state_machine_unified.py",
+    "/app/backend/tests/test_booking_state_machine_api.py",
+    "/app/test_reports/pytest/pytest_booking_state_machine_api_iter142.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Well-structured modular design with models.py, errors.py, policies.py, service.py, router.py separation",
+    "Proper use of optimistic locking via version field with atomic MongoDB update",
+    "Deprecation warnings correctly implemented for backward compatibility with legacy imports",
+    "Transition history and outbox events correctly written on each state change",
+    "Policy validation properly separates business rules from structural transition matrix"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_booking_state_machine_api.py"
+  ],
+  "success_rate": {
+    "backend": "100% (54 tests: 25 unit + 29 API)",
+    "frontend": "N/A (backend-only testing)"
+  },
+  "test_credentials": {
+    "super_admin": "agent@acenta.test / agent123"
+  },
+  "seed_data_creation": "Test bookings created in MongoDB with test_marker field, cleaned up after tests",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All Unified Booking State Machine endpoints are working correctly. The migration has already been run (11 bookings migrated, migration_complete=true). Legacy shim files properly emit deprecation warnings. Test file at /app/backend/tests/test_booking_state_machine_api.py can be reused for regression testing. The transition matrix endpoint GET /api/bookings-statuses/transitions requires a hyphen (not underscore). All transition endpoints require Bearer token authentication.",
+  "verified_features": {
+    "transition_matrix": "GET /api/bookings-statuses/transitions returns all statuses, commands, and transitions",
+    "command_transitions": {
+      "create_quote": "draft → quoted",
+      "place_option": "quoted → optioned",
+      "confirm": "quoted/optioned → confirmed",
+      "cancel": "draft/quoted/optioned/confirmed → cancelled",
+      "complete": "confirmed → completed",
+      "mark_refunded": "cancelled → refunded"
+    },
+    "fulfillment_commands": {
+      "mark_ticketed": "Sets fulfillment_status=ticketed without changing main status",
+      "mark_vouchered": "Sets fulfillment_status=vouchered without changing main status",
+      "combined": "ticketed + vouchered → fulfillment_status='both'"
+    },
+    "terminal_states": {
+      "completed": "No further transitions allowed",
+      "refunded": "No further transitions allowed"
+    },
+    "error_handling": {
+      "invalid_transition": "422 with INVALID_TRANSITION code",
+      "booking_not_found": "404",
+      "auth_required": "401/403"
+    },
+    "version_increment": "Each transition increments version by 1",
+    "booking_history": "Records from_status, to_status, command, actor, reason, occurred_at",
+    "outbox_events": "Created with event_type (e.g., booking.quoted), status='pending'"
+  }
+}

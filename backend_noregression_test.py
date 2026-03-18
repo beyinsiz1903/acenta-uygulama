@@ -10,7 +10,7 @@ import sys
 from datetime import datetime, timedelta
 
 # Base URL from frontend/.env
-BASE_URL = "https://offer-ttl-engine.preview.emergentagent.com/api"
+BASE_URL = "https://domain-consolidate-1.preview.emergentagent.com/api"
 
 # Test credentials
 ADMIN_CREDENTIALS = {

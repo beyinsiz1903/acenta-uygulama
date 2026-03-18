@@ -22,7 +22,7 @@ import os
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
-    BASE_URL = "https://eslint-490-fixes.preview.emergentagent.com"
+    BASE_URL = "https://paximum-integration.preview.emergentagent.com"
 
 
 class TestAuth:

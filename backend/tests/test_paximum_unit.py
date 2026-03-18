@@ -270,3 +270,148 @@ class TestAdapterValidation:
                     customer_nationality="TR",
                 )
             )
+
+
+
+# ── Status Mapping ──
+
+from app.services.suppliers.status_mapping import (
+    resolve_all,
+    resolve_supplier_booking_status,
+    resolve_oms_order_status,
+    resolve_settlement_status,
+    is_terminal_supplier_status,
+    should_post_ledger,
+    should_reverse_ledger,
+    ResolvedStatus,
+)
+
+
+class TestStatusMapping:
+    """Tests for Paximum → OMS three-domain status mapping."""
+
+    def test_confirmed_mapping(self):
+        r = resolve_all("Confirmed")
+        assert r.supplier_booking_status == "confirmed"
+        assert r.oms_order_status == "confirmed"
+        assert r.settlement_status == "not_settled"
+        assert r.raw_supplier_status == "Confirmed"
+
+    def test_pending_mapping(self):
+        r = resolve_all("Pending")
+        assert r.supplier_booking_status == "pending"
+        assert r.oms_order_status == "pending_confirmation"
+        assert r.settlement_status == "not_settled"
+
+    def test_onrequest_mapping(self):
+        r = resolve_all("OnRequest")
+        assert r.supplier_booking_status == "pending"
+        assert r.oms_order_status == "pending_confirmation"
+        assert r.settlement_status == "not_settled"
+
+    def test_rejected_mapping(self):
+        r = resolve_all("Rejected")
+        assert r.supplier_booking_status == "failed"
+        assert r.oms_order_status == "cancelled"
+        assert r.settlement_status == "not_settled"
+
+    def test_cancelled_mapping(self):
+        r = resolve_all("Cancelled")
+        assert r.supplier_booking_status == "cancelled"
+        assert r.oms_order_status == "cancelled"
+        assert r.settlement_status == "reversed"
+
+    def test_unknown_mapping_defaults(self):
+        r = resolve_all("SomeRandomStatus")
+        assert r.supplier_booking_status == "not_started"
+        assert r.oms_order_status == "pending_confirmation"
+        assert r.settlement_status == "not_settled"
+
+    def test_case_insensitive(self):
+        for raw in ("confirmed", "CONFIRMED", "Confirmed", "  confirmed  "):
+            r = resolve_all(raw)
+            assert r.supplier_booking_status == "confirmed"
+            assert r.oms_order_status == "confirmed"
+
+    def test_individual_resolvers(self):
+        assert resolve_supplier_booking_status("OnRequest") == "pending"
+        assert resolve_oms_order_status("OnRequest") == "pending_confirmation"
+        assert resolve_settlement_status("Cancelled") == "reversed"
+
+    def test_terminal_status(self):
+        assert is_terminal_supplier_status("Confirmed") is True
+        assert is_terminal_supplier_status("Rejected") is True
+        assert is_terminal_supplier_status("Cancelled") is True
+        assert is_terminal_supplier_status("Pending") is False
+        assert is_terminal_supplier_status("OnRequest") is False
+
+    def test_ledger_decisions(self):
+        assert should_post_ledger("Confirmed") is True
+        assert should_post_ledger("Pending") is False
+        assert should_reverse_ledger("Cancelled") is True
+        assert should_reverse_ledger("Rejected") is True
+        assert should_reverse_ledger("Confirmed") is False
+
+    def test_resolved_status_is_frozen(self):
+        r = resolve_all("Confirmed")
+        with pytest.raises(AttributeError):
+            r.oms_order_status = "hacked"
+
+    def test_three_domains_are_distinct(self):
+        """supplier_status != oms_status != settlement_status for non-trivial states."""
+        r = resolve_all("Pending")
+        assert r.supplier_booking_status == "pending"
+        assert r.oms_order_status == "pending_confirmation"
+        assert r.settlement_status == "not_settled"
+        # All three are different
+        assert len({r.supplier_booking_status, r.oms_order_status, r.settlement_status}) == 3
+
+
+# ── Offer Cache ──
+
+from app.services.suppliers.offer_cache import RedisOfferCache
+
+
+class TestOfferCacheTTL:
+    """Unit tests for TTL computation (no Redis needed)."""
+
+    def test_ttl_with_no_expiry(self):
+        cache = RedisOfferCache()
+        ttl = cache._compute_ttl(None)
+        assert ttl == cache.DEFAULT_TTL_SECONDS
+
+    def test_ttl_with_future_expiry(self):
+        cache = RedisOfferCache()
+        future = datetime(2099, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        ttl = cache._compute_ttl(future)
+        assert ttl > 0
+
+    def test_ttl_with_past_expiry(self):
+        cache = RedisOfferCache()
+        past = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        ttl = cache._compute_ttl(past)
+        assert ttl == 0
+
+    def test_ttl_subtracts_safety_buffer(self):
+        from datetime import timedelta
+        cache = RedisOfferCache()
+        # Offer expires 120 seconds from now
+        exp = datetime.now(timezone.utc) + timedelta(seconds=120)
+        ttl = cache._compute_ttl(exp)
+        # Should be approximately 120 - 30 = 90
+        assert 85 <= ttl <= 95
+
+    def test_ttl_too_short_returns_zero(self):
+        from datetime import timedelta
+        cache = RedisOfferCache()
+        # Offer expires 20 seconds from now (less than safety buffer)
+        exp = datetime.now(timezone.utc) + timedelta(seconds=20)
+        ttl = cache._compute_ttl(exp)
+        assert ttl == 0
+
+    def test_ttl_with_naive_datetime(self):
+        """Naive datetime should be treated as UTC."""
+        cache = RedisOfferCache()
+        future = datetime(2099, 1, 1, 0, 0, 0)
+        ttl = cache._compute_ttl(future)
+        assert ttl > 0

@@ -13,7 +13,7 @@ from typing import Dict, Any, Optional
 import uuid
 
 # Use the preview URL from frontend/.env
-BASE_URL = "https://eslint-490-fixes.preview.emergentagent.com"
+BASE_URL = "https://paximum-integration.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials

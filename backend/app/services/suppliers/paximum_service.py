@@ -5,6 +5,11 @@ from typing import Any, Optional
 
 from .paximum_adapter import PaximumAdapter, PaximumOfferExpiredError, PaximumValidationError
 from .paximum_models import Offer, PaximumBooking
+from .status_mapping import (
+    resolve_all,
+    should_post_ledger,
+    should_reverse_ledger,
+)
 
 
 @dataclass(slots=True)
@@ -44,18 +49,22 @@ class PaximumService:
             trace_id=trace_id,
         )
 
+        cached_count = 0
         for hotel in result.hotels:
             for offer in hotel.offers:
-                await self.deps.offer_cache.set(
+                ok = await self.deps.offer_cache.set(
                     key=f"paximum:{offer.offer_id}",
                     value=offer,
                     expires_on=offer.expires_on,
                 )
+                if ok:
+                    cached_count += 1
 
         return {
             "search_id": result.search_id,
             "expires_on": result.expires_on.isoformat() if result.expires_on else None,
             "hotel_count": len(result.hotels),
+            "cached_offer_count": cached_count,
         }
 
     async def validate_offer(self, offer_id: str, only_best_offers: bool, trace_id: Optional[str] = None) -> Offer:
@@ -128,7 +137,10 @@ class PaximumService:
             trace_id=trace_id,
         )
 
-        # 6) OMS update
+        # 6) Resolve three-domain status from supplier status
+        resolved = resolve_all(booking.status)
+
+        # 7) OMS update — uses resolved statuses
         await self.deps.oms_service.attach_supplier_booking(
             order_id=order["id"],
             supplier_code="paximum",
@@ -136,17 +148,19 @@ class PaximumService:
             supplier_booking_id=booking.booking_id,
             supplier_booking_number=booking.booking_number,
             supplier_order_number=booking.order_number,
-            supplier_status=booking.status,
+            supplier_status=resolved.supplier_booking_status,
+            oms_order_status=resolved.oms_order_status,
+            settlement_status=resolved.settlement_status,
             document_url=booking.document_url,
             pricing_trace_id=pricing_result["trace_id"],
             raw_supplier_response=supplier_resp,
         )
 
-        # 7) ledger
-        if booking.status.lower() == "confirmed":
+        # 8) ledger — only on confirmed
+        if should_post_ledger(booking.status):
             await self.deps.ledger_service.post_order_confirmed(order_id=order["id"])
 
-        # 8) timeline
+        # 9) timeline
         await self.deps.timeline_service.record(
             entity_type="order",
             entity_id=order["id"],
@@ -157,6 +171,12 @@ class PaximumService:
                 "booking_id": booking.booking_id,
                 "booking_number": booking.booking_number,
                 "order_number": booking.order_number,
+                "status_resolution": {
+                    "raw": resolved.raw_supplier_status,
+                    "supplier_booking": resolved.supplier_booking_status,
+                    "oms_order": resolved.oms_order_status,
+                    "settlement": resolved.settlement_status,
+                },
             },
         )
 
@@ -164,7 +184,10 @@ class PaximumService:
             "order_id": order["id"],
             "supplier_booking_id": booking.booking_id,
             "supplier_booking_number": booking.booking_number,
-            "supplier_status": booking.status,
+            "supplier_status": resolved.raw_supplier_status,
+            "oms_order_status": resolved.oms_order_status,
+            "supplier_booking_status": resolved.supplier_booking_status,
+            "settlement_status": resolved.settlement_status,
             "pricing_trace_id": pricing_result["trace_id"],
         }
 
@@ -179,14 +202,21 @@ class PaximumService:
         cancel_resp = await self.adapter.cancel_booking(booking_id=booking_id, trace_id=trace_id)
         booking = await self.adapter.get_booking_details(booking_id=booking_id, trace_id=trace_id)
 
+        # Resolve status
+        resolved = resolve_all(booking.status)
+
         await self.deps.oms_service.mark_supplier_booking_cancelled(
             order_id=order_id,
             supplier_booking_id=booking_id,
-            supplier_status=booking.status,
+            supplier_status=resolved.supplier_booking_status,
+            oms_order_status=resolved.oms_order_status,
+            settlement_status=resolved.settlement_status,
             cancellation_fee=fee.get("fee"),
         )
 
-        await self.deps.ledger_service.post_order_cancelled(order_id=order_id)
+        if should_reverse_ledger(booking.status):
+            await self.deps.ledger_service.post_order_cancelled(order_id=order_id)
+
         await self.deps.timeline_service.record(
             entity_type="order",
             entity_id=order_id,
@@ -195,14 +225,22 @@ class PaximumService:
             metadata={
                 "supplier": "paximum",
                 "booking_id": booking_id,
-                "supplier_status": booking.status,
+                "supplier_status": resolved.raw_supplier_status,
                 "fee": fee.get("fee"),
+                "status_resolution": {
+                    "supplier_booking": resolved.supplier_booking_status,
+                    "oms_order": resolved.oms_order_status,
+                    "settlement": resolved.settlement_status,
+                },
             },
         )
 
         return {
             "booking_id": booking_id,
-            "status": booking.status,
+            "supplier_status": resolved.raw_supplier_status,
+            "oms_order_status": resolved.oms_order_status,
+            "supplier_booking_status": resolved.supplier_booking_status,
+            "settlement_status": resolved.settlement_status,
             "fee": fee.get("fee"),
             "raw": cancel_resp,
         }

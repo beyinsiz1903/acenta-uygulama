@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 from app.auth import get_current_user
 from app.context_org import get_current_org
 from app.errors import AppError
+from app.services.suppliers.offer_cache import offer_cache
 from app.services.suppliers.paximum_adapter import (
     PaximumAuthError,
     PaximumError,
@@ -30,6 +31,7 @@ from app.services.suppliers.paximum_adapter import (
     PaximumValidationError,
     paximum_adapter,
 )
+from app.services.suppliers.status_mapping import resolve_all
 
 logger = logging.getLogger(__name__)
 
@@ -194,12 +196,19 @@ def _serialize_hotel(h) -> dict:
 
 
 def _serialize_booking(b) -> dict:
+    resolved = resolve_all(b.status)
     return {
         "booking_id": b.booking_id,
         "booking_number": b.booking_number,
         "order_number": b.order_number,
         "supplier_booking_number": b.supplier_booking_number,
         "status": b.status,
+        "status_resolution": {
+            "supplier_booking_status": resolved.supplier_booking_status,
+            "oms_order_status": resolved.oms_order_status,
+            "settlement_status": resolved.settlement_status,
+            "raw_supplier_status": resolved.raw_supplier_status,
+        },
         "payment_status": b.payment_status,
         "service_type": b.service_type,
         "checkin": b.checkin.isoformat() if b.checkin else None,
@@ -289,11 +298,24 @@ async def paximum_search(
     except PaximumError as exc:
         raise _map_paximum_error(exc) from exc
 
+    # Cache all offers from search results
+    cached_count = 0
+    for hotel in result.hotels:
+        for offer in hotel.offers:
+            ok = await offer_cache.set(
+                key=f"paximum:{offer.offer_id}",
+                value=offer,
+                expires_on=offer.expires_on,
+            )
+            if ok:
+                cached_count += 1
+
     return {
         "search_id": result.search_id,
         "expires_on": result.expires_on.isoformat() if result.expires_on else None,
         "hotel_count": len(result.hotels),
         "hotels": [_serialize_hotel(h) for h in result.hotels],
+        "cached_offer_count": cached_count,
         "trace_id": trace,
     }
 
@@ -322,12 +344,25 @@ async def paximum_check_availability(
     x_trace_id: Optional[str] = Header(None),
 ) -> Dict[str, Any]:
     trace = _trace_id(x_trace_id)
+
+    # Try cache first
+    cached = await offer_cache.get(f"paximum:{payload.offerId}")
+    if cached and not cached.is_expired():
+        return {"offer": _serialize_offer(cached), "trace_id": trace, "cache_hit": True}
+
     try:
         offer = await paximum_adapter.check_availability(payload.offerId, trace_id=trace)
     except PaximumError as exc:
         raise _map_paximum_error(exc) from exc
 
-    return {"offer": _serialize_offer(offer), "trace_id": trace}
+    # Update cache with fresh offer
+    await offer_cache.set(
+        key=f"paximum:{offer.offer_id}",
+        value=offer,
+        expires_on=offer.expires_on,
+    )
+
+    return {"offer": _serialize_offer(offer), "trace_id": trace, "cache_hit": False}
 
 
 @router.post("/book", status_code=status.HTTP_200_OK)

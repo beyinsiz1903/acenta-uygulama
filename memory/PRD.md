@@ -1,144 +1,79 @@
-# Travel Distribution SaaS — PRD
+# PRD — Travel Distribution SaaS Platform (Syroce)
 
-## Product Vision
-B2B otel dağıtım platformu: acentalar, tedarikçiler ve operasyon ekipleri için.
+## Original Problem Statement
+The CTO is guiding the refactoring of a monolithic application into a stable, scalable SaaS platform. The platform is a B2B travel distribution system for agencies to manage bookings, pricing, inventory, and customer relationships.
 
-## Core Architecture
-- **Backend**: FastAPI + MongoDB (Motor async)
-- **Frontend**: React + Shadcn/UI
-- **Multi-tenant**: Organization-based isolation (HARDENED)
-- **Suppliers**: Paximum (active), Hotelbeds/Juniper (planned)
+## Core Requirements
+1. **Multi-Tenant Architecture** — Strict tenant isolation via `organization_id` on every document
+2. **Booking Truth Model** — Single source of truth for booking state with proper state machine
+3. **Event-Driven Architecture** — Transactional outbox pattern with async consumers
+4. **Domain-Driven Design** — Modular domain boundaries (booking, pricing, inventory, etc.)
+5. **Audit & Compliance** — Full audit trail for all state changes
 
-## Domain Modules (Modular Monolith)
+## User Personas
+- **Super Admin** — Platform-wide management, migration oversight
+- **Agency Admin** — Organization-level management
+- **Sales/Ops** — Day-to-day booking and customer management
 
-### Active Modules
-| Module | Path | Status |
-|--------|------|--------|
-| **Tenant** | `modules/tenant/` | Production-ready (isolation hardening) |
-| **Booking** | `modules/booking/` | Production-ready (unified state machine) |
-| **Auth** | `modules/auth/` | Domain aggregate |
-| **Identity** | `modules/identity/` | Domain aggregate |
-| **B2B** | `modules/b2b/` | Domain aggregate |
-| **Supplier** | `modules/supplier/` | Domain aggregate |
-| **Finance** | `modules/finance/` | Domain aggregate |
-| **CRM** | `modules/crm/` | Domain aggregate |
-| **Operations** | `modules/operations/` | Domain aggregate |
-| **Enterprise** | `modules/enterprise/` | Domain aggregate |
-| **System** | `modules/system/` | Domain aggregate |
+## Architecture
 
-### Tenant Isolation (Canonical)
-**Enforcement layer**: `app/modules/tenant/`
+### Backend
+- **Framework:** FastAPI
+- **Database:** MongoDB (Motor async driver)
+- **Queue:** Celery + Redis (broker DB 1, results DB 2, cache DB 0)
+- **Pattern:** Transactional Outbox → Celery Worker → Consumer Handlers
 
-Key components:
-- `TenantScopedRepository`: base class for all tenant-aware data access
-- `TenantContext`: FastAPI dependency for extracting tenant info
-- `TenantGuard`: enforcement layer + violation audit logging
-- Admin bypass whitelist for global collections
-- Exception handlers for security boundary violations (403)
+### Event System (P0 #4 — COMPLETED)
+- **Outbox Table:** `outbox_events` collection — events produced by command handlers
+- **Outbox Consumer:** Periodic Celery beat task (every 5s) polls pending events
+- **Dispatch Table:** Maps event types to consumer handlers (10 event types, 35+ handlers)
+- **Consumers (First Wave):**
+  1. `send_booking_notification` — In-app notification records
+  2. `send_booking_email` — Email queue (via email_outbox collection)
+  3. `update_billing_projection` — Monthly billing/revenue aggregation
+  4. `update_reporting_projection` — Daily events + funnel metrics
+  5. `dispatch_webhook` — External webhook delivery to registered endpoints
+- **Guarantees:** At-least-once delivery, idempotent consumers, dead-letter queue
+- **Admin API:** Health, stats, pending/failed events, manual trigger, retry
 
-Guarantees:
-- Every query on tenant-scoped collections includes `organization_id` filter
-- Cross-tenant access attempts raise `TenantFilterBypassAttempt` (logged as CRITICAL)
-- Aggregate pipelines enforce `$match: {organization_id}` as first stage
-- Insert operations auto-stamp `organization_id`
-- Legacy `include_legacy_without_tenant=True` deprecated (defaults to False)
-- 32 collections classified (tenant-scoped vs global)
-- `organization_id` indexes on all tenant-scoped collections
+### Key Collections
+- `outbox_events` — Transactional outbox (status: pending → processing → dispatched/dead_letter)
+- `outbox_consumer_results` — Idempotency tracking (event_id + handler unique)
+- `outbox_consumer_log` — Audit trail for consumer processing
+- `outbox_dead_letters` — Failed events after max retries
+- `booking_notifications` — In-app notifications from consumer
+- `email_outbox` — Email queue from consumer
+- `billing_projections` — Monthly billing aggregations
+- `reporting_daily_events` — Daily event counters
+- `reporting_funnel` — Monthly funnel stage counts
+- `webhook_subscriptions` — Registered webhook endpoints per org
+- `webhook_deliveries` — Webhook delivery records
 
-### Booking State Machine (Canonical)
-**Single source of truth**: `app/modules/booking/models.py`
+## What's Been Implemented
+- [x] Booking truth model with state machine
+- [x] Tenant isolation (organization_id enforcement)
+- [x] Orphan order recovery (evidence-based migration + quarantine)
+- [x] Celery + Redis + Outbox Consumer (P0 #4) — 2026-03-18
+- [x] 5 first-wave consumers: notification, email, billing, reporting, webhook
+- [x] Admin outbox monitoring API (8 endpoints)
+- [x] Event dispatch table (10 event types, 35+ handlers)
+- [x] Supervisor configs for Redis, Celery worker, Celery beat
 
-States: DRAFT → QUOTED → OPTIONED → CONFIRMED → COMPLETED → CANCELLED → REFUNDED
+## Prioritized Backlog
 
-Separate tracks:
-- `fulfillment_status`: NONE, TICKETED, VOUCHERED, BOTH
-- `payment_status`: UNPAID, PARTIAL, PAID, REFUND_PENDING, REFUNDED
+### P0 — COMPLETED
+All P0 tasks have been addressed.
 
-Key features:
-- Command-based transitions (not direct status set)
-- Optimistic locking (version field)
-- Full history tracking (booking_history collection)
-- Event outbox (outbox_events collection)
-- Policy validation layer
-- Legacy state migration
+### P1 — Next Sprint
+1. **Event-Driven Core Expansion** — Add more domain-specific workers and event types
+2. **Router Consolidation Phase 2** — Physical merge of fragmented router files into domain modules
+3. **API Response Standardization** — Standard envelope (success/error), pagination, trace IDs
+4. **Cache Strategy** — L0 (in-memory), L1 (Redis), L2 (MongoDB) caching layers
 
-### Router Architecture
-**Registry**: `app/bootstrap/domain_router_registry.py`
-- 11 domain modules (including tenant)
-- ~119 remaining routers in organized sections
-- See `ROUTER_DOMAIN_MANIFEST.md` for details
-
-## Key API Endpoints
-
-### Tenant Isolation Admin Endpoints (NEW)
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/admin/tenant-isolation/health` | Health score + collection audit |
-| GET | `/api/admin/tenant-isolation/violations` | Violation log viewer |
-| POST | `/api/admin/tenant-isolation/ensure-indexes` | Create org_id indexes |
-| GET | `/api/admin/tenant-isolation/orphaned-documents` | Find orphaned docs |
-| GET | `/api/admin/tenant-isolation/scope-summary` | Coverage per collection |
-
-### Booking Command Endpoints
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/bookings/{id}/quote` | Create quote |
-| POST | `/api/bookings/{id}/confirm` | Confirm booking |
-| POST | `/api/bookings/{id}/cancel` | Cancel booking |
-| POST | `/api/bookings/{id}/complete` | Complete booking |
-| GET | `/api/bookings/{id}/history` | Transition history |
-| GET | `/api/bookings-statuses/transitions` | Transition matrix |
-
-### Orphan Migration Admin Endpoints (NEW)
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/admin/orphan-migration/status` | Migration summary + health score |
-| GET | `/api/admin/orphan-migration/audit-log` | Audit trail with evidence chains |
-| GET | `/api/admin/orphan-migration/quarantine` | Quarantined orders (filter by reviewed/strategy) |
-| POST | `/api/admin/orphan-migration/review` | Approve/reject quarantined order |
-| POST | `/api/admin/orphan-migration/analyze` | Re-run dry-run analysis |
-| POST | `/api/admin/orphan-migration/rollback` | Rollback a migration batch |
-
-### Existing Endpoints
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/auth/login` | Login |
-| GET | `/api/auth/me` | Current user |
-| GET | `/api/health` | Health check |
-
-## Test Credentials
-- **Super Admin**: agent@acenta.test / agent123
-- **Agency Admin**: agency1@demo.test / agency123
-
-## Completed Milestones
-1. Paximum Supplier Integration
-2. Strategic Analysis & Growth Plan
-3. **Unified Booking State Machine** (P0 #1)
-4. **Router Domain Consolidation Phase 1** (P0 #2)
-5. **Tenant Isolation Hardening** (P0 #3)
-6. **Orphan Order Organization Recovery** (P1 — Data Integrity)
-
-## Active Roadmap
-
-### P0 — In Progress
-- [x] Booking State Machine Unification
-- [x] Router Consolidation Phase 1 (domain aggregates)
-- [x] Tenant Isolation Hardening
-- [x] Orphan Order Organization Recovery (data integrity)
-- [ ] Async Queue (Celery + Redis + Outbox Consumer)
-
-### P1 — Next
-- [ ] Event-Driven Core (outbox consumer workers)
-- [ ] Transactional Outbox Pattern (full implementation)
-- [ ] API Response Standardization
-- [ ] Router Consolidation Phase 2 (admin, inventory, public)
-
-### P2 — Backlog
-- [ ] Cache Strategy (L0/L1/L2)
-- [ ] API Versioning (/api/v1/)
-- [ ] Webhook System
-- [ ] New Supplier Adapters (Hotelbeds, Juniper)
-- [ ] Frontend persona-based separation
-
-### Deferred (Out of Scope)
-- WebPOS, Storefront, Tour Management, Campaign Engine, CMS, AI Assistant
+### P2 — Future
+1. **Product Packaging** — Core/Pro/Enterprise tier feature gating
+2. **API Versioning** — /api/v1/ namespace
+3. **Webhook System UI** — Frontend for managing webhook subscriptions
+4. **New Supplier Adapters** — Hotelbeds, Juniper
+5. **Frontend Persona Separation** — Sales/Ops/Finance views
+6. **Enterprise SLA Monitoring**

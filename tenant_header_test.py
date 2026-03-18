@@ -11,7 +11,7 @@ import httpx
 async def test_with_tenant_header():
     """Test mobile endpoints with X-Tenant-Id header as requested in Turkish review"""
     
-    base_url = "https://domain-consolidate-1.preview.emergentagent.com"
+    base_url = "https://router-consolidation-2.preview.emergentagent.com"
     admin_email = "admin@acenta.test"
     admin_password = "admin123"
     

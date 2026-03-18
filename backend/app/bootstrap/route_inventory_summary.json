@@ -50,7 +50,7 @@
       "v1_migration_percent": 0.0
     }
   },
-  "generated_at": "2026-03-18T18:51:22.506669+00:00",
+  "generated_at": "2026-03-18T18:59:09.153977+00:00",
   "inventory_hash": "e35d222131a0c23a99b3424c4038246e1cca0e9c2ab62b070bda00c2f6aef699",
   "inventory_path": "/app/backend/app/bootstrap/route_inventory.json",
   "legacy_routes_remaining": 1367,

@@ -89,6 +89,16 @@ Key features:
 | GET | `/api/bookings/{id}/history` | Transition history |
 | GET | `/api/bookings-statuses/transitions` | Transition matrix |
 
+### Orphan Migration Admin Endpoints (NEW)
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/admin/orphan-migration/status` | Migration summary + health score |
+| GET | `/api/admin/orphan-migration/audit-log` | Audit trail with evidence chains |
+| GET | `/api/admin/orphan-migration/quarantine` | Quarantined orders (filter by reviewed/strategy) |
+| POST | `/api/admin/orphan-migration/review` | Approve/reject quarantined order |
+| POST | `/api/admin/orphan-migration/analyze` | Re-run dry-run analysis |
+| POST | `/api/admin/orphan-migration/rollback` | Rollback a migration batch |
+
 ### Existing Endpoints
 | Method | Path | Description |
 |--------|------|-------------|
@@ -106,6 +116,7 @@ Key features:
 3. **Unified Booking State Machine** (P0 #1)
 4. **Router Domain Consolidation Phase 1** (P0 #2)
 5. **Tenant Isolation Hardening** (P0 #3)
+6. **Orphan Order Organization Recovery** (P1 — Data Integrity)
 
 ## Active Roadmap
 
@@ -113,6 +124,7 @@ Key features:
 - [x] Booking State Machine Unification
 - [x] Router Consolidation Phase 1 (domain aggregates)
 - [x] Tenant Isolation Hardening
+- [x] Orphan Order Organization Recovery (data integrity)
 - [ ] Async Queue (Celery + Redis + Outbox Consumer)
 
 ### P1 — Next

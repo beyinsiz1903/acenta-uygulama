@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-03-18 (Session 2)
+
+### Orphan Order Organization Recovery (P1 — Data Integrity) — COMPLETE
+- Created production-grade, evidence-based two-phase migration script: `scripts/orphan_order_migration.py`
+- Phase 1 (Analyze): 8 evidence strategies with CTO-specified confidence levels:
+  - agency_direct (1.0), tenant_direct (0.95), invoice_chain (0.95)
+  - demo_seed_single_org (0.9), customer_exact_match (0.9)
+  - created_by_user_org (0.7), test_artifact_single_org (0.7)
+  - legacy_org_id_single_org (0.4)
+- Phase 2 (Apply): Only auto-fixes >=0.9 confidence with approved strategies
+- Decision matrix: auto_fix / manual_review / quarantine / unresolved
+- Rollback by batch_id supported with full audit trail
+- 8 demo_seed orders auto-applied (confidence 0.9)
+- 78 test/legacy orders quarantined for manual review (37 test artifacts + 41 legacy)
+- Admin API: 6 endpoints for monitoring, audit, quarantine review
+- Audit collection: `tenant_migration_audit` (full evidence chain per record)
+- Quarantine collection: `tenant_migration_quarantine` (manual approve/reject workflow)
+- 38 tests passing (26 API + 12 unit, 100% pass rate)
+
 ## 2026-03-18
 
 ### Tenant Isolation Hardening (P0 #3) — COMPLETE

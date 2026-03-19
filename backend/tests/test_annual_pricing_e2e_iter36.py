@@ -10,6 +10,15 @@ import pytest
 import httpx
 from unittest.mock import AsyncMock, patch
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 pytestmark = pytest.mark.anyio
 
 MOCK_SESSION_ID = "cs_test_mock_yearly_session_123"
@@ -50,16 +59,6 @@ def _mock_checkout_status(**overrides):
 def mock_stripe_service(monkeypatch):
     """Mock stripe_checkout_service methods to avoid needing a real Stripe key."""
     from app.services import stripe_checkout_service as svc_module
-
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
 
     service = svc_module.stripe_checkout_service
 

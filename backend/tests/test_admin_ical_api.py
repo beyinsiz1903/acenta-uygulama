@@ -17,6 +17,14 @@ from httpx import AsyncClient
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 def _org_from_token(token: str) -> str:
     """Extract org_id from JWT without verification (test-only)."""
     payload = jwt.decode(token, options={"verify_signature": False})
@@ -47,7 +55,7 @@ async def test_admin_ical_feeds_list_empty(
     # Test without product_id filter
     response = await async_client.get("/api/admin/ical/feeds", headers=headers)
     assert response.status_code == 200
-    data = response.json()
+    data = _unwrap(response)
     assert isinstance(data, list)
     assert len(data) == 0
 
@@ -57,7 +65,7 @@ async def test_admin_ical_feeds_list_empty(
         headers=headers
     )
     assert response.status_code == 200
-    data = response.json()
+    data = _unwrap(response)
     assert isinstance(data, list)
     assert len(data) == 0
 
@@ -90,7 +98,7 @@ async def test_admin_ical_feeds_create(
     response = await async_client.post("/api/admin/ical/feeds", headers=headers, json=payload)
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
 
     # Verify response structure
     assert "id" in data
@@ -158,7 +166,7 @@ async def test_admin_ical_sync_mock_functionality(
     response = await async_client.post("/api/admin/ical/sync", headers=headers, json=sync_payload)
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
 
     # Verify sync response structure
     assert data["ok"] is True
@@ -227,7 +235,7 @@ async def test_admin_ical_sync(
 
     create_response = await async_client.post("/api/admin/ical/feeds", headers=headers, json=feed_payload)
     assert create_response.status_code == 200
-    feed_data = create_response.json()
+    feed_data = _unwrap(create_response)
     feed_id = feed_data["id"]
 
     # Now sync the feed (this will fail because example.com doesn't have a real iCal file)
@@ -237,7 +245,7 @@ async def test_admin_ical_sync(
     # In test environment, this should fail with 502 (ical_fetch_failed)
     assert response.status_code == 502
 
-    data = response.json()
+    data = _unwrap(response)
     assert "error" in data
     assert data["error"]["code"] == "ical_fetch_failed"
 
@@ -295,7 +303,7 @@ async def test_admin_ical_calendar(
     )
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
 
     # Verify response structure
     assert data["product_id"] == product_id
@@ -355,12 +363,12 @@ async def test_admin_ical_feeds_list_with_data(
 
     create_response = await async_client.post("/api/admin/ical/feeds", headers=headers, json=feed_payload)
     assert create_response.status_code == 200
-    feed_data = create_response.json()
+    feed_data = _unwrap(create_response)
 
     # Test list all feeds
     response = await async_client.get("/api/admin/ical/feeds", headers=headers)
     assert response.status_code == 200
-    data = response.json()
+    data = _unwrap(response)
     assert isinstance(data, list)
     assert len(data) >= 1
 
@@ -377,7 +385,7 @@ async def test_admin_ical_feeds_list_with_data(
         headers=headers
     )
     assert response.status_code == 200
-    data = response.json()
+    data = _unwrap(response)
     assert isinstance(data, list)
     assert len(data) >= 1
 
@@ -411,7 +419,7 @@ async def test_admin_ical_sync_nonexistent_feed(
     response = await async_client.post("/api/admin/ical/sync", headers=headers, json=sync_payload)
     assert response.status_code == 404
 
-    data = response.json()
+    data = _unwrap(response)
     assert "error" in data
     assert data["error"]["code"] == "ical_feed_not_found"
 
@@ -473,7 +481,7 @@ async def test_admin_ical_comprehensive_flow(
         headers=headers
     )
     assert response.status_code == 200
-    assert len(response.json()) == 0
+    assert len(_unwrap(response)) == 0
 
     # Step 2: Create feed
     feed_payload = {
@@ -483,7 +491,7 @@ async def test_admin_ical_comprehensive_flow(
 
     response = await async_client.post("/api/admin/ical/feeds", headers=headers, json=feed_payload)
     assert response.status_code == 200
-    feed_data = response.json()
+    feed_data = _unwrap(response)
     feed_id = feed_data["id"]
 
     # Verify response excludes internal fields
@@ -501,7 +509,7 @@ async def test_admin_ical_comprehensive_flow(
 
     response = await async_client.post("/api/admin/ical/sync", headers=headers, json=sync_payload)
     assert response.status_code == 200
-    sync_data = response.json()
+    sync_data = _unwrap(response)
 
     assert sync_data["ok"] is True
     assert sync_data["feed_id"] == feed_id
@@ -518,7 +526,7 @@ async def test_admin_ical_comprehensive_flow(
         headers=headers
     )
     assert response.status_code == 200
-    calendar_data = response.json()
+    calendar_data = _unwrap(response)
 
     assert calendar_data["product_id"] == product_id
     assert calendar_data["year"] == current_year

@@ -17,6 +17,14 @@ import pytest
 from unittest.mock import AsyncMock, patch
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = _unwrap(resp)
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 # ── Provider Catalog Tests ───────────────────────────────────────────
 
 @pytest.mark.anyio
@@ -25,7 +33,7 @@ async def test_catalog_returns_all_providers(async_client, admin_token):
     headers = {"Authorization": f"Bearer {admin_token}"}
     resp = await async_client.get("/api/accounting/providers/catalog", headers=headers)
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     providers = data["providers"]
     assert len(providers) == 4
     codes = {p["code"] for p in providers}
@@ -43,7 +51,7 @@ async def test_catalog_active_returns_only_luca(async_client, admin_token):
     headers = {"Authorization": f"Bearer {admin_token}"}
     resp = await async_client.get("/api/accounting/providers/catalog/active", headers=headers)
     assert resp.status_code == 200
-    providers = resp.json()["providers"]
+    providers = _unwrap(resp)["providers"]
     assert len(providers) == 1
     assert providers[0]["code"] == "luca"
     assert providers[0]["is_active"] is True
@@ -55,7 +63,7 @@ async def test_catalog_specific_provider(async_client, admin_token):
     headers = {"Authorization": f"Bearer {admin_token}"}
     resp = await async_client.get("/api/accounting/providers/catalog/luca", headers=headers)
     assert resp.status_code == 200
-    p = resp.json()
+    p = _unwrap(resp)
     assert p["code"] == "luca"
     assert p["capabilities"]["customer_management"] is True
     assert p["capabilities"]["invoice_creation"] is True
@@ -85,7 +93,7 @@ async def test_configure_luca_provider(async_client, admin_token):
     }
     resp = await async_client.post("/api/accounting/providers/config", headers=headers, json=payload)
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["provider_code"] == "luca"
     assert data["status"] == "configured"
     assert "config_id" in data
@@ -103,7 +111,7 @@ async def test_get_config_returns_masked_credentials(async_client, admin_token):
     })
     resp = await async_client.get("/api/accounting/providers/config", headers=headers)
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["configured"] is True
     provider = data["provider"]
     assert provider["provider_code"] == "luca"
@@ -149,10 +157,10 @@ async def test_delete_provider_config(async_client, admin_token):
     # Delete
     resp = await async_client.delete("/api/accounting/providers/config", headers=headers)
     assert resp.status_code == 200
-    assert resp.json()["deleted"] is True
+    assert _unwrap(resp)["deleted"] is True
     # Verify
     get_resp = await async_client.get("/api/accounting/providers/config", headers=headers)
-    assert get_resp.json()["configured"] is False
+    assert _unwrap(get_resp)["configured"] is False
 
 
 # ── Connection Test ──────────────────────────────────────────────────
@@ -168,7 +176,7 @@ async def test_connection_test_flow(async_client, admin_token):
     })
     resp = await async_client.post("/api/accounting/providers/test-connection", headers=headers)
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["success"] is True
     assert data["status"] in ("connected", "simulated")
 
@@ -181,7 +189,7 @@ async def test_connection_test_no_config(async_client, admin_token):
     await async_client.delete("/api/accounting/providers/config", headers=headers)
     resp = await async_client.post("/api/accounting/providers/test-connection", headers=headers)
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["success"] is False
 
 
@@ -201,7 +209,7 @@ async def test_credential_rotation(async_client, admin_token):
         "credentials": {"username": "new_user", "password": "new_pass", "company_id": "NEW"},
     })
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["status"] == "configured"
     assert "encrypted_credentials" not in data
 
@@ -214,7 +222,7 @@ async def test_health_dashboard(async_client, admin_token):
     headers = {"Authorization": f"Bearer {admin_token}"}
     resp = await async_client.get("/api/accounting/providers/health", headers=headers)
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert "tenant_providers" in data
     assert "metrics_24h" in data
     assert "metrics_1h" in data
@@ -237,7 +245,7 @@ async def test_agency_admin_can_view_catalog(async_client, agency_token):
     headers = {"Authorization": f"Bearer {agency_token}"}
     resp = await async_client.get("/api/accounting/providers/catalog", headers=headers)
     assert resp.status_code == 200
-    assert len(resp.json()["providers"]) == 4
+    assert len(_unwrap(resp)["providers"]) == 4
 
 
 @pytest.mark.anyio
@@ -445,7 +453,7 @@ async def test_accounting_dashboard_structure(async_client, admin_token):
     headers = {"Authorization": f"Bearer {admin_token}"}
     resp = await async_client.get("/api/accounting/dashboard", headers=headers)
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     # Core dashboard fields
     assert "providers" in data
     assert "failed" in data
@@ -481,7 +489,7 @@ async def test_reconciliation_run_trigger(async_client, admin_token):
         "/api/reconciliation/run", headers=headers, json={"run_type": "manual"},
     )
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert "run_id" in data
 
 
@@ -493,7 +501,7 @@ async def test_finance_ops_list(async_client, admin_token):
     headers = {"Authorization": f"Bearer {admin_token}"}
     resp = await async_client.get("/api/reconciliation/ops", headers=headers, params={"limit": 10})
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert "items" in data
     assert "total" in data
 
@@ -504,7 +512,7 @@ async def test_finance_ops_stats(async_client, admin_token):
     headers = {"Authorization": f"Bearer {admin_token}"}
     resp = await async_client.get("/api/reconciliation/ops/stats", headers=headers)
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert "total" in data
 
 
@@ -526,7 +534,7 @@ async def test_financial_alerts_list(async_client, admin_token):
     headers = {"Authorization": f"Bearer {admin_token}"}
     resp = await async_client.get("/api/reconciliation/alerts", headers=headers, params={"limit": 10})
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert "items" in data
     assert "total" in data
 
@@ -537,5 +545,5 @@ async def test_financial_alerts_stats(async_client, admin_token):
     headers = {"Authorization": f"Bearer {admin_token}"}
     resp = await async_client.get("/api/reconciliation/alerts/stats", headers=headers)
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert "active_alerts" in data

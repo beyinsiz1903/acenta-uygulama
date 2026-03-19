@@ -8,6 +8,14 @@ from app.auth import create_access_token
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 @pytest.mark.anyio
 async def test_admin_push_invoice_v1_happy_and_idempotent(async_client, test_db):
     db = test_db
@@ -48,7 +56,7 @@ async def test_admin_push_invoice_v1_happy_and_idempotent(async_client, test_db)
         json={"booking_id": str(booking_id)},
     )
     assert resp1.status_code == 200
-    data1 = resp1.json()
+    data1 = _unwrap(resp1)
     assert data1["status"] == "success"
     assert data1["parasut_invoice_id"].startswith("mock_invoice_")
 
@@ -59,7 +67,7 @@ async def test_admin_push_invoice_v1_happy_and_idempotent(async_client, test_db)
         json={"booking_id": str(booking_id)},
     )
     assert resp2.status_code == 200
-    data2 = resp2.json()
+    data2 = _unwrap(resp2)
     assert data2["status"] == "skipped"
     assert data2["parasut_invoice_id"] == data1["parasut_invoice_id"]
 
@@ -105,7 +113,7 @@ async def test_admin_push_invoice_v1_404_for_other_org(async_client, test_db):
     # Should not leak that booking exists in another org
     # run_parasut_invoice_push handles cross-org as booking_not_found (failed)
     assert resp.status_code == 200
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["status"] == "failed"
     assert body["reason"] == "booking_not_found"
 
@@ -176,7 +184,7 @@ async def test_admin_list_parasut_push_log_filtered_by_org_and_booking(async_cli
         "/api/admin/finance/parasut/pushes?booking_id=bk2", headers=headers
     )
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     items = data["items"]
 
     # Only bk2 row should be visible

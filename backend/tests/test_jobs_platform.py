@@ -13,7 +13,7 @@ def _now() -> datetime:
   return datetime.now(timezone.utc)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_job_claim_is_atomic(monkeypatch):
   db = await get_db()
 
@@ -50,7 +50,7 @@ async def test_job_claim_is_atomic(monkeypatch):
   assert all(row.get("status") == "succeeded" for row in statuses)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_retry_backoff_to_dead():
   db = await get_db()
   await db.jobs.delete_many({})

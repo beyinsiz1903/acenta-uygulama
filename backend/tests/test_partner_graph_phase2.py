@@ -66,7 +66,7 @@ def _make_token(email: str, org_id: str, roles: list[str], minutes: int = 60 * 1
     return jwt.encode(payload, _jwt_secret(), algorithm="HS256")
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_invite_accept_activate_happy_path(async_client: AsyncClient) -> None:
     db = await get_db()
     # Cross-org seller/buyer
@@ -116,7 +116,7 @@ async def test_invite_accept_activate_happy_path(async_client: AsyncClient) -> N
     assert rel3["status"] == "active"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_inventory_share_requires_active_relationship(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "SellerOrg2", "seller2@example.com")
@@ -147,7 +147,7 @@ async def test_inventory_share_requires_active_relationship(async_client: AsyncC
     assert body["error"]["code"] == "partner_relationship_inactive"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_commission_resolution_specificity(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "SellerOrg3", "seller3@example.com")
@@ -236,7 +236,7 @@ async def test_commission_resolution_specificity(async_client: AsyncClient) -> N
     assert body["commission"]["amount"] == pytest.approx(15.0)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_network_booking_creates_settlement(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "SellerOrg4", "seller4@example.com")
@@ -318,7 +318,7 @@ async def test_network_booking_creates_settlement(async_client: AsyncClient) -> 
     assert settlement["net_amount"] == pytest.approx(450.0)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_network_booking_denied_if_not_shared(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "SellerOrg5", "seller5@example.com")

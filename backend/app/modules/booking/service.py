@@ -55,6 +55,16 @@ class BookingTransitionService:
         self.db = db
         self.policy = BookingPolicyService()
 
+    @staticmethod
+    def _version_filter(booking_id, organization_id, current_version: int) -> dict:
+        """Build OCC filter that handles legacy bookings without a version field."""
+        base = {"_id": ObjectId(booking_id), "organization_id": organization_id}
+        if current_version == 0:
+            base["$or"] = [{"version": 0}, {"version": {"$exists": False}}]
+        else:
+            base["version"] = current_version
+        return base
+
     # ── Public API ────────────────────────────────────────────
 
     async def transition(
@@ -105,7 +115,7 @@ class BookingTransitionService:
                 # Return current booking state — operation already applied
                 return await self._read_booking_clean(booking_id, organization_id)
 
-        current_status = booking.get("status", "draft")
+        current_status = booking.get("status") or booking.get("state", "draft")
         current_version = booking.get("version", 0)
         target_status = COMMAND_TO_TARGET.get(command)
 
@@ -128,6 +138,7 @@ class BookingTransitionService:
 
         update_fields: dict[str, Any] = {
             "status": target_status,
+            "state": target_status,  # keep legacy field in sync
             "status_changed_at": now,
             "status_changed_by": {
                 "user_id": actor.user_id,
@@ -154,11 +165,7 @@ class BookingTransitionService:
             raise BookingNotFoundError(booking_id)
 
         result = await self.db.bookings.update_one(
-            {
-                "_id": oid,
-                "organization_id": organization_id,
-                "version": current_version,
-            },
+            self._version_filter(booking_id, organization_id, current_version),
             {
                 "$set": update_fields,
                 "$inc": {"version": 1},
@@ -254,11 +261,7 @@ class BookingTransitionService:
             raise BookingNotFoundError(booking_id)
 
         result = await self.db.bookings.update_one(
-            {
-                "_id": oid,
-                "organization_id": organization_id,
-                "version": current_version,
-            },
+            self._version_filter(booking_id, organization_id, current_version),
             {
                 "$set": {
                     "fulfillment_status": new_fulfillment,
@@ -276,8 +279,8 @@ class BookingTransitionService:
             booking_id=booking_id,
             organization_id=organization_id,
             tenant_id=booking.get("tenant_id", ""),
-            from_status=booking.get("status", "draft"),
-            to_status=booking.get("status", "draft"),
+            from_status=booking.get("status") or booking.get("state", "draft"),
+            to_status=booking.get("status") or booking.get("state", "draft"),
             command=command,
             reason=reason,
             actor=actor,
@@ -296,7 +299,7 @@ class BookingTransitionService:
             version=current_version + 1,
             actor=actor,
             data={
-                "status": booking.get("status", "draft"),
+                "status": booking.get("status") or booking.get("state", "draft"),
                 "fulfillment_status": new_fulfillment,
             },
             now=now,
@@ -440,12 +443,16 @@ class BookingTransitionService:
                 organization_id=organization_id,
                 actor={"id": actor.user_id, "email": actor.email, "type": actor.actor_type},
                 request=None,
-                action=action,
+                action="BOOKING_STATE_CHANGED",
                 target_type="booking",
                 target_id=booking_id,
                 before=before,
                 after=after,
-                meta={},
+                meta={
+                    "from": before.get("status", ""),
+                    "to": after.get("status", ""),
+                    "command": action,
+                },
             )
         except Exception as e:
             logger.warning("Failed to write audit for booking %s: %s", booking_id, e)

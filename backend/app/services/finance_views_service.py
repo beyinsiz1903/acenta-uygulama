@@ -23,8 +23,11 @@ async def get_exposure_summary(db: AsyncIOMotorDatabase, organization_id: str) -
     total_exposure = await _calculate_exposure(db, organization_id)
 
     booking_repo = BookingRepository(db)
+    # Support both legacy "booked" and canonical "confirmed" state names
     booked = await booking_repo.list_bookings(organization_id, state="booked", limit=10000)
-    booked_count = len(booked)
+    confirmed = await booking_repo.list_bookings(organization_id, state="confirmed", limit=10000)
+    all_active = booked + confirmed
+    booked_count = len(all_active)
 
     available_credit: float | None
     if credit_limit is None:

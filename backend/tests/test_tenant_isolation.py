@@ -150,7 +150,7 @@ class TestTenantScopedRepository:
         result = repo._scope_pipeline([])
         assert result == [{"$match": {"organization_id": "org_alpha"}}]
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_find_one_includes_org_filter(self):
         db, mock_col = _mock_db()
         repo = TestBookingRepo(db, TENANT_A)
@@ -160,7 +160,7 @@ class TestTenantScopedRepository:
             None,
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_insert_stamps_org_id(self):
         db, mock_col = _mock_db()
         repo = TestBookingRepo(db, TENANT_A)
@@ -169,14 +169,14 @@ class TestTenantScopedRepository:
         inserted = mock_col.insert_one.call_args[0][0]
         assert inserted["organization_id"] == "org_alpha"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_insert_with_no_org_fails(self):
         db, _ = _mock_db()
         repo = TestBookingRepo(db, NO_ORG)
         with pytest.raises(TenantContextMissing):
             await repo.insert_one({"status": "draft"})
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_one_scoped(self):
         db, mock_col = _mock_db()
         repo = TestBookingRepo(db, TENANT_A)
@@ -184,7 +184,7 @@ class TestTenantScopedRepository:
         call_args = mock_col.update_one.call_args
         assert call_args[0][0]["organization_id"] == "org_alpha"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_delete_one_scoped(self):
         db, mock_col = _mock_db()
         repo = TestBookingRepo(db, TENANT_A)
@@ -192,7 +192,7 @@ class TestTenantScopedRepository:
         call_args = mock_col.delete_one.call_args
         assert call_args[0][0]["organization_id"] == "org_alpha"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_count_scoped(self):
         db, mock_col = _mock_db()
         repo = TestBookingRepo(db, TENANT_A)

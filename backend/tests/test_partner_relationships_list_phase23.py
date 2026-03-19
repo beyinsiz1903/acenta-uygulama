@@ -66,7 +66,7 @@ def _make_token(email: str, org_id: str, roles: list[str], minutes: int = 60 * 1
     return jwt.encode(payload, _jwt_secret(), algorithm="HS256")
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_list_relationships_role_any_and_filters_by_current_tenant(async_client: AsyncClient) -> None:
     db = await get_db()
     # Cross-org seller/buyer + third party
@@ -153,7 +153,7 @@ async def test_list_relationships_role_any_and_filters_by_current_tenant(async_c
     assert (other["tenant_id"], buyer["tenant_id"]) in tenant_ids
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_list_relationships_role_filters_seller_vs_buyer(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "SellerOrgR2", "sellerR2@example.com")
@@ -210,7 +210,7 @@ async def test_list_relationships_role_filters_seller_vs_buyer(async_client: Asy
     assert items_buyer[0]["buyer_tenant_id"] == buyer["tenant_id"]
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_list_relationships_status_filter_and_pagination(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "SellerOrgR3", "sellerR3@example.com")
@@ -277,7 +277,7 @@ async def test_list_relationships_status_filter_and_pagination(async_client: Asy
     assert body_all2.get("next_cursor") is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_list_relationships_invalid_status_and_role(async_client: AsyncClient) -> None:
     db = await get_db()
     tenant = await _seed_org_tenant_user(db, "OrgBad", "bad@example.com")
@@ -302,7 +302,7 @@ async def test_list_relationships_invalid_status_and_role(async_client: AsyncCli
     assert body_r["error"]["code"] == "invalid_role"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_list_relationships_invalid_cursor(async_client: AsyncClient) -> None:
     db = await get_db()
     tenant = await _seed_org_tenant_user(db, "OrgCursor", "cursor@example.com")

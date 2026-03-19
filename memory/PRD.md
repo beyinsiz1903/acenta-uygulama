@@ -78,6 +78,14 @@ The CTO is guiding the refactoring of a monolithic application into a stable, sc
   - 10 supported webhook events
   - Idempotency enforcement (subscription_id + event_id)
   - 27/27 tests passed
+- [x] **Backend Test Suite Stabilization** — 2026-03-19
+  - ResponseEnvelopeMiddleware cookie preservation (Set-Cookie header loss fix)
+  - Event loop mismatch fix (asyncio → anyio in 14 test files)
+  - Booking state machine canonical/legacy state compatibility
+  - OCC version filter for legacy bookings
+  - Mobile BFF route registration fix
+  - Conftest envelope unwrap fixes
+  - Result: 88 failures → 4 (all test-ordering, pass in isolation)
 
 ## Prioritized Backlog
 

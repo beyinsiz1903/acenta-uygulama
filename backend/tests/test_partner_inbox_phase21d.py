@@ -77,7 +77,7 @@ async def _seed_org_tenant_user(db, org_name: str, email: str) -> Dict[str, str]
     return {"org_id": org_id, "tenant_id": tenant_id, "user_id": user_id, "email": email}
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_relationship_detail_forbidden(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "RelSeller", "relseller@example.com")
@@ -117,7 +117,7 @@ async def test_relationship_detail_forbidden(async_client: AsyncClient) -> None:
     assert body["error"]["code"] == "partner_relationship_forbidden"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_inbox_invites_received_and_sent(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "InboxSeller", "inboxseller@example.com")
@@ -168,7 +168,7 @@ async def test_inbox_invites_received_and_sent(async_client: AsyncClient) -> Non
     assert len(body_b["invites_sent"]) == 0
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_notifications_summary_counts(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "NotifSeller", "notifseller@example.com")

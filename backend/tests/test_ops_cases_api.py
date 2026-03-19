@@ -18,7 +18,7 @@ def _unwrap(resp):
 
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_list_cases_default_open(async_client: httpx.AsyncClient, minimal_search_seed):
     """Default listing returns only open cases for org."""
 
@@ -96,7 +96,7 @@ async def test_list_cases_default_open(async_client: httpx.AsyncClient, minimal_
     assert "CASE-CLOSED-CANCEL" not in case_ids
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_list_cases_filter_type_and_status(async_client: httpx.AsyncClient):
     """Filtering by type and status works."""
 
@@ -155,7 +155,7 @@ async def test_list_cases_filter_type_and_status(async_client: httpx.AsyncClient
     assert items[0]["case_id"] == "CASE-F1"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_get_case_wrong_org_404(async_client: httpx.AsyncClient):
     """Case from another org is not visible (404)."""
 
@@ -198,7 +198,7 @@ async def test_get_case_wrong_org_404(async_client: httpx.AsyncClient):
     assert resp.status_code == 404
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_close_case_sets_status_and_emits_event(async_client: httpx.AsyncClient):
     """Closing a case sets status=closed and emits OPS_CASE_CLOSED event."""
 
@@ -258,7 +258,7 @@ async def test_close_case_sets_status_and_emits_event(async_client: httpx.AsyncC
     assert "OPS_CASE_CLOSED" in types
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_close_case_idempotent(async_client: httpx.AsyncClient):
     """Closing the same case twice is idempotent and does not emit duplicate events."""
 

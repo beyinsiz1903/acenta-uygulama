@@ -79,7 +79,7 @@ class BookingRepository:
             return None, None
 
         before = dict(doc)
-        updates: Dict[str, Any] = {"state": new_state, "updated_at": now_utc()}
+        updates: Dict[str, Any] = {"state": new_state, "status": new_state, "updated_at": now_utc()}
         if extra_updates:
             updates.update(extra_updates)
 
@@ -104,7 +104,7 @@ class BookingRepository:
     ) -> List[Dict[str, Any]]:
         flt: Dict[str, Any] = {}
         if state:
-            flt["state"] = state
+            flt["$or"] = [{"state": state}, {"status": state}]
         if start_date or end_date:
             date_range: Dict[str, Any] = {}
             if start_date:

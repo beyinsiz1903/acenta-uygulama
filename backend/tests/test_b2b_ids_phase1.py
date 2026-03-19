@@ -7,7 +7,7 @@ from httpx import AsyncClient
 from app.db import get_db
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_b2b_ids_and_listing_reference(async_client: AsyncClient) -> None:  # type: ignore[no-untyped-def]
     """Smoke test: listing id uses lst_*, match id uses mreq_* and listing_id is public id.
 

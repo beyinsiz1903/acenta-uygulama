@@ -27,9 +27,11 @@ async def _calculate_exposure(db: AsyncIOMotorDatabase, organization_id: str) ->
     P0 simplification: currency assumed TRY; multi-currency ignored.
     """
     booking_repo = BookingRepository(db)
-    # Reuse list_bookings with state filter 'booked'
+    # Reuse list_bookings with both legacy "booked" and canonical "confirmed" states
     booked = await booking_repo.list_bookings(organization_id, state="booked", limit=10000)
-    return float(sum(float(b.get("amount", 0.0)) for b in booked))
+    confirmed = await booking_repo.list_bookings(organization_id, state="confirmed", limit=10000)
+    all_active = booked + confirmed
+    return float(sum(float(b.get("amount", 0.0)) for b in all_active))
 
 
 async def has_available_credit(db: AsyncIOMotorDatabase, organization_id: str, amount: float) -> bool:

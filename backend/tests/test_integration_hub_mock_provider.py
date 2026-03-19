@@ -10,7 +10,7 @@ from app.services.integration_hub import (
 from app.services.jobs import claim_job, process_claimed_job
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_integration_sync_mock_provider_updates_rate_plans():
   db = await get_db()
 

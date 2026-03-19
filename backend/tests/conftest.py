@@ -590,7 +590,8 @@ async def minimal_search_seed(test_db, async_client: httpx.AsyncClient, agency_t
     headers = {"Authorization": f"Bearer {agency_token}"}
     me_resp = await async_client.get("/api/auth/me", headers=headers)
     assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
-    me = me_resp.json()
+    me_raw = me_resp.json()
+    me = me_raw.get("data", me_raw) if isinstance(me_raw, dict) and "ok" in me_raw else me_raw
     org_id = me.get("organization_id")
 
     from bson import ObjectId
@@ -685,6 +686,8 @@ async def minimal_search_seed(test_db, async_client: httpx.AsyncClient, agency_t
         resp = await async_client.get("/api/b2b/hotels/search", headers=headers, params=params)
         assert resp.status_code == 200, f"seed search failed: {resp.text}"
         data = resp.json()
+        if isinstance(data, dict) and "ok" in data and "data" in data:
+            data = data["data"]
         items = data.get("items") or []
         assert items, f"Seeded search returned no items: {data}"
 
@@ -726,7 +729,8 @@ async def minimal_finance_seed(test_db, async_client: httpx.AsyncClient, agency_
     headers = {"Authorization": f"Bearer {agency_token}"}
     me_resp = await async_client.get("/api/auth/me", headers=headers)
     assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
-    me = me_resp.json()
+    me_raw = me_resp.json()
+    me = me_raw.get("data", me_raw) if isinstance(me_raw, dict) and "ok" in me_raw else me_raw
 
     org_id = me.get("organization_id")
     agency_id = me.get("agency_id")
@@ -932,6 +936,7 @@ async def seed_confirmed_booking_for_cancel_net0(test_db, async_client: httpx.As
     me_resp = await async_client.get("/api/auth/me", headers=headers)
     assert me_resp.status_code == 200, f"/auth/me failed in seed_confirmed_booking: {me_resp.text}"
     me = me_resp.json()
+    me = me.get("data", me) if isinstance(me, dict) and "ok" in me else me
     org_id = me["organization_id"]
     agency_id = me["agency_id"]
 
@@ -954,6 +959,8 @@ async def seed_confirmed_booking_for_cancel_net0(test_db, async_client: httpx.As
     s = await async_client.get("/api/b2b/hotels/search", headers=headers, params=params)
     assert s.status_code == 200, f"hotel search failed: {s.text}"
     data = s.json() or {}
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        data = data["data"]
     items = data.get("items") or []
     assert items, f"hotel search returned empty: {data}"
 
@@ -981,6 +988,8 @@ async def seed_confirmed_booking_for_cancel_net0(test_db, async_client: httpx.As
     q = await async_client.post("/api/b2b/quotes", headers=headers, json=quote_payload)
     assert q.status_code == 200, f"quote create failed: {q.status_code} - {q.text}"
     quote = q.json() or {}
+    if isinstance(quote, dict) and "ok" in quote and "data" in quote:
+        quote = quote["data"]
     quote_id = quote.get("quote_id") or quote.get("id") or quote.get("_id")
     assert quote_id, f"cannot resolve quote_id from quote response: {quote}"
 

@@ -77,7 +77,7 @@ async def _seed_org_tenant_user(db, org_name: str, email: str) -> Dict[str, str]
     return {"org_id": org_id, "tenant_id": tenant_id, "user_id": user_id, "email": email}
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_effective_commission_happy_path_percentage(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "CommSeller1", "commseller1@example.com")
@@ -160,7 +160,7 @@ async def test_effective_commission_happy_path_percentage(async_client: AsyncCli
     assert body["rule"] is not None
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_effective_commission_denied_if_not_shared(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "CommSeller2", "commseller2@example.com")
@@ -205,7 +205,7 @@ async def test_effective_commission_denied_if_not_shared(async_client: AsyncClie
     assert body["error"]["code"] == "inventory_not_shared"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_effective_commission_denied_if_relationship_inactive(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "CommSeller3", "commseller3@example.com")
@@ -266,7 +266,7 @@ async def test_effective_commission_denied_if_relationship_inactive(async_client
     assert body["error"]["code"] == "partner_relationship_inactive"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_effective_commission_no_rule_defaults_to_zero(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "CommSeller4", "commseller4@example.com")
@@ -328,7 +328,7 @@ async def test_effective_commission_no_rule_defaults_to_zero(async_client: Async
     assert body["net_amount"] == pytest.approx(500.0)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_commission_rule_create_validation_percentage_bounds(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "CommSeller5", "commseller5@example.com")
@@ -365,7 +365,7 @@ async def test_commission_rule_create_validation_percentage_bounds(async_client:
     ) == 200
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_commission_rule_create_scope_constraints(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "CommSeller6", "commseller6@example.com")
@@ -397,7 +397,7 @@ async def test_commission_rule_create_scope_constraints(async_client: AsyncClien
     ) == 400
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_buyer_specific_rule_requires_active_relationship(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "CommSeller7", "commseller7@example.com")

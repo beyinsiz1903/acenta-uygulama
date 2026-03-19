@@ -78,7 +78,7 @@ async def _seed_org_tenant_user(db, org_name: str, email: str) -> Dict[str, str]
     return {"org_id": org_id, "tenant_id": tenant_id, "user_id": user_id, "email": email}
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_statement_seller_month_filters_and_totals(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "StmtSeller1", "sellerstmt1@example.com")
@@ -138,7 +138,7 @@ async def test_statement_seller_month_filters_and_totals(async_client: AsyncClie
     assert body["totals"]["net_total"] == pytest.approx(270.0)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_statement_currency_breakdown_multiple_currencies(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "StmtSeller2", "sellerstmt2@example.com")
@@ -194,7 +194,7 @@ async def test_statement_currency_breakdown_multiple_currencies(async_client: As
     assert currencies["USD"]["gross_total"] == pytest.approx(200.0)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_statement_buyer_perspective(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "StmtSeller3", "sellerstmt3@example.com")
@@ -232,7 +232,7 @@ async def test_statement_buyer_perspective(async_client: AsyncClient) -> None:
     assert body["totals"]["gross_total"] == pytest.approx(150.0)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_statement_status_filter(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "StmtSeller4", "sellerstmt4@example.com")
@@ -286,7 +286,7 @@ async def test_statement_status_filter(async_client: AsyncClient) -> None:
     assert body["totals"]["gross_total"] == pytest.approx(100.0)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_invalid_month_returns_400(async_client: AsyncClient) -> None:
     db = await get_db()
     tenant = await _seed_org_tenant_user(db, "StmtInvalid", "stmtinvalid@example.com")
@@ -302,7 +302,7 @@ async def test_invalid_month_returns_400(async_client: AsyncClient) -> None:
     assert body["error"]["code"] == "invalid_month"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_statement_too_large_guard(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "StmtSeller5", "sellerstmt5@example.com")

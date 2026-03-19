@@ -37,41 +37,39 @@ class TestBookingStateMachine:
 
         # draft -> quoted
         validate_transition("draft", "quoted")
-        # quoted -> booked
-        validate_transition("quoted", "booked")
-        # booked -> cancel_requested
-        validate_transition("booked", "cancel_requested")
-        # booked -> modified
-        validate_transition("booked", "modified")
+        # quoted -> confirmed (canonical form of "booked")
+        validate_transition("quoted", "confirmed")
+        # confirmed -> cancelled (canonical form of "cancel_requested")
+        validate_transition("confirmed", "cancelled")
+        # quoted -> optioned
+        validate_transition("quoted", "optioned")
 
     def test_invalid_transitions(self):
         from app.domain.booking_state_machine import validate_transition, BookingStateTransitionError
 
-        # refunded -> booked (cannot un-refund)
+        # refunded -> confirmed (cannot un-refund)
         with pytest.raises(BookingStateTransitionError):
-            validate_transition("refunded", "booked")
+            validate_transition("refunded", "confirmed")
 
-        # cancel_requested -> booked (no re-activation from cancel)
+        # completed -> confirmed (terminal state)
         with pytest.raises(BookingStateTransitionError):
-            validate_transition("cancel_requested", "booked")
+            validate_transition("completed", "confirmed")
 
     def test_refund_workflow(self):
         from app.domain.booking_state_machine import validate_transition
 
-        # booked -> refund_in_progress
-        validate_transition("booked", "refund_in_progress")
-        # refund_in_progress -> refunded (approve)
-        validate_transition("refund_in_progress", "refunded")
-        # refund_in_progress -> booked (reject)
-        validate_transition("refund_in_progress", "booked")
+        # confirmed -> cancelled
+        validate_transition("confirmed", "cancelled")
+        # cancelled -> refunded
+        validate_transition("cancelled", "refunded")
 
     def test_hold_workflow(self):
         from app.domain.booking_state_machine import validate_transition
 
-        # booked -> hold
-        validate_transition("booked", "hold")
-        # hold -> booked
-        validate_transition("hold", "booked")
+        # quoted -> optioned (canonical "hold")
+        validate_transition("quoted", "optioned")
+        # optioned -> confirmed (confirm from hold)
+        validate_transition("optioned", "confirmed")
 
 
 # ============================================================================

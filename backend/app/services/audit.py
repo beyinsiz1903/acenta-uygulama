@@ -233,14 +233,17 @@ async def write_audit_log(
     origin captures ip/user-agent/path/app_version and optional request-id.
     """
 
-    origin = {
-        "ip": _get_ip(request),
-        "user_agent": request.headers.get("user-agent", ""),
-        "path": str(request.url.path),
-        "method": request.method,
-        "app_version": request.headers.get("x-app-version", ""),
-        "request_id": request.headers.get("x-request-id", ""),
-    }
+    if request is not None:
+        origin = {
+            "ip": _get_ip(request),
+            "user_agent": request.headers.get("user-agent", ""),
+            "path": str(request.url.path),
+            "method": request.method,
+            "app_version": request.headers.get("x-app-version", ""),
+            "request_id": request.headers.get("x-request-id", ""),
+        }
+    else:
+        origin = {"ip": "", "user_agent": "", "path": "", "method": "", "app_version": "", "request_id": ""}
 
     doc = {
         "_id": str(uuid.uuid4()),

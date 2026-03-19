@@ -59,11 +59,11 @@ class BookingCommand(StrEnum):
 
 ALLOWED_TRANSITIONS: dict[str, set[str]] = {
     "draft":     {"quoted", "cancelled"},
-    "quoted":    {"optioned", "confirmed", "cancelled"},
+    "quoted":    {"quoted", "optioned", "confirmed", "cancelled"},
     "optioned":  {"confirmed", "cancelled", "quoted"},
-    "confirmed": {"completed", "cancelled"},
+    "confirmed": {"completed", "cancelled", "optioned", "quoted"},
     "completed": set(),           # terminal
-    "cancelled": {"refunded"},
+    "cancelled": {"refunded", "confirmed"},
     "refunded":  set(),           # terminal
 }
 

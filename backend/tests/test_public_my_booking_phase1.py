@@ -16,7 +16,7 @@ def _unwrap(resp):
 
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_request_link_always_ok_without_booking(async_client: httpx.AsyncClient, monkeypatch):
     """request-link must always return ok=true even if booking is not found.
 
@@ -41,7 +41,7 @@ async def test_request_link_always_ok_without_booking(async_client: httpx.AsyncC
     assert outbox_count == 0
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_request_link_creates_token_and_outbox(async_client: httpx.AsyncClient):
     """Happy path: booking exists → token + outbox entry created."""
 
@@ -73,7 +73,7 @@ async def test_request_link_creates_token_and_outbox(async_client: httpx.AsyncCl
     assert "expires_at" in token_doc
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_public_token_legacy_upgrade(async_client: httpx.AsyncClient):
     """Legacy token documents with plaintext `token` are upgraded on resolve."""
 
@@ -107,7 +107,7 @@ async def test_public_token_legacy_upgrade(async_client: httpx.AsyncClient):
     # plaintext token should be removed or at least no longer required for lookup
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_request_cancel_and_amend_idempotent(async_client: httpx.AsyncClient):
     """Cancel/amend endpoints create a single open ops_case per type and reuse it."""
 

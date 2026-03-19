@@ -101,7 +101,7 @@ async def test_inventory_shares_requires_tenant_header(async_client: AsyncClient
         assert body["error"]["code"] == "tenant_header_missing"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_settlements_requires_permission(async_client: AsyncClient) -> None:
     db = await get_db()
     # Seed org/tenant/user with limited permissions: role "b2b_agent" has no settlements.view
@@ -167,7 +167,7 @@ async def test_settlements_requires_permission(async_client: AsyncClient) -> Non
     assert body["error"]["code"] == "insufficient_permissions"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_settlements_returns_seller_entries_after_network_booking(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "SellerSet", "sellerset@example.com")

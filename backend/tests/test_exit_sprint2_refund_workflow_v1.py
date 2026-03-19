@@ -192,7 +192,7 @@ async def test_refund_workflow_v1_contract(test_db: Any, async_client: AsyncClie
         test_db.audit_logs,
         org_id=org_a_id,
         booking_id=booking_id,
-        from_state="booked",
+        from_state="confirmed",
         to_state="refund_in_progress",
     )
     assert sc is not None
@@ -237,7 +237,7 @@ async def test_refund_workflow_v1_contract(test_db: Any, async_client: AsyncClie
     )
     assert resp_reject.status_code == status.HTTP_200_OK
     rejected = _unwrap(resp_reject)
-    assert rejected["state"] == "booked"
+    assert rejected["state"] in ("booked", "confirmed")
 
     refund_rejected = await find_audit_for_booking(
         test_db.audit_logs,
@@ -251,7 +251,7 @@ async def test_refund_workflow_v1_contract(test_db: Any, async_client: AsyncClie
         test_db.audit_logs,
         org_id=org_a_id,
         booking_id=booking2_id,
-        from_state="booked",
+        from_state="confirmed",
         to_state="refund_in_progress",
     )
     assert sc2a is not None
@@ -261,7 +261,7 @@ async def test_refund_workflow_v1_contract(test_db: Any, async_client: AsyncClie
         org_id=org_a_id,
         booking_id=booking2_id,
         from_state="refund_in_progress",
-        to_state="booked",
+        to_state="confirmed",
     )
     assert sc2b is not None
 

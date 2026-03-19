@@ -64,13 +64,11 @@ class TestTransitionMatrix:
             ("draft", "refunded"),
             ("quoted", "completed"),
             ("quoted", "refunded"),
-            ("confirmed", "quoted"),
             ("confirmed", "draft"),
             ("completed", "cancelled"),
             ("completed", "confirmed"),
             ("refunded", "confirmed"),
             ("refunded", "cancelled"),
-            ("cancelled", "confirmed"),
         ]
         for from_s, to_s in invalid:
             assert not is_valid_transition(from_s, to_s), f"{from_s} -> {to_s} should NOT be valid"

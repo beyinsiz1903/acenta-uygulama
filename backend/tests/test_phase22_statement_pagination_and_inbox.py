@@ -77,7 +77,7 @@ async def _seed_org_tenant_user(db, org_name: str, email: str) -> Dict[str, str]
     return {"org_id": org_id, "tenant_id": tenant_id, "user_id": user_id, "email": email}
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_statement_filters_by_counterparty_seller_perspective(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "StmtP2Seller", "stmtp2seller@example.com")
@@ -121,7 +121,7 @@ async def test_statement_filters_by_counterparty_seller_perspective(async_client
     assert body["totals"]["gross_total"] == pytest.approx(100.0)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_statement_pagination_cursor_two_pages(async_client: AsyncClient) -> None:
     db = await get_db()
     seller = await _seed_org_tenant_user(db, "StmtP2Seller2", "stmtp2seller2@example.com")
@@ -176,7 +176,7 @@ async def test_statement_pagination_cursor_two_pages(async_client: AsyncClient) 
     assert body2.get("page", {}).get("next_cursor") is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_invalid_cursor_returns_400(async_client: AsyncClient) -> None:
     db = await get_db()
     tenant = await _seed_org_tenant_user(db, "StmtP2Invalid", "stmtp2invalid@example.com")
@@ -192,7 +192,7 @@ async def test_invalid_cursor_returns_400(async_client: AsyncClient) -> None:
     assert body["error"]["code"] == "invalid_cursor"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_inbox_active_partners_enriched(async_client: AsyncClient) -> None:
     db = await get_db()
     a = await _seed_org_tenant_user(db, "InboxActA", "inboxacta@example.com")

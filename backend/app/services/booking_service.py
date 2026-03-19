@@ -195,7 +195,7 @@ async def _transition_booking_state(
 
     ensure_try(doc.get("currency"))
 
-    current_state = str(doc.get("state") or "")
+    current_state = str(doc.get("state") or doc.get("status") or "")
 
     # Validate transition
     try:
@@ -301,7 +301,7 @@ async def transition_to_booked(
         assert after is not None
 
         # Audit: BOOKING_STATE_CHANGED (quoted -> hold or current -> hold)
-        current_state = str(doc.get("state") or "")
+        current_state = str(doc.get("state") or doc.get("status") or "")
         await write_audit_log(
             db,
             organization_id=organization_id,

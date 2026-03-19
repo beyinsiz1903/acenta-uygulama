@@ -9406,6 +9406,72 @@
   },
   {
     "compat_required": true,
+    "current_namespace": "/api/mobile",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "mobile",
+    "path": "/api/mobile/auth/me",
+    "risk_level": "medium",
+    "source": "app.modules.mobile.router",
+    "target_namespace": "/api/v1/mobile"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/mobile",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "mobile",
+    "path": "/api/mobile/bookings",
+    "risk_level": "medium",
+    "source": "app.modules.mobile.router",
+    "target_namespace": "/api/v1/mobile"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/mobile",
+    "legacy_or_v1": "legacy",
+    "method": "POST",
+    "owner": "mobile",
+    "path": "/api/mobile/bookings",
+    "risk_level": "medium",
+    "source": "app.modules.mobile.router",
+    "target_namespace": "/api/v1/mobile"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/mobile",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "mobile",
+    "path": "/api/mobile/bookings/{booking_id}",
+    "risk_level": "medium",
+    "source": "app.modules.mobile.router",
+    "target_namespace": "/api/v1/mobile"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/mobile",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "mobile",
+    "path": "/api/mobile/dashboard/summary",
+    "risk_level": "medium",
+    "source": "app.modules.mobile.router",
+    "target_namespace": "/api/v1/mobile"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/mobile",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "mobile",
+    "path": "/api/mobile/reports/summary",
+    "risk_level": "medium",
+    "source": "app.modules.mobile.router",
+    "target_namespace": "/api/v1/mobile"
+  },
+  {
+    "compat_required": true,
     "current_namespace": "/api/notifications",
     "legacy_or_v1": "legacy",
     "method": "GET",
@@ -15057,72 +15123,6 @@
     "risk_level": "low",
     "source": "app.routers.health",
     "target_namespace": "/api/v1/health"
-  },
-  {
-    "compat_required": false,
-    "current_namespace": "/api/v1/mobile",
-    "legacy_or_v1": "v1",
-    "method": "GET",
-    "owner": "mobile",
-    "path": "/api/v1/mobile/auth/me",
-    "risk_level": "medium",
-    "source": "app.modules.mobile.router",
-    "target_namespace": "/api/v1/mobile"
-  },
-  {
-    "compat_required": false,
-    "current_namespace": "/api/v1/mobile",
-    "legacy_or_v1": "v1",
-    "method": "GET",
-    "owner": "mobile",
-    "path": "/api/v1/mobile/bookings",
-    "risk_level": "medium",
-    "source": "app.modules.mobile.router",
-    "target_namespace": "/api/v1/mobile"
-  },
-  {
-    "compat_required": false,
-    "current_namespace": "/api/v1/mobile",
-    "legacy_or_v1": "v1",
-    "method": "POST",
-    "owner": "mobile",
-    "path": "/api/v1/mobile/bookings",
-    "risk_level": "medium",
-    "source": "app.modules.mobile.router",
-    "target_namespace": "/api/v1/mobile"
-  },
-  {
-    "compat_required": false,
-    "current_namespace": "/api/v1/mobile",
-    "legacy_or_v1": "v1",
-    "method": "GET",
-    "owner": "mobile",
-    "path": "/api/v1/mobile/bookings/{booking_id}",
-    "risk_level": "medium",
-    "source": "app.modules.mobile.router",
-    "target_namespace": "/api/v1/mobile"
-  },
-  {
-    "compat_required": false,
-    "current_namespace": "/api/v1/mobile",
-    "legacy_or_v1": "v1",
-    "method": "GET",
-    "owner": "mobile",
-    "path": "/api/v1/mobile/dashboard/summary",
-    "risk_level": "medium",
-    "source": "app.modules.mobile.router",
-    "target_namespace": "/api/v1/mobile"
-  },
-  {
-    "compat_required": false,
-    "current_namespace": "/api/v1/mobile",
-    "legacy_or_v1": "v1",
-    "method": "GET",
-    "owner": "mobile",
-    "path": "/api/v1/mobile/reports/summary",
-    "risk_level": "medium",
-    "source": "app.modules.mobile.router",
-    "target_namespace": "/api/v1/mobile"
   },
   {
     "compat_required": false,

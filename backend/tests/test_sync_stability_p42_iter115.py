@@ -25,7 +25,7 @@ def _unwrap(resp):
 
 
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://webhook-integration-4.preview.emergentagent.com")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://ci-stabilize.preview.emergentagent.com")
 
 @pytest.fixture(scope="module")
 def auth_token():

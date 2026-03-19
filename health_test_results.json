@@ -1,11 +1,11 @@
 {
   "test_time": "2026-03-10T15:52:52.547175",
-  "base_url": "https://webhook-integration-4.preview.emergentagent.com",
+  "base_url": "https://ci-stabilize.preview.emergentagent.com",
   "tests": [
     {
       "test_number": 1,
       "name": "GET /api/healthz",
-      "url": "https://webhook-integration-4.preview.emergentagent.com/api/healthz",
+      "url": "https://ci-stabilize.preview.emergentagent.com/api/healthz",
       "expected_status": 200,
       "description": "Main health check endpoint - was returning 404 (deployment blocker)",
       "actual_status": 200,
@@ -20,7 +20,7 @@
     {
       "test_number": 2,
       "name": "GET /api/health/ready",
-      "url": "https://webhook-integration-4.preview.emergentagent.com/api/health/ready",
+      "url": "https://ci-stabilize.preview.emergentagent.com/api/health/ready",
       "expected_status": 200,
       "description": "Readiness probe endpoint",
       "actual_status": 200,
@@ -35,7 +35,7 @@
     {
       "test_number": 3,
       "name": "GET /api/health",
-      "url": "https://webhook-integration-4.preview.emergentagent.com/api/health",
+      "url": "https://ci-stabilize.preview.emergentagent.com/api/health",
       "expected_status": 200,
       "description": "General health endpoint",
       "actual_status": 200,
@@ -50,7 +50,7 @@
     {
       "test_number": 4,
       "name": "GET /api/auth/me (no auth)",
-      "url": "https://webhook-integration-4.preview.emergentagent.com/api/auth/me",
+      "url": "https://ci-stabilize.preview.emergentagent.com/api/auth/me",
       "expected_status": 401,
       "description": "Auth endpoint without credentials - should return 401 (normal, not deployment blocker)",
       "actual_status": 401,

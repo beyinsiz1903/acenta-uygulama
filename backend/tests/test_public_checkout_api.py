@@ -6,6 +6,14 @@ import pytest
 
 from app.utils import now_utc
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 @pytest.mark.anyio
 async def test_public_quote_happy_path(async_client, test_db):
@@ -694,16 +702,6 @@ async def test_public_checkout_provider_unavailable_sets_reason_and_correlation(
     # 2) Stub stripe_adapter to simulate provider unavailability
     from app.services import stripe_adapter
 
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
-
     async def fake_create_payment_intent_unavailable(*args, **kwargs):  # type: ignore[unused-argument]
         raise RuntimeError("Stripe unavailable in test")
 
@@ -724,7 +722,7 @@ def _unwrap(resp):
 
     resp = await async_client.post("/api/public/checkout", json=payload)
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
 
     # Response should indicate provider_unavailable in reason and ok=False
     assert data["ok"] is False

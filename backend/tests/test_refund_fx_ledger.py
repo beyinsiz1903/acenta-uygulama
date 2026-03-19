@@ -7,6 +7,14 @@ import pytest
 from app.db import get_db
 from app.utils import now_utc
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 TOLERANCE_ABS = 0.02
 TOLERANCE_PCT = 0.001
@@ -19,16 +27,6 @@ def approx_equal(a: float, b: float, *, abs_tol: float = TOLERANCE_ABS, rel_tol:
 async def _create_simple_booking(client, token: str) -> str:
     """Use existing P0.2 flow to create a booking and return booking_id."""
     import uuid
-
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
 
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -47,7 +45,7 @@ def _unwrap(resp):
     }
     res = await client.get("/api/b2b/hotels/search", headers=headers, params=params)
     assert res.status_code == 200
-    data = res.json()
+    data = _unwrap(res)
     items = data.get("items") or []
     assert items, "P0.2 search did not return any items"
 
@@ -72,7 +70,7 @@ def _unwrap(resp):
     }
     res = await client.post("/api/b2b/quotes", headers=headers, json=quote_payload)
     assert res.status_code == 200, f"Quote creation failed: {res.status_code} - {res.text}"
-    quote = res.json()
+    quote = _unwrap(res)
     quote_id = quote["quote_id"]
 
     # 3) Create booking
@@ -88,7 +86,7 @@ def _unwrap(resp):
         json=booking_payload,
     )
     assert res.status_code == 200, f"Booking creation failed: {res.status_code} - {res.text}"
-    booking = res.json()
+    booking = _unwrap(res)
     return booking["booking_id"]
 
 

@@ -11,6 +11,14 @@ from httpx import AsyncClient
 from app.auth import _jwt_secret
 from app.utils import now_utc
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 @pytest.mark.exit_marketplace_bridge_v1
 @pytest.mark.anyio
@@ -151,16 +159,6 @@ async def test_marketplace_to_storefront_bridge_flow(test_db: Any, async_client:
 
     # Use redirect_url to verify search_id propagation
     from urllib.parse import urlparse, parse_qs
-
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
 
     parsed = urlparse(redirect_url)
     qs = parse_qs(parsed.query)

@@ -7,6 +7,14 @@ import pytest
 from app.db import get_db
 from app.utils import now_utc
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 @pytest.mark.anyio
 async def test_click_to_pay_happy_path_stubbed_stripe(monkeypatch, async_client, minimal_search_seed):
@@ -245,16 +253,6 @@ async def test_public_pay_invalid_and_expired_token(async_client):
     now = now_utc()
     from app.services.click_to_pay import _hash_token
 
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
-
     raw_token = "expired-token-456"
     token_hash = _hash_token(raw_token)
 
@@ -275,5 +273,5 @@ def _unwrap(resp):
 
     resp2 = await async_client.get(f"/api/public/pay/{raw_token}")
     assert resp2.status_code == 404
-    body2 = resp2.json()
+    body2 = _unwrap(resp2)
     assert body2["error"] == "NOT_FOUND"

@@ -16,6 +16,14 @@ from httpx import AsyncClient
 from app.auth import create_access_token
 from app.db import get_db
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 EXPECTED_SCREENS = [
     "dashboard", "rezervasyonlar", "oteller", "musaitlik",
     "sheet_baglantilari", "mutabakat", "raporlar", "turlar",
@@ -26,16 +34,6 @@ EXPECTED_SCREENS = [
 async def _seed_admin_and_agent(db):
     """Seed a super_admin and an agency_agent user for permission tests."""
     from datetime import datetime, timezone
-
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
 
     now = datetime.now(timezone.utc)
 

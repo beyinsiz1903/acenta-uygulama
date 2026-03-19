@@ -12,6 +12,14 @@ from httpx import AsyncClient
 from app.utils import now_utc
 from app.services.pricing_audit_service import emit_pricing_audit_if_needed
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 @pytest.mark.exit_pricing_audit_v1
 @pytest.mark.anyio
@@ -85,16 +93,6 @@ async def test_pricing_audit_emitted_for_storefront_booking(test_db: Any, async_
 
     # 3) Assert booking.pricing exists
     from bson import ObjectId
-
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
 
     booking_doc = await test_db.bookings.find_one({"_id": ObjectId(booking_id)})
     assert booking_doc is not None

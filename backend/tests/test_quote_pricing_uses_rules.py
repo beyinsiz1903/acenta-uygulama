@@ -6,6 +6,14 @@ import pytest
 
 from app.db import get_db
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 @pytest.mark.anyio
 @pytest.mark.xfail(reason="Seed data mismatch: test expects 'Demo Acente A'/'Demo Acente B' agencies which are not present in current seed")
@@ -187,16 +195,6 @@ async def test_quote_pricing_uses_rules_for_agency1_vs_other(async_client, admin
     # Diğer agency kullanıcı token'ını manuel olarak al
     from app.auth import create_access_token
 
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
-
     token_other = create_access_token(
         subject=other_user["email"],  # Use email as subject, not user ID
         organization_id=org_id,
@@ -206,7 +204,7 @@ def _unwrap(resp):
 
     resp_other = await client.post("/api/b2b/quotes", json=payload, headers=headers_other)
     assert resp_other.status_code == 200, resp_other.text
-    qb = resp_other.json()
+    qb = _unwrap(resp_other)
     assert qb["offers"], "No offers returned for other agency"
 
     offer_other = qb["offers"][0]

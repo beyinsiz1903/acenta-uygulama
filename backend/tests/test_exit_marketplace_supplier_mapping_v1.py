@@ -10,6 +10,14 @@ from httpx import AsyncClient
 from app.auth import _jwt_secret
 from app.utils import now_utc
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 @pytest.mark.exit_marketplace_supplier_mapping_v1
 @pytest.mark.anyio
@@ -137,16 +145,6 @@ async def test_resolve_supplier_and_booking_mapping(test_db: Any, async_client: 
     # Reload listing from DB and check supplier_mapping
     from bson import ObjectId
 
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
-
     stored = await test_db.marketplace_listings.find_one({"_id": ObjectId(listing_id)})
     mapping = (stored or {}).get("supplier_mapping") or {}
     assert mapping.get("status") == "resolved"
@@ -174,7 +172,7 @@ def _unwrap(resp):
 
     resp_booking = await client.post("/api/b2b/bookings", json=booking_payload, headers=buyer_headers)
     assert resp_booking.status_code == status.HTTP_201_CREATED, resp_booking.text
-    booking_data = resp_booking.json()
+    booking_data = _unwrap(resp_booking)
     booking_id = booking_data["booking_id"]
 
     # Check booking doc in DB

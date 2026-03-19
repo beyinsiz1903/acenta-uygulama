@@ -12,6 +12,14 @@ from app.auth import _jwt_secret
 from app.services.suppliers.contracts import ConfirmResult, ConfirmStatus
 from app.utils import now_utc
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 @pytest.mark.exit_confirm_timeout_enforced
 @pytest.mark.anyio
@@ -112,16 +120,6 @@ async def test_confirm_snapshot_redacted_does_not_store_pii(test_db: Any, async_
     """Confirm should store only redacted confirm_snapshot in booking.supplier.confirm_snapshot."""
 
     from app.services.suppliers.mock_adapter import MockSupplierAdapter
-
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
 
     client: AsyncClient = async_client
     now = now_utc()

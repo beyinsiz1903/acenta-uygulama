@@ -7,6 +7,14 @@ import pytest
 from app.db import get_db
 from app.utils import now_utc
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 @pytest.mark.asyncio
 async def test_request_link_always_ok_without_booking(async_client: httpx.AsyncClient, monkeypatch):
@@ -140,16 +148,6 @@ async def test_request_cancel_and_amend_idempotent(async_client: httpx.AsyncClie
     # Insert a synthetic token_doc so that resolve_public_token succeeds
     # The service looks up tokens by sha256 hash, so we must store the correct hash
     import hashlib
-
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
     token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
     now = now_utc()
     await db.booking_public_tokens.insert_one(
@@ -172,8 +170,8 @@ def _unwrap(resp):
     assert resp1.status_code == 200
     assert resp2.status_code == 200
 
-    data1 = resp1.json()
-    data2 = resp2.json()
+    data1 = _unwrap(resp1)
+    data2 = _unwrap(resp2)
     assert data1["case_id"] == data2["case_id"]
 
     # Amend
@@ -189,6 +187,6 @@ def _unwrap(resp):
     assert resp3.status_code == 200
     assert resp4.status_code == 200
 
-    data3 = resp3.json()
-    data4 = resp4.json()
+    data3 = _unwrap(resp3)
+    data4 = _unwrap(resp4)
     assert data3["case_id"] == data4["case_id"]

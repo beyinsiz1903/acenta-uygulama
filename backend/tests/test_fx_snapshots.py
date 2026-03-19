@@ -9,6 +9,14 @@ import pytest
 from app.db import get_db
 from app.utils import now_utc
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 TOLERANCE_ABS = 0.02
 TOLERANCE_PCT = 0.001
@@ -62,16 +70,6 @@ async def test_fx_snapshots_freeze_rate_per_booking(async_client, admin_token, a
     # Helper: simple booking creation function (reuse from booking_financials test via same endpoints)
     from app.utils import now_utc as _now
 
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
-
     async def _create_booking(rate_hint: str) -> str:
         # Rate selection is time-based in FXService, so creating bookings
         # at different times after inserting rates ensures different snapshots.
@@ -88,7 +86,7 @@ def _unwrap(resp):
         }
         res = await client.get("/api/b2b/hotels/search", headers=headers, params=params)
         assert res.status_code == 200
-        data = res.json()
+        data = _unwrap(res)
         items = data.get("items") or []
         assert items, f"Search returned no items for {rate_hint}"
         first = items[0]
@@ -111,7 +109,7 @@ def _unwrap(resp):
         }
         res = await client.post("/api/b2b/quotes", headers=headers, json=quote_payload)
         assert res.status_code == 200
-        quote = res.json()
+        quote = _unwrap(res)
 
         booking_payload = {
             "quote_id": quote["quote_id"],
@@ -125,7 +123,7 @@ def _unwrap(resp):
             json=booking_payload,
         )
         assert res.status_code == 200
-        booking = res.json()
+        booking = _unwrap(res)
         return booking["booking_id"]
 
     # Create two bookings; actual FX selection is based on latest as_of <= now

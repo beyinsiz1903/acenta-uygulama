@@ -10,6 +10,14 @@ from httpx import AsyncClient
 from app.auth import _jwt_secret
 from app.utils import now_utc
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 @pytest.mark.exit_canonical_schema_enforced
 @pytest.mark.anyio
@@ -243,16 +251,6 @@ async def test_search_session_ttl_and_indexes(test_db: Any, async_client: AsyncC
 
     # Ensure TTL index helper is invoked for test DB as well
     from app.indexes.marketplace_indexes import ensure_offers_indexes
-
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
 
     await ensure_offers_indexes(test_db)
 

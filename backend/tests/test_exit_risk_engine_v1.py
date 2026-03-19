@@ -11,6 +11,14 @@ from httpx import AsyncClient
 from app.auth import _jwt_secret
 from app.utils import now_utc
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 async def _create_org_user_and_agency_booking(
     test_db: Any,
@@ -256,16 +264,6 @@ async def test_risk_score_is_deterministic_for_same_booking(test_db: Any, async_
     """Evaluating the same booking twice should yield identical score & decision."""
 
     from app.services.risk.engine import evaluate_booking_risk
-
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
 
     now = now_utc()
     org = await test_db.organizations.insert_one(

@@ -13,6 +13,14 @@ from app.services.suppliers.registry import registry as supplier_registry
 from app.services.suppliers.contracts import SupplierAdapterError
 from app.utils import now_utc
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 @pytest.mark.exit_supplier_adapter_registry
 @pytest.mark.anyio
@@ -258,16 +266,6 @@ async def test_supplier_not_supported_for_paximum(test_db: Any, async_client: As
 async def test_supplier_error_propagation_retryable(test_db: Any, async_client: AsyncClient, monkeypatch: Any) -> None:
     from app.services.suppliers.mock_adapter import MockSupplierAdapter
 
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
-
     client: AsyncClient = async_client
     now = now_utc()
 
@@ -342,7 +340,7 @@ def _unwrap(resp):
 
     resp_confirm = await client.post(f"/api/b2b/bookings/{booking_id}/confirm", headers=headers)
     assert resp_confirm.status_code == status.HTTP_502_BAD_GATEWAY
-    err = resp_confirm.json().get("error", {})
+    err = _unwrap(resp_confirm).get("error", {})
     assert err.get("code") == "upstream_timeout"
     details = err.get("details") or {}
     assert details.get("retryable") is True

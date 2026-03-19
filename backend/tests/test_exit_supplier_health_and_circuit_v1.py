@@ -11,6 +11,14 @@ from app.auth import _jwt_secret
 from app.errors import AppError
 from app.utils import now_utc
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 def _make_search_headers(org_id: str, email: str, tenant_key: str) -> dict[str, str]:
     token = jwt.encode({"sub": email, "org": org_id}, _jwt_secret(), algorithm="HS256")
@@ -321,16 +329,6 @@ async def test_supplier_circuit_closes_after_until(test_db: Any, async_client: A
     await client.post("/api/offers/search", json=payload, headers=headers)
 
     from app.services.supplier_health_service import is_supplier_circuit_open as _check_open_after
-
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
 
     is_open_after = await _check_open_after(db, organization_id=org_id, supplier_code="paximum")
     assert is_open_after is False

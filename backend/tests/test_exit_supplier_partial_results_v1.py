@@ -9,6 +9,14 @@ from httpx import AsyncClient
 from app.auth import _jwt_secret
 from app.utils import now_utc
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 def _make_headers(org_id: str, email: str, tenant_key: str) -> dict[str, str]:
     token = jwt.encode({"sub": email, "org": org_id}, _jwt_secret(), algorithm="HS256")
@@ -285,16 +293,6 @@ async def test_supplier_warnings_ordering_deterministic(test_db: Any, async_clie
 
     from app.errors import AppError
 
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
-
     async def _failing_paximum(*args, **kwargs):  # type: ignore[no-untyped-def]
         raise AppError(503, "SUPPLIER_UPSTREAM_UNAVAILABLE", "Paximum unavailable", {})
 
@@ -321,8 +319,8 @@ def _unwrap(resp):
     assert resp1.status_code == 503
     assert resp2.status_code == 503
 
-    w1 = (resp1.json().get("error", {}).get("details", {}).get("warnings") or [])
-    w2 = (resp2.json().get("error", {}).get("details", {}).get("warnings") or [])
+    w1 = (_unwrap(resp1).get("error", {}).get("details", {}).get("warnings") or [])
+    w2 = (_unwrap(resp2).get("error", {}).get("details", {}).get("warnings") or [])
 
     assert [f"{w.get('supplier_code')}:{w.get('code')}" for w in w1] == [
         f"{w.get('supplier_code')}:{w.get('code')}" for w in w2

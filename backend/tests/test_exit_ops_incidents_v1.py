@@ -9,6 +9,14 @@ from httpx import AsyncClient
 from app.auth import _jwt_secret
 from app.utils import now_utc
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 async def _create_org_and_user(db: Any, roles: list[str]) -> tuple[str, str]:
     """Minimal helper to seed an organization and user for ops tests."""
@@ -322,16 +330,6 @@ async def test_ops_incident_deduplication(test_db: Any) -> None:
     db = test_db
 
     from app.services.ops_incidents_service import create_risk_review_incident
-
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
 
     org_id = "org_dedup"
     booking_id = "b_dedup"

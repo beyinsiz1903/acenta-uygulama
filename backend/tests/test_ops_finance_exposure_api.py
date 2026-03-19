@@ -4,6 +4,14 @@ import pytest
 
 from app.utils import now_utc
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 @pytest.mark.anyio
 @pytest.mark.xfail(reason="Exposure API returns org default currency (TRY) instead of account currency (EUR)")
@@ -69,16 +77,6 @@ async def test_exposure_dashboard_returns_aging_buckets(async_client, test_db, a
 
     # Helper to backdate days
     from datetime import timedelta
-
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
 
     def days_ago(d: int):
         return now - timedelta(days=d)
@@ -155,7 +153,7 @@ def _unwrap(resp):
     # extra API_PREFIX in server.py, bu yüzden efektif path "/api/ops/finance/exposure".
     resp = await async_client.get("/api/ops/finance/exposure", headers=headers)
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
 
     items = data.get("items") or []
     assert len(items) >= 1

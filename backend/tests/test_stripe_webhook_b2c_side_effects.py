@@ -5,6 +5,14 @@ import pytest
 
 from app.utils import now_utc
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 @pytest.mark.anyio
 async def test_stripe_webhook_rejects_when_secret_missing(async_client, monkeypatch):
@@ -149,16 +157,6 @@ async def test_stripe_webhook_does_not_trigger_side_effects_for_non_public(async
     )
 
     from app.services import stripe_handlers as handlers
-
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
 
     event_payload = {
         "id": "evt_test_b2b",

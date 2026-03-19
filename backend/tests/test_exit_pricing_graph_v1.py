@@ -10,6 +10,14 @@ from app.auth import _jwt_secret
 from app.utils import now_utc
 from app.routers.offers import round_money
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 async def _seed_org_user_and_tenant(test_db: Any) -> tuple[str, str]:
     """Reuse default org from seed_default_org_and_users and attach a new tenant.
@@ -351,16 +359,6 @@ async def test_pricing_graph_currency_mismatch_skips_rule(test_db: Any, async_cl
 
     from app.services.pricing_graph.graph import price_offer_with_graph
     from datetime import date as _date
-
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
 
     now = now_utc()
 

@@ -10,6 +10,14 @@ Tests:
 import pytest
 import jwt
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 @pytest.mark.anyio
 async def test_token_has_jti_and_sid(async_client):
@@ -165,16 +173,6 @@ async def test_token_blacklist_service(test_db):
         is_token_blacklisted,
     )
     from datetime import datetime, timezone, timedelta
-
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
 
     jti = "test-jti-12345"
     expires_at = datetime.now(timezone.utc) + timedelta(hours=12)

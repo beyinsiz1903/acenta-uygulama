@@ -13,6 +13,14 @@ from app.errors import AppError
 from app.auth import _jwt_secret
 from app.db import get_db
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 def _make_token(email: str, org_id: str, roles: list[str], minutes: int = 60 * 12) -> str:
     now = datetime.now(timezone.utc)
@@ -117,16 +125,6 @@ async def test_settlements_requires_permission(async_client: AsyncClient) -> Non
     # Seed active subscription so subscription guard passes and RBAC is exercised
     from app.services.subscription_service import SubscriptionService
 
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
-
     sub_service = SubscriptionService(db)
     await sub_service.set_subscription(
         org_id=org_id,
@@ -165,7 +163,7 @@ def _unwrap(resp):
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": tenant_id},
     )
     assert resp.status_code == 403
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["error"]["code"] == "insufficient_permissions"
 
 

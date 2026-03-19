@@ -12,6 +12,14 @@ from httpx import AsyncClient
 from app.utils import now_utc
 from app.services.pricing_service import calculate_price
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 @pytest.mark.exit_pricing_engine_v1
 @pytest.mark.anyio
@@ -262,16 +270,6 @@ async def test_storefront_booking_persists_pricing(test_db: Any, async_client: A
 
     # 3) Read booking directly from DB to inspect pricing field
     from bson import ObjectId
-
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
 
     booking_doc = await test_db.bookings.find_one({"_id": ObjectId(booking_id)})
 

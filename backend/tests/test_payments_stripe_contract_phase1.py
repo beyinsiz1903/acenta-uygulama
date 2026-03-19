@@ -7,6 +7,14 @@ import pytest
 
 from app.services.booking_payments import BookingPaymentsOrchestrator
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 @pytest.mark.anyio
 async def test_stripe_webhook_rejects_invalid_signature(async_client):
@@ -283,16 +291,6 @@ async def test_capture_and_refund_endpoints_set_idempotency_keys(monkeypatch, as
     called: Dict[str, Any] = {}
 
     from app.services import stripe_adapter as adapter  # type: ignore
-
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
 
     async def fake_create_intent(*, amount_cents: int, currency: str, metadata: Dict[str, str], idempotency_key: str, capture_method: str = "automatic") -> Dict[str, Any]:  # pragma: no cover
         called["create"] = {

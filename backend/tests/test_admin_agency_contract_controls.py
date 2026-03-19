@@ -8,6 +8,14 @@ from app.auth import create_access_token, hash_password
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 @pytest.mark.anyio
 async def test_admin_agencies_return_contract_summary_and_enforce_user_limit(async_client, test_db, admin_headers):
     now = now_utc()
@@ -51,7 +59,7 @@ async def test_admin_agencies_return_contract_summary_and_enforce_user_limit(asy
 
     agencies_resp = await async_client.get("/api/admin/agencies/", headers=admin_headers)
     assert agencies_resp.status_code == 200, agencies_resp.text
-    agencies = agencies_resp.json()
+    agencies = _unwrap(agencies_resp)
 
     target = next((item for item in agencies if item.get("id") == agency_id), None)
     assert target is not None, agencies
@@ -72,7 +80,7 @@ async def test_admin_agencies_return_contract_summary_and_enforce_user_limit(asy
         },
     )
     assert create_resp.status_code == 409, create_resp.text
-    payload = create_resp.json()
+    payload = _unwrap(create_resp)
     assert payload["error"]["code"] == "agency_user_limit_reached"
 
 
@@ -157,7 +165,7 @@ async def test_agency_profile_reports_expired_contract(async_client, test_db):
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": tenant_id},
     )
     assert resp.status_code == 200, resp.text
-    data = resp.json()
+    data = _unwrap(resp)
     contract = data.get("contract") or {}
     assert contract.get("contract_status") == "expired"
     assert contract.get("access_blocked") is True

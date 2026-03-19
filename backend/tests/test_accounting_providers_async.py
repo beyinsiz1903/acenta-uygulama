@@ -19,7 +19,7 @@ from unittest.mock import AsyncMock, patch
 
 def _unwrap(resp):
     """Unwrap response envelope if present."""
-    data = _unwrap(resp)
+    data = resp.json()
     if isinstance(data, dict) and "ok" in data and "data" in data:
         return data["data"]
     return data

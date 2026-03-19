@@ -15,6 +15,17 @@ def _unwrap(resp):
     return data
 
 
+def _redis_available() -> bool:
+    """Check if Redis is reachable (refresh tokens require Redis)."""
+    try:
+        import redis
+        r = redis.Redis(host="localhost", port=6379, socket_connect_timeout=1)
+        r.ping()
+        return True
+    except Exception:
+        return False
+
+
 
 WEB_HEADERS = {WEB_AUTH_PLATFORM_HEADER: WEB_AUTH_PLATFORM_VALUE}
 
@@ -93,6 +104,7 @@ async def test_v1_auth_cookie_bootstrap_flow(async_client) -> None:
 
 
 @pytest.mark.anyio
+@pytest.mark.skipif(not _redis_available(), reason="Refresh token rotation requires Redis")
 async def test_v1_auth_refresh_rotates_cookie_transport(async_client) -> None:
     login_response = await async_client.post(
         "/api/v1/auth/login",

@@ -7,7 +7,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = "https://async-hardening.preview.emergentagent.com/api"
+BACKEND_URL = "https://webhook-platform.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://async-hardening.preview.emergentagent.com/api",
-    "frontend_url": "https://async-hardening.preview.emergentagent.com",
+    "backend_url": "https://webhook-platform.preview.emergentagent.com/api",
+    "frontend_url": "https://webhook-platform.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

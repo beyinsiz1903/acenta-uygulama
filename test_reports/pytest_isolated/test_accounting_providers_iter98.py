@@ -7,7 +7,7 @@ import subprocess
 import requests
 import time
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://async-hardening.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://webhook-platform.preview.emergentagent.com").rstrip("/")
 
 # Global session caches
 _admin_session = None

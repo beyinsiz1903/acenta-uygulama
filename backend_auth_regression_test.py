@@ -10,7 +10,7 @@ import json
 import sys
 
 # Test configuration
-BACKEND_URL = "https://async-hardening.preview.emergentagent.com"
+BACKEND_URL = "https://webhook-platform.preview.emergentagent.com"
 TEST_CREDENTIALS = {
     "email": "agent@acenta.test",
     "password": "agent123"

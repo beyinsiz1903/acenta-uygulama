@@ -11,7 +11,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://async-hardening.preview.emergentagent.com/api"
+BASE_URL = "https://webhook-platform.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

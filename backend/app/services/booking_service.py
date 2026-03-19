@@ -328,7 +328,7 @@ async def transition_to_booked(
         db,
         organization_id,
         booking_id,
-        target_state="booked",
+        target_state="confirmed",
         actor=actor,
         request=request,
     )
@@ -443,7 +443,7 @@ async def transition_to_refund_rejected(
         db,
         organization_id,
         booking_id,
-        target_state="booked",
+        target_state="confirmed",
         actor=actor,
         request=request,
     )

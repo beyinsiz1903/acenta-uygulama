@@ -13,6 +13,14 @@ from app.utils import now_utc
 from server import app
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 @pytest.mark.anyio
 @pytest.mark.exit_sprint1
 
@@ -119,7 +127,7 @@ async def test_bookings_api_org_isolation(test_db: Any) -> None:
             # Debug aid for future failures
             print("CREATE_RESPONSE", resp_create.status_code, resp_create.text)
         assert resp_create.status_code == status.HTTP_201_CREATED
-        booking_a = resp_create.json()
+        booking_a = _unwrap(resp_create)
         booking_id = booking_a["id"]
         # UserB (OrgB) should not see OrgA's bookings in list
         resp_list_b = await client.get(
@@ -130,7 +138,9 @@ async def test_bookings_api_org_isolation(test_db: Any) -> None:
             },
         )
         assert resp_list_b.status_code == status.HTTP_200_OK
-        bookings_b = resp_list_b.json()
+        bookings_b = _unwrap(resp_list_b)
+        if isinstance(bookings_b, dict) and "items" in bookings_b:
+            bookings_b = bookings_b["items"]
         assert isinstance(bookings_b, list)
         assert all(b["id"] != booking_id for b in bookings_b)
 
@@ -153,6 +163,8 @@ async def test_bookings_api_org_isolation(test_db: Any) -> None:
             },
         )
         assert resp_list_a.status_code == status.HTTP_200_OK
-        bookings_a = resp_list_a.json()
+        bookings_a = _unwrap(resp_list_a)
+        if isinstance(bookings_a, dict) and "items" in bookings_a:
+            bookings_a = bookings_a["items"]
         assert isinstance(bookings_a, list)
         assert any(b["id"] == booking_id for b in bookings_a)

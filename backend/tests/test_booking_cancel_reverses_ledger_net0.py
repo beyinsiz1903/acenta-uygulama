@@ -7,6 +7,14 @@ from bson import ObjectId
 from app.db import get_db
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 @pytest.mark.anyio
 async def test_booking_cancel_creates_net_zero_ledger_and_full_refund(async_client, agency_token):
     """P1.x After-sales v1: CANCEL akışının finansal kanıtı.
@@ -96,16 +104,6 @@ async def test_booking_cancel_creates_net_zero_ledger_and_full_refund(async_clie
     # Net exposure agency/platform bazında penalty_eur civarında olmalı
     # (Bu testte seed ile cancel_penalty_percent = 20.0 varsayılıyor.)
     from collections import defaultdict
-
-
-def _unwrap(resp):
-    """Unwrap response envelope if present."""
-    data = resp.json()
-    if isinstance(data, dict) and "ok" in data and "data" in data:
-        return data["data"]
-    return data
-
-
 
     by_account = defaultdict(lambda: {"debit": 0.0, "credit": 0.0})
     for p in postings:

@@ -160,7 +160,7 @@ class BookingTransitionService:
             update_fields["last_transition_reason"] = reason
 
         try:
-            oid = ObjectId(booking_id)
+            ObjectId(booking_id)
         except Exception:
             raise BookingNotFoundError(booking_id)
 
@@ -256,7 +256,7 @@ class BookingTransitionService:
         event_id = str(uuid.uuid4())
 
         try:
-            oid = ObjectId(booking_id)
+            ObjectId(booking_id)
         except Exception:
             raise BookingNotFoundError(booking_id)
 

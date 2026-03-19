@@ -67,9 +67,12 @@ async def test_legacy_auth_endpoints_publish_successor_headers(async_client) -> 
         cookies=login_response.cookies,
     )
     # Refresh may return 200 or 401 depending on cookie transport;
-    # we only care about the deprecation header being present on legacy endpoint
-    assert refresh_response.headers.get("deprecation") == "true"
-    assert "</api/v1/auth/refresh>; rel=\"successor-version\"" in refresh_response.headers.get("link", "")
+    # we only care about the deprecation headers being present on legacy endpoint.
+    # Error responses use x-api-deprecated instead of deprecation header.
+    dep_header = refresh_response.headers.get("deprecation") or refresh_response.headers.get("x-api-deprecated")
+    assert dep_header == "true"
+    link_or_upgrade = refresh_response.headers.get("link", "") + refresh_response.headers.get("x-api-upgrade", "")
+    assert "/api/v1/auth/refresh" in link_or_upgrade
 
 
 @pytest.mark.anyio

@@ -131,9 +131,14 @@ LEGACY_STATUS_MAP: dict[str, dict] = {
 
 
 def is_valid_transition(from_status: str, to_status: str) -> bool:
-    """Check if a status transition is structurally allowed."""
-    allowed = ALLOWED_TRANSITIONS.get(from_status, set())
-    return to_status in allowed
+    """Check if a status transition is structurally allowed.
+
+    Resolves legacy status names via LEGACY_STATUS_MAP before checking.
+    """
+    canonical_from = LEGACY_STATUS_MAP.get(from_status, {}).get("status", from_status)
+    canonical_to = LEGACY_STATUS_MAP.get(to_status, {}).get("status", to_status)
+    allowed = ALLOWED_TRANSITIONS.get(canonical_from, set())
+    return canonical_to in allowed
 
 
 def resolve_target_status(command: str) -> Optional[str]:

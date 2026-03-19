@@ -20,6 +20,16 @@ import pytest
 import requests
 import os
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Batch ID from the migration run (provided in review request)
@@ -37,7 +47,7 @@ class TestOrphanMigrationStatus:
     def test_status_has_required_fields(self):
         """Status response should have total_orders, assigned, orphaned, health_score."""
         response = requests.get(f"{BASE_URL}/api/admin/orphan-migration/status")
-        data = response.json()
+        data = _unwrap(response)
         
         # Required fields
         assert "total_orders" in data, "Missing 'total_orders' field"
@@ -48,7 +58,7 @@ class TestOrphanMigrationStatus:
     def test_status_has_audit_and_quarantine_sections(self):
         """Status response should have audit and quarantine breakdown."""
         response = requests.get(f"{BASE_URL}/api/admin/orphan-migration/status")
-        data = response.json()
+        data = _unwrap(response)
         
         assert "audit" in data, "Missing 'audit' section"
         assert "quarantine" in data, "Missing 'quarantine' section"
@@ -64,7 +74,7 @@ class TestOrphanMigrationStatus:
     def test_status_numbers_are_reasonable(self):
         """Validate that status numbers match expected state."""
         response = requests.get(f"{BASE_URL}/api/admin/orphan-migration/status")
-        data = response.json()
+        data = _unwrap(response)
         
         # Per review request: 86 total orders
         assert data["total_orders"] >= 86, f"Expected >= 86 total orders, got {data['total_orders']}"
@@ -87,7 +97,7 @@ class TestOrphanMigrationAuditLog:
     def test_audit_log_has_required_fields(self):
         """Audit log response should have total, records, batches."""
         response = requests.get(f"{BASE_URL}/api/admin/orphan-migration/audit-log")
-        data = response.json()
+        data = _unwrap(response)
         
         assert "total" in data, "Missing 'total' field"
         assert "records" in data, "Missing 'records' field"
@@ -99,7 +109,7 @@ class TestOrphanMigrationAuditLog:
     def test_audit_log_has_9_records(self):
         """Per review request, should have 9 audit records (8 auto + 1 manual)."""
         response = requests.get(f"{BASE_URL}/api/admin/orphan-migration/audit-log")
-        data = response.json()
+        data = _unwrap(response)
         
         # At least 9 records
         assert data["total"] >= 9, f"Expected >= 9 audit records, got {data['total']}"
@@ -107,7 +117,7 @@ class TestOrphanMigrationAuditLog:
     def test_audit_log_records_have_required_fields(self):
         """Each audit record should have batch_id, action, order_id, etc."""
         response = requests.get(f"{BASE_URL}/api/admin/orphan-migration/audit-log", params={"limit": 5})
-        data = response.json()
+        data = _unwrap(response)
         
         if data["records"]:
             record = data["records"][0]
@@ -123,7 +133,7 @@ class TestOrphanMigrationAuditLog:
             params={"batch_id": TEST_BATCH_ID}
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         # All records should be from this batch
         for record in data["records"]:
@@ -141,7 +151,7 @@ class TestOrphanMigrationQuarantine:
     def test_quarantine_has_required_fields(self):
         """Quarantine response should have total and records."""
         response = requests.get(f"{BASE_URL}/api/admin/orphan-migration/quarantine")
-        data = response.json()
+        data = _unwrap(response)
         
         assert "total" in data, "Missing 'total' field"
         assert "records" in data, "Missing 'records' field"
@@ -154,7 +164,7 @@ class TestOrphanMigrationQuarantine:
             params={"reviewed": "false"}
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         # Per review request: 77 pending (78 - 1 approved)
         assert data["total"] >= 70, f"Expected >= 70 pending, got {data['total']}"
@@ -170,7 +180,7 @@ class TestOrphanMigrationQuarantine:
             params={"reviewed": "true"}
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         # Should have at least 1 (the manually approved one)
         assert data["total"] >= 1, f"Expected >= 1 reviewed, got {data['total']}"
@@ -183,7 +193,7 @@ class TestOrphanMigrationQuarantine:
             params={"strategy": "test_artifact_single_org"}
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         # All returned records should have the specified strategy
         for record in data["records"]:
@@ -192,7 +202,7 @@ class TestOrphanMigrationQuarantine:
     def test_quarantine_records_have_required_fields(self):
         """Quarantine records should have order_id, resolution, proposed_organization_id, etc."""
         response = requests.get(f"{BASE_URL}/api/admin/orphan-migration/quarantine", params={"limit": 5})
-        data = response.json()
+        data = _unwrap(response)
         
         if data["records"]:
             record = data["records"][0]
@@ -213,7 +223,7 @@ class TestOrphanMigrationReview:
             params={"reviewed": "false", "limit": 1}
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         if not data["records"]:
             pytest.skip("No pending quarantine records to test rejection")
@@ -231,7 +241,7 @@ class TestOrphanMigrationReview:
         )
         assert review_response.status_code == 200, f"Expected 200, got {review_response.status_code}: {review_response.text}"
         
-        result = review_response.json()
+        result = _unwrap(review_response)
         assert result.get("status") == "rejected", f"Expected 'rejected', got {result}"
         assert result.get("order_id") == order_id
         
@@ -246,7 +256,7 @@ class TestOrphanMigrationReview:
         )
         # Should return 200 with error message (not 500)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "error" in data, f"Expected error message for invalid action: {data}"
         
     def test_review_nonexistent_order(self):
@@ -260,7 +270,7 @@ class TestOrphanMigrationReview:
             }
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "error" in data, f"Expected error for non-existent order: {data}"
         assert "not found" in data.get("error", "").lower()
 
@@ -276,7 +286,7 @@ class TestOrphanMigrationAnalyze:
     def test_analyze_has_required_fields(self):
         """Analyze response should have breakdown of resolutions."""
         response = requests.post(f"{BASE_URL}/api/admin/orphan-migration/analyze")
-        data = response.json()
+        data = _unwrap(response)
         
         assert "total_orphans" in data, "Missing 'total_orphans'"
         assert "auto_fix" in data, "Missing 'auto_fix'"
@@ -287,7 +297,7 @@ class TestOrphanMigrationAnalyze:
     def test_analyze_numbers_sum_correctly(self):
         """Resolution counts should sum to total_orphans."""
         response = requests.post(f"{BASE_URL}/api/admin/orphan-migration/analyze")
-        data = response.json()
+        data = _unwrap(response)
         
         total = data["total_orphans"]
         sum_resolutions = data["auto_fix"] + data["manual_review"] + data["quarantine"] + data["unresolved"]
@@ -305,7 +315,7 @@ class TestOrphanMigrationRollback:
             params={"batch_id": "nonexistent_batch_testing_xyz"}
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         assert data.get("status") == "no_records", f"Expected 'no_records', got {data}"
         assert data.get("rolled_back") == 0
@@ -328,7 +338,7 @@ class TestOrphanMigrationOptimisticGuard:
             params={"reviewed": "true", "limit": 10}
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         # Find an approved one
         approved = [r for r in data["records"] if r.get("review_action") == "approved"]
@@ -347,7 +357,7 @@ class TestOrphanMigrationOptimisticGuard:
             }
         )
         assert review_response.status_code == 200
-        result = review_response.json()
+        result = _unwrap(review_response)
         
         # Should indicate already assigned (optimistic guard)
         # Note: The endpoint returns 'already_assigned' status when the order already has org_id
@@ -361,14 +371,14 @@ class TestIntegration:
         """Status endpoint quarantine counts should match quarantine endpoint totals."""
         # Get status
         status_response = requests.get(f"{BASE_URL}/api/admin/orphan-migration/status")
-        status_data = status_response.json()
+        status_data = _unwrap(status_response)
         
         # Get quarantine pending count directly
         quarantine_response = requests.get(
             f"{BASE_URL}/api/admin/orphan-migration/quarantine",
             params={"reviewed": "false"}
         )
-        quarantine_data = quarantine_response.json()
+        quarantine_data = _unwrap(quarantine_response)
         
         status_pending = status_data["quarantine"]["pending_review"]
         quarantine_pending = quarantine_data["total"]
@@ -379,7 +389,7 @@ class TestIntegration:
     def test_audit_batches_appear_in_list(self):
         """Batch IDs in audit log should be listed in 'batches' field."""
         response = requests.get(f"{BASE_URL}/api/admin/orphan-migration/audit-log")
-        data = response.json()
+        data = _unwrap(response)
         
         batches = set(data["batches"])
         record_batches = set(r["batch_id"] for r in data["records"])

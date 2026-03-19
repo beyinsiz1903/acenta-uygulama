@@ -13,6 +13,16 @@ from app.constants.features import FEATURE_REPORTS
 from tests.integration.feature_flags.conftest import clear_features, enable_feature
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 REPORTS_PATH = "/api/reports/reservations-summary"
 
 
@@ -28,7 +38,7 @@ async def test_reports_blocked_when_feature_disabled(
 
   resp = await feature_test_client.get(REPORTS_PATH)
   assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
-  body = resp.json()
+  body = _unwrap(resp)
   error = body.get("error") or {}
   assert error.get("code") == "feature_not_enabled", body
   assert error.get("details", {}).get("feature") == FEATURE_REPORTS
@@ -46,6 +56,6 @@ async def test_reports_allowed_when_feature_enabled(
 
   resp = await feature_test_client.get(REPORTS_PATH)
   # The endpoint may return 200 or empty data, but must NOT be blocked by feature guard
-  assert resp.status_code != 403 or resp.json().get("error", {}).get("code") != "feature_not_enabled", (
+  assert resp.status_code != 403 or _unwrap(resp).get("error", {}).get("code") != "feature_not_enabled", (
     f"Feature guard still blocking: {resp.text}"
   )

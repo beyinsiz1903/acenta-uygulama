@@ -13,6 +13,16 @@ import pytest
 import requests
 import os
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 @pytest.fixture(scope="module")
@@ -24,7 +34,7 @@ def auth_token():
     )
     if response.status_code != 200:
         pytest.skip(f"Authentication failed: {response.status_code} - {response.text}")
-    data = response.json()
+    data = _unwrap(response)
     return data.get("access_token") or data.get("token")
 
 @pytest.fixture(scope="module")
@@ -49,7 +59,7 @@ class TestE2EDemoScenarios:
         response = requests.get(f"{BASE_URL}/api/e2e-demo/scenarios", headers=auth_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "scenarios" in data, "Response should have 'scenarios' key"
         
         scenarios = data["scenarios"]
@@ -89,7 +99,7 @@ class TestE2EDemoRunTest:
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         
         # Verify basic structure
         assert "run_id" in data, "Response should have 'run_id'"
@@ -125,7 +135,7 @@ class TestE2EDemoRunTest:
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         steps = data["steps"]
         
         # Find revalidation step
@@ -148,7 +158,7 @@ class TestE2EDemoRunTest:
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         steps = data["steps"]
         
         # Search step should be FAIL
@@ -176,7 +186,7 @@ class TestE2EDemoRunTest:
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         steps = data["steps"]
         
         # Booking step should be FAIL
@@ -201,7 +211,7 @@ class TestE2EDemoRunTest:
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         steps = data["steps"]
         
         # Status check step should be WARN
@@ -223,7 +233,7 @@ class TestE2EDemoRunTest:
             )
             assert response.status_code == 200, f"Expected 200 for {supplier}, got {response.status_code}"
             
-            data = response.json()
+            data = _unwrap(response)
             assert data["supplier"] == supplier, f"Expected supplier {supplier}"
             assert len(data["steps"]) == 6, f"Expected 6 steps for {supplier}"
     
@@ -236,7 +246,7 @@ class TestE2EDemoRunTest:
         )
         assert response.status_code == 200  # Returns 200 with error in body
         
-        data = response.json()
+        data = _unwrap(response)
         assert "error" in data, "Should have error for unknown supplier"
     
     def test_run_unknown_scenario(self, auth_headers):
@@ -248,7 +258,7 @@ class TestE2EDemoRunTest:
         )
         assert response.status_code == 200  # Returns 200 with error in body
         
-        data = response.json()
+        data = _unwrap(response)
         assert "error" in data, "Should have error for unknown scenario"
 
 
@@ -265,7 +275,7 @@ class TestE2EDemoHistory:
         response = requests.get(f"{BASE_URL}/api/e2e-demo/history", headers=auth_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "tests" in data, "Response should have 'tests' key"
         assert "total" in data, "Response should have 'total' key"
         
@@ -285,7 +295,7 @@ class TestE2EDemoHistory:
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         # All returned tests should be for ratehawk
         for test in data["tests"]:
             assert test["supplier"] == "ratehawk", f"Expected ratehawk, got {test['supplier']}"
@@ -298,7 +308,7 @@ class TestE2EDemoHistory:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert len(data["tests"]) <= 5, f"Expected max 5 tests, got {len(data['tests'])}"
 
 
@@ -322,7 +332,7 @@ class TestE2EDemoRerunStep:
             json={"supplier": "ratehawk", "scenario": "supplier_unavailable"}
         )
         assert run_response.status_code == 200
-        run_data = run_response.json()
+        run_data = _unwrap(run_response)
         run_id = run_data["run_id"]
         
         # Now rerun the failed step
@@ -333,7 +343,7 @@ class TestE2EDemoRerunStep:
         )
         assert rerun_response.status_code == 200, f"Expected 200, got {rerun_response.status_code}"
         
-        data = rerun_response.json()
+        data = _unwrap(rerun_response)
         assert "step" in data, "Response should have 'step' key"
         assert data["step"]["id"] == "search", "Should rerun search step"
         assert data["rerun"] == True, "Should indicate this is a rerun"
@@ -347,7 +357,7 @@ class TestE2EDemoRerunStep:
         )
         assert response.status_code == 200  # Returns 200 with error in body
         
-        data = response.json()
+        data = _unwrap(response)
         assert "error" in data, "Should have error for invalid run_id"
 
 
@@ -364,7 +374,7 @@ class TestE2EDemoSuppliers:
         response = requests.get(f"{BASE_URL}/api/e2e-demo/suppliers", headers=auth_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "suppliers" in data, "Response should have 'suppliers' key"
         
         suppliers = data["suppliers"]
@@ -396,7 +406,7 @@ class TestE2EDemoStepDetails:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         steps = data["steps"]
         
         required_fields = ["id", "name", "status", "latency_ms", "request_id", "trace_id", "supplier_response", "message"]
@@ -414,7 +424,7 @@ class TestE2EDemoStepDetails:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         step_ids = [s["id"] for s in data["steps"]]
         expected_ids = ["search", "detail", "revalidation", "booking", "status_check", "cancel"]
         
@@ -429,7 +439,7 @@ class TestWtatilRename:
         response = requests.get(f"{BASE_URL}/api/e2e-demo/suppliers", headers=auth_headers)
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         supplier_codes = [s["code"] for s in data["suppliers"]]
         
         assert "wtatil" in supplier_codes, "Should have 'wtatil' supplier"
@@ -444,6 +454,6 @@ class TestWtatilRename:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["supplier"] == "wtatil", f"Expected wtatil, got {data['supplier']}"
         assert "error" not in data, "Should not have error"

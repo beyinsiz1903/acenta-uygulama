@@ -26,6 +26,16 @@ import pytest
 import requests
 import time
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials from review request
@@ -52,7 +62,7 @@ def authenticated_client(api_client):
     )
 
     if response.status_code == 429:
-        retry_after = response.json().get("details", {}).get("retry_after_seconds", 60)
+        retry_after = _unwrap(response).get("details", {}).get("retry_after_seconds", 60)
         print(f"Rate limited, waiting {retry_after}s...")
         time.sleep(min(retry_after, 30))
         response = api_client.post(
@@ -63,7 +73,7 @@ def authenticated_client(api_client):
     if response.status_code != 200:
         pytest.skip(f"Authentication failed: {response.status_code} - {response.text}")
 
-    data = response.json()
+    data = _unwrap(response)
     token = data.get("access_token") or data.get("token")
     if token:
         api_client.headers.update({"Authorization": f"Bearer {token}"})
@@ -85,7 +95,7 @@ class TestAccountingAuthentication:
             pytest.skip("Rate limited")
 
         assert response.status_code == 200, f"Login failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "access_token" in data or "token" in data
         print("PASS: Agency1 login successful")
 
@@ -97,7 +107,7 @@ class TestAccountingSummary:
         """Test GET /api/agency/pms/accounting/summary returns financial summary"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/summary")
         assert response.status_code == 200, f"Summary failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Check required fields
         assert "total_charges" in data, "Missing total_charges field"
@@ -123,7 +133,7 @@ class TestFolioList:
         """Test GET /api/agency/pms/accounting/folios returns folio list"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/folios")
         assert response.status_code == 200, f"Folios failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "items" in data, "Missing items field"
         assert "total" in data, "Missing total field"
@@ -144,7 +154,7 @@ class TestFolioList:
         """Test folios search by guest name"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/folios?search=test")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "items" in data
         print(f"PASS: Folios search - {data['total']} results")
 
@@ -153,7 +163,7 @@ class TestFolioList:
         # Test has_balance filter
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/folios?status=has_balance")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         # All returned items should have balance > 0
         for item in data["items"]:
@@ -169,7 +179,7 @@ class TestFolioDetail:
     def reservation_id(self, authenticated_client):
         """Get a reservation_id from folios list"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/folios?limit=1")
-        data = response.json()
+        data = _unwrap(response)
         if not data.get("items"):
             pytest.skip("No folios available")
         return data["items"][0]["reservation_id"]
@@ -178,7 +188,7 @@ class TestFolioDetail:
         """Test GET /api/agency/pms/accounting/folios/{reservation_id}"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/folios/{reservation_id}")
         assert response.status_code == 200, f"Folio detail failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Check required fields
         assert "reservation" in data, "Missing reservation field"
@@ -210,7 +220,7 @@ class TestChargeOperations:
     def reservation_id(self, authenticated_client):
         """Get a reservation_id from folios list"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/folios?limit=1")
-        data = response.json()
+        data = _unwrap(response)
         if not data.get("items"):
             pytest.skip("No folios available")
         return data["items"][0]["reservation_id"]
@@ -229,7 +239,7 @@ class TestChargeOperations:
             json=charge_data
         )
         assert response.status_code == 200, f"Charge failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "id" in data, "Missing id in response"
         assert data["type"] == "charge", f"Expected type=charge, got {data['type']}"
@@ -277,7 +287,7 @@ class TestPaymentOperations:
     def reservation_id(self, authenticated_client):
         """Get a reservation_id from folios list"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/folios?limit=1")
-        data = response.json()
+        data = _unwrap(response)
         if not data.get("items"):
             pytest.skip("No folios available")
         return data["items"][0]["reservation_id"]
@@ -296,7 +306,7 @@ class TestPaymentOperations:
             json=payment_data
         )
         assert response.status_code == 200, f"Payment failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "id" in data, "Missing id in response"
         assert data["type"] == "payment", f"Expected type=payment, got {data['type']}"
@@ -319,7 +329,7 @@ class TestPaymentOperations:
             json=payment_data
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["payment_method"] == "credit_card"
         print("PASS: Credit card payment posted")
 
@@ -347,7 +357,7 @@ class TestTransactionDeletion:
         # First create a charge to delete
         # Get a reservation
         folios_response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/folios?limit=1")
-        items = folios_response.json().get("items", [])
+        items = _unwrap(folios_response).get("items", [])
         if not items:
             pytest.skip("No folios available")
 
@@ -368,14 +378,14 @@ class TestTransactionDeletion:
         if create_response.status_code != 200:
             pytest.skip("Could not create charge for deletion test")
 
-        tx_id = create_response.json()["id"]
+        tx_id = _unwrap(create_response)["id"]
 
         # Delete the transaction
         response = authenticated_client.delete(
             f"{BASE_URL}/api/agency/pms/accounting/transactions/{tx_id}"
         )
         assert response.status_code == 200, f"Delete failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert data["status"] == "deleted"
         assert data["id"] == tx_id
 
@@ -397,7 +407,7 @@ class TestInvoiceList:
         """Test GET /api/agency/pms/accounting/invoices"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/invoices")
         assert response.status_code == 200, f"Invoice list failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "items" in data, "Missing items field"
         assert "total" in data, "Missing total field"
@@ -415,14 +425,14 @@ class TestInvoiceList:
         """Test invoice search by invoice_no or guest_name"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/invoices?search=INV")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         print(f"PASS: Invoice search - {data['total']} results")
 
     def test_invoices_status_filter(self, authenticated_client):
         """Test invoice status filter"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/invoices?status=draft")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         # All returned items should have status=draft
         for item in data["items"]:
@@ -438,7 +448,7 @@ class TestInvoiceCreation:
     def reservation_with_charges(self, authenticated_client):
         """Get a reservation with charges for invoice creation"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/folios")
-        data = response.json()
+        data = _unwrap(response)
 
         for item in data.get("items", []):
             if item.get("total_charges", 0) > 0:
@@ -476,7 +486,7 @@ class TestInvoiceCreation:
             json=invoice_data
         )
         assert response.status_code == 200, f"Invoice creation failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify required fields
         assert "id" in data, "Missing id"
@@ -500,11 +510,11 @@ class TestInvoiceCreation:
         """Test invoice creation fails when folio has no charges"""
         # Get a reservation from PMS (without charges)
         pms_response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/reservations?limit=50")
-        reservations = pms_response.json().get("items", [])
+        reservations = _unwrap(pms_response).get("items", [])
 
         # Find a reservation that has no charges
         folios_response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/folios")
-        folio_items = {item["reservation_id"]: item for item in folios_response.json().get("items", [])}
+        folio_items = {item["reservation_id"]: item for item in _unwrap(folios_response).get("items", [])}
 
         # Look for a reservation with 0 charges
         res_with_no_charges = None
@@ -550,7 +560,7 @@ class TestInvoiceDetail:
     def invoice_id(self, authenticated_client):
         """Get an invoice_id from invoices list"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/invoices?limit=1")
-        data = response.json()
+        data = _unwrap(response)
         if not data.get("items"):
             pytest.skip("No invoices available")
         return data["items"][0]["id"]
@@ -559,7 +569,7 @@ class TestInvoiceDetail:
         """Test GET /api/agency/pms/accounting/invoices/{id}"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/invoices/{invoice_id}")
         assert response.status_code == 200, f"Invoice detail failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Check required fields
         assert "id" in data
@@ -589,20 +599,20 @@ class TestInvoiceStatusUpdate:
     def draft_invoice_id(self, authenticated_client):
         """Get a draft invoice_id or create one"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/invoices?status=draft")
-        data = response.json()
+        data = _unwrap(response)
         if data.get("items"):
             return data["items"][0]["id"]
 
         # Create a new invoice
         folios_response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/folios")
-        for item in folios_response.json().get("items", []):
+        for item in _unwrap(folios_response).get("items", []):
             if item.get("total_charges", 0) > 0:
                 create_response = authenticated_client.post(
                     f"{BASE_URL}/api/agency/pms/accounting/invoices",
                     json={"reservation_id": item["reservation_id"], "invoice_to": "Test"}
                 )
                 if create_response.status_code == 200:
-                    return create_response.json()["id"]
+                    return _unwrap(create_response)["id"]
 
         pytest.skip("No draft invoice available")
 
@@ -613,7 +623,7 @@ class TestInvoiceStatusUpdate:
             json={"status": "issued"}
         )
         assert response.status_code == 200, f"Status update failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["status"] == "issued", f"Expected status=issued, got {data['status']}"
         assert "issued_at" in data and data["issued_at"], "Missing issued_at timestamp"
@@ -625,7 +635,7 @@ class TestInvoiceStatusUpdate:
         """Test updating invoice status from issued to paid"""
         # Get an issued invoice
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/invoices?status=issued")
-        data = response.json()
+        data = _unwrap(response)
 
         if not data.get("items"):
             pytest.skip("No issued invoice available")
@@ -637,7 +647,7 @@ class TestInvoiceStatusUpdate:
             json={"status": "paid"}
         )
         assert response.status_code == 200, f"Status update failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["status"] == "paid", f"Expected status=paid, got {data['status']}"
         assert "paid_at" in data and data["paid_at"], "Missing paid_at timestamp"
@@ -648,7 +658,7 @@ class TestInvoiceStatusUpdate:
         """Test updating invoice status to cancelled"""
         # Get a draft or issued invoice
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/invoices")
-        data = response.json()
+        data = _unwrap(response)
 
         # Find a cancellable invoice (draft or issued)
         invoice_id = None
@@ -665,7 +675,7 @@ class TestInvoiceStatusUpdate:
             json={"status": "cancelled"}
         )
         assert response.status_code == 200, f"Cancel failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["status"] == "cancelled", f"Expected status=cancelled, got {data['status']}"
         assert "cancelled_at" in data and data["cancelled_at"], "Missing cancelled_at timestamp"
@@ -676,7 +686,7 @@ class TestInvoiceStatusUpdate:
         """Test that invalid status is rejected"""
         # Get any invoice
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/invoices?limit=1")
-        data = response.json()
+        data = _unwrap(response)
 
         if not data.get("items"):
             pytest.skip("No invoices available")
@@ -694,7 +704,7 @@ class TestInvoiceStatusUpdate:
         """Test updating invoice billing information"""
         # Get any invoice
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/invoices?limit=1")
-        data = response.json()
+        data = _unwrap(response)
 
         if not data.get("items"):
             pytest.skip("No invoices available")
@@ -714,7 +724,7 @@ class TestInvoiceStatusUpdate:
             json=update_data
         )
         assert response.status_code == 200, f"Update failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["invoice_to"] == "Updated Company Name"
         assert data["tax_id"] == "9876543210"
@@ -728,7 +738,7 @@ class TestBalanceCalculation:
     def test_folio_balance_calculation(self, authenticated_client):
         """Test that folio balance = charges - payments"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/folios?limit=5")
-        data = response.json()
+        data = _unwrap(response)
 
         for item in data.get("items", []):
             expected_balance = item["total_charges"] - item["total_payments"]
@@ -740,7 +750,7 @@ class TestBalanceCalculation:
     def test_summary_balance_calculation(self, authenticated_client):
         """Test that summary balance = total_charges - total_payments"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/summary")
-        data = response.json()
+        data = _unwrap(response)
 
         expected_balance = data["total_charges"] - data["total_payments"]
         assert abs(data["balance"] - expected_balance) < 0.01, \

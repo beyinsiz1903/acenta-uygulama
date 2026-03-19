@@ -6,6 +6,16 @@ import requests
 import os
 import uuid
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://webhook-platform.preview.emergentagent.com').rstrip('/')
 
 class TestOMSOrderCRUD:
@@ -15,7 +25,7 @@ class TestOMSOrderCRUD:
         """GET /api/orders - List orders returns 200"""
         response = requests.get(f"{BASE_URL}/api/orders")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "orders" in data
         assert "total" in data
         print(f"✅ GET /api/orders - {data['total']} orders returned")
@@ -24,7 +34,7 @@ class TestOMSOrderCRUD:
         """GET /api/orders?status=confirmed - Filter by status"""
         response = requests.get(f"{BASE_URL}/api/orders?status=confirmed")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         for order in data["orders"]:
             assert order["status"] == "confirmed"
         print(f"✅ GET /api/orders?status=confirmed - {len(data['orders'])} confirmed orders")
@@ -33,7 +43,7 @@ class TestOMSOrderCRUD:
         """GET /api/orders?channel=B2B - Filter by channel"""
         response = requests.get(f"{BASE_URL}/api/orders?channel=B2B")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         for order in data["orders"]:
             assert order["channel"] == "B2B"
         print(f"✅ GET /api/orders?channel=B2B - {len(data['orders'])} B2B orders")
@@ -48,7 +58,7 @@ class TestOMSOrderCRUD:
         }
         response = requests.post(f"{BASE_URL}/api/orders", json=payload)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "order_id" in data
         assert "order_number" in data
         assert data["status"] == "draft"
@@ -79,7 +89,7 @@ class TestOMSOrderCRUD:
         }
         response = requests.post(f"{BASE_URL}/api/orders", json=payload)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["total_sell_amount"] == 1000
         assert data["total_supplier_amount"] == 850
         assert data["total_margin_amount"] == 150
@@ -95,12 +105,12 @@ class TestOMSOrderCRUD:
             "customer_id": "TEST_detail_cust",
             "channel": "Corporate"
         })
-        order_id = create_resp.json()["order_id"]
+        order_id = _unwrap(create_resp)["order_id"]
         
         # Get detail
         response = requests.get(f"{BASE_URL}/api/orders/{order_id}")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["order_id"] == order_id
         assert "items" in data
         assert "financial_summary" in data
@@ -119,7 +129,7 @@ class TestOMSOrderCRUD:
             "customer_id": "TEST_update_cust",
             "channel": "B2B"
         })
-        order_id = create_resp.json()["order_id"]
+        order_id = _unwrap(create_resp)["order_id"]
         
         # Update
         response = requests.patch(f"{BASE_URL}/api/orders/{order_id}", json={
@@ -127,7 +137,7 @@ class TestOMSOrderCRUD:
             "agency_id": "TEST_updated_agency"
         })
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["customer_id"] == "TEST_update_cust_modified"
         assert data["agency_id"] == "TEST_updated_agency"
         print(f"✅ PATCH /api/orders/{order_id} - Updated successfully")
@@ -143,7 +153,7 @@ class TestOMSStateTransitions:
             "customer_id": "TEST_confirm_cust",
             "channel": "B2B"
         })
-        order_id = create_resp.json()["order_id"]
+        order_id = _unwrap(create_resp)["order_id"]
         
         # Confirm
         response = requests.post(f"{BASE_URL}/api/orders/{order_id}/confirm", json={
@@ -151,7 +161,7 @@ class TestOMSStateTransitions:
             "reason": "Supplier confirmed booking"
         })
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["success"] == True
         assert data["new_status"] == "confirmed"
         
@@ -166,7 +176,7 @@ class TestOMSStateTransitions:
         create_resp = requests.post(f"{BASE_URL}/api/orders", json={
             "customer_id": "TEST_cancel_req_cust"
         })
-        order_id = create_resp.json()["order_id"]
+        order_id = _unwrap(create_resp)["order_id"]
         requests.post(f"{BASE_URL}/api/orders/{order_id}/confirm", json={"actor": "admin"})
         
         # Request cancel
@@ -175,7 +185,7 @@ class TestOMSStateTransitions:
             "reason": "Customer changed travel dates"
         })
         assert response.status_code == 200
-        assert response.json()["new_status"] == "cancel_requested"
+        assert _unwrap(response)["new_status"] == "cancel_requested"
         
         order = requests.get(f"{BASE_URL}/api/orders/{order_id}").json()
         assert order["status"] == "cancel_requested"
@@ -187,7 +197,7 @@ class TestOMSStateTransitions:
         create_resp = requests.post(f"{BASE_URL}/api/orders", json={
             "customer_id": "TEST_cancel_cust"
         })
-        order_id = create_resp.json()["order_id"]
+        order_id = _unwrap(create_resp)["order_id"]
         requests.post(f"{BASE_URL}/api/orders/{order_id}/confirm", json={"actor": "admin"})
         requests.post(f"{BASE_URL}/api/orders/{order_id}/request-cancel", json={"actor": "customer"})
         
@@ -197,7 +207,7 @@ class TestOMSStateTransitions:
             "reason": "Customer confirmed cancellation"
         })
         assert response.status_code == 200
-        assert response.json()["new_status"] == "cancelled"
+        assert _unwrap(response)["new_status"] == "cancelled"
         print(f"✅ POST /api/orders/{order_id}/cancel - cancel_requested → cancelled")
     
     def test_close_order_from_confirmed(self):
@@ -206,7 +216,7 @@ class TestOMSStateTransitions:
         create_resp = requests.post(f"{BASE_URL}/api/orders", json={
             "customer_id": "TEST_close_cust"
         })
-        order_id = create_resp.json()["order_id"]
+        order_id = _unwrap(create_resp)["order_id"]
         requests.post(f"{BASE_URL}/api/orders/{order_id}/confirm", json={"actor": "admin"})
         
         # Close
@@ -215,7 +225,7 @@ class TestOMSStateTransitions:
             "reason": "Travel completed successfully"
         })
         assert response.status_code == 200
-        assert response.json()["new_status"] == "closed"
+        assert _unwrap(response)["new_status"] == "closed"
         print(f"✅ POST /api/orders/{order_id}/close - confirmed → closed")
     
     def test_invalid_transition_draft_to_closed(self):
@@ -223,7 +233,7 @@ class TestOMSStateTransitions:
         create_resp = requests.post(f"{BASE_URL}/api/orders", json={
             "customer_id": "TEST_invalid_trans"
         })
-        order_id = create_resp.json()["order_id"]
+        order_id = _unwrap(create_resp)["order_id"]
         
         # Try to close directly from draft (invalid)
         response = requests.post(f"{BASE_URL}/api/orders/{order_id}/close", json={
@@ -237,7 +247,7 @@ class TestOMSStateTransitions:
         create_resp = requests.post(f"{BASE_URL}/api/orders", json={
             "customer_id": "TEST_invalid_back"
         })
-        order_id = create_resp.json()["order_id"]
+        order_id = _unwrap(create_resp)["order_id"]
         requests.post(f"{BASE_URL}/api/orders/{order_id}/confirm", json={"actor": "admin"})
         
         # Try request-cancel then try to confirm again (should fail for going back)
@@ -259,7 +269,7 @@ class TestOMSOrderItems:
         create_resp = requests.post(f"{BASE_URL}/api/orders", json={
             "customer_id": "TEST_add_item_cust"
         })
-        order_id = create_resp.json()["order_id"]
+        order_id = _unwrap(create_resp)["order_id"]
         
         # Add item
         response = requests.post(f"{BASE_URL}/api/orders/{order_id}/items", json={
@@ -273,7 +283,7 @@ class TestOMSOrderItems:
             "margin_amount": 300
         })
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "item_id" in data
         assert data["product_name"] == "TEST Antalya Beach Resort"
         assert data["supplier_booking_status"] == "not_started"
@@ -292,11 +302,11 @@ class TestOMSOrderItems:
                 "margin_amount": 100
             }]
         })
-        order_id = create_resp.json()["order_id"]
+        order_id = _unwrap(create_resp)["order_id"]
         
         response = requests.get(f"{BASE_URL}/api/orders/{order_id}/items")
         assert response.status_code == 200
-        items = response.json()
+        items = _unwrap(response)
         assert len(items) >= 1
         print(f"✅ GET /api/orders/{order_id}/items - {len(items)} items")
     
@@ -313,7 +323,7 @@ class TestOMSOrderItems:
                 "margin_amount": 150
             }]
         })
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         order_id = order["order_id"]
         item_id = order["items"][0]["item_id"]
         
@@ -327,7 +337,7 @@ class TestOMSOrderItems:
             }
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["success"] == True
         assert data["supplier_booking_id"] == "RH-BK-123456"
         
@@ -348,12 +358,12 @@ class TestOMSEventsTimeline:
         create_resp = requests.post(f"{BASE_URL}/api/orders", json={
             "customer_id": "TEST_events_cust"
         })
-        order_id = create_resp.json()["order_id"]
+        order_id = _unwrap(create_resp)["order_id"]
         requests.post(f"{BASE_URL}/api/orders/{order_id}/confirm", json={"actor": "admin"})
         
         response = requests.get(f"{BASE_URL}/api/orders/{order_id}/events")
         assert response.status_code == 200
-        events = response.json()
+        events = _unwrap(response)
         assert len(events) >= 2  # order_created + order_confirmed
         event_types = [e["event_type"] for e in events]
         assert "order_created" in event_types
@@ -366,7 +376,7 @@ class TestOMSEventsTimeline:
         create_resp = requests.post(f"{BASE_URL}/api/orders", json={
             "customer_id": "TEST_timeline_cust"
         })
-        order_id = create_resp.json()["order_id"]
+        order_id = _unwrap(create_resp)["order_id"]
         requests.post(f"{BASE_URL}/api/orders/{order_id}/confirm", json={
             "actor": "admin",
             "reason": "Confirmed by supplier"
@@ -374,7 +384,7 @@ class TestOMSEventsTimeline:
         
         response = requests.get(f"{BASE_URL}/api/orders/{order_id}/timeline")
         assert response.status_code == 200
-        timeline = response.json()
+        timeline = _unwrap(response)
         assert len(timeline) >= 2
         
         # Timeline has specific structure
@@ -402,11 +412,11 @@ class TestOMSFinancialSummary:
                 "margin_amount": 300
             }]
         })
-        order_id = create_resp.json()["order_id"]
+        order_id = _unwrap(create_resp)["order_id"]
         
         response = requests.get(f"{BASE_URL}/api/orders/{order_id}/financial-summary")
         assert response.status_code == 200
-        summary = response.json()
+        summary = _unwrap(response)
         assert summary["order_id"] == order_id
         assert summary["sell_total"] == 1500
         assert summary["supplier_total"] == 1200
@@ -425,7 +435,7 @@ class TestOMSFinancialSummary:
                 {"product_name": "Hotel 2", "sell_amount": 800, "supplier_amount": 600, "margin_amount": 200}
             ]
         })
-        order_id = create_resp.json()["order_id"]
+        order_id = _unwrap(create_resp)["order_id"]
         
         summary = requests.get(f"{BASE_URL}/api/orders/{order_id}/financial-summary").json()
         assert summary["sell_total"] == 1300  # 500 + 800
@@ -441,7 +451,7 @@ class TestOMSSeedDemoData:
         """POST /api/orders/seed - Seed demo orders"""
         response = requests.post(f"{BASE_URL}/api/orders/seed")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         # Either creates new orders or returns "already exist"
         assert "message" in data
         print(f"✅ POST /api/orders/seed - {data['message']}")
@@ -460,7 +470,7 @@ class TestOMSFullWorkflow:
             "currency": "EUR"
         })
         assert create_resp.status_code == 200
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         order_id = order["order_id"]
         assert order["status"] == "draft"
         print(f"1. Created order {order['order_number']} (status=draft)")
@@ -478,7 +488,7 @@ class TestOMSFullWorkflow:
             "passenger_summary": {"adults": 2}
         })
         assert item_resp.status_code == 200
-        item = item_resp.json()
+        item = _unwrap(item_resp)
         item_id = item["item_id"]
         print(f"2. Added item {item_id} - {item['product_name']}")
         
@@ -496,7 +506,7 @@ class TestOMSFullWorkflow:
             "reason": "Supplier confirmed"
         })
         assert confirm_resp.status_code == 200
-        assert confirm_resp.json()["new_status"] == "confirmed"
+        assert _unwrap(confirm_resp)["new_status"] == "confirmed"
         print(f"4. Confirmed order (draft → confirmed)")
         
         # 5. Request cancellation

@@ -8,6 +8,16 @@ from httpx import AsyncClient
 from app.constants.features import FEATURE_B2B, FEATURE_REPORTS, ALL_FEATURE_KEYS
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.anyio
 async def test_admin_get_tenant_features(
   async_client: AsyncClient,
@@ -20,7 +30,7 @@ async def test_admin_get_tenant_features(
     headers=admin_headers,
   )
   assert resp.status_code == 200, resp.text
-  body = resp.json()
+  body = _unwrap(resp)
   assert body["tenant_id"] == "nonexistent_tenant"
   assert body["features"] == []
   assert body["limits"] == {}
@@ -47,7 +57,7 @@ async def test_admin_patch_tenant_features(
     json={"features": [FEATURE_B2B, FEATURE_REPORTS]},
   )
   assert resp.status_code == 200, resp.text
-  body = resp.json()
+  body = _unwrap(resp)
   # Effective features = starter plan defaults + add_ons (b2b, reports)
   assert FEATURE_B2B in body["features"]
   assert FEATURE_REPORTS in body["features"]
@@ -66,7 +76,7 @@ async def test_admin_patch_tenant_features(
     headers=admin_headers,
   )
   assert resp2.status_code == 200
-  data = resp2.json()
+  data = _unwrap(resp2)
   assert FEATURE_B2B in data["features"]
   assert FEATURE_REPORTS in data["features"]
   assert data["source"] == "capabilities"
@@ -85,7 +95,7 @@ async def test_admin_patch_invalid_features(
     json={"features": ["b2b", "nonexistent_feature"]},
   )
   assert resp.status_code == 422, resp.text
-  body = resp.json()
+  body = _unwrap(resp)
   assert body["error"]["code"] == "invalid_features"
   assert "nonexistent_feature" in body["error"]["details"]["invalid"]
 
@@ -147,7 +157,7 @@ async def test_admin_list_tenants_returns_plan_and_billing_summary(
   )
 
   assert resp.status_code == 200, resp.text
-  body = resp.json()
+  body = _unwrap(resp)
   assert body["total"] == 1
   assert body["summary"]["payment_issue_count"] == 1
   assert body["summary"]["by_plan"]["pro"] == 1

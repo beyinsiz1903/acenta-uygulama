@@ -10,6 +10,16 @@ from app.auth import _jwt_secret
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 async def _seed_org_tenant_and_user(test_db: Any) -> tuple[str, str]:
     """Reuse default org, add agency_admin user and a dedicated tenant."""
 
@@ -125,7 +135,7 @@ async def test_pricing_trace_by_booking(test_db: Any, async_client: AsyncClient)
 
     resp = await client.get(f"/api/admin/pricing/graph/trace/by-booking/{booking_id}", headers=headers)
     assert resp.status_code == 200
-    body = resp.json()
+    body = _unwrap(resp)
 
     assert body["source"] == "booking"
     assert body["booking_id"] == booking_id
@@ -195,7 +205,7 @@ async def test_pricing_trace_by_session_offer(test_db: Any, async_client: AsyncC
         headers=headers,
     )
     assert resp.status_code == 200
-    body = resp.json()
+    body = _unwrap(resp)
 
     assert body["source"] == "search_session"
     assert body["session_id"] == session_id
@@ -271,7 +281,7 @@ async def test_pricing_trace_offer_token_not_found(test_db: Any, async_client: A
         headers=headers,
     )
     assert resp.status_code == 404
-    body = resp.json()
+    body = _unwrap(resp)
     assert body.get("error", {}).get("code") == "OFFER_TOKEN_NOT_FOUND"
 
 

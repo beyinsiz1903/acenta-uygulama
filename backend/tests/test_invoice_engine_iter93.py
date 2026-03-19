@@ -22,6 +22,16 @@ import requests
 import uuid
 from datetime import datetime
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -47,7 +57,7 @@ def super_admin_token(api_client):
         json={"email": SUPER_ADMIN_EMAIL, "password": SUPER_ADMIN_PASSWORD},
     )
     if resp.status_code == 200:
-        return resp.json().get("access_token")
+        return _unwrap(resp).get("access_token")
     pytest.skip(f"Super admin login failed: {resp.status_code}")
 
 
@@ -59,7 +69,7 @@ def agency_admin_token(api_client):
         json={"email": AGENCY_ADMIN_EMAIL, "password": AGENCY_ADMIN_PASSWORD},
     )
     if resp.status_code == 200:
-        return resp.json().get("access_token")
+        return _unwrap(resp).get("access_token")
     pytest.skip(f"Agency admin login failed: {resp.status_code}")
 
 
@@ -84,7 +94,7 @@ def sample_booking_id(api_client, auth_headers_agency):
         headers=auth_headers_agency,
     )
     if resp.status_code == 200:
-        bookings = resp.json()
+        bookings = _unwrap(resp)
         if bookings and len(bookings) > 0:
             return bookings[0].get("id")
     return None
@@ -105,7 +115,7 @@ class TestInvoiceDashboard:
             headers=auth_headers_agency,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         # Validate structure
         assert "total" in data
@@ -137,7 +147,7 @@ class TestInvoiceList:
             headers=auth_headers_agency,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         assert "items" in data
         assert "total" in data
@@ -153,7 +163,7 @@ class TestInvoiceList:
             headers=auth_headers_agency,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         # All returned items should have issued status
         for item in data.get("items", []):
@@ -167,7 +177,7 @@ class TestInvoiceList:
             headers=auth_headers_agency,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         for item in data.get("items", []):
             assert item.get("source_type") == "manual"
@@ -208,7 +218,7 @@ class TestCreateManualInvoice:
             },
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         # Validate response structure
         assert "invoice_id" in data
@@ -259,7 +269,7 @@ class TestCreateManualInvoice:
             },
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         assert data["customer"]["customer_type"] == "b2b"
         assert data["customer"]["tax_id"] == "1234567890"
@@ -287,7 +297,7 @@ class TestCreateFromBooking:
             json={"booking_id": "nonexistent-booking-id-123"},
         )
         assert resp.status_code == 400
-        data = resp.json()
+        data = _unwrap(resp)
         # Error may be in 'detail' or 'error.message' depending on error handler
         error_msg = data.get("detail", "") or data.get("error", {}).get("message", "")
         assert "not found" in error_msg.lower()
@@ -306,7 +316,7 @@ class TestCreateFromBooking:
         )
         # May return 200 (new) or 200 (existing due to idempotency)
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         assert "invoice_id" in data
         assert data["source_type"] == "booking"
@@ -326,7 +336,7 @@ class TestCreateFromBooking:
             json={"booking_id": sample_booking_id},
         )
         assert resp1.status_code == 200
-        invoice_id_1 = resp1.json().get("invoice_id")
+        invoice_id_1 = _unwrap(resp1).get("invoice_id")
         
         # Second call with same booking_id
         resp2 = api_client.post(
@@ -335,7 +345,7 @@ class TestCreateFromBooking:
             json={"booking_id": sample_booking_id},
         )
         assert resp2.status_code == 200
-        invoice_id_2 = resp2.json().get("invoice_id")
+        invoice_id_2 = _unwrap(resp2).get("invoice_id")
         
         # Both should return the same invoice_id (idempotent)
         assert invoice_id_1 == invoice_id_2
@@ -374,7 +384,7 @@ class TestInvoiceDetail:
             },
         )
         assert resp_create.status_code == 200
-        invoice_id = resp_create.json()["invoice_id"]
+        invoice_id = _unwrap(resp_create)["invoice_id"]
         
         # Get the invoice
         resp = api_client.get(
@@ -382,7 +392,7 @@ class TestInvoiceDetail:
             headers=auth_headers_agency,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         assert data["invoice_id"] == invoice_id
         assert "lines" in data
@@ -406,7 +416,7 @@ class TestBookingInvoiceCheck:
             headers=auth_headers_agency,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         # Should return either {"exists": false} or empty/null
         assert data.get("exists") == False or data.get("invoice_id") is None
 
@@ -429,7 +439,7 @@ class TestBookingInvoiceCheck:
             headers=auth_headers_agency,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         # Should return invoice info
         assert "invoice_id" in data or data.get("exists") == False
@@ -460,7 +470,7 @@ class TestInvoiceEvents:
             },
         )
         assert resp_create.status_code == 200
-        invoice_id = resp_create.json()["invoice_id"]
+        invoice_id = _unwrap(resp_create)["invoice_id"]
         
         # Get events
         resp = api_client.get(
@@ -468,7 +478,7 @@ class TestInvoiceEvents:
             headers=auth_headers_agency,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         assert "events" in data
         events = data["events"]
@@ -516,8 +526,8 @@ class TestInvoiceIssue:
             },
         )
         assert resp_create.status_code == 200
-        invoice_id = resp_create.json()["invoice_id"]
-        assert resp_create.json()["status"] == "draft"
+        invoice_id = _unwrap(resp_create)["invoice_id"]
+        assert _unwrap(resp_create)["status"] == "draft"
         
         # Issue the invoice
         resp = api_client.post(
@@ -525,7 +535,7 @@ class TestInvoiceIssue:
             headers=auth_headers_agency,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         # Status should be issued (mock provider auto-accepts)
         assert data["status"] == "issued"
@@ -547,7 +557,7 @@ class TestInvoiceIssue:
                 ],
             },
         )
-        invoice_id = resp_create.json()["invoice_id"]
+        invoice_id = _unwrap(resp_create)["invoice_id"]
         
         # First issue
         api_client.post(
@@ -562,7 +572,7 @@ class TestInvoiceIssue:
         )
         assert resp.status_code == 400
         # Error may be in 'detail' or 'error.message' 
-        data = resp.json()
+        data = _unwrap(resp)
         error_msg = data.get("detail", "") or data.get("error", {}).get("message", "")
         assert "Cannot issue" in error_msg or "Invalid" in error_msg
 
@@ -591,7 +601,7 @@ class TestInvoiceCancel:
                 ],
             },
         )
-        invoice_id = resp_create.json()["invoice_id"]
+        invoice_id = _unwrap(resp_create)["invoice_id"]
         
         # Cancel
         resp = api_client.post(
@@ -600,7 +610,7 @@ class TestInvoiceCancel:
             json={"reason": "Test cancellation"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         assert data["status"] == "cancelled"
         assert data.get("cancelled_at") is not None
@@ -621,7 +631,7 @@ class TestInvoiceCancel:
                 ],
             },
         )
-        invoice_id = resp_create.json()["invoice_id"]
+        invoice_id = _unwrap(resp_create)["invoice_id"]
         
         # First cancel
         api_client.post(
@@ -651,14 +661,14 @@ class TestStateMachine:
                 "lines": [{"description": f"TEST_SM_{uuid.uuid4().hex[:8]}", "quantity": 1, "unit_price": 50}],
             },
         )
-        invoice_id = resp_create.json()["invoice_id"]
+        invoice_id = _unwrap(resp_create)["invoice_id"]
         
         resp = api_client.post(
             f"{BASE_URL}/api/invoices/{invoice_id}/cancel",
             headers=auth_headers_agency,
         )
         assert resp.status_code == 200
-        assert resp.json()["status"] == "cancelled"
+        assert _unwrap(resp)["status"] == "cancelled"
 
     def test_valid_transition_draft_to_issued(self, api_client, auth_headers_agency):
         """Valid transition: draft -> ready_for_issue -> issuing -> issued."""
@@ -669,7 +679,7 @@ class TestStateMachine:
                 "lines": [{"description": f"TEST_SM2_{uuid.uuid4().hex[:8]}", "quantity": 1, "unit_price": 75}],
             },
         )
-        invoice_id = resp_create.json()["invoice_id"]
+        invoice_id = _unwrap(resp_create)["invoice_id"]
         
         resp = api_client.post(
             f"{BASE_URL}/api/invoices/{invoice_id}/issue",
@@ -677,7 +687,7 @@ class TestStateMachine:
         )
         assert resp.status_code == 200
         # With mock provider, should go to issued
-        assert resp.json()["status"] == "issued"
+        assert _unwrap(resp)["status"] == "issued"
 
 
 class TestDecisionEngine:
@@ -700,7 +710,7 @@ class TestDecisionEngine:
             },
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         # No integrator configured, should be draft_only
         assert data["invoice_type"] == "draft_only"
@@ -723,7 +733,7 @@ class TestDecisionEngine:
             },
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         # No integrator configured, should be draft_only
         assert data["invoice_type"] == "draft_only"

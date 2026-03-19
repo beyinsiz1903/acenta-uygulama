@@ -17,6 +17,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 
@@ -29,7 +39,7 @@ def auth_token():
         headers={"Content-Type": "application/json"},
     )
     assert response.status_code == 200, f"Login failed: {response.text}"
-    data = response.json()
+    data = _unwrap(response)
     token = data.get("access_token")  # Note: access_token not token
     assert token, "No access_token in response"
     return token
@@ -61,7 +71,7 @@ class TestCacheHealthOverview:
             f"{BASE_URL}/api/admin/cache-health/overview",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         assert "status" in data
         # Since Redis is unavailable, expect degraded
         assert data["status"] in ["healthy", "degraded"]
@@ -72,7 +82,7 @@ class TestCacheHealthOverview:
             f"{BASE_URL}/api/admin/cache-health/overview",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         assert "summary" in data
         summary = data["summary"]
         
@@ -92,7 +102,7 @@ class TestCacheHealthOverview:
             f"{BASE_URL}/api/admin/cache-health/overview",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         assert "redis_l1" in data
         redis_l1 = data["redis_l1"]
         assert "health" in redis_l1
@@ -104,7 +114,7 @@ class TestCacheHealthOverview:
             f"{BASE_URL}/api/admin/cache-health/overview",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         assert "mongo_l2" in data
         mongo_l2 = data["mongo_l2"]
         # Should have cache stats
@@ -117,7 +127,7 @@ class TestCacheHealthOverview:
             f"{BASE_URL}/api/admin/cache-health/overview",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         assert "ttl_config" in data
         ttl = data["ttl_config"]
         # Should have 20 categories and 6 supplier overrides
@@ -142,7 +152,7 @@ class TestCacheHealthMetrics:
             f"{BASE_URL}/api/admin/cache-health/metrics",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         assert "counters" in data
         assert isinstance(data["counters"], dict)
 
@@ -152,7 +162,7 @@ class TestCacheHealthMetrics:
             f"{BASE_URL}/api/admin/cache-health/metrics",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         assert "hit_rate_pct" in data
         assert isinstance(data["hit_rate_pct"], (int, float))
 
@@ -162,7 +172,7 @@ class TestCacheHealthMetrics:
             f"{BASE_URL}/api/admin/cache-health/metrics",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         assert "collected_at" in data
 
 
@@ -183,7 +193,7 @@ class TestCacheHealthTTLConfig:
             f"{BASE_URL}/api/admin/cache-health/ttl-config",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         assert "default_matrix" in data
         matrix = data["default_matrix"]
         assert len(matrix) == 20, f"Expected 20 categories, got {len(matrix)}"
@@ -202,7 +212,7 @@ class TestCacheHealthTTLConfig:
             f"{BASE_URL}/api/admin/cache-health/ttl-config",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         assert "supplier_overrides" in data
         overrides = data["supplier_overrides"]
         assert len(overrides) == 6, f"Expected 6 supplier overrides, got {len(overrides)}"
@@ -218,7 +228,7 @@ class TestCacheHealthTTLConfig:
             f"{BASE_URL}/api/admin/cache-health/ttl-config",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         
         # Check default_matrix entries have both TTLs
         for category, ttls in data["default_matrix"].items():
@@ -245,7 +255,7 @@ class TestCacheHealthRedisHealth:
             f"{BASE_URL}/api/admin/cache-health/redis/health",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         assert "health" in data
         assert "status" in data["health"]
         # Expected: error or unavailable since Redis not in preview env
@@ -257,7 +267,7 @@ class TestCacheHealthRedisHealth:
             f"{BASE_URL}/api/admin/cache-health/redis/health",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         assert "stats" in data
         assert "available" in data["stats"]
 
@@ -279,7 +289,7 @@ class TestCacheHealthMongoHealth:
             f"{BASE_URL}/api/admin/cache-health/mongo/health",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         assert "l2_cache" in data
         l2 = data["l2_cache"]
         assert "total_entries" in l2
@@ -292,7 +302,7 @@ class TestCacheHealthMongoHealth:
             f"{BASE_URL}/api/admin/cache-health/mongo/health",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         assert "app_cache" in data
 
 
@@ -315,7 +325,7 @@ class TestCacheHealthFallbackTest:
             headers=auth_headers,
             json={"test_key": "pytest_test_normal_2", "simulate_redis_down": False},
         )
-        data = response.json()
+        data = _unwrap(response)
         assert "status" in data
         assert data["status"] == "pass", f"Expected pass, got {data['status']}"
         assert "fallback_operational" in data
@@ -328,7 +338,7 @@ class TestCacheHealthFallbackTest:
             headers=auth_headers,
             json={"test_key": "pytest_test_results", "simulate_redis_down": False},
         )
-        data = response.json()
+        data = _unwrap(response)
         assert "results" in data
         results = data["results"]
         
@@ -344,7 +354,7 @@ class TestCacheHealthFallbackTest:
             headers=auth_headers,
             json={"test_key": "pytest_redis_down_sim", "simulate_redis_down": True},
         )
-        data = response.json()
+        data = _unwrap(response)
         assert response.status_code == 200
         assert data["status"] == "pass"
         assert data["fallback_operational"] == True
@@ -360,7 +370,7 @@ class TestCacheHealthFallbackTest:
             headers=auth_headers,
             json={"test_key": "pytest_metrics_check", "simulate_redis_down": False},
         )
-        data = response.json()
+        data = _unwrap(response)
         assert "current_metrics" in data
         metrics = data["current_metrics"]
         assert isinstance(metrics, dict)
@@ -383,7 +393,7 @@ class TestCacheHealthResetMetrics:
             f"{BASE_URL}/api/admin/cache-health/reset-metrics",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("status") == "reset"
 
     def test_reset_metrics_clears_counters(self, auth_headers):
@@ -399,7 +409,7 @@ class TestCacheHealthResetMetrics:
             f"{BASE_URL}/api/admin/cache-health/metrics",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         assert data["counters"] == {} or len(data["counters"]) == 0
         assert data["total_requests"] == 0
 
@@ -421,7 +431,7 @@ class TestCacheHealthHistory:
             f"{BASE_URL}/api/admin/cache-health/history",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         assert "history" in data
         assert isinstance(data["history"], list)
 
@@ -431,7 +441,7 @@ class TestCacheHealthHistory:
             f"{BASE_URL}/api/admin/cache-health/history?limit=5",
             headers=auth_headers,
         )
-        data = response.json()
+        data = _unwrap(response)
         assert len(data["history"]) <= 5
 
 

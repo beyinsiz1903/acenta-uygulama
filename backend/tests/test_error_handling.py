@@ -23,6 +23,16 @@ from app.errors import (
 )
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 def test_error_code_enum():
     """Test that ErrorCode enum has all required codes."""
     assert ErrorCode.AUTH_REQUIRED == "auth_required"
@@ -120,7 +130,7 @@ async def test_404_returns_standard_format(async_client):
     """Test that 404 responses use standardized error format."""
     resp = await async_client.get("/api/this-does-not-exist-at-all")
     assert resp.status_code == 404
-    data = resp.json()
+    data = _unwrap(resp)
     assert "error" in data
     assert "code" in data["error"]
     assert "message" in data["error"]
@@ -131,7 +141,7 @@ async def test_401_returns_standard_format(async_client):
     """Test that 401 responses use standardized error format."""
     resp = await async_client.get("/api/auth/me")
     assert resp.status_code == 401
-    data = resp.json()
+    data = _unwrap(resp)
     assert "error" in data
     assert "code" in data["error"]
 
@@ -142,7 +152,7 @@ async def test_validation_error_returns_standard_format(async_client):
     # Send invalid login payload (missing required fields)
     resp = await async_client.post("/api/auth/login", json={})
     assert resp.status_code == 422
-    data = resp.json()
+    data = _unwrap(resp)
     assert "error" in data
     assert data["error"]["code"] == "validation_error"
     assert "errors" in data["error"]["details"]

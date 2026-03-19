@@ -12,6 +12,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -32,7 +42,7 @@ def agency_token():
         headers={"Content-Type": "application/json"}
     )
     assert resp.status_code == 200, f"Login failed: {resp.text}"
-    return resp.json().get("access_token")
+    return _unwrap(resp).get("access_token")
 
 
 @pytest.fixture(scope="module")
@@ -44,7 +54,7 @@ def admin_token():
         headers={"Content-Type": "application/json"}
     )
     assert resp.status_code == 200, f"Admin login failed: {resp.text}"
-    return resp.json().get("access_token")
+    return _unwrap(resp).get("access_token")
 
 
 class TestAgencyAvailabilityAPI:
@@ -58,7 +68,7 @@ class TestAgencyAvailabilityAPI:
         )
         assert resp.status_code == 200, f"API failed: {resp.text}"
 
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Verify hotel info
         assert data.get("hotel") is not None, "Hotel info missing"
@@ -105,7 +115,7 @@ class TestAgencyAvailabilityAPI:
         )
         assert resp.status_code == 200
 
-        data = resp.json()
+        data = _unwrap(resp)
         grid = data.get("grid", [])
 
         # Find entries with data
@@ -137,7 +147,7 @@ class TestAgencyAvailabilityAPI:
         )
         assert resp.status_code == 200
 
-        data = resp.json()
+        data = _unwrap(resp)
         grid = data.get("grid", [])
 
         # Find stop_sale entries
@@ -159,7 +169,7 @@ class TestAgencyAvailabilityAPI:
         )
         assert resp.status_code == 200
 
-        data = resp.json()
+        data = _unwrap(resp)
         dates = data.get("dates", [])
 
         # All dates should be within range
@@ -181,7 +191,7 @@ class TestAgencyAvailabilityAPI:
         )
         assert resp.status_code == 200
 
-        data = resp.json()
+        data = _unwrap(resp)
         grid = data.get("grid", [])
 
         # All grid entries should be Deluxe
@@ -199,7 +209,7 @@ class TestAgencyAvailabilityAPI:
         )
         assert resp.status_code == 200
 
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Verify hotel info
         assert data.get("hotel") is not None
@@ -219,7 +229,7 @@ class TestAgencyHotelsList:
         )
         assert resp.status_code == 200, f"API failed: {resp.text}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         items = data.get("items", [])
 
         assert len(items) > 0, "No hotels returned"
@@ -238,7 +248,7 @@ class TestAgencyHotelsList:
         )
         assert resp.status_code == 200
 
-        data = resp.json()
+        data = _unwrap(resp)
         items = data.get("items", [])
 
         # Find Demo Hotel 1 which has sheet sync
@@ -263,7 +273,7 @@ class TestAgencyHotelsList:
         )
         assert resp.status_code == 200
 
-        data = resp.json()
+        data = _unwrap(resp)
         items = data.get("items", [])
 
         for hotel in items:

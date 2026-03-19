@@ -15,6 +15,16 @@ import pytest
 import requests
 from datetime import datetime
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
@@ -35,7 +45,7 @@ class TestReconciliationAPIs:
             "password": ADMIN_PASSWORD
         })
         if response.status_code == 200:
-            data = response.json()
+            data = _unwrap(response)
             return data.get("access_token") or data.get("token")
         pytest.skip(f"Auth failed: {response.status_code} - {response.text}")
 
@@ -48,7 +58,7 @@ class TestReconciliationAPIs:
         """GET /api/reconciliation/summary - returns last_run, open_mismatches, critical_mismatches, unsynced_aging."""
         response = requests.get(f"{BASE_URL}/api/reconciliation/summary", headers=headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         # Validate response structure
         assert "open_mismatches" in data or "last_run" in data or "critical_mismatches" in data, f"Missing expected fields: {data}"
@@ -58,7 +68,7 @@ class TestReconciliationAPIs:
         """GET /api/reconciliation/aging - returns aging buckets (0_1h, 1_6h, 6_24h, gt_24h)."""
         response = requests.get(f"{BASE_URL}/api/reconciliation/aging", headers=headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         # Validate response has unsynced_aging with expected buckets
         if "unsynced_aging" in data:
@@ -74,7 +84,7 @@ class TestReconciliationAPIs:
         """GET /api/reconciliation/runs - list reconciliation runs."""
         response = requests.get(f"{BASE_URL}/api/reconciliation/runs", headers=headers, params={"limit": 10})
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         # Validate response structure
         assert "items" in data, f"Expected 'items' in response: {data}"
@@ -85,7 +95,7 @@ class TestReconciliationAPIs:
         """GET /api/reconciliation/items - list mismatch items."""
         response = requests.get(f"{BASE_URL}/api/reconciliation/items", headers=headers, params={"limit": 50})
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         # Validate response structure
         assert "items" in data, f"Expected 'items' in response: {data}"
@@ -110,7 +120,7 @@ class TestReconciliationAPIs:
         response = requests.post(f"{BASE_URL}/api/reconciliation/run", headers=headers, 
                                 json={"run_type": "manual"})
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         # Validate response has run_id
         assert "run_id" in data, f"Expected 'run_id' in response: {data}"
@@ -129,7 +139,7 @@ class TestFinanceOpsAPIs:
             "password": ADMIN_PASSWORD
         })
         if response.status_code == 200:
-            data = response.json()
+            data = _unwrap(response)
             return data.get("access_token") or data.get("token")
         pytest.skip(f"Auth failed: {response.status_code}")
 
@@ -142,7 +152,7 @@ class TestFinanceOpsAPIs:
         """GET /api/reconciliation/ops - list finance ops queue items."""
         response = requests.get(f"{BASE_URL}/api/reconciliation/ops", headers=headers, params={"limit": 50})
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         assert "items" in data, f"Expected 'items': {data}"
         assert "total" in data, f"Expected 'total': {data}"
@@ -166,7 +176,7 @@ class TestFinanceOpsAPIs:
         """GET /api/reconciliation/ops/stats - return ops queue statistics."""
         response = requests.get(f"{BASE_URL}/api/reconciliation/ops/stats", headers=headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         # Validate expected fields
         expected_fields = ["total", "open", "claimed", "in_progress", "resolved", "escalated", "active"]
@@ -225,7 +235,7 @@ class TestFinanceOpsWorkflow:
             "password": ADMIN_PASSWORD
         })
         if response.status_code == 200:
-            data = response.json()
+            data = _unwrap(response)
             return data.get("access_token") or data.get("token")
         pytest.skip("Auth failed")
 
@@ -240,7 +250,7 @@ class TestFinanceOpsWorkflow:
         response = requests.get(f"{BASE_URL}/api/reconciliation/ops", headers=headers,
                                params={"status": "open", "limit": 1})
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         if data.get("items") and len(data["items"]) > 0:
             ops_id = data["items"][0]["ops_id"]
@@ -279,7 +289,7 @@ class TestFinancialAlertsAPIs:
             "password": ADMIN_PASSWORD
         })
         if response.status_code == 200:
-            data = response.json()
+            data = _unwrap(response)
             return data.get("access_token") or data.get("token")
         pytest.skip("Auth failed")
 
@@ -292,7 +302,7 @@ class TestFinancialAlertsAPIs:
         """GET /api/reconciliation/alerts - list financial alerts."""
         response = requests.get(f"{BASE_URL}/api/reconciliation/alerts", headers=headers, params={"limit": 50})
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         assert "items" in data, f"Expected 'items': {data}"
         assert "total" in data, f"Expected 'total': {data}"
@@ -316,7 +326,7 @@ class TestFinancialAlertsAPIs:
         """GET /api/reconciliation/alerts/stats - alert statistics."""
         response = requests.get(f"{BASE_URL}/api/reconciliation/alerts/stats", headers=headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         expected_fields = ["active_alerts", "acknowledged_alerts", "critical_active"]
         for field in expected_fields:
@@ -349,7 +359,7 @@ class TestAlertWorkflow:
             "password": ADMIN_PASSWORD
         })
         if response.status_code == 200:
-            data = response.json()
+            data = _unwrap(response)
             return data.get("access_token") or data.get("token")
         pytest.skip("Auth failed")
 
@@ -364,7 +374,7 @@ class TestAlertWorkflow:
         response = requests.get(f"{BASE_URL}/api/reconciliation/alerts", headers=headers,
                                params={"status": "active", "limit": 1})
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         if data.get("items") and len(data["items"]) > 0:
             alert_id = data["items"][0]["alert_id"]
@@ -397,7 +407,7 @@ class TestAutoSyncRulesBookingConfirmed:
             "password": ADMIN_PASSWORD
         })
         if response.status_code == 200:
-            data = response.json()
+            data = _unwrap(response)
             return data.get("access_token") or data.get("token")
         pytest.skip("Auth failed")
 
@@ -419,7 +429,7 @@ class TestAutoSyncRulesBookingConfirmed:
         
         # Should succeed - booking_confirmed is a valid trigger
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("trigger_event") == "booking_confirmed", f"Trigger mismatch: {data}"
         print(f"✓ Created rule with booking_confirmed trigger: {data.get('rule_id')}")
         
@@ -440,7 +450,7 @@ class TestCustomerMatchConfidence:
             "password": ADMIN_PASSWORD
         })
         if response.status_code == 200:
-            data = response.json()
+            data = _unwrap(response)
             return data.get("access_token") or data.get("token")
         pytest.skip("Auth failed")
 
@@ -453,7 +463,7 @@ class TestCustomerMatchConfidence:
         """GET /api/accounting/customers - verify match_confidence field."""
         response = requests.get(f"{BASE_URL}/api/accounting/customers", headers=headers, params={"limit": 10})
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         if data.get("items") and len(data["items"]) > 0:
             customer = data["items"][0]
@@ -477,7 +487,7 @@ class TestCustomerMatchConfidence:
                                 json={"customer_data": customer_data})
         
         if response.status_code == 200:
-            data = response.json()
+            data = _unwrap(response)
             if "match_confidence" in data:
                 print(f"✓ New customer has match_confidence: {data.get('match_confidence')}")
             else:
@@ -499,7 +509,7 @@ class TestAgencyRolePermissions:
             "password": AGENCY_PASSWORD
         })
         if response.status_code == 200:
-            data = response.json()
+            data = _unwrap(response)
             return data.get("access_token") or data.get("token")
         return None
 

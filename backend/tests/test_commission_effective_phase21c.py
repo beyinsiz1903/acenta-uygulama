@@ -12,6 +12,16 @@ from app.auth import _jwt_secret
 from app.db import get_db
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 def _make_token(email: str, org_id: str, roles: list[str], minutes: int = 60 * 12) -> str:
     now = datetime.now(timezone.utc)
     payload = {
@@ -144,7 +154,7 @@ async def test_effective_commission_happy_path_percentage(async_client: AsyncCli
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": buyer["tenant_id"]},
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["commission_amount"] == pytest.approx(100.0)
     assert body["net_amount"] == pytest.approx(900.0)
     assert body["rule"] is not None
@@ -191,7 +201,7 @@ async def test_effective_commission_denied_if_not_shared(async_client: AsyncClie
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": buyer["tenant_id"]},
     )
     assert resp.status_code == 403
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["error"]["code"] == "inventory_not_shared"
 
 
@@ -252,7 +262,7 @@ async def test_effective_commission_denied_if_relationship_inactive(async_client
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": buyer["tenant_id"]},
     )
     assert resp.status_code == 403
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["error"]["code"] == "partner_relationship_inactive"
 
 
@@ -312,7 +322,7 @@ async def test_effective_commission_no_rule_defaults_to_zero(async_client: Async
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": buyer["tenant_id"]},
     )
     assert resp.status_code == 200
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["rule"] is None
     assert body["commission_amount"] == pytest.approx(0.0)
     assert body["net_amount"] == pytest.approx(500.0)
@@ -408,5 +418,5 @@ async def test_buyer_specific_rule_requires_active_relationship(async_client: As
         },
     )
     assert resp.status_code == 403
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["error"]["code"] == "partner_relationship_inactive"

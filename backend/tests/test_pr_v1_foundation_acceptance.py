@@ -19,6 +19,14 @@ from pathlib import Path
 
 from tests.preview_auth_helper import get_preview_base_url_or_skip
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Test credentials
@@ -41,7 +49,7 @@ def auth_session():
             json={"email": TEST_EMAIL, "password": TEST_PASSWORD}
         )
     assert response.status_code == 200, f"Failed to login: {response.status_code}"
-    data = response.json()
+    data = _unwrap(response)
     return {
         "access_token": data.get("access_token"),
         "refresh_token": data.get("refresh_token"),
@@ -82,7 +90,7 @@ class TestLegacyAuthFlow:
             headers={"Authorization": f"Bearer {auth_session['access_token']}"}
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("email") == TEST_EMAIL
 
     def test_sessions_endpoint(self, auth_session):
@@ -92,7 +100,7 @@ class TestLegacyAuthFlow:
             headers={"Authorization": f"Bearer {auth_session['access_token']}"}
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list)
 
 
@@ -106,7 +114,7 @@ class TestMobileV1Route:
             headers={"Authorization": f"Bearer {auth_session['access_token']}"}
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "email" in data
         assert "organization_id" in data
 

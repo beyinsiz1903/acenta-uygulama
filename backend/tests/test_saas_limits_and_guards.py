@@ -14,6 +14,16 @@ from app.db import get_db
 from app.metrics import METRIC_BOOKINGS_CREATED
 from app.request_context import _permission_matches
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 # Enable dev-only endpoints for these tests
 os.environ.setdefault("DEV_MODE", "true")
 
@@ -212,7 +222,7 @@ async def test_resolve_requires_membership(async_client: AsyncClient) -> None:
         f"/api/saas/tenants/resolve?slug={ctx['tenant_slug']}", headers=headers
     )
     assert resp.status_code == 403
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["error"]["code"] == "tenant_access_forbidden"
 
 
@@ -226,7 +236,7 @@ async def test_subscription_suspended_blocks_resolve(async_client: AsyncClient) 
         f"/api/saas/tenants/resolve?slug={ctx['tenant_slug']}", headers=headers
     )
     assert resp.status_code == 403
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["error"]["code"] == "subscription_suspended"
 
 
@@ -254,7 +264,7 @@ async def test_booking_limit_exceeded(async_client: AsyncClient) -> None:
     }
     resp = await async_client.post("/api/dev/dummy-bookings/create", headers=headers)
     assert resp.status_code == 403
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["error"]["code"] == "limit_exceeded"
     assert body["error"]["details"]["metric"] == METRIC_BOOKINGS_CREATED
 
@@ -270,6 +280,6 @@ async def test_user_limit_exceeded(async_client: AsyncClient) -> None:
     }
     resp = await async_client.post("/api/dev/users/create", headers=headers)
     assert resp.status_code == 403
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["error"]["code"] == "limit_exceeded"
     assert body["error"]["details"]["metric"] == "users.active"

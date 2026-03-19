@@ -15,6 +15,16 @@ import pytest
 import requests
 import pymongo
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 # Use direct localhost to avoid conftest fixture conflicts
 BASE_URL = "http://localhost:8001"
 
@@ -41,7 +51,7 @@ def _get_agency_token():
         headers={"Content-Type": "application/json"}
     )
     assert response.status_code == 200, f"Agency login failed: {response.text}"
-    return response.json()["access_token"]
+    return _unwrap(response)["access_token"]
 
 
 def _get_admin_token():
@@ -53,7 +63,7 @@ def _get_admin_token():
         headers={"Content-Type": "application/json"}
     )
     assert response.status_code == 200, f"Admin login failed: {response.text}"
-    return response.json()["access_token"]
+    return _unwrap(response)["access_token"]
 
 
 class TestChangePasswordAgencyUser:
@@ -75,7 +85,7 @@ class TestChangePasswordAgencyUser:
             }
         )
         assert response.status_code == 400
-        data = response.json()
+        data = _unwrap(response)
         assert "error" in data
         assert "Mevcut şifre hatalı" in data["error"]["message"]
         print("PASS: Wrong current password correctly rejected")
@@ -114,7 +124,7 @@ class TestChangePasswordAgencyUser:
             }
         )
         assert response.status_code == 400
-        data = response.json()
+        data = _unwrap(response)
         assert "violations" in str(data) or "special" in str(data).lower()
         print("PASS: Password without special char correctly rejected")
 
@@ -134,7 +144,7 @@ class TestChangePasswordAgencyUser:
             }
         )
         assert response.status_code == 400
-        data = response.json()
+        data = _unwrap(response)
         assert "aynı olamaz" in data["error"]["message"].lower() or "same" in str(data).lower()
         print("PASS: Same password correctly rejected")
 
@@ -149,7 +159,7 @@ class TestChangePasswordAgencyUser:
             headers={"Content-Type": "application/json"}
         )
         assert login_resp.status_code == 200, "Initial login failed"
-        token = login_resp.json()["access_token"]
+        token = _unwrap(login_resp)["access_token"]
 
         # Step 2: Change password
         new_password = "NewAgency12345!"
@@ -165,7 +175,7 @@ class TestChangePasswordAgencyUser:
             }
         )
         assert change_resp.status_code == 200, f"Password change failed: {change_resp.text}"
-        change_data = change_resp.json()
+        change_data = _unwrap(change_resp)
         assert "Şifreniz güncellendi" in change_data.get("message", "")
         print(f"Password changed. Revoked sessions: {change_data.get('revoked_other_sessions', 0)}")
 
@@ -179,7 +189,7 @@ class TestChangePasswordAgencyUser:
             headers={"Content-Type": "application/json"}
         )
         assert new_login_resp.status_code == 200, "Login with new password failed"
-        new_token = new_login_resp.json()["access_token"]
+        new_token = _unwrap(new_login_resp)["access_token"]
         print("PASS: Login with new password successful")
 
         # Step 4: Login with OLD password should FAIL
@@ -241,7 +251,7 @@ class TestChangePasswordAdminUser:
         )
         # Should get 400 (wrong password) not 401/403 (no access)
         assert response.status_code == 400
-        data = response.json()
+        data = _unwrap(response)
         assert "Mevcut şifre hatalı" in data["error"]["message"]
         print("PASS: Admin has access to change password endpoint")
 
@@ -259,7 +269,7 @@ class TestAgencyModuleSaving:
             headers={"Authorization": f"Bearer {token}"}
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "agency_id" in data
         assert "allowed_modules" in data
         assert isinstance(data["allowed_modules"], list)
@@ -276,7 +286,7 @@ class TestAgencyModuleSaving:
             f"{BASE_URL}/api/admin/agencies/{AGENCY_ID}/modules",
             headers={"Authorization": f"Bearer {token}"}
         )
-        original_modules = get_resp.json()["allowed_modules"]
+        original_modules = _unwrap(get_resp)["allowed_modules"]
 
         # Update to a subset
         new_modules = ["dashboard", "rezervasyonlar", "musteriler"]
@@ -289,7 +299,7 @@ class TestAgencyModuleSaving:
             }
         )
         assert update_resp.status_code == 200
-        update_data = update_resp.json()
+        update_data = _unwrap(update_resp)
         assert update_data["allowed_modules"] == new_modules
         print(f"PASS: Updated modules to: {new_modules}")
 
@@ -298,7 +308,7 @@ class TestAgencyModuleSaving:
             f"{BASE_URL}/api/admin/agencies/{AGENCY_ID}/modules",
             headers={"Authorization": f"Bearer {token}"}
         )
-        assert verify_resp.json()["allowed_modules"] == new_modules
+        assert _unwrap(verify_resp)["allowed_modules"] == new_modules
         print("PASS: Modules persisted correctly")
 
         # Restore original modules
@@ -323,7 +333,7 @@ class TestAgencyModuleSaving:
             f"{BASE_URL}/api/admin/agencies/{AGENCY_ID}/modules",
             headers={"Authorization": f"Bearer {token}"}
         )
-        original_modules = get_resp.json()["allowed_modules"]
+        original_modules = _unwrap(get_resp)["allowed_modules"]
 
         # Set to empty array
         clear_resp = requests.put(
@@ -335,7 +345,7 @@ class TestAgencyModuleSaving:
             }
         )
         assert clear_resp.status_code == 200
-        assert clear_resp.json()["allowed_modules"] == []
+        assert _unwrap(clear_resp)["allowed_modules"] == []
         print("PASS: Cleared all modules")
 
         # Restore
@@ -377,7 +387,7 @@ class TestBillingVisibilityAPI:
             headers={"Authorization": f"Bearer {token}"}
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "agency_admin" in data["roles"]
         print(f"PASS: Agency user verified: {data['email']} with roles {data['roles']}")
 
@@ -391,7 +401,7 @@ class TestBillingVisibilityAPI:
             headers={"Authorization": f"Bearer {token}"}
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "super_admin" in data["roles"] or "admin" in data["roles"]
         print(f"PASS: Admin user verified: {data['email']} with roles {data['roles']}")
 

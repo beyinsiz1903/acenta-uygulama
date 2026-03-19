@@ -5,6 +5,16 @@ import pytest
 from httpx import AsyncClient
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 
 @pytest.mark.anyio
 async def test_b2b_events_written_on_happy_path(
@@ -29,7 +39,7 @@ async def test_b2b_events_written_on_happy_path(
     "provider_commission_rate": 10,
   })
   assert resp.status_code == 200, resp.text
-  listing_id = resp.json()["id"]
+  listing_id = _unwrap(resp)["id"]
 
   # 2) Create match request
   resp2 = await seller_client.post("/api/b2b/match-request", json={
@@ -37,7 +47,7 @@ async def test_b2b_events_written_on_happy_path(
     "requested_price": 1200,
   })
   assert resp2.status_code == 200, resp2.text
-  mreq_id = resp2.json()["id"]
+  mreq_id = _unwrap(resp2)["id"]
 
   # 3) Approve
   resp3 = await provider_client.patch(f"/api/b2b/match-request/{mreq_id}/approve")
@@ -89,7 +99,7 @@ async def test_b2b_event_has_tenant_ids(
     "category": "hotel",
     "provider_commission_rate": 5,
   })
-  listing_id = resp.json()["id"]
+  listing_id = _unwrap(resp)["id"]
 
   evt = await test_db.b2b_events.find_one(
     {"event_type": "listing.created", "entity_id": listing_id},

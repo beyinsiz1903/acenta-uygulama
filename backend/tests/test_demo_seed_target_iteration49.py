@@ -13,6 +13,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -34,7 +44,7 @@ def super_admin_token():
     )
     if response.status_code != 200:
         pytest.skip(f"Could not login as super admin: {response.text}")
-    return response.json()["access_token"]
+    return _unwrap(response)["access_token"]
 
 
 @pytest.fixture(scope="module")
@@ -48,7 +58,7 @@ def agency_admin_token():
     )
     if response.status_code != 200:
         pytest.skip(f"Could not login as agency admin: {response.text}")
-    return response.json()["access_token"]
+    return _unwrap(response)["access_token"]
 
 
 class TestDemoSeedTargetsEndpoint:
@@ -65,7 +75,7 @@ class TestDemoSeedTargetsEndpoint:
         )
 
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Should return a list
         assert isinstance(data, list), f"Expected list, got {type(data)}"
@@ -82,7 +92,7 @@ class TestDemoSeedTargetsEndpoint:
         )
 
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         if len(data) > 0:
             for user in data[:3]:  # Check first 3 users
@@ -102,7 +112,7 @@ class TestDemoSeedTargetsEndpoint:
         )
 
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         required_fields = ["id", "email", "status", "roles"]
 
@@ -147,7 +157,7 @@ class TestDemoSeedWithTargetUserId:
         if targets_response.status_code != 200:
             pytest.skip("Could not get seed targets")
 
-        targets = targets_response.json()
+        targets = _unwrap(targets_response)
         active_targets = [t for t in targets if t.get("status") == "active"]
 
         if not active_targets:
@@ -174,7 +184,7 @@ class TestDemoSeedWithTargetUserId:
         )
 
         assert response.status_code == 200, f"Demo seed failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data.get("ok") is True, f"Demo seed response not ok: {data}"
         assert data.get("target_user_id") is not None, "Response missing target_user_id"
@@ -196,7 +206,7 @@ class TestDemoSeedWithTargetUserId:
         if targets_response.status_code != 200:
             pytest.skip("Could not get seed targets")
 
-        targets = targets_response.json()
+        targets = _unwrap(targets_response)
         active_targets = [t for t in targets if t.get("status") == "active"]
 
         if not active_targets:
@@ -219,7 +229,7 @@ class TestDemoSeedWithTargetUserId:
         )
 
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         # Check target info fields
         assert "target_user_id" in data, "Missing target_user_id in response"
@@ -250,7 +260,7 @@ class TestAlreadySeededState:
         if targets_response.status_code != 200:
             pytest.skip("Could not get seed targets")
 
-        targets = targets_response.json()
+        targets = _unwrap(targets_response)
         active_targets = [t for t in targets if t.get("status") == "active"]
 
         if not active_targets:
@@ -276,7 +286,7 @@ class TestAlreadySeededState:
         if seed_response.status_code != 200:
             pytest.skip(f"Initial seed failed: {seed_response.text}")
 
-        seed_response.json()
+        _unwrap(seed_response)
 
         # Second call without force - should return already_seeded
         second_response = requests.post(
@@ -294,7 +304,7 @@ class TestAlreadySeededState:
         )
 
         assert second_response.status_code == 200
-        data = second_response.json()
+        data = _unwrap(second_response)
 
         assert data.get("ok") is True
         assert data.get("already_seeded") is True, f"Expected already_seeded=true, got: {data}"

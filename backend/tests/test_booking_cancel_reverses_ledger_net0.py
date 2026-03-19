@@ -29,7 +29,7 @@ async def test_booking_cancel_creates_net_zero_ledger_and_full_refund(async_clie
     # First, get user info from the agency token
     user_resp = await client.get("/api/auth/me", headers=headers)
     assert user_resp.status_code == 200, f"Failed to get user info: {user_resp.text}"
-    user_data = user_resp.json()
+    user_data = _unwrap(user_resp)
     agency_id = user_data.get("agency_id")
     org_id = user_data.get("organization_id")
 
@@ -50,7 +50,7 @@ async def test_booking_cancel_creates_net_zero_ledger_and_full_refund(async_clie
     # 3) Cancel endpoint'i çağır
     resp = await client.post(f"/api/b2b/bookings/{booking_id}/cancel", json={}, headers=headers)
     assert resp.status_code == 200, resp.text
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["booking_id"] == booking_id
     assert data["status"] == "CANCELLED"
     assert data["refund_status"] == "COMPLETED"
@@ -96,6 +96,16 @@ async def test_booking_cancel_creates_net_zero_ledger_and_full_refund(async_clie
     # Net exposure agency/platform bazında penalty_eur civarında olmalı
     # (Bu testte seed ile cancel_penalty_percent = 20.0 varsayılıyor.)
     from collections import defaultdict
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     by_account = defaultdict(lambda: {"debit": 0.0, "credit": 0.0})
     for p in postings:

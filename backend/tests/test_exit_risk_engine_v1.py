@@ -141,7 +141,7 @@ async def test_risk_blocked_prevents_supplier_confirm(test_db: Any, async_client
 
     resp = await client.post(f"/api/b2b/bookings/{booking_id}/confirm", headers=headers)
     assert resp.status_code == status.HTTP_409_CONFLICT
-    data = resp.json()
+    data = _unwrap(resp)
     assert data.get("error", {}).get("code") == "risk_blocked"
 
     # Booking should remain in draft/PENDING-like state (status unchanged or None)
@@ -203,7 +203,7 @@ async def test_risk_review_sets_risk_review_status_and_skips_supplier(test_db: A
 
     resp = await client.post(f"/api/b2b/bookings/{booking_id}/confirm", headers=headers)
     assert resp.status_code == status.HTTP_202_ACCEPTED
-    data = resp.json()
+    data = _unwrap(resp)
     err = data.get("error") or {}
     assert err.get("code") == "risk_review_required"
     details = err.get("details") or {}
@@ -240,7 +240,7 @@ async def test_risk_allow_allows_supplier_confirm_flow(test_db: Any, async_clien
 
     resp = await client.post(f"/api/b2b/bookings/{booking_id}/confirm", headers=headers)
     assert resp.status_code == status.HTTP_200_OK
-    data = resp.json()
+    data = _unwrap(resp)
     assert data.get("state") == "confirmed"
 
     # RISK_EVALUATED audit should exist
@@ -256,6 +256,16 @@ async def test_risk_score_is_deterministic_for_same_booking(test_db: Any, async_
     """Evaluating the same booking twice should yield identical score & decision."""
 
     from app.services.risk.engine import evaluate_booking_risk
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     now = now_utc()
     org = await test_db.organizations.insert_one(

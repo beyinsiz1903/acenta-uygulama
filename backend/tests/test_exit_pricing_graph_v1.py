@@ -155,7 +155,7 @@ async def test_pricing_graph_multi_level_applied(test_db: Any, async_client: Asy
 
     resp = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp.status_code == 200
-    body = resp.json()
+    body = _unwrap(resp)
     offers = body.get("offers") or []
     assert offers
 
@@ -217,7 +217,7 @@ async def test_pricing_graph_no_parent_fallback(test_db: Any, async_client: Asyn
 
     resp = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp.status_code == 200
-    offer = (resp.json().get("offers") or [])[0]
+    offer = (_unwrap(resp).get("offers") or [])[0]
     b2b = offer.get("b2b_pricing") or {}
     base_price = b2b.get("base_price") or {}
     final_price = b2b.get("final_price") or {}
@@ -265,7 +265,7 @@ async def test_booking_uses_graph_pricing_snapshot(test_db: Any, async_client: A
 
     search_resp = await client.post("/api/offers/search", json=search_payload, headers=headers)
     assert search_resp.status_code == 200
-    search_body = search_resp.json()
+    search_body = _unwrap(search_resp)
     session_id = search_body.get("session_id")
     offer = (search_body.get("offers") or [])[0]
     offer_token = offer.get("offer_token")
@@ -279,7 +279,7 @@ async def test_booking_uses_graph_pricing_snapshot(test_db: Any, async_client: A
 
     booking_resp = await client.post("/api/bookings/from-canonical-offer", json=booking_payload, headers=headers)
     assert booking_resp.status_code == 201
-    booking = booking_resp.json()
+    booking = _unwrap(booking_resp)
 
     pricing = booking.get("pricing") or {}
     base_amount = float(pricing.get("base_amount") or 0.0)
@@ -351,6 +351,16 @@ async def test_pricing_graph_currency_mismatch_skips_rule(test_db: Any, async_cl
 
     from app.services.pricing_graph.graph import price_offer_with_graph
     from datetime import date as _date
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     now = now_utc()
 

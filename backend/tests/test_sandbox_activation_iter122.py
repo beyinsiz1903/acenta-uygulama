@@ -10,6 +10,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 TEST_USER = {"email": "agent@acenta.test", "password": "agent123"}
 
@@ -20,7 +30,7 @@ def auth_token():
     resp = requests.post(f"{BASE_URL}/api/auth/login", json=TEST_USER)
     if resp.status_code != 200:
         pytest.skip(f"Login failed: {resp.status_code} - {resp.text}")
-    data = resp.json()
+    data = _unwrap(resp)
     token = data.get("access_token") or data.get("token")
     if not token:
         pytest.skip(f"No token in response: {data}")
@@ -52,7 +62,7 @@ class TestSandboxStatus:
             headers=auth_headers
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         # Required fields
         assert "supplier" in data, "Missing 'supplier' field"
@@ -79,7 +89,7 @@ class TestSandboxStatus:
             headers=auth_headers
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         readiness = data.get("readiness", {})
         expected_keys = [
@@ -104,7 +114,7 @@ class TestSandboxStatus:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         
         assert data["supplier"] == "paximum"
         assert data["mode"] == "simulation", f"Paximum should be in simulation mode, got {data['mode']}"
@@ -124,7 +134,7 @@ class TestE2ERunEndpoint:
             json={"supplier": "ratehawk", "scenario": "success"}
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         
         # Required fields
         assert "run_id" in data, "Missing run_id"
@@ -162,7 +172,7 @@ class TestE2ERunEndpoint:
             json={"supplier": "ratehawk", "scenario": "price_mismatch"}
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         
         # Non-success scenarios should always use simulation
         assert data["mode"] == "simulation", f"Expected simulation mode for price_mismatch, got {data['mode']}"
@@ -184,7 +194,7 @@ class TestE2ERunEndpoint:
             json={"supplier": "paximum", "scenario": "success"}
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         
         # Paximum has no credentials, should always be simulation
         assert data["mode"] == "simulation", f"Expected simulation mode for paximum, got {data['mode']}"
@@ -202,7 +212,7 @@ class TestE2ERunEndpoint:
             json={"supplier": "ratehawk", "scenario": "success"}
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         expected_steps = ["search", "detail", "revalidation", "booking", "status_check", "cancel"]
         step_ids = [s["id"] for s in data["steps"]]
@@ -234,7 +244,7 @@ class TestSuppliersEndpoint:
         """Suppliers response contains ratehawk with correct mode."""
         resp = requests.get(f"{BASE_URL}/api/e2e-demo/suppliers", headers=auth_headers)
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         assert "suppliers" in data, "Missing suppliers field"
         suppliers = data["suppliers"]
@@ -250,7 +260,7 @@ class TestSuppliersEndpoint:
         """Paximum supplier shows simulation mode (no credentials)."""
         resp = requests.get(f"{BASE_URL}/api/e2e-demo/suppliers", headers=auth_headers)
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         suppliers = data["suppliers"]
         paximum = next((s for s in suppliers if s["code"] == "paximum"), None)
@@ -263,7 +273,7 @@ class TestSuppliersEndpoint:
         """All expected suppliers are present."""
         resp = requests.get(f"{BASE_URL}/api/e2e-demo/suppliers", headers=auth_headers)
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         suppliers = data["suppliers"]
         supplier_codes = [s["code"] for s in suppliers]
@@ -288,7 +298,7 @@ class TestScenariosEndpoint:
         """Scenarios contains all expected scenario types."""
         resp = requests.get(f"{BASE_URL}/api/e2e-demo/scenarios", headers=auth_headers)
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         assert "scenarios" in data, "Missing scenarios field"
         scenarios = data["scenarios"]
@@ -325,7 +335,7 @@ class TestHistoryEndpoint:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         
         assert "tests" in data
         # All returned tests should be for ratehawk (if any exist)

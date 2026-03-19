@@ -14,6 +14,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 @pytest.fixture(scope="module")
@@ -25,7 +35,7 @@ def auth_token():
     )
     if response.status_code != 200:
         pytest.skip(f"Login failed: {response.status_code} - {response.text}")
-    data = response.json()
+    data = _unwrap(response)
     token = data.get("access_token") or data.get("token")
     if not token:
         pytest.skip(f"No token in response: {data.keys()}")
@@ -47,7 +57,7 @@ class TestPricingEngineMetadata:
         """GET /api/pricing-engine/metadata returns channels list."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/metadata", headers=auth_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "channels" in data, f"Missing channels: {data.keys()}"
         assert isinstance(data["channels"], list), f"channels should be list: {type(data['channels'])}"
         assert set(data["channels"]) == {"b2b", "b2c", "corporate", "whitelabel"}, f"Unexpected channels: {data['channels']}"
@@ -57,7 +67,7 @@ class TestPricingEngineMetadata:
         """GET /api/pricing-engine/metadata returns seasons list."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/metadata", headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "seasons" in data
         assert set(data["seasons"]) == {"peak", "high", "mid", "low", "off"}, f"Unexpected seasons: {data['seasons']}"
         print(f"Seasons: {data['seasons']}")
@@ -66,7 +76,7 @@ class TestPricingEngineMetadata:
         """GET /api/pricing-engine/metadata returns promotion_types list."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/metadata", headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "promotion_types" in data
         expected_types = {"early_booking", "flash_sale", "campaign_discount", "fixed_price_override"}
         assert set(data["promotion_types"]) == expected_types, f"Unexpected promotion_types: {data['promotion_types']}"
@@ -76,7 +86,7 @@ class TestPricingEngineMetadata:
         """GET /api/pricing-engine/metadata returns rule_categories list."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/metadata", headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "rule_categories" in data
         expected_cats = {"base_markup", "agency_tier", "commission", "tax"}
         assert set(data["rule_categories"]) == expected_cats, f"Unexpected rule_categories: {data['rule_categories']}"
@@ -86,7 +96,7 @@ class TestPricingEngineMetadata:
         """GET /api/pricing-engine/metadata returns agency_tiers list."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/metadata", headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "agency_tiers" in data
         expected_tiers = {"starter", "standard", "premium", "enterprise"}
         assert set(data["agency_tiers"]) == expected_tiers, f"Unexpected agency_tiers: {data['agency_tiers']}"
@@ -100,7 +110,7 @@ class TestPricingEngineDashboard:
         """GET /api/pricing-engine/dashboard returns stats."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/dashboard", headers=auth_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         # Check required fields
         required_fields = ["total_rules", "active_rules", "channel_count", "active_promotions"]
@@ -113,7 +123,7 @@ class TestPricingEngineDashboard:
         """GET /api/pricing-engine/dashboard returns rules_by_category breakdown."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/dashboard", headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "rules_by_category" in data
         print(f"Rules by category: {data['rules_by_category']}")
     
@@ -121,7 +131,7 @@ class TestPricingEngineDashboard:
         """GET /api/pricing-engine/dashboard returns active_channels list."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/dashboard", headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "active_channels" in data
         assert isinstance(data["active_channels"], list)
         print(f"Active channels: {data['active_channels']}")
@@ -147,7 +157,7 @@ class TestPricingEngineSimulate:
         }
         response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate", json=payload, headers=auth_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         # Check all breakdown fields exist
         required_fields = [
@@ -191,7 +201,7 @@ class TestPricingEngineSimulate:
             payload = {**base_payload, "channel": channel}
             response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate", json=payload, headers=auth_headers)
             assert response.status_code == 200
-            data = response.json()
+            data = _unwrap(response)
             prices[channel] = {
                 "sell_price": data["sell_price"],
                 "channel_adjustment_pct": data["channel_adjustment_pct"]
@@ -221,7 +231,7 @@ class TestPricingEngineSimulate:
         }
         response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate", json=payload, headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         assert data["sell_currency"] == "TRY"
         assert data["fx_rate"] >= 1.0  # EUR to TRY rate should be > 1
@@ -245,7 +255,7 @@ class TestDistributionRulesCRUD:
         response = requests.post(f"{BASE_URL}/api/pricing-engine/distribution-rules", json=payload, headers=auth_headers)
         if response.status_code not in [200, 201]:
             pytest.skip(f"Failed to create test rule: {response.status_code} - {response.text}")
-        data = response.json()
+        data = _unwrap(response)
         rule_id = data.get("rule_id")
         yield rule_id
         # Cleanup
@@ -263,7 +273,7 @@ class TestDistributionRulesCRUD:
         }
         response = requests.post(f"{BASE_URL}/api/pricing-engine/distribution-rules", json=payload, headers=auth_headers)
         assert response.status_code in [200, 201], f"Expected 201, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         assert "rule_id" in data
         assert data["name"] == "TEST_Create_Rule_Iter127"
@@ -281,7 +291,7 @@ class TestDistributionRulesCRUD:
         """GET /api/pricing-engine/distribution-rules lists rules."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/distribution-rules", headers=auth_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         assert isinstance(data, list), f"Expected list, got {type(data)}"
         print(f"Found {len(data)} distribution rules")
@@ -294,7 +304,7 @@ class TestDistributionRulesCRUD:
         """GET /api/pricing-engine/distribution-rules?category=base_markup filters by category."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/distribution-rules?category=base_markup", headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         for rule in data:
             assert rule.get("rule_category") == "base_markup", f"Unexpected category: {rule.get('rule_category')}"
@@ -313,18 +323,18 @@ class TestDistributionRulesCRUD:
         }
         create_response = requests.post(f"{BASE_URL}/api/pricing-engine/distribution-rules", json=payload, headers=auth_headers)
         assert create_response.status_code in [200, 201]
-        rule_id = create_response.json()["rule_id"]
+        rule_id = _unwrap(create_response)["rule_id"]
         
         # Delete it
         delete_response = requests.delete(f"{BASE_URL}/api/pricing-engine/distribution-rules/{rule_id}", headers=auth_headers)
         assert delete_response.status_code == 200
-        data = delete_response.json()
+        data = _unwrap(delete_response)
         assert data.get("ok") == True
         print(f"Deleted rule: {rule_id}")
         
         # Verify it's gone
         list_response = requests.get(f"{BASE_URL}/api/pricing-engine/distribution-rules", headers=auth_headers)
-        rule_ids = [r.get("rule_id") for r in list_response.json()]
+        rule_ids = [r.get("rule_id") for r in _unwrap(list_response)]
         assert rule_id not in rule_ids, f"Rule {rule_id} still exists after delete"
 
 
@@ -344,7 +354,7 @@ class TestChannelsCRUD:
         response = requests.post(f"{BASE_URL}/api/pricing-engine/channels", json=payload, headers=auth_headers)
         if response.status_code not in [200, 201]:
             pytest.skip(f"Failed to create test channel: {response.status_code} - {response.text}")
-        data = response.json()
+        data = _unwrap(response)
         rule_id = data.get("rule_id")
         yield rule_id
         # Cleanup
@@ -361,7 +371,7 @@ class TestChannelsCRUD:
         }
         response = requests.post(f"{BASE_URL}/api/pricing-engine/channels", json=payload, headers=auth_headers)
         assert response.status_code in [200, 201], f"Expected 201, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         assert "rule_id" in data
         assert data["channel"] == "corporate"
@@ -377,7 +387,7 @@ class TestChannelsCRUD:
         """GET /api/pricing-engine/channels lists channel configs."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/channels", headers=auth_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         assert isinstance(data, list)
         print(f"Found {len(data)} channel configs")
@@ -397,12 +407,12 @@ class TestChannelsCRUD:
         }
         create_response = requests.post(f"{BASE_URL}/api/pricing-engine/channels", json=payload, headers=auth_headers)
         assert create_response.status_code in [200, 201]
-        rule_id = create_response.json()["rule_id"]
+        rule_id = _unwrap(create_response)["rule_id"]
         
         # Delete it
         delete_response = requests.delete(f"{BASE_URL}/api/pricing-engine/channels/{rule_id}", headers=auth_headers)
         assert delete_response.status_code == 200
-        data = delete_response.json()
+        data = _unwrap(delete_response)
         assert data.get("ok") == True
         print(f"Deleted channel: {rule_id}")
 
@@ -425,7 +435,7 @@ class TestPromotionsCRUD:
         response = requests.post(f"{BASE_URL}/api/pricing-engine/promotions", json=payload, headers=auth_headers)
         if response.status_code not in [200, 201]:
             pytest.skip(f"Failed to create test promo: {response.status_code} - {response.text}")
-        data = response.json()
+        data = _unwrap(response)
         rule_id = data.get("rule_id")
         yield rule_id
         # Cleanup
@@ -444,7 +454,7 @@ class TestPromotionsCRUD:
         }
         response = requests.post(f"{BASE_URL}/api/pricing-engine/promotions", json=payload, headers=auth_headers)
         assert response.status_code in [200, 201], f"Expected 201, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         assert "rule_id" in data
         assert data["name"] == "TEST_Create_Promo_Iter127"
@@ -461,7 +471,7 @@ class TestPromotionsCRUD:
         """GET /api/pricing-engine/promotions lists promotions."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/promotions", headers=auth_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         assert isinstance(data, list)
         print(f"Found {len(data)} promotions")
@@ -474,14 +484,14 @@ class TestPromotionsCRUD:
         # Toggle off
         response = requests.post(f"{BASE_URL}/api/pricing-engine/promotions/{test_promo_id}/toggle?active=false", headers=auth_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("active") == False
         print(f"Toggled promo {test_promo_id} to inactive")
         
         # Toggle back on
         response = requests.post(f"{BASE_URL}/api/pricing-engine/promotions/{test_promo_id}/toggle?active=true", headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("active") == True
         print(f"Toggled promo {test_promo_id} back to active")
     
@@ -497,12 +507,12 @@ class TestPromotionsCRUD:
         }
         create_response = requests.post(f"{BASE_URL}/api/pricing-engine/promotions", json=payload, headers=auth_headers)
         assert create_response.status_code in [200, 201]
-        rule_id = create_response.json()["rule_id"]
+        rule_id = _unwrap(create_response)["rule_id"]
         
         # Delete it
         delete_response = requests.delete(f"{BASE_URL}/api/pricing-engine/promotions/{rule_id}", headers=auth_headers)
         assert delete_response.status_code == 200
-        data = delete_response.json()
+        data = _unwrap(delete_response)
         assert data.get("ok") == True
         print(f"Deleted promotion: {rule_id}")
 
@@ -528,7 +538,7 @@ class TestFullPipelineIntegration:
         }
         response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate", json=payload, headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         print(f"Full pipeline test:")
         print(f"  Input: {payload['supplier_price']} {payload['supplier_currency']}, channel={payload['channel']}, season={payload['season']}")

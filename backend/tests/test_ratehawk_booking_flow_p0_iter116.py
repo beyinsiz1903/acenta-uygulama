@@ -14,6 +14,16 @@ import pytest
 import requests
 from datetime import datetime, timedelta
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
     pytest.skip("REACT_APP_BACKEND_URL environment variable is required", allow_module_level=True)
@@ -28,7 +38,7 @@ def auth_token():
         timeout=15,
     )
     assert resp.status_code == 200, f"Login failed: {resp.text}"
-    data = resp.json()
+    data = _unwrap(resp)
     token = data.get("access_token") or data.get("token")
     assert token, "No token in login response"
     return token
@@ -69,7 +79,7 @@ class TestBookingPrecheck:
             timeout=15,
         )
         assert resp.status_code == 200, f"Precheck failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Validate required fields
         assert "precheck_id" in data, "Missing precheck_id"
@@ -108,7 +118,7 @@ class TestBookingPrecheck:
             timeout=15,
         )
         assert resp.status_code == 200, f"Precheck failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["book_hash"] == "bh_custom_test_hash123", "book_hash should match provided value"
         print("Precheck with custom book_hash PASS")
 
@@ -135,7 +145,7 @@ class TestBookingCreate:
             timeout=15,
         )
         assert precheck_resp.status_code == 200
-        precheck = precheck_resp.json()
+        precheck = _unwrap(precheck_resp)
 
         # Create booking
         payload = {
@@ -157,7 +167,7 @@ class TestBookingCreate:
             timeout=30,  # Booking can take time in simulation
         )
         assert resp.status_code == 200, f"Create booking failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Validate booking response
         assert "booking_id" in data, "Missing booking_id"
@@ -194,7 +204,7 @@ class TestBookingCreate:
             timeout=15,
         )
         assert precheck_resp.status_code == 200
-        precheck = precheck_resp.json()
+        precheck = _unwrap(precheck_resp)
 
         # Create booking — should fail
         payload = {
@@ -215,7 +225,7 @@ class TestBookingCreate:
             timeout=30,
         )
         assert resp.status_code == 200, f"Create booking request failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Should be failed status
         assert data["status"] == "failed", f"test_hotel_do_not_book should fail, got: {data['status']}"
@@ -244,7 +254,7 @@ class TestBookingStatus:
             timeout=15,
         )
         assert precheck_resp.status_code == 200
-        precheck = precheck_resp.json()
+        precheck = _unwrap(precheck_resp)
 
         create_resp = requests.post(
             f"{BASE_URL}/api/inventory/booking/create",
@@ -261,7 +271,7 @@ class TestBookingStatus:
             timeout=30,
         )
         assert create_resp.status_code == 200
-        booking = create_resp.json()
+        booking = _unwrap(create_resp)
         booking_id = booking["booking_id"]
 
         # Get status
@@ -271,7 +281,7 @@ class TestBookingStatus:
             timeout=15,
         )
         assert status_resp.status_code == 200, f"Status check failed: {status_resp.text}"
-        data = status_resp.json()
+        data = _unwrap(status_resp)
 
         # Validate status response
         assert data["booking_id"] == booking_id, "booking_id mismatch"
@@ -297,7 +307,7 @@ class TestBookingStatus:
             timeout=15,
         )
         assert resp.status_code == 200, f"Request failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("status") == "not_found" or "error" in data, "Should indicate not found"
         print("Non-existent booking status correctly returns not_found")
 
@@ -323,7 +333,7 @@ class TestBookingCancel:
             timeout=15,
         )
         assert precheck_resp.status_code == 200
-        precheck = precheck_resp.json()
+        precheck = _unwrap(precheck_resp)
 
         create_resp = requests.post(
             f"{BASE_URL}/api/inventory/booking/create",
@@ -340,7 +350,7 @@ class TestBookingCancel:
             timeout=30,
         )
         assert create_resp.status_code == 200
-        booking = create_resp.json()
+        booking = _unwrap(create_resp)
         booking_id = booking["booking_id"]
 
         # Only cancel if confirmed
@@ -351,7 +361,7 @@ class TestBookingCancel:
                 timeout=15,
             )
             assert cancel_resp.status_code == 200, f"Cancel failed: {cancel_resp.text}"
-            data = cancel_resp.json()
+            data = _unwrap(cancel_resp)
             assert data["status"] == "cancelled", f"Expected cancelled status, got: {data['status']}"
             assert data["booking_id"] == booking_id, "booking_id mismatch in cancel response"
             print(f"Booking {booking_id} successfully CANCELLED")
@@ -367,7 +377,7 @@ class TestBookingCancel:
             timeout=15,
         )
         assert resp.status_code == 200, f"Request failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("status") == "not_found" or "error" in data, "Should indicate not found"
         print("Non-existent booking cancel correctly returns error")
 
@@ -385,7 +395,7 @@ class TestBookingTestMatrix:
             timeout=60,  # Test matrix runs multiple scenarios
         )
         assert resp.status_code == 200, f"Test matrix failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Validate matrix structure
         assert "matrix_id" in data, "Missing matrix_id"
@@ -436,7 +446,7 @@ class TestBookingHistory:
             timeout=15,
         )
         assert resp.status_code == 200, f"History failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "bookings" in data, "Missing bookings array"
         assert "total" in data, "Missing total count"
@@ -463,7 +473,7 @@ class TestBookingHistory:
             timeout=15,
         )
         assert resp.status_code == 200, f"Test matrix history failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "results" in data, "Missing results array"
         assert "total" in data, "Missing total count"

@@ -6,6 +6,16 @@ import pytest
 from app.auth import create_access_token
 from app.db import get_db
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 # HTTP client comes from tests/conftest.py as `async_client` fixture
 
 
@@ -63,7 +73,7 @@ async def test_admin_agencies_create_and_cycle_guards(async_client, test_db, any
         json={"name": "Root Agency"},
     )
     assert resp.status_code == 200
-    root = resp.json()
+    root = _unwrap(resp)
     root_id = root["id"]
 
     # Create child agency with valid parent
@@ -73,7 +83,7 @@ async def test_admin_agencies_create_and_cycle_guards(async_client, test_db, any
         json={"name": "Child Agency", "parent_agency_id": root_id},
     )
     assert resp2.status_code == 200
-    child = resp2.json()
+    child = _unwrap(resp2)
     child_id = child["id"]
 
     # Self-parent on update -> 422
@@ -83,7 +93,7 @@ async def test_admin_agencies_create_and_cycle_guards(async_client, test_db, any
         json={"parent_agency_id": child_id},
     )
     assert resp_self.status_code == 422
-    body = resp_self.json()
+    body = _unwrap(resp_self)
     error_msg = body.get("detail") or body.get("error", {}).get("message", "")
     assert error_msg == "SELF_PARENT_NOT_ALLOWED"
 
@@ -94,7 +104,7 @@ async def test_admin_agencies_create_and_cycle_guards(async_client, test_db, any
         json={"name": "Third Agency", "parent_agency_id": child_id},
     )
     assert resp_c.status_code == 200
-    third = resp_c.json()
+    third = _unwrap(resp_c)
     third_id = third["id"]
 
     # Now attempt to set root's parent to third -> cycle
@@ -104,7 +114,7 @@ async def test_admin_agencies_create_and_cycle_guards(async_client, test_db, any
         json={"parent_agency_id": third_id},
     )
     assert resp_cycle.status_code == 422
-    cycle_body = resp_cycle.json()
+    cycle_body = _unwrap(resp_cycle)
     cycle_msg = cycle_body.get("detail") or cycle_body.get("error", {}).get("message", "")
     assert cycle_msg == "PARENT_CYCLE_DETECTED"
 
@@ -150,7 +160,7 @@ async def test_admin_agencies_org_isolation(async_client, test_db, anyio_backend
         json={"name": "Org A Agency"},
     )
     assert resp_a.status_code == 200
-    agency_a = resp_a.json()
+    agency_a = _unwrap(resp_a)
     agency_a_id = agency_a["id"]
 
     # Org B listing should not see Org A agency
@@ -159,7 +169,7 @@ async def test_admin_agencies_org_isolation(async_client, test_db, anyio_backend
         headers={"Authorization": f"Bearer {token_b}"},
     )
     assert resp_list_b.status_code == 200
-    items_b = resp_list_b.json()
+    items_b = _unwrap(resp_list_b)
     # list_agencies returns a plain list
     assert isinstance(items_b, list)
     assert all(item["id"] != agency_a_id for item in items_b)

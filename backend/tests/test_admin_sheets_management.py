@@ -4,6 +4,16 @@ import pytest
 
 from tests.preview_auth_helper import PreviewAuthSession, get_preview_base_url_or_skip
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 ADMIN_EMAIL = "admin@acenta.test"
@@ -23,7 +33,7 @@ def admin_client():
 def test_templates_endpoint_returns_downloadables(admin_client):
     response = admin_client.get(f"{BASE_URL}/api/admin/sheets/templates")
     assert response.status_code == 200, response.text
-    data = response.json()
+    data = _unwrap(response)
     assert "downloadable_templates" in data
     template_names = {item["name"] for item in data["downloadable_templates"]}
     assert {"inventory-sync", "reservation-writeback"}.issubset(template_names)
@@ -39,7 +49,7 @@ def test_validate_sheet_returns_graceful_not_configured_payload(admin_client):
         },
     )
     assert response.status_code == 200, response.text
-    data = response.json()
+    data = _unwrap(response)
     assert "configured" in data
     if data["configured"] is False:
         assert "required_service_account_fields" in data
@@ -67,13 +77,13 @@ def test_download_writeback_template(admin_client):
 def test_rest_style_create_connection_alias_when_not_configured(admin_client):
     config_response = admin_client.get(f"{BASE_URL}/api/admin/sheets/config")
     assert config_response.status_code == 200, config_response.text
-    config = config_response.json()
+    config = _unwrap(config_response)
     if config.get("configured"):
         pytest.skip("Gercek sheet id gerekecegi icin configured ortamda bu smoke test atlandi")
 
     hotels_response = admin_client.get(f"{BASE_URL}/api/admin/sheets/available-hotels")
     assert hotels_response.status_code == 200, hotels_response.text
-    hotels = hotels_response.json()
+    hotels = _unwrap(hotels_response)
     hotel = next((item for item in hotels if not item.get("connected")), None)
     if hotel is None:
         pytest.skip("Baglanabilir otel bulunamadi")
@@ -90,7 +100,7 @@ def test_rest_style_create_connection_alias_when_not_configured(admin_client):
         },
     )
     assert create_response.status_code == 200, create_response.text
-    created = create_response.json()
+    created = _unwrap(create_response)
     assert created["hotel_id"] == hotel["_id"]
     assert created["validation_status"] == "pending_configuration"
 

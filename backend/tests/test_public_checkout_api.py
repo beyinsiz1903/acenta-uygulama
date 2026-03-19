@@ -68,7 +68,7 @@ async def test_public_quote_happy_path(async_client, test_db):
 
     resp = await async_client.post("/api/public/quote", json=payload)
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["ok"] is True
     assert data["quote_id"]
     assert data["amount_cents"] > 0
@@ -140,7 +140,7 @@ async def test_public_checkout_happy_path_stubbed_stripe(monkeypatch, async_clie
 
     quote_resp = await async_client.post("/api/public/quote", json=quote_payload)
     assert quote_resp.status_code == 200
-    quote_data = quote_resp.json()
+    quote_data = _unwrap(quote_resp)
     quote_id = quote_data["quote_id"]
     amount_cents = quote_data["amount_cents"]
 
@@ -177,7 +177,7 @@ async def test_public_checkout_happy_path_stubbed_stripe(monkeypatch, async_clie
 
     checkout_resp = await async_client.post("/api/public/checkout", json=checkout_payload)
     assert checkout_resp.status_code == 200
-    data = checkout_resp.json()
+    data = _unwrap(checkout_resp)
     assert data["ok"] is True
     assert data["booking_id"]
     assert data["payment_intent_id"] == "pi_public_checkout"
@@ -206,7 +206,7 @@ async def test_public_checkout_happy_path_stubbed_stripe(monkeypatch, async_clie
     # Idempotency: second call returns same booking + PI
     checkout_resp2 = await async_client.post("/api/public/checkout", json=checkout_payload)
     assert checkout_resp2.status_code == 200
-    data2 = checkout_resp2.json()
+    data2 = _unwrap(checkout_resp2)
     assert data2["booking_id"] == data["booking_id"]
     assert data2["payment_intent_id"] == data["payment_intent_id"]
     assert data2["client_secret"] == data["client_secret"]
@@ -270,7 +270,7 @@ async def test_public_checkout_expired_quote(async_client, test_db):
 
     quote_resp = await async_client.post("/api/public/quote", json=quote_payload)
     assert quote_resp.status_code == 200
-    quote_data = quote_resp.json()
+    quote_data = _unwrap(quote_resp)
     qid = quote_data["quote_id"]
 
     # 2) Patch the quote to be expired in the DB
@@ -295,7 +295,7 @@ async def test_public_checkout_expired_quote(async_client, test_db):
     resp = await async_client.post("/api/public/checkout", json=payload)
     assert resp.status_code == 404
 
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["error"]["code"] == "QUOTE_EXPIRED"
     details = data["error"].get("details") or {}
     assert "correlation_id" in details
@@ -374,7 +374,7 @@ async def test_public_checkout_quote_not_found_code_and_correlation(async_client
 
     resp = await async_client.post("/api/public/checkout", json=payload)
     assert resp.status_code == 404
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["error"]["code"] == "QUOTE_NOT_FOUND"
     details = data["error"].get("details") or {}
     assert "correlation_id" in details
@@ -491,7 +491,7 @@ async def test_public_checkout_payment_failed_error_standardization(monkeypatch,
 
     quote_resp = await async_client.post("/api/public/quote", json=quote_payload)
     assert quote_resp.status_code == 200
-    quote_data = quote_resp.json()
+    quote_data = _unwrap(quote_resp)
     quote_id = quote_data["quote_id"]
 
     # 2) Stripe adapter'ı, create_payment_intent aşamasında patlayacak şekilde stubla
@@ -524,7 +524,7 @@ async def test_public_checkout_payment_failed_error_standardization(monkeypatch,
 
     resp = await async_client.post("/api/public/checkout", json=checkout_payload)
     assert resp.status_code == 502
-    data = resp.json()
+    data = _unwrap(resp)
 
     assert data["error"]["code"] == "PAYMENT_FAILED"
     details = data["error"].get("details") or {}
@@ -593,7 +593,7 @@ async def test_public_checkout_invalid_amount_code_and_correlation(async_client,
 
     quote_resp = await async_client.post("/api/public/quote", json=quote_payload)
     assert quote_resp.status_code == 200
-    quote_data = quote_resp.json()
+    quote_data = _unwrap(quote_resp)
     # Force amount_cents to zero by patching the quote in DB
     await db.public_quotes.update_one(
         {"quote_id": quote_data["quote_id"]},
@@ -610,7 +610,7 @@ async def test_public_checkout_invalid_amount_code_and_correlation(async_client,
 
     resp = await async_client.post("/api/public/checkout", json=payload)
     assert resp.status_code == 422
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["error"]["code"] == "INVALID_AMOUNT"
     details = data["error"].get("details") or {}
     assert "correlation_id" in details
@@ -688,11 +688,21 @@ async def test_public_checkout_provider_unavailable_sets_reason_and_correlation(
 
     quote_resp = await async_client.post("/api/public/quote", json=quote_payload)
     assert quote_resp.status_code == 200
-    quote_data = quote_resp.json()
+    quote_data = _unwrap(quote_resp)
     quote_id = quote_data["quote_id"]
 
     # 2) Stub stripe_adapter to simulate provider unavailability
     from app.services import stripe_adapter
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     async def fake_create_payment_intent_unavailable(*args, **kwargs):  # type: ignore[unused-argument]
         raise RuntimeError("Stripe unavailable in test")
@@ -793,7 +803,7 @@ async def test_public_checkout_idempotency_key_conflict_code_and_correlation(asy
     }
     quote_resp_1 = await async_client.post("/api/public/quote", json=quote_payload_1)
     assert quote_resp_1.status_code == 200
-    quote_1 = quote_resp_1.json()["quote_id"]
+    quote_1 = _unwrap(quote_resp_1)["quote_id"]
 
     # Product 2
     prod2 = {
@@ -843,7 +853,7 @@ async def test_public_checkout_idempotency_key_conflict_code_and_correlation(asy
     }
     quote_resp_2 = await async_client.post("/api/public/quote", json=quote_payload_2)
     assert quote_resp_2.status_code == 200
-    quote_2 = quote_resp_2.json()["quote_id"]
+    quote_2 = _unwrap(quote_resp_2)["quote_id"]
 
     # Happy path checkout with quote_1 to establish idempotent record
     idem_key = "idem-conflict-1"
@@ -899,7 +909,7 @@ async def test_public_checkout_idempotency_key_conflict_code_and_correlation(asy
 
     resp_conflict = await async_client.post("/api/public/checkout", json=checkout_payload_2)
     assert resp_conflict.status_code == 409
-    data = resp_conflict.json()
+    data = _unwrap(resp_conflict)
     assert data["error"]["code"] == "IDEMPOTENCY_KEY_CONFLICT"
     details = data["error"].get("details") or {}
     assert "correlation_id" in details

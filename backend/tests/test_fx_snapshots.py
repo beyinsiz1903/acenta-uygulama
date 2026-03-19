@@ -62,6 +62,16 @@ async def test_fx_snapshots_freeze_rate_per_booking(async_client, admin_token, a
     # Helper: simple booking creation function (reuse from booking_financials test via same endpoints)
     from app.utils import now_utc as _now
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
     async def _create_booking(rate_hint: str) -> str:
         # Rate selection is time-based in FXService, so creating bookings
         # at different times after inserting rates ensures different snapshots.

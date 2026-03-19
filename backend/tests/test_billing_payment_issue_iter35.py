@@ -11,6 +11,14 @@ import os
 import pytest
 import requests
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -28,7 +36,7 @@ def auth_token():
     )
     if response.status_code != 200:
         pytest.skip(f"Login failed: {response.status_code} - {response.text}")
-    data = response.json()
+    data = _unwrap(response)
     token = data.get("token") or data.get("access_token")
     if not token:
         pytest.skip("No token in login response")
@@ -59,7 +67,7 @@ class TestBillingSubscriptionPaymentIssue:
         """GET /api/billing/subscription returns payment_issue object."""
         response = api_client.get(f"{BASE_URL}/api/billing/subscription", timeout=15)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         assert "payment_issue" in data, "Missing payment_issue field"
         payment_issue = data["payment_issue"]
@@ -70,7 +78,7 @@ class TestBillingSubscriptionPaymentIssue:
         """payment_issue object has all required fields."""
         response = api_client.get(f"{BASE_URL}/api/billing/subscription", timeout=15)
         assert response.status_code == 200
-        payment_issue = response.json().get("payment_issue", {})
+        payment_issue = _unwrap(response).get("payment_issue", {})
 
         required_fields = [
             "has_issue",
@@ -96,7 +104,7 @@ class TestBillingSubscriptionPaymentIssue:
         """payment_issue.has_issue is boolean."""
         response = api_client.get(f"{BASE_URL}/api/billing/subscription", timeout=15)
         assert response.status_code == 200
-        payment_issue = response.json().get("payment_issue", {})
+        payment_issue = _unwrap(response).get("payment_issue", {})
 
         assert isinstance(payment_issue.get("has_issue"), bool), "has_issue must be boolean"
         print(f"✓ payment_issue.has_issue = {payment_issue.get('has_issue')} (boolean)")
@@ -105,7 +113,7 @@ class TestBillingSubscriptionPaymentIssue:
         """payment_issue.severity has valid values."""
         response = api_client.get(f"{BASE_URL}/api/billing/subscription", timeout=15)
         assert response.status_code == 200
-        payment_issue = response.json().get("payment_issue", {})
+        payment_issue = _unwrap(response).get("payment_issue", {})
 
         severity = payment_issue.get("severity")
         valid_values = [None, "warning", "critical"]
@@ -116,7 +124,7 @@ class TestBillingSubscriptionPaymentIssue:
         """GET /api/billing/subscription has core fields (regression)."""
         response = api_client.get(f"{BASE_URL}/api/billing/subscription", timeout=15)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         core_fields = [
             "tenant_id",
@@ -137,7 +145,7 @@ class TestBillingSubscriptionPaymentIssue:
         """plan has valid values."""
         response = api_client.get(f"{BASE_URL}/api/billing/subscription", timeout=15)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         valid_plans = ["trial", "starter", "pro", "enterprise"]
         assert data.get("plan") in valid_plans, f"Invalid plan: {data.get('plan')}"
@@ -147,7 +155,7 @@ class TestBillingSubscriptionPaymentIssue:
         """interval has valid values."""
         response = api_client.get(f"{BASE_URL}/api/billing/subscription", timeout=15)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         valid_intervals = ["monthly", "yearly"]
         assert data.get("interval") in valid_intervals, f"Invalid interval: {data.get('interval')}"
@@ -173,7 +181,7 @@ class TestBillingHistoryRegression:
         """GET /api/billing/history returns items array."""
         response = api_client.get(f"{BASE_URL}/api/billing/history", timeout=15)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         assert "items" in data, "Missing items field"
         assert isinstance(data["items"], list), "items must be a list"
@@ -183,7 +191,7 @@ class TestBillingHistoryRegression:
         """History items have required structure."""
         response = api_client.get(f"{BASE_URL}/api/billing/history", timeout=15)
         assert response.status_code == 200
-        items = response.json().get("items", [])
+        items = _unwrap(response).get("items", [])
 
         if not items:
             pytest.skip("No history items to validate structure")
@@ -199,7 +207,7 @@ class TestBillingHistoryRegression:
         """GET /api/billing/history?limit=5 works."""
         response = api_client.get(f"{BASE_URL}/api/billing/history?limit=5", timeout=15)
         assert response.status_code == 200
-        items = response.json().get("items", [])
+        items = _unwrap(response).get("items", [])
         assert len(items) <= 5, f"Expected <=5 items, got {len(items)}"
         print(f"✓ limit=5 works, returned {len(items)} items")
 

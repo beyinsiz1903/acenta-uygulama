@@ -11,6 +11,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 class TestSandboxModeStates:
@@ -25,7 +35,7 @@ class TestSandboxModeStates:
             headers={"Content-Type": "application/json"}
         )
         assert response.status_code == 200, f"Login failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         return data.get("access_token")
     
     @pytest.fixture
@@ -43,7 +53,7 @@ class TestSandboxModeStates:
         response = api_client.get(f"{BASE_URL}/api/e2e-demo/sandbox-status?supplier=ratehawk")
         
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         # Mode should be sandbox_blocked (credentials exist but API unreachable)
         assert data["mode"] == "sandbox_blocked", f"Expected sandbox_blocked, got {data['mode']}"
@@ -68,7 +78,7 @@ class TestSandboxModeStates:
         response = api_client.get(f"{BASE_URL}/api/e2e-demo/sandbox-status?supplier=paximum")
         
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         # Mode should be simulation (no credentials)
         assert data["mode"] == "simulation", f"Expected simulation, got {data['mode']}"
@@ -89,7 +99,7 @@ class TestSandboxModeStates:
         response = api_client.get(f"{BASE_URL}/api/e2e-demo/sandbox-status?supplier=tbo")
         
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         assert data["mode"] == "simulation"
         assert data["credentials_configured"] == False
@@ -101,7 +111,7 @@ class TestSandboxModeStates:
         response = api_client.get(f"{BASE_URL}/api/e2e-demo/sandbox-status?supplier=wtatil")
         
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         assert data["mode"] == "simulation"
         assert data["credentials_configured"] == False
@@ -113,7 +123,7 @@ class TestSandboxModeStates:
         response = api_client.get(f"{BASE_URL}/api/e2e-demo/sandbox-status?supplier=ratehawk")
         
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         # When mode is sandbox_blocked, health.error should contain connection/dns/network error
         assert data["mode"] == "sandbox_blocked"
@@ -139,7 +149,7 @@ class TestSandboxModeStates:
         for supplier in suppliers:
             response = api_client.get(f"{BASE_URL}/api/e2e-demo/sandbox-status?supplier={supplier}")
             assert response.status_code == 200
-            data = response.json()
+            data = _unwrap(response)
             
             assert "mode" in data, f"Missing mode field for {supplier}"
             assert data["mode"] in valid_modes, f"Invalid mode {data['mode']} for {supplier}"
@@ -151,7 +161,7 @@ class TestSandboxModeStates:
         response = api_client.get(f"{BASE_URL}/api/e2e-demo/sandbox-status?supplier=ratehawk")
         
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         required_readiness_fields = [
             "credential_wiring",

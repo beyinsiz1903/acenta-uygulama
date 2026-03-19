@@ -6,6 +6,16 @@ import pytest
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 async def _seed_tenant_plan(test_db, tenant_id: str, plan: str) -> None:
     now = now_utc()
     await test_db.tenant_capabilities.update_one(
@@ -130,7 +140,7 @@ async def test_reservation_creation_is_blocked_when_reservation_quota_is_full(as
     )
 
     assert response.status_code == 403
-    payload = response.json()["error"]
+    payload = _unwrap(response)["error"]
     assert payload["code"] == "quota_exceeded"
     assert payload["details"]["metric"] == "reservation.created"
     assert payload["details"]["limit"] == 100
@@ -157,7 +167,7 @@ async def test_sales_summary_csv_is_blocked_when_export_quota_is_full(async_clie
     response = await async_client.get("/api/reports/sales-summary.csv", headers=agency_headers)
 
     assert response.status_code == 403
-    payload = response.json()["error"]
+    payload = _unwrap(response)["error"]
     assert payload["code"] == "quota_exceeded"
     assert payload["details"]["metric"] == "export.generated"
     assert payload["details"]["limit"] == 10
@@ -185,7 +195,7 @@ async def test_admin_report_download_is_blocked_when_report_quota_is_full(async_
     )
 
     assert response.status_code == 403
-    payload = response.json()["error"]
+    payload = _unwrap(response)["error"]
     assert payload["code"] == "quota_exceeded"
     assert payload["details"]["metric"] == "report.generated"
     assert payload["details"]["limit"] == 20

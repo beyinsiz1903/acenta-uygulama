@@ -15,6 +15,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
     BASE_URL = ""
@@ -35,7 +45,7 @@ def auth_session():
     )
     assert login_response.status_code == 200, f"Login failed: {login_response.text}"
 
-    data = login_response.json()
+    data = _unwrap(login_response)
     token = data.get("access_token") or data.get("token")
     if token:
         session.headers.update({"Authorization": f"Bearer {token}"})
@@ -55,7 +65,7 @@ class TestDualScoreStatus:
         response = auth_session.get(f"{BASE_URL}/api/hardening/status")
         assert response.status_code == 200, f"Failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify dual scores exist
         assert "architecture_maturity" in data, "Missing architecture_maturity score"
@@ -78,7 +88,7 @@ class TestDualScoreStatus:
         response = auth_session.get(f"{BASE_URL}/api/hardening/status")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify architecture breakdown exists
         assert "architecture_breakdown" in data, "Missing architecture_breakdown"
@@ -98,7 +108,7 @@ class TestDualScoreStatus:
         response = auth_session.get(f"{BASE_URL}/api/hardening/status")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify blockers object exists
         assert "blockers" in data, "Missing blockers section"
@@ -126,7 +136,7 @@ class TestExecutionStatus:
         response = auth_session.get(f"{BASE_URL}/api/hardening/execution/status")
         assert response.status_code == 200, f"Failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify phases exist
         assert "phases" in data, "Missing phases array"
@@ -152,7 +162,7 @@ class TestExecutionStatus:
         response = auth_session.get(f"{BASE_URL}/api/hardening/execution/status")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify sprints exist
         assert "sprints" in data, "Missing sprints object"
@@ -180,7 +190,7 @@ class TestExecutionStatus:
         response = auth_session.get(f"{BASE_URL}/api/hardening/execution/status")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify blockers exist
         assert "blockers" in data, "Missing blockers array"
@@ -211,7 +221,7 @@ class TestExecutionStatus:
         response = auth_session.get(f"{BASE_URL}/api/hardening/execution/status")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify readiness object exists
         assert "readiness" in data, "Missing readiness object"
@@ -244,7 +254,7 @@ class TestPhaseDetail:
         response = auth_session.get(f"{BASE_URL}/api/hardening/execution/phase/1")
         assert response.status_code == 200, f"Failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify phase structure
         assert data.get("id") == 1
@@ -272,7 +282,7 @@ class TestPhaseDetail:
         response = auth_session.get(f"{BASE_URL}/api/hardening/execution/phase/999")
         assert response.status_code == 200  # Returns 200 with error field
 
-        data = response.json()
+        data = _unwrap(response)
         assert "error" in data
 
         print("✓ Invalid phase ID returns error")
@@ -290,7 +300,7 @@ class TestPhaseStart:
         response = auth_session.post(f"{BASE_URL}/api/hardening/execution/phase/1/start")
         assert response.status_code == 200, f"Failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
 
         assert data.get("status") == "started"
         assert data.get("phase_id") == 1
@@ -298,7 +308,7 @@ class TestPhaseStart:
 
         # Verify phase is now in_progress
         check_response = auth_session.get(f"{BASE_URL}/api/hardening/execution/phase/1")
-        check_data = check_response.json()
+        check_data = _unwrap(check_response)
         assert check_data.get("status") == "in_progress"
 
         print(f"✓ Phase 1 started: {data}")
@@ -316,7 +326,7 @@ class TestTaskComplete:
         response = auth_session.post(f"{BASE_URL}/api/hardening/execution/phase/1/task/1.1/complete")
         assert response.status_code == 200, f"Failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
 
         assert data.get("status") == "completed"
         assert data.get("task_id") == "1.1"
@@ -325,7 +335,7 @@ class TestTaskComplete:
 
         # Verify task is now completed
         check_response = auth_session.get(f"{BASE_URL}/api/hardening/execution/phase/1")
-        check_data = check_response.json()
+        check_data = _unwrap(check_response)
         task_1_1 = next((t for t in check_data["tasks"] if t["id"] == "1.1"), None)
         assert task_1_1 is not None
         assert task_1_1["status"] == "completed"
@@ -337,7 +347,7 @@ class TestTaskComplete:
         response = auth_session.post(f"{BASE_URL}/api/hardening/execution/phase/1/task/99.99/complete")
         assert response.status_code == 200  # Returns 200 with error field
 
-        data = response.json()
+        data = _unwrap(response)
         assert "error" in data
 
         print("✓ Invalid task ID returns error")
@@ -355,14 +365,14 @@ class TestBlockerResolve:
         response = auth_session.post(f"{BASE_URL}/api/hardening/execution/blocker/BLK-002/resolve")
         assert response.status_code == 200, f"Failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
 
         assert data.get("status") == "resolved"
         assert data.get("blocker_id") == "BLK-002"
 
         # Verify blocker is now resolved in status
         check_response = auth_session.get(f"{BASE_URL}/api/hardening/execution/status")
-        check_data = check_response.json()
+        check_data = _unwrap(check_response)
         blocker = next((b for b in check_data["blockers"] if b["id"] == "BLK-002"), None)
         assert blocker is not None
         assert blocker["status"] == "resolved"
@@ -374,7 +384,7 @@ class TestBlockerResolve:
         response = auth_session.post(f"{BASE_URL}/api/hardening/execution/blocker/INVALID/resolve")
         assert response.status_code == 200  # Returns 200 with error field
 
-        data = response.json()
+        data = _unwrap(response)
         assert "error" in data
 
         print("✓ Invalid blocker ID returns error")
@@ -392,7 +402,7 @@ class TestCertification:
         response = auth_session.get(f"{BASE_URL}/api/hardening/execution/certification")
         assert response.status_code == 200, f"Failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify certification report structure
         assert "timestamp" in data

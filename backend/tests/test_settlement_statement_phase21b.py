@@ -12,6 +12,16 @@ from app.auth import _jwt_secret
 from app.db import get_db
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 def _make_token(email: str, org_id: str, roles: list[str], minutes: int = 60 * 12) -> str:
     now = datetime.now(timezone.utc)
     payload = {
@@ -119,7 +129,7 @@ async def test_statement_seller_month_filters_and_totals(async_client: AsyncClie
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": seller["tenant_id"]},
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["month"] == this_month
     assert body["perspective"] == "seller"
     assert body["totals"]["count"] == 2
@@ -177,7 +187,7 @@ async def test_statement_currency_breakdown_multiple_currencies(async_client: As
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": seller["tenant_id"]},
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     currencies = {c["currency"]: c for c in body["currency_breakdown"]}
     assert "TRY" in currencies and "USD" in currencies
     assert currencies["TRY"]["gross_total"] == pytest.approx(100.0)
@@ -217,7 +227,7 @@ async def test_statement_buyer_perspective(async_client: AsyncClient) -> None:
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": buyer["tenant_id"]},
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["totals"]["count"] == 1
     assert body["totals"]["gross_total"] == pytest.approx(150.0)
 
@@ -271,7 +281,7 @@ async def test_statement_status_filter(async_client: AsyncClient) -> None:
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": seller["tenant_id"]},
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["totals"]["count"] == 1
     assert body["totals"]["gross_total"] == pytest.approx(100.0)
 
@@ -288,7 +298,7 @@ async def test_invalid_month_returns_400(async_client: AsyncClient) -> None:
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": tenant["tenant_id"]},
     )
     assert resp.status_code == 400
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["error"]["code"] == "invalid_month"
 
 
@@ -328,6 +338,6 @@ async def test_statement_too_large_guard(async_client: AsyncClient) -> None:
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": seller["tenant_id"]},
     )
     assert resp.status_code == 400, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["error"]["code"] == "statement_too_large"
     assert body["error"]["details"]["max_items"] == 500

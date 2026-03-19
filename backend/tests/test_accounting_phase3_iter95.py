@@ -16,6 +16,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -31,7 +41,7 @@ def auth_token():
         json={"email": SUPER_ADMIN_EMAIL, "password": SUPER_ADMIN_PASS},
     )
     assert resp.status_code == 200, f"Login failed: {resp.text}"
-    data = resp.json()
+    data = _unwrap(resp)
     return data.get("access_token")
 
 
@@ -54,7 +64,7 @@ class TestAccountingProviders:
         resp = api_client.get(f"{BASE_URL}/api/accounting/providers")
         assert resp.status_code == 200, f"Failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "providers" in data
         assert len(data["providers"]) >= 1
         
@@ -89,7 +99,7 @@ class TestAccountingCredentials:
         resp = api_client.post(f"{BASE_URL}/api/accounting/credentials", json=payload)
         assert resp.status_code == 200, f"Failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("provider") == "luca"
         assert data.get("status") == "configured"
         print("PASS: Save Luca credentials")
@@ -99,7 +109,7 @@ class TestAccountingCredentials:
         resp = api_client.get(f"{BASE_URL}/api/accounting/credentials")
         assert resp.status_code == 200, f"Failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "integrators" in data
         
         # Check if luca config exists (after save)
@@ -119,7 +129,7 @@ class TestAccountingCredentials:
         resp = api_client.post(f"{BASE_URL}/api/accounting/test-connection", json=payload)
         assert resp.status_code == 200, f"Failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         # In simulation mode, should succeed with "simulated" status
         assert data.get("success") == True, f"Test connection failed: {data}"
         assert data.get("status") in ("connected", "simulated"), f"Unexpected status: {data}"
@@ -134,7 +144,7 @@ class TestAccountingDashboard:
         resp = api_client.get(f"{BASE_URL}/api/accounting/dashboard")
         assert resp.status_code == 200, f"Failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         # Validate structure (enhanced in iter96 with new fields)
         assert "success" in data or "synced" in data
         assert "failed" in data
@@ -157,7 +167,7 @@ class TestAccountingSyncLogs:
         resp = api_client.get(f"{BASE_URL}/api/accounting/sync-logs")
         assert resp.status_code == 200, f"Failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "items" in data
         assert "total" in data
         print(f"PASS: Sync logs - {data['total']} total items")
@@ -167,7 +177,7 @@ class TestAccountingSyncLogs:
         resp = api_client.get(f"{BASE_URL}/api/accounting/sync-logs", params={"status": "synced"})
         assert resp.status_code == 200, f"Failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         # All returned items should have synced status
         for item in data.get("items", []):
             if item.get("sync_status"):
@@ -184,7 +194,7 @@ class TestInvoiceSyncToLuca:
         # First, list issued invoices
         resp = api_client.get(f"{BASE_URL}/api/invoices", params={"status": "issued", "limit": 1})
         if resp.status_code == 200:
-            data = resp.json()
+            data = _unwrap(resp)
             if data.get("items") and len(data["items"]) > 0:
                 return data["items"][0]["invoice_id"]
         
@@ -199,7 +209,7 @@ class TestInvoiceSyncToLuca:
             "currency": "TRY",
         })
         if create_resp.status_code == 200:
-            invoice_id = create_resp.json().get("invoice_id")
+            invoice_id = _unwrap(create_resp).get("invoice_id")
             # Issue it
             issue_resp = api_client.post(f"{BASE_URL}/api/invoices/{invoice_id}/issue")
             if issue_resp.status_code == 200:
@@ -215,7 +225,7 @@ class TestInvoiceSyncToLuca:
         )
         assert resp.status_code == 200, f"Sync failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         # Either success or duplicate (if already synced)
         if data.get("error") == "duplicate":
             print(f"PASS: Sync returns duplicate (already synced) - {data.get('message')}")
@@ -237,7 +247,7 @@ class TestInvoiceSyncToLuca:
         )
         assert resp.status_code == 200, f"Second sync failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("error") == "duplicate", f"Expected duplicate error: {data}"
         print("PASS: Idempotent sync returns duplicate error")
 
@@ -268,7 +278,7 @@ class TestDeleteCredentials:
         resp = api_client.delete(f"{BASE_URL}/api/accounting/credentials/luca")
         assert resp.status_code == 200, f"Delete failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("deleted") == True
         print("PASS: Delete Luca credentials")
 
@@ -301,7 +311,7 @@ class TestInvoiceSyncErrorHandling:
         if create_resp.status_code != 200:
             pytest.skip("Could not create draft invoice")
         
-        invoice_id = create_resp.json().get("invoice_id")
+        invoice_id = _unwrap(create_resp).get("invoice_id")
         
         # Try to sync draft invoice
         resp = api_client.post(

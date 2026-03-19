@@ -14,6 +14,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
     BASE_URL = "http://localhost:8001"
@@ -27,7 +37,7 @@ def auth_token():
         json={"email": "agent@acenta.test", "password": "agent123"},
     )
     assert response.status_code == 200, f"Login failed: {response.text}"
-    return response.json()["access_token"]
+    return _unwrap(response)["access_token"]
 
 
 @pytest.fixture(scope="module")
@@ -44,7 +54,7 @@ class TestInventorySyncStatus:
         response = requests.get(f"{BASE_URL}/api/inventory/sync/status", headers=auth_headers)
         assert response.status_code == 200, f"Failed: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "suppliers" in data
         assert "timestamp" in data
         
@@ -58,7 +68,7 @@ class TestInventorySyncStatus:
         response = requests.get(f"{BASE_URL}/api/inventory/sync/status", headers=auth_headers)
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         for supplier, status in data["suppliers"].items():
             # Verify config section
             assert "config" in status
@@ -82,7 +92,7 @@ class TestInventorySyncStatus:
         response = requests.get(f"{BASE_URL}/api/inventory/sync/status", headers=auth_headers)
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["suppliers"]["tbo"]["config"]["status"] == "pending"
 
     def test_active_suppliers_have_data(self, auth_headers):
@@ -90,7 +100,7 @@ class TestInventorySyncStatus:
         response = requests.get(f"{BASE_URL}/api/inventory/sync/status", headers=auth_headers)
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         active_suppliers = ["ratehawk", "paximum", "wtatil"]
         for sup in active_suppliers:
             status = data["suppliers"][sup]
@@ -115,7 +125,7 @@ class TestInventorySyncTrigger:
         )
         assert response.status_code == 200, f"Failed: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["supplier"] == "ratehawk"
         assert data["status"] == "completed"
         assert data["records_updated"] > 0
@@ -133,7 +143,7 @@ class TestInventorySyncTrigger:
         )
         assert response.status_code == 200, f"Failed: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["supplier"] == "paximum"
         assert data["status"] == "completed"
 
@@ -146,7 +156,7 @@ class TestInventorySyncTrigger:
         )
         assert response.status_code == 200, f"Failed: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["supplier"] == "wtatil"
         assert data["status"] == "completed"
 
@@ -158,7 +168,7 @@ class TestInventorySyncTrigger:
             json={"supplier": "unknown_supplier"}
         )
         assert response.status_code == 200  # Returns error in body
-        data = response.json()
+        data = _unwrap(response)
         assert "error" in data or "Unknown supplier" in str(data)
 
     def test_trigger_sync_requires_auth(self):
@@ -181,7 +191,7 @@ class TestInventorySyncJobs:
         )
         assert response.status_code == 200, f"Failed: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "jobs" in data
         assert "total" in data
         assert "timestamp" in data
@@ -194,7 +204,7 @@ class TestInventorySyncJobs:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         if data["jobs"]:
             job = data["jobs"][0]
             assert "supplier" in job
@@ -215,7 +225,7 @@ class TestInventorySyncJobs:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         for job in data["jobs"]:
             assert job["supplier"] == "ratehawk"
 
@@ -231,7 +241,7 @@ class TestInventorySearch:
         )
         assert response.status_code == 200, f"Failed: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "results" in data
         assert "total" in data
         assert "source" in data
@@ -247,7 +257,7 @@ class TestInventorySearch:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["total"] > 0
         for result in data["results"]:
             assert result["city"] == "Istanbul"
@@ -260,7 +270,7 @@ class TestInventorySearch:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         for result in data["results"]:
             assert result["city"] == "Dubai"
             assert result["stars"] >= 5
@@ -273,7 +283,7 @@ class TestInventorySearch:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         if data["results"]:
             result = data["results"][0]
             assert "supplier" in result
@@ -295,7 +305,7 @@ class TestInventorySearch:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert "search_params" in data
         assert data["search_params"]["destination"] == "Bodrum"
         assert data["search_params"]["min_stars"] == 4
@@ -310,7 +320,7 @@ class TestInventoryStats:
         response = requests.get(f"{BASE_URL}/api/inventory/stats", headers=auth_headers)
         assert response.status_code == 200, f"Failed: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "totals" in data
         totals = data["totals"]
         assert "hotels" in totals
@@ -325,7 +335,7 @@ class TestInventoryStats:
         response = requests.get(f"{BASE_URL}/api/inventory/stats", headers=auth_headers)
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert "by_supplier" in data
         suppliers = data["by_supplier"]
         for sup in ["ratehawk", "paximum", "wtatil", "tbo"]:
@@ -339,7 +349,7 @@ class TestInventoryStats:
         response = requests.get(f"{BASE_URL}/api/inventory/stats", headers=auth_headers)
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert "by_city" in data
         cities = data["by_city"]
         if cities:
@@ -352,7 +362,7 @@ class TestInventoryStats:
         response = requests.get(f"{BASE_URL}/api/inventory/stats", headers=auth_headers)
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert "redis_cache" in data
         assert "status" in data["redis_cache"]
         # Expected: unavailable since Redis is not running
@@ -363,7 +373,7 @@ class TestInventoryStats:
         response = requests.get(f"{BASE_URL}/api/inventory/stats", headers=auth_headers)
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert "sync_config" in data
         for sup in ["ratehawk", "paximum", "wtatil", "tbo"]:
             assert sup in data["sync_config"]
@@ -386,7 +396,7 @@ class TestPriceRevalidation:
         )
         assert response.status_code == 200, f"Failed: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "supplier" in data
         assert "hotel_id" in data
         assert "cached_price" in data
@@ -414,7 +424,7 @@ class TestPriceRevalidation:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["drift_severity"] in ["normal", "warning", "high", "critical"]
 
     def test_revalidate_drift_direction(self, auth_headers):
@@ -431,7 +441,7 @@ class TestPriceRevalidation:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["drift_direction"] in ["up", "down", "stable"]
 
     def test_revalidate_requires_auth(self):

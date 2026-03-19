@@ -11,6 +11,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -36,7 +46,7 @@ def admin_token(api_client):
         "password": ADMIN_PASSWORD
     })
     if resp.status_code == 200:
-        data = resp.json()
+        data = _unwrap(resp)
         return data.get("access_token") or data.get("token")
     pytest.skip(f"Admin login failed: {resp.status_code} - {resp.text}")
 
@@ -59,7 +69,7 @@ def agent_token(api_client):
         "password": AGENT_PASSWORD
     })
     if resp.status_code == 200:
-        data = resp.json()
+        data = _unwrap(resp)
         return data.get("access_token") or data.get("token")
     pytest.skip(f"Agent login failed: {resp.status_code} - {resp.text}")
 
@@ -86,14 +96,14 @@ class TestOnboardingPlans:
     def test_plans_contains_plans_array(self, api_client):
         """Response should contain 'plans' array."""
         resp = api_client.get(f"{BASE_URL}/api/onboarding/plans")
-        data = resp.json()
+        data = _unwrap(resp)
         assert "plans" in data, "Response should contain 'plans' key"
         assert isinstance(data["plans"], list), "'plans' should be a list"
 
     def test_plans_has_starter_pro_enterprise(self, api_client):
         """Plan catalog should include starter, pro, enterprise."""
         resp = api_client.get(f"{BASE_URL}/api/onboarding/plans")
-        data = resp.json()
+        data = _unwrap(resp)
         plan_keys = [p.get("key") or p.get("name") for p in data["plans"]]
         assert "starter" in plan_keys, "Should include 'starter' plan"
         assert "pro" in plan_keys, "Should include 'pro' plan"
@@ -102,7 +112,7 @@ class TestOnboardingPlans:
     def test_plan_has_limits_and_usage_allowances(self, api_client):
         """Each plan should have limits and usage_allowances."""
         resp = api_client.get(f"{BASE_URL}/api/onboarding/plans")
-        data = resp.json()
+        data = _unwrap(resp)
 
         for plan in data["plans"]:
             plan_name = plan.get("key") or plan.get("name")
@@ -114,7 +124,7 @@ class TestOnboardingPlans:
     def test_starter_plan_has_correct_limits(self, api_client):
         """Starter plan should have expected limit values."""
         resp = api_client.get(f"{BASE_URL}/api/onboarding/plans")
-        data = resp.json()
+        data = _unwrap(resp)
 
         starter = next((p for p in data["plans"] if (p.get("key") or p.get("name")) == "starter"), None)
         assert starter is not None, "Starter plan should exist"
@@ -126,7 +136,7 @@ class TestOnboardingPlans:
     def test_pro_plan_has_correct_limits(self, api_client):
         """Pro plan should have expected limit values."""
         resp = api_client.get(f"{BASE_URL}/api/onboarding/plans")
-        data = resp.json()
+        data = _unwrap(resp)
 
         pro = next((p for p in data["plans"] if (p.get("key") or p.get("name")) == "pro"), None)
         assert pro is not None, "Pro plan should exist"
@@ -138,7 +148,7 @@ class TestOnboardingPlans:
     def test_plans_have_features_array(self, api_client):
         """Each plan should have features array."""
         resp = api_client.get(f"{BASE_URL}/api/onboarding/plans")
-        data = resp.json()
+        data = _unwrap(resp)
 
         for plan in data["plans"]:
             plan_name = plan.get("key") or plan.get("name")
@@ -154,7 +164,7 @@ class TestAdminTenantFeatures:
         """GET /api/admin/tenants should return list of tenants."""
         resp = admin_client.get(f"{BASE_URL}/api/admin/tenants")
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "items" in data, "Response should have 'items'"
         assert isinstance(data["items"], list), "'items' should be a list"
 
@@ -162,7 +172,7 @@ class TestAdminTenantFeatures:
         """GET /api/admin/tenants/{tenant_id}/features should return entitlement projection."""
         # First get a tenant
         tenants_resp = admin_client.get(f"{BASE_URL}/api/admin/tenants")
-        data = tenants_resp.json()
+        data = _unwrap(tenants_resp)
         if not data.get("items"):
             pytest.skip("No tenants available for testing")
 
@@ -171,7 +181,7 @@ class TestAdminTenantFeatures:
         resp = admin_client.get(f"{BASE_URL}/api/admin/tenants/{tenant_id}/features")
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
 
-        feat_data = resp.json()
+        feat_data = _unwrap(resp)
         # Verify projection fields exist
         assert "tenant_id" in feat_data, "Should have 'tenant_id'"
         assert "plan" in feat_data, "Should have 'plan'"
@@ -184,7 +194,7 @@ class TestAdminTenantFeatures:
         """PATCH /api/admin/tenants/{tenant_id}/plan should update entitlement projection."""
         # First get a tenant
         tenants_resp = admin_client.get(f"{BASE_URL}/api/admin/tenants")
-        data = tenants_resp.json()
+        data = _unwrap(tenants_resp)
         if not data.get("items"):
             pytest.skip("No tenants available for testing")
 
@@ -192,7 +202,7 @@ class TestAdminTenantFeatures:
 
         # Get current plan
         feat_resp = admin_client.get(f"{BASE_URL}/api/admin/tenants/{tenant_id}/features")
-        current_plan = feat_resp.json().get("plan") or "starter"
+        current_plan = _unwrap(feat_resp).get("plan") or "starter"
 
         # Determine new plan to switch to
         new_plan = "pro" if current_plan != "pro" else "starter"
@@ -204,7 +214,7 @@ class TestAdminTenantFeatures:
         )
         assert patch_resp.status_code == 200, f"Expected 200, got {patch_resp.status_code}: {patch_resp.text}"
 
-        patch_data = patch_resp.json()
+        patch_data = _unwrap(patch_resp)
         assert patch_data.get("plan") == new_plan, f"Plan should be '{new_plan}', got {patch_data.get('plan')}"
         assert "limits" in patch_data, "Response should include 'limits'"
         assert "usage_allowances" in patch_data, "Response should include 'usage_allowances'"
@@ -226,7 +236,7 @@ class TestAdminTenantFeatures:
         """PATCH /api/admin/tenants/{tenant_id}/add-ons should preserve effective features and entitlement shape."""
         # First get a tenant
         tenants_resp = admin_client.get(f"{BASE_URL}/api/admin/tenants")
-        data = tenants_resp.json()
+        data = _unwrap(tenants_resp)
         if not data.get("items"):
             pytest.skip("No tenants available for testing")
 
@@ -234,7 +244,7 @@ class TestAdminTenantFeatures:
 
         # Get current add-ons
         feat_resp = admin_client.get(f"{BASE_URL}/api/admin/tenants/{tenant_id}/features")
-        current_add_ons = feat_resp.json().get("add_ons", [])
+        current_add_ons = _unwrap(feat_resp).get("add_ons", [])
 
         # Add a test add-on (e.g., 'b2b' if not already present)
         test_addon = "b2b" if "b2b" not in current_add_ons else "ops"
@@ -247,7 +257,7 @@ class TestAdminTenantFeatures:
         )
         assert patch_resp.status_code == 200, f"Expected 200, got {patch_resp.status_code}: {patch_resp.text}"
 
-        patch_data = patch_resp.json()
+        patch_data = _unwrap(patch_resp)
         # Verify entitlement shape is preserved
         assert "tenant_id" in patch_data, "Response should have 'tenant_id'"
         assert "plan" in patch_data, "Response should have 'plan'"
@@ -279,7 +289,7 @@ class TestTenantSelfServiceEntitlements:
         resp = agent_client.get(f"{BASE_URL}/api/tenant/features")
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         assert "tenant_id" in data, "Should have 'tenant_id'"
         assert "plan" in data, "Should have 'plan'"
         assert "limits" in data, "Should have 'limits'"
@@ -294,8 +304,8 @@ class TestTenantSelfServiceEntitlements:
 
         assert ent_resp.status_code == 200, f"Expected 200, got {ent_resp.status_code}: {ent_resp.text}"
 
-        feat_data = feat_resp.json()
-        ent_data = ent_resp.json()
+        feat_data = _unwrap(feat_resp)
+        ent_data = _unwrap(ent_resp)
 
         # Both should have same structure
         assert feat_data.get("tenant_id") == ent_data.get("tenant_id")
@@ -305,7 +315,7 @@ class TestTenantSelfServiceEntitlements:
     def test_tenant_features_has_valid_plan(self, agent_client):
         """Tenant features should have a valid plan (starter, pro, or enterprise)."""
         resp = agent_client.get(f"{BASE_URL}/api/tenant/features")
-        data = resp.json()
+        data = _unwrap(resp)
 
         plan = data.get("plan")
         if plan is not None:
@@ -319,7 +329,7 @@ class TestInvalidPlanHandling:
         """PATCH /api/admin/tenants/{tenant_id}/plan with invalid plan should return 422."""
         # First get a tenant
         tenants_resp = admin_client.get(f"{BASE_URL}/api/admin/tenants")
-        data = tenants_resp.json()
+        data = _unwrap(tenants_resp)
         if not data.get("items"):
             pytest.skip("No tenants available for testing")
 
@@ -335,7 +345,7 @@ class TestInvalidPlanHandling:
         """PATCH /api/admin/tenants/{tenant_id}/add-ons with invalid add-on should return 422."""
         # First get a tenant
         tenants_resp = admin_client.get(f"{BASE_URL}/api/admin/tenants")
-        data = tenants_resp.json()
+        data = _unwrap(tenants_resp)
         if not data.get("items"):
             pytest.skip("No tenants available for testing")
 

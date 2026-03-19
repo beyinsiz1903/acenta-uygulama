@@ -26,6 +26,14 @@ import pytest
 import requests
 import time
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials from review request
@@ -63,7 +71,7 @@ def authenticated_client(api_client):
     )
 
     if response.status_code == 429:
-        retry_after = response.json().get("details", {}).get("retry_after_seconds", 60)
+        retry_after = _unwrap(response).get("details", {}).get("retry_after_seconds", 60)
         print(f"Rate limited, waiting {retry_after}s...")
         time.sleep(min(retry_after, 30))
         response = api_client.post(
@@ -74,7 +82,7 @@ def authenticated_client(api_client):
     if response.status_code != 200:
         pytest.skip(f"Authentication failed: {response.status_code} - {response.text}")
 
-    data = response.json()
+    data = _unwrap(response)
     # Auth returns access_token field (not token)
     token = data.get("access_token") or data.get("token")
     if token:
@@ -97,7 +105,7 @@ class TestAuthentication:
             pytest.skip("Rate limited")
 
         assert response.status_code == 200, f"Login failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify access_token field is returned (not just 'token')
         assert "access_token" in data, f"Response missing access_token field: {data.keys()}"
@@ -111,7 +119,7 @@ class TestPMSDashboard:
         """Test dashboard returns 5 stat card values: arrivals, in_house, stayover, departures, occupancy_rate"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/dashboard")
         assert response.status_code == 200, f"Dashboard failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify 5 required stat fields for stat cards
         required_stats = ["arrivals", "in_house", "stayover", "departures", "occupancy_rate"]
@@ -134,7 +142,7 @@ class TestPMSDashboard:
         """Test that stayover count is separate from in_house count"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/dashboard")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         # Stayover count should be a separate field
         assert "stayover" in data
@@ -151,7 +159,7 @@ class TestPMSDashboard:
         """Test dashboard returns hotels list for selector"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/dashboard")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         assert "hotels" in data, "Missing hotels field"
         assert isinstance(data["hotels"], list)
@@ -171,7 +179,7 @@ class TestPMSArrivals:
         """Test GET /api/agency/pms/arrivals returns today's arrivals"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/arrivals")
         assert response.status_code == 200, f"Arrivals failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "items" in data, "Missing items field"
         assert "total" in data, "Missing total field"
@@ -193,7 +201,7 @@ class TestPMSInHouse:
         """Test GET /api/agency/pms/in-house returns in-house guests"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/in-house")
         assert response.status_code == 200, f"In-house failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "items" in data, "Missing items field"
         assert "total" in data, "Missing total field"
@@ -214,7 +222,7 @@ class TestPMSStayovers:
         """Test GET /api/agency/pms/stayovers endpoint exists and returns valid response"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/stayovers")
         assert response.status_code == 200, f"Stayovers endpoint failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "items" in data, "Missing items field"
         assert "total" in data, "Missing total field"
@@ -226,7 +234,7 @@ class TestPMSStayovers:
         """Test stayovers returns guests where check_in < today AND check_out > today"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/stayovers")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         from datetime import date
         today = date.today().isoformat()
@@ -246,7 +254,7 @@ class TestPMSStayovers:
         """Test stayover items have correct structure"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/stayovers")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         if data["items"]:
             item = data["items"][0]
@@ -264,7 +272,7 @@ class TestPMSDepartures:
         """Test GET /api/agency/pms/departures returns today's departures"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/departures")
         assert response.status_code == 200, f"Departures failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "items" in data, "Missing items field"
         assert "total" in data, "Missing total field"
@@ -280,7 +288,7 @@ class TestAccountingFolios:
         """Test GET /api/agency/pms/accounting/folios returns folio list"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/folios")
         assert response.status_code == 200, f"Folios failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "items" in data, "Missing items field"
         assert "total" in data, "Missing total field"
@@ -291,7 +299,7 @@ class TestAccountingFolios:
         """Test POST /api/agency/pms/accounting/folios/{res_id}/charge creates charge"""
         # Get a reservation
         folios_response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/folios?limit=1")
-        items = folios_response.json().get("items", [])
+        items = _unwrap(folios_response).get("items", [])
 
         if not items:
             pytest.skip("No folios available")
@@ -309,7 +317,7 @@ class TestAccountingFolios:
             json=charge_data
         )
         assert response.status_code == 200, f"Charge failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["type"] == "charge"
         assert data["amount"] == 50.00
@@ -320,7 +328,7 @@ class TestAccountingFolios:
         """Test POST /api/agency/pms/accounting/folios/{res_id}/payment creates payment"""
         # Get a reservation
         folios_response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/folios?limit=1")
-        items = folios_response.json().get("items", [])
+        items = _unwrap(folios_response).get("items", [])
 
         if not items:
             pytest.skip("No folios available")
@@ -338,7 +346,7 @@ class TestAccountingFolios:
             json=payment_data
         )
         assert response.status_code == 200, f"Payment failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["type"] == "payment"
         assert data["amount"] == 25.00
@@ -353,7 +361,7 @@ class TestAccountingInvoices:
         """Test GET /api/agency/pms/accounting/invoices returns invoice list"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/invoices")
         assert response.status_code == 200, f"Invoices failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "items" in data, "Missing items field"
         assert "total" in data, "Missing total field"
@@ -364,7 +372,7 @@ class TestAccountingInvoices:
         """Test POST /api/agency/pms/accounting/invoices creates invoice with KDV calculation"""
         # Get a reservation with charges
         folios_response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/folios")
-        folios = folios_response.json().get("items", [])
+        folios = _unwrap(folios_response).get("items", [])
 
         res_with_charges = None
         for folio in folios:
@@ -387,7 +395,7 @@ class TestAccountingInvoices:
             json=invoice_data
         )
         assert response.status_code == 200, f"Invoice creation failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify KDV calculation (20%)
         assert data["tax_rate"] == 0.20, f"Expected tax_rate=0.20, got {data['tax_rate']}"
@@ -406,7 +414,7 @@ class TestAccountingInvoices:
         """Test PUT /api/agency/pms/accounting/invoices/{id} updates status draft->issued"""
         # Get a draft invoice
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/invoices?status=draft")
-        invoices = response.json().get("items", [])
+        invoices = _unwrap(response).get("items", [])
 
         if not invoices:
             pytest.skip("No draft invoices available")
@@ -418,7 +426,7 @@ class TestAccountingInvoices:
             json={"status": "issued"}
         )
         assert response.status_code == 200, f"Status update failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["status"] == "issued"
         print("PASS: Invoice status updated draft->issued")
@@ -427,7 +435,7 @@ class TestAccountingInvoices:
         """Test PUT /api/agency/pms/accounting/invoices/{id} updates status issued->paid"""
         # Get an issued invoice
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/accounting/invoices?status=issued")
-        invoices = response.json().get("items", [])
+        invoices = _unwrap(response).get("items", [])
 
         if not invoices:
             pytest.skip("No issued invoices available")
@@ -439,7 +447,7 @@ class TestAccountingInvoices:
             json={"status": "paid"}
         )
         assert response.status_code == 200, f"Status update failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["status"] == "paid"
         print("PASS: Invoice status updated issued->paid")

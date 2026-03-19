@@ -8,6 +8,16 @@ from app.auth import create_access_token
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.anyio
 async def test_admin_settlements_feature_disabled(async_client, test_db, anyio_backend):  # type: ignore[override]
     db = test_db
@@ -107,7 +117,7 @@ async def test_admin_settlements_admin_json_and_csv(async_client, test_db, anyio
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp_json.status_code == 200
-    data = resp_json.json()
+    data = _unwrap(resp_json)
     assert data["ok"] is True
     assert data["total"] >= 1
     assert data["returned_count"] >= 1
@@ -234,7 +244,7 @@ async def test_admin_settlements_agency_admin_enforcement(async_client, test_db,
     # The key test is that the feature flag check passes when b2b_pro is True
     assert resp.status_code in (200, 403), f"Unexpected {resp.status_code}: {resp.text[:200]}"
     if resp.status_code == 200:
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["ok"] is True
         items = data["items"]
         # All rows must belong to agency_a

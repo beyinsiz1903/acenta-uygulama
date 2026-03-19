@@ -13,7 +13,7 @@ async def test_stripe_webhook_rejects_when_secret_missing(async_client, monkeypa
     resp = await async_client.post("/api/webhook/stripe-billing", content=b"{}")
 
     assert resp.status_code == 503
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["error"]["code"] == "webhook_secret_missing"
 
 
@@ -149,6 +149,16 @@ async def test_stripe_webhook_does_not_trigger_side_effects_for_non_public(async
     )
 
     from app.services import stripe_handlers as handlers
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     event_payload = {
         "id": "evt_test_b2b",

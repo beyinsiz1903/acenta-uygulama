@@ -13,6 +13,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -36,7 +46,7 @@ class TestLoginAndRoles:
         )
 
         assert response.status_code == 200, f"Login failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify user exists in response
         assert "user" in data, "Response missing 'user' field"
@@ -59,7 +69,7 @@ class TestLoginAndRoles:
         )
 
         assert response.status_code == 200, f"Login failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify user exists in response
         assert "user" in data, "Response missing 'user' field"
@@ -89,7 +99,7 @@ class TestDemoSeed:
         )
         if response.status_code != 200:
             pytest.skip(f"Could not login as agency admin: {response.text}")
-        return response.json()["access_token"]
+        return _unwrap(response)["access_token"]
 
     def test_demo_seed_endpoint_returns_200_for_agency_admin(self, agency_token):
         """POST /api/admin/demo/seed should return 200 for agency_admin"""
@@ -109,7 +119,7 @@ class TestDemoSeed:
         )
 
         assert response.status_code == 200, f"Demo seed failed with status {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data.get("ok") is True, f"Demo seed response not ok: {data}"
         print("PASS: Demo seed returned 200 with ok=True")
@@ -134,7 +144,7 @@ class TestDemoSeed:
         )
 
         assert response.status_code == 200, f"Demo seed failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify counts exist in response
         counts = data.get("counts", {})
@@ -162,7 +172,7 @@ class TestSeededDataEndpoints:
         )
         if response.status_code != 200:
             pytest.skip(f"Could not login as agency admin: {response.text}")
-        return response.json()["access_token"]
+        return _unwrap(response)["access_token"]
 
     @pytest.fixture(scope="class", autouse=True)
     def ensure_seeded_data(self, agency_token):
@@ -183,7 +193,7 @@ class TestSeededDataEndpoints:
         )
         # Don't fail if already seeded
         if response.status_code == 200:
-            print(f"Demo data seeded/verified: {response.json()}")
+            print(f"Demo data seeded/verified: {_unwrap(response)}")
 
     def test_agency_hotels_endpoint_returns_data(self, agency_token):
         """GET /api/agency/hotels should return seeded hotels"""
@@ -201,7 +211,7 @@ class TestSeededDataEndpoints:
 
         assert response.status_code == 200, f"Hotels endpoint failed: {response.status_code} - {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         # Check for list or items key
         items = data if isinstance(data, list) else data.get("items", data.get("data", data.get("hotels", [])))
 
@@ -222,7 +232,7 @@ class TestSeededDataEndpoints:
 
         assert response.status_code == 200, f"Tours endpoint failed: {response.status_code} - {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         items = data if isinstance(data, list) else data.get("items", data.get("data", data.get("tours", [])))
 
         print(f"PASS: Tours endpoint returned {len(items) if isinstance(items, list) else 'data'}")
@@ -242,7 +252,7 @@ class TestSeededDataEndpoints:
 
         assert response.status_code == 200, f"Reservations endpoint failed: {response.status_code} - {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         items = data if isinstance(data, list) else data.get("items", data.get("data", data.get("reservations", [])))
 
         print(f"PASS: Reservations endpoint returned {len(items) if isinstance(items, list) else 'data'}")

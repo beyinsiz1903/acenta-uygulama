@@ -51,7 +51,7 @@ async def test_click_to_pay_happy_path_stubbed_stripe(monkeypatch, async_client,
         json={"email": admin_email, "password": "admin123"},
     )
     assert login_resp.status_code == 200
-    token = login_resp.json()["access_token"]
+    token = _unwrap(login_resp)["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
     # Stub stripe_adapter.create_payment_intent and retrieve_payment_intent
@@ -86,7 +86,7 @@ async def test_click_to_pay_happy_path_stubbed_stripe(monkeypatch, async_client,
         headers=headers,
     )
     assert resp.status_code == 200
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["ok"] is True
     assert body["url"].startswith("/pay/")
     assert body["amount_cents"] > 0
@@ -111,7 +111,7 @@ async def test_click_to_pay_happy_path_stubbed_stripe(monkeypatch, async_client,
     token = body["url"].split("/pay/")[-1]
     public_resp = await async_client.get(f"/api/public/pay/{token}")
     assert public_resp.status_code == 200
-    pdata = public_resp.json()
+    pdata = _unwrap(public_resp)
     assert pdata["ok"] is True
     assert pdata["amount_cents"] == body["amount_cents"]
     assert pdata["currency"] == "EUR"
@@ -165,7 +165,7 @@ async def test_click_to_pay_nothing_to_collect(monkeypatch, async_client):
         json={"email": admin_email, "password": "admin123"},
     )
     assert login_resp.status_code == 200
-    token = login_resp.json()["access_token"]
+    token = _unwrap(login_resp)["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
     from app.services import stripe_adapter
@@ -181,7 +181,7 @@ async def test_click_to_pay_nothing_to_collect(monkeypatch, async_client):
         headers=headers,
     )
     assert resp.status_code == 200
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["ok"] is False
     assert body["reason"] == "nothing_to_collect"
     assert body["url"] is None
@@ -219,7 +219,7 @@ async def test_click_to_pay_wrong_org_ownership(async_client):
         json={"email": admin_email, "password": "admin123"},
     )
     assert login_resp.status_code == 200
-    token = login_resp.json()["access_token"]
+    token = _unwrap(login_resp)["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
     resp = await async_client.post(
@@ -237,13 +237,23 @@ async def test_public_pay_invalid_and_expired_token(async_client):
     # Completely invalid token (no DB record)
     resp = await async_client.get("/api/public/pay/invalid-token-123")
     assert resp.status_code == 404
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["error"] == "NOT_FOUND"
 
     # Manually insert an expired link and ensure resolver treats it as 404
     db = await get_db()
     now = now_utc()
     from app.services.click_to_pay import _hash_token
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     raw_token = "expired-token-456"
     token_hash = _hash_token(raw_token)

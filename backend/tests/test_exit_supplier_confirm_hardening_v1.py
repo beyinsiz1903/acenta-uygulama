@@ -100,7 +100,7 @@ async def test_confirm_timeout_enforced_returns_upstream_timeout(test_db: Any, a
 
     resp = await client.post(f"/api/b2b/bookings/{booking_id}/confirm", headers=headers)
     assert resp.status_code == status.HTTP_502_BAD_GATEWAY
-    err = resp.json().get("error", {})
+    err = _unwrap(resp).get("error", {})
     assert err.get("code") == "upstream_timeout"
     details = err.get("details") or {}
     assert details.get("retryable") is True
@@ -112,6 +112,16 @@ async def test_confirm_snapshot_redacted_does_not_store_pii(test_db: Any, async_
     """Confirm should store only redacted confirm_snapshot in booking.supplier.confirm_snapshot."""
 
     from app.services.suppliers.mock_adapter import MockSupplierAdapter
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     client: AsyncClient = async_client
     now = now_utc()

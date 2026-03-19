@@ -6,6 +6,14 @@ from pathlib import Path
 import pytest
 import requests
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 
 def _resolve_base_url() -> str:
@@ -47,7 +55,7 @@ class TestAuthSessionRolloutParity:
     def test_legacy_and_v1_sessions_lists_match(self):
         login_a = _login()
         assert login_a.status_code == 200, login_a.text
-        token_a = login_a.json()["access_token"]
+        token_a = _unwrap(login_a)["access_token"]
 
         login_b = _login(v1=True)
         assert login_b.status_code == 200, login_b.text
@@ -58,7 +66,7 @@ class TestAuthSessionRolloutParity:
         assert legacy_resp.status_code == 200, legacy_resp.text
         assert legacy_resp.headers.get("deprecation") == "true"
         assert v1_resp.status_code == 200, v1_resp.text
-        assert {item["id"] for item in legacy_resp.json()} == {item["id"] for item in v1_resp.json()}
+        assert {item["id"] for item in _unwrap(legacy_resp)} == {item["id"] for item in _unwrap(v1_resp)}
 
     def test_v1_revoke_specific_session_preserves_current_session_behavior(self):
         keeper_login = _login(v1=True)
@@ -66,9 +74,9 @@ class TestAuthSessionRolloutParity:
         assert keeper_login.status_code == 200, keeper_login.text
         assert target_login.status_code == 200, target_login.text
 
-        keeper_token = keeper_login.json()["access_token"]
-        target_token = target_login.json()["access_token"]
-        target_session_id = target_login.json()["session_id"]
+        keeper_token = _unwrap(keeper_login)["access_token"]
+        target_token = _unwrap(target_login)["access_token"]
+        target_session_id = _unwrap(target_login)["session_id"]
 
         revoke_resp = requests.post(
             f"{BASE_URL}/api/v1/auth/sessions/{target_session_id}/revoke",
@@ -91,11 +99,11 @@ class TestAuthSessionRolloutParity:
             timeout=30,
         )
         assert login_resp.status_code == 200, login_resp.text
-        assert login_resp.json().get("auth_transport") == "cookie_compat"
+        assert _unwrap(login_resp).get("auth_transport") == "cookie_compat"
 
         sessions_resp = session.get(f"{BASE_URL}/api/v1/auth/sessions", headers=WEB_HEADERS, timeout=30)
         assert sessions_resp.status_code == 200, sessions_resp.text
-        assert sessions_resp.json(), sessions_resp.text
+        assert _unwrap(sessions_resp), sessions_resp.text
 
         revoke_all_resp = session.post(
             f"{BASE_URL}/api/v1/auth/revoke-all-sessions",

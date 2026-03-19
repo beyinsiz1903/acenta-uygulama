@@ -108,7 +108,7 @@ async def test_marketplace_to_storefront_bridge_flow(test_db: Any, async_client:
 
     resp_create = await client.post("/api/marketplace/listings", json=payload, headers=seller_headers)
     assert resp_create.status_code == status.HTTP_201_CREATED, resp_create.text
-    listing = resp_create.json()
+    listing = _unwrap(resp_create)
     listing_id = listing["id"]
 
     resp_publish = await client.post(f"/api/marketplace/listings/{listing_id}/publish", headers=seller_headers)
@@ -126,7 +126,7 @@ async def test_marketplace_to_storefront_bridge_flow(test_db: Any, async_client:
         f"/api/marketplace/catalog/{listing_id}/create-storefront-session", headers=buyer_headers
     )
     assert resp_bridge.status_code == status.HTTP_200_OK, resp_bridge.text
-    data = resp_bridge.json()
+    data = _unwrap(resp_bridge)
     redirect_url = data.get("redirect_url")
     search_id = data.get("storefront_search_id")
     assert redirect_url
@@ -151,6 +151,16 @@ async def test_marketplace_to_storefront_bridge_flow(test_db: Any, async_client:
 
     # Use redirect_url to verify search_id propagation
     from urllib.parse import urlparse, parse_qs
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     parsed = urlparse(redirect_url)
     qs = parse_qs(parsed.query)

@@ -8,6 +8,16 @@ from httpx import AsyncClient
 
 from app.db import get_db
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 LISTINGS_PATH = "/api/b2b/listings"
 MY_LISTINGS_PATH = "/api/b2b/listings/my"
 AVAILABLE_PATH = "/api/b2b/listings/available"
@@ -42,7 +52,7 @@ async def test_listing_id_prefix_and_no_mongo_id_leak(provider_client: AsyncClie
     },
   )
   assert create_resp.status_code == 200, create_resp.text
-  listing = create_resp.json()
+  listing = _unwrap(create_resp)
 
   # Tekil response
   assert LISTING_ID_RE.match(listing["id"]), listing
@@ -51,7 +61,7 @@ async def test_listing_id_prefix_and_no_mongo_id_leak(provider_client: AsyncClie
   # /listings/my endpoint'i de aynı kontratı korumalı
   my_resp = await provider_client.get(MY_LISTINGS_PATH)
   assert my_resp.status_code == 200, my_resp.text
-  items = my_resp.json()
+  items = _unwrap(my_resp)
   assert any(it["id"] == listing["id"] for it in items)
   for it in items:
     assert LISTING_ID_RE.match(it["id"]), it
@@ -83,7 +93,7 @@ async def test_match_id_prefix_and_no_internal_fields_leak(
     },
   )
   assert create_resp.status_code == 200, create_resp.text
-  listing = create_resp.json()
+  listing = _unwrap(create_resp)
   assert LISTING_ID_RE.match(listing["id"]), listing
 
   # 2) Seller match-request oluşturur
@@ -92,7 +102,7 @@ async def test_match_id_prefix_and_no_internal_fields_leak(
     json={"listing_id": listing["id"], "requested_price": 950.0},
   )
   assert match_resp.status_code == 200, match_resp.text
-  match = match_resp.json()
+  match = _unwrap(match_resp)
 
   assert MATCH_ID_RE.match(match["id"]), match
   assert LISTING_ID_RE.match(match["listing_id"]), match
@@ -124,7 +134,7 @@ async def test_list_endpoints_do_not_leak_internal_fields(
     },
   )
   assert create_resp.status_code == 200, create_resp.text
-  listing = create_resp.json()
+  listing = _unwrap(create_resp)
 
   match_resp = await seller_client.post(
     MATCH_REQUEST_PATH,

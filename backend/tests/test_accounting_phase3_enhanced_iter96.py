@@ -26,6 +26,16 @@ import pytest
 import requests
 import uuid
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -41,7 +51,7 @@ def auth_token():
         json={"email": SUPER_ADMIN_EMAIL, "password": SUPER_ADMIN_PASS},
     )
     assert resp.status_code == 200, f"Login failed: {resp.text}"
-    data = resp.json()
+    data = _unwrap(resp)
     # Use access_token (not token)
     token = data.get("access_token")
     assert token, f"No access_token in response: {data.keys()}"
@@ -69,7 +79,7 @@ class TestEnhancedDashboard:
         resp = api_client.get(f"{BASE_URL}/api/accounting/dashboard")
         assert resp.status_code == 200, f"Dashboard failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "customer_stats" in data, f"Missing customer_stats: {data.keys()}"
         
         cs = data["customer_stats"]
@@ -83,7 +93,7 @@ class TestEnhancedDashboard:
         resp = api_client.get(f"{BASE_URL}/api/accounting/dashboard")
         assert resp.status_code == 200, f"Dashboard failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "active_rules" in data, f"Missing active_rules: {data.keys()}"
         assert "total_rules" in data, f"Missing total_rules: {data.keys()}"
         print(f"PASS: Dashboard has rules - active={data['active_rules']}, total={data['total_rules']}")
@@ -93,7 +103,7 @@ class TestEnhancedDashboard:
         resp = api_client.get(f"{BASE_URL}/api/accounting/dashboard")
         assert resp.status_code == 200, f"Dashboard failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         # New queue-based stats
         expected_fields = ["synced", "failed", "pending", "retrying", "retry_queue"]
         for field in expected_fields:
@@ -124,7 +134,7 @@ class TestCustomerCreate:
         resp = api_client.post(f"{BASE_URL}/api/accounting/customers/create", json=payload)
         assert resp.status_code == 200, f"Create customer failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "customer_id" in data, f"No customer_id: {data}"
         assert data.get("vkn") == unique_vkn
         assert data.get("name") == payload["customer_data"]["name"]
@@ -178,7 +188,7 @@ class TestCustomerMatch:
         resp = api_client.post(f"{BASE_URL}/api/accounting/customers/match", json=match_payload)
         assert resp.status_code == 200, f"Match failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("matched") == True, f"Expected matched=True: {data}"
         assert data.get("customer", {}).get("vkn") == unique_vkn
         print(f"PASS: Matched customer by VKN {unique_vkn}")
@@ -192,7 +202,7 @@ class TestCustomerMatch:
         resp = api_client.post(f"{BASE_URL}/api/accounting/customers/match", json=match_payload)
         assert resp.status_code == 200, f"Match failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("matched") == False
         print("PASS: No match returns matched=False")
 
@@ -205,7 +215,7 @@ class TestCustomerList:
         resp = api_client.get(f"{BASE_URL}/api/accounting/customers")
         assert resp.status_code == 200, f"List failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "items" in data
         assert "total" in data
         print(f"PASS: Listed {data['total']} customers")
@@ -223,7 +233,7 @@ class TestCustomerList:
         resp = api_client.get(f"{BASE_URL}/api/accounting/customers", params={"search": unique_name})
         assert resp.status_code == 200, f"Search failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         found = any(c.get("name") == unique_name for c in data.get("items", []))
         assert found, f"Customer {unique_name} not found in search results"
         print(f"PASS: Search found customer {unique_name}")
@@ -241,7 +251,7 @@ class TestCustomerUpdate:
             "customer_data": {"name": "TEST_Update_Before", "tax_id": unique_vkn}
         })
         assert create_resp.status_code == 200
-        customer_id = create_resp.json()["customer_id"]
+        customer_id = _unwrap(create_resp)["customer_id"]
         
         # Update
         update_payload = {
@@ -253,7 +263,7 @@ class TestCustomerUpdate:
         resp = api_client.put(f"{BASE_URL}/api/accounting/customers/{customer_id}", json=update_payload)
         assert resp.status_code == 200, f"Update failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("name") == "TEST_Update_After"
         assert data.get("email") == "updated@example.com"
         assert data.get("match_method") == "manual"  # Manual override sets match_method
@@ -287,7 +297,7 @@ class TestCustomerGetOrCreate:
         })
         assert resp.status_code == 200, f"Get-or-create failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("action") == "matched"
         assert data.get("vkn") == unique_vkn
         print(f"PASS: Get-or-create matched existing customer")
@@ -305,7 +315,7 @@ class TestCustomerGetOrCreate:
         })
         assert resp.status_code == 200, f"Get-or-create failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("action") == "created"
         assert "customer_id" in data
         print(f"PASS: Get-or-create created new customer {data['customer_id']}")
@@ -328,7 +338,7 @@ class TestAutoSyncRulesCreate:
         resp = api_client.post(f"{BASE_URL}/api/accounting/rules", json=payload)
         assert resp.status_code == 200, f"Create rule failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "rule_id" in data
         assert data.get("trigger_event") == "invoice_issued"
         assert data.get("enabled") == True
@@ -354,7 +364,7 @@ class TestAutoSyncRulesList:
         resp = api_client.get(f"{BASE_URL}/api/accounting/rules")
         assert resp.status_code == 200, f"List rules failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "rules" in data
         print(f"PASS: Listed {len(data['rules'])} rules")
 
@@ -371,7 +381,7 @@ class TestAutoSyncRulesUpdate:
             "enabled": True,
         })
         assert create_resp.status_code == 200
-        rule_id = create_resp.json()["rule_id"]
+        rule_id = _unwrap(create_resp)["rule_id"]
         
         # Disable it
         resp = api_client.put(f"{BASE_URL}/api/accounting/rules/{rule_id}", json={
@@ -379,7 +389,7 @@ class TestAutoSyncRulesUpdate:
         })
         assert resp.status_code == 200, f"Update rule failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("enabled") == False
         print(f"PASS: Toggled rule {rule_id} to enabled=False")
 
@@ -403,13 +413,13 @@ class TestAutoSyncRulesDelete:
             "trigger_event": "manual_trigger",
         })
         assert create_resp.status_code == 200
-        rule_id = create_resp.json()["rule_id"]
+        rule_id = _unwrap(create_resp)["rule_id"]
         
         # Delete it
         resp = api_client.delete(f"{BASE_URL}/api/accounting/rules/{rule_id}")
         assert resp.status_code == 200, f"Delete rule failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("deleted") == True
         print(f"PASS: Deleted rule {rule_id}")
 
@@ -430,7 +440,7 @@ class TestSyncJobs:
         resp = api_client.get(f"{BASE_URL}/api/accounting/sync-jobs")
         assert resp.status_code == 200, f"List sync jobs failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "items" in data
         assert "total" in data
         print(f"PASS: Listed {data['total']} sync jobs")
@@ -441,7 +451,7 @@ class TestSyncJobs:
             resp = api_client.get(f"{BASE_URL}/api/accounting/sync-jobs", params={"status": status})
             assert resp.status_code == 200, f"Filter by {status} failed: {resp.text}"
             
-            data = resp.json()
+            data = _unwrap(resp)
             # Verify all items have the filtered status (if any)
             for item in data.get("items", []):
                 assert item.get("status") == status, f"Item has wrong status: {item.get('status')}"
@@ -468,7 +478,7 @@ class TestInvoiceSyncViaQueue:
         # List issued invoices
         resp = api_client.get(f"{BASE_URL}/api/invoices", params={"status": "issued", "limit": 1})
         if resp.status_code == 200:
-            data = resp.json()
+            data = _unwrap(resp)
             if data.get("items") and len(data["items"]) > 0:
                 return data["items"][0]["invoice_id"]
         
@@ -483,7 +493,7 @@ class TestInvoiceSyncViaQueue:
             "currency": "TRY",
         })
         if create_resp.status_code == 200:
-            invoice_id = create_resp.json().get("invoice_id")
+            invoice_id = _unwrap(create_resp).get("invoice_id")
             issue_resp = api_client.post(f"{BASE_URL}/api/invoices/{invoice_id}/issue")
             if issue_resp.status_code == 200:
                 return invoice_id
@@ -498,7 +508,7 @@ class TestInvoiceSyncViaQueue:
         )
         assert resp.status_code == 200, f"Sync failed: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         # Queue-based should have job_id
         if data.get("error") == "duplicate":
             print(f"PASS: Sync duplicate returns existing job info")

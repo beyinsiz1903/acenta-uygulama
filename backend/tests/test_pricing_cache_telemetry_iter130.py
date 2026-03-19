@@ -22,6 +22,16 @@ import requests
 import os
 import time
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 
@@ -36,7 +46,7 @@ class TestCacheTelemetryAPI:
             "password": "agent123"
         })
         assert login_resp.status_code == 200, f"Login failed: {login_resp.text}"
-        self.token = login_resp.json().get("access_token")
+        self.token = _unwrap(login_resp).get("access_token")
         assert self.token, "No access_token in login response"
         self.headers = {"Authorization": f"Bearer {self.token}"}
     
@@ -49,7 +59,7 @@ class TestCacheTelemetryAPI:
     def test_telemetry_includes_total_requests(self):
         """Telemetry response includes total_requests field"""
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/telemetry", headers=self.headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "total_requests" in data, f"total_requests missing from telemetry: {data.keys()}"
         assert isinstance(data["total_requests"], int), f"total_requests should be int, got {type(data['total_requests'])}"
         print(f"PASS: telemetry.total_requests = {data['total_requests']}")
@@ -57,7 +67,7 @@ class TestCacheTelemetryAPI:
     def test_telemetry_includes_avg_hit_latency_ms(self):
         """Telemetry response includes avg_hit_latency_ms field"""
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/telemetry", headers=self.headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "avg_hit_latency_ms" in data, f"avg_hit_latency_ms missing: {data.keys()}"
         assert isinstance(data["avg_hit_latency_ms"], (int, float)), f"avg_hit_latency_ms should be numeric"
         print(f"PASS: telemetry.avg_hit_latency_ms = {data['avg_hit_latency_ms']}")
@@ -65,7 +75,7 @@ class TestCacheTelemetryAPI:
     def test_telemetry_includes_avg_miss_latency_ms(self):
         """Telemetry response includes avg_miss_latency_ms field"""
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/telemetry", headers=self.headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "avg_miss_latency_ms" in data, f"avg_miss_latency_ms missing: {data.keys()}"
         assert isinstance(data["avg_miss_latency_ms"], (int, float)), f"avg_miss_latency_ms should be numeric"
         print(f"PASS: telemetry.avg_miss_latency_ms = {data['avg_miss_latency_ms']}")
@@ -73,7 +83,7 @@ class TestCacheTelemetryAPI:
     def test_telemetry_includes_uptime_seconds(self):
         """Telemetry response includes uptime_seconds field"""
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/telemetry", headers=self.headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "uptime_seconds" in data, f"uptime_seconds missing: {data.keys()}"
         assert isinstance(data["uptime_seconds"], (int, float)), f"uptime_seconds should be numeric"
         assert data["uptime_seconds"] >= 0, "uptime_seconds should be >= 0"
@@ -82,7 +92,7 @@ class TestCacheTelemetryAPI:
     def test_telemetry_includes_supplier_breakdown(self):
         """Telemetry response includes supplier_breakdown dict"""
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/telemetry", headers=self.headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "supplier_breakdown" in data, f"supplier_breakdown missing: {data.keys()}"
         assert isinstance(data["supplier_breakdown"], dict), f"supplier_breakdown should be dict"
         print(f"PASS: telemetry.supplier_breakdown is dict with {len(data['supplier_breakdown'])} suppliers")
@@ -90,7 +100,7 @@ class TestCacheTelemetryAPI:
     def test_telemetry_includes_recent_invalidations(self):
         """Telemetry response includes recent_invalidations list"""
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/telemetry", headers=self.headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "recent_invalidations" in data, f"recent_invalidations missing: {data.keys()}"
         assert isinstance(data["recent_invalidations"], list), f"recent_invalidations should be list"
         print(f"PASS: telemetry.recent_invalidations is list with {len(data['recent_invalidations'])} entries")
@@ -100,8 +110,8 @@ class TestCacheTelemetryAPI:
         stats_resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/stats", headers=self.headers)
         telemetry_resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/telemetry", headers=self.headers)
         
-        stats = stats_resp.json()
-        telemetry = telemetry_resp.json()
+        stats = _unwrap(stats_resp)
+        telemetry = _unwrap(telemetry_resp)
         
         # All basic stats fields should be in telemetry too
         for key in ["hits", "misses", "hit_rate_pct", "ttl_seconds", "max_size"]:
@@ -120,7 +130,7 @@ class TestSupplierBreakdownMetrics:
             "password": "agent123"
         })
         assert login_resp.status_code == 200
-        self.token = login_resp.json().get("access_token")
+        self.token = _unwrap(login_resp).get("access_token")
         self.headers = {"Authorization": f"Bearer {self.token}"}
         
         # Clear cache for clean state
@@ -140,7 +150,7 @@ class TestSupplierBreakdownMetrics:
         
         # Check telemetry for ratehawk in supplier_breakdown
         telemetry_resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/telemetry", headers=self.headers)
-        data = telemetry_resp.json()
+        data = _unwrap(telemetry_resp)
         
         supplier_breakdown = data.get("supplier_breakdown", {})
         assert "ratehawk" in supplier_breakdown, f"ratehawk not in supplier_breakdown after simulate: {supplier_breakdown.keys()}"
@@ -158,7 +168,7 @@ class TestSupplierBreakdownMetrics:
         })
         
         telemetry_resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/telemetry", headers=self.headers)
-        data = telemetry_resp.json()
+        data = _unwrap(telemetry_resp)
         
         if "paximum" in data.get("supplier_breakdown", {}):
             supplier_data = data["supplier_breakdown"]["paximum"]
@@ -207,7 +217,7 @@ class TestCacheInvalidation:
             "password": "agent123"
         })
         assert login_resp.status_code == 200
-        self.token = login_resp.json().get("access_token")
+        self.token = _unwrap(login_resp).get("access_token")
         self.headers = {"Authorization": f"Bearer {self.token}"}
     
     def test_invalidate_supplier_endpoint_returns_200(self):
@@ -219,7 +229,7 @@ class TestCacheInvalidation:
     def test_invalidate_returns_ok_and_cleared_count(self):
         """Invalidate response includes ok, supplier, cleared fields"""
         resp = requests.post(f"{BASE_URL}/api/pricing-engine/cache/invalidate/ratehawk", headers=self.headers)
-        data = resp.json()
+        data = _unwrap(resp)
         
         assert data.get("ok") == True, f"Expected ok=True: {data}"
         assert "supplier" in data, f"supplier field missing: {data.keys()}"
@@ -253,7 +263,7 @@ class TestCacheInvalidation:
         
         # Invalidate only ratehawk
         inv_resp = requests.post(f"{BASE_URL}/api/pricing-engine/cache/invalidate/ratehawk", headers=self.headers)
-        cleared = inv_resp.json().get("cleared", 0)
+        cleared = _unwrap(inv_resp).get("cleared", 0)
         
         # Get telemetry after invalidation
         telemetry_after = requests.get(f"{BASE_URL}/api/pricing-engine/cache/telemetry", headers=self.headers).json()
@@ -283,7 +293,7 @@ class TestCacheInvalidation:
         
         # Invalidate that supplier (should have at least 1 entry now)
         inv_resp = requests.post(f"{BASE_URL}/api/pricing-engine/cache/invalidate/wtatil", headers=self.headers)
-        cleared = inv_resp.json().get("cleared", 0)
+        cleared = _unwrap(inv_resp).get("cleared", 0)
         
         # Only check log if entries were actually cleared
         if cleared > 0:
@@ -308,7 +318,7 @@ class TestCacheClearLogsInvalidation:
             "password": "agent123"
         })
         assert login_resp.status_code == 200
-        self.token = login_resp.json().get("access_token")
+        self.token = _unwrap(login_resp).get("access_token")
         self.headers = {"Authorization": f"Bearer {self.token}"}
     
     def test_cache_clear_logs_invalidation(self):
@@ -342,7 +352,7 @@ class TestBackwardCompatibility:
             "password": "agent123"
         })
         assert login_resp.status_code == 200
-        self.token = login_resp.json().get("access_token")
+        self.token = _unwrap(login_resp).get("access_token")
         self.headers = {"Authorization": f"Bearer {self.token}"}
     
     def test_cache_stats_still_works(self):
@@ -350,7 +360,7 @@ class TestBackwardCompatibility:
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/stats", headers=self.headers)
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         required_fields = ["total_entries", "active_entries", "hits", "misses", "hit_rate_pct", "ttl_seconds", "max_size"]
         for field in required_fields:
             assert field in data, f"{field} missing from cache/stats"
@@ -366,7 +376,7 @@ class TestBackwardCompatibility:
         })
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         required_fields = ["pricing_trace_id", "cache_hit", "cache_key", "latency_ms", "sell_price", "margin", "margin_pct"]
         for field in required_fields:
             assert field in data, f"{field} missing from simulate response"
@@ -384,7 +394,7 @@ class TestInvalidationLogFormat:
             "password": "agent123"
         })
         assert login_resp.status_code == 200
-        self.token = login_resp.json().get("access_token")
+        self.token = _unwrap(login_resp).get("access_token")
         self.headers = {"Authorization": f"Bearer {self.token}"}
     
     def test_invalidation_log_entry_format(self):

@@ -8,6 +8,16 @@ from app.db import get_db
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.anyio
 async def test_public_booking_summary_happy_path(async_client):
     db = await get_db()
@@ -40,7 +50,7 @@ async def test_public_booking_summary_happy_path(async_client):
 
     resp = await async_client.get("/api/public/bookings/by-code/PB-TEST123", params={"org": org})
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["ok"] is True
     b = data["booking"]
 
@@ -65,6 +75,6 @@ async def test_public_booking_summary_not_found(async_client):
 
     resp = await async_client.get("/api/public/bookings/by-code/NOPE", params={"org": "org_x"})
     assert resp.status_code == 404
-    data = resp.json()
+    data = _unwrap(resp)
     # Custom exception handler wraps detail in {"error": {"message": ...}}
     assert data.get("detail") == "NOT_FOUND" or data.get("error", {}).get("message") == "NOT_FOUND"

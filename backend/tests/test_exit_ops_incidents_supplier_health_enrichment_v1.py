@@ -10,6 +10,16 @@ from app.auth import _jwt_secret
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 def _make_admin_headers(org_id: str, email: str) -> dict[str, str]:
     token = jwt.encode({"sub": email, "org": org_id, "roles": ["agency_admin"]}, _jwt_secret(), algorithm="HS256")
     return {"Authorization": f"Bearer {token}"}
@@ -97,7 +107,7 @@ async def test_ops_incidents_list_no_enrichment_by_default(test_db: Any, async_c
     headers = _make_admin_headers(org_id, email)
     resp = await client.get("/api/admin/ops/incidents", headers=headers)
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     items = body.get("items") or []
     assert len(items) == 1
     item = items[0]
@@ -179,7 +189,7 @@ async def test_ops_incidents_list_enrichment_attaches_badge(test_db: Any, async_
     headers = _make_admin_headers(org_id, email)
     resp = await client.get("/api/admin/ops/incidents?include_supplier_health=true", headers=headers)
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     items = body.get("items") or []
     assert len(items) == 1
     item = items[0]
@@ -266,7 +276,7 @@ async def test_ops_incidents_detail_enrichment_default_true(test_db: Any, async_
     headers = _make_admin_headers(org_id, email)
     resp = await client.get("/api/admin/ops/incidents/inc_sup_3", headers=headers)
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     badge = body.get("supplier_health")
     assert badge is not None
     assert badge["supplier_code"] == "mock"
@@ -320,7 +330,7 @@ async def test_ops_incidents_enrichment_health_not_found_fail_open(test_db: Any,
     headers = _make_admin_headers(org_id, email)
     resp = await client.get("/api/admin/ops/incidents?include_supplier_health=true", headers=headers)
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     items = body.get("items") or []
     assert len(items) == 1
     badge = items[0].get("supplier_health")
@@ -398,7 +408,7 @@ async def test_ops_incidents_enrichment_supplier_code_resolution_deterministic(t
     headers = _make_admin_headers(org_id, email)
     resp = await client.get("/api/admin/ops/incidents?include_supplier_health=true", headers=headers)
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     items = body.get("items") or []
     assert len(items) == 1
     badge = items[0].get("supplier_health")

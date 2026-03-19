@@ -18,6 +18,16 @@ import httpx
 from tests.preview_auth_helper import get_preview_base_url_or_skip
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 # Test configuration
 BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 ADMIN_EMAIL = "admin@acenta.test"
@@ -54,7 +64,7 @@ class TestInboxGuardrails:
         response = await self.client.post("/api/auth/login", json=login_data)
         assert response.status_code == 200, f"Login failed: {response.text}"
 
-        auth_data = response.json()
+        auth_data = _unwrap(response)
         self.auth_token = auth_data.get("access_token")
         self.admin_user_id = auth_data.get("user", {}).get("id")
 
@@ -70,7 +80,7 @@ class TestInboxGuardrails:
         response = await self.client.get("/api/inbox/threads")
         assert response.status_code == 200, f"Failed to get threads: {response.text}"
 
-        threads_data = response.json()
+        threads_data = _unwrap(response)
         threads = threads_data.get("items", [])
 
         if threads:
@@ -88,7 +98,7 @@ class TestInboxGuardrails:
             response = await self.client.post("/api/inbox/threads", json=thread_data)
             assert response.status_code in [200, 201], f"Failed to create thread: {response.text}"
 
-            created_thread = response.json()
+            created_thread = _unwrap(response)
             self.test_thread_id = created_thread["id"]
 
         assert self.test_thread_id, "No test thread available"
@@ -113,7 +123,7 @@ class TestInboxGuardrails:
 
             assert response.status_code == 200, f"Status update to '{status}' failed: {response.text}"
 
-            response_data = response.json()
+            response_data = _unwrap(response)
             assert "status" in response_data, f"Response missing status field: {response_data}"
             assert response_data["status"] == status, f"Status not updated correctly: expected {status}, got {response_data['status']}"
 
@@ -124,7 +134,7 @@ class TestInboxGuardrails:
 
         assert response.status_code == 422, f"Invalid status should return 422, got {response.status_code}: {response.text}"
 
-        error_data = response.json()
+        error_data = _unwrap(response)
         # For invalid enum values, FastAPI returns Pydantic validation errors
         # Check if it's a Pydantic validation error for the status field
         if "detail" in error_data and isinstance(error_data["detail"], list):
@@ -148,7 +158,7 @@ class TestInboxGuardrails:
 
         assert response.status_code == 404, f"Non-existent thread should return 404, got {response.status_code}: {response.text}"
 
-        error_data = response.json()
+        error_data = _unwrap(response)
         # Check if error is nested under "error" key
         if "error" in error_data:
             error_info = error_data["error"]
@@ -188,7 +198,7 @@ class TestInboxGuardrails:
                 successful_requests += 1
             elif response.status_code == 429:
                 print(f"Rate limited at message {i + 1}")
-                error_data = response.json()
+                error_data = _unwrap(response)
                 # Check if error is nested under "error" key
                 if "error" in error_data:
                     error_info = error_data["error"]
@@ -237,7 +247,7 @@ class TestInboxGuardrails:
         )
 
         assert response1.status_code == 200, f"First message failed: {response1.text}"
-        message1_data = response1.json()
+        message1_data = _unwrap(response1)
         message1_id = message1_data.get("id")
         assert message1_id, f"First message missing ID: {message1_data}"
 
@@ -248,7 +258,7 @@ class TestInboxGuardrails:
         )
 
         assert response2.status_code == 200, f"Second message failed: {response2.text}"
-        message2_data = response2.json()
+        message2_data = _unwrap(response2)
         message2_id = message2_data.get("id")
         assert message2_id, f"Second message missing ID: {message2_data}"
 
@@ -259,7 +269,7 @@ class TestInboxGuardrails:
         thread_response = await self.client.get("/api/inbox/threads")
         assert thread_response.status_code == 200
 
-        threads = thread_response.json().get("items", [])
+        threads = _unwrap(thread_response).get("items", [])
         test_thread = next((t for t in threads if t["id"] == self.test_thread_id), None)
         assert test_thread is not None, "Test thread not found in threads list"
 
@@ -267,7 +277,7 @@ class TestInboxGuardrails:
         messages_response = await self.client.get(f"/api/inbox/threads/{self.test_thread_id}/messages")
         assert messages_response.status_code == 200
 
-        messages_data = messages_response.json()
+        messages_data = _unwrap(messages_response)
         duplicate_messages = [m for m in messages_data.get("items", []) if m.get("body") == duplicate_body]
 
         # Should only have 1 message with this body (due to deduplication)
@@ -287,7 +297,7 @@ class TestInboxGuardrails:
         )
 
         assert response3.status_code == 200, f"Third message failed: {response3.text}"
-        message3_data = response3.json()
+        message3_data = _unwrap(response3)
         message3_id = message3_data.get("id")
 
         # This should be a new message with different ID
@@ -313,7 +323,7 @@ class TestInboxGuardrails:
         thread_response = await self.client.get("/api/inbox/threads")
         assert thread_response.status_code == 200
 
-        threads = thread_response.json().get("items", [])
+        threads = _unwrap(thread_response).get("items", [])
         test_thread = next((t for t in threads if t["id"] == self.test_thread_id), None)
         assert test_thread is not None, "Test thread not found"
         assert test_thread["status"] == "done", f"Thread status should be 'done', got: {test_thread['status']}"
@@ -339,7 +349,7 @@ class TestInboxGuardrails:
         thread_response = await self.client.get("/api/inbox/threads")
         assert thread_response.status_code == 200
 
-        threads = thread_response.json().get("items", [])
+        threads = _unwrap(thread_response).get("items", [])
         updated_thread = next((t for t in threads if t["id"] == self.test_thread_id), None)
         assert updated_thread is not None, "Updated thread not found"
 

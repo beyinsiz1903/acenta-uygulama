@@ -8,6 +8,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -29,7 +39,7 @@ def auth_token():
     })
     if resp.status_code != 200:
         pytest.skip(f"Auth failed: {resp.status_code} - {resp.text}")
-    data = resp.json()
+    data = _unwrap(resp)
     token = data.get("token") or data.get("access_token")
     if not token:
         pytest.skip("No token in auth response")
@@ -89,7 +99,7 @@ class TestAllotmentBaseline:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Availability API failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Find the Standart room allotment for test date
         grid = data.get("grid", [])
@@ -130,7 +140,7 @@ class TestQuickReservation:
         resp = requests.post(f"{BASE_URL}/api/agency/reservations/quick", json=payload, headers=auth_headers)
         assert resp.status_code == 200, f"Create failed: {resp.status_code} - {resp.text}"
 
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Verify response fields
         assert "reservation_id" in data, "Missing reservation_id in response"
@@ -168,7 +178,7 @@ class TestQuickReservation:
         resp = requests.get(f"{BASE_URL}/api/agency/reservations?hotel_id={HOTEL_ID}", headers=auth_headers)
         assert resp.status_code == 200, f"List failed: {resp.status_code} - {resp.text}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         items = data.get("items", [])
 
         # Find the created reservation
@@ -212,7 +222,7 @@ class TestAllotmentDecrement:
         )
         assert resp.status_code == 200
 
-        data = resp.json()
+        data = _unwrap(resp)
         grid = data.get("grid", [])
 
         # Check allotment for both dates (check_in and night 2)
@@ -255,7 +265,7 @@ class TestListReservations:
         resp = requests.get(f"{BASE_URL}/api/agency/reservations", headers=auth_headers)
         assert resp.status_code == 200, f"List failed: {resp.status_code}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         assert "items" in data, "Missing 'items' in response"
         assert "total" in data, "Missing 'total' in response"
 
@@ -271,7 +281,7 @@ class TestListReservations:
         resp = requests.get(f"{BASE_URL}/api/agency/reservations?hotel_id={HOTEL_ID}", headers=auth_headers)
         assert resp.status_code == 200
 
-        data = resp.json()
+        data = _unwrap(resp)
         items = data.get("items", [])
 
         # All items should be for the specified hotel
@@ -324,7 +334,7 @@ class TestReservationValidation:
         if resp.status_code != 200:
             pytest.skip("Could not get availability data")
 
-        data = resp.json()
+        data = _unwrap(resp)
         grid = data.get("grid", [])
 
         stop_sale_entries = [g for g in grid if g.get("stop_sale") and g.get("room_type") == ROOM_TYPE]
@@ -374,7 +384,7 @@ class TestCancelReservation:
         )
         assert resp.status_code == 200, f"Cancel failed: {resp.status_code} - {resp.text}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("status") == "cancelled", f"Expected status=cancelled, got {data.get('status')}"
         assert data.get("reservation_id") == pytest.created_reservation_id
 
@@ -411,7 +421,7 @@ class TestAllotmentRestore:
         )
         assert resp.status_code == 200
 
-        data = resp.json()
+        data = _unwrap(resp)
         grid = data.get("grid", [])
 
         standart_entries = [g for g in grid if g.get("room_type") == ROOM_TYPE and g.get("date") == TEST_DATE]
@@ -436,7 +446,7 @@ class TestReservationStatusAfterCancel:
         resp = requests.get(f"{BASE_URL}/api/agency/reservations", headers=auth_headers)
         assert resp.status_code == 200
 
-        data = resp.json()
+        data = _unwrap(resp)
         items = data.get("items", [])
 
         found = None

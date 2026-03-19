@@ -8,6 +8,16 @@ from app.db import get_db
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.asyncio
 async def test_list_cases_default_open(async_client: httpx.AsyncClient, minimal_search_seed):
     """Default listing returns only open cases for org."""
@@ -70,13 +80,13 @@ async def test_list_cases_default_open(async_client: httpx.AsyncClient, minimal_
         json={"email": admin_email, "password": "admin123"},
     )
     assert login_resp.status_code == 200
-    token = login_resp.json()["access_token"]
+    token = _unwrap(login_resp)["access_token"]
 
     resp = await async_client.get(
         "/api/ops-cases/", headers={"Authorization": f"Bearer {token}"}
     )
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     items = data["items"]
 
     # Only the two open cases for this org
@@ -131,14 +141,14 @@ async def test_list_cases_filter_type_and_status(async_client: httpx.AsyncClient
         "/api/auth/login",
         json={"email": admin_email, "password": "admin123"},
     )
-    token = login_resp.json()["access_token"]
+    token = _unwrap(login_resp)["access_token"]
 
     resp = await async_client.get(
         "/api/ops-cases/?status=open&type=cancel",
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     items = data["items"]
 
     assert len(items) == 1
@@ -179,7 +189,7 @@ async def test_get_case_wrong_org_404(async_client: httpx.AsyncClient):
         "/api/auth/login",
         json={"email": admin_email, "password": "admin123"},
     )
-    token = login_resp.json()["access_token"]
+    token = _unwrap(login_resp)["access_token"]
 
     resp = await async_client.get(
         "/api/ops-cases/CASE-ORG-A",
@@ -223,7 +233,7 @@ async def test_close_case_sets_status_and_emits_event(async_client: httpx.AsyncC
         "/api/auth/login",
         json={"email": admin_email, "password": "admin123"},
     )
-    token = login_resp.json()["access_token"]
+    token = _unwrap(login_resp)["access_token"]
 
     resp = await async_client.post(
         "/api/ops-cases/CASE-CLOSE-1/close",
@@ -231,7 +241,7 @@ async def test_close_case_sets_status_and_emits_event(async_client: httpx.AsyncC
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["ok"] is True
     assert data["status"] == "closed"
 
@@ -283,7 +293,7 @@ async def test_close_case_idempotent(async_client: httpx.AsyncClient):
         "/api/auth/login",
         json={"email": admin_email, "password": "admin123"},
     )
-    token = login_resp.json()["access_token"]
+    token = _unwrap(login_resp)["access_token"]
 
     # First close
     resp1 = await async_client.post(

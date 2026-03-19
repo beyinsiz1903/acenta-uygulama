@@ -9,6 +9,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
     BASE_URL = ""
@@ -30,7 +40,7 @@ def auth_session():
     assert login_response.status_code == 200, f"Login failed: {login_response.text}"
 
     # Extract token and set authorization header
-    data = login_response.json()
+    data = _unwrap(login_response)
     token = data.get("access_token") or data.get("token")
     if token:
         session.headers.update({"Authorization": f"Bearer {token}"})
@@ -47,7 +57,7 @@ def test_hardening_status(auth_session):
     response = auth_session.get(f"{BASE_URL}/api/hardening/status")
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
     assert data["platform_hardening_phase"] == "active"
     assert "maturity_score" in data
     assert "maturity_label" in data
@@ -67,7 +77,7 @@ def test_traffic_status(auth_session):
     response = auth_session.get(f"{BASE_URL}/api/hardening/traffic/status")
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
     assert "traffic_gate" in data
     assert "sandbox_environments" in data
 
@@ -84,7 +94,7 @@ def test_set_traffic_mode(auth_session):
     response = auth_session.post(f"{BASE_URL}/api/hardening/traffic/mode", json=payload)
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
     assert data["status"] == "updated"
     assert data["supplier"] == "paximum"
 
@@ -96,7 +106,7 @@ def test_sandbox_test(auth_session):
     response = auth_session.post(f"{BASE_URL}/api/hardening/traffic/sandbox-test?supplier=paximum")
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
     assert data["supplier"] == "paximum"
     assert data["tests_run"] > 0
     assert all(r["status"] == "simulated_pass" for r in data["results"])
@@ -113,7 +123,7 @@ def test_workers_status(auth_session):
     response = auth_session.get(f"{BASE_URL}/api/hardening/workers/status")
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
     assert "redis_status" in data
     assert "worker_pools" in data
     assert "dlq_config" in data
@@ -134,7 +144,7 @@ def test_observability_status(auth_session):
     response = auth_session.get(f"{BASE_URL}/api/hardening/observability/status")
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
     assert "prometheus" in data
     assert "opentelemetry" in data
     assert "grafana_dashboards" in data
@@ -151,7 +161,7 @@ def test_grafana_dashboards(auth_session):
     response = auth_session.get(f"{BASE_URL}/api/hardening/observability/dashboards")
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
     assert "dashboards" in data
     assert "alert_rules" in data
 
@@ -170,7 +180,7 @@ def test_performance_assessment(auth_session):
     response = auth_session.get(f"{BASE_URL}/api/hardening/performance/assessment")
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
     assert "current_metrics" in data
     assert "sla_compliance" in data
     assert "bottleneck_analysis" in data
@@ -183,7 +193,7 @@ def test_performance_profiles(auth_session):
     response = auth_session.get(f"{BASE_URL}/api/hardening/performance/profiles")
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
     assert "profiles" in data
     assert "scenarios" in data
     assert "sla_targets" in data
@@ -203,7 +213,7 @@ def test_tenant_isolation_audit(auth_session):
     response = auth_session.get(f"{BASE_URL}/api/hardening/tenant-safety/audit")
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
     assert "total_collections" in data
     assert "passed" in data
     assert "failed" in data
@@ -222,7 +232,7 @@ def test_secrets_status(auth_session):
     response = auth_session.get(f"{BASE_URL}/api/hardening/secrets/status")
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
     assert "inventory" in data
     assert "summary" in data
     assert "migration_phases" in data
@@ -242,7 +252,7 @@ def test_incident_playbooks(auth_session):
     response = auth_session.get(f"{BASE_URL}/api/hardening/incidents/playbooks")
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
     assert "playbooks" in data
     assert "total" in data
 
@@ -257,7 +267,7 @@ def test_simulate_incident(auth_session):
     response = auth_session.post(f"{BASE_URL}/api/hardening/incidents/simulate?incident_type=supplier_outage")
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
     assert data["incident_type"] == "supplier_outage"
     assert data["total_steps"] > 0
 
@@ -273,7 +283,7 @@ def test_scaling_status(auth_session):
     response = auth_session.get(f"{BASE_URL}/api/hardening/scaling/status")
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
     assert "scaling_configs" in data
     assert "capacity_thresholds" in data
     assert "recommendations" in data
@@ -293,7 +303,7 @@ def test_dr_plan(auth_session):
     response = auth_session.get(f"{BASE_URL}/api/hardening/dr/plan")
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
     assert "rto_rpo_targets" in data
     assert "scenarios" in data
     assert "drill_schedule" in data
@@ -314,7 +324,7 @@ def test_hardening_checklist(auth_session):
     response = auth_session.get(f"{BASE_URL}/api/hardening/checklist")
     assert response.status_code == 200
 
-    data = response.json()
+    data = _unwrap(response)
     assert "tasks" in data
     assert "maturity" in data
     assert len(data["tasks"]) == 50

@@ -7,6 +7,16 @@ import pytest
 from app.auth import hash_password
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.anyio
 async def test_login_requires_tenant_context_when_same_email_exists_in_multiple_tenants(async_client, test_db):
     now = datetime.now(timezone.utc)
@@ -49,7 +59,7 @@ async def test_login_requires_tenant_context_when_same_email_exists_in_multiple_
         json={"email": shared_email, "password": "Password123!", "tenant_id": "tenant_login_a"},
     )
     assert scoped.status_code == 200, scoped.text
-    body = scoped.json()
+    body = _unwrap(scoped)
     assert body["tenant_id"] == "tenant_login_a"
     assert body["user"]["organization_id"] == "org_login_a"
 

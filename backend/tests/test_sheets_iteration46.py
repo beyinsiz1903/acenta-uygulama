@@ -12,6 +12,16 @@ import os
 import pytest
 from tests.preview_auth_helper import PreviewAuthSession, get_preview_base_url_or_skip
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 ADMIN_EMAIL = "admin@acenta.test"
@@ -49,7 +59,7 @@ class TestAdminSheetsTemplates:
     def test_templates_returns_200(self, admin_client):
         response = admin_client.get(f"{BASE_URL}/api/admin/sheets/templates")
         assert response.status_code == 200, response.text
-        data = response.json()
+        data = _unwrap(response)
         assert "downloadable_templates" in data
         assert "inventory_sync" in data
         assert "reservation_writeback" in data
@@ -58,7 +68,7 @@ class TestAdminSheetsTemplates:
 
     def test_templates_has_required_fields_in_inventory(self, admin_client):
         response = admin_client.get(f"{BASE_URL}/api/admin/sheets/templates")
-        data = response.json()
+        data = _unwrap(response)
         inventory = data.get("inventory_sync", {})
         required = inventory.get("required_fields", [])
         field_names = [f["field"] for f in required]
@@ -70,7 +80,7 @@ class TestAdminSheetsTemplates:
 
     def test_templates_has_writeback_headers(self, admin_client):
         response = admin_client.get(f"{BASE_URL}/api/admin/sheets/templates")
-        data = response.json()
+        data = _unwrap(response)
         writeback = data.get("reservation_writeback", {})
         headers = writeback.get("headers", [])
         assert "Kayit Tipi" in headers, "Missing Kayit Tipi header"
@@ -80,7 +90,7 @@ class TestAdminSheetsTemplates:
 
     def test_templates_checklist_mentions_incoming_reservation(self, admin_client):
         response = admin_client.get(f"{BASE_URL}/api/admin/sheets/templates")
-        data = response.json()
+        data = _unwrap(response)
         checklist = data.get("checklist", [])
         # Checklist should mention incoming_reservation / reservation import
         checklist_text = " ".join(checklist).lower()
@@ -95,13 +105,13 @@ class TestAdminSheetsConfig:
     def test_config_returns_200(self, admin_client):
         response = admin_client.get(f"{BASE_URL}/api/admin/sheets/config")
         assert response.status_code == 200, response.text
-        data = response.json()
+        data = _unwrap(response)
         assert "configured" in data
         print(f"✅ GET /api/admin/sheets/config returns 200, configured={data.get('configured')}")
 
     def test_config_graceful_when_not_configured(self, admin_client):
         response = admin_client.get(f"{BASE_URL}/api/admin/sheets/config")
-        data = response.json()
+        data = _unwrap(response)
         if not data.get("configured"):
             # Should have helpful fields for setup
             assert "required_service_account_fields" in data or "service_account_email" in data or True
@@ -117,13 +127,13 @@ class TestAdminSheetsConnections:
     def test_connections_returns_200(self, admin_client):
         response = admin_client.get(f"{BASE_URL}/api/admin/sheets/connections")
         assert response.status_code == 200, response.text
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list), f"Expected list, got {type(data)}"
         print(f"✅ GET /api/admin/sheets/connections returns list with {len(data)} connections")
 
     def test_connections_have_expected_fields(self, admin_client):
         response = admin_client.get(f"{BASE_URL}/api/admin/sheets/connections")
-        data = response.json()
+        data = _unwrap(response)
         if data:
             conn = data[0]
             expected_fields = ["hotel_id", "sheet_id", "sync_enabled"]
@@ -144,7 +154,7 @@ class TestAgencyHotels:
     def test_agency_hotels_returns_200(self, agency_client):
         response = agency_client.get(f"{BASE_URL}/api/agency/hotels")
         assert response.status_code == 200, response.text
-        data = response.json()
+        data = _unwrap(response)
         items = data.get("items", data) if isinstance(data, dict) else data
         assert isinstance(items, list), f"Expected list, got {type(items)}"
         print(f"✅ GET /api/agency/hotels returns list with {len(items)} hotels")
@@ -152,7 +162,7 @@ class TestAgencyHotels:
     def test_agency_hotels_have_sheet_fields(self, agency_client):
         """Test that hotels include the new sheet_managed_inventory fields"""
         response = agency_client.get(f"{BASE_URL}/api/agency/hotels")
-        data = response.json()
+        data = _unwrap(response)
         items = data.get("items", data) if isinstance(data, dict) else data
         if items:
             hotel = items[0]
@@ -174,7 +184,7 @@ class TestAgencyHotels:
     def test_agency_hotels_graceful_when_not_synced(self, agency_client):
         """Test graceful degradation when no sheet sync has occurred"""
         response = agency_client.get(f"{BASE_URL}/api/agency/hotels")
-        data = response.json()
+        data = _unwrap(response)
         items = data.get("items", data) if isinstance(data, dict) else data
         if items:
             hotel = items[0]
@@ -202,7 +212,7 @@ class TestGracefulDegradation:
             },
         )
         assert response.status_code == 200, response.text
-        data = response.json()
+        data = _unwrap(response)
         assert "configured" in data
         if not data.get("configured"):
             # Should provide helpful info
@@ -226,7 +236,7 @@ class TestGracefulDegradation:
         # Should return 200 even when not configured (with status=not_configured in response)
         assert response.status_code in [200, 400, 404], f"Unexpected status: {response.status_code}"
         if response.status_code == 200:
-            data = response.json()
+            data = _unwrap(response)
             status = data.get("status", "")
             # not_configured is a valid graceful status
             print(f"✅ Sync endpoint returns gracefully with status={status}")

@@ -7,6 +7,16 @@ import pytest
 from app.db import get_db
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.anyio
 async def test_pricing_quote_endpoint_with_simple_rule(async_client, admin_token):
     """End-to-end test for POST /api/pricing/quote using existing simple rules.
@@ -58,7 +68,7 @@ async def test_pricing_quote_endpoint_with_simple_rule(async_client, admin_token
     resp_quote = await client.post("/api/pricing/quote", json=quote_payload, headers=headers)
     assert resp_quote.status_code == 200, resp_quote.text
 
-    data = resp_quote.json()
+    data = _unwrap(resp_quote)
     assert data["currency"] == "TRY"
     assert data["base_price"] == 1000.0
     # Expect 10% markup on 1000 -> 1100

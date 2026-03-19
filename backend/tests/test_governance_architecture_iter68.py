@@ -22,6 +22,16 @@ import pytest
 import requests
 import uuid
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 
@@ -33,7 +43,7 @@ def auth_token():
         json={"email": "agent@acenta.test", "password": "agent123"},
     )
     if response.status_code == 200:
-        data = response.json()
+        data = _unwrap(response)
         # Token key is 'access_token' per main agent note
         return data.get("access_token") or data.get("token")
     pytest.fail(f"Authentication failed: {response.status_code} - {response.text}")
@@ -89,7 +99,7 @@ class TestPart1RBACSystem:
         """POST /api/governance/rbac/seed - Seeds 6 roles and 46 permissions"""
         response = requests.post(f"{BASE_URL}/api/governance/rbac/seed", headers=headers)
         assert response.status_code == 200, f"Seed RBAC failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "roles_seeded" in data
         assert len(data["roles_seeded"]) == 6, f"Expected 6 roles, got {len(data['roles_seeded'])}"
         expected_roles = {"super_admin", "ops_admin", "finance_admin", "agency_admin", "agent", "support"}
@@ -101,7 +111,7 @@ class TestPart1RBACSystem:
         """GET /api/governance/rbac/roles - Returns all 6 roles with hierarchy"""
         response = requests.get(f"{BASE_URL}/api/governance/rbac/roles", headers=headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list)
         assert len(data) >= 6, f"Expected at least 6 roles, got {len(data)}"
 
@@ -115,7 +125,7 @@ class TestPart1RBACSystem:
         """GET /api/governance/rbac/hierarchy - Returns role hierarchy tree sorted by level"""
         response = requests.get(f"{BASE_URL}/api/governance/rbac/hierarchy", headers=headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list)
 
         # Verify sorted by level descending
@@ -131,7 +141,7 @@ class TestPart2PermissionModel:
         """GET /api/governance/rbac/permissions - Returns all 46 permissions"""
         response = requests.get(f"{BASE_URL}/api/governance/rbac/permissions", headers=headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list)
         assert len(data) >= 46, f"Expected at least 46 permissions, got {len(data)}"
 
@@ -151,7 +161,7 @@ class TestPart2PermissionModel:
             },
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("role") == "support"
         assert "permissions" in data
         print("✓ Updated support role permissions")
@@ -164,7 +174,7 @@ class TestPart2PermissionModel:
             params={"user_email": "agent@acenta.test"},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "direct_roles" in data
         assert "effective_roles" in data
         assert "permissions" in data
@@ -180,7 +190,7 @@ class TestPart2PermissionModel:
             params={"user_email": "agent@acenta.test", "permission": "governance.rbac.manage"},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "granted" in data
         assert data["granted"] is True, "super_admin should have all permissions"
         print(f"✓ Permission check - governance.rbac.manage: {data['granted']}")
@@ -197,7 +207,7 @@ class TestPart3AuditLogging:
             params={"limit": 10},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "total" in data
         assert "items" in data
         print(f"✓ Audit logs retrieved - total: {data['total']}, items: {len(data['items'])}")
@@ -210,7 +220,7 @@ class TestPart3AuditLogging:
             params={"days": 30},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "period_days" in data
         assert "total_events" in data
         assert "by_category" in data
@@ -235,7 +245,7 @@ class TestPart4SecretManagement:
             },
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("name") == secret_name
         assert data.get("action") == "created"
         assert data.get("version") == 1
@@ -268,7 +278,7 @@ class TestPart4SecretManagement:
             },
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("action") == "rotated"
         assert data.get("version") >= 2
         print(f"✓ Secret rotated: {secret_name}, new version: {data['version']}")
@@ -277,7 +287,7 @@ class TestPart4SecretManagement:
         """GET /api/governance/secrets - List secrets (values masked)"""
         response = requests.get(f"{BASE_URL}/api/governance/secrets", headers=headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list)
 
         # Verify values are not exposed in list
@@ -303,7 +313,7 @@ class TestPart4SecretManagement:
             headers=headers,
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("name") == secret_name
         assert data.get("value") == secret_value
         print(f"✓ Secret value retrieved: {secret_name}")
@@ -325,7 +335,7 @@ class TestPart4SecretManagement:
             headers=headers,
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("deleted") is True
         print(f"✓ Secret soft-deleted: {secret_name}")
 
@@ -336,7 +346,7 @@ class TestPart4SecretManagement:
             headers=headers,
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list)
 
         # Verify rotation status structure
@@ -357,7 +367,7 @@ class TestPart5TenantSecurity:
             headers=headers,
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "isolation_score" in data
         assert "violations_detected" in data
         assert "collection_isolation" in data
@@ -371,7 +381,7 @@ class TestPart5TenantSecurity:
             params={"limit": 10},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "total" in data
         assert "items" in data
         print(f"✓ Tenant violations - total: {data['total']}")
@@ -389,7 +399,7 @@ class TestPart5TenantSecurity:
             },
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "allowed" in data
         print(f"✓ Tenant access validation - allowed: {data['allowed']}")
 
@@ -405,7 +415,7 @@ class TestPart5TenantSecurity:
             },
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         # Cross-org should be blocked
         assert data.get("allowed") is False, "Cross-org access should be blocked"
         print("✓ Cross-org access correctly blocked")
@@ -430,7 +440,7 @@ class TestPart6ComplianceLogging:
             },
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "compliance_id" in data
         assert "sequence" in data
         assert "entry_hash" in data
@@ -444,7 +454,7 @@ class TestPart6ComplianceLogging:
             params={"limit": 20},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "total" in data
         assert "items" in data
         print(f"✓ Compliance logs - total: {data['total']}, items: {len(data['items'])}")
@@ -457,7 +467,7 @@ class TestPart6ComplianceLogging:
             params={"last_n": 100},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "verified" in data
         assert "status" in data
         assert "entries_checked" in data
@@ -471,7 +481,7 @@ class TestPart6ComplianceLogging:
             params={"days": 90},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "period_days" in data
         assert "total_entries" in data
         assert "chain_integrity" in data
@@ -488,7 +498,7 @@ class TestPart7DataAccessPolicies:
             headers=headers,
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "policies_seeded" in data
         print(f"✓ Data policies seeded: {data['policies_seeded']}")
 
@@ -499,7 +509,7 @@ class TestPart7DataAccessPolicies:
             headers=headers,
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list)
         print(f"✓ Listed {len(data)} data access policies")
 
@@ -515,7 +525,7 @@ class TestPart7DataAccessPolicies:
             },
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "allowed" in data
         assert "reason" in data
         print(f"✓ Data access evaluated - allowed: {data['allowed']}, reason: {data['reason']}")
@@ -540,7 +550,7 @@ class TestPart8SecurityAlerting:
             },
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "alert_id" in data
         assert data.get("status") == "open"
         print(f"✓ Security alert created - ID: {data['alert_id']}, status: {data['status']}")
@@ -554,7 +564,7 @@ class TestPart8SecurityAlerting:
             params={"limit": 10},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "total" in data
         assert "items" in data
         print(f"✓ Security alerts - total: {data['total']}")
@@ -573,7 +583,7 @@ class TestPart8SecurityAlerting:
                 "actor_email": "attacker@test.com",
             },
         )
-        alert_id = create_resp.json().get("alert_id")
+        alert_id = _unwrap(create_resp).get("alert_id")
 
         # Acknowledge it
         response = requests.post(
@@ -581,7 +591,7 @@ class TestPart8SecurityAlerting:
             headers=headers,
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("acknowledged") is True
         print(f"✓ Alert acknowledged - ID: {alert_id}")
 
@@ -597,7 +607,7 @@ class TestPart8SecurityAlerting:
                 "title": "TEST: Privilege escalation",
             },
         )
-        alert_id = create_resp.json().get("alert_id")
+        alert_id = _unwrap(create_resp).get("alert_id")
 
         # Resolve it
         response = requests.post(
@@ -606,7 +616,7 @@ class TestPart8SecurityAlerting:
             params={"resolution": "False positive - authorized admin action"},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("resolved") is True
         print(f"✓ Alert resolved - ID: {alert_id}")
 
@@ -617,7 +627,7 @@ class TestPart8SecurityAlerting:
             headers=headers,
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "open_alerts" in data
         assert "total_alerts_this_week" in data
         assert "alert_types" in data
@@ -634,7 +644,7 @@ class TestPart9AdminGovernancePanel:
             headers=headers,
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify all sections present
         assert "rbac" in data
@@ -655,7 +665,7 @@ class TestPart9AdminGovernancePanel:
             headers=headers,
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "user" in data
         assert "permissions" in data
         assert "recent_activity" in data
@@ -672,7 +682,7 @@ class TestPart10GovernanceRoadmap:
         """GET /api/governance/roadmap - Top 25 improvements and maturity score"""
         response = requests.get(f"{BASE_URL}/api/governance/roadmap", headers=headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify maturity score
         assert "security_maturity_score" in data

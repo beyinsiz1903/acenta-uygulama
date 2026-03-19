@@ -16,6 +16,16 @@ import requests
 
 from tests.preview_auth_helper import get_preview_base_url_or_skip
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # PR-UM5 specific credentials
@@ -35,7 +45,7 @@ def agent_session():
     if resp.status_code != 200:
         pytest.skip(f"Agent login failed: {resp.status_code} - {resp.text}")
 
-    data = resp.json()
+    data = _unwrap(resp)
     token = data.get("access_token") or data.get("token")
     session.headers.update({"Authorization": f"Bearer {token}"})
     return {
@@ -55,7 +65,7 @@ class TestCookieCompatLogin:
             json={"email": AGENT_EMAIL, "password": AGENT_PASSWORD}
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "access_token" in data or "token" in data
         print(f"✅ Login successful for {AGENT_EMAIL}")
 
@@ -66,7 +76,7 @@ class TestCookieCompatLogin:
             json={"email": AGENT_EMAIL, "password": AGENT_PASSWORD}
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "tenant_id" in data, "tenant_id should be in login response"
         assert data["tenant_id"], "tenant_id should not be empty"
         print(f"✅ tenant_id: {data['tenant_id']}")
@@ -87,7 +97,7 @@ class TestAuthMe:
         session = agent_session["session"]
         resp = session.get(f"{BASE_URL}/api/auth/me")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "tenant_id" in data, "tenant_id should be in /api/auth/me response"
         assert data["tenant_id"], "tenant_id should not be empty"
         print(f"✅ tenant_id from /api/auth/me: {data['tenant_id']}")
@@ -97,7 +107,7 @@ class TestAuthMe:
         session = agent_session["session"]
         resp = session.get(f"{BASE_URL}/api/auth/me")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("email") == AGENT_EMAIL
         assert "roles" in data
         print(f"✅ User: {data['email']}, roles: {data['roles']}")
@@ -118,7 +128,7 @@ class TestUsageSummaryEndpoint:
         session = agent_session["session"]
         resp = session.get(f"{BASE_URL}/api/tenant/usage-summary?days=30")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("plan") == "trial", f"Expected 'trial' plan, got {data.get('plan')}"
         assert data.get("is_trial") is True, "is_trial should be True"
         print(f"✅ Plan: {data['plan']}, is_trial: {data['is_trial']}")
@@ -128,7 +138,7 @@ class TestUsageSummaryEndpoint:
         session = agent_session["session"]
         resp = session.get(f"{BASE_URL}/api/tenant/usage-summary?days=30")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         metrics = data.get("metrics", {})
         assert len(metrics) > 0, "Should have at least one metric"
@@ -143,7 +153,7 @@ class TestUsageSummaryEndpoint:
         session = agent_session["session"]
         resp = session.get(f"{BASE_URL}/api/tenant/usage-summary?days=30")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         metric = data.get("metrics", {}).get("reservation.created", {})
         assert metric.get("used") == 70, f"Expected 70, got {metric.get('used')}"
@@ -156,7 +166,7 @@ class TestUsageSummaryEndpoint:
         session = agent_session["session"]
         resp = session.get(f"{BASE_URL}/api/tenant/usage-summary?days=30")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         metric = data.get("metrics", {}).get("report.generated", {})
         assert metric.get("used") == 17, f"Expected 17, got {metric.get('used')}"
@@ -173,7 +183,7 @@ class TestUsageSummaryEndpoint:
         session = agent_session["session"]
         resp = session.get(f"{BASE_URL}/api/tenant/usage-summary?days=30")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         metric = data.get("metrics", {}).get("export.generated", {})
         assert metric.get("used") == 10, f"Expected 10, got {metric.get('used')}"
@@ -194,7 +204,7 @@ class TestCTAConfiguration:
         session = agent_session["session"]
         resp = session.get(f"{BASE_URL}/api/tenant/usage-summary?days=30")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         metrics = data.get("metrics", {})
         for metric_key, metric_data in metrics.items():
@@ -207,7 +217,7 @@ class TestCTAConfiguration:
         session = agent_session["session"]
         resp = session.get(f"{BASE_URL}/api/tenant/usage-summary?days=30")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         metrics = data.get("metrics", {})
         for metric_key, metric_data in metrics.items():
@@ -224,7 +234,7 @@ class TestTrialConversion:
         session = agent_session["session"]
         resp = session.get(f"{BASE_URL}/api/tenant/usage-summary?days=30")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "trial_conversion" in data, "trial_conversion should be in response"
         tc = data["trial_conversion"]
@@ -240,7 +250,7 @@ class TestTrialConversion:
         session = agent_session["session"]
         resp = session.get(f"{BASE_URL}/api/tenant/usage-summary?days=30")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         tc = data["trial_conversion"]
         assert tc.get("is_trial") is True
@@ -252,7 +262,7 @@ class TestTrialConversion:
         session = agent_session["session"]
         resp = session.get(f"{BASE_URL}/api/tenant/usage-summary?days=30")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         tc = data["trial_conversion"]
         assert tc.get("message") == "Trial kullanımınız devam ediyor.", f"Expected Turkish message, got {tc.get('message')}"
@@ -263,7 +273,7 @@ class TestTrialConversion:
         session = agent_session["session"]
         resp = session.get(f"{BASE_URL}/api/tenant/usage-summary?days=30")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         tc = data["trial_conversion"]
         # 40-80% usage recommends Pro
@@ -276,7 +286,7 @@ class TestTrialConversion:
         session = agent_session["session"]
         resp = session.get(f"{BASE_URL}/api/tenant/usage-summary?days=30")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         tc = data["trial_conversion"]
         assert tc.get("cta_href") == "/pricing"
@@ -292,7 +302,7 @@ class TestTrendData:
         session = agent_session["session"]
         resp = session.get(f"{BASE_URL}/api/tenant/usage-summary?days=30")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "trend" in data, "trend should be in response"
         trend = data["trend"]

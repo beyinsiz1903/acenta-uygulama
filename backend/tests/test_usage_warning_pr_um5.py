@@ -14,6 +14,14 @@ import requests
 
 from tests.preview_auth_helper import get_preview_base_url_or_skip
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Credentials
@@ -28,7 +36,7 @@ def admin_token():
     """Authenticate as admin user"""
     resp = requests.post(f"{BASE_URL}/api/auth/login", json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
     if resp.status_code == 200:
-        return resp.json().get("access_token") or resp.json().get("token")
+        return _unwrap(resp).get("access_token") or _unwrap(resp).get("token")
     pytest.skip(f"Admin login failed: {resp.status_code}")
 
 
@@ -37,7 +45,7 @@ def trial_token():
     """Authenticate as trial demo tenant user"""
     resp = requests.post(f"{BASE_URL}/api/auth/login", json={"email": TRIAL_EMAIL, "password": TRIAL_PASSWORD})
     if resp.status_code == 200:
-        return resp.json().get("access_token") or resp.json().get("token")
+        return _unwrap(resp).get("access_token") or _unwrap(resp).get("token")
     pytest.skip(f"Trial login failed: {resp.status_code}")
 
 
@@ -116,7 +124,7 @@ class TestTenantUsageSummaryEndpoint:
             headers={"Authorization": f"Bearer {trial_token}"}
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         metrics = data.get("metrics", {})
 
         assert len(metrics) > 0, "Should have at least one metric"
@@ -136,7 +144,7 @@ class TestTenantUsageSummaryEndpoint:
             headers={"Authorization": f"Bearer {trial_token}"}
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         metrics = data.get("metrics", {})
 
         for metric_key, metric_data in metrics.items():
@@ -152,7 +160,7 @@ class TestTenantUsageSummaryEndpoint:
             headers={"Authorization": f"Bearer {trial_token}"}
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Check trial_conversion exists
         assert "trial_conversion" in data, "Missing trial_conversion in response"
@@ -196,7 +204,7 @@ class TestTenantQuotaStatusEndpoint:
             headers={"Authorization": f"Bearer {trial_token}"}
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "quotas" in data
         assert isinstance(data["quotas"], list)
@@ -217,7 +225,7 @@ class TestTenantQuotaStatusEndpoint:
             headers={"Authorization": f"Bearer {trial_token}"}
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         for quota in data.get("quotas", []):
             assert "cta_href" in quota
@@ -240,7 +248,7 @@ class TestAdminUsageNoCTA:
         if resp.status_code != 200:
             pytest.skip("Admin tenants endpoint not accessible")
 
-        tenants_data = resp.json()
+        tenants_data = _unwrap(resp)
         # Handle paginated response
         tenants = tenants_data.get("items", tenants_data) if isinstance(tenants_data, dict) else tenants_data
         if not tenants:
@@ -266,7 +274,7 @@ class TestTrialDemoTenantSpecifically:
             headers={"Authorization": f"Bearer {trial_token}"}
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Check if export.generated has critical/limit_reached warning
         metrics = data.get("metrics", {})
@@ -292,7 +300,7 @@ class TestTrialDemoTenantSpecifically:
             headers={"Authorization": f"Bearer {trial_token}"}
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         tc = data.get("trial_conversion", {})
         is_trial = data.get("is_trial", False)

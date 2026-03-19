@@ -21,6 +21,16 @@ import time
 
 from tests.preview_auth_helper import get_preview_base_url_or_skip
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Test credentials
@@ -46,7 +56,7 @@ def login_user(session, email, password, max_retries=3):
             "password": password
         })
         if resp.status_code == 200:
-            data = resp.json()
+            data = _unwrap(resp)
             token = data.get("access_token") or data.get("token")
             return {"Authorization": f"Bearer {token}"}
         elif resp.status_code == 429:
@@ -79,7 +89,7 @@ class TestBillingSubscriptionEndpoint:
         resp = session.get(f"{BASE_URL}/api/billing/subscription", headers=auth)
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:300]}"
 
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Required fields per API spec
         assert "plan" in data, "Response should contain plan"
@@ -119,7 +129,7 @@ class TestBillingSubscriptionEndpoint:
         resp = session.get(f"{BASE_URL}/api/billing/subscription", headers=auth)
         assert resp.status_code == 200
 
-        data = resp.json()
+        data = _unwrap(resp)
         assert "interval_label" in data, "Response should contain interval_label"
         # Turkish labels: Aylık or Yıllık
         assert data["interval_label"] in ["Aylık", "Yıllık"], f"interval_label should be Aylık or Yıllık, got {data.get('interval_label')}"
@@ -158,7 +168,7 @@ class TestCustomerPortalEndpoint:
 
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:300]}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         assert "url" in data, "Response should contain portal URL"
         assert "stripe.com" in data.get("url", ""), f"URL should be Stripe portal, got {data.get('url')[:100] if data.get('url') else 'None'}"
 
@@ -211,7 +221,7 @@ class TestChangePlanEndpoint:
         if sub_resp.status_code != 200:
             pytest.skip("Could not fetch subscription")
 
-        sub_data = sub_resp.json()
+        sub_data = _unwrap(sub_resp)
         if not sub_data.get("legacy_subscription"):
             pytest.skip("User does not have legacy subscription")
 
@@ -231,7 +241,7 @@ class TestChangePlanEndpoint:
 
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:300]}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("action") == "checkout_redirect", f"Legacy subscription should return checkout_redirect, got {data.get('action')}"
         assert "url" in data, "Response should contain checkout URL"
         assert "stripe.com" in data.get("url", ""), "URL should be Stripe checkout"
@@ -257,7 +267,7 @@ class TestChangePlanEndpoint:
 
         assert resp.status_code == 422, f"Enterprise should return 422, got {resp.status_code}: {resp.text[:200]}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         error_code = data.get("error", {}).get("code") or data.get("code")
         assert error_code == "enterprise_contact_required", f"Should return enterprise_contact_required, got {error_code}"
 
@@ -275,7 +285,7 @@ class TestChangePlanEndpoint:
         if sub_resp.status_code != 200:
             pytest.skip("Could not fetch subscription")
 
-        sub_data = sub_resp.json()
+        sub_data = _unwrap(sub_resp)
         current_plan = sub_data.get("plan")
         current_interval = sub_data.get("interval")
 
@@ -297,7 +307,7 @@ class TestChangePlanEndpoint:
         if resp.status_code == 409:
             print(f"✅ Change to same plan ({current_plan}/{current_interval}) correctly rejected with 409")
         else:
-            data = resp.json()
+            data = _unwrap(resp)
             assert "url" in data, "200 response should include a checkout URL"
             print(f"✅ Change to same plan ({current_plan}/{current_interval}) redirects to checkout (no active subscription)")
 
@@ -325,7 +335,7 @@ class TestCancelSubscriptionEndpoint:
         if sub_resp.status_code != 200:
             pytest.skip("Could not fetch subscription")
 
-        sub_data = sub_resp.json()
+        sub_data = _unwrap(sub_resp)
         if not sub_data.get("legacy_subscription"):
             pytest.skip("User does not have legacy subscription")
 
@@ -337,7 +347,7 @@ class TestCancelSubscriptionEndpoint:
         # Legacy subscriptions should return 409 subscription_management_unavailable
         assert resp.status_code == 409, f"Expected 409 for legacy subscription cancel, got {resp.status_code}: {resp.text[:200]}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         error_code = data.get("error", {}).get("code") or data.get("code")
         assert error_code == "subscription_management_unavailable", f"Expected subscription_management_unavailable, got {error_code}"
 
@@ -369,7 +379,7 @@ class TestCreateCheckoutSubscriptionMode:
 
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:300]}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         assert "url" in data, "Response should contain checkout URL"
         assert "session_id" in data, "Response should contain session_id"
         assert data.get("plan") == "starter"
@@ -396,7 +406,7 @@ class TestCreateCheckoutSubscriptionMode:
 
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:300]}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("plan") == "pro"
         assert data.get("amount") == 2490.0
 

@@ -95,7 +95,7 @@ async def test_supplier_confirm_flow_mock_happy_path(test_db: Any, async_client:
 
     resp_confirm = await client.post(f"/api/b2b/bookings/{booking_id}/confirm", headers=headers)
     assert resp_confirm.status_code == status.HTTP_200_OK, resp_confirm.text
-    body = resp_confirm.json()
+    body = _unwrap(resp_confirm)
     assert body["booking_id"] == booking_id
     assert body["state"] == "confirmed"
 
@@ -178,7 +178,7 @@ async def test_supplier_unresolved_returns_400_and_audit(test_db: Any, async_cli
     resp_confirm = await client.post(f"/api/b2b/bookings/{booking_id}/confirm", headers=headers)
     # In v1 we reuse INVALID_SUPPLIER_MAPPING for unresolved supplier cases
     assert resp_confirm.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    err = resp_confirm.json().get("error", {})
+    err = _unwrap(resp_confirm).get("error", {})
     assert err.get("code") == "INVALID_SUPPLIER_MAPPING"
 
 
@@ -249,7 +249,7 @@ async def test_supplier_not_supported_for_paximum(test_db: Any, async_client: As
 
     resp_confirm = await client.post(f"/api/b2b/bookings/{booking_id}/confirm", headers=headers)
     assert resp_confirm.status_code == status.HTTP_501_NOT_IMPLEMENTED
-    err = resp_confirm.json().get("error", {})
+    err = _unwrap(resp_confirm).get("error", {})
     assert err.get("code") == "supplier_not_supported"
 
 
@@ -257,6 +257,16 @@ async def test_supplier_not_supported_for_paximum(test_db: Any, async_client: As
 @pytest.mark.anyio
 async def test_supplier_error_propagation_retryable(test_db: Any, async_client: AsyncClient, monkeypatch: Any) -> None:
     from app.services.suppliers.mock_adapter import MockSupplierAdapter
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     client: AsyncClient = async_client
     now = now_utc()

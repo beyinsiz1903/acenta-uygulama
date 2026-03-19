@@ -19,6 +19,14 @@ import pytest
 
 from tests.preview_auth_helper import resolve_preview_base_url
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 try:
     BASE_URL = resolve_preview_base_url(
         os.environ.get("REACT_APP_BACKEND_URL", "")
@@ -46,7 +54,7 @@ class TestHardQuotaEnforcementHTTP:
         )
         if response.status_code == 200:
             # Cookie-based auth or token in response
-            data = response.json()
+            data = _unwrap(response)
             if "access_token" in data:
                 session.headers.update({"Authorization": f"Bearer {data['access_token']}"})
         return session, response.status_code == 200
@@ -64,7 +72,7 @@ class TestHardQuotaEnforcementHTTP:
             json={"email": "admin@acenta.test", "password": "admin123"}
         )
         if response.status_code == 200:
-            data = response.json()
+            data = _unwrap(response)
             if "access_token" in data:
                 session.headers.update({"Authorization": f"Bearer {data['access_token']}"})
         return session, response.status_code == 200
@@ -92,7 +100,7 @@ class TestHardQuotaEnforcementHTTP:
 
         # Should return 200 with usage data
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify response structure has expected fields
         assert "metrics" in data or "tenant_id" in data or "plan" in data, f"Missing expected fields in response: {data}"
@@ -109,7 +117,7 @@ class TestHardQuotaEnforcementHTTP:
 
         # Should return 200 with subscription data
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify response has expected fields
         assert "plan" in data, f"Missing 'plan' in response: {data}"
@@ -165,7 +173,7 @@ class TestHardQuotaEnforcementHTTP:
             print("PASS: /api/reports/sales-summary.csv returns CSV data")
         elif response.status_code == 403:
             # Quota exceeded - verify error structure
-            data = response.json()
+            data = _unwrap(response)
             assert "error" in data, f"Expected error envelope: {data}"
             assert data["error"]["code"] == "quota_exceeded", f"Expected quota_exceeded code: {data}"
             print("PASS: /api/reports/sales-summary.csv correctly returns quota_exceeded when limit reached")
@@ -185,7 +193,7 @@ class TestHardQuotaEnforcementHTTP:
         assert response.status_code in [200, 403, 404], f"Expected 200/403/404, got {response.status_code}: {response.text}"
 
         if response.status_code == 403:
-            data = response.json()
+            data = _unwrap(response)
             if "error" in data:
                 print(f"PASS: /api/admin/exports/run endpoint protected, code={data['error'].get('code')}")
             else:
@@ -212,7 +220,7 @@ class TestHardQuotaEnforcementHTTP:
             assert "zip" in content_type, f"Expected ZIP content, got {content_type}"
             print("PASS: /api/admin/tenant/export returns ZIP archive")
         elif response.status_code == 403:
-            data = response.json()
+            data = _unwrap(response)
             assert "error" in data, f"Expected error envelope: {data}"
             assert data["error"]["code"] == "quota_exceeded", f"Expected quota_exceeded code: {data}"
             print("PASS: /api/admin/tenant/export correctly returns quota_exceeded when limit reached")
@@ -234,7 +242,7 @@ class TestHardQuotaEnforcementHTTP:
             assert "csv" in content_type or "text" in content_type, f"Expected CSV content, got {content_type}"
             print("PASS: /api/admin/audit/export returns CSV data")
         elif response.status_code == 403:
-            data = response.json()
+            data = _unwrap(response)
             assert "error" in data, f"Expected error envelope: {data}"
             assert data["error"]["code"] == "quota_exceeded", f"Expected quota_exceeded code: {data}"
             print("PASS: /api/admin/audit/export correctly returns quota_exceeded when limit reached")

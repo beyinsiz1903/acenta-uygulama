@@ -16,6 +16,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials from review request
@@ -39,7 +49,7 @@ def auth_token(api_client):
     )
     if response.status_code != 200:
         pytest.skip(f"Authentication failed: {response.status_code} - {response.text}")
-    data = response.json()
+    data = _unwrap(response)
     token = data.get("access_token") or data.get("token")
     if not token:
         pytest.skip("No token in response")
@@ -63,7 +73,7 @@ class TestPMSAuthentication:
             json=AGENCY_CREDENTIALS
         )
         assert response.status_code == 200, f"Login failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "access_token" in data or "token" in data
         print("PASS: Agency login successful")
 
@@ -83,7 +93,7 @@ class TestPMSDashboard:
         """Test GET /api/agency/pms/dashboard returns dashboard stats"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/dashboard")
         assert response.status_code == 200, f"Dashboard failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Check required fields
         assert "date" in data, "Missing date field"
@@ -100,7 +110,7 @@ class TestPMSDashboard:
         # First get dashboard to find a hotel
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/dashboard")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         if data.get("hotels") and len(data["hotels"]) > 0:
             hotel_id = data["hotels"][0]["id"]
@@ -118,7 +128,7 @@ class TestPMSArrivals:
         """Test GET /api/agency/pms/arrivals returns today's arrivals"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/arrivals")
         assert response.status_code == 200, f"Arrivals failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "items" in data, "Missing items field"
         assert "total" in data, "Missing total field"
@@ -143,7 +153,7 @@ class TestPMSInHouse:
         """Test GET /api/agency/pms/in-house returns in-house guests"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/in-house")
         assert response.status_code == 200, f"In-house failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "items" in data, "Missing items field"
         assert "total" in data, "Missing total field"
@@ -158,7 +168,7 @@ class TestPMSDepartures:
         """Test GET /api/agency/pms/departures returns today's departures"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/departures")
         assert response.status_code == 200, f"Departures failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "items" in data, "Missing items field"
         assert "total" in data, "Missing total field"
@@ -174,7 +184,7 @@ class TestPMSReservations:
         """Test GET /api/agency/pms/reservations returns reservations list"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/reservations")
         assert response.status_code == 200, f"Reservations failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "items" in data, "Missing items field"
         assert "total" in data, "Missing total field"
@@ -186,7 +196,7 @@ class TestPMSReservations:
         """Test GET /api/agency/pms/reservations with search filter"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/reservations?limit=50")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert len(data["items"]) <= 50, "Limit not respected"
         print("PASS: Reservations with limit filter works")
 
@@ -198,7 +208,7 @@ class TestPMSRooms:
         """Test GET /api/agency/pms/rooms returns rooms list"""
         response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/rooms")
         assert response.status_code == 200, f"List rooms failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "items" in data, "Missing items field"
         assert "total" in data, "Missing total field"
@@ -213,7 +223,7 @@ class TestPMSRooms:
         if dashboard_response.status_code != 200:
             pytest.skip("Cannot get dashboard to find hotel_id")
 
-        dashboard_data = dashboard_response.json()
+        dashboard_data = _unwrap(dashboard_response)
         hotels = dashboard_data.get("hotels", [])
 
         if not hotels:
@@ -244,7 +254,7 @@ class TestPMSRooms:
 
         assert response.status_code in [200, 201], f"Create room failed: {response.status_code} - {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "id" in data, "Missing id in created room"
         assert data["room_number"] == "TEST_999"
 
@@ -258,7 +268,7 @@ class TestPMSRooms:
         if response.status_code != 200:
             pytest.skip("Cannot list rooms")
 
-        data = response.json()
+        data = _unwrap(response)
         if not data.get("items"):
             pytest.skip("No rooms available to update")
 
@@ -286,7 +296,7 @@ class TestPMSRooms:
         if response.status_code != 200:
             pytest.skip("Cannot list rooms")
 
-        data = response.json()
+        data = _unwrap(response)
         test_room = None
         for room in data.get("items", []):
             if room.get("room_number") == "TEST_999":
@@ -315,7 +325,7 @@ class TestPMSCheckInOut:
         if response.status_code != 200:
             pytest.skip("Cannot get arrivals")
 
-        data = response.json()
+        data = _unwrap(response)
         arrivals = data.get("items", [])
 
         # Find an arrival that can be checked in (not already in_house or checked_out)
@@ -330,7 +340,7 @@ class TestPMSCheckInOut:
             # Also check all reservations
             all_res = authenticated_client.get(f"{BASE_URL}/api/agency/pms/reservations")
             if all_res.status_code == 200:
-                for item in all_res.json().get("items", []):
+                for item in _unwrap(all_res).get("items", []):
                     status = item.get("pms_status", "")
                     if status in ["arrival", "pending", ""] or not status:
                         candidate = item
@@ -350,7 +360,7 @@ class TestPMSCheckInOut:
         if check_in_response.status_code == 409:
             print("PASS: Check-in handles already checked-in reservation correctly (409)")
         elif check_in_response.status_code == 200:
-            updated = check_in_response.json()
+            updated = _unwrap(check_in_response)
             assert updated.get("pms_status") == "in_house", "Status not updated to in_house"
             print(f"PASS: Reservation {res_id} checked in successfully")
         else:
@@ -363,7 +373,7 @@ class TestPMSCheckInOut:
         if response.status_code != 200:
             pytest.skip("Cannot get in-house guests")
 
-        data = response.json()
+        data = _unwrap(response)
         in_house = data.get("items", [])
 
         if not in_house:
@@ -392,7 +402,7 @@ class TestPMSCheckInOut:
         if check_out_response.status_code == 409:
             print("PASS: Check-out handles edge case correctly (409)")
         elif check_out_response.status_code == 200:
-            updated = check_out_response.json()
+            updated = _unwrap(check_out_response)
             assert updated.get("pms_status") == "checked_out", "Status not updated to checked_out"
             print(f"PASS: Reservation {res_id} checked out successfully")
         else:
@@ -409,7 +419,7 @@ class TestPMSReservationUpdate:
         if response.status_code != 200:
             pytest.skip("Cannot get reservations")
 
-        data = response.json()
+        data = _unwrap(response)
         if not data.get("items"):
             pytest.skip("No reservations available to update")
 
@@ -437,7 +447,7 @@ class TestPMSReservationUpdate:
 
         assert update_response.status_code == 200, f"Update reservation failed: {update_response.text}"
 
-        updated = update_response.json()
+        updated = _unwrap(update_response)
         assert updated.get("notes") == "Updated by pytest iter59", "Notes not updated"
 
         # Verify flight info
@@ -453,7 +463,7 @@ class TestPMSReservationUpdate:
         if response.status_code != 200:
             pytest.skip("Cannot get reservations")
 
-        data = response.json()
+        data = _unwrap(response)
         if not data.get("items"):
             pytest.skip("No reservations available")
 
@@ -463,7 +473,7 @@ class TestPMSReservationUpdate:
         detail_response = authenticated_client.get(f"{BASE_URL}/api/agency/pms/reservations/{res_id}")
         assert detail_response.status_code == 200, f"Get reservation failed: {detail_response.text}"
 
-        detail = detail_response.json()
+        detail = _unwrap(detail_response)
         assert detail.get("id") == res_id, "ID mismatch"
         print(f"PASS: Single reservation detail retrieved for {res_id}")
 

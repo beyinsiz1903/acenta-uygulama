@@ -13,6 +13,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 @pytest.fixture(scope="module")
@@ -24,7 +34,7 @@ def admin_token():
     )
     if resp.status_code != 200:
         pytest.skip(f"Auth failed: {resp.status_code} - {resp.text[:200]}")
-    data = resp.json()
+    data = _unwrap(resp)
     return data.get("access_token") or data.get("token")
 
 @pytest.fixture(scope="module")
@@ -42,7 +52,7 @@ class TestSupplierConfigEndpoints:
         resp = requests.get(f"{BASE_URL}/api/inventory/supplier-config", headers=auth_headers)
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "suppliers" in data, "Response should have 'suppliers' key"
         suppliers = data["suppliers"]
         
@@ -61,7 +71,7 @@ class TestSupplierConfigEndpoints:
         resp = requests.get(f"{BASE_URL}/api/inventory/supplier-config", headers=auth_headers)
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         suppliers = data["suppliers"]
         
         # Check that unconfigured suppliers show simulation mode
@@ -86,7 +96,7 @@ class TestSupplierConfigEndpoints:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("supplier") == "ratehawk"
         assert data.get("mode") == "sandbox"
         assert data.get("configured") == True
@@ -97,7 +107,7 @@ class TestSupplierConfigEndpoints:
         resp = requests.get(f"{BASE_URL}/api/inventory/supplier-config", headers=auth_headers)
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         ratehawk_cfg = data["suppliers"].get("ratehawk", {})
         
         # After setting config, ratehawk should show configured
@@ -113,7 +123,7 @@ class TestSupplierConfigEndpoints:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("supplier") == "ratehawk"
         assert data.get("removed") == True
         assert data.get("mode") == "simulation"
@@ -123,7 +133,7 @@ class TestSupplierConfigEndpoints:
         resp = requests.get(f"{BASE_URL}/api/inventory/supplier-config", headers=auth_headers)
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         ratehawk_cfg = data["suppliers"].get("ratehawk", {})
         
         # After deletion, ratehawk should show unconfigured
@@ -147,7 +157,7 @@ class TestSandboxValidationEndpoint:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("supplier") == "ratehawk"
         assert data.get("status") == "not_configured", "Status should be not_configured when no creds"
         assert "message" in data, "Should have a message explaining not_configured"
@@ -178,7 +188,7 @@ class TestSandboxValidationEndpoint:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("supplier") == "ratehawk"
         # Status should be pass, partial, or fail (not not_configured)
         assert data.get("status") in ["pass", "partial", "fail"], f"Status should be pass/partial/fail, got: {data.get('status')}"
@@ -213,7 +223,7 @@ class TestSandboxValidationEndpoint:
         )
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         # For non-ratehawk, should indicate adapter not ready
         tests = data.get("tests", [])
         if tests:
@@ -234,7 +244,7 @@ class TestSupplierMetricsEndpoint:
         resp = requests.get(f"{BASE_URL}/api/inventory/supplier-metrics", headers=auth_headers)
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "metrics" in data, "Response should have 'metrics' key"
         assert "total" in data, "Response should have 'total' key"
         
@@ -250,7 +260,7 @@ class TestSupplierMetricsEndpoint:
         )
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "metrics" in data
         # If there are metrics, they should all be for ratehawk
         for m in data.get("metrics", []):
@@ -273,7 +283,7 @@ class TestSyncTriggerWithSyncMode:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("supplier") == "paximum"
         assert "sync_mode" in data, "Response should have sync_mode field"
         assert data.get("sync_mode") == "simulation", "sync_mode should be simulation when no creds"
@@ -298,7 +308,7 @@ class TestSyncTriggerWithSyncMode:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("supplier") == "ratehawk"
         assert "sync_mode" in data, "Response should have sync_mode field"
         assert data.get("sync_mode") == "sandbox", f"sync_mode should be sandbox, got: {data.get('sync_mode')}"
@@ -316,7 +326,7 @@ class TestSyncStatusWithConfig:
         resp = requests.get(f"{BASE_URL}/api/inventory/sync/status", headers=auth_headers)
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "suppliers" in data
         suppliers = data["suppliers"]
         
@@ -353,7 +363,7 @@ class TestRevalidateWithSource:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "source" in data, "Revalidate response should have 'source' field"
         assert data.get("source") == "simulation", f"Source should be simulation, got: {data.get('source')}"
         assert "cached_price" in data
@@ -370,7 +380,7 @@ class TestInventoryStats:
         resp = requests.get(f"{BASE_URL}/api/inventory/stats", headers=auth_headers)
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "totals" in data
         assert "by_supplier" in data
         assert "by_city" in data
@@ -395,7 +405,7 @@ class TestCachedSearchStillWorks:
         )
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "results" in data
         assert "source" in data
         assert data.get("source") in ["redis", "mongodb", "redis_miss"]
@@ -440,7 +450,7 @@ class TestCleanup:
         # Verify cleanup
         resp = requests.get(f"{BASE_URL}/api/inventory/supplier-config", headers=auth_headers)
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         for sup, cfg in data.get("suppliers", {}).items():
             # All should be unconfigured after cleanup
             assert cfg.get("configured") == False or cfg.get("has_credentials") == False, f"{sup} should be unconfigured after cleanup"

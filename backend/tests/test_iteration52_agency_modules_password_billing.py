@@ -8,6 +8,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -50,7 +60,7 @@ class TestAdminAgencyModules:
         resp = TestHelpers.login(SUPERADMIN_EMAIL, SUPERADMIN_PASSWORD)
         if resp.status_code != 200:
             pytest.skip(f"Superadmin login failed: {resp.status_code}")
-        data = resp.json()
+        data = _unwrap(resp)
         return {
             "token": TestHelpers.get_token_from_response(data),
             "user": data.get("user", {})
@@ -62,7 +72,7 @@ class TestAdminAgencyModules:
         headers = TestHelpers.get_auth_headers(superadmin_auth["token"])
         resp = requests.get(f"{BASE_URL}/api/admin/agencies", headers=headers, timeout=30)
         assert resp.status_code == 200, f"Failed to list agencies: {resp.status_code}"
-        agencies = resp.json()
+        agencies = _unwrap(resp)
         if not agencies:
             pytest.skip("No agencies found in the system")
 
@@ -99,7 +109,7 @@ class TestAdminAgencyModules:
             timeout=30
         )
         assert resp.status_code == 200, f"Failed to get modules: {resp.status_code}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "agency_id" in data, "Response should contain agency_id"
         assert "allowed_modules" in data, "Response should contain allowed_modules"
         print(f"✓ GET agency modules - agency_id: {data.get('agency_id')}, modules: {data.get('allowed_modules')}")
@@ -118,7 +128,7 @@ class TestAdminAgencyModules:
             timeout=30
         )
         assert resp.status_code == 200, f"Failed to update modules: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("agency_id") == agency_id, "Response agency_id should match"
 
         # Verify modules were saved
@@ -148,7 +158,7 @@ class TestAdminAgencyModules:
             timeout=30
         )
         assert get_resp.status_code == 200
-        data = get_resp.json()
+        data = _unwrap(get_resp)
 
         for mod in test_modules:
             assert mod in data.get("allowed_modules", []), f"Module {mod} should persist"
@@ -165,7 +175,7 @@ class TestAdminAgencyModules:
             timeout=30
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("allowed_modules") == [], "Empty modules should clear restrictions"
         print("✓ Clear all modules works correctly")
 
@@ -186,7 +196,7 @@ class TestAdminAgencyModules:
             timeout=30
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         saved_modules = data.get("allowed_modules", [])
         assert len(saved_modules) >= len(all_modules) - 2, "Most modules should be saved"
         print(f"✓ Select all modules saved: {len(saved_modules)} modules")
@@ -198,7 +208,7 @@ class TestAdminAgencyModules:
         if resp.status_code != 200:
             pytest.skip("Agency login failed")
 
-        token = TestHelpers.get_token_from_response(resp.json())
+        token = TestHelpers.get_token_from_response(_unwrap(resp))
         headers = TestHelpers.get_auth_headers(token)
 
         # Try to access admin endpoint - should fail
@@ -225,14 +235,14 @@ class TestAgencyProfileModulesSync:
         admin_resp = TestHelpers.login(SUPERADMIN_EMAIL, SUPERADMIN_PASSWORD)
         if admin_resp.status_code != 200:
             pytest.skip("Superadmin login failed")
-        admin_token = TestHelpers.get_token_from_response(admin_resp.json())
+        admin_token = TestHelpers.get_token_from_response(_unwrap(admin_resp))
 
         # Login as agency to get agency_id
         agency_resp = TestHelpers.login(AGENCY_ADMIN_EMAIL, AGENCY_ADMIN_PASSWORD)
         if agency_resp.status_code != 200:
             pytest.skip("Agency login failed")
 
-        agency_data = agency_resp.json()
+        agency_data = _unwrap(agency_resp)
         agency_token = TestHelpers.get_token_from_response(agency_data)
         agency_user = agency_data.get("user", {})
         agency_id = agency_user.get("agency_id")
@@ -242,7 +252,7 @@ class TestAgencyProfileModulesSync:
             headers = TestHelpers.get_auth_headers(agency_token)
             profile_resp = requests.get(f"{BASE_URL}/api/agency/profile", headers=headers, timeout=30)
             if profile_resp.status_code == 200:
-                agency_id = profile_resp.json().get("agency_id")
+                agency_id = _unwrap(profile_resp).get("agency_id")
 
         if not agency_id:
             pytest.skip("Could not determine agency_id")
@@ -276,7 +286,7 @@ class TestAgencyProfileModulesSync:
             timeout=30
         )
         assert profile_resp.status_code == 200, f"Agency profile failed: {profile_resp.status_code}"
-        profile = profile_resp.json()
+        profile = _unwrap(profile_resp)
 
         allowed_modules = profile.get("allowed_modules", [])
         for mod in test_modules:
@@ -296,7 +306,7 @@ class TestPasswordChange:
         resp = TestHelpers.login(AGENCY_ADMIN_EMAIL, AGENCY_ADMIN_PASSWORD)
         if resp.status_code != 200:
             pytest.skip(f"Agency login failed: {resp.status_code}")
-        data = resp.json()
+        data = _unwrap(resp)
         return {
             "token": TestHelpers.get_token_from_response(data),
             "user": data.get("user", {})
@@ -316,7 +326,7 @@ class TestPasswordChange:
             timeout=30
         )
         assert resp.status_code == 400, f"Should fail with wrong password: {resp.status_code}"
-        data = resp.json()
+        data = _unwrap(resp)
         # API returns error in error.message format
         error_message = data.get("error", {}).get("message", "") or data.get("detail", "")
         assert "hatalı" in error_message.lower() or "mevcut" in error_message.lower(), \
@@ -338,7 +348,7 @@ class TestPasswordChange:
         )
         # Should fail with 400 or 422 for validation error
         assert resp.status_code in [400, 422], f"Should fail with weak password: {resp.status_code}"
-        data = resp.json()
+        data = _unwrap(resp)
         # Check for validation errors - can be in different formats
         error_msg = str(data.get("error", {}).get("message", "")) or str(data.get("detail", ""))
         assert "violations" in error_msg or "karşılamıyor" in error_msg or "weak" in error_msg.lower() or len(error_msg) > 0, \
@@ -359,7 +369,7 @@ class TestPasswordChange:
             timeout=30
         )
         assert resp.status_code == 400, f"Should fail when same password: {resp.status_code}"
-        data = resp.json()
+        data = _unwrap(resp)
         error_msg = data.get("error", {}).get("message", "") or data.get("detail", "")
         assert "aynı" in error_msg.lower(), f"Error should mention same password: {error_msg}"
         print(f"✓ Same password correctly rejected: {error_msg}")
@@ -382,7 +392,7 @@ class TestPasswordChange:
         )
 
         if resp.status_code == 200:
-            data = resp.json()
+            data = _unwrap(resp)
             assert "güncellendi" in data.get("message", "").lower() or "updated" in data.get("message", "").lower(), \
                 "Success message should confirm update"
             print("✓ Password changed successfully")
@@ -391,7 +401,7 @@ class TestPasswordChange:
             # Login with new password
             new_login = TestHelpers.login(AGENCY_ADMIN_EMAIL, strong_password)
             if new_login.status_code == 200:
-                new_token = TestHelpers.get_token_from_response(new_login.json())
+                new_token = TestHelpers.get_token_from_response(_unwrap(new_login))
                 revert_headers = TestHelpers.get_auth_headers(new_token)
                 revert_resp = requests.post(
                     f"{BASE_URL}/api/settings/change-password",
@@ -411,7 +421,7 @@ class TestPasswordChange:
         else:
             # If it fails due to weak password policy (original password doesn't meet policy),
             # that's expected since agent123 is a legacy weak password
-            data = resp.json()
+            data = _unwrap(resp)
             print(f"ℹ Password change failed (expected if original password is weak): {resp.status_code}")
             print(f"  Detail: {data.get('detail', 'No detail')}")
             # This is actually expected behavior - don't fail the test
@@ -443,7 +453,7 @@ class TestAgencyBillingVisibility:
         resp = TestHelpers.login(AGENCY_ADMIN_EMAIL, AGENCY_ADMIN_PASSWORD)
         if resp.status_code != 200:
             pytest.skip(f"Agency login failed: {resp.status_code}")
-        data = resp.json()
+        data = _unwrap(resp)
         return {
             "token": TestHelpers.get_token_from_response(data),
             "user": data.get("user", {})
@@ -455,7 +465,7 @@ class TestAgencyBillingVisibility:
         resp = TestHelpers.login(SUPERADMIN_EMAIL, SUPERADMIN_PASSWORD)
         if resp.status_code != 200:
             pytest.skip(f"Superadmin login failed: {resp.status_code}")
-        data = resp.json()
+        data = _unwrap(resp)
         return {
             "token": TestHelpers.get_token_from_response(data),
             "user": data.get("user", {})
@@ -478,7 +488,7 @@ class TestAgencyBillingVisibility:
             print("✓ Agency user correctly denied billing API access (401)")
         elif resp.status_code == 200:
             # If 200, check that data is restricted/empty
-            data = resp.json()
+            data = _unwrap(resp)
             print("ℹ Billing API returned 200 for agency user - checking data")
             # Agency users might see limited data, this is still valid
             print(f"  Data: {data}")

@@ -7,6 +7,16 @@ import pytest
 from app.db import get_db
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.anyio
 async def test_public_search_basic_tenant_scoping_and_published_only(async_client):
   db = await get_db()
@@ -98,7 +108,7 @@ async def test_public_search_basic_tenant_scoping_and_published_only(async_clien
   assert "Cache-Control" in resp.headers
   assert "stale-while-revalidate" in resp.headers["Cache-Control"]
 
-  data = resp.json()
+  data = _unwrap(resp)
   assert data["page"] == 1
   assert data["page_size"] == 10
   assert data["total"] >= 1

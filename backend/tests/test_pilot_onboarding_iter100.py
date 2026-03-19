@@ -19,6 +19,16 @@ import pytest
 import requests
 import uuid
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -36,7 +46,7 @@ def auth_token():
     )
     if response.status_code != 200:
         pytest.skip(f"Authentication failed: {response.status_code} - {response.text}")
-    data = response.json()
+    data = _unwrap(response)
     token = data.get("access_token")
     if not token:
         pytest.skip("No access_token in login response")
@@ -79,7 +89,7 @@ class TestPilotOnboardingWizard:
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "agency" in data, "Response should contain 'agency'"
         assert "step" in data, "Response should contain 'step'"
         assert data["step"] == 1
@@ -101,7 +111,7 @@ class TestPilotOnboardingWizard:
             timeout=15
         )
         assert response.status_code == 400, f"Expected 400 for duplicate, got {response.status_code}"
-        data = response.json()
+        data = _unwrap(response)
         # Handle both error formats: {"detail": "..."} or {"error": {"message": "..."}}
         error_msg = data.get("detail") or data.get("error", {}).get("message", "")
         assert error_msg, f"Expected error message in response: {data}"
@@ -123,7 +133,7 @@ class TestPilotOnboardingWizard:
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "step" in data
         assert data["step"] == 2
         assert "supplier_config" in data
@@ -146,7 +156,7 @@ class TestPilotOnboardingWizard:
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "step" in data
         assert data["step"] == 3
         assert "accounting_config" in data
@@ -164,7 +174,7 @@ class TestPilotOnboardingWizard:
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "step" in data
         assert data["step"] == 4
         assert "supplier_connection" in data
@@ -183,7 +193,7 @@ class TestPilotOnboardingWizard:
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "step" in data
         assert data["step"] == 5
         assert "status" in data
@@ -201,7 +211,7 @@ class TestPilotOnboardingWizard:
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "step" in data
         assert data["step"] == 6
         assert "status" in data
@@ -218,7 +228,7 @@ class TestPilotOnboardingWizard:
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "step" in data
         assert data["step"] == 7
         assert "status" in data
@@ -234,7 +244,7 @@ class TestPilotOnboardingWizard:
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "step" in data
         assert data["step"] == 8
         assert "status" in data
@@ -251,7 +261,7 @@ class TestPilotOnboardingWizard:
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "step" in data
         assert data["step"] == 9
         assert "status" in data
@@ -272,7 +282,7 @@ class TestPilotOnboardingReadEndpoints:
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "agencies" in data
         assert "total" in data
         assert "active" in data
@@ -289,7 +299,7 @@ class TestPilotOnboardingReadEndpoints:
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         # Validate KPI sections
         assert "platform_health" in data
         assert "financial_flow" in data
@@ -337,7 +347,7 @@ class TestPilotOnboardingReadEndpoints:
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "incidents" in data
         assert "total" in data
         assert "timestamp" in data

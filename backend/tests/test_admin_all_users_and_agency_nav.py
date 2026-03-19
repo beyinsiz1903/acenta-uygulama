@@ -15,6 +15,16 @@ import os
 
 from tests.preview_auth_helper import get_preview_auth_context, get_preview_base_url_or_skip
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Test credentials
@@ -54,7 +64,7 @@ class TestAdminAllUsersEndpoint:
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert isinstance(data, list), "Response should be a list"
         print(f"✅ GET /api/admin/all-users returned {len(data)} users")
 
@@ -65,7 +75,7 @@ class TestAdminAllUsersEndpoint:
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         if len(data) == 0:
             pytest.skip("No agency users in system")
@@ -108,7 +118,7 @@ class TestAdminUserManagement:
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert resp.status_code == 200
-        users = resp.json()
+        users = _unwrap(resp)
 
         if not users:
             pytest.skip("No agency users to test role change")
@@ -136,7 +146,7 @@ class TestAdminUserManagement:
         )
         assert patch_resp.status_code == 200, f"Role change failed: {patch_resp.status_code} - {patch_resp.text}"
 
-        result = patch_resp.json()
+        result = _unwrap(patch_resp)
         assert new_role in result.get("roles", []), f"Expected {new_role} in roles"
         print(f"✅ Role changed from {current_agency_role} to {new_role} for {test_user['email']}")
 
@@ -157,7 +167,7 @@ class TestAdminUserManagement:
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert resp.status_code == 200
-        users = resp.json()
+        users = _unwrap(resp)
 
         if not users:
             pytest.skip("No agency users to test status toggle")
@@ -183,7 +193,7 @@ class TestAdminUserManagement:
         )
         assert patch_resp.status_code == 200, f"Status toggle failed: {patch_resp.status_code} - {patch_resp.text}"
 
-        result = patch_resp.json()
+        result = _unwrap(patch_resp)
         assert result.get("status") == new_status, f"Expected status {new_status}"
         print(f"✅ Status changed from {current_status} to {new_status} for {test_user['email']}")
 
@@ -207,7 +217,7 @@ class TestAgencyProfileEndpoint:
             headers={"Authorization": f"Bearer {agency_token}"}
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         print(f"✅ GET /api/agency/profile returned: {data}")
 
     def test_agency_profile_has_allowed_modules(self, agency_token):
@@ -217,7 +227,7 @@ class TestAgencyProfileEndpoint:
             headers={"Authorization": f"Bearer {agency_token}"}
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "allowed_modules" in data, "Response should have allowed_modules field"
         assert isinstance(data["allowed_modules"], list), "allowed_modules should be a list"
@@ -241,7 +251,7 @@ class TestAgencyModulesEndpoint:
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert agencies_resp.status_code == 200
-        agencies = agencies_resp.json()
+        agencies = _unwrap(agencies_resp)
 
         if not agencies:
             pytest.skip("No agencies to test")
@@ -255,7 +265,7 @@ class TestAgencyModulesEndpoint:
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "agency_id" in data, "Response should have agency_id"
         assert "agency_name" in data, "Response should have agency_name"
@@ -270,7 +280,7 @@ class TestAgencyModulesEndpoint:
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert agencies_resp.status_code == 200
-        agencies = agencies_resp.json()
+        agencies = _unwrap(agencies_resp)
 
         if not agencies:
             pytest.skip("No agencies to test")
@@ -283,7 +293,7 @@ class TestAgencyModulesEndpoint:
             f"{BASE_URL}/api/admin/agencies/{agency_id}/modules",
             headers={"Authorization": f"Bearer {admin_token}"}
         )
-        current_modules = get_resp.json().get("allowed_modules", [])
+        current_modules = _unwrap(get_resp).get("allowed_modules", [])
 
         # Set test modules
         test_modules = ["dashboard", "rezervasyonlar", "musteriler"]
@@ -294,7 +304,7 @@ class TestAgencyModulesEndpoint:
         )
         assert put_resp.status_code == 200, f"Expected 200, got {put_resp.status_code}: {put_resp.text}"
 
-        result = put_resp.json()
+        result = _unwrap(put_resp)
         assert result.get("allowed_modules") == test_modules
         print(f"✅ Set modules to: {test_modules}")
 

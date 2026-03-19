@@ -18,6 +18,14 @@ from pathlib import Path
 import pytest
 import requests
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 
 def _resolve_base_url() -> str:
@@ -69,7 +77,7 @@ class TestLegacyAuthCompatHeaders:
         assert "</api/v1/auth/login>; rel=\"successor-version\"" in link_header, f"Missing successor link: {link_header}"
 
         # Verify response data
-        data = resp.json()
+        data = _unwrap(resp)
         assert "access_token" in data, "Missing access_token"
         assert data.get("user", {}).get("email") == ADMIN_EMAIL, "Incorrect user email"
         print("✅ Legacy login works with compat headers")
@@ -100,7 +108,7 @@ class TestLegacyAuthCompatHeaders:
         assert "</api/v1/auth/me>; rel=\"successor-version\"" in link_header, f"Missing successor link: {link_header}"
 
         # Verify response data
-        data = me_resp.json()
+        data = _unwrap(me_resp)
         assert data.get("email") == ADMIN_EMAIL, "Incorrect user email"
         print("✅ Legacy /me works with compat headers")
 
@@ -131,7 +139,7 @@ class TestLegacyAuthCompatHeaders:
         assert "</api/v1/auth/refresh>; rel=\"successor-version\"" in link_header, f"Missing successor link: {link_header}"
 
         # Verify response data
-        data = refresh_resp.json()
+        data = _unwrap(refresh_resp)
         assert "access_token" in data, "Missing access_token"
         print("✅ Legacy refresh works with compat headers")
 
@@ -150,7 +158,7 @@ class TestV1AuthCookieFlow:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("auth_transport") == "cookie_compat", f"Expected cookie_compat transport, got {data.get('auth_transport')}"
         assert "access_token" in data, "Missing access_token"
 
@@ -176,7 +184,7 @@ class TestV1AuthCookieFlow:
         )
         assert me_resp.status_code == 200, f"Expected 200, got {me_resp.status_code}: {me_resp.text}"
 
-        data = me_resp.json()
+        data = _unwrap(me_resp)
         assert data.get("email") == ADMIN_EMAIL, f"Expected {ADMIN_EMAIL}, got {data.get('email')}"
         print("✅ V1 /me works after v1 login with cookie flow")
 
@@ -191,7 +199,7 @@ class TestV1AuthCookieFlow:
         )
         assert login_resp.status_code == 200, f"Login failed: {login_resp.text}"
 
-        first_refresh_token = login_resp.json().get("refresh_token")
+        first_refresh_token = _unwrap(login_resp).get("refresh_token")
 
         refresh_resp = session.post(
             f"{BASE_URL}/api/v1/auth/refresh",
@@ -201,7 +209,7 @@ class TestV1AuthCookieFlow:
         )
         assert refresh_resp.status_code == 200, f"Expected 200, got {refresh_resp.status_code}: {refresh_resp.text}"
 
-        data = refresh_resp.json()
+        data = _unwrap(refresh_resp)
         assert data.get("auth_transport") == "cookie_compat", "Expected cookie_compat transport"
         assert "access_token" in data, "Missing access_token"
         assert "refresh_token" in data, "Missing refresh_token"
@@ -222,7 +230,7 @@ class TestV1AuthBearerFlow:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("auth_transport") == "bearer", f"Expected bearer transport, got {data.get('auth_transport')}"
         assert "access_token" in data, "Missing access_token"
         print("✅ V1 login works with bearer transport")
@@ -238,7 +246,7 @@ class TestV1AuthBearerFlow:
         )
         assert login_resp.status_code == 200, f"Login failed: {login_resp.text}"
 
-        token = login_resp.json().get("access_token")
+        token = _unwrap(login_resp).get("access_token")
 
         me_resp = requests.get(
             f"{BASE_URL}/api/v1/auth/me",
@@ -247,7 +255,7 @@ class TestV1AuthBearerFlow:
         )
         assert me_resp.status_code == 200, f"Expected 200, got {me_resp.status_code}: {me_resp.text}"
 
-        data = me_resp.json()
+        data = _unwrap(me_resp)
         assert data.get("email") == ADMIN_EMAIL, f"Expected {ADMIN_EMAIL}, got {data.get('email')}"
         print("✅ V1 /me works with bearer token")
 
@@ -266,7 +274,7 @@ class TestMobileBFFSafety:
         )
         assert login_resp.status_code == 200, f"Login failed: {login_resp.text}"
 
-        token = login_resp.json().get("access_token")
+        token = _unwrap(login_resp).get("access_token")
 
         # Call mobile BFF /me with that token
         mobile_me_resp = requests.get(
@@ -276,7 +284,7 @@ class TestMobileBFFSafety:
         )
         assert mobile_me_resp.status_code == 200, f"Expected 200, got {mobile_me_resp.status_code}: {mobile_me_resp.text}"
 
-        data = mobile_me_resp.json()
+        data = _unwrap(mobile_me_resp)
         assert data.get("email") == ADMIN_EMAIL, f"Expected {ADMIN_EMAIL}, got {data.get('email')}"
         print("✅ Mobile BFF /me works with v1 auth token")
 

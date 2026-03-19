@@ -9,6 +9,16 @@ from app.constants.plan_matrix import PLAN_MATRIX
 from tests.integration.feature_flags.conftest import enable_feature
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.anyio
 async def test_get_tenant_features_empty(
   feature_test_client: AsyncClient,
@@ -22,7 +32,7 @@ async def test_get_tenant_features_empty(
 
   resp = await feature_test_client.get("/api/tenant/features")
   assert resp.status_code == 200, resp.text
-  body = resp.json()
+  body = _unwrap(resp)
   assert body["tenant_id"] == tenant_id
   assert body["features"] == []
   assert body["limits"] == {}
@@ -46,7 +56,7 @@ async def test_get_tenant_features_with_plan(
 
   resp = await feature_test_client.get("/api/tenant/features")
   assert resp.status_code == 200, resp.text
-  body = resp.json()
+  body = _unwrap(resp)
   assert body["tenant_id"] == tenant_id
   assert body["source"] == "capabilities"
   assert body["plan"] == "starter"
@@ -70,7 +80,7 @@ async def test_get_tenant_entitlements_alias(
 
   resp = await feature_test_client.get("/api/tenant/entitlements")
   assert resp.status_code == 200, resp.text
-  body = resp.json()
+  body = _unwrap(resp)
   assert body["tenant_id"] == tenant_id
   assert "limits" in body
   assert "usage_allowances" in body

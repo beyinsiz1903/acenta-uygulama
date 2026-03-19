@@ -11,6 +11,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -28,7 +38,7 @@ def auth_token():
     )
     if resp.status_code != 200:
         pytest.skip(f"Auth failed: {resp.status_code} - {resp.text}")
-    data = resp.json()
+    data = _unwrap(resp)
     return data.get("access_token")
 
 
@@ -59,7 +69,7 @@ class TestPilotSimulationFlows:
 
         assert resp.status_code == 200, f"Simulation failed: {resp.status_code} - {resp.text}"
 
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Verify simulation summary
         assert "total_flows" in data, "Missing total_flows"
@@ -107,7 +117,7 @@ class TestPilotMetricsDashboard:
 
         assert resp.status_code == 200, f"Metrics failed: {resp.status_code} - {resp.text}"
 
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Verify flow_health section
         assert "flow_health" in data, "Missing flow_health section"
@@ -128,7 +138,7 @@ class TestPilotMetricsDashboard:
 
         assert resp.status_code == 200
 
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Verify supplier_metrics section
         assert "supplier_metrics" in data, "Missing supplier_metrics section"
@@ -148,7 +158,7 @@ class TestPilotMetricsDashboard:
 
         assert resp.status_code == 200
 
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Verify finance_metrics section
         assert "finance_metrics" in data, "Missing finance_metrics section"
@@ -167,7 +177,7 @@ class TestPilotMetricsDashboard:
         )
 
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Required sections
         required_sections = [
@@ -194,7 +204,7 @@ class TestPilotAgenciesList:
 
         assert resp.status_code == 200, f"Agencies list failed: {resp.status_code} - {resp.text}"
 
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "agencies" in data, "Missing agencies list"
         assert "total" in data, "Missing total count"
@@ -225,7 +235,7 @@ class TestPilotIncidents:
 
         assert resp.status_code == 200, f"Incidents failed: {resp.status_code} - {resp.text}"
 
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "incidents" in data, "Missing incidents list"
         assert "total" in data, "Missing total count"
@@ -242,7 +252,7 @@ class TestPilotIncidents:
         )
 
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         # If there are incidents, verify they have enhanced fields
         if data["incidents"]:

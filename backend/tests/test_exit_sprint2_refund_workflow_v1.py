@@ -13,6 +13,16 @@ from app.utils import now_utc
 from app.services.org_service import initialize_org_defaults
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 def _id_variants(x: str) -> list[Any]:
     vals: list[Any] = [x]
     try:
@@ -131,7 +141,7 @@ async def test_refund_workflow_v1_contract(test_db: Any, async_client: AsyncClie
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_create.status_code == status.HTTP_201_CREATED
-    booking = resp_create.json()
+    booking = _unwrap(resp_create)
     booking_id = booking["id"]
 
     await client.post(
@@ -149,7 +159,7 @@ async def test_refund_workflow_v1_contract(test_db: Any, async_client: AsyncClie
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_req.status_code == status.HTTP_200_OK
-    refund_in_progress = resp_req.json()
+    refund_in_progress = _unwrap(resp_req)
     assert refund_in_progress["state"] == "refund_in_progress"
 
     # refund-approve => refunded
@@ -158,7 +168,7 @@ async def test_refund_workflow_v1_contract(test_db: Any, async_client: AsyncClie
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_approve.status_code == status.HTTP_200_OK
-    refunded = resp_approve.json()
+    refunded = _unwrap(resp_approve)
     assert refunded["state"] == "refunded"
 
     # Refund-specific audits must exist alongside BOOKING_STATE_CHANGED audits
@@ -203,7 +213,7 @@ async def test_refund_workflow_v1_contract(test_db: Any, async_client: AsyncClie
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_create2.status_code == status.HTTP_201_CREATED
-    booking2_id = resp_create2.json()["id"]
+    booking2_id = _unwrap(resp_create2)["id"]
 
     await client.post(
         f"/api/bookings/{booking2_id}/quote",
@@ -219,14 +229,14 @@ async def test_refund_workflow_v1_contract(test_db: Any, async_client: AsyncClie
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_req2.status_code == status.HTTP_200_OK
-    assert resp_req2.json()["state"] == "refund_in_progress"
+    assert _unwrap(resp_req2)["state"] == "refund_in_progress"
 
     resp_reject = await client.post(
         f"/api/bookings/{booking2_id}/refund-reject",
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_reject.status_code == status.HTTP_200_OK
-    rejected = resp_reject.json()
+    rejected = _unwrap(resp_reject)
     assert rejected["state"] == "booked"
 
     refund_rejected = await find_audit_for_booking(

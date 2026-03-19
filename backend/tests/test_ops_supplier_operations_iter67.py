@@ -19,6 +19,16 @@ import requests
 import os
 import uuid
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 # Get BASE_URL from environment
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
@@ -38,7 +48,7 @@ class TestOpsAuth:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert response.status_code == 200, f"Agent login failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         return data.get("access_token")
 
     @pytest.fixture(scope="class")
@@ -72,7 +82,7 @@ class TestP1SupplierPerformanceDashboard:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert response.status_code == 200
-        return response.json().get("access_token")
+        return _unwrap(response).get("access_token")
 
     @pytest.fixture(scope="class")
     def auth_headers(self, agent_token):
@@ -86,7 +96,7 @@ class TestP1SupplierPerformanceDashboard:
             params={"window_minutes": 60}
         )
         assert response.status_code == 200, f"Performance dashboard failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Validate response structure
         assert "dashboard" in data, "Missing 'dashboard' key"
@@ -115,7 +125,7 @@ class TestP1SupplierPerformanceDashboard:
             params={"window_hours": 24, "bucket_minutes": 15}
         )
         assert response.status_code == 200, f"Performance timeseries failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Validate response structure
         assert "supplier_code" in data
@@ -137,7 +147,7 @@ class TestP2BookingFunnelAnalytics:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert response.status_code == 200
-        return response.json().get("access_token")
+        return _unwrap(response).get("access_token")
 
     @pytest.fixture(scope="class")
     def auth_headers(self, agent_token):
@@ -151,7 +161,7 @@ class TestP2BookingFunnelAnalytics:
             params={"window_hours": 24}
         )
         assert response.status_code == 200, f"Funnel analytics failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Validate response structure
         assert "funnel" in data, "Missing 'funnel' key"
@@ -178,7 +188,7 @@ class TestP2BookingFunnelAnalytics:
             params={"window_hours": 24, "bucket_hours": 1}
         )
         assert response.status_code == 200, f"Funnel timeseries failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Validate response structure
         assert "window_hours" in data
@@ -198,7 +208,7 @@ class TestP3FailoverVisibility:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert response.status_code == 200
-        return response.json().get("access_token")
+        return _unwrap(response).get("access_token")
 
     @pytest.fixture(scope="class")
     def auth_headers(self, agent_token):
@@ -212,7 +222,7 @@ class TestP3FailoverVisibility:
             params={"window_hours": 24}
         )
         assert response.status_code == 200, f"Failover dashboard failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Validate response structure
         assert "failover_summary" in data, "Missing 'failover_summary' key"
@@ -242,7 +252,7 @@ class TestP4BookingIncidentTracking:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert response.status_code == 200
-        return response.json().get("access_token")
+        return _unwrap(response).get("access_token")
 
     @pytest.fixture(scope="class")
     def auth_headers(self, agent_token):
@@ -255,7 +265,7 @@ class TestP4BookingIncidentTracking:
             headers=auth_headers
         )
         assert response.status_code == 200, f"Detect incidents failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Validate response structure
         assert "stuck_bookings" in data, "Missing 'stuck_bookings' key"
@@ -283,7 +293,7 @@ class TestP4BookingIncidentTracking:
             json=test_incident
         )
         assert create_resp.status_code == 201, f"Create incident failed: {create_resp.text}"
-        created = create_resp.json()
+        created = _unwrap(create_resp)
 
         assert "incident_id" in created
         assert created["incident_type"] == test_incident["incident_type"]
@@ -299,7 +309,7 @@ class TestP4BookingIncidentTracking:
             params={"limit": 50}
         )
         assert list_resp.status_code == 200, f"List incidents failed: {list_resp.text}"
-        list_data = list_resp.json()
+        list_data = _unwrap(list_resp)
 
         assert "incidents" in list_data
         assert "total" in list_data
@@ -327,7 +337,7 @@ class TestP4BookingIncidentTracking:
             json=test_incident
         )
         assert create_resp.status_code == 201
-        incident_id = create_resp.json()["incident_id"]
+        incident_id = _unwrap(create_resp)["incident_id"]
 
         # Resolve the incident
         resolve_resp = requests.post(
@@ -336,7 +346,7 @@ class TestP4BookingIncidentTracking:
             json={"resolution": "Test resolution - incident resolved successfully"}
         )
         assert resolve_resp.status_code == 200, f"Resolve incident failed: {resolve_resp.text}"
-        resolved = resolve_resp.json()
+        resolved = _unwrap(resolve_resp)
 
         assert resolved.get("status") == "resolved"
         assert resolved.get("resolution") is not None
@@ -360,7 +370,7 @@ class TestP4BookingIncidentTracking:
         assert response.status_code in [200, 404], f"Force state failed unexpectedly: {response.text}"
 
         if response.status_code == 200:
-            data = response.json()
+            data = _unwrap(response)
             if "error" not in data:
                 assert "booking_id" in data
                 assert "forced" in data
@@ -381,7 +391,7 @@ class TestP5SupplierDebuggingTools:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert response.status_code == 200
-        return response.json().get("access_token")
+        return _unwrap(response).get("access_token")
 
     @pytest.fixture(scope="class")
     def auth_headers(self, agent_token):
@@ -395,7 +405,7 @@ class TestP5SupplierDebuggingTools:
             params={"window_hours": 24, "limit": 50}
         )
         assert response.status_code == 200, f"List debug interactions failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "interactions" in data
         assert "total" in data
@@ -413,7 +423,7 @@ class TestP5SupplierDebuggingTools:
             params={"dry_run": True}
         )
         assert response.status_code == 200, f"Replay request failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Either returns dry_run result or trace_not_found error
         if "error" in data:
@@ -434,7 +444,7 @@ class TestP6RealTimeAlerting:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert response.status_code == 200
-        return response.json().get("access_token")
+        return _unwrap(response).get("access_token")
 
     @pytest.fixture(scope="class")
     def auth_headers(self, agent_token):
@@ -448,7 +458,7 @@ class TestP6RealTimeAlerting:
             params={"limit": 50}
         )
         assert response.status_code == 200, f"List alerts failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "alerts" in data
         assert "total" in data
@@ -462,7 +472,7 @@ class TestP6RealTimeAlerting:
             headers=auth_headers
         )
         assert response.status_code == 200, f"Evaluate alerts failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "fired_alerts" in data
         assert "total_fired" in data
@@ -482,7 +492,7 @@ class TestP6RealTimeAlerting:
             json=config
         )
         assert response.status_code == 200, f"Configure alerts failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data.get("status") == "ok"
 
@@ -495,7 +505,7 @@ class TestP6RealTimeAlerting:
             f"{BASE_URL}/api/ops/suppliers/alerts/evaluate",
             headers=auth_headers
         )
-        eval_resp.json()
+        _unwrap(eval_resp)
 
         # Get list of active alerts
         list_resp = requests.get(
@@ -503,7 +513,7 @@ class TestP6RealTimeAlerting:
             headers=auth_headers,
             params={"status": "active", "limit": 10}
         )
-        list_data = list_resp.json()
+        list_data = _unwrap(list_resp)
         alerts = list_data.get("alerts", [])
 
         if alerts:
@@ -515,7 +525,7 @@ class TestP6RealTimeAlerting:
                 headers=auth_headers
             )
             assert ack_resp.status_code == 200, f"Acknowledge alert failed: {ack_resp.text}"
-            ack_data = ack_resp.json()
+            ack_data = _unwrap(ack_resp)
             assert ack_data.get("acknowledged") is True or ack_data.get("status") == "acknowledged"
 
             # Resolve alert
@@ -524,7 +534,7 @@ class TestP6RealTimeAlerting:
                 headers=auth_headers
             )
             assert resolve_resp.status_code == 200, f"Resolve alert failed: {resolve_resp.text}"
-            resolve_data = resolve_resp.json()
+            resolve_data = _unwrap(resolve_resp)
             assert resolve_data.get("resolved") is True or resolve_data.get("status") == "resolved"
 
             print(f"PASS: Acknowledged and resolved alert {alert_id}")
@@ -542,7 +552,7 @@ class TestP7VoucherPipeline:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert response.status_code == 200
-        return response.json().get("access_token")
+        return _unwrap(response).get("access_token")
 
     @pytest.fixture(scope="class")
     def auth_headers(self, agent_token):
@@ -556,7 +566,7 @@ class TestP7VoucherPipeline:
             params={"limit": 50}
         )
         assert response.status_code == 200, f"Voucher pipeline status failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "status_distribution" in data
         assert "total" in data
@@ -585,7 +595,7 @@ class TestP7VoucherPipeline:
             json=voucher_data
         )
         assert response.status_code == 201, f"Create voucher failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "voucher_id" in data
         assert data.get("status") == "pending"
@@ -612,7 +622,7 @@ class TestP7VoucherPipeline:
             json=voucher_data
         )
         assert create_resp.status_code == 201
-        voucher_id = create_resp.json()["voucher_id"]
+        voucher_id = _unwrap(create_resp)["voucher_id"]
 
         # Generate the voucher
         gen_resp = requests.post(
@@ -620,7 +630,7 @@ class TestP7VoucherPipeline:
             headers=auth_headers
         )
         assert gen_resp.status_code == 200, f"Generate voucher failed: {gen_resp.text}"
-        data = gen_resp.json()
+        data = _unwrap(gen_resp)
 
         assert data.get("status") == "generated"
         assert "html_length" in data
@@ -643,7 +653,7 @@ class TestP7VoucherPipeline:
             json=voucher_data
         )
         assert create_resp.status_code == 201
-        voucher_id = create_resp.json()["voucher_id"]
+        voucher_id = _unwrap(create_resp)["voucher_id"]
 
         # Generate first
         requests.post(
@@ -658,7 +668,7 @@ class TestP7VoucherPipeline:
             json={"recipient_email": "test@example.com"}
         )
         assert send_resp.status_code == 200, f"Send voucher failed: {send_resp.text}"
-        data = send_resp.json()
+        data = _unwrap(send_resp)
 
         assert data.get("status") == "delivered"
         assert data.get("recipient") == "test@example.com"
@@ -672,7 +682,7 @@ class TestP7VoucherPipeline:
             headers=auth_headers
         )
         assert response.status_code == 200, f"Retry failed vouchers failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "retried" in data
 
@@ -689,7 +699,7 @@ class TestP8OPSAdminPanel:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert response.status_code == 200
-        return response.json().get("access_token")
+        return _unwrap(response).get("access_token")
 
     @pytest.fixture(scope="class")
     def auth_headers(self, agent_token):
@@ -704,7 +714,7 @@ class TestP8OPSAdminPanel:
             headers=auth_headers
         )
         assert response.status_code == 200, f"Inspect booking failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Either returns booking data or error
         if "error" not in data:
@@ -727,7 +737,7 @@ class TestP8OPSAdminPanel:
             json={"action": "circuit_open", "reason": "TEST: Circuit open for testing"}
         )
         assert response.status_code == 200, f"Supplier override failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data.get("supplier_code") == supplier_code
         assert data.get("action") == "circuit_open"
@@ -752,7 +762,7 @@ class TestP8OPSAdminPanel:
             headers=auth_headers
         )
         assert response.status_code == 200, f"Manual failover failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "primary_supplier" in data
         assert "selected_supplier" in data
@@ -777,7 +787,7 @@ class TestP8OPSAdminPanel:
             json=override_data
         )
         assert response.status_code == 200, f"Price override failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         if "error" not in data:
             assert "booking_id" in data
@@ -796,7 +806,7 @@ class TestP8OPSAdminPanel:
             params={"limit": 50}
         )
         assert response.status_code == 200, f"Audit log failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "logs" in data
         assert "total" in data
@@ -818,7 +828,7 @@ class TestP9OperationsMetrics:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert response.status_code == 200
-        return response.json().get("access_token")
+        return _unwrap(response).get("access_token")
 
     @pytest.fixture(scope="class")
     def auth_headers(self, agent_token):
@@ -831,7 +841,7 @@ class TestP9OperationsMetrics:
             headers=auth_headers
         )
         assert response.status_code == 200, f"Metrics JSON failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Validate metrics structure
         assert "bookings_by_state" in data, "Missing 'bookings_by_state'"
@@ -880,7 +890,7 @@ class TestEndToEndOperationsWorkflow:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert response.status_code == 200
-        return response.json().get("access_token")
+        return _unwrap(response).get("access_token")
 
     @pytest.fixture(scope="class")
     def auth_headers(self, agent_token):
@@ -894,7 +904,7 @@ class TestEndToEndOperationsWorkflow:
             headers=auth_headers
         )
         assert detect_resp.status_code == 200
-        detect_resp.json()
+        _unwrap(detect_resp)
 
         # 2. Create a manual incident
         incident = {
@@ -910,7 +920,7 @@ class TestEndToEndOperationsWorkflow:
             json=incident
         )
         assert create_resp.status_code == 201
-        incident_id = create_resp.json()["incident_id"]
+        incident_id = _unwrap(create_resp)["incident_id"]
 
         # 3. List to verify
         list_resp = requests.get(
@@ -927,7 +937,7 @@ class TestEndToEndOperationsWorkflow:
             json={"resolution": "Resolved as part of E2E workflow test"}
         )
         assert resolve_resp.status_code == 200
-        assert resolve_resp.json().get("status") == "resolved"
+        assert _unwrap(resolve_resp).get("status") == "resolved"
 
         print(f"PASS: E2E Incident workflow - created and resolved incident {incident_id}")
 
@@ -951,7 +961,7 @@ class TestEndToEndOperationsWorkflow:
             json=voucher
         )
         assert create_resp.status_code == 201
-        voucher_id = create_resp.json()["voucher_id"]
+        voucher_id = _unwrap(create_resp)["voucher_id"]
 
         # 2. Generate
         gen_resp = requests.post(
@@ -959,7 +969,7 @@ class TestEndToEndOperationsWorkflow:
             headers=auth_headers
         )
         assert gen_resp.status_code == 200
-        assert gen_resp.json().get("status") == "generated"
+        assert _unwrap(gen_resp).get("status") == "generated"
 
         # 3. Send
         send_resp = requests.post(
@@ -968,7 +978,7 @@ class TestEndToEndOperationsWorkflow:
             json={"recipient_email": "e2e@example.com"}
         )
         assert send_resp.status_code == 200
-        assert send_resp.json().get("status") == "delivered"
+        assert _unwrap(send_resp).get("status") == "delivered"
 
         # 4. Check pipeline status
         pipeline_resp = requests.get(

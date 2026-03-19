@@ -12,6 +12,16 @@ from app.auth import _jwt_secret
 from app.db import get_db
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 async def _seed_org_tenant_user(db, org_name: str, email: str) -> Dict[str, str]:
     now = datetime.now(timezone.utc)
     org = {"name": org_name, "billing_email": email, "status": "active", "created_at": now, "updated_at": now}
@@ -76,7 +86,7 @@ async def test_invite_accept_activate_happy_path(async_client: AsyncClient) -> N
         json={"buyer_tenant_id": buyer["tenant_id"], "note": "Test"},
     )
     assert resp.status_code == 200, resp.text
-    rel = resp.json()
+    rel = _unwrap(resp)
     assert rel["status"] == "invited"
 
     rel_id = rel["id"]
@@ -90,7 +100,7 @@ async def test_invite_accept_activate_happy_path(async_client: AsyncClient) -> N
         },
     )
     assert resp2.status_code == 200, resp2.text
-    rel2 = resp2.json()
+    rel2 = _unwrap(resp2)
     assert rel2["status"] == "accepted"
 
     # Seller activates
@@ -102,7 +112,7 @@ async def test_invite_accept_activate_happy_path(async_client: AsyncClient) -> N
         },
     )
     assert resp3.status_code == 200, resp3.text
-    rel3 = resp3.json()
+    rel3 = _unwrap(resp3)
     assert rel3["status"] == "active"
 
 
@@ -133,7 +143,7 @@ async def test_inventory_share_requires_active_relationship(async_client: AsyncC
         },
     )
     assert resp2.status_code == 403
-    body = resp2.json()
+    body = _unwrap(resp2)
     assert body["error"]["code"] == "partner_relationship_inactive"
 
 
@@ -222,7 +232,7 @@ async def test_commission_resolution_specificity(async_client: AsyncClient) -> N
         },
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["commission"]["amount"] == pytest.approx(15.0)
 
 
@@ -296,7 +306,7 @@ async def test_network_booking_creates_settlement(async_client: AsyncClient) -> 
         },
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     booking_id = body["booking_id"]
     settlement_id = body["settlement_id"]
     assert settlement_id
@@ -348,5 +358,5 @@ async def test_network_booking_denied_if_not_shared(async_client: AsyncClient) -
         },
     )
     assert resp.status_code == 403, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["error"]["code"] == "inventory_not_shared"

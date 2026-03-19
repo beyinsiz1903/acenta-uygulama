@@ -10,6 +10,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -38,7 +48,7 @@ def admin_session():
     if login_resp.status_code != 200:
         pytest.skip(f"Admin login failed: {login_resp.status_code} - {login_resp.text[:200]}")
 
-    data = login_resp.json()
+    data = _unwrap(login_resp)
     token = data.get("token") or data.get("access_token")
     if token:
         session.headers.update({"Authorization": f"Bearer {token}"})
@@ -52,7 +62,7 @@ def tenant_id(admin_session):
     # Try to get tenant from /admin/tenants list
     resp = admin_session.get(f"{BASE_URL}/api/admin/tenants", params={"limit": 1})
     if resp.status_code == 200:
-        data = resp.json()
+        data = _unwrap(resp)
         items = data.get("items") or data.get("tenants") or []
         if items:
             return str(items[0].get("id") or items[0].get("_id"))
@@ -60,7 +70,7 @@ def tenant_id(admin_session):
     # Fallback: try /api/tenant/features to get current tenant_id
     resp2 = admin_session.get(f"{BASE_URL}/api/tenant/features")
     if resp2.status_code == 200:
-        return resp2.json().get("tenant_id")
+        return _unwrap(resp2).get("tenant_id")
 
     pytest.skip("Could not find a tenant_id for testing")
 
@@ -78,7 +88,7 @@ class TestTenantUsageSummaryEndpoint:
         """Response should contain metrics object."""
         resp = admin_session.get(f"{BASE_URL}/api/tenant/usage-summary", params={"days": 30})
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "metrics" in data, "Response should have 'metrics' field"
         assert isinstance(data["metrics"], dict), "'metrics' should be a dict"
@@ -88,7 +98,7 @@ class TestTenantUsageSummaryEndpoint:
         """Response should contain trend data."""
         resp = admin_session.get(f"{BASE_URL}/api/tenant/usage-summary", params={"days": 30})
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "trend" in data, "Response should have 'trend' field"
         trend = data["trend"]
@@ -101,7 +111,7 @@ class TestTenantUsageSummaryEndpoint:
         """Response should contain primary_metrics list."""
         resp = admin_session.get(f"{BASE_URL}/api/tenant/usage-summary", params={"days": 30})
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "primary_metrics" in data, "Response should have 'primary_metrics'"
         primary = data["primary_metrics"]
@@ -119,7 +129,7 @@ class TestTenantUsageSummaryEndpoint:
         """Response should have plan and billing period info."""
         resp = admin_session.get(f"{BASE_URL}/api/tenant/usage-summary", params={"days": 30})
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "plan" in data or "plan_label" in data, "Response should have plan info"
         assert "period" in data or "billing_period" in data, "Response should have billing period"
@@ -129,7 +139,7 @@ class TestTenantUsageSummaryEndpoint:
         """Each metric should have used, limit, percent fields."""
         resp = admin_session.get(f"{BASE_URL}/api/tenant/usage-summary", params={"days": 30})
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         metrics = data.get("metrics", {})
 
         if not metrics:
@@ -155,7 +165,7 @@ class TestAdminBillingUsageEndpoint:
         """Admin endpoint should return raw usage + trend (no upgrade suggestion per UM4)."""
         resp = admin_session.get(f"{BASE_URL}/api/admin/billing/tenants/{tenant_id}/usage", params={"days": 30})
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Should have metrics
         assert "metrics" in data, "Admin response should have 'metrics'"
@@ -174,7 +184,7 @@ class TestAdminBillingUsageEndpoint:
         """Admin view should include all metrics (not just primary)."""
         resp = admin_session.get(f"{BASE_URL}/api/admin/billing/tenants/{tenant_id}/usage", params={"days": 30})
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         metrics = data.get("metrics", {})
         # Admin should see all available metrics
@@ -184,7 +194,7 @@ class TestAdminBillingUsageEndpoint:
         """Admin response should indicate data source."""
         resp = admin_session.get(f"{BASE_URL}/api/admin/billing/tenants/{tenant_id}/usage", params={"days": 30})
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Should have totals_source or similar indicator
         source = data.get("totals_source")
@@ -194,7 +204,7 @@ class TestAdminBillingUsageEndpoint:
         """Trend should have daily array with date and metric counts."""
         resp = admin_session.get(f"{BASE_URL}/api/admin/billing/tenants/{tenant_id}/usage", params={"days": 30})
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         trend = data.get("trend", {})
         daily = trend.get("daily", [])
@@ -214,7 +224,7 @@ class TestUsageReadServiceConstants:
         """Tenant usage summary should only show primary metrics."""
         resp = admin_session.get(f"{BASE_URL}/api/tenant/usage-summary", params={"days": 30})
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         metrics = data.get("metrics", {})
         primary = data.get("primary_metrics", [])
@@ -233,7 +243,7 @@ class TestNoUpgradeCTAYet:
         """Tenant usage should not have upgrade CTA."""
         resp = admin_session.get(f"{BASE_URL}/api/tenant/usage-summary", params={"days": 30})
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Check for upgrade-related fields
         has_upgrade = any(k in data for k in ["upgrade_suggestion", "upgrade_cta", "recommended_plan"])
@@ -246,7 +256,7 @@ class TestNoUpgradeCTAYet:
         """Admin usage should not have upgrade suggestion."""
         resp = admin_session.get(f"{BASE_URL}/api/admin/billing/tenants/{tenant_id}/usage", params={"days": 30})
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         has_upgrade = any(k in data for k in ["upgrade_suggestion", "upgrade_cta", "recommended_plan"])
         if has_upgrade:
@@ -264,14 +274,14 @@ class TestTenantContextResolution:
 
         # Should not return tenant_context_missing error
         if resp.status_code == 400:
-            data = resp.json()
+            data = _unwrap(resp)
             error_code = data.get("error_code") or data.get("code")
             if error_code == "tenant_context_missing":
                 pytest.fail("tenant_context_missing error - context fallback not working")
 
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         tenant_id = data.get("tenant_id")
         assert tenant_id, "Response should include resolved tenant_id"
         print(f"✅ Tenant context resolved: {tenant_id}")

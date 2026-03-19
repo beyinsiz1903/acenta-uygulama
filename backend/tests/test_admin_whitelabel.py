@@ -7,6 +7,16 @@ import pytest
 from app.auth import create_access_token
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.anyio
 async def test_admin_whitelabel_feature_disabled(async_client, test_db, anyio_backend):  # type: ignore[override]
     db = test_db
@@ -59,7 +69,7 @@ async def test_admin_whitelabel_upsert_and_get(async_client, test_db, anyio_back
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp_get_initial.status_code == 200
-    data_initial = resp_get_initial.json()
+    data_initial = _unwrap(resp_get_initial)
     assert data_initial["brand_name"] == ""
 
     # Upsert new config
@@ -76,7 +86,7 @@ async def test_admin_whitelabel_upsert_and_get(async_client, test_db, anyio_back
         json=payload,
     )
     assert resp_put.status_code == 200
-    data_put = resp_put.json()
+    data_put = _unwrap(resp_put)
     assert data_put["brand_name"] == payload["brand_name"]
     assert data_put["primary_color"] == payload["primary_color"]
 
@@ -86,7 +96,7 @@ async def test_admin_whitelabel_upsert_and_get(async_client, test_db, anyio_back
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp_get.status_code == 200
-    data = resp_get.json()
+    data = _unwrap(resp_get)
     assert data["brand_name"] == payload["brand_name"]
     assert data["primary_color"] == payload["primary_color"]
     assert data["logo_url"] == payload["logo_url"]

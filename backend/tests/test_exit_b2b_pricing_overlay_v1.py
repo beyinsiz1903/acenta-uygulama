@@ -11,6 +11,16 @@ from app.auth import _jwt_secret
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 async def _seed_pricing_rule(test_db: Any, organization_id: str, agency_id: str, markup_pct: float) -> None:
     now = now_utc()
     doc = {
@@ -90,7 +100,7 @@ async def test_b2b_pricing_overlay_applied_on_canonical_offers(test_db: Any, asy
 
     resp = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp.status_code == status.HTTP_200_OK, resp.text
-    data = resp.json()
+    data = _unwrap(resp)
     offers = data.get("offers") or []
     assert offers
 
@@ -178,7 +188,7 @@ async def test_b2b_pricing_default_when_no_rule(test_db: Any, async_client: Asyn
 
     resp = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp.status_code == status.HTTP_200_OK, resp.text
-    data = resp.json()
+    data = _unwrap(resp)
     offers = data.get("offers") or []
     assert offers
 
@@ -262,7 +272,7 @@ async def test_booking_repricing_consistency_with_canonical_offer(test_db: Any, 
 
     resp_search = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp_search.status_code == status.HTTP_200_OK, resp_search.text
-    search_data = resp_search.json()
+    search_data = _unwrap(resp_search)
     session_id = search_data["session_id"]
     offers = search_data.get("offers") or []
     assert offers
@@ -285,7 +295,7 @@ async def test_booking_repricing_consistency_with_canonical_offer(test_db: Any, 
 
     resp_booking = await client.post("/api/bookings/from-canonical-offer", json=create_payload, headers=headers)
     assert resp_booking.status_code == status.HTTP_201_CREATED, resp_booking.text
-    booking = resp_booking.json()
+    booking = _unwrap(resp_booking)
 
     # booking.pricing.base_amount must equal canonical base price
     pricing = booking.get("pricing") or {}

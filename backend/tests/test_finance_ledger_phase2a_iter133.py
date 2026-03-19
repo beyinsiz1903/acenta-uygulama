@@ -12,6 +12,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 
@@ -22,7 +32,7 @@ class TestLedgerEndpoints:
         """GET /api/finance/ledger/summary returns ledger totals"""
         response = requests.get(f"{BASE_URL}/api/finance/ledger/summary")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         # Validate structure
         assert "total_entries" in data
         assert "total_debit" in data
@@ -43,7 +53,7 @@ class TestLedgerEndpoints:
         """GET /api/finance/ledger/receivable-payable returns receivable/payable breakdown"""
         response = requests.get(f"{BASE_URL}/api/finance/ledger/receivable-payable")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         # Validate structure
         assert "total_receivable" in data
         assert "receivable_count" in data
@@ -59,7 +69,7 @@ class TestLedgerEndpoints:
         """GET /api/finance/ledger/recent-postings returns recent entries list"""
         response = requests.get(f"{BASE_URL}/api/finance/ledger/recent-postings?limit=10")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list)
         assert len(data) <= 10
         if data:
@@ -76,7 +86,7 @@ class TestLedgerEndpoints:
         """GET /api/finance/ledger/entries returns paginated ledger entries"""
         response = requests.get(f"{BASE_URL}/api/finance/ledger/entries?limit=5")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "entries" in data
         assert "total" in data
         assert "skip" in data
@@ -89,7 +99,7 @@ class TestLedgerEndpoints:
         """GET /api/finance/ledger/entries with account_type filter"""
         response = requests.get(f"{BASE_URL}/api/finance/ledger/entries?account_type=RECEIVABLE")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         for entry in data["entries"]:
             assert entry["account_type"] == "RECEIVABLE"
         print(f"✅ Filtered RECEIVABLE entries: {data['total']}")
@@ -98,7 +108,7 @@ class TestLedgerEndpoints:
         """GET /api/finance/ledger/entries/{id} returns single entry detail (LE-0001)"""
         response = requests.get(f"{BASE_URL}/api/finance/ledger/entries/LE-0001")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["entry_id"] == "LE-0001"
         assert "entry_type" in data
         assert "account_type" in data
@@ -115,7 +125,7 @@ class TestAgencyBalancesEndpoints:
         """GET /api/finance/ledger/agency-balances returns agency balance list"""
         response = requests.get(f"{BASE_URL}/api/finance/ledger/agency-balances")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "balances" in data
         assert "total" in data
         assert isinstance(data["balances"], list)
@@ -132,7 +142,7 @@ class TestAgencyBalancesEndpoints:
         """GET /api/finance/ledger/agency-balances?status=overdue returns 2 agencies"""
         response = requests.get(f"{BASE_URL}/api/finance/ledger/agency-balances?status=overdue")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         # Per requirements, filter should return 2 overdue agencies
         assert data["total"] == 2
         for balance in data["balances"]:
@@ -147,7 +157,7 @@ class TestSupplierPayablesEndpoints:
         """GET /api/finance/ledger/supplier-payables returns supplier payables"""
         response = requests.get(f"{BASE_URL}/api/finance/ledger/supplier-payables")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "payables" in data
         assert "total" in data
         assert isinstance(data["payables"], list)
@@ -164,7 +174,7 @@ class TestSupplierPayablesEndpoints:
         """GET /api/finance/ledger/supplier-payables?status=overdue returns 1 supplier (RateHawk)"""
         response = requests.get(f"{BASE_URL}/api/finance/ledger/supplier-payables?status=overdue")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         # Per requirements, filter should return 1 overdue supplier (RateHawk)
         assert data["total"] == 1
         assert data["payables"][0]["supplier_name"] == "RateHawk"
@@ -179,7 +189,7 @@ class TestSettlementRunEndpoints:
         """GET /api/finance/settlement-runs returns settlement run list"""
         response = requests.get(f"{BASE_URL}/api/finance/settlement-runs")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "runs" in data
         assert "total" in data
         assert isinstance(data["runs"], list)
@@ -197,7 +207,7 @@ class TestSettlementRunEndpoints:
         """GET /api/finance/settlement-runs/stats returns run stats by status"""
         response = requests.get(f"{BASE_URL}/api/finance/settlement-runs/stats")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "total_runs" in data
         assert "total_amount" in data
         assert "by_status" in data
@@ -208,7 +218,7 @@ class TestSettlementRunEndpoints:
         """GET /api/finance/settlement-runs?status=draft returns 1 run"""
         response = requests.get(f"{BASE_URL}/api/finance/settlement-runs?status=draft")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         # Per requirements, filter should return 1 draft run
         assert data["total"] == 1
         assert data["runs"][0]["status"] == "draft"
@@ -218,7 +228,7 @@ class TestSettlementRunEndpoints:
         """GET /api/finance/settlement-runs/{run_id} returns run detail with linked entries (SR-001)"""
         response = requests.get(f"{BASE_URL}/api/finance/settlement-runs/SR-001")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["run_id"] == "SR-001"
         assert data["status"] == "paid"
         assert "entries" in data
@@ -237,7 +247,7 @@ class TestReconciliationEndpoints:
         """GET /api/finance/reconciliation/summary returns recon summary"""
         response = requests.get(f"{BASE_URL}/api/finance/reconciliation/summary")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "latest_snapshot" in data
         assert "aggregate" in data
         # Validate latest snapshot
@@ -259,7 +269,7 @@ class TestReconciliationEndpoints:
         """GET /api/finance/reconciliation/snapshots returns snapshot list"""
         response = requests.get(f"{BASE_URL}/api/finance/reconciliation/snapshots")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "snapshots" in data
         assert "total" in data
         assert isinstance(data["snapshots"], list)
@@ -276,7 +286,7 @@ class TestReconciliationEndpoints:
         """GET /api/finance/reconciliation/margin-revenue returns margin data"""
         response = requests.get(f"{BASE_URL}/api/finance/reconciliation/margin-revenue")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "periods" in data
         assert "totals" in data
         assert isinstance(data["periods"], list)
@@ -296,7 +306,7 @@ class TestFinanceOverviewEndpoint:
         """GET /api/finance/ledger/overview returns combined KPI data"""
         response = requests.get(f"{BASE_URL}/api/finance/ledger/overview")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         # Validate all sections
         assert "ledger_summary" in data
         assert "receivable_payable" in data

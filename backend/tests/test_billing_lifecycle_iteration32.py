@@ -15,6 +15,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
     pytest.skip("REACT_APP_BACKEND_URL not set", allow_module_level=True)
@@ -35,7 +45,7 @@ class TestBillingSubscriptionLegacy:
             pytest.skip("Rate limited on login - wait 300s cooldown")
         if resp.status_code != 200:
             pytest.skip(f"Login failed with status {resp.status_code}: {resp.text[:200]}")
-        data = resp.json()
+        data = _unwrap(resp)
         token = data.get("access_token") or data.get("token")
         if not token:
             pytest.skip("No token in login response")
@@ -51,7 +61,7 @@ class TestBillingSubscriptionLegacy:
             timeout=30
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Verify legacy state
         assert data.get("legacy_subscription") is True, "Expected legacy_subscription=true"
@@ -68,7 +78,7 @@ class TestBillingSubscriptionLegacy:
             timeout=30
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         plan = data.get("plan")
         assert plan in ["trial", "starter", "pro", "enterprise"], f"Unexpected plan: {plan}"
@@ -82,7 +92,7 @@ class TestBillingSubscriptionLegacy:
             timeout=30
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         interval_label = data.get("interval_label", "")
         interval = data.get("interval", "")
@@ -102,7 +112,7 @@ class TestBillingSubscriptionLegacy:
             timeout=30
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         next_renewal = data.get("next_renewal_at")
         current_period_end = data.get("current_period_end")
@@ -124,7 +134,7 @@ class TestBillingSubscriptionLegacy:
             timeout=30
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Legacy accounts should have these guardrails:
         assert data.get("can_cancel") is False, "Legacy accounts cannot self-cancel"
@@ -142,7 +152,7 @@ class TestBillingSubscriptionLegacy:
             timeout=30
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Portal can be available even for legacy if customer exists or user has email
         portal_available = data.get("portal_available")
@@ -162,7 +172,7 @@ class TestBillingSubscriptionLegacy:
 
         # Legacy accounts should get 409 - subscription management unavailable
         assert resp.status_code == 409, f"Expected 409 for legacy cancel, got {resp.status_code}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         error = data.get("error", {})
         assert error.get("code") == "subscription_management_unavailable", \
@@ -182,7 +192,7 @@ class TestBillingSubscriptionLegacy:
 
         # Legacy accounts should get 409 - subscription management unavailable
         assert resp.status_code == 409, f"Expected 409 for legacy reactivate, got {resp.status_code}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         error = data.get("error", {})
         assert error.get("code") == "subscription_management_unavailable", \
@@ -204,7 +214,7 @@ class TestBillingSubscriptionLegacy:
             timeout=30
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         url = data.get("url", "")
         assert url.startswith("https://billing.stripe.com/"), f"Expected Stripe portal URL, got {url[:80]}"
@@ -227,7 +237,7 @@ class TestBillingSubscriptionLegacy:
             timeout=30
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Verify checkout redirect action
         assert data.get("action") == "checkout_redirect", f"Expected checkout_redirect, got {data.get('action')}"
@@ -257,7 +267,7 @@ class TestBillingSubscriptionLegacy:
         assert resp.status_code != 500, f"Got 500 error (stale customer handling failed): {resp.text[:200]}"
 
         if resp.status_code == 200:
-            data = resp.json()
+            data = _unwrap(resp)
             # Should get checkout redirect
             assert data.get("url") is not None, "Should have checkout URL"
             print("Stale customer handling verified - checkout URL returned")
@@ -281,7 +291,7 @@ class TestBillingSubscriptionLegacy:
 
         # Enterprise should require sales contact
         assert resp.status_code == 422, f"Expected 422 for enterprise, got {resp.status_code}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         error = data.get("error", {})
         assert error.get("code") == "enterprise_contact_required", \
@@ -305,7 +315,7 @@ class TestBillingCheckoutFlow:
             pytest.skip("Rate limited on login - wait 300s cooldown")
         if resp.status_code != 200:
             pytest.skip(f"Login failed with status {resp.status_code}")
-        data = resp.json()
+        data = _unwrap(resp)
         token = data.get("access_token") or data.get("token")
         if not token:
             pytest.skip("No token in login response")
@@ -325,7 +335,7 @@ class TestBillingCheckoutFlow:
             timeout=30
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Verify checkout session response
         assert data.get("url", "").startswith("https://checkout.stripe.com/"), \

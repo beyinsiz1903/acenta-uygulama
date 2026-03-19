@@ -7,6 +7,16 @@ from app.db import get_db
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.anyio
 async def test_create_token_happy_path(async_client):
     db = await get_db()
@@ -31,7 +41,7 @@ async def test_create_token_happy_path(async_client):
         json={"org": org, "booking_code": "PB-INSTANT-123"},
     )
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["ok"] is True
     assert "token" in data and isinstance(data["token"], str) and data["token"]
     assert "expires_at" in data
@@ -54,7 +64,7 @@ async def test_create_token_not_found_is_ok(async_client):
         json={"org": "org_x", "booking_code": "NOPE"},
     )
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data == {"ok": True}
 
     count = await db.booking_public_tokens.count_documents({})

@@ -22,6 +22,14 @@ import pytest
 import requests
 from bson import ObjectId
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -41,7 +49,7 @@ class TestTransitionMatrixEndpoint:
         """Transition matrix endpoint should be publicly accessible"""
         resp = requests.get(f"{BASE_URL}/api/bookings-statuses/transitions")
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         
         # Validate response structure
         assert "statuses" in data
@@ -53,7 +61,7 @@ class TestTransitionMatrixEndpoint:
     def test_transition_matrix_has_all_statuses(self):
         """Verify all expected statuses are present"""
         resp = requests.get(f"{BASE_URL}/api/bookings-statuses/transitions")
-        data = resp.json()
+        data = _unwrap(resp)
         
         expected_statuses = ["draft", "quoted", "optioned", "confirmed", "completed", "cancelled", "refunded"]
         for status in expected_statuses:
@@ -62,7 +70,7 @@ class TestTransitionMatrixEndpoint:
     def test_transition_matrix_has_all_commands(self):
         """Verify all expected commands are present"""
         resp = requests.get(f"{BASE_URL}/api/bookings-statuses/transitions")
-        data = resp.json()
+        data = _unwrap(resp)
         
         expected_commands = ["create_quote", "place_option", "confirm", "cancel", "complete", "mark_ticketed", "mark_vouchered", "mark_refunded"]
         for cmd in expected_commands:
@@ -71,7 +79,7 @@ class TestTransitionMatrixEndpoint:
     def test_transitions_matrix_structure(self):
         """Verify transitions object has correct structure"""
         resp = requests.get(f"{BASE_URL}/api/bookings-statuses/transitions")
-        data = resp.json()
+        data = _unwrap(resp)
         
         transitions = data["transitions"]
         # Terminal states should have no transitions
@@ -92,7 +100,7 @@ def auth_token():
     )
     if resp.status_code != 200:
         pytest.skip(f"Login failed: {resp.text}")
-    return resp.json()["access_token"]
+    return _unwrap(resp)["access_token"]
 
 
 @pytest.fixture(scope="module")
@@ -161,7 +169,7 @@ class TestBookingTransitions:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["ok"] is True
         assert data["status"] == "quoted"
         assert data["booking_id"] == booking_id
@@ -179,7 +187,7 @@ class TestBookingTransitions:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["status"] == "optioned"
         
         # Cleanup
@@ -196,7 +204,7 @@ class TestBookingTransitions:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["status"] == "confirmed"
         
         self._cleanup_booking(booking_id)
@@ -212,7 +220,7 @@ class TestBookingTransitions:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["status"] == "confirmed"
         
         self._cleanup_booking(booking_id)
@@ -228,7 +236,7 @@ class TestBookingTransitions:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["status"] == "cancelled"
         
         self._cleanup_booking(booking_id)
@@ -244,7 +252,7 @@ class TestBookingTransitions:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["status"] == "cancelled"
         
         self._cleanup_booking(booking_id)
@@ -260,7 +268,7 @@ class TestBookingTransitions:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["status"] == "completed"
         
         self._cleanup_booking(booking_id)
@@ -276,7 +284,7 @@ class TestBookingTransitions:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["status"] == "refunded"
         
         self._cleanup_booking(booking_id)
@@ -353,7 +361,7 @@ class TestFulfillmentCommands:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["status"] == "confirmed", "Main status should not change"
         assert data["fulfillment_status"] == "ticketed"
         
@@ -370,7 +378,7 @@ class TestFulfillmentCommands:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["status"] == "confirmed", "Main status should not change"
         assert data["fulfillment_status"] == "vouchered"
         
@@ -387,7 +395,7 @@ class TestFulfillmentCommands:
             json={}
         )
         assert resp1.status_code == 200
-        assert resp1.json()["fulfillment_status"] == "ticketed"
+        assert _unwrap(resp1)["fulfillment_status"] == "ticketed"
         
         # Then mark vouchered
         resp2 = requests.post(
@@ -396,7 +404,7 @@ class TestFulfillmentCommands:
             json={}
         )
         assert resp2.status_code == 200
-        assert resp2.json()["fulfillment_status"] == "both"
+        assert _unwrap(resp2)["fulfillment_status"] == "both"
         
         self._cleanup_booking(booking_id)
 
@@ -471,7 +479,7 @@ class TestInvalidTransitions:
         )
         assert resp.status_code == 422, f"Expected 422, got {resp.status_code}: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "INVALID_TRANSITION" in str(data) or "not allowed" in str(data).lower()
         
         self._cleanup_booking(booking_id)
@@ -603,7 +611,7 @@ class TestVersionConflict:
             json={}
         )
         assert resp1.status_code == 200
-        assert resp1.json()["version"] == 1, "Version should be 1 after first transition"
+        assert _unwrap(resp1)["version"] == 1, "Version should be 1 after first transition"
         
         # Option the booking (version 1 → 2)
         resp2 = requests.post(
@@ -612,7 +620,7 @@ class TestVersionConflict:
             json={}
         )
         assert resp2.status_code == 200
-        assert resp2.json()["version"] == 2, "Version should be 2 after second transition"
+        assert _unwrap(resp2)["version"] == 2, "Version should be 2 after second transition"
         
         # Cleanup
         async def cleanup():
@@ -637,7 +645,7 @@ class TestBookingStatusEndpoint:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["booking_id"] == booking_id
         assert data["status"] == "quoted"
         assert "allowed_transitions" in data
@@ -727,7 +735,7 @@ class TestBookingHistoryEndpoint:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["booking_id"] == booking_id
         assert "history" in data
         assert len(data["history"]) >= 2, "Should have at least 2 history entries"
@@ -805,7 +813,7 @@ class TestMigrationEndpoints:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "total_bookings" in data
         assert "migrated" in data
         assert "pending" in data
@@ -819,7 +827,7 @@ class TestMigrationEndpoints:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["ok"] is True
         assert data["dry_run"] is True
         assert "stats" in data

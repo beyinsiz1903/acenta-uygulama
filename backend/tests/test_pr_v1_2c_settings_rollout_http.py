@@ -9,6 +9,16 @@ import pytest
 import requests
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 def _resolve_base_url() -> str:
     env_url = os.environ.get("REACT_APP_BACKEND_URL", "").strip()
     if env_url:
@@ -47,7 +57,7 @@ class TestSettingsRolloutParity:
     def test_legacy_and_v1_settings_list_match(self):
         login_resp = _login()
         assert login_resp.status_code == 200, login_resp.text
-        token = login_resp.json()["access_token"]
+        token = _unwrap(login_resp)["access_token"]
 
         legacy_resp = requests.get(f"{BASE_URL}/api/settings/users", headers=_bearer(token), timeout=30)
         v1_resp = requests.get(f"{BASE_URL}/api/v1/settings/users", headers=_bearer(token), timeout=30)
@@ -56,12 +66,12 @@ class TestSettingsRolloutParity:
         assert legacy_resp.headers.get("deprecation") == "true"
         assert "</api/v1/settings/users>; rel=\"successor-version\"" in legacy_resp.headers.get("link", "")
         assert v1_resp.status_code == 200, v1_resp.text
-        assert [user["email"] for user in legacy_resp.json()] == [user["email"] for user in v1_resp.json()]
+        assert [user["email"] for user in _unwrap(legacy_resp)] == [user["email"] for user in _unwrap(v1_resp)]
 
     def test_v1_settings_create_user_preserves_legacy_behavior(self):
         login_resp = _login()
         assert login_resp.status_code == 200, login_resp.text
-        token = login_resp.json()["access_token"]
+        token = _unwrap(login_resp)["access_token"]
 
         unique_email = f"settings-v1-{uuid.uuid4().hex[:8]}@acenta.test"
         create_resp = requests.post(
@@ -76,11 +86,11 @@ class TestSettingsRolloutParity:
             timeout=30,
         )
         assert create_resp.status_code == 200, create_resp.text
-        assert create_resp.json()["email"] == unique_email
+        assert _unwrap(create_resp)["email"] == unique_email
 
         legacy_list = requests.get(f"{BASE_URL}/api/settings/users", headers=_bearer(token), timeout=30)
         assert legacy_list.status_code == 200, legacy_list.text
-        assert any(user["email"] == unique_email for user in legacy_list.json())
+        assert any(user["email"] == unique_email for user in _unwrap(legacy_list))
 
     def test_v1_settings_list_works_with_cookie_auth(self):
         session = requests.Session()
@@ -91,14 +101,14 @@ class TestSettingsRolloutParity:
             timeout=30,
         )
         assert login_resp.status_code == 200, login_resp.text
-        assert login_resp.json()["auth_transport"] == "cookie_compat"
-        access_token = login_resp.json()["access_token"]
+        assert _unwrap(login_resp)["auth_transport"] == "cookie_compat"
+        access_token = _unwrap(login_resp)["access_token"]
 
         v1_resp = session.get(f"{BASE_URL}/api/v1/settings/users", headers=WEB_HEADERS, timeout=30)
         mobile_resp = requests.get(f"{BASE_URL}/api/v1/mobile/auth/me", headers=_bearer(access_token), timeout=30)
 
         assert v1_resp.status_code == 200, v1_resp.text
-        assert isinstance(v1_resp.json(), list)
+        assert isinstance(_unwrap(v1_resp), list)
         assert mobile_resp.status_code == 200, mobile_resp.text
 
 

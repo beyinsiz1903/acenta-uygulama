@@ -25,7 +25,7 @@ async def test_request_link_always_ok_without_booking(async_client: httpx.AsyncC
         json={"email": "guest@example.com", "booking_code": "NO_SUCH_CODE"},
     )
     assert resp.status_code == 200
-    assert resp.json() == {"ok": True}
+    assert _unwrap(resp) == {"ok": True}
 
     token_count = await db.booking_public_tokens.count_documents({})
     outbox_count = await db.email_outbox.count_documents({})
@@ -57,7 +57,7 @@ async def test_request_link_creates_token_and_outbox(async_client: httpx.AsyncCl
         json={"email": email, "booking_code": code},
     )
     assert resp.status_code == 200
-    assert resp.json() == {"ok": True}
+    assert _unwrap(resp) == {"ok": True}
 
     token_doc = await db.booking_public_tokens.find_one({"booking_id": str(booking["_id"])})
     assert token_doc is not None
@@ -140,6 +140,16 @@ async def test_request_cancel_and_amend_idempotent(async_client: httpx.AsyncClie
     # Insert a synthetic token_doc so that resolve_public_token succeeds
     # The service looks up tokens by sha256 hash, so we must store the correct hash
     import hashlib
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
     token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
     now = now_utc()
     await db.booking_public_tokens.insert_one(

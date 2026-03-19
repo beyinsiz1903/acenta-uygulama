@@ -12,6 +12,16 @@ import uuid
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 
@@ -34,7 +44,7 @@ class TestTrialSignup:
         assert response.status_code == 200 or response.status_code == 201, f"Signup failed: {response.status_code} - {response.text}"
 
         # Data assertions
-        data = response.json()
+        data = _unwrap(response)
         assert "org_id" in data, "Missing org_id in signup response"
         assert "tenant_id" in data, "Missing tenant_id in signup response"
         assert "user_id" in data, "Missing user_id in signup response"
@@ -76,7 +86,7 @@ class TestTrialSignup:
         response = requests.post(f"{BASE_URL}/api/onboarding/signup", json=payload)
         assert response.status_code in [200, 201], f"Signup failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "org_id" in data, "Missing org_id"
         assert "tenant_id" in data, "Missing tenant_id"
 
@@ -100,7 +110,7 @@ class TestTrialExpiry:
         login_response = requests.post(f"{BASE_URL}/api/auth/login", json=login_payload)
         assert login_response.status_code == 200, f"Login failed: {login_response.status_code} - {login_response.text}"
 
-        login_data = login_response.json()
+        login_data = _unwrap(login_response)
         token = login_data.get("token") or login_data.get("access_token")
         assert token, "No token in login response"
 
@@ -110,7 +120,7 @@ class TestTrialExpiry:
 
         assert trial_response.status_code == 200, f"Trial endpoint failed: {trial_response.status_code} - {trial_response.text}"
 
-        trial_data = trial_response.json()
+        trial_data = _unwrap(trial_response)
         # Expected: status=expired AND expired=true
         assert trial_data.get("expired") or trial_data.get("status") == "expired", \
             f"Expected expired trial, got: {trial_data}"
@@ -128,7 +138,7 @@ class TestTrialExpiry:
         login_response = requests.post(f"{BASE_URL}/api/auth/login", json=login_payload)
         assert login_response.status_code == 200, f"Login failed: {login_response.status_code} - {login_response.text}"
 
-        login_data = login_response.json()
+        login_data = _unwrap(login_response)
         token = login_data.get("token") or login_data.get("access_token")
         assert token, "No token in login response"
 
@@ -138,7 +148,7 @@ class TestTrialExpiry:
 
         assert trial_response.status_code == 200, f"Trial endpoint failed: {trial_response.status_code} - {trial_response.text}"
 
-        trial_data = trial_response.json()
+        trial_data = _unwrap(trial_response)
         # Expected: expired=false for non-trial admin
         assert not trial_data.get("expired"), \
             f"Non-trial admin should not show expired, got: {trial_data}"
@@ -156,7 +166,7 @@ class TestPricingPublicEndpoints:
         # Plans endpoint should return successfully
         assert response.status_code == 200, f"Plans endpoint failed: {response.status_code} - {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "plans" in data or isinstance(data, list), "Plans response should contain plans data"
         print(f"SUCCESS: Plans endpoint returns data: {data}")
 
@@ -174,7 +184,7 @@ class TestAuthEndpoints:
         response = requests.post(f"{BASE_URL}/api/auth/login", json=payload)
         assert response.status_code == 200, f"Login failed: {response.status_code} - {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "token" in data or "access_token" in data, "Login should return token"
         print("SUCCESS: Login returns valid token")
 

@@ -11,6 +11,16 @@ from app.auth import _jwt_secret
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.exit_marketplace_v1
 @pytest.mark.anyio
 async def test_marketplace_publish_and_access_flow(test_db: Any, async_client: AsyncClient) -> None:
@@ -105,7 +115,7 @@ async def test_marketplace_publish_and_access_flow(test_db: Any, async_client: A
 
     resp_create = await client.post("/api/marketplace/listings", json=payload, headers=seller_headers)
     assert resp_create.status_code == status.HTTP_201_CREATED, resp_create.text
-    listing = resp_create.json()
+    listing = _unwrap(resp_create)
     assert listing["organization_id"] == org_id
     assert listing["tenant_id"] == seller_tenant_id
     assert listing["status"] == "draft"
@@ -117,7 +127,7 @@ async def test_marketplace_publish_and_access_flow(test_db: Any, async_client: A
         f"/api/marketplace/listings/{listing_id}/publish", headers=seller_headers
     )
     assert resp_publish.status_code == status.HTTP_200_OK, resp_publish.text
-    published = resp_publish.json()
+    published = _unwrap(resp_publish)
     assert published["status"] == "published"
 
     # 3) Admin grants access seller->buyer
@@ -136,7 +146,7 @@ async def test_marketplace_publish_and_access_flow(test_db: Any, async_client: A
     buyer_headers = {"Authorization": f"Bearer {buyer_token}", "X-Tenant-Key": "buyer-tenant"}
     resp_catalog = await client.get("/api/marketplace/catalog", headers=buyer_headers)
     assert resp_catalog.status_code == status.HTTP_200_OK, resp_catalog.text
-    data = resp_catalog.json()
+    data = _unwrap(resp_catalog)
     items = data.get("items") or []
     assert any(i["id"] == listing_id for i in items)
 
@@ -148,7 +158,7 @@ async def test_marketplace_publish_and_access_flow(test_db: Any, async_client: A
 
     resp_catalog2 = await client.get("/api/marketplace/catalog", headers=buyer_headers)
     assert resp_catalog2.status_code == status.HTTP_200_OK, resp_catalog2.text
-    data2 = resp_catalog2.json()
+    data2 = _unwrap(resp_catalog2)
     items2 = data2.get("items") or []
     assert all(i["id"] != listing_id for i in items2)
 
@@ -243,7 +253,7 @@ async def test_marketplace_org_and_tenant_scoping(test_db: Any, async_client: As
     }
     resp_create = await client.post("/api/marketplace/listings", json=payload, headers=headers1)
     assert resp_create.status_code == status.HTTP_201_CREATED, resp_create.text
-    listing = resp_create.json()
+    listing = _unwrap(resp_create)
     listing_id = listing["id"]
 
     resp_publish = await client.post(f"/api/marketplace/listings/{listing_id}/publish", headers=headers1)

@@ -72,7 +72,7 @@ async def test_supplier_partial_results_returns_200_with_warnings(test_db: Any, 
 
     resp = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
 
     offers = body.get("offers") or []
     assert len(offers) >= 1
@@ -131,7 +131,7 @@ async def test_supplier_partial_results_audit_written(test_db: Any, async_client
 
     resp = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     session_id = body.get("session_id")
     assert session_id
 
@@ -195,7 +195,7 @@ async def test_supplier_all_failed_returns_503(test_db: Any, async_client: Async
 
     resp = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp.status_code == 503, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     assert body.get("error", {}).get("code") == "SUPPLIER_ALL_FAILED"
     details = body.get("error", {}).get("details") or {}
     warnings = details.get("warnings") or []
@@ -251,7 +251,7 @@ async def test_supplier_partial_results_offers_empty_but_successful_supplier(tes
 
     resp = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
 
     assert body.get("offers") == []
     warnings = body.get("warnings") or []
@@ -284,6 +284,16 @@ async def test_supplier_warnings_ordering_deterministic(test_db: Any, async_clie
     tenant_key = "partial-tenant-5"
 
     from app.errors import AppError
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     async def _failing_paximum(*args, **kwargs):  # type: ignore[no-untyped-def]
         raise AppError(503, "SUPPLIER_UPSTREAM_UNAVAILABLE", "Paximum unavailable", {})

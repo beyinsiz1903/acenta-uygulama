@@ -11,6 +11,16 @@ from app.auth import _jwt_secret
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.exit_sprint3
 @pytest.mark.anyio
 async def test_supplier_search_to_booking_v1_contract(test_db: Any, async_client: AsyncClient) -> None:
@@ -78,7 +88,7 @@ async def test_supplier_search_to_booking_v1_contract(test_db: Any, async_client
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_search.status_code == status.HTTP_200_OK
-    search_data = resp_search.json()
+    search_data = _unwrap(resp_search)
 
     assert search_data.get("supplier") == "mock_v1"
     assert search_data.get("currency") == "TRY"
@@ -106,7 +116,7 @@ async def test_supplier_search_to_booking_v1_contract(test_db: Any, async_client
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_from_offer.status_code == status.HTTP_201_CREATED
-    booking_min = resp_from_offer.json()
+    booking_min = _unwrap(resp_from_offer)
 
     # Gate response contract: minimal projection
     assert set(booking_min.keys()) == {"booking_id", "state", "amount", "currency", "supplier", "offer_id"}
@@ -124,7 +134,7 @@ async def test_supplier_search_to_booking_v1_contract(test_db: Any, async_client
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_list_a.status_code == status.HTTP_200_OK
-    bookings_a = resp_list_a.json()
+    bookings_a = _unwrap(resp_list_a)
     assert isinstance(bookings_a, list)
     assert any(b.get("id") == booking_id for b in bookings_a)
 
@@ -145,7 +155,7 @@ async def test_supplier_search_to_booking_v1_contract(test_db: Any, async_client
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_invalid_offer.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    body_invalid = resp_invalid_offer.json()
+    body_invalid = _unwrap(resp_invalid_offer)
     assert body_invalid.get("error", {}).get("message") == "INVALID_OFFER"
 
     # 6) Guardrail: unsupported supplier -> 422 UNSUPPORTED_SUPPLIER
@@ -158,5 +168,5 @@ async def test_supplier_search_to_booking_v1_contract(test_db: Any, async_client
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_unsupported_supplier.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    body_unsup = resp_unsupported_supplier.json()
+    body_unsup = _unwrap(resp_unsupported_supplier)
     assert body_unsup.get("error", {}).get("message") == "UNSUPPORTED_SUPPLIER"

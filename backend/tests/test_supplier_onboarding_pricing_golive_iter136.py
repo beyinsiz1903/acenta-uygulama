@@ -19,6 +19,16 @@ import requests
 import os
 import time
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -40,7 +50,7 @@ def auth_token():
         "password": TEST_PASSWORD
     })
     if resp.status_code == 200:
-        data = resp.json()
+        data = _unwrap(resp)
         return data.get("access_token") or data.get("token")
     pytest.skip(f"Auth failed: {resp.status_code} — {resp.text[:200]}")
 
@@ -68,7 +78,7 @@ class TestDashboardReturns6Suppliers:
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/dashboard")
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "suppliers" in data
         assert len(data["suppliers"]) == 6, f"Expected 6 suppliers, got {len(data['suppliers'])}"
         
@@ -82,7 +92,7 @@ class TestDashboardReturns6Suppliers:
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/dashboard")
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "go_live_threshold" in data
         assert data["go_live_threshold"] == 80
 
@@ -95,7 +105,7 @@ class TestSupplierDetailIncludesPricingConfig:
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/detail/ratehawk")
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "pricing_config" in data, "pricing_config field missing from supplier detail"
         # pricing_config can be null or an object
         
@@ -104,7 +114,7 @@ class TestSupplierDetailIncludesPricingConfig:
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/detail/paximum")
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         required_fields = ["code", "name", "status", "credential_fields", "go_live"]
         for field in required_fields:
             assert field in data, f"Missing required field: {field}"
@@ -125,7 +135,7 @@ class TestPricingSetupGetDefaults:
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/pricing-setup/tbo")
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "supplier_code" in data
         assert "pricing_config" in data
         assert data.get("is_default") is True, "Expected is_default=True for unconfigured supplier"
@@ -139,7 +149,7 @@ class TestPricingSetupGetDefaults:
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/pricing-setup/wtatil")
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         config = data.get("pricing_config", {})
         channels = config.get("channels", {})
         
@@ -154,7 +164,7 @@ class TestPricingSetupGetDefaults:
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/pricing-setup/juniper")
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         config = data.get("pricing_config", {})
         tiers = config.get("agency_tiers", {})
         
@@ -168,7 +178,7 @@ class TestPricingSetupGetDefaults:
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/pricing-setup/ratehawk")
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         config = data.get("pricing_config", {})
         guardrails = config.get("guardrails", {})
         
@@ -225,7 +235,7 @@ class TestPricingSetupSave:
         resp = api_client.post(f"{BASE_URL}/api/supplier-onboarding/pricing-setup/{TEST_SUPPLIER_PRICING}", json=pricing_payload)
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("status") == "pricing_configured", f"Expected status pricing_configured, got {data.get('status')}"
         assert "pricing_config" in data
         
@@ -234,7 +244,7 @@ class TestPricingSetupSave:
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/pricing-setup/{TEST_SUPPLIER_PRICING}")
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("is_default") is False, "Expected is_default=False after saving"
         
         config = data.get("pricing_config", {})
@@ -245,7 +255,7 @@ class TestPricingSetupSave:
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/detail/{TEST_SUPPLIER_PRICING}")
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("status") == "pricing_configured"
         assert data.get("pricing_config") is not None
         assert data["pricing_config"].get("base_markup_pct") == 12
@@ -265,7 +275,7 @@ class TestGoLiveToggle:
         })
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("status") == "live", f"Expected status 'live', got {data.get('status')}"
         assert data.get("go_live") is True
         assert "message" in data
@@ -277,7 +287,7 @@ class TestGoLiveToggle:
         })
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         # Should return to pricing_configured since pricing was set
         assert data.get("status") == "pricing_configured", f"Expected status 'pricing_configured', got {data.get('status')}"
         assert data.get("go_live") is False
@@ -301,7 +311,7 @@ class TestGoLiveToggle:
             "enabled": True
         })
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "error" in data, "Expected error when trying to go-live without certification"
 
 
@@ -327,7 +337,7 @@ class TestActivityTimelineLogging:
         })
         assert timeline_resp.status_code == 200, f"Expected 200 for timeline, got {timeline_resp.status_code}"
         
-        timeline_data = timeline_resp.json()
+        timeline_data = _unwrap(timeline_resp)
         events = timeline_data.get("events", [])
         
         # Find the go-live event
@@ -356,7 +366,7 @@ class TestActivityTimelineLogging:
         })
         assert timeline_resp.status_code == 200
         
-        timeline_data = timeline_resp.json()
+        timeline_data = _unwrap(timeline_resp)
         events = timeline_data.get("events", [])
         
         deactivate_events = [e for e in events if e.get("action") == "supplier_deactivated"]
@@ -388,27 +398,27 @@ class TestFullOnboardingWorkflow:
             }
         })
         assert cred_resp.status_code == 200
-        cred_data = cred_resp.json()
+        cred_data = _unwrap(cred_resp)
         assert cred_data.get("status") == "credentials_saved"
         
         # Step 2: Health check
         health_resp = api_client.post(f"{BASE_URL}/api/supplier-onboarding/validate/{supplier}")
         assert health_resp.status_code == 200
-        health_data = health_resp.json()
+        health_data = _unwrap(health_resp)
         assert health_data.get("overall") == "pass"
         assert len(health_data.get("checks", [])) == 4
         
         # Step 3: Certification
         cert_resp = api_client.post(f"{BASE_URL}/api/supplier-onboarding/certify/{supplier}")
         assert cert_resp.status_code == 200
-        cert_data = cert_resp.json()
+        cert_data = _unwrap(cert_resp)
         assert cert_data.get("go_live_eligible") is True
         assert len(cert_data.get("results", [])) == 6
         
         # Verify status is certified
         detail_resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/detail/{supplier}")
         assert detail_resp.status_code == 200
-        detail_data = detail_resp.json()
+        detail_data = _unwrap(detail_resp)
         assert detail_data.get("status") == "certified"
         
         # Step 4: Configure pricing
@@ -418,7 +428,7 @@ class TestFullOnboardingWorkflow:
             "max_discount_pct": 20
         })
         assert pricing_resp.status_code == 200
-        pricing_data = pricing_resp.json()
+        pricing_data = _unwrap(pricing_resp)
         assert pricing_data.get("status") == "pricing_configured"
         
         # Step 5: Go-live
@@ -426,14 +436,14 @@ class TestFullOnboardingWorkflow:
             "enabled": True
         })
         assert golive_resp.status_code == 200
-        golive_data = golive_resp.json()
+        golive_data = _unwrap(golive_resp)
         assert golive_data.get("status") == "live"
         assert golive_data.get("go_live") is True
         
         # Final verification
         final_detail = api_client.get(f"{BASE_URL}/api/supplier-onboarding/detail/{supplier}")
         assert final_detail.status_code == 200
-        final_data = final_detail.json()
+        final_data = _unwrap(final_detail)
         assert final_data.get("status") == "live"
         assert final_data.get("go_live") is True
         assert final_data.get("pricing_config") is not None
@@ -451,7 +461,7 @@ class TestPricingSetupErrors:
         """Pricing setup for unknown supplier should return error"""
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/pricing-setup/unknown_supplier")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "error" in data
         
     def test_pricing_setup_save_unknown_supplier(self, api_client):
@@ -460,7 +470,7 @@ class TestPricingSetupErrors:
             "base_markup_pct": 10
         })
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "error" in data
 
 

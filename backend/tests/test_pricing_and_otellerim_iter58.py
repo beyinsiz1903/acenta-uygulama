@@ -9,6 +9,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 
@@ -24,7 +34,7 @@ class TestAuthLogin:
 
         assert response.status_code == 200, f"Login failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "access_token" in data
         assert "user" in data
         assert data["user"]["email"] == "agent@acenta.test"
@@ -59,12 +69,12 @@ class TestAgencyHotelsAPI:
         if login_response.status_code != 200:
             pytest.skip("Could not login - skipping agency hotels tests")
 
-        self.token = login_response.json()["access_token"]
+        self.token = _unwrap(login_response)["access_token"]
         self.headers = {
             "Authorization": f"Bearer {self.token}",
             "Content-Type": "application/json"
         }
-        self.agency_id = login_response.json()["user"]["agency_id"]
+        self.agency_id = _unwrap(login_response)["user"]["agency_id"]
 
     def test_get_agency_hotels_returns_hotels_list(self):
         """Test GET /api/agency/hotels returns list of hotels"""
@@ -75,7 +85,7 @@ class TestAgencyHotelsAPI:
 
         assert response.status_code == 200, f"Failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         items = data.get("items", data) if isinstance(data, dict) else data
 
         assert len(items) > 0, "Expected at least one hotel"
@@ -90,7 +100,7 @@ class TestAgencyHotelsAPI:
 
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
         items = data.get("items", data) if isinstance(data, dict) else data
 
         # Check each hotel has allocation_available field
@@ -111,7 +121,7 @@ class TestAgencyHotelsAPI:
 
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
         items = data.get("items", data) if isinstance(data, dict) else data
 
         required_fields = ["hotel_id", "hotel_name", "location", "status_label", "allocation_available"]
@@ -138,7 +148,7 @@ class TestHealthEndpoint:
         response = requests.get(f"{BASE_URL}/api/health")
 
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("status") == "ok"
         print("✅ Health check passed")
 

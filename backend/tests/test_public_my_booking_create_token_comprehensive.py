@@ -51,7 +51,7 @@ async def test_create_token_happy_path_with_token_creation(async_client):
 
     # Verify response
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["ok"] is True
     assert "token" in data and isinstance(data["token"], str) and data["token"]
     assert data["token"].startswith("pub_")
@@ -88,7 +88,7 @@ async def test_create_token_not_found_enumeration_safe(async_client):
 
     # Verify enumeration-safe response
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data == {"ok": True}  # No token or expires_at fields
 
     # Verify no token document created
@@ -131,7 +131,7 @@ async def test_create_token_rate_limit_enumeration_safe(async_client):
         )
 
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["ok"] is True
 
         if "token" in data:
@@ -189,7 +189,7 @@ async def test_create_token_multi_tenant_isolation(async_client):
         json={"org": org_a, "booking_code": booking_code},
     )
     assert resp_a.status_code == 200
-    data_a = resp_a.json()
+    data_a = _unwrap(resp_a)
     assert data_a["ok"] is True
     assert "token" in data_a
 
@@ -199,7 +199,7 @@ async def test_create_token_multi_tenant_isolation(async_client):
         json={"org": org_b, "booking_code": booking_code},
     )
     assert resp_b.status_code == 200
-    data_b = resp_b.json()
+    data_b = _unwrap(resp_b)
     assert data_b["ok"] is True
     assert "token" in data_b
 
@@ -212,7 +212,7 @@ async def test_create_token_multi_tenant_isolation(async_client):
         json={"org": "org_nonexistent", "booking_code": booking_code},
     )
     assert resp_wrong.status_code == 200
-    data_wrong = resp_wrong.json()
+    data_wrong = _unwrap(resp_wrong)
     assert data_wrong == {"ok": True}  # No token returned
 
 
@@ -296,7 +296,7 @@ async def test_create_token_respects_mybooking_require_email_env(monkeypatch, as
         json={"org": org, "booking_code": booking_code},
     )
     assert resp1.status_code == 200
-    data1 = resp1.json()
+    data1 = _unwrap(resp1)
     assert data1 == {"ok": True}
 
     # 2) Call with wrong email -> still enumeration-safe
@@ -305,7 +305,7 @@ async def test_create_token_respects_mybooking_require_email_env(monkeypatch, as
         json={"org": org, "booking_code": booking_code, "email": "wrong@example.com"},
     )
     assert resp2.status_code == 200
-    data2 = resp2.json()
+    data2 = _unwrap(resp2)
     assert data2 == {"ok": True}
 
     # 3) Call with correct email -> token returned
@@ -314,7 +314,7 @@ async def test_create_token_respects_mybooking_require_email_env(monkeypatch, as
         json={"org": org, "booking_code": booking_code, "email": "guest.flag@example.com"},
     )
     assert resp3.status_code == 200
-    data3 = resp3.json()
+    data3 = _unwrap(resp3)
     assert data3["ok"] is True
     assert "token" in data3 and data3["token"].startswith("pub_")
     assert "expires_at" in data3
@@ -360,7 +360,7 @@ async def test_create_token_ttl_and_expiry_format(async_client):
     after_request = now_utc()
 
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["ok"] is True
     assert "expires_at" in data
 
@@ -381,6 +381,16 @@ async def test_create_token_ttl_and_expiry_format(async_client):
 
     # Normalize both to timezone-aware (UTC) for comparison
     from datetime import timezone as _tz
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
     if db_expires_at.tzinfo is None:
         db_expires_at = db_expires_at.replace(tzinfo=_tz.utc)
     if expires_at.tzinfo is None:
@@ -419,7 +429,7 @@ async def test_create_token_edge_cases(async_client):
         json={"org": org, "booking_code": long_booking_code},
     )
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["ok"] is True
     assert "token" in data
 
@@ -439,7 +449,7 @@ async def test_create_token_edge_cases(async_client):
         json={"org": org, "booking_code": special_booking_code},
     )
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["ok"] is True
     assert "token" in data
 
@@ -479,7 +489,7 @@ async def test_create_token_db_isolation_with_conftest_fixtures(async_client):
     )
 
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["ok"] is True
     assert "token" in data
 
@@ -527,7 +537,7 @@ async def test_create_token_rate_limit_key_isolation(async_client):
             json={"org": org, "booking_code": "BK-RATE-KEY-1"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["ok"] is True
         # First few should have tokens, later ones might not due to rate limiting
 
@@ -537,7 +547,7 @@ async def test_create_token_rate_limit_key_isolation(async_client):
         json={"org": org, "booking_code": "BK-RATE-KEY-1"},
     )
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data == {"ok": True}  # Should be rate limited (no token)
 
     # But request for booking 2 should still work (different rate limit key)
@@ -546,6 +556,6 @@ async def test_create_token_rate_limit_key_isolation(async_client):
         json={"org": org, "booking_code": "BK-RATE-KEY-2"},
     )
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["ok"] is True
     assert "token" in data  # Should not be rate limited

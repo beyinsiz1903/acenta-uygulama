@@ -11,6 +11,16 @@ import requests
 
 from tests.preview_auth_helper import get_preview_base_url_or_skip
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 
@@ -27,7 +37,7 @@ class TestBillingSubscriptionManaged:
         )
         if resp.status_code != 200:
             pytest.skip(f"Login failed with status {resp.status_code}: {resp.text[:200]}")
-        data = resp.json()
+        data = _unwrap(resp)
         token = data.get("access_token") or data.get("token")
         if not token:
             pytest.skip("No token in login response")
@@ -41,7 +51,7 @@ class TestBillingSubscriptionManaged:
             timeout=30
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Verify managed subscription state
         assert data.get("managed_subscription") is True, "Expected managed_subscription=true"
@@ -72,7 +82,7 @@ class TestBillingSubscriptionManaged:
             timeout=30
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Verify date fields are present and in ISO format
         next_renewal = data.get("next_renewal_at")
@@ -94,7 +104,7 @@ class TestBillingSubscriptionManaged:
             timeout=30
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         interval_label = data.get("interval_label", "")
         interval = data.get("interval", "")
@@ -115,7 +125,7 @@ class TestBillingSubscriptionManaged:
             timeout=30
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Verify cancel response
         assert data.get("cancel_at_period_end") is True, "Expected cancel_at_period_end=true"
@@ -142,7 +152,7 @@ class TestBillingSubscriptionManaged:
             timeout=30
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert data.get("cancel_at_period_end") is True, "Expected cancel_at_period_end=true"
         assert data.get("cancel_message"), "Should have cancel_message"
@@ -165,7 +175,7 @@ class TestBillingSubscriptionManaged:
             timeout=30
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Verify reactivate response
         assert data.get("cancel_at_period_end") is False, "Expected cancel_at_period_end=false"
@@ -191,7 +201,7 @@ class TestBillingSubscriptionManaged:
             timeout=30
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert data.get("cancel_at_period_end") is False, "Expected cancel_at_period_end=false"
         assert data.get("cancel_message") is None, "Should have no cancel_message"
@@ -210,7 +220,7 @@ class TestBillingSubscriptionManaged:
             timeout=30
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Verify portal URL
         url = data.get("url", "")
@@ -233,7 +243,7 @@ class TestBillingSubscriptionManaged:
             timeout=30
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert data.get("status") == "active", f"Final status should be active: {data.get('status')}"
         assert data.get("cancel_at_period_end") is False, "cancel_at_period_end should be false"
@@ -261,7 +271,7 @@ class TestBillingLegacyGuardrails:
             pytest.skip("Rate limited on legacy account login")
         if resp.status_code != 200:
             pytest.skip(f"Login failed with status {resp.status_code}")
-        data = resp.json()
+        data = _unwrap(resp)
         token = data.get("access_token") or data.get("token")
         if not token:
             pytest.skip("No token in login response")
@@ -278,7 +288,7 @@ class TestBillingLegacyGuardrails:
         assert resp.status_code != 500, f"Got 500 error: {resp.text[:200]}"
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         # Legacy accounts may have managed_subscription=false
         print(f"Legacy account state: plan={data.get('plan')}, managed={data.get('managed_subscription')}")
 

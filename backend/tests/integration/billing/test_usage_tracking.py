@@ -8,6 +8,14 @@ from app.repositories.usage_daily_repository import usage_daily_repo
 from app.services.usage_service import track_usage, check_quota
 from app.services.feature_service import feature_service
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 @pytest.mark.anyio
 async def test_usage_tracking_writes_to_ledger(test_db) -> None:
@@ -139,7 +147,7 @@ async def test_usage_summary_endpoint(
     headers=admin_headers,
   )
   assert resp.status_code == 200, resp.text
-  body = resp.json()
+  body = _unwrap(resp)
   assert body["plan"] == "pro"
   assert "b2b.match_request" in body["metrics"]
   assert body["metrics"]["b2b.match_request"]["used"] == 1

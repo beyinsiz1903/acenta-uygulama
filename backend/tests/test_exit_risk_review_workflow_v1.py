@@ -11,6 +11,16 @@ from app.auth import _jwt_secret
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 async def _seed_risk_review_booking(
     test_db: Any,
     *,
@@ -114,7 +124,7 @@ async def test_risk_review_approve_transitions_to_pending_and_audit(test_db: Any
         headers=headers,
     )
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data.get("ok") is True
     assert data.get("booking_id") == booking_id
     assert data.get("status") == "PENDING"
@@ -161,7 +171,7 @@ async def test_risk_review_reject_sets_rejected_and_audit(test_db: Any, async_cl
         json=payload,
     )
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data.get("ok") is True
     assert data.get("status") == "RISK_REJECTED"
 
@@ -203,7 +213,7 @@ async def test_risk_review_approve_reject_wrong_state_returns_409(test_db: Any, 
         headers=headers,
     )
     assert resp1.status_code == 409
-    data1 = resp1.json()
+    data1 = _unwrap(resp1)
     assert data1.get("error", {}).get("code") == "RISK_REVIEW_NOT_REQUIRED"
     assert data1.get("error", {}).get("details", {}).get("status") == "PENDING"
 
@@ -213,7 +223,7 @@ async def test_risk_review_approve_reject_wrong_state_returns_409(test_db: Any, 
         json={"reason": "test"},
     )
     assert resp2.status_code == 409
-    data2 = resp2.json()
+    data2 = _unwrap(resp2)
     assert data2.get("error", {}).get("code") == "RISK_REVIEW_NOT_REQUIRED"
     assert data2.get("error", {}).get("details", {}).get("status") == "PENDING"
 
@@ -256,7 +266,7 @@ async def test_confirm_blocked_for_risk_review_and_risk_rejected(test_db: Any, a
         headers=headers,
     )
     assert resp1.status_code == 409
-    data1 = resp1.json()
+    data1 = _unwrap(resp1)
     assert data1.get("error", {}).get("code") == "risk_review_required"
     assert data1.get("error", {}).get("details", {}).get("status") == "RISK_REVIEW"
 
@@ -265,6 +275,6 @@ async def test_confirm_blocked_for_risk_review_and_risk_rejected(test_db: Any, a
         headers=headers,
     )
     assert resp2.status_code == 409
-    data2 = resp2.json()
+    data2 = _unwrap(resp2)
     assert data2.get("error", {}).get("code") == "risk_rejected"
     assert data2.get("error", {}).get("details", {}).get("status") == "RISK_REJECTED"

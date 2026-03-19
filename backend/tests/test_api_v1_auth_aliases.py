@@ -6,6 +6,16 @@ from app.bootstrap.route_inventory import build_route_inventory
 from app.config import AUTH_REFRESH_COOKIE_NAME, WEB_AUTH_PLATFORM_HEADER, WEB_AUTH_PLATFORM_VALUE
 from server import app
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 WEB_HEADERS = {WEB_AUTH_PLATFORM_HEADER: WEB_AUTH_PLATFORM_VALUE}
 
 
@@ -63,11 +73,11 @@ async def test_v1_auth_cookie_bootstrap_flow(async_client) -> None:
         headers=WEB_HEADERS,
     )
     assert login_response.status_code == 200, login_response.text
-    assert login_response.json()["auth_transport"] == "cookie_compat"
+    assert _unwrap(login_response)["auth_transport"] == "cookie_compat"
 
     me_response = await async_client.get("/api/v1/auth/me", headers=WEB_HEADERS)
     assert me_response.status_code == 200, me_response.text
-    assert me_response.json()["email"] == "admin@acenta.test"
+    assert _unwrap(me_response)["email"] == "admin@acenta.test"
 
 
 
@@ -88,7 +98,7 @@ async def test_v1_auth_refresh_rotates_cookie_transport(async_client) -> None:
         headers=WEB_HEADERS,
     )
     assert refresh_response.status_code == 200, refresh_response.text
-    assert refresh_response.json()["auth_transport"] == "cookie_compat"
+    assert _unwrap(refresh_response)["auth_transport"] == "cookie_compat"
     assert refresh_response.cookies.get(AUTH_REFRESH_COOKIE_NAME)
     assert refresh_response.cookies.get(AUTH_REFRESH_COOKIE_NAME) != first_refresh_cookie
 
@@ -100,7 +110,7 @@ async def test_v1_auth_bearer_flow_matches_legacy_transport(async_client) -> Non
         json={"email": "admin@acenta.test", "password": "admin123"},
     )
     assert login_response.status_code == 200, login_response.text
-    payload = login_response.json()
+    payload = _unwrap(login_response)
     assert payload["auth_transport"] == "bearer"
 
     me_response = await async_client.get(
@@ -108,4 +118,4 @@ async def test_v1_auth_bearer_flow_matches_legacy_transport(async_client) -> Non
         headers={"Authorization": f"Bearer {payload['access_token']}"},
     )
     assert me_response.status_code == 200, me_response.text
-    assert me_response.json()["email"] == "admin@acenta.test"
+    assert _unwrap(me_response)["email"] == "admin@acenta.test"

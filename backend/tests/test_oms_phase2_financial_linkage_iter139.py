@@ -22,6 +22,16 @@ import os
 import uuid
 from datetime import datetime
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 
@@ -65,7 +75,7 @@ class TestOMSPhase2FinancialLinkage:
         }
         response = self.session.post(f"{BASE_URL}/api/orders", json=payload)
         if response.status_code == 200:
-            order = response.json()
+            order = _unwrap(response)
             self.created_order_ids.append(order.get("order_id"))
         return response
 
@@ -75,7 +85,7 @@ class TestOMSPhase2FinancialLinkage:
         response = self._create_test_order("TEST_INIT_FIN")
         assert response.status_code == 200, f"Failed to create order: {response.text}"
         
-        order = response.json()
+        order = _unwrap(response)
         # Data assertions - verify initial financial state
         assert "order_id" in order
         assert "order_number" in order
@@ -94,7 +104,7 @@ class TestOMSPhase2FinancialLinkage:
         # Create order
         create_resp = self._create_test_order("TEST_CONFIRM_LEDGER")
         assert create_resp.status_code == 200
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         order_id = order["order_id"]
         
         # Confirm order
@@ -103,14 +113,14 @@ class TestOMSPhase2FinancialLinkage:
             json={"actor": "test_admin", "reason": "Testing ledger posting"}
         )
         assert confirm_resp.status_code == 200, f"Confirm failed: {confirm_resp.text}"
-        result = confirm_resp.json()
+        result = _unwrap(confirm_resp)
         assert result.get("success") == True
         assert result.get("new_status") == "confirmed"
         
         # Verify ledger entries were created
         ledger_resp = self.session.get(f"{BASE_URL}/api/orders/{order_id}/ledger-entries")
         assert ledger_resp.status_code == 200, f"Get ledger entries failed: {ledger_resp.text}"
-        ledger_data = ledger_resp.json()
+        ledger_data = _unwrap(ledger_resp)
         
         entries = ledger_data.get("entries", [])
         totals = ledger_data.get("totals", {})
@@ -131,13 +141,13 @@ class TestOMSPhase2FinancialLinkage:
         # Create and confirm order
         create_resp = self._create_test_order("TEST_FIN_SUMMARY")
         assert create_resp.status_code == 200
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         order_id = order["order_id"]
         
         # Get financial summary before confirm
         summary_resp = self.session.get(f"{BASE_URL}/api/orders/{order_id}/financial-summary")
         assert summary_resp.status_code == 200, f"Get summary failed: {summary_resp.text}"
-        summary = summary_resp.json()
+        summary = _unwrap(summary_resp)
         
         # Verify summary fields
         assert "order_id" in summary
@@ -164,7 +174,7 @@ class TestOMSPhase2FinancialLinkage:
         """Ledger entries should have balanced debit/credit totals"""
         create_resp = self._create_test_order("TEST_LEDGER_BALANCE")
         assert create_resp.status_code == 200
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         order_id = order["order_id"]
         
         # Confirm to create ledger entries
@@ -173,7 +183,7 @@ class TestOMSPhase2FinancialLinkage:
         # Get ledger entries
         ledger_resp = self.session.get(f"{BASE_URL}/api/orders/{order_id}/ledger-entries")
         assert ledger_resp.status_code == 200
-        ledger_data = ledger_resp.json()
+        ledger_data = _unwrap(ledger_resp)
         
         entries = ledger_data.get("entries", [])
         totals = ledger_data.get("totals", {})
@@ -198,7 +208,7 @@ class TestOMSPhase2FinancialLinkage:
         """GET /api/orders/{id}/ledger-postings returns posting documents"""
         create_resp = self._create_test_order("TEST_LEDGER_POSTINGS")
         assert create_resp.status_code == 200
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         order_id = order["order_id"]
         
         # Confirm to create postings
@@ -207,7 +217,7 @@ class TestOMSPhase2FinancialLinkage:
         # Get ledger postings
         postings_resp = self.session.get(f"{BASE_URL}/api/orders/{order_id}/ledger-postings")
         assert postings_resp.status_code == 200, f"Get postings failed: {postings_resp.text}"
-        postings = postings_resp.json()
+        postings = _unwrap(postings_resp)
         
         # Should be a list (may be empty if postings use different ID format)
         assert isinstance(postings, list)
@@ -218,13 +228,13 @@ class TestOMSPhase2FinancialLinkage:
         """POST /api/orders/{id}/financial-summary/rebuild rebuilds summary"""
         create_resp = self._create_test_order("TEST_REBUILD_SUMMARY")
         assert create_resp.status_code == 200
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         order_id = order["order_id"]
         
         # Rebuild summary
         rebuild_resp = self.session.post(f"{BASE_URL}/api/orders/{order_id}/financial-summary/rebuild")
         assert rebuild_resp.status_code == 200, f"Rebuild failed: {rebuild_resp.text}"
-        result = rebuild_resp.json()
+        result = _unwrap(rebuild_resp)
         
         assert "summary" in result or "sell_total" in result or "message" in result
         print(f"PASS: Financial summary rebuilt for order {order_id}")
@@ -234,13 +244,13 @@ class TestOMSPhase2FinancialLinkage:
         """GET /api/orders/{id}/settlements returns settlement runs and status"""
         create_resp = self._create_test_order("TEST_GET_SETTLEMENTS")
         assert create_resp.status_code == 200
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         order_id = order["order_id"]
         
         # Get settlements
         settlements_resp = self.session.get(f"{BASE_URL}/api/orders/{order_id}/settlements")
         assert settlements_resp.status_code == 200, f"Get settlements failed: {settlements_resp.text}"
-        settlements_data = settlements_resp.json()
+        settlements_data = _unwrap(settlements_resp)
         
         # Verify structure
         assert "runs" in settlements_data
@@ -261,7 +271,7 @@ class TestOMSPhase2FinancialLinkage:
         """POST /api/orders/{id}/settlements/link links settlement run"""
         create_resp = self._create_test_order("TEST_LINK_SETTLEMENT")
         assert create_resp.status_code == 200
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         order_id = order["order_id"]
         
         # Link a settlement run
@@ -271,7 +281,7 @@ class TestOMSPhase2FinancialLinkage:
             json={"run_id": run_id, "actor": "test_admin"}
         )
         assert link_resp.status_code == 200, f"Link settlement failed: {link_resp.text}"
-        result = link_resp.json()
+        result = _unwrap(link_resp)
         
         assert result.get("success") == True
         assert result.get("settlement_run_id") == run_id
@@ -280,7 +290,7 @@ class TestOMSPhase2FinancialLinkage:
         # Verify settlement is linked
         settlements_resp = self.session.get(f"{BASE_URL}/api/orders/{order_id}/settlements")
         assert settlements_resp.status_code == 200
-        settlements_data = settlements_resp.json()
+        settlements_data = _unwrap(settlements_resp)
         
         assert settlements_data["status"]["settlement_run_count"] == 1
         assert settlements_data["status"]["settlement_status"] == "partially_settled"
@@ -292,7 +302,7 @@ class TestOMSPhase2FinancialLinkage:
         """POST /api/orders/{id}/mark-settled marks order as fully settled"""
         create_resp = self._create_test_order("TEST_MARK_SETTLED")
         assert create_resp.status_code == 200
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         order_id = order["order_id"]
         
         # First confirm order to create ledger postings (required for settled status)
@@ -308,7 +318,7 @@ class TestOMSPhase2FinancialLinkage:
             json={"actor": "test_admin"}
         )
         assert settled_resp.status_code == 200, f"Mark settled failed: {settled_resp.text}"
-        result = settled_resp.json()
+        result = _unwrap(settled_resp)
         
         assert result.get("success") == True
         assert result.get("settlement_status") == "settled"
@@ -316,7 +326,7 @@ class TestOMSPhase2FinancialLinkage:
         # Verify order is settled
         order_resp = self.session.get(f"{BASE_URL}/api/orders/{order_id}")
         assert order_resp.status_code == 200
-        order_data = order_resp.json()
+        order_data = _unwrap(order_resp)
         
         assert order_data.get("settlement_status") == "settled"
         # financial_status is computed: settled only if ledger_refs exist and settlement_status=settled
@@ -329,7 +339,7 @@ class TestOMSPhase2FinancialLinkage:
         """Cancelling a confirmed order should create reversal ledger entries"""
         create_resp = self._create_test_order("TEST_CANCEL_REVERSAL")
         assert create_resp.status_code == 200
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         order_id = order["order_id"]
         
         # Confirm order first
@@ -341,7 +351,7 @@ class TestOMSPhase2FinancialLinkage:
         
         # Get ledger entries after confirm
         ledger_resp_before = self.session.get(f"{BASE_URL}/api/orders/{order_id}/ledger-entries")
-        entries_before_count = len(ledger_resp_before.json().get("entries", []))
+        entries_before_count = len(_unwrap(ledger_resp_before).get("entries", []))
         
         # Cancel order
         cancel_resp = self.session.post(
@@ -352,7 +362,7 @@ class TestOMSPhase2FinancialLinkage:
         
         # Get ledger entries after cancel
         ledger_resp_after = self.session.get(f"{BASE_URL}/api/orders/{order_id}/ledger-entries")
-        ledger_after = ledger_resp_after.json()
+        ledger_after = _unwrap(ledger_resp_after)
         entries_after_count = len(ledger_after.get("entries", []))
         
         # Should have more entries (reversal entries added)
@@ -360,7 +370,7 @@ class TestOMSPhase2FinancialLinkage:
         
         # Check financial_status is reversed
         order_resp = self.session.get(f"{BASE_URL}/api/orders/{order_id}")
-        order_data = order_resp.json()
+        order_data = _unwrap(order_resp)
         assert order_data.get("financial_status") == "reversed"
         
         print(f"PASS: Cancel created reversal entries ({entries_before_count} -> {entries_after_count}), financial_status=reversed")
@@ -370,7 +380,7 @@ class TestOMSPhase2FinancialLinkage:
         """POST /api/orders/{id}/post-to-ledger for manual posting"""
         create_resp = self._create_test_order("TEST_MANUAL_POST")
         assert create_resp.status_code == 200
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         order_id = order["order_id"]
         
         # Manual post to ledger
@@ -379,14 +389,14 @@ class TestOMSPhase2FinancialLinkage:
             json={"actor": "test_admin"}
         )
         assert post_resp.status_code == 200, f"Manual post failed: {post_resp.text}"
-        result = post_resp.json()
+        result = _unwrap(post_resp)
         
         assert result.get("success") == True
         assert "posting_refs" in result or "financial_status" in result
         
         # Verify financial status changed to posted
         summary_resp = self.session.get(f"{BASE_URL}/api/orders/{order_id}/financial-summary")
-        summary = summary_resp.json()
+        summary = _unwrap(summary_resp)
         assert summary.get("financial_status") == "posted"
         
         print(f"PASS: Manual post-to-ledger succeeded for order {order_id}")
@@ -396,7 +406,7 @@ class TestOMSPhase2FinancialLinkage:
         """Timeline should include financial linkage events"""
         create_resp = self._create_test_order("TEST_TIMELINE_FIN")
         assert create_resp.status_code == 200
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         order_id = order["order_id"]
         
         # Confirm order to trigger financial events
@@ -411,7 +421,7 @@ class TestOMSPhase2FinancialLinkage:
         # Get timeline
         timeline_resp = self.session.get(f"{BASE_URL}/api/orders/{order_id}/timeline")
         assert timeline_resp.status_code == 200, f"Get timeline failed: {timeline_resp.text}"
-        timeline = timeline_resp.json()
+        timeline = _unwrap(timeline_resp)
         
         # Should be a list of events
         assert isinstance(timeline, list)
@@ -438,14 +448,14 @@ class TestOMSPhase2FinancialLinkage:
         """Version field should increment on status transitions"""
         create_resp = self._create_test_order("TEST_VERSION_INC")
         assert create_resp.status_code == 200
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         order_id = order["order_id"]
         initial_version = order.get("version", 1)
         
         # Confirm
         self.session.post(f"{BASE_URL}/api/orders/{order_id}/confirm", json={"actor": "test"})
         order_resp = self.session.get(f"{BASE_URL}/api/orders/{order_id}")
-        order_after_confirm = order_resp.json()
+        order_after_confirm = _unwrap(order_resp)
         
         assert order_after_confirm.get("version", 1) > initial_version, "Version should increment after confirm"
         
@@ -456,7 +466,7 @@ class TestOMSPhase2FinancialLinkage:
         """Order number should follow ORD-YYYY-NNNNNN format"""
         create_resp = self._create_test_order("TEST_ORDER_NUM_FORMAT")
         assert create_resp.status_code == 200
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         
         order_number = order.get("order_number", "")
         assert order_number.startswith("ORD-"), f"Order number should start with ORD-: {order_number}"
@@ -476,7 +486,7 @@ class TestOMSPhase2FinancialLinkage:
         search_resp = self.session.get(f"{BASE_URL}/api/orders/search?limit=5")
         assert search_resp.status_code == 200, f"Search failed: {search_resp.text}"
         
-        result = search_resp.json()
+        result = _unwrap(search_resp)
         assert "orders" in result or isinstance(result, list)
         
         print(f"PASS: Search endpoint works")
@@ -486,7 +496,7 @@ class TestOMSPhase2FinancialLinkage:
         """After confirm, financial_status should be 'posted'"""
         create_resp = self._create_test_order("TEST_POSTED_STATUS")
         assert create_resp.status_code == 200
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         order_id = order["order_id"]
         
         # Confirm
@@ -494,7 +504,7 @@ class TestOMSPhase2FinancialLinkage:
         
         # Check status
         order_resp = self.session.get(f"{BASE_URL}/api/orders/{order_id}")
-        order_data = order_resp.json()
+        order_data = _unwrap(order_resp)
         
         assert order_data.get("financial_status") == "posted", f"Expected 'posted', got {order_data.get('financial_status')}"
         assert order_data.get("status") == "confirmed"
@@ -506,7 +516,7 @@ class TestOMSPhase2FinancialLinkage:
         """Ledger entries should have expected account ID patterns"""
         create_resp = self._create_test_order("TEST_ACCOUNT_PATTERNS")
         assert create_resp.status_code == 200
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         order_id = order["order_id"]
         
         # Confirm
@@ -514,7 +524,7 @@ class TestOMSPhase2FinancialLinkage:
         
         # Get ledger entries
         ledger_resp = self.session.get(f"{BASE_URL}/api/orders/{order_id}/ledger-entries")
-        entries = ledger_resp.json().get("entries", [])
+        entries = _unwrap(ledger_resp).get("entries", [])
         
         account_ids = [e.get("account_id", "") for e in entries]
         
@@ -534,12 +544,12 @@ class TestOMSPhase2FinancialLinkage:
         """Financial summary should include supplier_codes from items"""
         create_resp = self._create_test_order("TEST_SUPPLIER_CODES")
         assert create_resp.status_code == 200
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         order_id = order["order_id"]
         
         # Get summary
         summary_resp = self.session.get(f"{BASE_URL}/api/orders/{order_id}/financial-summary")
-        summary = summary_resp.json()
+        summary = _unwrap(summary_resp)
         
         assert "supplier_codes" in summary
         assert isinstance(summary["supplier_codes"], list)
@@ -551,7 +561,7 @@ class TestOMSPhase2FinancialLinkage:
         """Linking same settlement run twice should return already linked message"""
         create_resp = self._create_test_order("TEST_ALREADY_LINKED")
         assert create_resp.status_code == 200
-        order = create_resp.json()
+        order = _unwrap(create_resp)
         order_id = order["order_id"]
         
         run_id = "ALREADY_LINKED_RUN_123"
@@ -569,7 +579,7 @@ class TestOMSPhase2FinancialLinkage:
             json={"run_id": run_id, "actor": "test"}
         )
         assert second_link.status_code == 200
-        result = second_link.json()
+        result = _unwrap(second_link)
         
         # Should indicate already linked
         assert result.get("success") == True
@@ -588,12 +598,12 @@ class TestOMSPhase2FinancialLinkage:
             pytest.skip(f"Existing order {existing_order_id} not found in DB")
         
         assert order_resp.status_code == 200
-        order = order_resp.json()
+        order = _unwrap(order_resp)
         
         # Check if it has ledger entries
         ledger_resp = self.session.get(f"{BASE_URL}/api/orders/{existing_order_id}/ledger-entries")
         assert ledger_resp.status_code == 200
-        ledger_data = ledger_resp.json()
+        ledger_data = _unwrap(ledger_resp)
         
         # Check settlements
         settlements_resp = self.session.get(f"{BASE_URL}/api/orders/{existing_order_id}/settlements")

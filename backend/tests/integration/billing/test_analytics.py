@@ -7,6 +7,16 @@ import pytest
 from httpx import AsyncClient
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 
 @pytest.mark.anyio
 async def test_revenue_summary_empty(
@@ -16,7 +26,7 @@ async def test_revenue_summary_empty(
   """Revenue summary with no subscriptions returns zero metrics."""
   resp = await async_client.get("/api/admin/analytics/revenue-summary", headers=admin_headers)
   assert resp.status_code == 200, resp.text
-  body = resp.json()
+  body = _unwrap(resp)
   assert "active_subscriptions_count" in body
   assert "mrr_gross_active" in body
   assert "mrr_at_risk" in body
@@ -56,7 +66,7 @@ async def test_revenue_summary_with_subscription(
   )
 
   resp = await async_client.get("/api/admin/analytics/revenue-summary", headers=admin_headers)
-  body = resp.json()
+  body = _unwrap(resp)
   assert body["active_subscriptions_count"] >= 1
   assert body["mrr_gross_active"] >= 999.0
 
@@ -93,7 +103,7 @@ async def test_revenue_summary_past_due_at_risk(
   )
 
   resp = await async_client.get("/api/admin/analytics/revenue-summary", headers=admin_headers)
-  body = resp.json()
+  body = _unwrap(resp)
   assert body["past_due_count"] >= 1
   assert body["mrr_at_risk"] >= 499.0
   assert body["grace_count"] >= 1
@@ -108,7 +118,7 @@ async def test_usage_overview_buckets(
   """Usage overview returns quota buckets."""
   resp = await async_client.get("/api/admin/analytics/usage-overview", headers=admin_headers)
   assert resp.status_code == 200
-  body = resp.json()
+  body = _unwrap(resp)
   assert "quota_buckets" in body
   assert len(body["quota_buckets"]) == 5
   bucket_names = [b["bucket"] for b in body["quota_buckets"]]

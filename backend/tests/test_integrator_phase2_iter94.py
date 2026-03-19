@@ -18,6 +18,16 @@ import pytest
 import requests
 import uuid
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -43,7 +53,7 @@ def super_admin_token(api_client):
         json={"email": SUPER_ADMIN_EMAIL, "password": SUPER_ADMIN_PASSWORD},
     )
     if resp.status_code == 200:
-        return resp.json().get("access_token")
+        return _unwrap(resp).get("access_token")
     pytest.skip(f"Super admin login failed: {resp.status_code}")
 
 
@@ -55,7 +65,7 @@ def agency_admin_token(api_client):
         json={"email": AGENCY_ADMIN_EMAIL, "password": AGENCY_ADMIN_PASSWORD},
     )
     if resp.status_code == 200:
-        return resp.json().get("access_token")
+        return _unwrap(resp).get("access_token")
     pytest.skip(f"Agency admin login failed: {resp.status_code}")
 
 
@@ -90,7 +100,7 @@ class TestIntegratorProviders:
             headers=auth_headers_super_admin,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         assert "providers" in data
         providers = data["providers"]
@@ -138,7 +148,7 @@ class TestIntegratorCredentials:
             },
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         assert data["provider"] == "edm"
         assert data["status"] in ["configured", "active", "error"]  # status varies
@@ -153,7 +163,7 @@ class TestIntegratorCredentials:
             headers=auth_headers_super_admin,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         assert "integrators" in data
         integrators = data["integrators"]
@@ -185,7 +195,7 @@ class TestIntegratorCredentials:
             headers=auth_headers_super_admin,
         )
         assert resp.status_code == 200
-        assert resp.json().get("deleted") == True
+        assert _unwrap(resp).get("deleted") == True
         
         # Verify deleted
         resp2 = api_client.get(
@@ -193,7 +203,7 @@ class TestIntegratorCredentials:
             headers=auth_headers_super_admin,
         )
         assert resp2.status_code == 200
-        integrators = resp2.json().get("integrators", [])
+        integrators = _unwrap(resp2).get("integrators", [])
         edm_configs = [c for c in integrators if c["provider"] == "edm"]
         assert len(edm_configs) == 0
 
@@ -235,7 +245,7 @@ class TestIntegratorConnection:
             json={"provider": "edm"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         # Should fail - no credentials
         assert data["success"] == False
@@ -262,7 +272,7 @@ class TestIntegratorConnection:
             json={"provider": "edm"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         # In simulation mode, may return auth_failed (real EDM not reachable)
         # or simulated success
@@ -304,7 +314,7 @@ class TestInvoiceEDMIntegration:
             },
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         # With integrator configured, should select e_fatura
         assert data["provider"] == "edm"
@@ -324,7 +334,7 @@ class TestInvoiceEDMIntegration:
             },
         )
         assert resp_create.status_code == 200
-        invoice_id = resp_create.json()["invoice_id"]
+        invoice_id = _unwrap(resp_create)["invoice_id"]
         
         # Issue via EDM
         resp = api_client.post(
@@ -332,7 +342,7 @@ class TestInvoiceEDMIntegration:
             headers=auth_headers_super_admin,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         # Should be issued with provider_invoice_id (ETTN)
         assert data["status"] == "issued"
@@ -378,7 +388,7 @@ class TestInvoiceStatusCheck:
                 "lines": [{"description": unique_desc, "quantity": 1, "unit_price": 300}]
             },
         )
-        invoice_id = resp_create.json()["invoice_id"]
+        invoice_id = _unwrap(resp_create)["invoice_id"]
         
         # Issue
         api_client.post(
@@ -392,7 +402,7 @@ class TestInvoiceStatusCheck:
             headers=auth_headers_super_admin,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         assert "invoice_id" in data
         assert "status" in data
@@ -411,7 +421,7 @@ class TestInvoiceStatusCheck:
                 "lines": [{"description": unique_desc, "quantity": 1, "unit_price": 100}]
             },
         )
-        invoice_id = resp_create.json()["invoice_id"]
+        invoice_id = _unwrap(resp_create)["invoice_id"]
         
         # Check status (should work but indicate no provider ID)
         resp = api_client.get(
@@ -419,7 +429,7 @@ class TestInvoiceStatusCheck:
             headers=auth_headers_super_admin,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         # Draft invoice has no provider_invoice_id yet
         assert data["provider_status"] is None or data.get("message", "") != ""
@@ -460,7 +470,7 @@ class TestInvoicePDFDownload:
                 "lines": [{"description": unique_desc, "quantity": 1, "unit_price": 750}]
             },
         )
-        invoice_id = resp_create.json()["invoice_id"]
+        invoice_id = _unwrap(resp_create)["invoice_id"]
         
         # Issue
         api_client.post(
@@ -490,7 +500,7 @@ class TestInvoicePDFDownload:
                 "lines": [{"description": unique_desc, "quantity": 1, "unit_price": 200}]
             },
         )
-        invoice_id = resp_create.json()["invoice_id"]
+        invoice_id = _unwrap(resp_create)["invoice_id"]
         
         # Download PDF without issuing
         resp = api_client.get(
@@ -545,7 +555,7 @@ class TestDecisionEngineWithIntegrator:
             },
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         assert data["invoice_type"] == "e_fatura"
         assert data["decision_reason"] == "b2b_with_vkn"
@@ -567,7 +577,7 @@ class TestDecisionEngineWithIntegrator:
             },
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         assert data["invoice_type"] == "e_arsiv"
         # Decision reason may be "b2c_with_id" or "individual_or_unregistered"
@@ -589,7 +599,7 @@ class TestAgencyAdminIntegratorAccess:
             headers=auth_headers_agency,
         )
         assert resp.status_code == 200
-        assert "providers" in resp.json()
+        assert "providers" in _unwrap(resp)
 
     def test_agency_admin_can_list_credentials(self, api_client, auth_headers_agency):
         """Agency admin can list their tenant's credentials."""
@@ -598,7 +608,7 @@ class TestAgencyAdminIntegratorAccess:
             headers=auth_headers_agency,
         )
         assert resp.status_code == 200
-        assert "integrators" in resp.json()
+        assert "integrators" in _unwrap(resp)
 
 
 if __name__ == "__main__":

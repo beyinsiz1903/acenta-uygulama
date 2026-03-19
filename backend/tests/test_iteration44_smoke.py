@@ -6,6 +6,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
@@ -29,7 +39,7 @@ def admin_auth(api_client):
         "password": ADMIN_PASSWORD
     })
     if response.status_code == 200:
-        data = response.json()
+        data = _unwrap(response)
         # Token field can be 'access_token' or 'token' depending on API version
         token = data.get("access_token") or data.get("token")
         return {"token": token, "user": data.get("user")}
@@ -43,7 +53,7 @@ def agent_auth(api_client):
         "password": AGENT_PASSWORD
     })
     if response.status_code == 200:
-        data = response.json()
+        data = _unwrap(response)
         token = data.get("access_token") or data.get("token")
         return {"token": token, "user": data.get("user")}
     return None
@@ -59,7 +69,7 @@ class TestAuthEndpoints:
             "password": ADMIN_PASSWORD
         })
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "token" in data or "user" in data, "Missing token or user in response"
         if "user" in data:
             assert "super_admin" in data["user"].get("roles", []), "Admin should have super_admin role"
@@ -71,7 +81,7 @@ class TestAuthEndpoints:
             "password": AGENT_PASSWORD
         })
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "token" in data or "user" in data, "Missing token or user in response"
         if "user" in data:
             assert "agency_admin" in data["user"].get("roles", []), "Agent should have agency_admin role"
@@ -84,7 +94,7 @@ class TestAuthEndpoints:
         headers = {"Authorization": f"Bearer {admin_auth['token']}"}
         response = api_client.get(f"{BASE_URL}/api/auth/me", headers=headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
-        data = response.json()
+        data = _unwrap(response)
         assert "email" in data or "user" in data, "Should return user info"
 
     def test_login_invalid_credentials_returns_401(self, api_client):
@@ -109,7 +119,7 @@ class TestReportsEndpoints:
         # Could be 200 (success) or 429 (rate limit) or 403 (quota)
         assert response.status_code in [200, 429, 403], f"Expected 200/429/403, got {response.status_code}"
         if response.status_code == 200:
-            data = response.json()
+            data = _unwrap(response)
             # Should have kpis or some report data
             assert "kpis" in data or "period" in data or "error" not in data
 
@@ -121,7 +131,7 @@ class TestReportsEndpoints:
         headers = {"Authorization": f"Bearer {admin_auth['token']}"}
         response = api_client.get(f"{BASE_URL}/api/reports/reservations-summary", headers=headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list), "Should return list of reservation summaries"
 
     def test_reports_sales_summary(self, api_client, admin_auth):
@@ -132,7 +142,7 @@ class TestReportsEndpoints:
         headers = {"Authorization": f"Bearer {admin_auth['token']}"}
         response = api_client.get(f"{BASE_URL}/api/reports/sales-summary", headers=headers, params={"days": 30})
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list), "Should return list of sales data"
 
 
@@ -147,7 +157,7 @@ class TestSearchEndpoint:
         headers = {"Authorization": f"Bearer {admin_auth['token']}"}
         response = api_client.get(f"{BASE_URL}/api/search", headers=headers, params={"q": "test", "limit": 5})
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "sections" in data or "total_results" in data, "Should return search results structure"
 
 
@@ -164,7 +174,7 @@ class TestBillingEndpoints:
         # Could be 200 (has subscription) or 404 (no subscription)
         assert response.status_code in [200, 404], f"Expected 200/404, got {response.status_code}"
         if response.status_code == 200:
-            data = response.json()
+            data = _unwrap(response)
             # Should have plan or status info
             assert "plan" in data or "status" in data or "interval" in data
 
@@ -180,7 +190,7 @@ class TestAdminEndpoints:
         headers = {"Authorization": f"Bearer {admin_auth['token']}"}
         response = api_client.get(f"{BASE_URL}/api/admin/agencies", headers=headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list) or "items" in data, "Should return agencies list"
 
     def test_admin_reporting_summary(self, api_client, admin_auth):

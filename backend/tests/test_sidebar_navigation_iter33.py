@@ -12,6 +12,16 @@ import requests
 import os
 from datetime import datetime
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test Credentials
@@ -33,7 +43,7 @@ class TestAgencyEndpoints:
         if resp.status_code == 429:
             pytest.skip("Rate limited - waiting period required")
         assert resp.status_code == 200, f"Agency login failed: {resp.text}"
-        return resp.json().get("access_token")
+        return _unwrap(resp).get("access_token")
 
     def test_agency_bookings_endpoint(self, agency_token):
         """GET /api/agency/bookings should return 200"""
@@ -45,7 +55,7 @@ class TestAgencyEndpoints:
         assert resp.status_code == 200, f"Agency bookings failed: {resp.status_code} - {resp.text}"
 
         # Verify response is a list
-        data = resp.json()
+        data = _unwrap(resp)
         assert isinstance(data, list), "Expected list of bookings"
         print(f"SUCCESS: GET /api/agency/bookings returned {len(data)} bookings")
 
@@ -61,7 +71,7 @@ class TestAgencyEndpoints:
         assert resp.status_code == 200, f"Agency settlements failed: {resp.status_code} - {resp.text}"
 
         # Verify response structure
-        data = resp.json()
+        data = _unwrap(resp)
         assert "month" in data, "Expected 'month' in response"
         assert "totals" in data, "Expected 'totals' in response"
         assert "entries" in data, "Expected 'entries' in response"
@@ -77,7 +87,7 @@ class TestAgencyEndpoints:
         assert resp.status_code == 200, f"Agency hotels failed: {resp.status_code} - {resp.text}"
 
         # Verify response structure
-        data = resp.json()
+        data = _unwrap(resp)
         assert "items" in data, "Expected 'items' in response"
         print(f"SUCCESS: GET /api/agency/hotels returned {len(data.get('items', []))} hotels")
 
@@ -97,7 +107,7 @@ class TestAgencyLoginRedirect:
 
         assert resp.status_code == 200, f"Login failed: {resp.text}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         user = data.get("user", {})
 
         # Verify agency user roles
@@ -124,7 +134,7 @@ class TestAdminEndpoints:
         if resp.status_code == 429:
             pytest.skip("Rate limited - waiting period required")
         assert resp.status_code == 200, f"Admin login failed: {resp.text}"
-        return resp.json().get("access_token")
+        return _unwrap(resp).get("access_token")
 
     def test_admin_dashboard_access(self, admin_token):
         """Admin should have access to dashboard-enhanced endpoint"""

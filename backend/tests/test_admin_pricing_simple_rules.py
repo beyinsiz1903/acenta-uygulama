@@ -7,6 +7,16 @@ from app.db import get_db
 from app.services.pricing_rules import PricingRulesService
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.anyio
 async def test_admin_pricing_simple_rule_create_list_and_resolve(async_client, admin_token):
     """Create a simple pricing rule over Admin API and verify it is used by PricingRulesService.
@@ -44,7 +54,7 @@ async def test_admin_pricing_simple_rule_create_list_and_resolve(async_client, a
 
     resp = await client.post("/api/admin/pricing/rules/simple", json=payload, headers=headers)
     assert resp.status_code == 200, resp.text
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["priority"] == 150
     assert data["action"]["type"] == "markup_percent"
     assert data["action"]["value"] == 15.0
@@ -52,7 +62,7 @@ async def test_admin_pricing_simple_rule_create_list_and_resolve(async_client, a
     # List rules and ensure our rule appears
     resp_list = await client.get("/api/admin/pricing/rules", headers=headers)
     assert resp_list.status_code == 200, resp_list.text
-    items = resp_list.json()
+    items = _unwrap(resp_list)
     assert any(r.get("notes") == "test_admin_simple" for r in items)
 
     # Now resolve via service and expect 15.0
@@ -105,7 +115,7 @@ async def test_admin_pricing_simple_rule_update_priority_changes_resolution(asyn
     }
     resp_b = await client.post("/api/admin/pricing/rules/simple", json=payload_b, headers=headers)
     assert resp_b.status_code == 200, resp_b.text
-    rule_b = resp_b.json()
+    rule_b = _unwrap(resp_b)
 
     svc = PricingRulesService(db)
 

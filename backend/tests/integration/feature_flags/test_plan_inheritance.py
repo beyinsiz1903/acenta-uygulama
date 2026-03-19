@@ -4,6 +4,14 @@ from __future__ import annotations
 import pytest
 from httpx import AsyncClient
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 
 @pytest.mark.anyio
@@ -24,7 +32,7 @@ async def test_starter_plan_no_b2b(
     json={"plan": "starter"},
   )
   assert resp.status_code == 200, resp.text
-  body = resp.json()
+  body = _unwrap(resp)
   assert "b2b" not in body["features"]
   assert body["plan"] == "starter"
   assert body["source"] == "capabilities"
@@ -46,7 +54,7 @@ async def test_enterprise_plan_has_b2b(
     json={"plan": "enterprise"},
   )
   assert resp.status_code == 200, resp.text
-  body = resp.json()
+  body = _unwrap(resp)
   assert "b2b" in body["features"]
   assert "accounting" in body["features"]
   assert body["plan"] == "enterprise"
@@ -76,7 +84,7 @@ async def test_add_on_override_starter(
     json={"add_ons": ["b2b"]},
   )
   assert resp.status_code == 200, resp.text
-  body = resp.json()
+  body = _unwrap(resp)
   assert "b2b" in body["features"]
   assert body["plan"] == "starter"
   assert "b2b" in body["add_ons"]
@@ -86,7 +94,7 @@ async def test_add_on_override_starter(
     f"/api/admin/tenants/{target}/features",
     headers=admin_headers,
   )
-  assert "b2b" in resp2.json()["features"]
+  assert "b2b" in _unwrap(resp2)["features"]
 
 
 @pytest.mark.anyio
@@ -118,7 +126,7 @@ async def test_plan_downgrade_removes_features(
     f"/api/admin/tenants/{target}/features",
     headers=admin_headers,
   )
-  assert "b2b" in resp1.json()["features"]
+  assert "b2b" in _unwrap(resp1)["features"]
 
   # Downgrade to pro
   resp2 = await async_client.patch(
@@ -127,7 +135,7 @@ async def test_plan_downgrade_removes_features(
     json={"plan": "pro"},
   )
   assert resp2.status_code == 200
-  assert "b2b" not in resp2.json()["features"]
+  assert "b2b" not in _unwrap(resp2)["features"]
 
 
 @pytest.mark.anyio
@@ -156,7 +164,7 @@ async def test_legacy_fallback(
     headers=admin_headers,
   )
   assert resp.status_code == 200
-  body = resp.json()
+  body = _unwrap(resp)
   assert body["source"] == "legacy_fallback"
   assert "b2b" in body["features"]
   assert "crm" in body["features"]
@@ -174,7 +182,7 @@ async def test_invalid_plan_rejected(
     json={"plan": "ultra_premium"},
   )
   assert resp.status_code == 422, resp.text
-  assert resp.json()["error"]["code"] == "invalid_plan"
+  assert _unwrap(resp)["error"]["code"] == "invalid_plan"
 
 
 @pytest.mark.anyio

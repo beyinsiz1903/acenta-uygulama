@@ -8,6 +8,16 @@ from app.auth import create_access_token
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.anyio
 async def test_admin_statements_feature_disabled(async_client, test_db, anyio_backend):  # type: ignore[override]
     db = test_db
@@ -85,7 +95,7 @@ async def test_admin_statements_json_and_csv_happy_path(async_client, test_db, a
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp_json.status_code == 200
-    data = resp_json.json()
+    data = _unwrap(resp_json)
     assert data["ok"] is True
     assert data["total"] >= 1
     assert data["returned_count"] >= 1
@@ -197,6 +207,6 @@ async def test_admin_statements_agency_admin_forces_own_agency(async_client, tes
     # agency_admin may get 200 (with proper tenant resolution) or 403 (tenant middleware)
     assert resp.status_code in (200, 403), f"Unexpected {resp.status_code}: {resp.text[:200]}"
     if resp.status_code == 200:
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["ok"] is True
         assert all(item.get("agency_id") == "agency_a" for item in data["items"])

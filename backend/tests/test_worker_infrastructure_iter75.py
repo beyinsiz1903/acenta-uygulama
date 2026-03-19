@@ -18,6 +18,16 @@ import pytest
 import requests
 import time
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Module-level session to avoid rate limiting from multiple logins
@@ -45,7 +55,7 @@ def get_auth():
     if login_resp.status_code != 200:
         raise Exception(f"Login failed: {login_resp.text}")
 
-    data = login_resp.json()
+    data = _unwrap(login_resp)
     access_token = data.get("access_token")
     _headers = {"Authorization": f"Bearer {access_token}"}
     _login_time = time.time()
@@ -66,7 +76,7 @@ class TestWorkerInfrastructurePart1:
         session, headers = auth
         response = session.get(f"{BASE_URL}/api/workers/pools", headers=headers)
         assert response.status_code == 200, f"Status {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "pools" in data
         assert data["total_pools"] == 5, f"Expected 5 pools, got {data['total_pools']}"
@@ -90,7 +100,7 @@ class TestWorkerInfrastructurePart2:
         session, headers = auth
         response = session.get(f"{BASE_URL}/api/workers/health", headers=headers)
         assert response.status_code == 200, f"Status {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "status" in data
         assert "pools" in data
@@ -108,7 +118,7 @@ class TestWorkerInfrastructurePart3:
         session, headers = auth
         response = session.get(f"{BASE_URL}/api/workers/dlq", headers=headers)
         assert response.status_code == 200, f"Status {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "status" in data
         assert "queues" in data
@@ -130,7 +140,7 @@ class TestWorkerInfrastructurePart4:
         session, headers = auth
         response = session.get(f"{BASE_URL}/api/workers/monitoring", headers=headers)
         assert response.status_code == 200, f"Status {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "queue_depths" in data
         assert "dlq_depths" in data
@@ -148,7 +158,7 @@ class TestWorkerInfrastructurePart5:
         session, headers = auth
         response = session.get(f"{BASE_URL}/api/workers/autoscaling", headers=headers)
         assert response.status_code == 200, f"Status {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "decisions" in data
         decisions = data["decisions"]
@@ -173,7 +183,7 @@ class TestWorkerInfrastructurePart6:
         session, headers = auth
         response = session.post(f"{BASE_URL}/api/workers/simulate-failure/crash", headers=headers)
         assert response.status_code == 200, f"Status {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["failure_type"] == "worker_crash"
         assert data["verdict"] in ["PASS", "PARTIAL"]
@@ -185,7 +195,7 @@ class TestWorkerInfrastructurePart6:
         session, headers = auth
         response = session.post(f"{BASE_URL}/api/workers/simulate-failure/dlq_capture", headers=headers)
         assert response.status_code == 200, f"Status {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["failure_type"] == "dlq_capture"
         assert data["verdict"] == "PASS"
@@ -197,7 +207,7 @@ class TestWorkerInfrastructurePart6:
         session, headers = auth
         response = session.post(f"{BASE_URL}/api/workers/simulate-failure/retry", headers=headers)
         assert response.status_code == 200, f"Status {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["failure_type"] == "retry_behavior"
         assert data["verdict"] == "PASS"
@@ -212,7 +222,7 @@ class TestWorkerInfrastructurePart7:
         session, headers = auth
         response = session.get(f"{BASE_URL}/api/workers/observability", headers=headers)
         assert response.status_code == 200, f"Status {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "timestamp" in data
         assert "worker_processes" in data
@@ -231,7 +241,7 @@ class TestWorkerInfrastructurePart8:
         session, headers = auth
         response = session.post(f"{BASE_URL}/api/workers/performance-test?jobs_per_minute=100", headers=headers, timeout=60)
         assert response.status_code == 200, f"Status {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["verdict"] == "PASS"
         assert data["total_drained"] == data["total_injected"]
@@ -247,7 +257,7 @@ class TestWorkerInfrastructurePart9:
         session, headers = auth
         response = session.post(f"{BASE_URL}/api/workers/incident-test/worker_crash", headers=headers)
         assert response.status_code == 200, f"Status {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["incident_type"] == "worker_crash"
         assert data["verdict"] == "PASS"
@@ -260,7 +270,7 @@ class TestWorkerInfrastructurePart9:
         session, headers = auth
         response = session.post(f"{BASE_URL}/api/workers/incident-test/redis_disconnect", headers=headers)
         assert response.status_code == 200, f"Status {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["incident_type"] == "redis_disconnect"
         assert data["verdict"] == "PASS"
@@ -276,7 +286,7 @@ class TestWorkerInfrastructurePart10:
         session, headers = auth
         response = session.get(f"{BASE_URL}/api/workers/infrastructure-score", headers=headers)
         assert response.status_code == 200, f"Status {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "infrastructure_score" in data
         assert "target" in data
@@ -298,7 +308,7 @@ class TestWorkerInfrastructureDashboard:
         session, headers = auth
         response = session.get(f"{BASE_URL}/api/workers/dashboard", headers=headers)
         assert response.status_code == 200, f"Status {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "infrastructure_score" in data
         assert "worker_health" in data

@@ -18,6 +18,16 @@ import requests
 import uuid
 from datetime import date, timedelta
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -38,7 +48,7 @@ class TestSupplierEcosystemAuth:
             json={"email": TEST_EMAIL, "password": TEST_PASSWORD}
         )
         assert response.status_code == 200, f"Login failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "access_token" in data, f"No access_token in response: {data}"
         return data["access_token"]
 
@@ -50,14 +60,14 @@ class TestSupplierEcosystemAuth:
             json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
         )
         if response.status_code == 200:
-            data = response.json()
+            data = _unwrap(response)
             return data.get("access_token")
         # Fallback to agent token if admin doesn't exist
         response = requests.post(
             f"{BASE_URL}/api/auth/login",
             json={"email": TEST_EMAIL, "password": TEST_PASSWORD}
         )
-        data = response.json()
+        data = _unwrap(response)
         return data.get("access_token")
 
     @pytest.fixture(scope="class")
@@ -77,7 +87,7 @@ class TestRegistryAndStateMachine(TestSupplierEcosystemAuth):
         response = requests.get(f"{BASE_URL}/api/suppliers/ecosystem/registry", headers=headers)
         assert response.status_code == 200, f"Registry failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "adapters" in data, f"No adapters field: {data}"
         assert "total" in data, f"No total field: {data}"
 
@@ -104,7 +114,7 @@ class TestRegistryAndStateMachine(TestSupplierEcosystemAuth):
         response = requests.get(f"{BASE_URL}/api/suppliers/ecosystem/booking-states")
         assert response.status_code == 200, f"Booking states failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "states" in data
         assert "total_states" in data
         assert "total_transitions" in data
@@ -141,7 +151,7 @@ class TestSupplierSearch(TestSupplierEcosystemAuth):
         response = requests.post(f"{BASE_URL}/api/suppliers/ecosystem/search", headers=headers, json=payload)
         assert response.status_code == 200, f"Hotel search failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "items" in data
         assert "total_items" in data
         assert data["total_items"] == 5, f"Expected 5 hotel items, got {data['total_items']}"
@@ -167,7 +177,7 @@ class TestSupplierSearch(TestSupplierEcosystemAuth):
         response = requests.post(f"{BASE_URL}/api/suppliers/ecosystem/search", headers=headers, json=payload)
         assert response.status_code == 200, f"Flight search failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "items" in data
         assert data["total_items"] == 4, f"Expected 4 flight items, got {data['total_items']}"
 
@@ -189,7 +199,7 @@ class TestSupplierSearch(TestSupplierEcosystemAuth):
         response = requests.post(f"{BASE_URL}/api/suppliers/ecosystem/search", headers=headers, json=payload)
         assert response.status_code == 200, f"Tour search failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "items" in data
         # Tour adapter returns items
         assert data["total_items"] >= 0, f"Got {data['total_items']} tour items"
@@ -207,7 +217,7 @@ class TestSupplierSearch(TestSupplierEcosystemAuth):
         response = requests.post(f"{BASE_URL}/api/suppliers/ecosystem/search", headers=headers, json=payload)
         assert response.status_code == 200, f"Insurance search failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "items" in data
         assert data["total_items"] >= 0, f"Got {data['total_items']} insurance items"
 
@@ -225,7 +235,7 @@ class TestSupplierSearch(TestSupplierEcosystemAuth):
         response = requests.post(f"{BASE_URL}/api/suppliers/ecosystem/search", headers=headers, json=payload)
         assert response.status_code == 200, f"Transport search failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "items" in data
         assert data["total_items"] >= 0, f"Got {data['total_items']} transport items"
 
@@ -247,7 +257,7 @@ class TestBookingLifecycle(TestSupplierEcosystemAuth):
         response = requests.post(f"{BASE_URL}/api/suppliers/ecosystem/hold", headers=headers, json=payload)
         assert response.status_code == 200, f"Hold failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "hold_id" in data, f"No hold_id in response: {data}"
         assert "status" in data
         assert data["status"] == "held", f"Expected status 'held', got '{data['status']}'"
@@ -268,7 +278,7 @@ class TestBookingLifecycle(TestSupplierEcosystemAuth):
         }
         hold_response = requests.post(f"{BASE_URL}/api/suppliers/ecosystem/hold", headers=headers, json=hold_payload)
         assert hold_response.status_code == 200
-        hold_id = hold_response.json()["hold_id"]
+        hold_id = _unwrap(hold_response)["hold_id"]
 
         # Confirm the hold
         confirm_payload = {
@@ -279,7 +289,7 @@ class TestBookingLifecycle(TestSupplierEcosystemAuth):
         response = requests.post(f"{BASE_URL}/api/suppliers/ecosystem/confirm", headers=headers, json=confirm_payload)
         assert response.status_code == 200, f"Confirm failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "supplier_booking_id" in data
         assert "status" in data
         assert data["status"] == "confirmed", f"Expected status 'confirmed', got '{data['status']}'"
@@ -299,7 +309,7 @@ class TestBookingLifecycle(TestSupplierEcosystemAuth):
             "contact": {"email": "cancel@test.com"}
         })
         assert hold_response.status_code == 200
-        hold_id = hold_response.json()["hold_id"]
+        hold_id = _unwrap(hold_response)["hold_id"]
 
         confirm_response = requests.post(f"{BASE_URL}/api/suppliers/ecosystem/confirm", headers=headers, json={
             "supplier_code": "mock_hotel",
@@ -307,7 +317,7 @@ class TestBookingLifecycle(TestSupplierEcosystemAuth):
             "payment_reference": "PAY-CANCEL-TEST"
         })
         assert confirm_response.status_code == 200
-        supplier_booking_id = confirm_response.json()["supplier_booking_id"]
+        supplier_booking_id = _unwrap(confirm_response)["supplier_booking_id"]
 
         # Now cancel
         cancel_payload = {
@@ -318,7 +328,7 @@ class TestBookingLifecycle(TestSupplierEcosystemAuth):
         response = requests.post(f"{BASE_URL}/api/suppliers/ecosystem/cancel", headers=headers, json=cancel_payload)
         assert response.status_code == 200, f"Cancel failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "status" in data
         assert data["status"] == "cancelled", f"Expected status 'cancelled', got '{data['status']}'"
         assert "refund_amount" in data
@@ -343,7 +353,7 @@ class TestPricingAndAvailability(TestSupplierEcosystemAuth):
         response = requests.post(url, headers=headers, params=params)
         assert response.status_code == 200, f"Pricing failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "supplier_price" in data, f"No supplier_price: {data}"
         assert "sell_price" in data, f"No sell_price: {data}"
         assert "priced_at" in data
@@ -368,7 +378,7 @@ class TestPricingAndAvailability(TestSupplierEcosystemAuth):
         response = requests.post(url, headers=headers, params=params)
         assert response.status_code == 200, f"Availability check failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "available" in data
         assert data["available"], f"Expected available=true, got {data['available']}"
         assert "checked_at" in data
@@ -402,7 +412,7 @@ class TestOrchestration(TestSupplierEcosystemAuth):
         response = requests.post(f"{BASE_URL}/api/suppliers/ecosystem/orchestrate", headers=headers, json=payload)
         assert response.status_code == 200, f"Orchestration failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "run_id" in data
         assert "booking_id" in data
         assert data["booking_id"] == booking_id
@@ -425,7 +435,7 @@ class TestHealthDashboard(TestSupplierEcosystemAuth):
         response = requests.get(f"{BASE_URL}/api/suppliers/ecosystem/health", headers=headers)
         assert response.status_code == 200, f"Health dashboard failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "suppliers" in data
         assert "total" in data
         assert data["total"] == 5, f"Expected 5 suppliers, got {data['total']}"
@@ -449,7 +459,7 @@ class TestHealthDashboard(TestSupplierEcosystemAuth):
         )
         assert response.status_code == 200, f"Health compute failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "supplier_code" in data
         assert data["supplier_code"] == "mock_hotel"
         assert "score" in data
@@ -489,7 +499,7 @@ class TestPartnerManagement(TestSupplierEcosystemAuth):
         response = requests.post(f"{BASE_URL}/api/suppliers/ecosystem/partners", headers=headers, json=create_payload)
         assert response.status_code == 201, f"Partner create failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "partner_id" in data
         partner_id = data["partner_id"]
         assert data["name"] == partner_name
@@ -504,7 +514,7 @@ class TestPartnerManagement(TestSupplierEcosystemAuth):
         )
         assert approve_response.status_code == 200, f"Partner approve failed: {approve_response.text}"
 
-        approve_data = approve_response.json()
+        approve_data = _unwrap(approve_response)
         assert approve_data["status"] == "active"
         assert "api_key" in approve_data
 
@@ -514,7 +524,7 @@ class TestPartnerManagement(TestSupplierEcosystemAuth):
         list_response = requests.get(f"{BASE_URL}/api/suppliers/ecosystem/partners", headers=headers)
         assert list_response.status_code == 200, f"Partner list failed: {list_response.text}"
 
-        list_data = list_response.json()
+        list_data = _unwrap(list_response)
         assert "partners" in list_data
         assert "total" in list_data
 
@@ -538,7 +548,7 @@ class TestCacheAndLogs(TestSupplierEcosystemAuth):
         response = requests.get(f"{BASE_URL}/api/suppliers/ecosystem/cache/stats", headers=headers)
         assert response.status_code == 200, f"Cache stats failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "status" in data
         # Status can be "ok", "unavailable" (if Redis not running), or "error"
         print(f"✓ Cache Stats: status={data['status']}")
@@ -556,7 +566,7 @@ class TestCacheAndLogs(TestSupplierEcosystemAuth):
         )
         assert response.status_code == 200, f"Orchestration runs failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "runs" in data
         assert "total" in data
 
@@ -573,7 +583,7 @@ class TestCacheAndLogs(TestSupplierEcosystemAuth):
         )
         assert response.status_code == 200, f"Failover logs failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "logs" in data
         assert "total" in data
 

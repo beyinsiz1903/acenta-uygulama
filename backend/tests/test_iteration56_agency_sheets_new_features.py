@@ -18,6 +18,14 @@ import requests
 
 from tests.preview_auth_helper import PreviewAuthSession, get_preview_base_url_or_skip
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Test credentials
@@ -54,7 +62,7 @@ class TestSyncStatusEndpoint:
         response = agency_client.get(f"{BASE_URL}/api/agency/sheets/sync-status")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         # Verify required fields
         assert "total_connections" in data, f"Missing 'total_connections' in response: {data}"
         assert "sync_enabled_count" in data, f"Missing 'sync_enabled_count' in response: {data}"
@@ -90,7 +98,7 @@ class TestSyncHistoryEndpoint:
         response = agency_client.get(f"{BASE_URL}/api/agency/sheets/sync-history")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "items" in data, f"Missing 'items' in response: {data}"
         assert "total" in data, f"Missing 'total' in response: {data}"
         assert isinstance(data["items"], list)
@@ -103,7 +111,7 @@ class TestSyncHistoryEndpoint:
         response = agency_client.get(f"{BASE_URL}/api/agency/sheets/sync-history?limit=5")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         # Limit may affect results if there are more than 5 items
         assert len(data["items"]) <= 5, f"Expected at most 5 items, got {len(data['items'])}"
         print("✅ GET /api/agency/sheets/sync-history?limit=5 respects limit parameter")
@@ -113,7 +121,7 @@ class TestSyncHistoryEndpoint:
         response = agency_client.get(f"{BASE_URL}/api/agency/sheets/sync-history?connection_id=nonexistent-id")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         # Should return empty or filtered results (since connection doesn't exist)
         assert "items" in data
         print("✅ GET /api/agency/sheets/sync-history?connection_id=xxx accepts connection_id param")
@@ -173,7 +181,7 @@ class TestCredentialsSaveEndpoint:
         )
         assert response.status_code == 400, f"Expected 400, got {response.status_code}: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "error" in data or "detail" in data, f"Expected error details in response: {data}"
         print("✅ POST /api/agency/sheets/credentials returns 400 for invalid JSON")
 
@@ -207,7 +215,7 @@ class TestCredentialsStatusEndpoint:
         response = agency_client.get(f"{BASE_URL}/api/agency/sheets/credentials/status")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         # Verify required fields
         assert "has_own_credentials" in data, f"Missing 'has_own_credentials' in response: {data}"
         assert "global_configured" in data, f"Missing 'global_configured' in response: {data}"
@@ -237,7 +245,7 @@ class TestCredentialsDeleteEndpoint:
         response = agency_client.delete(f"{BASE_URL}/api/agency/sheets/credentials")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "deleted" in data, f"Missing 'deleted' in response: {data}"
         assert "fallback" in data, f"Missing 'fallback' in response: {data}"
 
@@ -264,7 +272,7 @@ class TestCredentialsCRUDFlow:
         # 1. Check initial status
         status_response = agency_client.get(f"{BASE_URL}/api/agency/sheets/credentials/status")
         assert status_response.status_code == 200
-        initial_status = status_response.json()
+        initial_status = _unwrap(status_response)
         print(f"Initial status: has_own={initial_status.get('has_own_credentials')}, active_source={initial_status.get('active_source')}")
 
         # 2. Attempt to save valid credentials (with mock data)
@@ -284,7 +292,7 @@ class TestCredentialsCRUDFlow:
             json={"service_account_json": json.dumps(mock_credentials)}
         )
         assert save_response.status_code == 200, f"Expected 200, got {save_response.status_code}: {save_response.text}"
-        save_data = save_response.json()
+        save_data = _unwrap(save_response)
         assert save_data.get("status") == "saved", f"Expected status='saved': {save_data}"
         assert save_data.get("client_email") == "test@test-project.iam.gserviceaccount.com"
         print(f"✅ Credentials saved: client_email={save_data.get('client_email')}")
@@ -292,7 +300,7 @@ class TestCredentialsCRUDFlow:
         # 3. Check updated status
         status_after = agency_client.get(f"{BASE_URL}/api/agency/sheets/credentials/status")
         assert status_after.status_code == 200
-        updated_status = status_after.json()
+        updated_status = _unwrap(status_after)
         assert updated_status.get("has_own_credentials"), f"Expected has_own_credentials=True: {updated_status}"
         assert updated_status.get("active_source") == "agency", f"Expected active_source='agency': {updated_status}"
         assert updated_status.get("own_service_account_email") == "test@test-project.iam.gserviceaccount.com"
@@ -301,14 +309,14 @@ class TestCredentialsCRUDFlow:
         # 4. Delete credentials
         delete_response = agency_client.delete(f"{BASE_URL}/api/agency/sheets/credentials")
         assert delete_response.status_code == 200
-        delete_data = delete_response.json()
+        delete_data = _unwrap(delete_response)
         assert delete_data.get("deleted"), f"Expected deleted=True: {delete_data}"
         print(f"✅ Credentials deleted: deleted={delete_data.get('deleted')}, fallback={delete_data.get('fallback')}")
 
         # 5. Verify status after delete
         final_status = agency_client.get(f"{BASE_URL}/api/agency/sheets/credentials/status")
         assert final_status.status_code == 200
-        final_data = final_status.json()
+        final_data = _unwrap(final_status)
         assert not final_data.get("has_own_credentials"), f"Expected has_own_credentials=False: {final_data}"
         # active_source should be 'none' since no global configured in preview env
         assert final_data.get("active_source") in ["global", "none"], f"Unexpected active_source: {final_data}"

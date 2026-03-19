@@ -15,6 +15,16 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from tests.preview_auth_helper import PreviewAuthSession, get_preview_base_url_or_skip
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = get_preview_base_url_or_skip("")
 
 # Admin credentials
@@ -41,7 +51,7 @@ class TestAdminSheetsConfig:
         """GET /api/admin/sheets/config should return 200"""
         response = admin_session.get("/api/admin/sheets/config")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         # Should have configured key
         assert "configured" in data
         # When not configured, should return False gracefully
@@ -51,7 +61,7 @@ class TestAdminSheetsConfig:
         """Config should include required_service_account_fields"""
         response = admin_session.get("/api/admin/sheets/config")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         # Should have required fields for service account setup
         assert "required_service_account_fields" in data or "message" in data
 
@@ -71,7 +81,7 @@ class TestAdminSheetsConnections:
         """GET /api/admin/sheets/connections should return 200"""
         response = admin_session.get("/api/admin/sheets/connections")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list), "Connections should be a list"
         print(f"Found {len(data)} sheet connections")
 
@@ -79,7 +89,7 @@ class TestAdminSheetsConnections:
         """Each connection should have required fields"""
         response = admin_session.get("/api/admin/sheets/connections")
         assert response.status_code == 200
-        connections = response.json()
+        connections = _unwrap(response)
         if connections:
             conn = connections[0]
             # Required fields for connection
@@ -103,7 +113,7 @@ class TestAdminSheetsStatus:
         """GET /api/admin/sheets/status should return 200"""
         response = admin_session.get("/api/admin/sheets/status")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         # Should have dashboard stats
         assert "configured" in data
         print(f"Status: total={data.get('total')}, enabled={data.get('enabled')}, healthy={data.get('healthy')}")
@@ -125,7 +135,7 @@ class TestAdminSheetsSyncNotConfigured:
         # First get a connection
         response = admin_session.get("/api/admin/sheets/connections")
         assert response.status_code == 200
-        connections = response.json()
+        connections = _unwrap(response)
 
         if not connections:
             pytest.skip("No sheet connections to test sync")
@@ -136,7 +146,7 @@ class TestAdminSheetsSyncNotConfigured:
         sync_response = admin_session.post(f"/api/admin/sheets/sync/{hotel_id}")
         assert sync_response.status_code == 200, f"Expected 200, got {sync_response.status_code}: {sync_response.text}"
 
-        sync_data = sync_response.json()
+        sync_data = _unwrap(sync_response)
         # Should gracefully return not_configured status
         if not sync_data.get("configured", True):
             assert sync_data.get("status") == "not_configured", "Expected not_configured status"
@@ -161,7 +171,7 @@ class TestAdminSheetsTemplates:
         """GET /api/admin/sheets/templates should return 200"""
         response = admin_session.get("/api/admin/sheets/templates")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         # Should have checklist and downloadable_templates
         assert "checklist" in data or "downloadable_templates" in data
         print(f"Templates: checklist items={len(data.get('checklist', []))}")
@@ -182,7 +192,7 @@ class TestAdminSheetsWritebackStats:
         """GET /api/admin/sheets/writeback/stats should return 200"""
         response = admin_session.get("/api/admin/sheets/writeback/stats")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         # Should have stats fields
         assert "configured" in data
         print(f"Writeback stats: queued={data.get('queued')}, completed={data.get('completed')}")
@@ -203,7 +213,7 @@ class TestAdminSheetsRuns:
         """GET /api/admin/sheets/runs should return 200"""
         response = admin_session.get("/api/admin/sheets/runs")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list), "Runs should be a list"
         print(f"Found {len(data)} sync runs")
 
@@ -223,7 +233,7 @@ class TestAdminSheetsAvailableHotels:
         """GET /api/admin/sheets/available-hotels should return 200"""
         response = admin_session.get("/api/admin/sheets/available-hotels")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list), "Available hotels should be a list"
         print(f"Found {len(data)} available hotels")
         if data:
@@ -247,7 +257,7 @@ class TestAgencyHotels:
         """GET /api/agency/hotels should return 200"""
         response = agency_session.get("/api/agency/hotels")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         # Can be list or dict with items
         if isinstance(data, dict):
             items = data.get("items", [])
@@ -259,7 +269,7 @@ class TestAgencyHotels:
         """Agency hotels should include sheet-related fields"""
         response = agency_session.get("/api/agency/hotels")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         if isinstance(data, dict):
             items = data.get("items", [])
@@ -284,7 +294,7 @@ class TestAgencyHotels:
         """Agency hotels should include status fields"""
         response = agency_session.get("/api/agency/hotels")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         if isinstance(data, dict):
             items = data.get("items", [])
@@ -317,7 +327,7 @@ class TestAdminAgencyConnections:
         """GET /api/admin/sheets/agency-connections should return 200"""
         response = admin_session.get("/api/admin/sheets/agency-connections")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list), "Agency connections should be a list"
         print(f"Found {len(data)} agency-specific connections")
 

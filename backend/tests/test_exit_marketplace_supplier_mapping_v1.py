@@ -111,7 +111,7 @@ async def test_resolve_supplier_and_booking_mapping(test_db: Any, async_client: 
 
     resp_create = await client.post("/api/marketplace/listings", json=payload, headers=seller_headers)
     assert resp_create.status_code == status.HTTP_201_CREATED, resp_create.text
-    listing = resp_create.json()
+    listing = _unwrap(resp_create)
     listing_id = listing["id"]
 
     # 2) Seller publishes listing
@@ -130,12 +130,22 @@ async def test_resolve_supplier_and_booking_mapping(test_db: Any, async_client: 
         headers=seller_headers,
     )
     assert resp_resolve.status_code == status.HTTP_200_OK, resp_resolve.text
-    resolved = resp_resolve.json()
+    resolved = _unwrap(resp_resolve)
     assert resolved["supplier"] == "mock_supplier_v1"
     assert resolved["supplier_offer_id"] == "MOCK-MS-12345"
 
     # Reload listing from DB and check supplier_mapping
     from bson import ObjectId
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     stored = await test_db.marketplace_listings.find_one({"_id": ObjectId(listing_id)})
     mapping = (stored or {}).get("supplier_mapping") or {}
@@ -229,14 +239,14 @@ async def test_unsupported_supplier_errors(test_db: Any, async_client: AsyncClie
     }
     resp_create1 = await client.post("/api/marketplace/listings", json=payload_no_name, headers=headers)
     assert resp_create1.status_code == status.HTTP_201_CREATED, resp_create1.text
-    listing1 = resp_create1.json()
+    listing1 = _unwrap(resp_create1)
 
     resp_resolve1 = await client.post(
         f"/api/marketplace/listings/{listing1['id']}/resolve-supplier",
         headers=headers,
     )
     assert resp_resolve1.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY, resp_resolve1.text
-    err1 = resp_resolve1.json().get("error", {})
+    err1 = _unwrap(resp_resolve1).get("error", {})
     assert err1.get("code") == "SUPPLIER_NOT_SUPPORTED"
 
     # 2) Unknown supplier.name -> SUPPLIER_NOT_SUPPORTED
@@ -251,14 +261,14 @@ async def test_unsupported_supplier_errors(test_db: Any, async_client: AsyncClie
     }
     resp_create2 = await client.post("/api/marketplace/listings", json=payload_unknown, headers=headers)
     assert resp_create2.status_code == status.HTTP_201_CREATED, resp_create2.text
-    listing2 = resp_create2.json()
+    listing2 = _unwrap(resp_create2)
 
     resp_resolve2 = await client.post(
         f"/api/marketplace/listings/{listing2['id']}/resolve-supplier",
         headers=headers,
     )
     assert resp_resolve2.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY, resp_resolve2.text
-    err2 = resp_resolve2.json().get("error", {})
+    err2 = _unwrap(resp_resolve2).get("error", {})
     assert err2.get("code") == "SUPPLIER_NOT_SUPPORTED"
 
     # 3) Missing external_ref -> LISTING_SUPPLIER_REF_REQUIRED
@@ -272,12 +282,12 @@ async def test_unsupported_supplier_errors(test_db: Any, async_client: AsyncClie
     }
     resp_create3 = await client.post("/api/marketplace/listings", json=payload_no_ref, headers=headers)
     assert resp_create3.status_code == status.HTTP_201_CREATED, resp_create3.text
-    listing3 = resp_create3.json()
+    listing3 = _unwrap(resp_create3)
 
     resp_resolve3 = await client.post(
         f"/api/marketplace/listings/{listing3['id']}/resolve-supplier",
         headers=headers,
     )
     assert resp_resolve3.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY, resp_resolve3.text
-    err3 = resp_resolve3.json().get("error", {})
+    err3 = _unwrap(resp_resolve3).get("error", {})
     assert err3.get("code") == "LISTING_SUPPLIER_REF_REQUIRED"

@@ -12,6 +12,16 @@ from app.auth import _jwt_secret
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 def _id_variants(x: str) -> list[Any]:
     vals: list[Any] = [x]
     try:
@@ -95,7 +105,7 @@ async def test_risk_rules_v1_amount_threshold_alert(test_db: Any, async_client: 
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_create_low.status_code == status.HTTP_201_CREATED
-    booking_low_id = resp_create_low.json()["id"]
+    booking_low_id = _unwrap(resp_create_low)["id"]
 
     await client.post(
         f"/api/bookings/{booking_low_id}/quote",
@@ -121,7 +131,7 @@ async def test_risk_rules_v1_amount_threshold_alert(test_db: Any, async_client: 
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_create_high.status_code == status.HTTP_201_CREATED
-    booking_high_id = resp_create_high.json()["id"]
+    booking_high_id = _unwrap(resp_create_high)["id"]
 
     await client.post(
         f"/api/bookings/{booking_high_id}/quote",

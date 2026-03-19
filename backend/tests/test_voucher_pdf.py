@@ -7,6 +7,16 @@ from bson import ObjectId
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.anyio
 async def test_ops_issue_and_b2b_download_latest_voucher_pdf(async_client, test_db, admin_headers, agency_headers):
     """Issue a voucher PDF via ops endpoint and download it via b2b latest endpoint.
@@ -25,7 +35,7 @@ async def test_ops_issue_and_b2b_download_latest_voucher_pdf(async_client, test_
         json={"email": "admin@acenta.test", "password": "admin123"},
     )
     assert login_resp.status_code == 200
-    admin_user = login_resp.json()["user"]
+    admin_user = _unwrap(login_resp)["user"]
     org_id = admin_user["organization_id"]
 
     # Get agency user's agency_id
@@ -34,7 +44,7 @@ async def test_ops_issue_and_b2b_download_latest_voucher_pdf(async_client, test_
         json={"email": "agency1@demo.test", "password": "agency123"},
     )
     assert agency_login_resp.status_code == 200
-    agency_user = agency_login_resp.json()["user"]
+    agency_user = _unwrap(agency_login_resp)["user"]
     agency_id = agency_user["agency_id"]
 
     # Seed minimal booking document
@@ -86,7 +96,7 @@ async def test_ops_issue_and_b2b_download_latest_voucher_pdf(async_client, test_
         json={"issue_reason": "INITIAL", "locale": "tr"},
     )
     assert resp_issue.status_code == 200
-    data_issue = resp_issue.json()
+    data_issue = _unwrap(resp_issue)
     assert data_issue["booking_id"] == "507f1f77bcf86cd799439011"
     assert data_issue["issue_reason"] == "INITIAL"
     assert data_issue["filename"].endswith(".pdf")
@@ -131,7 +141,7 @@ async def test_voucher_issue_idempotent_per_version_and_reason(async_client, tes
         json={"email": "admin@acenta.test", "password": "admin123"},
     )
     assert login_resp.status_code == 200
-    admin_user = login_resp.json()["user"]
+    admin_user = _unwrap(login_resp)["user"]
     org_id = admin_user["organization_id"]
 
     booking_doc = {

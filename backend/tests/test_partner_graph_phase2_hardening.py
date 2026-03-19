@@ -89,7 +89,7 @@ async def test_inventory_shares_requires_tenant_header(async_client: AsyncClient
         assert e.code == "tenant_header_missing"
     else:
         assert resp.status_code == 400
-        body = resp.json()
+        body = _unwrap(resp)
         assert body["error"]["code"] == "tenant_header_missing"
 
 
@@ -116,6 +116,16 @@ async def test_settlements_requires_permission(async_client: AsyncClient) -> Non
 
     # Seed active subscription so subscription guard passes and RBAC is exercised
     from app.services.subscription_service import SubscriptionService
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     sub_service = SubscriptionService(db)
     await sub_service.set_subscription(
@@ -239,6 +249,6 @@ async def test_settlements_returns_seller_entries_after_network_booking(async_cl
         headers={"Authorization": f"Bearer {seller_token}", "X-Tenant-Id": seller["tenant_id"]},
     )
     assert resp2.status_code == 200, resp2.text
-    data = resp2.json()
+    data = _unwrap(resp2)
     assert isinstance(data.get("items"), list)
     assert len(data["items"]) >= 1

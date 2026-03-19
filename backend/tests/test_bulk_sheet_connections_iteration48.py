@@ -19,6 +19,16 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from tests.preview_auth_helper import PreviewAuthSession, get_preview_base_url_or_skip
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 BASE_URL = get_preview_base_url_or_skip("")
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASS = "admin123"
@@ -27,7 +37,7 @@ ADMIN_PASS = "admin123"
 def _pick_available_hotel(admin_session: PreviewAuthSession) -> dict:
     response = admin_session.get("/api/admin/sheets/available-hotels")
     assert response.status_code == 200, response.text
-    hotels = response.json()
+    hotels = _unwrap(response)
     available = [hotel for hotel in hotels if not hotel.get("connected")]
     if not available:
         pytest.skip("Bulk test için baglanabilir otel kalmadi")
@@ -37,7 +47,7 @@ def _pick_available_hotel(admin_session: PreviewAuthSession) -> dict:
 def _pick_available_agency(admin_session: PreviewAuthSession, hotel_id: str) -> dict:
     response = admin_session.get(f"/api/admin/sheets/agencies-for-hotel/{hotel_id}")
     assert response.status_code == 200, response.text
-    agencies = response.json()
+    agencies = _unwrap(response)
     available = [agency for agency in agencies if not agency.get("connected")]
     if not available:
         pytest.skip("Bulk test için baglanabilir acenta kalmadi")
@@ -96,7 +106,7 @@ class TestBulkSheetConnectionsIteration48:
             },
         )
         assert response.status_code == 200, response.text
-        data = response.json()
+        data = _unwrap(response)
         assert data["scope"] == "hotel"
         assert data["source"] == "paste"
         assert data["summary"]["valid_rows"] == 1
@@ -119,7 +129,7 @@ class TestBulkSheetConnectionsIteration48:
             },
         )
         assert response.status_code == 200, response.text
-        data = response.json()
+        data = _unwrap(response)
         assert data["scope"] == "agency"
         assert data["summary"]["valid_rows"] == 1
         assert data["summary"]["invalid_rows"] == 0
@@ -138,7 +148,7 @@ class TestBulkSheetConnectionsIteration48:
             },
         )
         assert response.status_code == 200, response.text
-        data = response.json()
+        data = _unwrap(response)
         assert data["summary"]["valid_rows"] == 0
         assert data["summary"]["invalid_rows"] == 1
         assert len(data["invalid_rows"]) == 1
@@ -161,7 +171,7 @@ class TestBulkSheetConnectionsIteration48:
             files={"file": ("bulk_connections.csv", io.BytesIO(csv_text.encode("utf-8")), "text/csv")},
         )
         assert response.status_code == 200, response.text
-        data = response.json()
+        data = _unwrap(response)
         assert data["source"] == "upload"
         assert data["filename"] == "bulk_connections.csv"
         assert data["summary"]["valid_rows"] == 1
@@ -180,7 +190,7 @@ class TestBulkSheetConnectionsIteration48:
             files={"file": ("semicolon.csv", io.BytesIO(csv_text.encode("utf-8")), "text/csv")},
         )
         assert response.status_code == 200, response.text
-        data = response.json()
+        data = _unwrap(response)
         assert data["summary"]["valid_rows"] == 1
 
     # ── Master Sheet Preview Tests ───────────────────────────────────
@@ -196,7 +206,7 @@ class TestBulkSheetConnectionsIteration48:
             },
         )
         assert response.status_code == 200, response.text
-        data = response.json()
+        data = _unwrap(response)
         assert data["configured"] is False
         assert data["source"] == "master_sheet"
         assert "message" in data
@@ -219,7 +229,7 @@ class TestBulkSheetConnectionsIteration48:
             },
         )
         assert preview_response.status_code == 200, preview_response.text
-        preview_data = preview_response.json()
+        preview_data = _unwrap(preview_response)
         assert preview_data["summary"]["valid_rows"] == 1
 
         # Execute bulk connection
@@ -228,7 +238,7 @@ class TestBulkSheetConnectionsIteration48:
             json={"scope": "hotel", "rows": preview_data["valid_rows"]},
         )
         assert execute_response.status_code == 200, execute_response.text
-        execute_data = execute_response.json()
+        execute_data = _unwrap(execute_response)
         assert execute_data["scope"] == "hotel"
         assert execute_data["created_count"] == 1
         assert execute_data["error_count"] == 0
@@ -237,13 +247,13 @@ class TestBulkSheetConnectionsIteration48:
         # Cleanup - delete the created connection
         cleanup_response = admin_session.delete(f"/api/admin/sheets/connections/{hotel['_id']}")
         assert cleanup_response.status_code == 200, cleanup_response.text
-        cleanup_data = cleanup_response.json()
+        cleanup_data = _unwrap(cleanup_response)
         assert cleanup_data.get("deleted") is True
 
         # Verify cleanup - connection should no longer exist
         verify_response = admin_session.get(f"/api/admin/sheets/connections/{hotel['_id']}")
         assert verify_response.status_code == 200
-        assert verify_response.json().get("connected") is False
+        assert _unwrap(verify_response).get("connected") is False
 
     def test_bulk_execute_empty_rows_returns_error(self, admin_session):
         """POST /api/admin/sheets/bulk/execute with empty rows returns 400"""
@@ -271,7 +281,7 @@ class TestBulkSheetConnectionsIteration48:
         assert preview_response.status_code == 200
         execute_response = admin_session.post(
             "/api/admin/sheets/bulk/execute",
-            json={"scope": "hotel", "rows": preview_response.json()["valid_rows"]},
+            json={"scope": "hotel", "rows": _unwrap(preview_response)["valid_rows"]},
         )
         assert execute_response.status_code == 200, execute_response.text
 
@@ -292,7 +302,7 @@ class TestBulkSheetConnectionsIteration48:
                 },
             )
             assert duplicate_execute.status_code == 200
-            dup_data = duplicate_execute.json()
+            dup_data = _unwrap(duplicate_execute)
             assert dup_data["error_count"] >= 1  # Should have error for duplicate
         finally:
             # Cleanup

@@ -11,6 +11,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 @pytest.fixture(scope="module")
@@ -22,7 +32,7 @@ def auth_token():
     )
     if response.status_code != 200:
         pytest.skip(f"Login failed: {response.status_code} - {response.text}")
-    data = response.json()
+    data = _unwrap(response)
     token = data.get("access_token") or data.get("token")
     if not token:
         pytest.skip(f"No token in response: {data.keys()}")
@@ -57,7 +67,7 @@ class TestPipelineStepsExplainability:
         }
         response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate", json=payload, headers=auth_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         # Check pipeline_steps exists and is a list
         assert "pipeline_steps" in data, f"Missing pipeline_steps in response: {data.keys()}"
@@ -81,7 +91,7 @@ class TestPipelineStepsExplainability:
         }
         response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate", json=payload, headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         steps = data["pipeline_steps"]
         assert len(steps) == 7, f"Expected 7 steps, got {len(steps)}"
@@ -120,7 +130,7 @@ class TestPipelineStepsExplainability:
         }
         response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate", json=payload, headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         required_fields = [
             "step", "label", "input_price", "adjustment_pct", 
@@ -150,7 +160,7 @@ class TestPipelineStepsExplainability:
         }
         response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate", json=payload, headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         steps = data["pipeline_steps"]
         for i in range(len(steps) - 1):
@@ -182,7 +192,7 @@ class TestEvaluatedRulesPrecedence:
         }
         response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate", json=payload, headers=auth_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         # Check evaluated_rules exists and is a list
         assert "evaluated_rules" in data, f"Missing evaluated_rules in response: {data.keys()}"
@@ -206,7 +216,7 @@ class TestEvaluatedRulesPrecedence:
         }
         response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate", json=payload, headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         if not data["evaluated_rules"]:
             pytest.skip("No evaluated rules in response - may need seeded rules")
@@ -242,7 +252,7 @@ class TestEvaluatedRulesPrecedence:
         }
         response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate", json=payload, headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         evaluated = data["evaluated_rules"]
         winners = [r for r in evaluated if r["won"]]
@@ -266,7 +276,7 @@ class TestGuardrailsEndpoints:
         """GET /api/pricing-engine/guardrails returns list of guardrails."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/guardrails", headers=auth_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         assert isinstance(data, list), f"Expected list, got {type(data)}"
         print(f"Found {len(data)} guardrails")
@@ -285,7 +295,7 @@ class TestGuardrailsEndpoints:
         }
         response = requests.post(f"{BASE_URL}/api/pricing-engine/guardrails", json=payload, headers=auth_headers)
         assert response.status_code == 201, f"Expected 201, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         assert "guardrail_id" in data, f"Missing guardrail_id in response: {data.keys()}"
         assert data["name"] == "TEST_Min_Margin_Iter128"
@@ -312,7 +322,7 @@ class TestGuardrailsEndpoints:
             payload = {**g, "scope": {}, "active": True}
             response = requests.post(f"{BASE_URL}/api/pricing-engine/guardrails", json=payload, headers=auth_headers)
             assert response.status_code == 201, f"Failed to create {g['guardrail_type']}: {response.status_code}"
-            data = response.json()
+            data = _unwrap(response)
             created_ids.append(data["guardrail_id"])
             print(f"Created {g['guardrail_type']} guardrail: {data['guardrail_id']}")
         
@@ -332,25 +342,25 @@ class TestGuardrailsEndpoints:
         }
         create_response = requests.post(f"{BASE_URL}/api/pricing-engine/guardrails", json=payload, headers=auth_headers)
         assert create_response.status_code == 201
-        guardrail_id = create_response.json()["guardrail_id"]
+        guardrail_id = _unwrap(create_response)["guardrail_id"]
         
         # Delete it
         delete_response = requests.delete(f"{BASE_URL}/api/pricing-engine/guardrails/{guardrail_id}", headers=auth_headers)
         assert delete_response.status_code == 200, f"Expected 200, got {delete_response.status_code}: {delete_response.text}"
-        data = delete_response.json()
+        data = _unwrap(delete_response)
         assert data.get("ok") == True
         print(f"Deleted guardrail: {guardrail_id}")
         
         # Verify it's gone
         list_response = requests.get(f"{BASE_URL}/api/pricing-engine/guardrails", headers=auth_headers)
-        guardrail_ids = [g.get("guardrail_id") for g in list_response.json()]
+        guardrail_ids = [g.get("guardrail_id") for g in _unwrap(list_response)]
         assert guardrail_id not in guardrail_ids, f"Guardrail {guardrail_id} still exists after delete"
     
     def test_metadata_includes_guardrail_types(self, auth_headers):
         """GET /api/pricing-engine/metadata returns guardrail_types."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/metadata", headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         assert "guardrail_types" in data, f"Missing guardrail_types in metadata: {data.keys()}"
         expected_types = {"min_margin_pct", "max_discount_pct", "channel_floor_price", "supplier_max_markup_pct"}
@@ -378,7 +388,7 @@ class TestGuardrailWarnings:
         }
         response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate", json=payload, headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         assert "guardrails_passed" in data, f"Missing guardrails_passed in response: {data.keys()}"
         assert isinstance(data["guardrails_passed"], bool), f"guardrails_passed should be bool: {type(data['guardrails_passed'])}"
@@ -401,7 +411,7 @@ class TestGuardrailWarnings:
         }
         response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate", json=payload, headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         assert "guardrail_warnings" in data, f"Missing guardrail_warnings in response: {data.keys()}"
         assert isinstance(data["guardrail_warnings"], list), f"guardrail_warnings should be list: {type(data['guardrail_warnings'])}"
@@ -432,7 +442,7 @@ class TestGuardrailWarnings:
             headers=auth_headers
         )
         assert sim_response.status_code == 200
-        data = sim_response.json()
+        data = _unwrap(sim_response)
         
         # Check if there's already a guardrail violation (from existing min_margin_pct=5)
         if data["guardrails_passed"] == False and len(data["guardrail_warnings"]) > 0:
@@ -464,7 +474,7 @@ class TestGuardrailWarnings:
                 headers=auth_headers
             )
             assert create_response.status_code == 201
-            guardrail_id = create_response.json()["guardrail_id"]
+            guardrail_id = _unwrap(create_response)["guardrail_id"]
             
             try:
                 # Run simulation again
@@ -474,7 +484,7 @@ class TestGuardrailWarnings:
                     headers=auth_headers
                 )
                 assert sim_response.status_code == 200
-                data = sim_response.json()
+                data = _unwrap(sim_response)
                 
                 # Should have warning and guardrails_passed=False
                 assert data["guardrails_passed"] == False, f"Expected guardrails_passed=False with 50% margin guardrail"
@@ -513,7 +523,7 @@ class TestGuardrailWarnings:
             headers=auth_headers
         )
         assert create_response.status_code == 201
-        guardrail_id = create_response.json()["guardrail_id"]
+        guardrail_id = _unwrap(create_response)["guardrail_id"]
         
         try:
             sim_payload = {
@@ -535,7 +545,7 @@ class TestGuardrailWarnings:
                 headers=auth_headers
             )
             assert sim_response.status_code == 200
-            data = sim_response.json()
+            data = _unwrap(sim_response)
             
             assert len(data["guardrail_warnings"]) > 0
             
@@ -561,7 +571,7 @@ class TestDashboardWithGuardrails:
         """GET /api/pricing-engine/dashboard returns active_guardrails count."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/dashboard", headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         assert "active_guardrails" in data, f"Missing active_guardrails in dashboard: {data.keys()}"
         assert isinstance(data["active_guardrails"], int), f"active_guardrails should be int: {type(data['active_guardrails'])}"

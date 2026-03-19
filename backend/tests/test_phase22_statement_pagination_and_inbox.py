@@ -12,6 +12,16 @@ from app.auth import _jwt_secret
 from app.db import get_db
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 def _make_token(email: str, org_id: str, roles: list[str], minutes: int = 60 * 12) -> str:
     now = datetime.now(timezone.utc)
     payload = {
@@ -106,7 +116,7 @@ async def test_statement_filters_by_counterparty_seller_perspective(async_client
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": seller["tenant_id"]},
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["totals"]["count"] == 1
     assert body["totals"]["gross_total"] == pytest.approx(100.0)
 
@@ -149,7 +159,7 @@ async def test_statement_pagination_cursor_two_pages(async_client: AsyncClient) 
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": seller["tenant_id"]},
     )
     assert resp1.status_code == 200, resp1.text
-    body1 = resp1.json()
+    body1 = _unwrap(resp1)
     assert len(body1["items"]) == 2
     next_cursor = body1.get("page", {}).get("next_cursor")
     assert next_cursor
@@ -161,7 +171,7 @@ async def test_statement_pagination_cursor_two_pages(async_client: AsyncClient) 
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": seller["tenant_id"]},
     )
     assert resp2.status_code == 200, resp2.text
-    body2 = resp2.json()
+    body2 = _unwrap(resp2)
     assert len(body2["items"]) == 1
     assert body2.get("page", {}).get("next_cursor") is None
 
@@ -178,7 +188,7 @@ async def test_invalid_cursor_returns_400(async_client: AsyncClient) -> None:
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": tenant["tenant_id"]},
     )
     assert resp.status_code == 400
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["error"]["code"] == "invalid_cursor"
 
 
@@ -217,6 +227,6 @@ async def test_inbox_active_partners_enriched(async_client: AsyncClient) -> None
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": a["tenant_id"]},
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     # For now active_partners is empty (placeholder), but we assert field presence
     assert "active_partners" in body

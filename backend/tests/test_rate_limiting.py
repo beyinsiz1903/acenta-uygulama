@@ -9,6 +9,16 @@ Tests:
 import pytest
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.anyio
 async def test_login_rate_limit_format(async_client):
     """Test that rate limited responses have proper error format."""
@@ -24,7 +34,7 @@ async def test_login_rate_limit_format(async_client):
             break
 
     if last_resp and last_resp.status_code == 429:
-        data = last_resp.json()
+        data = _unwrap(last_resp)
         assert "error" in data, "Rate limit response should have 'error' key"
         assert data["error"]["code"] == "rate_limit_exceeded"
         assert "retry_after_seconds" in data["error"].get("details", data["error"])

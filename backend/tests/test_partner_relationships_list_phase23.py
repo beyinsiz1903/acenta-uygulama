@@ -12,6 +12,16 @@ from app.auth import _jwt_secret
 from app.db import get_db
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 async def _seed_org_tenant_user(db, org_name: str, email: str) -> Dict[str, str]:
     now = datetime.now(timezone.utc)
     org = {"name": org_name, "billing_email": email, "status": "active", "created_at": now, "updated_at": now}
@@ -133,7 +143,7 @@ async def test_list_relationships_role_any_and_filters_by_current_tenant(async_c
         },
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     items = body["items"]
 
     # Only two relationships where buyer is party should be visible
@@ -177,7 +187,7 @@ async def test_list_relationships_role_filters_seller_vs_buyer(async_client: Asy
         headers={"Authorization": f"Bearer {seller_token}", "X-Tenant-Id": seller["tenant_id"]},
     )
     assert resp_seller.status_code == 200, resp_seller.text
-    items_seller = resp_seller.json()["items"]
+    items_seller = _unwrap(resp_seller)["items"]
     assert len(items_seller) == 1
     assert items_seller[0]["seller_tenant_id"] == seller["tenant_id"]
 
@@ -187,7 +197,7 @@ async def test_list_relationships_role_filters_seller_vs_buyer(async_client: Asy
         headers={"Authorization": f"Bearer {seller_token}", "X-Tenant-Id": seller["tenant_id"]},
     )
     assert resp_seller_buyer.status_code == 200, resp_seller_buyer.text
-    assert resp_seller_buyer.json()["items"] == []
+    assert _unwrap(resp_seller_buyer)["items"] == []
 
     # For buyer tenant, role=buyer should return the relationship
     resp_buyer = await async_client.get(
@@ -195,7 +205,7 @@ async def test_list_relationships_role_filters_seller_vs_buyer(async_client: Asy
         headers={"Authorization": f"Bearer {buyer_token}", "X-Tenant-Id": buyer["tenant_id"]},
     )
     assert resp_buyer.status_code == 200, resp_buyer.text
-    items_buyer = resp_buyer.json()["items"]
+    items_buyer = _unwrap(resp_buyer)["items"]
     assert len(items_buyer) == 1
     assert items_buyer[0]["buyer_tenant_id"] == buyer["tenant_id"]
 
@@ -238,7 +248,7 @@ async def test_list_relationships_status_filter_and_pagination(async_client: Asy
         headers={"Authorization": f"Bearer {buyer_token}", "X-Tenant-Id": buyer["tenant_id"]},
     )
     assert resp_active_page1.status_code == 200, resp_active_page1.text
-    body1 = resp_active_page1.json()
+    body1 = _unwrap(resp_active_page1)
     items1 = body1["items"]
     assert len(items1) == 2
     cursor = body1.get("next_cursor")
@@ -250,7 +260,7 @@ async def test_list_relationships_status_filter_and_pagination(async_client: Asy
         headers={"Authorization": f"Bearer {buyer_token}", "X-Tenant-Id": buyer["tenant_id"]},
     )
     assert resp_all_page1.status_code == 200, resp_all_page1.text
-    body_all1 = resp_all_page1.json()
+    body_all1 = _unwrap(resp_all_page1)
     items_all1 = body_all1["items"]
     assert len(items_all1) == 2
     cursor_all = body_all1.get("next_cursor")
@@ -261,7 +271,7 @@ async def test_list_relationships_status_filter_and_pagination(async_client: Asy
         headers={"Authorization": f"Bearer {buyer_token}", "X-Tenant-Id": buyer["tenant_id"]},
     )
     assert resp_all_page2.status_code == 200, resp_all_page2.text
-    body_all2 = resp_all_page2.json()
+    body_all2 = _unwrap(resp_all_page2)
     items_all2 = body_all2["items"]
     assert len(items_all2) == 1
     assert body_all2.get("next_cursor") is None
@@ -279,7 +289,7 @@ async def test_list_relationships_invalid_status_and_role(async_client: AsyncCli
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": tenant["tenant_id"]},
     )
     assert resp_status.status_code == 400
-    body_s = resp_status.json()
+    body_s = _unwrap(resp_status)
     assert body_s["error"]["code"] == "invalid_status"
 
     # invalid role
@@ -288,7 +298,7 @@ async def test_list_relationships_invalid_status_and_role(async_client: AsyncCli
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": tenant["tenant_id"]},
     )
     assert resp_role.status_code == 400
-    body_r = resp_role.json()
+    body_r = _unwrap(resp_role)
     assert body_r["error"]["code"] == "invalid_role"
 
 
@@ -303,5 +313,5 @@ async def test_list_relationships_invalid_cursor(async_client: AsyncClient) -> N
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": tenant["tenant_id"]},
     )
     assert resp.status_code == 400
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["error"]["code"] == "invalid_cursor"

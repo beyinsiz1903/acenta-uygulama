@@ -15,6 +15,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Module-level token cache
@@ -33,7 +43,7 @@ def get_admin_token():
         headers={"Content-Type": "application/json"},
     )
     if response.status_code == 200:
-        data = response.json()
+        data = _unwrap(response)
         _admin_token = data.get("access_token") or data.get("token")
         return _admin_token
     elif response.status_code == 429:
@@ -73,7 +83,7 @@ class TestExistingHealthEndpoints:
         """GET /api/health should return status ok."""
         response = fresh_session.get(f"{BASE_URL}/api/health")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("status") == "ok"
         print(f"✓ /api/health: {data}")
 
@@ -81,7 +91,7 @@ class TestExistingHealthEndpoints:
         """GET /api/health/deep should return MongoDB stats."""
         response = fresh_session.get(f"{BASE_URL}/api/health/deep")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
-        data = response.json()
+        data = _unwrap(response)
         assert "collections" in data or "status" in data
         print("✓ /api/health/deep returned collection stats")
 
@@ -104,7 +114,7 @@ class TestInfrastructureHealth:
         """Infrastructure health with valid auth."""
         response = authed_session.get(f"{BASE_URL}/api/infrastructure/health")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Validate response structure
         assert "redis" in data, "Missing 'redis' in response"
@@ -143,7 +153,7 @@ class TestRedisStatus:
         """Redis status with valid auth."""
         response = authed_session.get(f"{BASE_URL}/api/infrastructure/redis")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Validate Redis health info
         assert "status" in data, "Missing 'status' in response"
@@ -188,7 +198,7 @@ class TestCircuitBreakers:
         """Circuit breakers status with valid auth."""
         response = authed_session.get(f"{BASE_URL}/api/infrastructure/circuit-breakers")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Validate response structure
         assert "breakers" in data, "Missing 'breakers' in response"
@@ -218,7 +228,7 @@ class TestCircuitBreakers:
         """Reset a circuit breaker."""
         response = authed_session.post(f"{BASE_URL}/api/infrastructure/circuit-breakers/aviationstack/reset")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert "status" in data, "Missing 'status' in response"
         assert data.get("status") == "reset"
@@ -247,7 +257,7 @@ class TestEventBus:
         """Event bus status with valid auth."""
         response = authed_session.get(f"{BASE_URL}/api/infrastructure/events")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Validate response structure
         assert "registered_handlers" in data, "Missing 'registered_handlers' in response"
@@ -278,7 +288,7 @@ class TestRateLimits:
         """Rate limits status with valid auth."""
         response = authed_session.get(f"{BASE_URL}/api/infrastructure/rate-limits")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Validate response structure
         assert "status" in data, "Missing 'status' in response"
@@ -322,7 +332,7 @@ class TestMetrics:
         """Metrics summary with valid auth."""
         response = authed_session.get(f"{BASE_URL}/api/infrastructure/metrics")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Validate response structure
         assert "counters" in data, "Missing 'counters' in response"
@@ -354,7 +364,7 @@ class TestQueues:
         """Celery queue status with valid auth."""
         response = authed_session.get(f"{BASE_URL}/api/infrastructure/queues")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Validate response structure
         assert "status" in data, "Missing 'status' in response"

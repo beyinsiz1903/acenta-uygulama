@@ -21,6 +21,16 @@ import time
 
 from tests.preview_auth_helper import get_preview_base_url_or_skip
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Test credentials
@@ -46,11 +56,11 @@ def login_user(session, email, password, max_retries=2):
             "password": password
         })
         if resp.status_code == 200:
-            data = resp.json()
+            data = _unwrap(resp)
             token = data.get("access_token") or data.get("token")
             return {"Authorization": f"Bearer {token}"}
         elif resp.status_code == 429:
-            retry_after = resp.json().get("error", {}).get("details", {}).get("retry_after_seconds", 5)
+            retry_after = _unwrap(resp).get("error", {}).get("details", {}).get("retry_after_seconds", 5)
             print(f"[WARN] Rate limited. Retry after {retry_after}s")
             if retry_after > 60:
                 pytest.skip(f"Rate limited for {retry_after}s - skipping test")
@@ -86,7 +96,7 @@ class TestCreateCheckoutSubscriptionMode:
 
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:300]}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         # Required fields
         assert "url" in data, "Response should contain checkout URL"
         assert "session_id" in data, "Response should contain session_id"
@@ -120,7 +130,7 @@ class TestCreateCheckoutSubscriptionMode:
         )
 
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("plan") == "starter"
         assert data.get("amount") == 990.0, f"Starter monthly should be 990, got {data.get('amount')}"
         assert data.get("currency").lower() == "try"
@@ -143,7 +153,7 @@ class TestCreateCheckoutSubscriptionMode:
         )
 
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("plan") == "pro"
         assert data.get("amount") == 2490.0, f"Pro monthly should be 2490, got {data.get('amount')}"
         print("✅ Pro monthly = 2490 TRY")
@@ -165,7 +175,7 @@ class TestCreateCheckoutSubscriptionMode:
         )
 
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("plan") == "pro"
         assert data.get("amount") == 24900.0, f"Pro yearly should be 24900, got {data.get('amount')}"
         print("✅ Pro yearly = 24900 TRY")
@@ -186,7 +196,7 @@ class TestBillingSubscriptionState:
         resp = session.get(f"{BASE_URL}/api/billing/subscription", headers=auth)
         assert resp.status_code == 200
 
-        data = resp.json()
+        data = _unwrap(resp)
         print("[INFO] Expired trial user state:")
         print(f"       plan: {data.get('plan')}")
         print(f"       status: {data.get('status')}")
@@ -210,7 +220,7 @@ class TestBillingSubscriptionState:
         resp = session.get(f"{BASE_URL}/api/billing/subscription", headers=auth)
         assert resp.status_code == 200
 
-        data = resp.json()
+        data = _unwrap(resp)
         provider_sub_id = data.get("provider_subscription_id") or ""
         print("[INFO] Legacy paid user state:")
         print(f"       plan: {data.get('plan')}")
@@ -239,7 +249,7 @@ class TestBillingSubscriptionState:
         resp = session.get(f"{BASE_URL}/api/billing/subscription", headers=auth)
         assert resp.status_code == 200
 
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Required fields per API spec
         required_fields = [
@@ -274,7 +284,7 @@ class TestCancelSubscription:
         if sub_resp.status_code != 200:
             pytest.skip("Could not fetch subscription")
 
-        sub_data = sub_resp.json()
+        sub_data = _unwrap(sub_resp)
         if sub_data.get("managed_subscription"):
             pytest.skip("User has managed subscription, not legacy")
 
@@ -285,7 +295,7 @@ class TestCancelSubscription:
 
         assert resp.status_code == 409, f"Expected 409 for legacy cancel, got {resp.status_code}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         error_code = data.get("error", {}).get("code") or data.get("code")
         assert error_code == "subscription_management_unavailable"
 
@@ -302,14 +312,14 @@ class TestCancelSubscription:
         if sub_resp.status_code != 200:
             pytest.skip("Could not fetch subscription")
 
-        sub_data = sub_resp.json()
+        sub_data = _unwrap(sub_resp)
         if not sub_data.get("managed_subscription"):
             pytest.skip("User does not have managed subscription")
 
         resp = session.post(f"{BASE_URL}/api/billing/cancel-subscription", headers=auth)
 
         if resp.status_code == 200:
-            data = resp.json()
+            data = _unwrap(resp)
             # Should have period-end cancel message
             assert "message" in data, "Response should contain message"
             assert data.get("cancel_at_period_end"), "Should be period-end cancel"
@@ -340,7 +350,7 @@ class TestChangePlan:
         if sub_resp.status_code != 200:
             pytest.skip("Could not fetch subscription")
 
-        sub_data = sub_resp.json()
+        sub_data = _unwrap(sub_resp)
         if sub_data.get("managed_subscription"):
             pytest.skip("User has managed subscription, not legacy")
 
@@ -360,7 +370,7 @@ class TestChangePlan:
 
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("action") == "checkout_redirect", f"Expected checkout_redirect, got {data.get('action')}"
         assert "url" in data, "Response should contain URL"
         assert "stripe.com" in data["url"], "URL should be Stripe checkout"
@@ -385,7 +395,7 @@ class TestChangePlan:
 
         assert resp.status_code == 422, f"Expected 422, got {resp.status_code}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         error_code = data.get("error", {}).get("code") or data.get("code")
         assert error_code == "enterprise_contact_required"
 
@@ -402,7 +412,7 @@ class TestChangePlan:
         if sub_resp.status_code != 200:
             pytest.skip("Could not fetch subscription")
 
-        sub_data = sub_resp.json()
+        sub_data = _unwrap(sub_resp)
         current_plan = sub_data.get("plan")
         current_interval = sub_data.get("interval")
 
@@ -443,7 +453,7 @@ class TestCustomerPortal:
 
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         assert "url" in data, "Response should contain portal URL"
 
         url = data["url"]
@@ -511,7 +521,7 @@ class TestCheckoutStatus:
         if create_resp.status_code != 200:
             pytest.skip("Could not create checkout session")
 
-        session_id = create_resp.json().get("session_id")
+        session_id = _unwrap(create_resp).get("session_id")
 
         # Check status
         status_resp = session.get(
@@ -521,7 +531,7 @@ class TestCheckoutStatus:
 
         assert status_resp.status_code == 200, f"Expected 200, got {status_resp.status_code}"
 
-        data = status_resp.json()
+        data = _unwrap(status_resp)
         # Expected fields
         assert "session_id" in data
         assert "status" in data

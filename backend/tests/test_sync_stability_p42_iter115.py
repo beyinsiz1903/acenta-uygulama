@@ -15,6 +15,16 @@ import pytest
 import requests
 import time
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://webhook-platform.preview.emergentagent.com")
 
 @pytest.fixture(scope="module")
@@ -25,7 +35,7 @@ def auth_token():
         json={"email": "agent@acenta.test", "password": "agent123"}
     )
     assert response.status_code == 200, f"Login failed: {response.text}"
-    data = response.json()
+    data = _unwrap(response)
     # P4.2 note: Login response uses 'access_token' not 'token'
     token = data.get("access_token")
     assert token, f"No access_token in response: {data}"
@@ -51,7 +61,7 @@ class TestStabilityReport:
             headers=auth_headers
         )
         assert response.status_code == 200, f"Failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         # Verify required fields
         assert "success_rate" in data, "Missing success_rate"
@@ -80,7 +90,7 @@ class TestStabilityReport:
             headers=auth_headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         supplier_breakdown = data.get("supplier_breakdown", {})
         if supplier_breakdown:
@@ -97,7 +107,7 @@ class TestStabilityReport:
             headers=auth_headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         assert "retry_effectiveness" in data, "Missing retry_effectiveness"
         retry_eff = data["retry_effectiveness"]
@@ -117,7 +127,7 @@ class TestRegionSyncStatus:
             headers=auth_headers
         )
         assert response.status_code == 200, f"Failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         assert "supplier" in data, "Missing supplier"
         assert data["supplier"] == "ratehawk", "Wrong supplier"
@@ -145,7 +155,7 @@ class TestRegionSyncStatus:
             headers=auth_headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["supplier"] == "paximum"
         print(f"Paximum regions: {data.get('total_regions', 0)}")
 
@@ -160,7 +170,7 @@ class TestSupplierDowntime:
             headers=auth_headers
         )
         assert response.status_code == 200, f"Failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         assert "supplier" in data, "Missing supplier"
         assert data["supplier"] == "ratehawk", "Wrong supplier"
@@ -190,7 +200,7 @@ class TestSyncTriggerP42Fields:
             json={"supplier": "ratehawk"}
         )
         assert response.status_code == 200, f"Failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         # Could be already_running or a new sync
         if data.get("status") == "already_running":
@@ -223,7 +233,7 @@ class TestSyncTriggerP42Fields:
             json={"supplier": "paximum"}
         )
         assert response1.status_code == 200
-        data1 = response1.json()
+        data1 = _unwrap(response1)
         
         # If first one started running, second should show already_running
         if data1.get("status") in ["running", "completed", "completed_with_partial_errors"]:
@@ -235,7 +245,7 @@ class TestSyncTriggerP42Fields:
                 json={"supplier": "paximum"}
             )
             assert response2.status_code == 200
-            data2 = response2.json()
+            data2 = _unwrap(response2)
             # Either already_running or completed
             assert data2.get("status") in ["already_running", "completed", "completed_with_partial_errors"], \
                 f"Expected already_running or completed: {data2}"
@@ -252,7 +262,7 @@ class TestRegionRetry:
             headers=auth_headers
         )
         assert response.status_code == 200, f"Failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         # Should return job_id and region info
         assert "job_id" in data, "Missing job_id"
@@ -272,7 +282,7 @@ class TestRegionRetry:
             headers=auth_headers
         )
         assert response.status_code == 200  # Returns 200 with error in body
-        data = response.json()
+        data = _unwrap(response)
         
         assert "error" in data, "Missing error"
         assert "available_regions" in data, "Missing available_regions"
@@ -289,7 +299,7 @@ class TestCancelJob:
             headers=auth_headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "error" in data, "Missing error"
         print(f"Cancel invalid job: {data['error']}")
     
@@ -301,7 +311,7 @@ class TestCancelJob:
             headers=auth_headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "error" in data, "Missing error"
         assert "not found" in data["error"].lower(), f"Unexpected error: {data['error']}"
         print(f"Cancel nonexistent job: {data['error']}")
@@ -317,7 +327,7 @@ class TestExecuteRetries:
             headers=auth_headers
         )
         assert response.status_code == 200, f"Failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         assert "executed" in data, "Missing executed count"
         assert "results" in data, "Missing results"
@@ -336,7 +346,7 @@ class TestSyncJobsP42StatusCodes:
             headers=auth_headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         assert "jobs" in data, "Missing jobs"
         assert "total" in data, "Missing total"
@@ -370,7 +380,7 @@ class TestSyncStatusBadgeStatuses:
             headers=auth_headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         assert "suppliers" in data, "Missing suppliers"
         suppliers = data["suppliers"]

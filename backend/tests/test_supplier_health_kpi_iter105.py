@@ -14,6 +14,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Fixtures
@@ -33,7 +43,7 @@ def auth_token(api_client):
         "password": "agent123"
     })
     if response.status_code == 200:
-        data = response.json()
+        data = _unwrap(response)
         return data.get("access_token")  # Note: access_token not token
     pytest.skip("Authentication failed - skipping tests")
 
@@ -55,7 +65,7 @@ class TestSupplierHealth:
         response = authenticated_client.get(f"{BASE_URL}/api/inventory/supplier-health")
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert "suppliers" in data
         assert "timestamp" in data
         
@@ -71,7 +81,7 @@ class TestSupplierHealth:
         response = authenticated_client.get(f"{BASE_URL}/api/inventory/supplier-health")
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         required_fields = [
             "supplier", "latency_avg", "error_rate", "success_rate", 
             "availability_rate", "last_sync", "last_validation", "status"
@@ -86,7 +96,7 @@ class TestSupplierHealth:
         response = authenticated_client.get(f"{BASE_URL}/api/inventory/supplier-health")
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         valid_statuses = {"healthy", "degraded", "down"}
         
         for sup_name, sup_data in data["suppliers"].items():
@@ -97,7 +107,7 @@ class TestSupplierHealth:
         response = authenticated_client.get(f"{BASE_URL}/api/inventory/supplier-health?supplier=ratehawk")
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert "suppliers" in data
         assert "ratehawk" in data["suppliers"]
     
@@ -118,7 +128,7 @@ class TestKpiDrift:
         response = authenticated_client.get(f"{BASE_URL}/api/inventory/kpi/drift")
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         required_fields = [
             "drift_rate", "price_consistency", "total_revalidations",
             "drifted_count", "severity_breakdown", "supplier_drift_rates",
@@ -133,7 +143,7 @@ class TestKpiDrift:
         response = authenticated_client.get(f"{BASE_URL}/api/inventory/kpi/drift")
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         drift_rate = data["drift_rate"]
         assert isinstance(drift_rate, (int, float))
         assert 0 <= drift_rate <= 100
@@ -143,7 +153,7 @@ class TestKpiDrift:
         response = authenticated_client.get(f"{BASE_URL}/api/inventory/kpi/drift")
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         pc = data["price_consistency"]
         assert isinstance(pc, (int, float))
         assert 0 <= pc <= 1
@@ -153,7 +163,7 @@ class TestKpiDrift:
         response = authenticated_client.get(f"{BASE_URL}/api/inventory/kpi/drift")
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         severity_breakdown = data["severity_breakdown"]
         
         # severity_breakdown is per supplier
@@ -170,7 +180,7 @@ class TestKpiDrift:
         response = authenticated_client.get(f"{BASE_URL}/api/inventory/kpi/drift")
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         supplier_drift_rates = data["supplier_drift_rates"]
         
         if supplier_drift_rates:  # May be empty if no revalidations
@@ -185,7 +195,7 @@ class TestKpiDrift:
         response = authenticated_client.get(f"{BASE_URL}/api/inventory/kpi/drift")
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         timeline = data["price_drift_timeline"]
         
         assert isinstance(timeline, list)
@@ -201,7 +211,7 @@ class TestKpiDrift:
         response = authenticated_client.get(f"{BASE_URL}/api/inventory/kpi/drift?supplier=ratehawk")
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert "drift_rate" in data
         assert "price_consistency" in data
     
@@ -225,7 +235,7 @@ class TestSandboxValidateEnhanced:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert "supplier" in data
         assert "status" in data
     
@@ -237,7 +247,7 @@ class TestSandboxValidateEnhanced:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         # Without credentials, should return not_configured
         # Note: price_consistency field may be present or null when not_configured
         assert data["status"] == "not_configured" or "tests" in data
@@ -256,7 +266,7 @@ class TestSyncTriggerSimulation:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert "sync_mode" in data
         assert data["sync_mode"] in {"simulation", "sandbox", "production", "disabled"}
     
@@ -268,7 +278,7 @@ class TestSyncTriggerSimulation:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["sync_mode"] == "simulation"
 
 
@@ -296,7 +306,7 @@ class TestRevalidate:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert "source" in data
         assert data["source"] in {"simulation", "ratehawk_api", "simulation_fallback"}
     
@@ -313,7 +323,7 @@ class TestRevalidate:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert "drift_severity" in data
         assert data["drift_severity"] in {"normal", "warning", "high", "critical"}
 
@@ -328,7 +338,7 @@ class TestSupplierConfig:
         response = authenticated_client.get(f"{BASE_URL}/api/inventory/supplier-config")
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert "suppliers" in data
         
         suppliers = data["suppliers"]
@@ -342,7 +352,7 @@ class TestSupplierConfig:
         response = authenticated_client.get(f"{BASE_URL}/api/inventory/supplier-config")
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         required_fields = ["supplier", "mode", "configured", "base_url", "has_credentials", "validation_status"]
         
         for sup_name, sup_data in data["suppliers"].items():
@@ -360,7 +370,7 @@ class TestKpiIntegration:
         # Get initial KPI data
         response1 = authenticated_client.get(f"{BASE_URL}/api/inventory/kpi/drift")
         assert response1.status_code == 200
-        initial_data = response1.json()
+        initial_data = _unwrap(response1)
         initial_count = initial_data["total_revalidations"]
         
         # Do a revalidation
@@ -377,7 +387,7 @@ class TestKpiIntegration:
         # Get updated KPI data
         response2 = authenticated_client.get(f"{BASE_URL}/api/inventory/kpi/drift")
         assert response2.status_code == 200
-        updated_data = response2.json()
+        updated_data = _unwrap(response2)
         updated_count = updated_data["total_revalidations"]
         
         # Count should increase

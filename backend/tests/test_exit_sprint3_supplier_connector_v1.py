@@ -11,6 +11,16 @@ from app.auth import _jwt_secret
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.exit_sprint3
 @pytest.mark.anyio
 async def test_supplier_connector_mock_v1_contract(test_db: Any, async_client: AsyncClient) -> None:
@@ -95,7 +105,7 @@ async def test_supplier_connector_mock_v1_contract(test_db: Any, async_client: A
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_a1.status_code == status.HTTP_200_OK
-    assert resp_a1.json() == expected_response
+    assert _unwrap(resp_a1) == expected_response
 
     resp_a2 = await client.post(
         "/api/suppliers/mock/search",
@@ -103,7 +113,7 @@ async def test_supplier_connector_mock_v1_contract(test_db: Any, async_client: A
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_a2.status_code == status.HTTP_200_OK
-    assert resp_a2.json() == expected_response
+    assert _unwrap(resp_a2) == expected_response
 
     # OrgB: same payload, same deterministic mock response
     resp_b = await client.post(
@@ -112,4 +122,4 @@ async def test_supplier_connector_mock_v1_contract(test_db: Any, async_client: A
         headers={"Authorization": f"Bearer {token_b}"},
     )
     assert resp_b.status_code == status.HTTP_200_OK
-    assert resp_b.json() == expected_response
+    assert _unwrap(resp_b) == expected_response

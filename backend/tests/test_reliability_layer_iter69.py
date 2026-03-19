@@ -12,6 +12,16 @@ import pytest
 import requests
 import uuid
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 AUTH_EMAIL = "agent@acenta.test"
 AUTH_PASSWORD = "agent123"
@@ -25,7 +35,7 @@ def auth_token():
         json={"email": AUTH_EMAIL, "password": AUTH_PASSWORD}
     )
     assert response.status_code == 200, f"Auth failed: {response.text}"
-    data = response.json()
+    data = _unwrap(response)
     assert "access_token" in data, "No access_token in response"
     return data["access_token"]
 
@@ -74,7 +84,7 @@ class TestP1ResilienceConfig:
         """GET /api/reliability/resilience/config returns config."""
         response = requests.get(f"{BASE_URL}/api/reliability/resilience/config", headers=headers)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         # Config might be default (with strategies/defaults) or existing org config
         has_defaults = "defaults" in data and "strategies" in data
         has_existing_config = "organization_id" in data or "supplier_overrides" in data
@@ -93,7 +103,7 @@ class TestP1ResilienceConfig:
         }
         response = requests.put(f"{BASE_URL}/api/reliability/resilience/config", headers=headers, json=payload)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("status") == "updated", f"Expected status=updated, got {data.get('status')}"
         assert data.get("supplier_code") == "mock_hotel", "Supplier code mismatch"
         assert data.get("config", {}).get("timeout_ms") == 10000, "Timeout not updated"
@@ -107,7 +117,7 @@ class TestP1ResilienceConfig:
             params={"window_minutes": 60}
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "window_minutes" in data, "Missing window_minutes"
         assert "suppliers" in data, "Missing suppliers"
         print(f"✅ P1: GET resilience stats - window={data.get('window_minutes')}m, suppliers={len(data.get('suppliers', []))}")
@@ -123,7 +133,7 @@ class TestP2Sandbox:
         """GET /api/reliability/sandbox/config returns sandbox config."""
         response = requests.get(f"{BASE_URL}/api/reliability/sandbox/config", headers=headers)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "enabled" in data, "Missing enabled field"
         assert "mode" in data, "Missing mode field"
         # available_modes is only in default config; existing config might not have it
@@ -140,7 +150,7 @@ class TestP2Sandbox:
         }
         response = requests.put(f"{BASE_URL}/api/reliability/sandbox/config", headers=headers, json=payload)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("status") == "updated", f"Expected status=updated, got {data.get('status')}"
         config = data.get("config", {})
         assert config.get("enabled"), "Sandbox not enabled"
@@ -155,7 +165,7 @@ class TestP2Sandbox:
         }
         response = requests.post(f"{BASE_URL}/api/reliability/sandbox/call", headers=headers, json=payload)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("sandbox"), "Response should indicate sandbox mode"
         assert data.get("supplier_code") == "mock_hotel", "Supplier code mismatch"
         # If fault injected, we might get error response; if not, we get mock items
@@ -172,7 +182,7 @@ class TestP2Sandbox:
             params={"limit": 10}
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list), "Expected list of sandbox logs"
         print(f"✅ P2: GET sandbox log - {len(data)} entries returned")
 
@@ -189,7 +199,7 @@ class TestP3RetryAndDLQ:
         """GET /api/reliability/retry/config returns retry categories."""
         response = requests.get(f"{BASE_URL}/api/reliability/retry/config", headers=headers)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "categories" in data, "Missing categories"
         categories = data.get("categories", {})
         assert "supplier_call" in categories, "Missing supplier_call category"
@@ -208,7 +218,7 @@ class TestP3RetryAndDLQ:
         }
         response = requests.post(f"{BASE_URL}/api/reliability/dlq", headers=headers, json=payload)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("status") == "enqueued", f"Expected status=enqueued, got {data.get('status')}"
         assert "entry_id" in data, "Missing entry_id"
         TestP3RetryAndDLQ.dlq_entry_id = data["entry_id"]
@@ -222,7 +232,7 @@ class TestP3RetryAndDLQ:
             params={"status": "pending", "limit": 20}
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "total" in data, "Missing total"
         assert "items" in data, "Missing items"
         print(f"✅ P3: GET dlq list - total={data.get('total')}, returned={len(data.get('items', []))}")
@@ -234,7 +244,7 @@ class TestP3RetryAndDLQ:
         entry_id = TestP3RetryAndDLQ.dlq_entry_id
         response = requests.post(f"{BASE_URL}/api/reliability/dlq/{entry_id}/retry", headers=headers)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         # Entry might be retrying or not found if already processed
         assert data.get("status") in ["retrying", "not_found_or_already_retrying"], f"Unexpected status: {data.get('status')}"
         print(f"✅ P3: POST dlq retry - status={data.get('status')}")
@@ -252,7 +262,7 @@ class TestP3RetryAndDLQ:
         }
         create_resp = requests.post(f"{BASE_URL}/api/reliability/dlq", headers=headers, json=payload)
         assert create_resp.status_code == 200
-        entry_id = create_resp.json().get("entry_id")
+        entry_id = _unwrap(create_resp).get("entry_id")
 
         # Discard it
         response = requests.delete(
@@ -261,7 +271,7 @@ class TestP3RetryAndDLQ:
             params={"reason": "Test cleanup"}
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("status") in ["discarded", "not_found"], f"Unexpected status: {data.get('status')}"
         print(f"✅ P3: DELETE dlq entry - status={data.get('status')}")
 
@@ -269,7 +279,7 @@ class TestP3RetryAndDLQ:
         """GET /api/reliability/dlq/stats returns DLQ statistics."""
         response = requests.get(f"{BASE_URL}/api/reliability/dlq/stats", headers=headers)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "categories" in data, "Missing categories in stats"
         print(f"✅ P3: GET dlq stats - categories={len(data.get('categories', []))}")
 
@@ -289,7 +299,7 @@ class TestP4Idempotency:
         }
         response = requests.post(f"{BASE_URL}/api/reliability/idempotency/check", headers=headers, json=payload)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert not data.get("duplicate"), f"Expected duplicate=false for new key, got {data.get('duplicate')}"
         assert data.get("cached_result") is None, "Expected no cached result for new key"
         print("✅ P4: POST idempotency check - new key returns duplicate=False")
@@ -298,7 +308,7 @@ class TestP4Idempotency:
         """GET /api/reliability/idempotency/stats returns supported operations."""
         response = requests.get(f"{BASE_URL}/api/reliability/idempotency/stats", headers=headers)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "supported_operations" in data, "Missing supported_operations"
         assert "ttl_seconds" in data, "Missing ttl_seconds"
         ops = data.get("supported_operations", [])
@@ -316,7 +326,7 @@ class TestP5Versioning:
         """GET /api/reliability/versions returns default version registry for 5 suppliers."""
         response = requests.get(f"{BASE_URL}/api/reliability/versions", headers=headers)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "suppliers" in data, "Missing suppliers"
         suppliers = data.get("suppliers", [])
         assert len(suppliers) >= 5, f"Expected at least 5 suppliers in registry, got {len(suppliers)}"
@@ -335,7 +345,7 @@ class TestP5Versioning:
         }
         response = requests.post(f"{BASE_URL}/api/reliability/versions", headers=headers, json=payload)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("status") == "registered", f"Expected status=registered, got {data.get('status')}"
         assert data.get("version") == "v2", "Version mismatch"
         print("✅ P5: POST versions - registered v2 for mock_hotel")
@@ -348,7 +358,7 @@ class TestP5Versioning:
         }
         response = requests.post(f"{BASE_URL}/api/reliability/versions/deprecate", headers=headers, json=payload)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("status") == "deprecated", f"Expected status=deprecated, got {data.get('status')}"
         print("✅ P5: POST versions/deprecate - deprecated v1 for mock_hotel")
 
@@ -360,7 +370,7 @@ class TestP5Versioning:
             params={"limit": 20}
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list), "Expected list of version history"
         print(f"✅ P5: GET versions/history - {len(data)} entries")
 
@@ -401,7 +411,7 @@ class TestP6ContractValidation:
         }
         response = requests.post(f"{BASE_URL}/api/reliability/contracts/validate", headers=headers, json=payload)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("valid"), f"Expected valid=true, got {data.get('valid')}, violations: {data.get('violations')}"
         assert "schema_hash" in data, "Missing schema_hash"
         print(f"✅ P6: POST contracts/validate (valid) - valid=True, schema_hash={data.get('schema_hash')}")
@@ -422,7 +432,7 @@ class TestP6ContractValidation:
         }
         response = requests.post(f"{BASE_URL}/api/reliability/contracts/validate", headers=headers, json=payload)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert not data.get("valid"), f"Expected valid=false for missing fields, got {data.get('valid')}"
         violations = data.get("violations", [])
         assert len(violations) > 0, "Expected violations for missing fields"
@@ -444,7 +454,7 @@ class TestP6ContractValidation:
         }
         resp1 = requests.post(f"{BASE_URL}/api/reliability/contracts/validate", headers=headers, json=payload1)
         assert resp1.status_code == 200
-        resp1.json().get("schema_hash")
+        _unwrap(resp1).get("schema_hash")
 
         # Second call with different schema (added extra field)
         payload2 = {
@@ -461,7 +471,7 @@ class TestP6ContractValidation:
         }
         resp2 = requests.post(f"{BASE_URL}/api/reliability/contracts/validate", headers=headers, json=payload2)
         assert resp2.status_code == 200
-        data2 = resp2.json()
+        data2 = _unwrap(resp2)
         # Schema drift should be detected if schema hash changed
         if data2.get("schema_drift"):
             print(f"✅ P6: POST contracts/validate - schema drift detected (prev_hash={data2.get('previous_hash')}, new_hash={data2.get('schema_hash')})")
@@ -472,7 +482,7 @@ class TestP6ContractValidation:
         """GET /api/reliability/contracts/status returns contract status."""
         response = requests.get(f"{BASE_URL}/api/reliability/contracts/status", headers=headers)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "contracts" in data, "Missing contracts"
         assert "validation_modes" in data, "Missing validation_modes"
         print(f"✅ P6: GET contracts/status - contracts={len(data.get('contracts', []))}, modes={data.get('validation_modes')}")
@@ -492,7 +502,7 @@ class TestP7Metrics:
             params={"window": "1h"}
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "window" in data, "Missing window"
         assert "suppliers" in data, "Missing suppliers"
         print(f"✅ P7: GET metrics/suppliers - window={data.get('window')}, suppliers={len(data.get('suppliers', []))}")
@@ -505,7 +515,7 @@ class TestP7Metrics:
             params={"window": "15m"}
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "supplier_code" in data, "Missing supplier_code"
         assert data.get("supplier_code") == "mock_hotel", "Supplier code mismatch"
         assert "p50" in data, "Missing p50"
@@ -521,7 +531,7 @@ class TestP7Metrics:
             params={"window": "1h"}
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "window" in data, "Missing window"
         assert "timeline" in data, "Missing timeline"
         print(f"✅ P7: GET metrics/error-rate - window={data.get('window')}, timeline_points={len(data.get('timeline', []))}")
@@ -534,7 +544,7 @@ class TestP7Metrics:
             params={"window": "1h"}
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "window" in data, "Missing window"
         assert "suppliers" in data, "Missing suppliers"
         print(f"✅ P7: GET metrics/success-rate - window={data.get('window')}, suppliers={len(data.get('suppliers', []))}")
@@ -558,7 +568,7 @@ class TestP8IncidentResponse:
         }
         response = requests.post(f"{BASE_URL}/api/reliability/incidents", headers=headers, json=payload)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "incident_id" in data, "Missing incident_id"
         assert data.get("status") == "open", f"Expected status=open, got {data.get('status')}"
         assert "auto_action" in data, "Missing auto_action"
@@ -573,7 +583,7 @@ class TestP8IncidentResponse:
             params={"limit": 20}
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "total" in data, "Missing total"
         assert "items" in data, "Missing items"
         print(f"✅ P8: GET incidents - total={data.get('total')}, returned={len(data.get('items', []))}")
@@ -585,7 +595,7 @@ class TestP8IncidentResponse:
         incident_id = TestP8IncidentResponse.incident_id
         response = requests.post(f"{BASE_URL}/api/reliability/incidents/{incident_id}/acknowledge", headers=headers)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("status") in ["acknowledged", "not_found_or_not_open"], f"Unexpected status: {data.get('status')}"
         print(f"✅ P8: POST incidents/acknowledge - status={data.get('status')}")
 
@@ -601,7 +611,7 @@ class TestP8IncidentResponse:
             json=payload
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("status") in ["resolved", "not_found_or_already_resolved"], f"Unexpected status: {data.get('status')}"
         print(f"✅ P8: POST incidents/resolve - status={data.get('status')}")
 
@@ -613,7 +623,7 @@ class TestP8IncidentResponse:
             params={"window_minutes": 15}
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list), "Expected list of detected incidents"
         print(f"✅ P8: POST incidents/detect - detected {len(data)} issues")
 
@@ -621,7 +631,7 @@ class TestP8IncidentResponse:
         """GET /api/reliability/incidents/stats returns incident statistics."""
         response = requests.get(f"{BASE_URL}/api/reliability/incidents/stats", headers=headers)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "total" in data, "Missing total"
         assert "by_status" in data, "Missing by_status"
         assert "by_severity" in data, "Missing by_severity"
@@ -639,7 +649,7 @@ class TestP9Dashboard:
         """GET /api/reliability/dashboard returns summary."""
         response = requests.get(f"{BASE_URL}/api/reliability/dashboard", headers=headers)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "summary" in data, "Missing summary"
         assert "generated_at" in data, "Missing generated_at"
         summary = data.get("summary", {})
@@ -651,7 +661,7 @@ class TestP9Dashboard:
         """GET /api/reliability/dashboard/supplier/mock_hotel returns supplier detail."""
         response = requests.get(f"{BASE_URL}/api/reliability/dashboard/supplier/mock_hotel", headers=headers)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "supplier_code" in data, "Missing supplier_code"
         assert data.get("supplier_code") == "mock_hotel", "Supplier code mismatch"
         assert "status" in data, "Missing status"
@@ -669,7 +679,7 @@ class TestP10Roadmap:
         """GET /api/reliability/roadmap returns 20 improvements + maturity score."""
         response = requests.get(f"{BASE_URL}/api/reliability/roadmap", headers=headers)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "improvements" in data, "Missing improvements"
         assert "maturity_score" in data, "Missing maturity_score"
         improvements = data.get("improvements", [])
@@ -683,7 +693,7 @@ class TestP10Roadmap:
         """GET /api/reliability/maturity returns maturity dimensions and grade."""
         response = requests.get(f"{BASE_URL}/api/reliability/maturity", headers=headers)
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "overall_score" in data, "Missing overall_score"
         assert "grade" in data, "Missing grade"
         assert "dimensions" in data, "Missing dimensions"

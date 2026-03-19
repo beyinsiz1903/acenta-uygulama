@@ -9,6 +9,16 @@ import pytest
 import requests
 import os
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 
@@ -24,7 +34,7 @@ class TestSupplierResponseDiffBackend:
         )
         if response.status_code != 200:
             pytest.skip(f"Auth failed: {response.status_code} - {response.text}")
-        data = response.json()
+        data = _unwrap(response)
         # Auth uses 'access_token' field
         self.token = data.get("access_token") or data.get("token")
         self.headers = {"Authorization": f"Bearer {self.token}"}
@@ -40,7 +50,7 @@ class TestSupplierResponseDiffBackend:
             headers=self.headers
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify supplier_response_diff_summary is present
         assert "supplier_response_diff_summary" in data, "Missing supplier_response_diff_summary"
@@ -63,7 +73,7 @@ class TestSupplierResponseDiffBackend:
             headers=self.headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         # Check each flow has supplier_response_diff
         flows = data.get("flows", [])
@@ -91,7 +101,7 @@ class TestSupplierResponseDiffBackend:
             headers=self.headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["passed"] == 10, f"Expected 10 PASS, got {data['passed']}"
         assert data["failed"] == 0, f"Expected 0 FAIL, got {data['failed']}"
@@ -107,7 +117,7 @@ class TestSupplierResponseDiffBackend:
             headers=self.headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         srd = data["supplier_response_diff_summary"]
         assert "alert_threshold_pct" in srd, "Missing alert_threshold_pct"
@@ -130,7 +140,7 @@ class TestSupplierResponseDiffBackend:
             headers=self.headers
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify supplier_response_diff section
         assert "supplier_response_diff" in data, "Missing supplier_response_diff in metrics"
@@ -159,7 +169,7 @@ class TestSupplierResponseDiffBackend:
             headers=self.headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         srd = data["supplier_response_diff"]
         recent_diffs = srd.get("recent_diffs", [])
@@ -183,7 +193,7 @@ class TestSupplierResponseDiffBackend:
             headers=self.headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         srd = data["supplier_response_diff"]
         

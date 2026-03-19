@@ -7,6 +7,16 @@ import pytest
 from app.auth import create_access_token
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.anyio
 @pytest.mark.xfail(reason="Tenant isolation middleware does not enforce cross-tenant denial in current implementation")
 async def test_admin_agencies_isolated_by_tenant_header_and_membership(async_client, test_db):
@@ -48,7 +58,7 @@ async def test_admin_agencies_isolated_by_tenant_header_and_membership(async_cli
         headers={"Authorization": f"Bearer {token_a}", "X-Tenant-Id": tenant_a},
     )
     assert allowed_resp.status_code == 200, allowed_resp.text
-    names = [item["name"] for item in allowed_resp.json()]
+    names = [item["name"] for item in _unwrap(allowed_resp)]
     assert names == ["Agency A"]
 
     denied_resp = await async_client.get(

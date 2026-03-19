@@ -15,6 +15,16 @@ import time
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -33,7 +43,7 @@ class TestAuth:
             json={"email": SUPER_ADMIN_EMAIL, "password": SUPER_ADMIN_PASSWORD}
         )
         assert response.status_code == 200, f"Login failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         # Note: token key is 'access_token' per agent context
         assert "access_token" in data, f"No access_token in response: {data.keys()}"
         return data["access_token"]
@@ -55,7 +65,7 @@ class TestSupplierHealth:
             f"{BASE_URL}/api/auth/login",
             json={"email": SUPER_ADMIN_EMAIL, "password": SUPER_ADMIN_PASSWORD}
         )
-        token = response.json().get("access_token")
+        token = _unwrap(response).get("access_token")
         return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     
     def test_supplier_health_endpoint(self, auth_headers):
@@ -65,7 +75,7 @@ class TestSupplierHealth:
             headers=auth_headers
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         # Verify response structure
         assert "suppliers" in data, f"Missing 'suppliers' in response: {data.keys()}"
@@ -97,7 +107,7 @@ class TestSyncStatus:
             f"{BASE_URL}/api/auth/login",
             json={"email": SUPER_ADMIN_EMAIL, "password": SUPER_ADMIN_PASSWORD}
         )
-        token = response.json().get("access_token")
+        token = _unwrap(response).get("access_token")
         return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     
     def test_sync_status_endpoint(self, auth_headers):
@@ -107,7 +117,7 @@ class TestSyncStatus:
             headers=auth_headers
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         assert "suppliers" in data, f"Missing 'suppliers': {data.keys()}"
         assert "timestamp" in data
@@ -136,7 +146,7 @@ class TestSyncTrigger:
             f"{BASE_URL}/api/auth/login",
             json={"email": SUPER_ADMIN_EMAIL, "password": SUPER_ADMIN_PASSWORD}
         )
-        token = response.json().get("access_token")
+        token = _unwrap(response).get("access_token")
         return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     
     def test_sync_trigger_ratehawk(self, auth_headers):
@@ -147,7 +157,7 @@ class TestSyncTrigger:
             json={"supplier": "ratehawk"}
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         # Can be either 'completed', 'already_running', or error
         if "error" in data:
@@ -176,7 +186,7 @@ class TestSyncTrigger:
             json={"supplier": "paximum"}
         )
         assert response2.status_code == 200
-        data2 = response2.json()
+        data2 = _unwrap(response2)
         
         # Second call should either complete quickly (simulation) or show already_running
         valid_statuses = ["completed", "completed_with_errors", "already_running"]
@@ -191,7 +201,7 @@ class TestSyncTrigger:
             json={"supplier": "unknown_supplier"}
         )
         assert response.status_code == 200, f"Expected 200 with error payload: {response.status_code}"
-        data = response.json()
+        data = _unwrap(response)
         assert "error" in data, f"Expected error for unknown supplier: {data}"
         assert "available" in data, f"Expected 'available' list in error response"
         print(f"✓ Unknown supplier returns error with available suppliers list")
@@ -206,7 +216,7 @@ class TestBookingE2ETest:
             f"{BASE_URL}/api/auth/login",
             json={"email": SUPER_ADMIN_EMAIL, "password": SUPER_ADMIN_PASSWORD}
         )
-        token = response.json().get("access_token")
+        token = _unwrap(response).get("access_token")
         return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     
     def test_booking_e2e_test_ratehawk(self, auth_headers):
@@ -218,7 +228,7 @@ class TestBookingE2ETest:
             timeout=60  # E2E test may take time
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         # Verify response structure
         assert "supplier" in data, f"Missing 'supplier': {data.keys()}"
@@ -266,7 +276,7 @@ class TestBookingE2ETest:
             timeout=60
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         assert data["supplier"] == "paximum"
         assert "steps" in data
@@ -282,7 +292,7 @@ class TestBookingE2ETest:
             timeout=60
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         assert data["supplier"] == "tbo"
         assert len(data["steps"]) == 6
@@ -297,7 +307,7 @@ class TestBookingE2ETest:
             timeout=60
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         assert data["supplier"] == "wtatil"
         assert len(data["steps"]) == 6
@@ -311,7 +321,7 @@ class TestBookingE2ETest:
             json={"supplier": "unknown"}
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["status"] == "error"
         assert "unknown supplier" in data.get("error", "").lower() or "Unknown supplier" in data.get("error", "")
         assert "available_suppliers" in data
@@ -327,7 +337,7 @@ class TestBookingTestHistory:
             f"{BASE_URL}/api/auth/login",
             json={"email": SUPER_ADMIN_EMAIL, "password": SUPER_ADMIN_PASSWORD}
         )
-        token = response.json().get("access_token")
+        token = _unwrap(response).get("access_token")
         return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     
     def test_booking_test_history(self, auth_headers):
@@ -337,7 +347,7 @@ class TestBookingTestHistory:
             headers=auth_headers
         )
         assert response.status_code == 200, f"Failed: {response.status_code} - {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         
         assert "tests" in data, f"Missing 'tests': {data.keys()}"
         assert "total" in data
@@ -365,7 +375,7 @@ class TestBookingTestHistory:
             headers=auth_headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         # All returned tests should be for ratehawk
         for test in data["tests"]:
@@ -383,7 +393,7 @@ class TestStepVerification:
             f"{BASE_URL}/api/auth/login",
             json={"email": SUPER_ADMIN_EMAIL, "password": SUPER_ADMIN_PASSWORD}
         )
-        token = response.json().get("access_token")
+        token = _unwrap(response).get("access_token")
         return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     
     def test_all_steps_have_details(self, auth_headers):
@@ -403,7 +413,7 @@ class TestStepVerification:
             timeout=60
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         steps = data["steps"]
         

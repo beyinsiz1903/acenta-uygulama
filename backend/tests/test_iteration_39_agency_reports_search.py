@@ -14,6 +14,16 @@ import pytest
 import requests
 from typing import Optional
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 class AuthHelper:
@@ -29,7 +39,7 @@ class AuthHelper:
                 timeout=15
             )
             if response.status_code == 200:
-                data = response.json()
+                data = _unwrap(response)
                 return data.get("access_token") or data.get("token")
             elif response.status_code == 429:
                 pytest.skip(f"Rate limited on login for {email}")
@@ -90,7 +100,7 @@ class TestAgencyEndpointsNoRegression:
         """GET /api/agency/hotels returns 200"""
         response = agency_session.get(f"{BASE_URL}/api/agency/hotels", timeout=15)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         # Should return a list (can be empty)
         assert isinstance(data, list), f"Expected list, got {type(data)}"
         print(f"Agency hotels returned {len(data)} hotels")
@@ -99,7 +109,7 @@ class TestAgencyEndpointsNoRegression:
         """GET /api/agency/bookings returns 200"""
         response = agency_session.get(f"{BASE_URL}/api/agency/bookings", timeout=15)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         # Could be list or dict with items
         if isinstance(data, dict):
             items = data.get("items") or data.get("bookings") or []
@@ -115,7 +125,7 @@ class TestAgencyEndpointsNoRegression:
             timeout=15
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         print(f"Agency settlements returned: {type(data)}")
 
 
@@ -134,7 +144,7 @@ class TestGlobalSearchAPI:
             timeout=15
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify response structure
         assert "query" in data, "Response should have 'query' field"
@@ -168,7 +178,7 @@ class TestGlobalSearchAPI:
             timeout=15
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("scope") == "organization", f"Admin should have organization scope, got {data.get('scope')}"
         print(f"Admin global search: scope={data.get('scope')}, total={data.get('total_results')}")
 
@@ -188,7 +198,7 @@ class TestReportsGenerateAPI:
             timeout=30
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify KPI structure
         assert "kpis" in data, "Response should have 'kpis' field"
@@ -211,7 +221,7 @@ class TestReportsGenerateAPI:
             timeout=30
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "kpis" in data, "Admin report should have KPIs"
         print(f"Admin reports generate: period={data.get('period')}")
 
@@ -223,7 +233,7 @@ class TestReportsGenerateAPI:
             timeout=30
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "kpis" in data, "POST response should have KPIs"
 
 
@@ -242,7 +252,7 @@ class TestSalesSummaryAPI:
             timeout=15
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list), f"Expected list, got {type(data)}"
         print(f"Sales summary returned {len(data)} day entries")
 
@@ -253,7 +263,7 @@ class TestSalesSummaryAPI:
             timeout=15
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list), f"Expected list, got {type(data)}"
         print(f"Reservations summary returned {len(data)} status entries")
 
@@ -281,7 +291,7 @@ class TestAdminTenantFeaturesAPI:
         """GET /api/admin/tenants returns list of tenants"""
         response = admin_session.get(f"{BASE_URL}/api/admin/tenants", timeout=15)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Could be list or dict with items
         if isinstance(data, dict):
@@ -300,7 +310,7 @@ class TestAdminTenantFeaturesAPI:
         # First get tenant list
         tenants_response = admin_session.get(f"{BASE_URL}/api/admin/tenants", timeout=15)
         assert tenants_response.status_code == 200
-        tenants_data = tenants_response.json()
+        tenants_data = _unwrap(tenants_response)
 
         if isinstance(tenants_data, dict):
             items = tenants_data.get("items") or tenants_data.get("tenants") or []
@@ -318,7 +328,7 @@ class TestAdminTenantFeaturesAPI:
             timeout=15
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify structure
         assert "plan" in data, "Response should have 'plan' field"
@@ -329,7 +339,7 @@ class TestAdminTenantFeaturesAPI:
         # First get tenant list
         tenants_response = admin_session.get(f"{BASE_URL}/api/admin/tenants", timeout=15)
         assert tenants_response.status_code == 200
-        tenants_data = tenants_response.json()
+        tenants_data = _unwrap(tenants_response)
 
         if isinstance(tenants_data, dict):
             items = tenants_data.get("items") or tenants_data.get("tenants") or []
@@ -350,7 +360,7 @@ class TestAdminTenantFeaturesAPI:
         assert response.status_code in [200, 404], f"Expected 200 or 404, got {response.status_code}: {response.text}"
 
         if response.status_code == 200:
-            data = response.json()
+            data = _unwrap(response)
             print(f"Tenant subscription: {data.get('subscription', {}).get('status')}")
         else:
             print("Tenant has no active subscription")

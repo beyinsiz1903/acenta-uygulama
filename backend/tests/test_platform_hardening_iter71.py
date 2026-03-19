@@ -19,6 +19,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
     BASE_URL = ""
@@ -43,7 +53,7 @@ class TestPlatformHardeningAuth:
         assert login_response.status_code == 200, f"Login failed: {login_response.text}"
 
         # Extract token and set authorization header
-        data = login_response.json()
+        data = _unwrap(login_response)
         token = data.get("access_token") or data.get("token")
         if token:
             session.headers.update({"Authorization": f"Bearer {token}"})
@@ -55,7 +65,7 @@ class TestPlatformHardeningAuth:
         """Verify super_admin login works."""
         response = auth_session.get(f"{BASE_URL}/api/auth/me")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("email") == "agent@acenta.test"
         print(f"✓ Login successful for: {data.get('email')}, role: {data.get('role')}")
 
@@ -72,7 +82,7 @@ class TestHardeningCombinedStatus:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert login_response.status_code == 200
-        data = login_response.json()
+        data = _unwrap(login_response)
         token = data.get("access_token") or data.get("token")
         if token:
             session.headers.update({"Authorization": f"Bearer {token}"})
@@ -83,7 +93,7 @@ class TestHardeningCombinedStatus:
         response = auth_session.get(f"{BASE_URL}/api/hardening/status")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
         # Validate structure
         assert "platform_hardening_phase" in data
         assert data["platform_hardening_phase"] == "active"
@@ -123,7 +133,7 @@ class TestTrafficTesting:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert login_response.status_code == 200
-        data = login_response.json()
+        data = _unwrap(login_response)
         token = data.get("access_token") or data.get("token")
         if token:
             session.headers.update({"Authorization": f"Bearer {token}"})
@@ -134,7 +144,7 @@ class TestTrafficTesting:
         response = auth_session.get(f"{BASE_URL}/api/hardening/traffic/status")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
         assert "traffic_gate" in data
         assert "sandbox_environments" in data
 
@@ -165,7 +175,7 @@ class TestTrafficTesting:
         )
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("status") == "updated"
         assert data.get("supplier") == "paximum"
         assert data.get("mode") == "sandbox"
@@ -177,7 +187,7 @@ class TestTrafficTesting:
         response = auth_session.post(f"{BASE_URL}/api/hardening/traffic/sandbox-test?supplier=paximum")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("supplier") == "paximum"
         assert "tests_run" in data
         assert "results" in data
@@ -204,7 +214,7 @@ class TestWorkerStrategy:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert login_response.status_code == 200
-        data = login_response.json()
+        data = _unwrap(login_response)
         token = data.get("access_token") or data.get("token")
         if token:
             session.headers.update({"Authorization": f"Bearer {token}"})
@@ -215,7 +225,7 @@ class TestWorkerStrategy:
         response = auth_session.get(f"{BASE_URL}/api/hardening/workers/status")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
         assert "redis_status" in data
         assert "worker_pools" in data
         assert "dlq_config" in data
@@ -245,7 +255,7 @@ class TestObservabilityStack:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert login_response.status_code == 200
-        data = login_response.json()
+        data = _unwrap(login_response)
         token = data.get("access_token") or data.get("token")
         if token:
             session.headers.update({"Authorization": f"Bearer {token}"})
@@ -256,7 +266,7 @@ class TestObservabilityStack:
         response = auth_session.get(f"{BASE_URL}/api/hardening/observability/status")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
         assert "prometheus" in data
         assert "opentelemetry" in data
         assert "grafana_dashboards" in data
@@ -279,7 +289,7 @@ class TestObservabilityStack:
         response = auth_session.get(f"{BASE_URL}/api/hardening/observability/dashboards")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
         assert "dashboards" in data
         assert "alert_rules" in data
 
@@ -304,7 +314,7 @@ class TestPerformanceTesting:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert login_response.status_code == 200
-        data = login_response.json()
+        data = _unwrap(login_response)
         token = data.get("access_token") or data.get("token")
         if token:
             session.headers.update({"Authorization": f"Bearer {token}"})
@@ -315,7 +325,7 @@ class TestPerformanceTesting:
         response = auth_session.get(f"{BASE_URL}/api/hardening/performance/assessment")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
         assert "timestamp" in data
         assert "current_metrics" in data
         assert "sla_compliance" in data
@@ -335,7 +345,7 @@ class TestPerformanceTesting:
         response = auth_session.get(f"{BASE_URL}/api/hardening/performance/profiles")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
         assert "profiles" in data
         assert "scenarios" in data
         assert "sla_targets" in data
@@ -363,7 +373,7 @@ class TestTenantSafety:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert login_response.status_code == 200
-        data = login_response.json()
+        data = _unwrap(login_response)
         token = data.get("access_token") or data.get("token")
         if token:
             session.headers.update({"Authorization": f"Bearer {token}"})
@@ -374,7 +384,7 @@ class TestTenantSafety:
         response = auth_session.get(f"{BASE_URL}/api/hardening/tenant-safety/audit")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
         assert "timestamp" in data
         assert "total_collections" in data
         assert "passed" in data
@@ -400,7 +410,7 @@ class TestSecretManagement:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert login_response.status_code == 200
-        data = login_response.json()
+        data = _unwrap(login_response)
         token = data.get("access_token") or data.get("token")
         if token:
             session.headers.update({"Authorization": f"Bearer {token}"})
@@ -411,7 +421,7 @@ class TestSecretManagement:
         response = auth_session.get(f"{BASE_URL}/api/hardening/secrets/status")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
         assert "inventory" in data
         assert "summary" in data
         assert "migration_phases" in data
@@ -444,7 +454,7 @@ class TestIncidentPlaybooks:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert login_response.status_code == 200
-        data = login_response.json()
+        data = _unwrap(login_response)
         token = data.get("access_token") or data.get("token")
         if token:
             session.headers.update({"Authorization": f"Bearer {token}"})
@@ -455,7 +465,7 @@ class TestIncidentPlaybooks:
         response = auth_session.get(f"{BASE_URL}/api/hardening/incidents/playbooks")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
         assert "playbooks" in data
         assert "total" in data
         assert "severities" in data
@@ -479,7 +489,7 @@ class TestIncidentPlaybooks:
         response = auth_session.post(f"{BASE_URL}/api/hardening/incidents/simulate?incident_type=supplier_outage")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("incident_type") == "supplier_outage"
         assert "playbook_name" in data
         assert "severity" in data
@@ -501,7 +511,7 @@ class TestAutoScaling:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert login_response.status_code == 200
-        data = login_response.json()
+        data = _unwrap(login_response)
         token = data.get("access_token") or data.get("token")
         if token:
             session.headers.update({"Authorization": f"Bearer {token}"})
@@ -512,7 +522,7 @@ class TestAutoScaling:
         response = auth_session.get(f"{BASE_URL}/api/hardening/scaling/status")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
         assert "scaling_configs" in data
         assert "capacity_thresholds" in data
         assert "recommendations" in data
@@ -540,7 +550,7 @@ class TestDisasterRecovery:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert login_response.status_code == 200
-        data = login_response.json()
+        data = _unwrap(login_response)
         token = data.get("access_token") or data.get("token")
         if token:
             session.headers.update({"Authorization": f"Bearer {token}"})
@@ -551,7 +561,7 @@ class TestDisasterRecovery:
         response = auth_session.get(f"{BASE_URL}/api/hardening/dr/plan")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
         assert "rto_rpo_targets" in data
         assert "scenarios" in data
         assert "drill_schedule" in data
@@ -588,7 +598,7 @@ class TestHardeningChecklist:
             json={"email": "agent@acenta.test", "password": "agent123"}
         )
         assert login_response.status_code == 200
-        data = login_response.json()
+        data = _unwrap(login_response)
         token = data.get("access_token") or data.get("token")
         if token:
             session.headers.update({"Authorization": f"Bearer {token}"})
@@ -599,7 +609,7 @@ class TestHardeningChecklist:
         response = auth_session.get(f"{BASE_URL}/api/hardening/checklist")
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
         assert "tasks" in data
         assert "maturity" in data
         assert "generated_at" in data

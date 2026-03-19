@@ -6,6 +6,14 @@ import pytest
 
 from app.db import get_db
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
 @pytest.mark.anyio
 async def test_partner_key_cannot_access_other_org(async_client):
@@ -46,7 +54,7 @@ async def test_partner_key_cannot_access_other_org(async_client):
     json={"email": "admin@acenta.test", "password": "admin123"},
   )
   assert login_res.status_code == 200
-  token = login_res.json()["access_token"]
+  token = _unwrap(login_res)["access_token"]
 
   res = await async_client.post(
     "/api/admin/api-keys",
@@ -54,7 +62,7 @@ async def test_partner_key_cannot_access_other_org(async_client):
     json={"name": "partner-a", "scopes": ["products:read"]},
   )
   assert res.status_code == 200
-  api_key = res.json()["api_key"]
+  api_key = _unwrap(res)["api_key"]
 
   # Partner search should only see org_a products
   res_search = await async_client.get(
@@ -62,7 +70,7 @@ async def test_partner_key_cannot_access_other_org(async_client):
     headers={"X-API-Key": api_key},
   )
   assert res_search.status_code == 200
-  items = res_search.json()["items"]
+  items = _unwrap(res_search)["items"]
   assert any("Hotel A" in (i["title"] or "") for i in items)
   assert all("Hotel B" not in (i["title"] or "") for i in items)
 
@@ -95,14 +103,14 @@ async def test_partner_rate_limit_returns_429(async_client):
     json={"email": "admin@acenta.test", "password": "admin123"},
   )
   assert login_res.status_code == 200
-  token = login_res.json()["access_token"]
+  token = _unwrap(login_res)["access_token"]
 
   res = await async_client.post(
     "/api/admin/api-keys",
     headers={"Authorization": f"Bearer {token}"},
     json={"name": "partner-rl", "scopes": ["products:read"]},
   )
-  api_key = res.json()["api_key"]
+  api_key = _unwrap(res)["api_key"]
 
   # Hit the endpoint many times to trigger limit
   last_status = None
@@ -177,14 +185,14 @@ async def test_partner_happy_path_search_quote_booking_docs(async_client):
     "/api/auth/login",
     json={"email": "admin@acenta.test", "password": "admin123"},
   )
-  token = login_res.json()["access_token"]
+  token = _unwrap(login_res)["access_token"]
 
   res_key = await async_client.post(
     "/api/admin/api-keys",
     headers={"Authorization": f"Bearer {token}"},
     json={"name": "partner-flow", "scopes": ["products:read", "quotes:write", "bookings:write", "documents:read"]},
   )
-  api_key = res_key.json()["api_key"]
+  api_key = _unwrap(res_key)["api_key"]
 
   # search
   res_search = await async_client.get(
@@ -192,7 +200,7 @@ async def test_partner_happy_path_search_quote_booking_docs(async_client):
     headers={"X-API-Key": api_key},
   )
   assert res_search.status_code == 200
-  items = res_search.json()["items"]
+  items = _unwrap(res_search)["items"]
   assert any("Hotel PF" in (i["title"] or "") for i in items)
 
   # quote
@@ -213,7 +221,7 @@ async def test_partner_happy_path_search_quote_booking_docs(async_client):
     },
   )
   assert res_quote.status_code == 200
-  quote_body = res_quote.json()
+  quote_body = _unwrap(res_quote)
   quote_id = quote_body["quote_id"]
 
   # booking
@@ -233,7 +241,7 @@ async def test_partner_happy_path_search_quote_booking_docs(async_client):
     },
   )
   assert res_booking.status_code in (200, 503)
-  body_booking = res_booking.json()
+  body_booking = _unwrap(res_booking)
 
   # Even if provider_unavailable (Stripe test env), we must get deterministic response shape
   assert "ok" in body_booking
@@ -245,4 +253,4 @@ async def test_partner_happy_path_search_quote_booking_docs(async_client):
     headers={"X-API-Key": api_key},
   )
   assert res_docs.status_code == 200
-  assert "voucher_url" in res_docs.json()
+  assert "voucher_url" in _unwrap(res_docs)

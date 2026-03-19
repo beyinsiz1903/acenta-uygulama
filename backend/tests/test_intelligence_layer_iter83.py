@@ -14,6 +14,16 @@ import pytest
 import requests
 import os
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -34,7 +44,7 @@ class TestAuthAndSetup:
             "password": AGENCY_ADMIN_PASSWORD
         })
         assert resp.status_code == 200, f"Login failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         token = data.get("access_token")
         assert token, f"No access_token in response: {data}"
         return token
@@ -47,7 +57,7 @@ class TestAuthAndSetup:
             "password": SUPER_ADMIN_PASSWORD
         })
         assert resp.status_code == 200, f"Super admin login failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         token = data.get("access_token")
         assert token, f"No access_token in response: {data}"
         return token
@@ -72,14 +82,14 @@ class TestIntelligenceSuggestions:
             "email": AGENCY_ADMIN_EMAIL,
             "password": AGENCY_ADMIN_PASSWORD
         })
-        return resp.json().get("access_token")
+        return _unwrap(resp).get("access_token")
 
     def test_suggestions_returns_structure(self, agency_token):
         """Test suggestions endpoint returns correct structure"""
         headers = {"Authorization": f"Bearer {agency_token}"}
         resp = requests.get(f"{BASE_URL}/api/intelligence/suggestions", headers=headers)
         assert resp.status_code == 200, f"Suggestions failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Verify required fields
         assert "recent_searches" in data, "Missing recent_searches in response"
@@ -93,7 +103,7 @@ class TestIntelligenceSuggestions:
         headers = {"Authorization": f"Bearer {agency_token}"}
         resp = requests.get(f"{BASE_URL}/api/intelligence/suggestions?product_type=hotel", headers=headers)
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert isinstance(data["popular_destinations"], list)
         print(f"Hotel suggestions: {len(data['popular_destinations'])} destinations")
 
@@ -102,7 +112,7 @@ class TestIntelligenceSuggestions:
         headers = {"Authorization": f"Bearer {agency_token}"}
         resp = requests.get(f"{BASE_URL}/api/intelligence/suggestions", headers=headers)
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         recs = data["supplier_recommendations"]
         # Should have recommendations (at least defaults)
@@ -131,14 +141,14 @@ class TestConversionFunnel:
             "email": AGENCY_ADMIN_EMAIL,
             "password": AGENCY_ADMIN_PASSWORD
         })
-        return resp.json().get("access_token")
+        return _unwrap(resp).get("access_token")
 
     def test_funnel_returns_structure(self, agency_token):
         """Test funnel endpoint returns all 5 event types"""
         headers = {"Authorization": f"Bearer {agency_token}"}
         resp = requests.get(f"{BASE_URL}/api/intelligence/funnel", headers=headers)
         assert resp.status_code == 200, f"Funnel failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "days" in data, "Missing days in response"
         assert "funnel" in data, "Missing funnel in response"
@@ -167,7 +177,7 @@ class TestConversionFunnel:
         for days in [7, 30, 90]:
             resp = requests.get(f"{BASE_URL}/api/intelligence/funnel?days={days}", headers=headers)
             assert resp.status_code == 200, f"Funnel failed for days={days}: {resp.text}"
-            data = resp.json()
+            data = _unwrap(resp)
             assert data["days"] == days, f"Days mismatch: expected {days}, got {data['days']}"
 
         print("Funnel days parameter works correctly")
@@ -187,14 +197,14 @@ class TestDailyStats:
             "email": AGENCY_ADMIN_EMAIL,
             "password": AGENCY_ADMIN_PASSWORD
         })
-        return resp.json().get("access_token")
+        return _unwrap(resp).get("access_token")
 
     def test_daily_stats_returns_structure(self, agency_token):
         """Test daily stats endpoint returns correct structure"""
         headers = {"Authorization": f"Bearer {agency_token}"}
         resp = requests.get(f"{BASE_URL}/api/intelligence/daily-stats", headers=headers)
         assert resp.status_code == 200, f"Daily stats failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "days" in data, "Missing days in response"
         assert "stats" in data, "Missing stats in response"
@@ -223,14 +233,14 @@ class TestSupplierScores:
             "email": AGENCY_ADMIN_EMAIL,
             "password": AGENCY_ADMIN_PASSWORD
         })
-        return resp.json().get("access_token")
+        return _unwrap(resp).get("access_token")
 
     def test_supplier_scores_returns_structure(self, agency_token):
         """Test supplier scores endpoint returns correct structure"""
         headers = {"Authorization": f"Bearer {agency_token}"}
         resp = requests.get(f"{BASE_URL}/api/intelligence/supplier-scores", headers=headers)
         assert resp.status_code == 200, f"Supplier scores failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "days" in data, "Missing days in response"
         assert "scores" in data, "Missing scores in response"
@@ -271,14 +281,14 @@ class TestSupplierRecommendations:
             "email": AGENCY_ADMIN_EMAIL,
             "password": AGENCY_ADMIN_PASSWORD
         })
-        return resp.json().get("access_token")
+        return _unwrap(resp).get("access_token")
 
     def test_recommendations_returns_3_categories(self, agency_token):
         """Test recommendations returns 3 category recommendations"""
         headers = {"Authorization": f"Bearer {agency_token}"}
         resp = requests.get(f"{BASE_URL}/api/intelligence/supplier-recommendations", headers=headers)
         assert resp.status_code == 200, f"Recommendations failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "recommendations" in data, "Missing recommendations in response"
         recs = data["recommendations"]
@@ -297,7 +307,7 @@ class TestSupplierRecommendations:
         headers = {"Authorization": f"Bearer {agency_token}"}
         resp = requests.get(f"{BASE_URL}/api/intelligence/supplier-recommendations", headers=headers)
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         for rec in data["recommendations"]:
             assert "category" in rec
@@ -317,14 +327,14 @@ class TestSupplierRevenue:
             "email": AGENCY_ADMIN_EMAIL,
             "password": AGENCY_ADMIN_PASSWORD
         })
-        return resp.json().get("access_token")
+        return _unwrap(resp).get("access_token")
 
     def test_revenue_returns_structure(self, agency_token):
         """Test revenue endpoint returns correct structure"""
         headers = {"Authorization": f"Bearer {agency_token}"}
         resp = requests.get(f"{BASE_URL}/api/intelligence/supplier-revenue", headers=headers)
         assert resp.status_code == 200, f"Revenue failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "days" in data, "Missing days in response"
         assert "revenue" in data, "Missing revenue in response"
@@ -348,7 +358,7 @@ class TestTrackFunnelEvent:
             "email": AGENCY_ADMIN_EMAIL,
             "password": AGENCY_ADMIN_PASSWORD
         })
-        return resp.json().get("access_token")
+        return _unwrap(resp).get("access_token")
 
     def test_track_result_view_event(self, agency_token):
         """Test tracking result_view_event"""
@@ -362,7 +372,7 @@ class TestTrackFunnelEvent:
         }
         resp = requests.post(f"{BASE_URL}/api/intelligence/track", json=payload, headers=headers)
         assert resp.status_code == 200, f"Track failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert data["tracked"]
         assert data["event_type"] == "result_view_event"
@@ -381,7 +391,7 @@ class TestTrackFunnelEvent:
         }
         resp = requests.post(f"{BASE_URL}/api/intelligence/track", json=payload, headers=headers)
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert data["tracked"]
         assert data["event_type"] == "supplier_select_event"
@@ -399,7 +409,7 @@ class TestTrackFunnelEvent:
         }
         resp = requests.post(f"{BASE_URL}/api/intelligence/track", json=payload, headers=headers)
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert data["tracked"]
         assert data["event_type"] == "booking_start_event"
@@ -421,14 +431,14 @@ class TestKPISummary:
             "email": AGENCY_ADMIN_EMAIL,
             "password": AGENCY_ADMIN_PASSWORD
         })
-        return resp.json().get("access_token")
+        return _unwrap(resp).get("access_token")
 
     def test_kpi_summary_returns_structure(self, agency_token):
         """Test KPI summary returns all required fields"""
         headers = {"Authorization": f"Bearer {agency_token}"}
         resp = requests.get(f"{BASE_URL}/api/intelligence/kpi-summary", headers=headers)
         assert resp.status_code == 200, f"KPI summary failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert "days" in data, "Missing days"
         assert "kpi" in data, "Missing kpi"
@@ -456,7 +466,7 @@ class TestKPISummary:
         for days in [7, 30, 90]:
             resp = requests.get(f"{BASE_URL}/api/intelligence/kpi-summary?days={days}", headers=headers)
             assert resp.status_code == 200
-            data = resp.json()
+            data = _unwrap(resp)
             assert data["days"] == days
 
         print("KPI summary days parameter works correctly")
@@ -466,7 +476,7 @@ class TestKPISummary:
         headers = {"Authorization": f"Bearer {agency_token}"}
         resp = requests.get(f"{BASE_URL}/api/intelligence/kpi-summary", headers=headers)
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
 
         funnel = data["funnel"]
         assert "search_event" in funnel
@@ -488,7 +498,7 @@ class TestSearchAnalyticsIntegration:
             "email": AGENCY_ADMIN_EMAIL,
             "password": AGENCY_ADMIN_PASSWORD
         })
-        return resp.json().get("access_token")
+        return _unwrap(resp).get("access_token")
 
     def test_search_creates_analytics(self, agency_token):
         """Test that POST /api/unified-booking/search creates search_event"""
@@ -496,7 +506,7 @@ class TestSearchAnalyticsIntegration:
 
         # Get funnel before search
         before_resp = requests.get(f"{BASE_URL}/api/intelligence/funnel?days=1", headers=headers)
-        before_data = before_resp.json()
+        before_data = _unwrap(before_resp)
         before_searches = before_data.get("funnel", {}).get("search_event", 0)
 
         # Execute search
@@ -514,7 +524,7 @@ class TestSearchAnalyticsIntegration:
 
         # Get funnel after search
         after_resp = requests.get(f"{BASE_URL}/api/intelligence/funnel?days=1", headers=headers)
-        after_data = after_resp.json()
+        after_data = _unwrap(after_resp)
         after_searches = after_data.get("funnel", {}).get("search_event", 0)
 
         # Search should have incremented
@@ -540,7 +550,7 @@ class TestSearchAnalyticsIntegration:
         # Check suggestions
         sugg_resp = requests.get(f"{BASE_URL}/api/intelligence/suggestions", headers=headers)
         assert sugg_resp.status_code == 200
-        data = sugg_resp.json()
+        data = _unwrap(sugg_resp)
 
         recent = data.get("recent_searches", [])
         destinations = [r.get("destination") for r in recent]

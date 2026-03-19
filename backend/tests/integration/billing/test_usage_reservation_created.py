@@ -10,6 +10,16 @@ from app.services.feature_service import feature_service
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 async def _seed_reservation_prereqs(test_db) -> tuple[str, str, ObjectId, ObjectId, str]:
   admin = await test_db.users.find_one({"email": "admin@acenta.test"})
   assert admin is not None
@@ -103,7 +113,7 @@ async def test_reservation_created_tracks_usage_on_new_create(async_client, admi
   }
   resp = await async_client.post("/api/reservations/reserve", json=payload, headers=admin_headers)
   assert resp.status_code == 200, resp.text
-  body = resp.json()
+  body = _unwrap(resp)
   assert body["organization_id"] == org_id
 
   ledger_doc = await test_db.usage_ledger.find_one(
@@ -116,7 +126,7 @@ async def test_reservation_created_tracks_usage_on_new_create(async_client, admi
 
   summary_resp = await async_client.get(f"/api/admin/billing/tenants/{tenant_id}/usage", headers=admin_headers)
   assert summary_resp.status_code == 200, summary_resp.text
-  summary = summary_resp.json()
+  summary = _unwrap(summary_resp)
   assert summary["metrics"][UsageMetric.RESERVATION_CREATED]["used"] == 1
   assert summary["metrics"][UsageMetric.RESERVATION_CREATED]["quota"] == 100
 
@@ -143,7 +153,7 @@ async def test_reservation_created_does_not_double_count_idempotent_retry(async_
 
   assert first.status_code == 200, first.text
   assert second.status_code == 200, second.text
-  assert first.json()["id"] == second.json()["id"]
+  assert _unwrap(first)["id"] == _unwrap(second)["id"]
 
   ledger_count = await test_db.usage_ledger.count_documents(
     {"tenant_id": tenant_id, "metric": UsageMetric.RESERVATION_CREATED}
@@ -179,7 +189,7 @@ async def test_reservation_created_is_not_incremented_on_status_change(async_cli
     headers=admin_headers,
   )
   assert create_resp.status_code == 200, create_resp.text
-  reservation_id = create_resp.json()["id"]
+  reservation_id = _unwrap(create_resp)["id"]
 
   confirm_resp = await async_client.post(f"/api/reservations/{reservation_id}/confirm", headers=admin_headers)
   cancel_resp = await async_client.post(f"/api/reservations/{reservation_id}/cancel", headers=admin_headers)
@@ -188,7 +198,7 @@ async def test_reservation_created_is_not_incremented_on_status_change(async_cli
 
   summary = await async_client.get(f"/api/admin/billing/tenants/{tenant_id}/usage", headers=admin_headers)
   assert summary.status_code == 200, summary.text
-  body = summary.json()
+  body = _unwrap(summary)
   assert body["metrics"][UsageMetric.RESERVATION_CREATED]["used"] == 1
 
 
@@ -220,7 +230,7 @@ async def test_tour_reservation_create_tracks_usage(async_client, admin_headers,
 
   summary = await async_client.get(f"/api/admin/billing/tenants/{tenant_id}/usage", headers=admin_headers)
   assert summary.status_code == 200, summary.text
-  body = summary.json()
+  body = _unwrap(summary)
   assert body["metrics"][UsageMetric.RESERVATION_CREATED]["used"] == 1
 
   ledger_doc = await test_db.usage_ledger.find_one(

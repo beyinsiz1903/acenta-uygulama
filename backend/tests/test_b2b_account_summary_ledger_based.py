@@ -5,6 +5,16 @@ import pytest
 from datetime import datetime
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.anyio
 async def test_b2b_account_summary_uses_ledger_when_available(async_client, agency_token, test_db):
     """When finance_accounts + credit_profiles exist, /b2b/account/summary
@@ -20,7 +30,7 @@ async def test_b2b_account_summary_uses_ledger_when_available(async_client, agen
     headers = {"Authorization": f"Bearer {agency_token}"}
     me_resp = await async_client.get("/api/auth/me", headers=headers)
     assert me_resp.status_code == 200, f"/api/auth/me failed: {me_resp.text}"
-    me = me_resp.json()
+    me = _unwrap(me_resp)
     org_id = me.get("organization_id")
     agency_id = me.get("agency_id")
 
@@ -76,7 +86,7 @@ async def test_b2b_account_summary_uses_ledger_when_available(async_client, agen
     )
     assert resp.status_code == 200, resp.text
 
-    data = resp.json()
+    data = _unwrap(resp)
 
     assert data["data_source"] == "ledger_based"
     assert "exposure_eur" in data

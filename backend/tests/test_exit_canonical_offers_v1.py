@@ -65,7 +65,7 @@ async def test_canonical_offers_schema_and_no_raw_leakage(test_db: Any, async_cl
 
     resp = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp.status_code == status.HTTP_200_OK, resp.text
-    data = resp.json()
+    data = _unwrap(resp)
 
     assert "session_id" in data
     assert "expires_at" in data
@@ -217,7 +217,7 @@ async def test_search_session_ttl_and_indexes(test_db: Any, async_client: AsyncC
 
     resp = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp.status_code == status.HTTP_200_OK, resp.text
-    data = resp.json()
+    data = _unwrap(resp)
     session_id = data["session_id"]
 
     # Check session document exists in DB
@@ -243,6 +243,16 @@ async def test_search_session_ttl_and_indexes(test_db: Any, async_client: AsyncC
 
     # Ensure TTL index helper is invoked for test DB as well
     from app.indexes.marketplace_indexes import ensure_offers_indexes
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     await ensure_offers_indexes(test_db)
 
@@ -314,7 +324,7 @@ async def test_booking_from_canonical_offer_creates_draft_booking(test_db: Any, 
 
     resp_search = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp_search.status_code == status.HTTP_200_OK, resp_search.text
-    search_data = resp_search.json()
+    search_data = _unwrap(resp_search)
     session_id = search_data["session_id"]
     offers = search_data.get("offers") or []
     assert offers
@@ -333,7 +343,7 @@ async def test_booking_from_canonical_offer_creates_draft_booking(test_db: Any, 
 
     resp_booking = await client.post("/api/bookings/from-canonical-offer", json=create_payload, headers=headers)
     assert resp_booking.status_code == status.HTTP_201_CREATED, resp_booking.text
-    booking = resp_booking.json()
+    booking = _unwrap(resp_booking)
     assert booking.get("state") in {"draft", "created"}
     offer_ref = booking.get("offer_ref") or {}
     assert offer_ref.get("supplier") == "mock"

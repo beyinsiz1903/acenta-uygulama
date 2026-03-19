@@ -17,6 +17,16 @@ import requests
 
 from tests.preview_auth_helper import PreviewAuthSession, get_preview_base_url_or_skip
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Test credentials
@@ -126,7 +136,7 @@ class TestAgencyConnections:
         # May return 200 (list) or 403 (no agency)
         assert response.status_code in [200, 403], f"Expected 200/403, got {response.status_code}: {response.text}"
         if response.status_code == 200:
-            data = response.json()
+            data = _unwrap(response)
             assert isinstance(data, list), f"Expected list, got {type(data)}"
             print(f"✅ GET /api/agency/sheets/connections returns list with {len(data)} connections")
         else:
@@ -138,7 +148,7 @@ class TestAgencyConnections:
         # May return 200 (list) or 403 (no agency)
         assert response.status_code in [200, 403], f"Expected 200/403, got {response.status_code}: {response.text}"
         if response.status_code == 200:
-            data = response.json()
+            data = _unwrap(response)
             assert isinstance(data, list), f"Expected list, got {type(data)}"
             print(f"✅ GET /api/agency/sheets/hotels returns list with {len(data)} hotels")
         else:
@@ -187,7 +197,7 @@ class TestAdminSheetsConfig:
         """GET /api/admin/sheets/config returns config status."""
         response = admin_client.get(f"{BASE_URL}/api/admin/sheets/config")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "configured" in data, f"Expected 'configured' field in response: {data}"
         print(f"✅ GET /api/admin/sheets/config returns config status: configured={data.get('configured')}")
 
@@ -205,7 +215,7 @@ class TestAdminConnections:
         """GET /api/admin/sheets/connections returns list."""
         response = admin_client.get(f"{BASE_URL}/api/admin/sheets/connections")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list), f"Expected list, got {type(data)}"
         print(f"✅ GET /api/admin/sheets/connections returns list with {len(data)} connections")
 

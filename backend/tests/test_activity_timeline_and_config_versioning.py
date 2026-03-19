@@ -20,6 +20,16 @@ import requests
 import time
 from datetime import datetime
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -36,7 +46,7 @@ def auth_token():
     })
     if response.status_code != 200:
         pytest.skip(f"Authentication failed: {response.status_code} - {response.text}")
-    data = response.json()
+    data = _unwrap(response)
     return data.get("token") or data.get("access_token")
 
 
@@ -59,7 +69,7 @@ class TestActivityTimelineAPI:
         response = api_client.get(f"{BASE_URL}/api/activity-timeline?limit=50")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "events" in data, "Response should contain 'events' key"
         assert "total" in data, "Response should contain 'total' key"
         assert isinstance(data["events"], list), "events should be a list"
@@ -70,7 +80,7 @@ class TestActivityTimelineAPI:
         response = api_client.get(f"{BASE_URL}/api/activity-timeline?entity_type=distribution_rule&limit=20")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
-        data = response.json()
+        data = _unwrap(response)
         for event in data["events"]:
             assert event["entity_type"] == "distribution_rule", f"Filtered event should have entity_type=distribution_rule"
         print(f"✅ Entity type filter working - found {len(data['events'])} distribution_rule events")
@@ -80,7 +90,7 @@ class TestActivityTimelineAPI:
         response = api_client.get(f"{BASE_URL}/api/activity-timeline?action=created&limit=20")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
-        data = response.json()
+        data = _unwrap(response)
         for event in data["events"]:
             assert event["action"] == "created", f"Filtered event should have action=created"
         print(f"✅ Action filter working - found {len(data['events'])} 'created' events")
@@ -90,7 +100,7 @@ class TestActivityTimelineAPI:
         response = api_client.get(f"{BASE_URL}/api/activity-timeline/stats")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "total_events" in data, "Stats should contain 'total_events'"
         assert "by_entity_type" in data, "Stats should contain 'by_entity_type'"
         assert "by_action" in data, "Stats should contain 'by_action'"
@@ -116,7 +126,7 @@ class TestDistributionRulesVersioning:
         response = api_client.post(f"{BASE_URL}/api/pricing-engine/distribution-rules", json=payload)
         assert response.status_code == 201, f"Expected 201, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "rule_id" in data, "Response should contain rule_id"
         assert data["version"] == 1, f"New rule should have version=1, got {data.get('version')}"
         assert data["created_by"] == SUPER_ADMIN_EMAIL, f"created_by should be {SUPER_ADMIN_EMAIL}"
@@ -140,7 +150,7 @@ class TestDistributionRulesVersioning:
         response = api_client.patch(f"{BASE_URL}/api/pricing-engine/distribution-rules/{rule_id}", json=payload)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["version"] == 2, f"Updated rule should have version=2, got {data.get('version')}"
         assert data["value"] == 15.0, f"Value should be updated to 15.0"
         assert data["updated_by"] == SUPER_ADMIN_EMAIL
@@ -155,7 +165,7 @@ class TestDistributionRulesVersioning:
         response = api_client.get(f"{BASE_URL}/api/config-versions/distribution_rule/{rule_id}")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "versions" in data, "Response should contain 'versions' key"
         # Should have at least 1 snapshot (from the update)
         assert len(data["versions"]) >= 1, f"Should have at least 1 version snapshot, got {len(data['versions'])}"
@@ -176,7 +186,7 @@ class TestDistributionRulesVersioning:
         response = api_client.get(f"{BASE_URL}/api/activity-timeline/entity/distribution_rule/{rule_id}")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "events" in data
         # Should have at least 2 events: created + updated
         assert len(data["events"]) >= 2, f"Should have at least 2 events (created, updated), got {len(data['events'])}"
@@ -196,14 +206,14 @@ class TestDistributionRulesVersioning:
         response = api_client.delete(f"{BASE_URL}/api/pricing-engine/distribution-rules/{rule_id}")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("ok") == True, f"Delete should return ok=true"
         
         # Verify timeline event was recorded
         time.sleep(0.2)  # Small delay for async event recording
         response2 = api_client.get(f"{BASE_URL}/api/activity-timeline/entity/distribution_rule/{rule_id}")
         if response2.status_code == 200:
-            events = response2.json().get("events", [])
+            events = _unwrap(response2).get("events", [])
             actions = [e["action"] for e in events]
             assert "deleted" in actions, f"Should have 'deleted' event in timeline: {actions}"
             print(f"✅ Deleted rule {rule_id} - delete event recorded in timeline")
@@ -227,7 +237,7 @@ class TestChannelConfigsVersioning:
         response = api_client.post(f"{BASE_URL}/api/pricing-engine/channels", json=payload)
         assert response.status_code == 201, f"Expected 201, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["version"] == 1, f"New channel should have version=1"
         assert data["created_by"] == SUPER_ADMIN_EMAIL
         
@@ -248,7 +258,7 @@ class TestChannelConfigsVersioning:
         response = api_client.patch(f"{BASE_URL}/api/pricing-engine/channels/{channel_id}", json=payload)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["version"] == 2, f"Updated channel should have version=2, got {data.get('version')}"
         print(f"✅ Updated channel config {channel_id} - version={data['version']}")
 
@@ -277,7 +287,7 @@ class TestGuardrailsVersioning:
         response = api_client.post(f"{BASE_URL}/api/pricing-engine/guardrails", json=payload)
         assert response.status_code == 201, f"Expected 201, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["version"] == 1, f"New guardrail should have version=1"
         assert data["created_by"] == SUPER_ADMIN_EMAIL
         
@@ -298,7 +308,7 @@ class TestGuardrailsVersioning:
         response = api_client.patch(f"{BASE_URL}/api/pricing-engine/guardrails/{guardrail_id}", json=payload)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["version"] == 2, f"Updated guardrail should have version=2"
         print(f"✅ Updated guardrail {guardrail_id} - version={data['version']}")
 
@@ -324,7 +334,7 @@ class TestPromotionsAuditTrail:
         response = api_client.post(f"{BASE_URL}/api/pricing-engine/promotions", json=payload)
         assert response.status_code == 201, f"Expected 201, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "rule_id" in data, "Promotion should have rule_id"
         
         TestPromotionsAuditTrail.promo_id = data["rule_id"]
@@ -344,7 +354,7 @@ class TestPromotionsAuditTrail:
         response = api_client.patch(f"{BASE_URL}/api/pricing-engine/promotions/{promo_id}", json=payload)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         # Promotions should also have versioning
         assert data.get("version", 0) >= 1
         print(f"✅ Updated promotion {promo_id}")
@@ -368,7 +378,7 @@ class TestSettlementWorkflowAudit:
         response = requests.post(f"{BASE_URL}/api/finance/settlement-runs", json=payload)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "run_id" in data, "Response should contain run_id"
         
         TestSettlementWorkflowAudit.run_id = data["run_id"]
@@ -388,7 +398,7 @@ class TestSettlementWorkflowAudit:
         response = requests.patch(f"{BASE_URL}/api/finance/settlement-runs/{run_id}/submit", json=payload)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["status"] == "pending_approval", f"Status should be pending_approval"
         print(f"✅ Submitted settlement {run_id} - status={data['status']}")
 
@@ -406,7 +416,7 @@ class TestSettlementWorkflowAudit:
         response = requests.patch(f"{BASE_URL}/api/finance/settlement-runs/{run_id}/approve", json=payload)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["status"] == "approved", f"Status should be approved"
         print(f"✅ Approved settlement {run_id} - status={data['status']}")
 
@@ -419,7 +429,7 @@ class TestSettlementWorkflowAudit:
         response = api_client.get(f"{BASE_URL}/api/activity-timeline/entity/settlement_run/{run_id}")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
-        data = response.json()
+        data = _unwrap(response)
         events = data.get("events", [])
         actions = [e["action"] for e in events]
         
@@ -438,7 +448,7 @@ class TestExceptionResolutionAudit:
         response = requests.get(f"{BASE_URL}/api/finance/exceptions?limit=10")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "exceptions" in data, "Response should have 'exceptions' key"
         print(f"✅ Found {len(data['exceptions'])} exceptions")
         
@@ -462,7 +472,7 @@ class TestEntitySpecificTimeline:
             response = api_client.get(f"{BASE_URL}/api/activity-timeline/entity/settlement_run/{run_id}")
             assert response.status_code == 200, f"Expected 200, got {response.status_code}"
             
-            data = response.json()
+            data = _unwrap(response)
             assert data["entity_type"] == "settlement_run"
             assert data["entity_id"] == run_id
             assert "events" in data
@@ -482,7 +492,7 @@ class TestConfigVersionHistory:
         response = api_client.get(f"{BASE_URL}/api/config-versions/distribution_rule/nonexistent_id")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "versions" in data
         assert data["versions"] == [] or isinstance(data["versions"], list)
         print("✅ Version history returns empty list for nonexistent entity")

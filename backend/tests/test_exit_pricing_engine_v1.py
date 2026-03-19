@@ -238,7 +238,7 @@ async def test_storefront_booking_persists_pricing(test_db: Any, async_client: A
         headers={"X-Tenant-Key": "pricing-tenant"},
     )
     assert resp_search.status_code == status.HTTP_200_OK
-    data_search = resp_search.json()
+    data_search = _unwrap(resp_search)
     search_id = data_search["search_id"]
     offer = data_search["offers"][0]
 
@@ -257,11 +257,21 @@ async def test_storefront_booking_persists_pricing(test_db: Any, async_client: A
         headers={"X-Tenant-Key": "pricing-tenant"},
     )
     assert resp_book.status_code == status.HTTP_201_CREATED
-    data_book = resp_book.json()
+    data_book = _unwrap(resp_book)
     booking_id = data_book["booking_id"]
 
     # 3) Read booking directly from DB to inspect pricing field
     from bson import ObjectId
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     booking_doc = await test_db.bookings.find_one({"_id": ObjectId(booking_id)})
 

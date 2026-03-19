@@ -20,6 +20,14 @@ sys.path.insert(0, "/app/backend")
 
 from tests.preview_auth_helper import PreviewAuthSession, get_preview_base_url_or_skip
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Test credentials
@@ -52,7 +60,7 @@ class TestUsageMeteringPRUM3:
         resp = self.session.get(f"/api/admin/billing/tenants/{self.tenant_id}/usage")
         if resp.status_code != 200:
             return {}
-        return resp.json()
+        return _unwrap(resp)
 
     def _get_usage_count(self, metric: str) -> int:
         """Get current usage count for a specific metric."""
@@ -235,7 +243,7 @@ class TestUsageMeteringPRUM3:
         )
 
         assert resp.status_code == 200, f"Sales summary JSON failed: {resp.status_code}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert isinstance(data, list), "Expected JSON array response"
         print(f"Dashboard read returned {len(data)} items")
 

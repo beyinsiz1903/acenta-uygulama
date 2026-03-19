@@ -12,6 +12,16 @@ from app.utils import now_utc
 from app.services.org_service import initialize_org_defaults
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.exit_sprint3
 @pytest.mark.anyio
 async def test_finance_exposure_view_v1_contract(test_db: Any, async_client: AsyncClient) -> None:
@@ -73,7 +83,7 @@ async def test_finance_exposure_view_v1_contract(test_db: Any, async_client: Asy
             headers={"Authorization": f"Bearer {token_a}"},
         )
         assert resp_create.status_code == status.HTTP_201_CREATED
-        booking_id = resp_create.json()["id"]
+        booking_id = _unwrap(resp_create)["id"]
         await client.post(
             f"/api/bookings/{booking_id}/quote",
             headers={"Authorization": f"Bearer {token_a}"},
@@ -90,7 +100,7 @@ async def test_finance_exposure_view_v1_contract(test_db: Any, async_client: Asy
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_fin_a.status_code == status.HTTP_200_OK
-    data_a = resp_fin_a.json()
+    data_a = _unwrap(resp_fin_a)
     assert data_a["currency"] == "TRY"
     assert data_a["credit_limit"] == pytest.approx(100_000.0)
     assert data_a["total_exposure"] == pytest.approx(100_000.0)
@@ -104,7 +114,7 @@ async def test_finance_exposure_view_v1_contract(test_db: Any, async_client: Asy
         headers={"Authorization": f"Bearer {token_b}"},
     )
     assert resp_fin_b.status_code == status.HTTP_200_OK
-    data_b = resp_fin_b.json()
+    data_b = _unwrap(resp_fin_b)
     assert data_b["currency"] == "TRY"
     assert data_b["credit_limit"] is None
     assert data_b["available_credit"] is None

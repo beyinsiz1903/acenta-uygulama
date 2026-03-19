@@ -29,7 +29,7 @@ async def test_stripe_webhook_rejects_invalid_signature(async_client):
     )
 
     assert resp.status_code == 400
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["error"]["code"] == "stripe_invalid_signature"
 
 
@@ -97,7 +97,7 @@ async def test_payment_intent_succeeded_currency_mismatch_returns_500(monkeypatc
     )
 
     assert resp.status_code == 500
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["error"]["code"] == "stripe_currency_mismatch"
 
 
@@ -160,7 +160,7 @@ async def test_payment_intent_succeeded_idempotent_on_provider_ids(monkeypatch, 
         headers={"Stripe-Signature": "valid-for-test"},
     )
     assert resp1.status_code == 200
-    assert resp1.json()["ok"] is True
+    assert _unwrap(resp1)["ok"] is True
 
     # 2nd delivery (replay)
     resp2 = await async_client.post(
@@ -169,7 +169,7 @@ async def test_payment_intent_succeeded_idempotent_on_provider_ids(monkeypatch, 
         headers={"Stripe-Signature": "valid-for-test"},
     )
     assert resp2.status_code == 200
-    assert resp2.json()["ok"] is True
+    assert _unwrap(resp2)["ok"] is True
 
     # Ensure we only inserted a single tx for this provider_object_id
     tx_docs = await test_db.booking_payment_transactions.find({"provider_object_id": pi_id}).to_list(10)
@@ -256,7 +256,7 @@ async def test_charge_refunded_idempotent_on_refund_id(monkeypatch, async_client
         headers={"Stripe-Signature": "valid-for-test"},
     )
     assert resp1.status_code == 200
-    assert resp1.json()["ok"] is True
+    assert _unwrap(resp1)["ok"] is True
 
     # 2nd delivery (replay)
     resp2 = await async_client.post(
@@ -265,7 +265,7 @@ async def test_charge_refunded_idempotent_on_refund_id(monkeypatch, async_client
         headers={"Stripe-Signature": "valid-for-test"},
     )
     assert resp2.status_code == 200
-    assert resp2.json()["ok"] is True
+    assert _unwrap(resp2)["ok"] is True
 
     # Ensure only one tx (per refund id)
     tx_docs = await test_db.booking_payment_transactions.find({"provider_object_id": refund_id}).to_list(10)
@@ -283,6 +283,16 @@ async def test_capture_and_refund_endpoints_set_idempotency_keys(monkeypatch, as
     called: Dict[str, Any] = {}
 
     from app.services import stripe_adapter as adapter  # type: ignore
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     async def fake_create_intent(*, amount_cents: int, currency: str, metadata: Dict[str, str], idempotency_key: str, capture_method: str = "automatic") -> Dict[str, Any]:  # pragma: no cover
         called["create"] = {

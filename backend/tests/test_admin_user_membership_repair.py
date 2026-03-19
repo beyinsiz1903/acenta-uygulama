@@ -4,6 +4,16 @@ from app.auth import hash_password
 from app.utils import now_utc
 
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 async def _get_demo_agency_and_tenant(test_db):
     agency = await test_db.agencies.find_one({"name": "Demo Agency"})
     tenant = await test_db.tenants.find_one({"_id": "tenant_default"})
@@ -27,7 +37,7 @@ async def test_create_user_auto_creates_membership(async_client, admin_headers, 
         },
     )
     assert response.status_code == 200, response.text
-    created = response.json()
+    created = _unwrap(response)
 
     membership = await test_db.memberships.find_one(
         {
@@ -47,7 +57,7 @@ async def test_create_user_auto_creates_membership(async_client, admin_headers, 
         },
     )
     assert login_response.status_code == 200, login_response.text
-    assert login_response.json().get("tenant_id") == str(tenant["_id"])
+    assert _unwrap(login_response).get("tenant_id") == str(tenant["_id"])
 
 
 async def test_repair_endpoint_fixes_existing_broken_user(async_client, admin_headers, test_db):
@@ -74,7 +84,7 @@ async def test_repair_endpoint_fixes_existing_broken_user(async_client, admin_he
         headers=admin_headers,
     )
     assert repair_response.status_code == 200, repair_response.text
-    payload = repair_response.json()
+    payload = _unwrap(repair_response)
     assert payload["repaired"] >= 1
 
     membership = await test_db.memberships.find_one(
@@ -95,4 +105,4 @@ async def test_repair_endpoint_fixes_existing_broken_user(async_client, admin_he
         },
     )
     assert login_response.status_code == 200, login_response.text
-    assert login_response.json().get("tenant_id") == str(tenant["_id"])
+    assert _unwrap(login_response).get("tenant_id") == str(tenant["_id"])

@@ -13,6 +13,16 @@ from app.utils import now_utc
 from app.services.org_service import initialize_org_defaults
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.exit_sprint3
 @pytest.mark.anyio
 async def test_paximum_draft_to_booked_happy_path(test_db: Any, async_client: AsyncClient) -> None:
@@ -92,7 +102,7 @@ async def test_paximum_draft_to_booked_happy_path(test_db: Any, async_client: As
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_from_offer.status_code == status.HTTP_201_CREATED
-    draft_booking = resp_from_offer.json()
+    draft_booking = _unwrap(resp_from_offer)
 
     booking_id = draft_booking["id"]
     assert draft_booking["state"] == "draft"
@@ -105,7 +115,7 @@ async def test_paximum_draft_to_booked_happy_path(test_db: Any, async_client: As
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_quote.status_code == status.HTTP_200_OK
-    quoted = resp_quote.json()
+    quoted = _unwrap(resp_quote)
     assert quoted["id"] == booking_id
     assert quoted["state"] == "quoted"
 
@@ -115,7 +125,7 @@ async def test_paximum_draft_to_booked_happy_path(test_db: Any, async_client: As
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_book.status_code == status.HTTP_200_OK
-    booked = resp_book.json()
+    booked = _unwrap(resp_book)
     assert booked["id"] == booking_id
     assert booked["state"] == "booked"
 
@@ -213,7 +223,7 @@ async def test_paximum_non_try_booking_transitions_blocked(test_db: Any, async_c
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp_quote.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    err_q = resp_quote.json().get("error", {})
+    err_q = _unwrap(resp_quote).get("error", {})
     assert err_q.get("code") == "UNSUPPORTED_CURRENCY"
 
     resp_book = await client.post(
@@ -221,7 +231,7 @@ async def test_paximum_non_try_booking_transitions_blocked(test_db: Any, async_c
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp_book.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    err_b = resp_book.json().get("error", {})
+    err_b = _unwrap(resp_book).get("error", {})
     assert err_b.get("code") == "UNSUPPORTED_CURRENCY"
 
 
@@ -291,7 +301,7 @@ async def test_paximum_lifecycle_org_isolation(test_db: Any, async_client: Async
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_from_offer.status_code == status.HTTP_201_CREATED
-    draft_booking = resp_from_offer.json()
+    draft_booking = _unwrap(resp_from_offer)
     booking_id = draft_booking["id"]
 
     # OrgB should not be able to get, quote, or book this booking

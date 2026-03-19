@@ -11,6 +11,16 @@ import os
 import re
 from datetime import datetime
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 API_BASE = f"{BASE_URL}/api"
 
@@ -29,7 +39,7 @@ class TestOrderNumberFormat:
             },
         )
         assert response.status_code == 200, f"Create order failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         order_number = data.get("order_number", "")
         
         # Pattern: ORD-YYYY-NNNNNN (e.g., ORD-2026-000001)
@@ -43,12 +53,12 @@ class TestOrderNumberFormat:
         # Create first order
         resp1 = requests.post(f"{API_BASE}/orders", json={"customer_id": "TEST_incr_1", "channel": "B2B"})
         assert resp1.status_code == 200
-        order1 = resp1.json()
+        order1 = _unwrap(resp1)
         
         # Create second order
         resp2 = requests.post(f"{API_BASE}/orders", json={"customer_id": "TEST_incr_2", "channel": "B2B"})
         assert resp2.status_code == 200
-        order2 = resp2.json()
+        order2 = _unwrap(resp2)
         
         # Extract sequence numbers
         seq1 = int(order1["order_number"].split("-")[-1])
@@ -65,7 +75,7 @@ class TestSearchEndpoint:
         """Search endpoint should exist and return 200"""
         response = requests.get(f"{API_BASE}/orders/search")
         assert response.status_code == 200, f"Search endpoint failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "orders" in data
         assert "total" in data
         print(f"Search endpoint works: {data['total']} orders found")
@@ -74,7 +84,7 @@ class TestSearchEndpoint:
         """Search should filter by status"""
         response = requests.get(f"{API_BASE}/orders/search?status=draft")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         for order in data["orders"]:
             assert order["status"] == "draft", f"Expected draft status, got {order['status']}"
         print(f"Status filter works: {len(data['orders'])} draft orders found")
@@ -83,7 +93,7 @@ class TestSearchEndpoint:
         """Search should filter by channel"""
         response = requests.get(f"{API_BASE}/orders/search?channel=B2B")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         for order in data["orders"]:
             assert order["channel"] == "B2B", f"Expected B2B channel, got {order['channel']}"
         print(f"Channel filter works: {len(data['orders'])} B2B orders found")
@@ -92,7 +102,7 @@ class TestSearchEndpoint:
         """Search should filter by settlement_status"""
         response = requests.get(f"{API_BASE}/orders/search?settlement_status=not_settled")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         for order in data["orders"]:
             assert order.get("settlement_status") == "not_settled", f"Expected not_settled, got {order.get('settlement_status')}"
         print(f"Settlement status filter works: {len(data['orders'])} not_settled orders found")
@@ -102,13 +112,13 @@ class TestSearchEndpoint:
         # Create order first to ensure there's a known order
         resp = requests.post(f"{API_BASE}/orders", json={"customer_id": "TEST_search_order", "channel": "B2B"})
         assert resp.status_code == 200
-        new_order = resp.json()
+        new_order = _unwrap(resp)
         
         # Search with partial order number (e.g., "ORD-2026")
         current_year = datetime.now().year
         response = requests.get(f"{API_BASE}/orders/search?order_number=ORD-{current_year}")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["total"] >= 1, "Expected at least 1 order with current year"
         print(f"Order number filter works: {data['total']} orders found with ORD-{current_year}")
 
@@ -121,7 +131,7 @@ class TestSearchEndpoint:
         # Search with partial customer_id
         response = requests.get(f"{API_BASE}/orders/search?customer_id=TEST_cust_unique")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["total"] >= 1, "Expected at least 1 order with partial customer_id"
         print(f"Customer ID partial filter works: {data['total']} orders found")
 
@@ -134,7 +144,7 @@ class TestSearchEndpoint:
         # Search with partial agency_id
         response = requests.get(f"{API_BASE}/orders/search?agency_id=TEST_agency_unique")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["total"] >= 1, "Expected at least 1 order with partial agency_id"
         print(f"Agency ID partial filter works: {data['total']} orders found")
 
@@ -147,7 +157,7 @@ class TestSearchEndpoint:
         # Search with free text
         response = requests.get(f"{API_BASE}/orders/search?q=freetext_search_123")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["total"] >= 1, "Expected at least 1 order with free text search"
         print(f"Free text search (q) works: {data['total']} orders found")
 
@@ -156,14 +166,14 @@ class TestSearchEndpoint:
         today = datetime.now().strftime("%Y-%m-%d")
         response = requests.get(f"{API_BASE}/orders/search?date_from={today}&date_to={today}")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         print(f"Date range filter works: {data['total']} orders found for today")
 
     def test_search_combined_filters(self):
         """Search should support multiple filters combined"""
         response = requests.get(f"{API_BASE}/orders/search?status=draft&channel=B2B&settlement_status=not_settled")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         for order in data["orders"]:
             assert order["status"] == "draft"
             assert order["channel"] == "B2B"
@@ -181,7 +191,7 @@ class TestOptimisticLocking:
             json={"customer_id": "TEST_version_check", "channel": "B2B"},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "version" in data, "Order should have version field"
         assert data["version"] == 1, f"New order should have version=1, got {data['version']}"
         print(f"New order has version=1: {data['order_id']}")
@@ -191,7 +201,7 @@ class TestOptimisticLocking:
         # Create order
         resp = requests.post(f"{API_BASE}/orders", json={"customer_id": "TEST_no_version", "channel": "B2B"})
         assert resp.status_code == 200
-        order_id = resp.json()["order_id"]
+        order_id = _unwrap(resp)["order_id"]
         
         # Update without version
         update_resp = requests.patch(
@@ -199,7 +209,7 @@ class TestOptimisticLocking:
             json={"customer_id": "TEST_no_version_updated"},
         )
         assert update_resp.status_code == 200, f"Update without version failed: {update_resp.text}"
-        updated = update_resp.json()
+        updated = _unwrap(update_resp)
         assert updated["customer_id"] == "TEST_no_version_updated"
         assert updated["version"] == 2, "Version should increment after update"
         print(f"Update without version works (backwards compatible)")
@@ -209,7 +219,7 @@ class TestOptimisticLocking:
         # Create order
         resp = requests.post(f"{API_BASE}/orders", json={"customer_id": "TEST_correct_version", "channel": "B2B"})
         assert resp.status_code == 200
-        order = resp.json()
+        order = _unwrap(resp)
         order_id = order["order_id"]
         current_version = order["version"]
         
@@ -219,7 +229,7 @@ class TestOptimisticLocking:
             json={"customer_id": "TEST_correct_version_updated", "version": current_version},
         )
         assert update_resp.status_code == 200, f"Update with correct version failed: {update_resp.text}"
-        updated = update_resp.json()
+        updated = _unwrap(update_resp)
         assert updated["version"] == current_version + 1
         print(f"Update with correct version works: v{current_version} -> v{updated['version']}")
 
@@ -228,7 +238,7 @@ class TestOptimisticLocking:
         # Create order
         resp = requests.post(f"{API_BASE}/orders", json={"customer_id": "TEST_wrong_version", "channel": "B2B"})
         assert resp.status_code == 200
-        order_id = resp.json()["order_id"]
+        order_id = _unwrap(resp)["order_id"]
         
         # Update with wrong version
         update_resp = requests.patch(
@@ -243,7 +253,7 @@ class TestOptimisticLocking:
         # Create order
         resp = requests.post(f"{API_BASE}/orders", json={"customer_id": "TEST_concurrent", "channel": "B2B"})
         assert resp.status_code == 200
-        order = resp.json()
+        order = _unwrap(resp)
         order_id = order["order_id"]
         original_version = order["version"]
         
@@ -271,7 +281,7 @@ class TestStateTransitionVersionIncrement:
         # Create draft order
         resp = requests.post(f"{API_BASE}/orders", json={"customer_id": "TEST_confirm_ver", "channel": "B2B"})
         assert resp.status_code == 200
-        order = resp.json()
+        order = _unwrap(resp)
         order_id = order["order_id"]
         initial_version = order["version"]
         
@@ -282,7 +292,7 @@ class TestStateTransitionVersionIncrement:
         # Get order and check version
         get_resp = requests.get(f"{API_BASE}/orders/{order_id}")
         assert get_resp.status_code == 200
-        updated_order = get_resp.json()
+        updated_order = _unwrap(get_resp)
         assert updated_order["version"] > initial_version, f"Version should increment: {initial_version} -> {updated_order['version']}"
         assert updated_order["status"] == "confirmed"
         print(f"Confirm transition increments version: {initial_version} -> {updated_order['version']}")
@@ -292,21 +302,21 @@ class TestStateTransitionVersionIncrement:
         # Create and confirm order
         resp = requests.post(f"{API_BASE}/orders", json={"customer_id": "TEST_cancel_ver", "channel": "B2B"})
         assert resp.status_code == 200
-        order_id = resp.json()["order_id"]
+        order_id = _unwrap(resp)["order_id"]
         
         requests.post(f"{API_BASE}/orders/{order_id}/confirm", json={"actor": "test"})
         get1 = requests.get(f"{API_BASE}/orders/{order_id}")
-        version_after_confirm = get1.json()["version"]
+        version_after_confirm = _unwrap(get1)["version"]
         
         # Request cancel
         requests.post(f"{API_BASE}/orders/{order_id}/request-cancel", json={"actor": "test"})
         get2 = requests.get(f"{API_BASE}/orders/{order_id}")
-        version_after_request_cancel = get2.json()["version"]
+        version_after_request_cancel = _unwrap(get2)["version"]
         
         # Cancel
         requests.post(f"{API_BASE}/orders/{order_id}/cancel", json={"actor": "test"})
         get3 = requests.get(f"{API_BASE}/orders/{order_id}")
-        version_after_cancel = get3.json()["version"]
+        version_after_cancel = _unwrap(get3)["version"]
         
         assert version_after_request_cancel > version_after_confirm
         assert version_after_cancel > version_after_request_cancel
@@ -317,16 +327,16 @@ class TestStateTransitionVersionIncrement:
         # Create and confirm order
         resp = requests.post(f"{API_BASE}/orders", json={"customer_id": "TEST_close_ver", "channel": "B2B"})
         assert resp.status_code == 200
-        order_id = resp.json()["order_id"]
+        order_id = _unwrap(resp)["order_id"]
         
         requests.post(f"{API_BASE}/orders/{order_id}/confirm", json={"actor": "test"})
         get1 = requests.get(f"{API_BASE}/orders/{order_id}")
-        version_before_close = get1.json()["version"]
+        version_before_close = _unwrap(get1)["version"]
         
         # Close
         requests.post(f"{API_BASE}/orders/{order_id}/close", json={"actor": "test"})
         get2 = requests.get(f"{API_BASE}/orders/{order_id}")
-        version_after_close = get2.json()["version"]
+        version_after_close = _unwrap(get2)["version"]
         
         assert version_after_close > version_before_close
         print(f"Close transition increments version: {version_before_close} -> {version_after_close}")
@@ -340,12 +350,12 @@ class TestOrderDetailWithVersion:
         # Create order
         resp = requests.post(f"{API_BASE}/orders", json={"customer_id": "TEST_detail_version", "channel": "B2B"})
         assert resp.status_code == 200
-        order_id = resp.json()["order_id"]
+        order_id = _unwrap(resp)["order_id"]
         
         # Get detail
         detail_resp = requests.get(f"{API_BASE}/orders/{order_id}")
         assert detail_resp.status_code == 200
-        detail = detail_resp.json()
+        detail = _unwrap(detail_resp)
         assert "version" in detail, "Order detail should include version field"
         print(f"Order detail includes version: {detail['version']}")
 
@@ -365,7 +375,7 @@ class TestExistingOrderCRUD:
             },
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["customer_id"] == "TEST_crud_create"
         assert data["channel"] == "B2C"
         assert data["version"] == 1
@@ -376,7 +386,7 @@ class TestExistingOrderCRUD:
         """List orders should still work"""
         resp = requests.get(f"{API_BASE}/orders")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "orders" in data
         assert "total" in data
         print(f"List orders works: {data['total']} orders")
@@ -385,12 +395,12 @@ class TestExistingOrderCRUD:
         """Get order detail should still work"""
         # Create first
         create_resp = requests.post(f"{API_BASE}/orders", json={"customer_id": "TEST_detail_crud", "channel": "B2B"})
-        order_id = create_resp.json()["order_id"]
+        order_id = _unwrap(create_resp)["order_id"]
         
         # Get detail
         detail_resp = requests.get(f"{API_BASE}/orders/{order_id}")
         assert detail_resp.status_code == 200
-        detail = detail_resp.json()
+        detail = _unwrap(detail_resp)
         assert detail["order_id"] == order_id
         assert "items" in detail
         assert "financial_summary" in detail
@@ -399,14 +409,14 @@ class TestExistingOrderCRUD:
     def test_update_order_still_works(self):
         """Update order should still work"""
         create_resp = requests.post(f"{API_BASE}/orders", json={"customer_id": "TEST_update_crud", "channel": "B2B"})
-        order_id = create_resp.json()["order_id"]
+        order_id = _unwrap(create_resp)["order_id"]
         
         update_resp = requests.patch(
             f"{API_BASE}/orders/{order_id}",
             json={"customer_id": "TEST_update_crud_modified"},
         )
         assert update_resp.status_code == 200
-        updated = update_resp.json()
+        updated = _unwrap(update_resp)
         assert updated["customer_id"] == "TEST_update_crud_modified"
         print(f"Update order works")
 

@@ -13,6 +13,16 @@ from server import app
 import jwt
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.exit_sprint2
 @pytest.mark.anyio
 async def test_booking_lifecycle_v2_states_and_transitions(test_db: Any) -> None:
@@ -100,7 +110,7 @@ async def test_booking_lifecycle_v2_api_flow_with_org_isolation(test_db: Any) ->
             headers={"Authorization": f"Bearer {token_a}"},
         )
         assert resp_create.status_code == status.HTTP_201_CREATED
-        booking = resp_create.json()
+        booking = _unwrap(resp_create)
         assert booking["state"] == "draft"
         assert booking["organization_id"] == org_a_id
         booking_id = booking["id"]
@@ -111,7 +121,7 @@ async def test_booking_lifecycle_v2_api_flow_with_org_isolation(test_db: Any) ->
             headers={"Authorization": f"Bearer {token_a}"},
         )
         assert resp_quote.status_code == status.HTTP_200_OK
-        quoted = resp_quote.json()
+        quoted = _unwrap(resp_quote)
         assert quoted["state"] == "quoted"
 
         resp_book = await client.post(
@@ -119,7 +129,7 @@ async def test_booking_lifecycle_v2_api_flow_with_org_isolation(test_db: Any) ->
             headers={"Authorization": f"Bearer {token_a}"},
         )
         assert resp_book.status_code == status.HTTP_200_OK
-        booked = resp_book.json()
+        booked = _unwrap(resp_book)
         assert booked["state"] == "booked"
 
         resp_modify = await client.post(
@@ -127,7 +137,7 @@ async def test_booking_lifecycle_v2_api_flow_with_org_isolation(test_db: Any) ->
             headers={"Authorization": f"Bearer {token_a}"},
         )
         assert resp_modify.status_code == status.HTTP_200_OK
-        modified = resp_modify.json()
+        modified = _unwrap(resp_modify)
         assert modified["state"] == "modified"
 
         resp_requote = await client.post(
@@ -135,7 +145,7 @@ async def test_booking_lifecycle_v2_api_flow_with_org_isolation(test_db: Any) ->
             headers={"Authorization": f"Bearer {token_a}"},
         )
         assert resp_requote.status_code == status.HTTP_200_OK
-        requoted = resp_requote.json()
+        requoted = _unwrap(resp_requote)
         assert requoted["state"] == "quoted"
 
 
@@ -190,7 +200,7 @@ async def test_booking_lifecycle_v2_invalid_http_transitions(test_db: Any) -> No
             headers={"Authorization": f"Bearer {token}"},
         )
         assert resp_create.status_code == status.HTTP_201_CREATED
-        booking = resp_create.json()
+        booking = _unwrap(resp_create)
         booking_id = booking["id"]
 
         resp_invalid_refund_approve = await client.post(
@@ -198,7 +208,7 @@ async def test_booking_lifecycle_v2_invalid_http_transitions(test_db: Any) -> No
             headers={"Authorization": f"Bearer {token}"},
         )
         assert resp_invalid_refund_approve.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-        body = resp_invalid_refund_approve.json()
+        body = _unwrap(resp_invalid_refund_approve)
         # Our global error format wraps detail inside error.message
         assert body.get("error", {}).get("message") == "INVALID_STATE_TRANSITION"
 
@@ -209,7 +219,7 @@ async def test_booking_lifecycle_v2_invalid_http_transitions(test_db: Any) -> No
             headers={"Authorization": f"Bearer {token}"},
         )
         assert resp_create2.status_code == status.HTTP_201_CREATED
-        booking2_id = resp_create2.json()["id"]
+        booking2_id = _unwrap(resp_create2)["id"]
 
         await client.post(f"/api/bookings/{booking2_id}/quote", headers={"Authorization": f"Bearer {token}"})
         await client.post(f"/api/bookings/{booking2_id}/book", headers={"Authorization": f"Bearer {token}"})
@@ -227,7 +237,7 @@ async def test_booking_lifecycle_v2_invalid_http_transitions(test_db: Any) -> No
             headers={"Authorization": f"Bearer {token}"},
         )
         assert resp_invalid_book.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-        body2 = resp_invalid_book.json()
+        body2 = _unwrap(resp_invalid_book)
         assert body2.get("error", {}).get("message") == "INVALID_STATE_TRANSITION"
 
         # Happy path 2: draft -> quoted -> booked -> refund-request -> refund-approve -> refunded
@@ -238,7 +248,7 @@ async def test_booking_lifecycle_v2_invalid_http_transitions(test_db: Any) -> No
             headers={"Authorization": f"Bearer {token}"},
         )
         assert resp_create2.status_code == status.HTTP_201_CREATED
-        booking2 = resp_create2.json()
+        booking2 = _unwrap(resp_create2)
         booking2_id = booking2["id"]
 
         resp_quote2 = await client.post(
@@ -258,7 +268,7 @@ async def test_booking_lifecycle_v2_invalid_http_transitions(test_db: Any) -> No
             headers={"Authorization": f"Bearer {token}"},
         )
         assert resp_refund_req.status_code == status.HTTP_200_OK
-        refund_in_progress = resp_refund_req.json()
+        refund_in_progress = _unwrap(resp_refund_req)
         assert refund_in_progress["state"] == "refund_in_progress"
 
         resp_refund_ok = await client.post(
@@ -266,7 +276,7 @@ async def test_booking_lifecycle_v2_invalid_http_transitions(test_db: Any) -> No
             headers={"Authorization": f"Bearer {token}"},
         )
         assert resp_refund_ok.status_code == status.HTTP_200_OK
-        refunded = resp_refund_ok.json()
+        refunded = _unwrap(resp_refund_ok)
         assert refunded["state"] == "refunded"
 
         # OrgB must not see OrgA's booking2 in list or by id
@@ -275,7 +285,7 @@ async def test_booking_lifecycle_v2_invalid_http_transitions(test_db: Any) -> No
             headers={"Authorization": f"Bearer {token_b}"},
         )
         assert resp_list_b.status_code == status.HTTP_200_OK
-        bookings_b = resp_list_b.json()
+        bookings_b = _unwrap(resp_list_b)
         assert all(bk["id"] != booking2_id for bk in bookings_b)
 
         resp_get_b = await client.get(

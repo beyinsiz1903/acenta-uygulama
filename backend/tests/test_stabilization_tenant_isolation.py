@@ -15,6 +15,16 @@ from bson import ObjectId
 
 from app.utils import now_utc
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 pytestmark = pytest.mark.anyio
 
 
@@ -32,7 +42,7 @@ class TestTenantContext:
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "organization_id" in data
         assert data["organization_id"] is not None
 
@@ -43,7 +53,7 @@ class TestTenantContext:
             headers={"Authorization": f"Bearer {agency_token}"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "organization_id" in data
 
 
@@ -61,7 +71,7 @@ class TestCrossTenantIsolation:
             "/api/auth/me",
             headers={"Authorization": f"Bearer {agency_token}"},
         )
-        me_resp.json()["organization_id"]
+        _unwrap(me_resp)["organization_id"]
 
         # Insert a booking in a DIFFERENT org
         other_org = "org_other_" + ObjectId().__str__()[:8]
@@ -78,7 +88,7 @@ class TestCrossTenantIsolation:
             headers={"Authorization": f"Bearer {agency_token}"},
         )
         if resp.status_code == 200:
-            data = resp.json()
+            data = _unwrap(resp)
             items = data if isinstance(data, list) else data.get("items", data.get("bookings", []))
             for item in items:
                 # No booking should belong to other_org
@@ -90,7 +100,7 @@ class TestCrossTenantIsolation:
             "/api/auth/me",
             headers={"Authorization": f"Bearer {agency_token}"},
         )
-        me_resp.json()["organization_id"]
+        _unwrap(me_resp)["organization_id"]
 
         other_org = "org_other_" + ObjectId().__str__()[:8]
         await test_db.customers.insert_one({
@@ -105,7 +115,7 @@ class TestCrossTenantIsolation:
             headers={"Authorization": f"Bearer {agency_token}"},
         )
         if resp.status_code == 200:
-            data = resp.json()
+            data = _unwrap(resp)
             items = data if isinstance(data, list) else data.get("items", data.get("customers", []))
             for item in items:
                 assert item.get("organization_id") != other_org

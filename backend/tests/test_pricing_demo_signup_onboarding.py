@@ -14,6 +14,16 @@ import os
 import uuid
 from datetime import datetime
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 
@@ -29,7 +39,7 @@ class TestOnboardingPlansAPI:
     def test_plans_response_structure(self):
         """Response should have 'plans' array"""
         response = requests.get(f"{BASE_URL}/api/onboarding/plans")
-        data = response.json()
+        data = _unwrap(response)
         assert "plans" in data, "Response should contain 'plans' key"
         assert isinstance(data["plans"], list), "'plans' should be an array"
         print(f"✅ Plans response contains {len(data['plans'])} plans")
@@ -37,7 +47,7 @@ class TestOnboardingPlansAPI:
     def test_trial_plan_is_not_public(self):
         """Trial plan should have is_public=False"""
         response = requests.get(f"{BASE_URL}/api/onboarding/plans")
-        data = response.json()
+        data = _unwrap(response)
         trial_plan = next((p for p in data["plans"] if p["key"] == "trial"), None)
         assert trial_plan is not None, "Trial plan should exist in catalog"
         assert not trial_plan.get("is_public"), "Trial plan should have is_public=False"
@@ -46,7 +56,7 @@ class TestOnboardingPlansAPI:
     def test_starter_plan_is_public(self):
         """Starter plan should have is_public=True"""
         response = requests.get(f"{BASE_URL}/api/onboarding/plans")
-        data = response.json()
+        data = _unwrap(response)
         starter = next((p for p in data["plans"] if p["key"] == "starter"), None)
         assert starter is not None, "Starter plan should exist"
         assert starter.get("is_public"), "Starter plan should be public"
@@ -55,7 +65,7 @@ class TestOnboardingPlansAPI:
     def test_pro_plan_is_public(self):
         """Pro plan should have is_public=True"""
         response = requests.get(f"{BASE_URL}/api/onboarding/plans")
-        data = response.json()
+        data = _unwrap(response)
         pro = next((p for p in data["plans"] if p["key"] == "pro"), None)
         assert pro is not None, "Pro plan should exist"
         assert pro.get("is_public"), "Pro plan should be public"
@@ -64,7 +74,7 @@ class TestOnboardingPlansAPI:
     def test_enterprise_plan_is_public(self):
         """Enterprise plan should have is_public=True"""
         response = requests.get(f"{BASE_URL}/api/onboarding/plans")
-        data = response.json()
+        data = _unwrap(response)
         enterprise = next((p for p in data["plans"] if p["key"] == "enterprise"), None)
         assert enterprise is not None, "Enterprise plan should exist"
         assert enterprise.get("is_public"), "Enterprise plan should be public"
@@ -73,7 +83,7 @@ class TestOnboardingPlansAPI:
     def test_starter_pricing_990_try(self):
         """Starter plan should cost ₺990/month"""
         response = requests.get(f"{BASE_URL}/api/onboarding/plans")
-        data = response.json()
+        data = _unwrap(response)
         starter = next((p for p in data["plans"] if p["key"] == "starter"), None)
         assert starter["pricing"]["monthly"] == 990, f"Starter should be 990, got {starter['pricing'].get('monthly')}"
         assert starter["pricing"]["currency"] == "TRY", "Currency should be TRY"
@@ -82,7 +92,7 @@ class TestOnboardingPlansAPI:
     def test_pro_pricing_2490_try(self):
         """Pro plan should cost ₺2,490/month"""
         response = requests.get(f"{BASE_URL}/api/onboarding/plans")
-        data = response.json()
+        data = _unwrap(response)
         pro = next((p for p in data["plans"] if p["key"] == "pro"), None)
         assert pro["pricing"]["monthly"] == 2490, f"Pro should be 2490, got {pro['pricing'].get('monthly')}"
         assert pro["pricing"]["currency"] == "TRY", "Currency should be TRY"
@@ -91,7 +101,7 @@ class TestOnboardingPlansAPI:
     def test_enterprise_pricing_6990_try(self):
         """Enterprise plan should cost ₺6,990/month"""
         response = requests.get(f"{BASE_URL}/api/onboarding/plans")
-        data = response.json()
+        data = _unwrap(response)
         enterprise = next((p for p in data["plans"] if p["key"] == "enterprise"), None)
         assert enterprise["pricing"]["monthly"] == 6990, f"Enterprise should be 6990, got {enterprise['pricing'].get('monthly')}"
         assert enterprise["pricing"]["currency"] == "TRY", "Currency should be TRY"
@@ -100,7 +110,7 @@ class TestOnboardingPlansAPI:
     def test_pro_plan_is_popular(self):
         """Pro plan should be marked as popular"""
         response = requests.get(f"{BASE_URL}/api/onboarding/plans")
-        data = response.json()
+        data = _unwrap(response)
         pro = next((p for p in data["plans"] if p["key"] == "pro"), None)
         assert pro.get("is_popular"), "Pro plan should be marked as popular"
         print("✅ Pro plan is marked as 'popular' (En Popüler)")
@@ -108,7 +118,7 @@ class TestOnboardingPlansAPI:
     def test_starter_limits_100_reservations_3_users(self):
         """Starter plan: 100 reservations/month, 3 users"""
         response = requests.get(f"{BASE_URL}/api/onboarding/plans")
-        data = response.json()
+        data = _unwrap(response)
         starter = next((p for p in data["plans"] if p["key"] == "starter"), None)
         limits = starter.get("limits", {})
         assert limits.get("users.active") == 3, f"Starter users should be 3, got {limits.get('users.active')}"
@@ -118,7 +128,7 @@ class TestOnboardingPlansAPI:
     def test_pro_limits_500_reservations_10_users(self):
         """Pro plan: 500 reservations/month, 10 users"""
         response = requests.get(f"{BASE_URL}/api/onboarding/plans")
-        data = response.json()
+        data = _unwrap(response)
         pro = next((p for p in data["plans"] if p["key"] == "pro"), None)
         limits = pro.get("limits", {})
         assert limits.get("users.active") == 10, f"Pro users should be 10, got {limits.get('users.active')}"
@@ -128,7 +138,7 @@ class TestOnboardingPlansAPI:
     def test_enterprise_limits_unlimited(self):
         """Enterprise plan: unlimited reservations and users (null values)"""
         response = requests.get(f"{BASE_URL}/api/onboarding/plans")
-        data = response.json()
+        data = _unwrap(response)
         enterprise = next((p for p in data["plans"] if p["key"] == "enterprise"), None)
         limits = enterprise.get("limits", {})
         assert limits.get("users.active") is None, f"Enterprise users should be unlimited (null), got {limits.get('users.active')}"
@@ -138,7 +148,7 @@ class TestOnboardingPlansAPI:
     def test_trial_limits_100_reservations_2_users(self):
         """Trial plan: 100 reservations, 2 users as per revised spec"""
         response = requests.get(f"{BASE_URL}/api/onboarding/plans")
-        data = response.json()
+        data = _unwrap(response)
         trial = next((p for p in data["plans"] if p["key"] == "trial"), None)
         limits = trial.get("limits", {})
         assert limits.get("users.active") == 2, f"Trial users should be 2, got {limits.get('users.active')}"
@@ -164,7 +174,7 @@ class TestOnboardingSignupAPI:
 
         # Check response
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify plan is trial
         assert data.get("plan") == "trial", f"Plan should be 'trial', got {data.get('plan')}"
@@ -184,7 +194,7 @@ class TestOnboardingSignupAPI:
         response = requests.post(f"{BASE_URL}/api/onboarding/signup", json=payload)
         assert response.status_code == 200, f"Signup failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "trial_end" in data, "Response should include trial_end"
 
         # Parse and validate trial_end is ~14 days from now
@@ -208,7 +218,7 @@ class TestOnboardingSignupAPI:
         response = requests.post(f"{BASE_URL}/api/onboarding/signup", json=payload)
         assert response.status_code == 200, f"Signup failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "access_token" in data, "Response should include access_token"
         assert len(data["access_token"]) > 50, "Token should be a valid JWT"
         print("✅ Signup returns access_token for auto-login")
@@ -225,7 +235,7 @@ class TestOnboardingSignupAPI:
         response = requests.post(f"{BASE_URL}/api/onboarding/signup", json=payload)
         assert response.status_code == 200, f"Signup failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         assert "org_id" in data, "Response should include org_id"
         assert "tenant_id" in data, "Response should include tenant_id"
         assert "user_id" in data, "Response should include user_id"
@@ -274,7 +284,7 @@ class TestOnboardingSignupAPI:
         response = requests.post(f"{BASE_URL}/api/onboarding/signup", json=payload)
         assert response.status_code == 200, f"Signup failed: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         # Backend accepts 'pro' as a preference but creates trial subscription
         # This is by design - signup always starts with trial
         assert data.get("plan") in ["trial", "pro"], f"Plan should be trial (or pro if allowed), got {data.get('plan')}"
@@ -287,7 +297,7 @@ class TestPlanSorting:
     def test_plans_have_sort_order(self):
         """Each plan should have sort_order field"""
         response = requests.get(f"{BASE_URL}/api/onboarding/plans")
-        data = response.json()
+        data = _unwrap(response)
         for plan in data["plans"]:
             assert "sort_order" in plan, f"Plan {plan['key']} missing sort_order"
         print("✅ All plans have sort_order field")
@@ -295,7 +305,7 @@ class TestPlanSorting:
     def test_trial_sort_order_is_0(self):
         """Trial should have lowest sort_order"""
         response = requests.get(f"{BASE_URL}/api/onboarding/plans")
-        data = response.json()
+        data = _unwrap(response)
         trial = next((p for p in data["plans"] if p["key"] == "trial"), None)
         assert trial["sort_order"] == 0, f"Trial sort_order should be 0, got {trial['sort_order']}"
         print("✅ Trial has sort_order=0")
@@ -303,7 +313,7 @@ class TestPlanSorting:
     def test_plan_order_is_trial_starter_pro_enterprise(self):
         """Plans should be ordered: trial, starter, pro, enterprise"""
         response = requests.get(f"{BASE_URL}/api/onboarding/plans")
-        data = response.json()
+        data = _unwrap(response)
 
         sorted_plans = sorted(data["plans"], key=lambda p: p.get("sort_order", 999))
         keys = [p["key"] for p in sorted_plans]

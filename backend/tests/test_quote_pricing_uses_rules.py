@@ -167,7 +167,7 @@ async def test_quote_pricing_uses_rules_for_agency1_vs_other(async_client, admin
 
     resp_a1 = await client.post("/api/b2b/quotes", json=payload, headers=headers_agency1)
     assert resp_a1.status_code == 200, resp_a1.text
-    qa = resp_a1.json()
+    qa = _unwrap(resp_a1)
     assert qa["offers"], "No offers returned for agency1"
 
     offer_a1 = qa["offers"][0]
@@ -186,6 +186,16 @@ async def test_quote_pricing_uses_rules_for_agency1_vs_other(async_client, admin
 
     # Diğer agency kullanıcı token'ını manuel olarak al
     from app.auth import create_access_token
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     token_other = create_access_token(
         subject=other_user["email"],  # Use email as subject, not user ID

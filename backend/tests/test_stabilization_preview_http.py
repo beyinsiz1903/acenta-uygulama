@@ -26,7 +26,7 @@ class TestHealthEndpointsHTTP:
         """GET /api/health returns {status: 'ok', timestamp: ...}."""
         resp = requests.get(f"{BASE_URL}/api/health", timeout=10)
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("status") == "ok", f"Expected status 'ok', got: {data}"
         assert "timestamp" in data, f"Missing 'timestamp' in response: {data}"
         print(f"✓ /api/health: status={data['status']}, timestamp={data['timestamp']}")
@@ -35,7 +35,7 @@ class TestHealthEndpointsHTTP:
         """GET /api/healthz returns {status: 'ok'}."""
         resp = requests.get(f"{BASE_URL}/api/healthz", timeout=10)
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("status") == "ok", f"Expected status 'ok', got: {data}"
         print(f"✓ /api/healthz: {data}")
 
@@ -43,7 +43,7 @@ class TestHealthEndpointsHTTP:
         """GET /api/health/ready returns MongoDB connectivity check with latency_ms."""
         resp = requests.get(f"{BASE_URL}/api/health/ready", timeout=10)
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("status") in ("ok", "degraded"), f"Unexpected status: {data}"
         assert "checks" in data, f"Missing 'checks' in response: {data}"
         assert "mongodb" in data["checks"], f"Missing 'mongodb' in checks: {data}"
@@ -55,7 +55,7 @@ class TestHealthEndpointsHTTP:
         """GET /api/health/deep returns collection stats for critical collections."""
         resp = requests.get(f"{BASE_URL}/api/health/deep", timeout=15)
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "checks" in data, f"Missing 'checks' in response: {data}"
 
         if "mongodb" in data["checks"] and data["checks"]["mongodb"].get("status") == "ok":
@@ -82,7 +82,7 @@ class TestAuthEndpointsHTTP:
             timeout=10,
         )
         assert resp.status_code == 200, f"Admin login failed: {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "access_token" in data, f"Missing 'access_token': {data}"
         assert data.get("user", {}).get("email") == "agent@acenta.test", f"Wrong user email: {data}"
         print(f"✓ Admin login successful: token length={len(data['access_token'])}")
@@ -96,7 +96,7 @@ class TestAuthEndpointsHTTP:
             timeout=10,
         )
         assert resp.status_code == 200, f"Agency login failed: {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "access_token" in data, f"Missing 'access_token': {data}"
         print(f"✓ Agency login successful: token length={len(data['access_token'])}")
         return data["access_token"]
@@ -120,7 +120,7 @@ class TestAuthEndpointsHTTP:
             timeout=10,
         )
         assert login_resp.status_code == 200
-        token = login_resp.json()["access_token"]
+        token = _unwrap(login_resp)["access_token"]
 
         # Now test /api/auth/me
         resp = requests.get(
@@ -129,7 +129,7 @@ class TestAuthEndpointsHTTP:
             timeout=10,
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "email" in data, f"Missing 'email': {data}"
         assert "organization_id" in data, f"Missing 'organization_id': {data}"
         print(f"✓ /api/auth/me: email={data['email']}, org_id={data['organization_id']}")
@@ -225,7 +225,7 @@ class TestCSRFMiddleware:
             timeout=10,
         )
         assert login_resp.status_code == 200
-        token = login_resp.json()["access_token"]
+        token = _unwrap(login_resp)["access_token"]
 
         # Make a state-changing request with Bearer token (should work without CSRF)
         # Using /api/auth/me as a safe endpoint to test
@@ -241,6 +241,16 @@ class TestCSRFMiddleware:
 if __name__ == "__main__":
     # Run tests
     import sys
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     print(f"\n{'='*60}")
     print(f"Running Stabilization Tests against: {BASE_URL}")

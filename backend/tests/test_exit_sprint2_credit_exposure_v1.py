@@ -13,6 +13,16 @@ from app.utils import now_utc
 from app.services.org_service import initialize_org_defaults
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.exit_sprint2
 @pytest.mark.anyio
 async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any, async_client: AsyncClient) -> None:
@@ -79,7 +89,7 @@ async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any, async_c
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_create_a.status_code == status.HTTP_201_CREATED
-    booking_a = resp_create_a.json()
+    booking_a = _unwrap(resp_create_a)
     booking_a_id = booking_a["id"]
 
     await client.post(
@@ -91,7 +101,7 @@ async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any, async_c
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_book_a.status_code == status.HTTP_200_OK
-    booked_a = resp_book_a.json()
+    booked_a = _unwrap(resp_book_a)
     assert booked_a["state"] == "booked"
 
     # Case B: create high exposure so that next booking exceeds limit
@@ -104,7 +114,7 @@ async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any, async_c
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_create_exposure.status_code == status.HTTP_201_CREATED
-    booking_exposure_id = resp_create_exposure.json()["id"]
+    booking_exposure_id = _unwrap(resp_create_exposure)["id"]
 
     await client.post(
         f"/api/bookings/{booking_exposure_id}/quote",
@@ -115,7 +125,7 @@ async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any, async_c
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_book_exposure.status_code == status.HTTP_200_OK
-    assert resp_book_exposure.json()["state"] == "booked"
+    assert _unwrap(resp_book_exposure)["state"] == "booked"
 
     # Now a new booking that would exceed limit should be held
     resp_create_hold = await client.post(
@@ -124,7 +134,7 @@ async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any, async_c
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_create_hold.status_code == status.HTTP_201_CREATED
-    booking_hold = resp_create_hold.json()
+    booking_hold = _unwrap(resp_create_hold)
     booking_hold_id = booking_hold["id"]
 
     await client.post(
@@ -136,7 +146,7 @@ async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any, async_c
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_book_hold.status_code == status.HTTP_200_OK
-    held = resp_book_hold.json()
+    held = _unwrap(resp_book_hold)
     assert held["state"] == "hold"
 
     # OrgB must not see OrgA's held booking

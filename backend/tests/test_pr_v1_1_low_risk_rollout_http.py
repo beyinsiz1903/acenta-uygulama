@@ -16,6 +16,14 @@ import os
 import pytest
 import requests
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Admin credentials
@@ -40,7 +48,7 @@ def admin_auth_token(api_client):
         headers={"X-Client-Platform": "web"},
     )
     if response.status_code == 200:
-        data = response.json()
+        data = _unwrap(response)
         return data.get("access_token") or data.get("token")
     pytest.skip(f"Authentication failed: {response.status_code} - {response.text}")
 
@@ -63,7 +71,7 @@ class TestHealthEndpoints:
         """GET /api/health - legacy route should respond"""
         response = api_client.get(f"{BASE_URL}/api/health")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "status" in data or "healthy" in data or data == {"status": "ok"} or data.get("status") == "healthy"
         print(f"✅ GET /api/health -> {response.status_code}")
 
@@ -71,7 +79,7 @@ class TestHealthEndpoints:
         """GET /api/v1/health - v1 alias should respond identically"""
         response = api_client.get(f"{BASE_URL}/api/v1/health")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "status" in data or "healthy" in data or data == {"status": "ok"} or data.get("status") == "healthy"
         print(f"✅ GET /api/v1/health -> {response.status_code}")
 
@@ -299,8 +307,8 @@ class TestLegacyV1Parity:
 
         assert legacy_resp.status_code == v1_resp.status_code
         # Both should return similar structure (status key)
-        legacy_data = legacy_resp.json()
-        v1_data = v1_resp.json()
+        legacy_data = _unwrap(legacy_resp)
+        v1_data = _unwrap(v1_resp)
         assert ("status" in legacy_data) == ("status" in v1_data)
         print("✅ /api/health and /api/v1/health have parity")
 

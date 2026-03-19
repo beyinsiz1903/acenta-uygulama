@@ -13,6 +13,16 @@ import os
 
 from tests.preview_auth_helper import get_preview_auth_context, get_preview_base_url_or_skip
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = get_preview_base_url_or_skip(os.environ.get('REACT_APP_BACKEND_URL', ''))
 
 # Test credentials
@@ -68,7 +78,7 @@ class TestAgencyModulesEndpoints:
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "agency_id" in data
         assert "agency_name" in data
         assert "allowed_modules" in data
@@ -88,7 +98,7 @@ class TestAgencyModulesEndpoints:
             json={"allowed_modules": new_modules}
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["allowed_modules"] == new_modules
 
         # Verify GET returns updated modules
@@ -97,13 +107,13 @@ class TestAgencyModulesEndpoints:
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert get_resp.status_code == 200
-        assert get_resp.json()["allowed_modules"] == new_modules
+        assert _unwrap(get_resp)["allowed_modules"] == new_modules
 
     def test_get_modules_without_auth_401(self):
         """GET /api/admin/agencies/{id}/modules without auth returns 401"""
         resp = requests.get(f"{BASE_URL}/api/admin/agencies/{TEST_AGENCY_ID}/modules")
         # Could be 401 or response with error code
-        assert resp.status_code in [401, 403] or "error" in resp.json()
+        assert resp.status_code in [401, 403] or "error" in _unwrap(resp)
 
     def test_put_modules_without_auth_401(self):
         """PUT /api/admin/agencies/{id}/modules without auth returns 401"""
@@ -112,7 +122,7 @@ class TestAgencyModulesEndpoints:
             headers={"Content-Type": "application/json"},
             json={"allowed_modules": ["dashboard"]}
         )
-        assert resp.status_code in [401, 403] or "error" in resp.json()
+        assert resp.status_code in [401, 403] or "error" in _unwrap(resp)
 
     def test_get_nonexistent_agency_404(self, admin_token):
         """GET modules for non-existent agency returns 404"""
@@ -134,7 +144,7 @@ class TestAgencyProfileEndpoint:
             headers={"Authorization": f"Bearer {agent_token}"}
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "agency_id" in data
         assert "name" in data
         assert "allowed_modules" in data
@@ -147,7 +157,7 @@ class TestAgencyProfileEndpoint:
             headers={"Authorization": f"Bearer {agent_token}"}
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["agency_id"] == TEST_AGENCY_ID
 
     def test_profile_modules_match_admin_settings(self, admin_token, agent_token):
@@ -169,13 +179,13 @@ class TestAgencyProfileEndpoint:
             headers={"Authorization": f"Bearer {agent_token}"}
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["allowed_modules"] == test_modules
 
     def test_profile_without_auth_401(self):
         """GET /api/agency/profile without auth returns 401"""
         resp = requests.get(f"{BASE_URL}/api/agency/profile")
-        assert resp.status_code in [401, 403] or "error" in resp.json()
+        assert resp.status_code in [401, 403] or "error" in _unwrap(resp)
 
 
 class TestWhitelabelBrandingEndpoints:
@@ -188,7 +198,7 @@ class TestWhitelabelBrandingEndpoints:
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "can_edit_name" in data
         assert data["can_edit_name"], "super_admin should have can_edit_name=true"
 
@@ -204,7 +214,7 @@ class TestWhitelabelBrandingEndpoints:
             json={"company_name": test_name, "primary_color": "#3b82f6"}
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("company_name") == test_name
 
     def test_put_colors_and_logo(self, admin_token):
@@ -222,7 +232,7 @@ class TestWhitelabelBrandingEndpoints:
             }
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("primary_color") == "#ef4444"
         assert data.get("logo_url") == "https://example.com/logo.png"
         assert data.get("support_email") == "support@test.com"
@@ -230,7 +240,7 @@ class TestWhitelabelBrandingEndpoints:
     def test_whitelabel_without_auth_401(self):
         """GET /api/admin/whitelabel-settings without auth returns 401"""
         resp = requests.get(f"{BASE_URL}/api/admin/whitelabel-settings")
-        assert resp.status_code in [401, 403] or "error" in resp.json()
+        assert resp.status_code in [401, 403] or "error" in _unwrap(resp)
 
 
 class TestCleanup:
@@ -248,7 +258,7 @@ class TestCleanup:
             json={"allowed_modules": original_modules}
         )
         assert resp.status_code == 200
-        assert resp.json()["allowed_modules"] == original_modules
+        assert _unwrap(resp)["allowed_modules"] == original_modules
 
     def test_reset_branding(self, admin_token):
         """Reset branding to default"""

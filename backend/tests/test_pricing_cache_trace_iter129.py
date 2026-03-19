@@ -15,6 +15,16 @@ import time
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 
@@ -29,7 +39,7 @@ class TestPricingAuth:
             "password": "agent123"
         })
         assert response.status_code == 200, f"Login failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "access_token" in data, f"Missing access_token in response: {data}"
         return data["access_token"]
     
@@ -59,7 +69,7 @@ class TestPricingTraceId(TestPricingAuth):
         response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate", 
                                  json=payload, headers=auth_headers)
         assert response.status_code == 200, f"Simulate failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "pricing_trace_id" in data, f"Missing pricing_trace_id: {data.keys()}"
         print(f"pricing_trace_id: {data['pricing_trace_id']}")
     
@@ -75,7 +85,7 @@ class TestPricingTraceId(TestPricingAuth):
         response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate",
                                  json=payload, headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         trace_id = data.get("pricing_trace_id", "")
         # Check format: prc_ followed by 8 hex characters
         pattern = r"^prc_[0-9a-f]{8}$"
@@ -97,7 +107,7 @@ class TestPricingTraceId(TestPricingAuth):
             response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate",
                                      json=payload, headers=auth_headers)
             assert response.status_code == 200
-            trace_id = response.json().get("pricing_trace_id")
+            trace_id = _unwrap(response).get("pricing_trace_id")
             assert trace_id, f"Missing trace_id in response {i}"
             assert trace_id not in trace_ids, f"Duplicate trace_id: {trace_id}"
             trace_ids.add(trace_id)
@@ -118,7 +128,7 @@ class TestPricingCache(TestPricingAuth):
         response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate",
                                  json=payload, headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "cache_hit" in data, f"Missing cache_hit: {data.keys()}"
         assert isinstance(data["cache_hit"], bool), f"cache_hit should be bool: {type(data['cache_hit'])}"
         print(f"cache_hit: {data['cache_hit']}")
@@ -134,7 +144,7 @@ class TestPricingCache(TestPricingAuth):
         response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate",
                                  json=payload, headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "latency_ms" in data, f"Missing latency_ms: {data.keys()}"
         assert isinstance(data["latency_ms"], (int, float)), f"latency_ms should be numeric: {type(data['latency_ms'])}"
         assert data["latency_ms"] >= 0, f"latency_ms should be non-negative: {data['latency_ms']}"
@@ -151,7 +161,7 @@ class TestPricingCache(TestPricingAuth):
         response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate",
                                  json=payload, headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "cache_key" in data, f"Missing cache_key: {data.keys()}"
         # Cache key should be a 16-char hex string
         cache_key = data["cache_key"]
@@ -175,7 +185,7 @@ class TestPricingCache(TestPricingAuth):
         response = requests.post(f"{BASE_URL}/api/pricing-engine/simulate",
                                  json=payload, headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["cache_hit"] == False, f"First call should be MISS: cache_hit={data['cache_hit']}"
         print(f"First call: cache_hit=False (MISS), latency={data['latency_ms']}ms")
     
@@ -198,7 +208,7 @@ class TestPricingCache(TestPricingAuth):
         resp1 = requests.post(f"{BASE_URL}/api/pricing-engine/simulate",
                               json=payload, headers=auth_headers)
         assert resp1.status_code == 200
-        data1 = resp1.json()
+        data1 = _unwrap(resp1)
         assert data1["cache_hit"] == False, "First call should be MISS"
         sell_price_1 = data1["sell_price"]
         latency_1 = data1["latency_ms"]
@@ -207,7 +217,7 @@ class TestPricingCache(TestPricingAuth):
         resp2 = requests.post(f"{BASE_URL}/api/pricing-engine/simulate",
                               json=payload, headers=auth_headers)
         assert resp2.status_code == 200
-        data2 = resp2.json()
+        data2 = _unwrap(resp2)
         assert data2["cache_hit"] == True, "Second identical call should be HIT"
         sell_price_2 = data2["sell_price"]
         latency_2 = data2["latency_ms"]
@@ -231,13 +241,13 @@ class TestPricingCache(TestPricingAuth):
         # First call
         resp1 = requests.post(f"{BASE_URL}/api/pricing-engine/simulate",
                               json=payload, headers=auth_headers)
-        data1 = resp1.json()
+        data1 = _unwrap(resp1)
         sell_price_1 = data1["sell_price"]
         
         # Second call
         resp2 = requests.post(f"{BASE_URL}/api/pricing-engine/simulate",
                               json=payload, headers=auth_headers)
-        data2 = resp2.json()
+        data2 = _unwrap(resp2)
         sell_price_2 = data2["sell_price"]
         
         assert sell_price_1 == sell_price_2, f"Prices should match: {sell_price_1} vs {sell_price_2}"
@@ -258,13 +268,13 @@ class TestPricingCache(TestPricingAuth):
         # First call - MISS
         resp1 = requests.post(f"{BASE_URL}/api/pricing-engine/simulate",
                               json=payload, headers=auth_headers)
-        data1 = resp1.json()
+        data1 = _unwrap(resp1)
         latency_miss = data1["latency_ms"]
         
         # Second call - HIT
         resp2 = requests.post(f"{BASE_URL}/api/pricing-engine/simulate",
                               json=payload, headers=auth_headers)
-        data2 = resp2.json()
+        data2 = _unwrap(resp2)
         latency_hit = data2["latency_ms"]
         
         print(f"Latency MISS: {latency_miss}ms, Latency HIT: {latency_hit}ms")
@@ -286,14 +296,14 @@ class TestPricingCache(TestPricingAuth):
         # First call
         resp1 = requests.post(f"{BASE_URL}/api/pricing-engine/simulate",
                               json=base_payload, headers=auth_headers)
-        data1 = resp1.json()
+        data1 = _unwrap(resp1)
         cache_key_1 = data1["cache_key"]
         
         # Different channel
         payload2 = {**base_payload, "channel": "b2b"}
         resp2 = requests.post(f"{BASE_URL}/api/pricing-engine/simulate",
                               json=payload2, headers=auth_headers)
-        data2 = resp2.json()
+        data2 = _unwrap(resp2)
         cache_key_2 = data2["cache_key"]
         
         assert cache_key_1 != cache_key_2, f"Different params should have different cache keys: {cache_key_1} vs {cache_key_2}"
@@ -315,7 +325,7 @@ class TestCacheStatsEndpoint(TestPricingAuth):
         """Cache stats should include 'hits' field."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/cache/stats",
                                 headers=auth_headers)
-        data = response.json()
+        data = _unwrap(response)
         assert "hits" in data, f"Missing 'hits': {data.keys()}"
         assert isinstance(data["hits"], int), f"hits should be int: {type(data['hits'])}"
         print(f"Cache hits: {data['hits']}")
@@ -324,7 +334,7 @@ class TestCacheStatsEndpoint(TestPricingAuth):
         """Cache stats should include 'misses' field."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/cache/stats",
                                 headers=auth_headers)
-        data = response.json()
+        data = _unwrap(response)
         assert "misses" in data, f"Missing 'misses': {data.keys()}"
         assert isinstance(data["misses"], int), f"misses should be int: {type(data['misses'])}"
         print(f"Cache misses: {data['misses']}")
@@ -333,7 +343,7 @@ class TestCacheStatsEndpoint(TestPricingAuth):
         """Cache stats should include 'active_entries' field."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/cache/stats",
                                 headers=auth_headers)
-        data = response.json()
+        data = _unwrap(response)
         assert "active_entries" in data, f"Missing 'active_entries': {data.keys()}"
         assert isinstance(data["active_entries"], int), f"active_entries should be int"
         print(f"Active entries: {data['active_entries']}")
@@ -342,7 +352,7 @@ class TestCacheStatsEndpoint(TestPricingAuth):
         """Cache stats should include 'hit_rate_pct' field."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/cache/stats",
                                 headers=auth_headers)
-        data = response.json()
+        data = _unwrap(response)
         assert "hit_rate_pct" in data, f"Missing 'hit_rate_pct': {data.keys()}"
         assert isinstance(data["hit_rate_pct"], (int, float)), f"hit_rate_pct should be numeric"
         print(f"Hit rate: {data['hit_rate_pct']}%")
@@ -351,7 +361,7 @@ class TestCacheStatsEndpoint(TestPricingAuth):
         """Cache stats should include 'ttl_seconds' field (300s)."""
         response = requests.get(f"{BASE_URL}/api/pricing-engine/cache/stats",
                                 headers=auth_headers)
-        data = response.json()
+        data = _unwrap(response)
         assert "ttl_seconds" in data, f"Missing 'ttl_seconds': {data.keys()}"
         assert data["ttl_seconds"] == 300, f"TTL should be 300s: {data['ttl_seconds']}"
         print(f"TTL: {data['ttl_seconds']}s")
@@ -365,7 +375,7 @@ class TestCacheClearEndpoint(TestPricingAuth):
         response = requests.post(f"{BASE_URL}/api/pricing-engine/cache/clear",
                                  headers=auth_headers)
         assert response.status_code == 200, f"Cache clear failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("ok") == True, f"Cache clear should return ok=true: {data}"
         print(f"Cache clear: ok=true")
     
@@ -391,7 +401,7 @@ class TestCacheClearEndpoint(TestPricingAuth):
         # Check stats are reset
         stats_response = requests.get(f"{BASE_URL}/api/pricing-engine/cache/stats",
                                       headers=auth_headers)
-        stats = stats_response.json()
+        stats = _unwrap(stats_response)
         assert stats["hits"] == 0, f"Hits should be 0 after clear: {stats['hits']}"
         assert stats["misses"] == 0, f"Misses should be 0 after clear: {stats['misses']}"
         assert stats["active_entries"] == 0, f"Active entries should be 0 after clear: {stats['active_entries']}"

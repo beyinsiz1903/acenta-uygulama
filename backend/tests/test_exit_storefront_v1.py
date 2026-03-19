@@ -10,6 +10,16 @@ from httpx import AsyncClient
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.exit_storefront_v1
 @pytest.mark.anyio
 async def test_storefront_health_requires_tenant(test_db: Any, async_client: AsyncClient) -> None:
@@ -39,13 +49,13 @@ async def test_storefront_health_requires_tenant(test_db: Any, async_client: Asy
     # Without tenant -> TENANT_NOT_FOUND
     resp_no = await client.get("/storefront/health")
     assert resp_no.status_code == status.HTTP_404_NOT_FOUND
-    err_no = resp_no.json().get("error", {})
+    err_no = _unwrap(resp_no).get("error", {})
     assert err_no.get("message") == "TENANT_NOT_FOUND"
 
     # With tenant header -> 200
     resp_yes = await client.get("/storefront/health", headers={"X-Tenant-Key": "sf-tenant-a"})
     assert resp_yes.status_code == status.HTTP_200_OK
-    body = resp_yes.json()
+    body = _unwrap(resp_yes)
     assert body["ok"] is True
     assert body["tenant_key"] == "sf-tenant-a"
     assert body["tenant_id"] is not None
@@ -85,7 +95,7 @@ async def test_storefront_full_flow_happy_path(test_db: Any, async_client: Async
         headers={"X-Tenant-Key": "sf-tenant-b"},
     )
     assert resp_search.status_code == status.HTTP_200_OK
-    data_search = resp_search.json()
+    data_search = _unwrap(resp_search)
     search_id = data_search["search_id"]
     offers = data_search.get("offers") or []
     assert offers
@@ -98,7 +108,7 @@ async def test_storefront_full_flow_happy_path(test_db: Any, async_client: Async
         headers={"X-Tenant-Key": "sf-tenant-b"},
     )
     assert resp_offer.status_code == status.HTTP_200_OK
-    data_offer = resp_offer.json()
+    data_offer = _unwrap(resp_offer)
     assert data_offer["offer_id"] == first_offer["offer_id"]
 
     # 3) Create booking
@@ -118,7 +128,7 @@ async def test_storefront_full_flow_happy_path(test_db: Any, async_client: Async
         headers={"X-Tenant-Key": "sf-tenant-b"},
     )
     assert resp_book.status_code == status.HTTP_201_CREATED
-    data_book = resp_book.json()
+    data_book = _unwrap(resp_book)
     assert data_book["state"] == "draft"
     assert data_book["booking_id"]
 
@@ -167,7 +177,7 @@ async def test_storefront_session_expired_behaviour(test_db: Any, async_client: 
         headers={"X-Tenant-Key": "sf-tenant-c"},
     )
     assert resp_offer.status_code == status.HTTP_410_GONE
-    err_offer = resp_offer.json().get("error", {})
+    err_offer = _unwrap(resp_offer).get("error", {})
     assert err_offer.get("code") == "SESSION_EXPIRED"
 
     # bookings endpoint should also report SESSION_EXPIRED
@@ -185,7 +195,7 @@ async def test_storefront_session_expired_behaviour(test_db: Any, async_client: 
         headers={"X-Tenant-Key": "sf-tenant-c"},
     )
     assert resp_book.status_code == status.HTTP_410_GONE
-    err_book = resp_book.json().get("error", {})
+    err_book = _unwrap(resp_book).get("error", {})
     assert err_book.get("code") == "SESSION_EXPIRED"
 
 
@@ -243,7 +253,7 @@ async def test_storefront_cross_tenant_isolation_on_search_id(test_db: Any, asyn
         headers={"X-Tenant-Key": "sf-tenant-d1"},
     )
     assert resp_search_a.status_code == status.HTTP_200_OK
-    search_id_a = resp_search_a.json()["search_id"]
+    search_id_a = _unwrap(resp_search_a)["search_id"]
 
     # TenantB tries to re-use TenantA's search_id => SESSION_EXPIRED (no session for that tenant+search_id)
     resp_offer_b = await client.get(
@@ -252,5 +262,5 @@ async def test_storefront_cross_tenant_isolation_on_search_id(test_db: Any, asyn
         headers={"X-Tenant-Key": "sf-tenant-d2"},
     )
     assert resp_offer_b.status_code == status.HTTP_410_GONE
-    err_b = resp_offer_b.json().get("error", {})
+    err_b = _unwrap(resp_offer_b).get("error", {})
     assert err_b.get("code") == "SESSION_EXPIRED"

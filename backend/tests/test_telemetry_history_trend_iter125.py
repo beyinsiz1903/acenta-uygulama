@@ -13,6 +13,16 @@ import pytest
 import requests
 import time
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -28,7 +38,7 @@ def auth_token():
         json={"email": TEST_EMAIL, "password": TEST_PASSWORD},
     )
     if response.status_code == 200:
-        data = response.json()
+        data = _unwrap(response)
         # Handle both 'access_token' and 'token' fields
         token = data.get("access_token") or data.get("token")
         if token:
@@ -55,7 +65,7 @@ class TestTelemetryHistoryEndpoint:
             headers=auth_headers,
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify structure
         assert "period" in data, "Response should have 'period' field"
@@ -74,7 +84,7 @@ class TestTelemetryHistoryEndpoint:
             headers=auth_headers,
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["period"] == "daily", "Period should be 'daily'"
         assert isinstance(data["data"], list), "Data should be a list"
@@ -88,7 +98,7 @@ class TestTelemetryHistoryEndpoint:
             headers=auth_headers,
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["period"] == "weekly", "Period should be 'weekly'"
         assert isinstance(data["data"], list), "Data should be a list"
@@ -102,7 +112,7 @@ class TestTelemetryHistoryEndpoint:
             headers=auth_headers,
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["period"] == "hourly"
         assert data["supplier_filter"] == "ratehawk", "Supplier filter should be 'ratehawk'"
@@ -127,7 +137,7 @@ class TestTelemetryHistoryEndpoint:
             headers=auth_headers,
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         if data["data"]:
             point = data["data"][0]
@@ -164,7 +174,7 @@ class TestSnapshotCreationOnRun:
             json={"supplier": "ratehawk", "scenario": "success"},
         )
         assert run_response.status_code == 200, f"Run failed: {run_response.text}"
-        run_data = run_response.json()
+        run_data = _unwrap(run_response)
 
         # Verify expected fields in run result (no regression)
         assert "run_id" in run_data
@@ -183,7 +193,7 @@ class TestSnapshotCreationOnRun:
             headers=auth_headers,
         )
         assert history_response.status_code == 200
-        history_data = history_response.json()
+        history_data = _unwrap(history_response)
 
         # Should have at least 1 data point now
         assert history_data["total_points"] >= 1, "Should have at least 1 data point after running a test"
@@ -201,7 +211,7 @@ class TestNoRegression:
             headers=auth_headers,
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify structure from iteration 124
         assert "counters" in data, "Response should have 'counters' object"
@@ -229,7 +239,7 @@ class TestNoRegression:
         )
         assert response.status_code == 200
 
-        data = response.json()
+        data = _unwrap(response)
 
         # All expected fields from enriched response
         required_fields = [
@@ -292,7 +302,7 @@ class TestLimitParameter:
             headers=auth_headers,
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         # Should have at most 5 points
         assert data["total_points"] <= 5, f"Expected at most 5 points, got {data['total_points']}"

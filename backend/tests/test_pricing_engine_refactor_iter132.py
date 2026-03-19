@@ -22,6 +22,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -42,7 +52,7 @@ def auth_session():
     )
     
     if login_response.status_code == 200:
-        data = login_response.json()
+        data = _unwrap(login_response)
         token = data.get("access_token") or data.get("token")
         if token:
             session.headers.update({"Authorization": f"Bearer {token}"})
@@ -65,7 +75,7 @@ class TestPricingEngineDashboard:
         """Dashboard should return total_rules, active_rules, channel_count, etc."""
         response = auth_session.get(f"{BASE_URL}/api/pricing-engine/dashboard")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         # Verify expected fields exist
         expected_fields = ["total_rules", "active_rules", "channel_count", "active_promotions", "active_guardrails"]
@@ -114,7 +124,7 @@ class TestPricingSimulator:
         }
         response = auth_session.post(f"{BASE_URL}/api/pricing-engine/simulate", json=payload)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         expected_fields = ["sell_price", "margin", "margin_pct", "pipeline_steps", "per_night", "commission"]
         for field in expected_fields:
@@ -136,7 +146,7 @@ class TestCacheStats:
         """Cache stats should have entries, hits, misses, hit_rate, evictions, memory."""
         response = auth_session.get(f"{BASE_URL}/api/pricing-engine/cache/stats")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         expected_fields = ["total_entries", "active_entries", "hits", "misses", "hit_rate_pct", "evictions", "memory_usage_mb"]
         for field in expected_fields:
@@ -158,7 +168,7 @@ class TestCacheTelemetry:
         """Telemetry should have supplier_breakdown and other fields."""
         response = auth_session.get(f"{BASE_URL}/api/pricing-engine/cache/telemetry")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         assert "supplier_breakdown" in data, "Missing supplier_breakdown"
         assert "warming_status" in data, "Missing warming_status"
@@ -180,7 +190,7 @@ class TestCacheDiagnostics:
         """Diagnostics should return global_hit_rate, total_entries, memory, uptime, etc."""
         response = auth_session.get(f"{BASE_URL}/api/pricing-engine/cache/diagnostics")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         expected_fields = ["global_hit_rate", "total_entries", "memory_usage_mb", "evictions", "utilization_pct", "uptime_seconds"]
         for field in expected_fields:
@@ -202,7 +212,7 @@ class TestCacheAlerts:
         """Alerts should return active_alerts, alert_history, threshold_pct, min_requests."""
         response = auth_session.get(f"{BASE_URL}/api/pricing-engine/cache/alerts")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         expected_fields = ["active_alerts", "alert_history", "threshold_pct", "min_requests"]
         for field in expected_fields:
@@ -227,7 +237,7 @@ class TestDistributionRules:
         """Distribution rules should return a list."""
         response = auth_session.get(f"{BASE_URL}/api/pricing-engine/distribution-rules")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         assert isinstance(data, list), f"Expected list, got {type(data)}"
         print(f"✅ Distribution rules: {len(data)} rules found")
@@ -252,7 +262,7 @@ class TestChannels:
         """Channels should return a list."""
         response = auth_session.get(f"{BASE_URL}/api/pricing-engine/channels")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         assert isinstance(data, list), f"Expected list, got {type(data)}"
         print(f"✅ Channels: {len(data)} channels found")
@@ -271,7 +281,7 @@ class TestPromotions:
         """Promotions should return a list."""
         response = auth_session.get(f"{BASE_URL}/api/pricing-engine/promotions")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         assert isinstance(data, list), f"Expected list, got {type(data)}"
         print(f"✅ Promotions: {len(data)} promotions found")
@@ -290,7 +300,7 @@ class TestGuardrails:
         """Guardrails should return a list."""
         response = auth_session.get(f"{BASE_URL}/api/pricing-engine/guardrails")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         assert isinstance(data, list), f"Expected list, got {type(data)}"
         print(f"✅ Guardrails: {len(data)} guardrails found")
@@ -303,7 +313,7 @@ class TestCacheClear:
         """Cache clear endpoint should return 200."""
         response = auth_session.post(f"{BASE_URL}/api/pricing-engine/cache/clear")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("ok") == True, f"Expected ok=True, got {data}"
         print("✅ POST /api/pricing-engine/cache/clear returns 200 with ok=True")
 
@@ -321,7 +331,7 @@ class TestMetadata:
         """Metadata should return channels, seasons, promotion_types, etc."""
         response = auth_session.get(f"{BASE_URL}/api/pricing-engine/metadata")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         
         expected_fields = ["channels", "seasons", "promotion_types", "rule_categories", "agency_tiers"]
         for field in expected_fields:

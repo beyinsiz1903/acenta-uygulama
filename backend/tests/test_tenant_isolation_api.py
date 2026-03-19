@@ -14,6 +14,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 
@@ -28,7 +38,7 @@ class TestTenantIsolationAdminAPI:
             json={"email": "agent@acenta.test", "password": "agent123"},
         )
         assert response.status_code == 200, f"Login failed: {response.text}"
-        return response.json()["access_token"]
+        return _unwrap(response)["access_token"]
     
     @pytest.fixture(scope="class")
     def agency_admin_token(self):
@@ -38,7 +48,7 @@ class TestTenantIsolationAdminAPI:
             json={"email": "agency1@demo.test", "password": "agency123"},
         )
         assert response.status_code == 200, f"Login failed: {response.text}"
-        return response.json()["access_token"]
+        return _unwrap(response)["access_token"]
     
     # ============================================================================
     # Test: /api/admin/tenant-isolation/health
@@ -51,7 +61,7 @@ class TestTenantIsolationAdminAPI:
             headers={"Authorization": f"Bearer {super_admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("status") == "ok"
         assert "report" in data
         report = data["report"]
@@ -66,7 +76,7 @@ class TestTenantIsolationAdminAPI:
             headers={"Authorization": f"Bearer {agency_admin_token}"},
         )
         assert response.status_code == 200  # Returns 200 with error message
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("error") == "Super admin only"
     
     def test_health_no_auth_denied(self):
@@ -88,7 +98,7 @@ class TestTenantIsolationAdminAPI:
             headers={"Authorization": f"Bearer {super_admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "violations" in data
         assert "count" in data
         assert isinstance(data["violations"], list)
@@ -100,7 +110,7 @@ class TestTenantIsolationAdminAPI:
             headers={"Authorization": f"Bearer {agency_admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("error") == "Super admin only"
     
     def test_violations_with_limit(self, super_admin_token):
@@ -110,7 +120,7 @@ class TestTenantIsolationAdminAPI:
             headers={"Authorization": f"Bearer {super_admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert len(data["violations"]) <= 5
     
     # ============================================================================
@@ -124,7 +134,7 @@ class TestTenantIsolationAdminAPI:
             headers={"Authorization": f"Bearer {super_admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("status") == "ok"
         assert "created_indexes" in data
         assert "already_indexed" in data
@@ -138,7 +148,7 @@ class TestTenantIsolationAdminAPI:
             headers={"Authorization": f"Bearer {agency_admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("error") == "Super admin only"
     
     # ============================================================================
@@ -152,7 +162,7 @@ class TestTenantIsolationAdminAPI:
             headers={"Authorization": f"Bearer {super_admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("status") == "ok"
         assert "orphaned_documents" in data
         assert "total_orphaned" in data
@@ -166,7 +176,7 @@ class TestTenantIsolationAdminAPI:
             headers={"Authorization": f"Bearer {agency_admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("error") == "Super admin only"
     
     # ============================================================================
@@ -180,7 +190,7 @@ class TestTenantIsolationAdminAPI:
             headers={"Authorization": f"Bearer {super_admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("status") == "ok"
         assert "collections" in data
         assert "timestamp" in data
@@ -200,7 +210,7 @@ class TestTenantIsolationAdminAPI:
             headers={"Authorization": f"Bearer {agency_admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("error") == "Super admin only"
     
     # ============================================================================

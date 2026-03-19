@@ -7,6 +7,16 @@ from httpx import AsyncClient
 
 from app.db import get_db
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 LISTINGS_PATH = "/api/b2b/listings"
 AVAILABLE_PATH = "/api/b2b/listings/available"
 MATCH_REQUEST_PATH = "/api/b2b/match-request"
@@ -45,7 +55,7 @@ async def test_b2b_tenant_isolation_cannot_request_own_listing(
     },
   )
   assert create_resp.status_code == 200, create_resp.text
-  listing = create_resp.json()
+  listing = _unwrap(create_resp)
 
   # Sağlayıcı tenant id'si seller_tenant ile aynı olmalı
   assert listing["provider_tenant_id"] == str(seller_tenant["_id"])
@@ -53,7 +63,7 @@ async def test_b2b_tenant_isolation_cannot_request_own_listing(
   # 2) Same-tenant available listesinde bu listing görünmemeli (partner ilişkisi yok)
   available_resp = await seller_client.get(AVAILABLE_PATH)
   assert available_resp.status_code == 200, available_resp.text
-  available = available_resp.json()
+  available = _unwrap(available_resp)
   assert all(item["id"] != listing["id"] for item in available)
 
   # 3) Same-tenant doğrudan match-request denemesi yasak
@@ -62,7 +72,7 @@ async def test_b2b_tenant_isolation_cannot_request_own_listing(
     json={"listing_id": listing["id"], "requested_price": 1000.0},
   )
   assert match_resp.status_code in (400, 403, 422), match_resp.text
-  body = match_resp.json()
+  body = _unwrap(match_resp)
   error = body.get("error") or {}
   assert error.get("code") == "cannot_request_own_listing", body
 
@@ -98,14 +108,14 @@ async def test_b2b_happy_path_flow(
     },
   )
   assert create_resp.status_code == 200, create_resp.text
-  listing = create_resp.json()
+  listing = _unwrap(create_resp)
   assert listing["id"].startswith("lst_"), listing
   assert listing["currency"] == "TRY"
 
   # 2) Seller sees listing in available listings
   available_resp = await seller_client.get(AVAILABLE_PATH)
   assert available_resp.status_code == 200, available_resp.text
-  available = available_resp.json()
+  available = _unwrap(available_resp)
   ids = {item["id"] for item in available}
   assert listing["id"] in ids
 
@@ -118,7 +128,7 @@ async def test_b2b_happy_path_flow(
     },
   )
   assert match_resp.status_code == 200, match_resp.text
-  match = match_resp.json()
+  match = _unwrap(match_resp)
   assert match["id"].startswith("mreq_"), match
   assert match["listing_id"] == listing["id"]
   assert match["status"] == "pending"
@@ -128,18 +138,18 @@ async def test_b2b_happy_path_flow(
   # 4) Provider sees incoming request
   incoming_resp = await provider_client.get(f"{MATCH_REQUEST_PATH}/incoming")
   assert incoming_resp.status_code == 200, incoming_resp.text
-  incoming = incoming_resp.json()
+  incoming = _unwrap(incoming_resp)
   assert any(m["id"] == match["id"] for m in incoming)
 
   # 5) Provider approves then completes
   approve_resp = await provider_client.patch(f"{MATCH_REQUEST_PATH}/{match['id']}/approve")
   assert approve_resp.status_code == 200, approve_resp.text
-  approved = approve_resp.json()
+  approved = _unwrap(approve_resp)
   assert approved["status"] == "approved"
 
   complete_resp = await provider_client.patch(f"{MATCH_REQUEST_PATH}/{match['id']}/complete")
   assert complete_resp.status_code == 200, complete_resp.text
-  completed = complete_resp.json()
+  completed = _unwrap(complete_resp)
   assert completed["status"] == "completed"
 
   # 6) DB-level verification: platform_fee_amount and status_history
@@ -189,12 +199,12 @@ async def test_b2b_not_active_partner_cannot_see_or_request(
     },
   )
   assert create_resp.status_code == 200, create_resp.text
-  listing = create_resp.json()
+  listing = _unwrap(create_resp)
 
   # 3) Seller should not see this listing in /available
   available_resp = await seller_client.get(AVAILABLE_PATH)
   assert available_resp.status_code == 200, available_resp.text
-  available = available_resp.json()
+  available = _unwrap(available_resp)
   assert all(item["id"] != listing["id"] for item in available)
 
   # 4) Seller trying to create match-request should get not_active_partner
@@ -203,7 +213,7 @@ async def test_b2b_not_active_partner_cannot_see_or_request(
     json={"listing_id": listing["id"], "requested_price": 1100.0},
   )
   assert match_resp.status_code in (400, 403, 422), match_resp.text
-  body = match_resp.json()
+  body = _unwrap(match_resp)
   # AppError format: {"error": {"code": ..., "message": ..., "details": {...}}}
   error = body.get("error") or {}
   assert error.get("code") == "not_active_partner", body
@@ -232,12 +242,12 @@ async def test_b2b_cross_org_cannot_see_or_request(
     },
   )
   assert create_resp.status_code == 200, create_resp.text
-  listing = create_resp.json()
+  listing = _unwrap(create_resp)
 
   # Cross-org tenant should not see listing in /available
   available_resp = await other_client.get(AVAILABLE_PATH)
   assert available_resp.status_code == 200, available_resp.text
-  available = available_resp.json()
+  available = _unwrap(available_resp)
   assert all(item["id"] != listing["id"] for item in available)
 
   # Cross-org tenant trying to create match-request should get not_active_partner
@@ -246,7 +256,7 @@ async def test_b2b_cross_org_cannot_see_or_request(
     json={"listing_id": listing["id"], "requested_price": 950.0},
   )
   assert match_resp.status_code in (400, 403, 422), match_resp.text
-  body = match_resp.json()
+  body = _unwrap(match_resp)
   error = body.get("error") or {}
   assert error.get("code") == "not_active_partner", body
 
@@ -276,7 +286,7 @@ async def test_b2b_third_tenant_cannot_approve_match(
     },
   )
   assert create_resp.status_code == 200, create_resp.text
-  listing = create_resp.json()
+  listing = _unwrap(create_resp)
 
   # 2) Seller creates match request
   match_resp = await seller_client.post(
@@ -284,12 +294,12 @@ async def test_b2b_third_tenant_cannot_approve_match(
     json={"listing_id": listing["id"], "requested_price": 750.0},
   )
   assert match_resp.status_code == 200, match_resp.text
-  match = match_resp.json()
+  match = _unwrap(match_resp)
 
   # 3) Third tenant tries to approve -> should be forbidden
   approve_resp = await third_client.patch(f"{MATCH_REQUEST_PATH}/{match['id']}/approve")
   assert approve_resp.status_code == 403, approve_resp.text
-  body = approve_resp.json()
+  body = _unwrap(approve_resp)
   error = body.get("error") or {}
   assert error.get("code") == "forbidden", body
 
@@ -319,20 +329,20 @@ async def test_b2b_invalid_status_pending_cannot_complete(
     },
   )
   assert create_resp.status_code == 200, create_resp.text
-  listing = create_resp.json()
+  listing = _unwrap(create_resp)
 
   match_resp = await seller_client.post(
     MATCH_REQUEST_PATH,
     json={"listing_id": listing["id"], "requested_price": 550.0},
   )
   assert match_resp.status_code == 200, match_resp.text
-  match = match_resp.json()
+  match = _unwrap(match_resp)
   assert match["status"] == "pending"
 
   # 2) Doğrudan complete etmeye çalış
   complete_resp = await provider_client.patch(f"{MATCH_REQUEST_PATH}/{match['id']}/complete")
   assert complete_resp.status_code == 400, complete_resp.text
-  body = complete_resp.json()
+  body = _unwrap(complete_resp)
   error = body.get("error") or {}
   assert error.get("code") == "invalid_status_transition", body
 
@@ -356,25 +366,25 @@ async def test_b2b_invalid_status_rejected_cannot_approve(
     },
   )
   assert create_resp.status_code == 200, create_resp.text
-  listing = create_resp.json()
+  listing = _unwrap(create_resp)
 
   match_resp = await seller_client.post(
     MATCH_REQUEST_PATH,
     json={"listing_id": listing["id"], "requested_price": 650.0},
   )
   assert match_resp.status_code == 200, match_resp.text
-  match = match_resp.json()
+  match = _unwrap(match_resp)
 
   # 2) Önce reject et (geçerli)
   reject_resp = await provider_client.patch(f"{MATCH_REQUEST_PATH}/{match['id']}/reject")
   assert reject_resp.status_code == 200, reject_resp.text
-  rejected = reject_resp.json()
+  rejected = _unwrap(reject_resp)
   assert rejected["status"] == "rejected"
 
   # 3) Sonra tekrar approve etmeye çalış
   approve_resp = await provider_client.patch(f"{MATCH_REQUEST_PATH}/{match['id']}/approve")
   assert approve_resp.status_code == 400, approve_resp.text
-  body = approve_resp.json()
+  body = _unwrap(approve_resp)
   error = body.get("error") or {}
   assert error.get("code") == "invalid_status_transition", body
 
@@ -398,25 +408,25 @@ async def test_b2b_invalid_status_approved_cannot_reapprove(
     },
   )
   assert create_resp.status_code == 200, create_resp.text
-  listing = create_resp.json()
+  listing = _unwrap(create_resp)
 
   match_resp = await seller_client.post(
     MATCH_REQUEST_PATH,
     json={"listing_id": listing["id"], "requested_price": 750.0},
   )
   assert match_resp.status_code == 200, match_resp.text
-  match = match_resp.json()
+  match = _unwrap(match_resp)
 
   # 2) Geçerli approve
   approve_resp_1 = await provider_client.patch(f"{MATCH_REQUEST_PATH}/{match['id']}/approve")
   assert approve_resp_1.status_code == 200, approve_resp_1.text
-  approved = approve_resp_1.json()
+  approved = _unwrap(approve_resp_1)
   assert approved["status"] == "approved"
 
   # 3) Tekrar approve etmeye çalış
   approve_resp_2 = await provider_client.patch(f"{MATCH_REQUEST_PATH}/{match['id']}/approve")
   assert approve_resp_2.status_code == 400, approve_resp_2.text
-  body = approve_resp_2.json()
+  body = _unwrap(approve_resp_2)
   error = body.get("error") or {}
   assert error.get("code") == "invalid_status_transition", body
 
@@ -440,21 +450,21 @@ async def test_b2b_invalid_status_completed_cannot_change(
     },
   )
   assert create_resp.status_code == 200, create_resp.text
-  listing = create_resp.json()
+  listing = _unwrap(create_resp)
 
   match_resp = await seller_client.post(
     MATCH_REQUEST_PATH,
     json={"listing_id": listing["id"], "requested_price": 850.0},
   )
   assert match_resp.status_code == 200, match_resp.text
-  match = match_resp.json()
+  match = _unwrap(match_resp)
 
   # 2) Geçerli approve + complete
   approve_resp = await provider_client.patch(f"{MATCH_REQUEST_PATH}/{match['id']}/approve")
   assert approve_resp.status_code == 200, approve_resp.text
   complete_resp = await provider_client.patch(f"{MATCH_REQUEST_PATH}/{match['id']}/complete")
   assert complete_resp.status_code == 200, complete_resp.text
-  completed = complete_resp.json()
+  completed = _unwrap(complete_resp)
   assert completed["status"] == "completed"
 
   # 3) Tekrar approve / reject / complete çağrıları invalid olmalı
@@ -465,7 +475,7 @@ async def test_b2b_invalid_status_completed_cannot_change(
   ]:
     resp = await provider_client.patch(path)
     assert resp.status_code == 400, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     error = body.get("error") or {}
     assert error.get("code") == "invalid_status_transition", body
 
@@ -489,7 +499,7 @@ async def test_b2b_feature_flag_enforcement(
   # 2) Try to call GET /api/b2b/listings/available - should return 403
   available_resp = await seller_client.get(AVAILABLE_PATH)
   assert available_resp.status_code == 403, available_resp.text
-  body = available_resp.json()
+  body = _unwrap(available_resp)
   error = body.get("error") or {}
   assert error.get("code") == "feature_not_enabled", body
 
@@ -503,14 +513,14 @@ async def test_b2b_feature_flag_enforcement(
     },
   )
   assert create_listing_resp.status_code == 403, create_listing_resp.text
-  body = create_listing_resp.json()
+  body = _unwrap(create_listing_resp)
   error = body.get("error") or {}
   assert error.get("code") == "feature_not_enabled", body
 
   # 4) Try to call GET /api/b2b/listings/my - should return 403
   my_listings_resp = await seller_client.get(f"{LISTINGS_PATH}/my")
   assert my_listings_resp.status_code == 403, my_listings_resp.text
-  body = my_listings_resp.json()
+  body = _unwrap(my_listings_resp)
   error = body.get("error") or {}
   assert error.get("code") == "feature_not_enabled", body
 
@@ -520,21 +530,21 @@ async def test_b2b_feature_flag_enforcement(
     json={"listing_id": "lst_dummy", "requested_price": 1200.0},
   )
   assert match_request_resp.status_code == 403, match_request_resp.text
-  body = match_request_resp.json()
+  body = _unwrap(match_request_resp)
   error = body.get("error") or {}
   assert error.get("code") == "feature_not_enabled", body
 
   # 6) Try to call GET /api/b2b/match-request/my - should return 403
   my_matches_resp = await seller_client.get(f"{MATCH_REQUEST_PATH}/my")
   assert my_matches_resp.status_code == 403, my_matches_resp.text
-  body = my_matches_resp.json()
+  body = _unwrap(my_matches_resp)
   error = body.get("error") or {}
   assert error.get("code") == "feature_not_enabled", body
 
   # 7) Try to call GET /api/b2b/match-request/incoming - should return 403
   incoming_matches_resp = await seller_client.get(f"{MATCH_REQUEST_PATH}/incoming")
   assert incoming_matches_resp.status_code == 403, incoming_matches_resp.text
-  body = incoming_matches_resp.json()
+  body = _unwrap(incoming_matches_resp)
   error = body.get("error") or {}
   assert error.get("code") == "feature_not_enabled", body
 

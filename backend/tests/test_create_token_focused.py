@@ -43,7 +43,7 @@ async def test_create_token_happy_path_single_request(async_client):
 
     # Verify response
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["ok"] is True
     assert "token" in data and isinstance(data["token"], str) and data["token"]
     assert data["token"].startswith("pub_")
@@ -75,7 +75,7 @@ async def test_create_token_not_found_enumeration_safe(async_client):
 
     # Verify enumeration-safe response
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data == {"ok": True}  # No token or expires_at fields
 
     # Verify no token document created
@@ -147,7 +147,7 @@ async def test_create_token_multi_tenant_isolation(async_client):
         json={"org": org_a, "booking_code": booking_code},
     )
     assert resp_a.status_code == 200
-    data_a = resp_a.json()
+    data_a = _unwrap(resp_a)
     assert data_a["ok"] is True
     assert "token" in data_a
 
@@ -157,7 +157,7 @@ async def test_create_token_multi_tenant_isolation(async_client):
         json={"org": org_b, "booking_code": booking_code},
     )
     assert resp_wrong.status_code == 200
-    data_wrong = resp_wrong.json()
+    data_wrong = _unwrap(resp_wrong)
     assert data_wrong == {"ok": True}  # No token returned
 
 
@@ -197,12 +197,22 @@ async def test_create_token_ttl_format(async_client):
     after_request = now_utc()
 
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["ok"] is True
     assert "expires_at" in data
 
     # Parse expires_at timestamp
     from datetime import datetime
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
     expires_at = datetime.fromisoformat(data["expires_at"].replace('Z', '+00:00'))
 
     # Verify TTL is approximately 24 hours (PUBLIC_TOKEN_TTL_HOURS)
@@ -242,7 +252,7 @@ async def test_create_token_rate_limit_basic(async_client):
         json={"org": org, "booking_code": booking_code},
     )
     assert resp1.status_code == 200
-    data1 = resp1.json()
+    data1 = _unwrap(resp1)
     assert data1["ok"] is True
     # First request might have token depending on rate limit state
 
@@ -279,6 +289,6 @@ async def test_create_token_special_characters(async_client):
         json={"org": org, "booking_code": special_booking_code},
     )
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["ok"] is True
     assert "token" in data

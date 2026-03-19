@@ -51,6 +51,16 @@ def mock_stripe_service(monkeypatch):
     """Mock stripe_checkout_service methods to avoid needing a real Stripe key."""
     from app.services import stripe_checkout_service as svc_module
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
     service = svc_module.stripe_checkout_service
 
     async def fake_create_checkout(http_request=None, **kwargs):
@@ -96,7 +106,7 @@ class TestYearlyCheckoutCreation:
             f"Expected 200, got {response.status_code}: {response.text[:200]}"
         )
 
-        data = response.json()
+        data = _unwrap(response)
         assert "url" in data, "Response should contain checkout URL"
         assert "session_id" in data, "Response should contain session_id"
         assert data.get("plan") == "starter", f"Plan should be starter, got {data.get('plan')}"
@@ -123,7 +133,7 @@ class TestYearlyCheckoutCreation:
             f"Expected 200, got {response.status_code}: {response.text[:200]}"
         )
 
-        data = response.json()
+        data = _unwrap(response)
         assert "url" in data, "Response should contain checkout URL"
         assert data.get("plan") == "pro", f"Plan should be pro, got {data.get('plan')}"
         assert data.get("interval") == "yearly", f"Interval should be yearly, got {data.get('interval')}"
@@ -169,7 +179,7 @@ class TestCheckoutStatusYearly:
             },
         )
         assert create_resp.status_code == 200
-        session_id = create_resp.json().get("session_id")
+        session_id = _unwrap(create_resp).get("session_id")
         assert session_id
 
         response = await async_client.get(
@@ -179,7 +189,7 @@ class TestCheckoutStatusYearly:
             f"Expected 200, got {response.status_code}: {response.text[:200]}"
         )
 
-        data = response.json()
+        data = _unwrap(response)
         assert data.get("session_id") == session_id, "Session ID should match"
         assert data.get("plan") == "starter", f"Plan should be starter, got {data.get('plan')}"
         assert data.get("interval") == "yearly", f"Interval should be yearly, got {data.get('interval')}"
@@ -200,7 +210,7 @@ class TestBillingSubscriptionYearly:
             f"Expected 200, got {response.status_code}: {response.text[:200]}"
         )
 
-        data = response.json()
+        data = _unwrap(response)
         assert "plan" in data, "Response should contain plan"
         assert "interval" in data, "Response should contain interval"
         assert "interval_label" in data, "Response should contain interval_label"
@@ -239,7 +249,7 @@ class TestPlanChangeYearly:
             f"Expected 200 or 409, got {response.status_code}: {response.text[:200]}"
         )
 
-        data = response.json()
+        data = _unwrap(response)
 
         if response.status_code == 409:
             assert (

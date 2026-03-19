@@ -9,6 +9,16 @@ from app.db import get_db
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 TOLERANCE_ABS = 0.02
 TOLERANCE_PCT = 0.001  # 0.1%
 
@@ -42,7 +52,7 @@ async def _create_simple_booking(client, token: str, *, use_seeded_db: bool = Fa
     }
     res = await client.get("/api/b2b/hotels/search", headers=headers, params=params)
     assert res.status_code == 200
-    data = res.json()
+    data = _unwrap(res)
     items = data.get("items") or []
     assert items, "P0.2 search did not return any items"
 
@@ -67,7 +77,7 @@ async def _create_simple_booking(client, token: str, *, use_seeded_db: bool = Fa
     }
     res = await client.post("/api/b2b/quotes", headers=headers, json=quote_payload)
     assert res.status_code == 200, f"Quote creation failed: {res.status_code} - {res.text}"
-    quote = res.json()
+    quote = _unwrap(res)
     quote_id = quote["quote_id"]
 
     # 3) Create booking
@@ -83,7 +93,7 @@ async def _create_simple_booking(client, token: str, *, use_seeded_db: bool = Fa
         json=booking_payload,
     )
     assert res.status_code == 200, f"Booking creation failed: {res.status_code} - {res.text}"
-    booking = res.json()
+    booking = _unwrap(res)
     return booking["booking_id"]
 
 
@@ -105,7 +115,7 @@ async def test_booking_financials_and_fx_snapshot_consistency(async_client, admi
     headers_admin = {"Authorization": f"Bearer {admin_token}"}
     res = await client.get(f"/api/ops/finance/bookings/{booking_id}/financials", headers=headers_admin)
     assert res.status_code == 200, f"Booking financials failed: {res.status_code} - {res.text}"
-    fin = res.json()
+    fin = _unwrap(res)
 
     print(f"DEBUG: Booking financials response: {fin}")
 

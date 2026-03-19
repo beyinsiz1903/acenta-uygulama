@@ -19,6 +19,16 @@ import requests
 import os
 import time
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -39,7 +49,7 @@ def auth_token():
         "password": TEST_PASSWORD
     })
     if resp.status_code == 200:
-        data = resp.json()
+        data = _unwrap(resp)
         return data.get("access_token") or data.get("token")
     pytest.skip(f"Auth failed: {resp.status_code} — {resp.text[:200]}")
 
@@ -62,7 +72,7 @@ class TestSupplierOnboardingRegistry:
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/registry")
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "suppliers" in data
         assert "total" in data
         assert data["total"] == 6
@@ -73,7 +83,7 @@ class TestSupplierOnboardingRegistry:
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/registry")
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         codes = [s["code"] for s in data["suppliers"]]
         for expected_code in EXPECTED_SUPPLIERS:
             assert expected_code in codes, f"Missing supplier: {expected_code}"
@@ -83,7 +93,7 @@ class TestSupplierOnboardingRegistry:
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/registry")
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         for supplier in data["suppliers"]:
             assert "code" in supplier
             assert "name" in supplier
@@ -101,7 +111,7 @@ class TestSupplierOnboardingDashboard:
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/dashboard")
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "suppliers" in data
         assert "go_live_threshold" in data
         assert data["go_live_threshold"] == 80
@@ -112,7 +122,7 @@ class TestSupplierOnboardingDashboard:
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/dashboard")
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         for supplier in data["suppliers"]:
             assert "supplier_code" in supplier
             assert "status" in supplier
@@ -138,7 +148,7 @@ class TestSupplierOnboardingCredentials:
         })
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("supplier_code") == TEST_SUPPLIER
         assert data.get("status") == "credentials_saved"
         assert "next_step" in data
@@ -154,7 +164,7 @@ class TestSupplierOnboardingCredentials:
             }
         })
         assert resp.status_code == 200  # API returns error in body
-        data = resp.json()
+        data = _unwrap(resp)
         assert "error" in data
 
 
@@ -177,7 +187,7 @@ class TestSupplierOnboardingHealthCheck:
         resp = api_client.post(f"{BASE_URL}/api/supplier-onboarding/validate/{TEST_SUPPLIER}")
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "checks" in data
         assert len(data["checks"]) == 4, f"Expected 4 checks, got {len(data['checks'])}"
         
@@ -192,7 +202,7 @@ class TestSupplierOnboardingHealthCheck:
         resp = api_client.post(f"{BASE_URL}/api/supplier-onboarding/validate/{TEST_SUPPLIER}")
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "overall" in data
         assert data["overall"] in ["pass", "fail"]
         assert "score" in data
@@ -206,7 +216,7 @@ class TestSupplierOnboardingHealthCheck:
         
         resp = api_client.post(f"{BASE_URL}/api/supplier-onboarding/validate/hotelbeds")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "error" in data
 
 
@@ -230,7 +240,7 @@ class TestSupplierOnboardingCertification:
         resp = api_client.post(f"{BASE_URL}/api/supplier-onboarding/certify/{TEST_SUPPLIER}")
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "results" in data
         assert len(data["results"]) == 6, f"Expected 6 steps, got {len(data['results'])}"
         
@@ -244,7 +254,7 @@ class TestSupplierOnboardingCertification:
         resp = api_client.post(f"{BASE_URL}/api/supplier-onboarding/certify/{TEST_SUPPLIER}")
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "score" in data
         assert "go_live_eligible" in data
         assert "go_live_threshold" in data
@@ -259,7 +269,7 @@ class TestSupplierOnboardingCertification:
         resp = api_client.post(f"{BASE_URL}/api/supplier-onboarding/certify/{TEST_SUPPLIER}")
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "test_run_id" in data
         assert "certified_at" in data
         assert "total_duration_ms" in data
@@ -275,7 +285,7 @@ class TestSupplierOnboardingCertificationReport:
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/certification/{TEST_SUPPLIER}")
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         # Should have certification data since we ran certify before
         if "error" not in data:
             assert "results" in data
@@ -289,7 +299,7 @@ class TestSupplierOnboardingCertificationReport:
         
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/certification/juniper")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "error" in data
 
 
@@ -316,7 +326,7 @@ class TestSupplierOnboardingGoLive:
         })
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("status") == "live"
         assert data.get("go_live") is True
         assert "message" in data
@@ -328,7 +338,7 @@ class TestSupplierOnboardingGoLive:
         })
         assert resp.status_code == 200
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("status") == "certified"
         assert data.get("go_live") is False
         
@@ -349,7 +359,7 @@ class TestSupplierOnboardingGoLive:
             "enabled": True
         })
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "error" in data
 
 
@@ -361,7 +371,7 @@ class TestSupplierOnboardingReset:
         resp = api_client.post(f"{BASE_URL}/api/supplier-onboarding/reset/wtatil")
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("status") == "not_started"
         assert "message" in data
         
@@ -369,7 +379,7 @@ class TestSupplierOnboardingReset:
         """Reset unknown supplier should error"""
         resp = api_client.post(f"{BASE_URL}/api/supplier-onboarding/reset/unknown_supplier")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "error" in data
 
 
@@ -381,7 +391,7 @@ class TestSupplierOnboardingDetail:
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/detail/{TEST_SUPPLIER}")
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
         
-        data = resp.json()
+        data = _unwrap(resp)
         assert "code" in data
         assert "name" in data
         assert "status" in data
@@ -391,7 +401,7 @@ class TestSupplierOnboardingDetail:
         """Get unknown supplier should error"""
         resp = api_client.get(f"{BASE_URL}/api/supplier-onboarding/detail/unknown_supplier")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "error" in data
 
 

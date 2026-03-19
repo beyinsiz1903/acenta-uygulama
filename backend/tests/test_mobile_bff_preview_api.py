@@ -21,6 +21,16 @@ import requests
 
 from tests.preview_auth_helper import build_preview_auth_headers, get_preview_auth_context, get_preview_base_url_or_skip
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Test credentials
@@ -40,7 +50,7 @@ def preview_admin_auth():
         f"{BASE_URL}/api/auth/me",
         headers=build_preview_auth_headers(auth),
     )
-    me_data = me_response.json() if me_response.status_code == 200 else {}
+    me_data = _unwrap(me_response) if me_response.status_code == 200 else {}
     return {
         "token": auth.access_token,
         "login_response": auth.login_response,
@@ -91,7 +101,7 @@ class TestMobileBFFAuthenticatedEndpoints:
         response = requests.get(f"{BASE_URL}/api/v1/mobile/auth/me", headers=admin_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         print(f"Mobile /auth/me response: {data}")
 
         # Contract checks - required fields
@@ -116,7 +126,7 @@ class TestMobileBFFAuthenticatedEndpoints:
         response = requests.get(f"{BASE_URL}/api/v1/mobile/dashboard/summary", headers=admin_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         print(f"Mobile dashboard/summary response: {data}")
 
         # Contract checks - required fields
@@ -141,7 +151,7 @@ class TestMobileBFFAuthenticatedEndpoints:
         response = requests.get(f"{BASE_URL}/api/v1/mobile/bookings", headers=admin_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         print(f"Mobile bookings list response (truncated): total={data.get('total')}, items_count={len(data.get('items', []))}")
 
         # Contract checks - required fields
@@ -170,7 +180,7 @@ class TestMobileBFFAuthenticatedEndpoints:
         response = requests.get(f"{BASE_URL}/api/v1/mobile/reports/summary", headers=admin_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         print(f"Mobile reports/summary response: {data}")
 
         # Contract checks - required fields
@@ -223,7 +233,7 @@ class TestMobileBFFBookingCreation:
         response = requests.post(f"{BASE_URL}/api/v1/mobile/bookings", headers=headers, json=payload)
         assert response.status_code == 201, f"Expected 201, got {response.status_code}: {response.text}"
 
-        data = response.json()
+        data = _unwrap(response)
         print(f"Mobile booking create response: {data}")
 
         # Contract checks - response should be MobileBookingDetail
@@ -263,14 +273,14 @@ class TestMobileBFFBookingCreation:
 
         create_response = requests.post(f"{BASE_URL}/api/v1/mobile/bookings", headers=headers, json=payload)
         assert create_response.status_code == 201, f"Create failed: {create_response.text}"
-        created = create_response.json()
+        created = _unwrap(create_response)
         booking_id = created["id"]
 
         # Now get the booking by ID
         detail_response = requests.get(f"{BASE_URL}/api/v1/mobile/bookings/{booking_id}", headers=headers)
         assert detail_response.status_code == 200, f"Expected 200, got {detail_response.status_code}: {detail_response.text}"
 
-        data = detail_response.json()
+        data = _unwrap(detail_response)
         print(f"Mobile booking detail response: {data}")
 
         # Verify it's the same booking
@@ -304,7 +314,7 @@ class TestLegacyAuthNonRegression:
             headers={"Authorization": f"Bearer {preview_admin_auth['token']}"},
         )
         assert response.status_code == 200, f"Legacy /auth/me failed: {response.text}"
-        data = response.json()
+        data = _unwrap(response)
         assert "email" in data, f"Missing email in legacy /auth/me: {data}"
         print("PASS: Legacy /api/auth/me still works")
 

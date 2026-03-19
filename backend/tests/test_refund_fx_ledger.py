@@ -20,6 +20,16 @@ async def _create_simple_booking(client, token: str) -> str:
     """Use existing P0.2 flow to create a booking and return booking_id."""
     import uuid
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
     headers = {"Authorization": f"Bearer {token}"}
 
     # 1) Search hotels for Istanbul with deterministic dates
@@ -104,7 +114,7 @@ async def test_refund_creates_reversal_and_net_eur_zero(async_client, admin_toke
     res = await client.get("/api/ops/finance/refunds", headers=headers_admin)
     print(f"DEBUG: GET /api/ops/finance/refunds status: {res.status_code}")
     if res.status_code == 200:
-        refunds = res.json()
+        refunds = _unwrap(res)
         print(f"DEBUG: Existing refunds: {refunds}")
 
     # Since there's no POST endpoint for creating refunds, let's check if there are any existing refunds
@@ -114,7 +124,7 @@ async def test_refund_creates_reversal_and_net_eur_zero(async_client, admin_toke
     # Get the booking financials to find the organization_id
     res = await client.get(f"/api/ops/finance/bookings/{booking_id}/financials", headers=headers_admin)
     assert res.status_code == 200, f"Booking financials failed: {res.status_code} - {res.text}"
-    fin = res.json()
+    fin = _unwrap(res)
     org_id = fin["organization_id"]
 
     # 4) Check ledger postings for the booking (without refund for now)

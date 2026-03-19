@@ -7,6 +7,16 @@ import pytest
 from app.db import get_db
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 def approx_equal(a: float, b: float, tol: float) -> bool:
     return abs(a - b) <= tol
 
@@ -45,7 +55,7 @@ async def test_ledger_reversal_net_zero(async_client, admin_token):
         json={**payload_base, "event": "BOOKING_CONFIRMED"},
     )
     assert r1.status_code == 200, r1.text
-    post1 = r1.json()
+    post1 = _unwrap(r1)
 
     # 2) Refund approved event
     r2 = await client.post(
@@ -54,7 +64,7 @@ async def test_ledger_reversal_net_zero(async_client, admin_token):
         json={**payload_base, "event": "REFUND_APPROVED"},
     )
     assert r2.status_code == 200, r2.text
-    post2 = r2.json()
+    post2 = _unwrap(r2)
 
     org_id = post1.get("organization_id") or post2.get("organization_id")
     assert org_id, "organization_id not returned from _test/posting"

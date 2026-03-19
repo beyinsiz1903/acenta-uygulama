@@ -29,6 +29,16 @@ from app.services.notification_email_service import (
 from app.services.stripe_checkout_service import stripe_checkout_service
 from app.services.usage_service import track_usage_event
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 # BASE_URL from frontend .env for HTTP tests
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
@@ -501,7 +511,7 @@ class TestSearchNoRegression:
             timeout=30,
         )
         assert resp.status_code == 200, f"Login failed: {resp.text}"
-        token = resp.json().get("access_token")
+        token = _unwrap(resp).get("access_token")
         return {"Authorization": f"Bearer {token}"}
 
     def test_global_search_returns_200(self, auth_headers):
@@ -513,7 +523,7 @@ class TestSearchNoRegression:
             timeout=30,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "query" in data
         assert "scope" in data
         assert "sections" in data
@@ -528,7 +538,7 @@ class TestSearchNoRegression:
             timeout=30,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         sections = data.get("sections", {})
         # Verify all expected section keys exist
         assert "customers" in sections
@@ -545,7 +555,7 @@ class TestSearchNoRegression:
             timeout=30,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("scope") == "agency"
 
     def test_global_search_with_limit(self, auth_headers):
@@ -557,7 +567,7 @@ class TestSearchNoRegression:
             timeout=30,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         # Each section should have at most 2 items
         for section_name, items in data.get("sections", {}).items():
             assert len(items) <= 2, f"Section {section_name} exceeds limit"
@@ -576,7 +586,7 @@ class TestReportsNoRegression:
             timeout=30,
         )
         assert resp.status_code == 200, f"Login failed: {resp.text}"
-        token = resp.json().get("access_token")
+        token = _unwrap(resp).get("access_token")
         return {"Authorization": f"Bearer {token}"}
 
     def test_reports_generate_returns_200(self, auth_headers):
@@ -588,7 +598,7 @@ class TestReportsNoRegression:
             timeout=30,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "generated_at" in data
         assert "period" in data
         assert "kpis" in data
@@ -602,7 +612,7 @@ class TestReportsNoRegression:
             timeout=30,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         kpis = data.get("kpis", {})
         # Verify KPI fields exist
         assert "booking_count" in kpis
@@ -622,7 +632,7 @@ class TestReportsNoRegression:
             timeout=30,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         period = data.get("period", {})
         assert "start" in period
         assert "end" in period
@@ -654,7 +664,7 @@ class TestReportsNoRegression:
             timeout=30,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert isinstance(data, list)
         # If data exists, verify structure
         if data:
@@ -681,7 +691,7 @@ class TestAdminSearchNoRegression:
             timeout=30,
         )
         assert resp.status_code == 200, f"Admin login failed: {resp.text}"
-        token = resp.json().get("access_token")
+        token = _unwrap(resp).get("access_token")
         return {"Authorization": f"Bearer {token}"}
 
     def test_admin_search_scope_organization(self, admin_headers):
@@ -693,7 +703,7 @@ class TestAdminSearchNoRegression:
             timeout=30,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("scope") == "organization"
 
     def test_admin_reports_generate(self, admin_headers):
@@ -705,7 +715,7 @@ class TestAdminSearchNoRegression:
             timeout=30,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "kpis" in data
         # Admin should see more bookings than agency-scoped user
         assert data["kpis"]["booking_count"] >= 0

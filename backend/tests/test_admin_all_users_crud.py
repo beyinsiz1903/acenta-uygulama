@@ -20,6 +20,16 @@ import uuid
 
 from tests.preview_auth_helper import get_preview_auth_context, get_preview_base_url_or_skip
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Test credentials
@@ -65,7 +75,7 @@ class TestGetAllUsers:
             timeout=10
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert isinstance(data, list), "Response should be a list"
         print(f"✅ GET /api/admin/all-users returned {len(data)} users")
 
@@ -77,7 +87,7 @@ class TestGetAllUsers:
             timeout=10
         )
         assert resp.status_code == 200
-        users = resp.json()
+        users = _unwrap(resp)
 
         if not users:
             pytest.skip("No users in system")
@@ -127,7 +137,7 @@ class TestCreateUser:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
 
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["email"] == unique_email.lower()
         assert data["name"] == "Test Create User"
         assert "agency_agent" in data["roles"]
@@ -163,7 +173,7 @@ class TestCreateUser:
             timeout=10
         )
         assert create_resp.status_code == 200
-        user_id = create_resp.json()["id"]
+        user_id = _unwrap(create_resp)["id"]
 
         # Try to create another with same email
         dup_resp = requests.post(
@@ -200,7 +210,7 @@ class TestCreateUser:
             timeout=10
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "agency_admin" in data["roles"]
 
         # Cleanup
@@ -251,7 +261,7 @@ class TestUpdateUser:
             timeout=10
         )
         assert create_resp.status_code == 200
-        user_id = create_resp.json()["id"]
+        user_id = _unwrap(create_resp)["id"]
 
         # Update name
         update_resp = requests.put(
@@ -261,7 +271,7 @@ class TestUpdateUser:
             timeout=10
         )
         assert update_resp.status_code == 200
-        assert update_resp.json()["name"] == "Updated Name"
+        assert _unwrap(update_resp)["name"] == "Updated Name"
 
         # Verify with GET
         get_resp = requests.get(
@@ -269,7 +279,7 @@ class TestUpdateUser:
             headers={"Authorization": f"Bearer {admin_token}"},
             timeout=10
         )
-        users = [u for u in get_resp.json() if u["id"] == user_id]
+        users = [u for u in _unwrap(get_resp) if u["id"] == user_id]
         assert len(users) == 1
         assert users[0]["name"] == "Updated Name"
 
@@ -298,7 +308,7 @@ class TestUpdateUser:
             timeout=10
         )
         assert create_resp.status_code == 200
-        user_id = create_resp.json()["id"]
+        user_id = _unwrap(create_resp)["id"]
 
         # Update role to admin
         update_resp = requests.put(
@@ -308,7 +318,7 @@ class TestUpdateUser:
             timeout=10
         )
         assert update_resp.status_code == 200
-        assert "agency_admin" in update_resp.json()["roles"]
+        assert "agency_admin" in _unwrap(update_resp)["roles"]
 
         # Cleanup
         requests.delete(
@@ -335,7 +345,7 @@ class TestUpdateUser:
             timeout=10
         )
         assert create_resp.status_code == 200
-        user_id = create_resp.json()["id"]
+        user_id = _unwrap(create_resp)["id"]
 
         # Update status to disabled
         update_resp = requests.put(
@@ -345,7 +355,7 @@ class TestUpdateUser:
             timeout=10
         )
         assert update_resp.status_code == 200
-        assert update_resp.json()["status"] == "disabled"
+        assert _unwrap(update_resp)["status"] == "disabled"
 
         # Toggle back to active
         update_resp2 = requests.put(
@@ -355,7 +365,7 @@ class TestUpdateUser:
             timeout=10
         )
         assert update_resp2.status_code == 200
-        assert update_resp2.json()["status"] == "active"
+        assert _unwrap(update_resp2)["status"] == "active"
 
         # Cleanup
         requests.delete(
@@ -382,7 +392,7 @@ class TestUpdateUser:
             timeout=10
         )
         assert create_resp.status_code == 200
-        user_id = create_resp.json()["id"]
+        user_id = _unwrap(create_resp)["id"]
 
         # Transfer to different agency
         update_resp = requests.put(
@@ -392,8 +402,8 @@ class TestUpdateUser:
             timeout=10
         )
         assert update_resp.status_code == 200
-        assert update_resp.json()["agency_id"] == DEMO_ACENTE_A_ID
-        assert update_resp.json()["agency_name"] == "Demo Acente A"
+        assert _unwrap(update_resp)["agency_id"] == DEMO_ACENTE_A_ID
+        assert _unwrap(update_resp)["agency_name"] == "Demo Acente A"
 
         # Cleanup
         requests.delete(
@@ -421,8 +431,8 @@ class TestUpdateUser:
             json={"email": email2, "name": "User 2", "password": "test123456", "agency_id": DEMO_ACENTA_ID, "role": "agency_agent"},
             timeout=10
         )
-        user1_id = create1.json()["id"]
-        user2_id = create2.json()["id"]
+        user1_id = _unwrap(create1)["id"]
+        user2_id = _unwrap(create2)["id"]
 
         # Try to update user2's email to user1's email
         update_resp = requests.put(
@@ -471,7 +481,7 @@ class TestDeleteUser:
             timeout=10
         )
         assert create_resp.status_code == 200
-        user_id = create_resp.json()["id"]
+        user_id = _unwrap(create_resp)["id"]
 
         # Delete user
         del_resp = requests.delete(
@@ -480,7 +490,7 @@ class TestDeleteUser:
             timeout=10
         )
         assert del_resp.status_code == 200, f"Expected 200, got {del_resp.status_code}: {del_resp.text}"
-        data = del_resp.json()
+        data = _unwrap(del_resp)
         assert data["ok"] is True
         assert data["deleted_id"] == user_id
 
@@ -490,7 +500,7 @@ class TestDeleteUser:
             headers={"Authorization": f"Bearer {admin_token}"},
             timeout=10
         )
-        users = [u for u in get_resp.json() if u["id"] == user_id]
+        users = [u for u in _unwrap(get_resp) if u["id"] == user_id]
         assert len(users) == 0, "User should be deleted"
         print("✅ Deleted user successfully")
 

@@ -12,6 +12,16 @@ from app.auth import _jwt_secret
 from app.db import get_db
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 def _make_token(email: str, org_id: str, roles: list[str], minutes: int = 60 * 12) -> str:
     now = datetime.now(timezone.utc)
     payload = {
@@ -103,7 +113,7 @@ async def test_relationship_detail_forbidden(async_client: AsyncClient) -> None:
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": stranger["tenant_id"]},
     )
     assert resp.status_code == 403
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["error"]["code"] == "partner_relationship_forbidden"
 
 
@@ -143,7 +153,7 @@ async def test_inbox_invites_received_and_sent(async_client: AsyncClient) -> Non
         headers={"Authorization": f"Bearer {seller_token}", "X-Tenant-Id": seller["tenant_id"]},
     )
     assert resp_seller.status_code == 200
-    body_s = resp_seller.json()
+    body_s = _unwrap(resp_seller)
     assert len(body_s["invites_sent"]) == 1
     assert len(body_s["invites_received"]) == 0
 
@@ -153,7 +163,7 @@ async def test_inbox_invites_received_and_sent(async_client: AsyncClient) -> Non
         headers={"Authorization": f"Bearer {buyer_token}", "X-Tenant-Id": buyer["tenant_id"]},
     )
     assert resp_buyer.status_code == 200
-    body_b = resp_buyer.json()
+    body_b = _unwrap(resp_buyer)
     assert len(body_b["invites_received"]) == 1
     assert len(body_b["invites_sent"]) == 0
 
@@ -253,7 +263,7 @@ async def test_notifications_summary_counts(async_client: AsyncClient) -> None:
         headers={"Authorization": f"Bearer {token}", "X-Tenant-Id": seller["tenant_id"]},
     )
     assert resp.status_code == 200
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["counts"]["invites_received"] == 2
     assert body["counts"]["invites_sent"] == 1
     assert body["counts"]["active_partners"] >= 2

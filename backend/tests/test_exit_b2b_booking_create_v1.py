@@ -15,6 +15,16 @@ from app.auth import _jwt_secret
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.exit_b2b_booking_create_v1
 @pytest.mark.anyio
 async def test_b2b_booking_create_happy_path(test_db: Any, async_client: AsyncClient) -> None:
@@ -148,7 +158,7 @@ async def test_b2b_booking_create_happy_path(test_db: Any, async_client: AsyncCl
 
     resp = await client.post("/api/b2b/bookings", json=payload, headers=headers)
     assert resp.status_code == status.HTTP_201_CREATED, resp.text
-    data = resp.json()
+    data = _unwrap(resp)
     booking_id = data["booking_id"]
     assert data["state"] == "draft"
 
@@ -274,7 +284,7 @@ async def test_b2b_booking_create_forbidden_without_access(test_db: Any, async_c
 
     resp = await client.post("/api/b2b/bookings", json=payload, headers=headers)
     assert resp.status_code == status.HTTP_403_FORBIDDEN
-    err = resp.json().get("error", {})
+    err = _unwrap(resp).get("error", {})
     assert err.get("message") == "MARKETPLACE_ACCESS_FORBIDDEN"
 
 
@@ -325,5 +335,5 @@ async def test_b2b_booking_create_requires_tenant_context(test_db: Any, async_cl
 
     resp = await client.post("/api/b2b/bookings", json=payload, headers=headers)
     assert resp.status_code == status.HTTP_403_FORBIDDEN
-    err = resp.json().get("error", {})
+    err = _unwrap(resp).get("error", {})
     assert err.get("code") == "TENANT_CONTEXT_REQUIRED"

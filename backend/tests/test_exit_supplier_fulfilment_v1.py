@@ -12,6 +12,16 @@ from app.auth import _jwt_secret
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.exit_supplier_fulfilment_v1
 @pytest.mark.anyio
 async def test_supplier_fulfilment_happy_path(test_db: Any, async_client: AsyncClient) -> None:
@@ -108,7 +118,7 @@ async def test_supplier_fulfilment_happy_path(test_db: Any, async_client: AsyncC
 
     resp_create = await client.post("/api/marketplace/listings", json=payload, headers=seller_headers)
     assert resp_create.status_code == status.HTTP_201_CREATED, resp_create.text
-    listing = resp_create.json()
+    listing = _unwrap(resp_create)
     listing_id = listing["id"]
 
     # 2) Seller publishes listing
@@ -150,7 +160,7 @@ async def test_supplier_fulfilment_happy_path(test_db: Any, async_client: AsyncC
 
     resp_booking = await client.post("/api/b2b/bookings", json=booking_payload, headers=buyer_headers)
     assert resp_booking.status_code == status.HTTP_201_CREATED, resp_booking.text
-    booking_data = resp_booking.json()
+    booking_data = _unwrap(resp_booking)
     booking_id = booking_data["booking_id"]
     assert booking_data["state"] == "draft"
 
@@ -162,7 +172,7 @@ async def test_supplier_fulfilment_happy_path(test_db: Any, async_client: AsyncC
 
     resp_confirm = await client.post(f"/api/b2b/bookings/{booking_id}/confirm", headers=confirm_headers)
     assert resp_confirm.status_code == status.HTTP_200_OK, resp_confirm.text
-    body = resp_confirm.json()
+    body = _unwrap(resp_confirm)
     assert body["booking_id"] == booking_id
     assert body["state"] == "confirmed"
 
@@ -260,7 +270,7 @@ async def test_supplier_fulfilment_missing_mapping(test_db: Any, async_client: A
 
     resp_confirm = await client.post(f"/api/b2b/bookings/{booking_id}/confirm", headers=headers)
     assert resp_confirm.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    err = resp_confirm.json().get("error", {})
+    err = _unwrap(resp_confirm).get("error", {})
     assert err.get("code") == "INVALID_SUPPLIER_MAPPING"
     # reason should be one of the allowed values; we don't assert exact here to keep v1 flexible
     details = err.get("details") or {}
@@ -351,7 +361,7 @@ async def test_supplier_fulfilment_tenant_mismatch(test_db: Any, async_client: A
 
     resp_confirm = await client.post(f"/api/b2b/bookings/{booking_id}/confirm", headers=headers)
     assert resp_confirm.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    err = resp_confirm.json().get("error", {})
+    err = _unwrap(resp_confirm).get("error", {})
     assert err.get("code") == "BOOKING_NOT_CONFIRMABLE"
     details = err.get("details") or {}
     assert details.get("reason") == "invalid_state"
@@ -428,13 +438,13 @@ async def test_supplier_fulfilment_idempotent_confirm(test_db: Any, async_client
     # First confirm (should be treated as idempotent no-op since status is already CONFIRMED)
     resp_confirm_1 = await client.post(f"/api/b2b/bookings/{booking_id}/confirm", headers=headers)
     assert resp_confirm_1.status_code == status.HTTP_200_OK
-    data1 = resp_confirm_1.json()
+    data1 = _unwrap(resp_confirm_1)
     assert data1["state"] == "confirmed"
 
     # Second confirm
     resp_confirm_2 = await client.post(f"/api/b2b/bookings/{booking_id}/confirm", headers=headers)
     assert resp_confirm_2.status_code == status.HTTP_200_OK
-    data2 = resp_confirm_2.json()
+    data2 = _unwrap(resp_confirm_2)
     assert data2["state"] == "confirmed"
 
     # Only one BOOKING_CONFIRMED lifecycle event should exist

@@ -27,6 +27,16 @@ async def _seed_admin_and_agent(db):
     """Seed a super_admin and an agency_agent user for permission tests."""
     from datetime import datetime, timezone
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
     now = datetime.now(timezone.utc)
 
     admin_email = "perm_admin@test.local"
@@ -91,7 +101,7 @@ async def test_list_screens_authenticated(async_client: AsyncClient, test_db) ->
 
     resp = await async_client.get("/api/admin/permissions/screens", headers=ctx["admin_headers"])
     assert resp.status_code == 200, f"Failed: {resp.text[:200]}"
-    screens = resp.json()
+    screens = _unwrap(resp)
 
     assert isinstance(screens, list)
     assert len(screens) >= 10
@@ -118,7 +128,7 @@ async def test_get_user_permissions(async_client: AsyncClient, test_db) -> None:
         headers=ctx["admin_headers"],
     )
     assert resp.status_code == 200, f"Failed: {resp.text[:200]}"
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["user_id"] == ctx["agent_id"]
     assert isinstance(data["allowed_screens"], list)
 
@@ -153,7 +163,7 @@ async def test_update_permissions_valid(async_client: AsyncClient, test_db) -> N
         json={"allowed_screens": new_screens},
     )
     assert resp.status_code == 200, f"Failed: {resp.text[:200]}"
-    assert set(resp.json()["allowed_screens"]) == set(new_screens)
+    assert set(_unwrap(resp)["allowed_screens"]) == set(new_screens)
 
     # Persistence check
     get_resp = await async_client.get(
@@ -161,7 +171,7 @@ async def test_update_permissions_valid(async_client: AsyncClient, test_db) -> N
         headers=ctx["admin_headers"],
     )
     assert get_resp.status_code == 200
-    assert set(get_resp.json()["allowed_screens"]) == set(new_screens)
+    assert set(_unwrap(get_resp)["allowed_screens"]) == set(new_screens)
 
 
 @pytest.mark.anyio
@@ -175,7 +185,7 @@ async def test_update_permissions_all_screens(async_client: AsyncClient, test_db
         json={"allowed_screens": EXPECTED_SCREENS},
     )
     assert resp.status_code == 200
-    assert set(resp.json()["allowed_screens"]) == set(EXPECTED_SCREENS)
+    assert set(_unwrap(resp)["allowed_screens"]) == set(EXPECTED_SCREENS)
 
 
 @pytest.mark.anyio
@@ -189,7 +199,7 @@ async def test_update_permissions_empty(async_client: AsyncClient, test_db) -> N
         json={"allowed_screens": []},
     )
     assert resp.status_code == 200
-    assert resp.json()["allowed_screens"] == []
+    assert _unwrap(resp)["allowed_screens"] == []
 
 
 @pytest.mark.anyio
@@ -203,7 +213,7 @@ async def test_update_permissions_filters_invalid(async_client: AsyncClient, tes
         json={"allowed_screens": ["dashboard", "invalid_xyz", "rezervasyonlar", "fake"]},
     )
     assert resp.status_code == 200
-    assert set(resp.json()["allowed_screens"]) == {"dashboard", "rezervasyonlar"}
+    assert set(_unwrap(resp)["allowed_screens"]) == {"dashboard", "rezervasyonlar"}
 
 
 @pytest.mark.anyio
@@ -239,7 +249,7 @@ async def test_auth_me_includes_allowed_screens(async_client: AsyncClient, test_
 
     resp = await async_client.get("/api/auth/me", headers=ctx["admin_headers"])
     assert resp.status_code == 200, f"Failed: {resp.text[:200]}"
-    data = resp.json()
+    data = _unwrap(resp)
     assert "allowed_screens" in data
     assert isinstance(data["allowed_screens"], list)
 
@@ -258,7 +268,7 @@ async def test_full_permissions_workflow(async_client: AsyncClient, test_db) -> 
     # 1 - List screens
     screens_resp = await async_client.get("/api/admin/permissions/screens", headers=h)
     assert screens_resp.status_code == 200
-    assert len(screens_resp.json()) >= 10
+    assert len(_unwrap(screens_resp)) >= 10
 
     # 2 - Get initial permissions
     get_resp = await async_client.get(f"/api/admin/all-users/{uid}/permissions", headers=h)
@@ -271,7 +281,7 @@ async def test_full_permissions_workflow(async_client: AsyncClient, test_db) -> 
         headers=h, json={"allowed_screens": restricted},
     )
     assert upd.status_code == 200
-    assert set(upd.json()["allowed_screens"]) == set(restricted)
+    assert set(_unwrap(upd)["allowed_screens"]) == set(restricted)
 
     # 4 - Clear
     clear = await async_client.put(
@@ -279,4 +289,4 @@ async def test_full_permissions_workflow(async_client: AsyncClient, test_db) -> 
         headers=h, json={"allowed_screens": []},
     )
     assert clear.status_code == 200
-    assert clear.json()["allowed_screens"] == []
+    assert _unwrap(clear)["allowed_screens"] == []

@@ -22,6 +22,16 @@ from app.auth import _jwt_secret
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.exit_pricing_rules_admin_v1
 @pytest.mark.anyio
 async def test_pricing_rules_crud_and_listing_active_only(test_db: Any, async_client: AsyncClient) -> None:
@@ -90,7 +100,7 @@ async def test_pricing_rules_crud_and_listing_active_only(test_db: Any, async_cl
 
     resp1 = await client.post("/api/pricing/rules", json=create_payload_1, headers=base_headers)
     assert resp1.status_code == status.HTTP_201_CREATED, resp1.text
-    rule1 = resp1.json()
+    rule1 = _unwrap(resp1)
     assert rule1["organization_id"] == org_id
     assert rule1["tenant_id"] is not None  # taken from context
     assert rule1["supplier"] == "mock_v1"
@@ -114,12 +124,12 @@ async def test_pricing_rules_crud_and_listing_active_only(test_db: Any, async_cl
 
     resp2 = await client.post("/api/pricing/rules", json=create_payload_2, headers=base_headers)
     assert resp2.status_code == status.HTTP_201_CREATED, resp2.text
-    rule2 = resp2.json()
+    rule2 = _unwrap(resp2)
 
     # 2) List all rules (no filters) -> both appear, sorted by priority DESC then created_at ASC
     resp_list_all = await client.get("/api/pricing/rules", headers=base_headers)
     assert resp_list_all.status_code == status.HTTP_200_OK, resp_list_all.text
-    items_all: List[Dict[str, Any]] = resp_list_all.json()
+    items_all: List[Dict[str, Any]] = _unwrap(resp_list_all)
     ids_all = [r["id"] for r in items_all]
     assert rule1["id"] in ids_all and rule2["id"] in ids_all
 
@@ -131,7 +141,7 @@ async def test_pricing_rules_crud_and_listing_active_only(test_db: Any, async_cl
     # 3) List with active_only=true -> future-window rule2 must be filtered out
     resp_list_active = await client.get("/api/pricing/rules?active_only=true", headers=base_headers)
     assert resp_list_active.status_code == status.HTTP_200_OK, resp_list_active.text
-    items_active: List[Dict[str, Any]] = resp_list_active.json()
+    items_active: List[Dict[str, Any]] = _unwrap(resp_list_active)
     ids_active = [r["id"] for r in items_active]
     assert rule1["id"] in ids_active
     assert rule2["id"] not in ids_active
@@ -139,7 +149,7 @@ async def test_pricing_rules_crud_and_listing_active_only(test_db: Any, async_cl
     # 4) Get by id (organization-scoped)
     resp_get = await client.get(f"/api/pricing/rules/{rule1['id']}", headers=base_headers)
     assert resp_get.status_code == status.HTTP_200_OK, resp_get.text
-    got = resp_get.json()
+    got = _unwrap(resp_get)
     assert got["id"] == rule1["id"]
     assert got["organization_id"] == org_id
 
@@ -150,19 +160,19 @@ async def test_pricing_rules_crud_and_listing_active_only(test_db: Any, async_cl
     }
     resp_upd = await client.patch(f"/api/pricing/rules/{rule1['id']}", json=update_payload, headers=base_headers)
     assert resp_upd.status_code == status.HTTP_200_OK, resp_upd.text
-    updated = resp_upd.json()
+    updated = _unwrap(resp_upd)
     assert updated["value"] == "12.50"
     assert updated["priority"] == 100
 
     # 6) Delete rule2 (hard delete) and ensure it disappears from listing
     resp_del = await client.delete(f"/api/pricing/rules/{rule2['id']}", headers=base_headers)
     assert resp_del.status_code == status.HTTP_200_OK, resp_del.text
-    assert resp_del.json().get("ok") is True
+    assert _unwrap(resp_del).get("ok") is True
 
     # List again: only rule1 remains
     resp_list_after_del = await client.get("/api/pricing/rules", headers=base_headers)
     assert resp_list_after_del.status_code == status.HTTP_200_OK, resp_list_after_del.text
-    items_after_del: List[Dict[str, Any]] = resp_list_after_del.json()
+    items_after_del: List[Dict[str, Any]] = _unwrap(resp_list_after_del)
     ids_after_del = [r["id"] for r in items_after_del]
     assert rule1["id"] in ids_after_del
     assert rule2["id"] not in ids_after_del
@@ -229,13 +239,13 @@ async def test_pricing_rules_cross_tenant_protection(test_db: Any, async_client:
 
     resp_bad = await client.post("/api/pricing/rules", json=bad_payload, headers=headers)
     assert resp_bad.status_code == status.HTTP_403_FORBIDDEN
-    data_bad = resp_bad.json()
+    data_bad = _unwrap(resp_bad)
     assert data_bad["error"]["message"] == "CROSS_TENANT_FORBIDDEN"
 
     # Query tenant_id mismatch on list
     resp_bad_list = await client.get("/api/pricing/rules?tenant_id=other-tenant", headers=headers)
     assert resp_bad_list.status_code == status.HTTP_403_FORBIDDEN
-    data_bad_list = resp_bad_list.json()
+    data_bad_list = _unwrap(resp_bad_list)
     assert data_bad_list["error"]["message"] == "CROSS_TENANT_FORBIDDEN"
 
 
@@ -342,7 +352,7 @@ async def test_booking_pricing_trace_minimal_shape(test_db: Any, async_client: A
     # 1) Happy path: Org A token requesting Org A booking
     resp_trace = await client.get(f"/api/bookings/{booking_a_id}/pricing-trace", headers=headers_a)
     assert resp_trace.status_code == status.HTTP_200_OK, resp_trace.text
-    data = resp_trace.json()
+    data = _unwrap(resp_trace)
     assert data["booking_id"] == booking_a_id
     assert data["pricing"] is not None
     assert data["pricing"]["currency"] == "TRY"
@@ -364,7 +374,7 @@ async def test_booking_pricing_trace_minimal_shape(test_db: Any, async_client: A
 
     resp_empty = await client.get(f"/api/bookings/{empty_booking_id}/pricing-trace", headers=headers_a)
     assert resp_empty.status_code == status.HTTP_200_OK, resp_empty.text
-    data_empty = resp_empty.json()
+    data_empty = _unwrap(resp_empty)
     assert data_empty["booking_id"] == empty_booking_id
     assert data_empty["pricing"] is None or data_empty["pricing"] == {}
     assert data_empty["pricing_audit"] is None
@@ -376,6 +386,6 @@ async def test_booking_pricing_trace_minimal_shape(test_db: Any, async_client: A
     # 4) Invalid ObjectId should also yield 404 BOOKING_NOT_FOUND
     resp_invalid = await client.get("/api/bookings/not-a-valid-id/pricing-trace", headers=headers_a)
     assert resp_invalid.status_code == status.HTTP_404_NOT_FOUND
-    err = resp_invalid.json().get("error", {})
+    err = _unwrap(resp_invalid).get("error", {})
     assert err.get("code") == "not_found"
 

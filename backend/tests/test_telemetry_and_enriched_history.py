@@ -10,6 +10,16 @@ import pytest
 import requests
 import os
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 @pytest.fixture(scope="module")
@@ -20,7 +30,7 @@ def auth_token():
         "password": "agent123"
     })
     assert response.status_code == 200, f"Login failed: {response.text}"
-    data = response.json()
+    data = _unwrap(response)
     assert "access_token" in data, f"No access_token in response: {data}"
     return data["access_token"]
 
@@ -38,7 +48,7 @@ class TestTelemetryEndpoint:
         response = requests.get(f"{BASE_URL}/api/e2e-demo/telemetry", headers=auth_headers)
         assert response.status_code == 200, f"Telemetry endpoint failed: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         
         # Check counters structure
         assert "counters" in data, "Missing 'counters' field in response"
@@ -75,7 +85,7 @@ class TestTelemetryEndpoint:
         )
         assert response.status_code == 200, f"Telemetry with filter failed: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "counters" in data
         assert "supplier_filter" in data
         assert data["supplier_filter"] == "ratehawk"
@@ -90,7 +100,7 @@ class TestTelemetryCounterIncrement:
         # Get initial telemetry
         initial_response = requests.get(f"{BASE_URL}/api/e2e-demo/telemetry", headers=auth_headers)
         assert initial_response.status_code == 200
-        initial_counters = initial_response.json()["counters"]
+        initial_counters = _unwrap(initial_response)["counters"]
         initial_simulation_runs = initial_counters.get("simulation_runs", 0)
         
         # Run a test (simulation mode - no sandbox credentials configured)
@@ -104,7 +114,7 @@ class TestTelemetryCounterIncrement:
         # Get updated telemetry
         updated_response = requests.get(f"{BASE_URL}/api/e2e-demo/telemetry", headers=auth_headers)
         assert updated_response.status_code == 200
-        updated_counters = updated_response.json()["counters"]
+        updated_counters = _unwrap(updated_response)["counters"]
         updated_simulation_runs = updated_counters.get("simulation_runs", 0)
         
         # Verify counter incremented
@@ -118,7 +128,7 @@ class TestTelemetryCounterIncrement:
         # Get initial telemetry
         initial_response = requests.get(f"{BASE_URL}/api/e2e-demo/telemetry", headers=auth_headers)
         assert initial_response.status_code == 200
-        initial_attempts = initial_response.json()["counters"].get("sandbox_connection_attempts", 0)
+        initial_attempts = _unwrap(initial_response)["counters"].get("sandbox_connection_attempts", 0)
         
         # Call sandbox-status endpoint
         status_response = requests.get(
@@ -130,7 +140,7 @@ class TestTelemetryCounterIncrement:
         # Get updated telemetry
         updated_response = requests.get(f"{BASE_URL}/api/e2e-demo/telemetry", headers=auth_headers)
         assert updated_response.status_code == 200
-        updated_attempts = updated_response.json()["counters"].get("sandbox_connection_attempts", 0)
+        updated_attempts = _unwrap(updated_response)["counters"].get("sandbox_connection_attempts", 0)
         
         # Counter might increment (depends on credentials being configured)
         print(f"✅ sandbox_connection_attempts: {initial_attempts} -> {updated_attempts}")
@@ -148,7 +158,7 @@ class TestEnrichedTestResult:
         )
         assert response.status_code == 200, f"Run test failed: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         
         # Check enriched fields at root level
         assert "environment" in data, "Missing 'environment' field in test result"
@@ -183,7 +193,7 @@ class TestEnrichedTestResult:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert "supplier" in data, "Missing 'supplier' field"
         assert data["supplier"] == "paximum", f"Wrong supplier: {data['supplier']}"
         print(f"✅ Supplier field working: {data['supplier']}")
@@ -200,7 +210,7 @@ class TestEnrichedHistory:
         )
         assert response.status_code == 200, f"History endpoint failed: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "tests" in data, "Missing 'tests' field in history response"
         
         tests = data["tests"]
@@ -239,7 +249,7 @@ class TestEnrichedHistory:
         )
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         tests = data.get("tests", [])
         
         # All returned tests should be for ratehawk
@@ -261,7 +271,7 @@ class TestSandboxStatusEndpoint:
         )
         assert response.status_code == 200, f"Sandbox status failed: {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         
         assert "mode" in data, "Missing 'mode' field"
         assert "supplier" in data, "Missing 'supplier' field"

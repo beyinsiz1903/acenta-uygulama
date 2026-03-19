@@ -18,6 +18,16 @@ import pytest
 import requests
 import os
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
@@ -32,7 +42,7 @@ def auth_token():
         json=SUPER_ADMIN_CREDS
     )
     if response.status_code == 200:
-        data = response.json()
+        data = _unwrap(response)
         # Auth uses 'access_token' field
         return data.get("access_token") or data.get("token")
     pytest.skip(f"Authentication failed: {response.status_code}")
@@ -59,7 +69,7 @@ class TestInfrastructureHealth:
             headers=auth_headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify structure
         assert "timestamp" in data
@@ -97,7 +107,7 @@ class TestInfrastructureHealth:
             headers=auth_headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         redis = data["services"]["redis"]
         assert redis["status"] == "healthy"
@@ -115,7 +125,7 @@ class TestInfrastructureHealth:
             headers=auth_headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         mongo = data["services"]["mongodb"]
         assert mongo["status"] == "healthy"
@@ -140,7 +150,7 @@ class TestSecretAudit:
             headers=auth_headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify structure
         assert "timestamp" in data
@@ -178,7 +188,7 @@ class TestSupplierStatus:
             headers=auth_headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify structure
         assert "timestamp" in data
@@ -215,7 +225,7 @@ class TestPerformanceBaseline:
             timeout=30  # Longer timeout for performance tests
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify structure
         assert "timestamp" in data
@@ -240,7 +250,7 @@ class TestPerformanceBaseline:
             timeout=30
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         # Check MongoDB read latency exists
         results = data["results"]
@@ -267,7 +277,7 @@ class TestIncidentSimulation:
             headers=auth_headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify structure
         assert data["incident_type"] == "supplier_outage"
@@ -288,7 +298,7 @@ class TestIncidentSimulation:
             headers=auth_headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["incident_type"] == "queue_backlog"
         assert "simulation" in data
@@ -305,7 +315,7 @@ class TestIncidentSimulation:
             headers=auth_headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         assert data["incident_type"] == "payment_failure"
         assert "simulation" in data
@@ -332,7 +342,7 @@ class TestTenantIsolation:
             timeout=30
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify structure
         assert "timestamp" in data
@@ -362,7 +372,7 @@ class TestDryRun:
             timeout=30
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify structure
         assert "timestamp" in data
@@ -404,7 +414,7 @@ class TestOnboardingReadiness:
             headers=auth_headers
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify structure
         assert "timestamp" in data
@@ -442,7 +452,7 @@ class TestGoLiveCertification:
             timeout=60  # Certification runs all checks
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         # Verify top-level structure
         assert "timestamp" in data
@@ -477,7 +487,7 @@ class TestGoLiveCertification:
             timeout=60
         )
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
 
         cert = data["certification"]
         score = cert["production_readiness_score"]

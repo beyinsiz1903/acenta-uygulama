@@ -13,6 +13,16 @@ from app.utils import now_utc
 from app.config import PAXIMUM_BASE_URL
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.exit_sprint3
 @pytest.mark.anyio
 async def test_bookings_create_rejects_non_try_currency(test_db: Any, async_client: AsyncClient) -> None:
@@ -47,7 +57,7 @@ async def test_bookings_create_rejects_non_try_currency(test_db: Any, async_clie
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp_eur.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    body = resp_eur.json()
+    body = _unwrap(resp_eur)
     err = body.get("error", {})
     assert err.get("code") == "UNSUPPORTED_CURRENCY"
     details = err.get("details") or {}
@@ -61,7 +71,7 @@ async def test_bookings_create_rejects_non_try_currency(test_db: Any, async_clie
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp_try.status_code == status.HTTP_201_CREATED
-    booking = resp_try.json()
+    booking = _unwrap(resp_try)
     assert booking["currency"] == "TRY"
     assert booking["organization_id"] == org_id
 
@@ -108,7 +118,7 @@ async def test_from_offer_rejects_non_try_for_paximum_and_mock(test_db: Any, asy
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp_pax_eur.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    err_pax_eur = resp_pax_eur.json().get("error", {})
+    err_pax_eur = _unwrap(resp_pax_eur).get("error", {})
     assert err_pax_eur.get("code") == "UNSUPPORTED_CURRENCY"
 
     # mock_v1 + EUR -> 422 (even though mock service is deterministic in TRY)
@@ -118,7 +128,7 @@ async def test_from_offer_rejects_non_try_for_paximum_and_mock(test_db: Any, asy
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp_mock_eur.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    err_mock_eur = resp_mock_eur.json().get("error", {})
+    err_mock_eur = _unwrap(resp_mock_eur).get("error", {})
     assert err_mock_eur.get("code") == "UNSUPPORTED_CURRENCY"
 
 
@@ -173,7 +183,7 @@ async def test_paximum_search_currency_guards_request_and_response(test_db: Any,
         assert not route.called
 
     assert resp_req.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    err_req = resp_req.json().get("error", {})
+    err_req = _unwrap(resp_req).get("error", {})
     assert err_req.get("code") == "UNSUPPORTED_CURRENCY"
 
     # Response-level guard: upstream returns EUR
@@ -199,7 +209,7 @@ async def test_paximum_search_currency_guards_request_and_response(test_db: Any,
         )
 
     assert resp_res.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    err_res = resp_res.json().get("error", {})
+    err_res = _unwrap(resp_res).get("error", {})
     assert err_res.get("code") == "UNSUPPORTED_CURRENCY"
 
 
@@ -249,7 +259,7 @@ async def test_non_try_booking_transitions_are_blocked(test_db: Any, async_clien
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp_quote.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    err_q = resp_quote.json().get("error", {})
+    err_q = _unwrap(resp_quote).get("error", {})
     assert err_q.get("code") == "UNSUPPORTED_CURRENCY"
 
     # Attempt to book should also fail similarly
@@ -258,5 +268,5 @@ async def test_non_try_booking_transitions_are_blocked(test_db: Any, async_clien
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp_book.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    err_b = resp_book.json().get("error", {})
+    err_b = _unwrap(resp_book).get("error", {})
     assert err_b.get("code") == "UNSUPPORTED_CURRENCY"

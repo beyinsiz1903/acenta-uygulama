@@ -8,6 +8,16 @@ from bson import ObjectId
 from app.auth import create_access_token
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 def _auth_headers(token: str, tenant_id: str | None = None) -> dict[str, str]:
     headers = {"Authorization": f"Bearer {token}"}
     if tenant_id:
@@ -35,7 +45,7 @@ async def test_mobile_auth_me_returns_sanitized_user(async_client, admin_token):
     )
 
     assert response.status_code == 200, response.text
-    payload = response.json()
+    payload = _unwrap(response)
     assert payload["email"] == "admin@acenta.test"
     assert "password_hash" not in payload
     assert "_id" not in payload
@@ -119,7 +129,7 @@ async def test_mobile_bookings_are_tenant_isolated(async_client, test_db):
 
     list_response = await async_client.get("/api/v1/mobile/bookings", headers=headers)
     assert list_response.status_code == 200, list_response.text
-    body = list_response.json()
+    body = _unwrap(list_response)
     assert body["total"] == 1
     assert len(body["items"]) == 1
     assert body["items"][0]["hotel_name"] == "Hotel A"
@@ -127,7 +137,7 @@ async def test_mobile_bookings_are_tenant_isolated(async_client, test_db):
 
     detail_allowed = await async_client.get(f"/api/v1/mobile/bookings/{booking_a_id}", headers=headers)
     assert detail_allowed.status_code == 200, detail_allowed.text
-    assert detail_allowed.json()["hotel_name"] == "Hotel A"
+    assert _unwrap(detail_allowed)["hotel_name"] == "Hotel A"
 
     detail_denied = await async_client.get(f"/api/v1/mobile/bookings/{booking_b_id}", headers=headers)
     assert detail_denied.status_code == 404, detail_denied.text
@@ -183,7 +193,7 @@ async def test_mobile_booking_create_sets_tenant_and_returns_mobile_dto(async_cl
     )
 
     assert response.status_code == 201, response.text
-    payload = response.json()
+    payload = _unwrap(response)
     assert payload["tenant_id"] == tenant_id
     assert payload["customer_name"] == "Jane Doe"
     assert payload["hotel_name"] == "Mobile Hotel"
@@ -265,14 +275,14 @@ async def test_mobile_dashboard_and_reports_summary_contracts(async_client, test
 
     dashboard_response = await async_client.get("/api/v1/mobile/dashboard/summary", headers=headers)
     assert dashboard_response.status_code == 200, dashboard_response.text
-    dashboard_payload = dashboard_response.json()
+    dashboard_payload = _unwrap(dashboard_response)
     assert dashboard_payload["bookings_month"] == 2
     assert dashboard_payload["revenue_month"] == pytest.approx(2300.0)
     assert dashboard_payload["currency"] == "TRY"
 
     reports_response = await async_client.get("/api/v1/mobile/reports/summary", headers=headers)
     assert reports_response.status_code == 200, reports_response.text
-    reports_payload = reports_response.json()
+    reports_payload = _unwrap(reports_response)
     assert reports_payload["total_bookings"] == 2
     assert reports_payload["total_revenue"] == pytest.approx(2300.0)
     assert {item["status"] for item in reports_payload["status_breakdown"]} == {"booked", "draft"}

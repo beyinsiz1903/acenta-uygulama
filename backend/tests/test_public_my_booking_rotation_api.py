@@ -9,6 +9,16 @@ from app.utils import now_utc
 from app.services.public_my_booking import create_public_token, _hash_token
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.anyio
 async def test_root_token_first_use_rotates_and_marks_used(async_client, test_db):
     """Root token first resolve should mark it used and create exactly one rotated token."""
@@ -36,7 +46,7 @@ async def test_root_token_first_use_rotates_and_marks_used(async_client, test_db
     # First GET should succeed and return next_token
     resp = await async_client.get(f"/api/public/my-booking/{root_token}")
     assert resp.status_code == 200
-    data = resp.json()
+    data = _unwrap(resp)
     assert data["code"] == booking["code"]
     assert "next_token" in data and isinstance(data["next_token"], str)
     assert data["next_token"] and data["next_token"] != root_token
@@ -87,7 +97,7 @@ async def test_root_token_second_use_is_not_found(async_client, test_db):
     # Second resolve must now be NOT_FOUND
     second = await async_client.get(f"/api/public/my-booking/{root_token}")
     assert second.status_code == 404
-    body = second.json()
+    body = _unwrap(second)
     # Custom exception handler wraps detail in {"error": {"message": ...}}
     assert body.get("detail") == "NOT_FOUND" or body.get("error", {}).get("message") == "NOT_FOUND"
 
@@ -116,20 +126,20 @@ async def test_rotated_token_multi_use_without_further_rotation(async_client, te
     # First resolve root to obtain rotated token
     first = await async_client.get(f"/api/public/my-booking/{root_token}")
     assert first.status_code == 200
-    first_data = first.json()
+    first_data = _unwrap(first)
     rotated_token = first_data.get("next_token")
     assert rotated_token and rotated_token != root_token
 
     # First use of rotated token
     resp1 = await async_client.get(f"/api/public/my-booking/{rotated_token}")
     assert resp1.status_code == 200
-    data1 = resp1.json()
+    data1 = _unwrap(resp1)
     assert "next_token" not in data1 or data1.get("next_token") in (None, "")
 
     # Second use of rotated token
     resp2 = await async_client.get(f"/api/public/my-booking/{rotated_token}")
     assert resp2.status_code == 200
-    data2 = resp2.json()
+    data2 = _unwrap(resp2)
     assert "next_token" not in data2 or data2.get("next_token") in (None, "")
 
 
@@ -160,7 +170,7 @@ async def test_root_token_race_results_in_single_rotation(async_client, test_db)
 
     async def hit_root() -> dict[str, Any]:
         r = await async_client.get(f"/api/public/my-booking/{root_token}")
-        return {"status": r.status_code, "body": r.json()}
+        return {"status": r.status_code, "body": _unwrap(r)}
 
     # Fire two concurrent resolves
     res1, res2 = await asyncio.gather(hit_root(), hit_root())

@@ -13,6 +13,14 @@ import os
 import pytest
 import requests
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 
@@ -28,14 +36,14 @@ class TestProviderCatalog:
             json={"email": "admin@acenta.test", "password": "admin123"},
         )
         assert login_resp.status_code == 200, f"Login failed: {login_resp.text}"
-        token = login_resp.json().get("access_token")
+        token = _unwrap(login_resp).get("access_token")
         self.session.headers.update({"Authorization": f"Bearer {token}"})
 
     def test_list_all_providers_returns_4_providers(self):
         """GET /api/accounting/providers/catalog - returns luca, logo, parasut, mikro."""
         resp = self.session.get(f"{BASE_URL}/api/accounting/providers/catalog")
         assert resp.status_code == 200, f"Catalog failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "providers" in data, "Missing providers key"
         providers = data["providers"]
         assert len(providers) == 4, f"Expected 4 providers, got {len(providers)}"
@@ -50,7 +58,7 @@ class TestProviderCatalog:
         """Verify each provider has capability matrix."""
         resp = self.session.get(f"{BASE_URL}/api/accounting/providers/catalog")
         assert resp.status_code == 200
-        providers = resp.json()["providers"]
+        providers = _unwrap(resp)["providers"]
         for p in providers:
             assert "capabilities" in p, f"Missing capabilities for {p['code']}"
             caps = p["capabilities"]
@@ -69,7 +77,7 @@ class TestProviderCatalog:
         """GET /api/accounting/providers/catalog/active - only Luca is active."""
         resp = self.session.get(f"{BASE_URL}/api/accounting/providers/catalog/active")
         assert resp.status_code == 200, f"Active catalog failed: {resp.text}"
-        providers = resp.json()["providers"]
+        providers = _unwrap(resp)["providers"]
         assert len(providers) == 1, f"Expected 1 active provider, got {len(providers)}"
         assert providers[0]["code"] == "luca", f"Expected luca, got {providers[0]['code']}"
         assert providers[0]["is_active"] is True
@@ -79,7 +87,7 @@ class TestProviderCatalog:
         """GET /api/accounting/providers/catalog/luca - returns Luca details."""
         resp = self.session.get(f"{BASE_URL}/api/accounting/providers/catalog/luca")
         assert resp.status_code == 200, f"Get luca failed: {resp.text}"
-        p = resp.json()
+        p = _unwrap(resp)
         assert p["code"] == "luca"
         assert p["name"] == "Luca"
         assert p["is_active"] is True
@@ -92,7 +100,7 @@ class TestProviderCatalog:
         """GET /api/accounting/providers/catalog/logo - Logo is inactive."""
         resp = self.session.get(f"{BASE_URL}/api/accounting/providers/catalog/logo")
         assert resp.status_code == 200
-        p = resp.json()
+        p = _unwrap(resp)
         assert p["code"] == "logo"
         assert p["is_active"] is False
         print(f"SUCCESS: Logo is inactive stub - {p['description'][:50]}...")
@@ -101,7 +109,7 @@ class TestProviderCatalog:
         """GET /api/accounting/providers/catalog/parasut - Parasut is inactive."""
         resp = self.session.get(f"{BASE_URL}/api/accounting/providers/catalog/parasut")
         assert resp.status_code == 200
-        p = resp.json()
+        p = _unwrap(resp)
         assert p["code"] == "parasut"
         assert p["is_active"] is False
         print("SUCCESS: Parasut is inactive stub")
@@ -110,7 +118,7 @@ class TestProviderCatalog:
         """GET /api/accounting/providers/catalog/mikro - Mikro is inactive."""
         resp = self.session.get(f"{BASE_URL}/api/accounting/providers/catalog/mikro")
         assert resp.status_code == 200
-        p = resp.json()
+        p = _unwrap(resp)
         assert p["code"] == "mikro"
         assert p["is_active"] is False
         print("SUCCESS: Mikro is inactive stub")
@@ -134,7 +142,7 @@ class TestProviderConfig:
             json={"email": "admin@acenta.test", "password": "admin123"},
         )
         assert login_resp.status_code == 200, f"Login failed: {login_resp.text}"
-        token = login_resp.json().get("access_token")
+        token = _unwrap(login_resp).get("access_token")
         self.session.headers.update({"Authorization": f"Bearer {token}"})
 
     def test_configure_luca_provider(self):
@@ -149,7 +157,7 @@ class TestProviderConfig:
         }
         resp = self.session.post(f"{BASE_URL}/api/accounting/providers/config", json=payload)
         assert resp.status_code == 200, f"Config failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("provider_code") == "luca"
         assert data.get("status") == "configured"
         assert "config_id" in data
@@ -164,7 +172,7 @@ class TestProviderConfig:
         }
         resp = self.session.post(f"{BASE_URL}/api/accounting/providers/config", json=payload)
         assert resp.status_code == 400, f"Expected 400, got {resp.status_code}"
-        error = resp.json()
+        error = _unwrap(resp)
         error_msg = error.get("detail", "") or error.get("error", {}).get("message", "")
         assert "aktif degil" in error_msg.lower() or "active" in str(error).lower(), f"Unexpected error: {error}"
         print(f"SUCCESS: Inactive provider correctly rejected: {error}")
@@ -192,7 +200,7 @@ class TestProviderConfig:
         # Get config
         resp = self.session.get(f"{BASE_URL}/api/accounting/providers/config")
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("configured") is True
         provider = data.get("provider")
         assert provider is not None
@@ -219,7 +227,7 @@ class TestConnectionTest:
             json={"email": "admin@acenta.test", "password": "admin123"},
         )
         assert login_resp.status_code == 200
-        token = login_resp.json().get("access_token")
+        token = _unwrap(login_resp).get("access_token")
         self.session.headers.update({"Authorization": f"Bearer {token}"})
 
     def test_test_connection_simulated_mode(self):
@@ -234,7 +242,7 @@ class TestConnectionTest:
         )
         resp = self.session.post(f"{BASE_URL}/api/accounting/providers/test-connection")
         assert resp.status_code == 200, f"Test connection failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("success") is True, f"Test connection not successful: {data}"
         assert data.get("status") in ["connected", "simulated"], f"Unexpected status: {data}"
         print(f"SUCCESS: Connection test - status={data.get('status')}")
@@ -251,7 +259,7 @@ class TestCredentialRotation:
             json={"email": "admin@acenta.test", "password": "admin123"},
         )
         assert login_resp.status_code == 200
-        token = login_resp.json().get("access_token")
+        token = _unwrap(login_resp).get("access_token")
         self.session.headers.update({"Authorization": f"Bearer {token}"})
 
     def test_rotate_credentials(self):
@@ -270,7 +278,7 @@ class TestCredentialRotation:
             json={"credentials": {"username": "TEST_rotated", "password": "TEST_rotated_pass", "company_id": "TEST_ROT"}},
         )
         assert resp.status_code == 200, f"Rotate failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "encrypted_credentials" not in data
         assert data.get("status") == "configured"
         print("SUCCESS: Credentials rotated")
@@ -287,7 +295,7 @@ class TestDeleteConfig:
             json={"email": "admin@acenta.test", "password": "admin123"},
         )
         assert login_resp.status_code == 200
-        token = login_resp.json().get("access_token")
+        token = _unwrap(login_resp).get("access_token")
         self.session.headers.update({"Authorization": f"Bearer {token}"})
 
     def test_delete_config(self):
@@ -303,11 +311,11 @@ class TestDeleteConfig:
         # Delete
         resp = self.session.delete(f"{BASE_URL}/api/accounting/providers/config")
         assert resp.status_code == 200, f"Delete failed: {resp.text}"
-        assert resp.json().get("deleted") is True
+        assert _unwrap(resp).get("deleted") is True
         # Verify deleted
         get_resp = self.session.get(f"{BASE_URL}/api/accounting/providers/config")
         assert get_resp.status_code == 200
-        assert get_resp.json().get("configured") is False
+        assert _unwrap(get_resp).get("configured") is False
         print("SUCCESS: Config deleted and verified")
 
 
@@ -322,14 +330,14 @@ class TestHealthDashboard:
             json={"email": "admin@acenta.test", "password": "admin123"},
         )
         assert login_resp.status_code == 200
-        token = login_resp.json().get("access_token")
+        token = _unwrap(login_resp).get("access_token")
         self.session.headers.update({"Authorization": f"Bearer {token}"})
 
     def test_health_dashboard(self):
         """GET /api/accounting/providers/health - health dashboard."""
         resp = self.session.get(f"{BASE_URL}/api/accounting/providers/health")
         assert resp.status_code == 200, f"Health failed: {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "tenant_providers" in data, "Missing tenant_providers"
         assert "metrics_24h" in data, "Missing metrics_24h"
         assert "metrics_1h" in data, "Missing metrics_1h"
@@ -349,7 +357,7 @@ class TestRBACAgencyAdmin:
         )
         if login_resp.status_code != 200:
             pytest.skip(f"Agency login failed: {login_resp.text}")
-        token = login_resp.json().get("access_token")
+        token = _unwrap(login_resp).get("access_token")
         self.session.headers.update({"Authorization": f"Bearer {token}"})
 
     def test_agency_admin_can_view_catalog(self):
@@ -357,7 +365,7 @@ class TestRBACAgencyAdmin:
         resp = self.session.get(f"{BASE_URL}/api/accounting/providers/catalog")
         # agency_admin should be in ALLOWED_ROLES
         assert resp.status_code == 200, f"Agency should access catalog: {resp.status_code} - {resp.text}"
-        providers = resp.json().get("providers", [])
+        providers = _unwrap(resp).get("providers", [])
         assert len(providers) == 4
         print("SUCCESS: Agency admin CAN view catalog")
 
@@ -408,7 +416,7 @@ class TestCleanup:
             json={"email": "admin@acenta.test", "password": "admin123"},
         )
         assert login_resp.status_code == 200
-        token = login_resp.json().get("access_token")
+        token = _unwrap(login_resp).get("access_token")
         self.session.headers.update({"Authorization": f"Bearer {token}"})
 
     def test_reconfigure_luca_for_frontend(self):

@@ -14,6 +14,14 @@ from __future__ import annotations
 import pytest
 import httpx
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 pytestmark = pytest.mark.anyio
 
 
@@ -31,7 +39,7 @@ class TestAuthLogin:
             json={"email": "admin@acenta.test", "password": "admin123"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "access_token" in data
         assert data.get("user", {}).get("email") == "admin@acenta.test"
 
@@ -42,7 +50,7 @@ class TestAuthLogin:
             json={"email": "agency1@demo.test", "password": "agency123"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "access_token" in data
 
     async def test_login_invalid_password(self, async_client: httpx.AsyncClient):
@@ -81,7 +89,7 @@ class TestTokenValidation:
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "email" in data
         assert "organization_id" in data
 

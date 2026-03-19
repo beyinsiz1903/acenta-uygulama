@@ -202,7 +202,7 @@ async def test_ops_incident_created_for_supplier_all_failed(test_db: Any, async_
 
     resp = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp.status_code == 503
-    body = resp.json()
+    body = _unwrap(resp)
     code = body.get("error", {}).get("code")
     assert code == "SUPPLIER_ALL_FAILED"
 
@@ -267,7 +267,7 @@ async def test_ops_incident_list_filtering(test_db: Any, async_client: AsyncClie
     headers = _make_admin_headers(org_id, email)
     resp = await client.get("/api/admin/ops/incidents?status=open&type=risk_review", headers=headers)
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["total"] >= 1
     items = body["items"]
     assert len(items) == 1
@@ -304,7 +304,7 @@ async def test_ops_incident_resolve_flow(test_db: Any, async_client: AsyncClient
     headers = _make_admin_headers(org_id, email)
     resp = await client.patch("/api/admin/ops/incidents/inc_resolve_1/resolve", headers=headers)
     assert resp.status_code == 200
-    body = resp.json()
+    body = _unwrap(resp)
     assert body == {"incident_id": "inc_resolve_1", "status": "resolved"}
 
     updated = await db.ops_incidents.find_one({"organization_id": org_id, "incident_id": "inc_resolve_1"})
@@ -322,6 +322,16 @@ async def test_ops_incident_deduplication(test_db: Any) -> None:
     db = test_db
 
     from app.services.ops_incidents_service import create_risk_review_incident
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     org_id = "org_dedup"
     booking_id = "b_dedup"

@@ -239,7 +239,7 @@ async def test_supplier_circuit_open_skips_supplier_and_emits_warning(test_db: A
 
     resp = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
 
     assert called["paximum"] is False
     warnings = body.get("warnings") or []
@@ -322,6 +322,16 @@ async def test_supplier_circuit_closes_after_until(test_db: Any, async_client: A
 
     from app.services.supplier_health_service import is_supplier_circuit_open as _check_open_after
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
     is_open_after = await _check_open_after(db, organization_id=org_id, supplier_code="paximum")
     assert is_open_after is False
 
@@ -403,7 +413,7 @@ async def test_admin_supplier_health_endpoint_rbac_and_shape(test_db: Any, async
     admin_headers = {"Authorization": f"Bearer {jwt.encode({'sub': admin_email, 'org': org_id, 'roles': ['agency_admin']}, _jwt_secret(), algorithm='HS256')}"}
     resp = await client.get("/api/admin/suppliers/health", headers=admin_headers)
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["window_sec"] == 900
     assert len(body.get("items") or []) == 1
     item = body["items"][0]
@@ -474,7 +484,7 @@ async def test_admin_supplier_health_filtering_deterministic_order(test_db: Any,
     admin_headers = {"Authorization": f"Bearer {jwt.encode({'sub': admin_email, 'org': org_id, 'roles': ['agency_admin']}, _jwt_secret(), algorithm='HS256')}"}
     resp = await client.get("/api/admin/suppliers/health?supplier_codes=paximum,mock", headers=admin_headers)
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     items = body.get("items") or []
     assert len(items) == 2
     assert items[0]["supplier_code"] == "mock"

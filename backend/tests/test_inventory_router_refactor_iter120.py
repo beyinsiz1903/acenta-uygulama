@@ -20,6 +20,14 @@ import os
 import pytest
 import requests
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
@@ -35,7 +43,7 @@ def auth_token():
         "password": TEST_PASSWORD
     })
     assert resp.status_code == 200, f"Login failed: {resp.status_code} - {resp.text}"
-    data = resp.json()
+    data = _unwrap(resp)
     return data.get("access_token") or data.get("token")
 
 
@@ -63,7 +71,7 @@ class TestInventorySyncEndpoints:
             json={"supplier": "ratehawk"}
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert data["supplier"] == "ratehawk"
         assert data["status"] == "completed"
         
@@ -71,7 +79,7 @@ class TestInventorySyncEndpoints:
         """GET /api/inventory/sync/status — Get sync status for all suppliers"""
         resp = requests.get(f"{BASE_URL}/api/inventory/sync/status", headers=auth_headers)
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "suppliers" in data
         assert "ratehawk" in data["suppliers"]
         assert "paximum" in data["suppliers"]
@@ -82,7 +90,7 @@ class TestInventorySyncEndpoints:
         """GET /api/inventory/sync/jobs — List sync jobs"""
         resp = requests.get(f"{BASE_URL}/api/inventory/sync/jobs?limit=10", headers=auth_headers)
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "jobs" in data
         assert "total" in data
         
@@ -93,7 +101,7 @@ class TestInventorySyncEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         # May return error for non-existent job, which is fine
         assert "job_id" in data or "error" in data
         
@@ -112,7 +120,7 @@ class TestInventorySyncEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "executed" in data or "retries" in data or "total" in data or "message" in data
         
     def test_inventory_search(self, auth_headers):
@@ -122,7 +130,7 @@ class TestInventorySyncEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "results" in data
         assert "total" in data
         
@@ -130,7 +138,7 @@ class TestInventorySyncEndpoints:
         """GET /api/inventory/stats — Inventory statistics"""
         resp = requests.get(f"{BASE_URL}/api/inventory/stats", headers=auth_headers)
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "totals" in data
         
     def test_inventory_revalidate(self, auth_headers):
@@ -146,7 +154,7 @@ class TestInventorySyncEndpoints:
             }
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "supplier" in data
         assert "cached_price" in data or "revalidated_price" in data
 
@@ -173,7 +181,7 @@ class TestInventoryBookingEndpoints:
             }
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "precheck_id" in data or "price" in data or "status" in data
         
     def test_booking_create(self, auth_headers):
@@ -193,7 +201,7 @@ class TestInventoryBookingEndpoints:
             }
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "booking_id" in data or "status" in data or "error" in data
         
     def test_booking_status(self, auth_headers):
@@ -203,7 +211,7 @@ class TestInventoryBookingEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "booking_id" in data or "status" in data or "error" in data
         
     def test_booking_cancel(self, auth_headers):
@@ -222,7 +230,7 @@ class TestInventoryBookingEndpoints:
             json={"supplier": "ratehawk"}
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         # Response has matrix_id, overall_status, scenarios keys
         assert "matrix_id" in data or "results" in data or "scenarios" in data or "overall_status" in data
         
@@ -233,7 +241,7 @@ class TestInventoryBookingEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "bookings" in data or "history" in data or "total" in data
         
     def test_booking_test_matrix_history(self, auth_headers):
@@ -243,7 +251,7 @@ class TestInventoryBookingEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "history" in data or "runs" in data or "total" in data
         
     def test_booking_test_e2e(self, auth_headers):
@@ -254,7 +262,7 @@ class TestInventoryBookingEndpoints:
             json={"supplier": "ratehawk"}
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "test_id" in data or "result" in data or "steps" in data
         
     def test_booking_test_history(self, auth_headers):
@@ -264,7 +272,7 @@ class TestInventoryBookingEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "history" in data or "tests" in data or "total" in data
 
 
@@ -282,7 +290,7 @@ class TestInventoryDiagnosticsEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "suppliers" in data
         
     def test_supplier_config_post(self, auth_headers):
@@ -317,7 +325,7 @@ class TestInventoryDiagnosticsEndpoints:
             json={"supplier": "ratehawk"}
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "supplier" in data
         assert "status" in data
         
@@ -328,7 +336,7 @@ class TestInventoryDiagnosticsEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "metrics" in data
         
     def test_supplier_health(self, auth_headers):
@@ -338,7 +346,7 @@ class TestInventoryDiagnosticsEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "suppliers" in data or "health" in data
         
     def test_kpi_drift(self, auth_headers):
@@ -348,7 +356,7 @@ class TestInventoryDiagnosticsEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         # Response has drift_rate, price_consistency, price_drift_timeline keys
         assert "drift_rate" in data or "price_consistency" in data or "suppliers" in data
         
@@ -359,7 +367,7 @@ class TestInventoryDiagnosticsEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         # Response has job_breakdown, avg_duration_ms, period keys
         assert "job_breakdown" in data or "period" in data or "avg_duration_ms" in data or "total_jobs" in data
         
@@ -370,7 +378,7 @@ class TestInventoryDiagnosticsEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "supplier" in data or "regions" in data
         
     def test_sync_downtime(self, auth_headers):
@@ -380,7 +388,7 @@ class TestInventoryDiagnosticsEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "supplier" in data or "downtime" in data or "circuit_breaker" in data
 
 
@@ -398,7 +406,7 @@ class TestE2EDemoEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "scenarios" in data
         assert len(data["scenarios"]) == 6
         
@@ -409,7 +417,7 @@ class TestE2EDemoEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "suppliers" in data
         
     def test_e2e_run(self, auth_headers):
@@ -420,7 +428,7 @@ class TestE2EDemoEndpoints:
             json={"supplier": "ratehawk", "scenario": "success"}
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "run_id" in data
         assert "steps" in data
         assert len(data["steps"]) == 6
@@ -432,7 +440,7 @@ class TestE2EDemoEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "tests" in data
         
     def test_e2e_rerun_step(self, auth_headers):
@@ -443,7 +451,7 @@ class TestE2EDemoEndpoints:
             headers=auth_headers,
             json={"supplier": "ratehawk", "scenario": "supplier_unavailable"}
         )
-        run_data = run_resp.json()
+        run_data = _unwrap(run_resp)
         run_id = run_data.get("run_id", "test_run_001")
         
         resp = requests.post(
@@ -452,7 +460,7 @@ class TestE2EDemoEndpoints:
             json={"run_id": run_id, "step_id": "search"}
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "step" in data or "error" in data
 
 
@@ -470,7 +478,7 @@ class TestSupplierOnboardingEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "suppliers" in data
         assert len(data["suppliers"]) == 6
         
@@ -481,7 +489,7 @@ class TestSupplierOnboardingEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "suppliers" in data
         
     def test_onboarding_detail(self, auth_headers):
@@ -491,7 +499,7 @@ class TestSupplierOnboardingEndpoints:
             headers=auth_headers
         )
         assert resp.status_code == 200, f"Failed: {resp.status_code} - {resp.text}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert "code" in data or "name" in data or "error" in data
         
     def test_onboarding_credentials(self, auth_headers):
@@ -611,7 +619,7 @@ class TestRouteRegistration:
             pytest.skip("OpenAPI schema not accessible")
         
         try:
-            data = resp.json()
+            data = _unwrap(resp)
         except Exception:
             pytest.skip("OpenAPI schema not accessible")
             

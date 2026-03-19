@@ -7,6 +7,16 @@ import pytest
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.anyio
 async def test_booking_amend_quote_and_confirm_zero_delta_has_no_ledger(async_client, agency_token, test_db):
     """P1.5: Delta ~ 0 iken ledger posting olmamali, amend CONFIRMED olmalidir.
@@ -26,7 +36,7 @@ async def test_booking_amend_quote_and_confirm_zero_delta_has_no_ledger(async_cl
     headers = {"Authorization": f"Bearer {agency_token}"}
     me = await client.get("/api/auth/me", headers=headers)
     assert me.status_code == 200, me.text
-    me_data = me.json()
+    me_data = _unwrap(me)
     org_id = me_data.get("organization_id")
     agency_id = me_data.get("agency_id")
     if not agency_id:
@@ -115,7 +125,7 @@ async def test_booking_amend_quote_and_confirm_zero_delta_has_no_ledger(async_cl
         headers=headers,
     )
     assert r_quote.status_code == 200, r_quote.text
-    q = r_quote.json()
+    q = _unwrap(r_quote)
 
     assert q["booking_id"] == booking_id
     assert q["status"] == "PROPOSED"
@@ -132,7 +142,7 @@ async def test_booking_amend_quote_and_confirm_zero_delta_has_no_ledger(async_cl
         headers=headers,
     )
     assert r_conf.status_code == 200, r_conf.text
-    c = r_conf.json()
+    c = _unwrap(r_conf)
     assert c["booking_id"] == booking_id
     assert c["status"] == "CONFIRMED"
 

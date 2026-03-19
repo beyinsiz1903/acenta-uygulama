@@ -12,6 +12,16 @@ from app.auth import _jwt_secret
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.exit_sprint2
 @pytest.mark.anyio
 async def test_b2b_portal_backend_org_agency_isolation(test_db: Any, async_client: AsyncClient) -> None:
@@ -123,7 +133,7 @@ async def test_b2b_portal_backend_org_agency_isolation(test_db: Any, async_clien
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_list_a.status_code == status.HTTP_200_OK
-    data_a = resp_list_a.json()
+    data_a = _unwrap(resp_list_a)
     ids_a = {item["booking_id"] for item in data_a.get("items", [])}
     assert str(booking_a["_id"]) in ids_a
     assert str(booking_b["_id"]) not in ids_a
@@ -134,7 +144,7 @@ async def test_b2b_portal_backend_org_agency_isolation(test_db: Any, async_clien
         headers={"Authorization": f"Bearer {token_b}"},
     )
     assert resp_list_b.status_code == status.HTTP_200_OK
-    data_b = resp_list_b.json()
+    data_b = _unwrap(resp_list_b)
     ids_b = {item["booking_id"] for item in data_b.get("items", [])}
     assert str(booking_b["_id"]) in ids_b
     assert str(booking_a["_id"]) not in ids_b
@@ -145,7 +155,7 @@ async def test_b2b_portal_backend_org_agency_isolation(test_db: Any, async_clien
         headers={"Authorization": f"Bearer {token_c}"},
     )
     assert resp_list_c.status_code == status.HTTP_200_OK
-    data_c = resp_list_c.json()
+    data_c = _unwrap(resp_list_c)
     ids_c = {item["booking_id"] for item in data_c.get("items", [])}
     assert str(booking_c["_id"]) in ids_c
     assert str(booking_a["_id"]) not in ids_c
@@ -157,7 +167,7 @@ async def test_b2b_portal_backend_org_agency_isolation(test_db: Any, async_clien
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_detail_ok.status_code == status.HTTP_200_OK
-    detail = resp_detail_ok.json()
+    detail = _unwrap(resp_detail_ok)
     assert detail["booking_id"] == str(booking_a["_id"])
     assert detail["organization_id"] == org_a_id
     assert detail["agency_id"] == agency_a_id
@@ -182,7 +192,7 @@ async def test_b2b_portal_backend_org_agency_isolation(test_db: Any, async_clien
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_org_a_all.status_code == status.HTTP_200_OK
-    all_a = resp_org_a_all.json()
+    all_a = _unwrap(resp_org_a_all)
     all_ids_a = {b["id"] for b in all_a}
 
     # OrgA user should see both AgencyA and AgencyB bookings at org level

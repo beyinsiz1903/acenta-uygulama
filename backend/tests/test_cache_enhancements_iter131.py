@@ -22,6 +22,16 @@ import os
 import time
 import random
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 
@@ -34,7 +44,7 @@ def auth_token():
     })
     if resp.status_code != 200:
         pytest.skip("Auth failed - cannot proceed")
-    data = resp.json()
+    data = _unwrap(resp)
     return data.get("access_token")
 
 
@@ -56,28 +66,28 @@ class TestCacheStatsEnhanced:
 
     def test_cache_stats_has_evictions_field(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/stats", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "evictions" in data, "Missing evictions field"
         assert isinstance(data["evictions"], int), "evictions should be int"
         print(f"PASS: evictions field present: {data['evictions']}")
 
     def test_cache_stats_has_memory_usage_bytes(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/stats", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "memory_usage_bytes" in data, "Missing memory_usage_bytes field"
         assert isinstance(data["memory_usage_bytes"], int), "memory_usage_bytes should be int"
         print(f"PASS: memory_usage_bytes field present: {data['memory_usage_bytes']}")
 
     def test_cache_stats_has_memory_usage_mb(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/stats", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "memory_usage_mb" in data, "Missing memory_usage_mb field"
         assert isinstance(data["memory_usage_mb"], (int, float)), "memory_usage_mb should be numeric"
         print(f"PASS: memory_usage_mb field present: {data['memory_usage_mb']}")
 
     def test_cache_stats_has_active_alerts(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/stats", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "active_alerts" in data, "Missing active_alerts field"
         assert isinstance(data["active_alerts"], int), "active_alerts should be int (count)"
         print(f"PASS: active_alerts field present: {data['active_alerts']}")
@@ -95,28 +105,28 @@ class TestCacheAlerts:
 
     def test_cache_alerts_has_active_alerts(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/alerts", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "active_alerts" in data, "Missing active_alerts field"
         assert isinstance(data["active_alerts"], list), "active_alerts should be list"
         print(f"PASS: active_alerts is list with {len(data['active_alerts'])} items")
 
     def test_cache_alerts_has_alert_history(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/alerts", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "alert_history" in data, "Missing alert_history field"
         assert isinstance(data["alert_history"], list), "alert_history should be list"
         print(f"PASS: alert_history is list with {len(data['alert_history'])} items")
 
     def test_cache_alerts_has_threshold_pct(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/alerts", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "threshold_pct" in data, "Missing threshold_pct field"
         assert data["threshold_pct"] == 70.0, f"Expected 70.0, got {data['threshold_pct']}"
         print(f"PASS: threshold_pct is {data['threshold_pct']}")
 
     def test_cache_alerts_has_min_requests(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/alerts", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "min_requests" in data, "Missing min_requests field"
         assert data["min_requests"] == 10, f"Expected 10, got {data['min_requests']}"
         print(f"PASS: min_requests is {data['min_requests']}")
@@ -124,7 +134,7 @@ class TestCacheAlerts:
     def test_clear_alerts_returns_200(self, auth_headers):
         resp = requests.post(f"{BASE_URL}/api/pricing-engine/cache/alerts/clear", headers=auth_headers)
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}"
-        data = resp.json()
+        data = _unwrap(resp)
         assert data.get("ok") is True, "Expected ok=true"
         print("PASS: POST /cache/alerts/clear returns 200 with ok=true")
 
@@ -141,42 +151,42 @@ class TestCacheDiagnostics:
 
     def test_diagnostics_has_global_hit_rate(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/diagnostics", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "global_hit_rate" in data, "Missing global_hit_rate field"
         assert isinstance(data["global_hit_rate"], (int, float)), "global_hit_rate should be numeric"
         print(f"PASS: global_hit_rate is {data['global_hit_rate']}%")
 
     def test_diagnostics_has_total_entries(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/diagnostics", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "total_entries" in data, "Missing total_entries field"
         assert isinstance(data["total_entries"], int), "total_entries should be int"
         print(f"PASS: total_entries is {data['total_entries']}")
 
     def test_diagnostics_has_memory_usage_mb(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/diagnostics", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "memory_usage_mb" in data, "Missing memory_usage_mb field"
         assert isinstance(data["memory_usage_mb"], (int, float)), "memory_usage_mb should be numeric"
         print(f"PASS: memory_usage_mb is {data['memory_usage_mb']}MB")
 
     def test_diagnostics_has_evictions(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/diagnostics", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "evictions" in data, "Missing evictions field"
         assert isinstance(data["evictions"], int), "evictions should be int"
         print(f"PASS: evictions is {data['evictions']}")
 
     def test_diagnostics_has_utilization_pct(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/diagnostics", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "utilization_pct" in data, "Missing utilization_pct field"
         assert isinstance(data["utilization_pct"], (int, float)), "utilization_pct should be numeric"
         print(f"PASS: utilization_pct is {data['utilization_pct']}%")
 
     def test_diagnostics_has_warming_status(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/diagnostics", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "warming_status" in data, "Missing warming_status field"
         assert isinstance(data["warming_status"], dict), "warming_status should be dict"
         assert "tracked_queries" in data["warming_status"], "warming_status missing tracked_queries"
@@ -184,7 +194,7 @@ class TestCacheDiagnostics:
 
     def test_diagnostics_has_uptime_seconds(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/diagnostics", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "uptime_seconds" in data, "Missing uptime_seconds field"
         assert isinstance(data["uptime_seconds"], int), "uptime_seconds should be int"
         print(f"PASS: uptime_seconds is {data['uptime_seconds']}")
@@ -202,21 +212,21 @@ class TestCacheWarming:
 
     def test_warm_response_has_supplier(self, auth_headers):
         resp = requests.post(f"{BASE_URL}/api/pricing-engine/cache/warm/ratehawk", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "supplier" in data, "Missing supplier field"
         assert data["supplier"] == "ratehawk", f"Expected ratehawk, got {data['supplier']}"
         print(f"PASS: supplier is {data['supplier']}")
 
     def test_warm_response_has_warmed_count(self, auth_headers):
         resp = requests.post(f"{BASE_URL}/api/pricing-engine/cache/warm/ratehawk", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "warmed" in data, "Missing warmed field"
         assert isinstance(data["warmed"], int), "warmed should be int"
         print(f"PASS: warmed={data['warmed']} routes")
 
     def test_warm_response_has_skipped_count(self, auth_headers):
         resp = requests.post(f"{BASE_URL}/api/pricing-engine/cache/warm/ratehawk", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "skipped" in data, "Missing skipped field"
         assert isinstance(data["skipped"], int), "skipped should be int"
         print(f"PASS: skipped={data['skipped']} routes")
@@ -224,7 +234,7 @@ class TestCacheWarming:
     def test_warm_with_limit_param(self, auth_headers):
         resp = requests.post(f"{BASE_URL}/api/pricing-engine/cache/warm/ratehawk?limit=5", headers=auth_headers)
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}"
-        data = resp.json()
+        data = _unwrap(resp)
         print(f"PASS: warm with limit=5 returns warmed={data.get('warmed')}, skipped={data.get('skipped')}")
 
     def test_popular_routes_returns_200(self, auth_headers):
@@ -234,14 +244,14 @@ class TestCacheWarming:
 
     def test_popular_routes_has_routes(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/popular-routes", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "routes" in data, "Missing routes field"
         assert isinstance(data["routes"], list), "routes should be list"
         print(f"PASS: routes list with {len(data['routes'])} items")
 
     def test_popular_routes_has_total_tracked(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/popular-routes", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "total_tracked" in data, "Missing total_tracked field"
         assert isinstance(data["total_tracked"], int), "total_tracked should be int"
         print(f"PASS: total_tracked={data['total_tracked']}")
@@ -254,34 +264,34 @@ class TestEnhancedTelemetry:
 
     def test_telemetry_has_evictions(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/telemetry", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "evictions" in data, "Missing evictions field"
         assert isinstance(data["evictions"], int), "evictions should be int"
         print(f"PASS: telemetry evictions={data['evictions']}")
 
     def test_telemetry_has_memory_usage_mb(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/telemetry", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "memory_usage_mb" in data, "Missing memory_usage_mb field"
         print(f"PASS: telemetry memory_usage_mb={data['memory_usage_mb']}")
 
     def test_telemetry_has_active_alerts(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/telemetry", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "active_alerts" in data, "Missing active_alerts field"
         assert isinstance(data["active_alerts"], list), "active_alerts should be list"
         print(f"PASS: telemetry active_alerts (list with {len(data['active_alerts'])} items)")
 
     def test_telemetry_has_alert_history(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/telemetry", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "alert_history" in data, "Missing alert_history field"
         assert isinstance(data["alert_history"], list), "alert_history should be list"
         print(f"PASS: telemetry alert_history (list with {len(data['alert_history'])} items)")
 
     def test_telemetry_has_warming_status(self, auth_headers):
         resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/telemetry", headers=auth_headers)
-        data = resp.json()
+        data = _unwrap(resp)
         assert "warming_status" in data, "Missing warming_status field"
         assert isinstance(data["warming_status"], dict), "warming_status should be dict"
         print(f"PASS: telemetry warming_status={data['warming_status']}")
@@ -323,7 +333,7 @@ class TestAlertTriggerLogic:
         
         # Check if alert was triggered (all misses = 0% hit rate)
         alerts_resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/alerts", headers=auth_headers)
-        alerts_data = alerts_resp.json()
+        alerts_data = _unwrap(alerts_resp)
         
         # We should have an active alert since hit_rate=0% < 70% and requests > 10
         active_alerts = alerts_data.get("active_alerts", [])
@@ -331,7 +341,7 @@ class TestAlertTriggerLogic:
         
         # Check stats
         stats_resp = requests.get(f"{BASE_URL}/api/pricing-engine/cache/stats", headers=auth_headers)
-        stats_data = stats_resp.json()
+        stats_data = _unwrap(stats_resp)
         print(f"Stats: hits={stats_data.get('hits')}, misses={stats_data.get('misses')}, hit_rate={stats_data.get('hit_rate_pct')}%")
         
         assert stats_data.get("misses", 0) >= 12, f"Expected at least 12 misses, got {stats_data.get('misses')}"
@@ -355,7 +365,7 @@ class TestSimulateBackwardCompat:
             "sell_currency": "EUR"
         })
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         
         # Check expected fields still present
         assert "sell_price" in data, "Missing sell_price"

@@ -6,6 +6,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 
@@ -25,7 +35,7 @@ class TestSettlementWorkflow:
         }
         response = requests.post(f"{BASE_URL}/api/finance/settlement-runs", json=payload)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["status"] == "draft"
         assert data["run_type"] == "AGENCY"
         assert data["entity_id"] == "AGN-TEST-001"
@@ -41,7 +51,7 @@ class TestSettlementWorkflow:
         payload = {"actor": "admin"}
         response = requests.patch(f"{BASE_URL}/api/finance/settlement-runs/{run_id}/submit", json=payload)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["status"] == "pending_approval"
         print(f"✅ Submitted {run_id} for approval, status: {data['status']}")
 
@@ -52,7 +62,7 @@ class TestSettlementWorkflow:
         payload = {"actor": "finance_manager", "reason": "Budget approved"}
         response = requests.patch(f"{BASE_URL}/api/finance/settlement-runs/{run_id}/approve", json=payload)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["status"] == "approved"
         assert data["approved_at"] is not None
         print(f"✅ Approved {run_id}, approved_at: {data['approved_at']}")
@@ -71,7 +81,7 @@ class TestSettlementWorkflow:
         }
         create_res = requests.post(f"{BASE_URL}/api/finance/settlement-runs", json=create_payload)
         assert create_res.status_code == 200
-        run_id = create_res.json()["run_id"]
+        run_id = _unwrap(create_res)["run_id"]
         
         # Submit for approval
         submit_res = requests.patch(f"{BASE_URL}/api/finance/settlement-runs/{run_id}/submit", json={"actor": "admin"})
@@ -81,7 +91,7 @@ class TestSettlementWorkflow:
         reject_payload = {"actor": "finance_manager", "reason": "Documents incomplete"}
         response = requests.patch(f"{BASE_URL}/api/finance/settlement-runs/{run_id}/reject", json=reject_payload)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["status"] == "rejected"
         assert data["rejected_at"] is not None
         print(f"✅ Rejected {run_id}, status: {data['status']}")
@@ -93,7 +103,7 @@ class TestSettlementWorkflow:
         payload = {"actor": "treasury"}
         response = requests.patch(f"{BASE_URL}/api/finance/settlement-runs/{run_id}/mark-paid", json=payload)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["status"] == "paid"
         assert data["paid_at"] is not None
         print(f"✅ Marked {run_id} as paid, paid_at: {data['paid_at']}")
@@ -111,13 +121,13 @@ class TestSettlementWorkflow:
         }
         create_res = requests.post(f"{BASE_URL}/api/finance/settlement-runs", json=create_payload)
         assert create_res.status_code == 200
-        run_id = create_res.json()["run_id"]
+        run_id = _unwrap(create_res)["run_id"]
         
         # Try to approve directly (should fail - draft can only go to pending_approval)
         approve_payload = {"actor": "admin"}
         response = requests.patch(f"{BASE_URL}/api/finance/settlement-runs/{run_id}/approve", json=approve_payload)
         assert response.status_code == 400
-        data = response.json()
+        data = _unwrap(response)
         assert "error" in data
         assert "Invalid transition" in data["error"]
         print(f"✅ Invalid transition correctly rejected: {data['error']}")
@@ -134,7 +144,7 @@ class TestSettlementWorkflow:
             "currency": "EUR"
         }
         create_res = requests.post(f"{BASE_URL}/api/finance/settlement-runs", json=create_payload)
-        run_id = create_res.json()["run_id"]
+        run_id = _unwrap(create_res)["run_id"]
         
         # Try to mark paid directly (should fail)
         response = requests.patch(f"{BASE_URL}/api/finance/settlement-runs/{run_id}/mark-paid", json={"actor": "admin"})
@@ -149,7 +159,7 @@ class TestSettlementEntries:
         """GET /api/finance/settlement-runs/unassigned-entries - Get unassigned ledger entries"""
         response = requests.get(f"{BASE_URL}/api/finance/settlement-runs/unassigned-entries")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list)
         print(f"✅ Got {len(data)} unassigned entries")
 
@@ -157,7 +167,7 @@ class TestSettlementEntries:
         """GET unassigned entries with entity_type filter"""
         response = requests.get(f"{BASE_URL}/api/finance/settlement-runs/unassigned-entries?entity_type=AGENCY")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert isinstance(data, list)
         # All returned entries should be AGENCY type
         for entry in data:
@@ -176,18 +186,18 @@ class TestSettlementEntries:
             "currency": "EUR"
         }
         create_res = requests.post(f"{BASE_URL}/api/finance/settlement-runs", json=create_payload)
-        run_id = create_res.json()["run_id"]
+        run_id = _unwrap(create_res)["run_id"]
         
         # Get some unassigned entries
         unassigned_res = requests.get(f"{BASE_URL}/api/finance/settlement-runs/unassigned-entries?entity_id=AGN-001&limit=3")
-        unassigned = unassigned_res.json()
+        unassigned = _unwrap(unassigned_res)
         
         if len(unassigned) > 0:
             entry_ids = [e["entry_id"] for e in unassigned[:2]]
             add_payload = {"entry_ids": entry_ids}
             response = requests.post(f"{BASE_URL}/api/finance/settlement-runs/{run_id}/add-entries", json=add_payload)
             assert response.status_code == 200
-            data = response.json()
+            data = _unwrap(response)
             assert "linked" in data
             print(f"✅ Added {data['linked']} entries to {run_id}, total: {data['total_entries']}")
         else:
@@ -200,7 +210,7 @@ class TestSettlementEntries:
         add_payload = {"entry_ids": ["LE-0001"]}
         response = requests.post(f"{BASE_URL}/api/finance/settlement-runs/{run_id}/add-entries", json=add_payload)
         assert response.status_code == 400
-        data = response.json()
+        data = _unwrap(response)
         assert "draft" in data["error"].lower()
         print(f"✅ Add to non-draft correctly rejected: {data['error']}")
 
@@ -212,7 +222,7 @@ class TestExceptionQueue:
         """GET /api/finance/exceptions - List all exceptions"""
         response = requests.get(f"{BASE_URL}/api/finance/exceptions")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "exceptions" in data
         assert "total" in data
         assert isinstance(data["exceptions"], list)
@@ -222,7 +232,7 @@ class TestExceptionQueue:
         """GET /api/finance/exceptions?status=open - Filter by status"""
         response = requests.get(f"{BASE_URL}/api/finance/exceptions?status=open")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         for exc in data["exceptions"]:
             assert exc["status"] == "open"
         print(f"✅ Got {len(data['exceptions'])} open exceptions")
@@ -231,7 +241,7 @@ class TestExceptionQueue:
         """GET /api/finance/exceptions?severity=high - Filter by severity"""
         response = requests.get(f"{BASE_URL}/api/finance/exceptions?severity=high")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         for exc in data["exceptions"]:
             assert exc["severity"] == "high"
         print(f"✅ Got {len(data['exceptions'])} high severity exceptions")
@@ -240,7 +250,7 @@ class TestExceptionQueue:
         """GET /api/finance/exceptions?exception_type=amount_mismatch - Filter by type"""
         response = requests.get(f"{BASE_URL}/api/finance/exceptions?exception_type=amount_mismatch")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         for exc in data["exceptions"]:
             assert exc["exception_type"] == "amount_mismatch"
         print(f"✅ Got {len(data['exceptions'])} amount_mismatch exceptions")
@@ -249,7 +259,7 @@ class TestExceptionQueue:
         """GET /api/finance/exceptions/stats - Exception statistics"""
         response = requests.get(f"{BASE_URL}/api/finance/exceptions/stats")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "total" in data
         assert "by_status" in data
         assert "by_severity" in data
@@ -266,7 +276,7 @@ class TestExceptionQueue:
         }
         response = requests.patch(f"{BASE_URL}/api/finance/exceptions/{exc_id}/resolve", json=payload)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["status"] == "resolved"
         assert data["resolution"] == "adjusted"
         assert data["resolved_by"] == "finance_admin"
@@ -280,7 +290,7 @@ class TestExceptionQueue:
         payload = {"reason": "False positive - data entry error"}
         response = requests.patch(f"{BASE_URL}/api/finance/exceptions/{exc_id}/dismiss", json=payload)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["status"] == "dismissed"
         assert data["dismissed_at"] is not None
         print(f"✅ Dismissed {exc_id}")
@@ -292,7 +302,7 @@ class TestExceptionQueue:
         payload = {"resolution": "waived", "resolved_by": "admin"}
         response = requests.patch(f"{BASE_URL}/api/finance/exceptions/{exc_id}/resolve", json=payload)
         assert response.status_code == 400
-        data = response.json()
+        data = _unwrap(response)
         assert "already resolved" in data["error"].lower()
         print(f"✅ Double resolve correctly rejected: {data['error']}")
 
@@ -312,7 +322,7 @@ class TestFinanceOverview:
         """GET /api/finance/ledger/overview - Should include exception_stats"""
         response = requests.get(f"{BASE_URL}/api/finance/ledger/overview")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "exception_stats" in data
         assert "by_status" in data["exception_stats"]
         assert "by_severity" in data["exception_stats"]
@@ -327,7 +337,7 @@ class TestSettlementRunDetail:
         run_id = "SR-001"
         response = requests.get(f"{BASE_URL}/api/finance/settlement-runs/{run_id}")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["run_id"] == run_id
         assert "history" in data or data.get("status") is not None
         print(f"✅ Got detail for {run_id}: status={data['status']}, amount={data.get('total_amount')}")
@@ -336,7 +346,7 @@ class TestSettlementRunDetail:
         """GET /api/finance/settlement-runs - List all runs"""
         response = requests.get(f"{BASE_URL}/api/finance/settlement-runs")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "runs" in data
         assert len(data["runs"]) >= 5  # Seeded 5 runs
         print(f"✅ Listed {len(data['runs'])} settlement runs")
@@ -345,7 +355,7 @@ class TestSettlementRunDetail:
         """GET /api/finance/settlement-runs/stats - Stats by status"""
         response = requests.get(f"{BASE_URL}/api/finance/settlement-runs/stats")
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "by_status" in data
         print(f"✅ Settlement stats: {list(data['by_status'].keys())}")
 

@@ -12,6 +12,16 @@ import pytest
 import requests
 import os
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 class TestSupplierTelemetryAndFunnel:
@@ -29,7 +39,7 @@ class TestSupplierTelemetryAndFunnel:
             "password": "agent123"
         })
         assert login_response.status_code == 200, f"Login failed: {login_response.text}"
-        token_data = login_response.json()
+        token_data = _unwrap(login_response)
         token = token_data.get("access_token") or token_data.get("token")
         assert token, f"No token in login response: {token_data}"
         
@@ -43,7 +53,7 @@ class TestSupplierTelemetryAndFunnel:
         response = self.session.get(f"{BASE_URL}/api/e2e-demo/telemetry/suppliers")
         assert response.status_code == 200, f"Unexpected status: {response.status_code}, {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "suppliers" in data, f"Missing 'suppliers' key: {data}"
         assert "timestamp" in data, f"Missing 'timestamp' key: {data}"
         
@@ -59,7 +69,7 @@ class TestSupplierTelemetryAndFunnel:
         response = self.session.get(f"{BASE_URL}/api/e2e-demo/telemetry/suppliers")
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         suppliers = data["suppliers"]
         
         for sup_code, sup_data in suppliers.items():
@@ -92,7 +102,7 @@ class TestSupplierTelemetryAndFunnel:
         response = self.session.get(f"{BASE_URL}/api/e2e-demo/certification-funnel")
         assert response.status_code == 200, f"Unexpected status: {response.status_code}, {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "funnels" in data, f"Missing 'funnels' key: {data}"
         assert "timestamp" in data, f"Missing 'timestamp' key: {data}"
         
@@ -108,7 +118,7 @@ class TestSupplierTelemetryAndFunnel:
         response = self.session.get(f"{BASE_URL}/api/e2e-demo/certification-funnel")
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         funnels = data["funnels"]
         
         expected_stages = ["credential_added", "sandbox_test_started", "sandbox_test_passed", "go_live_activated"]
@@ -135,7 +145,7 @@ class TestSupplierTelemetryAndFunnel:
         response = self.session.get(f"{BASE_URL}/api/e2e-demo/certification-funnel?supplier=ratehawk")
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         funnels = data["funnels"]
         assert "ratehawk" in funnels, f"Missing ratehawk in filtered response: {funnels.keys()}"
         assert data["supplier_filter"] == "ratehawk", f"supplier_filter mismatch: {data['supplier_filter']}"
@@ -156,7 +166,7 @@ class TestSupplierTelemetryAndFunnel:
         response = self.session.get(f"{BASE_URL}/api/e2e-demo/telemetry/history?period=hourly")
         assert response.status_code == 200, f"Unexpected status: {response.status_code}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert "data" in data, f"Missing 'data' key: {data}"
         
         # Even if data is empty, check schema by creating test data first
@@ -183,7 +193,7 @@ class TestSupplierTelemetryAndFunnel:
         })
         assert response.status_code == 200, f"Run failed: {response.status_code}, {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["scenario"] == "price_mismatch", f"Scenario mismatch: {data['scenario']}"
         assert data["supplier"] == "ratehawk", f"Supplier mismatch: {data['supplier']}"
         
@@ -199,7 +209,7 @@ class TestSupplierTelemetryAndFunnel:
         })
         assert response.status_code == 200, f"Run failed: {response.status_code}, {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["scenario"] == "supplier_unavailable"
         
         # This scenario should have failures
@@ -215,7 +225,7 @@ class TestSupplierTelemetryAndFunnel:
         })
         assert response.status_code == 200, f"Run failed: {response.status_code}, {response.text}"
         
-        data = response.json()
+        data = _unwrap(response)
         assert data["scenario"] == "booking_timeout"
         
         # This scenario should have a failure at booking step
@@ -228,7 +238,7 @@ class TestSupplierTelemetryAndFunnel:
         response = self.session.get(f"{BASE_URL}/api/e2e-demo/telemetry/history?period=hourly&limit=24")
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         history_data = data["data"]
         
         if len(history_data) == 0:
@@ -255,7 +265,7 @@ class TestSupplierTelemetryAndFunnel:
         response = self.session.get(f"{BASE_URL}/api/e2e-demo/telemetry")
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         assert "counters" in data, f"Missing 'counters' in existing telemetry endpoint: {data}"
         assert "derived" in data, f"Missing 'derived' in existing telemetry endpoint: {data}"
         print(f"✅ Existing GET /api/e2e-demo/telemetry endpoint works (no regression)")
@@ -268,7 +278,7 @@ class TestSupplierTelemetryAndFunnel:
         })
         assert response.status_code == 200
         
-        data = response.json()
+        data = _unwrap(response)
         required_fields = ["run_id", "supplier", "scenario", "mode", "steps", "certification", "total_duration_ms"]
         for field in required_fields:
             assert field in data, f"Missing required field '{field}' in run response"

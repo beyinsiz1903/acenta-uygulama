@@ -7,6 +7,16 @@ import pytest
 from app.db import get_db
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 TOLERANCE_ABS = 0.02
 TOLERANCE_PCT = 0.001
 
@@ -91,7 +101,7 @@ async def test_non_eur_booking_fx_and_ledger(async_client, admin_token, agency_t
         admin_headers = {"Authorization": f"Bearer {admin_token}"}
         resp_fin = await client.get(f"/api/ops/finance/bookings/{booking_id}/financials", headers=admin_headers)
         assert resp_fin.status_code == 200, resp_fin.text
-        bf = resp_fin.json()
+        bf = _unwrap(resp_fin)
     else:
         # normalize
         bf["sell_total"] = float(bf.get("sell_total", 0.0))

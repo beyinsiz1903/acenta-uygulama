@@ -10,6 +10,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 
@@ -34,7 +44,7 @@ class TestAuthEndpoints:
             pytest.skip("Rate limit hit - expected behavior")
 
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "access_token" in data
         assert "user" in data
         assert data["user"]["email"] == "admin@acenta.test"
@@ -51,7 +61,7 @@ class TestAuthEndpoints:
             pytest.skip("Rate limit hit - expected behavior")
 
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "access_token" in data
         assert "user" in data
         assert data["user"]["email"] == "agent@acenta.test"
@@ -89,7 +99,7 @@ class TestAuthMe:
         if login_resp.status_code == 429:
             self.token = None
         else:
-            self.token = login_resp.json().get("access_token")
+            self.token = _unwrap(login_resp).get("access_token")
 
     def test_auth_me_with_valid_token(self):
         """Test /api/auth/me returns user info with valid token"""
@@ -102,7 +112,7 @@ class TestAuthMe:
         )
 
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert data["email"] == "agent@acenta.test"
         assert "agency_admin" in data["roles"]
         assert data["agency_id"] is not None
@@ -132,7 +142,7 @@ class TestAgencyProfile:
             self.token = None
             self.agency_id = None
         else:
-            data = login_resp.json()
+            data = _unwrap(login_resp)
             self.token = data.get("access_token")
             self.agency_id = data.get("user", {}).get("agency_id")
 
@@ -147,7 +157,7 @@ class TestAgencyProfile:
         )
 
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "agency_id" in data
         assert "name" in data
         assert "allowed_modules" in data
@@ -177,7 +187,7 @@ class TestAdminAgencyModules:
         if login_resp.status_code == 429:
             self.token = None
         else:
-            self.token = login_resp.json().get("access_token")
+            self.token = _unwrap(login_resp).get("access_token")
 
         self.test_agency_id = "f5f7a2a3-5de1-4d65-b700-ec4f9807d83a"  # Demo Acenta
 
@@ -192,7 +202,7 @@ class TestAdminAgencyModules:
         )
 
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert "agency_id" in data
         assert "allowed_modules" in data
         assert isinstance(data["allowed_modules"], list)
@@ -207,7 +217,7 @@ class TestAdminAgencyModules:
             f"{BASE_URL}/api/admin/agencies/{self.test_agency_id}/modules",
             headers={"Authorization": f"Bearer {self.token}"}
         )
-        original_modules = get_resp.json().get("allowed_modules", [])
+        original_modules = _unwrap(get_resp).get("allowed_modules", [])
 
         # Update with test modules
         test_modules = ["dashboard", "rezervasyonlar", "musteriler"]
@@ -218,7 +228,7 @@ class TestAdminAgencyModules:
         )
 
         assert update_resp.status_code == 200
-        data = update_resp.json()
+        data = _unwrap(update_resp)
         assert set(data["allowed_modules"]) == set(test_modules)
 
         # Restore original modules
@@ -242,7 +252,7 @@ class TestAdminAgencyModules:
         if agent_login.status_code == 429:
             pytest.skip("Rate limit hit")
 
-        agent_token = agent_login.json().get("access_token")
+        agent_token = _unwrap(agent_login).get("access_token")
 
         # Get original modules from profile
         profile_resp = self.session.get(
@@ -251,7 +261,7 @@ class TestAdminAgencyModules:
         )
 
         assert profile_resp.status_code == 200
-        profile_data = profile_resp.json()
+        profile_data = _unwrap(profile_resp)
         assert "allowed_modules" in profile_data
 
 

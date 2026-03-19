@@ -13,6 +13,16 @@ import requests
 
 from tests.preview_auth_helper import get_preview_base_url_or_skip
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = get_preview_base_url_or_skip(os.environ.get("REACT_APP_BACKEND_URL", ""))
 
 # Test credentials from main agent
@@ -37,7 +47,7 @@ def login_user(session, email, password):
         "password": password
     })
     if resp.status_code == 200:
-        data = resp.json()
+        data = _unwrap(resp)
         token = data.get("access_token") or data.get("token")
         return {"Authorization": f"Bearer {token}"}
     return None
@@ -85,7 +95,7 @@ class TestCreateCheckoutSession:
             }
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:300]}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         # Verify response structure
         assert "url" in data, "Response should contain checkout URL"
@@ -116,7 +126,7 @@ class TestCreateCheckoutSession:
             }
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:300]}"
-        data = resp.json()
+        data = _unwrap(resp)
 
         assert data.get("plan") == "pro"
         assert data.get("interval") == "yearly"
@@ -206,7 +216,7 @@ class TestCheckoutStatus:
         if create_resp.status_code != 200:
             pytest.skip(f"Could not create checkout session: {create_resp.status_code}")
 
-        session_id = create_resp.json().get("session_id")
+        session_id = _unwrap(create_resp).get("session_id")
         assert session_id, "No session_id returned"
 
         # Now check status
@@ -216,7 +226,7 @@ class TestCheckoutStatus:
         )
 
         assert status_resp.status_code == 200, f"Expected 200, got {status_resp.status_code}: {status_resp.text[:200]}"
-        data = status_resp.json()
+        data = _unwrap(status_resp)
 
         # Verify response structure
         assert "session_id" in data
@@ -248,7 +258,7 @@ class TestPaidUserPlanState:
             print(f"⚠️ Trial status endpoint returned {resp.status_code}")
             return
 
-        data = resp.json()
+        data = _unwrap(resp)
         print(f"✅ Paid user trial status: {data}")
 
         # A paid user should either have expired=false or plan != trial
@@ -275,7 +285,7 @@ class TestBillingCycleToggle:
             }
         )
         assert resp.status_code == 200
-        assert resp.json().get("amount") == 990.0
+        assert _unwrap(resp).get("amount") == 990.0
         print("✅ Starter monthly = 990 TRY")
 
     def test_starter_pricing_yearly(self, session):
@@ -294,7 +304,7 @@ class TestBillingCycleToggle:
             }
         )
         assert resp.status_code == 200
-        assert resp.json().get("amount") == 9900.0
+        assert _unwrap(resp).get("amount") == 9900.0
         print("✅ Starter yearly = 9900 TRY")
 
     def test_pro_pricing_monthly(self, session):
@@ -313,7 +323,7 @@ class TestBillingCycleToggle:
             }
         )
         assert resp.status_code == 200
-        assert resp.json().get("amount") == 2490.0
+        assert _unwrap(resp).get("amount") == 2490.0
         print("✅ Pro monthly = 2490 TRY")
 
     def test_pro_pricing_yearly(self, session):
@@ -332,7 +342,7 @@ class TestBillingCycleToggle:
             }
         )
         assert resp.status_code == 200
-        assert resp.json().get("amount") == 24900.0
+        assert _unwrap(resp).get("amount") == 24900.0
         print("✅ Pro yearly = 24900 TRY")
 
 

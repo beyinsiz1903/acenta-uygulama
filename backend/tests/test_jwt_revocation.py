@@ -19,7 +19,7 @@ async def test_token_has_jti_and_sid(async_client):
         json={"email": "admin@acenta.test", "password": "admin123"},
     )
     assert resp.status_code == 200
-    token = resp.json()["access_token"]
+    token = _unwrap(resp)["access_token"]
 
     # Decode without verification to check claims
     payload = jwt.decode(token, options={"verify_signature": False})
@@ -41,7 +41,7 @@ async def test_logout_invalidates_token(async_client):
         json={"email": "admin@acenta.test", "password": "admin123"},
     )
     assert login_resp.status_code == 200
-    token = login_resp.json()["access_token"]
+    token = _unwrap(login_resp)["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
     # Verify token works
@@ -51,7 +51,7 @@ async def test_logout_invalidates_token(async_client):
     # Logout
     logout_resp = await async_client.post("/api/auth/logout", headers=headers)
     assert logout_resp.status_code == 200
-    assert logout_resp.json()["status"] == "ok"
+    assert _unwrap(logout_resp)["status"] == "ok"
 
     # Token should now be rejected
     me_resp2 = await async_client.get("/api/auth/me", headers=headers)
@@ -73,21 +73,21 @@ async def test_revoke_all_sessions_invalidates_all_active_tokens(async_client):
         json={"email": "admin@acenta.test", "password": "admin123"},
     )
     assert login_resp.status_code == 200
-    token_one = login_resp.json()["access_token"]
+    token_one = _unwrap(login_resp)["access_token"]
 
     login_resp_two = await async_client.post(
         "/api/auth/login",
         json={"email": "admin@acenta.test", "password": "admin123"},
     )
     assert login_resp_two.status_code == 200
-    token_two = login_resp_two.json()["access_token"]
+    token_two = _unwrap(login_resp_two)["access_token"]
 
     headers = {"Authorization": f"Bearer {token_one}"}
 
     # Revoke all sessions
     revoke_resp = await async_client.post("/api/auth/revoke-all-sessions", headers=headers)
     assert revoke_resp.status_code == 200
-    data = revoke_resp.json()
+    data = _unwrap(revoke_resp)
     assert data["revoked_sessions"] >= 2
     assert "revoked_count" in data
     assert data["message"] == "Tüm oturumlar iptal edildi"
@@ -106,7 +106,7 @@ async def test_fresh_login_after_logout(async_client):
         "/api/auth/login",
         json={"email": "admin@acenta.test", "password": "admin123"},
     )
-    token1 = login1.json()["access_token"]
+    token1 = _unwrap(login1)["access_token"]
     headers1 = {"Authorization": f"Bearer {token1}"}
 
     # Logout
@@ -118,7 +118,7 @@ async def test_fresh_login_after_logout(async_client):
         json={"email": "admin@acenta.test", "password": "admin123"},
     )
     assert login2.status_code == 200
-    token2 = login2.json()["access_token"]
+    token2 = _unwrap(login2)["access_token"]
     assert token1 != token2, "New login should produce different token"
 
     # New token should work
@@ -135,14 +135,14 @@ async def test_refresh_rotation_reuse_detection_invalidates_family(async_client)
     )
     assert login_resp.status_code == 200
 
-    first_refresh = login_resp.json()["refresh_token"]
+    first_refresh = _unwrap(login_resp)["refresh_token"]
 
     refresh_resp = await async_client.post(
         "/api/auth/refresh",
         json={"refresh_token": first_refresh},
     )
     assert refresh_resp.status_code == 200
-    second_refresh = refresh_resp.json()["refresh_token"]
+    second_refresh = _unwrap(refresh_resp)["refresh_token"]
 
     reuse_resp = await async_client.post(
         "/api/auth/refresh",
@@ -165,6 +165,16 @@ async def test_token_blacklist_service(test_db):
         is_token_blacklisted,
     )
     from datetime import datetime, timezone, timedelta
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     jti = "test-jti-12345"
     expires_at = datetime.now(timezone.utc) + timedelta(hours=12)

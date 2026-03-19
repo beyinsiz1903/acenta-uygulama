@@ -11,6 +11,16 @@ from app.auth import _jwt_secret
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.exit_pricing_overlay_audit_written
 @pytest.mark.anyio
 async def test_pricing_overlay_applied_audit_written(test_db: Any, async_client: AsyncClient) -> None:
@@ -65,7 +75,7 @@ async def test_pricing_overlay_applied_audit_written(test_db: Any, async_client:
 
     resp = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp.status_code == status.HTTP_200_OK, resp.text
-    data = resp.json()
+    data = _unwrap(resp)
     offers = data.get("offers") or []
     assert offers, (
         f"expected offers but got 0; payload={payload}; headers={{'X-Tenant-Key': headers.get('X-Tenant-Key')}}; resp={data}"
@@ -144,7 +154,7 @@ async def test_booking_repriced_audit_written(test_db: Any, async_client: AsyncC
 
     resp_search = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp_search.status_code == status.HTTP_200_OK, resp_search.text
-    search_data = resp_search.json()
+    search_data = _unwrap(resp_search)
     session_id = search_data["session_id"]
     offers = search_data.get("offers") or []
     assert offers, f"expected offers but got 0; response={search_data}"
@@ -163,7 +173,7 @@ async def test_booking_repriced_audit_written(test_db: Any, async_client: AsyncC
 
     resp_booking = await client.post("/api/bookings/from-canonical-offer", json=create_payload, headers=headers)
     assert resp_booking.status_code == status.HTTP_201_CREATED, resp_booking.text
-    booking = resp_booking.json()
+    booking = _unwrap(resp_booking)
     booking_id = booking.get("id") or booking.get("booking_id")
     assert booking_id
 
@@ -245,7 +255,7 @@ async def test_pricing_mismatch_audit_written(test_db: Any, async_client: AsyncC
 
     resp_search = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp_search.status_code == status.HTTP_200_OK, resp_search.text
-    search_data = resp_search.json()
+    search_data = _unwrap(resp_search)
     session_id = search_data["session_id"]
     offers = search_data.get("offers") or []
     assert offers, f"expected offers but got 0; response={search_data}"
@@ -278,7 +288,7 @@ async def test_pricing_mismatch_audit_written(test_db: Any, async_client: AsyncC
 
     resp_booking = await client.post("/api/bookings/from-canonical-offer", json=create_payload, headers=headers)
     assert resp_booking.status_code == status.HTTP_201_CREATED, resp_booking.text
-    booking = resp_booking.json()
+    booking = _unwrap(resp_booking)
     booking_id = booking.get("id") or booking.get("booking_id")
     assert booking_id
 

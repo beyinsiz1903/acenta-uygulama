@@ -70,6 +70,16 @@ async def test_exposure_dashboard_returns_aging_buckets(async_client, test_db, a
     # Helper to backdate days
     from datetime import timedelta
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
     def days_ago(d: int):
         return now - timedelta(days=d)
 

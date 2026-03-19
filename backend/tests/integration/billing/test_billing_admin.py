@@ -31,7 +31,7 @@ async def test_seed_plan_catalog(
         headers=admin_headers,
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
 
     assert body["seeded"] == 6
     assert len(body["items"]) == 6
@@ -69,7 +69,7 @@ async def test_get_plan_catalog(
         headers=admin_headers,
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
 
     assert "items" in body
     assert "plans" in body
@@ -101,7 +101,7 @@ async def test_downgrade_preview_returns_lost_kept_features(
         json={"target_plan": "starter"},
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
 
     assert body["tenant_id"] == tenant_id
     assert body["target_plan"] == "starter"
@@ -127,7 +127,7 @@ async def test_downgrade_preview_invalid_plan(
         json={"target_plan": "invalid_plan"},
     )
     assert resp.status_code == 422, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     assert body["error"]["code"] == "invalid_plan"
 
 
@@ -146,7 +146,7 @@ async def test_get_subscription_status_null(
         headers=admin_headers,
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
 
     assert body["tenant_id"] == tenant_id
     assert body["subscription"] is None
@@ -182,7 +182,7 @@ async def test_get_subscription_status_with_subscription(
         headers=admin_headers,
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
 
     assert body["tenant_id"] == tenant_id
     assert body["subscription"] is not None
@@ -214,7 +214,7 @@ async def test_webhook_invalid_signature_returns_400(
         content=b'{"type":"invoice.paid","data":{"object":{}}}',
     )
     assert resp.status_code == 400, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     assert "error" in body or body.get("status") == "error"
 
 
@@ -254,7 +254,7 @@ async def test_webhook_idempotency(
         content=payload.encode(),
     )
     assert resp1.status_code == 200, resp1.text
-    body1 = resp1.json()
+    body1 = _unwrap(resp1)
     assert body1.get("status") == "ok"
 
     # Second request with same event_id - should be skipped
@@ -264,7 +264,7 @@ async def test_webhook_idempotency(
         content=payload.encode(),
     )
     assert resp2.status_code == 200, resp2.text
-    body2 = resp2.json()
+    body2 = _unwrap(resp2)
     assert body2.get("status") == "already_processed"
 
     # Verify event recorded in DB
@@ -353,7 +353,7 @@ async def test_starter_plan_no_b2b(
         json={"plan": "starter"},
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     assert "b2b" not in body["features"]
     assert body["plan"] == "starter"
 
@@ -374,7 +374,7 @@ async def test_enterprise_plan_has_b2b(
         json={"plan": "enterprise"},
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     assert "b2b" in body["features"]
     assert body["plan"] == "enterprise"
 
@@ -403,7 +403,7 @@ async def test_add_on_override_starter(
         json={"add_ons": ["b2b"]},
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
+    body = _unwrap(resp)
     assert "b2b" in body["features"]
     assert body["plan"] == "starter"
     assert "b2b" in body["add_ons"]
@@ -489,6 +489,16 @@ async def test_billing_provider_factory(monkeypatch) -> None:
     from app.billing import get_billing_provider
     from app.billing.stripe_provider import StripeBillingProvider
     from app.billing.iyzico_provider import IyzicoBillingProvider
+
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 
     stripe_provider = get_billing_provider("stripe")
     assert isinstance(stripe_provider, StripeBillingProvider)

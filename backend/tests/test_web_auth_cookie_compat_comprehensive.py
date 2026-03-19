@@ -17,6 +17,16 @@ import pytest
 from app.config import AUTH_ACCESS_COOKIE_NAME, AUTH_REFRESH_COOKIE_NAME, WEB_AUTH_PLATFORM_HEADER, WEB_AUTH_PLATFORM_VALUE
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 WEB_HEADERS = {WEB_AUTH_PLATFORM_HEADER: WEB_AUTH_PLATFORM_VALUE}
 
 
@@ -34,7 +44,7 @@ async def test_web_login_sets_auth_cookies_and_cookie_transport(async_client):
     )
 
     assert response.status_code == 200, response.text
-    data = response.json()
+    data = _unwrap(response)
 
     # Verify auth_transport is cookie_compat
     assert data.get("auth_transport") == "cookie_compat"
@@ -65,7 +75,7 @@ async def test_web_cookie_session_bootstraps_without_authorization_header(async_
     me_response = await async_client.get("/api/auth/me", headers=WEB_HEADERS)
 
     assert me_response.status_code == 200, me_response.text
-    data = me_response.json()
+    data = _unwrap(me_response)
     assert data["email"] == "admin@acenta.test"
 
 
@@ -82,7 +92,7 @@ async def test_auth_me_sanitizes_sensitive_fields(async_client):
     me_response = await async_client.get("/api/auth/me", headers=WEB_HEADERS)
     assert me_response.status_code == 200, me_response.text
 
-    data = me_response.json()
+    data = _unwrap(me_response)
 
     # These sensitive fields should NOT be present
     sensitive_fields = ["password_hash", "hashed_password", "totp_secret", "mfa_secret", "recovery_codes", "reset_token", "reset_token_hash"]
@@ -110,7 +120,7 @@ async def test_web_refresh_uses_cookie_when_refresh_body_is_empty(async_client):
     )
 
     assert refresh_response.status_code == 200, refresh_response.text
-    data = refresh_response.json()
+    data = _unwrap(refresh_response)
 
     # Should return cookie_compat transport and new tokens
     assert data.get("auth_transport") == "cookie_compat"
@@ -177,7 +187,7 @@ async def test_legacy_login_returns_bearer_transport(async_client):
     )
 
     assert response.status_code == 200, response.text
-    data = response.json()
+    data = _unwrap(response)
 
     # Should return bearer transport
     assert data.get("auth_transport") == "bearer"
@@ -196,7 +206,7 @@ async def test_legacy_bearer_auth_me_works(async_client):
         json={"email": "admin@acenta.test", "password": "admin123"},
     )
     assert login_response.status_code == 200, login_response.text
-    access_token = login_response.json()["access_token"]
+    access_token = _unwrap(login_response)["access_token"]
 
     # Call /auth/me with Bearer token
     me_response = await async_client.get(
@@ -205,7 +215,7 @@ async def test_legacy_bearer_auth_me_works(async_client):
     )
 
     assert me_response.status_code == 200, me_response.text
-    assert me_response.json()["email"] == "admin@acenta.test"
+    assert _unwrap(me_response)["email"] == "admin@acenta.test"
 
 
 @pytest.mark.anyio
@@ -217,7 +227,7 @@ async def test_legacy_refresh_with_body_token_works(async_client):
         json={"email": "admin@acenta.test", "password": "admin123"},
     )
     assert login_response.status_code == 200, login_response.text
-    refresh_token = login_response.json()["refresh_token"]
+    refresh_token = _unwrap(login_response)["refresh_token"]
 
     # Refresh with token in body
     refresh_response = await async_client.post(
@@ -226,7 +236,7 @@ async def test_legacy_refresh_with_body_token_works(async_client):
     )
 
     assert refresh_response.status_code == 200, refresh_response.text
-    data = refresh_response.json()
+    data = _unwrap(refresh_response)
     assert data.get("auth_transport") == "bearer"
     assert "access_token" in data
     assert "refresh_token" in data

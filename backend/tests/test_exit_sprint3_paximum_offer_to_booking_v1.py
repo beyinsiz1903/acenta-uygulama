@@ -11,6 +11,16 @@ from app.auth import _jwt_secret
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.exit_sprint3
 @pytest.mark.anyio
 async def test_paximum_offer_to_booking_draft_happy_path(test_db: Any, async_client: AsyncClient) -> None:
@@ -82,7 +92,7 @@ async def test_paximum_offer_to_booking_draft_happy_path(test_db: Any, async_cli
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_from_offer.status_code == status.HTTP_201_CREATED
-    booking_min = resp_from_offer.json()
+    booking_min = _unwrap(resp_from_offer)
 
     # Minimal projection contract for this gate
     assert set(booking_min.keys()) >= {"id", "organization_id", "state", "amount", "currency", "supplier", "offer_ref"}
@@ -102,7 +112,7 @@ async def test_paximum_offer_to_booking_draft_happy_path(test_db: Any, async_cli
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_list_a.status_code == status.HTTP_200_OK
-    bookings_a = resp_list_a.json()
+    bookings_a = _unwrap(resp_list_a)
     assert isinstance(bookings_a, list)
     assert any(b.get("id") == booking_id for b in bookings_a)
 
@@ -118,7 +128,7 @@ async def test_paximum_offer_to_booking_draft_happy_path(test_db: Any, async_cli
         headers={"Authorization": f"Bearer {token_b}"},
     )
     assert resp_list_b.status_code == status.HTTP_200_OK
-    bookings_b = resp_list_b.json()
+    bookings_b = _unwrap(resp_list_b)
     assert isinstance(bookings_b, list)
     assert all(b.get("id") != booking_id for b in bookings_b)
 
@@ -168,7 +178,7 @@ async def test_paximum_offer_to_booking_rejects_non_try_currency(test_db: Any, a
     )
 
     assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    body = resp.json()
+    body = _unwrap(resp)
     err = body.get("error", {})
     assert err.get("code") == "UNSUPPORTED_CURRENCY"
 
@@ -221,7 +231,7 @@ async def test_paximum_offer_to_booking_audit_log_created(test_db: Any, async_cl
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == status.HTTP_201_CREATED
-    booking = resp.json()
+    booking = _unwrap(resp)
     booking_id = booking["id"]
 
     # Tolerant audit assertion: look for at least one matching log

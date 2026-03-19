@@ -7,6 +7,16 @@ import os
 import pytest
 import requests
 
+
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials for agency user
@@ -23,7 +33,7 @@ def auth_token():
         timeout=30
     )
     assert response.status_code == 200, f"Login failed: {response.text}"
-    data = response.json()
+    data = _unwrap(response)
     return data["access_token"]
 
 
@@ -49,14 +59,14 @@ class TestBillingHistoryEndpoint:
     def test_billing_history_returns_items_array(self, authenticated_session):
         """Response should contain items array"""
         response = authenticated_session.get(f"{BASE_URL}/api/billing/history", timeout=30)
-        data = response.json()
+        data = _unwrap(response)
         assert "items" in data, "Response should contain 'items' key"
         assert isinstance(data["items"], list), "items should be an array"
 
     def test_billing_history_item_structure(self, authenticated_session):
         """Each item should have required user-facing fields"""
         response = authenticated_session.get(f"{BASE_URL}/api/billing/history", timeout=30)
-        data = response.json()
+        data = _unwrap(response)
 
         if len(data["items"]) == 0:
             pytest.skip("No billing history items to validate structure")
@@ -71,7 +81,7 @@ class TestBillingHistoryEndpoint:
     def test_billing_history_item_tone_values(self, authenticated_session):
         """tone field should have valid values (success, warning, info)"""
         response = authenticated_session.get(f"{BASE_URL}/api/billing/history", timeout=30)
-        data = response.json()
+        data = _unwrap(response)
 
         if len(data["items"]) == 0:
             pytest.skip("No billing history items to validate")
@@ -83,7 +93,7 @@ class TestBillingHistoryEndpoint:
     def test_billing_history_item_actor_type_values(self, authenticated_session):
         """actor_type field should have valid values (system, user)"""
         response = authenticated_session.get(f"{BASE_URL}/api/billing/history", timeout=30)
-        data = response.json()
+        data = _unwrap(response)
 
         if len(data["items"]) == 0:
             pytest.skip("No billing history items to validate")
@@ -96,7 +106,7 @@ class TestBillingHistoryEndpoint:
         """GET /api/billing/history?limit=5 should limit results"""
         response = authenticated_session.get(f"{BASE_URL}/api/billing/history?limit=5", timeout=30)
         assert response.status_code == 200
-        data = response.json()
+        data = _unwrap(response)
         assert len(data["items"]) <= 5, "Limit parameter should restrict result count"
 
     def test_billing_history_unauthenticated_returns_401(self):
@@ -116,7 +126,7 @@ class TestBillingSubscriptionRegression:
     def test_billing_subscription_has_required_fields(self, authenticated_session):
         """Subscription response should have required billing overview fields"""
         response = authenticated_session.get(f"{BASE_URL}/api/billing/subscription", timeout=30)
-        data = response.json()
+        data = _unwrap(response)
 
         required_fields = [
             "tenant_id", "plan", "interval", "status",
@@ -129,7 +139,7 @@ class TestBillingSubscriptionRegression:
     def test_billing_subscription_plan_values(self, authenticated_session):
         """Plan should be a valid plan key"""
         response = authenticated_session.get(f"{BASE_URL}/api/billing/subscription", timeout=30)
-        data = response.json()
+        data = _unwrap(response)
 
         valid_plans = {"trial", "starter", "pro", "enterprise"}
         assert data["plan"] in valid_plans, f"Invalid plan: {data['plan']}"
@@ -137,7 +147,7 @@ class TestBillingSubscriptionRegression:
     def test_billing_subscription_interval_values(self, authenticated_session):
         """Interval should be monthly or yearly"""
         response = authenticated_session.get(f"{BASE_URL}/api/billing/subscription", timeout=30)
-        data = response.json()
+        data = _unwrap(response)
 
         valid_intervals = {"monthly", "yearly"}
         assert data["interval"] in valid_intervals, f"Invalid interval: {data['interval']}"

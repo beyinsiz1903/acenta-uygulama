@@ -14,6 +14,14 @@ from bson import ObjectId
 
 from app.utils import now_utc
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
 pytestmark = pytest.mark.anyio
 
 
@@ -184,5 +192,5 @@ class TestBookingAPI:
             params=params,
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = _unwrap(resp)
         assert "items" in data

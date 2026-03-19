@@ -14,6 +14,16 @@ from app.utils import now_utc
 from app.config import PAXIMUM_BASE_URL
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.exit_sprint3
 @pytest.mark.anyio
 async def test_paximum_supplier_search_try_only_happy_path(test_db: Any, async_client: AsyncClient) -> None:
@@ -103,7 +113,7 @@ async def test_paximum_supplier_search_try_only_happy_path(test_db: Any, async_c
         )
 
     assert resp.status_code == status.HTTP_200_OK
-    data = resp.json()
+    data = _unwrap(resp)
 
     assert data["supplier"] == "paximum"
     assert data["currency"] == "TRY"
@@ -176,7 +186,7 @@ async def test_paximum_supplier_search_request_currency_not_try(test_db: Any, as
         assert not route.called
 
     assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    body = resp.json()
+    body = _unwrap(resp)
     # Global error handler wraps into {"error": {"code", "message", "details"}}
     err = body.get("error", {})
     assert err.get("code") == "UNSUPPORTED_CURRENCY"
@@ -228,6 +238,6 @@ async def test_paximum_supplier_search_upstream_unavailable_maps_to_503(test_db:
         )
 
     assert resp.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
-    body = resp.json()
+    body = _unwrap(resp)
     err = body.get("error", {})
     assert err.get("code") == "SUPPLIER_UPSTREAM_UNAVAILABLE"

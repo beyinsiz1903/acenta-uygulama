@@ -11,6 +11,16 @@ from app.auth import _jwt_secret
 from app.utils import now_utc
 
 
+def _unwrap(resp):
+    """Unwrap response envelope if present."""
+    data = resp.json()
+    if isinstance(data, dict) and "ok" in data and "data" in data:
+        return data["data"]
+    return data
+
+
+
+
 @pytest.mark.exit_multitenant_v1
 @pytest.mark.anyio
 async def test_tenant_resolve_by_header(test_db: Any, async_client: AsyncClient) -> None:
@@ -42,7 +52,7 @@ async def test_tenant_resolve_by_header(test_db: Any, async_client: AsyncClient)
     # header it should pass middleware and reach the storefront health handler
     resp_no_tenant = await client.get("/storefront/health")
     assert resp_no_tenant.status_code == status.HTTP_404_NOT_FOUND
-    assert resp_no_tenant.json().get("error", {}).get("message") == "TENANT_NOT_FOUND"
+    assert _unwrap(resp_no_tenant).get("error", {}).get("message") == "TENANT_NOT_FOUND"
 
     resp_with_tenant = await client.get(
         "/storefront/health",
@@ -61,7 +71,7 @@ async def test_storefront_requires_tenant(test_db: Any, async_client: AsyncClien
 
     resp = await client.get("/storefront/health")
     assert resp.status_code == status.HTTP_404_NOT_FOUND
-    body = resp.json()
+    body = _unwrap(resp)
     err = body.get("error", {})
     assert err.get("message") == "TENANT_NOT_FOUND"
 
@@ -101,7 +111,7 @@ async def test_api_routes_allow_no_tenant_for_backward_compat(test_db: Any, asyn
     )
 
     assert resp.status_code == status.HTTP_201_CREATED
-    booking = resp.json()
+    booking = _unwrap(resp)
     assert booking["organization_id"] == org_id
 
 
@@ -160,6 +170,6 @@ async def test_cross_tenant_forbidden_on_payload_org_id_mismatch(test_db: Any, a
     )
 
     assert resp.status_code == status.HTTP_403_FORBIDDEN
-    body = resp.json()
+    body = _unwrap(resp)
     err = body.get("error", {})
     assert err.get("message") == "CROSS_TENANT_FORBIDDEN"

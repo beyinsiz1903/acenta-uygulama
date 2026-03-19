@@ -554,6 +554,9 @@ async def admin_token(async_client: httpx.AsyncClient) -> str:
     )
     assert response.status_code == 200, f"Admin login failed: {response.text}"
     data = response.json()
+    # Handle both envelope-wrapped and raw responses
+    if "ok" in data and "data" in data:
+        data = data["data"]
     return data["access_token"]
 
 
@@ -1072,6 +1075,9 @@ async def agency_token(async_client: httpx.AsyncClient, seed_default_org_and_use
     )
     assert response.status_code == 200, f"Agency login failed: {response.text}"
     data = response.json()
+    # Handle both envelope-wrapped and raw responses
+    if "ok" in data and "data" in data:
+        data = data["data"]
     return data["access_token"]
 
 

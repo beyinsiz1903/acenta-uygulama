@@ -21,7 +21,19 @@ def db():
     mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
     db_name = os.environ.get("DB_NAME", "test_database")
     client = pymongo.MongoClient(mongo_url)
-    return client[db_name]
+    database = client[db_name]
+
+    # Seed a test organization only if none exist, so warm_caches() finds at least one
+    seeded_id = None
+    if database.organizations.count_documents({}) == 0:
+        seeded_id = ObjectId()
+        database.organizations.insert_one({"_id": seeded_id, "name": "test_org_for_orphan_migration"})
+
+    yield database
+
+    # Teardown: remove seeded org if we created one
+    if seeded_id is not None:
+        database.organizations.delete_one({"_id": seeded_id})
 
 
 class TestOrphanAnalyzer:

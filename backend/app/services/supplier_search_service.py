@@ -6,11 +6,9 @@ from fastapi import status
 
 from app.errors import AppError
 from app.services.suppliers.paximum_adapter import (
-    PaximumAdapter,
     PaximumAuthError,
     PaximumError,
     PaximumRetryableError,
-    PaximumValidationError,
     paximum_adapter,
 )
 

@@ -10,8 +10,7 @@ from enum import Enum
 
 from app.modules.booking.models import (
     ALLOWED_TRANSITIONS,
-    BookingStatus as CanonicalBookingStatus,
-    get_status_label,
+    get_status_label,  # noqa: F401 — re-exported for backward compatibility
     is_valid_transition,
 )
 

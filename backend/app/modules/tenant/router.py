@@ -17,7 +17,6 @@ from app.auth import get_current_user, is_super_admin
 from app.db import get_db
 from app.modules.tenant.admin_bypass import TENANT_SCOPED_COLLECTIONS
 from app.modules.tenant.guard import run_tenant_isolation_health_check
-from app.utils import serialize_doc
 
 router = APIRouter(
     prefix="/api/admin/tenant-isolation",

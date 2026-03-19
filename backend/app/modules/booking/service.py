@@ -21,21 +21,18 @@ from __future__ import annotations
 import logging
 import uuid
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from bson import ObjectId
 
 from app.modules.booking.errors import (
     BookingNotFoundError,
-    IdempotentOperationError,
     InvalidTransitionError,
     VersionConflictError,
 )
 from app.modules.booking.models import (
-    ALLOWED_TRANSITIONS,
     COMMAND_TO_EVENT,
     COMMAND_TO_TARGET,
-    FulfillmentStatus,
     is_valid_transition,
 )
 from app.modules.booking.policies import BookingPolicyService

@@ -9,8 +9,6 @@ import warnings
 from typing import Literal
 
 from app.modules.booking.models import (
-    ALLOWED_TRANSITIONS,
-    BookingStatus,
     is_valid_transition,
 )
 

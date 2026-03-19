@@ -10,9 +10,7 @@ Safe to run multiple times (idempotent — checks if version field already exist
 """
 from __future__ import annotations
 
-import asyncio
 import logging
-from datetime import timezone
 
 from app.modules.booking.models import LEGACY_STATUS_MAP
 

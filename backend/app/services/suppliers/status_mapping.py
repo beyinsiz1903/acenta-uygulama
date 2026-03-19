@@ -17,7 +17,6 @@ mapping dict per supplier if needed in the future.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 # ── Paximum → Supplier Booking Status ─────────────────────────

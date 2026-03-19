@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 from .paximum_adapter import PaximumAdapter, PaximumOfferExpiredError, PaximumValidationError
-from .paximum_models import Offer, PaximumBooking
+from .paximum_models import Offer
 from .status_mapping import (
     resolve_all,
     should_post_ledger,

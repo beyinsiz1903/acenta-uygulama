@@ -17,7 +17,6 @@ from app.modules.tenant.admin_bypass import (
     TENANT_SCOPED_COLLECTIONS,
     is_collection_tenant_scoped,
 )
-from app.request_context import get_request_context
 
 logger = logging.getLogger("tenant.guard")
 

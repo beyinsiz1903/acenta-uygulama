@@ -66,6 +66,23 @@ def _should_wrap(path: str, content_type: str) -> bool:
     return True
 
 
+def _rebuild_response(
+    content: bytes | str,
+    status_code: int,
+    original: Response,
+    media_type: str = "application/json",
+) -> Response:
+    """Build a new Response preserving ALL headers from *original*, including duplicate Set-Cookie."""
+    new_resp = Response(content=content, status_code=status_code, media_type=media_type)
+    for raw_key, raw_val in original.raw_headers:
+        if raw_key.lower() in (b"content-length", b"content-type"):
+            continue
+        new_resp.headers.append(raw_key.decode("latin-1"), raw_val.decode("latin-1"))
+    body_bytes = content.encode("utf-8") if isinstance(content, str) else content
+    new_resp.headers["content-length"] = str(len(body_bytes))
+    return new_resp
+
+
 class ResponseEnvelopeMiddleware(BaseHTTPMiddleware):
     """Wraps all JSON API responses in a standard {ok, data, meta} envelope."""
 
@@ -95,12 +112,7 @@ class ResponseEnvelopeMiddleware(BaseHTTPMiddleware):
         try:
             data = json.loads(raw_body)
         except (json.JSONDecodeError, UnicodeDecodeError):
-            return Response(
-                content=raw_body,
-                status_code=response.status_code,
-                headers=dict(response.headers),
-                media_type=response.media_type,
-            )
+            return _rebuild_response(raw_body, response.status_code, response, response.media_type or "application/json")
 
         # Build meta
         trace_id = getattr(request.state, "correlation_id", None) or response.headers.get("X-Correlation-Id", "")
@@ -114,12 +126,7 @@ class ResponseEnvelopeMiddleware(BaseHTTPMiddleware):
 
         # Already wrapped? (re-entrant safety)
         if isinstance(data, dict) and "ok" in data and "meta" in data:
-            return Response(
-                content=raw_body,
-                status_code=response.status_code,
-                headers=dict(response.headers),
-                media_type="application/json",
-            )
+            return _rebuild_response(raw_body, response.status_code, response)
 
         # Error response (from exception handlers)
         if isinstance(data, dict) and "error" in data and isinstance(data["error"], dict):
@@ -138,13 +145,4 @@ class ResponseEnvelopeMiddleware(BaseHTTPMiddleware):
 
         wrapped = json.dumps(envelope, ensure_ascii=False, default=str)
 
-        # Build new response preserving original headers
-        new_headers = dict(response.headers)
-        new_headers["content-length"] = str(len(wrapped.encode("utf-8")))
-
-        return Response(
-            content=wrapped,
-            status_code=response.status_code,
-            headers=new_headers,
-            media_type="application/json",
-        )
+        return _rebuild_response(wrapped, response.status_code, response)

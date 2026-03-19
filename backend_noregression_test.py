@@ -10,7 +10,7 @@ import sys
 from datetime import datetime, timedelta
 
 # Base URL from frontend/.env
-BASE_URL = "https://webhook-platform.preview.emergentagent.com/api"
+BASE_URL = "https://hook-platform.preview.emergentagent.com/api"
 
 # Test credentials
 ADMIN_CREDENTIALS = {

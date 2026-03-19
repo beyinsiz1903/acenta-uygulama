@@ -11,7 +11,7 @@ import sys
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
-    BASE_URL = "https://webhook-platform.preview.emergentagent.com"
+    BASE_URL = "https://hook-platform.preview.emergentagent.com"
 
 
 def get_auth_session():

@@ -73,7 +73,7 @@ class TestCreateCheckoutSession:
         resp = session.post(f"{BASE_URL}/api/billing/create-checkout", json={
             "plan": "starter",
             "interval": "monthly",
-            "origin_url": "https://hook-platform.preview.emergentagent.com"
+            "origin_url": "https://webhook-integration-4.preview.emergentagent.com"
         })
         assert resp.status_code in [401, 403], f"Expected 401/403, got {resp.status_code}"
         print("✅ Create checkout requires authentication")
@@ -90,7 +90,7 @@ class TestCreateCheckoutSession:
             json={
                 "plan": "starter",
                 "interval": "monthly",
-                "origin_url": "https://hook-platform.preview.emergentagent.com",
+                "origin_url": "https://webhook-integration-4.preview.emergentagent.com",
                 "cancel_path": "/pricing"
             }
         )
@@ -121,7 +121,7 @@ class TestCreateCheckoutSession:
             json={
                 "plan": "pro",
                 "interval": "yearly",
-                "origin_url": "https://hook-platform.preview.emergentagent.com",
+                "origin_url": "https://webhook-integration-4.preview.emergentagent.com",
                 "cancel_path": "/pricing"
             }
         )
@@ -147,7 +147,7 @@ class TestCreateCheckoutSession:
             json={
                 "plan": "enterprise",
                 "interval": "monthly",
-                "origin_url": "https://hook-platform.preview.emergentagent.com"
+                "origin_url": "https://webhook-integration-4.preview.emergentagent.com"
             }
         )
         # Enterprise should be rejected with 422 (plan not checkout enabled)
@@ -166,7 +166,7 @@ class TestCreateCheckoutSession:
             json={
                 "plan": "invalid_plan",
                 "interval": "monthly",
-                "origin_url": "https://hook-platform.preview.emergentagent.com"
+                "origin_url": "https://webhook-integration-4.preview.emergentagent.com"
             }
         )
         assert resp.status_code == 422, f"Expected 422 for invalid plan, got {resp.status_code}"
@@ -209,7 +209,7 @@ class TestCheckoutStatus:
             json={
                 "plan": "starter",
                 "interval": "monthly",
-                "origin_url": "https://hook-platform.preview.emergentagent.com"
+                "origin_url": "https://webhook-integration-4.preview.emergentagent.com"
             }
         )
 
@@ -281,7 +281,7 @@ class TestBillingCycleToggle:
             json={
                 "plan": "starter",
                 "interval": "monthly",
-                "origin_url": "https://hook-platform.preview.emergentagent.com"
+                "origin_url": "https://webhook-integration-4.preview.emergentagent.com"
             }
         )
         assert resp.status_code == 200
@@ -300,7 +300,7 @@ class TestBillingCycleToggle:
             json={
                 "plan": "starter",
                 "interval": "yearly",
-                "origin_url": "https://hook-platform.preview.emergentagent.com"
+                "origin_url": "https://webhook-integration-4.preview.emergentagent.com"
             }
         )
         assert resp.status_code == 200
@@ -319,7 +319,7 @@ class TestBillingCycleToggle:
             json={
                 "plan": "pro",
                 "interval": "monthly",
-                "origin_url": "https://hook-platform.preview.emergentagent.com"
+                "origin_url": "https://webhook-integration-4.preview.emergentagent.com"
             }
         )
         assert resp.status_code == 200
@@ -338,7 +338,7 @@ class TestBillingCycleToggle:
             json={
                 "plan": "pro",
                 "interval": "yearly",
-                "origin_url": "https://hook-platform.preview.emergentagent.com"
+                "origin_url": "https://webhook-integration-4.preview.emergentagent.com"
             }
         )
         assert resp.status_code == 200

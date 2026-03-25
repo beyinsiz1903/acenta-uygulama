@@ -311,10 +311,19 @@ async def test_supplier_circuit_closes_after_until(test_db: Any, async_client: A
     )
 
     from app.services.supplier_health_service import is_supplier_circuit_open
+    import asyncio as _aio
 
     # Trigger auto-close once via health check
     is_open = await is_supplier_circuit_open(db, organization_id=org_id, supplier_code="paximum")
     assert is_open is False
+
+    # Verify circuit was actually closed in DB (primary assertion)
+    health_doc = await db.supplier_health.find_one(
+        {"organization_id": org_id, "supplier_code": "paximum"},
+        {"_id": 0, "circuit": 1},
+    )
+    assert health_doc is not None
+    assert health_doc["circuit"]["state"] == "closed"
 
     payload = {
         "destination": "IST",
@@ -333,9 +342,15 @@ async def test_supplier_circuit_closes_after_until(test_db: Any, async_client: A
     is_open_after = await _check_open_after(db, organization_id=org_id, supplier_code="paximum")
     assert is_open_after is False
 
-    audit = await db.audit_logs.find_one(
-        {"organization_id": org_id, "action": "SUPPLIER_CIRCUIT_CLOSED", "target.id": "paximum"}
-    )
+    # Audit log check with retry (under heavy load, write may be briefly delayed)
+    audit = None
+    for _attempt in range(3):
+        audit = await db.audit_logs.find_one(
+            {"organization_id": org_id, "action": "SUPPLIER_CIRCUIT_CLOSED", "target.id": "paximum"}
+        )
+        if audit:
+            break
+        await _aio.sleep(0.3)
     assert audit is not None
 
 

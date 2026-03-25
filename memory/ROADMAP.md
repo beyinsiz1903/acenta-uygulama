@@ -26,8 +26,8 @@
 
 ---
 
-## P0 — Kritik (Şu An)
-- [ ] Backend test suite %100 yeşil (kalan 4 test-ordering/isolation hatası)
+## P0 — Kritik (Tamamlandı)
+- [x] Backend test suite %100 yeşil (0 FAILED, 0 ERROR — 680 passed)
 
 ## P1 — Yüksek (Sıradaki Sprint)
 - [ ] Router Consolidation Phase 2

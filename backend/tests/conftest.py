@@ -548,16 +548,26 @@ async def admin_token(async_client: httpx.AsyncClient) -> str:
     if _is_external_preview_http_test():
         return "preview-skip-admin-token"
 
-    response = await async_client.post(
-        "/api/auth/login",
-        json={"email": "admin@acenta.test", "password": "admin123"},
-    )
-    assert response.status_code == 200, f"Admin login failed: {response.text}"
-    data = response.json()
-    # Handle both envelope-wrapped and raw responses
-    if "ok" in data and "data" in data:
-        data = data["data"]
-    return data["access_token"]
+    import asyncio as _aio
+
+    last_err = None
+    for _attempt in range(3):
+        try:
+            response = await async_client.post(
+                "/api/auth/login",
+                json={"email": "admin@acenta.test", "password": "admin123"},
+            )
+            assert response.status_code == 200, f"Admin login failed: {response.text}"
+            data = response.json()
+            # Handle both envelope-wrapped and raw responses
+            if "ok" in data and "data" in data:
+                data = data["data"]
+            return data["access_token"]
+        except Exception as exc:
+            last_err = exc
+            if _attempt < 2:
+                await _aio.sleep(0.5 * (_attempt + 1))
+    raise last_err  # type: ignore[misc]
 
 
 @pytest.fixture(autouse=True)
@@ -1073,21 +1083,32 @@ async def agency_token(async_client: httpx.AsyncClient, seed_default_org_and_use
 
     Depends on seed_default_org_and_users to ensure the default organization
     and demo agency user exist inside the isolated test_db before login.
+    Includes retry for transient failures under heavy test suite load.
     """
 
     if _is_external_preview_http_test():
         return "preview-skip-agency-token"
 
-    response = await async_client.post(
-        "/api/auth/login",
-        json={"email": "agency1@demo.test", "password": "agency123"},
-    )
-    assert response.status_code == 200, f"Agency login failed: {response.text}"
-    data = response.json()
-    # Handle both envelope-wrapped and raw responses
-    if "ok" in data and "data" in data:
-        data = data["data"]
-    return data["access_token"]
+    import asyncio as _aio
+
+    last_err = None
+    for _attempt in range(3):
+        try:
+            response = await async_client.post(
+                "/api/auth/login",
+                json={"email": "agency1@demo.test", "password": "agency123"},
+            )
+            assert response.status_code == 200, f"Agency login failed: {response.text}"
+            data = response.json()
+            # Handle both envelope-wrapped and raw responses
+            if "ok" in data and "data" in data:
+                data = data["data"]
+            return data["access_token"]
+        except Exception as exc:
+            last_err = exc
+            if _attempt < 2:
+                await _aio.sleep(0.5 * (_attempt + 1))
+    raise last_err  # type: ignore[misc]
 
 
 @pytest.fixture

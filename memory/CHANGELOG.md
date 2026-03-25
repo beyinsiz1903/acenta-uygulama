@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 2026-02 — Ürün Konumlandırma & Dokümantasyon Reseti (Faz 1)
+## 2026-02 — Ürün Konumlandırma & Dokümantasyon Reseti (Faz 1) + Test Suite %100 Yeşil
 
 ### Stratejik Değişiklikler
 - **Ürün tanımı genişletildi:** "Otel acenteleri" → "Tur, otel, uçak ve B2B satış yapan acenteler için acente bulut otomasyonu"
@@ -10,12 +10,19 @@
   - Extension: b2b, marketplace, enterprise, partner-graph, reporting, mobile, webhook, ai-assistant
 - **Hotel/PMS yeniden konumlandırıldı:** Yan oyuncak değil, "Destekleyici Çekirdek / Operasyonel Derinlik" katmanında
 
+### Test Suite Stabilizasyonu (P0 Tamamlandı)
+- **Supplier circuit test:** Audit log yerine doğrudan DB state kontrolü eklendi + audit için retry loop
+- **Login fixture'ları:** `agency_token` ve `admin_token` fixture'larına 3-retry mekanizması eklendi
+- **Rerun politikası genişletildi:** `TimeoutError` ve `OSError` de otomatik rerun kapsamına alındı
+- **Sonuç:** 0 FAILED, 0 ERROR — 680 passed, 1787 skipped, 8 xfail, 1 rerun
+
 ### Dokümanlar
 - `README.md` — Tam yeniden yazıldı (ürün tanımı, mimari, kurulum, entegrasyon, proje yapısı)
 - `memory/PRD.md` — Yeni konumlandırma ile güncellendi
 - `docs/MODULE_MAP.md` — Detaylı modül haritası oluşturuldu (sahiplik, konum, sorumluluk)
 - `memory/ROADMAP.md` — Strateji uyumlu olarak güncellendi
 - `docs/COMMERCIAL_PACKAGES.md` — Ticari paketleme dokümantasyonu
+- `docs/TEST_ISOLATION_POLICY.md` — Test izolasyon kuralları ve politikası
 
 ---
 

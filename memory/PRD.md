@@ -49,19 +49,27 @@ Admin, Agency, Hotel ve B2B persona'ları için görev odaklı arayüz.
   - Blok 3: Hızlı Aksiyonlar (6 buton: Otel Ara, Çoklu Arama, Yeni Teklif, Müşteriler, Turlar, Rezervasyonlarım)
   - Blok 4: Son Aktivite + Haftalık Özet
 - Backend: /api/dashboard/agency-today endpoint (11 paralel DB sorgusu)
-- Persona-aware DashboardRouter: Agency → AgencyDashboardPage, Admin → DashboardPage
-- Backward compatibility korundu — Admin mevcut Yönetim Panosu'nu görüyor
 - useAgencyDashboard.js hook (30s stale, 60s auto-refresh)
 - Tüm testler geçti (backend 10/10, frontend %100)
 
+#### Sprint 3: Admin Dashboard & Yönetim Yüzeyi (Tamamlandı - 26.03.2026)
+- AdminDashboardPage.jsx — Yönetim odaklı 6 bloklı dashboard
+  - Blok 1: Kritik Uyarılar (dinamik threshold'lar)
+  - Blok 2: Operasyon Özeti (4 KPI)
+  - Blok 3: Finansal Snapshot (4 kart)
+  - Blok 4: Onay Bekleyenler
+  - Blok 5: Sistem / Entegrasyon Sağlığı
+  - Blok 6: Son Yönetim Aksiyonları
+- Backend: /api/dashboard/admin-today endpoint (18 paralel DB sorgusu)
+- Persona-aware DashboardRouter: Admin → AdminDashboardPage, Agency → AgencyDashboardPage
+- useAdminDashboard.js hook (60s stale, 90s auto-refresh)
+- Legacy 403 console noise giderildi
+- Tüm testler geçti (%100 backend+frontend, iteration_151.json)
+
 ## Bekleyen İşler
 
-### Sprint 3 (Sıradaki): Admin Dashboard & Yönetim Yüzeyi
-- Admin persona dashboard'u (persona'ya özel)
-- Ortak page shell / breadcrumb / section header standardı
-
-### Sprint 4: Hotel + B2B Rollout
-- Hotel ve B2B dashboard'ları
+### Sprint 4 (Sıradaki): Hotel + B2B Rollout & UX Polish
+- Hotel ve B2B persona dashboard'ları
 - Son temizlik, UX polish, demo senaryoları
 
 ### Gelecek Fazlar
@@ -73,6 +81,6 @@ Admin, Agency, Hotel ve B2B persona'ları için görev odaklı arayüz.
 - Cache Strategy L0/L1/L2
 
 ## Bilinen Sorunlar
-- Frontend yarn.lock dependency mismatch (P2, tekrarlayan)
-- API 400 hataları (tenant/auth ile ilgili, non-blocking)
+- Frontend yarn.lock dependency mismatch (Çözüldü - 26.03.2026)
+- API 400/403 hataları (/reports/* feature-gated) (Çözüldü - 26.03.2026, çağrılar temizlendi)
 - test_paximum_unit "too many open files" (ortam limiti, kod hatası değil)

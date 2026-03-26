@@ -1,5 +1,29 @@
 # CHANGELOG — Syroce
 
+## [2026-03-26] Faz 3 Sprint 3: Admin Dashboard & Yönetim Yüzeyi
+
+### Eklenen
+- `pages/AdminDashboardPage.jsx` — Yönetim odaklı Admin dashboard (6 blok)
+- `hooks/useAdminDashboard.js` — React Query hook (/api/dashboard/admin-today)
+- `backend/app/routers/dashboard_admin.py` — Admin daily overview endpoint (18 paralel query)
+
+### Değiştirilen
+- `routes/coreRoutes.jsx` — DashboardRouter: admin → AdminDashboardPage eklendi
+- `modules/reporting/__init__.py` — dashboard_admin_router eklendi
+- `pages/DashboardPage.jsx` — Feature-gated /reports/* çağrıları temizlendi (403 console noise)
+
+### Düzeltilen
+- yarn.lock dependency mismatch (silindi, yeniden oluşturuldu)
+- API 403 feature_not_enabled console hataları (dashboard'dan /reports/* çağrıları kaldırıldı)
+
+### Notlar
+- Admin kullanıcıları /app'te yeni görev odaklı dashboard görüyor
+- Agency kullanıcıları mevcut Agency dashboard'u görmeye devam ediyor
+- Eski Yönetici Panosu /app/admin/dashboard'da hâlâ erişilebilir
+- Test raporu: backend %100, frontend %100 (iteration_151.json)
+
+---
+
 ## [2026-03-26] Faz 3 Sprint 2: Agency Dashboard & Görev Odaklı Kontrol Paneli
 
 ### Eklenen

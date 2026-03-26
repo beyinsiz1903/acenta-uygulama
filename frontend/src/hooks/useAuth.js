@@ -40,7 +40,8 @@ export function useLogin() {
         tenant_id,
         tenant_slug,
       });
-      return data;
+      // Unwrap standard response envelope { ok, data, meta }
+      return data?.data || data;
     },
     onSuccess: (data) => {
       if (data?.user) {

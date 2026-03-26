@@ -31,13 +31,10 @@ import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { normalizeAgencyModuleKeys } from "../lib/agencyModules";
 import { hasAnyRole } from "../lib/roles";
 import {
-  ACCOUNT_NAV_ITEMS,
-  ADMIN_NAV_SECTIONS,
-  APP_NAV_SECTIONS,
-  buildScopedNavItems,
-  buildScopedNavSections,
-  getUserScope,
-} from "../lib/appNavigation";
+  resolvePersona,
+  getPersonaNavSections,
+  getPersonaAccountLinks,
+} from "../navigation";
 
 /* ------------------------------------------------------------------ */
 /*  Sidebar collapse persistence                                       */
@@ -324,7 +321,7 @@ function AppShellInner() {
   }, [resSummary, sales]);
 
   const isAdmin = hasAnyRole(user, ["super_admin", "admin"]);
-  const userScope = useMemo(() => getUserScope(user), [user]);
+  const persona = useMemo(() => resolvePersona(user), [user]);
   const trialExpired = Boolean(trialStatus?.expired || trialStatus?.status === "expired");
   const agencyContractExpired = Boolean(isAgencyUser && agencyContract?.access_blocked);
   const showAgencyContractWarning = Boolean(
@@ -354,7 +351,8 @@ function AppShellInner() {
 
   const filterNavByMode = useCallback((items) => {
     return items.filter((it) => {
-      if (it.visibleScopes && !it.visibleScopes.includes(userScope)) return false;
+      if (it.visibleInSidebar === false) return false;
+      if (it.visibleScopes && !it.visibleScopes.includes(persona)) return false;
       if (!it.to) return false;
       if (!it.isCore && it.feature && !(!featuresLoading && hasFeature(it.feature))) return false;
       if (it.minMode) {
@@ -368,18 +366,14 @@ function AppShellInner() {
       }
       return true;
     });
-  }, [featuresLoading, hasFeature, currentModeLevel, hiddenNavItems, isAgencyModuleVisible, userScope, userAllowedScreens]);
+  }, [featuresLoading, hasFeature, currentModeLevel, hiddenNavItems, isAgencyModuleVisible, persona, userAllowedScreens]);
 
-  const navSource = useMemo(
-    () => (isAdmin ? [...APP_NAV_SECTIONS, ...ADMIN_NAV_SECTIONS] : APP_NAV_SECTIONS),
-    [isAdmin],
-  );
-  const navSections = useMemo(() => buildScopedNavSections(navSource, userScope), [navSource, userScope]);
+  const navSections = useMemo(() => getPersonaNavSections(persona), [persona]);
   const visibleNavSections = useMemo(
     () => navSections.filter((section) => section.showInSidebar !== false),
     [navSections],
   );
-  const accountLinks = useMemo(() => buildScopedNavItems(ACCOUNT_NAV_ITEMS, userScope), [userScope]);
+  const accountLinks = useMemo(() => getPersonaAccountLinks(persona), [persona]);
 
   /* ── Mode Route Guard: redirect if current path is hidden by mode ── */
   useEffect(() => {

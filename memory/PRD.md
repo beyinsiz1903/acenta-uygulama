@@ -1,41 +1,69 @@
-# PRD -- Syroce: Acente Bulut Otomasyonu
+# PRD — Syroce: Acenta İşletim Sistemi (Multi-Product SaaS)
 
-## Urun Tanimi
-Syroce, turizm acentelerinin otel, tur, ucus ve B2B islemlerini tek platformda yoneten
-cok urunlu SaaS acente isletim sistemidir.
-
-## Hedef Kullanicilar
-- Admin (Sistem yoneticisi)
-- Acente (Satis & operasyon)
-- Otel (Envanter & musaitlik)
-- B2B (Ag/partner yonetimi)
-- Finans (Odeme & raporlama)
-
-## Temel Gereksinimler
-1. Cok-kiracili (multi-tenant) mimari, organization_id bazli izolasyon
-2. Domain-driven modul yapisi (16 bounded context)
-3. Booking state machine (tek dogru kaynak)
-4. Supplier entegrasyonu (adapter pattern, circuit breaker)
-5. B2B marketplace & exchange
-6. Finans: faturalama, odeme, mutabakat, ledger
-7. Webhook sistemi (HMAC, retry, DLQ)
-8. Event-driven outbox pattern
+## Vizyon
+Otel/tur acenteleri için uçtan uca dijital operasyon yönetim sistemi.
+Admin, Agency, Hotel ve B2B persona'ları için görev odaklı arayüz.
 
 ## Mimari
-- Backend: FastAPI + MongoDB + Celery + Redis
-- Frontend: React + Shadcn UI
-- 16 Domain Modulu: auth, identity, booking, b2b, supplier, finance, crm,
-  operations, enterprise, system, inventory, pricing, public, reporting, tenant, webhooks
-- Router registry: domain_router_registry.py (tum router'lar domain modullerinde)
+- **Backend**: FastAPI + MongoDB + Celery + Redis
+- **Frontend**: React + Shadcn/UI + React Router
+- **Domain-Driven Design**: 16 bounded context (Faz 2'de tamamlandı)
+- **Navigation**: Persona-based navigation platform (Faz 3 Sprint 1'de tamamlandı)
 
-## Tamamlanan Calisma
-- Faz 1: Dokumantasyon & Konumlandirma (Subat 2026)
-- P0: Backend test suite %100 yesil (Subat 2026)
-- Faz 2: Router & Domain Ownership Cleanup - TUM DALGALAR (Subat 2026)
-  - 16 domain modulu, ~160+ router konsolide, REMAINING: 0
-  - Architecture Guard testi, Domain Ownership Manifest
+## Persona'lar
+1. **Admin** — Sistem sahibi/operasyon yöneticisi (max 7 sidebar grubu)
+2. **Agency** — Acenta operasyon kullanıcısı (max 7 sidebar grubu)
+3. **Hotel** — Otel operasyon/kontrat kullanıcısı (max 7 sidebar grubu)
+4. **B2B** — Bayi/partner (max 6 sidebar grubu, ayrı layout)
 
-## Siradaki Hedefler
-- Faz 3: UI Sadelestirme & Bilgi Mimarisi
+## Tamamlanan Fazlar
+
+### Faz 1 — Mimari Analiz (Tamamlandı)
+- Mevcut kod base'in analizi, bağımlılık haritası çıkarıldı
+
+### Faz 2 — Router & Domain Ownership Cleanup (Tamamlandı)
+- ~160+ legacy router, 16 bounded context'e migrate edildi
+- domain_router_registry.py refactor edildi
+- Architecture Guard testi oluşturuldu
+- DOMAIN_OWNERSHIP_MANIFEST.md dokümante edildi
+
+### Faz 3 — UI Simplification & Info Architecture
+#### Sprint 1: Persona-Based Navigation Platform (Tamamlandı - 26.03.2026)
+- Monolitik appNavigation.js (1038 satır) → persona bazlı 6 dosyaya bölündü
+- navigation/personas/{admin,agency,hotel,b2b}.navigation.js
+- navigation/shared/navigation.utils.js + navigation/index.js
+- Her persona max 7 sidebar grubu görüyor
+- directAccessOnly metadata ile eski route'lar korunuyor
+- visibleInSidebar, visibleInSearch, legacy, directAccessOnly metadata
+- Türkçe iş dili label'ları (modül adları yerine görev adları)
+- PERSONA_IA.md ve MENU_PRUNING_MATRIX.md dokümantasyonu
+- API response envelope auto-unwrap (Axios interceptor)
+- PageErrorBoundary eklendi
+- Tüm testler geçti (%100 frontend)
+
+## Bekleyen İşler
+
+### Sprint 2 (Sıradaki): Agency Dashboard & Ana Akış Ekranları
+- Agency persona dashboard'u (görev odaklı, 4 blok: Bugün, KPI, Hızlı Aksiyon, Son Aktivite)
+- Agency ana akış ekranlarının yeniden gruplaması
+- Ölü route ve menü temizlikleri
+
+### Sprint 3: Admin Dashboard & Yönetim Yüzeyi
+- Admin dashboard (persona'ya özel)
+- Ortak page shell / breadcrumb / section header standardı
+
+### Sprint 4: Hotel + B2B Rollout
+- Hotel ve B2B dashboard'ları
+- Son temizlik, UX polish, demo senaryoları
+
+### Gelecek Fazlar
+- Fiziksel router taşınması (app/routers → modules/*/routers)
+- CI Quality Gates & Coverage Visibility
+- Dependency & Scope Control Audits
 - Event-Driven Core Expansion
 - Cache Strategy L0/L1/L2
+
+## Bilinen Sorunlar
+- Frontend yarn.lock dependency mismatch (P2, tekrarlayan)
+- API 400 hataları (tenant/auth ile ilgili, non-blocking)
+- test_paximum_unit "too many open files" (ortam limiti, kod hatası değil)

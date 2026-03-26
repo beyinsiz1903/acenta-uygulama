@@ -1,49 +1,42 @@
-# CHANGELOG -- Syroce
+# CHANGELOG — Syroce
 
-## [2026-02-XX] Faz 2: Router & Domain Ownership Cleanup
+## [2026-03-26] Faz 3 Sprint 1: Persona-Based Navigation Platform
 
-### Eklendi
-- Yeni domain modulleri olusturuldu:
-  - `modules/inventory/` -- otel, oda, musaitlik, PMS, sheets, arama (24 router)
-  - `modules/pricing/` -- fiyatlama, marketplace, teklifler (12 router)
-  - `modules/public/` -- storefront, public search, checkout, SEO (13 router)
-  - `modules/reporting/` -- raporlar, analytics, dashboard, export (10 router)
-- Architecture Guard testi (`tests/test_architecture_guard.py`)
-- Domain Ownership Manifest (`docs/DOMAIN_OWNERSHIP_MANIFEST.md`)
+### Eklenen
+- `navigation/personas/admin.navigation.js` — Admin persona navigasyon tanımı (7 sidebar grubu, ~100 öğe)
+- `navigation/personas/agency.navigation.js` — Agency persona navigasyon tanımı (7 sidebar grubu)
+- `navigation/personas/hotel.navigation.js` — Hotel persona navigasyon tanımı (5 aktif sidebar grubu)
+- `navigation/personas/b2b.navigation.js` — B2B persona navigasyon tanımı (6 sidebar grubu)
+- `navigation/shared/navigation.utils.js` — resolvePersona(), flattenNavItems(), filterSidebarItems()
+- `navigation/index.js` — Merkezi export (getPersonaNavSections, getPersonaAccountLinks)
+- `components/PageErrorBoundary.jsx` — Sayfa bazlı hata yakalayıcı
+- `docs/PERSONA_IA.md` — Persona bilgi mimarisi dokümanı
+- `docs/MENU_PRUNING_MATRIX.md` — Menü budama matrisi (keep/merge/remove/hide kararları)
 
-### Degistirildi
-- `domain_router_registry.py` tamamen yeniden yazildi:
-  - Onceki: ~413 satir, ~109 router "REMAINING" bolumunde
-  - Simdi: ~160 satir, 16 domain import, 0 REMAINING router
-- Mevcut domain modulleri guncellendi (yeni router'lar eklendi):
-  - `modules/supplier/` -- +4 router (activation, credentials, aggregator, ecosystem)
-  - `modules/booking/` -- +11 router (legacy, vouchers, matches, unified)
-  - `modules/finance/` -- +9 router (ledger, settlements, OMS, accounting)
-  - `modules/system/` -- +20 router (platform layers, admin misc, extensions)
-  - `modules/enterprise/` -- +3 router (risk, policies, approvals)
-  - `modules/operations/` -- +1 router (tickets)
-  - `modules/b2b/` -- +3 router (partner_graph, partner_v1, admin_partners)
-  - `modules/crm/` -- +2 router (inbox, inbox_v2)
+### Değiştirilen
+- `components/AppShell.jsx` — lib/appNavigation yerine navigation/ modülü kullanıyor; PageErrorBoundary eklendi
+- `lib/api.js` — Axios response interceptor'a otomatik envelope unwrap eklendi ({ok, data, meta} → data)
+- `hooks/useAuth.js` — Login envelope unwrap yorumu güncellendi (interceptor tarafından yönetiliyor)
 
-### Test Durumu
-- Architecture Guard: PASSED (0 cross-domain violation)
-- Supplier tests: 6 passed
-- Tenant isolation tests: 32 passed
-- Admin settlements, pricing, ical tests: PASSED
-- Backend startup: OK
+### Düzeltilen
+- Agency dashboard WeeklySummaryTable crash (response envelope unwrap sorunu)
+- ReservationsPage crash (aynı sebep)
+- Tüm API yanıtları artık otomatik olarak envelope'dan çıkarılıyor
 
-## [2026-02-XX] Faz 1: Dokumantasyon & Konumlandirma Reseti
+### Notlar
+- Eski appNavigation.js dosyası bozulmadı (AdminAllModulesPage hâlâ kullanıyor)
+- Tüm route'lar backward compatible — sidebar'dan kaldırılan menüler URL ile erişilebilir
+- directAccessOnly metadata sayesinde "üründen kaldırıldı" ≠ "teknik olarak erişilemez"
 
-### Eklendi
-- `docs/MODULE_MAP.md` -- domain boundary tanimlari
-- `docs/COMMERCIAL_PACKAGES.md` -- lisanslama mimarisi
-- `docs/TEST_ISOLATION_POLICY.md` -- test kurallari
+---
 
-### Degistirildi
-- `PRD.md` -- cok urunlu SaaS tanimiyla guncellendi
-- `README.md` -- sifirdan yazildi
+## [2026-03-25] Faz 2: Router & Domain Ownership Cleanup
 
-## [2026-02-XX] P0: Test Suite Stabilizasyonu
-- Backend test suite 680 passed, 0 failed, 0 error
-- conftest.py fixture'lari (retry logic, graceful skips)
-- Supplier circuit test DB state duzeltmesi
+### Eklenen
+- 4 yeni domain modülü: inventory, pricing, public, reporting
+- Architecture Guard testi: test_architecture_guard.py
+- DOMAIN_OWNERSHIP_MANIFEST.md
+
+### Değiştirilen
+- domain_router_registry.py — 400+ satırdan ~50 satıra (16 domain aggregator)
+- ~160+ legacy router mantıksal olarak bounded context'lere taşındı

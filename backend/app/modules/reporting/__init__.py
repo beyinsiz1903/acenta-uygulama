@@ -18,6 +18,7 @@ from app.routers.admin_reports import router as admin_reports_router
 from app.routers.admin_funnel import router as admin_funnel_router
 from app.routers.admin_insights import router as admin_insights_router
 from app.routers.dashboard_enhanced import router as dashboard_enhanced_router
+from app.routers.dashboard_agency import router as dashboard_agency_router
 from app.routers.revenue_router import router as revenue_router
 
 domain_router = APIRouter()
@@ -37,4 +38,5 @@ domain_router.include_router(admin_insights_router)
 
 # Dashboard & revenue
 domain_router.include_router(dashboard_enhanced_router)
+domain_router.include_router(dashboard_agency_router)
 domain_router.include_router(revenue_router)

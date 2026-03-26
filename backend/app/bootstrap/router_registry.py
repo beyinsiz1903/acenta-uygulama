@@ -108,6 +108,7 @@ from app.routers.crm_events import router as crm_events_router
 from app.routers.crm_notes import router as crm_notes_router
 from app.routers.crm_tasks import router as crm_tasks_router
 from app.routers.crm_timeline import router as crm_timeline_router
+from app.routers.dashboard_agency import router as dashboard_agency_router
 from app.routers.dashboard_enhanced import router as dashboard_enhanced_router
 from app.routers.demo_scale_ui_proof import router as demo_scale_ui_proof_router
 from app.routers.dev_saas import router as dev_saas_router
@@ -410,6 +411,7 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(admin_demo_guide_router)
     app.include_router(ai_assistant_router)
     app.include_router(dashboard_enhanced_router)
+    app.include_router(dashboard_agency_router)
     app.include_router(gdpr_router)
     app.include_router(agency_contracts_router)
     app.include_router(multicurrency_router)

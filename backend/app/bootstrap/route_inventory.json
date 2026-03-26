@@ -6143,6 +6143,17 @@
     "legacy_or_v1": "legacy",
     "method": "GET",
     "owner": "dashboard",
+    "path": "/api/dashboard/agency-today",
+    "risk_level": "medium",
+    "source": "app.routers.dashboard_agency",
+    "target_namespace": "/api/v1/dashboard"
+  },
+  {
+    "compat_required": true,
+    "current_namespace": "/api/dashboard",
+    "legacy_or_v1": "legacy",
+    "method": "GET",
+    "owner": "dashboard",
     "path": "/api/dashboard/kpi-stats",
     "risk_level": "medium",
     "source": "app.routers.dashboard_enhanced",

@@ -1,8 +1,11 @@
 import { lazy } from "react";
 import { Route, Navigate } from "react-router-dom";
+import { getUser } from "../lib/api";
+import { resolvePersona } from "../navigation";
 
 // ─── Lazy imports: Core app pages ───
 const DashboardPage = lazy(() => import("../pages/DashboardPage"));
+const AgencyDashboardPage = lazy(() => import("../pages/AgencyDashboardPage"));
 const ReservationsPage = lazy(() => import("../pages/ReservationsPage"));
 const AdvancedReportsPage = lazy(() => import("../pages/AdvancedReportsPage"));
 const UsagePage = lazy(() => import("../pages/UsagePage"));
@@ -46,13 +49,21 @@ const PartnerInvitesPage = lazy(() => import("../pages/partners/PartnerInvitesPa
 const PartnerRelationshipsPage = lazy(() => import("../pages/partners/PartnerRelationshipsPage"));
 const PartnerStatementsPage = lazy(() => import("../pages/partners/PartnerStatementsPage"));
 
+/** Persona-aware dashboard selector */
+function DashboardRouter() {
+  const user = getUser();
+  const persona = resolvePersona(user);
+  if (persona === "agency") return <AgencyDashboardPage />;
+  return <DashboardPage />;
+}
+
 /**
  * Core app route children — rendered inside AppShell.
  * Parent: /app/*
  */
 export const coreRoutes = (
   <>
-    <Route index element={<DashboardPage />} />
+    <Route index element={<DashboardRouter />} />
     <Route path="customers" element={<Navigate to="/app/crm/customers" replace />} />
     <Route path="reservations" element={<ReservationsPage />} />
     <Route path="reports" element={<AdvancedReportsPage />} />

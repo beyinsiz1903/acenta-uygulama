@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import uuid
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, EmailStr
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
+from app.services.email import send_email_ses, EmailSendError
 from app.utils import now_utc, build_booking_public_view
 
 # DEPLOYMENT FIX: WeasyPrint lazy import (prevents crash if libpangoft2 missing)
@@ -220,6 +221,7 @@ async def get_voucher_public_html(token: str, format: str = "html"):
     html = _build_voucher_html(view, organization=org_doc)
 
     if format.lower() == "pdf":
+        from weasyprint import HTML  # Lazy import
         pdf_bytes = HTML(string=html).write_pdf()
         filename_code = (view.get("code") or token).replace("\n", " ")
         headers = {

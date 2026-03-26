@@ -1,26 +1,24 @@
-# ROADMAP — Syroce
+# ROADMAP — Syroce Platform
 
-## Tamamlanan
-- [x] Faz 1: Mimari Analiz
-- [x] Faz 2: Router & Domain Ownership Cleanup (mantıksal migrasyon)
-- [x] Faz 3 Sprint 1: Persona-Based Navigation Platform
-- [x] Faz 3 Sprint 2: Agency Dashboard & Görev Odaklı Kontrol Paneli
-- [x] Faz 3 Sprint 3: Admin Dashboard & Yönetim Yüzeyi
-- [x] Faz 3 Sprint 4: Hotel & B2B Dashboard + Cmd+K Enrichment
-- [x] Frontend yarn.lock dependency mismatch temizliği
-- [x] API 403 console noise temizliği
+## Completed
+- [x] Phase 1: Foundation (PRD, module maps, packaging)
+- [x] Phase 2: Router & Domain Cleanup (160+ routers, architecture guard)
+- [x] Phase 3: Persona-Based UI & Dashboards (all 4 personas)
+- [x] Phase 4 Faz A: CI Quality Gates & Scope Audit
+- [x] Phase 4 Faz B: Physical Router Migration (230 files)
+- [x] Phase 4 Faz C: Event-Driven Core + Cache Strategy
+- [x] Phase 4 Faz D: Live Architecture Documentation
 
-## Sıradaki (P1)
-- [ ] UI Polish & Demo Senaryoları
-  - Boş durum ekranları (empty states)
-  - Loading/skeleton standardizasyonu
-  - Hata fallback'leri
-  - Kart yoğunluğu ve mobil kırılımlar
+## P1 — Next Up
+- [ ] Coverage threshold gradual increase (20% → 30% → 50%)
+- [ ] Shim file cleanup: Gradually remove backward-compat shims after verifying all imports
+- [ ] WebSocket Real-Time Dashboard Integration
 
-## Backlog (P2)
-- [ ] Fiziksel Router Taşıma (app/routers → modules/*/routers)
-- [ ] CI Quality Gates & Coverage Visibility
-- [ ] Dependency & Scope Control Audits
-- [ ] Event-Driven Core + Cache Strategy
+## P2 — Backlog
+- [ ] Feature flag / package scope enforcement
 - [ ] In-Product Analytics & Usage Visibility
-- [ ] Auto-generated Live Architecture Docs
+- [ ] Event-driven expansion: Add actual handlers for booking/payment flows
+- [ ] Redis integration hardening (currently optional/graceful degradation)
+- [ ] React Router v7 migration (resolve future flag warnings)
+- [ ] Service layer refactoring (remove FastAPI imports from services)
+- [ ] Orphan router assignment (4 remaining)

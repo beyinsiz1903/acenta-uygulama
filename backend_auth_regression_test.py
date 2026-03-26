@@ -10,7 +10,7 @@ import json
 import sys
 
 # Test configuration
-BACKEND_URL = "https://daily-hub-27.preview.emergentagent.com"
+BACKEND_URL = "https://hotel-b2b-rollout.preview.emergentagent.com"
 TEST_CREDENTIALS = {
     "email": "agent@acenta.test",
     "password": "agent123"

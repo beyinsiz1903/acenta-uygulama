@@ -13,7 +13,7 @@ from typing import Dict, Any, Optional
 import uuid
 
 # Use the preview URL from frontend/.env
-BASE_URL = "https://daily-hub-27.preview.emergentagent.com"
+BASE_URL = "https://hotel-b2b-rollout.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials

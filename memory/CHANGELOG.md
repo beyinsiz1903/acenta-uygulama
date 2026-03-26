@@ -1,50 +1,49 @@
-# CHANGELOG
+# CHANGELOG -- Syroce
 
-## 2026-02 — Ürün Konumlandırma & Dokümantasyon Reseti (Faz 1) + Test Suite %100 Yeşil
+## [2026-02-XX] Faz 2: Router & Domain Ownership Cleanup
 
-### Stratejik Değişiklikler
-- **Ürün tanımı genişletildi:** "Otel acenteleri" → "Tur, otel, uçak ve B2B satış yapan acenteler için acente bulut otomasyonu"
-- **Modül sınıflandırması oluşturuldu:** Çekirdek / Destekleyici Çekirdek / Extension üçlü katman yapısı
-  - Çekirdek: identity, tenant, auth, booking, finance, supplier, crm
-  - Destekleyici Çekirdek: operations, inventory, pricing, reservation-control
-  - Extension: b2b, marketplace, enterprise, partner-graph, reporting, mobile, webhook, ai-assistant
-- **Hotel/PMS yeniden konumlandırıldı:** Yan oyuncak değil, "Destekleyici Çekirdek / Operasyonel Derinlik" katmanında
+### Eklendi
+- Yeni domain modulleri olusturuldu:
+  - `modules/inventory/` -- otel, oda, musaitlik, PMS, sheets, arama (24 router)
+  - `modules/pricing/` -- fiyatlama, marketplace, teklifler (12 router)
+  - `modules/public/` -- storefront, public search, checkout, SEO (13 router)
+  - `modules/reporting/` -- raporlar, analytics, dashboard, export (10 router)
+- Architecture Guard testi (`tests/test_architecture_guard.py`)
+- Domain Ownership Manifest (`docs/DOMAIN_OWNERSHIP_MANIFEST.md`)
 
-### Test Suite Stabilizasyonu (P0 Tamamlandı)
-- **Supplier circuit test:** Audit log yerine doğrudan DB state kontrolü eklendi + audit için retry loop
-- **Login fixture'ları:** `agency_token` ve `admin_token` fixture'larına 3-retry mekanizması eklendi
-- **Rerun politikası genişletildi:** `TimeoutError` ve `OSError` de otomatik rerun kapsamına alındı
-- **Sonuç:** 0 FAILED, 0 ERROR — 680 passed, 1787 skipped, 8 xfail, 1 rerun
+### Degistirildi
+- `domain_router_registry.py` tamamen yeniden yazildi:
+  - Onceki: ~413 satir, ~109 router "REMAINING" bolumunde
+  - Simdi: ~160 satir, 16 domain import, 0 REMAINING router
+- Mevcut domain modulleri guncellendi (yeni router'lar eklendi):
+  - `modules/supplier/` -- +4 router (activation, credentials, aggregator, ecosystem)
+  - `modules/booking/` -- +11 router (legacy, vouchers, matches, unified)
+  - `modules/finance/` -- +9 router (ledger, settlements, OMS, accounting)
+  - `modules/system/` -- +20 router (platform layers, admin misc, extensions)
+  - `modules/enterprise/` -- +3 router (risk, policies, approvals)
+  - `modules/operations/` -- +1 router (tickets)
+  - `modules/b2b/` -- +3 router (partner_graph, partner_v1, admin_partners)
+  - `modules/crm/` -- +2 router (inbox, inbox_v2)
 
-### Dokümanlar
-- `README.md` — Tam yeniden yazıldı (ürün tanımı, mimari, kurulum, entegrasyon, proje yapısı)
-- `memory/PRD.md` — Yeni konumlandırma ile güncellendi
-- `docs/MODULE_MAP.md` — Detaylı modül haritası oluşturuldu (sahiplik, konum, sorumluluk)
-- `memory/ROADMAP.md` — Strateji uyumlu olarak güncellendi
-- `docs/COMMERCIAL_PACKAGES.md` — Ticari paketleme dokümantasyonu
-- `docs/TEST_ISOLATION_POLICY.md` — Test izolasyon kuralları ve politikası
+### Test Durumu
+- Architecture Guard: PASSED (0 cross-domain violation)
+- Supplier tests: 6 passed
+- Tenant isolation tests: 32 passed
+- Admin settlements, pricing, ical tests: PASSED
+- Backend startup: OK
 
----
+## [2026-02-XX] Faz 1: Dokumantasyon & Konumlandirma Reseti
 
-## 2026-03-20 — Ruff Linting & CI Test Fix
+### Eklendi
+- `docs/MODULE_MAP.md` -- domain boundary tanimlari
+- `docs/COMMERCIAL_PACKAGES.md` -- lisanslama mimarisi
+- `docs/TEST_ISOLATION_POLICY.md` -- test kurallari
 
-### Düzeltmeler
-- `backend/app/modules/booking/service.py`: 2 adet F841 (unused variable) hatası düzeltildi
-- `tests/test_orphan_migration.py`: CI ortamında boş veritabanı sorununu çözen idempotent pytest fixture eklendi
+### Degistirildi
+- `PRD.md` -- cok urunlu SaaS tanimiyla guncellendi
+- `README.md` -- sifirdan yazildi
 
----
-
-## 2026-03-19 — Backend Test Suite Stabilization (P0)
-
-### Kritik Düzeltmeler
-- **ResponseEnvelopeMiddleware Cookie Loss:** `dict(response.headers)` → `_rebuild_response()` ile Set-Cookie header korunması
-- **Event Loop Mismatch:** 14 test dosyasında `@pytest.mark.asyncio` → `@pytest.mark.anyio`
-- **Booking State Machine Compatibility:** quoted/optioned → confirmed geçişleri eklendi
-- **OCC Version Filter:** Legacy booking'ler için `version` alanı olmayan dokümanlar desteklendi
-- **Mobile BFF Routes:** `/api/mobile/*` kaydı düzeltildi
-- **Audit Service:** `request=None` güvenli işleme
-- **Conftest Envelope Fixes:** Response envelope unwrap düzeltmeleri
-
-### Test Sonuçları
-- Öncesi: 71 FAILED + 17 ERROR = 88 başarısız
-- Sonrası: 1 FAILED + 3 ERROR (izolasyonda tümü geçiyor — test-ordering sorunu)
+## [2026-02-XX] P0: Test Suite Stabilizasyonu
+- Backend test suite 680 passed, 0 failed, 0 error
+- conftest.py fixture'lari (retry logic, graceful skips)
+- Supplier circuit test DB state duzeltmesi

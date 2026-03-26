@@ -1,4 +1,7 @@
-"""CRM domain — customers, deals, tasks, activities, notes, timeline, leads."""
+"""CRM domain — customers, deals, tasks, activities, notes, timeline, leads, inbox.
+
+Phase 2, Dalga 5 additions: inbox, inbox_v2.
+"""
 from fastapi import APIRouter
 
 from app.routers.crm_customers import router as crm_customers_router
@@ -12,6 +15,10 @@ from app.routers.crm_customer_inbox import router as crm_customer_inbox_router
 from app.routers.customers import router as customers_router
 from app.routers.leads import router as leads_router
 
+# --- Phase 2, Dalga 5 ---
+from app.routers.inbox import router as inbox_router
+from app.routers.inbox_v2 import router as inbox_v2_router
+
 domain_router = APIRouter()
 domain_router.include_router(crm_customers_router)
 domain_router.include_router(crm_deals_router)
@@ -23,3 +30,5 @@ domain_router.include_router(crm_timeline_router)
 domain_router.include_router(crm_customer_inbox_router)
 domain_router.include_router(customers_router)
 domain_router.include_router(leads_router)
+domain_router.include_router(inbox_router)
+domain_router.include_router(inbox_v2_router)

@@ -1,4 +1,7 @@
-"""B2B domain — all B2B network, marketplace, exchange routers."""
+"""B2B domain — all B2B network, marketplace, exchange, partner routers.
+
+Phase 2, Dalga 5 additions: partner_graph, partner_v1, admin_partners.
+"""
 from fastapi import APIRouter
 
 from app.config import API_PREFIX
@@ -24,6 +27,11 @@ from app.routers.admin_b2b_pricing import router as admin_b2b_pricing_router
 from app.routers.admin_b2b_visibility import router as admin_b2b_visibility_router
 from app.routers.ops_b2b import router as ops_b2b_router
 
+# --- Phase 2, Dalga 5 additions ---
+from app.routers.partner_graph import router as partner_graph_router
+from app.routers.partner_v1 import router as partner_v1_router
+from app.routers.admin_partners import router as admin_partners_router
+
 domain_router = APIRouter()
 domain_router.include_router(b2b_router)
 domain_router.include_router(b2b_bookings_router)
@@ -45,3 +53,8 @@ domain_router.include_router(admin_b2b_marketplace_router)
 domain_router.include_router(admin_b2b_pricing_router)
 domain_router.include_router(admin_b2b_visibility_router)
 domain_router.include_router(ops_b2b_router)
+
+# Partner network
+domain_router.include_router(partner_graph_router)
+domain_router.include_router(partner_v1_router)
+domain_router.include_router(admin_partners_router)

@@ -8,7 +8,7 @@ Turkish Review Request:
 - Test POST /api/admin/all-users/repair-memberships endpoint; should return 200 with numerical result
 - Delete test user if possible
 
-Base URL: https://test-stability-core.preview.emergentagent.com
+Base URL: https://ownership-manifest.preview.emergentagent.com
 Credentials: admin@acenta.test / admin123
 """
 
@@ -18,7 +18,7 @@ import json
 import time
 
 # Configuration
-BASE_URL = "https://test-stability-core.preview.emergentagent.com"
+BASE_URL = "https://ownership-manifest.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

@@ -11,7 +11,7 @@ import sys
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
-    BASE_URL = "https://ci-stabilize.preview.emergentagent.com"
+    BASE_URL = "https://test-stability-core.preview.emergentagent.com"
 
 
 def get_auth_session():

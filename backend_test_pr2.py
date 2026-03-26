@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://ci-stabilize.preview.emergentagent.com"
+BASE_URL = "https://test-stability-core.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials

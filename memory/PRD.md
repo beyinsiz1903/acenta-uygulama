@@ -9,13 +9,14 @@ Admin, Agency, Hotel ve B2B persona'ları için görev odaklı arayüz.
 - **Frontend**: React + Shadcn/UI + React Router
 - **Domain-Driven Design**: 16 bounded context (Faz 2'de tamamlandı)
 - **Navigation**: Persona-based navigation platform (Faz 3 Sprint 1'de tamamlandı)
-- **Dashboard**: Persona-based dashboards (Faz 3 Sprint 2'de Agency tamamlandı)
+- **Dashboard**: Persona-based dashboards — Admin, Agency, Hotel, B2B (Faz 3 Sprint 2-4'te tamamlandı)
+- **Command Palette**: Persona-based Cmd+K search (Faz 3 Sprint 4'te tamamlandı)
 
 ## Persona'lar
-1. **Admin** — Sistem sahibi/operasyon yöneticisi (max 7 sidebar grubu)
-2. **Agency** — Acenta operasyon kullanıcısı (max 7 sidebar grubu, özel dashboard)
-3. **Hotel** — Otel operasyon/kontrat kullanıcısı (max 7 sidebar grubu)
-4. **B2B** — Bayi/partner (max 6 sidebar grubu, ayrı layout)
+1. **Admin** — Sistem sahibi/operasyon yöneticisi (max 7 sidebar grubu, ~115 aranabilir sayfa)
+2. **Agency** — Acenta operasyon kullanıcısı (max 7 sidebar grubu, ~20 aranabilir sayfa)
+3. **Hotel** — Otel operasyon/kontrat kullanıcısı (max 7 sidebar grubu, özel dashboard)
+4. **B2B** — Bayi/partner (max 6 sidebar grubu, ayrı layout, özel dashboard)
 
 ## Tamamlanan Fazlar
 
@@ -29,58 +30,62 @@ Admin, Agency, Hotel ve B2B persona'ları için görev odaklı arayüz.
 - DOMAIN_OWNERSHIP_MANIFEST.md dokümante edildi
 
 ### Faz 3 — UI Simplification & Info Architecture
+
 #### Sprint 1: Persona-Based Navigation Platform (Tamamlandı - 26.03.2026)
-- Monolitik appNavigation.js (1038 satır) → persona bazlı 6 dosyaya bölündü
-- navigation/personas/{admin,agency,hotel,b2b}.navigation.js
-- navigation/shared/navigation.utils.js + navigation/index.js
-- Her persona max 7 sidebar grubu görüyor
-- directAccessOnly metadata ile eski route'lar korunuyor
+- Monolitik appNavigation.js → persona bazlı 6 dosyaya bölündü
 - visibleInSidebar, visibleInSearch, legacy, directAccessOnly metadata
-- Türkçe iş dili label'ları (modül adları yerine görev adları)
-- PERSONA_IA.md ve MENU_PRUNING_MATRIX.md dokümantasyonu
+- Türkçe iş dili label'ları
 - API response envelope auto-unwrap (Axios interceptor)
-- PageErrorBoundary eklendi
-- Tüm testler geçti (%100 frontend)
 
-#### Sprint 2: Agency Dashboard & Görev Odaklı Kontrol Paneli (Tamamlandı - 26.03.2026)
-- AgencyDashboardPage.jsx — Görev odaklı 4 bloklı dashboard
-  - Blok 1: Bugün Yapılacaklar (pending rez, checkin'ler, CRM görevleri, dolan teklifler)
-  - Blok 2: KPI Strip (bugünün geliri, yeni rez, toplam satış, aksiyon bekleyen)
-  - Blok 3: Hızlı Aksiyonlar (6 buton: Otel Ara, Çoklu Arama, Yeni Teklif, Müşteriler, Turlar, Rezervasyonlarım)
-  - Blok 4: Son Aktivite + Haftalık Özet
-- Backend: /api/dashboard/agency-today endpoint (11 paralel DB sorgusu)
-- useAgencyDashboard.js hook (30s stale, 60s auto-refresh)
-- Tüm testler geçti (backend 10/10, frontend %100)
+#### Sprint 2: Agency Dashboard (Tamamlandı - 26.03.2026)
+- AgencyDashboardPage.jsx — 4 bloklı dashboard
+- Backend: /api/dashboard/agency-today endpoint (11 paralel sorgu)
 
-#### Sprint 3: Admin Dashboard & Yönetim Yüzeyi (Tamamlandı - 26.03.2026)
-- AdminDashboardPage.jsx — Yönetim odaklı 6 bloklı dashboard
-  - Blok 1: Kritik Uyarılar (dinamik threshold'lar)
-  - Blok 2: Operasyon Özeti (4 KPI)
-  - Blok 3: Finansal Snapshot (4 kart)
-  - Blok 4: Onay Bekleyenler
-  - Blok 5: Sistem / Entegrasyon Sağlığı
-  - Blok 6: Son Yönetim Aksiyonları
-- Backend: /api/dashboard/admin-today endpoint (18 paralel DB sorgusu)
-- Persona-aware DashboardRouter: Admin → AdminDashboardPage, Agency → AgencyDashboardPage
-- useAdminDashboard.js hook (60s stale, 90s auto-refresh)
-- Legacy 403 console noise giderildi
-- Tüm testler geçti (%100 backend+frontend, iteration_151.json)
+#### Sprint 3: Admin Dashboard (Tamamlandı - 26.03.2026)
+- AdminDashboardPage.jsx — 6 bloklı dashboard
+- Backend: /api/dashboard/admin-today endpoint (18 paralel sorgu)
+
+#### Sprint 4: Hotel & B2B Dashboard + Cmd+K Enrichment (Tamamlandı - 26.03.2026)
+- **Cmd+K Command Palette Zenginleştirme**:
+  - Hardcoded 9 sayfa listesi → Persona-bazlı dinamik navigasyon
+  - flattenNavItems() + visibleInSearch filter
+  - directAccessOnly öğeler "gizli" badge'ı ile aranabilir
+  - Admin: 115 sayfa, Agency: 20 sayfa (persona izolasyonu)
+  - legacy: true öğeler filtreleniyor
+  - Grup bazlı sonuç görüntüleme (DASHBOARD, OPERASYON, vb.)
+  - moduleAliases ile genişletilmiş arama
+- **Hotel Dashboard**: HotelDashboardPage.jsx — 5 bloklı
+  - Check-in/Check-out KPI (bugün, yarın, aktif konaklama)
+  - Doluluk & Müsaitlik (kontenjan, stop sell, haftalık rez)
+  - Kritik Uyarılar (dinamik threshold)
+  - Bekleyen Rezervasyonlar & İptaller
+  - Yaklaşan Varışlar (7 gün) + Son Aktiviteler
+  - Backend: /api/dashboard/hotel-today (12 paralel sorgu)
+- **B2B Dashboard**: B2BDashboardPage.jsx — 5 bloklı
+  - Satış Pipeline (açık teklif, kazanılan, kaybedilen, dönüşüm oranı)
+  - Partner Performansı (aktif partner, bekleyen onay)
+  - Bekleyen Onaylar (rez + partner başvuruları)
+  - Tahsilat & Ciro Özeti (aylık, haftalık)
+  - Son B2B Satışlar + Son Aktiviteler
+  - Backend: /api/dashboard/b2b-today (13 paralel sorgu)
+- DashboardRouter: Admin→AdminDashboard, Agency→AgencyDashboard, Hotel→HotelDashboard
+- B2B Layout güncellendi ("Ana Panel" nav link)
+- Hotel auth: super_admin + admin artık hotel route'larına erişebilir
+- Tüm testler geçti (iteration_152.json: backend 20/20, frontend %100)
 
 ## Bekleyen İşler
 
-### Sprint 4 (Sıradaki): Hotel + B2B Rollout & UX Polish
-- Hotel ve B2B persona dashboard'ları
-- Son temizlik, UX polish, demo senaryoları
-
 ### Gelecek Fazlar
-- Command Palette (Cmd+K) search enrichment: directAccessOnly items
 - Fiziksel router taşınması (app/routers → modules/*/routers)
 - CI Quality Gates & Coverage Visibility
 - Dependency & Scope Control Audits
 - Event-Driven Core Expansion
 - Cache Strategy L0/L1/L2
+- Auto-generated Live Architecture Docs
+- In-Product Analytics & Usage Visibility
 
 ## Bilinen Sorunlar
 - Frontend yarn.lock dependency mismatch (Çözüldü - 26.03.2026)
-- API 400/403 hataları (/reports/* feature-gated) (Çözüldü - 26.03.2026, çağrılar temizlendi)
+- API 400/403 hataları (/reports/* feature-gated) (Çözüldü - 26.03.2026)
 - test_paximum_unit "too many open files" (ortam limiti, kod hatası değil)
+- CommandDialog aria-describedby uyarısı (shadcn UI bileşeni, minör erişilebilirlik)

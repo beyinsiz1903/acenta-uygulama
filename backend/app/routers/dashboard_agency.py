@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 
 from app.auth import get_current_user
 from app.db import get_db
@@ -56,7 +56,6 @@ async def agency_today(user=Depends(get_current_user)):
     now = datetime.now(timezone.utc)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     today_end = today_start + timedelta(days=1)
-    tomorrow_end = today_start + timedelta(days=2)
     three_days = today_start + timedelta(days=3)
 
     # --- Parallel queries ---

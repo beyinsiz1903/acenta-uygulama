@@ -3,6 +3,7 @@ import { Route, Navigate } from "react-router-dom";
 
 // ─── Lazy imports: Hotel pages ───
 const HotelBookingsPage = lazy(() => import("../pages/HotelBookingsPage"));
+const HotelDashboardPage = lazy(() => import("../pages/HotelDashboardPage"));
 const HotelStopSellPage = lazy(() => import("../pages/HotelStopSellPage"));
 const HotelAllocationsPage = lazy(() => import("../pages/HotelAllocationsPage"));
 const HotelSettlementsPage = lazy(() => import("../pages/HotelSettlementsPage"));
@@ -15,7 +16,8 @@ const HotelHelpPage = lazy(() => import("../pages/HotelHelpPage"));
  */
 export const hotelRoutes = (
   <>
-    <Route index element={<Navigate to="bookings" replace />} />
+    <Route index element={<Navigate to="dashboard" replace />} />
+    <Route path="dashboard" element={<HotelDashboardPage />} />
     <Route path="bookings" element={<HotelBookingsPage />} />
     <Route path="stop-sell" element={<HotelStopSellPage />} />
     <Route path="allocations" element={<HotelAllocationsPage />} />

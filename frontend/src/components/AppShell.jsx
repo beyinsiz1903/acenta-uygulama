@@ -653,7 +653,7 @@ function AppShellInner() {
       {!trialExpired && agencyContractExpired ? <AgencyContractExpiredGate contract={agencyContract} /> : null}
 
       {/* P3: Command Palette (Cmd+K) */}
-      <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
+      <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} persona={persona} />
 
       {/* AI Assistant floating panel (lazy) */}
       <Suspense fallback={null}>

@@ -20,6 +20,8 @@ from app.routers.admin_insights import router as admin_insights_router
 from app.routers.dashboard_enhanced import router as dashboard_enhanced_router
 from app.routers.dashboard_agency import router as dashboard_agency_router
 from app.routers.dashboard_admin import router as dashboard_admin_router
+from app.routers.dashboard_hotel import router as dashboard_hotel_router
+from app.routers.dashboard_b2b import router as dashboard_b2b_router
 from app.routers.revenue_router import router as revenue_router
 
 domain_router = APIRouter()
@@ -41,4 +43,6 @@ domain_router.include_router(admin_insights_router)
 domain_router.include_router(dashboard_enhanced_router)
 domain_router.include_router(dashboard_agency_router)
 domain_router.include_router(dashboard_admin_router)
+domain_router.include_router(dashboard_hotel_router)
+domain_router.include_router(dashboard_b2b_router)
 domain_router.include_router(revenue_router)

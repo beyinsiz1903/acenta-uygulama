@@ -22,7 +22,7 @@ export const B2B_SIDEBAR_SECTIONS = [
         key: "b2b-dashboard",
         label: "Ana Panel",
         icon: LayoutGrid,
-        to: "/b2b/bookings",
+        to: "/b2b/dashboard",
         end: true,
         isCore: true,
         visibleInSidebar: true,

@@ -27,7 +27,7 @@ export const HOTEL_SIDEBAR_SECTIONS = [
         key: "hotel-dashboard",
         label: "Genel Bakış",
         icon: LayoutGrid,
-        to: "/app/hotel/bookings",
+        to: "/app/hotel/dashboard",
         end: true,
         isCore: true,
         visibleInSidebar: true,

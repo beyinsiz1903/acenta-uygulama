@@ -8,52 +8,22 @@ import {
   CommandGroup,
   CommandItem,
   CommandSeparator,
-  CommandShortcut,
 } from "./ui/command";
 import {
-  LayoutGrid,
-  Ticket,
-  Users,
-  DollarSign,
-  BarChart3,
-  Settings,
-  Search,
-  Plus,
-  Building2,
   ArrowRight,
-  MapPin,
-  Loader2,
   FileText,
-  Zap,
+  Loader2,
+  Search,
+  Users,
+  Ticket,
+  Building2,
+  MapPin,
 } from "lucide-react";
 import { api } from "../lib/api";
 import { cn } from "../lib/utils";
+import { getPersonaNavSections, getPersonaAccountLinks, flattenNavItems } from "../navigation";
 
-// ─── Quick Actions ───
-const QUICK_ACTIONS = [
-  {
-    id: "new-booking",
-    label: "Yeni Rezervasyon",
-    icon: Plus,
-    action: "/app/agency/bookings/new",
-    shortcut: "N",
-    group: "actions",
-  },
-];
-
-// ─── Navigation Pages ───
-const NAV_PAGES = [
-  { id: "nav-dashboard", label: "Dashboard", icon: LayoutGrid, path: "/app", shortcut: "G D" },
-  { id: "nav-reservations", label: "Rezervasyonlar", icon: Ticket, path: "/app/reservations", shortcut: "G R" },
-  { id: "nav-customers", label: "Müşteriler", icon: Users, path: "/app/crm/customers", shortcut: "G C" },
-  { id: "nav-finance", label: "Finans & Mutabakat", icon: DollarSign, path: "/app/admin/finance/settlements", shortcut: "G F" },
-  { id: "nav-reports", label: "Raporlar", icon: BarChart3, path: "/app/reports" },
-  { id: "nav-hotels", label: "Oteller", icon: Building2, path: "/app/agency/hotels" },
-  { id: "nav-tours", label: "Turlar", icon: MapPin, path: "/app/tours" },
-  { id: "nav-integrations", label: "Entegrasyonlar", icon: Zap, path: "/app/admin/integrations" },
-  { id: "nav-settings", label: "Ayarlar", icon: Settings, path: "/app/settings", shortcut: "G S" },
-];
-
+// ─── Backend search result type icons ───
 const SEARCH_TYPE_ICONS = {
   customer: Users,
   booking: Ticket,
@@ -68,13 +38,75 @@ const SEARCH_TYPE_LABELS = {
   tours: "Turlar",
 };
 
-export function CommandPalette({ open, onOpenChange }) {
+/**
+ * Builds searchable page list from persona navigation metadata.
+ * - Includes all items with visibleInSearch: true
+ * - Excludes legacy: true items
+ * - Groups by sectionGroup
+ */
+function buildSearchablePages(persona) {
+  const sections = getPersonaNavSections(persona);
+  const accountLinks = getPersonaAccountLinks(persona);
+
+  // Flatten all nav items (includes directAccessOnly items)
+  const allItems = flattenNavItems(sections);
+
+  // Add account links with a group
+  const accountItems = (accountLinks || [])
+    .filter((l) => l.to && l.visibleInSearch !== false)
+    .map((l) => ({ ...l, sectionGroup: "HESAP" }));
+
+  const combined = [...allItems, ...accountItems];
+
+  // Filter: visibleInSearch AND not legacy
+  return combined.filter(
+    (item) => item.visibleInSearch !== false && item.legacy !== true
+  );
+}
+
+/**
+ * Groups flat items by sectionGroup.
+ * Returns Map<groupName, items[]> preserving insertion order.
+ */
+function groupBySection(items) {
+  const groups = new Map();
+  for (const item of items) {
+    const g = item.sectionGroup || "DİĞER";
+    if (!groups.has(g)) groups.set(g, []);
+    groups.get(g).push(item);
+  }
+  return groups;
+}
+
+export function CommandPalette({ open, onOpenChange, persona = "admin" }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const abortRef = useRef(null);
   const debounceRef = useRef(null);
+
+  // Build persona-based searchable pages
+  const searchablePages = useMemo(() => buildSearchablePages(persona), [persona]);
+  const groupedPages = useMemo(() => groupBySection(searchablePages), [searchablePages]);
+
+  // Filter pages by local query (instant, no backend call needed for navigation)
+  const filteredPageGroups = useMemo(() => {
+    const trimmed = query.trim().toLowerCase();
+    if (trimmed.length < 1) return groupedPages;
+
+    const filtered = new Map();
+    for (const [group, items] of groupedPages) {
+      const matched = items.filter((item) => {
+        const label = (item.label || "").toLowerCase();
+        const path = (item.to || "").toLowerCase();
+        const aliases = (item.moduleAliases || []).join(" ").toLowerCase();
+        return label.includes(trimmed) || path.includes(trimmed) || aliases.includes(trimmed);
+      });
+      if (matched.length > 0) filtered.set(group, matched);
+    }
+    return filtered;
+  }, [query, groupedPages]);
 
   // Reset state when dialog closes
   useEffect(() => {
@@ -85,7 +117,7 @@ export function CommandPalette({ open, onOpenChange }) {
     }
   }, [open]);
 
-  // Debounced backend search
+  // Debounced backend search (customers, bookings, etc.)
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (abortRef.current) abortRef.current.abort();
@@ -124,15 +156,15 @@ export function CommandPalette({ open, onOpenChange }) {
   const handleSelect = useCallback(
     (value) => {
       onOpenChange(false);
-      // value is the path/route
       if (value) navigate(value);
     },
     [navigate, onOpenChange],
   );
 
   const hasQuery = query.trim().length >= 2;
-  const hasResults = searchResults && searchResults.total_results > 0;
+  const hasBackendResults = searchResults && searchResults.total_results > 0;
   const searchSections = searchResults?.sections || {};
+  const hasPageResults = filteredPageGroups.size > 0;
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
@@ -151,18 +183,17 @@ export function CommandPalette({ open, onOpenChange }) {
           </div>
         )}
 
-        {/* Empty state */}
-        {!isSearching && hasQuery && !hasResults && (
+        {/* Empty state — only when query is typed and no results anywhere */}
+        {!isSearching && hasQuery && !hasBackendResults && !hasPageResults && (
           <CommandEmpty data-testid="command-palette-empty">
             <span className="text-muted-foreground">Sonuç bulunamadı.</span>
           </CommandEmpty>
         )}
 
-        {/* ─── Backend Search Results ─── */}
-        {hasResults &&
+        {/* ─── Backend Search Results (customers, bookings, etc.) ─── */}
+        {hasBackendResults &&
           Object.entries(searchSections).map(([sectionKey, items]) => {
             if (!items || items.length === 0) return null;
-            const SectionIcon = SEARCH_TYPE_ICONS[items[0]?.type] || FileText;
             return (
               <CommandGroup
                 key={sectionKey}
@@ -206,51 +237,42 @@ export function CommandPalette({ open, onOpenChange }) {
             );
           })}
 
-        {/* ─── Quick Actions (shown when no search query) ─── */}
-        {!hasQuery && (
-          <>
-            <CommandGroup heading="Hızlı İşlemler" data-testid="command-palette-quick-actions">
-              {QUICK_ACTIONS.map((action) => {
-                const Icon = action.icon;
+        {/* ─── Separator between backend results and pages ─── */}
+        {hasBackendResults && hasPageResults && <CommandSeparator />}
+
+        {/* ─── Navigation Pages (persona-based, grouped by section) ─── */}
+        {hasPageResults &&
+          Array.from(filteredPageGroups.entries()).map(([groupName, items]) => (
+            <CommandGroup
+              key={groupName}
+              heading={groupName}
+              data-testid={`command-palette-group-${groupName.toLowerCase().replace(/[^a-z0-9]/g, "-")}`}
+            >
+              {items.map((item) => {
+                const Icon = item.icon || FileText;
                 return (
                   <CommandItem
-                    key={action.id}
-                    value={action.label}
-                    onSelect={() => handleSelect(action.action)}
-                    data-testid={`command-palette-action-${action.id}`}
-                  >
-                    <div className="flex h-6 w-6 items-center justify-center rounded-md border bg-background">
-                      <Icon className="h-3.5 w-3.5" />
-                    </div>
-                    <span>{action.label}</span>
-                    {action.shortcut && <CommandShortcut>{action.shortcut}</CommandShortcut>}
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-
-            <CommandSeparator />
-
-            {/* ─── Navigation Pages ─── */}
-            <CommandGroup heading="Sayfalar" data-testid="command-palette-pages">
-              {NAV_PAGES.map((page) => {
-                const Icon = page.icon;
-                return (
-                  <CommandItem
-                    key={page.id}
-                    value={page.label}
-                    onSelect={() => handleSelect(page.path)}
-                    data-testid={`command-palette-page-${page.id}`}
+                    key={item.key}
+                    value={`${item.label} ${item.to} ${(item.moduleAliases || []).join(" ")}`}
+                    onSelect={() => handleSelect(item.to)}
+                    data-testid={`command-palette-page-${item.key}`}
                   >
                     <Icon className="h-4 w-4 text-muted-foreground" />
-                    <span>{page.label}</span>
-                    {page.shortcut && <CommandShortcut>{page.shortcut}</CommandShortcut>}
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <span className="truncate text-sm">{item.label}</span>
+                      <span className="truncate text-[11px] text-muted-foreground/60">{item.to}</span>
+                    </div>
+                    {item.directAccessOnly && (
+                      <span className="ml-auto shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+                        gizli
+                      </span>
+                    )}
+                    <ArrowRight className="ml-auto h-3 w-3 shrink-0 text-muted-foreground/40" />
                   </CommandItem>
                 );
               })}
             </CommandGroup>
-          </>
-        )}
+          ))}
       </CommandList>
 
       {/* Footer with hints */}
@@ -277,7 +299,7 @@ export function CommandPalette({ open, onOpenChange }) {
         </div>
         <span className="hidden sm:inline text-muted-foreground/60">
           <Search className="inline h-3 w-3 mr-1" />
-          2+ karakter ile arama yapın
+          {searchablePages.length} sayfa aranabilir
         </span>
       </div>
     </CommandDialog>

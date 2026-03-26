@@ -9,6 +9,14 @@ export default function B2BLayout() {
         <div className="font-semibold text-lg">B2B Portal</div>
         <nav className="flex flex-col gap-2 text-sm">
           <NavLink
+            to="/b2b/dashboard"
+            className={({ isActive }) =>
+              `px-2 py-1 rounded-md ${isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`
+            }
+          >
+            Ana Panel
+          </NavLink>
+          <NavLink
             to="/b2b/bookings"
             className={({ isActive }) =>
               `px-2 py-1 rounded-md ${isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`

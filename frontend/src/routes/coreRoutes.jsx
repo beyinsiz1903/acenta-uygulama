@@ -7,6 +7,7 @@ import { resolvePersona } from "../navigation";
 const DashboardPage = lazy(() => import("../pages/DashboardPage"));
 const AgencyDashboardPage = lazy(() => import("../pages/AgencyDashboardPage"));
 const AdminDashboardPage = lazy(() => import("../pages/AdminDashboardPage"));
+const HotelDashboardPage = lazy(() => import("../pages/HotelDashboardPage"));
 const ReservationsPage = lazy(() => import("../pages/ReservationsPage"));
 const AdvancedReportsPage = lazy(() => import("../pages/AdvancedReportsPage"));
 const UsagePage = lazy(() => import("../pages/UsagePage"));
@@ -56,6 +57,7 @@ function DashboardRouter() {
   const persona = resolvePersona(user);
   if (persona === "agency") return <AgencyDashboardPage />;
   if (persona === "admin") return <AdminDashboardPage />;
+  if (persona === "hotel") return <HotelDashboardPage />;
   return <DashboardPage />;
 }
 

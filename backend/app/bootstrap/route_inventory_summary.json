@@ -8,22 +8,22 @@
       "v1_migration_percent": 42.86
     },
     "admin": {
-      "target_route_count": 333,
+      "target_route_count": 332,
       "migrated_v1_route_count": 2,
-      "remaining_route_count": 331,
+      "remaining_route_count": 330,
       "v1_migration_percent": 0.6
     },
     "public": {
-      "target_route_count": 31,
+      "target_route_count": 27,
       "migrated_v1_route_count": 5,
-      "remaining_route_count": 26,
-      "v1_migration_percent": 16.13
+      "remaining_route_count": 22,
+      "v1_migration_percent": 18.52
     },
     "system": {
-      "target_route_count": 25,
-      "migrated_v1_route_count": 9,
-      "remaining_route_count": 16,
-      "v1_migration_percent": 36.0
+      "target_route_count": 27,
+      "migrated_v1_route_count": 10,
+      "remaining_route_count": 17,
+      "v1_migration_percent": 37.04
     },
     "mobile": {
       "target_route_count": 6,
@@ -44,14 +44,14 @@
       "v1_migration_percent": 0.0
     },
     "misc": {
-      "target_route_count": 827,
+      "target_route_count": 831,
       "migrated_v1_route_count": 0,
-      "remaining_route_count": 827,
+      "remaining_route_count": 831,
       "v1_migration_percent": 0.0
     }
   },
-  "generated_at": "2026-03-26T08:44:14.255993+00:00",
-  "inventory_hash": "83de259be9e753db380543e0c35d0a6c67798a5d45e67b159f2a99d826209040",
+  "generated_at": "2026-03-26T09:15:05.236057+00:00",
+  "inventory_hash": "16854be07d57e48b823b7ac0dbc4737cb6f5bdbbe43ee25318e08c4fe0ebc705",
   "inventory_path": "/app/backend/app/bootstrap/route_inventory.json",
   "legacy_routes_remaining": 1417,
   "legacy_count": 1417,
@@ -62,16 +62,16 @@
   },
   "namespaces": {
     "auth": 20,
-    "admin": 336,
-    "public": 36,
-    "system": 36,
+    "admin": 335,
+    "public": 32,
+    "system": 38,
     "mobile": 6,
     "tenant": 103,
     "finance": 73,
-    "misc": 829
+    "misc": 833
   },
-  "route_count": 1439,
+  "route_count": 1440,
   "runtime_name": "api",
-  "v1_count": 22,
+  "v1_count": 23,
   "compat_required_count": 1417
 }

@@ -11,30 +11,30 @@ from fastapi import APIRouter
 from app.config import API_PREFIX
 
 # --- Core inventory ---
-from app.routers.inventory_shares import router as inventory_shares_router
-from app.routers.inventory_snapshots_api import router as inventory_snapshots_api_router
-from app.routers.products import router as products_router
-from app.routers.hotel import router as agency_hotels_router
-from app.routers.hotel_integrations import router as hotel_integrations_router
-from app.routers.rateplans import router as rateplans_router
-from app.routers.search import router as search_router
-from app.routers.reservations import router as reservations_router
+from app.modules.inventory.routers.inventory_shares import router as inventory_shares_router
+from app.modules.inventory.routers.inventory_snapshots_api import router as inventory_snapshots_api_router
+from app.modules.inventory.routers.products import router as products_router
+from app.modules.inventory.routers.hotel import router as agency_hotels_router
+from app.modules.inventory.routers.hotel_integrations import router as hotel_integrations_router
+from app.modules.inventory.routers.rateplans import router as rateplans_router
+from app.modules.inventory.routers.search import router as search_router
+from app.modules.inventory.routers.reservations import router as reservations_router
 
 # --- Agency operations ---
-from app.routers.agency_availability import router as agency_availability_router
-from app.routers.agency_reservations import router as agency_reservations_router
-from app.routers.agency_pms import router as agency_pms_router
-from app.routers.agency_pms_accounting import router as agency_pms_accounting_router
-from app.routers.agency_sheets import router as agency_sheets_router
-from app.routers.agency_writeback import router as agency_writeback_router
-from app.routers.agency_booking import router as agency_booking_router
+from app.modules.inventory.routers.agency_availability import router as agency_availability_router
+from app.modules.inventory.routers.agency_reservations import router as agency_reservations_router
+from app.modules.inventory.routers.agency_pms import router as agency_pms_router
+from app.modules.inventory.routers.agency_pms_accounting import router as agency_pms_accounting_router
+from app.modules.inventory.routers.agency_sheets import router as agency_sheets_router
+from app.modules.inventory.routers.agency_writeback import router as agency_writeback_router
+from app.modules.inventory.routers.agency_booking import router as agency_booking_router
 
 # --- Admin inventory ---
-from app.routers.admin_hotels import router as admin_hotels_router
-from app.routers.admin_ical import router as admin_ical_router
-from app.routers.admin_sheets import router as admin_sheets_router
-from app.routers.admin_catalog import router as admin_catalog_router
-from app.routers.admin_tours import router as admin_tours_router
+from app.modules.inventory.routers.admin_hotels import router as admin_hotels_router
+from app.modules.inventory.routers.admin_ical import router as admin_ical_router
+from app.modules.inventory.routers.admin_sheets import router as admin_sheets_router
+from app.modules.inventory.routers.admin_catalog import router as admin_catalog_router
+from app.modules.inventory.routers.admin_tours import router as admin_tours_router
 
 # --- Inventory sub-package (sync, booking, diagnostics, onboarding) ---
 from app.routers.inventory import (

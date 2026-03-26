@@ -26,21 +26,21 @@ from app.modules.booking.router import router as booking_commands_router
 from app.modules.booking.migration_router import router as booking_migration_router
 
 # --- Legacy booking CRUD & outcomes ---
-from app.routers.bookings import router as bookings_legacy_router
-from app.routers.booking_outcomes import router as booking_outcomes_router
+from app.modules.booking.routers.bookings import router as bookings_legacy_router
+from app.modules.booking.routers.booking_outcomes import router as booking_outcomes_router
 
 # --- Unified booking orchestration ---
-from app.routers.unified_booking_router import router as unified_booking_router
+from app.modules.booking.routers.unified_booking_router import router as unified_booking_router
 
 # --- Supporting: cancel reasons, vouchers ---
-from app.routers.cancel_reasons import router as cancel_reasons_router
-from app.routers.vouchers import router as vouchers_router
-from app.routers.voucher import router as voucher_router
+from app.modules.booking.routers.cancel_reasons import router as cancel_reasons_router
+from app.modules.booking.routers.vouchers import router as vouchers_router
+from app.modules.booking.routers.voucher import router as voucher_router
 
 # --- Matching ---
-from app.routers.matches import router as matches_router
-from app.routers.match_alerts import router as match_alerts_router
-from app.routers.match_unblock import router as match_unblock_router
+from app.modules.booking.routers.matches import router as matches_router
+from app.modules.booking.routers.match_alerts import router as match_alerts_router
+from app.modules.booking.routers.match_unblock import router as match_unblock_router
 
 domain_router = APIRouter()
 

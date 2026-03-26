@@ -84,6 +84,17 @@ async def cached(key: str, compute_fn, ttl_seconds: int = 300, tenant_id: str = 
     return result
 
 
+async def cache_delete(key: str) -> bool:
+    """Delete a specific key from MongoDB L2 cache."""
+    try:
+        db = await get_db()
+        result = await db.app_cache.delete_one({"_id": key})
+        return result.deleted_count > 0
+    except Exception:
+        return False
+
+
+
 async def get_cache_stats() -> dict[str, Any]:
     """Get cache statistics."""
     try:

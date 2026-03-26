@@ -1,9 +1,3 @@
-# DEPRECATED: Marketplace B2B booking endpoint
-# Logic has been moved into app.routers.b2b_bookings.create_b2b_booking_from_marketplace
-# This file is kept as a stub to avoid import errors if referenced elsewhere.
-
-from __future__ import annotations
-
-from fastapi import APIRouter
-
-router = APIRouter(tags=["b2b-bookings-marketplace"])
+"""Compat shim — moved to app.modules.b2b.routers.b2b_marketplace_booking"""
+import importlib as _il, sys as _sys
+_sys.modules[__name__] = _il.import_module("app.modules.b2b.routers.b2b_marketplace_booking")

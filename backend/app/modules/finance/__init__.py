@@ -14,37 +14,37 @@ from fastapi import APIRouter
 from app.config import API_PREFIX
 
 # --- Core finance ---
-from app.routers.finance import router as finance_router
-from app.routers.admin_billing import router as admin_billing_router
-from app.routers.admin_settlements import router as admin_settlements_router
-from app.routers.admin_statements import router as admin_statements_router
-from app.routers.admin_parasut import router as admin_parasut_router
-from app.routers.admin_accounting import router as admin_accounting_router
-from app.routers.billing_checkout import router as billing_checkout_router
-from app.routers.billing_lifecycle import router as billing_lifecycle_router
-from app.routers.billing_webhooks import router as billing_webhooks_router
-from app.routers.payments import router as payments_router
-from app.routers.payments_stripe import router as payments_stripe_router
-from app.routers.efatura import router as efatura_router
-from app.routers.invoice_engine import router as invoice_engine_router
-from app.routers.reconciliation import router as reconciliation_router
-from app.routers.multicurrency import router as multicurrency_router
-from app.routers.accounting_sync import router as accounting_sync_router
-from app.routers.accounting_providers import router as accounting_providers_router
-from app.routers.commission_rules import router as commission_rules_router
+from app.modules.finance.routers.finance import router as finance_router
+from app.modules.finance.routers.admin_billing import router as admin_billing_router
+from app.modules.finance.routers.admin_settlements import router as admin_settlements_router
+from app.modules.finance.routers.admin_statements import router as admin_statements_router
+from app.modules.finance.routers.admin_parasut import router as admin_parasut_router
+from app.modules.finance.routers.admin_accounting import router as admin_accounting_router
+from app.modules.finance.routers.billing_checkout import router as billing_checkout_router
+from app.modules.finance.routers.billing_lifecycle import router as billing_lifecycle_router
+from app.modules.finance.routers.billing_webhooks import router as billing_webhooks_router
+from app.modules.finance.routers.payments import router as payments_router
+from app.modules.finance.routers.payments_stripe import router as payments_stripe_router
+from app.modules.finance.routers.efatura import router as efatura_router
+from app.modules.finance.routers.invoice_engine import router as invoice_engine_router
+from app.modules.finance.routers.reconciliation import router as reconciliation_router
+from app.modules.finance.routers.multicurrency import router as multicurrency_router
+from app.modules.finance.routers.accounting_sync import router as accounting_sync_router
+from app.modules.finance.routers.accounting_providers import router as accounting_providers_router
+from app.modules.finance.routers.commission_rules import router as commission_rules_router
 
 # --- Ops finance ---
-from app.routers.ops_finance import router as ops_finance_router
-from app.routers.ops_finance_accounts import router as ops_finance_accounts_router
-from app.routers.ops_finance_refunds import router as ops_finance_refunds_router
-from app.routers.ops_finance_settlements import router as ops_finance_settlements_router
-from app.routers.ops_finance_documents import router as ops_finance_documents_router
-from app.routers.ops_finance_suppliers import router as ops_finance_suppliers_router
-from app.routers.ops_click_to_pay import router as ops_click_to_pay_router
-from app.routers.public_click_to_pay import router as public_click_to_pay_router
+from app.modules.finance.routers.ops_finance import router as ops_finance_router
+from app.modules.finance.routers.ops_finance_accounts import router as ops_finance_accounts_router
+from app.modules.finance.routers.ops_finance_refunds import router as ops_finance_refunds_router
+from app.modules.finance.routers.ops_finance_settlements import router as ops_finance_settlements_router
+from app.modules.finance.routers.ops_finance_documents import router as ops_finance_documents_router
+from app.modules.finance.routers.ops_finance_suppliers import router as ops_finance_suppliers_router
+from app.modules.finance.routers.ops_click_to_pay import router as ops_click_to_pay_router
+from app.modules.finance.routers.public_click_to_pay import router as public_click_to_pay_router
 
 # --- Ledger & settlement runs (Phase 2, Dalga 3) ---
-from app.routers.finance_ledger import (
+from app.modules.finance.routers.finance_ledger import (
     router as finance_ledger_router,
     settlement_router as finance_settlement_router,
     recon_router as finance_recon_router,
@@ -52,14 +52,14 @@ from app.routers.finance_ledger import (
 )
 
 # --- Agency/Hotel/Network settlements (Phase 2, Dalga 3) ---
-from app.routers.settlements import (
+from app.modules.finance.routers.settlements import (
     agency_router as agency_settlements_router,
     hotel_router as hotel_settlements_router,
     network_settlements_router,
 )
 
 # --- OMS (Phase 2, Dalga 3) ---
-from app.routers.order_router import router as order_router
+from app.modules.finance.routers.order_router import router as order_router
 
 domain_router = APIRouter()
 

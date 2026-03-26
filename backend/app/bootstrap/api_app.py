@@ -121,6 +121,14 @@ def create_app() -> FastAPI:
             import logging
             logging.getLogger("startup").warning("Supplier config indexes: %s", exc)
 
+        # Register Event-Cache Invalidation Bridge
+        try:
+            from app.infrastructure.event_cache_bridge import register_cache_invalidation_handlers
+            register_cache_invalidation_handlers()
+        except Exception as exc:
+            import logging
+            logging.getLogger("startup").warning("Event-cache bridge: %s", exc)
+
         # Start Job Scheduler
         try:
             from app.services.job_scheduler_service import start_scheduler

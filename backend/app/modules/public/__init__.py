@@ -10,19 +10,19 @@ from fastapi import APIRouter
 
 from app.config import API_PREFIX
 
-from app.routers.public_bookings import router as public_bookings_router
-from app.routers.public_campaigns import router as public_campaigns_router
-from app.routers.public_checkout import router as public_checkout_router
-from app.routers.public_cms_pages import router as public_cms_pages_router
-from app.routers.public_my_booking import router as public_my_booking_router
-from app.routers.public_partners import router as public_partners_router
-from app.routers.public_search import router as public_search_router
-from app.routers.public_tours import router as public_tours_router
-from app.routers.storefront import router as storefront_router
-from app.routers.seo import router as seo_router
-from app.routers.tours_browse import router as tours_browse_router
-from app.routers.web_booking import router as web_booking_router
-from app.routers.web_catalog import router as web_catalog_router
+from app.modules.public.routers.public_bookings import router as public_bookings_router
+from app.modules.public.routers.public_campaigns import router as public_campaigns_router
+from app.modules.public.routers.public_checkout import router as public_checkout_router
+from app.modules.public.routers.public_cms_pages import router as public_cms_pages_router
+from app.modules.public.routers.public_my_booking import router as public_my_booking_router
+from app.modules.public.routers.public_partners import router as public_partners_router
+from app.modules.public.routers.public_search import router as public_search_router
+from app.modules.public.routers.public_tours import router as public_tours_router
+from app.modules.public.routers.storefront import router as storefront_router
+from app.modules.public.routers.seo import router as seo_router
+from app.modules.public.routers.tours_browse import router as tours_browse_router
+from app.modules.public.routers.web_booking import router as web_booking_router
+from app.modules.public.routers.web_catalog import router as web_catalog_router
 
 domain_router = APIRouter()
 

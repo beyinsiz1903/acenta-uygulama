@@ -19,19 +19,19 @@ from fastapi import APIRouter
 from app.config import API_PREFIX
 
 # --- Core supplier CRUD & adapters ---
-from app.routers.suppliers import router as suppliers_router
-from app.routers.paximum_router import router as paximum_router
+from app.modules.supplier.routers.suppliers import router as suppliers_router
+from app.modules.supplier.routers.paximum_router import router as paximum_router
 
 # --- Admin & ops ---
-from app.routers.admin_supplier_health import router as admin_supplier_health_router
-from app.routers.ops_supplier_operations import router as ops_supplier_operations_router
+from app.modules.supplier.routers.admin_supplier_health import router as admin_supplier_health_router
+from app.modules.supplier.routers.ops_supplier_operations import router as ops_supplier_operations_router
 
 # --- Activation & credentials (Phase 2 consolidation) ---
-from app.routers.supplier_activation import router as supplier_activation_router
-from app.routers.supplier_credentials_router import router as supplier_credentials_router
+from app.modules.supplier.routers.supplier_activation import router as supplier_activation_router
+from app.modules.supplier.routers.supplier_credentials_router import router as supplier_credentials_router
 
 # --- Aggregation & ecosystem (Phase 2 consolidation) ---
-from app.routers.supplier_aggregator_router import router as supplier_aggregator_router
+from app.modules.supplier.routers.supplier_aggregator_router import router as supplier_aggregator_router
 from app.suppliers.router import router as supplier_ecosystem_router
 
 domain_router = APIRouter()

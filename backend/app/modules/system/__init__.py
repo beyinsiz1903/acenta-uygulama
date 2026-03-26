@@ -10,71 +10,71 @@ Phase 2, Dalga 5 additions: platform layers, admin misc, activity/config, demo s
 from fastapi import APIRouter
 
 # --- Core system ---
-from app.routers.health import router as health_router
-from app.routers.health_dashboard import router as health_dashboard_router
-from app.routers.cache_health_router import router as cache_health_router
-from app.routers.cache_management import router as cache_management_router
-from app.routers.infrastructure import router as infrastructure_router
-from app.routers.distributed_locks import router as distributed_locks_router
-from app.routers.metrics import router as metrics_router
-from app.routers.notifications import router as notifications_router
-from app.routers.sms_notifications import router as sms_notifications_router
-from app.routers.reliability import router as reliability_router
+from app.modules.system.routers.health import router as health_router
+from app.modules.system.routers.health_dashboard import router as health_dashboard_router
+from app.modules.system.routers.cache_health_router import router as cache_health_router
+from app.modules.system.routers.cache_management import router as cache_management_router
+from app.modules.system.routers.infrastructure import router as infrastructure_router
+from app.modules.system.routers.distributed_locks import router as distributed_locks_router
+from app.modules.system.routers.metrics import router as metrics_router
+from app.modules.system.routers.notifications import router as notifications_router
+from app.modules.system.routers.sms_notifications import router as sms_notifications_router
+from app.modules.system.routers.reliability import router as reliability_router
 
 # --- Admin system ---
-from app.routers.admin_system_backups import router as admin_system_backups_router
-from app.routers.admin_system_integrity import router as admin_system_integrity_router
-from app.routers.admin_system_metrics import router as admin_system_metrics_router
-from app.routers.admin_system_errors import router as admin_system_errors_router
-from app.routers.admin_system_uptime import router as admin_system_uptime_router
-from app.routers.admin_system_incidents import router as admin_system_incidents_router
-from app.routers.admin_maintenance import router as admin_maintenance_router
-from app.routers.admin_system_preflight import router as admin_system_preflight_router
-from app.routers.admin_system_runbook import router as admin_system_runbook_router
-from app.routers.admin_system_perf import router as admin_system_perf_router
-from app.routers.system_product_mode import router as system_product_mode_router
-from app.routers.admin_product_mode import router as admin_product_mode_router
+from app.modules.system.routers.admin_system_backups import router as admin_system_backups_router
+from app.modules.system.routers.admin_system_integrity import router as admin_system_integrity_router
+from app.modules.system.routers.admin_system_metrics import router as admin_system_metrics_router
+from app.modules.system.routers.admin_system_errors import router as admin_system_errors_router
+from app.modules.system.routers.admin_system_uptime import router as admin_system_uptime_router
+from app.modules.system.routers.admin_system_incidents import router as admin_system_incidents_router
+from app.modules.system.routers.admin_maintenance import router as admin_maintenance_router
+from app.modules.system.routers.admin_system_preflight import router as admin_system_preflight_router
+from app.modules.system.routers.admin_system_runbook import router as admin_system_runbook_router
+from app.modules.system.routers.admin_system_perf import router as admin_system_perf_router
+from app.modules.system.routers.system_product_mode import router as system_product_mode_router
+from app.modules.system.routers.admin_product_mode import router as admin_product_mode_router
 
 # --- Platform layers (Phase 2, Dalga 5) ---
-from app.routers.production import router as production_router
-from app.routers.hardening import router as hardening_router
-from app.routers.worker_infrastructure import router as worker_infra_router
-from app.routers.stress_test_router import router as stress_test_router
-from app.routers.pilot_launch_router import router as pilot_launch_router
-from app.routers.intelligence_router import router as intelligence_router
-from app.routers.scalability_router import router as scalability_router
-from app.routers.operations_router import router as operations_router
-from app.routers.market_launch_router import router as market_launch_router
-from app.routers.growth_engine_router import router as growth_engine_router
-from app.routers.pilot_onboarding_router import router as pilot_onboarding_router
-from app.routers.gtm_demo_seed import router as gtm_demo_seed_router
-from app.routers.activation_checklist import router as activation_checklist_router
+from app.modules.system.routers.production import router as production_router
+from app.modules.system.routers.hardening import router as hardening_router
+from app.modules.system.routers.worker_infrastructure import router as worker_infra_router
+from app.modules.system.routers.stress_test_router import router as stress_test_router
+from app.modules.system.routers.pilot_launch_router import router as pilot_launch_router
+from app.modules.system.routers.intelligence_router import router as intelligence_router
+from app.modules.system.routers.scalability_router import router as scalability_router
+from app.modules.system.routers.operations_router import router as operations_router
+from app.modules.system.routers.market_launch_router import router as market_launch_router
+from app.modules.system.routers.growth_engine_router import router as growth_engine_router
+from app.modules.system.routers.pilot_onboarding_router import router as pilot_onboarding_router
+from app.modules.system.routers.gtm_demo_seed import router as gtm_demo_seed_router
+from app.modules.system.routers.activation_checklist import router as activation_checklist_router
 
 # --- Admin misc (Phase 2, Dalga 5) ---
-from app.routers.admin import router as admin_router
-from app.routers.admin_demo_guide import router as admin_demo_guide_router
-from app.routers.admin_import import router as admin_import_router
-from app.routers.admin_integrations import router as admin_integrations_router
-from app.routers.admin_jobs import router as admin_jobs_router
-from app.routers.admin_links import router as admin_links_router
-from app.routers.admin_metrics import router as admin_metrics_router
-from app.routers.admin_demo_seed import router as admin_demo_seed_router
-from app.routers.dev_saas import router as dev_saas_router
-from app.routers.demo_scale_ui_proof import router as demo_scale_ui_proof_router
-from app.routers.integrator_management import router as integrator_management_router
-from app.routers.theme import router as theme_router
-from app.routers.upgrade_requests import router as upgrade_requests_router
+from app.modules.system.routers.admin import router as admin_router
+from app.modules.system.routers.admin_demo_guide import router as admin_demo_guide_router
+from app.modules.system.routers.admin_import import router as admin_import_router
+from app.modules.system.routers.admin_integrations import router as admin_integrations_router
+from app.modules.system.routers.admin_jobs import router as admin_jobs_router
+from app.modules.system.routers.admin_links import router as admin_links_router
+from app.modules.system.routers.admin_metrics import router as admin_metrics_router
+from app.modules.system.routers.admin_demo_seed import router as admin_demo_seed_router
+from app.modules.system.routers.dev_saas import router as dev_saas_router
+from app.modules.system.routers.demo_scale_ui_proof import router as demo_scale_ui_proof_router
+from app.modules.system.routers.integrator_management import router as integrator_management_router
+from app.modules.system.routers.theme import router as theme_router
+from app.modules.system.routers.upgrade_requests import router as upgrade_requests_router
 
 # --- Activity/Config (Phase 2, Dalga 5) ---
-from app.routers.activity_timeline_router import router as activity_timeline_router
-from app.routers.config_versions_router import router as config_versions_router
+from app.modules.system.routers.activity_timeline_router import router as activity_timeline_router
+from app.modules.system.routers.config_versions_router import router as config_versions_router
 
 # --- Extensions (Phase 2, Dalga 5) ---
-from app.routers.admin_campaigns import router as admin_campaigns_router
-from app.routers.admin_cms_pages import router as admin_cms_pages_router
-from app.routers.admin_coupons import router as admin_coupons_router
-from app.routers.webpos import router as webpos_router
-from app.routers.ai_assistant import router as ai_assistant_router
+from app.modules.system.routers.admin_campaigns import router as admin_campaigns_router
+from app.modules.system.routers.admin_cms_pages import router as admin_cms_pages_router
+from app.modules.system.routers.admin_coupons import router as admin_coupons_router
+from app.modules.system.routers.webpos import router as webpos_router
+from app.modules.system.routers.ai_assistant import router as ai_assistant_router
 
 domain_router = APIRouter()
 

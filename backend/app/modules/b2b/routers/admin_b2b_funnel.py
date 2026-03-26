@@ -1,0 +1,92 @@
+from __future__ import annotations
+
+from datetime import timedelta
+from typing import Any, Dict, List
+
+from fastapi import APIRouter, Depends
+
+from app.auth import get_current_user, require_roles
+from app.db import get_db
+from app.utils import now_utc
+
+router = APIRouter(prefix="/api/admin/b2b/funnel", tags=["admin_b2b_funnel"])
+
+AdminDep = Depends(require_roles(["super_admin", "admin"]))
+
+
+@router.get("/summary", dependencies=[AdminDep])
+async def get_partner_funnel_summary(user=Depends(get_current_user), db=Depends(get_db)) -> Dict[str, Any]:
+    """Basit partner funnel fzeti.
+
+    euxeleri kapsar (son 30 gn):
+    - public_quotes ieinde channel="partner" veya partner alan non-null olan kaytlar
+    - partner baznda teklif say7s ve toplam amount_cents
+
+    0imdi iin yalnzca read-only raporlama iin kullanlr.
+    """
+
+    org_id = user["organization_id"]
+    since = now_utc() - timedelta(days=30)
+
+    cursor = db.public_quotes.find(
+        {
+            "organization_id": org_id,
+            "created_at": {"$gte": since},
+            "partner": {"$ne": None},
+        },
+        {
+            "partner": 1,
+            "amount_cents": 1,
+            "created_at": 1,
+            "_id": 0,
+        },
+    )
+
+    stats: Dict[str, Dict[str, Any]] = {}
+
+    async for doc in cursor:
+        partner = str(doc.get("partner") or "").strip()
+        if not partner:
+            continue
+        created_at = doc.get("created_at")
+        amount_cents = int(doc.get("amount_cents") or 0)
+
+        entry = stats.get(partner)
+        if entry is None:
+            entry = {
+                "partner": partner,
+                "total_quotes": 0,
+                "total_amount_cents": 0,
+                "first_quote_at": created_at,
+                "last_quote_at": created_at,
+            }
+            stats[partner] = entry
+
+        entry["total_quotes"] += 1
+        entry["total_amount_cents"] += amount_cents
+
+        if created_at is not None:
+            if entry["first_quote_at"] is None or created_at < entry["first_quote_at"]:
+                entry["first_quote_at"] = created_at
+            if entry["last_quote_at"] is None or created_at > entry["last_quote_at"]:
+                entry["last_quote_at"] = created_at
+
+    # ISO stringe 5fevir (frontend iin daha kolay)
+    items: List[Dict[str, Any]] = []
+    for partner, entry in stats.items():
+        first_dt = entry.get("first_quote_at")
+        last_dt = entry.get("last_quote_at")
+        items.append(
+            {
+                "partner": partner,
+                "total_quotes": entry["total_quotes"],
+                "total_amount_cents": entry["total_amount_cents"],
+                "first_quote_at": first_dt.isoformat() if first_dt else None,
+                "last_quote_at": last_dt.isoformat() if last_dt else None,
+            }
+        )
+
+    # partner id s7rasna g7re srala (stabil g7rnm iin)
+    items.sort(key=lambda it: it["partner"])
+
+    return {"items": items}

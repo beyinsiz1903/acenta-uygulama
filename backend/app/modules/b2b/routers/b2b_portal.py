@@ -1,0 +1,200 @@
+from __future__ import annotations
+
+from fastapi import APIRouter, Depends, BackgroundTasks, Request
+
+from app.db import get_db
+from app.security.deps_b2b import CurrentB2BUser, current_b2b_user
+from app.services.crm_events import log_crm_event
+from app.services.endpoint_cache import try_cache_get, cache_and_return
+
+router = APIRouter(prefix="/api/b2b", tags=["b2b-portal"])
+
+
+async def _log_b2b_login_success(db, user: CurrentB2BUser):
+    """Best-effort logging for B2B login success.
+
+    Any exception here must not break the main /me response.
+    """
+    try:
+        if user.organization_id:
+            await log_crm_event(
+                db,
+                user.organization_id,
+                entity_type="auth",
+                entity_id=user.id,
+                action="b2b.login.success",
+                payload={"roles": user.roles},
+                actor={"id": user.id, "roles": user.roles},
+                source="b2b_portal",
+            )
+    except Exception:
+        # Swallow all errors – logging is best-effort only
+        pass
+
+
+@router.get("/me")
+async def b2b_me(
+    request: Request,
+    background: BackgroundTasks,
+    user: CurrentB2BUser = Depends(current_b2b_user),
+    db=Depends(get_db),
+):
+    """Return minimal identity + scope info for B2B users.
+
+    - Only users with B2B-allowed roles can access (enforced by current_b2b_user)
+    - Used by frontend B2BAuthGuard and login flows
+    """
+
+    # Fire-and-forget: log event in background so main response is not blocked
+    background.add_task(_log_b2b_login_success, db, user)
+
+    return {
+        "user_id": user.id,
+        "roles": user.roles,
+        "organization_id": user.organization_id,
+        "agency_id": user.agency_id,
+    }
+
+
+@router.get("/account/summary")
+async def b2b_account_summary(user: CurrentB2BUser = Depends(current_b2b_user), db=Depends(get_db)):
+    """Return read-only account summary for B2B agency user."""
+    org_id = user.organization_id
+    agency_id = user.agency_id
+    if not org_id or not agency_id:
+        from app.errors import AppError
+        raise AppError(403, "forbidden", "Only agency users can view B2B account summary")
+
+    # Redis L1 cache (2 min — financial summary)
+    hit, ck = await try_cache_get("b2b_acct", org_id, {"aid": agency_id})
+    if hit:
+        return hit
+
+    # Defaults
+    total_debit = 0.0
+    total_credit = 0.0
+    currency = "EUR"
+    recent: list[dict] = []
+
+    # ------------------------------------------------------------------
+    # Strategy A: use ledger-backed finance data if available
+    # ------------------------------------------------------------------
+    # Try to locate finance account + credit profile + account balance
+    credit_profile = await db.credit_profiles.find_one(
+        {"organization_id": org_id, "agency_id": agency_id}
+    )
+    account = await db.finance_accounts.find_one(
+        {"organization_id": org_id, "type": "agency", "owner_id": agency_id}
+    )
+
+    exposure_eur = 0.0
+    credit_limit = None
+    soft_limit = None
+    payment_terms = None
+    status = "ok"
+    aging = None
+
+    if account:
+        currency = account.get("currency", currency)
+        balance = await db.account_balances.find_one(
+            {
+                "organization_id": org_id,
+                "account_id": account["_id"],
+                "currency": currency,
+            }
+        )
+        exposure_eur = float(balance.get("balance", 0.0)) if balance else 0.0
+
+    if credit_profile:
+        credit_limit = float(credit_profile.get("limit") or 0.0)
+        soft_limit = credit_profile.get("soft_limit")
+        payment_terms = credit_profile.get("payment_terms") or None
+
+        # Status hesaplama (ops_finance.exposure ile aynı mantık)
+        if credit_limit and exposure_eur >= credit_limit:
+            status = "over_limit"
+        elif soft_limit and exposure_eur >= soft_limit:
+            status = "near_limit"
+
+    # Aging şu anda B2B summary response'unda yalnızca placeholder olarak dönüyor.
+    # Ops tarafındaki exposure dashboard aging hesaplaması tek kaynak olarak
+    # kullanılacak; burada ek bir hesap yapılmıyor.
+
+    # ------------------------------------------------------------------
+    # Strategy B: fallback to bookings-derived summary when no ledger data
+    # ------------------------------------------------------------------
+    if not account and not credit_profile:
+        from datetime import datetime
+
+        cursor = (
+            db.bookings.find(
+                {
+                    "organization_id": org_id,
+                    "agency_id": agency_id,
+                }
+            )
+            .sort("created_at", -1)
+            .limit(50)
+        )
+        docs = await cursor.to_list(length=50)
+
+        for doc in docs:
+            amounts = doc.get("amounts") or {}
+            sell = float(amounts.get("sell") or 0.0)
+            cur = doc.get("currency") or currency
+            currency = cur or currency
+
+            status_b = (doc.get("status") or "").upper()
+            pay_status = (doc.get("payment_status") or "").lower()
+
+            # Treat CONFIRMED + unpaid/partial bookings as debit exposure
+            direction = None
+            if status_b == "CONFIRMED" and pay_status in {"unpaid", "partial", ""} and sell > 0:
+                direction = "debit"
+                total_debit += sell
+
+            created_at = doc.get("created_at")
+            if isinstance(created_at, datetime):
+                dt = created_at.isoformat()
+            else:
+                dt = str(created_at) if created_at else None
+
+            if direction:
+                recent.append(
+                    {
+                        "id": str(doc.get("_id")),
+                        "date": dt,
+                        "type": "booking",
+                        "description": doc.get("booking_code")
+                        or f"Booking {str(doc.get('_id'))[:8]}",
+                        "direction": direction,
+                        "amount": sell,
+                        "currency": cur,
+                        "ref_id": str(doc.get("_id")),
+                    }
+                )
+
+        recent = recent[:20]
+        net = total_credit - total_debit
+        data_source = "derived_from_bookings"
+    else:
+        # When ledger-backed data is available, keep recent movements empty for now
+        net = -exposure_eur
+        data_source = "ledger_based"
+
+    result = {
+        "total_debit": round(total_debit, 2),
+        "total_credit": round(total_credit, 2),
+        "net": round(net, 2),
+        "currency": currency,
+        "recent": recent,
+        "data_source": data_source,
+        "exposure_eur": round(exposure_eur, 2),
+        "credit_limit": credit_limit,
+        "soft_limit": soft_limit,
+        "payment_terms": payment_terms,
+        "status": status,
+        "aging": aging,
+    }
+    return await cache_and_return(ck, result, ttl=120)
+

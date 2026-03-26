@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="15" time="40.402" timestamp="2026-03-26T09:14:39.029099+00:00" hostname="agent-env-63590fcb-02ff-4407-bb72-dd57245d2566"><testcase classname="test_reports.pytest_isolated.test_platform_maturation_iter153.TestHealthAndBasics" name="test_health_endpoint" time="0.357" /><testcase classname="test_reports.pytest_isolated.test_platform_maturation_iter153.TestHealthAndBasics" name="test_root_endpoint" time="0.096"><failure message="requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)">/root/.venv/lib/python3.11/site-packages/requests/models.py:976: in json
+    return complexjson.loads(self.text, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:355: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+../test_reports/pytest_isolated/test_platform_maturation_iter153.py:40: in test_root_endpoint
+    data = response.json()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/models.py:980: in json
+    raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
+E   requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)</failure></testcase><testcase classname="test_reports.pytest_isolated.test_platform_maturation_iter153.TestAuthentication" name="test_admin_login" time="0.351" /><testcase classname="test_reports.pytest_isolated.test_platform_maturation_iter153.TestAuthentication" name="test_agency_login" time="0.363" /><testcase classname="test_reports.pytest_isolated.test_platform_maturation_iter153.TestDashboardAPIs" name="test_admin_dashboard_today" time="0.524" /><testcase classname="test_reports.pytest_isolated.test_platform_maturation_iter153.TestDashboardAPIs" name="test_agency_dashboard_today" time="0.475" /><testcase classname="test_reports.pytest_isolated.test_platform_maturation_iter153.TestDashboardAPIs" name="test_hotel_dashboard_today" time="0.471" /><testcase classname="test_reports.pytest_isolated.test_platform_maturation_iter153.TestDashboardAPIs" name="test_b2b_dashboard_today" time="0.469" /><testcase classname="test_reports.pytest_isolated.test_platform_maturation_iter153.TestRouteInventory" name="test_route_count_above_threshold" time="0.003" /><testcase classname="test_reports.pytest_isolated.test_platform_maturation_iter153.TestRouteInventory" name="test_route_inventory_summary" time="0.000" /><testcase classname="test_reports.pytest_isolated.test_platform_maturation_iter153.TestArchitectureGuard" name="test_architecture_guard_passes" time="6.448" /><testcase classname="test_reports.pytest_isolated.test_platform_maturation_iter153.TestArchitectureGuard" name="test_scope_audit_passes" time="13.056" /><testcase classname="test_reports.pytest_isolated.test_platform_maturation_iter153.TestArchitectureGuard" name="test_event_cache_passes" time="17.603" /><testcase classname="test_reports.pytest_isolated.test_platform_maturation_iter153.TestGeneratedDocs" name="test_docs_freshness" time="0.053" /><testcase classname="test_reports.pytest_isolated.test_platform_maturation_iter153.TestGeneratedDocs" name="test_generated_docs_exist" time="0.000" /></testsuite></testsuites>

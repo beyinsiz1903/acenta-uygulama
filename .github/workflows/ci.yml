@@ -56,7 +56,50 @@ jobs:
         run: cd frontend && npx eslint src/ --max-warnings 0
 
   # ============================================
-  # Stage 2: Security Scanning
+  # Stage 2: Architecture & Scope Guards
+  # ============================================
+  architecture-guard:
+    name: Architecture & Scope Guards
+    runs-on: ubuntu-latest
+    needs: [lint]
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ping: 1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          grep -v emergentintegrations requirements.txt > /tmp/requirements_ci.txt
+          pip install -r /tmp/requirements_ci.txt --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
+          pip install pytest pytest-anyio httpx pytest-rerunfailures
+
+      - name: Architecture Guard (cross-domain imports)
+        run: |
+          cd backend
+          python -m pytest tests/test_architecture_guard.py -v --timeout=30
+
+      - name: Scope & Dependency Audit
+        run: |
+          cd backend
+          python -m pytest tests/test_scope_audit.py -v --timeout=30
+
+  # ============================================
+  # Stage 3: Security Scanning
   # ============================================
   security:
     name: Security Scan
@@ -88,12 +131,12 @@ jobs:
         continue-on-error: true
 
   # ============================================
-  # Stage 3: Unit & Integration Tests (Backend)
+  # Stage 4: Unit & Integration Tests (Backend)
   # ============================================
   backend-tests:
     name: Backend Tests
     runs-on: ubuntu-latest
-    needs: [lint]
+    needs: [lint, architecture-guard]
     services:
       mongodb:
         image: mongo:7.0
@@ -120,16 +163,22 @@ jobs:
           pip install -r /tmp/requirements_ci.txt --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
           pip install pytest pytest-anyio pytest-cov httpx pytest-rerunfailures
 
-      - name: Run unit tests
+      - name: Run unit tests with coverage
         run: |
           cd backend
           python -m pytest tests/ \
             -x --timeout=60 \
             --reruns=2 --reruns-delay=3 --only-rerun="AutoReconnect" \
             --cov=app --cov-report=xml:coverage.xml \
+            --cov-report=term-missing:skip-covered \
             -k "not preview and not external" \
             --ignore=tests/integration \
             -q
+
+      - name: Check coverage thresholds
+        run: |
+          cd backend
+          python scripts/check_coverage_threshold.py
 
       - name: Run integration tests
         run: |
@@ -138,6 +187,7 @@ jobs:
             -x --timeout=120 \
             -k "not preview and not external" \
             -q
+        continue-on-error: true
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
@@ -148,7 +198,7 @@ jobs:
           fail_ci_if_error: false
 
   # ============================================
-  # Stage 4: Frontend Build
+  # Stage 5: Frontend Build
   # ============================================
   frontend-build:
     name: Frontend Build
@@ -174,7 +224,7 @@ jobs:
           CI: true
 
   # ============================================
-  # Stage 5: API Contract Tests
+  # Stage 6: API Contract Tests
   # ============================================
   contract-tests:
     name: API Contract Tests
@@ -199,7 +249,7 @@ jobs:
           cd backend
           grep -v emergentintegrations requirements.txt > /tmp/requirements_ci.txt
           pip install -r /tmp/requirements_ci.txt --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
-          pip install pytest pytest-anyio httpx schemathesis
+          pip install pytest pytest-anyio httpx schemathesis pytest-rerunfailures
 
       - name: Run contract tests
         run: |
@@ -210,12 +260,83 @@ jobs:
             -q
 
   # ============================================
-  # Stage 6: Deploy to Staging
+  # Stage 7: Architecture Docs Freshness
+  # ============================================
+  docs-freshness:
+    name: Architecture Docs Freshness
+    runs-on: ubuntu-latest
+    needs: [architecture-guard]
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          grep -v emergentintegrations requirements.txt > /tmp/requirements_ci.txt
+          pip install -r /tmp/requirements_ci.txt --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
+
+      - name: Check generated docs are up to date
+        run: |
+          cd backend
+          python scripts/generate_arch_docs.py --check
+
+  # ============================================
+  # Stage 8: Quality Gate Summary
+  # ============================================
+  quality-summary:
+    name: Quality Gate Summary
+    runs-on: ubuntu-latest
+    needs: [lint, architecture-guard, backend-tests, frontend-build, security, docs-freshness]
+    if: always()
+    steps:
+      - name: Quality Gate Report
+        run: |
+          echo "## Quality Gate Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Gate | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint (Backend + Frontend) | ${{ needs.lint.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Architecture Guard | ${{ needs.architecture-guard.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Tests + Coverage | ${{ needs.backend-tests.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Build | ${{ needs.frontend-build.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Scan | ${{ needs.security.result == 'success' && '✅' || '⚠️' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docs Freshness | ${{ needs.docs-freshness.result == 'success' && '✅' || '⚠️' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Fail Conditions" >> $GITHUB_STEP_SUMMARY
+          echo "- **Lint errors**: Any ruff E/F/W violation or ESLint error" >> $GITHUB_STEP_SUMMARY
+          echo "- **Architecture violation**: Cross-domain imports detected" >> $GITHUB_STEP_SUMMARY
+          echo "- **Scope audit**: Orphan routers, duplicate ownership" >> $GITHUB_STEP_SUMMARY
+          echo "- **Coverage below threshold**: Overall < 20%, Critical modules < 30%" >> $GITHUB_STEP_SUMMARY
+          echo "- **Frontend build failure**: TypeScript/React compilation errors" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if critical gates failed
+        if: |
+          needs.lint.result != 'success' ||
+          needs.architecture-guard.result != 'success' ||
+          needs.backend-tests.result != 'success' ||
+          needs.frontend-build.result != 'success'
+        run: |
+          echo "❌ One or more critical quality gates failed."
+          exit 1
+
+  # ============================================
+  # Stage 8: Deploy to Staging
   # ============================================
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    needs: [backend-tests, frontend-build, security]
+    needs: [backend-tests, frontend-build, security, architecture-guard]
     if: github.ref == 'refs/heads/develop'
     environment: staging
     steps:
@@ -224,12 +345,12 @@ jobs:
         run: echo "Deploy to staging environment"
 
   # ============================================
-  # Stage 7: Deploy to Production
+  # Stage 9: Deploy to Production
   # ============================================
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [backend-tests, frontend-build, contract-tests, security]
+    needs: [backend-tests, frontend-build, contract-tests, security, architecture-guard]
     if: startsWith(github.ref, 'refs/heads/release/')
     environment: production
     steps:

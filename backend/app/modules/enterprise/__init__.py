@@ -8,17 +8,17 @@ Phase 2, Dalga 5 additions: risk_snapshots, action_policies, approval_tasks.
 """
 from fastapi import APIRouter
 
-from app.routers.enterprise_approvals import router as enterprise_approvals_router
-from app.routers.enterprise_audit import router as enterprise_audit_router
-from app.routers.enterprise_health import router as enterprise_health_router
-from app.routers.enterprise_schedules import router as enterprise_schedules_router
-from app.routers.audit import router as audit_router
-from app.routers.governance import router as governance_router
+from app.modules.enterprise.routers.enterprise_approvals import router as enterprise_approvals_router
+from app.modules.enterprise.routers.enterprise_audit import router as enterprise_audit_router
+from app.modules.enterprise.routers.enterprise_health import router as enterprise_health_router
+from app.modules.enterprise.routers.enterprise_schedules import router as enterprise_schedules_router
+from app.modules.enterprise.routers.audit import router as audit_router
+from app.modules.enterprise.routers.governance import router as governance_router
 
 # --- Phase 2, Dalga 5 additions ---
-from app.routers.risk_snapshots import router as risk_snapshots_router
-from app.routers.action_policies import router as action_policies_router
-from app.routers.approval_tasks import router as approval_tasks_router
+from app.modules.enterprise.routers.risk_snapshots import router as risk_snapshots_router
+from app.modules.enterprise.routers.action_policies import router as action_policies_router
+from app.modules.enterprise.routers.approval_tasks import router as approval_tasks_router
 
 domain_router = APIRouter()
 domain_router.include_router(enterprise_approvals_router)

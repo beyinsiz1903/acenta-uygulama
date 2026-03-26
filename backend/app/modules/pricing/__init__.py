@@ -11,24 +11,24 @@ from fastapi import APIRouter
 from app.config import API_PREFIX
 
 # --- Core pricing ---
-from app.routers.pricing import router as pricing_router
-from app.routers.pricing_rules import router as pricing_rules_router
-from app.routers.pricing_quote import router as pricing_quote_router
-from app.routers.pricing_engine_router import router as pricing_engine_router
+from app.modules.pricing.routers.pricing import router as pricing_router
+from app.modules.pricing.routers.pricing_rules import router as pricing_rules_router
+from app.modules.pricing.routers.pricing_quote import router as pricing_quote_router
+from app.modules.pricing.routers.pricing_engine_router import router as pricing_engine_router
 
 # --- Admin pricing ---
-from app.routers.admin_pricing import router as admin_pricing_router
-from app.routers.admin_pricing_incidents import router as admin_pricing_incidents_router
-from app.routers.admin_pricing_trace import router as admin_pricing_trace_router
+from app.modules.pricing.routers.admin_pricing import router as admin_pricing_router
+from app.modules.pricing.routers.admin_pricing_incidents import router as admin_pricing_incidents_router
+from app.modules.pricing.routers.admin_pricing_trace import router as admin_pricing_trace_router
 
 # --- Offers & quotes ---
-from app.routers.offers import router as offers_router
-from app.routers.offers_booking import router as offers_booking_router
-from app.routers.quotes import router as quotes_router
+from app.modules.pricing.routers.offers import router as offers_router
+from app.modules.pricing.routers.offers_booking import router as offers_booking_router
+from app.modules.pricing.routers.quotes import router as quotes_router
 
 # --- Marketplace ---
-from app.routers.marketplace import router as marketplace_router
-from app.routers.marketplace_supplier_mapping import router as marketplace_supplier_mapping_router
+from app.modules.pricing.routers.marketplace import router as marketplace_router
+from app.modules.pricing.routers.marketplace_supplier_mapping import router as marketplace_supplier_mapping_router
 
 domain_router = APIRouter()
 

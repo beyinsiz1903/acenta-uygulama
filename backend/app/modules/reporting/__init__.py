@@ -8,21 +8,21 @@ Phase 2, Dalga 5 consolidation.
 """
 from fastapi import APIRouter
 
-from app.routers.reports import router as reports_router
-from app.routers.advanced_reports import router as advanced_reports_router
-from app.routers.exports import router as exports_router
-from app.routers.exports import public_router as public_exports_router
-from app.routers.admin_analytics import router as admin_analytics_router
-from app.routers.admin_reporting import router as admin_reporting_router
-from app.routers.admin_reports import router as admin_reports_router
-from app.routers.admin_funnel import router as admin_funnel_router
-from app.routers.admin_insights import router as admin_insights_router
-from app.routers.dashboard_enhanced import router as dashboard_enhanced_router
-from app.routers.dashboard_agency import router as dashboard_agency_router
-from app.routers.dashboard_admin import router as dashboard_admin_router
-from app.routers.dashboard_hotel import router as dashboard_hotel_router
-from app.routers.dashboard_b2b import router as dashboard_b2b_router
-from app.routers.revenue_router import router as revenue_router
+from app.modules.reporting.routers.reports import router as reports_router
+from app.modules.reporting.routers.advanced_reports import router as advanced_reports_router
+from app.modules.reporting.routers.exports import router as exports_router
+from app.modules.reporting.routers.exports import public_router as public_exports_router
+from app.modules.reporting.routers.admin_analytics import router as admin_analytics_router
+from app.modules.reporting.routers.admin_reporting import router as admin_reporting_router
+from app.modules.reporting.routers.admin_reports import router as admin_reports_router
+from app.modules.reporting.routers.admin_funnel import router as admin_funnel_router
+from app.modules.reporting.routers.admin_insights import router as admin_insights_router
+from app.modules.reporting.routers.dashboard_enhanced import router as dashboard_enhanced_router
+from app.modules.reporting.routers.dashboard_agency import router as dashboard_agency_router
+from app.modules.reporting.routers.dashboard_admin import router as dashboard_admin_router
+from app.modules.reporting.routers.dashboard_hotel import router as dashboard_hotel_router
+from app.modules.reporting.routers.dashboard_b2b import router as dashboard_b2b_router
+from app.modules.reporting.routers.revenue_router import router as revenue_router
 
 domain_router = APIRouter()
 

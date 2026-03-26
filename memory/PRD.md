@@ -9,10 +9,11 @@ Admin, Agency, Hotel ve B2B persona'ları için görev odaklı arayüz.
 - **Frontend**: React + Shadcn/UI + React Router
 - **Domain-Driven Design**: 16 bounded context (Faz 2'de tamamlandı)
 - **Navigation**: Persona-based navigation platform (Faz 3 Sprint 1'de tamamlandı)
+- **Dashboard**: Persona-based dashboards (Faz 3 Sprint 2'de Agency tamamlandı)
 
 ## Persona'lar
 1. **Admin** — Sistem sahibi/operasyon yöneticisi (max 7 sidebar grubu)
-2. **Agency** — Acenta operasyon kullanıcısı (max 7 sidebar grubu)
+2. **Agency** — Acenta operasyon kullanıcısı (max 7 sidebar grubu, özel dashboard)
 3. **Hotel** — Otel operasyon/kontrat kullanıcısı (max 7 sidebar grubu)
 4. **B2B** — Bayi/partner (max 6 sidebar grubu, ayrı layout)
 
@@ -41,15 +42,22 @@ Admin, Agency, Hotel ve B2B persona'ları için görev odaklı arayüz.
 - PageErrorBoundary eklendi
 - Tüm testler geçti (%100 frontend)
 
+#### Sprint 2: Agency Dashboard & Görev Odaklı Kontrol Paneli (Tamamlandı - 26.03.2026)
+- AgencyDashboardPage.jsx — Görev odaklı 4 bloklı dashboard
+  - Blok 1: Bugün Yapılacaklar (pending rez, checkin'ler, CRM görevleri, dolan teklifler)
+  - Blok 2: KPI Strip (bugünün geliri, yeni rez, toplam satış, aksiyon bekleyen)
+  - Blok 3: Hızlı Aksiyonlar (6 buton: Otel Ara, Çoklu Arama, Yeni Teklif, Müşteriler, Turlar, Rezervasyonlarım)
+  - Blok 4: Son Aktivite + Haftalık Özet
+- Backend: /api/dashboard/agency-today endpoint (11 paralel DB sorgusu)
+- Persona-aware DashboardRouter: Agency → AgencyDashboardPage, Admin → DashboardPage
+- Backward compatibility korundu — Admin mevcut Yönetim Panosu'nu görüyor
+- useAgencyDashboard.js hook (30s stale, 60s auto-refresh)
+- Tüm testler geçti (backend 10/10, frontend %100)
+
 ## Bekleyen İşler
 
-### Sprint 2 (Sıradaki): Agency Dashboard & Ana Akış Ekranları
-- Agency persona dashboard'u (görev odaklı, 4 blok: Bugün, KPI, Hızlı Aksiyon, Son Aktivite)
-- Agency ana akış ekranlarının yeniden gruplaması
-- Ölü route ve menü temizlikleri
-
-### Sprint 3: Admin Dashboard & Yönetim Yüzeyi
-- Admin dashboard (persona'ya özel)
+### Sprint 3 (Sıradaki): Admin Dashboard & Yönetim Yüzeyi
+- Admin persona dashboard'u (persona'ya özel)
 - Ortak page shell / breadcrumb / section header standardı
 
 ### Sprint 4: Hotel + B2B Rollout
@@ -57,6 +65,7 @@ Admin, Agency, Hotel ve B2B persona'ları için görev odaklı arayüz.
 - Son temizlik, UX polish, demo senaryoları
 
 ### Gelecek Fazlar
+- Command Palette (Cmd+K) search enrichment: directAccessOnly items
 - Fiziksel router taşınması (app/routers → modules/*/routers)
 - CI Quality Gates & Coverage Visibility
 - Dependency & Scope Control Audits

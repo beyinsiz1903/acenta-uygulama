@@ -1,6 +1,25 @@
 # CHANGELOG — Syroce
 
-## [2026-03-26] Faz 3 Sprint 1: Persona-Based Navigation Platform
+## [2026-03-26] Faz 3 Sprint 2: Agency Dashboard & Görev Odaklı Kontrol Paneli
+
+### Eklenen
+- `pages/AgencyDashboardPage.jsx` — Görev odaklı Agency dashboard (4 blok)
+- `hooks/useAgencyDashboard.js` — React Query hook (/api/dashboard/agency-today)
+- `backend/app/routers/dashboard_agency.py` — Agency daily overview endpoint (11 paralel query)
+- Persona-aware `DashboardRouter` bileşeni (`coreRoutes.jsx`)
+
+### Değiştirilen
+- `routes/coreRoutes.jsx` — DashboardRouter ile persona bazlı dashboard yönlendirmesi
+- `modules/reporting/__init__.py` — dashboard_agency_router eklendi
+- `bootstrap/router_registry.py` — dashboard_agency_router import & include
+
+### Notlar
+- Agency kullanıcıları /app'te görev odaklı dashboard görüyor
+- Admin kullanıcıları mevcut Yönetim Panosu'nu görmeye devam ediyor
+- user_name serialization düzeltmesi (obje → string)
+- Test raporu: backend 10/10, frontend %100 (iteration_150.json)
+
+--- [2026-03-26] Faz 3 Sprint 1: Persona-Based Navigation Platform
 
 ### Eklenen
 - `navigation/personas/admin.navigation.js` — Admin persona navigasyon tanımı (7 sidebar grubu, ~100 öğe)

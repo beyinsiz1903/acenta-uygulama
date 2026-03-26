@@ -1,5 +1,5 @@
 # Event Catalog
-> Auto-generated: 2026-03-26 09:08 UTC
+> Auto-generated: 2026-03-26 09:22 UTC
 > Source: `app/infrastructure/event_contracts.py`
 
 | Event Type | Description | Cache Invalidation Targets |

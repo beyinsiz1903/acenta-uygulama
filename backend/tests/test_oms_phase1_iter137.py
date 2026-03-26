@@ -16,7 +16,7 @@ def _unwrap(resp):
 
 
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://sprint-4-rollout.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ddd-router-hub.preview.emergentagent.com').rstrip('/')
 
 class TestOMSOrderCRUD:
     """Order CRUD operations tests"""

@@ -1,7 +1,7 @@
 // tests/e2e/reports-page.spec.ts
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "https://sprint-4-rollout.preview.emergentagent.com";
+const BASE_URL = "https://ddd-router-hub.preview.emergentagent.com";
 
 async function login(page) {
   await page.goto(`${BASE_URL}/login`);

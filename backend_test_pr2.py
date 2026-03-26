@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://sprint-4-rollout.preview.emergentagent.com"
+BASE_URL = "https://ddd-router-hub.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials

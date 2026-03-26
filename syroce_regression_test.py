@@ -13,7 +13,7 @@ import json
 import sys
 
 # Backend URL
-BACKEND_URL = "https://sprint-4-rollout.preview.emergentagent.com/api"
+BACKEND_URL = "https://ddd-router-hub.preview.emergentagent.com/api"
 
 # Test credentials from review request
 ADMIN_EMAIL = "admin@acenta.test"

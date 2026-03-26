@@ -4,6 +4,7 @@ import { AlertTriangle, Bell, Inbox, LogOut, Menu, Search } from "lucide-react";
 
 import { Button } from "./ui/button";
 import { Sheet, SheetContent } from "./ui/sheet";
+import { PageErrorBoundary } from "./PageErrorBoundary";
 import ThemeToggle from "./ThemeToggle";
 import { cn } from "../lib/utils";
 import { api, getUser } from "../lib/api";
@@ -635,7 +636,9 @@ function AppShellInner() {
             </div>
           )}
           <div className="p-4 md:p-6 max-w-[1400px]">
-            <Outlet />
+            <PageErrorBoundary>
+              <Outlet />
+            </PageErrorBoundary>
           </div>
         </main>
       </div>

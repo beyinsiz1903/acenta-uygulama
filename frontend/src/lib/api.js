@@ -210,7 +210,13 @@ function addRefreshSubscriber(cb) {
 }
 
 api.interceptors.response.use(
-  (resp) => resp,
+  (resp) => {
+    // Auto-unwrap standard { ok, data, meta } envelope from backend middleware
+    if (resp.data && typeof resp.data === "object" && "ok" in resp.data && "data" in resp.data) {
+      resp.data = resp.data.data;
+    }
+    return resp;
+  },
   async (err) => {
     const originalRequest = err.config;
 

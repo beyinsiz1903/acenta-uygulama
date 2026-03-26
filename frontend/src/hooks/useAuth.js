@@ -40,8 +40,8 @@ export function useLogin() {
         tenant_id,
         tenant_slug,
       });
-      // Unwrap standard response envelope { ok, data, meta }
-      return data?.data || data;
+      // Auto-unwrapped by api interceptor
+      return data;
     },
     onSuccess: (data) => {
       if (data?.user) {

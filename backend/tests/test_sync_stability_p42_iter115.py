@@ -25,7 +25,7 @@ def _unwrap(resp):
 
 
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://ia-rebuild.preview.emergentagent.com")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://daily-hub-27.preview.emergentagent.com")
 
 @pytest.fixture(scope="module")
 def auth_token():

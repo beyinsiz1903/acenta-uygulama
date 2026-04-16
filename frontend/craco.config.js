@@ -161,6 +161,16 @@ if (config.enableVisualEdits || config.enableHealthCheck) {
 
     // Disable WebSocket for hot reload in preview/production environments
     devServerConfig.webSocketServer = false;
+    // Allow all hosts for Replit proxy
+    devServerConfig.allowedHosts = "all";
+    devServerConfig.host = "0.0.0.0";
+    // Proxy API requests to the backend
+    devServerConfig.proxy = {
+      "/api": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+      },
+    };
 
     return devServerConfig;
   };
@@ -168,6 +178,16 @@ if (config.enableVisualEdits || config.enableHealthCheck) {
   // Even without visual edits/health check, disable WebSocket in preview environments
   webpackConfig.devServer = (devServerConfig) => {
     devServerConfig.webSocketServer = false;
+    // Allow all hosts for Replit proxy
+    devServerConfig.allowedHosts = "all";
+    devServerConfig.host = "0.0.0.0";
+    // Proxy API requests to the backend
+    devServerConfig.proxy = {
+      "/api": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+      },
+    };
     return devServerConfig;
   };
 }

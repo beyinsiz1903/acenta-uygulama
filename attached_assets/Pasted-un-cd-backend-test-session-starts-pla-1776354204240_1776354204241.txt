@@ -1,0 +1,99 @@
+un cd backend
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.0.2, pluggy-1.6.0
+rootdir: /home/runner/work/acenta-uygulama/acenta-uygulama/backend
+configfile: pytest.ini
+plugins: timeout-2.4.0, rerunfailures-16.1, anyio-4.12.0, respx-0.22.0, Faker-40.8.0
+timeout: 30.0s
+timeout method: signal
+timeout func_only: False
+collected 7 items
+
+tests/test_scope_audit.py F......                                        [100%]
+
+=================================== FAILURES ===================================
+_________________________ test_imported_routers_exist __________________________
+
+    def test_imported_routers_exist():
+        """Every router imported in module __init__.py must exist as a file."""
+        module_imports = _get_module_imported_routers()
+        all_router_files = _get_all_router_files()
+        missing = []
+    
+        for domain, imports in module_imports.items():
+            for imp in imports:
+                if imp not in all_router_files and imp not in ROUTER_SUBPACKAGES:
+                    missing.append(f"[{domain}] imports '{imp}' but file not found")
+    
+        if missing:
+>           pytest.fail(
+                "Router files imported but not found:\n"
+                + "\n".join(f"  {m}" for m in missing)
+            )
+E           Failed: Router files imported but not found:
+E             [finance] imports 'payment_gateways.py' but file not found
+E             [identity] imports 'org_modules.py' but file not found
+E             [inventory] imports 'admin_villas.py' but file not found
+E             [operations] imports 'admin_portal_management.py' but file not found
+E             [operations] imports 'admin_activities.py' but file not found
+
+tests/test_scope_audit.py:111: Failed
+------------------------------ Captured log setup ------------------------------
+WARNING  infrastructure.redis:redis_client.py:66 Async Redis unavailable: Error Multiple exceptions: [Errno 111] Connect call failed ('::1', 6379, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 6379) connecting to localhost:6379.
+WARNING  infrastructure.redis:redis_client.py:66 Async Redis unavailable: Error Multiple exceptions: [Errno 111] Connect call failed ('::1', 6379, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 6379) connecting to localhost:6379.
+WARNING  infrastructure.redis:redis_client.py:66 Async Redis unavailable: Error Multiple exceptions: [Errno 111] Connect call failed ('::1', 6379, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 6379) connecting to localhost:6379.
+=============================== warnings summary ===============================
+../../../../../../opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/formparsers.py:12
+  /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
+    import multipart
+
+app/services/booking_service.py:7
+  /home/runner/work/acenta-uygulama/acenta-uygulama/backend/app/services/booking_service.py:7: DeprecationWarning: app.domain.booking_state_machine is deprecated. Use app.modules.booking.models instead.
+    from app.domain.booking_state_machine import validate_transition
+
+app/services/reservations.py:9
+  /home/runner/work/acenta-uygulama/acenta-uygulama/backend/app/services/reservations.py:9: DeprecationWarning: app.constants.booking_statuses is deprecated. Use app.modules.booking.models instead.
+    from app.constants.booking_statuses import can_transition, get_status_label
+
+app/schemas_b2b_cancel.py:14
+  /home/runner/work/acenta-uygulama/acenta-uygulama/backend/app/schemas_b2b_cancel.py:14: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    @validator("requested_refund_amount")
+
+tests/test_scope_audit.py::test_no_orphan_routers
+  /home/runner/work/acenta-uygulama/acenta-uygulama/backend/tests/test_scope_audit.py:148: UserWarning: Found 5 orphan router(s) not imported by any domain module:
+    - agency.py
+    - customer_portal.py
+    - e2e_demo_router.py
+    - inventory_sync_router.py
+    - supplier_onboarding_router.py
+  
+  These should be assigned to a domain module or added to KNOWN_EXCEPTIONS.
+    warnings.warn(msg)
+
+tests/test_scope_audit.py::test_services_no_fastapi_imports
+  /home/runner/work/acenta-uygulama/acenta-uygulama/backend/tests/test_scope_audit.py:275: UserWarning: Found 14 service-layer FastAPI/HTTP imports:
+    app/services/enforcement.py:5 → from fastapi import HTTPException
+    app/services/currency_guard.py:5 → from fastapi import status
+    app/services/pricing_audit_service.py:6 → from fastapi import Request
+    app/services/partner_auth.py:5 → from fastapi import Header, HTTPException, Request
+    app/services/audit.py:7 → from fastapi import Request
+    app/services/booking_service.py:60 → from fastapi import HTTPException, status
+    app/services/booking_service.py:123 → from fastapi import HTTPException
+    app/services/booking_service.py:189 → from fastapi import HTTPException, status
+    app/services/booking_service.py:204 → from fastapi import HTTPException, status
+    app/services/booking_service.py:283 → from fastapi import HTTPException, status
+    ... and 4 more
+  
+  Consider moving HTTP-specific logic to router layer.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_scope_audit.py::test_imported_routers_exist - Failed: Router files imported but not found:
+  [finance] imports 'payment_gateways.py' but file not found
+  [identity] imports 'org_modules.py' but file not found
+  [inventory] imports 'admin_villas.py' but file not found
+  [operations] imports 'admin_portal_management.py' but file not found
+  [operations] imports 'admin_activities.py' but file not found
+=================== 1 failed, 6 passed, 6 warnings in 7.68s ====================
+Error: Process completed with exit code 1.

@@ -1,5 +1,5 @@
 # Router Map — Endpoint → Domain
-> Auto-generated: 2026-03-26 09:22 UTC
+> Auto-generated: 2026-04-16 15:51 UTC
 > Source: `app/modules/*/` router registrations
 
 ## AUTH
@@ -107,6 +107,7 @@
 | `router` | `accounting_sync_router` |
 | `router` | `accounting_providers_router` |
 | `router` | `commission_rules_router` |
+| `router` | `payment_gateways_router` |
 | `router` | `ops_finance_router` |
 | `router` | `ops_finance_accounts_router` |
 | `router` | `ops_finance_refunds_router` |
@@ -140,6 +141,7 @@
 | `router` | `agency_profile_router` |
 | `router` | `agency_contracts_router` |
 | `router` | `onboarding_router` |
+| `router` | `org_modules_router` |
 
 ## INVENTORY
 
@@ -165,6 +167,7 @@
 | `router` | `admin_sheets_router` |
 | `router` | `admin_catalog_router` |
 | `router` | `admin_tours_router` |
+| `router` | `admin_villas_router` |
 
 ## MOBILE
 
@@ -181,6 +184,16 @@
 | `router` | `ops_incidents_router` |
 | `router` | `ops_booking_events_router` |
 | `router` | `tickets_router` |
+| `router` | `admin_transfers_router` |
+| `router` | `admin_guides_router` |
+| `router` | `admin_vehicles_router` |
+| `router` | `admin_flights_router` |
+| `router` | `admin_visa_router` |
+| `router` | `admin_insurance_router` |
+| `router` | `calendar_router` |
+| `router` | `admin_email_templates_router` |
+| `router` | `admin_portal_management_router` |
+| `router` | `admin_activities_router` |
 
 ## PRICING
 

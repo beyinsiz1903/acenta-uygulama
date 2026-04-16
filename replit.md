@@ -73,3 +73,5 @@ MongoDB and Redis are started automatically by the `start_backend.sh` script usi
 - The app is Turkish-language (UI strings are in Turkish)
 - Multi-tenant: every request requires an `X-Tenant-Id` header
 - Auth uses HTTP-only cookies (no localStorage tokens)
+- CRM customer documents require an explicit `id` field (separate from MongoDB `_id`); the `list_customers` query uses `{"_id": 0}` projection
+- Trial and demo seed services (`trial_seed_service.py`, `demo_seed_service.py`) must include `"id"` in customer documents to match the `CustomerOut` Pydantic schema

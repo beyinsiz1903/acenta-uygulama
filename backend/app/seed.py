@@ -703,6 +703,7 @@ async def ensure_seed_data() -> None:
     # ══════════════════════════════════════════════════════════
     if not await db.customers.find_one({"organization_id": org_id}):
         await db.customers.insert_one({
+            "id": "cust_demo_seed_001",
             "organization_id": org_id,
             "name": "Demo Musteri",
             "email": "demo.musteri@example.com",

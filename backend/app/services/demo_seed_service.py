@@ -546,10 +546,12 @@ def seed_customers(db: Database, context: dict[str, Any]) -> list[dict[str, Any]
         city = rng.choice(["İstanbul", "Antalya", "İzmir", "Nevşehir", "Denizli"])
         notes = f"{market['label']} pazarında teklif veren demo müşteri. İlgi alanı: {rng.choice(['kültür turu', 'yaz tatili', 'hafta sonu kaçamağı', 'premium şehir turu'])}."
 
+        customer_id = f"demo-cust-{context['slug'][:10]}-{index+1:02d}"
         db.customers.update_one(
             {"organization_id": context["organization_id"], "email": email},
             {
                 "$set": {
+                    "id": customer_id,
                     "organization_id": context["organization_id"],
                     "name": name,
                     "email": email,

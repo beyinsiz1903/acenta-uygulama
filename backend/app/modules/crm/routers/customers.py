@@ -24,6 +24,7 @@ async def create_customer(payload: CustomerIn, user=Depends(get_current_user)):
     doc = payload.model_dump()
     doc.update(
         {
+            "id": f"cust_{ObjectId().__str__()}",
             "organization_id": user["organization_id"],
             "created_at": now_utc(),
             "updated_at": now_utc(),

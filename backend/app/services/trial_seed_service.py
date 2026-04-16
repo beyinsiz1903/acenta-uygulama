@@ -264,6 +264,7 @@ async def seed_trial_signup_workspace(
             {
                 "$set": {
                     "_id": customer_id,
+                    "id": customer_id,
                     "organization_id": organization_id,
                     "tenant_id": tenant_id,
                     "name": customer_name,

@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
-from app.auth import get_current_user, require_roles
+from app.auth import require_roles
 from app.db import get_db
 from app.errors import AppError
 from app.security.module_guard import require_org_module

@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -11,7 +11,6 @@ from pydantic import BaseModel
 from app.auth import require_roles
 from app.constants.org_modules import ALL_MODULE_KEYS, CORE_MODULES, ORG_MODULE_REGISTRY
 from app.db import get_db
-from app.errors import AppError
 
 logger = logging.getLogger(__name__)
 

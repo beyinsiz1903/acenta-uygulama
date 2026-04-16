@@ -1,0 +1,221 @@
+Run ruff check backend/app/ --select E,F,W --ignore E501,E402
+F401 [*] `fastapi.Query` imported but unused
+ --> backend/app/modules/finance/routers/payment_gateways.py:8:41
+  |
+6 | from typing import Any, Dict, List, Optional
+7 |
+8 | from fastapi import APIRouter, Depends, Query, Request
+  |                                         ^^^^^
+9 | from pydantic import BaseModel, Field
+  |
+help: Remove unused import: `fastapi.Query`
+
+F401 [*] `typing.Optional` imported but unused
+ --> backend/app/modules/identity/routers/org_modules.py:6:26
+  |
+4 | import uuid
+5 | from datetime import datetime, timezone
+6 | from typing import List, Optional
+  |                          ^^^^^^^^
+7 |
+8 | from fastapi import APIRouter, Depends
+  |
+help: Remove unused import: `typing.Optional`
+
+F401 [*] `app.errors.AppError` imported but unused
+  --> backend/app/modules/identity/routers/org_modules.py:14:24
+   |
+12 | from app.constants.org_modules import ALL_MODULE_KEYS, CORE_MODULES, ORG_MODULE_REGISTRY
+13 | from app.db import get_db
+14 | from app.errors import AppError
+   |                        ^^^^^^^^
+15 |
+16 | logger = logging.getLogger(__name__)
+   |
+help: Remove unused import: `app.errors.AppError`
+
+F401 [*] `fastapi.Request` imported but unused
+ --> backend/app/modules/inventory/routers/admin_villas.py:8:48
+  |
+6 | from typing import Any, Dict, List, Optional
+7 |
+8 | from fastapi import APIRouter, Depends, Query, Request
+  |                                                ^^^^^^^
+9 | from pydantic import BaseModel, Field
+  |
+help: Remove unused import: `fastapi.Request`
+
+F401 [*] `app.auth.get_current_user` imported but unused
+  --> backend/app/modules/inventory/routers/admin_villas.py:11:22
+   |
+ 9 | from pydantic import BaseModel, Field
+10 |
+11 | from app.auth import get_current_user, require_roles
+   |                      ^^^^^^^^^^^^^^^^
+12 | from app.db import get_db
+13 | from app.errors import AppError
+   |
+help: Remove unused import: `app.auth.get_current_user`
+
+F401 [*] `app.auth.get_current_user` imported but unused
+  --> backend/app/modules/operations/routers/admin_activities.py:11:22
+   |
+ 9 | from pydantic import BaseModel, Field
+10 |
+11 | from app.auth import get_current_user, require_roles
+   |                      ^^^^^^^^^^^^^^^^
+12 | from app.db import get_db
+13 | from app.errors import AppError
+   |
+help: Remove unused import: `app.auth.get_current_user`
+
+F401 [*] `pydantic.Field` imported but unused
+  --> backend/app/modules/operations/routers/admin_guides.py:9:33
+   |
+ 8 | from fastapi import APIRouter, Depends, Query
+ 9 | from pydantic import BaseModel, Field
+   |                                 ^^^^^
+10 |
+11 | from app.auth import get_current_user, require_roles
+   |
+help: Remove unused import: `pydantic.Field`
+
+F401 [*] `uuid` imported but unused
+ --> backend/app/modules/operations/routers/admin_portal_management.py:4:8
+  |
+3 | import logging
+4 | import uuid
+  |        ^^^^
+5 | from datetime import datetime, timezone
+6 | from typing import Any, Dict, Optional
+  |
+help: Remove unused import: `uuid`
+
+F401 [*] `fastapi.Request` imported but unused
+ --> backend/app/modules/operations/routers/admin_transfers.py:8:48
+  |
+6 | from typing import Any, Dict, List, Optional
+7 |
+8 | from fastapi import APIRouter, Depends, Query, Request
+  |                                                ^^^^^^^
+9 | from pydantic import BaseModel, Field
+  |
+help: Remove unused import: `fastapi.Request`
+
+F401 [*] `typing.List` imported but unused
+ --> backend/app/modules/operations/routers/admin_vehicles.py:6:31
+  |
+4 | import uuid
+5 | from datetime import datetime, timezone
+6 | from typing import Any, Dict, List, Optional
+  |                               ^^^^
+7 |
+8 | from fastapi import APIRouter, Depends, Query
+  |
+help: Remove unused import: `typing.List`
+
+F401 [*] `pydantic.Field` imported but unused
+  --> backend/app/modules/operations/routers/admin_vehicles.py:9:33
+   |
+ 8 | from fastapi import APIRouter, Depends, Query
+ 9 | from pydantic import BaseModel, Field
+   |                                 ^^^^^
+10 |
+11 | from app.auth import get_current_user, require_roles
+   |
+help: Remove unused import: `pydantic.Field`
+
+F401 [*] `datetime.datetime` imported but unused
+ --> backend/app/modules/operations/routers/calendar.py:3:22
+  |
+1 | from __future__ import annotations
+2 |
+3 | from datetime import datetime, timezone
+  |                      ^^^^^^^^
+4 | from typing import Any, Dict, List, Optional
+  |
+help: Remove unused import
+
+F401 [*] `datetime.timezone` imported but unused
+ --> backend/app/modules/operations/routers/calendar.py:3:32
+  |
+1 | from __future__ import annotations
+2 |
+3 | from datetime import datetime, timezone
+  |                                ^^^^^^^^
+4 | from typing import Any, Dict, List, Optional
+  |
+help: Remove unused import
+
+F401 [*] `typing.List` imported but unused
+ --> backend/app/modules/operations/routers/customer_portal.py:5:31
+  |
+3 | import logging
+4 | import re
+5 | from typing import Any, Dict, List, Optional
+  |                               ^^^^
+6 | import uuid
+7 | from datetime import datetime, timezone
+  |
+help: Remove unused import
+
+F401 [*] `typing.Optional` imported but unused
+ --> backend/app/modules/operations/routers/customer_portal.py:5:37
+  |
+3 | import logging
+4 | import re
+5 | from typing import Any, Dict, List, Optional
+  |                                     ^^^^^^^^
+6 | import uuid
+7 | from datetime import datetime, timezone
+  |
+help: Remove unused import
+
+F401 [*] `fastapi.responses.JSONResponse` imported but unused
+  --> backend/app/modules/operations/routers/customer_portal.py:10:31
+   |
+ 9 | from fastapi import APIRouter, Depends, Query
+10 | from fastapi.responses import JSONResponse
+   |                               ^^^^^^^^^^^^
+11 |
+12 | from app.db import get_db
+   |
+help: Remove unused import: `fastapi.responses.JSONResponse`
+
+F401 [*] `typing.List` imported but unused
+ --> backend/app/modules/public/routers/customer_portal.py:3:31
+  |
+1 | from __future__ import annotations
+2 |
+3 | from typing import Any, Dict, List, Optional
+  |                               ^^^^
+4 | import uuid
+5 | from datetime import datetime, timezone
+  |
+help: Remove unused import
+
+F401 [*] `typing.Optional` imported but unused
+ --> backend/app/modules/public/routers/customer_portal.py:3:37
+  |
+1 | from __future__ import annotations
+2 |
+3 | from typing import Any, Dict, List, Optional
+  |                                     ^^^^^^^^
+4 | import uuid
+5 | from datetime import datetime, timezone
+  |
+help: Remove unused import
+
+F401 [*] `re` imported but unused
+ --> backend/app/services/email_template_resolver.py:4:8
+  |
+3 | import logging
+4 | import re
+  |        ^^
+5 | from typing import Any, Dict, Optional
+  |
+help: Remove unused import: `re`
+
+Found 19 errors.
+[*] 19 fixable with the `--fix` option.
+Error: Process completed with exit code 1.

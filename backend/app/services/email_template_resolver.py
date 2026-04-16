@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from typing import Any, Dict, Optional
 
 logger = logging.getLogger("email_template_resolver")

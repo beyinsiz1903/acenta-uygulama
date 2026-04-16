@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Query
-from fastapi.responses import JSONResponse
 
 from app.db import get_db
 from app.errors import AppError

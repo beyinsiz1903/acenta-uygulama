@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
-import { Truck, Plus, Edit, Trash2, Wrench, Calendar } from "lucide-react";
+import { Truck, Plus, Edit, Trash2, Wrench, Calendar, X } from "lucide-react";
 
 const VEHICLE_TYPES = [
   { value: "sedan", label: "Sedan" },
@@ -22,10 +22,25 @@ export default function AdminVehiclesPage() {
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
+  const [maintenanceModal, setMaintenanceModal] = useState(null);
+  const [showMaintForm, setShowMaintForm] = useState(false);
+  const [calendarModal, setCalendarModal] = useState(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-vehicles"],
     queryFn: () => api.get("/admin/vehicles").then((r) => r.data),
+  });
+
+  const { data: maintData, isLoading: maintLoading } = useQuery({
+    queryKey: ["vehicle-maintenance", maintenanceModal],
+    queryFn: () => api.get(`/admin/vehicles/${maintenanceModal}/maintenance`).then((r) => r.data),
+    enabled: !!maintenanceModal,
+  });
+
+  const { data: calData, isLoading: calLoading } = useQuery({
+    queryKey: ["vehicle-calendar", calendarModal],
+    queryFn: () => api.get(`/admin/vehicles/${calendarModal}/calendar`).then((r) => r.data),
+    enabled: !!calendarModal,
   });
 
   const createMut = useMutation({
@@ -40,6 +55,10 @@ export default function AdminVehiclesPage() {
     mutationFn: (id) => api.delete(`/admin/vehicles/${id}`),
     onSuccess: () => qc.invalidateQueries(["admin-vehicles"]),
   });
+  const addMaintMut = useMutation({
+    mutationFn: ({ id, body }) => api.post(`/admin/vehicles/${id}/maintenance`, body),
+    onSuccess: () => { qc.invalidateQueries(["vehicle-maintenance"]); setShowMaintForm(false); },
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -52,7 +71,19 @@ export default function AdminVehiclesPage() {
     else createMut.mutate(body);
   };
 
+  const handleMaintSubmit = (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const body = Object.fromEntries(fd.entries());
+    body.cost = parseFloat(body.cost || "0");
+    addMaintMut.mutate({ id: maintenanceModal, body });
+  };
+
   const items = data?.items || [];
+  const maintRecords = maintData?.records || maintData?.maintenance || [];
+  const calEvents = calData?.events || calData?.assignments || [];
+  const maintVehicle = items.find((v) => v.id === maintenanceModal);
+  const calVehicle = items.find((v) => v.id === calendarModal);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -100,6 +131,102 @@ export default function AdminVehiclesPage() {
         </div>
       )}
 
+      {maintenanceModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => { setMaintenanceModal(null); setShowMaintForm(false); }}>
+          <div className="bg-white rounded-xl p-6 w-full max-w-lg shadow-xl max-h-[70vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Bak\u0131m Kay\u0131tlar\u0131 — {maintVehicle?.plate_number}</h3>
+              <button onClick={() => { setMaintenanceModal(null); setShowMaintForm(false); }} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+            </div>
+
+            {!showMaintForm && (
+              <button onClick={() => setShowMaintForm(true)} className="flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-emerald-700 mb-4">
+                <Plus className="w-4 h-4" /> Bak\u0131m Ekle
+              </button>
+            )}
+
+            {showMaintForm && (
+              <form onSubmit={handleMaintSubmit} className="bg-gray-50 rounded-lg p-4 mb-4 grid grid-cols-2 gap-3">
+                <select name="maintenance_type" className="border rounded-lg px-3 py-2 text-sm col-span-2">
+                  <option value="periodic">Periyodik Bak\u0131m</option>
+                  <option value="repair">Onar\u0131m</option>
+                  <option value="tire_change">Lastik De\u011fi\u015fimi</option>
+                  <option value="oil_change">Ya\u011f De\u011fi\u015fimi</option>
+                  <option value="inspection">Muayene</option>
+                  <option value="other">Di\u011fer</option>
+                </select>
+                <input name="date" type="date" className="border rounded-lg px-3 py-2 text-sm" required />
+                <input name="cost" type="number" step="0.01" placeholder="Maliyet" className="border rounded-lg px-3 py-2 text-sm" />
+                <input name="description" placeholder="A\u00e7\u0131klama" className="border rounded-lg px-3 py-2 text-sm col-span-2" />
+                <input name="next_maintenance_date" type="date" placeholder="Sonraki bak\u0131m" className="border rounded-lg px-3 py-2 text-sm" />
+                <input name="mileage" placeholder="Kilometre" className="border rounded-lg px-3 py-2 text-sm" />
+                <div className="col-span-2 flex gap-2">
+                  <button type="submit" className="bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-sm">Kaydet</button>
+                  <button type="button" onClick={() => setShowMaintForm(false)} className="bg-gray-200 px-4 py-1.5 rounded-lg text-sm">Vazge\u00e7</button>
+                </div>
+              </form>
+            )}
+
+            {maintLoading ? (
+              <div className="text-center py-8 text-gray-400">Y\u00fckleniyor...</div>
+            ) : maintRecords.length === 0 ? (
+              <div className="text-center py-8">
+                <Wrench className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                <p className="text-gray-500 text-sm">Hen\u00fcz bak\u0131m kayd\u0131 yok</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {maintRecords.map((r, i) => (
+                  <div key={i} className="p-3 bg-gray-50 rounded-lg border">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-sm">{r.maintenance_type || r.type}</span>
+                      <span className="text-xs text-gray-500">{r.date}</span>
+                    </div>
+                    {r.description && <p className="text-sm text-gray-600 mt-1">{r.description}</p>}
+                    <div className="flex gap-4 mt-2 text-xs text-gray-500">
+                      {r.cost > 0 && <span>Maliyet: {r.cost} TRY</span>}
+                      {r.mileage && <span>KM: {r.mileage}</span>}
+                      {r.next_maintenance_date && <span>Sonraki: {r.next_maintenance_date}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {calendarModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setCalendarModal(null)}>
+          <div className="bg-white rounded-xl p-6 w-full max-w-lg shadow-xl max-h-[70vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">{calVehicle?.plate_number} — Takvim</h3>
+              <button onClick={() => setCalendarModal(null)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+            </div>
+            {calLoading ? (
+              <div className="text-center py-8 text-gray-400">Y\u00fckleniyor...</div>
+            ) : calEvents.length === 0 ? (
+              <div className="text-center py-8">
+                <Calendar className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                <p className="text-gray-500 text-sm">Atanm\u0131\u015f g\u00f6rev yok</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {calEvents.map((ev, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0" />
+                    <div>
+                      <div className="font-medium text-sm">{ev.title || ev.type}</div>
+                      <div className="text-xs text-gray-500">{ev.date} {ev.time || ""}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="text-center py-12 text-gray-400">Y\u00fckleniyor...</div>
       ) : items.length === 0 ? (
@@ -120,6 +247,8 @@ export default function AdminVehiclesPage() {
                   </span>
                 </div>
                 <div className="flex gap-1">
+                  <button onClick={() => setMaintenanceModal(item.id)} className="text-yellow-600 hover:text-yellow-800 p-1" title="Bak\u0131m"><Wrench className="w-4 h-4" /></button>
+                  <button onClick={() => setCalendarModal(item.id)} className="text-orange-500 hover:text-orange-700 p-1" title="Takvim"><Calendar className="w-4 h-4" /></button>
                   <button onClick={() => { setEditItem(item); setShowForm(true); }} className="text-blue-600 hover:text-blue-800 p-1"><Edit className="w-4 h-4" /></button>
                   <button onClick={() => { if (window.confirm("Silmek istediginize emin misiniz?")) deleteMut.mutate(item.id); }} className="text-red-500 hover:text-red-700 p-1"><Trash2 className="w-4 h-4" /></button>
                 </div>

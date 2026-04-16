@@ -49,10 +49,54 @@ async def enqueue_booking_email(
     check_out = (stay.get("check_out") or "")[:10]
 
     subject_prefix = "[Rezervasyon Onayı]" if event_type == "booking.confirmed" else "[Rezervasyon İptali]"
-    subject = f"{subject_prefix} {hotel_name} / {check_in} - {check_out}".strip()
 
     guest = booking.get("guest") or {}
     guest_name = guest.get("full_name") or booking.get("guest_name") or "-"
+
+    try:
+        from app.services.email_template_resolver import resolve_template
+        trigger_key = "booking_confirmed" if event_type == "booking.confirmed" else "booking_cancelled"
+        resolved = await resolve_template(
+            db,
+            organization_id=organization_id,
+            trigger_key=trigger_key,
+            variables={
+                "hotel_name": hotel_name,
+                "guest_name": guest_name,
+                "check_in": check_in,
+                "check_out": check_out,
+                "status": subject_prefix,
+                "html_url": html_url,
+                "pdf_url": pdf_url,
+            },
+        )
+        if resolved:
+            subject = resolved["subject"]
+            html_body = resolved["html_body"]
+            text_body = resolved["text_body"]
+
+            now = now_utc()
+            doc = {
+                "organization_id": organization_id,
+                "booking_id": booking_id,
+                "event_type": event_type,
+                "to": to_clean,
+                "subject": subject,
+                "html_body": html_body,
+                "text_body": text_body,
+                "status": "pending",
+                "attempt_count": 0,
+                "last_error": None,
+                "next_retry_at": now,
+                "created_at": now,
+                "sent_at": None,
+            }
+            await db.email_outbox.insert_one(doc)
+            return
+    except Exception as e:
+        logger.warning("Template resolution failed, using fallback: %s", e)
+
+    subject = f"{subject_prefix} {hotel_name} / {check_in} - {check_out}".strip()
 
     # Simple HTML body (TR + EN sections)
     html_body = f"""

@@ -95,4 +95,18 @@ All new routers live in `backend/app/modules/operations/routers/` and are regist
 | Email Templates | `admin_email_templates.py` | `pages/admin/EmailTemplates.jsx` | `/api/admin/email-templates` |
 | Customer Self-Service Portal | `customer_portal.py` | `pages/admin/CustomerPortal.jsx` | `/api/portal` |
 
+| Admin Portal Mgmt | `admin_portal_management.py` | (integrated in CustomerPortal) | `/api/admin/support-tickets`, `/api/admin/cancel-requests` |
+
 New MongoDB collections: `transfers`, `guides`, `vehicles`, `flights`, `visa_applications`, `insurance_policies`, `email_templates`, `portal_sessions`, `support_tickets`, `cancel_requests`
+
+### Cross-Module Integrations (Phase 3 Gaps Fixed)
+
+- **Customer Portal**: Admin support ticket listing/management + cancel request approve/reject endpoints
+- **Transfer → Vehicle/Guide**: Assign-vehicle and assign-guide buttons with dropdown selectors in Transfer page
+- **Transfer → Booking**: `booking_id` field in transfer creation form
+- **Visa/Insurance → CRM**: Searchable customer dropdown fetching from `/crm/customers` instead of plain text ID input
+- **Flight → Passengers**: Passenger list modal with add/remove capability on each flight
+- **Guide → Calendar/Rating**: Calendar modal showing guide assignments + star rating modal
+- **Vehicle → Maintenance**: Maintenance record viewer + add form; calendar modal for vehicle assignments
+- **Calendar → Detail/Create**: Click event to see detail modal; click day for quick-create shortcuts to Transfer/Flight/Visa/Insurance
+- **Email Templates → Outbox**: `email_template_resolver.py` service resolves templates by `trigger_key` with variable substitution; wired into `enqueue_booking_email` with fallback to hardcoded HTML

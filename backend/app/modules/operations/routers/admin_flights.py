@@ -159,6 +159,36 @@ async def delete_flight(flight_id: str, user=Depends(get_current_user), db=Depen
     return {"ok": True}
 
 
+@router.get("/{flight_id}/passengers", dependencies=[AdminDep])
+async def get_passengers(flight_id: str, user=Depends(get_current_user), db=Depends(get_db)):
+    org_id = user["organization_id"]
+    doc = await db.flights.find_one({"id": flight_id, "organization_id": org_id}, {"_id": 0})
+    if not doc:
+        return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "Ucus bulunamadi"})
+    return {"passengers": doc.get("passengers", []), "flight_id": flight_id}
+
+
+@router.delete("/{flight_id}/passengers/{passenger_id}", dependencies=[AdminDep])
+async def remove_passenger(flight_id: str, passenger_id: str, user=Depends(get_current_user), db=Depends(get_db)):
+    org_id = user["organization_id"]
+    doc = await db.flights.find_one(
+        {"id": flight_id, "organization_id": org_id, "passengers.id": passenger_id},
+        {"_id": 1},
+    )
+    if not doc:
+        return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "Ucus veya yolcu bulunamadi"})
+    now = datetime.now(timezone.utc).isoformat()
+    await db.flights.update_one(
+        {"id": flight_id, "organization_id": org_id},
+        {
+            "$pull": {"passengers": {"id": passenger_id}},
+            "$inc": {"available_seats": 1},
+            "$set": {"updated_at": now},
+        },
+    )
+    return {"ok": True}
+
+
 @router.post("/{flight_id}/passengers", dependencies=[AdminDep])
 async def add_passenger(flight_id: str, payload: Dict[str, Any], user=Depends(get_current_user), db=Depends(get_db)):
     org_id = user["organization_id"]

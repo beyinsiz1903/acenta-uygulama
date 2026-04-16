@@ -1,8 +1,8 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import {
-  Bus, Plus, Search, Filter, Trash2, Edit, MapPin, Clock, Users, ChevronDown, X,
+  Bus, Plus, Edit, Trash2, MapPin, UserCheck, Truck, X,
 } from "lucide-react";
 
 const TRANSFER_TYPES = [
@@ -30,6 +30,7 @@ export default function AdminTransfersPage() {
   const [editItem, setEditItem] = useState(null);
   const [filterStatus, setFilterStatus] = useState("");
   const [filterType, setFilterType] = useState("");
+  const [assignModal, setAssignModal] = useState(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-transfers", filterStatus, filterType],
@@ -39,6 +40,16 @@ export default function AdminTransfersPage() {
       if (filterType) params.set("transfer_type", filterType);
       return api.get(`/admin/transfers?${params}`).then((r) => r.data);
     },
+  });
+
+  const { data: guidesData } = useQuery({
+    queryKey: ["admin-guides-list"],
+    queryFn: () => api.get("/admin/guides?page_size=200").then((r) => r.data),
+  });
+
+  const { data: vehiclesData } = useQuery({
+    queryKey: ["admin-vehicles-list"],
+    queryFn: () => api.get("/admin/vehicles?page_size=200").then((r) => r.data),
   });
 
   const createMut = useMutation({
@@ -53,6 +64,16 @@ export default function AdminTransfersPage() {
     mutationFn: (id) => api.delete(`/admin/transfers/${id}`),
     onSuccess: () => qc.invalidateQueries(["admin-transfers"]),
   });
+  const assignVehicleMut = useMutation({
+    mutationFn: ({ id, vehicle_id, driver_name }) =>
+      api.post(`/admin/transfers/${id}/assign-vehicle`, { vehicle_id, driver_name }),
+    onSuccess: () => { qc.invalidateQueries(["admin-transfers"]); setAssignModal(null); },
+  });
+  const assignGuideMut = useMutation({
+    mutationFn: ({ id, guide_id }) =>
+      api.post(`/admin/transfers/${id}/assign-guide`, { guide_id }),
+    onSuccess: () => { qc.invalidateQueries(["admin-transfers"]); setAssignModal(null); },
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -65,6 +86,14 @@ export default function AdminTransfersPage() {
   };
 
   const items = data?.items || [];
+  const guides = guidesData?.items || [];
+  const vehicles = vehiclesData?.items || [];
+
+  const getGuideName = (id) => guides.find((g) => g.id === id)?.name || "";
+  const getVehiclePlate = (id) => {
+    const v = vehicles.find((v) => v.id === id);
+    return v ? `${v.plate_number} (${v.brand || ""})` : "";
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -103,18 +132,77 @@ export default function AdminTransfersPage() {
             <input name="pickup_location" defaultValue={editItem?.pickup_location || ""} placeholder="Al\u0131\u015f Noktas\u0131" className="border rounded-lg px-3 py-2" />
             <input name="dropoff_location" defaultValue={editItem?.dropoff_location || ""} placeholder="B\u0131rak\u0131\u015f Noktas\u0131" className="border rounded-lg px-3 py-2" />
             <input name="route_name" defaultValue={editItem?.route_name || ""} placeholder="G\u00fczergah Ad\u0131" className="border rounded-lg px-3 py-2" />
+            <select name="vehicle_id" defaultValue={editItem?.vehicle_id || ""} className="border rounded-lg px-3 py-2">
+              <option value="">Ara\u00e7 Se\u00e7in (opsiyonel)</option>
+              {vehicles.filter((v) => v.status === "active").map((v) => (
+                <option key={v.id} value={v.id}>{v.plate_number} - {v.brand} {v.model} ({v.capacity} ki\u015fi)</option>
+              ))}
+            </select>
+            <select name="guide_id" defaultValue={editItem?.guide_id || ""} className="border rounded-lg px-3 py-2">
+              <option value="">Rehber Se\u00e7in (opsiyonel)</option>
+              {guides.filter((g) => g.status === "active").map((g) => (
+                <option key={g.id} value={g.id}>{g.name} - {g.languages?.join(", ")}</option>
+              ))}
+            </select>
             <input name="driver_name" defaultValue={editItem?.driver_name || ""} placeholder="\u015eof\u00f6r Ad\u0131" className="border rounded-lg px-3 py-2" />
             <input name="pax_count" type="number" defaultValue={editItem?.pax_count || 1} placeholder="Yolcu Say\u0131s\u0131" className="border rounded-lg px-3 py-2" />
             <input name="price" type="number" step="0.01" defaultValue={editItem?.price || 0} placeholder="Fiyat" className="border rounded-lg px-3 py-2" />
             <select name="status" defaultValue={editItem?.status || "planned"} className="border rounded-lg px-3 py-2">
               {STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
+            <input name="booking_id" defaultValue={editItem?.booking_id || ""} placeholder="Rezervasyon ID (opsiyonel)" className="border rounded-lg px-3 py-2" />
             <input name="notes" defaultValue={editItem?.notes || ""} placeholder="Notlar" className="border rounded-lg px-3 py-2 md:col-span-2" />
             <div className="flex gap-2 md:col-span-3">
               <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">Kaydet</button>
               <button type="button" onClick={() => { setShowForm(false); setEditItem(null); }} className="bg-gray-200 px-6 py-2 rounded-lg">Vazge\u00e7</button>
             </div>
           </form>
+        </div>
+      )}
+
+      {assignModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setAssignModal(null)}>
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">
+                {assignModal.type === "vehicle" ? "Ara\u00e7 Ata" : "Rehber Ata"}
+              </h3>
+              <button onClick={() => setAssignModal(null)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+            </div>
+            {assignModal.type === "vehicle" ? (
+              <div className="space-y-3">
+                {vehicles.filter((v) => v.status === "active").map((v) => (
+                  <button
+                    key={v.id}
+                    onClick={() => assignVehicleMut.mutate({ id: assignModal.transferId, vehicle_id: v.id, driver_name: v.driver_name || "" })}
+                    className={`w-full text-left p-3 rounded-lg border hover:bg-blue-50 hover:border-blue-300 transition ${assignModal.currentId === v.id ? "bg-blue-50 border-blue-400" : ""}`}
+                  >
+                    <div className="font-medium">{v.plate_number}</div>
+                    <div className="text-sm text-gray-500">{v.brand} {v.model} \u00b7 {v.capacity} ki\u015fi \u00b7 \u015eof\u00f6r: {v.driver_name || "-"}</div>
+                  </button>
+                ))}
+                {vehicles.filter((v) => v.status === "active").length === 0 && (
+                  <p className="text-gray-500 text-center py-4">Aktif ara\u00e7 bulunamad\u0131</p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {guides.filter((g) => g.status === "active").map((g) => (
+                  <button
+                    key={g.id}
+                    onClick={() => assignGuideMut.mutate({ id: assignModal.transferId, guide_id: g.id })}
+                    className={`w-full text-left p-3 rounded-lg border hover:bg-indigo-50 hover:border-indigo-300 transition ${assignModal.currentId === g.id ? "bg-indigo-50 border-indigo-400" : ""}`}
+                  >
+                    <div className="font-medium">{g.name}</div>
+                    <div className="text-sm text-gray-500">{g.languages?.join(", ")} \u00b7 {g.daily_rate} {g.currency}/g\u00fcn</div>
+                  </button>
+                ))}
+                {guides.filter((g) => g.status === "active").length === 0 && (
+                  <p className="text-gray-500 text-center py-4">Aktif rehber bulunamad\u0131</p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -133,7 +221,8 @@ export default function AdminTransfersPage() {
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Tarih/Saat</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Tip</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">G\u00fczergah</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">\u015eof\u00f6r</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Ara\u00e7</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Rehber</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Pax</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Durum</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-600">\u0130\u015flemler</th>
@@ -150,10 +239,27 @@ export default function AdminTransfersPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
                       <MapPin className="w-3 h-3 text-gray-400" />
-                      {item.pickup_location} → {item.dropoff_location}
+                      {item.pickup_location} \u2192 {item.dropoff_location}
                     </div>
                   </td>
-                  <td className="px-4 py-3">{item.driver_name || "-"}</td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => setAssignModal({ type: "vehicle", transferId: item.id, currentId: item.vehicle_id })}
+                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg border ${item.vehicle_id ? "bg-emerald-50 border-emerald-300 text-emerald-700" : "bg-gray-50 border-gray-300 text-gray-500 hover:bg-blue-50"}`}
+                    >
+                      <Truck className="w-3 h-3" />
+                      {item.vehicle_id ? getVehiclePlate(item.vehicle_id) || item.driver_name || "Atandı" : "Ata"}
+                    </button>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => setAssignModal({ type: "guide", transferId: item.id, currentId: item.guide_id })}
+                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg border ${item.guide_id ? "bg-indigo-50 border-indigo-300 text-indigo-700" : "bg-gray-50 border-gray-300 text-gray-500 hover:bg-blue-50"}`}
+                    >
+                      <UserCheck className="w-3 h-3" />
+                      {item.guide_id ? getGuideName(item.guide_id) || "Atandı" : "Ata"}
+                    </button>
+                  </td>
                   <td className="px-4 py-3">{item.pax_count}</td>
                   <td className="px-4 py-3"><StatusBadge status={item.status} /></td>
                   <td className="px-4 py-3 text-right">

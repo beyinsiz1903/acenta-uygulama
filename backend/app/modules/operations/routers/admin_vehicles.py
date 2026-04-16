@@ -188,11 +188,14 @@ async def add_maintenance_record(vehicle_id: str, payload: Dict[str, Any], user=
         "organization_id": org_id,
         "vehicle_id": vehicle_id,
         "date": payload.get("date", now[:10]),
-        "type": payload.get("type", "general"),
+        "type": payload.get("type") or payload.get("maintenance_type", "general"),
+        "maintenance_type": payload.get("maintenance_type") or payload.get("type", "general"),
         "description": payload.get("description", ""),
         "cost": float(payload.get("cost", 0)),
         "currency": payload.get("currency", "TRY"),
-        "km_reading": payload.get("km_reading", 0),
+        "km_reading": payload.get("km_reading") or payload.get("mileage", 0),
+        "mileage": payload.get("mileage") or payload.get("km_reading", 0),
+        "next_maintenance_date": payload.get("next_maintenance_date"),
         "created_at": now,
     }
     await db.vehicle_maintenance.insert_one(doc)

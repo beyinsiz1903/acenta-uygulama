@@ -79,6 +79,7 @@ function AppShellInner() {
   const [commandOpen, setCommandOpen] = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [agencyAllowedModules, setAgencyAllowedModules] = useState(null); // null = not loaded, [] = no restrictions
+  const [orgEnabledModules, setOrgEnabledModules] = useState(null); // null = not loaded (all enabled)
   const [agencyContract, setAgencyContract] = useState(null);
   const [userAllowedScreens, setUserAllowedScreens] = useState(null); // null = not loaded, [] = full access
   const [trialStatus, setTrialStatus] = useState(null);
@@ -159,6 +160,47 @@ function AppShellInner() {
   useEffect(() => {
     setBrandLogoFailed(false);
   }, [brandLogo]);
+
+  // ── Org-level module restrictions ──────────────────────────
+  useEffect(() => {
+    if (!hasAnyRole(user, ["super_admin", "admin"])) {
+      setOrgEnabledModules(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get("/admin/org-modules");
+        if (!cancelled) {
+          if (res.data?.all_enabled) {
+            setOrgEnabledModules(null);
+          } else {
+            setOrgEnabledModules(new Set(res.data?.enabled_modules || []));
+          }
+        }
+      } catch (err) {
+        if (!cancelled) {
+          if (err?.response?.status === 401 || err?.response?.status === 403) {
+            setOrgEnabledModules(null);
+          }
+        }
+      }
+    })();
+    const handler = () => {
+      (async () => {
+        try {
+          const res = await api.get("/admin/org-modules");
+          if (res.data?.all_enabled) {
+            setOrgEnabledModules(null);
+          } else {
+            setOrgEnabledModules(new Set(res.data?.enabled_modules || []));
+          }
+        } catch { /* */ }
+      })();
+    };
+    window.addEventListener("org-modules-updated", handler);
+    return () => { cancelled = true; window.removeEventListener("org-modules-updated", handler); };
+  }, [user]);
 
   // ── Agency module restrictions (dynamic nav) ──────────────
   const isAgencyUser = hasAnyRole(user, ["agency_admin", "agency_agent"])
@@ -350,6 +392,12 @@ function AppShellInner() {
     return candidateKeys.some((moduleKey) => normalizedAgencyAllowedModules.has(moduleKey));
   }, [isAgencyUser, normalizedAgencyAllowedModules]);
 
+  const isOrgModuleEnabled = useCallback((item) => {
+    if (!orgEnabledModules) return true;
+    if (!item.moduleKey) return true;
+    return orgEnabledModules.has(item.moduleKey);
+  }, [orgEnabledModules]);
+
   const filterNavByMode = useCallback((items) => {
     return items.filter((it) => {
       if (it.visibleInSidebar === false) return false;
@@ -362,12 +410,13 @@ function AppShellInner() {
       }
       if (!it.isCore && it.modeKey && hiddenNavItems.includes(it.modeKey)) return false;
       if (!isAgencyModuleVisible(it)) return false;
+      if (!isOrgModuleEnabled(it)) return false;
       if (userAllowedScreens && userAllowedScreens.length > 0 && it.modeKey) {
         if (!userAllowedScreens.includes(it.modeKey)) return false;
       }
       return true;
     });
-  }, [featuresLoading, hasFeature, currentModeLevel, hiddenNavItems, isAgencyModuleVisible, persona, userAllowedScreens]);
+  }, [featuresLoading, hasFeature, currentModeLevel, hiddenNavItems, isAgencyModuleVisible, isOrgModuleEnabled, persona, userAllowedScreens]);
 
   const navSections = useMemo(() => getPersonaNavSections(persona), [persona]);
   const visibleNavSections = useMemo(
@@ -409,6 +458,9 @@ function AppShellInner() {
         if (!isAgencyModuleVisible(it) && it.to) {
           hiddenPaths.push(it.to);
         }
+        if (!isOrgModuleEnabled(it) && it.to) {
+          hiddenPaths.push(it.to);
+        }
         // User-level screen permissions enforcement
         if (userAllowedScreens && userAllowedScreens.length > 0 && it.modeKey && !userAllowedScreens.includes(it.modeKey) && it.to) {
           hiddenPaths.push(it.to);
@@ -420,7 +472,7 @@ function AppShellInner() {
     if (isBlocked) {
       navigate("/app", { replace: true });
     }
-  }, [location.pathname, modeLoading, currentModeLevel, hiddenNavItems, isAgencyModuleVisible, navigate, navSections, userAllowedScreens]);
+  }, [location.pathname, modeLoading, currentModeLevel, hiddenNavItems, isAgencyModuleVisible, isOrgModuleEnabled, navigate, navSections, userAllowedScreens]);
 
   const toggleCollapse = () => {
     setCollapsed((v) => {

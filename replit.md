@@ -144,6 +144,24 @@ Bulk status update endpoints added:
 - Flight passenger add uses atomic MongoDB update with `available_seats: {$gt: 0}` filter (race-condition safe)
 - Vehicle creation checks for duplicate plate numbers
 
+### Organization Module Management
+
+Per-organization module toggle system allowing each agency to enable/disable specific product modules:
+
+| Component | Path | Description |
+|-----------|------|-------------|
+| Module Registry | `backend/app/constants/org_modules.py` | 6 groups, 28 modules with labels/descriptions |
+| Backend API | `backend/app/modules/identity/routers/org_modules.py` | GET/PUT/DELETE `/api/admin/org-modules` |
+| Frontend Page | `frontend/src/pages/admin/AdminOrgModulesPage.jsx` | Toggle UI with search, group select, save |
+| Nav Integration | `frontend/src/components/AppShell.jsx` | `moduleKey` on nav items; `isOrgModuleEnabled` filter |
+
+- **Core modules** (dashboard, users, settings) are always visible
+- All nav items tagged with `moduleKey` property matching backend module keys
+- Disabling a module hides it from sidebar AND blocks route access (redirect to `/app`)
+- Changes broadcast via `org-modules-updated` CustomEvent for instant UI refresh
+- MongoDB collection: `organization_modules`
+- No restrictions = all modules visible (default behavior)
+
 ### Cross-Module Integrations (Phase 3 Gaps Fixed)
 
 - **Customer Portal**: Admin support ticket listing/management + cancel request approve/reject + portal stats dashboard

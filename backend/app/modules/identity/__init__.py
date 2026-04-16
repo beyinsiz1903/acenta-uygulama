@@ -20,8 +20,10 @@ from app.modules.identity.routers.settings import router as settings_router
 from app.modules.identity.routers.agency_profile import router as agency_profile_router
 from app.modules.identity.routers.agency_contracts import router as agency_contracts_router
 from app.modules.identity.routers.onboarding import router as onboarding_router
+from app.modules.identity.routers.org_modules import router as org_modules_router
 
 domain_router = APIRouter()
+domain_router.include_router(org_modules_router)
 domain_router.include_router(admin_agencies_router)
 domain_router.include_router(admin_agency_users_router)
 domain_router.include_router(admin_all_users_router)

@@ -112,6 +112,7 @@ const AdminCustomerPortalPage = lazy(() => import("../pages/admin/AdminCustomerP
 const AdminVillasPage = lazy(() => import("../pages/admin/AdminVillasPage"));
 const AdminActivitiesPage = lazy(() => import("../pages/admin/AdminActivitiesPage"));
 const AdminPaymentGatewaysPage = lazy(() => import("../pages/admin/AdminPaymentGatewaysPage"));
+const AdminOrgModulesPage = lazy(() => import("../pages/admin/AdminOrgModulesPage"));
 
 // Finance Ledger (Phase 2A)
 const FinanceOverviewPage = lazy(() => import("../pages/finance/FinanceOverviewPage"));
@@ -275,6 +276,7 @@ export const adminRoutes = (
     <Route path="villas" element={<AdminVillasPage />} />
     <Route path="activities" element={<AdminActivitiesPage />} />
     <Route path="payment-gateways" element={<AdminPaymentGatewaysPage />} />
+    <Route path="org-modules" element={<AdminOrgModulesPage />} />
     {/* Settings & Demo */}
     <Route path="product-mode" element={<AdminProductModePage />} />
     <Route path="demo-guide" element={<AdminDemoGuidePage />} />

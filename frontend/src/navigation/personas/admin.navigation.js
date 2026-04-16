@@ -14,6 +14,7 @@ import {
   Compass,
   CreditCard,
   DollarSign,
+  FileCheck,
   FileText,
   Globe,
   Home,
@@ -21,6 +22,7 @@ import {
   LayoutGrid,
   Mail,
   Megaphone,
+  Package,
   Plane,
   Settings,
   Shield,
@@ -30,7 +32,6 @@ import {
   UserCheck,
   Users,
   Zap,
-  FileCheck,
 } from "lucide-react";
 
 export const ADMIN_SIDEBAR_SECTIONS = [
@@ -80,6 +81,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "orders",
       },
       {
         key: "admin-approval-inbox",
@@ -127,6 +129,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         visibleInSidebar: false,
         visibleInSearch: true,
         directAccessOnly: true,
+        moduleKey: "hotels",
       },
       {
         key: "admin-tours-mgmt",
@@ -137,6 +140,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         visibleInSidebar: false,
         visibleInSearch: true,
         directAccessOnly: true,
+        moduleKey: "tours",
       },
       {
         key: "admin-transfers",
@@ -146,6 +150,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "transfers",
       },
       {
         key: "admin-flights",
@@ -155,6 +160,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "flights",
       },
       {
         key: "admin-guides",
@@ -164,6 +170,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "guides",
       },
       {
         key: "admin-vehicles",
@@ -173,6 +180,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "vehicles",
       },
       {
         key: "admin-calendar",
@@ -182,6 +190,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "calendar",
       },
       {
         key: "admin-visa",
@@ -191,6 +200,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "visa",
       },
       {
         key: "admin-insurance",
@@ -200,6 +210,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "insurance",
       },
       {
         key: "admin-villas",
@@ -209,6 +220,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "villas",
       },
       {
         key: "admin-activities",
@@ -218,6 +230,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "activities",
       },
       {
         key: "admin-ops-b2b",
@@ -269,6 +282,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         visibleInSearch: true,
         modeKey: "rezervasyonlar",
         minMode: "lite",
+        moduleKey: "reservations",
       },
       {
         key: "admin-refunds",
@@ -278,6 +292,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "refunds",
       },
       {
         key: "admin-exposure",
@@ -287,6 +302,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "exposure",
       },
     ],
   },
@@ -309,6 +325,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         feature: "crm",
         modeKey: "musteriler",
         minMode: "lite",
+        moduleKey: "crm",
       },
       {
         key: "admin-agencies",
@@ -318,6 +335,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "agencies",
       },
       {
         key: "admin-partners",
@@ -327,6 +345,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "partners",
       },
       {
         key: "admin-b2b-channel",
@@ -336,6 +355,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "b2b",
       },
       // --- directAccessOnly ---
       {
@@ -426,6 +446,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "pricing",
       },
       {
         key: "admin-pricing-rules",
@@ -435,6 +456,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "pricing",
       },
       {
         key: "admin-campaigns",
@@ -444,6 +466,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "campaigns",
       },
       {
         key: "admin-coupons",
@@ -453,6 +476,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "campaigns",
       },
       // --- directAccessOnly ---
       {
@@ -523,6 +547,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "analytics",
       },
       {
         key: "admin-reporting",
@@ -532,6 +557,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "reporting",
       },
       {
         key: "admin-settlements",
@@ -541,6 +567,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "settlements",
       },
       {
         key: "admin-exports",
@@ -550,6 +577,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "exports",
       },
       {
         key: "admin-matches",
@@ -699,6 +727,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "integrations",
       },
       {
         key: "admin-tenant-features",
@@ -717,6 +746,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "branding",
       },
       {
         key: "admin-api-keys",
@@ -728,6 +758,15 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         visibleInSearch: true,
       },
       // --- directAccessOnly ---
+      {
+        key: "admin-org-modules",
+        label: "Modül Yönetimi",
+        icon: Package,
+        to: "/app/admin/org-modules",
+        isCore: true,
+        visibleInSidebar: true,
+        visibleInSearch: true,
+      },
       {
         key: "admin-agency-modules",
         label: "Acenta Modülleri",
@@ -766,6 +805,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "email_templates",
       },
       {
         key: "admin-customer-portal",
@@ -775,6 +815,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "customer_portal",
       },
       {
         key: "admin-sms",
@@ -834,6 +875,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         isCore: true,
         visibleInSidebar: true,
         visibleInSearch: true,
+        moduleKey: "payment_gateways",
       },
       {
         key: "admin-jobs",

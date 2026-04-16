@@ -11,10 +11,15 @@ from pydantic import BaseModel, Field
 from app.auth import require_roles
 from app.db import get_db
 from app.errors import AppError
+from app.security.module_guard import require_org_module
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/admin/payment-gateways", tags=["admin-payment-gateways"])
+router = APIRouter(
+    prefix="/api/admin/payment-gateways",
+    tags=["admin-payment-gateways"],
+    dependencies=[require_org_module("payment_gateways")],
+)
 
 AdminDep = Depends(require_roles(["super_admin", "admin"]))
 

@@ -11,10 +11,15 @@ from pydantic import BaseModel, Field
 from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.errors import AppError
+from app.security.module_guard import require_org_module
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/admin/villas", tags=["admin-villas"])
+router = APIRouter(
+    prefix="/api/admin/villas",
+    tags=["admin-villas"],
+    dependencies=[require_org_module("villas")],
+)
 
 AdminDep = Depends(require_roles(["super_admin", "admin"]))
 

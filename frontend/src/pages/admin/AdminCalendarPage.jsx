@@ -90,10 +90,11 @@ export default function AdminCalendarPage() {
 
   const navigateToModule = (type) => {
     const routes = {
-      transfer: "/admin/transfers",
-      flight: "/admin/flights",
-      visa: "/admin/visa",
-      insurance: "/admin/insurance",
+      transfer: "/app/admin/transfers",
+      flight: "/app/admin/flights",
+      visa: "/app/admin/visa",
+      insurance: "/app/admin/insurance",
+      tour: "/app/admin/tours",
     };
     if (routes[type]) navigate(routes[type]);
     setSelectedDay(null);

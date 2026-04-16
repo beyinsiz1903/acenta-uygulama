@@ -221,10 +221,7 @@ class PartnerGraphService:
         return {"items": items, "next_cursor": next_cursor}
 
     async def build_inbox(self, tenant_id: str) -> dict[str, Any]:
-        """Build inbox view: invites received, invites sent, and active partners.
-
-        For now we focus on invites lists; active_partners can be enriched in a later phase.
-        """
+        """Build inbox view: invites received, invites sent, and active partners."""
 
         invites_received_cur = self._repo._col.find(
             {"buyer_tenant_id": tenant_id, "status": "invited"}
@@ -232,6 +229,15 @@ class PartnerGraphService:
         invites_sent_cur = self._repo._col.find(
             {"seller_tenant_id": tenant_id, "status": "invited"}
         ).sort("created_at", -1).limit(50)
+        active_partners_cur = self._repo._col.find(
+            {
+                "status": "active",
+                "$or": [
+                    {"seller_tenant_id": tenant_id},
+                    {"buyer_tenant_id": tenant_id},
+                ],
+            }
+        ).sort("updated_at", -1).limit(100)
 
         async def _collect(cur):
             out: list[dict[str, Any]] = []
@@ -242,12 +248,37 @@ class PartnerGraphService:
 
         invites_received = await _collect(invites_received_cur)
         invites_sent = await _collect(invites_sent_cur)
+        active_partners_raw = await _collect(active_partners_cur)
+
+        active_partners: list[dict[str, Any]] = []
+        for doc in active_partners_raw:
+            seller = doc.get("seller_tenant_id")
+            buyer = doc.get("buyer_tenant_id")
+            if seller == tenant_id:
+                role = "seller"
+                counterparty_tenant_id = buyer
+            else:
+                role = "buyer"
+                counterparty_tenant_id = seller
+            active_partners.append(
+                {
+                    "id": doc.get("id"),
+                    "role": role,
+                    "counterparty_tenant_id": counterparty_tenant_id,
+                    "seller_tenant_id": seller,
+                    "buyer_tenant_id": buyer,
+                    "status": doc.get("status"),
+                    "created_at": doc.get("created_at"),
+                    "updated_at": doc.get("updated_at"),
+                    "metadata": doc.get("metadata") or {},
+                }
+            )
 
         return {
             "tenant_id": tenant_id,
             "invites_received": invites_received,
             "invites_sent": invites_sent,
-            "active_partners": [],
+            "active_partners": active_partners,
         }
 
     async def notifications_summary(self, tenant_id: str) -> dict[str, Any]:

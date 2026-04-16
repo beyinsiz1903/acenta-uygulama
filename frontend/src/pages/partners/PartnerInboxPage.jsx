@@ -234,6 +234,7 @@ export default function PartnerInboxPage() {
 
   const hasReceived = (data.invites_received || []).length > 0;
   const hasSent = (data.invites_sent || []).length > 0;
+  const hasActive = (data.active_partners || []).length > 0;
 
   return (
     <div className="space-y-4">
@@ -275,9 +276,10 @@ export default function PartnerInboxPage() {
           )}
 
           <Tabs value={tab} onValueChange={setTab} className="w-full">
-            <TabsList className="grid grid-cols-2 max-w-xs">
+            <TabsList className="grid grid-cols-3 max-w-md">
               <TabsTrigger value="received">Gelen Davetler</TabsTrigger>
               <TabsTrigger value="sent">Gönderilen Davetler</TabsTrigger>
+              <TabsTrigger value="active">Aktif Partnerler</TabsTrigger>
             </TabsList>
 
             <TabsContent value="received" className="mt-4">
@@ -306,10 +308,50 @@ export default function PartnerInboxPage() {
               )}
             </TabsContent>
 
-            {/* Aktif partnerler placeholder (gelecek sürüm) */}
-            <div className="mt-6 text-xs text-muted-foreground">
-              Aktif partnerler yakında burada listelenecek.
-            </div>
+            <TabsContent value="active" className="mt-4">
+              {!hasActive && !loading ? (
+                <p className="text-xs text-muted-foreground">Henüz aktif partner ilişkiniz yok.</p>
+              ) : (
+                <div className="overflow-x-auto rounded-md border">
+                  <table className="min-w-full text-xs">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="px-3 py-2 text-left font-medium">Karşı Taraf Tenant</th>
+                        <th className="px-3 py-2 text-left font-medium">Rolünüz</th>
+                        <th className="px-3 py-2 text-left font-medium">Durum</th>
+                        <th className="px-3 py-2 text-left font-medium">Güncellendi</th>
+                        <th className="px-3 py-2 text-left font-medium">İşlem</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(data.active_partners || []).map((rel) => (
+                        <tr key={rel.id} className="border-t">
+                          <td className="px-3 py-2 font-mono">{rel.counterparty_tenant_id || "-"}</td>
+                          <td className="px-3 py-2">{rel.role === "seller" ? "Satıcı" : "Alıcı"}</td>
+                          <td className="px-3 py-2">
+                            <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-800">
+                              {rel.status}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 text-muted-foreground">
+                            {rel.updated_at ? new Date(rel.updated_at).toLocaleString("tr-TR") : "-"}
+                          </td>
+                          <td className="px-3 py-2">
+                            <button
+                              type="button"
+                              onClick={() => handleCopyId(rel.id)}
+                              className="text-xs text-blue-600 hover:underline"
+                            >
+                              ID Kopyala
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>

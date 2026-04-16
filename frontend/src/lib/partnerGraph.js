@@ -20,7 +20,7 @@ export async function fetchPartnerNotificationsSummary() {
 
 export async function acceptPartnerRelationship(id) {
   try {
-    const res = await api.post(`/partner-graph/relationships/${id}/accept`);
+    const res = await api.post(`/partner-graph/${id}/accept`);
     return res.data || {};
   } catch (err) {
     throw { message: apiErrorMessage(err), raw: err };
@@ -29,7 +29,7 @@ export async function acceptPartnerRelationship(id) {
 
 export async function activatePartnerRelationship(id) {
   try {
-    const res = await api.post(`/partner-graph/relationships/${id}/activate`);
+    const res = await api.post(`/partner-graph/${id}/activate`);
     return res.data || {};
   } catch (err) {
     throw { message: apiErrorMessage(err), raw: err };

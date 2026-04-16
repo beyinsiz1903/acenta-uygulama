@@ -100,6 +100,15 @@ const SupplierOnboardingPage = lazy(() => import("../pages/admin/SupplierOnboard
 const SupplierCertificationConsolePage = lazy(() => import("../pages/admin/SupplierCertificationConsolePage"));
 const CacheHealthDashboardPage = lazy(() => import("../pages/admin/CacheHealthDashboardPage"));
 const GrowthEnginePage = lazy(() => import("../pages/admin/GrowthEnginePage"));
+const AdminTransfersPage = lazy(() => import("../pages/admin/AdminTransfersPage"));
+const AdminGuidesPage = lazy(() => import("../pages/admin/AdminGuidesPage"));
+const AdminVehiclesPage = lazy(() => import("../pages/admin/AdminVehiclesPage"));
+const AdminFlightsPage = lazy(() => import("../pages/admin/AdminFlightsPage"));
+const AdminVisaPage = lazy(() => import("../pages/admin/AdminVisaPage"));
+const AdminInsurancePage = lazy(() => import("../pages/admin/AdminInsurancePage"));
+const AdminCalendarPage = lazy(() => import("../pages/admin/AdminCalendarPage"));
+const AdminEmailTemplatesPage = lazy(() => import("../pages/admin/AdminEmailTemplatesPage"));
+const AdminCustomerPortalPage = lazy(() => import("../pages/admin/AdminCustomerPortalPage"));
 
 // Finance Ledger (Phase 2A)
 const FinanceOverviewPage = lazy(() => import("../pages/finance/FinanceOverviewPage"));
@@ -247,6 +256,18 @@ export const adminRoutes = (
     {/* Communication */}
     <Route path="sms" element={<AdminSMSPage />} />
     <Route path="tickets" element={<AdminTicketsPage />} />
+    {/* Operations — Transfer, Guide, Vehicle, Flight */}
+    <Route path="transfers" element={<AdminTransfersPage />} />
+    <Route path="guides" element={<AdminGuidesPage />} />
+    <Route path="vehicles" element={<AdminVehiclesPage />} />
+    <Route path="flights" element={<AdminFlightsPage />} />
+    {/* Visa & Insurance */}
+    <Route path="visa" element={<AdminVisaPage />} />
+    <Route path="insurance" element={<AdminInsurancePage />} />
+    {/* Calendar, Email Templates, Customer Portal */}
+    <Route path="calendar" element={<AdminCalendarPage />} />
+    <Route path="email-templates" element={<AdminEmailTemplatesPage />} />
+    <Route path="customer-portal" element={<AdminCustomerPortalPage />} />
     {/* Settings & Demo */}
     <Route path="product-mode" element={<AdminProductModePage />} />
     <Route path="demo-guide" element={<AdminDemoGuidePage />} />

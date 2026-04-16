@@ -145,6 +145,12 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(reporting_domain)
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # CUSTOMER PORTAL (registered directly to avoid circular imports in public domain)
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    from app.modules.operations.routers.customer_portal import router as customer_portal_router
+    app.include_router(customer_portal_router)
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # V1 ALIASES (backward compatibility)
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     from app.bootstrap.v1_registry import register_v1_routers

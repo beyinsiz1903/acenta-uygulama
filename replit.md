@@ -78,3 +78,21 @@ MongoDB and Redis are started automatically by the `start_backend.sh` script usi
 - Emergent AI platform dependencies have been fully removed (scripts, visual-edits plugin, proxy URLs, CORS allowlists, LLM key references)
 - AI assistant uses `LLM_API_KEY` environment variable (not the old Emergent key)
 - Stripe connects directly to `api.stripe.com` (no proxy)
+
+## Phase 3 Modules (New)
+
+All new routers live in `backend/app/modules/operations/routers/` and are registered via the operations domain router in `backend/app/modules/operations/__init__.py`. The Customer Portal is registered directly in `domain_router_registry.py` to avoid circular imports in the public module.
+
+| Module | Backend Router | Frontend Page | API Prefix |
+|--------|---------------|---------------|------------|
+| Transfer Management | `admin_transfers.py` | `pages/admin/Transfers.jsx` | `/api/admin/transfers` |
+| Guide Management | `admin_guides.py` | `pages/admin/Guides.jsx` | `/api/admin/guides` |
+| Vehicle/Fleet Management | `admin_vehicles.py` | `pages/admin/Vehicles.jsx` | `/api/admin/vehicles` |
+| Flight Management | `admin_flights.py` | `pages/admin/Flights.jsx` | `/api/admin/flights` |
+| Visa Tracking | `admin_visa.py` | `pages/admin/Visa.jsx` | `/api/admin/visa` |
+| Insurance Management | `admin_insurance.py` | `pages/admin/Insurance.jsx` | `/api/admin/insurance` |
+| Calendar | `calendar.py` | `pages/admin/Calendar.jsx` | `/api/calendar` |
+| Email Templates | `admin_email_templates.py` | `pages/admin/EmailTemplates.jsx` | `/api/admin/email-templates` |
+| Customer Self-Service Portal | `customer_portal.py` | `pages/admin/CustomerPortal.jsx` | `/api/portal` |
+
+New MongoDB collections: `transfers`, `guides`, `vehicles`, `flights`, `visa_applications`, `insurance_policies`, `email_templates`, `portal_sessions`, `support_tickets`, `cancel_requests`

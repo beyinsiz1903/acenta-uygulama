@@ -63,6 +63,15 @@ from app.routers.admin_system_runbook import router as admin_system_runbook_rout
 from app.routers.admin_system_uptime import router as admin_system_uptime_router
 from app.routers.admin_tenant_features import router as admin_tenant_features_router
 from app.routers.admin_tours import router as admin_tours_router
+from app.routers.admin_transfers import router as admin_transfers_router
+from app.routers.admin_guides import router as admin_guides_router
+from app.routers.admin_vehicles import router as admin_vehicles_router
+from app.routers.admin_flights import router as admin_flights_router
+from app.routers.admin_visa import router as admin_visa_router
+from app.routers.admin_insurance import router as admin_insurance_router
+from app.routers.calendar import router as calendar_router
+from app.routers.admin_email_templates import router as admin_email_templates_router
+from app.routers.customer_portal import router as customer_portal_router
 from app.routers.admin_whitelabel import router as admin_whitelabel_router
 from app.routers.agency import router as agency_hotels_router
 from app.routers.agency_availability import router as agency_availability_router
@@ -261,6 +270,15 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(admin_b2b_funnel_router)
     app.include_router(admin_b2b_announcements_router)
     app.include_router(admin_tours_router)
+    app.include_router(admin_transfers_router)
+    app.include_router(admin_guides_router)
+    app.include_router(admin_vehicles_router)
+    app.include_router(admin_flights_router)
+    app.include_router(admin_visa_router)
+    app.include_router(admin_insurance_router)
+    app.include_router(calendar_router)
+    app.include_router(admin_email_templates_router)
+    app.include_router(customer_portal_router)
     app.include_router(tours_browse_router)
     app.include_router(admin_cms_pages_router)
     app.include_router(admin_campaigns_router)

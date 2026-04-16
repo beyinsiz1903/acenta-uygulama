@@ -2,7 +2,7 @@
 
 Supplier capability: Hotel
 Auth: API key based (Basic auth with key_id:api_key)
-Docs reference: https://docs.ratehawk.com/
+Docs reference: https://docs.emergingtravel.com/docs/b2b-api/
 """
 from __future__ import annotations
 

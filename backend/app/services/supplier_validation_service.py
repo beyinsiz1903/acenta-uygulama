@@ -24,9 +24,10 @@ SUPPLIER_CAPABILITIES = {
         "product_types": ["hotel"],
         "search": True, "price_check": True, "hold": False,
         "booking": True, "cancel": True,
-        "sandbox_available": False,
+        "sandbox_available": True,
         "auth_type": "basic_api_key",
         "base_url_pattern": "https://api.worldota.net",
+        "sandbox_url": "https://api-sandbox.worldota.net",
     },
     "tbo": {
         "display_name": "TBO Holidays",

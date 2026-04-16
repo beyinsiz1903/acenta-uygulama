@@ -33,8 +33,8 @@ SUPPLIER_REGISTRY = {
             {"key": "key_id", "label": "Key ID", "placeholder": "Your RateHawk Key ID", "sensitive": False, "required": True},
             {"key": "api_key", "label": "API Key", "placeholder": "Your RateHawk API Key", "sensitive": True, "required": True},
         ],
-        "sandbox_url": "https://api.worldota.net",
-        "docs_url": "https://docs.emergingtravel.com/",
+        "sandbox_url": "https://api-sandbox.worldota.net",
+        "docs_url": "https://docs.emergingtravel.com/docs/b2b-api/",
     },
     "paximum": {
         "code": "paximum",

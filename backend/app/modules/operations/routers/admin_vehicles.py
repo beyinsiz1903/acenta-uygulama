@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Query
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
+from app.errors import AppError
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/admin/vehicles", tags=["admin-vehicles"])
 
@@ -52,6 +55,16 @@ class VehiclePatch(BaseModel):
     notes: Optional[str] = None
 
 
+class MaintenanceCreate(BaseModel):
+    date: str = ""
+    maintenance_type: str = "general"
+    description: str = ""
+    cost: float = 0.0
+    currency: str = "TRY"
+    mileage: int = 0
+    next_maintenance_date: Optional[str] = None
+
+
 def _doc_to_dict(doc: dict) -> dict:
     return {
         "id": doc.get("id") or str(doc.get("_id")),
@@ -77,10 +90,30 @@ def _doc_to_dict(doc: dict) -> dict:
     }
 
 
+async def _audit(db, org_id: str, user: dict, action: str, target_id: str, meta: dict = None):
+    try:
+        from app.services.audit import write_audit_log
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles") or []},
+            request=None,
+            action=action,
+            target_type="vehicle",
+            target_id=target_id,
+            before=None,
+            after=None,
+            meta=meta or {},
+        )
+    except Exception:
+        logger.exception("Audit log failed for %s: %s", action, target_id)
+
+
 @router.get("", dependencies=[AdminDep])
 async def list_vehicles(
     status: Optional[str] = None,
     vehicle_type: Optional[str] = None,
+    search: Optional[str] = None,
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
     user=Depends(get_current_user),
@@ -92,6 +125,8 @@ async def list_vehicles(
         filt["status"] = status
     if vehicle_type:
         filt["vehicle_type"] = vehicle_type
+    if search:
+        filt["plate_number"] = {"$regex": search, "$options": "i"}
     total = await db.vehicles.count_documents(filt)
     skip = (page - 1) * page_size
     cursor = db.vehicles.find(filt, {"_id": 0}).sort("plate_number", 1).skip(skip).limit(page_size)
@@ -104,13 +139,18 @@ async def get_vehicle(vehicle_id: str, user=Depends(get_current_user), db=Depend
     org_id = user["organization_id"]
     doc = await db.vehicles.find_one({"id": vehicle_id, "organization_id": org_id}, {"_id": 0})
     if not doc:
-        return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "Arac bulunamadi"})
+        raise AppError(404, "NOT_FOUND", "Arac bulunamadi")
     return _doc_to_dict(doc)
 
 
 @router.post("", dependencies=[AdminDep])
 async def create_vehicle(body: VehicleCreate, user=Depends(get_current_user), db=Depends(get_db)):
     org_id = user["organization_id"]
+    existing = await db.vehicles.find_one(
+        {"organization_id": org_id, "plate_number": body.plate_number}, {"_id": 1}
+    )
+    if existing:
+        raise AppError(409, "ALREADY_EXISTS", f"Bu plaka zaten kayitli: {body.plate_number}")
     now = datetime.now(timezone.utc).isoformat()
     doc = {
         "id": str(uuid.uuid4()),
@@ -122,7 +162,9 @@ async def create_vehicle(body: VehicleCreate, user=Depends(get_current_user), db
         "created_by": user.get("id"),
     }
     await db.vehicles.insert_one(doc)
-    return _doc_to_dict(doc)
+    result = _doc_to_dict(doc)
+    await _audit(db, org_id, user, "VEHICLE_CREATED", result["id"], {"plate_number": body.plate_number})
+    return result
 
 
 @router.patch("/{vehicle_id}", dependencies=[AdminDep])
@@ -130,12 +172,13 @@ async def patch_vehicle(vehicle_id: str, body: VehiclePatch, user=Depends(get_cu
     org_id = user["organization_id"]
     updates = {k: v for k, v in body.model_dump(exclude_none=True).items()}
     if not updates:
-        return JSONResponse(status_code=400, content={"code": "NO_CHANGES", "message": "Guncelleme verisi yok"})
+        raise AppError(400, "NO_CHANGES", "Guncelleme verisi yok")
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
     result = await db.vehicles.update_one({"id": vehicle_id, "organization_id": org_id}, {"$set": updates})
     if result.matched_count == 0:
-        return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "Arac bulunamadi"})
+        raise AppError(404, "NOT_FOUND", "Arac bulunamadi")
     doc = await db.vehicles.find_one({"id": vehicle_id, "organization_id": org_id}, {"_id": 0})
+    await _audit(db, org_id, user, "VEHICLE_UPDATED", vehicle_id, {"fields": list(updates.keys())})
     return _doc_to_dict(doc)
 
 
@@ -144,7 +187,8 @@ async def delete_vehicle(vehicle_id: str, user=Depends(get_current_user), db=Dep
     org_id = user["organization_id"]
     result = await db.vehicles.delete_one({"id": vehicle_id, "organization_id": org_id})
     if result.deleted_count == 0:
-        return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "Arac bulunamadi"})
+        raise AppError(404, "NOT_FOUND", "Arac bulunamadi")
+    await _audit(db, org_id, user, "VEHICLE_DELETED", vehicle_id)
     return {"ok": True}
 
 
@@ -159,7 +203,7 @@ async def get_vehicle_calendar(
     org_id = user["organization_id"]
     doc = await db.vehicles.find_one({"id": vehicle_id, "organization_id": org_id}, {"_id": 0})
     if not doc:
-        return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "Arac bulunamadi"})
+        raise AppError(404, "NOT_FOUND", "Arac bulunamadi")
 
     filt: Dict[str, Any] = {"organization_id": org_id, "vehicle_id": vehicle_id}
     if start_date and end_date:
@@ -180,23 +224,37 @@ async def get_vehicle_maintenance(vehicle_id: str, user=Depends(get_current_user
 
 
 @router.post("/{vehicle_id}/maintenance", dependencies=[AdminDep])
-async def add_maintenance_record(vehicle_id: str, payload: Dict[str, Any], user=Depends(get_current_user), db=Depends(get_db)):
+async def add_maintenance_record(vehicle_id: str, body: MaintenanceCreate, user=Depends(get_current_user), db=Depends(get_db)):
     org_id = user["organization_id"]
+    vehicle = await db.vehicles.find_one({"id": vehicle_id, "organization_id": org_id}, {"_id": 1})
+    if not vehicle:
+        raise AppError(404, "NOT_FOUND", "Arac bulunamadi")
+
     now = datetime.now(timezone.utc).isoformat()
     doc = {
         "id": str(uuid.uuid4()),
         "organization_id": org_id,
         "vehicle_id": vehicle_id,
-        "date": payload.get("date", now[:10]),
-        "type": payload.get("type") or payload.get("maintenance_type", "general"),
-        "maintenance_type": payload.get("maintenance_type") or payload.get("type", "general"),
-        "description": payload.get("description", ""),
-        "cost": float(payload.get("cost", 0)),
-        "currency": payload.get("currency", "TRY"),
-        "km_reading": payload.get("km_reading") or payload.get("mileage", 0),
-        "mileage": payload.get("mileage") or payload.get("km_reading", 0),
-        "next_maintenance_date": payload.get("next_maintenance_date"),
+        "date": body.date or now[:10],
+        "type": body.maintenance_type,
+        "maintenance_type": body.maintenance_type,
+        "description": body.description,
+        "cost": body.cost,
+        "currency": body.currency,
+        "km_reading": body.mileage,
+        "mileage": body.mileage,
+        "next_maintenance_date": body.next_maintenance_date,
         "created_at": now,
+        "created_by": user.get("id"),
     }
     await db.vehicle_maintenance.insert_one(doc)
+
+    if body.mileage > 0:
+        await db.vehicles.update_one(
+            {"id": vehicle_id, "organization_id": org_id},
+            {"$set": {"total_km": body.mileage, "updated_at": now}},
+        )
+
+    await _audit(db, org_id, user, "VEHICLE_MAINTENANCE_ADDED", vehicle_id, {"maintenance_type": body.maintenance_type, "cost": body.cost})
+    doc.pop("_id", None)
     return doc

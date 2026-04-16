@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -19,6 +20,7 @@ from app.schemas_ops_incidents import (
 from app.services.ops_incidents_enrichment import attach_supplier_health_badges
 from app.services.ops_incidents_service import resolve_incident
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix=f"{API_PREFIX}/admin/ops/incidents", tags=["ops-incidents"])
 
@@ -72,7 +74,6 @@ async def list_incidents(
 
     total = await db.ops_incidents.count_documents(flt)
 
-    # Fetch a reasonable upper bound and sort in Python for deterministic ordering
     raw: List[Dict[str, Any]] = []
     cursor = db.ops_incidents.find(flt, {"_id": 0})
     async for doc in cursor:
@@ -96,7 +97,6 @@ async def list_incidents(
     page_limit, page_offset = _enforce_pagination(limit, offset)
     page = raw[page_offset : page_offset + page_limit]
 
-    # Optional supplier health enrichment on the page slice
     page = await attach_supplier_health_badges(
         db,
         organization_id=organization_id,
@@ -165,7 +165,6 @@ async def resolve_incident_endpoint(
     if not organization_id:
         raise AppError(400, "invalid_user_context", "User is missing organization_id")
 
-    # Resolve via service (includes validation and status checks)
     incident = await resolve_incident(
         db,
         organization_id=organization_id,
@@ -173,7 +172,6 @@ async def resolve_incident_endpoint(
         current_user=user,
     )
 
-    # Best-effort audit
     try:
         from app.services.audit import write_audit_log
 
@@ -201,6 +199,6 @@ async def resolve_incident_endpoint(
             meta=meta,
         )
     except Exception:
-        pass
+        logger.exception("Audit log failed for OPS_INCIDENT_RESOLVED: %s", incident_id)
 
     return {"incident_id": incident.incident_id, "status": "resolved"}

@@ -94,19 +94,46 @@ All new routers live in `backend/app/modules/operations/routers/` and are regist
 | Calendar | `calendar.py` | `pages/admin/Calendar.jsx` | `/api/calendar` |
 | Email Templates | `admin_email_templates.py` | `pages/admin/EmailTemplates.jsx` | `/api/admin/email-templates` |
 | Customer Self-Service Portal | `customer_portal.py` | `pages/admin/CustomerPortal.jsx` | `/api/portal` |
+| Admin Portal Mgmt | `admin_portal_management.py` | (integrated in CustomerPortal) | `/api/admin/support-tickets`, `/api/admin/cancel-requests`, `/api/admin/portal-stats` |
 
-| Admin Portal Mgmt | `admin_portal_management.py` | (integrated in CustomerPortal) | `/api/admin/support-tickets`, `/api/admin/cancel-requests` |
+New MongoDB collections: `transfers`, `guides`, `vehicles`, `flights`, `visa_applications`, `insurance_policies`, `email_templates`, `portal_sessions`, `support_tickets`, `cancel_requests`, `vehicle_maintenance`
 
-New MongoDB collections: `transfers`, `guides`, `vehicles`, `flights`, `visa_applications`, `insurance_policies`, `email_templates`, `portal_sessions`, `support_tickets`, `cancel_requests`
+### Error Handling Standard
+
+All routers use `AppError` from `app.errors` (not `JSONResponse`). The `AppError` class provides:
+- Consistent error format: `{"error": {"code": "...", "message": "...", "details": {...}}}`
+- Helper functions: `not_found_error()`, `validation_error()`, `conflict_error()`, `business_error()`
+- Status validation on PATCH/status updates with allowed status lists
+- Pydantic `BaseModel` for all create/update payloads (no raw `Dict[str, Any]`)
+
+### Audit Logging
+
+All Phase 3 routers include `_audit()` helper that writes to audit_logs on create/update/delete/assign operations. Audit failures are logged via `logger.exception()` (never silently swallowed with `except: pass`).
+
+### Bulk Operations
+
+Bulk status update endpoints added:
+- `POST /api/admin/transfers/bulk-status`
+- `POST /api/admin/flights/bulk-status`
+- `POST /api/admin/visa/bulk-status`
+
+### Security
+
+- Customer Portal login requires `organization_id` parameter upfront (prevents cross-tenant lookup)
+- All portal endpoints enforce `organization_id` from session (no fallback/optional behavior)
+- Flight passenger add uses atomic MongoDB update with `available_seats: {$gt: 0}` filter (race-condition safe)
+- Vehicle creation checks for duplicate plate numbers
 
 ### Cross-Module Integrations (Phase 3 Gaps Fixed)
 
-- **Customer Portal**: Admin support ticket listing/management + cancel request approve/reject endpoints
+- **Customer Portal**: Admin support ticket listing/management + cancel request approve/reject + portal stats dashboard
 - **Transfer → Vehicle/Guide**: Assign-vehicle and assign-guide buttons with dropdown selectors in Transfer page
 - **Transfer → Booking**: `booking_id` field in transfer creation form
-- **Visa/Insurance → CRM**: Searchable customer dropdown fetching from `/crm/customers` instead of plain text ID input
-- **Flight → Passengers**: Passenger list modal with add/remove capability on each flight
-- **Guide → Calendar/Rating**: Calendar modal showing guide assignments + star rating modal
-- **Vehicle → Maintenance**: Maintenance record viewer + add form; calendar modal for vehicle assignments
+- **Visa/Insurance → CRM**: Searchable customer dropdown fetching from `/crm/customers` instead of plain text ID input; sidebar visibility enabled
+- **Flight → Passengers**: Passenger list modal with add/remove capability on each flight; atomic seat management
+- **Guide → Calendar/Rating**: Calendar modal showing guide assignments + star rating modal with existence validation
+- **Vehicle → Maintenance**: Pydantic-validated maintenance form; vehicle km auto-update on maintenance; calendar modal
 - **Calendar → Detail/Create**: Click event to see detail modal; click day for quick-create shortcuts to Transfer/Flight/Visa/Insurance
 - **Email Templates → Outbox**: `email_template_resolver.py` service resolves templates by `trigger_key` with variable substitution; wired into `enqueue_booking_email` with fallback to hardcoded HTML
+- **Insurance → Renew**: Policy renewal endpoint creates new policy linked to previous one
+- **Search**: All list endpoints support `search` query parameter for name/number text search

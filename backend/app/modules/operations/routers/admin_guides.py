@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Query
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
+from app.errors import AppError
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/admin/guides", tags=["admin-guides"])
 
@@ -69,10 +72,30 @@ def _doc_to_dict(doc: dict) -> dict:
     }
 
 
+async def _audit(db, org_id: str, user: dict, action: str, target_id: str, meta: dict = None):
+    try:
+        from app.services.audit import write_audit_log
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles") or []},
+            request=None,
+            action=action,
+            target_type="guide",
+            target_id=target_id,
+            before=None,
+            after=None,
+            meta=meta or {},
+        )
+    except Exception:
+        logger.exception("Audit log failed for %s: %s", action, target_id)
+
+
 @router.get("", dependencies=[AdminDep])
 async def list_guides(
     status: Optional[str] = None,
     language: Optional[str] = None,
+    search: Optional[str] = None,
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
     user=Depends(get_current_user),
@@ -84,6 +107,8 @@ async def list_guides(
         filt["status"] = status
     if language:
         filt["languages"] = language
+    if search:
+        filt["name"] = {"$regex": search, "$options": "i"}
     total = await db.guides.count_documents(filt)
     skip = (page - 1) * page_size
     cursor = db.guides.find(filt, {"_id": 0}).sort("name", 1).skip(skip).limit(page_size)
@@ -96,7 +121,7 @@ async def get_guide(guide_id: str, user=Depends(get_current_user), db=Depends(ge
     org_id = user["organization_id"]
     doc = await db.guides.find_one({"id": guide_id, "organization_id": org_id}, {"_id": 0})
     if not doc:
-        return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "Rehber bulunamadi"})
+        raise AppError(404, "NOT_FOUND", "Rehber bulunamadi")
     return _doc_to_dict(doc)
 
 
@@ -115,7 +140,9 @@ async def create_guide(body: GuideCreate, user=Depends(get_current_user), db=Dep
         "created_by": user.get("id"),
     }
     await db.guides.insert_one(doc)
-    return _doc_to_dict(doc)
+    result = _doc_to_dict(doc)
+    await _audit(db, org_id, user, "GUIDE_CREATED", result["id"], {"name": body.name})
+    return result
 
 
 @router.patch("/{guide_id}", dependencies=[AdminDep])
@@ -123,12 +150,13 @@ async def patch_guide(guide_id: str, body: GuidePatch, user=Depends(get_current_
     org_id = user["organization_id"]
     updates = {k: v for k, v in body.model_dump(exclude_none=True).items()}
     if not updates:
-        return JSONResponse(status_code=400, content={"code": "NO_CHANGES", "message": "Guncelleme verisi yok"})
+        raise AppError(400, "NO_CHANGES", "Guncelleme verisi yok")
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
     result = await db.guides.update_one({"id": guide_id, "organization_id": org_id}, {"$set": updates})
     if result.matched_count == 0:
-        return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "Rehber bulunamadi"})
+        raise AppError(404, "NOT_FOUND", "Rehber bulunamadi")
     doc = await db.guides.find_one({"id": guide_id, "organization_id": org_id}, {"_id": 0})
+    await _audit(db, org_id, user, "GUIDE_UPDATED", guide_id, {"fields": list(updates.keys())})
     return _doc_to_dict(doc)
 
 
@@ -137,7 +165,8 @@ async def delete_guide(guide_id: str, user=Depends(get_current_user), db=Depends
     org_id = user["organization_id"]
     result = await db.guides.delete_one({"id": guide_id, "organization_id": org_id})
     if result.deleted_count == 0:
-        return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "Rehber bulunamadi"})
+        raise AppError(404, "NOT_FOUND", "Rehber bulunamadi")
+    await _audit(db, org_id, user, "GUIDE_DELETED", guide_id)
     return {"ok": True}
 
 
@@ -152,7 +181,7 @@ async def get_guide_calendar(
     org_id = user["organization_id"]
     doc = await db.guides.find_one({"id": guide_id, "organization_id": org_id}, {"_id": 0})
     if not doc:
-        return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "Rehber bulunamadi"})
+        raise AppError(404, "NOT_FOUND", "Rehber bulunamadi")
 
     filt: Dict[str, Any] = {"organization_id": org_id, "guide_id": guide_id}
     if start_date and end_date:
@@ -166,11 +195,14 @@ async def get_guide_calendar(
 async def rate_guide(guide_id: str, payload: Dict[str, Any], user=Depends(get_current_user), db=Depends(get_db)):
     org_id = user["organization_id"]
     rating = payload.get("rating", 0)
-    if not (1 <= rating <= 5):
-        return JSONResponse(status_code=400, content={"code": "INVALID", "message": "Puan 1-5 arasi olmali"})
+    if not isinstance(rating, (int, float)) or not (1 <= rating <= 5):
+        raise AppError(400, "INVALID", "Puan 1-5 arasi olmali")
     now = datetime.now(timezone.utc).isoformat()
-    await db.guides.update_one(
+    result = await db.guides.update_one(
         {"id": guide_id, "organization_id": org_id},
         {"$set": {"rating": rating, "updated_at": now}},
     )
+    if result.matched_count == 0:
+        raise AppError(404, "NOT_FOUND", "Rehber bulunamadi")
+    await _audit(db, org_id, user, "GUIDE_RATED", guide_id, {"rating": rating})
     return {"ok": True}

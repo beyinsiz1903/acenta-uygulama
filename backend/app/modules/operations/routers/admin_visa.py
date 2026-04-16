@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Query
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
+from app.errors import AppError
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/admin/visa", tags=["admin-visa"])
 
@@ -98,11 +101,31 @@ def _doc_to_dict(doc: dict) -> dict:
     }
 
 
+async def _audit(db, org_id: str, user: dict, action: str, target_id: str, meta: dict = None):
+    try:
+        from app.services.audit import write_audit_log
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles") or []},
+            request=None,
+            action=action,
+            target_type="visa_application",
+            target_id=target_id,
+            before=None,
+            after=None,
+            meta=meta or {},
+        )
+    except Exception:
+        logger.exception("Audit log failed for %s: %s", action, target_id)
+
+
 @router.get("", dependencies=[AdminDep])
 async def list_visa_applications(
     status: Optional[str] = None,
     country: Optional[str] = None,
     customer_id: Optional[str] = None,
+    search: Optional[str] = None,
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
     user=Depends(get_current_user),
@@ -116,6 +139,8 @@ async def list_visa_applications(
         filt["destination_country"] = {"$regex": country, "$options": "i"}
     if customer_id:
         filt["customer_id"] = customer_id
+    if search:
+        filt["customer_name"] = {"$regex": search, "$options": "i"}
     total = await db.visa_applications.count_documents(filt)
     skip = (page - 1) * page_size
     cursor = db.visa_applications.find(filt, {"_id": 0}).sort("created_at", -1).skip(skip).limit(page_size)
@@ -138,13 +163,16 @@ async def get_visa_application(visa_id: str, user=Depends(get_current_user), db=
     org_id = user["organization_id"]
     doc = await db.visa_applications.find_one({"id": visa_id, "organization_id": org_id}, {"_id": 0})
     if not doc:
-        return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "Vize basvurusu bulunamadi"})
+        raise AppError(404, "NOT_FOUND", "Vize basvurusu bulunamadi")
     return _doc_to_dict(doc)
 
 
 @router.post("", dependencies=[AdminDep])
 async def create_visa_application(body: VisaApplicationCreate, user=Depends(get_current_user), db=Depends(get_db)):
     org_id = user["organization_id"]
+    if not body.customer_id.strip():
+        raise AppError(400, "INVALID", "Musteri secimi gereklidir")
+
     now = datetime.now(timezone.utc).isoformat()
     doc = {
         "id": str(uuid.uuid4()),
@@ -156,7 +184,9 @@ async def create_visa_application(body: VisaApplicationCreate, user=Depends(get_
         "created_by": user.get("id"),
     }
     await db.visa_applications.insert_one(doc)
-    return _doc_to_dict(doc)
+    result = _doc_to_dict(doc)
+    await _audit(db, org_id, user, "VISA_CREATED", result["id"], {"customer_name": body.customer_name, "country": body.destination_country})
+    return result
 
 
 @router.patch("/{visa_id}", dependencies=[AdminDep])
@@ -164,7 +194,10 @@ async def patch_visa_application(visa_id: str, body: VisaApplicationPatch, user=
     org_id = user["organization_id"]
     updates = {k: v for k, v in body.model_dump(exclude_none=True).items()}
     if not updates:
-        return JSONResponse(status_code=400, content={"code": "NO_CHANGES", "message": "Guncelleme verisi yok"})
+        raise AppError(400, "NO_CHANGES", "Guncelleme verisi yok")
+
+    if "status" in updates and updates["status"] not in VISA_STATUSES:
+        raise AppError(400, "INVALID", f"Gecersiz durum. Gecerli degerler: {', '.join(VISA_STATUSES)}")
 
     now = datetime.now(timezone.utc).isoformat()
     updates["updated_at"] = now
@@ -181,8 +214,9 @@ async def patch_visa_application(visa_id: str, body: VisaApplicationPatch, user=
         {"id": visa_id, "organization_id": org_id}, update_ops
     )
     if result.matched_count == 0:
-        return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "Vize basvurusu bulunamadi"})
+        raise AppError(404, "NOT_FOUND", "Vize basvurusu bulunamadi")
     doc = await db.visa_applications.find_one({"id": visa_id, "organization_id": org_id}, {"_id": 0})
+    await _audit(db, org_id, user, "VISA_UPDATED", visa_id, {"fields": list(updates.keys())})
     return _doc_to_dict(doc)
 
 
@@ -191,7 +225,8 @@ async def delete_visa_application(visa_id: str, user=Depends(get_current_user), 
     org_id = user["organization_id"]
     result = await db.visa_applications.delete_one({"id": visa_id, "organization_id": org_id})
     if result.deleted_count == 0:
-        return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "Vize basvurusu bulunamadi"})
+        raise AppError(404, "NOT_FOUND", "Vize basvurusu bulunamadi")
+    await _audit(db, org_id, user, "VISA_DELETED", visa_id)
     return {"ok": True}
 
 
@@ -203,11 +238,33 @@ async def add_timeline_entry(visa_id: str, payload: Dict[str, Any], user=Depends
         "date": now,
         "action": payload.get("action", "note"),
         "note": payload.get("note", ""),
+        "by": user.get("email"),
     }
     result = await db.visa_applications.update_one(
         {"id": visa_id, "organization_id": org_id},
         {"$push": {"timeline": entry}, "$set": {"updated_at": now}},
     )
     if result.matched_count == 0:
-        return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "Vize basvurusu bulunamadi"})
+        raise AppError(404, "NOT_FOUND", "Vize basvurusu bulunamadi")
     return {"ok": True}
+
+
+@router.post("/bulk-status", dependencies=[AdminDep])
+async def bulk_update_status(payload: Dict[str, Any], user=Depends(get_current_user), db=Depends(get_db)):
+    org_id = user["organization_id"]
+    ids = payload.get("ids", [])
+    new_status = payload.get("status", "")
+    if not ids or not new_status:
+        raise AppError(400, "INVALID", "ids ve status alanlari gereklidir")
+    if new_status not in VISA_STATUSES:
+        raise AppError(400, "INVALID", f"Gecersiz durum. Gecerli degerler: {', '.join(VISA_STATUSES)}")
+    now = datetime.now(timezone.utc).isoformat()
+    result = await db.visa_applications.update_many(
+        {"id": {"$in": ids}, "organization_id": org_id},
+        {
+            "$set": {"status": new_status, "updated_at": now},
+            "$push": {"timeline": {"date": now, "action": f"bulk_status_to_{new_status}", "note": "Toplu guncelleme"}},
+        },
+    )
+    await _audit(db, org_id, user, "VISA_BULK_STATUS", ",".join(ids[:5]), {"status": new_status, "count": result.modified_count})
+    return {"ok": True, "modified_count": result.modified_count}

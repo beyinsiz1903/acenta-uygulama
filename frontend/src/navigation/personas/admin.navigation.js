@@ -187,9 +187,8 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         icon: FileCheck,
         to: "/app/admin/visa",
         isCore: true,
-        visibleInSidebar: false,
+        visibleInSidebar: true,
         visibleInSearch: true,
-        directAccessOnly: true,
       },
       {
         key: "admin-insurance",
@@ -197,9 +196,8 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         icon: Shield,
         to: "/app/admin/insurance",
         isCore: true,
-        visibleInSidebar: false,
+        visibleInSidebar: true,
         visibleInSearch: true,
-        directAccessOnly: true,
       },
       {
         key: "admin-ops-b2b",

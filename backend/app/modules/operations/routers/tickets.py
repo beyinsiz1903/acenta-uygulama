@@ -4,6 +4,7 @@ Permissions: tickets.create, tickets.checkin, tickets.view, tickets.cancel
 """
 from __future__ import annotations
 
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -20,6 +21,8 @@ from app.services.ticket_service import (
     get_ticket_by_code,
     list_tickets,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/tickets", tags=["tickets"])
 
@@ -75,7 +78,7 @@ async def create_ticket_endpoint(
             target_id=result.get("ticket_code", ""),
         )
     except Exception:
-        pass
+        logger.exception("Audit log failed for TICKET_CREATED: %s", result.get("ticket_code", ""))
     return result
 
 
@@ -117,7 +120,7 @@ async def check_in(
             target_id=payload.ticket_code,
         )
     except Exception:
-        pass
+        logger.exception("Audit log failed for TICKET_CHECKED_IN: %s", payload.ticket_code)
     return result
 
 
@@ -164,7 +167,7 @@ async def get_tickets(
         reservation_id=reservation_id,
         limit=limit,
     )
-    return {"items": items, "count": len(items)}
+    return {"items": items, "total": len(items)}
 
 
 @router.get("/stats")

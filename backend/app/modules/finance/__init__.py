@@ -32,6 +32,7 @@ from app.modules.finance.routers.multicurrency import router as multicurrency_ro
 from app.modules.finance.routers.accounting_sync import router as accounting_sync_router
 from app.modules.finance.routers.accounting_providers import router as accounting_providers_router
 from app.modules.finance.routers.commission_rules import router as commission_rules_router
+from app.modules.finance.routers.payment_gateways import router as payment_gateways_router
 
 # --- Ops finance ---
 from app.modules.finance.routers.ops_finance import router as ops_finance_router
@@ -82,6 +83,7 @@ domain_router.include_router(multicurrency_router)
 domain_router.include_router(accounting_sync_router)
 domain_router.include_router(accounting_providers_router)
 domain_router.include_router(commission_rules_router)
+domain_router.include_router(payment_gateways_router)
 
 # Ops finance
 domain_router.include_router(ops_finance_router)

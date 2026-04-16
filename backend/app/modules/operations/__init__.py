@@ -25,6 +25,7 @@ from app.modules.operations.routers.admin_insurance import router as admin_insur
 from app.modules.operations.routers.calendar import router as calendar_router
 from app.modules.operations.routers.admin_email_templates import router as admin_email_templates_router
 from app.modules.operations.routers.admin_portal_management import router as admin_portal_management_router
+from app.modules.operations.routers.admin_activities import router as admin_activities_router
 
 domain_router = APIRouter()
 domain_router.include_router(ops_cases_router)
@@ -43,3 +44,4 @@ domain_router.include_router(admin_insurance_router)
 domain_router.include_router(calendar_router)
 domain_router.include_router(admin_email_templates_router)
 domain_router.include_router(admin_portal_management_router)
+domain_router.include_router(admin_activities_router)

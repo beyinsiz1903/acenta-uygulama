@@ -109,6 +109,9 @@ const AdminInsurancePage = lazy(() => import("../pages/admin/AdminInsurancePage"
 const AdminCalendarPage = lazy(() => import("../pages/admin/AdminCalendarPage"));
 const AdminEmailTemplatesPage = lazy(() => import("../pages/admin/AdminEmailTemplatesPage"));
 const AdminCustomerPortalPage = lazy(() => import("../pages/admin/AdminCustomerPortalPage"));
+const AdminVillasPage = lazy(() => import("../pages/admin/AdminVillasPage"));
+const AdminActivitiesPage = lazy(() => import("../pages/admin/AdminActivitiesPage"));
+const AdminPaymentGatewaysPage = lazy(() => import("../pages/admin/AdminPaymentGatewaysPage"));
 
 // Finance Ledger (Phase 2A)
 const FinanceOverviewPage = lazy(() => import("../pages/finance/FinanceOverviewPage"));
@@ -268,6 +271,10 @@ export const adminRoutes = (
     <Route path="calendar" element={<AdminCalendarPage />} />
     <Route path="email-templates" element={<AdminEmailTemplatesPage />} />
     <Route path="customer-portal" element={<AdminCustomerPortalPage />} />
+    {/* Villas, Activities, Payment Gateways */}
+    <Route path="villas" element={<AdminVillasPage />} />
+    <Route path="activities" element={<AdminActivitiesPage />} />
+    <Route path="payment-gateways" element={<AdminPaymentGatewaysPage />} />
     {/* Settings & Demo */}
     <Route path="product-mode" element={<AdminProductModePage />} />
     <Route path="demo-guide" element={<AdminDemoGuidePage />} />

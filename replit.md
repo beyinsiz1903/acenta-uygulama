@@ -95,8 +95,28 @@ All new routers live in `backend/app/modules/operations/routers/` and are regist
 | Email Templates | `admin_email_templates.py` | `pages/admin/EmailTemplates.jsx` | `/api/admin/email-templates` |
 | Customer Self-Service Portal | `customer_portal.py` | `pages/admin/CustomerPortal.jsx` | `/api/portal` |
 | Admin Portal Mgmt | `admin_portal_management.py` | (integrated in CustomerPortal) | `/api/admin/support-tickets`, `/api/admin/cancel-requests`, `/api/admin/portal-stats` |
+| Villa Management | `admin_villas.py` (inventory) | `pages/admin/AdminVillasPage.jsx` | `/api/admin/villas` |
+| Activity Management | `admin_activities.py` (operations) | `pages/admin/AdminActivitiesPage.jsx` | `/api/admin/activities` |
+| Payment Gateways | `payment_gateways.py` (finance) | `pages/admin/AdminPaymentGatewaysPage.jsx` | `/api/admin/payment-gateways` |
 
-New MongoDB collections: `transfers`, `guides`, `vehicles`, `flights`, `visa_applications`, `insurance_policies`, `email_templates`, `portal_sessions`, `support_tickets`, `cancel_requests`, `vehicle_maintenance`
+New MongoDB collections: `transfers`, `guides`, `vehicles`, `flights`, `visa_applications`, `insurance_policies`, `email_templates`, `portal_sessions`, `support_tickets`, `cancel_requests`, `vehicle_maintenance`, `villas`, `activities`, `payment_gateways`, `payment_transactions`
+
+### Supplier Integrations (XML/REST)
+
+| Supplier | Adapter File | Status |
+|----------|-------------|--------|
+| Paximum | `backend/app/suppliers/adapters/paximum_adapter.py` | Full implementation (Hotel + Transfer + Activity) |
+| HotelsPro | `backend/app/suppliers/adapters/hotelspro_adapter.py` | Full implementation (Hotel, JSON + XML modes) |
+
+### Turkish Payment Gateways
+
+| Provider | File | Capabilities |
+|----------|------|-------------|
+| İyzico | `backend/app/billing/iyzico_provider.py` | Checkout form, 3D Secure, Refund, Cancel, Sub-merchant, Subscriptions |
+| PayTR | `backend/app/billing/paytr_provider.py` | iFrame token, Callback verification, Customer management |
+| Stripe | `backend/app/billing/stripe_provider.py` | Full implementation (existing) |
+
+Gateway configuration admin: `/api/admin/payment-gateways` — multi-provider setup with test/live modes, credential management, and payment initiation
 
 ### Error Handling Standard
 

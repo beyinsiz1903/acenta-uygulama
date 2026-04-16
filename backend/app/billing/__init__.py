@@ -69,4 +69,7 @@ def get_billing_provider(provider_name: str = "stripe") -> BillingProvider:
   if provider_name == "iyzico":
     from app.billing.iyzico_provider import IyzicoBillingProvider
     return IyzicoBillingProvider()
+  if provider_name == "paytr":
+    from app.billing.paytr_provider import PayTRBillingProvider
+    return PayTRBillingProvider()
   raise ValueError(f"Unknown billing provider: {provider_name}")

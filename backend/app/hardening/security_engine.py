@@ -33,7 +33,7 @@ SECRET_INVENTORY = [
     {"name": "STRIPE_API_KEY", "env_key": "STRIPE_API_KEY", "category": "payment", "required": True, "min_length": 20, "rotation_days": 365},
     {"name": "STRIPE_WEBHOOK_SECRET", "env_key": "STRIPE_WEBHOOK_SECRET", "category": "payment", "required": True, "min_length": 20, "rotation_days": 365},
     {"name": "AVIATIONSTACK_API_KEY", "env_key": "AVIATIONSTACK_API_KEY", "category": "supplier", "required": False, "min_length": 16, "rotation_days": 180},
-    {"name": "EMERGENT_LLM_KEY", "env_key": "EMERGENT_LLM_KEY", "category": "ai", "required": False, "min_length": 16, "rotation_days": 90},
+    {"name": "LLM_API_KEY", "env_key": "LLM_API_KEY", "category": "ai", "required": False, "min_length": 16, "rotation_days": 90},
     {"name": "SENTRY_DSN", "env_key": "SENTRY_DSN", "category": "monitoring", "required": False, "min_length": 10, "rotation_days": 0, "is_url": True},
     {"name": "CORS_ORIGINS", "env_key": "CORS_ORIGINS", "category": "security", "required": True, "min_length": 5, "rotation_days": 0},
 ]
@@ -501,16 +501,6 @@ def audit_api_keys() -> dict:
         "revocation_supported": True,
     })
 
-    # Check EMERGENT_LLM_KEY
-    llm_key = os.environ.get("EMERGENT_LLM_KEY", "")
-    keys_audit.append({
-        "service": "Emergent LLM",
-        "key_present": bool(llm_key),
-        "is_test_key": False,
-        "hashed_prefix": hashlib.sha256(llm_key[:8].encode()).hexdigest()[:12] if llm_key else None,
-        "rotation_supported": True,
-        "revocation_supported": True,
-    })
 
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),

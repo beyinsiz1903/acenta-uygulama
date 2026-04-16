@@ -26,7 +26,7 @@ async def health() -> dict:
 
 @router.get("/healthz")
 async def healthz() -> dict:
-    """Kubernetes/Emergent readiness probe endpoint."""
+    """Readiness probe endpoint."""
     return {"status": "ok"}
 
 

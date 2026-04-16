@@ -128,7 +128,7 @@ Görevlerin:
 
 
 def _get_llm_key() -> str:
-    key = os.environ.get("EMERGENT_LLM_KEY", "")
+    key = os.environ.get("LLM_API_KEY", "")
     if not key:
         raise HTTPException(status_code=500, detail="AI servisi yapılandırılmamış")
     return key

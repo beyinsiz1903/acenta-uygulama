@@ -25,8 +25,6 @@ def _get_stripe_key() -> str:
 
 def _configure_stripe_proxy(key: str) -> None:
   stripe.api_key = key
-  if "sk_test_emergent" in key:
-    stripe.api_base = "https://integrations.emergentagent.com/stripe"
 
 
 def _masked_key(key: str) -> str:

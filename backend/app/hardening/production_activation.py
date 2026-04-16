@@ -189,7 +189,7 @@ SECRET_INVENTORY = [
     {"name": "STRIPE_API_KEY", "env_key": "STRIPE_API_KEY", "category": "payment", "rotation_days": 365},
     {"name": "STRIPE_WEBHOOK_SECRET", "env_key": "STRIPE_WEBHOOK_SECRET", "category": "payment", "rotation_days": 365},
     {"name": "AVIATIONSTACK_API_KEY", "env_key": "AVIATIONSTACK_API_KEY", "category": "supplier", "rotation_days": 180},
-    {"name": "EMERGENT_LLM_KEY", "env_key": "EMERGENT_LLM_KEY", "category": "ai", "rotation_days": 90},
+    {"name": "LLM_API_KEY", "env_key": "LLM_API_KEY", "category": "ai", "rotation_days": 90},
     {"name": "SENTRY_DSN", "env_key": "SENTRY_DSN", "category": "monitoring", "rotation_days": 0},
     {"name": "CORS_ORIGINS", "env_key": "CORS_ORIGINS", "category": "security", "rotation_days": 0},
 ]

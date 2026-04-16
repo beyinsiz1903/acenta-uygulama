@@ -5,18 +5,8 @@ require("dotenv").config();
 // Environment variable overrides
 const config = {
   disableHotReload: process.env.DISABLE_HOT_RELOAD === "true",
-  enableVisualEdits: process.env.REACT_APP_ENABLE_VISUAL_EDITS === "true",
   enableHealthCheck: process.env.ENABLE_HEALTH_CHECK === "true",
 };
-
-// Conditionally load visual editing modules only if enabled
-let babelMetadataPlugin;
-let setupDevServer;
-
-if (config.enableVisualEdits) {
-  babelMetadataPlugin = require("./plugins/visual-edits/babel-metadata-plugin");
-  setupDevServer = require("./plugins/visual-edits/dev-server-setup");
-}
 
 // Conditionally load health check modules only if enabled
 let WebpackHealthPlugin;
@@ -127,44 +117,24 @@ const webpackConfig = {
   },
 };
 
-// Only add babel plugin if visual editing is enabled
-if (config.enableVisualEdits) {
-  webpackConfig.babel = {
-    plugins: [babelMetadataPlugin],
-  };
-}
-
-// Setup dev server with visual edits and/or health check
-if (config.enableVisualEdits || config.enableHealthCheck) {
+// Setup dev server with health check
+if (config.enableHealthCheck) {
   webpackConfig.devServer = (devServerConfig) => {
-    // Apply visual edits dev server setup if enabled
-    if (config.enableVisualEdits && setupDevServer) {
-      devServerConfig = setupDevServer(devServerConfig);
-    }
-
-    // Add health check endpoints if enabled
-    if (config.enableHealthCheck && setupHealthEndpoints && healthPluginInstance) {
+    if (setupHealthEndpoints && healthPluginInstance) {
       const originalSetupMiddlewares = devServerConfig.setupMiddlewares;
 
       devServerConfig.setupMiddlewares = (middlewares, devServer) => {
-        // Call original setup if exists
         if (originalSetupMiddlewares) {
           middlewares = originalSetupMiddlewares(middlewares, devServer);
         }
-
-        // Setup health endpoints
         setupHealthEndpoints(devServer, healthPluginInstance);
-
         return middlewares;
       };
     }
 
-    // Disable WebSocket for hot reload in preview/production environments
     devServerConfig.webSocketServer = false;
-    // Allow all hosts for Replit proxy
     devServerConfig.allowedHosts = "all";
     devServerConfig.host = "0.0.0.0";
-    // Proxy API requests to the backend
     devServerConfig.proxy = {
       "/api": {
         target: "http://localhost:8000",
@@ -175,13 +145,10 @@ if (config.enableVisualEdits || config.enableHealthCheck) {
     return devServerConfig;
   };
 } else {
-  // Even without visual edits/health check, disable WebSocket in preview environments
   webpackConfig.devServer = (devServerConfig) => {
     devServerConfig.webSocketServer = false;
-    // Allow all hosts for Replit proxy
     devServerConfig.allowedHosts = "all";
     devServerConfig.host = "0.0.0.0";
-    // Proxy API requests to the backend
     devServerConfig.proxy = {
       "/api": {
         target: "http://localhost:8000",

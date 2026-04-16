@@ -39,7 +39,7 @@ PLAN_CHECKOUT_MATRIX = {
 }
 
 PLAN_ORDER = {"trial": 0, "starter": 1, "pro": 2, "enterprise": 3}
-STRIPE_PROXY_BASE = "https://integrations.emergentagent.com/stripe"
+STRIPE_PROXY_BASE = "https://api.stripe.com"
 REAL_PRICE_PREFIX = "price_"
 REAL_SUBSCRIPTION_PREFIX = "sub_"
 REAL_CUSTOMER_PREFIX = "cus_"

@@ -75,3 +75,6 @@ MongoDB and Redis are started automatically by the `start_backend.sh` script usi
 - Auth uses HTTP-only cookies (no localStorage tokens)
 - CRM customer documents require an explicit `id` field (separate from MongoDB `_id`); the `list_customers` query uses `{"_id": 0}` projection
 - Trial and demo seed services (`trial_seed_service.py`, `demo_seed_service.py`) must include `"id"` in customer documents to match the `CustomerOut` Pydantic schema
+- Emergent AI platform dependencies have been fully removed (scripts, visual-edits plugin, proxy URLs, CORS allowlists, LLM key references)
+- AI assistant uses `LLM_API_KEY` environment variable (not the old Emergent key)
+- Stripe connects directly to `api.stripe.com` (no proxy)

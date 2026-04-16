@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
  * data format:
  * [{ date: "YYYY-MM-DD", pending: 1, confirmed: 2, cancelled: 0, total: 3 }, ...]
  *
- * Pure SVG (no recharts) -> Emergent'te dependency riski yok.
+ * Pure SVG (no recharts) -> harici bağımlılık yok.
  */
 export function TrendChart({ data = [], height = 220, testId }) {
   const { pointsConfirmed, pointsPending, labels, maxY } = useMemo(() => {

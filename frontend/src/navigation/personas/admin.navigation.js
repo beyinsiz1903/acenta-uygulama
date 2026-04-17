@@ -18,6 +18,7 @@ import {
   FileText,
   Globe,
   Home,
+  Hotel,
   Inbox,
   LayoutGrid,
   Mail,
@@ -699,6 +700,43 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         visibleInSidebar: false,
         visibleInSearch: true,
         directAccessOnly: true,
+      },
+    ],
+  },
+
+  /* ────────────────────────────────────────────── */
+  /*  6.5 SYROCE MARKETPLACE                        */
+  /* ────────────────────────────────────────────── */
+  {
+    group: "SYROCE MARKETPLACE",
+    showInSidebar: true,
+    items: [
+      {
+        key: "syroce-marketplace-search",
+        label: "Otel Ara",
+        icon: Hotel,
+        to: "/app/admin/syroce-marketplace/search",
+        visibleInSidebar: true,
+        visibleInSearch: true,
+        moduleKey: "syroce_marketplace",
+      },
+      {
+        key: "syroce-marketplace-reservations",
+        label: "Rezervasyonlarım",
+        icon: CalendarDays,
+        to: "/app/admin/syroce-marketplace/reservations",
+        visibleInSidebar: true,
+        visibleInSearch: true,
+        moduleKey: "syroce_marketplace",
+      },
+      {
+        key: "syroce-marketplace-reconciliation",
+        label: "Mutabakat",
+        icon: DollarSign,
+        to: "/app/admin/syroce-marketplace/reconciliation",
+        visibleInSidebar: true,
+        visibleInSearch: true,
+        moduleKey: "syroce_marketplace",
       },
     ],
   },

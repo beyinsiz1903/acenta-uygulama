@@ -56,6 +56,7 @@ ORG_MODULE_REGISTRY = [
         "group": "AYARLAR & ENTEGRASYON",
         "modules": [
             {"key": "integrations", "label": "Entegrasyonlar", "description": "Tedarikçi ve API entegrasyonları"},
+            {"key": "syroce_marketplace", "label": "Syroce Marketplace", "description": "Syroce PMS Marketplace v1 entegrasyonu (otel arama, rezervasyon, mutabakat)"},
             {"key": "email_templates", "label": "E-posta Şablonları", "description": "E-posta şablon yönetimi"},
             {"key": "customer_portal", "label": "Müşteri Portalı", "description": "Müşteri self-servis portalı"},
             {"key": "branding", "label": "Marka Ayarları", "description": "Logo, renk ve white-label ayarları"},

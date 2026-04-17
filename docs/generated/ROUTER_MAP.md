@@ -1,5 +1,5 @@
 # Router Map — Endpoint → Domain
-> Auto-generated: 2026-04-16 15:51 UTC
+> Auto-generated: 2026-04-17 07:20 UTC
 > Source: `app/modules/*/` router registrations
 
 ## AUTH
@@ -168,6 +168,7 @@
 | `router` | `admin_catalog_router` |
 | `router` | `admin_tours_router` |
 | `router` | `admin_villas_router` |
+| `router` | `syroce_marketplace_router` |
 
 ## MOBILE
 

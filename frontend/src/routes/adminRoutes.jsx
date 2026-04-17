@@ -110,6 +110,9 @@ const AdminCalendarPage = lazy(() => import("../pages/admin/AdminCalendarPage"))
 const AdminEmailTemplatesPage = lazy(() => import("../pages/admin/AdminEmailTemplatesPage"));
 const AdminCustomerPortalPage = lazy(() => import("../pages/admin/AdminCustomerPortalPage"));
 const AdminVillasPage = lazy(() => import("../pages/admin/AdminVillasPage"));
+const MarketplaceSearchPage = lazy(() => import("../pages/syroce/MarketplaceSearchPage"));
+const MarketplaceReservationsPage = lazy(() => import("../pages/syroce/MarketplaceReservationsPage"));
+const MarketplaceReconciliationPage = lazy(() => import("../pages/syroce/MarketplaceReconciliationPage"));
 const AdminActivitiesPage = lazy(() => import("../pages/admin/AdminActivitiesPage"));
 const AdminPaymentGatewaysPage = lazy(() => import("../pages/admin/AdminPaymentGatewaysPage"));
 const AdminOrgModulesPage = lazy(() => import("../pages/admin/AdminOrgModulesPage"));
@@ -277,6 +280,10 @@ export const adminRoutes = (
     <Route path="activities" element={<AdminActivitiesPage />} />
     <Route path="payment-gateways" element={<AdminPaymentGatewaysPage />} />
     <Route path="org-modules" element={<AdminOrgModulesPage />} />
+    {/* Syroce Marketplace */}
+    <Route path="syroce-marketplace/search" element={<MarketplaceSearchPage />} />
+    <Route path="syroce-marketplace/reservations" element={<MarketplaceReservationsPage />} />
+    <Route path="syroce-marketplace/reconciliation" element={<MarketplaceReconciliationPage />} />
     {/* Settings & Demo */}
     <Route path="product-mode" element={<AdminProductModePage />} />
     <Route path="demo-guide" element={<AdminDemoGuidePage />} />

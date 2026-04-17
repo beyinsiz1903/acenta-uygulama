@@ -1,0 +1,123 @@
+Syroce PMS Marketplace v1 entegrasyonunu acenta uygulamasına ekle.
+Bu sayede tek bir API key ile birden fazla otelde arama yapıp rezervasyon
+oluşturabileceğiz.
+
+## 1) Yapılandırma (Environment)
+Aşağıdaki değişkenleri Secrets'a ekle (kullanıcıdan iste):
+- SYROCE_MARKETPLACE_BASE_URL  (örn: https://<pms-domain>/api/marketplace/v1)
+- SYROCE_MARKETPLACE_API_KEY   (PMS yöneticisi tarafından üretilen acenta key'i)
+
+Backend client'ta tüm isteklerde header:
+  X-API-Key: <SYROCE_MARKETPLACE_API_KEY>
+  Content-Type: application/json
+
+Tüm tarihler "YYYY-MM-DD". Para birimi TRY varsayılır (response'taki currency'i kullan).
+
+## 2) Backend Servisi
+`services/syroceMarketplace.{js|ts|py}` adında bir client modül oluştur.
+Aşağıdaki fonksiyonları implement et — endpoint'lere birebir uy:
+
+a) listHotels(filters?) → GET  /listings
+   query: city?, country?, q?
+   response: { total, hotels: [{ tenant_id, hotel_name, city, country,
+              star_rating, allowed_room_types[], default_commission_pct }] }
+
+b) searchAvailability(payload) → POST /search
+   body: { check_in, check_out, adults, children=0, city?, country?,
+           q?, max_price?, room_type? }
+   response: { total_hotels, results: [{
+       tenant_id, hotel_name, city, country, star_rating,
+       available_room_types: [{ room_type, room_count, base_price,
+           nights, total_price, commission_pct,
+           agency_commission_amount, agency_payable }]
+   }] }
+   NOT: Listede gösterilecek "acentaya net maliyet" = agency_payable.
+        Müşteriye satış fiyatı = total_price.
+
+c) getRates(tenant_id, room_type, check_in, check_out)
+   → GET /rates?tenant_id=...&room_type=...&check_in=...&check_out=...
+   Günlük fiyat dağılımı için kullan.
+
+d) createReservation(payload) → POST /reservations
+   body (zorunlu alanlar):
+     tenant_id, room_type, check_in, check_out,
+     guest_name, guest_email, guest_phone,
+     adults, children=0,
+     external_reference  (acentanın PNR'ı — UNIQUE TUTULMALI)
+   opsiyonel: special_requests, total_amount
+   ÖNEMLİ: total_amount gönderilirse server-side fiyatla ±0.50 TRY toleransla
+   karşılaştırılır; uymazsa 422 döner. Bu nedenle GÜVENLİ YOL = total_amount
+   GÖNDERME, server hesabını kabul et. Eğer göndereceksen mutlaka /search
+   çağrısından dönen total_price değerini kullan.
+   response: { ok, reservation: { id, confirmation_code, external_reference,
+       tenant_id, hotel_name, status, room_type, room_number, check_in,
+       check_out, guest_name, total_amount, agency_commission_rate,
+       agency_commission_amount, net_to_hotel } }
+
+e) getReservation(reservation_id) → GET /reservations/{id}
+   response: { summary, booking }
+
+f) cancelReservation(reservation_id, reason?)
+   → DELETE /reservations/{id}?reason=agency_request
+   404 = bulunamadı; 409 = check-in yapılmış (iptal edilemez).
+
+g) reconciliationAgency(period_start, period_end, tenant_id?)
+   → GET /reconciliation/agency?period_start=...&period_end=...
+   Komisyon mutabakat raporu (acenta görünümü).
+
+Hata yönetimi: HTTP 4xx/5xx geldiğinde response'taki `detail` mesajını
+kullanıcı arayüzüne aynen göster (Türkçe geliyor).
+
+## 3) Veri Modeli (yerel DB)
+Mevcut "rezervasyon" tablosuna şu alanları ekle (yoksa):
+- syroce_reservation_id        (PMS tarafındaki id)
+- syroce_confirmation_code     (MKT-XXXXXXXX)
+- syroce_tenant_id             (hangi otel)
+- syroce_hotel_name
+- commission_rate, commission_amount, net_to_hotel
+- channel = "syroce_marketplace"
+- external_reference           (bizim PNR'ımız — UNIQUE INDEX ekle)
+- status (confirmed/cancelled)
+- raw_response (JSONB — debug için)
+
+## 4) UI Akışı (yeni sayfalar)
+1. "Otel Ara" sayfası
+   - Form: şehir, giriş, çıkış, yetişkin, çocuk, oda tipi (opsiyonel),
+     max fiyat (opsiyonel)
+   - Submit → searchAvailability → otel kartları + her otelin altında
+     oda tipleri, "Müşteri Fiyatı" (total_price) ve "Sizin Maliyetiniz"
+     (agency_payable) kolonu, "Komisyon: %X" rozeti
+   - Her satırda "Rezerve Et" butonu
+
+2. "Rezervasyon Oluştur" modalı
+   - Misafir adı/e-posta/telefon, özel istek, kendi PNR'ımız (otomatik üret
+     ve düzenlenebilir bırak — örn: ACT-{uuid8})
+   - Onayla → createReservation → başarılı ise yerel DB'ye yaz, listeye
+     "Onaylandı: MKT-XXXXXXXX" toast'ı göster
+
+3. "Rezervasyonlarım" sayfası
+   - Yerel tablodan listele; satırda "Detay" (getReservation) ve "İptal Et"
+     (cancelReservation, sebep modalı) butonları
+   - İptalden sonra status'u güncelle
+
+4. "Mutabakat" sayfası
+   - Tarih aralığı seç → reconciliationAgency çağır
+   - Otel bazlı toplam ciro / komisyon / net ödenmesi gereken tablo
+
+## 5) Validasyonlar
+- check_out > check_in
+- guest_email format kontrolü
+- external_reference yerel DB'de UNIQUE (idempotency)
+- createReservation çağrısı sırasında loading state, double-submit engelle
+
+## 6) Test
+- Geçici demo otel için PMS yöneticisinden bir API key al, .env'e koy
+- Şu akışı manuel test et: ara → rezerve et → detay → iptal et → mutabakat
+- Hatalı senaryolar: geçmiş tarih, kapasiteden fazla yetişkin, aynı
+  external_reference ile ikinci kez gönderme
+
+Mevcut auth/login sistemine DOKUNMA. Bu entegrasyon yeni bir modül olarak
+eklensin; navigasyon menüsüne "Syroce Marketplace" başlığı altında üç
+sayfayı (Otel Ara, Rezervasyonlarım, Mutabakat) ekle.
+
+İşin bittiğinde bana hangi dosyaların eklendiğini ve manuel test sonuçlarını özetle.

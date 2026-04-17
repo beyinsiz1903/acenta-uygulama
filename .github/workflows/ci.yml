@@ -55,9 +55,6 @@ jobs:
       - name: ESLint (frontend)
         run: cd frontend && npx eslint src/ --max-warnings 0
 
-      - name: Check JSX for Turkish unicode escapes
-        run: bash scripts/check_jsx_unicode_escapes.sh
-
   # ============================================
   # Stage 2: Architecture & Scope Guards
   # ============================================

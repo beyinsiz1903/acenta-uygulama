@@ -9,9 +9,6 @@ on:
     branches: [main, develop]
 
 env:
-  # Opt into Node 24 runtime for JS-based actions (checkout@v4, setup-python@v5, etc.)
-  # to silence the Node 20 deprecation warning until those actions ship native v5/v6 builds.
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   PYTHON_VERSION: '3.11'
   NODE_VERSION: '18'
   MONGO_URL: mongodb://localhost:27017
